@@ -296,7 +296,7 @@ router.get('/download/topdecked/:id/:seat', async (req, res) => {
     }
     const seat = deck.seats[req.params.seat];
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.title.replace(/\W/g, '')}.csv`);
+    res.setHeader('Content-disposition', `attachment; filename=${req.params.id}_${req.params.seat}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 

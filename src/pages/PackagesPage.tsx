@@ -8,7 +8,6 @@ import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 import Alert from 'components/base/Alert';
-import { csrfFetch } from 'utils/CSRF';
 import CardPackageData from 'datatypes/CardPackage';
 import Button from 'components/base/Button';
 import Spinner from 'components/base/Spinner';
@@ -21,6 +20,7 @@ import useQueryParam from 'hooks/useQueryParam';
 import RenderToRoot from 'components/RenderToRoot';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Link from 'components/base/Link';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 
@@ -33,6 +33,7 @@ interface PackagesPageProps {
 
 const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items, lastKey, activePage }) => {
   const user = useContext(UserContext);
+  const { csrfFetch } = useContext(CSRFContext);
 
   const [type, setType] = useQueryParam('t', 'a');
   const [filter, setFilter] = useQueryParam('kw', '');

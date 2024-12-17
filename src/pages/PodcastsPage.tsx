@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -12,7 +12,7 @@ import RenderToRoot from 'components/RenderToRoot';
 import Episode from 'datatypes/Episode';
 import Podcast from 'datatypes/Podcast';
 import MainLayout from 'layouts/MainLayout';
-import { csrfFetch } from 'utils/CSRF';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface PodcastsPageProps {
   loginCallback?: string;
@@ -25,6 +25,7 @@ const PAGE_SIZE = 24;
 
 const PodcastsPage: React.FC<PodcastsPageProps> = ({ loginCallback = '/', episodes, podcasts, lastKey }) => {
   const [items, setItems] = useState(episodes);
+  const { csrfFetch } = useContext(CSRFContext);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);

@@ -1,12 +1,12 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
-import { csrfFetch } from 'utils/CSRF';
 import { formatDateTime } from 'utils/Date';
 import Pagination from '../base/Pagination';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CubeHistoryProps {
   changes: Record<string, any>[];
@@ -16,6 +16,7 @@ interface CubeHistoryProps {
 const PAGE_SIZE = 18;
 
 const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState(changes);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [page, setPage] = React.useState(0);

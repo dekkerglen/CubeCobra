@@ -5,8 +5,6 @@ html(lang='en' class=theme)
 		meta(name='description', content='Build, playtest, and share your Magic the Gathering cube!')
 		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
 		meta(name='viewport', content='width=device-width, initial-scale=1')
-		if csrfToken
-			meta(name='csrf-token', content=csrfToken)
 		if metadata
 			for metadatum, i in metadata
 				if metadatum.name
@@ -37,8 +35,6 @@ html(lang='en' class=theme)
 		noscript
 			div.centered
 				p.mt-3.mx-2 Cube Cobra requires javascript to work. To use the site, please enable javascript in your browser.
-		
-		script(src='/js/csrf.js', async)
 		
 		if node_env === 'production'
 			script(src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js', crossorigin)

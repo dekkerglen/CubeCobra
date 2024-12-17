@@ -98,7 +98,7 @@ router.get('/csv/:id', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return util.handleRouteErr-or(req, res, err, '/404');
   }
 });
 

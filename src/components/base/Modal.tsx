@@ -50,7 +50,7 @@ export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md,
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <div className="p-4">
+                <div className="p-4 pb-20">
                   <DialogPanel className="relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col max-h-modal">
                     {children}
                   </DialogPanel>

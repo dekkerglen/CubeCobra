@@ -9,7 +9,6 @@ import DisplayContext, { DisplayContextValue } from 'contexts/DisplayContext';
 import { BoardType } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
 import useLocalStorage from 'hooks/useLocalStorage';
-import { csrfFetch } from 'utils/CSRF';
 import Alert, { UncontrolledAlertProps } from './base/Alert';
 import Collapse from './base/Collapse';
 import { Col, Flexbox, Row } from './base/Layout';
@@ -17,6 +16,7 @@ import Select from './base/Select';
 import Button from './base/Button';
 import Checkbox from './base/Checkbox';
 import Input from './base/Input';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface GetCardResponse {
   success: 'true' | 'false';
@@ -24,6 +24,7 @@ interface GetCardResponse {
 }
 
 export const getCard = async (
+  csrfFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
   defaultprinting: string,
   name: string,
   setAlerts?: Dispatch<SetStateAction<UncontrolledAlertProps[]>>,
@@ -71,6 +72,7 @@ interface EditCollapseProps {
 }
 
 const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
   const { showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext) as DisplayContextValue;
@@ -104,7 +106,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
     async (event: React.FormEvent, match: string) => {
       event.preventDefault();
       try {
-        const card = await getCard(cube.defaultPrinting, match, setAlerts);
+        const card = await getCard(csrfFetch, cube.defaultPrinting, match, setAlerts);
         if (!card) {
           return;
         }
@@ -154,7 +156,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         }
 
         if (replace) {
-          const card = await getCard(cube.defaultPrinting, addValue, setAlerts);
+          const card = await getCard(csrfFetch, cube.defaultPrinting, addValue, setAlerts);
           if (!card) {
             return;
           }
@@ -257,21 +259,23 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
             </Flexbox>
           </Col>
         </Row>
-        <Row>
-          <Flexbox direction="row" justify="start" gap="4">
-            <Checkbox
-              label="Specify Versions"
-              checked={specifyEdition}
-              setChecked={(value) => setSpecifyEdition(value)}
-            />
-            <Checkbox label="Use Maybeboard" checked={showMaybeboard} setChecked={toggleShowMaybeboard} />
-            <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
-          </Flexbox>
-        </Row>
+        <Flexbox direction="row" justify="start" gap="4" wrap="wrap">
+          <Checkbox
+            label="Specify Versions"
+            checked={specifyEdition}
+            setChecked={(value) => setSpecifyEdition(value)}
+          />
+          <Checkbox label="Use Maybeboard" checked={showMaybeboard} setChecked={toggleShowMaybeboard} />
+          <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
+        </Flexbox>
         <Collapse
           isOpen={
-            Object.values(changes.mainboard).some((c) => c.length > 0) ||
-            Object.values(changes.maybeboard).some((c) => c.length > 0)
+            Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
+              (c) => c.length > 0,
+            ) ||
+            Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
+              (c) => c.length > 0,
+            )
           }
           className="pt-1"
         >

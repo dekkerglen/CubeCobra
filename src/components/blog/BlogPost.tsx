@@ -1,58 +1,75 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 
 import TimeAgo from 'react-timeago';
 
+import { PencilIcon, TrashIcon } from '@primer/octicons-react';
+import Button from 'components/base/Button';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
+import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import CommentsSection from 'components/comments/CommentsSection';
 import EditBlogModal from 'components/EditBlogModal';
+import DeleteBlogModal from 'components/modals/DeleteBlogModal';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
+import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import BlogPostData from 'datatypes/BlogPost';
 import User from 'datatypes/User';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Col, Flexbox, Row } from 'components/base/Layout';
-import Text from 'components/base/Text';
-import Link from 'components/base/Link';
 export interface BlogPostProps {
   post: BlogPostData;
   noScroll?: boolean;
   className?: string;
 }
 
+const EditBlogButton = withModal(Button, EditBlogModal);
+const DeleteBlogButton = withModal(Button, DeleteBlogModal);
+
 const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }) => {
   const user: User | null = useContext(UserContext);
-  const [editOpen, setEditOpen] = useState(false);
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
-  const canEdit = user && user.id === post.owner;
+  const canEdit = user && (typeof post.owner === 'object' ? user.id === post.owner.id : user.id === post.owner);
 
   const hasChangelist = post.Changelog !== undefined;
   const hasBody = post.body && post.body.length > 0;
 
   return (
     <Card className={className}>
-      <CardHeader className="pl-4 pr-0 pt-2 pb-0">
-        <Text lg semibold>
-          <Flexbox direction="row" justify="between">
-            <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
-            {canEdit && (
-              <Flexbox direction="row">
-                <EditBlogModal isOpen={editOpen} setOpen={setEditOpen} post={post} cubeID={post.cube} />
+      <CardHeader className="p-2">
+        <Flexbox direction="col" alignItems="start">
+          <Flexbox direction="row" justify="between" className="w-full">
+            <Text lg semibold>
+              <Flexbox direction="row" justify="between">
+                <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
               </Flexbox>
-            )}
+            </Text>
+            <Flexbox direction="row" gap="2">
+              {canEdit && (
+                <>
+                  <EditBlogButton color="primary" modalprops={{ cubeID: post.cube, post }}>
+                    <PencilIcon size={16} />
+                  </EditBlogButton>
+                  <DeleteBlogButton color="danger" modalprops={{ post }}>
+                    <TrashIcon size={16} />
+                  </DeleteBlogButton>
+                </>
+              )}
+            </Flexbox>
           </Flexbox>
-        </Text>
-        <Text md className=" text-text-secondary">
-          <Username user={post.owner} />
-          {' posted to '}
-          {post.cube === 'DEVBLOG' ? (
-            <Link href="/dev/blog">Developer Blog</Link>
-          ) : (
-            <Link href={`/cube/overview/${post.cube}`}>{post.cubeName}</Link>
-          )}
-          {' - '}
-          <TimeAgo date={post.date} />
-        </Text>
+          <Text md className=" text-text-secondary">
+            <Username user={post.owner} />
+            {' posted to '}
+            {post.cube === 'DEVBLOG' ? (
+              <Link href="/dev/blog">Developer Blog</Link>
+            ) : (
+              <Link href={`/cube/overview/${post.cube}`}>{post.cubeName}</Link>
+            )}
+            {' - '}
+            <TimeAgo date={post.date} />
+          </Text>
+        </Flexbox>
       </CardHeader>
       {hasChangelist && hasBody && (
         <Row className="gap-0">

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import ConfirmDeleteModal from 'components/modals/ConfirmDeleteModal';
-import { csrfFetch } from 'utils/CSRF';
 import Draft from 'datatypes/Draft';
 import User from 'datatypes/User';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface DeckDeleteModalProps {
   deck: Draft;
@@ -13,6 +13,7 @@ interface DeckDeleteModalProps {
 }
 
 const DeckDeleteModal: React.FC<DeckDeleteModalProps> = ({ deck, cubeID, nextURL, isOpen, setOpen }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const confirm = async () => {
     const response = await csrfFetch(`/cube/deck/deletedeck/${deck.id}`, {
       method: 'DELETE',

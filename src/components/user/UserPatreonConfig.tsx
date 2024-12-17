@@ -79,7 +79,7 @@ const UserPatreonConfig: React.FC<UserPatreonConfigProps> = ({ patron, featured 
           </p>
         )}
       </div>
-      <Button block outline color="danger" href="/patreon/unlink">
+      <Button type="link" block outline color="danger" href="/patreon/unlink">
         Unlink Patreon Account
       </Button>
     </Flexbox>

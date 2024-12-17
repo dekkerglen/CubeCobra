@@ -1,6 +1,6 @@
 import { Card } from 'components/base/Card';
 import Input from 'components/base/Input';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import CSRFForm from 'components/CSRFForm';
 import DeckStacks from 'components/DeckStacks';
@@ -17,8 +17,8 @@ import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftuti
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { makeSubtitle } from 'utils/Card';
-import { csrfFetch } from 'utils/CSRF';
 import { fromEntries, toNullableInt } from 'utils/Util';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const MUTATIONS = {
   makePick: ({
@@ -73,6 +73,7 @@ interface GridDraftPageProps {
 
 const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatNumber, loginCallback }) => {
   const { cards } = initialDraft;
+  const { csrfFetch } = useContext(CSRFContext);
   const draftType = initialDraft.seats[1].bot ? 'bot' : '2playerlocal';
   const seatNum = toNullableInt(seatNumber?.toString() ?? '') ?? 0;
   const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);

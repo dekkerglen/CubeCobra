@@ -2,14 +2,15 @@ import React, { useContext, useState } from 'react';
 import { BellFillIcon } from '@primer/octicons-react';
 import Link from 'components/base/Link';
 import UserContext from 'contexts/UserContext';
-import { csrfFetch } from 'utils/CSRF';
 import { Notification } from 'datatypes/Notification';
 import Badge from 'components/base/Badge';
 import { CardHeader, CardFooter } from 'components/base/Card';
 import NavMenu from 'components/base/NavMenu';
 import { Flexbox } from 'components/base/Layout';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const NotificationsNav: React.FC = () => {
+  const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
 
   if (!user) {

@@ -53,7 +53,7 @@ const UploadBulkReplaceModal: React.FC<UploadBulkReplaceModalProps> = ({ isOpen,
             <Button color="primary" type="submit" disabled={!file} block onClick={() => formRef.current?.submit()}>
               Upload
             </Button>
-            <Button color="danger" onClick={() => setOpen(false)} block>
+            <Button color="secondary" onClick={() => setOpen(false)} block>
               Close
             </Button>
           </Flexbox>

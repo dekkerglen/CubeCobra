@@ -46,7 +46,7 @@ const UploadDecklistModal: React.FC<UploadDecklistModalProps> = ({ isOpen, setOp
             <Button block color="primary" onClick={() => formRef.current?.submit()}>
               Upload
             </Button>
-            <Button block color="danger" onClick={() => setOpen(false)}>
+            <Button block color="secondary" onClick={() => setOpen(false)}>
               Close
             </Button>
           </Flexbox>

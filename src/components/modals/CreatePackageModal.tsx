@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import LoadingButton from 'components/LoadingButton';
-import { csrfFetch } from 'utils/CSRF';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Input from 'components/base/Input';
 import Button from 'components/base/Button';
 import { Card } from 'components/base/Card';
 import { Row, Col, Flexbox } from 'components/base/Layout';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CreatePackageModalProps {
   isOpen: boolean;
@@ -17,6 +17,7 @@ interface CreatePackageModalProps {
 }
 
 const CreatePackageModal: React.FC<CreatePackageModalProps> = ({ isOpen, setOpen, onError, onSuccess }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [cards, setCards] = useState<string[]>([]);
   const [cardName, setCardName] = useState<string>('');
   const [packageName, setPackageName] = useState<string>('');
@@ -127,7 +128,7 @@ const CreatePackageModal: React.FC<CreatePackageModalProps> = ({ isOpen, setOpen
           <LoadingButton color="primary" onClick={save} block>
             Submit Package
           </LoadingButton>
-          <Button color="danger" onClick={() => setOpen(false)} block>
+          <Button color="secondary" onClick={() => setOpen(false)} block>
             Cancel
           </Button>
         </Flexbox>

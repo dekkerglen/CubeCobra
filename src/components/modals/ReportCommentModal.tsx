@@ -78,7 +78,7 @@ const ReportCommentModal: React.FC<ReportCommentModalProps> = ({ comment, isOpen
             <Button block color="primary" onClick={() => formRef.current?.submit()}>
               Submit Report
             </Button>
-            <Button block color="danger" onClick={() => setOpen(false)}>
+            <Button block color="secondary" onClick={() => setOpen(false)}>
               Cancel
             </Button>
           </Flexbox>

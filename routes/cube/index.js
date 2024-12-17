@@ -26,6 +26,7 @@ const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, upd
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
+const CubeHash = require('../../dynamo/models/cubeHash');
 const Blog = require('../../dynamo/models/blog');
 const User = require('../../dynamo/models/user');
 const Draft = require('../../dynamo/models/draft');
@@ -333,7 +334,7 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
         'Set',
       ];
 
-      if (!categories.includes(updatedCube.categoryOverride)) {
+      if (updatedCube.categoryOverride && !categories.includes(updatedCube.categoryOverride)) {
         req.flash('danger', 'Not a valid category override.');
         return redirect(req, res, '/cube/overview/' + cube.id);
       }
@@ -893,6 +894,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
 
+    
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
       let pack;
       try {
@@ -901,6 +903,8 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
         req.flash('danger', err.message);
         return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
+
+      console.log(pack);
 
       // Try to make it roughly 5 times as wide as it is tall in cards.
       const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));

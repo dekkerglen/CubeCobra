@@ -4,9 +4,8 @@ import DeckDeleteModal from 'components/modals/DeckDeleteModal';
 import withModal from 'components/WithModal';
 import Card from 'datatypes/Card';
 import { setupPicks } from 'drafting/draftutil';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
 import { cardCmc, cardOracleId, cardType } from 'utils/Card';
-import { csrfFetch } from 'utils/CSRF';
 import Controls from './base/Controls';
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 import { Flexbox } from './base/Layout';
@@ -17,6 +16,7 @@ import Button from './base/Button';
 import Collapse from './base/Collapse';
 import CSRFForm from './CSRFForm';
 import Draft from 'datatypes/Draft';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const DeleteDeckModalLink = withModal(Link, DeckDeleteModal);
 const BasicsModalLink = withModal(Link, BasicsModal);
@@ -48,6 +48,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   setSideboard,
   setDeck,
 }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [expanded, toggleExpanded] = useToggle(false);
   const formRef = useRef<HTMLFormElement>(null);
   const formData = useMemo<Record<string, string>>(

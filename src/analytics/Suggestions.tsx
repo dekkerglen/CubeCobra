@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import CubeContext from 'contexts/CubeContext';
-import { csrfFetch } from 'utils/CSRF';
 import Suggestion from './Suggestion';
 import ImageSuggestion from './ImageSuggestion';
 import FilterContext from 'contexts/FilterContext';
@@ -11,10 +10,12 @@ import { Col, Flexbox, Row } from 'components/base/Layout';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
 import Button from 'components/base/Button';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const PAGE_SIZE = 100;
 
 const Suggestions: React.FC = () => {
+  const { csrfFetch } = useContext(CSRFContext);
   const { filterInput } = useContext(FilterContext);
   const { cube } = useContext(CubeContext);
   const [maybeOnly, setMaybeOnly] = useState(false);

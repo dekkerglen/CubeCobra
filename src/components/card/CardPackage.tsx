@@ -7,7 +7,6 @@ import Username from 'components/Username';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import CardPackageData, { APPROVED } from 'datatypes/CardPackage';
-import { csrfFetch } from 'utils/CSRF';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -16,6 +15,7 @@ import CardGrid from 'components/card/CardGrid';
 import Voter from 'components/base/Voter';
 import { cardId, detailsToCard } from 'utils/Card';
 import { StarFillIcon } from '@primer/octicons-react';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 
@@ -24,6 +24,7 @@ export interface CardPackageProps {
 }
 
 const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
   const [voters, setVoters] = useState<string[]>(cardPackage.voters);
   const [loading, setLoading] = useState(false);

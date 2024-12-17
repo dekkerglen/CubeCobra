@@ -45,7 +45,7 @@ const FeaturedCubesQueuePage: React.FC<FeaturedCubesQueuePageProps> = ({ cubes, 
               </Flexbox>
               <Row>
                 {cubes.map((cube, index) => (
-                  <QueueItem key={cube.id} cube={cube} index={index} />
+                  <QueueItem key={index} cube={cube} index={index} />
                 ))}
               </Row>
             </Flexbox>

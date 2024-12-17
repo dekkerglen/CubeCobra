@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import Text from 'components/base/Text';
 import BlogPost from 'components/blog/BlogPost';
@@ -6,11 +6,11 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
-import { csrfFetch } from 'utils/CSRF';
 import User from 'datatypes/User';
 import BlogPostType from 'datatypes/BlogPost';
 import Pagination from 'components/base/Pagination';
 import { Flexbox } from 'components/base/Layout';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface UserBlogPageProps {
   owner: User;
@@ -32,6 +32,7 @@ const UserBlogPage: React.FC<UserBlogPageProps> = ({
   lastKey,
 }) => {
   const [items, setItems] = useState(posts);
+  const { csrfFetch } = useContext(CSRFContext);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);

@@ -136,7 +136,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
             <Button block color="primary" disabled={!!errorsInFormat} onClick={() => formRef.current?.submit()}>
               Save
             </Button>
-            <Button block color="danger" onClick={() => setOpen(false)}>
+            <Button block color="secondary" onClick={() => setOpen(false)}>
               Close
             </Button>
           </Flexbox>

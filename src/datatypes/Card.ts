@@ -10,7 +10,10 @@ export type BoardChanges = {
   edits: { index: number; newCard: Card; oldCard: Card }[];
 };
 
-export type Changes = Record<BoardType, BoardChanges>;
+export interface Changes {
+  mainboard?: BoardChanges;
+  maybeboard?: BoardChanges;
+}
 
 interface Card {
   index?: number;

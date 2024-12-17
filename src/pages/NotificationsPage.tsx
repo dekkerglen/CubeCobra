@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -9,8 +9,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import Notification from 'components/nav/Notification';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import { csrfFetch } from 'utils/CSRF';
 import type { Notification as NotificationType } from 'datatypes/Notification';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface NotificationsPageProps {
   notifications: NotificationType[];
@@ -22,6 +22,7 @@ const PAGE_SIZE = 18;
 
 const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, lastKey, loginCallback }) => {
   const [items, setItems] = useState<NotificationType[]>(notifications);
+  const { csrfFetch } = useContext(CSRFContext);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);

@@ -1,29 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import { Row, Col, Flexbox } from 'components/base/Layout';
 import { Card } from 'components/base/Card';
 import Text from 'components/base/Text';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import LoadingButton from 'components/LoadingButton';
-import { csrfFetch } from 'utils/CSRF';
 import Cube from 'datatypes/Cube';
 import Button from 'components/base/Button';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CustomizeBasicsModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
   cube: Cube;
-  updateBasics: (basics: string[]) => void;
   onError: (message: string) => void;
 }
 
-const CustomizeBasicsModal: React.FC<CustomizeBasicsModalProps> = ({
-  isOpen,
-  setOpen,
-  cube,
-  updateBasics,
-  onError,
-}) => {
+const CustomizeBasicsModal: React.FC<CustomizeBasicsModalProps> = ({ isOpen, setOpen, cube, onError }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [basics, setBasics] = useState<string[]>(cube.basics.slice());
   const [cardName, setCardName] = useState('');
   const [imageDict, setImageDict] = useState<Record<string, { id: string }>>({});
@@ -55,7 +49,6 @@ const CustomizeBasicsModal: React.FC<CustomizeBasicsModalProps> = ({
       },
     });
     if (response.ok) {
-      updateBasics(basics);
       setOpen(false);
     } else {
       onError('Error updating basics');
@@ -126,12 +119,12 @@ const CustomizeBasicsModal: React.FC<CustomizeBasicsModalProps> = ({
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" className="w-full" justify="between" gap="2">
-          <Button block color="danger" onClick={() => setOpen(false)}>
-            Close
-          </Button>
           <LoadingButton block color="primary" onClick={save}>
             Save Changes
           </LoadingButton>
+          <Button block color="secondary" onClick={() => setOpen(false)}>
+            Close
+          </Button>
         </Flexbox>
       </ModalFooter>
     </Modal>

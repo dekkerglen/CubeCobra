@@ -91,6 +91,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({
                 <CardBody>
                   <p>Your account is currently not linked to your Patreon account.</p>
                   <Button
+                    type="link"
                     block
                     outline
                     color="primary"

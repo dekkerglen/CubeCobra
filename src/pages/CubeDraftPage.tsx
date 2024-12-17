@@ -10,10 +10,10 @@ import UserContext from 'contexts/UserContext';
 import useMount from 'hooks/UseMount';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import { callApi } from 'utils/CSRF';
 import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
 import Text from 'components/base/Text';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const socket = socketIOClient('/', { rejectUnauthorized: false });
 
@@ -24,6 +24,7 @@ interface CubeDraftPageProps {
 }
 
 const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, initialDraft, loginCallback }) => {
+  const { callApi } = useContext(CSRFContext);
   const user = useContext(UserContext);
   const [state, setState] = useState('loading');
   const [message, setMessage] = useState('');

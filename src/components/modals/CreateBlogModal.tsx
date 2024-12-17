@@ -62,7 +62,7 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, setOpen, post
             <Button color="primary" block onClick={() => formRef.current?.submit()}>
               Save
             </Button>
-            <Button color="danger" block onClick={() => setOpen(false)}>
+            <Button color="secondary" block onClick={() => setOpen(false)}>
               Close
             </Button>
           </Flexbox>

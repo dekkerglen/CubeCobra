@@ -5,6 +5,7 @@ import CSRFForm from 'components/CSRFForm';
 import TextEntry from 'components/TextEntry';
 import BlogPost from 'datatypes/BlogPost';
 import React, { useMemo, useState } from 'react';
+import { Flexbox } from './base/Layout';
 
 interface EditBlogModalProps {
   isOpen: boolean;
@@ -30,26 +31,30 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cu
       <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`} ref={formRef} formData={formData}>
         <ModalHeader setOpen={setOpen}>Edit Blog Post</ModalHeader>
         <ModalBody>
-          <Input
-            label="Title"
-            required
-            minLength={5}
-            maxLength={200}
-            name="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          {post && <Input type="hidden" name="id" value={post.id} />}
-          <TextEntry name="markdown" value={markdown} setValue={setMarkdown} maxLength={10000} />
+          <Flexbox direction="col" gap="2">
+            <Input
+              label="Title"
+              required
+              minLength={5}
+              maxLength={200}
+              name="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            {post && <Input type="hidden" name="id" value={post.id} />}
+            <TextEntry name="markdown" value={markdown} setValue={setMarkdown} maxLength={10000} />
+          </Flexbox>
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" onClick={() => setOpen(false)}>
-            Save
-          </Button>
-          <Button color="secondary" onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <Flexbox direction="row" gap="2" className="w-full">
+            <Button block color="primary" onClick={() => setOpen(false)}>
+              Save
+            </Button>
+            <Button block color="secondary" onClick={() => setOpen(false)}>
+              Close
+            </Button>
+          </Flexbox>
         </ModalFooter>
       </CSRFForm>
     </Modal>

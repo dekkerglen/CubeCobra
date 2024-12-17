@@ -9,10 +9,10 @@ import BlogPost from 'components/blog/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import TextEntry from 'components/TextEntry';
+import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 import React, { useCallback, useContext, useState } from 'react';
-import { csrfFetch } from 'utils/CSRF';
 
 interface DevBlogEntryProps {
   items: any[];
@@ -32,6 +32,7 @@ const loader = (
 );
 
 const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
 
@@ -81,6 +82,7 @@ const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
 };
 
 const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey, loginCallback = '/' }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState(blogs);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const user = useContext(UserContext);

@@ -2,11 +2,11 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import Draft from 'datatypes/Draft';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import DeckPreview from './DeckPreview';
-import { csrfFetch } from 'utils/CSRF';
 import Pagination from './base/Pagination';
 import { Flexbox } from './base/Layout';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CubesCardProps {
   decks: Draft[];
@@ -16,6 +16,7 @@ interface CubesCardProps {
 const PAGE_SIZE = 10;
 
 const RecentDraftsCard: React.FC<CubesCardProps> = ({ decks, lastKey }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState<Draft[]>(decks);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);

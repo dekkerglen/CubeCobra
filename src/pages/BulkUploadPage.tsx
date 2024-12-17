@@ -15,6 +15,7 @@ import MainLayout from 'layouts/MainLayout';
 import Cube from 'datatypes/Cube';
 import CardType from 'datatypes/Card';
 import { getCard } from 'components/EditCollapse';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated - Automatic Post';
 
@@ -24,6 +25,7 @@ interface BulkUploadPageRawProps {
 }
 
 const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
 
   const { alerts, setAlerts, cube, loading, addCard, bulkAddCard, commitChanges } = useContext(CubeContext);
@@ -56,7 +58,7 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added })
   const handleAdd = useCallback(
     async (match: any) => {
       try {
-        const card = await getCard(cube.defaultPrinting, match, setAlerts);
+        const card = await getCard(csrfFetch, cube.defaultPrinting, match, setAlerts);
         if (!card) {
           return;
         }

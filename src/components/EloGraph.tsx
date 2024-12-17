@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
   Chart as ChartJS,
   TimeScale,
@@ -13,12 +13,12 @@ import 'chartjs-adapter-date-fns';
 import { Line } from 'react-chartjs-2';
 import History from 'datatypes/History';
 
-import { csrfFetch } from 'utils/CSRF';
 import { formatDate } from 'utils/Date';
 import { Row, Col, Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface EloGraphProps {
   defaultHistories: History[];
@@ -29,6 +29,7 @@ interface EloGraphProps {
 ChartJS.register(CategoryScale, TimeScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
 const EloGraph: React.FC<EloGraphProps> = ({ defaultHistories, cardId }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [history, setHistory] = useState<History[]>(defaultHistories);
   const [zoom, setZoom] = useState<string>('year');
   const [period, setPeriod] = useState<string>('week');

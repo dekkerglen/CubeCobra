@@ -36,7 +36,7 @@ const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID
             <Button color="primary" disabled={!bulkText} block onClick={() => formRef.current?.submit()}>
               Add Cards
             </Button>
-            <Button color="danger" onClick={() => setOpen(false)} block>
+            <Button color="secondary" onClick={() => setOpen(false)} block>
               Close
             </Button>
           </Flexbox>

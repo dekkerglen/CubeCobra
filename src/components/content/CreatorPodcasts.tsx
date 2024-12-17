@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import PodcastPreview from 'components/content/PodcastPreview';
-import { csrfFetch } from 'utils/CSRF';
 import Spinner from 'components/base/Spinner';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Podcast from 'datatypes/Podcast';
 import Button from 'components/base/Button';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CreatorPodcastsProps {
   podcasts: Podcast[];
@@ -13,6 +13,7 @@ interface CreatorPodcastsProps {
 }
 
 const CreatorPodcasts: React.FC<CreatorPodcastsProps> = ({ podcasts, lastKey }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState<Podcast[]>(podcasts);
   const [currentLastKey, setLastKey] = useState<any>(lastKey);
   const [loading, setLoading] = useState(false);

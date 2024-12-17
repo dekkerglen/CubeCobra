@@ -142,7 +142,7 @@ const Changelist: React.FC = () => {
   return (
     <div>
       {boardTypes.map((board) => {
-        const { adds, removes, swaps, edits } = changes[board];
+        const { adds, removes, swaps, edits } = changes[board] || { adds: [], removes: [], swaps: [], edits: [] };
         if (adds.length === 0 && removes.length === 0 && swaps.length === 0 && edits.length === 0) {
           return false;
         }

@@ -63,7 +63,7 @@ const SampleHandModal: React.FC<SampleHandModalProps> = ({ deck, isOpen, setOpen
           <Button block color="accent" onClick={draw}>
             Draw One Card
           </Button>
-          <Button block color="danger" onClick={close}>
+          <Button block color="secondary" onClick={close}>
             Close
           </Button>
         </Flexbox>

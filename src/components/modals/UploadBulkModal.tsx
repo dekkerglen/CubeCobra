@@ -53,7 +53,7 @@ const UploadBulkModal: React.FC<UploadBulkModalProps> = ({ isOpen, setOpen, cube
             <Button color="primary" type="submit" disabled={!file} block>
               Upload
             </Button>
-            <Button color="danger" onClick={() => setOpen(false)} block>
+            <Button color="secondary" onClick={() => setOpen(false)} block>
               Close
             </Button>
           </Flexbox>

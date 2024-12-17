@@ -1,10 +1,13 @@
 import Button from 'components/base/Button';
+import { Card } from 'components/base/Card';
 import Checkbox from 'components/base/Checkbox';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Select from 'components/base/Select';
+import Text from 'components/base/Text';
 import withCardModal from 'components/modals/WithCardModal';
+import withGroupModal from 'components/modals/WithGroupModal';
 import PagedTable from 'components/PagedTable';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
@@ -23,6 +26,8 @@ import {
   normalizeName,
 } from 'utils/Card';
 import { getLabels } from 'utils/Sort';
+
+const GroupModalButton = withGroupModal(Button);
 
 const AutoCardLink = withAutocard(Link);
 const CardModalLink = withCardModal(AutoCardLink);
@@ -77,7 +82,7 @@ interface ListViewProps {
 }
 
 const ListView: React.FC<ListViewProps> = ({ cards }) => {
-  const { versionDict, editCard, tagColors, allTags } = useContext(CubeContext);
+  const { versionDict, editCard, tagColors, allTags, canEdit } = useContext(CubeContext);
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
   const [pageSize, setPageSize] = useState(50);
 
@@ -199,27 +204,56 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
   }));
 
   return (
-    <Flexbox direction="col" gap="2" className="my-3">
-      <Flexbox direction="row" justify="start" gap="2" alignItems="end">
-        <Button color="primary" onClick={handleCheckAll}>
-          Check All
-        </Button>
-        <Button color="accent" onClick={() => console.log('Bulk Edit')}>
-          Edit Selected
-        </Button>
-        <Select
-          label="Page Size"
-          value={`${pageSize}`}
-          setValue={(v) => setPageSize(parseInt(v, 10))}
-          options={[10, 25, 50, 100].map((size) => ({
-            value: `${size}`,
-            label: `${size}`,
-          }))}
-          dense
-        />
-      </Flexbox>
-      <PagedTable pageSize={pageSize} headers={headers} rows={rows} />
-    </Flexbox>
+    <Card className="my-3">
+      <PagedTable
+        pageSize={pageSize}
+        headers={headers}
+        rows={rows}
+        paginateClassname="p-2"
+        sideControl={
+          <Flexbox direction="row" justify="between" gap="2" alignItems="end">
+            <Select
+              label="Page Size"
+              value={`${pageSize}`}
+              setValue={(v) => setPageSize(parseInt(v, 10))}
+              options={[10, 25, 50, 100].map((size) => ({
+                value: `${size}`,
+                label: `${size}`,
+              }))}
+              dense
+            />
+            {canEdit && (
+              <>
+                <Button color="primary" onClick={handleCheckAll}>
+                  Check All
+                </Button>
+                <Button
+                  color="danger"
+                  onClick={() => setChecked({})}
+                  disabled={Object.values(checked).every((c) => !c)}
+                >
+                  Uncheck All
+                </Button>
+                <GroupModalButton
+                  color="accent"
+                  disabled={Object.values(checked).every((c) => !c)}
+                  modalprops={{ cards: cards.filter((card) => checked[cardIndex(card)]) }}
+                >
+                  Edit Selected
+                </GroupModalButton>
+                {Object.values(checked).some((c) => c) && (
+                  <Flexbox direction="row" alignItems="center">
+                    <Text semibold text-md>
+                      {Object.values(checked).filter((c) => c).length} Cards Selected
+                    </Text>
+                  </Flexbox>
+                )}
+              </>
+            )}
+          </Flexbox>
+        }
+      />
+    </Card>
   );
 };
 

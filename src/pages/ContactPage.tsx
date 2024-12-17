@@ -35,11 +35,11 @@ const ContactPage: React.FC<ContactPageProps> = ({ loginCallback = '/' }) => (
           </Text>
           <Row>
             <Col xs={12} sm={4}>
-              <Text semibold>Official Twitter</Text>
+              <Text semibold>Official Bluesky</Text>
             </Col>
             <Col xs={12} sm={8} className="mb-3">
-              <Link href="https://twitter.com/CubeCobra1" target="_blank" rel="noopener noreferrer">
-                @CubeCobra1
+              <Link href="https://bsky.app/profile/cubecobra.com" target="_blank" rel="noopener noreferrer">
+                @cubecobra.com
               </Link>
             </Col>
             <Col xs={12} sm={4}>

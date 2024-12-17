@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import ConfirmDeleteModal from 'components/modals/ConfirmDeleteModal';
-import { csrfFetch } from 'utils/CSRF';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 export interface BlogDeleteModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ export interface BlogDeleteModalProps {
 }
 
 const BlogDeleteModal: React.FC<BlogDeleteModalProps> = ({ isOpen, setOpen, postID }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const confirm = async () => {
     const response = await csrfFetch(`/cube/blog/remove/${postID}`, {
       method: 'DELETE',

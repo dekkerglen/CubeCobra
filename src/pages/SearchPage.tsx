@@ -1,17 +1,17 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import { csrfFetch } from 'utils/CSRF';
 import Cube from 'datatypes/Cube';
 import { Row, Col, Flexbox } from 'components/base/Layout';
 import Pagination from 'components/base/Pagination';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeSearchController from 'components/cube/CubeSearchController';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface SearchPageProps {
   cubes: Cube[];
@@ -26,6 +26,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
+  const { csrfFetch } = useContext(CSRFContext);
 
   const [currentQuery, setCurrentQuery] = useQueryParam('q', '');
   const [currentOrder, setCurrentOrder] = useQueryParam('order', 'pop');

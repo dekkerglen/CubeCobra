@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
-import { csrfFetch } from 'utils/CSRF';
+import React, { useState, useCallback, useContext } from 'react';
 import { Card, CardBody, CardHeader } from './base/Card';
 import Text from 'components/base/Text';
 import { Col, Flexbox, Row } from './base/Layout';
 import Pagination from './base/Pagination';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface IndefinitePaginatedListProps<T> {
   items: T[];
@@ -42,6 +42,7 @@ const IndefinitePaginatedList = <T,>({
   xxl,
   inCard = false,
 }: IndefinitePaginatedListProps<T>) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
 

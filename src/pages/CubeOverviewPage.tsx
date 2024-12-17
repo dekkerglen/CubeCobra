@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 
 import Button from 'components/base/Button';
 import Controls from 'components/base/Controls';
@@ -16,9 +16,10 @@ import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import BlogPostType from 'datatypes/BlogPost';
 import Cube, { CubeCards } from 'datatypes/Cube';
+import User from 'datatypes/User';
+import useAlerts from 'hooks/UseAlerts';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import User from 'datatypes/User';
 
 const CubeOverviewModalLink = withModal(Link, CubeOverviewModal);
 const CubeSettingsModalLink = withModal(Link, CubeSettingsModal);
@@ -46,12 +47,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
   followers,
 }) => {
   const user = useContext(UserContext);
-
-  const [alerts, setAlerts] = useState<{ color: string; message: string }[]>([]);
-
-  const addAlert = (color: string, message: string) => {
-    setAlerts([...alerts, { color, message }]);
-  };
+  const { alerts, addAlert } = useAlerts();
 
   return (
     <MainLayout>
@@ -80,11 +76,6 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
                     cube: cube,
                     onError: (message: string) => {
                       addAlert('danger', message);
-                    },
-                    updateBasics: (basics: any) => {
-                      const deepClone = JSON.parse(JSON.stringify(cube));
-                      deepClone.basics = basics;
-                      // onCubeUpdate(deepClone);
                     },
                   }}
                 >

@@ -7,6 +7,7 @@ import { AutocardContextProvider } from 'contexts/AutocardContext';
 import DomainContext, { DomainContextValue } from 'contexts/DomainContext';
 import UserContext, { UserContextValue } from 'contexts/UserContext';
 import CaptchaContext from 'contexts/CaptchaContext';
+import { CSRFContextProvider } from 'contexts/CSRFContext';
 
 declare global {
   interface Window {
@@ -20,6 +21,7 @@ export interface UniversalReactProps {
   user: UserContextValue;
   theme: string;
   captchaSiteKey: string;
+  csrfToken: string;
 }
 
 // Returns its input to enable our usual pattern of export default RenderToRoot(XPage).
@@ -27,17 +29,19 @@ const RenderToRoot = <P,>(Element: ComponentType<P>): ComponentType<P> => {
   const reactProps: P & UniversalReactProps = typeof window !== 'undefined' ? window.reactProps : {};
   const element: ReactElement = (
     <ErrorBoundary className="mt-3">
-      <CaptchaContext.Provider value={reactProps.captchaSiteKey}>
-        <AutocardContextProvider>
-          <AdsContext.Provider value={reactProps.nitroPayEnabled}>
-            <DomainContext.Provider value={reactProps.domain}>
-              <UserContext.Provider value={reactProps.user}>
-                <Element {...reactProps} />
-              </UserContext.Provider>
-            </DomainContext.Provider>
-          </AdsContext.Provider>
-        </AutocardContextProvider>
-      </CaptchaContext.Provider>
+      <CSRFContextProvider csrfToken={reactProps.csrfToken}>
+        <CaptchaContext.Provider value={reactProps.captchaSiteKey}>
+          <AutocardContextProvider>
+            <AdsContext.Provider value={reactProps.nitroPayEnabled}>
+              <DomainContext.Provider value={reactProps.domain}>
+                <UserContext.Provider value={reactProps.user}>
+                  <Element {...reactProps} />
+                </UserContext.Provider>
+              </DomainContext.Provider>
+            </AdsContext.Provider>
+          </AutocardContextProvider>
+        </CaptchaContext.Provider>
+      </CSRFContextProvider>
     </ErrorBoundary>
   );
 

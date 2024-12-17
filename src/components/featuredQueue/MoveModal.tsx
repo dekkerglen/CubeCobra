@@ -53,7 +53,7 @@ const MoveModal: React.FC<MoveModalProps> = ({ isOpen, setOpen, cube, index }) =
             <Button color="primary" block onClick={() => formRef.current?.submit()}>
               Submit
             </Button>
-            <Button color="danger" block onClick={() => setOpen(false)}>
+            <Button color="secondary" block onClick={() => setOpen(false)}>
               Close
             </Button>
           </Flexbox>

@@ -292,7 +292,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
       </ModalBody>
       <ModalFooter>
         <Flexbox gap="2" justify="between" className="w-full">
-          <Button color="danger" aria-label="Close" onClick={() => setOpen(false)} block>
+          <Button color="secondary" aria-label="Close" onClick={() => setOpen(false)} block>
             Cancel
           </Button>
           <Button

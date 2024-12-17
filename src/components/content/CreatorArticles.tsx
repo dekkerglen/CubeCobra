@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import ArticlePreview from 'components/content/ArticlePreview';
-import { csrfFetch } from 'utils/CSRF';
 import Article from 'datatypes/Article';
 import Spinner from 'components/base/Spinner';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Button from 'components/base/Button';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CreatorArticlesProps {
   articles: Article[];
@@ -13,6 +13,7 @@ interface CreatorArticlesProps {
 }
 
 const CreatorArticles: React.FC<CreatorArticlesProps> = ({ articles, lastKey }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState<Article[]>(articles);
   const [currentLastKey, setLastKey] = useState<any>(lastKey);
   const [loading, setLoading] = useState(false);

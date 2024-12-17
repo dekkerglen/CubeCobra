@@ -1,5 +1,4 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
-import { callApi } from 'utils/CSRF';
 import useMount from 'hooks/UseMount';
 import UserContext from 'contexts/UserContext';
 import DomainContext from 'contexts/DomainContext';
@@ -13,6 +12,7 @@ import Username from 'components/Username';
 import { PasteIcon, LockIcon } from '@primer/octicons-react';
 import Draft from 'datatypes/Draft';
 import { SortableItem, SortableList } from 'components/DND';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const BOT_NAME = 'Bot';
 
@@ -25,6 +25,7 @@ interface CubeDraftStagingProps {
 }
 
 const CubeDraftStaging: React.FC<CubeDraftStagingProps> = ({ draft, socket, start }) => {
+  const { callApi } = useContext(CSRFContext);
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<(string | null)[]>(draft.seats.map(() => null));
   const [players, setPlayers] = useState<string[]>([]);

@@ -198,7 +198,7 @@ function writeCard(res, card, maybe) {
   res.write(`"${name.replace(/"/, '""')}",`);
   res.write(`${card.cmc || cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
-  res.write(`${(card.colors || colorIdentity).join('')},`);
+  res.write(`${(card.colors || colorIdentity || []).join('')},`);
   res.write(`"${carddb.cardFromId(card.cardID).set}",`);
   res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
   res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);
@@ -240,8 +240,7 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.write('\r\n\r\n');
 
   const side = {};
-  for (const cardIndex of sideCards.flat()) {
-    const card = carddb.cardFromId(cards[cardIndex].cardID);
+  for (const card of sideCards.flat()) {
     if (card) {
       if (side[card.name]) {
         side[card.name] += 1;

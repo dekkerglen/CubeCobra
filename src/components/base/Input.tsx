@@ -17,6 +17,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   innerRef?: React.Ref<HTMLInputElement>;
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onEnter?: () => void;
   disabled?: boolean;
 }
 
@@ -33,6 +34,7 @@ const Input: React.FC<InputProps> = ({
   onChange,
   value,
   disabled = false,
+  onEnter,
 }) => {
   return (
     <div className="block w-full">
@@ -63,7 +65,19 @@ const Input: React.FC<InputProps> = ({
         type={type}
         placeholder={placeholder}
         ref={innerRef}
-        onKeyDown={disabled ? undefined : onKeyDown}
+        onKeyDown={
+          disabled
+            ? undefined
+            : (event) => {
+                if (onEnter && event.key === 'Enter') {
+                  onEnter();
+                }
+
+                if (onKeyDown) {
+                  onKeyDown(event);
+                }
+              }
+        }
         onChange={disabled ? undefined : onChange}
         value={value}
         disabled={disabled}

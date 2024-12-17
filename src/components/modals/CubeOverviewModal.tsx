@@ -13,10 +13,10 @@ import MtgImage from 'components/MtgImage';
 import TagInput from 'components/TagInput';
 import TextEntry from 'components/TextEntry';
 import Cube from 'datatypes/Cube';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { csrfFetch } from 'utils/CSRF';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getCubeDescription } from 'utils/Util';
 import Image from 'datatypes/Image';
+import { CSRFContext } from 'contexts/CSRFContext';
 interface CubeOverviewModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
@@ -24,6 +24,7 @@ interface CubeOverviewModalProps {
 }
 
 const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, cube }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [state, setState] = useState<Cube>(JSON.parse(JSON.stringify(cube)));
   const [imagename, setImagename] = useState(cube.imageName);
   const [imageDict, setImageDict] = useState<Record<string, Image>>({});
@@ -190,12 +191,12 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
         </ModalBody>
         <ModalFooter>
           <Flexbox direction="row" justify="between" className="w-full" gap="2">
-            <Button block color="danger" onClick={() => setOpen(false)}>
-              Close
-            </Button>
             <LoadingButton color="primary" block onClick={() => formRef.current?.submit()}>
               Save Changes
             </LoadingButton>
+            <Button block color="secondary" onClick={() => setOpen(false)}>
+              Close
+            </Button>
           </Flexbox>
         </ModalFooter>
       </CSRFForm>

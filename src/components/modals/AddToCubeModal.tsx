@@ -5,12 +5,12 @@ import UserContext from 'contexts/UserContext';
 import CardDetails from 'datatypes/CardDetails';
 import User from 'datatypes/User';
 import useLocalStorage from 'hooks/useLocalStorage';
-import { csrfFetch } from 'utils/CSRF';
 import { Modal, ModalBody, ModalHeader, ModalFooter } from 'components/base/Modal';
 import Button from 'components/base/Button';
 import Select from 'components/base/Select';
 import Alert from 'components/base/Alert';
 import { Flexbox } from '../base/Layout';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 export interface AddToCubeModalProps {
   card: CardDetails;
@@ -32,6 +32,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   hideAnalytics = false,
   cubeContext,
 }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const user: User | null = useContext(UserContext);
   const cubes: { id: string; name: string }[] = user?.cubes ?? [];
 
@@ -93,7 +94,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
                 Analytics
               </Button>
             )}
-            <Button block color="danger" onClick={() => setOpen(false)}>
+            <Button block color="secondary" onClick={() => setOpen(false)}>
               Close
             </Button>
           </Flexbox>
@@ -145,7 +146,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
               Analytics
             </Button>
           )}
-          <Button block color="danger" onClick={() => setOpen(false)}>
+          <Button block color="secondary" onClick={() => setOpen(false)}>
             Close
           </Button>
         </Flexbox>

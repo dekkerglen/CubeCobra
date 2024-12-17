@@ -87,7 +87,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
           })}
         >
           <Banner className="px-2" />
-          <Flexbox direction="row" className="px-4" justify="between" wrap="wrap">
+          <Flexbox direction="row" className="px-2" justify="between" wrap="wrap">
             <CubeSubtitle />
             <Tabs
               tabs={tabs.map((tab) => ({

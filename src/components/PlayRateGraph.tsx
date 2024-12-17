@@ -9,15 +9,15 @@ import {
   Tooltip,
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-import { csrfFetch } from 'utils/CSRF';
 import { formatDate } from 'utils/Date';
 import { Col, Row, Flexbox } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import Select from 'components/base/Select';
 import History, { CubeType } from 'datatypes/History';
 import useQueryParam from 'hooks/useQueryParam';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface PlayRateGraphProps {
   defaultHistories: History[];
@@ -28,6 +28,7 @@ interface PlayRateGraphProps {
 ChartJS.register(CategoryScale, TimeScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
 const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
   const [history, setHistory] = useState<History[]>(defaultHistories);
   const [zoom, setZoom] = useState('year');

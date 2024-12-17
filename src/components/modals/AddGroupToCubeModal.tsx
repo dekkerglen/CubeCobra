@@ -1,9 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import LoadingButton from 'components/LoadingButton';
 import CardDetails from 'datatypes/CardDetails';
 import CubePropType from 'datatypes/Cube';
-import { csrfFetch } from 'utils/CSRF';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from 'components/base/Modal';
 import Button from 'components/base/Button';
 import Alert from 'components/base/Alert';
@@ -11,6 +10,7 @@ import CardList from 'components/base/CardList';
 import Select from 'components/base/Select';
 import { detailsToCard } from 'utils/Card';
 import { Flexbox } from '../base/Layout';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 export interface AddGroupToCubeModalProps {
   cards: CardDetails[];
@@ -26,6 +26,7 @@ interface AlertProps {
 }
 
 const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen, setOpen, cubes, packid = null }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [selectedCube, setSelectedCube] = useState<string | null>(cubes && cubes.length > 0 ? cubes[0].id : null);
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
   const [board, setBoard] = useState<'mainboard' | 'maybeboard'>('mainboard');
@@ -68,7 +69,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
           <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
         </ModalBody>
         <ModalFooter>
-          <Button block color="danger" onClick={() => setOpen(false)}>
+          <Button block color="secondary" onClick={() => setOpen(false)}>
             Close
           </Button>
         </ModalFooter>
@@ -109,7 +110,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
           <LoadingButton block loading={loadingSubmit} color="primary" onClick={() => add()}>
             Add
           </LoadingButton>
-          <Button block color="danger" onClick={() => setOpen(false)}>
+          <Button block color="secondary" onClick={() => setOpen(false)}>
             Close
           </Button>
         </Flexbox>

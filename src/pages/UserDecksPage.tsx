@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -11,7 +11,7 @@ import Draft from 'datatypes/Draft';
 import User from 'datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
-import { csrfFetch } from 'utils/CSRF';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface UserDecksPageProps {
   owner: User;
@@ -32,6 +32,7 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
   loginCallback = '/',
   lastKey,
 }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState<Draft[]>(decks);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);

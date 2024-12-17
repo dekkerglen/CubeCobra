@@ -6,11 +6,11 @@ import LoadingButton from 'components/LoadingButton';
 import CubeContext, { TAG_COLORS } from 'contexts/CubeContext';
 import { TagColor } from 'datatypes/Cube';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
-import { csrfFetch } from 'utils/CSRF';
 import { getTagColorClass } from 'utils/Util';
 import { SortableItem, SortableList } from '../DND';
 import { Card } from 'components/base/Card';
 import { GrabberIcon } from '@primer/octicons-react';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface TagColorRowProps {
   tag: string;
@@ -45,6 +45,7 @@ interface TagColorsModalProps {
 }
 
 const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const { tagColors, setTagColors, showTagColors, updateShowTagColors, canEdit, cube } = useContext(CubeContext);
   const [loading, setLoading] = useState(false);
   const [modalColors, setModalColors] = useState([...tagColors]);

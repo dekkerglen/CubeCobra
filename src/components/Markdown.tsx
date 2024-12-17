@@ -15,6 +15,7 @@ import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdow
 import { isInternalURL, isSamePageURL } from 'utils/Util';
 import Text from 'components/base/Text';
 import Link, { LinkProps } from 'components/base/Link';
+import { Flexbox } from './base/Layout';
 
 type AutocardLinkProps = WithAutocardProps & LinkProps;
 const AutocardLink: React.FC<AutocardLinkProps> = withAutocard(Link);
@@ -28,7 +29,7 @@ interface RenderBlockQuoteProps {
   children: ReactNode;
 }
 const renderBlockQuote: React.FC<RenderBlockQuoteProps> = (node) => (
-  <div className="bg-gray-800 mb-4 p-4">{node.children}</div>
+  <div className="border border-border background-background-secondary mb-4 p-4">{node.children}</div>
 );
 
 interface RenderImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {}
@@ -154,7 +155,11 @@ interface RenderCardrowProps {
   children: ReactNode;
 }
 const renderCardrow: React.FC<RenderCardrowProps> = (node) => (
-  <div className="flex justify-start gap-2">{node.children}</div>
+  <Flexbox direction="row" justify="center">
+    <Flexbox direction="row" wrap="wrap" gap="2">
+      {node.children}
+    </Flexbox>
+  </Flexbox>
 );
 
 interface RenderH1Props {

@@ -1,13 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import CardType from 'datatypes/Card';
-import { csrfFetch } from 'utils/CSRF';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import { Card } from 'components/base/Card';
 import Select from 'components/base/Select';
 import Button from 'components/base/Button';
 import LoadingButton from 'components/LoadingButton';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const MAX_BASICS = 21;
 
@@ -21,6 +21,7 @@ export interface BasicsModalProps {
 }
 
 const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, deck, basics, cards }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [counts, setCounts] = useState<number[]>(basics.map(() => 0));
 
   const handleAddBasics = useCallback(() => {
@@ -98,7 +99,7 @@ const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, d
           <LoadingButton color="accent" onClick={calculateBasics} block>
             Calculate
           </LoadingButton>
-          <Button color="danger" onClick={() => setOpen(false)} block>
+          <Button color="secondary" onClick={() => setOpen(false)} block>
             Close
           </Button>
         </Flexbox>

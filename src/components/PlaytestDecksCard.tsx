@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import { Card, CardFooter, CardHeader } from 'components/base/Card';
 import DeckPreview from 'components/DeckPreview';
 import Draft from 'datatypes/Draft';
 import Text from 'components/base/Text';
 import { Flexbox } from './base/Layout';
 import Pagination from './base/Pagination';
-import { csrfFetch } from 'utils/CSRF';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface PlaytestDecksCardProps {
   decks: Draft[];
@@ -16,6 +16,7 @@ interface PlaytestDecksCardProps {
 const PAGE_SIZE = 25;
 
 const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks, decksLastKey, cubeId }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [page, setPage] = React.useState(0);
   const [items, setItems] = React.useState<Draft[]>(decks);
   const [lastKey, setLastKey] = useState(decksLastKey);
@@ -26,7 +27,7 @@ const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks, decksLastK
 
   const fetchMore = useCallback(async () => {
     setLoading(true);
-    const response = await csrfFetch(`/cube/getmoredecks`, {
+    const response = await csrfFetch(`/cube/getmoredecks/${cubeId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

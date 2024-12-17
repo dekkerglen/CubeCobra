@@ -44,6 +44,9 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
     reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';
     reactProps.domain = process.env.DOMAIN;
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
+    if (res.locals.csrfToken) {
+      reactProps.csrfToken = res.locals.csrfToken;
+    }
 
     if (!options.metadata) {
       options.metadata = [];

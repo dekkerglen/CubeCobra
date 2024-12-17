@@ -90,12 +90,12 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" justify="between" gap="2" className="w-full">
-          <Button block color="danger" onClick={() => setOpen(false)}>
-            Close
-          </Button>
           <LoadingButton block color="primary" onClick={() => formRef.current?.submit()}>
             Save Changes
           </LoadingButton>
+          <Button block color="secondary" onClick={() => setOpen(false)}>
+            Close
+          </Button>
         </Flexbox>
       </ModalFooter>
     </Modal>

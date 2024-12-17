@@ -264,35 +264,17 @@ img.mana-symbol-sm {
 /* Medium screens (md) */
 @media (min-width: 768px) {
   .table-view-col {
-    width: 20%;
-		min-width: 20%;
-		max-width: 20%;
+    width: 25%;
+		min-width: 25%;
+		max-width: 25%;
   }
 }
 
 /* Large screens (lg) */
 @media (min-width: 1024px) {
   .table-view-col {
-    width: 12%;
-		min-width: 12%;
+    width: 12.5%;
+		min-width: 12.5%;
 		max-width: 12.5%;
   }
-}
-
-/* Extra large screens (xl) */
-@media (min-width: 1280px) {
-  .table-view-col {
-    width: 11.11%;
-		min-width: 11.11%;
-		max-width: 11.11%;
-  }
-}
-
-/* Extra extra large screens (xxl) */
-@media (min-width: 1536px) {
-	.table-view-col {
-    width: 10%;
-		min-width: 10%;
-		max-width: 10%;
-	}
 }

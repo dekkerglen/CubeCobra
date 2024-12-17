@@ -122,7 +122,7 @@ router.get('/blogpost/:id', async (req, res) => {
   }
 });
 
-router.delete('/remove/:id', ensureAuth, async (req, res) => {
+router.get('/remove/:id', ensureAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const blog = await Blog.getById(id);
@@ -135,12 +135,10 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
     await Blog.delete(id);
 
     req.flash('success', 'Post Removed');
-    return res.send('Success');
+    return redirect(req, res, `/cube/blog/${encodeURIComponent(blog.cube)}`);
   } catch {
-    return res.status(500).send({
-      success: 'false',
-      message: 'Error deleting post.',
-    });
+    req.flash('danger', 'Error deleting post.');
+    return redirect(req, res, '/404');
   }
 });
 

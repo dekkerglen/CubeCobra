@@ -8,9 +8,9 @@ import DraftLocation, { locations, addCard, removeCard } from 'drafting/DraftLoc
 import { draftStateToTitle, getCardCol, setupPicks } from 'drafting/draftutil';
 import useMount from 'hooks/UseMount';
 import { cardCmc, cardType, makeSubtitle } from 'utils/Card';
-import { callApi } from 'utils/CSRF';
 import Draft from 'datatypes/Draft';
 import { DndContext } from '@dnd-kit/core';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CubeDraftProps {
   draft: Draft;
@@ -20,7 +20,7 @@ interface CubeDraftProps {
   };
 }
 
-const fetchPicks = async (draft: Draft, seat: number) => {
+const fetchPicks = async (callApi: any, draft: Draft, seat: number) => {
   const res = await callApi('/multiplayer/getpicks', {
     draft: draft.id,
     seat,
@@ -35,7 +35,7 @@ const fetchPicks = async (draft: Draft, seat: number) => {
   return picks;
 };
 
-const fetchPack = async (draft: Draft, seat: number) => {
+const fetchPack = async (callApi: any, draft: Draft, seat: number) => {
   const res = await callApi('/multiplayer/getpack', {
     draft: draft.id,
     seat,
@@ -49,6 +49,7 @@ let staticPicks: any[][][];
 let seat = 0;
 
 const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
+  const { callApi } = useContext(CSRFContext);
   const [packQueue, setPackQueue] = useState<any[]>([]);
   const [pack, setPack] = useState<number[]>([]);
   const [mainboard, setMainboard] = useState<any[][][]>(setupPicks(2, 8));
@@ -154,8 +155,8 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
         setLoading(false);
       });
 
-      setMainboard(await fetchPicks(draft, seat));
-      updatePack(await fetchPack(draft, seat));
+      setMainboard(await fetchPicks(callApi, draft, seat));
+      updatePack(await fetchPack(callApi, draft, seat));
       setLoading(false);
 
       if (seat === 0) {

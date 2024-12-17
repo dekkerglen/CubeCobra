@@ -22,14 +22,16 @@ const TypeRow: React.FC<TypeRowProps> = ({ cardType, group }) => {
       <Text semibold sm>
         {cardType} ({group.length})
       </Text>
-      <Flexbox direction="row" wrap="wrap" gap="2">
+      <Flexbox direction="row" wrap="wrap">
         {cmc2Labels.map((cmc) => (
           <div key={cmc} style={{ width: `${100 / cmc2Labels.length}%` }}>
-            <TableViewCardGroup
-              heading={`${cmc} (${(sorted[cmc] || []).length})`}
-              cards={sorted[cmc] || []}
-              sort="Unsorted"
-            />
+            <div className="pr-1">
+              <TableViewCardGroup
+                heading={`${cmc} (${(sorted[cmc] || []).length})`}
+                cards={sorted[cmc] || []}
+                sort="Unsorted"
+              />
+            </div>
           </div>
         ))}
       </Flexbox>

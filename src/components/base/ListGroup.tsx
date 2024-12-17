@@ -1,6 +1,7 @@
-import React, { FC, ReactNode } from 'react';
+import React, { FC, ReactNode, useContext } from 'react';
 import classNames from 'classnames';
 import { Flexbox } from './Layout';
+import UserContext from 'contexts/UserContext';
 
 interface ListGroupProps {
   children: ReactNode;
@@ -35,12 +36,15 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
   first = false,
   ...props
 }) => {
+  const user = useContext(UserContext);
+  const theme = user?.theme || 'default';
+
   const itemClasses = classNames(
     'px-1 py-[3px] transition-all duration-200 truncate text-xs',
     {
       'font-semibold centered border-b border-border-secondary rounded-t-md': heading,
-      'font-light': !heading,
-      'cursor-pointer hover:brightness-125': onClick || onAuxClick,
+      'cursor-pointer hover:brightness-125': (onClick || onAuxClick) && theme === 'dark',
+      'cursor-pointer hover:brightness-90': (onClick || onAuxClick) && theme === 'default',
       'rounded-b-md': last,
       'rounded-t-md': first,
     },

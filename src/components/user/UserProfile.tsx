@@ -9,10 +9,11 @@ import MtgImage from 'components/MtgImage';
 import TextEntry from 'components/TextEntry';
 import UserContext from 'contexts/UserContext';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { csrfFetch } from 'utils/CSRF';
 import Image from 'datatypes/Image';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const UserProfile: React.FC = () => {
+  const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
   const [markdown, setMarkdown] = useState('');
   const [username, setUsername] = useState(user?.username);

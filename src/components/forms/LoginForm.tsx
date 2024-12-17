@@ -34,6 +34,7 @@ const LoginForm: React.FC<LoginModalProps> = ({ loginCallback, formRef }) => {
         link={{ href: '/user/lostpassword', text: 'Forgot Password?' }}
         value={formData.password}
         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        onEnter={() => formRef.current?.submit()}
       />
     </CSRFForm>
   );

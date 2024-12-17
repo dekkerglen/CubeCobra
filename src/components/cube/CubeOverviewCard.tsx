@@ -20,9 +20,9 @@ import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
 import useAlerts from 'hooks/UseAlerts';
-import { csrfFetch } from 'utils/CSRF';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 import User from 'datatypes/User';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 const FollowersModalLink = withModal(Link, FollowersModal);
 const CubeIdModalLink = withModal(Link, CubeIdModal);
@@ -47,6 +47,7 @@ interface CubeOverviewCardProps {
 }
 
 const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwned, pricePurchase, followers }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const { cube } = useContext(CubeContext);
   const user = useContext(UserContext);
   const [followedState, setFollowedState] = useState(followed);
@@ -91,9 +92,10 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                 <TextBadge name="Cube ID">
                   <CubeIdModalLink
                     className="text-xs"
-                    onClick={() => {
-                      navigator.clipboard.writeText(getCubeId(cube));
-                      addAlert('success', 'Cube ID copied to clipboard.');
+                    modalprops={{
+                      shortId: cube.shortId,
+                      fullID: cube.id,
+                      alert: addAlert,
                     }}
                   >
                     {getCubeId(cube)}
@@ -167,6 +169,13 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                   ))}
               </Flexbox>
             </CardBody>
+          </Card>
+        </Col>
+        <Col xs={12} md={6} lg={7} xl={8}>
+          <Card>
+            <CardBody>
+              <Markdown markdown={cube.description || ''} />
+            </CardBody>
             {cube.tags && cube.tags.length > 0 && (
               <CardFooter>
                 <Flexbox direction="row" gap="2" wrap="wrap">
@@ -176,13 +185,6 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                 </Flexbox>
               </CardFooter>
             )}
-          </Card>
-        </Col>
-        <Col xs={12} md={6} lg={7} xl={8}>
-          <Card>
-            <CardBody>
-              <Markdown markdown={cube.description || ''} />
-            </CardBody>
           </Card>
         </Col>
       </Row>

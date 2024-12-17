@@ -41,7 +41,7 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, login
               </Flexbox>
             </CardHeader>
             <CardBody>
-              <CardGrid cards={pack} xs={3} md={5} />
+              <CardGrid cards={pack} xs={3} md={5} lg={8} hrefFn={(card) => `/tool/card/${card.cardID}`} />
             </CardBody>
           </Card>
         </Flexbox>
