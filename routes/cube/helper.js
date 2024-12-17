@@ -195,7 +195,7 @@ function writeCard(res, card, maybe) {
   } else {
     imgBackUrl = '';
   }
-  res.write(`"${name.replace(/"/, '""')}",`);
+  res.write(`"${name.replaceAll(/"/g, '""')}",`);
   res.write(`${card.cmc || cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
   res.write(`${(card.colors || colorIdentity || []).join('')},`);
@@ -223,38 +223,29 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.setHeader('Content-disposition', `attachment; filename=${fileName.replace(/\W/g, '')}.txt`);
   res.setHeader('Content-type', 'text/plain');
   res.charset = 'UTF-8';
-  const main = {};
-  for (const cardIndex of mainCards.flat()) {
-    const cardID = cardIndex.cardID || cards[cardIndex].cardID;
-    const { name } = carddb.cardFromId(cardID);
-    if (main[name]) {
-      main[name] += 1;
-    } else {
-      main[name] = 1;
-    }
-  }
-  for (const [key, value] of Object.entries(main)) {
-    const name = key.replace(' // ', '/');
-    res.write(`${value} ${name}\r\n`);
-  }
-  res.write('\r\n\r\n');
 
-  const side = {};
-  for (const card of sideCards.flat()) {
-    if (card) {
-      if (side[card.name]) {
-        side[card.name] += 1;
-      } else {
-        side[card.name] = 1;
-      }
-    }
-  }
-  for (const [key, value] of Object.entries(side)) {
-    const name = key.replace(' // ', '/');
-    res.write(`${value} ${name}\r\n`);
-  }
+  exportBoardToMtgo(res, mainCards, cards)
+  res.write('\r\n\r\n');
+  exportBoardToMtgo(res, sideCards, cards)
   return res.end();
 };
+
+const exportBoardToMtgo = (res, boardCards, allCards) => {
+  const cardSet = {};
+  for (const cardIndex of boardCards.flat()) {
+    const cardID = cardIndex.cardID || allCards[cardIndex].cardID;
+    const { name } = carddb.cardFromId(cardID);
+    if (cardSet[name]) {
+      cardSet[name] += 1;
+    } else {
+      cardSet[name] = 1;
+    }
+  }
+  for (const [key, value] of Object.entries(cardSet)) {
+    const name = key.replace(' // ', '/');
+    res.write(`${value} ${name}\r\n`);
+  }
+}
 
 const shuffle = (a) => {
   for (let i = a.length - 1; i > 0; i--) {

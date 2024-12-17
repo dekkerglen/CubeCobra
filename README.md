@@ -18,6 +18,11 @@ Node 20
 
 NodeJS: https://nodejs.org/en/download/
 
+After installing node, ensure you are running Yarn version 4.4.0 to match the project's package.json. With a terminal do:
+- Install yarn via npm to start: `npm install -g yarn`
+- Upgrade to newest yarn (also known as Berry): `yarn set version 4.4.0`
+- Validate correct version is installed: `yarn --version`
+
 ### Redis
 
 Redis Server:
@@ -42,6 +47,22 @@ You may follow the installation guidelines from the localstack site. The recomme
 [docker]: https://docs.docker.com/desktop/install/mac-install/
 
 Once localstack is installed, you can start the server in the background with the CLI: `localstack start --detached`. You can see the status with `localstack status`.
+
+*Note*: Localstack community edition (eg. without a pro account) does not persist anything to disk once the container is stopped.
+
+#### AWSLocal CLI (for Localstack)
+
+The awslocal CLI used by this project (https://github.com/localstack/awscli-local) is required for initial setup of the localstack resources used by Cube Cobra.
+
+First install Python (suggest Python 3) and pip for your operating system. Sample instructions for a linux environment are:
+- Ensure Virtual environment package is installed: `sudo apt-get install python3-venv`
+- Create a virtual environment in your home directory: `python3 -m venv ~/venv`
+- Add the virtual environment to your path: `export PATH=~/venv/bin:$PATH`
+- Also add to your startup profile script (eg. bash profile) the activation of the virtual environment: `source ~/venv/bin/activate`
+- Install awslocal: `pip3 install "awscli-local[ver1]"`
+- Validate install: `awslocal --version`
+  - Will pass and print some "aws-cli" version (likely 1.X) for the system
+
 
 ### Code Editor (IDE)
 
@@ -110,7 +131,7 @@ You can run a local instance of Cube Cobra against real AWS resources rather tha
 Here is a table on how to fill out the env vars:
 
 | Variable Name          | Description                                                                                  | Required? |
-| ---------------------- | -------------------------------------------------------------------------------------------- | --------- | --- |
+| ---------------------- | -------------------------------------------------------------------------------------------- | --------- |
 | AWS_ACCESS_KEY_ID      | The AWS access key for your account.                                                         | Yes       |
 | AWS_ENDPOINT           | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.        |           |
 | AWS_LOG_GROUP          | The name of the AWS CloudWatch log group to use.                                             | Yes       |
@@ -124,7 +145,7 @@ Here is a table on how to fill out the env vars:
 | DYNAMO_PREFIX          | The prefix to use for DynamoDB tables. You can leave this as the default value               | Yes       |
 | EMAIL_CONFIG_PASSWORD  | The password for the email account to use for sending emails.                                |           |
 | EMAIL_CONFIG_USERNAME  | The username for the email account to use for sending emails.                                |           |
-| ENV                    | The environment to run Cube Cobra in.                                                        | Yes       | \   |
+| ENV                    | The environment to run Cube Cobra in.                                                        | Yes       |
 | NITROPAY_ENABLED       | Whether or not to enable NitroPay, our ad provider.                                          |           |
 | NODE_ENV               | The environment to run Cube Cobra in.                                                        | Yes       |
 | PATREON_CLIENT_ID      | The client ID for the Patreon OAuth app.                                                     |           |
