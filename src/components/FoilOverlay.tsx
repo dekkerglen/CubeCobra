@@ -6,11 +6,13 @@ export interface FoilOverlayProps {
   wrapperTag?: ElementType;
   finish?: string;
   card: Card;
+  innerRef?: React.Ref<any>;
 }
 
 const FoilOverlay = <T extends ElementType>(Tag: T) => {
   const FoilOverlayComponent: React.FC<ComponentProps<T> & FoilOverlayProps> = ({
     wrapperTag: WrapperTag = 'div',
+    innerRef,
     ...props
   }) => {
     let finish = 'Non-foil';
@@ -21,11 +23,16 @@ const FoilOverlay = <T extends ElementType>(Tag: T) => {
     }
 
     const Result = (
-      <WrapperTag className="position-relative">
+      <WrapperTag className="relative">
+        <Tag ref={innerRef} {...(props as any)} />
         {finish === 'Foil' && (
-          <img src="/content/foilOverlay.png" className="foilOverlay card-border" width="100%" alt="Foil overlay" />
+          <img
+            src="/content/foilOverlay.png"
+            className="absolute inset-0 w-full h-full foilOverlay card-border"
+            width="100%"
+            alt="Foil overlay"
+          />
         )}
-        <Tag {...(props as any)} />
       </WrapperTag>
     );
     return Result;

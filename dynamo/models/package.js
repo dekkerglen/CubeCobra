@@ -57,11 +57,8 @@ const hydrate = async (pack) => {
 
   pack.owner = await User.getById(pack.owner);
   pack.cards = pack.cards.map((c) => {
-    if (c.id) {
+    if (c.scryfall_id) {
       return c;
-    }
-    if (c.oracle_id) {
-      return carddb.cardFromId(carddb.oracleToId[c.oracle_id][0]);
     }
     return carddb.cardFromId(c);
   });
@@ -75,11 +72,8 @@ const batchHydrate = async (packs) => {
   packs.forEach((pack) => {
     pack.owner = owners.find((owner) => owner.id === pack.owner);
     pack.cards = pack.cards.map((c) => {
-      if (c.id) {
+      if (c.scryfall_id) {
         return c;
-      }
-      if (c.oracle_id) {
-        return carddb.cardFromId(carddb.oracleToId[c.oracle_id][0]);
       }
       return carddb.cardFromId(c);
     });
@@ -99,12 +93,8 @@ module.exports = {
 
     if (document.cards) {
       document.cards = document.cards.map((card) => {
-        if (card.id) {
-          return card.id;
-        }
-
-        if (carddb.oracle_id) {
-          return carddb.oracleToId[carddb.oracle_id][0];
+        if (card.scryfall_id) {
+          return card.scryfall_id;
         }
 
         return card;
@@ -136,14 +126,30 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
-      Limit: 10,
+      limit: 36,
     };
+    
+    if (keywords) {
+      const words = keywords ? keywords.toLowerCase().split(' ') : null;
+
+      // all words must exist in the keywords
+      query.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');
+
+      query.ExpressionAttributeNames = {
+        ...query.ExpressionAttributeNames,
+        '#keywords': FIELDS.KEYWORDS,
+      };
+
+      query.ExpressionAttributeValues = {
+        ...query.ExpressionAttributeValues,
+        ...words.reduce((acc, word) => {
+          acc[`:${word}`] = word;
+          return acc;
+        }, {}),
+      };
+    }
 
     const result = await client.query(query);
-
-    if (keywords) {
-      result.Items = result.Items.filter((item) => item[FIELDS.KEYWORDS].some((keyword) => keywords.includes(keyword)));
-    }
 
     return {
       items: await batchHydrate(result.Items),
@@ -162,14 +168,30 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
-      Limit: 10,
+      limit: 36,
     };
 
-    const result = await client.query(query);
+    if (keywords) {
+      const words = keywords ? keywords.toLowerCase().split(' ') : null;
 
-    if (keywords && keywords.length > 0) {
-      result.Items = result.Items.filter((item) => item[FIELDS.KEYWORDS].some((keyword) => keywords.includes(keyword)));
+      // all words must exist in the keywords
+      query.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');
+
+      query.ExpressionAttributeNames = {
+        ...query.ExpressionAttributeNames,
+        '#keywords': FIELDS.KEYWORDS,
+      };
+
+      query.ExpressionAttributeValues = {
+        ...query.ExpressionAttributeValues,
+        ...words.reduce((acc, word) => {
+          acc[`:${word}`] = word;
+          return acc;
+        }, {}),
+      };
     }
+
+    const result = await client.query(query);
 
     return {
       items: await batchHydrate(result.Items),
@@ -187,7 +209,7 @@ module.exports = {
         ':owner': owner,
       },
       ExclusiveStartKey: lastKey,
-      limit: 10,
+      limit: 100,
     };
 
     const result = await client.query(query);

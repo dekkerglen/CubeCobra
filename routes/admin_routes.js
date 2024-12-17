@@ -14,7 +14,7 @@ const Comment = require('../dynamo/models/comment');
 const Content = require('../dynamo/models/content');
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
 
@@ -37,7 +37,7 @@ router.get('/dashboard', ensureAdmin, async (req, res) => {
 });
 
 router.get('/comments', async (req, res) => {
-  return res.redirect('/admin/notices');
+  return redirect(req, res, '/admin/notices');
 });
 
 router.get('/reviewcontent', ensureAdmin, async (req, res) => {
@@ -55,7 +55,7 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
 
   if (document.status !== Content.STATUS.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
-    return res.redirect('/admin/reviewcontent');
+    return redirect(req, res, '/admin/reviewcontent');
   }
 
   document.status = Content.STATUS.PUBLISHED;
@@ -108,7 +108,7 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
 
   req.flash('success', `Content published: ${document.title}`);
 
-  return res.redirect('/admin/reviewcontent');
+  return redirect(req, res, '/admin/reviewcontent');
 });
 
 router.get('/removereview/:id', ensureAdmin, async (req, res) => {
@@ -116,7 +116,7 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
 
   if (document.status !== Content.STATUS.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
-    return res.redirect('/admin/reviewcontent');
+    return redirect(req, res, '/admin/reviewcontent');
   }
 
   document.status = Content.STATUS.DRAFT;
@@ -169,7 +169,7 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
 
   req.flash('success', `Content declined: ${document.title}`);
 
-  return res.redirect('/admin/reviewcontent');
+  return redirect(req, res, '/admin/reviewcontent');
 });
 
 router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
@@ -179,7 +179,7 @@ router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
   await Notice.put(report);
 
   req.flash('success', 'This report has been ignored.');
-  return res.redirect('/admin/notices');
+  return redirect(req, res, '/admin/notices');
 });
 
 router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
@@ -196,7 +196,7 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   await Comment.put(comment);
 
   req.flash('success', 'This comment has been deleted.');
-  return res.redirect('/admin/notices');
+  return redirect(req, res, '/admin/notices');
 });
 
 router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
@@ -245,7 +245,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   });
 
   req.flash('success', `Application for ${application.user.username} approved.`);
-  return res.redirect(`/admin/notices`);
+  return redirect(req, res, `/admin/notices`);
 });
 
 router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
@@ -286,13 +286,13 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   });
 
   req.flash('danger', `Application declined.`);
-  return res.redirect(`/admin/notices`);
+  return redirect(req, res, `/admin/notices`);
 });
 
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
-  const featured = await FeaturedQueue.querySortedByDate();
+  const featured = await FeaturedQueue.querySortedByDate(null, 10000);
   const cubes = await Cube.batchGet(featured.items.map((f) => f.cube));
-  const sortedCubes = featured.items.map((f) => cubes.find((c) => c.id === f.cube));
+  const sortedCubes = featured.items.map((f) => cubes.find((c) => c.id === f.cube)).filter((c) => c);
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes: sortedCubes,
@@ -312,7 +312,7 @@ router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
 
   if (rotate.success === 'false') {
     req.flash('danger', 'featured Cube rotation failed!');
-    return res.redirect('/admin/featuredcubes');
+    return redirect(req, res, '/admin/featuredcubes');
   }
 
   const olds = await User.batchGet(rotate.removed.map((f) => f.ownerID));
@@ -329,14 +329,14 @@ router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
     );
   }
   await Promise.all(notifications);
-  return res.redirect('/admin/featuredcubes');
+  return redirect(req, res, '/admin/featuredcubes');
 });
 
 router.post(
-  '/featuredcubes/setperiod/:days',
+  '/featuredcubes/setperiod',
   ensureAdmin,
   util.wrapAsyncApi(async (req, res) => {
-    const days = Number.parseInt(req.params.days, 10);
+    const days = Number.parseInt(req.body.days, 10);
     if (!Number.isInteger(days)) {
       return res.status(400).send({
         success: 'false',
@@ -354,17 +354,17 @@ router.post(
 router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
-    return res.redirect('/admin/featuredcubes');
+    return redirect(req, res, '/admin/featuredcubes');
   }
   const cube = await Cube.getById(req.body.cubeId);
   if (!cube) {
     req.flash('danger', 'Cube does not exist');
-    return res.redirect('/admin/featuredcubes');
+    return redirect(req, res, '/admin/featuredcubes');
   }
 
   if (cube.isPrivate) {
     req.flash('danger', 'Cannot feature private cube');
-    return res.redirect('/admin/featuredcubes');
+    return redirect(req, res, '/admin/featuredcubes');
   }
 
   const update = await fq.updateFeatured(async (featured) => {
@@ -377,7 +377,7 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
 
   if (!update.ok) {
     req.flash('danger', update.message);
-    return res.redirect('/admin/featuredcubes');
+    return redirect(req, res, '/admin/featuredcubes');
   }
 
   await util.addNotification(
@@ -386,13 +386,13 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     '/user/account?nav=patreon',
     'An admin added your cube to the featured cubes queue.',
   );
-  return res.redirect('/admin/featuredcubes');
+  return redirect(req, res, '/admin/featuredcubes');
 });
 
 router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
   if (!req.body.cubeId) {
     req.flash('Cube ID not sent');
-    return res.redirect('/admin/featuredcubes');
+    return redirect(req, res, '/admin/featuredcubes');
   }
 
   const update = await fq.updateFeatured(async (featured) => {
@@ -407,7 +407,7 @@ router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
   });
   if (!update.ok) {
     req.flash('danger', update.message);
-    return res.redirect('/admin/featuredcubes');
+    return redirect(req, res, '/admin/featuredcubes');
   }
 
   const [removed] = update.return;
@@ -418,7 +418,7 @@ router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
     '/user/account?nav=patreon',
     'An admin removed your cube from the featured cubes queue.',
   );
-  return res.redirect('/admin/featuredcubes');
+  return redirect(req, res, '/admin/featuredcubes');
 });
 
 router.post(
@@ -429,7 +429,7 @@ router.post(
   body('to', 'Cannot move cube to featured position').isInt({ gt: 2 }).toInt(),
   flashValidationErrors,
   async (req, res) => {
-    if (!req.validated) return res.redirect('/admin/featuredcubes');
+    if (!req.validated) return redirect(req, res, '/admin/featuredcubes');
     let { from, to } = req.body;
     // indices are sent in human-readable form (indexing from 1)
     from -= 1;
@@ -446,7 +446,7 @@ router.post(
     if (!update.ok) req.flash('danger', update.message);
     else req.flash('success', 'Successfully moved cube');
 
-    return res.redirect('/admin/featuredcubes');
+    return redirect(req, res, '/admin/featuredcubes');
   },
 );
 

@@ -9,7 +9,7 @@ const path = require('path');
 const { isCubeListed } = require('../serverjs/cubefn');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 
 // Bring in models
 const User = require('../dynamo/models/user');
@@ -23,7 +23,7 @@ const Draft = require('../dynamo/models/draft');
 
 const router = express.Router();
 
-const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
+const { ensureAuth, csrfProtection, flashValidationErrors, recaptcha } = require('./middleware');
 
 // For consistency between different forms, validate username through this function.
 const usernameValid = [
@@ -51,7 +51,7 @@ router.get('/notification/:id', ensureAuth, async (req, res) => {
 
     if (!notification) {
       req.flash('danger', 'Not Found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     if (notification.status === Notification.STATUS.UNREAD) {
@@ -59,7 +59,7 @@ router.get('/notification/:id', ensureAuth, async (req, res) => {
       await Notification.update(notification);
     }
 
-    return res.redirect(notification.url);
+    return redirect(req, res, notification.url);
   } catch (err) {
     req.logger.error(err.message, err.stack);
     return res.status(500).send({
@@ -71,14 +71,21 @@ router.get('/notification/:id', ensureAuth, async (req, res) => {
 
 router.post('/clearnotifications', ensureAuth, async (req, res) => {
   try {
-    const notifications = await Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD);
+    let items, lastKey;
 
-    await Notification.batchPut(
-      notifications.items.map((notification) => ({
-        ...notification,
-        status: Notification.STATUS.READ,
-      })),
-    );
+    do {
+      const result = await Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD, lastKey);
+
+      items = result.items;
+      lastKey = result.lastKey;
+
+      await Notification.batchPut(
+        items.map((notification) => ({
+          ...notification,
+          status: Notification.STATUS.READ,
+        })),
+      );
+    } while (lastKey);
 
     return res.status(200).send({
       success: 'true',
@@ -103,7 +110,7 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
     if (!other) {
       req.flash('danger', 'User not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     if (!other.following.some((id) => id === user.id)) {
@@ -117,7 +124,7 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
     await User.batchPut([other, user]);
 
-    return res.redirect(`/user/view/${req.params.id}`);
+    return redirect(req, res, `/user/view/${req.params.id}`);
   } catch (err) {
     req.logger.error(err.message, err.stack);
     return res.status(500).send({
@@ -133,7 +140,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 
     if (!other) {
       req.flash('danger', 'User not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     other.following = other.following.filter((id) => req.user.id !== id);
@@ -141,7 +148,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 
     await User.batchPut([user, other]);
 
-    return res.redirect(`/user/view/${req.params.id}`);
+    return redirect(req, res, `/user/view/${req.params.id}`);
   } catch (err) {
     req.logger.error(err.message, err.stack);
     return res.status(500).send({
@@ -210,7 +217,7 @@ router.post(
       });
 
       req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
-      return res.redirect('/user/lostpassword');
+      return redirect(req, res, '/user/lostpassword');
     } catch (err) {
       return util.handleRouteError(req, res, err, `/user/lostpassword`);
     }
@@ -221,7 +228,7 @@ router.get('/passwordreset/:id', async (req, res) => {
   const document = await PasswordReset.getById(req.params.id);
   if (!document || Date.now().valueOf() > document.date + 6 * 60 * 60 * 1000) {
     req.flash('danger', 'Password recovery link expired');
-    return res.redirect('/');
+    return redirect(req, res, '/');
   }
   return render(req, res, 'PasswordResetPage', { code: req.params.id });
 });
@@ -269,7 +276,7 @@ router.post(
           try {
             await User.update(user);
             req.flash('success', 'Password updated successfully');
-            return res.redirect('/user/login');
+            return redirect(req, res, '/user/login');
           } catch (err6) {
             return util.handleRouteError(req, res, err6, `/`);
           }
@@ -303,6 +310,7 @@ router.post(
     }),
     ...usernameValid,
   ],
+  recaptcha,
   flashValidationErrors,
   async (req, res) => {
     const email = req.body.email.toLowerCase();
@@ -439,7 +447,7 @@ router.get('/decks/:userid', async (req, res) => {
 
     if (!user) {
       req.flash('danger', 'User not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const followers = await User.batchGet(user.following || []);
@@ -449,11 +457,22 @@ router.get('/decks/:userid', async (req, res) => {
       followers,
       following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
       decks: decks.items,
-      lastKey: decks.lastKey,
+      lastKey: decks.lastEvaluatedKey,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
+});
+
+router.post('/getmoredecks', ensureAuth, async (req, res) => {
+  const { lastKey } = req.body;
+  const decks = await Draft.getByOwner(req.user.id, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    decks: decks.items,
+    lastKey: decks.lastEvaluatedKey,
+  });
 });
 
 router.get('/notifications', ensureAuth, async (req, res) => {
@@ -566,23 +585,23 @@ router.post(
   flashValidationErrors,
   async (req, res) => {
     if (!req.validated) {
-      return res.redirect('/user/account');
+      return redirect(req, res, '/user/account');
     }
     const user = await User.getByIdWithSensitiveData(req.user.id);
 
     if (!user) {
       req.flash('danger', 'User not found');
-      return res.redirect('/user/account?nav=password');
+      return redirect(req, res, '/user/account?nav=password');
     }
 
     return bcrypt.compare(req.body.password, user.passwordHash, (err2, isMatch) => {
       if (!isMatch) {
         req.flash('danger', 'Password is incorrect');
-        return res.redirect('/user/account?nav=password');
+        return redirect(req, res, '/user/account?nav=password');
       }
       if (req.body.password2 !== req.body.password3) {
         req.flash('danger', "New passwords don't match");
-        return res.redirect('/user/account?nav=password');
+        return redirect(req, res, '/user/account?nav=password');
       }
       return bcrypt.genSalt(10, (err3, salt) => {
         bcrypt.hash(req.body.password2, salt, async (err4, hash) => {
@@ -592,7 +611,7 @@ router.post(
           user.passwordHash = hash;
           await User.update(user);
           req.flash('success', 'Password updated successfully');
-          return res.redirect('/user/account?nav=password');
+          return redirect(req, res, '/user/account?nav=password');
         });
       });
     });
@@ -603,7 +622,7 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
   try {
     const { user } = req;
     if (!req.validated) {
-      return res.redirect('/user/account');
+      return redirect(req, res, '/user/account');
     }
 
     if (req.body.username.toLowerCase() !== user.username.toLowerCase()) {
@@ -611,7 +630,7 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
 
       if (userByName) {
         req.flash('danger', 'username already taken.');
-        return res.redirect('/user/account');
+        return redirect(req, res, '/user/account');
       }
     }
 
@@ -624,7 +643,7 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
     await User.update(user);
 
     req.flash('success', 'User information updated.');
-    return res.redirect('/user/account');
+    return redirect(req, res, '/user/account');
   } catch (err) {
     return util.handleRouteError(req, res, err, '/user/account');
   }
@@ -635,12 +654,12 @@ router.post('/updateemail', ensureAuth, async (req, res) => {
 
   if (emailUser && emailUser.id === req.user.id) {
     req.flash('danger', 'This is already your email.');
-    return res.redirect('/user/account');
+    return redirect(req, res, '/user/account');
   }
 
   if (emailUser) {
     req.flash('danger', 'email already taken.');
-    return res.redirect('/user/account');
+    return redirect(req, res, '/user/account');
   }
 
   const user = await User.getById(req.user.id);
@@ -649,7 +668,7 @@ router.post('/updateemail', ensureAuth, async (req, res) => {
   await User.update(user);
 
   req.flash('success', 'Your profile has been updated.');
-  return res.redirect('/user/account');
+  return redirect(req, res, '/user/account');
 });
 
 router.post('/changedisplay', ensureAuth, async (req, res) => {
@@ -697,28 +716,28 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
   const redirect = '/user/account?nav=patreon';
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
-    return res.redirect(redirect);
+    return redirect(req, res, redirect);
   }
 
   const cube = await Cube.getById(req.body.cubeId);
   if (!cube) {
     req.flash('danger', 'Cube not found');
-    return res.redirect(redirect);
+    return redirect(req, res, redirect);
   }
   if (cube.owner.id !== req.user.id) {
     req.flash('danger', 'Only an owner of a cube can add it to the queue');
-    return res.redirect(redirect);
+    return redirect(req, res, redirect);
   }
 
   if (cube.visibility === Cube.VISIBILITY.PRIVATE) {
     req.flash('danger', 'Private cubes cannot be featured');
-    return res.redirect(redirect);
+    return redirect(req, res, redirect);
   }
 
   const patron = await Patron.getById(req.user.id);
   if (!fq.canBeFeatured(patron)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');
-    return res.redirect(redirect);
+    return redirect(req, res, redirect);
   }
 
   const shouldUpdate = await fq.doesUserHaveFeaturedCube(req.user.id);
@@ -735,7 +754,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     req.flash('danger', err.message);
   }
 
-  return res.redirect(redirect);
+  return redirect(req, res, redirect);
 });
 
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
@@ -746,7 +765,7 @@ router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
   } catch (err) {
     req.flash('danger', err.message);
   }
-  return res.redirect('/user/account?nav=patreon');
+  return redirect(req, res, '/user/account?nav=patreon');
 });
 
 module.exports = router;

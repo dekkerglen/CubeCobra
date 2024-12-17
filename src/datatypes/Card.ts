@@ -1,4 +1,4 @@
-import CardDetails from 'datatypes/CardDetails';
+import CardDetails, { ColorCategory } from 'datatypes/CardDetails';
 
 export const boardTypes = ['mainboard', 'maybeboard'] as const;
 export type BoardType = (typeof boardTypes)[number];
@@ -10,7 +10,10 @@ export type BoardChanges = {
   edits: { index: number; newCard: Card; oldCard: Card }[];
 };
 
-export type Changes = Record<BoardType, BoardChanges>;
+export interface Changes {
+  mainboard?: BoardChanges;
+  maybeboard?: BoardChanges;
+}
 
 interface Card {
   index?: number;
@@ -22,7 +25,7 @@ interface Card {
   imgBackUrl?: string;
   cardID: string;
   colors?: ('W' | 'U' | 'B' | 'R' | 'G')[];
-  colorCategory?: 'w' | 'u' | 'b' | 'r' | 'g' | 'h' | 'l' | 'c' | 'm';
+  colorCategory?: ColorCategory;
   tags?: string[];
   finish?: string;
   status?: string;
@@ -32,6 +35,7 @@ interface Card {
   addedTmsp?: string;
   notes?: string;
   details?: CardDetails;
+  asfan?: number;
 }
 
 export default Card;

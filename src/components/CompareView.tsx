@@ -1,20 +1,24 @@
 import React, { useContext } from 'react';
-import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
-import AutocardListItem from 'components/AutocardListItem';
-import withCardModal from 'components/WithCardModal';
+import Text from 'components/base/Text';
+import AutocardListItem from 'components/card/AutocardListItem';
 import CubeContext from 'contexts/CubeContext';
-import Card from 'datatypes/Card';
+import CardType from 'datatypes/Card';
+import { CardDetails } from 'utils/Card';
 import { getLabels, sortIntoGroups } from 'utils/Sort';
+import { Card, CardBody } from './base/Card';
+import { Col, Flexbox, Row } from './base/Layout';
+import { ListGroup, ListGroupItem } from './base/ListGroup';
+import AddToCubeModal from './modals/AddToCubeModal';
+import withModal from './WithModal';
 
+const AutocardListItemLink = withModal(AutocardListItem, AddToCubeModal);
 export interface CompareGroupProps {
   heading: string;
-  both: Card[];
-  onlyA: Card[];
-  onlyB: Card[];
+  both: CardType[];
+  onlyA: CardType[];
+  onlyB: CardType[];
 }
-
-const CardModalLink = withCardModal(AutocardListItem);
 
 const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB }) => {
   const bothCmc = sortIntoGroups(both, 'Mana Value');
@@ -22,38 +26,57 @@ const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB
   const onlyBCmc = sortIntoGroups(onlyB, 'Mana Value');
 
   return (
-    <ListGroup className="list-outline">
-      <ListGroupItem className="list-group-heading px-0">
-        {heading}
-        <Row className="g-0">
-          <Col>({both.length})</Col>
-          <Col>({onlyA.length})</Col>
-          <Col>({onlyB.length})</Col>
-        </Row>
+    <ListGroup>
+      <ListGroupItem heading>
+        <div className="w-full">
+          <Flexbox direction="row" gap="2" justify="center">
+            <Text sm semibold>
+              {heading}
+            </Text>
+          </Flexbox>
+          <Row className="w-full">
+            <Col xs={4}>
+              <Flexbox direction="row" gap="2" justify="center">
+                <Text sm semibold>
+                  ({both.length})
+                </Text>
+              </Flexbox>
+            </Col>
+            <Col xs={4}>
+              <Flexbox direction="row" gap="2" justify="center">
+                <Text sm semibold>
+                  ({onlyA.length})
+                </Text>
+              </Flexbox>
+            </Col>
+            <Col xs={4}>
+              <Flexbox direction="row" gap="2" justify="center">
+                <Text sm semibold>
+                  ({onlyB.length})
+                </Text>
+              </Flexbox>
+            </Col>
+          </Row>
+        </div>
       </ListGroupItem>
       {getLabels(null, 'Mana Value')
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
-          <Row key={cmc} className="cmc-group g-0">
+          <Row key={cmc} gutters={0}>
             {(
               [
                 [bothCmc, 'both'],
                 [onlyACmc, 'a'],
                 [onlyBCmc, 'b'],
-              ] as [Record<string, Card[]>, string][]
+              ] as [Record<string, CardType[]>, string][]
             ).map(([cards, key]) => (
-              <Col xs="4" key={key}>
+              <Col xs={4} key={key}>
                 {(cards[cmc] || []).map((card, index) => (
-                  <CardModalLink
+                  <AutocardListItemLink
                     key={card.index}
                     card={card}
-                    altClick={() => {
-                      window.open(`/tool/card/${card.cardID}`);
-                    }}
-                    className={index === 0 ? 'cmc-group' : undefined}
-                    modalProps={{
-                      card,
-                    }}
+                    className={index === 0 ? 'border-t border-border-secondary' : undefined}
+                    modalprops={{ card: CardDetails(card) }}
                   />
                 ))}
               </Col>
@@ -64,8 +87,57 @@ const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB
   );
 };
 
+interface SummaryCardProps {
+  label: string;
+  both: number;
+  onlyA: number;
+  onlyB: number;
+}
+
+const SummaryCard: React.FC<SummaryCardProps> = ({ label, both, onlyA, onlyB }) => (
+  <>
+    <Flexbox direction="row" gap="2" justify="center">
+      <Text semibold lg>
+        {label}
+      </Text>
+    </Flexbox>
+    <Row>
+      <Col xs={4}>
+        <Flexbox direction="col" alignItems="center">
+          <Text semibold md>
+            In Both cubes
+          </Text>
+          <Text semibold md>
+            ({both})
+          </Text>
+        </Flexbox>
+      </Col>
+      <Col xs={4}>
+        <Flexbox direction="col" alignItems="center">
+          <Text semibold md>
+            Only in Base Cube
+          </Text>
+          <Text semibold md>
+            ({onlyA})
+          </Text>
+        </Flexbox>
+      </Col>
+      <Col xs={4}>
+        <Flexbox direction="col" alignItems="center">
+          <Text semibold md>
+            Only in Comparison Cube
+          </Text>
+          <Text semibold md>
+            ({onlyB})
+          </Text>
+        </Flexbox>
+      </Col>
+    </Row>
+  </>
+);
+
 export interface CompareViewProps {
-  cards: Card[];
+  cards: CardType[];
   // These fields all take oracle_ids.
   both: string[];
   onlyA: string[];
@@ -76,7 +148,7 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
   const { sortPrimary, sortSecondary, cube } = useContext(CubeContext) ?? {};
 
   const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', !!cube?.showUnsorted);
-  const columnsSecondary: Record<string, Record<string, Card[]>> = {};
+  const columnsSecondary: Record<string, Record<string, CardType[]>> = {};
   const columnCounts: Record<string, number> = {};
   const bothCounts: Record<string, number> = { total: 0 };
   const onlyACounts: Record<string, number> = { total: 0 };
@@ -123,108 +195,59 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
   const onlyBCopy = onlyB.slice(0);
 
   return (
-    <>
-      {
-        <div className="compare-header pt-2">
-          <Row>
-            <Col>
-              <h6 className="text-center">Total</h6>
-            </Col>
-          </Row>
-          <Row>
-            <Col xs="4">
-              <h6 className="text-center">
-                In Both cubes
-                <br />({bothCounts.total})
-              </h6>
-            </Col>
-            <Col xs="4">
-              <h6 className="text-center">
-                Only in Base Cube
-                <br />({onlyACounts.total})
-              </h6>
-            </Col>
-            <Col xs="4">
-              <h6 className="text-center">
-                Only in Comparison Cube
-                <br />({onlyBCounts.total})
-              </h6>
-            </Col>
-          </Row>
-        </div>
-      }
+    <Flexbox direction="col" gap="3" className="my-2">
+      <Card>
+        <CardBody>
+          <SummaryCard label="All Cards" both={both.length} onlyA={onlyA.length} onlyB={onlyB.length} />
+        </CardBody>
+      </Card>
       {getLabels(cards, sortPrimary ?? 'Unsorted', cube?.showUnsorted)
         .filter((columnLabel) => columnsPrimary[columnLabel])
         .map((columnLabel) => {
           const column = columnsSecondary[columnLabel];
           return (
-            <Row key={columnLabel}>
-              <Col xs="12" md="10" lg="8" className="mx-auto">
-                <div className="compare-header pt-2">
-                  <Row>
-                    <Col>
-                      <h6 className="text-center">{columnLabel}</h6>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col xs="4">
-                      <h6 className="text-center">
-                        In Both cubes
-                        <br />({bothCounts[columnLabel]})
-                      </h6>
-                    </Col>
-                    <Col xs="4">
-                      <h6 className="text-center">
-                        Only in Base Cube
-                        <br />({onlyACounts[columnLabel]})
-                      </h6>
-                    </Col>
-                    <Col xs="4">
-                      <h6 className="text-center">
-                        Only in Comparison Cube
-                        <br />({onlyBCounts[columnLabel]})
-                      </h6>
-                    </Col>
-                  </Row>
-                </div>
-                {getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', cube?.showUnsorted)
-                  .filter((label) => column[label])
-                  .map((label) => {
-                    const group = column[label];
-                    const bothGroup: Card[] = [];
-                    const onlyAGroup: Card[] = [];
-                    const onlyBGroup: Card[] = [];
+            <Flexbox key={columnLabel} direction="col" gap="1">
+              <Card>
+                <CardBody>
+                  <SummaryCard
+                    label={columnLabel}
+                    both={bothCounts[columnLabel]}
+                    onlyA={onlyACounts[columnLabel]}
+                    onlyB={onlyBCounts[columnLabel]}
+                  />
+                </CardBody>
+              </Card>
+              {getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', cube?.showUnsorted)
+                .filter((label) => column[label])
+                .map((label) => {
+                  const group = column[label];
+                  const bothGroup: CardType[] = [];
+                  const onlyAGroup: CardType[] = [];
+                  const onlyBGroup: CardType[] = [];
 
-                    for (const card of group) {
-                      const oracleId = card.details?.oracle_id ?? '';
-                      let index;
-                      if ((index = bothCopy.indexOf(oracleId)) >= 0) {
-                        bothGroup.push(card);
-                        bothCopy.splice(index, 1);
-                      } else if ((index = onlyACopy.indexOf(oracleId)) >= 0) {
-                        onlyAGroup.push(card);
-                        onlyACopy.splice(index, 1);
-                      } else if ((index = onlyBCopy.indexOf(oracleId)) >= 0) {
-                        onlyBGroup.push(card);
-                        onlyBCopy.splice(index, 1);
-                      }
+                  for (const card of group) {
+                    const oracleId = card.details?.oracle_id ?? '';
+                    let index;
+                    if ((index = bothCopy.indexOf(oracleId)) >= 0) {
+                      bothGroup.push(card);
+                      bothCopy.splice(index, 1);
+                    } else if ((index = onlyACopy.indexOf(oracleId)) >= 0) {
+                      onlyAGroup.push(card);
+                      onlyACopy.splice(index, 1);
+                    } else if ((index = onlyBCopy.indexOf(oracleId)) >= 0) {
+                      onlyBGroup.push(card);
+                      onlyBCopy.splice(index, 1);
                     }
+                  }
 
-                    return (
-                      <CompareGroup
-                        key={label}
-                        heading={label}
-                        both={bothGroup}
-                        onlyA={onlyAGroup}
-                        onlyB={onlyBGroup}
-                      />
-                    );
-                  })}
-              </Col>
-            </Row>
+                  return (
+                    <CompareGroup key={label} heading={label} both={bothGroup} onlyA={onlyAGroup} onlyB={onlyBGroup} />
+                  );
+                })}
+            </Flexbox>
           );
         })}
-    </>
+    </Flexbox>
   );
 };
 

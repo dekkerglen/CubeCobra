@@ -624,12 +624,14 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
       }
     } else if (cardColorIdentity(card).length === 5) {
       ret = ['Five Color'];
-    } else {
-      ret = [
-        ...cardGetLabels(card, 'Guilds', showOther),
-        ...cardGetLabels(card, 'Shards / Wedges', showOther),
-        ...cardGetLabels(card, '4+ Color', showOther),
-      ];
+    } else if (cardColorIdentity(card).length === 4) {
+      ret = [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
+    } else if (cardColorIdentity(card).length === 3) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+      ret = [SHARD_AND_WEDGE_MAP[ordered]];
+    } else if (cardColorIdentity(card).length === 2) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+      ret = [GUILD_MAP[ordered]];
     }
   } else if (sort === 'Artist') {
     ret = [cardArtist(card)];

@@ -1,27 +1,29 @@
 import React, { ReactNode, useCallback, useState } from 'react';
 
 import useLocalStorage from 'hooks/useLocalStorage';
+import { NumCols } from 'components/base/Layout';
+import Query from 'utils/Query';
 
 export interface DisplayContextValue {
   showCustomImages: boolean;
   toggleShowCustomImages: () => void;
-  compressedView: boolean;
-  toggleCompressedView: () => void;
   showMaybeboard: boolean;
   toggleShowMaybeboard: () => void;
   openCollapse: string | null;
   setOpenCollapse: React.Dispatch<React.SetStateAction<string | null>>;
+  cardsPerRow: NumCols;
+  setCardsPerRow: React.Dispatch<React.SetStateAction<NumCols>>;
 }
 
 const DisplayContext = React.createContext<DisplayContextValue>({
   showCustomImages: true,
-  compressedView: false,
   showMaybeboard: false,
   toggleShowCustomImages: () => {},
-  toggleCompressedView: () => {},
   toggleShowMaybeboard: () => {},
   openCollapse: null,
   setOpenCollapse: () => {},
+  cardsPerRow: 8,
+  setCardsPerRow: () => {},
 });
 
 interface DisplayContextProviderProps {
@@ -31,19 +33,14 @@ interface DisplayContextProviderProps {
 
 export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ cubeID, ...props }) => {
   const [showCustomImages, setShowCustomImages] = useLocalStorage<boolean>('showcustomimages', true);
-  const [openCollapse, setOpenCollapse] = useState<string | null>(null);
+  const [openCollapse, setOpenCollapse] = useState<string | null>(() => {
+    return Query.get('f') ? 'filter' : null;
+  });
+  const [cardsPerRow, setCardsPerRow] = useState<NumCols>(8);
 
   const toggleShowCustomImages = useCallback(() => {
     setShowCustomImages((prev) => !prev);
   }, [setShowCustomImages]);
-
-  const [compressedView, setCompressedView] = useState<boolean>(() => {
-    return typeof localStorage !== 'undefined' && localStorage.getItem('compressed') === 'true';
-  });
-  const toggleCompressedView = useCallback(() => {
-    localStorage.setItem('compressed', (!compressedView).toString());
-    setCompressedView((prev) => !prev);
-  }, [compressedView]);
 
   const [showMaybeboard, setShowMaybeboard] = useState<boolean>(() => {
     return (
@@ -60,12 +57,12 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
   const value: DisplayContextValue = {
     showCustomImages,
     toggleShowCustomImages,
-    compressedView,
-    toggleCompressedView,
     showMaybeboard,
     toggleShowMaybeboard,
     openCollapse,
     setOpenCollapse,
+    cardsPerRow,
+    setCardsPerRow,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };

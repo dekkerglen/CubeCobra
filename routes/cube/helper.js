@@ -1,5 +1,5 @@
 const carddb = require('../../serverjs/carddb');
-const { render } = require('../../serverjs/render');
+const { render, redirect } = require('../../serverjs/render');
 const util = require('../../serverjs/util');
 const { CSVtoCards } = require('../../serverjs/cubefn');
 
@@ -92,7 +92,7 @@ async function updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelog,
       req.flash('danger', 'No changes made.');
     }
 
-    return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
+    return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }
@@ -198,7 +198,7 @@ function writeCard(res, card, maybe) {
   res.write(`"${name.replaceAll(/"/g, '""')}",`);
   res.write(`${card.cmc || cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
-  res.write(`${(card.colors || colorIdentity).join('')},`);
+  res.write(`${(card.colors || colorIdentity || []).join('')},`);
   res.write(`"${carddb.cardFromId(card.cardID).set}",`);
   res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
   res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);

@@ -32,6 +32,9 @@ const config = {
     ],
     usedExports: true,
   },
+  infrastructureLogging: {
+    level: 'verbose',
+ }
 };
 
 const clientConfig = merge(commonClientConfig, config, {});

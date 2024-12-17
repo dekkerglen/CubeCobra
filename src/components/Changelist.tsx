@@ -1,13 +1,16 @@
 import React, { MouseEventHandler, useContext, useEffect, useState } from 'react';
-import { Card, Col, Row, Spinner } from 'reactstrap';
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 
 import withAutocard from 'components/WithAutocard';
-import withCardModal from 'components/WithCardModal';
+import Text from 'components/base/Text';
+import withCardModal from 'components/modals/WithCardModal';
 import CubeContext from 'contexts/CubeContext';
 import CardData, { boardTypes } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
+import { Card } from './base/Card';
+import { Flexbox } from './base/Layout';
+import Spinner from './base/Spinner';
 
 interface RemoveButtonProps {
   onClick: MouseEventHandler;
@@ -44,22 +47,18 @@ const Add = ({ card, revert }: { card: CardData; revert: () => void }) => {
   }, [card.cardID]);
 
   return (
-    <li>
+    <Flexbox direction="row" gap="1" alignItems="center">
       <RemoveButton onClick={revert} />
       <span className="mx-1" style={{ color: 'green' }}>
         <PlusCircleIcon />
       </span>
-      {!loading && details ? (
-        <TextAutocard card={{ details, ...card }}>{details.name}</TextAutocard>
-      ) : (
-        <Spinner size="sm" />
-      )}
-    </li>
+      {!loading && details ? <TextAutocard card={{ details, ...card }}>{details.name}</TextAutocard> : <Spinner sm />}
+    </Flexbox>
   );
 };
 
 const Remove = ({ card, revert }: { card: CardData; revert: () => void }) => (
-  <li>
+  <Flexbox direction="row" gap="1">
     <RemoveButton onClick={revert} />
     <span className="mx-1" style={{ color: 'red' }}>
       <NoEntryIcon />
@@ -69,17 +68,17 @@ const Remove = ({ card, revert }: { card: CardData; revert: () => void }) => (
       altClick={() => {
         window.open(`/tool/card/${card.cardID}`);
       }}
-      modalProps={{
+      modalprops={{
         card,
       }}
     >
       {card.details?.name}
     </CardModalLink>
-  </li>
+  </Flexbox>
 );
 
 const Edit = ({ card, revert }: { card: CardData; revert: () => void }) => (
-  <li>
+  <Flexbox direction="row" gap="1">
     <RemoveButton onClick={revert} />
     <span className="mx-1" style={{ color: 'orange' }}>
       <ToolsIcon />
@@ -89,13 +88,13 @@ const Edit = ({ card, revert }: { card: CardData; revert: () => void }) => (
       altClick={() => {
         window.open(`/tool/card/${card.cardID}`);
       }}
-      modalProps={{
+      modalprops={{
         card,
       }}
     >
       {card.details?.name}
     </CardModalLink>
-  </li>
+  </Flexbox>
 );
 
 const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; revert: () => void }) => {
@@ -116,7 +115,7 @@ const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; re
   }, [card.cardID]);
 
   return (
-    <li>
+    <Flexbox direction="row" gap="1">
       <RemoveButton onClick={revert} />
       <span className="mx-1" style={{ color: 'blue' }}>
         <ArrowSwitchIcon />
@@ -126,9 +125,9 @@ const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; re
       {!loading && details ? (
         <TextAutocard card={{ ...oldCard, details }}>{details.name}</TextAutocard>
       ) : (
-        <Spinner size="sm" />
+        <Spinner sm />
       )}
-    </li>
+    </Flexbox>
   );
 };
 
@@ -143,29 +142,27 @@ const Changelist: React.FC = () => {
   return (
     <div>
       {boardTypes.map((board) => {
-        const { adds, removes, swaps, edits } = changes[board];
+        const { adds, removes, swaps, edits } = changes[board] || { adds: [], removes: [], swaps: [], edits: [] };
         if (adds.length === 0 && removes.length === 0 && swaps.length === 0 && edits.length === 0) {
           return false;
         }
         return (
           <div key={board} className="mb-2">
-            <h6>
-              <Row>
-                <Col>{capitalizeFirstLetter(board)} Changelist</Col>
-                <Col className="col-sm-auto">
-                  <div className="text-secondary">
-                    +{adds.length + edits.length}, -{removes.length + edits.length},{' '}
-                    {cube.cards[board].length + adds.length - removes.length} Total
-                  </div>
-                </Col>
-              </Row>
-            </h6>
+            <Text semibold sm>
+              <Flexbox direction="row" justify="between">
+                <Text sm semibold>
+                  {capitalizeFirstLetter(board)} Changelist
+                </Text>
+                <div className="text-secondary">
+                  +{adds.length + edits.length}, -{removes.length + edits.length},{' '}
+                  {cube.cards[board].length + adds.length - removes.length} Total
+                </div>
+              </Flexbox>
+            </Text>
             <Card className="changelist-container p-2">
               <ul className="changelist">
                 {adds &&
-                  adds.map((card, index) => (
-                    <Add key={card.cardID} card={card} revert={() => revertAdd(index, board)} />
-                  ))}
+                  adds.map((card, index) => <Add key={index} card={card} revert={() => revertAdd(index, board)} />)}
                 {removes &&
                   removes.map((remove, index) => (
                     <Remove

@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 import Comment from 'datatypes/Comment';
 import { findUserLinks } from 'markdown/parser';
-import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 export interface EditRequest {
   id: string;
@@ -28,6 +28,7 @@ const useComments = (
   string | null,
   () => Promise<void>,
 ] => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastKey, setLastKey] = useState<string | null>(null);

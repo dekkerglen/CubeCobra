@@ -141,5 +141,16 @@ module.exports = {
       },
     ];
   },
+
+  scan: async (lastKey) => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      ScanIndexForward: true,
+    });
+    return {
+      items: result.Items,
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   FIELDS,
 };

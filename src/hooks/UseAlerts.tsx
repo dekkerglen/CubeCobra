@@ -1,20 +1,20 @@
+import Alert from 'components/base/Alert';
 import React, { useCallback, useState } from 'react';
-import { UncontrolledAlert, UncontrolledAlertProps } from 'reactstrap';
 
 interface Alert {
   color: string;
   message: string;
 }
 
-interface AlertsProps extends UncontrolledAlertProps {
+interface AlertsProps {
   alerts: Alert[];
 }
 
 export const Alerts: React.FC<AlertsProps> = ({ alerts, ...props }) =>
   alerts.map(({ color, message }, index) => (
-    <UncontrolledAlert key={index} color={color} {...props}>
+    <Alert key={index} color={color} {...props}>
       {message}
-    </UncontrolledAlert>
+    </Alert>
   ));
 
 const useAlerts = (): { addAlert: (color: string, message: string) => void; alerts: Alert[] } => {

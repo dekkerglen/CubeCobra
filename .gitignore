@@ -4,7 +4,6 @@ private/
 /.vscode/
 src/generated/
 jobs/export/
-public/css/bootstrap
 /temp/
 /model/
 .DS_Store
@@ -361,8 +360,6 @@ nCrunchTemp_*
 *.mm.*
 AutoTest.Net/
 
-# Web workbench (sass)
-.sass-cache/
 
 # Installshield output folder
 [Ee]xpress/
@@ -561,3 +558,5 @@ push-docker.ps1
 
 # asdf version manager config (https://asdf-vm.com)
 .tool-versions
+
+target.zip

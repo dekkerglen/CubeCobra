@@ -35,7 +35,7 @@ router.get('/unlink', ensureAuth, async (req, res) => {
     await User.update(user);
 
     req.flash('success', `Patron account has been unlinked.`);
-    return res.redirect('/user/account?nav=patreon');
+    return redirect(req, res, '/user/account?nav=patreon');
   } catch (err) {
     return util.handleRouteError(req, res, err, '/user/account?nav=patreon');
   }
@@ -131,7 +131,7 @@ router.get('/redirect', ensureAuth, async (req, res) => {
   // if this user is already a patron, error
   if (patron && patron.status === Patron.STATUSES.ACTIVE) {
     req.flash('danger', `A Patreon account has already been linked.`);
-    return res.redirect('/user/account?nav=patreon');
+    return redirect(req, res, '/user/account?nav=patreon');
   }
 
   return patreonOAuthClient
@@ -152,7 +152,7 @@ router.get('/redirect', ensureAuth, async (req, res) => {
           'danger',
           `This Patreon account has already been linked to another Cube Cobra account. If you think this was done by mistake, please contact us.`,
         );
-        return res.redirect('/user/account?nav=patreon');
+        return redirect(req, res, '/user/account?nav=patreon');
       }
 
       const newPatron = {
@@ -162,19 +162,19 @@ router.get('/redirect', ensureAuth, async (req, res) => {
       };
       if (!rawJson.included) {
         req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
-        return res.redirect('/user/account?nav=patreon');
+        return redirect(req, res, '/user/account?nav=patreon');
       }
 
       const pledges = rawJson.included.filter((item) => item.type === 'pledge');
 
       if (pledges.length === 0) {
         req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
-        return res.redirect('/user/account?nav=patreon');
+        return redirect(req, res, '/user/account?nav=patreon');
       }
 
       if (pledges.length > 1) {
         req.flash('danger', `The server response from Patreon was malformed. Please contact us for more information.`);
-        return res.redirect('/user/account?nav=patreon');
+        return redirect(req, res, '/user/account?nav=patreon');
       }
 
       if (!pledges[0].relationships.reward || !pledges[0].relationships.reward.data) {
@@ -189,7 +189,7 @@ router.get('/redirect', ensureAuth, async (req, res) => {
             'danger',
             `The server response from Patreon was malformed, too many reward objects. Please contact us for more information.`,
           );
-          return res.redirect('/user/account?nav=patreon');
+          return redirect(req, res, '/user/account?nav=patreon');
         }
 
         if (rewards.length === 0) {
@@ -216,13 +216,13 @@ router.get('/redirect', ensureAuth, async (req, res) => {
         );
       }
       req.flash('success', `Your Patreon account has successfully been linked.`);
-      return res.redirect('/user/account?nav=patreon');
+      return redirect(req, res, '/user/account?nav=patreon');
     })
     .catch((err) => {
       req.logger.error(err.message, err.stack);
 
       req.flash('danger', `There was an error linking your Patreon account: ${err.message}`);
-      return res.redirect('/user/account?nav=patreon');
+      return redirect(req, res, '/user/account?nav=patreon');
     });
 });
 

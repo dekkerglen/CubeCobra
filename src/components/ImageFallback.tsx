@@ -5,16 +5,25 @@ export interface ImageFallbackProps extends React.ImgHTMLAttributes<HTMLImageEle
   fallbackSrc: string;
   innerRef?: RefObject<HTMLImageElement>;
   [key: string]: any;
+  className?: string;
 }
 
-const ImageFallback: React.FC<ImageFallbackProps> = ({ src, fallbackSrc, innerRef, ...props }) => {
+const ImageFallback: React.FC<ImageFallbackProps> = ({ src, fallbackSrc, innerRef, className, ...props }) => {
   const [fallback, setFallback] = useState(false);
 
   const handleError = () => setFallback(true);
 
   useEffect(() => setFallback(false), [src]);
 
-  return <img src={fallback || !src ? fallbackSrc : src} onError={handleError} ref={innerRef} {...props} />;
+  return (
+    <img
+      className={`card-border ${className}`}
+      src={fallback || !src ? fallbackSrc : src}
+      onError={handleError}
+      ref={innerRef}
+      {...props}
+    />
+  );
 };
 
 export default ImageFallback;

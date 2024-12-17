@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const carddb = require('../../serverjs/carddb');
-const { render } = require('../../serverjs/render');
+const { render, redirect } = require('../../serverjs/render');
 const util = require('../../serverjs/util');
 const generateMeta = require('../../serverjs/meta');
 const cardutil = require('../../dist/utils/Card');
@@ -28,7 +28,7 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
 
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const seat = deck.seats[req.params.seat];
@@ -83,7 +83,7 @@ router.get('/download/forge/:id/:seat', async (req, res) => {
     const deck = await Draft.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
     const seat = deck.seats[req.params.seat];
 
@@ -141,7 +141,7 @@ router.get('/download/txt/:id/:seat', async (req, res) => {
     const deck = await Draft.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
     const seat = deck.seats[req.params.seat];
 
@@ -167,7 +167,7 @@ router.get('/download/mtgo/:id/:seat', async (req, res) => {
     const deck = await Draft.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
     const seat = deck.seats[req.params.seat];
     return exportToMtgo(res, seat.name, seat.mainboard.flat(), seat.sideboard.flat(), deck.cards);
@@ -181,7 +181,7 @@ router.get('/download/arena/:id/:seat', async (req, res) => {
     const deck = await Draft.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
     const seat = deck.seats[req.params.seat];
 
@@ -237,7 +237,7 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
     const deck = await Draft.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
     const seat = deck.seats[req.params.seat];
 
@@ -292,11 +292,11 @@ router.get('/download/topdecked/:id/:seat', async (req, res) => {
     const deck = await Draft.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
     const seat = deck.seats[req.params.seat];
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.title.replace(/\W/g, '')}.csv`);
+    res.setHeader('Content-disposition', `attachment; filename=${req.params.id}_${req.params.seat}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 
@@ -358,7 +358,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
 
     if (req.user.id !== deck.owner.id && req.user.id !== deck.cubeOwner.id) {
       req.flash('danger', 'Unauthorized');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     await Draft.delete(deck.id);
@@ -378,19 +378,19 @@ router.get('/deckbuilder/:id', async (req, res) => {
     const deck = await Draft.getById(req.params.id);
     if (!deck) {
       req.flash('danger', 'Deck not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const deckOwners = deck.seats.map((seat) => (seat.owner ? seat.owner.id : null)).filter((userid) => userid);
     if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
-      return res.redirect(`/cube/deck/${req.params.id}`);
+      return redirect(req, res, `/cube/deck/${req.params.id}`);
     }
 
     const cube = await Cube.getById(deck.cube);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     return render(
@@ -416,45 +416,6 @@ router.get('/deckbuilder/:id', async (req, res) => {
   }
 });
 
-router.get('/decks/:cubeid', async (req, res) => {
-  try {
-    const { cubeid } = req.params;
-
-    const cube = await Cube.getById(cubeid);
-    if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', 'Cube not found');
-      return res.redirect('/404');
-    }
-
-    const decks = await Draft.getByCube(cube.id);
-
-    return render(
-      req,
-      res,
-      'CubeDecksPage',
-      {
-        cube,
-        decks: decks.items,
-        lastKey: decks.lastKey,
-      },
-      {
-        title: `${abbreviate(cube.name)} - Draft Decks`,
-        metadata: generateMeta(
-          `Cube Cobra Decks: ${cube.name}`,
-          cube.description,
-          cube.image.uri,
-          `https://cubecobra.com/user/decks/${encodeURIComponent(req.params.cubeid)}`,
-        ),
-      },
-    );
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.cubeid)}`);
-  }
-});
-
-router.get('/decks/:id', async (req, res) => {
-  res.redirect(`/cube/deck/decks/${encodeURIComponent(req.params.id)}/0`);
-});
 
 router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
   try {
@@ -463,14 +424,14 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
     if (!base) {
       req.flash('danger', 'Deck not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const cube = await Cube.getById(base.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect(`/cube/deck/${base.id}`);
+      return redirect(req, res, `/cube/deck/${base.id}`);
     }
 
     const cardsArray = [];
@@ -528,7 +489,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       );
     }
 
-    return res.redirect(`/cube/deck/deckbuilder/${id}`);
+    return redirect(req, res, `/cube/deck/deckbuilder/${id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/404`);
   }
@@ -544,7 +505,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Unauthorized');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const seatIndex = deck.seats
@@ -563,7 +524,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     await Draft.put(deck);
 
     req.flash('success', 'Deck saved successfully');
-    return res.redirect(`/cube/deck/${deck.id}`);
+    return redirect(req, res, `/cube/deck/${deck.id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -574,10 +535,10 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     const draftid = req.body.body;
 
     if (req.body.skipDeckbuilder) {
-      return res.redirect(`/cube/deck/${draftid}`);
+      return redirect(req, res, `/cube/deck/${draftid}`);
     }
 
-    return res.redirect(`/cube/deck/deckbuilder/${draftid}`);
+    return redirect(req, res, `/cube/deck/deckbuilder/${draftid}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
   }
@@ -589,19 +550,19 @@ router.get('/redraft/:id/:seat', ensureAuth, async (req, res) => {
 
     if (!base) {
       req.flash('danger', 'Deck not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const seat = parseInt(req.params.seat, 10);
     if (!Number.isInteger(seat) || seat < 0 || seat >= base.seats.length) {
       req.flash('danger', 'Invalid seat index to redraft as.');
-      return res.redirect(`/cube/deck/${req.params.id}`);
+      return redirect(req, res, `/cube/deck/${req.params.id}`);
     }
 
     const cube = await Cube.getById(base.cube);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'The cube that this deck belongs to no longer exists.');
-      return res.redirect(`/cube/deck/${req.params.id}`);
+      return redirect(req, res, `/cube/deck/${req.params.id}`);
     }
 
     const draft = {
@@ -628,7 +589,7 @@ router.get('/redraft/:id/:seat', ensureAuth, async (req, res) => {
     await Draft.put(draft);
 
     await createLobby(draft, req.user);
-    return res.redirect(`/cube/draft/${draft.id}`);
+    return redirect(req, res, `/cube/draft/${draft.id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
@@ -640,7 +601,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found.');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const cubeCards = await Cube.getCards(cube.id);
@@ -648,13 +609,13 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
-      return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
+      return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
     const cards = req.body.body.match(/[^\r\n]+/g);
     if (!cards) {
       req.flash('danger', 'No cards detected');
-      return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
+      return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
     const cardList = [];
@@ -738,7 +699,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     cube.numDecks += 1;
     await Cube.update(cube);
 
-    return res.redirect(`/cube/deck/deckbuilder/${id}`);
+    return redirect(req, res, `/cube/deck/deckbuilder/${id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -748,21 +709,21 @@ router.get('/:id', async (req, res) => {
   try {
     if (!req.params.id || req.params.id === 'null' || req.params.id === 'false') {
       req.flash('danger', 'Invalid deck ID.');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const draft = await Draft.getById(req.params.id);
 
-    if (!deck) {
+    if (!draft) {
       req.flash('danger', 'Deck not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(deck.cube);
+    const cube = await Cube.getById(draft.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     return render(
@@ -771,7 +732,7 @@ router.get('/:id', async (req, res) => {
       'CubeDeckPage',
       {
         cube,
-        deck,
+        draft,
       },
       {
         title: `Draft deck of ${abbreviate(cube.name)}`,

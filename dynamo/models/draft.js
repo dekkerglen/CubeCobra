@@ -533,7 +533,7 @@ module.exports = {
         }),
       );
 
-      initialState = draft.initial_state.map((seat) =>
+      initialState = draft.InitialState.map((seat) =>
         seat.map((pack) => {
           if (pack.cards) {
             return {
@@ -555,7 +555,7 @@ module.exports = {
       pickorders = draft.seats.map((seat) => seat.pickorder);
 
       cards = draft.cards;
-      initialState = draft.initial_state.map((pack) =>
+      initialState = draft.InitialState.map((pack) =>
         pack.map((idx) => cards.findIndex((card) => draft.cards[idx].cardID === card.cardID)),
       );
     } else {

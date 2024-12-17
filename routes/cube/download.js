@@ -39,7 +39,7 @@ router.get('/cubecobra/:id', async (req, res) => {
     const cube = await Cube.getById(req.params.id);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const cards = await Cube.getCards(cube.id);
@@ -70,7 +70,7 @@ router.get('/csv/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const cards = await Cube.getCards(cube.id);
@@ -98,7 +98,7 @@ router.get('/csv/:id', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return util.handleRouteErr-or(req, res, err, '/404');
   }
 });
 
@@ -108,7 +108,7 @@ router.get('/forge/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const cards = await Cube.getCards(cube.id);
@@ -142,7 +142,7 @@ router.get('/mtgo/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const cards = await Cube.getCards(cube.id);
@@ -168,7 +168,7 @@ router.get('/xmage/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const cards = await Cube.getCards(cube.id);
@@ -199,7 +199,7 @@ router.get('/plaintext/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     const cards = await Cube.getCards(cube.id);

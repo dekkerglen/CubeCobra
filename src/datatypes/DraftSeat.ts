@@ -1,9 +1,15 @@
+import User from './User';
+
 export default interface DraftSeat {
   description?: string;
-  deck?: number[][][];
+  mainboard: number[][][];
   sideboard: number[][][];
-  username?: string;
-  userid?: string;
+  pickorder?: number[];
+  trashorder?: number[];
+  // null in case of a bot
+  owner?: string | User;
   bot?: boolean;
   name?: string;
+  // grid draft only
+  pickedIndices?: number[];
 }

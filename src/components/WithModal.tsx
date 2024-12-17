@@ -1,16 +1,16 @@
 import React, { ComponentProps, ComponentType, ElementType, MouseEvent, ReactNode, useCallback, useState } from 'react';
 
-// If the modal is controlled, modalProps should include isOpen and toggle. If not, the component will create its own.
+// If the modal is controlled, modalprops should include isOpen and toggle. If not, the component will create its own.
 export interface WithModalProps<U> {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
-  modalProps?: Omit<U, 'isOpen' | 'toggle'>;
+  modalprops?: Omit<U, 'setOpen' | 'isOpen' | 'toggle'>;
   altClick?: () => void;
 }
 
 const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>) => {
   const Result: React.FC<WithModalProps<U> & ComponentProps<T>> = (allProps: WithModalProps<U> & ComponentProps<T>) => {
-    const { children, className, modalProps = {}, altClick } = allProps;
+    const { children, className, modalprops = {}, altClick } = allProps;
     const [isOpen, setIsOpen] = useState(false);
     const toggle = useCallback(
       (event?: MouseEvent<HTMLElement>) => {
@@ -44,7 +44,7 @@ const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>)
         >
           {children}
         </Tag>
-        <ModalTag isOpen={isOpen} toggle={toggle} {...modalProps} />
+        <ModalTag isOpen={isOpen} setOpen={setIsOpen} toggle={toggle} {...modalprops} />
       </>
     );
   };

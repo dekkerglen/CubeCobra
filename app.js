@@ -19,6 +19,7 @@ const { updateCardbase } = require('./serverjs/updatecards');
 const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
+const flash = require('connect-flash');
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason) => {
@@ -103,7 +104,7 @@ app.use(
 );
 
 // Express messages middleware
-app.use(require('connect-flash')());
+app.use(flash());
 
 app.use((req, res, next) => {
   res.locals.messages = require('express-messages')(req, res);
@@ -193,6 +194,10 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
     }),
   );
 }
+
+app.post('/healthcheck', (req, res) => {
+  res.status(200).send('OK');
+});
 
 // Route files; they manage their own CSRF protection
 app.use('/patreon', require('./routes/patreon_routes'));

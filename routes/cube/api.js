@@ -15,7 +15,6 @@ const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
-const CubeHash = require('../../dynamo/models/cubeHash');
 const Draft = require('../../dynamo/models/draft');
 const Package = require('../../dynamo/models/package');
 const Blog = require('../../dynamo/models/blog');
@@ -38,172 +37,6 @@ router.get('/cardimages', (_, res) =>
   res.status(200).send({
     success: 'true',
     cardimages: carddb.cardimages,
-  }),
-);
-
-router.post(
-  '/editoverview',
-  ensureAuth,
-  body('name', 'Cube name should be between 5 and 100 characters long.').isLength({
-    min: 5,
-    max: 100,
-  }),
-  body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('shortId', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
-    /^[A-Za-z0-9_-]*$/,
-  ),
-  body('shortId', `Custom URL may not be longer than 100 characters.`).isLength({
-    min: 0,
-    max: 100,
-  }),
-  body('shortId', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  jsonValidationErrors,
-  util.wrapAsyncApi(async (req, res) => {
-    const updatedCube = req.body;
-
-    const cube = await Cube.getById(updatedCube.id);
-    const { user } = req;
-
-    if (!isCubeViewable(cube, user)) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube Not Found',
-      });
-    }
-
-    if (cube.owner.id !== user.id) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Unauthorized',
-      });
-    }
-
-    if (updatedCube.shortId !== cube.shortId) {
-      const taken = await CubeHash.getSortedByName(`shortid:${updatedCube.shortId.toLowerCase()}`);
-
-      if (taken.items.length === 1 && taken.items[0].cube !== cube.id) {
-        return res.status(400).send({
-          success: 'false',
-          message: 'Custom URL is already taken',
-        });
-      }
-      if (taken.items.length > 1) {
-        return res.status(400).send({
-          success: 'false',
-          message: 'Custom URL already taken.',
-        });
-      }
-
-      cube.shortId = updatedCube.shortId;
-    }
-
-    cube.name = updatedCube.name;
-    cube.imageName = updatedCube.imageName;
-
-    if (updatedCube.description !== null) {
-      cube.description = updatedCube.description;
-    }
-    cube.date = Date.now().valueOf();
-
-    // cube category override
-    if (updatedCube.categoryOverride !== null) {
-      const categories = [
-        '',
-        'Vintage',
-        'Legacy+',
-        'Legacy',
-        'Modern',
-        'Premodern',
-        'Pioneer',
-        'Historic',
-        'Standard',
-        'Set',
-      ];
-      const prefixes = [
-        'Powered',
-        'Unpowered',
-        'Pauper',
-        'Peasant',
-        'Budget',
-        'Silver-bordered',
-        'Commander',
-        'Battle Box',
-        'Multiplayer',
-        'Judge Tower',
-      ];
-
-      if (!categories.includes(updatedCube.categoryOverride)) {
-        return res.status(400).send({
-          success: 'false',
-          message: 'Not a valid category override.',
-        });
-      }
-
-      for (let i = 0; i < (updatedCube.categoryPrefixes || []).length; i += 1) {
-        if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
-          return res.status(400).send({
-            success: 'false',
-            message: 'Not a valid category prefix.',
-          });
-        }
-      }
-
-      cube.categoryOverride = updatedCube.categoryOverride;
-      cube.categoryPrefixes = updatedCube.categoryPrefixes;
-    } else {
-      cube.categoryOverride = null;
-      cube.categoryPrefixes = [];
-    }
-
-    // cube tags
-    cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
-
-    await Cube.update(cube);
-    return res.status(200).send({
-      success: 'true',
-    });
-  }),
-);
-
-router.post(
-  '/settings/:id',
-  ensureAuth,
-  body('priceVisibility', 'Invalid Price visibility').isIn(
-    Object.entries(Cube.PRICE_VISIBLITY).map((entry) => entry[1]),
-  ),
-  body('disableAlerts').toBoolean(),
-  body('defaultStatus', 'status must be valid.').isIn(['Owned', 'Not Owned']),
-  body('defaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
-  body('visibility', 'visibility must be valid').isIn(Object.entries(Cube.VISIBILITY).map((entry) => entry[1])),
-  jsonValidationErrors,
-  util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.getById(req.params.id);
-
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube Not Found',
-      });
-    }
-
-    if (cube.owner.id !== req.user.id) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Unauthorized',
-      });
-    }
-
-    const update = req.body;
-    for (const field of ['visibility', 'priceVisibility', 'disableAlerts', 'defaultStatus', 'defaultPrinting']) {
-      if (update[field] !== undefined) {
-        cube[field] = update[field];
-      }
-    }
-
-    await Cube.update(cube);
-    return res.status(200).send({
-      success: 'true',
-    });
   }),
 );
 
@@ -325,7 +158,23 @@ router.post(
       });
     }
 
-    cube.tagColors = req.body.tag_colors;
+    // filter out tags that don't exist on any cards
+    const cubeCards = await Cube.getCards(cube.id);
+    const tags = new Set();
+
+    for (const [board, list] of Object.entries(cubeCards)) {
+      if (board !== 'id') {
+        for (const card of list) {
+          for (const tag of card.tags || []) {
+            tags.add(tag);
+          }
+        }
+      }
+    }
+
+    const allTags = [...tags];
+
+    cube.tagColors = req.body.tag_colors.filter((tagColor) => allTags.includes(tagColor.tag));
 
     await Cube.update(cube);
     return res.status(200).send({

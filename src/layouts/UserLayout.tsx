@@ -1,9 +1,14 @@
 import React, { useContext } from 'react';
-import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
 
-import CreateCubeModal from 'components/CreateCubeModal';
+import classNames from 'classnames';
+import Banner from 'components/Banner';
+import Button from 'components/base/Button';
+import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
+import { Tabs } from 'components/base/Tabs';
+import Text from 'components/base/Text';
 import ErrorBoundary from 'components/ErrorBoundary';
-import FollowersModal from 'components/FollowersModal';
+import FollowersModal from 'components/modals/FollowersModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import User from 'datatypes/User';
@@ -14,70 +19,90 @@ interface UserLayoutProps {
   following: boolean;
   activeLink: string;
   children?: React.ReactNode;
+  hasControls?: boolean;
 }
 
-const FollowersModalLink = withModal('a', FollowersModal);
-const CreateCubeModalLink = withModal(NavLink, CreateCubeModal);
+const tabs = [
+  {
+    label: 'Cubes',
+    href: '/user/view',
+  },
+  {
+    label: 'Decks',
+    href: '/user/decks',
+  },
+  {
+    label: 'Blog',
+    href: '/user/blog',
+  },
+];
 
-const UserLayout: React.FC<UserLayoutProps> = ({ user, followers, following, activeLink, children }) => {
+const FollowersModalLink = withModal(Link, FollowersModal);
+
+const UserLayout: React.FC<UserLayoutProps> = ({
+  user,
+  followers,
+  following,
+  activeLink,
+  children,
+  hasControls = false,
+}) => {
   const activeUser = useContext(UserContext)!;
   const canEdit = activeUser && activeUser.id === user.id;
 
   const numFollowers = followers.length;
   const followersText = (
-    <h6>
+    <Text semibold sm>
       {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
-    </h6>
+    </Text>
   );
   return (
     <>
-      <Nav tabs fill className="cubenav pt-2">
-        <NavItem>
-          <h5 style={{ color: '#218937' }}>{user.username}</h5>
-          {numFollowers > 0 ? (
-            <FollowersModalLink href="#" modalProps={{ followers }}>
-              {followersText}
-            </FollowersModalLink>
-          ) : (
-            followersText
-          )}
-          {!following && !canEdit && (
-            <Button color="accent" className="rounded-0 w-100" href={`/user/follow/${user.id}`}>
-              Follow
-            </Button>
-          )}
-          {following && !canEdit && (
-            <Button color="unsafe" outline className="rounded-0 w-100" href={`/user/unfollow/${user.id}`}>
-              Unfollow
-            </Button>
-          )}
-        </NavItem>
-        <NavItem className="px-2 align-self-end">
-          <NavLink active={activeLink === 'view'} href={`/user/view/${user.id}`}>
-            Cubes
-          </NavLink>
-        </NavItem>
-        <NavItem className="px-2 align-self-end">
-          <NavLink active={activeLink === 'decks'} href={`/user/decks/${user.id}`}>
-            Decks
-          </NavLink>
-        </NavItem>
-        <NavItem className="px-2 align-self-end">
-          <NavLink active={activeLink === 'blog'} href={`/user/blog/${user.id}`}>
-            Blog
-          </NavLink>
-        </NavItem>
-      </Nav>
-      {canEdit && (
-        <Navbar light className="usercontrols">
-          <Nav navbar>
-            <NavItem>
-              <CreateCubeModalLink>Create New Cube</CreateCubeModalLink>
-            </NavItem>
-          </Nav>
-        </Navbar>
-      )}
-      <Row className="mb-3" />
+      <div
+        className={classNames('bg-bg-accent border-r border-l border-b border-border', {
+          'rounded-b-md': !hasControls,
+        })}
+      >
+        <Banner className="px-2" />
+
+        <Flexbox direction="row" className="px-4" justify="between" wrap="wrap">
+          <Flexbox direction="col" gap="2" className="my-2">
+            <Text semibold md>
+              {user.username}
+            </Text>
+            {numFollowers > 0 ? (
+              <FollowersModalLink href="#" modalprops={{ followers }}>
+                {followersText}
+              </FollowersModalLink>
+            ) : (
+              followersText
+            )}
+            {!following && !canEdit && (
+              <Button type="link" color="accent" className="rounded-0 w-full" href={`/user/follow/${user.id}`}>
+                Follow
+              </Button>
+            )}
+            {following && !canEdit && (
+              <Button
+                type="link"
+                color="danger"
+                outline
+                className="rounded-0 w-full"
+                href={`/user/unfollow/${user.id}`}
+              >
+                Unfollow
+              </Button>
+            )}
+          </Flexbox>
+          <Tabs
+            tabs={tabs.map((tab) => ({
+              label: tab.label,
+              href: tab.href + '/' + user.id,
+            }))}
+            activeTab={tabs.findIndex((tab) => tab.href.includes(activeLink))}
+          />
+        </Flexbox>
+      </div>
       <ErrorBoundary>{children}</ErrorBoundary>
     </>
   );

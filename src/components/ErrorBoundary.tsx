@@ -1,6 +1,7 @@
 import React, { Component, Fragment, ReactNode } from 'react';
-import { Card, Container } from 'reactstrap';
-
+import Text from 'components/base/Text';
+import Container from './base/Container';
+import { Card } from './base/Card';
 interface ErrorBoundaryProps {
   className?: string;
   children: ReactNode;
@@ -34,7 +35,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     if (hasError) {
       return (
         <div className={className ?? 'mt-3'}>
-          <h1 className="text-center">Something went wrong.</h1>
+          <Text semibold xl>
+            Something went wrong.
+          </Text>
           <p className="text-center">You may want to try reloading the page.</p>
           <br />
           <Container>

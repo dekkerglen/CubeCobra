@@ -224,9 +224,4 @@ Card filters are defined that can be used by the frontend and backend. [Nearley]
 
 ### Components & Styling
 
-Components are provided by [Reactstrap 9][reactstrap] which is powered by [Bootstrap v5.1][boostrap], which uses SCSS.
-
-Components typically directly use bootstrap classes for additional styling, but may also use global classnames defined in public CSS files.
-
-[reactstrap]: https://reactstrap.github.io/
-[bootstrap]: https://getbootstrap.com/docs/5.1/getting-started/introduction/
+Components are styled using TailwindCSS, with some custom CSS for more complex components.

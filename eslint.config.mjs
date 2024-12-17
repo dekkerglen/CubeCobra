@@ -60,8 +60,8 @@ export default [
           groups: [
             // Node.js builtins prefixed with `node:`.
             ['^node:'],
-            // react and reactstrap.
-            ['^react$', '^reactstrap$'],
+            // react .
+            ['^react$'],
             // Packages.
             // Things that start with a letter (or digit or underscore), or `@` followed by a letter.
             ['^@?\\w'],

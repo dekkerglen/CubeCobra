@@ -1,29 +1,30 @@
 import React from 'react';
-import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-import ButtonLink from 'components/ButtonLink';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from 'components/base/Modal';
+
+import Button from 'components/base/Button';
 
 export interface LinkModalProps {
   link: string;
   isOpen: boolean;
-  toggle: () => void;
+  setOpen: (isOpen: boolean) => void;
 }
 
-const LinkModal: React.FC<LinkModalProps> = ({ link, isOpen, toggle }) => {
+const LinkModal: React.FC<LinkModalProps> = ({ link, isOpen, setOpen }) => {
   return (
-    <Modal isOpen={isOpen} toggle={toggle} size="xs">
-      <ModalHeader toggle={toggle}>This link could be dangerous</ModalHeader>
+    <Modal isOpen={isOpen} setOpen={setOpen} md>
+      <ModalHeader setOpen={setOpen}>This link could be dangerous</ModalHeader>
       <ModalBody>
         <p>
           This link leads to: <code>{link}</code>
         </p>
         <p>Following unknown links can be dangerous, are you sure you wish to proceed?</p>
-        <ButtonLink href={link} block color="unsafe" outline target="_blank" rel="noopener noreferrer">
+        <Button type="link" href={link} block color="danger" outline target="_blank" rel="noopener noreferrer">
           Yes, I know what I'm doing
-        </ButtonLink>
+        </Button>
       </ModalBody>
       <ModalFooter>
-        <Button color="secondary" onClick={toggle}>
+        <Button color="secondary" onClick={() => setOpen(false)}>
           Close
         </Button>
       </ModalFooter>
