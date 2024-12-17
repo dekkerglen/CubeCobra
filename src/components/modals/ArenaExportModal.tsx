@@ -18,7 +18,7 @@ interface ArenaExportModalProps {
 }
 
 const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, isSortUsed, isFilterUsed }) => {
-  const { alerts, addAlert } = useAlerts();
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
   const [text, setText] = useState('');
   const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
   const { cardFilter } = useContext(FilterContext)!;
@@ -89,18 +89,23 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
   }
 
   async function copyToClipboard() {
+    //Dismiss any remaining alerts before adding the new one, so multiple don't stack up
+    dismissAlerts();
     await navigator.clipboard.writeText(text);
     addAlert('success', 'Copied to clipboard successfully.');
+    //Auto dismiss after a few seconds
+    setTimeout(dismissAlerts, 3000);
   }
 
-  //Modal setOpen is when the background is clicked to close
   function onClose() {
     setOpen(false);
+    //Dismiss when closing the dialog so it opens in a fresh state
+    dismissAlerts();
   }
 
   return (
     <Modal isOpen={isOpen} setOpen={onClose} md>
-      <ModalHeader setOpen={setOpen}>Arena Export</ModalHeader>
+      <ModalHeader setOpen={onClose}>Arena Export</ModalHeader>
       <ModalBody>
         <Text>Copy the textbox or use the Copy to clipboard button.</Text>
         <Text>Note: Arena can only import 250 cards into a deck.</Text>
