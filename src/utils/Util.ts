@@ -1,7 +1,7 @@
 import Card from 'datatypes/Card';
 import { ColorCategory } from 'datatypes/CardDetails';
 import { TagColor } from 'datatypes/Cube';
-import { cardCmc, cardColorCategory, cardType } from 'utils/Card';
+import { cardCmc, cardColorIdentityCategory, cardType } from 'utils/Card';
 
 export function arraysEqual(a: any, b: any): boolean {
   if (a === b) return true;
@@ -218,7 +218,7 @@ export function isSamePageURL(to: string): boolean {
   }
 }
 
-const colorCategoryToColorClass: { [key in ColorCategory]: string } = {
+const colorToColorClass: { [key in ColorCategory]: string } = {
   White: 'white',
   Blue: 'blue',
   Black: 'black',
@@ -235,7 +235,7 @@ export function getCardColorClass(card: Card): string {
     return 'colorless';
   }
 
-  return colorCategoryToColorClass[cardColorCategory(card)];
+  return colorToColorClass[cardColorIdentityCategory(card)];
 }
 
 export function getCardTagColorClass(tagColors: TagColor[], card: Card): string {
