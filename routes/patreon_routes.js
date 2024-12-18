@@ -9,6 +9,7 @@ const util = require('../serverjs/util');
 
 const Patron = require('../dynamo/models/patron');
 const User = require('../dynamo/models/user');
+const { redirect } = require('../serverjs/render');
 
 const patreonAPI = patreon.patreon;
 const patreonOAuth = patreon.oauth;

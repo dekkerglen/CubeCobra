@@ -60,7 +60,7 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
             <img src="/content/delverbanner.png" className="h-full" />
           </a>
         </ResponsiveDiv>
-        <ResponsiveDiv xxxl className="pb-8 py-2">
+        <ResponsiveDiv xl className="pb-8 py-2">
           <Card className="h-full bg-advert">
             <CardBody className="bg-advert h-full rounded-md">
               <Flexbox direction="col" justify="center" className="h-full">

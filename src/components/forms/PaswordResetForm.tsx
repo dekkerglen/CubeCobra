@@ -46,7 +46,7 @@ const PasswordResetForm: React.FC<LoginModalProps> = ({ code }) => {
           id="password2"
           type="password"
           value={formData.password2}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, password2: e.target.value })}
         />
         <Button color="primary" block onClick={() => formRef.current?.submit()}>
           Change Password

@@ -136,7 +136,7 @@ const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
   const tag = node.inParagraph ? 'span' : 'div';
   return (
-    <div className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/6">
+    <div className="w-1/2 lg:w-1/4 p-2">
       <Link href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
         <FoilCardImage autocard card={{ details } as any} className="clickable" wrapperTag={tag} />
       </Link>
@@ -155,10 +155,8 @@ interface RenderCardrowProps {
   children: ReactNode;
 }
 const renderCardrow: React.FC<RenderCardrowProps> = (node) => (
-  <Flexbox direction="row" justify="center">
-    <Flexbox direction="row" wrap="wrap" gap="2">
-      {node.children}
-    </Flexbox>
+  <Flexbox direction="row" wrap="wrap">
+    {node.children}
   </Flexbox>
 );
 

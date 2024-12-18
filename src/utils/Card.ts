@@ -98,7 +98,25 @@ export const cardFinish = (card: Card): string => card.finish ?? 'Non-foil';
 
 export const cardStatus = (card: Card): any => card.status;
 
-export const cardColorIdentity = (card: Card): string[] => card.colors ?? card.details?.color_identity ?? [];
+export const cardColorIdentity = (card: Card): string[] => {
+  if (card.colors) {
+    if (typeof card.colors === 'string') {
+      return [...card.colors];
+    }
+
+    return card.colors;
+  }
+
+  if (card.details) {
+    if (typeof card.details.color_identity === 'string') {
+      return [...card.details.color_identity];
+    }
+
+    return card.details.color_identity;
+  }
+
+  return [];
+};
 
 export const cardIndex = (card: Card): number => (card.index === undefined ? -1 : card.index);
 

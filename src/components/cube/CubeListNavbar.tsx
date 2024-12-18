@@ -127,21 +127,22 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
     </>
   );
 
+  const viewOptions = [
+    { value: 'table', label: 'Table View' },
+    { value: 'spoiler', label: 'Visual Spoiler' },
+    { value: 'curve', label: 'Curve View' },
+  ];
+
+  if (canEdit) {
+    viewOptions.push({ value: 'list', label: 'List View' });
+  }
+
   return (
     <Controls>
       <Flexbox direction="col" className="py-2 px-4">
         <Flexbox direction="row" wrap="wrap" justify="between" alignItems="center">
           <Flexbox direction="row" justify="start" gap="4" alignItems="center">
-            <Select
-              options={[
-                { value: 'table', label: 'Table View' },
-                { value: 'spoiler', label: 'Visual Spoiler' },
-                { value: 'list', label: 'List View' },
-                { value: 'curve', label: 'Curve View' },
-              ]}
-              value={cubeView}
-              setValue={setCubeView}
-            />
+            <Select options={viewOptions} value={cubeView} setValue={setCubeView} />
             {cubeView === 'spoiler' && (
               <Select
                 value={`${cardsPerRow}`}

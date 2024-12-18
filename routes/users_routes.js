@@ -375,7 +375,7 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res) => {
   let user;
 
-  if (!req.body.username) {
+  if (!req.body.username || req.body.username.length === 0) {
     req.flash('danger', 'Incorrect Username or email address.');
     res.redirect('/user/login');
   }

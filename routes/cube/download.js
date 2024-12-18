@@ -7,6 +7,7 @@ const util = require('../../serverjs/util');
 
 const { isCubeViewable } = require('../../serverjs/cubefn');
 const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper');
+const { redirect } = require('../../serverjs/render');
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
@@ -98,7 +99,7 @@ router.get('/csv/:id', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteErr-or(req, res, err, '/404');
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 
