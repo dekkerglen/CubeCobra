@@ -1,8 +1,9 @@
-import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Button from 'components/base/Button';
-import Text from 'components/base/Text';
 import { Flexbox } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import Text from 'components/base/Text';
+import CSRFForm from 'components/CSRFForm';
+import React from 'react';
 
 interface DeleteCubeModalProps {
   isOpen: boolean;
@@ -13,21 +14,23 @@ interface DeleteCubeModalProps {
 const DeleteCubeModal: React.FC<DeleteCubeModalProps> = ({ isOpen, setOpen, cubeID }) => {
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} sm>
-      <ModalHeader setOpen={setOpen}>Delete Cube</ModalHeader>
-      <ModalBody>
-        <Text>Are you sure you want to delete this cube? This action cannot be undone.</Text>
-      </ModalBody>
-      <ModalFooter>
-        <Flexbox direction="row" gap="2" className="w-full">
-          <Button block type="link" color="danger" href={`/cube/delete/${cubeID}`}>
-            Delete
-          </Button>
-          <Button block color="secondary" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-        </Flexbox>
-      </ModalFooter>
-    </Modal>
+      <CSRFForm method="POST" action={`/cube/remove/${cubeID}`} formData={{}}>
+        <ModalHeader setOpen={setOpen}>Delete Cube</ModalHeader>
+        <ModalBody>
+          <Text>Are you sure you want to delete this cube? This action cannot be undone.</Text>
+        </ModalBody>
+        <ModalFooter>
+          <Flexbox direction="row" gap="2" className="w-full">
+            <Button block type="submit" color="danger">
+              Delete
+            </Button>
+            <Button block color="secondary" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+          </Flexbox>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal >
   );
 };
 
