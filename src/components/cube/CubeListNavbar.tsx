@@ -4,6 +4,7 @@ import { Flexbox, NumCols } from 'components/base/Layout';
 import CompareCollapse from 'components/cube/CompareCollapse';
 import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
+import ArenaExportModal from 'components/modals/ArenaExportModal';
 import PasteBulkModal from 'components/modals/PasteBulkModal';
 import UploadBulkModal from 'components/modals/UploadBulkModal';
 import UploadBulkReplaceModal from 'components/modals/UploadBulkReplaceModal';
@@ -12,19 +13,21 @@ import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
 import React, { useCallback, useContext, useState } from 'react';
+import Checkbox from '../base/Checkbox';
 import Collapse from '../base/Collapse';
 import Controls from '../base/Controls';
 import Link from '../base/Link';
-import ResponsiveDiv from '../base/ResponsiveDiv';
-import Text from '../base/Text';
-import Select from '../base/Select';
 import NavMenu from '../base/NavMenu';
-import Checkbox from '../base/Checkbox';
+import ResponsiveDiv from '../base/ResponsiveDiv';
+import Select from '../base/Select';
+import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
 import TagColorsModal from '../modals/TagColorsModal';
 
+const ArenaExportModalItem = withModal(Link, ArenaExportModal);
 const PasteBulkModalItem = withModal(Link, PasteBulkModal);
 const UploadBulkModalItem = withModal(Link, UploadBulkModal);
 const UploadBulkReplaceModalItem = withModal(Link, UploadBulkReplaceModal);
@@ -41,6 +44,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
   const { cardsPerRow, setCardsPerRow } = useContext(DisplayContext);
+  const { alerts } = useAlerts();
 
   const { canEdit, hasCustomImages, cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, setShowUnsorted } =
     useContext(CubeContext);
@@ -106,6 +110,9 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           <Link href={`/cube/download/forge/${cube.id}?${urlSegment}`}>Forge (.dck)</Link>
           <Link href={`/cube/download/mtgo/${cube.id}?${urlSegment}`}>MTGO (.txt)</Link>
           <Link href={`/cube/download/xmage/${cube.id}?${urlSegment}`}>XMage (.dck)</Link>
+          <ArenaExportModalItem modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed }}>
+            Arena (.txt)
+          </ArenaExportModalItem>
           <Flexbox direction="row" justify="between" onClick={() => setIsSortUsed((is) => !is)}>
             <Checkbox label="Use Sort" checked={isSortUsed} setChecked={setIsSortUsed} />
             <Tooltip text="Order export using current sort options." wrapperTag="span" className="ms-auto me-0">
@@ -227,6 +234,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             }
           />
           <CompareCollapse isOpen={openCollapse === 'compare'} />
+          <Alerts alerts={alerts} />
         </div>
       </Flexbox>
     </Controls>
