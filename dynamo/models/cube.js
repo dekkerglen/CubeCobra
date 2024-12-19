@@ -259,7 +259,7 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  getByVisibility: async (visibility, lastKey, limit = 36) => {
+  getByVisibility: async (visibility, lastKey, limit = 100) => {
     const result = await client.query({
       IndexName: 'ByVisiblity',
       KeyConditionExpression: `#p1 = :visibility`,

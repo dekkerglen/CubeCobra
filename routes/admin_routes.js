@@ -18,7 +18,6 @@ const { render, redirect } = require('../serverjs/render');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
 
-const { dumpDraft } = require('../serverjs/multiplayerDrafting');
 
 const ensureAdmin = ensureRole('Admin');
 
@@ -450,10 +449,5 @@ router.post(
   },
 );
 
-router.get('/dumpdraft/:id', async (req, res) => {
-  const dump = await dumpDraft(req.params.id);
-
-  return res.status(200).send(dump);
-});
 
 module.exports = router;

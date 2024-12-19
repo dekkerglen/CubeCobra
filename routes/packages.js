@@ -216,7 +216,7 @@ router.get('/:id', async (req, res) => {
 });
 
 router.get('/', (req, res) => {
-  res.redirect('/packages');
+  redirect(req, res, '/packages');
 });
 
 module.exports = router;

@@ -8,6 +8,7 @@ interface ModalProps {
   children: ReactNode;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
+  xs?: boolean;
   sm?: boolean;
   md?: boolean;
   lg?: boolean;
@@ -15,7 +16,7 @@ interface ModalProps {
   xxl?: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md, lg, xl, xxl }) => {
+export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, xs, sm, md, lg, xl, xxl }) => {
   return (
     <Transition show={isOpen}>
       <Dialog as="div" className="relative z-30" onClose={() => setOpen(false)}>
@@ -35,6 +36,7 @@ export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md,
           >
             <div
               className={classNames(`grow`, {
+                'max-w-screen-xs': xs,
                 'max-w-screen-sm': sm,
                 'max-w-screen-md': md,
                 'max-w-screen-lg': lg,

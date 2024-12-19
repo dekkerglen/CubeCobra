@@ -26,6 +26,7 @@ import Select from '../base/Select';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
 import TagColorsModal from '../modals/TagColorsModal';
+import UserContext from 'contexts/UserContext';
 
 const ArenaExportModalItem = withModal(Link, ArenaExportModal);
 const PasteBulkModalItem = withModal(Link, PasteBulkModal);
@@ -40,6 +41,7 @@ interface CubeListNavbarProps {
 }
 
 const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }) => {
+  const user = useContext(UserContext);
   const [expanded, toggleExpanded] = useToggle(false);
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
@@ -105,6 +107,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               <Text semibold>Export</Text>
             </>
           )}
+          {user && <Link href={`/cube/clone/${cube.id}`}>Clone Cube</Link>}
           <Link href={`/cube/download/plaintext/${cube.id}?${urlSegment}`}>Card Names (.txt)</Link>
           <Link href={`/cube/download/csv/${cube.id}?${urlSegment}`}>Comma-Separated (.csv)</Link>
           <Link href={`/cube/download/forge/${cube.id}?${urlSegment}`}>Forge (.dck)</Link>

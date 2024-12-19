@@ -220,7 +220,8 @@ router.get('/redirect', ensureAuth, async (req, res) => {
       return redirect(req, res, '/user/account?nav=patreon');
     })
     .catch((err) => {
-      req.logger.error(err.message, err.stack);
+      console.error(err);
+      req.logger.error(err.message, err.stack, JSON.stringify(err));
 
       req.flash('danger', `There was an error linking your Patreon account: ${err.message}`);
       return redirect(req, res, '/user/account?nav=patreon');

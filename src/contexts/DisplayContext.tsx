@@ -36,7 +36,7 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
   const [openCollapse, setOpenCollapse] = useState<string | null>(() => {
     return Query.get('f') ? 'filter' : null;
   });
-  const [cardsPerRow, setCardsPerRow] = useState<NumCols>(8);
+  const [cardsPerRow, setCardsPerRow] = useLocalStorage<NumCols>('cardsPerRow', 6);
 
   const toggleShowCustomImages = useCallback(() => {
     setShowCustomImages((prev) => !prev);

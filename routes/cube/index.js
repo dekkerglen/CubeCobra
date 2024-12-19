@@ -11,6 +11,7 @@ const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');
 const util = require('../../serverjs/util');
 const generateMeta = require('../../serverjs/meta');
 const { createLobby } = require('../../serverjs/multiplayerDrafting');
+const { dumpDraft } = require('../../serverjs/multiplayerDrafting');
 
 const {
   generatePack,
@@ -41,6 +42,13 @@ router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));
 
+
+router.get('/dumpdraft/:id', async (req, res) => {
+  const dump = await dumpDraft(req.params.id);
+
+  return res.status(200).send(dump);
+});
+
 router.post('/add', ensureAuth, recaptcha, async (req, res) => {
   try {
     const {
@@ -53,7 +61,18 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
     }
 
     if (util.hasProfanity(name)) {
-      req.flash('danger', 'Cube name should not use profanity.');
+      req.flash('danger', 'Cube name contains a banned word. If you feel this was a mistake, please contact us.');
+      return redirect(req, res, `/user/view/${user.id}`);
+    }
+
+    // if this user has two empty cubes, we deny them from making a new cube
+
+    const cubes = await Cube.getByOwner(user.id);
+
+    const emptyCubes = cubes.items.filter((cube) => cube.cardCount === 0);
+
+    if (emptyCubes.length >= 2) {
+      req.flash('danger', 'You may only have two empty cubes at a time. To create a new cube, please delete an empty cube, or add cards to it.');
       return redirect(req, res, `/user/view/${user.id}`);
     }
 
@@ -168,7 +187,7 @@ router.get('/clone/:id', async (req, res) => {
   }
 });
 
-router.get('/view/:id', (req, res) => res.redirect(`/cube/overview/${req.params.id}`));
+router.get('/view/:id', (req, res) => redirect(req, res, `/cube/overview/${req.params.id}`));
 
 router.post('/format/add/:id', ensureAuth, async (req, res) => {
   try {
@@ -293,6 +312,18 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
 
     if (cube.owner.id !== user.id) {
       req.flash('danger', 'Unauthorized');
+      return redirect(req, res, '/cube/overview/' + cube.id);
+    }
+
+    // if this cube has no cards, we deny them from making any changes
+    // this is a spam prevention measure
+    if (cube.cardCount === 0) {
+      req.flash('danger', 'Cannot update the cube overview for an empty cube. Please add cards to the cube first.');
+      return redirect(req, res, '/cube/overview/' + cube.id);
+    }
+    
+    if (util.hasProfanity(updatedCube.name)) {
+      req.flash('danger', 'Could not update cube, the name contains a banned word. If you feel this was a mistake, please contact us.');
       return redirect(req, res, '/cube/overview/' + cube.id);
     }
 
@@ -828,7 +859,7 @@ router.get('/analysis/:id', async (req, res) => {
 });
 
 router.get('/samplepack/:id', (req, res) => {
-  res.redirect(`/cube/samplepack/${encodeURIComponent(req.params.id)}/${Date.now().toString()}`);
+  redirect(req, res, `/cube/samplepack/${encodeURIComponent(req.params.id)}/${Date.now().toString()}`);
 });
 
 router.get('/samplepack/:id/:seed', async (req, res) => {
@@ -846,13 +877,11 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     try {
       pack = await generatePack(cube, cards, carddb, req.params.seed);
     } catch (err) {
-      req.flash('danger', "Failed to generate pack. If trying again doesn't work, please file a bug report.");
-      req.logger.error(err.message, err.stack);
+      // this is probably a 400, not a 500, as the user can fix it by trying again.
+      req.flash('danger', "Failed to generate pack: " + err.message);
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
-
-    console.log(pack);
     const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
     const height = Math.ceil(pack.pack.length / width);
 
@@ -904,7 +933,10 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
         return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
 
-      console.log(pack);
+      if (pack.pack.some((card) => !card.imgUrl && !card.details.image_normal)) {
+        req.flash('danger', 'One or more cards in this pack are missing images.');
+        return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+      }
 
       // Try to make it roughly 5 times as wide as it is tall in cards.
       const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));

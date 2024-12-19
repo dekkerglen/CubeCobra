@@ -20,6 +20,7 @@ const Patron = require('../dynamo/models/patron');
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Notification = require('../dynamo/models/notification');
 const Draft = require('../dynamo/models/draft');
+const uuid = require('uuid');
 
 const router = express.Router();
 
@@ -313,58 +314,121 @@ router.post(
   recaptcha,
   flashValidationErrors,
   async (req, res) => {
-    const email = req.body.email.toLowerCase();
-    const { username, password } = req.body;
+    try {
+      const email = req.body.email.toLowerCase();
+      const { username, password } = req.body;     
 
-    const attempt = { email, username };
+      const attempt = { email, username };
 
-    if (!req.validated) {
-      return render(req, res, 'RegisterPage', attempt);
-    }
+      if (!req.validated) {
+        return render(req, res, 'RegisterPage', attempt);
+      }
 
-    const userByName = await User.getByUsername(req.body.username.toLowerCase());
+      // if email has a plus, validation error
+      if (email.includes('+')) {
+        req.flash('danger', 'CubeCobra does not support plus email addressing, please remove the "+descriptor" from your email and try again.');
+        return render(req, res, 'RegisterPage', attempt);
+      }
 
-    if (userByName) {
-      req.flash('danger', 'username already taken.');
-      return render(req, res, 'RegisterPage', attempt);
-    }
+      const userByName = await User.getByUsername(req.body.username.toLowerCase());
 
-    // check if user exists
-    const user = await User.getByEmail(req.body.email.toLowerCase());
+      if (userByName) {
+        req.flash('danger', 'username already taken.');
+        return render(req, res, 'RegisterPage', attempt);
+      }
 
-    if (user) {
-      req.flash('danger', 'email already associated with an existing account.');
-      return render(req, res, 'RegisterPage', attempt);
-    }
+      // check if user exists
+      const user = await User.getByEmail(req.body.email.toLowerCase());
 
-    const newUser = {
-      email,
-      username,
-      followedCubes: [],
-      followedUsers: [],
-      following: [],
-      hideFeatured: false,
-      hideTagColors: false,
-      imageName: 'Ambush Viper',
-      roles: [],
-      theme: 'default',
-    };
+      if (user) {
+        req.flash('danger', 'email already associated with an existing account.');
+        return render(req, res, 'RegisterPage', attempt);
+      }
 
-    return bcrypt.genSalt(10, (err3, salt) => {
-      bcrypt.hash(password, salt, async (err4, hash) => {
-        if (err4) {
-          req.logger.error(err4.message, err4.stack);
-        } else {
-          newUser.passwordHash = hash;
-          await User.put(newUser);
+      const newUser = {
+        email,
+        username,
+        followedCubes: [],
+        followedUsers: [],
+        following: [],
+        hideFeatured: false,
+        hideTagColors: false,
+        imageName: 'Ambush Viper',
+        roles: [],
+        theme: 'default',
+        emailVerified: false,
+        token:  uuid.v4()
+      };
 
-          req.flash('success', 'Account successfully created. You are now able to login.');
-          res.redirect('/user/login');
-        }
+      const salt = await bcrypt.genSalt(10);
+      newUser.passwordHash = await bcrypt.hash(password, salt);
+      const id = await User.put(newUser);
+
+      const smtpTransport = mailer.createTransport({
+        name: 'CubeCobra.com',
+        secure: true,
+        service: 'Gmail',
+        auth: {
+          user: process.env.EMAIL_CONFIG_USERNAME,
+          pass: process.env.EMAIL_CONFIG_PASSWORD,
+        },
       });
-    });
+
+      const message = new Email({
+        message: {
+          from: 'Cube Cobra Team <support@cubecobra.com>',
+          to: email,
+          subject: 'Please verify your new Cube Cobra account',
+        },
+        send: true,
+        juiceResources: {
+          webResources: {
+            relativeTo: path.join(__dirname, '..', 'public'),
+            images: true,
+          },
+        },
+        transport: smtpTransport,
+      });
+
+      message.send({
+        template: 'confirm_email',
+        locals: {
+          id,
+          token: newUser.token,
+        },
+      });
+
+      req.flash('success', 'Account successfully created. Please check your email for a verification link to login.');
+      return redirect(req, res, '/user/login');
+    } catch (err) {
+      util.handleRouteError(req, res, err, '/user/register');
+    }
   },
 );
+
+router.get('/register/confirm/:id/:token', async (req, res) => {
+  try {
+    const user = await User.getById(req.params.id);
+
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/user/login');
+    }
+
+    if (user.token !== req.params.token) {
+      req.flash('danger', 'Invalid token');
+      return redirect(req, res, '/user/login');
+    }
+
+    user.emailVerified = true;
+    await User.update(user);
+
+    req.flash('success', 'Email verified. You can now login.');
+    return redirect(req, res, '/user/login');
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/user/login');
+  }
+});
 
 // Login route
 router.get('/login', (req, res) => {
@@ -375,9 +439,9 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res) => {
   let user;
 
-  if (!req.body.username || req.body.username.length === 0) {
+  if (!req.body.username || req.body.username.toLowerCase().length === 0) {
     req.flash('danger', 'Incorrect Username or email address.');
-    res.redirect('/user/login');
+    return redirect(req, res, '/user/login');
   }
 
   if (req.body.username.includes('@')) {
@@ -388,31 +452,33 @@ router.post('/login', async (req, res) => {
 
   if (!user) {
     req.flash('danger', 'Incorrect Username or email address.');
-    res.redirect('/user/login');
-  } else {
-    req.body.username = user.username;
-    // TODO: fix confirmation and check it here.
-    let redirect = '/';
-    if (req.body.loginCallback) {
-      redirect = req.body.loginCallback;
-    }
-    passport.authenticate('local', {
-      successRedirect: redirect,
-      failureRedirect: '/user/login',
-      failureFlash: { type: 'danger' },
-    })(req, res, () => {
-      res.redirect('/');
-    });
+    return redirect(req, res, '/user/login');
   }
+
+  if (user.emailVerified === false) {
+    req.flash('danger', 'Your account is not verified. Please check your email for a verification link.');
+    return redirect(req, res, '/user/login');
+  }
+
+  req.body.username = user.username;
+  // TODO: fix confirmation and check it here.
+  let redirectRoute = '/';
+  if (req.body.loginCallback) {
+    redirectRoute = req.body.loginCallback;
+  }
+  passport.authenticate('local', {
+    successRedirect: redirectRoute,
+    failureRedirect: '/user/login',
+    failureFlash: { type: 'danger' },
+  })(req, res, () => {
+    return redirect(req, res, '/');
+  });
 });
 
 // logout
 router.get('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      res.redirect('/');
-    }
-    res.redirect('/');
+  req.session.destroy(() => {
+    return redirect(req, res, '/');
   });
 });
 
@@ -433,8 +499,7 @@ router.get('/view/:id', async (req, res) => {
       following,
     });
   } catch (err) {
-    req.logger.error(err.message, err.stack);
-    return res.status(500).send(err);
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -681,10 +746,10 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
     await User.update(user);
 
     req.flash('success', 'Your display preferences have been updated.');
-    res.redirect('/user/account');
+    return redirect(req, res, '/user/account');
   } catch (err) {
     req.flash('danger', `Could not save preferences: ${err.message}`);
-    res.redirect('/user/account?nav=display');
+    return redirect(req, res, '/user/account?nav=display');
   }
 });
 

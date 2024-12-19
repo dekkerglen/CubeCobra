@@ -18,7 +18,7 @@ const router = express.Router();
 router.use(csrfProtection);
 
 // Home route
-router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
+router.get('/', async (req, res) => (req.user ? redirect(req, res, '/dashboard') : redirect(req, res, '/landing')));
 
 router.get('/explore', async (req, res) => {
   const recents = (await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC)).items.filter((cube) =>
@@ -679,11 +679,11 @@ router.get('/donate', (req, res) => {
 });
 
 router.get('/c/:id', (req, res) => {
-  res.redirect(`/cube/list/${req.params.id}`);
+  redirect(req, res, `/cube/list/${req.params.id}`);
 });
 
 router.get('/d/:id', (req, res) => {
-  res.redirect(`/cube/draft/${req.params.id}`);
+  redirect(req, res, `/cube/draft/${req.params.id}`);
 });
 
 router.get('/leave', (req, res) => {
@@ -693,7 +693,7 @@ router.get('/leave', (req, res) => {
 });
 
 router.get('/ads.txt', (req, res) => {
-  res.redirect(301, 'https://api.nitropay.com/v1/ads-860.txt');
+  redirect(req, res, 301, 'https://api.nitropay.com/v1/ads-860.txt');
 });
 
 module.exports = router;

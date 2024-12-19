@@ -333,7 +333,7 @@ module.exports = {
     const documents = await client.batchGet(ids);
     return batchHydrate(await Promise.all(documents.map((document) => addS3Fields(document))));
   },
-  getByOwner: async (owner, lastKey) => {
+  getByOwner: async (owner, lastKey, limit=200) => {
     const res = await client.query({
       IndexName: 'ByOwner',
       KeyConditionExpression: '#owner = :owner',
@@ -346,7 +346,7 @@ module.exports = {
         ':owner': owner,
         ':complete': true,
       },
-      Limit: 200,
+      Limit: limit,
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });

@@ -1,7 +1,7 @@
 const shuffleSeed = require('shuffle-seed');
 const Notification = require('../dynamo/models/notification');
 const cardutil = require('../dist/utils/Card');
-
+const { redirect } = require('./render');
 const carddb = require('./carddb');
 
 function hasProfanity(text) {
@@ -11,6 +11,56 @@ function hasProfanity(text) {
   const filter = new Filter();
   const removeWords = ['hell', 'sadist', 'God'];
   filter.removeWords(...removeWords);
+  const addWords = [
+    'dhabi',
+    'dubai',
+    'persian',
+    'escort',
+    'call girl',
+    'scandal',
+    'onlyfans',
+    'leaked',
+    'pdf',
+    'download',
+    'xbox',
+    'gift card',
+    'vbucks',
+    'v-bucks',
+    'streaming',
+    'bitcoin',
+    'cryptocurrency',
+    'crypto',
+    'nft',
+    'coinbase',
+    'ozempic',
+    'xanax',
+    'viagra',
+    'tramadol',
+    'adderall',
+    'percocet',
+    'oxycontin',
+    'vicodin',
+    'hydrocodone',
+    'codeine',
+    'morphine',
+    'fentanyl',
+    'ambien',
+    'valium',
+    'ativan',
+    'dilaudid',
+    'alprazolam',
+    'meridia',
+    'phentermine',
+    'fioricet',
+    'google play',
+    'coin master',
+    'robux',
+    'roblox',
+    'monopoly go',
+    'monopoly-go',
+    'fullmovie',
+  ];
+  filter.addWords(...addWords);
 
   return filter.isProfane(text.toLowerCase());
 }
@@ -146,10 +196,9 @@ function wrapAsyncApi(route) {
 }
 
 function handleRouteError(req, res, err, reroute) {
-  console.error(err);
   req.logger.error(err.message, err.stack);
   req.flash('danger', err.message);
-  res.redirect(reroute);
+  redirect(req, res, reroute);
 }
 
 function toNonNullArray(arr) {
