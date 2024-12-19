@@ -10,7 +10,7 @@ import { Flexbox } from 'components/base/Layout';
 
 const GridDraftCard: React.FC = () => {
   const { cube } = useContext(CubeContext);
-  const [packs, setPacks] = useState('3');
+  const [packs, setPacks] = useState('18');
   const [type, setType] = useState('bot');
   const formRef = React.createRef<HTMLFormElement>();
 
@@ -37,8 +37,7 @@ const GridDraftCard: React.FC = () => {
             <Select
               label="Number of packs"
               id="packs"
-              defaultValue="18"
-              options={rangeOptions(1, 16)}
+              options={rangeOptions(1, 30)}
               value={packs}
               setValue={setPacks}
             />
