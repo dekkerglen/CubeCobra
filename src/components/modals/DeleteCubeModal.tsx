@@ -1,11 +1,11 @@
-import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Button from 'components/base/Button';
-import Text from 'components/base/Text';
 import { Flexbox } from 'components/base/Layout';
 import Input from 'components/base/Input';
 import type Cube from 'datatypes/Cube';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
+import React from 'react';
 
 interface DeleteCubeModalProps {
   isOpen: boolean;

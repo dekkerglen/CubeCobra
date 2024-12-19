@@ -42,7 +42,6 @@ const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultDraftForma
             <Select
               label="Number of packs"
               id="packs"
-              defaultValue="3"
               options={rangeOptions(1, 16)}
               value={packs}
               setValue={setPacks}
@@ -50,7 +49,6 @@ const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultDraftForma
             <Select
               label="Cards per pack"
               id="cards"
-              defaultValue="15"
               options={rangeOptions(1, 25)}
               value={cards}
               setValue={setCards}
@@ -58,7 +56,6 @@ const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultDraftForma
             <Select
               label="Total seats"
               id="seats"
-              defaultValue="8"
               options={rangeOptions(2, 17)}
               value={seats}
               setValue={setSeats}

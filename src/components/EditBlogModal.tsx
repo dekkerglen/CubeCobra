@@ -48,7 +48,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cu
         </ModalBody>
         <ModalFooter>
           <Flexbox direction="row" gap="2" className="w-full">
-            <Button block color="primary" onClick={() => setOpen(false)}>
+            <Button type="submit" block color="primary">
               Save
             </Button>
             <Button block color="secondary" onClick={() => setOpen(false)}>

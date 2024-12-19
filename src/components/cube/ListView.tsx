@@ -14,7 +14,7 @@ import withAutocard from 'components/WithAutocard';
 import CubeContext from 'contexts/CubeContext';
 import CardType from 'datatypes/Card';
 import TagData from 'datatypes/TagData';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
   cardCmc,
   cardColorIdentity,
@@ -25,7 +25,7 @@ import {
   cardType,
   normalizeName,
 } from 'utils/Card';
-import { getLabels } from 'utils/Sort';
+import { getLabels, sortForDownload } from 'utils/Sort';
 
 const GroupModalButton = withGroupModal(Button);
 
@@ -86,6 +86,22 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
   const [pageSize, setPageSize] = useState(50);
 
+  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } =
+    useContext(CubeContext);
+
+  const sorted = useMemo(
+    () =>
+      sortForDownload(
+        cards,
+        sortPrimary || 'Color Category',
+        sortSecondary || 'Types-Multicolor',
+        sortTertiary || 'CMC',
+        sortQuaternary || 'Alphabetical',
+        cube.showUnsorted || false,
+      ),
+    [cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary],
+  );
+
   const handleCheck = useCallback(
     (card: CardType) => {
       setChecked((prevChecked) => ({
@@ -116,7 +132,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
   );
 
   const headers = ['Name', 'Version', 'Type', 'Status', 'Finish', 'CMC', 'Color Identity', 'Tags'];
-  const rows = cards.map((card) => ({
+  const rows = sorted.map((card) => ({
     Name: (
       <Flexbox direction="row" gap="2">
         <Checkbox label="" checked={checked[cardIndex(card)]} setChecked={() => handleCheck(card)} />
