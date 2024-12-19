@@ -1,6 +1,6 @@
 function enterCentering(token) {
   this.enter(
-    { type: 'centering', data: { hName: 'div', hProperties: { className: ['centered-markdown'] } }, children: [] },
+    { type: 'centering', data: { hName: 'div', hProperties: { className: ['text-center'] } }, children: [] },
     token,
   );
 }
