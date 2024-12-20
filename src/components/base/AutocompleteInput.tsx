@@ -270,6 +270,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
+      let enterPressed = event.keyCode === 13;
       if (event.keyCode === 40) {
         // DOWN key
         event.preventDefault();
@@ -278,15 +279,21 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         // UP key
         event.preventDefault();
         setPosition((p) => (p > -1 ? p - 1 : p));
-      } else if (event.keyCode === 9 || event.keyCode === 13) {
+      } else if (event.keyCode === 9 || enterPressed) {
         // TAB or ENTER key
         if (showMatches) {
           const goodPosition = position >= 0 && position < matches.length ? position : 0;
           const match = matches[goodPosition];
           acceptSuggestion(match);
-          if (event.keyCode === 13 && onSubmit) {
+          if (enterPressed && onSubmit) {
             // ENTER key
             onSubmit(event, match);
+          }
+          //If not showing matches but there is a single match for the current card name, then hitting enter should trigger the on submit
+        } else if (matches.length === 1 && matches[0] === value) {
+          if (enterPressed && onSubmit) {
+            // ENTER key
+            onSubmit(event, matches[0]);
           }
         }
       }

@@ -221,7 +221,8 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
                 name="add"
                 value={addValue}
                 setValue={setAddValue}
-                onSubmit={(e) => handleAdd(e, removeValue)}
+                //Can't be addValue or else the selected text from the autocomplete input is ignored
+                onSubmit={(e, addCardValue) => handleAdd(e, addCardValue!)}
                 placeholder="Card to Add"
                 autoComplete="off"
                 data-lpignore
@@ -243,7 +244,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
                 name="remove"
                 value={removeValue}
                 setValue={setRemoveValue}
-                onSubmit={(e) => handleRemoveReplace(e, removeValue)}
+                onSubmit={(e, removeCardValue) => handleRemoveReplace(e, removeCardValue!)}
                 placeholder="Card to Remove"
                 autoComplete="off"
                 data-lpignore
