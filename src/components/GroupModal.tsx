@@ -1,26 +1,26 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
+import { XIcon } from '@primer/octicons-react';
+import Text from 'components/base/Text';
+import Tooltip from 'components/base/Tooltip';
 import AutocardListItem from 'components/card/AutocardListItem';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import MassBuyButton from 'components/MassBuyButton';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
-import Tooltip from 'components/base/Tooltip';
 import AutocardContext from 'contexts/AutocardContext';
 import Card, { BoardType } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/Card';
-import Text from 'components/base/Text';
-import { Modal, ModalBody, ModalHeader } from './base/Modal';
-import { Col, Flexbox, Row } from './base/Layout';
-import { ListGroup } from './base/ListGroup';
 import Button from './base/Button';
-import { XIcon } from '@primer/octicons-react';
-import Link from './base/Link';
-import Select from './base/Select';
 import Input from './base/Input';
+import { Col, Flexbox, Row } from './base/Layout';
+import Link from './base/Link';
+import { ListGroup } from './base/ListGroup';
+import { Modal, ModalBody, ModalHeader } from './base/Modal';
 import RadioButtonGroup from './base/RadioButtonGroup';
+import Select from './base/Select';
 
 function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: number }[] {
   return cards.filter((card) => card.board !== undefined && card.index !== undefined) as {
@@ -84,9 +84,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
           index: card.index,
         }))
         .filter(({ board, index }) => board !== undefined && index !== undefined) as {
-        board: BoardType;
-        index: number;
-      }[],
+          board: BoardType;
+          index: number;
+        }[],
     );
     setOpen(false);
   }, [bulkRemoveCard, cards, setOpen]);
@@ -100,9 +100,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
           index: card.index,
         }))
         .filter(({ board, index }) => board !== undefined && index !== undefined) as {
-        board: BoardType;
-        index: number;
-      }[],
+          board: BoardType;
+          index: number;
+        }[],
     );
   }, [bulkRevertRemove, cards]);
 
@@ -114,9 +114,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
           index: card.index,
         }))
         .filter(({ board, index }) => board !== undefined && index !== undefined) as {
-        board: BoardType;
-        index: number;
-      }[],
+          board: BoardType;
+          index: number;
+        }[],
     );
   }, [bulkRevertEdit, cards]);
 
