@@ -18,7 +18,7 @@ const PasswordResetForm: React.FC<LoginModalProps> = ({ code }) => {
   const formRef = React.useRef<HTMLFormElement>(null);
 
   return (
-    <CSRFForm ref={formRef} method="POST" action="/user/login" formData={formData}>
+    <CSRFForm ref={formRef} method="POST" action="/user/lostpasswordreset" formData={formData}>
       <Flexbox direction="col" gap="2">
         <Input
           label="Username or Email Address"

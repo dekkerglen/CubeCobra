@@ -11,6 +11,11 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 
+import ConfirmActionModal from 'components/modals/ConfirmActionModal';
+import withModal from 'components/WithModal';
+
+const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
+
 interface Notice {
   id: string;
   type: string;
@@ -27,7 +32,8 @@ interface NoticePageProps {
 
 const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices }) => {
   const applications = notices.filter((notice) => notice.type === 'a');
-  const reports = notices.filter((notice) => notice.type === 'cr');
+  const commentReports = notices.filter((notice) => notice.type === 'cr');
+  const cubeReports = notices.filter((notice) => notice.type === 'cur');
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -93,7 +99,7 @@ const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices })
             Recent Comment Reports
           </Text>
         </CardHeader>
-        {reports.map((report) => (
+        {commentReports.map((report) => (
           <Card key={report.id}>
             <CardBody>
               <p>
@@ -120,6 +126,54 @@ const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices })
                   <Button type="link" color="danger" block outline href={`/admin/removecomment/${report.id}`}>
                     Remove Comment
                   </Button>
+                </Col>
+              </Row>
+            </CardBody>
+          </Card>
+        ))}
+      </Card>
+      <Card className="my-3">
+        <CardHeader>
+          <Text md semibold>
+            Recent Cube Reports
+          </Text>
+        </CardHeader>
+        {cubeReports.map((report) => (
+          <Card key={report.id}>
+            <CardBody>
+              <p>
+                User:{' '}
+                <Link href={`/user/view/${report.subject}`} target="_blank" rel="noopener noreferrer">
+                  {report.subject}
+                </Link>
+              </p>
+              <p>{report.body}</p>
+              <p>
+                Reported by:{' '}
+                <Link href={`/user/view/${report.user.id}`} target="_blank" rel="noopener noreferrer">
+                  {report.user.username}
+                </Link>
+                - <TimeAgo date={report.date} />
+              </p>
+              <Row>
+                <Col xs={12} sm={6}>
+                  <Button type="link" color="primary" block outline href={`/admin/ignorereport/${report.id}`}>
+                    Ignore
+                  </Button>
+                </Col>
+                <Col xs={12} sm={6}>
+                  <ConfirmActionModalButton
+                    color="danger"
+                    block
+                    modalprops={{
+                      target: `/admin/banuser/${report.id}`,
+                      title: 'Ban User',
+                      message: 'Are you sure you want to ban this user? ',
+                      buttonText: 'Ban User',
+                    }}
+                  >
+                    Ban User
+                  </ConfirmActionModalButton>
                 </Col>
               </Row>
             </CardBody>

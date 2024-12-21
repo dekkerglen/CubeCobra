@@ -17,10 +17,19 @@ interface CubesCardProps {
     text: string;
   };
   lean?: boolean;
+  alternateViewFewer?: React.ReactNode;
   [key: string]: any; // To allow additional props
 }
 
-const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, sideLink, lean = false, ...props }) => {
+const CubesCard: React.FC<CubesCardProps> = ({
+  children,
+  cubes,
+  title,
+  sideLink,
+  lean = false,
+  alternateViewFewer,
+  ...props
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = () => setIsOpen(!isOpen);
@@ -53,9 +62,21 @@ const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, sideLink,
       </Collapse>
       {(!lean || cubes.length > 2) && (
         <CardBody>
-          <Button color="accent" block onClick={toggle}>
-            {isOpen ? 'View Fewer...' : 'View More...'}
-          </Button>
+          {alternateViewFewer ? (
+            <>
+              {isOpen ? (
+                alternateViewFewer
+              ) : (
+                <Button color="primary" block onClick={toggle}>
+                  View More...
+                </Button>
+              )}
+            </>
+          ) : (
+            <Button color="primary" block onClick={toggle}>
+              {isOpen ? 'View Fewer...' : 'View More...'}
+            </Button>
+          )}
         </CardBody>
       )}
       {children}

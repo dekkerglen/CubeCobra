@@ -124,7 +124,7 @@ const getHashesForCube = (metadata, cards) => {
   return [...new Set([...getHashesForCards(cards), ...getHashesForMetadata(metadata)])];
 };
 
-const getSortedByFollowers = async (hash, ascending, lastKey) => {
+const getSortedByFollowers = async (hash, ascending, lastKey, limit=36) => {
   const result = await client.query({
     IndexName: 'SortedByFollowers',
     KeyConditionExpression: `#p1 = :hash`,
@@ -136,6 +136,7 @@ const getSortedByFollowers = async (hash, ascending, lastKey) => {
     },
     ExclusiveStartKey: lastKey,
     ScanIndexForward: ascending,
+    Limit: limit,
   });
   return {
     items: result.Items,
@@ -143,7 +144,7 @@ const getSortedByFollowers = async (hash, ascending, lastKey) => {
   };
 };
 
-const getSortedByName = async (hash, ascending, lastKey) => {
+const getSortedByName = async (hash, ascending, lastKey, limit=36) => {
   const result = await client.query({
     IndexName: 'SortedByName',
     KeyConditionExpression: `#p1 = :hash`,
@@ -155,6 +156,7 @@ const getSortedByName = async (hash, ascending, lastKey) => {
     },
     ExclusiveStartKey: lastKey,
     ScanIndexForward: ascending,
+    Limit: limit,
   });
   return {
     items: result.Items,
@@ -162,7 +164,7 @@ const getSortedByName = async (hash, ascending, lastKey) => {
   };
 };
 
-const getSortedByCardCount = async (hash, ascending, lastKey) => {
+const getSortedByCardCount = async (hash, ascending, lastKey, limit=36) => {
   const result = await client.query({
     IndexName: 'SortedByCardCount',
     KeyConditionExpression: `#p1 = :hash`,
@@ -174,6 +176,7 @@ const getSortedByCardCount = async (hash, ascending, lastKey) => {
     },
     ExclusiveStartKey: lastKey,
     ScanIndexForward: ascending,
+    Limit: limit,
   });
   return {
     items: result.Items,
@@ -182,16 +185,16 @@ const getSortedByCardCount = async (hash, ascending, lastKey) => {
 };
 
 module.exports = {
-  query: async (hash, ascending, lastKey, order) => {
+  query: async (hash, ascending, lastKey, order, limit=36) => {
     switch (order) {
       case 'pop':
-        return getSortedByFollowers(hash, ascending, lastKey);
+        return getSortedByFollowers(hash, ascending, lastKey, limit);
       case 'alpha':
-        return getSortedByName(hash, ascending, lastKey);
+        return getSortedByName(hash, ascending, lastKey, limit);
       case 'cards':
-        return getSortedByCardCount(hash, ascending, lastKey);
+        return getSortedByCardCount(hash, ascending, lastKey, limit);
       default:
-        return getSortedByFollowers(hash, ascending, lastKey);
+        return getSortedByFollowers(hash, ascending, lastKey, limit);
     }
   },
   getHashesByCubeId: async (cubeId) => {

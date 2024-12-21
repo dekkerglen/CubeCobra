@@ -11,13 +11,14 @@ const { ensureRole, csrfProtection, flashValidationErrors } = require('./middlew
 const User = require('../dynamo/models/user');
 const Notice = require('../dynamo/models/notice');
 const Comment = require('../dynamo/models/comment');
+const Blog = require('../dynamo/models/blog');
+const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
 const { render, redirect } = require('../serverjs/render');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
-
 
 const ensureAdmin = ensureRole('Admin');
 
@@ -388,6 +389,103 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
   return redirect(req, res, '/admin/featuredcubes');
 });
 
+router.get('/banuser/:id', ensureAdmin, async (req, res) => {
+  try {
+    const notice = await Notice.getById(req.params.id);
+    const userToBan = notice.subject;
+
+    let aggregates = {
+      commentsWiped: 0,
+      cubesDeleted: 0,
+      blogPostsDeleted: 0,
+      draftsDeleted: 0,
+      failed: [],
+    };
+
+    // delete all cubes
+    const response = await Cube.getByOwner(userToBan);
+
+    aggregates.cubesDeleted += response.items.length;
+    for (const cube of response.items) {
+      await Cube.deleteById(cube.id);
+    }
+
+    // delete all blog posts
+    const blogResponse = await Blog.getByOwner(userToBan);
+
+    let lastKey = blogResponse.LastEvaluatedKey;
+    let blogIds = blogResponse.items.map((blog) => blog.id);
+
+    while (lastKey) {
+      const nextResponse = await Blog.getByOwner(userToBan, 100, lastKey);
+      lastKey = nextResponse.LastEvaluatedKey;
+      blogIds = blogIds.concat(nextResponse.items.map((blog) => blog.id));
+    }
+
+    aggregates.blogPostsDeleted += blogIds.length;
+    for (const blogId of blogIds) {
+      await Blog.delete(blogId);
+    }
+
+    // delete all drafts
+    const draftResponse = await Draft.getByOwner(userToBan);
+
+    lastKey = draftResponse.LastEvaluatedKey;
+    let draftIds = draftResponse.items.map((draft) => draft.id);
+
+    while (lastKey) {
+      const nextResponse = await Draft.getByOwner(userToBan, 100, lastKey);
+      lastKey = nextResponse.LastEvaluatedKey;
+      draftIds = draftIds.concat(nextResponse.items.map((draft) => draft.id));
+    }
+
+    aggregates.draftsDeleted += draftIds.length;
+    for (const draftId of draftIds) {
+      await Draft.delete(draftId);
+    }
+
+    commentResponse = await Comment.queryByOwner(userToBan);
+    lastkey = commentResponse.LastEvaluatedKey;
+    comments = commentResponse.items;
+
+    while (lastKey) {
+      const nextResponse = await Comment.queryByOwner(userToBan, lastKey);
+      lastKey = nextResponse.LastEvaluatedKey;
+      comments = comments.concat(nextResponse.items);
+    }
+
+    // delete all comments
+    aggregates.commentsWiped += comments.length;
+
+    for (const comment of comments) {
+      comment.owner = null;
+      comment.body = '[deleted]';
+    
+      await Comment.put(comment);
+    }
+
+    // ban user
+    const user = await User.getById(userToBan);
+
+    user.roles = ['Banned'];
+    user.about = '[deleted]';
+
+    await User.put(user);
+
+    notice.status = Notice.STATUS.PROCESSED;
+    await Notice.put(notice);
+
+    req.flash(
+      'success',
+      `User ${userToBan} has been banned. ${aggregates.cubesDeleted} cubes, ${aggregates.blogPostsDeleted} blog posts, ${aggregates.draftsDeleted} drafts, and ${aggregates.commentsWiped} comments were deleted.`,
+    );
+    return redirect(req, res, '/admin/notices');
+  } catch (err) {
+    req.flash('danger', err.message);
+    return redirect(req, res, '/admin/notices');
+  }
+});
+
 router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
   if (!req.body.cubeId) {
     req.flash('Cube ID not sent');
@@ -448,6 +546,5 @@ router.post(
     return redirect(req, res, '/admin/featuredcubes');
   },
 );
-
 
 module.exports = router;

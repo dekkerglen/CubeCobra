@@ -25,6 +25,11 @@ const client = createClient({
       partitionKey: FIELDS.PARENT,
       sortKey: FIELDS.DATE,
     },
+    {
+      name: 'ByOwner',
+      partitionKey: FIELDS.OWNER,
+      sortKey: FIELDS.DATE,
+    }
   ],
   attributes: {
     [FIELDS.ID]: 'S',
@@ -101,6 +106,25 @@ module.exports = {
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
       Limit: 10,
+    });
+
+    return {
+      items: await batchHydrate(result.Items),
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  queryByOwner: async (owner, lastKey) => {
+    const result = await client.query({
+      IndexName: 'ByOwner',
+      KeyConditionExpression: `#p1 = :owner`,
+      ExpressionAttributeValues: {
+        ':owner': owner,
+      },
+      ExpressionAttributeNames: {
+        '#p1': FIELDS.OWNER,
+      },
+      ExclusiveStartKey: lastKey,
+      ScanIndexForward: false,
     });
 
     return {

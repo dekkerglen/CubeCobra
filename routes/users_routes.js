@@ -20,6 +20,7 @@ const Patron = require('../dynamo/models/patron');
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Notification = require('../dynamo/models/notification');
 const Draft = require('../dynamo/models/draft');
+const Notice = require('../dynamo/models/notice');
 const uuid = require('uuid');
 
 const router = express.Router();
@@ -98,6 +99,36 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
     });
   }
 });
+
+router.get('/report/:id', ensureAuth, async (req, res) => {
+  try {
+    const user = await User.getById(req.params.id);
+
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/404');
+    }
+    const report = {
+      subject: user.id,
+      body: `"${user.username}" was reported by ${req.user.username}`,
+      user: req.user ? req.user.id : null,
+      date: Date.now().valueOf(),
+      type: Notice.TYPE.CUBE_REPORT,
+    };
+
+    await Notice.put(report);
+
+    req.flash(
+      'success',
+      'Thank you for the report! Our moderators will review the report can decide whether to take action.',
+    );
+
+    return redirect(req, res,  `/user/view/${req.params.id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/user/view/${req.params.id}`);
+  }
+});
+
 
 // Lost password form
 router.get('/lostpassword', (req, res) => {
@@ -324,9 +355,10 @@ router.post(
         return render(req, res, 'RegisterPage', attempt);
       }
 
-      // if email has a plus, validation error
-      if (email.includes('+')) {
-        req.flash('danger', 'CubeCobra does not support plus email addressing, please remove the "+descriptor" from your email and try again.');
+      try {
+        util.validateEmail(email);
+      } catch (err) {
+        req.flash('danger', err.message);
         return render(req, res, 'RegisterPage', attempt);
       }
 
@@ -485,6 +517,11 @@ router.get('/logout', (req, res) => {
 router.get('/view/:id', async (req, res) => {
   try {
     const user = await User.getByIdOrUsername(req.params.id);
+
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/404');
+    }
 
     const cubes = (await Cube.getByOwner(user.id)).items.filter((cube) => isCubeListed(cube, req.user));
 

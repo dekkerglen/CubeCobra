@@ -108,8 +108,12 @@ const banUser = async (userToBan, comments) => {
       await wipeComment(comment);
     }
 
-    // delete user
-    await User.deleteById(userToBan);
+    // ban user
+    const user = await User.getById(userToBan);
+
+    user.roles = ['Banned'];
+
+    await User.put(user);
   } catch (err) {
     aggregates.failed.push(userToBan);
     console.error(`Failed to ban user ${userToBan}`, err);

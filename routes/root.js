@@ -1,6 +1,5 @@
 const express = require('express');
 
-const carddb = require('../serverjs/carddb');
 const util = require('../serverjs/util');
 const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
@@ -11,7 +10,6 @@ const Feed = require('../dynamo/models/feed');
 const { render, redirect } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../serverjs/cubefn');
-const { last } = require('lodash');
 
 const router = express.Router();
 
@@ -113,67 +111,6 @@ router.get('/version', async (req, res) => {
   });
 });
 
-const searchCubes = async (query, order, lastKey, ascending, user) => {
-  let sanitizedQuery = query.toLowerCase().replace(/[^a-z0-9: ]/g, '');
-  const split = sanitizedQuery.split(':');
-
-  if (split.length === 1 && split[0].length > 0) {
-    sanitizedQuery = `keywords:${sanitizedQuery}`;
-  } else if (split.length === 2 && split[0].length > 0 && split[1].length > 0) {
-    // removed surrounding quotes from split[1]
-    if (split[1].startsWith('"') && split[1].endsWith('"')) {
-      split[1] = split[1].substring(1, split[1].length - 1);
-    }
-    sanitizedQuery = `${split[0].trim()}:${split[1].trim()}`;
-  }
-
-  const [unsafeKey, unsafeValue] = query.split(':');
-  if (unsafeKey === 'card') {
-    // get oracle id from card name
-    const card = carddb.getMostReasonable(unsafeValue);
-
-    sanitizedQuery = `oracle:${card ? card.oracle_id : ''}`;
-  }
-
-  const result = await CubeHash.query(sanitizedQuery, ascending, lastKey, order);
-
-  const items = (result.items.length > 0 ? await Cube.batchGet(result.items.map((hash) => hash.cube)) : []).filter(
-    (cube) => isCubeListed(cube, user),
-  );
-
-  // make sure items is in same order as result.items
-  const cubes = result.items.map((hash) => items.find((cube) => cube.id === hash.cube)).filter((cube) => cube);
-
-  return {
-    cubes,
-    lastKey: result.lastKey,
-  };
-};
-
-router.get('/search', async (req, res) => {
-  const ascending = req.query.ascending || 'false';
-  const order = req.query.order || 'pop';
-  const query = req.query.q || '';
-  
-  const result = query !== '' ? await searchCubes(query, order, null, ascending === 'true', req.user) : { cubes: [], lastKey: null };
-
-  return render(req, res, 'SearchPage', {
-    cubes: result.cubes,
-    lastKey: result.lastKey,
-  });
-});
-
-router.post('/getmoresearchitems', ensureAuth, async (req, res) => {
-  const { lastKey, query, order, ascending } = req.body;
-
-  const result = await searchCubes(query, order, lastKey, ascending, req.user);
-
-  return res.status(200).send({
-    success: 'true',
-    cubes: result.cubes,
-    lastKey: result.lastKey,
-  });
-});
 
 router.get('/contact', (req, res) => {
   return render(req, res, 'ContactPage');

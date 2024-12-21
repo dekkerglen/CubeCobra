@@ -21,11 +21,13 @@ const {
   generateSamplepackImage,
   cachePromise,
   isCubeViewable,
+  isCubeListed
 } = require('../../serverjs/cubefn');
 
 const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, updateCubeAndBlog } = require('./helper');
 
 // Bring in models
+const Notice = require('../../dynamo/models/notice');
 const Cube = require('../../dynamo/models/cube');
 const CubeHash = require('../../dynamo/models/cubeHash');
 const Blog = require('../../dynamo/models/blog');
@@ -121,6 +123,62 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
   } catch (err) {
     return util.handleRouteError(req, res, err, `/user/view/${req.user.id}`);
   }
+});
+
+router.get('/report/:id', ensureAuth, async (req, res) => {
+  try {
+    const cube = await Cube.getById(req.params.id);
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+    const report = {
+      subject: cube.owner.id,
+      body: `"${cube.name}" was reported by ${req.user.username}`,
+      user: req.user ? req.user.id : null,
+      date: Date.now().valueOf(),
+      type: Notice.TYPE.CUBE_REPORT,
+    };
+
+    await Notice.put(report);
+
+    req.flash(
+      'success',
+      'Thank you for the report! Our moderators will review the report can decide whether to take action.',
+    );
+
+    return redirect(req, res,  `/cube/overview/${req.params.id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+  }
+});
+
+router.get('/recents', async (req, res) => {
+  const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
+  
+  
+
+  return render(req, res, 'RecentlyUpdateCubesPage', {
+    items: result.items.filter((cube) =>
+      isCubeListed(cube, req.user),
+    ),
+    lastKey: result.lastKey,
+  });
+});
+
+router.post('/getmorerecents', ensureAuth, async (req, res) => {
+  const { lastKey } = req.body;
+
+  const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    items: result.items.filter((cube) =>
+      isCubeListed(cube, req.user),
+    ),
+    lastKey: result.lastKey,
+  });
 });
 
 router.get('/clone/:id', async (req, res) => {

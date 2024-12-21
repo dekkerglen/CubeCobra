@@ -65,6 +65,46 @@ function hasProfanity(text) {
   return filter.isProfane(text.toLowerCase());
 }
 
+function validateEmail(email) {
+  if (email.includes('+')) {
+    throw new Error('CubeCobra does not support plus email addressing, please remove the "+descriptor" from your email and try again.');
+  }
+
+  const bannedDomains = [
+    'evusd.com',
+    'yomail.edu.pl',
+    'munik.edu.pl',
+    'thetechnext.net',
+    'mailmagnet.co',
+    'cctoolz.com',
+    'chosenx.com',
+    'mowline.com',
+    'greatphone.co.uk',
+    'azuretechtalk.net',
+    'kisoq.com',
+    'myfxspot.com',
+    'teleg.eu',
+    'ronete.com',
+    'rabitex.com',
+    'polkaroad.net',
+    'kelenson.com',
+    'owube.com',
+    'jxpomup.com',
+    'datquynhon.net',
+    'finestudio.org',
+    'myfxspot.com',
+    'inboxorigin.com'
+  ]
+
+  const domain = email.split('@')[1];
+
+  if (bannedDomains.includes(domain)) {
+    throw new Error('CubeCobra does not support email addresses from this domain, please use a different email address.');
+  }
+
+  return true;
+}
+
 function generateEditToken() {
   // Not sure if this function is actually used anywhere.
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -285,4 +325,5 @@ module.exports = {
   flatten,
   mapNonNull,
   getImageData,
+  validateEmail
 };

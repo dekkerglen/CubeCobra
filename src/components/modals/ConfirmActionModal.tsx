@@ -25,7 +25,7 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
       <ModalHeader setOpen={setOpen}>{title}</ModalHeader>
       <ModalBody className="flex flex-col gap-2">
         <Text>{message}</Text>
-        <Button color="danger" href={target}>
+        <Button type="link" color="danger" href={target}>
           {buttonText}
         </Button>
       </ModalBody>
