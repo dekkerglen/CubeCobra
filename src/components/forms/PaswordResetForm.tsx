@@ -18,7 +18,7 @@ const PasswordResetForm: React.FC<LoginModalProps> = ({ code }) => {
   const formRef = React.useRef<HTMLFormElement>(null);
 
   return (
-    <CSRFForm ref={formRef} method="POST" action="/user/login" formData={formData}>
+    <CSRFForm ref={formRef} method="POST" action="/user/lostpasswordreset" formData={formData}>
       <Flexbox direction="col" gap="2">
         <Input
           label="Username or Email Address"
@@ -46,7 +46,7 @@ const PasswordResetForm: React.FC<LoginModalProps> = ({ code }) => {
           id="password2"
           type="password"
           value={formData.password2}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, password2: e.target.value })}
         />
         <Button color="primary" block onClick={() => formRef.current?.submit()}>
           Change Password

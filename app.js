@@ -199,6 +199,18 @@ app.post('/healthcheck', (req, res) => {
   res.status(200).send('OK');
 });
 
+app.use((req, res, next) => {
+  if (req.user && req.user.roles.includes('Banned')) {
+    req.session.destroy(() => {
+      req.flash('danger', 'Your account has been banned, please contact CubeCobra staff if you believe this is in error.');
+      return res.redirect('/');
+    });
+  }
+
+  next();
+}); 
+
+
 // Route files; they manage their own CSRF protection
 app.use('/patreon', require('./routes/patreon_routes'));
 app.use('/cache', require('./routes/cache_routes'));
@@ -215,6 +227,7 @@ app.use('/packages', require('./routes/packages'));
 app.use('/api/private', require('./routes/api/private'));
 app.use('/job', require('./routes/job_routes'));
 
+app.use('', require('./routes/search_routes'));
 app.use('', require('./routes/root'));
 
 app.use((req, res) =>

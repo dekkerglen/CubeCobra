@@ -7,6 +7,7 @@ import CubeSearchNavBar from 'components/cube/CubeSearchNavBar';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import Button from 'components/base/Button';
 
 interface ExplorePageProps {
   recents: Cube[];
@@ -26,12 +27,30 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ recents, featured, drafted, p
           <CubesCard title="Featured Cubes" className="mt-4" cubes={featured} lean />
         </Col>
         <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Recently Updated Cubes" className="mt-4" cubes={recents} />
+          <CubesCard
+            title="Recently Updated Cubes"
+            className="mt-4"
+            cubes={recents}
+            alternateViewFewer={
+              <Button color="primary" block type="link" href={`/cube/recents`}>
+                View All
+              </Button>
+            }
+          />
         </Col>
       </Row>
       <Row>
         <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Most Popular Cubes" className="mt-4" cubes={popular} />
+          <CubesCard
+            title="Most Popular Cubes"
+            className="mt-4"
+            cubes={popular}
+            alternateViewFewer={
+              <Button color="primary" block type="link" href={`/search`}>
+                View All
+              </Button>
+            }
+          />
         </Col>
         <Col lg={6} md={6} sm={12} xs={12}>
           <CubesCard title="Recently Drafted Cubes" className="mt-4" cubes={drafted} />

@@ -15,9 +15,13 @@ const getCubes = async (req, callback) => {
 };
 
 const redirect = (req, res, to) => {
-  return req.session.save(() => {
+  if (req.session) {
+    return req.session.save(() => {
+      return res.redirect(to);
+    });
+  } else {
     return res.redirect(to);
-  });
+  }
 };
 
 const render = (req, res, page, reactProps = {}, options = {}) => {

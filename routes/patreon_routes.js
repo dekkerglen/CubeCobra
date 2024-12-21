@@ -9,6 +9,7 @@ const util = require('../serverjs/util');
 
 const Patron = require('../dynamo/models/patron');
 const User = require('../dynamo/models/user');
+const { redirect } = require('../serverjs/render');
 
 const patreonAPI = patreon.patreon;
 const patreonOAuth = patreon.oauth;
@@ -219,7 +220,8 @@ router.get('/redirect', ensureAuth, async (req, res) => {
       return redirect(req, res, '/user/account?nav=patreon');
     })
     .catch((err) => {
-      req.logger.error(err.message, err.stack);
+      console.error(err);
+      req.logger.error(err.message, err.stack, JSON.stringify(err));
 
       req.flash('danger', `There was an error linking your Patreon account: ${err.message}`);
       return redirect(req, res, '/user/account?nav=patreon');

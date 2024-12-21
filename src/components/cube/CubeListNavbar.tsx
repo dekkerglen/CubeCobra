@@ -26,6 +26,7 @@ import Select from '../base/Select';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
 import TagColorsModal from '../modals/TagColorsModal';
+import UserContext from 'contexts/UserContext';
 
 const ArenaExportModalItem = withModal(Link, ArenaExportModal);
 const PasteBulkModalItem = withModal(Link, PasteBulkModal);
@@ -40,6 +41,7 @@ interface CubeListNavbarProps {
 }
 
 const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }) => {
+  const user = useContext(UserContext);
   const [expanded, toggleExpanded] = useToggle(false);
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
@@ -105,6 +107,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               <Text semibold>Export</Text>
             </>
           )}
+          {user && <Link href={`/cube/clone/${cube.id}`}>Clone Cube</Link>}
           <Link href={`/cube/download/plaintext/${cube.id}?${urlSegment}`}>Card Names (.txt)</Link>
           <Link href={`/cube/download/csv/${cube.id}?${urlSegment}`}>Comma-Separated (.csv)</Link>
           <Link href={`/cube/download/forge/${cube.id}?${urlSegment}`}>Forge (.dck)</Link>
@@ -134,21 +137,22 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
     </>
   );
 
+  const viewOptions = [
+    { value: 'table', label: 'Table View' },
+    { value: 'spoiler', label: 'Visual Spoiler' },
+    { value: 'curve', label: 'Curve View' },
+  ];
+
+  if (canEdit) {
+    viewOptions.push({ value: 'list', label: 'List View' });
+  }
+
   return (
     <Controls>
       <Flexbox direction="col" className="py-2 px-4">
         <Flexbox direction="row" wrap="wrap" justify="between" alignItems="center">
           <Flexbox direction="row" justify="start" gap="4" alignItems="center">
-            <Select
-              options={[
-                { value: 'table', label: 'Table View' },
-                { value: 'spoiler', label: 'Visual Spoiler' },
-                { value: 'list', label: 'List View' },
-                { value: 'curve', label: 'Curve View' },
-              ]}
-              value={cubeView}
-              setValue={setCubeView}
-            />
+            <Select options={viewOptions} value={cubeView} setValue={setCubeView} />
             {cubeView === 'spoiler' && (
               <Select
                 value={`${cardsPerRow}`}

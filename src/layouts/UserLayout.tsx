@@ -12,6 +12,7 @@ import FollowersModal from 'components/modals/FollowersModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import User from 'datatypes/User';
+import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 
 interface UserLayoutProps {
   user: User;
@@ -38,6 +39,7 @@ const tabs = [
 ];
 
 const FollowersModalLink = withModal(Link, FollowersModal);
+const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
 
 const UserLayout: React.FC<UserLayoutProps> = ({
   user,
@@ -93,6 +95,19 @@ const UserLayout: React.FC<UserLayoutProps> = ({
                 Unfollow
               </Button>
             )}
+            <ConfirmActionModalButton
+              color="danger"
+              block
+              modalprops={{
+                title: 'Report User',
+                message:
+                  'Are you sure you want to report this user? A moderator will review the report and take appropriate action.',
+                target: `/user/report/${user.id}`,
+                buttonText: 'Report User',
+              }}
+            >
+              Report User
+            </ConfirmActionModalButton>
           </Flexbox>
           <Tabs
             tabs={tabs.map((tab) => ({

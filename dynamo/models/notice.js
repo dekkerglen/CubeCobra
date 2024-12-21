@@ -14,6 +14,7 @@ const FIELDS = {
 const TYPE = {
   APPLICATION: 'a',
   COMMENT_REPORT: 'cr',
+  CUBE_REPORT: 'cur',
 };
 
 const STATUS = {

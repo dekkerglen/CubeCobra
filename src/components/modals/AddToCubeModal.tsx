@@ -74,7 +74,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
 
   if (!cubes || cubes.length === 0) {
     return (
-      <Modal isOpen={isOpen} setOpen={setOpen} sm>
+      <Modal isOpen={isOpen} setOpen={setOpen} xs>
         <ModalHeader setOpen={setOpen}>{card.name}</ModalHeader>
         <ModalBody className="centered">
           <Flexbox direction="col" alignItems="center" gap="2">

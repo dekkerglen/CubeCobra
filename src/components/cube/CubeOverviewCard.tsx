@@ -23,10 +23,12 @@ import useAlerts from 'hooks/UseAlerts';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 import User from 'datatypes/User';
 import { CSRFContext } from 'contexts/CSRFContext';
+import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 
 const FollowersModalLink = withModal(Link, FollowersModal);
 const CubeIdModalLink = withModal(Link, CubeIdModal);
 const QRCodeModalLink = withModal(Link, QRCodeModal);
+const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
 
 const PrivateCubeIcon = () => (
   <Tooltip
@@ -167,6 +169,19 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                       Follow
                     </Button>
                   ))}
+                <ConfirmActionModalButton
+                  color="danger"
+                  block
+                  modalprops={{
+                    title: 'Report Cube',
+                    message:
+                      'Are you sure you want to report this cube? A moderator will review the report and take appropriate action.',
+                    target: `/cube/report/${cube.id}`,
+                    buttonText: 'Report Cube',
+                  }}
+                >
+                  Report Cube
+                </ConfirmActionModalButton>
               </Flexbox>
             </CardBody>
           </Card>
@@ -180,7 +195,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
               <CardFooter>
                 <Flexbox direction="row" gap="2" wrap="wrap">
                   {cube.tags.map((tag) => (
-                    <Tag href={`/search?q=${encodeURIComponent(`tag:${tag}`)}`} key={tag} text={tag} />
+                    <Tag href={`/search?q=${encodeURIComponent(`tag:"${tag}"`)}`} key={tag} text={tag} />
                   ))}
                 </Flexbox>
               </CardFooter>

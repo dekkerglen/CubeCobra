@@ -1,7 +1,7 @@
 const shuffleSeed = require('shuffle-seed');
 const Notification = require('../dynamo/models/notification');
 const cardutil = require('../dist/utils/Card');
-
+const { redirect } = require('./render');
 const carddb = require('./carddb');
 
 function hasProfanity(text) {
@@ -11,8 +11,98 @@ function hasProfanity(text) {
   const filter = new Filter();
   const removeWords = ['hell', 'sadist', 'God'];
   filter.removeWords(...removeWords);
+  const addWords = [
+    'dhabi',
+    'dubai',
+    'persian',
+    'escort',
+    'call girl',
+    'scandal',
+    'onlyfans',
+    'leaked',
+    'pdf',
+    'download',
+    'xbox',
+    'gift card',
+    'vbucks',
+    'v-bucks',
+    'streaming',
+    'bitcoin',
+    'cryptocurrency',
+    'crypto',
+    'nft',
+    'coinbase',
+    'ozempic',
+    'xanax',
+    'viagra',
+    'tramadol',
+    'adderall',
+    'percocet',
+    'oxycontin',
+    'vicodin',
+    'hydrocodone',
+    'codeine',
+    'morphine',
+    'fentanyl',
+    'ambien',
+    'valium',
+    'ativan',
+    'dilaudid',
+    'alprazolam',
+    'meridia',
+    'phentermine',
+    'fioricet',
+    'google play',
+    'coin master',
+    'robux',
+    'roblox',
+    'monopoly go',
+    'monopoly-go',
+    'fullmovie',
+  ];
+  filter.addWords(...addWords);
 
   return filter.isProfane(text.toLowerCase());
+}
+
+function validateEmail(email) {
+  if (email.includes('+')) {
+    throw new Error('CubeCobra does not support plus email addressing, please remove the "+descriptor" from your email and try again.');
+  }
+
+  const bannedDomains = [
+    'evusd.com',
+    'yomail.edu.pl',
+    'munik.edu.pl',
+    'thetechnext.net',
+    'mailmagnet.co',
+    'cctoolz.com',
+    'chosenx.com',
+    'mowline.com',
+    'greatphone.co.uk',
+    'azuretechtalk.net',
+    'kisoq.com',
+    'myfxspot.com',
+    'teleg.eu',
+    'ronete.com',
+    'rabitex.com',
+    'polkaroad.net',
+    'kelenson.com',
+    'owube.com',
+    'jxpomup.com',
+    'datquynhon.net',
+    'finestudio.org',
+    'myfxspot.com',
+    'inboxorigin.com'
+  ]
+
+  const domain = email.split('@')[1];
+
+  if (bannedDomains.includes(domain)) {
+    throw new Error('CubeCobra does not support email addresses from this domain, please use a different email address.');
+  }
+
+  return true;
 }
 
 function generateEditToken() {
@@ -146,10 +236,9 @@ function wrapAsyncApi(route) {
 }
 
 function handleRouteError(req, res, err, reroute) {
-  console.error(err);
   req.logger.error(err.message, err.stack);
   req.flash('danger', err.message);
-  res.redirect(reroute);
+  redirect(req, res, reroute);
 }
 
 function toNonNullArray(arr) {
@@ -236,4 +325,5 @@ module.exports = {
   flatten,
   mapNonNull,
   getImageData,
+  validateEmail
 };

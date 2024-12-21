@@ -147,7 +147,7 @@ module.exports = {
   },
   put: async (document) => {
     delete document.image;
-    await client.put({
+    return client.put({
       [FIELDS.USERNAME_LOWER]: document[FIELDS.USERNAME].toLowerCase(),
       ...document,
     });

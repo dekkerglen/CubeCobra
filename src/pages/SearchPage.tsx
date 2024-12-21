@@ -12,23 +12,27 @@ import useQueryParam from 'hooks/useQueryParam';
 import CubeSearchController from 'components/cube/CubeSearchController';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { CSRFContext } from 'contexts/CSRFContext';
+import Spinner from 'components/base/Spinner';
 
 interface SearchPageProps {
   cubes: Cube[];
   loginCallback?: string;
   lastKey?: string;
+  parsedQuery?: string[];
+  query?: string;
 }
 
 const PAGE_SIZE = 36;
 
-const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }) => {
+const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey, parsedQuery, query }) => {
   const [items, setItems] = useState<Cube[]>(cubes);
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
   const { csrfFetch } = useContext(CSRFContext);
+  const [currentParsedQuery, setCurrentParsedQuery] = useState(parsedQuery || []);
 
-  const [currentQuery, setCurrentQuery] = useQueryParam('q', '');
+  const [currentQuery, setCurrentQuery] = useQueryParam('q', query || '');
   const [currentOrder, setCurrentOrder] = useQueryParam('order', 'pop');
   const [currentAscending, setCurrentAscending] = useQueryParam('ascending', 'false');
 
@@ -54,8 +58,16 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
-        setItems([...items, ...json.cubes]);
-        setPage(page + 1);
+        const newItems = [...items, ...json.cubes];
+        setItems(newItems);
+        setCurrentParsedQuery(json.parsedQuery);
+
+        const numItemsShowOnLastPage = items.length % PAGE_SIZE;
+        const newItemsShowOnLastPage = newItems.length % PAGE_SIZE;
+
+        if (numItemsShowOnLastPage === 0 && newItemsShowOnLastPage > 0) {
+          setPage(page + 1);
+        }
         setCurrentLastKey(json.lastKey);
       }
     }
@@ -65,6 +77,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
   const go = useCallback(
     async (query: string, order: string, ascending: string) => {
       setCurrentQuery(query);
+      setCurrentParsedQuery([]);
       setCurrentOrder(order);
       setCurrentAscending(ascending.toString());
       setLoading(true);
@@ -87,9 +100,9 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
       if (response.ok) {
         const json = await response.json();
         if (json.success === 'true') {
-          console.log(json);
           setItems(json.cubes);
           setCurrentLastKey(json.lastKey);
+          setCurrentParsedQuery(json.parsedQuery);
         }
       }
       setLoading(false);
@@ -103,7 +116,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
-        console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();
         } else {
@@ -113,8 +125,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
       loading={loading}
     />
   );
-
-  console.log(items);
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -128,12 +138,19 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
-          <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
-            <Text lg semibold>
-              Cubes Found ({items.length}
-              {hasMore ? '+' : ''})
-            </Text>
-            {items.length > 0 && pager}
+          <Flexbox direction="col" gap="2">
+            <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+              <Text lg semibold>
+                Cubes Found ({items.length}
+                {hasMore ? '+' : ''})
+              </Text>
+              {items.length > 0 && pager}
+            </Flexbox>
+            <Flexbox direction="row" justify="start" gap="2" className="w-full">
+              <Text sm semibold italic>
+                {(currentParsedQuery || []).join(', ')}
+              </Text>
+            </Flexbox>
           </Flexbox>
         </CardHeader>
         <CardBody>
@@ -152,7 +169,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
             </Flexbox>
           ) : (
             <Text semibold lg>
-              No Results
+              {loading ? <Spinner xl /> : 'No Results'}
             </Text>
           )}
         </CardBody>

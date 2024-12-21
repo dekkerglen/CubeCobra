@@ -363,11 +363,19 @@ function isCubeListed(cube, user) {
     return false;
   }
 
+  if (user && (cube.owner.id === user.id || util.isAdmin(user))) {
+    return true;
+  }
+
+  if (cube.cardCount === 0) {
+    return false;
+  }
+
   if (cube.visibility === Cube.VISIBILITY.PUBLIC) {
     return true;
   }
 
-  return user && (cube.owner.id === user.id || util.isAdmin(user));
+  return false;
 }
 
 const methods = {

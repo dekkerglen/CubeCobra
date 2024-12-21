@@ -130,15 +130,15 @@ router.post('/getmorepodcasts', async (req, res) => {
 });
 
 router.get('/a/:id', (req, res) => {
-  res.redirect(`/content/article/${req.params.id}`);
+  redirect(req, res, `/content/article/${req.params.id}`);
 });
 
 router.get('/p/:id', (req, res) => {
-  res.redirect(`/content/podcast/${req.params.id}`);
+  redirect(req, res, `/content/podcast/${req.params.id}`);
 });
 
 router.get('/v/:id', (req, res) => {
-  res.redirect(`/content/video/${req.params.id}`);
+  redirect(req, res, `/content/video/${req.params.id}`);
 });
 
 router.get('/article/:id', async (req, res) => {
