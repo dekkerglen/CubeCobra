@@ -17,6 +17,25 @@ import Text from 'components/base/Text';
 import Link, { LinkProps } from 'components/base/Link';
 import { Flexbox } from './base/Layout';
 
+import { slug } from 'github-slugger';
+
+/*
+* Duplicating the behaviour of the rehype-slug plugin with respect to generating a heading ID from its text.
+* That plugin, and its friend rehype-autolink-headings only interact with literal h# elements, but we have configured
+* ReactMarkdown with custom components (renderers) for those which generate Text components (they are not h# elements)
+*/
+function generateHeadingId(headingText: ReactNode): string {
+  /*
+  * Extra defensive since ReactNode can be many things, not just text. For example we support a heading containing LaTex which would
+  * be converted to HTML elements by rehypeKatex
+  */
+  if (typeof headingText === "string") {
+    //Simplfied, slug replaces spaces with dashes and strips non-alphanumeric content
+    return slug(String(headingText), false);
+  }
+  return '';
+}
+
 type AutocardLinkProps = WithAutocardProps & LinkProps;
 const AutocardLink: React.FC<AutocardLinkProps> = withAutocard(Link);
 
@@ -163,61 +182,79 @@ const renderCardrow: React.FC<RenderCardrowProps> = (node) => (
 interface RenderH1Props {
   children: ReactNode;
 }
-const renderH1: React.FC<RenderH1Props> = (node) => (
-  <Text xxxxl semibold className="mb-4">
-    {node.children}
-  </Text>
-);
+const renderH1: React.FC<RenderH1Props> = (node) => {
+  const id = generateHeadingId(node.children);
+  return (
+    <Text id={id} xxxxl semibold className="mb-4">
+      {node.children}
+    </Text>
+  );
+}
 
 interface RenderH2Props {
   children: ReactNode;
 }
 
-const renderH2: React.FC<RenderH2Props> = (node) => (
-  <Text xxxl semibold className="mb-2">
-    {node.children}
-  </Text>
-);
+const renderH2: React.FC<RenderH2Props> = (node) => {
+  const id = generateHeadingId(node.children);
+  return (
+    <Text id={id} xxxl semibold className="mb-4">
+      {node.children}
+    </Text>
+  );
+};
 
 interface RenderH3Props {
   children: ReactNode;
 }
 
-const renderH3: React.FC<RenderH3Props> = (node) => (
-  <Text xxl semibold className="mb-2">
-    {node.children}
-  </Text>
-);
+const renderH3: React.FC<RenderH3Props> = (node) => {
+  const id = generateHeadingId(node.children);
+  return (
+    <Text id={id} xxl semibold className="mb-4">
+      {node.children}
+    </Text>
+  );
+};
 
 interface RenderH4Props {
   children: ReactNode;
 }
 
-const renderH4: React.FC<RenderH4Props> = (node) => (
-  <Text xl semibold className="mb-2">
-    {node.children}
-  </Text>
-);
+const renderH4: React.FC<RenderH4Props> = (node) => {
+  const id = generateHeadingId(node.children);
+  return (
+    <Text id={id} xl semibold className="mb-4">
+      {node.children}
+    </Text>
+  );
+};
 
 interface RenderH5Props {
   children: ReactNode;
 }
 
-const renderH5: React.FC<RenderH5Props> = (node) => (
-  <Text lg semibold className="mb-2">
-    {node.children}
-  </Text>
-);
+const renderH5: React.FC<RenderH5Props> = (node) => {
+  const id = generateHeadingId(node.children);
+  return (
+    <Text id={id} lg semibold className="mb-4">
+      {node.children}
+    </Text>
+  );
+};
 
 interface RenderH6Props {
   children: ReactNode;
 }
 
-const renderH6: React.FC<RenderH6Props> = (node) => (
-  <Text md semibold className="mb-2">
-    {node.children}
-  </Text>
-);
+const renderH6: React.FC<RenderH6Props> = (node) => {
+  const id = generateHeadingId(node.children);
+  return (
+    <Text id={id} md semibold className="mb-4">
+      {node.children}
+    </Text>
+  );
+};
 
 interface renderUlProps {
   children: ReactNode;
