@@ -9,6 +9,8 @@ import CaptchaContext from 'contexts/CaptchaContext';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 import CSRFForm from 'components/CSRFForm';
+import ChallengeInput, { generateChallenge } from 'components/forms/ChallengeInput';
+import UserContext from 'contexts/UserContext';
 
 type Props = {
   isOpen: boolean;
@@ -16,13 +18,19 @@ type Props = {
 };
 
 const CreateCubeModal: React.FC<Props> = ({ isOpen, setOpen }) => {
+  const user = useContext(UserContext);
   const captchaSiteKey = useContext(CaptchaContext);
   const [loading, setLoading] = useState(false);
   const formRef = React.createRef<HTMLFormElement>();
   const [name, setName] = useState('');
   const [captcha, setCaptcha] = useState('');
+  const [answer, setAnswer] = useState('');
+  const challenge = useMemo(() => generateChallenge(), []);
 
-  const formData = useMemo(() => ({ name, captcha }), [name, captcha]);
+  const formData = useMemo(
+    () => ({ name, captcha, question: challenge.question, answer }),
+    [name, captcha, challenge, answer],
+  );
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} sm>
@@ -38,7 +46,12 @@ const CreateCubeModal: React.FC<Props> = ({ isOpen, setOpen }) => {
               name="name"
               type="text"
             />
-            <ReCAPTCHA sitekey={captchaSiteKey} onChange={(value) => setCaptcha(value || '')} />
+            <ChallengeInput question={challenge.question} answer={answer} setAnswer={setAnswer} name="answer" />
+            <ReCAPTCHA
+              sitekey={captchaSiteKey}
+              onChange={(value) => setCaptcha(value || '')}
+              theme={user?.theme === 'dark' ? 'dark' : 'light'}
+            />
           </Flexbox>
         </ModalBody>
         <ModalFooter>

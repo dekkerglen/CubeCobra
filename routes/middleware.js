@@ -43,8 +43,51 @@ const csrfProtection = [
   },
 ];
 
+const questions = [
+  'What card type attacks and blocks?',
+  "What is the name of Magic's discard pile?",
+  'What color of mana does a Plains produce?',
+  'What color of mana does a Island produce?',
+  'What color of mana does a Swamp produce?',
+  'What color of mana does a Mountain produce?',
+  'What color of mana does a Forest produce?',
+  'What is the name of the basic land that produces white mana?',
+  'What is the name of the basic land that produces blue mana?',
+  'What is the name of the basic land that produces black mana?',
+  'What is the name of the basic land that produces red mana?',
+  'What is the name of the basic land that produces green mana?',
+];
+
+const answers = [
+  'creature', // 'What card type attacks and blocks?'
+  'graveyard', // "What is the name of Magic's discard pile?"
+  'white', // 'What color of mana does a Plains produce?'
+  'blue', // 'What color of mana does a Island produce?'
+  'black', // 'What color of mana does a Swamp produce?'
+  'red', // 'What color of mana does a Mountain produce?'
+  'green', // 'What color of mana does a Forest produce?'
+  'plains', // 'What is the name of the basic land that produces white mana?'
+  'island', // 'What is the name of the basic land that produces blue mana?'
+  'swamp', // 'What is the name of the basic land that produces black mana?'
+  'mountain', // 'What is the name of the basic land that produces red mana?'
+  'forest', // 'What is the name of the basic land that produces green mana?'
+];
+
 async function recaptcha (req, res, next) {
-  const { captcha } = req.body;
+  const { captcha, question, answer } = req.body;
+  
+  if (!question || !answer) {
+    req.flash('danger', 'Please answer the security question');
+    return redirect(req, res, '/');
+  }
+  
+  const index = questions.indexOf(question);
+
+  if (index === -1 || answers[index].toLowerCase() !== answer.toLowerCase()) {
+    req.flash('danger', 'Incorrect answer to security question');
+    return redirect(req, res, '/');
+  }
+
   if (!captcha) {
     req.flash('danger', 'Please complete the reCAPTCHA');
     return redirect(req, res, '/');
@@ -67,6 +110,7 @@ async function recaptcha (req, res, next) {
 
   next();
 }
+
 
 function flashValidationErrors(req, res, next) {
   const errors = validationResult(req).formatWith(({ msg }) => msg);

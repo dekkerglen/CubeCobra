@@ -59,6 +59,8 @@ function hasProfanity(text) {
     'monopoly go',
     'monopoly-go',
     'fullmovie',
+    'ultimate guide',
+    'v bucks',
   ];
   filter.addWords(...addWords);
 
@@ -93,7 +95,9 @@ function validateEmail(email) {
     'datquynhon.net',
     'finestudio.org',
     'myfxspot.com',
-    'inboxorigin.com'
+    'inboxorigin.com',
+    'allfreemail.net',
+    'gufum.com'
   ]
 
   const domain = email.split('@')[1];
