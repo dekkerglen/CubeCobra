@@ -97,7 +97,7 @@ const TagInput: React.FC<TagInputProps> = ({
             {filteredSuggestions.length > 0 && (
               <div
                 className={classNames(
-                  'absolute border border-border rounded-md top-0 left-0 translate-y-9 w-full flex flex-col overflow-y-visible z-[1050]',
+                  'border border-border rounded-md top-0 left-0 w-full flex flex-col overflow-y-visible z-[1050]',
                 )}
               >
                 {filteredSuggestions.map((suggestion, index) => (

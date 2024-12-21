@@ -38,13 +38,20 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
     const byOracleId: { [key: string]: { token: CardType; cards: PositionedCard[] } } = {};
     for (const card of positioned) {
       for (const token of card.details?.tokens || []) {
-        if (!byOracleId[token]) {
-          byOracleId[token] = {
+        //Equivalent tokens from different sets have their own unique id, but share an oracle id.
+        //Eg 2 1/1 white bird tokens from different sets have card Ids A and B, but share oracle id C
+        const oracleId = tokenMap[token].details?.oracle_id;
+        if (oracleId == undefined) {
+          continue;
+        }
+
+        if (!byOracleId[oracleId]) {
+          byOracleId[oracleId] = {
             token: tokenMap[token],
             cards: [],
           };
         }
-        byOracleId[token].cards.push({
+        byOracleId[oracleId].cards.push({
           ...card,
           position: card.position,
         });
