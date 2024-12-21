@@ -53,7 +53,7 @@ const SampleHandModal: React.FC<SampleHandModalProps> = ({ deck, isOpen, setOpen
         </Text>
       </ModalHeader>
       <ModalBody className="p-4">
-        <CardGrid cards={hand} xs={7} />
+        <CardGrid cards={hand} xs={3} md={4} lg={7} />
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" className="w-full" justify="between" gap="2">

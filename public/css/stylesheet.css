@@ -1238,6 +1238,10 @@ video {
   grid-template-columns: repeat(10, minmax(0, 1fr));
 }
 
+.grid-cols-11 {
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+}
+
 .grid-cols-12 {
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
@@ -1272,10 +1276,6 @@ video {
 
 .grid-cols-9 {
   grid-template-columns: repeat(9, minmax(0, 1fr));
-}
-
-.grid-cols-11 {
-  grid-template-columns: repeat(11, minmax(0, 1fr));
 }
 
 .flex-row {
@@ -3031,6 +3031,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 
+  .sm\:grid-cols-11 {
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+  }
+
   .sm\:grid-cols-12 {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
@@ -3065,10 +3069,6 @@ img.mana-symbol-sm {
 
   .sm\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
-  }
-
-  .sm\:grid-cols-11 {
-    grid-template-columns: repeat(11, minmax(0, 1fr));
   }
 
   .sm\:text-sm {
@@ -3151,6 +3151,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 
+  .md\:grid-cols-11 {
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+  }
+
   .md\:grid-cols-12 {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
@@ -3185,10 +3189,6 @@ img.mana-symbol-sm {
 
   .md\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
-  }
-
-  .md\:grid-cols-11 {
-    grid-template-columns: repeat(11, minmax(0, 1fr));
   }
 
   .md\:px-4 {
@@ -3280,6 +3280,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 
+  .lg\:grid-cols-11 {
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+  }
+
   .lg\:grid-cols-12 {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
@@ -3314,10 +3318,6 @@ img.mana-symbol-sm {
 
   .lg\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
-  }
-
-  .lg\:grid-cols-11 {
-    grid-template-columns: repeat(11, minmax(0, 1fr));
   }
 
   .lg\:text-2xl {
@@ -3435,6 +3435,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 
+  .xl\:grid-cols-11 {
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+  }
+
   .xl\:grid-cols-12 {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
@@ -3469,10 +3473,6 @@ img.mana-symbol-sm {
 
   .xl\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
-  }
-
-  .xl\:grid-cols-11 {
-    grid-template-columns: repeat(11, minmax(0, 1fr));
   }
 }
 
@@ -3550,6 +3550,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 
+  .\32xl\:grid-cols-11 {
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+  }
+
   .\32xl\:grid-cols-12 {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
@@ -3584,10 +3588,6 @@ img.mana-symbol-sm {
 
   .\32xl\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
-  }
-
-  .\32xl\:grid-cols-11 {
-    grid-template-columns: repeat(11, minmax(0, 1fr));
   }
 }
 

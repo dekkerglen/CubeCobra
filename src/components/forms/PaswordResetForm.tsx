@@ -10,7 +10,7 @@ interface LoginModalProps {
 
 const PasswordResetForm: React.FC<LoginModalProps> = ({ code }) => {
   const [formData, setFormData] = React.useState<Record<string, string>>({
-    username: '',
+    email: '',
     password: '',
     password2: '',
     code: code,
@@ -23,11 +23,11 @@ const PasswordResetForm: React.FC<LoginModalProps> = ({ code }) => {
         <Input
           label="Username or Email Address"
           maxLength={1000}
-          name="username"
-          id="username"
+          name="email"
+          id="email"
           type="text"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
         <Input
           label="Password"

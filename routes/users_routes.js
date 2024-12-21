@@ -266,7 +266,7 @@ router.get('/passwordreset/:id', async (req, res) => {
 });
 
 router.post(
-  '/lostpasswordreset/:code',
+  '/lostpasswordreset',
   [
     body('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max: 24 }),
     body('password', 'New passwords must match.').custom(checkPasswordsMatch),
@@ -275,47 +275,36 @@ router.post(
   async (req, res) => {
     try {
       if (!req.validated) {
-        return render(req, res, 'PasswordResetPage', { code: req.params.code });
+        return render(req, res, 'PasswordResetPage', { code: req.body.code });
       }
       const recoveryEmail = req.body.email.toLowerCase();
-      const passwordreset = await PasswordReset.getById(req.params.code);
+      const passwordreset = await PasswordReset.getById(req.body.code);
 
       if (!passwordreset) {
         req.flash('danger', 'Incorrect email and recovery code combination.');
-        return render(req, res, 'PasswordResetPage', { code: req.params.code });
+        return render(req, res, 'PasswordResetPage', { code: req.body.code });
       }
       const user = await User.getByEmail(recoveryEmail);
 
       if (!user) {
         req.flash('danger', 'No user with that email found! Are you sure you created an account?');
-        return render(req, res, 'PasswordResetPage', { code: req.params.code });
+        return render(req, res, 'PasswordResetPage', { code: req.body.code });
       }
 
       if (req.body.password2 !== req.body.password) {
         req.flash('danger', "New passwords don't match");
-        return render(req, res, 'PasswordResetPage', { code: req.params.code });
+        return render(req, res, 'PasswordResetPage', { code: req.body.code });
       }
 
-      return bcrypt.genSalt(10, (err4, salt) => {
-        if (err4) {
-          return util.handleRouteError(req, res, err4, `/`);
-        }
-        return bcrypt.hash(req.body.password2, salt, async (err5, hash) => {
-          if (err5) {
-            return util.handleRouteError(req, res, err5, `/`);
-          }
-          user.passwordHash = hash;
-          try {
-            await User.update(user);
-            req.flash('success', 'Password updated successfully');
-            return redirect(req, res, '/user/login');
-          } catch (err6) {
-            return util.handleRouteError(req, res, err6, `/`);
-          }
-        });
-      });
+      const salt = await bcrypt.genSalt(10);
+      user.passwordHash = await bcrypt.hash(req.body.password2, salt);
+      await User.update(user);
+
+      req.flash('success', 'Password updated successfully');
+      return redirect(req, res, '/user/login');
+
     } catch (err) {
-      return util.handleRouteError(req, res, err, `/`);
+      return util.handleRouteError(req, res, err, `/user/login`);
     }
   },
 );

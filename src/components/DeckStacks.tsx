@@ -1,12 +1,11 @@
-import React from 'react';
 import { CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox, NumCols, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CardStack from 'components/card/CardStack';
 import DraggableCard from 'components/DraggableCard';
-import Location, { location } from 'drafting/DraftLocation';
 import Card from 'datatypes/Card';
-import ResponsiveDiv from './base/ResponsiveDiv';
+import Location, { location } from 'drafting/DraftLocation';
+import React from 'react';
 
 interface DeckStacksProps {
   cards: Card[][][];
@@ -22,15 +21,13 @@ interface DeckStacksProps {
 const DeckStacks: React.FC<DeckStacksProps> = ({ cards, title, subtitle, locationType, xs, md, lg }) => (
   <>
     <CardHeader>
-      <Flexbox direction="row" alignItems="end" justify="between">
+      <Flexbox direction="row" alignItems="end" justify="between" wrap="wrap">
         <Text semibold lg>
           {title}
         </Text>
-        <ResponsiveDiv lg>
-          <Text semibold md>
-            {subtitle}
-          </Text>
-        </ResponsiveDiv>
+        <Text semibold md>
+          {subtitle}
+        </Text>
       </Flexbox>
     </CardHeader>
     <CardBody className="pt-0">
