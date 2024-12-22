@@ -15,6 +15,7 @@ interface TextProps {
   semibold?: boolean;
   italic?: boolean;
   className?: string;
+  id?: string;
   area?: boolean;
   clamp?: number; // New prop to specify the number of lines to clamp
 }
@@ -34,6 +35,7 @@ const Text: React.FC<TextProps> = ({
   semibold,
   italic,
   className = '',
+  id = '',
 }) => {
   const classes = classNames(
     {
@@ -60,11 +62,17 @@ const Text: React.FC<TextProps> = ({
     className,
   );
 
-  if (area) {
-    return <p className={`${classes} h-full`}>{children}</p>;
+  let optionalProps = {};
+  if (id !== '') {
+    //@ts-ignore
+    optionalProps['id'] = id;
   }
 
-  return <span className={`${classes}`}>{children}</span>;
+  if (area) {
+    return <p {...optionalProps} className={`${classes} h-full`}>{children}</p>;
+  }
+
+  return <span {...optionalProps} className={`${classes}`}>{children}</span>;
 };
 
 export default Text;
