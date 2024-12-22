@@ -78,7 +78,7 @@ const CubeListPageRaw: React.FC = () => {
                   {boardcards.length === 0 &&
                     (cardFilter ? (
                       <Text semibold md>
-                        No cards match filter.
+                        No {boardname == 'mainboard' ? 'Mainboard' : 'Maybeboard'} cards match filter.
                       </Text>
                     ) : (
                       <Text semibold md>

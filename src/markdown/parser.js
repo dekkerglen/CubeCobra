@@ -1,6 +1,4 @@
-import autoHeadings from 'rehype-autolink-headings';
 import rehypeKatex from 'rehype-katex';
-import slug from 'rehype-slug';
 import breaks from 'remark-breaks';
 import gfm from 'remark-gfm';
 import math from 'remark-math';
@@ -23,7 +21,7 @@ export const ALL_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
 export const LIMITED_REHYPE_PLUGINS = [rehypeKatex];
 
 // rehype plugins used in fully-featured displays
-export const ALL_REHYPE_PLUGINS = [...LIMITED_REHYPE_PLUGINS, slug, autoHeadings];
+export const ALL_REHYPE_PLUGINS = [...LIMITED_REHYPE_PLUGINS];
 
 // runs parser to detect users that are mentioned in some Markdown content
 export function findUserLinks(text) {

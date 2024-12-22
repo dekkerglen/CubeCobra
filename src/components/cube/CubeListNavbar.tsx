@@ -231,9 +231,10 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             isOpen={openCollapse === 'filter'}
             showReset
             filterTextFn={({ mainboard, maybeboard }) =>
+              //Undefined what text to show if there is no mainboard
               mainboard && maybeboard
                 ? `Showing ${mainboard[0]} / ${mainboard[1]} cards in Mainboard, ${maybeboard[0]} / ${maybeboard[1]} cards in Maybeboard.`
-                : 'No cards to filter.'
+                : (mainboard ? `Showing ${mainboard[0]} / ${mainboard[1]} cards in Mainboard.` : 'No cards to filter.')
             }
           />
           <CompareCollapse isOpen={openCollapse === 'compare'} />
