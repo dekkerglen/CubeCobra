@@ -7,7 +7,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import ListView from 'components/cube/ListView';
 import RenderToRoot from 'components/RenderToRoot';
-import TableView from 'components/TableView';
+import TableView from 'components/cube/TableView';
 import VisualSpoiler from 'components/cube/VisualSpoiler';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
@@ -18,6 +18,8 @@ import Cube from 'datatypes/Cube';
 import Card, { BoardType } from 'datatypes/Card';
 import FilterContext from 'contexts/FilterContext';
 import { Flexbox } from 'components/base/Layout';
+import ChangesContext from 'contexts/ChangesContext';
+import VersionMismatch from 'components/cube/VersionMismatch';
 
 interface CubeListPageProps {
   cube: Cube;
@@ -34,11 +36,22 @@ const boardToName: Record<BoardType, string> = {
 };
 
 const CubeListPageRaw: React.FC = () => {
+  const { versionMismatch } = useContext(ChangesContext);
   const { changedCards } = useContext(CubeContext);
   const { showMaybeboard } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext);
 
   const [cubeView, setCubeView] = useQueryParam('view', 'table');
+
+  if (versionMismatch) {
+    return (
+      <>
+        <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+        <DynamicFlash />
+        <VersionMismatch />
+      </>
+    );
+  }
 
   const tagList = [];
   for (const [boardname, list] of Object.entries(changedCards)) {

@@ -24,9 +24,10 @@ import useLocalStorage from 'hooks/useLocalStorage';
 import useMount from 'hooks/UseMount';
 import useQueryParam from 'hooks/useQueryParam';
 import { cardName, normalizeName } from 'utils/Card';
-import { deepCopy, xorStrings } from 'utils/Util';
+import { deepCopy } from 'utils/Util';
 import FilterContext from './FilterContext';
 import { CSRFContext } from './CSRFContext';
+import ChangesContext from './ChangesContext';
 
 export interface CubeWithCards extends Cube {
   cards: {
@@ -59,7 +60,7 @@ export interface CubeContextValue {
   removeCard: (index: number, board: BoardType) => void;
   swapCard: (index: number, card: Card, board: BoardType) => void;
   editCard: (index: number, card: Card, board: BoardType) => void;
-  discardAllChanges: () => void;
+  clearChanges: () => void;
   changes: Changes;
   revertAdd: (index: number, board: BoardType) => void;
   revertRemove: (index: number, board: BoardType) => void;
@@ -118,7 +119,7 @@ const CubeContext = createContext<CubeContextValue>({
   removeCard: defaultFn,
   swapCard: defaultFn,
   editCard: defaultFn,
-  discardAllChanges: defaultFn,
+  clearChanges: defaultFn,
   changes: {} as Changes,
   revertAdd: defaultFn,
   revertRemove: defaultFn,
@@ -203,6 +204,7 @@ export function CubeContextProvider({
 }) {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
+  const { changes, setChanges, clearChanges } = useContext(ChangesContext);
   const { filterInput, cardFilter } = useContext(FilterContext)!;
 
   const { setOpenCollapse } = useContext(DisplayContext);
@@ -223,7 +225,7 @@ export function CubeContextProvider({
     [cube.defaultSorts],
   );
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
-  const [changes, setChanges] = useLocalStorage<Changes>(`cubecobra-changes-${cube.id}`, {});
+
   const [modalSelection, setModalSelection] = useState<
     { index: number; board: BoardType } | { index: number; board: BoardType }[]
   >([]);
@@ -637,25 +639,6 @@ export function CubeContextProvider({
     return [result, changed];
   }, [cube.cards, useChangedCards, cardFilter, filterInput, changes, versionDict]);
 
-  const discardAllChanges = useCallback(() => {
-    setChanges({
-      mainboard: { adds: [], removes: [], swaps: [], edits: [] },
-      maybeboard: { adds: [], removes: [], swaps: [], edits: [] },
-    });
-  }, [setChanges]);
-
-  const checksum = useMemo(() => {
-    // we want to checksum the cube we are applying to, to make sure it hasn't changed since we started editing
-    // we want to xorStrings each card's cardID
-    const cardIds = [];
-    for (const board of boardTypes) {
-      for (const card of cube.cards[board]) {
-        cardIds.push(card.cardID);
-      }
-    }
-    return xorStrings(cardIds);
-  }, [cube.cards]);
-
   const commitChanges = useCallback(
     async (title: string, blog: string) => {
       setLoading(true);
@@ -672,7 +655,7 @@ export function CubeContextProvider({
             changes,
             id: cube.id,
             useBlog,
-            checksum,
+            expectedVersion: changes.version,
           }),
         });
 
@@ -731,7 +714,7 @@ export function CubeContextProvider({
           }
 
           setModalSelection([]);
-          discardAllChanges();
+          clearChanges();
           setCube({
             ...cube,
             cards: newCards,
@@ -742,10 +725,9 @@ export function CubeContextProvider({
       }
 
       setModalSelection([]);
-      discardAllChanges();
       setLoading(false);
     },
-    [discardAllChanges, changes, cube, useBlog, checksum, unfilteredChangedCards],
+    [clearChanges, changes, cube, useBlog, unfilteredChangedCards],
   );
 
   const bulkEditCard = useCallback(
@@ -924,7 +906,7 @@ export function CubeContextProvider({
       removeCard,
       swapCard,
       editCard,
-      discardAllChanges,
+      clearChanges,
       changes,
       revertAdd,
       revertRemove,
@@ -973,7 +955,7 @@ export function CubeContextProvider({
       removeCard,
       swapCard,
       editCard,
-      discardAllChanges,
+      clearChanges,
       changes,
       revertAdd,
       revertRemove,

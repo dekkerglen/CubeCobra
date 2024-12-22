@@ -68,7 +68,6 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
     }
 
     // if this user has two empty cubes, we deny them from making a new cube
-
     const cubes = await Cube.getByOwner(user.id);
 
     const emptyCubes = cubes.items.filter((cube) => cube.cardCount === 0);
@@ -76,6 +75,16 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
     if (emptyCubes.length >= 2) {
       req.flash('danger', 'You may only have two empty cubes at a time. To create a new cube, please delete an empty cube, or add cards to it.');
       return redirect(req, res, `/user/view/${user.id}`);
+    }
+
+    // if this account is younger than a week, we deny them from making a new cube
+    if (req.user.dateCreated && Date.now() - req.user.dateCreated < 1000 * 60 * 60 * 24 * 7) {
+      const totalCubes = cubes.items.length;
+
+      if (totalCubes > 2) {
+        req.flash('danger', 'You may only have two cubes until your account is a week old.');
+        return redirect(req, res, `/user/view/${user.id}`);
+      }
     }
 
     const cube = {

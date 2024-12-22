@@ -12,6 +12,7 @@ import Cube from 'datatypes/Cube';
 import MainLayout from 'layouts/MainLayout';
 import Query from 'utils/Query';
 import FilterContext, { FilterContextProvider } from 'contexts/FilterContext';
+import { ChangesContextProvider } from 'contexts/ChangesContext';
 
 interface CubeComparePageProps {
   cards: Card[];
@@ -60,9 +61,11 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
     <FilterContextProvider>
       <MainLayout loginCallback={loginCallback}>
         <DisplayContextProvider cubeID={cube.id}>
-          <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>
-            <CubeComparePageInner cards={cards} cube={cube} cubeB={cubeB} onlyA={onlyA} onlyB={onlyB} both={both} />
-          </CubeContextProvider>
+          <ChangesContextProvider cube={cube}>
+            <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>
+              <CubeComparePageInner cards={cards} cube={cube} cubeB={cubeB} onlyA={onlyA} onlyB={onlyB} both={both} />
+            </CubeContextProvider>
+          </ChangesContextProvider>
         </DisplayContextProvider>
       </MainLayout>
     </FilterContextProvider>

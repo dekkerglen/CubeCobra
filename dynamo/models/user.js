@@ -18,6 +18,7 @@ const FIELDS = {
   THEME: 'theme',
   HIDE_FEATURED: 'hideFeatured',
   PATRON_ID: 'patron',
+  DATE_CREATED: 'dateCreated',
 };
 
 const ROLES = {

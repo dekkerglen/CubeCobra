@@ -1,0 +1,188 @@
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
+
+import useLocalStorage from 'hooks/useLocalStorage';
+import Card, { BoardType, Changes } from 'datatypes/Card';
+import Cube from 'datatypes/Cube';
+import { cardsAreEquivalent } from 'utils/Card';
+import DisplayContext from './DisplayContext';
+
+export interface ChangesContextValue {
+  changes: Changes;
+  brokenChanges?: Changes;
+  setChanges: (changes: Changes) => void;
+  clearChanges: () => void;
+  versionMismatch: boolean;
+  fixedChanges?: Changes;
+}
+
+const ChangesContext = createContext<ChangesContextValue>({
+  changes: {},
+  setChanges: function (): void {
+    throw new Error('Function not implemented.');
+  },
+  clearChanges: function (): void {
+    throw new Error('Function not implemented.');
+  },
+  versionMismatch: false,
+});
+
+interface ChangesContextProvider {
+  children: React.ReactNode;
+  cube: Cube;
+  cards?: Record<BoardType, Card[]>;
+}
+
+export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ children, cube, cards }) => {
+  const [changes, updateChanges] = useLocalStorage<Changes>(`cubecobra-changes-${cube.id}`, {});
+  const { setOpenCollapse } = useContext(DisplayContext);
+
+  const setChanges = useCallback(
+    (newChanges: Changes) => {
+      newChanges.version = cube.version;
+      updateChanges(newChanges);
+      setOpenCollapse('edit');
+    },
+    [cube.version, updateChanges],
+  );
+
+  const clearChanges = useCallback(() => {
+    updateChanges({});
+  }, [updateChanges]);
+
+  const value = useMemo(() => {
+    let versionMismatch = false;
+
+    // if changes is not an empty object, and the version of the changes does not match the cube version
+    if (Object.keys(changes).length > 0 && changes.version !== cube.version) {
+      // if the local changes are only adds, this is actually fine, and we can just bump the version
+      let onlyAdds = true;
+
+      if (
+        changes.mainboard &&
+        (changes.mainboard.removes.length > 0 ||
+          changes.mainboard.swaps.length > 0 ||
+          changes.mainboard.edits.length > 0)
+      ) {
+        onlyAdds = false;
+      }
+
+      if (
+        changes.maybeboard &&
+        (changes.maybeboard.removes.length > 0 ||
+          changes.maybeboard.swaps.length > 0 ||
+          changes.maybeboard.edits.length > 0)
+      ) {
+        onlyAdds = false;
+      }
+
+      if (onlyAdds) {
+        const newChanges = { ...changes };
+        newChanges.version = cube.version;
+        setChanges(newChanges);
+      } else {
+        versionMismatch = true;
+      }
+    }
+
+    console.log('version mismatch', versionMismatch, changes.version, cube.version);
+
+    if (versionMismatch) {
+      // attempt to create a fixedChanges object
+      const fixedChanges: Changes = {};
+
+      if (changes.mainboard) {
+        fixedChanges.mainboard = {
+          adds: changes.mainboard.adds,
+          removes: [],
+          edits: [],
+          swaps: [],
+        };
+
+        if (cards && changes.mainboard.removes.length > 0) {
+          // we go through and see if the index matches the oldCard
+          fixedChanges.mainboard.removes = changes.mainboard.removes.filter((remove) => {
+            return cardsAreEquivalent(remove.oldCard, cards.mainboard[remove.index]);
+          });
+
+          fixedChanges.mainboard.edits = changes.mainboard.edits.filter((edit) => {
+            return cardsAreEquivalent(edit.oldCard, cards.mainboard[edit.index]);
+          });
+
+          fixedChanges.mainboard.swaps = changes.mainboard.swaps.filter((swap) => {
+            return cardsAreEquivalent(swap.oldCard, cards.mainboard[swap.index]);
+          });
+        }
+      }
+      if (changes.maybeboard) {
+        fixedChanges.maybeboard = {
+          adds: changes.maybeboard.adds,
+          removes: [],
+          edits: [],
+          swaps: [],
+        };
+
+        if (cards && changes.maybeboard.removes.length > 0) {
+          // we go through and see if the index matches the oldCard
+          fixedChanges.maybeboard.removes = changes.maybeboard.removes.filter((remove) => {
+            return cardsAreEquivalent(remove.oldCard, cards.maybeboard[remove.index]);
+          });
+
+          fixedChanges.maybeboard.edits = changes.maybeboard.edits.filter((edit) => {
+            return cardsAreEquivalent(edit.oldCard, cards.maybeboard[edit.index]);
+          });
+
+          fixedChanges.maybeboard.swaps = changes.maybeboard.swaps.filter((swap) => {
+            return cardsAreEquivalent(swap.oldCard, cards.maybeboard[swap.index]);
+          });
+        }
+      }
+
+      // if all the lists are the same length, just update the version
+      let equal = true;
+
+      if (changes.mainboard && fixedChanges.mainboard) {
+        if (
+          fixedChanges.mainboard.removes.length !== changes.mainboard.removes.length ||
+          fixedChanges.mainboard.edits.length !== changes.mainboard.edits.length ||
+          fixedChanges.mainboard.swaps.length !== changes.mainboard.swaps.length
+        ) {
+          equal = false;
+        }
+      }
+
+      if (changes.maybeboard && fixedChanges.maybeboard) {
+        if (
+          fixedChanges.maybeboard.removes.length !== changes.maybeboard.removes.length ||
+          fixedChanges.maybeboard.edits.length !== changes.maybeboard.edits.length ||
+          fixedChanges.maybeboard.swaps.length !== changes.maybeboard.swaps.length
+        ) {
+          equal = false;
+        }
+      }
+
+      if (equal) {
+        setChanges(fixedChanges);
+      }
+
+      return {
+        changes: {},
+        brokenChanges: changes,
+        setChanges,
+        clearChanges,
+        fixedChanges,
+        versionMismatch,
+      };
+    }
+
+    return {
+      changes,
+      setChanges,
+      clearChanges,
+      versionMismatch,
+    };
+  }, [changes, setChanges]);
+
+  return <ChangesContext.Provider value={value}>{children}</ChangesContext.Provider>;
+};
+
+export default ChangesContext;

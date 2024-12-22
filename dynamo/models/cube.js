@@ -49,6 +49,7 @@ const FIELDS = {
   TAGS: 'tags',
   KEYWORDS: 'keywords',
   CARD_COUNT: 'cardCount',
+  VERSION: 'version',
 };
 
 const VISIBILITY = {
@@ -198,6 +199,7 @@ module.exports = {
 
     const main = newCards.mainboard;
     newMetadata.cardCount = main.length;
+    newMetadata.version = (newMetadata.version || 0) + 1;
 
     const totalCards = main.length + newCards.maybeboard.length;
 

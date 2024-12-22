@@ -24,8 +24,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }
   const challenge = useMemo(() => generateChallenge(), []);
 
   const formData = useMemo(
-    () => ({ captcha, email, username, password, password2, question: challenge.question, answer }),
-    [email, username, password, password2, challenge, answer, captcha],
+    () => ({
+      captcha,
+      email: currentEmail,
+      username: currentUsername,
+      password,
+      password2,
+      question: challenge.question,
+      answer,
+    }),
+    [currentEmail, currentUsername, password, password2, challenge, answer, captcha],
   );
 
   return (

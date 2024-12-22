@@ -67,7 +67,10 @@ export function decodeName(name: string): string {
   return decodeURIComponent(name.toLowerCase());
 }
 
-export function cardsAreEquivalent(a: Card, b: Card): boolean {
+export function cardsAreEquivalent(a?: Card, b?: Card): boolean {
+  if (!a || !b) {
+    return false;
+  }
   return (
     a.cardID === b.cardID &&
     a.type_line === b.type_line &&

@@ -5,7 +5,7 @@ import TableViewCardGroup from 'components/card/TableViewCardGroup';
 import CubeContext from 'contexts/CubeContext';
 import { countGroup, sortDeep } from 'utils/Sort';
 import Card from 'datatypes/Card';
-import ResponsiveDiv from './base/ResponsiveDiv';
+import ResponsiveDiv from '../base/ResponsiveDiv';
 import classNames from 'classnames';
 
 interface TableViewProps {

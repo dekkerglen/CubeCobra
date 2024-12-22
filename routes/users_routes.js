@@ -378,7 +378,8 @@ router.post(
         roles: [],
         theme: 'default',
         emailVerified: false,
-        token:  uuid.v4()
+        token:  uuid.v4(),
+        dateCreated: new Date().valueOf(),
       };
 
       const salt = await bcrypt.genSalt(10);

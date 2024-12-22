@@ -639,7 +639,7 @@ router.get(
 
 router.post('/commit', async (req, res) => {
   try {
-    const { id, changes, title, blog, useBlog, checksum } = req.body;
+    const { id, changes, title, blog, useBlog, expectedVersion } = req.body;
 
     let changeCount = 0;
 
@@ -674,26 +674,14 @@ router.post('/commit', async (req, res) => {
       });
     }
 
-    const cards = await Cube.getCards(cube.id, true);
-
-    // we want to checksum the cube we are applying to, to make sure it hasn't changed since we started editing
-    // we want to xorStrings each card's cardID
-    const cardIds = [];
-    for (const [board] of Object.entries(cards)) {
-      if (board !== 'id') {
-        for (const card of cards[board]) {
-          cardIds.push(card.cardID);
-        }
-      }
-    }
-
-    const currentChecksum = xorStrings(cardIds);
-    if (currentChecksum !== checksum) {
-      return res.status(400).send({
+    if (cube.version !== expectedVersion) {
+      return res.status(409).send({
         success: 'false',
-        message: 'Cube has been modified since changes were made. Please refresh and try again.',
+        message: 'Cube has been updated since changes were made.',
       });
     }
+
+    const cards = await Cube.getCards(cube.id, true);
 
     for (const [board] of Object.entries(changes)) {
       // swaps

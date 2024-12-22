@@ -13,6 +13,7 @@ export type BoardChanges = {
 export interface Changes {
   mainboard?: BoardChanges;
   maybeboard?: BoardChanges;
+  version?: number;
 }
 
 interface Card {

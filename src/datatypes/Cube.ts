@@ -47,6 +47,7 @@ interface Cube {
   keywords: string[];
   cardCount: number;
   image: CubeImage;
+  version: number;
 }
 
 export default Cube;

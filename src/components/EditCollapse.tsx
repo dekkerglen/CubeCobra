@@ -86,7 +86,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
     removeCard,
     swapCard,
     changedCards,
-    discardAllChanges,
+    clearChanges,
     commitChanges,
     alerts,
     setAlerts,
@@ -309,7 +309,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
                 color="danger"
                 block
                 onClick={() => {
-                  discardAllChanges();
+                  clearChanges();
                   setPostTitle(DEFAULT_BLOG_TITLE);
                   setPostContent('');
                 }}

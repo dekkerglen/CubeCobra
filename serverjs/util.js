@@ -61,6 +61,10 @@ function hasProfanity(text) {
     'fullmovie',
     'ultimate guide',
     'v bucks',
+    'nude',
+    'deepnude',
+    'undress',
+    'deepfake',    
   ];
   filter.addWords(...addWords);
 
@@ -97,7 +101,21 @@ function validateEmail(email) {
     'myfxspot.com',
     'inboxorigin.com',
     'allfreemail.net',
-    'gufum.com'
+    'gufum.com',
+    'surveyees.com',
+    'rabitex.com',
+    'horizonspost.com',
+    'moonapps.org',
+    'freesourcecodes.com',
+    'fast.edu.pl',
+    'ronete.com',
+    'wanadoo.fr',
+    'astmemail.com',
+    'wmail.cam',
+    'crowfiles.shop',
+    'reduceness.com',
+    'web.de',
+    'adminzoom.com'
   ]
 
   const domain = email.split('@')[1];
