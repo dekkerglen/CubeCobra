@@ -3,13 +3,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import Banner from 'components/Banner';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import Markdown from 'components/Markdown';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Flexbox, Row, Col } from 'components/base/Layout';
 
 interface MarkdownProps {
   loginCallback?: string;
@@ -29,7 +30,7 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
         <CardBody>
           <p>
             CubeCobra supports regular Markdown as well as some extra features specific to our site. If you need any
-            help regarding how to use markdown, please <a href="/contact">contact us</a>.
+            help regarding how to use markdown, please <Link href="/contact">contact us</Link>.
           </p>
         </CardBody>
         <CardBody className="border-top">
@@ -38,7 +39,7 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
           </Text>
           <p>
             Our Markdown syntax is based on the CommonMark specification, which includes all the common Markdown
-            constructs you may already be familiar with. <a href="https://commonmark.org/help/">Learn more.</a>
+            constructs you may already be familiar with. <Link href="https://commonmark.org/help/" target="_blank" rel="noopener noreferrer">Learn more.</Link>
           </p>
         </CardBody>
         <CardBody className="border-top">
@@ -73,9 +74,9 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
           <p>
             You can put the card in whatever case you want. It will always link to the Cube Cobra card page. If you want
             to link to a specific version, you can supply a{' '}
-            <a href="https://scryfall.com/docs/api/cards/id" target="_blank" rel="noopener noreferrer">
+            <Link href="https://scryfall.com/docs/api/cards/id" target="_blank" rel="noopener noreferrer">
               Scryfall ID
-            </a>
+            </Link>
             . These IDs can be found from the URL of card pages, for the version you are looking for. The text displayed
             will be whatever is to the left of the pipe (|).For example:
           </p>
@@ -672,9 +673,9 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
           <p>
             When writing a code block, specifying a language will enable syntax highlighting for that language. You can
             specify{' '}
-            <a href="https://github.com/react-syntax-highlighter/react-syntax-highlighter/blob/master/AVAILABLE_LANGUAGES_HLJS.MD">
+            <Link href="https://github.com/react-syntax-highlighter/react-syntax-highlighter/blob/master/AVAILABLE_LANGUAGES_HLJS.MD" target="_blank" rel="noopener noreferrer">
               the following languages.
-            </a>
+            </Link>
           </p>
           <Row>
             <Col xs={12} sm={6}>
