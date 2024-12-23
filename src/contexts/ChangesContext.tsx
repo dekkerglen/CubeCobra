@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import useLocalStorage from 'hooks/useLocalStorage';
 import Card, { BoardType, Changes } from 'datatypes/Card';
@@ -7,6 +7,8 @@ import { cardsAreEquivalent } from 'utils/Card';
 import DisplayContext from './DisplayContext';
 
 export interface ChangesContextValue {
+  version: number;
+  setVersion: (version: number) => void;
   changes: Changes;
   brokenChanges?: Changes;
   setChanges: (changes: Changes) => void;
@@ -16,6 +18,10 @@ export interface ChangesContextValue {
 }
 
 const ChangesContext = createContext<ChangesContextValue>({
+  version: 0,
+  setVersion: function (): void {
+    throw new Error('Function not implemented.');
+  },
   changes: {},
   setChanges: function (): void {
     throw new Error('Function not implemented.');
@@ -34,15 +40,16 @@ interface ChangesContextProvider {
 
 export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ children, cube, cards }) => {
   const [changes, updateChanges] = useLocalStorage<Changes>(`cubecobra-changes-${cube.id}`, {});
+  const [version, setVersion] = useState(cube.version);
   const { setOpenCollapse } = useContext(DisplayContext);
 
   const setChanges = useCallback(
     (newChanges: Changes) => {
-      newChanges.version = cube.version;
+      newChanges.version = version;
       updateChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [cube.version, updateChanges],
+    [version, updateChanges],
   );
 
   const clearChanges = useCallback(() => {
@@ -53,7 +60,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
     let versionMismatch = false;
 
     // if changes is not an empty object, and the version of the changes does not match the cube version
-    if (Object.keys(changes).length > 0 && changes.version !== cube.version) {
+    if (Object.keys(changes).length > 0 && changes.version !== version) {
       // if the local changes are only adds, this is actually fine, and we can just bump the version
       let onlyAdds = true;
 
@@ -77,14 +84,14 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
       if (onlyAdds) {
         const newChanges = { ...changes };
-        newChanges.version = cube.version;
+        newChanges.version = version;
         setChanges(newChanges);
       } else {
         versionMismatch = true;
       }
     }
 
-    console.log('version mismatch', versionMismatch, changes.version, cube.version);
+    console.log('version mismatch', versionMismatch, changes.version, version);
 
     if (versionMismatch) {
       // attempt to create a fixedChanges object
@@ -165,6 +172,8 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       }
 
       return {
+        version,
+        setVersion,
         changes: {},
         brokenChanges: changes,
         setChanges,
@@ -175,6 +184,8 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
     }
 
     return {
+      version,
+      setVersion,
       changes,
       setChanges,
       clearChanges,

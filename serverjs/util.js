@@ -115,7 +115,15 @@ function validateEmail(email) {
     'crowfiles.shop',
     'reduceness.com',
     'web.de',
-    'adminzoom.com'
+    'adminzoom.com',
+    'starmail.net',
+    'diginey.com',
+    'somelora.com',
+    'qacmjeq.com',
+    'qejjyl.com',
+    'jxpomup.com',
+    'zlorkun.com',
+    'gufum.com'
   ]
 
   const domain = email.split('@')[1];

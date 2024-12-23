@@ -458,7 +458,7 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
     aggregates.commentsWiped += comments.length;
 
     for (const comment of comments) {
-      comment.owner = null;
+      delete comment.owner;
       comment.body = '[deleted]';
     
       await Comment.put(comment);

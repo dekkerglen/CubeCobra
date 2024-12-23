@@ -204,7 +204,7 @@ export function CubeContextProvider({
 }) {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
-  const { changes, setChanges, clearChanges } = useContext(ChangesContext);
+  const { changes, setChanges, clearChanges, version, setVersion } = useContext(ChangesContext);
   const { filterInput, cardFilter } = useContext(FilterContext)!;
 
   const { setOpenCollapse } = useContext(DisplayContext);
@@ -719,6 +719,7 @@ export function CubeContextProvider({
             ...cube,
             cards: newCards,
           });
+          setVersion(version + 1);
         }
       } catch {
         setAlerts([{ color: 'danger', message: 'Operation timed out' }]);
