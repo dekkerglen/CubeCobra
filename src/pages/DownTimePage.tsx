@@ -45,8 +45,8 @@ const DownTimePage: React.FC = () => (
               <Text semibold>Discord</Text>
             </Col>
             <Col xs={12} sm={8}>
-              <Link href="https://discord.gg/Hn39bCU" target="_blank" rel="noopener noreferrer">
-                https://discord.gg/Hn39bCU
+              <Link href="https://discord.gg/YYF9x65Ane" target="_blank" rel="noopener noreferrer">
+                https://discord.gg/YYF9x65Ane
               </Link>
             </Col>
           </Row>

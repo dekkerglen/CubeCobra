@@ -31,7 +31,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ title, error, requestId, loginCal
           <Flexbox direction="col" gap="2">
             <p>
               If you think this was a mistake, please report this on the{' '}
-              <a href="https://discord.gg/Hn39bCU">Cube Cobra Discord</a>
+              <a href="https://discord.gg/YYF9x65Ane">Cube Cobra Discord</a>
             </p>
             {error && (
               <p>

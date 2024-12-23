@@ -40,7 +40,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ loginCallback = '/' }) => (
           <ul>
             <li>A totally ad-free browsing experience</li>
             <li>
-              Access to exclusive <Link href="https://discord.gg/Hn39bCU">Discord</Link> channels available only to
+              Access to exclusive <Link href="https://discord.gg/YYF9x65Ane">Discord</Link> channels available only to
               Patreon supporters
             </li>
             <li>
@@ -55,7 +55,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ loginCallback = '/' }) => (
             After becoming a patron, make sure to{' '}
             <Link href="/user/account?nav=patreon">link your Cube Cobra account</Link> to gain access to these benefits.
             If you are experiencing issues with your Patreon subscription, feel free to contact us on{' '}
-            <Link href="https://discord.gg/Hn39bCU">Discord</Link>.
+            <Link href="https://discord.gg/YYF9x65Ane">Discord</Link>.
           </p>
           <Text lg semibold>
             Donation Links

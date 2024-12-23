@@ -131,7 +131,7 @@ const Footer: React.FC = () => {
           Custom card images displayed in Cube Cobra are subject to the license terms under which they were uploaded to
           their hosts. Cube Cobra is not responsible for the content of custom card images. To report a custom card
           image violation, message the development team on{' '}
-          <FooterLink href="https://discord.gg/Hn39bCU">Discord</FooterLink>
+          <FooterLink href="https://discord.gg/YYF9x65Ane">Discord</FooterLink>
           .
           <br />
           <Copyright />

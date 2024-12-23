@@ -91,7 +91,7 @@ const RecentDraftsCard: React.FC<CubesCardProps> = ({ decks, lastKey }) => {
         <CardBody>
           <Text>
             Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
-            <Link href="https://discord.gg/Hn39bCU">Discord draft exchange?</Link>
+            <Link href="https://discord.gg/YYF9x65Ane">Discord draft exchange?</Link>
           </Text>
         </CardBody>
       )}

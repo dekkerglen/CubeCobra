@@ -90,7 +90,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
         ) : (
           <p className="m-2">
             You don't have any notifications! Why don't you try sharing your cube on the{' '}
-            <a href="https://discord.gg/Hn39bCU">Cube Cobra Discord?</a>
+            <a href="https://discord.gg/YYF9x65Ane">Cube Cobra Discord?</a>
           </p>
         )}
         <CardBody>

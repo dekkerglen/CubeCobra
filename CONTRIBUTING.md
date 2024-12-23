@@ -183,11 +183,11 @@ If you find a security vulnerability, do NOT open an issue. Send a private messa
 # How to suggest a feature or enhancement
 ### Join the discord disscussion.
 
- https://discord.gg/Hn39bCU
+ https://discord.gg/YYF9x65Ane
 
 # Community
 
-We have a fairly active discord and would love for you to join the discussion.  https://discord.gg/Hn39bCU
+We have a fairly active discord and would love for you to join the discussion.  https://discord.gg/YYF9x65Ane
 
 Private Message 'DEKKARU', the admin on Discord, to gain the contributor role and unlock the contributor-only channels.
 
