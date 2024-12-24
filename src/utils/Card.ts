@@ -1,5 +1,5 @@
 import Card from 'datatypes/Card';
-import CardDetailsType, { ColorCategory } from 'datatypes/CardDetails';
+import CardDetailsType, { ColorCategory, COLOR_CATEGORIES } from 'datatypes/CardDetails';
 import CategoryOverrides from 'res/CategoryOverrides.json';
 import LandCategories from 'res/LandCategories.json';
 import { arraysEqual } from 'utils/Util';
@@ -188,9 +188,42 @@ export const cardImageBackUrl = (card: Card): string => card.imgBackUrl ?? card.
 
 export const cardNotes = (card: Card): string | null => card.notes ?? null;
 
+/*
+* Helper to convert the old color category types into current Type. Existing cards may have their colorCategory
+* set to the legacy value and used in places such as CSV export, which then can import instead of the current values.
+*/
+export const convertFromLegacyCardColorCategory = (colorCategory: string): ColorCategory | null => {
+  const legacyColorCategoryToCurrentMap = new Map([
+    ['w', 'White'],
+    ['u', 'Blue'],
+    ['b', 'Black'],
+    ['r', 'Red'],
+    ['g', 'Green'],
+    ['c', 'Colorless'],
+    ['m', 'Multicolored'],
+    ['h', 'Hybrid'],
+    ['l', 'Lands'],
+  ]);
+
+  //If it is a valid current color category, return it.
+  //In order to check if a string is contained in the array, Typescript requires us to "widen" it by casting as readonly array of string
+  if ((COLOR_CATEGORIES as ReadonlyArray<string>).includes(colorCategory)) {
+    return colorCategory as ColorCategory;
+    //If it is a legacy cateogry, convert to the current version
+  } else if (legacyColorCategoryToCurrentMap.get(colorCategory) !== undefined) {
+    return legacyColorCategoryToCurrentMap.get(colorCategory)! as ColorCategory;
+    //Else, not much we can do but return the same value
+  } else {
+    return null;
+  }
+}
+
 export const cardColorCategory = (card: Card): ColorCategory => {
   if (card.colorCategory) {
-    return card.colorCategory;
+    const converted = convertFromLegacyCardColorCategory(card.colorCategory);
+    if (converted !== null) {
+      return converted;
+    }
   }
 
   if (cardType(card).includes('Land')) {
@@ -557,6 +590,7 @@ export default {
   cardCubeCount,
   cardPickCount,
   COLOR_COMBINATIONS,
+  convertFromLegacyCardColorCategory,
   normalizeName,
   encodeName,
   decodeName,
