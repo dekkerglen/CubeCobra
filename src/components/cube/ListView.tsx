@@ -206,7 +206,10 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
       <TagInput
         tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
         addTag={(tag: TagData) => {
-          updateField(card, 'tags', [...cardTags(card), tag.text]);
+          let existingTags = cardTags(card);
+          if (!existingTags.includes(tag.text)) {
+            updateField(card, 'tags', [...cardTags(card), tag.text]);
+          }
         }}
         deleteTag={(index: number) => {
           const newTags = [...cardTags(card)];

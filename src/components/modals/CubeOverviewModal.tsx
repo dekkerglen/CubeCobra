@@ -166,7 +166,11 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
             <TagInput
               label="Tags"
               tags={state.tags.map((tag) => ({ text: tag, id: tag }))}
-              addTag={(tag) => setState({ ...state, tags: [...state.tags, tag.text] })}
+              addTag={(tag) => {
+                if (!state.tags.includes(tag.text)) {
+                  setState({ ...state, tags: [...state.tags, tag.text] })
+                }
+              }}
               deleteTag={(index) => {
                 const newTags = [...state.tags];
                 newTags.splice(index, 1);
