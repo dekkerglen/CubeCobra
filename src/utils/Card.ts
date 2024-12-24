@@ -236,7 +236,7 @@ export const cardColorCategory = (card: Card): ColorCategory => {
     return 'Colorless';
   }
   if (colors.length > 1) {
-    return 'Multicolor';
+    return 'Multicolored';
   }
 
   if (colors.length === 1) {
@@ -274,7 +274,7 @@ export const cardColorIdentityCategory = (card: Card): ColorCategory => {
     return 'Colorless';
   }
   if (colors.length > 1) {
-    return 'Multicolor';
+    return 'Multicolored';
   }
 
   if (colors.length === 1) {
