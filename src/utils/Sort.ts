@@ -21,6 +21,7 @@ import {
   cardTix,
   cardType,
   COLOR_COMBINATIONS,
+  convertFromLegacyCardColorCategory,
 } from 'utils/Card';
 import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
 import { COLOR_CATEGORIES } from 'datatypes/CardDetails';
@@ -492,9 +493,11 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
   let ret: string[] = [];
   /* Start of sort options */
   if (sort === 'Color Category') {
-    ret = [card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
+    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string)
+    ret = [convertedColorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
   } else if (sort === 'Color Category Full') {
-    const colorCategory = card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
+    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string)
+    const colorCategory = convertedColorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
     if (colorCategory === 'Multicolored') {
       ret = [getColorCombination(cardColorIdentity(card))];
     } else {
