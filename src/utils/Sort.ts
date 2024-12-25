@@ -23,6 +23,7 @@ import {
   COLOR_COMBINATIONS,
 } from 'utils/Card';
 import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
+import { COLOR_CATEGORIES } from 'datatypes/CardDetails';
 
 const COLOR_MAP: Record<string, string> = {
   W: 'White',
@@ -297,7 +298,8 @@ function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): st
 
   /* Start of sort Options */
   if (sort === 'Color Category') {
-    ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
+    //Slice creates a copy of the readonly COLOR_CATEGORIES array (as it is a const assertion), as a regular array
+    ret = COLOR_CATEGORIES.slice();
   } else if (sort === 'Color Category Full') {
     ret = SINGLE_COLOR.concat(['Colorless'])
       .concat(GUILDS)
