@@ -84,9 +84,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
           index: card.index,
         }))
         .filter(({ board, index }) => board !== undefined && index !== undefined) as {
-          board: BoardType;
-          index: number;
-        }[],
+        board: BoardType;
+        index: number;
+      }[],
     );
     setOpen(false);
   }, [bulkRemoveCard, cards, setOpen]);
@@ -100,9 +100,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
           index: card.index,
         }))
         .filter(({ board, index }) => board !== undefined && index !== undefined) as {
-          board: BoardType;
-          index: number;
-        }[],
+        board: BoardType;
+        index: number;
+      }[],
     );
   }, [bulkRevertRemove, cards]);
 
@@ -114,14 +114,16 @@ const GroupModal: React.FC<GroupModalProps> = ({
           index: card.index,
         }))
         .filter(({ board, index }) => board !== undefined && index !== undefined) as {
-          board: BoardType;
-          index: number;
-        }[],
+        board: BoardType;
+        index: number;
+      }[],
     );
   }, [bulkRevertEdit, cards]);
 
   const applyChanges = useCallback(() => {
     const updates = JSON.parse(JSON.stringify(cards));
+
+    console.log(updates);
 
     if (status !== '') {
       updates.forEach((card: Card) => {

@@ -72,7 +72,7 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
               outline
               color="accent"
               block
-              href={`/search/?q=${encodeURIComponent(`card:${card.name}`)}`}
+              href={`/search/?q=${encodeURIComponent(`card:"${card.name}"`)}`}
               target="_blank"
             >
               {`Cubes with ${card.name}`}

@@ -48,6 +48,15 @@ const useComments = (
           type,
         }),
       });
+
+      if (!response.ok) {
+        console.error('Failed to add comment');
+        console.log(response);
+        const json = await response.json();
+        console.log(json);
+        return;
+      }
+
       const val: { comment: Comment } = await response.json();
       setComments([val.comment, ...comments]);
     },

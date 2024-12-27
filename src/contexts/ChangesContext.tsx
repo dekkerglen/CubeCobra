@@ -91,8 +91,6 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       }
     }
 
-    console.log('version mismatch', versionMismatch, changes.version, version);
-
     if (versionMismatch) {
       // attempt to create a fixedChanges object
       const fixedChanges: Changes = {};

@@ -736,6 +736,10 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const edit of list) {
+        if (!newChanges[edit.board]) {
+          newChanges[edit.board] = { adds: [], removes: [], swaps: [], edits: [] };
+        }
+
         // don't push an edit if this card is marked for delete
         if (!changes[edit.board]?.removes.some((remove) => remove.index === edit.index)) {
           const card = cube.cards[edit.board][edit.index];

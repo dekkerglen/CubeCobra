@@ -167,7 +167,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
         <Markdown markdown={seat.description} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="draft" parent={draft.id} collapse={false} />
+        <CommentsSection parentType="deck" parent={draft.id} collapse={false} />
       </div>
     </Card>
   );
