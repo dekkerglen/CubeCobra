@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "npm run nearley && tsc -b && npm run webpack && npx tailwindcss -i ./src/css/stylesheet.css -o ./public/css/stylesheet.css",
-    "lint": "npm run prettier-base --check && npm run eslint --max-warnings 0",
+    "lint": "npm run prettier-base --check && npm run eslint -- --max-warnings 0",
     "bash": "bash",
     "beautify": "npm run prettier",
     "list-files": "bash -c 'shopt -s nullglob\n echo {__tests__,fixtures,jobs,models,one_shot_scripts,public/js,routes,serverjs,src}/{**/*,*}.{js,jsx,ts,tsx} {app,force_update,server}.js webpack.*.mjs eslint.config.mjs babel.config.mjs'",
