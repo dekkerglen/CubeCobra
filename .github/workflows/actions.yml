@@ -15,8 +15,8 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
       - name: Setup
-        run: yarn install --immutable
+        run: npm ci
       - name: Check Code Style
-        run: yarn run lint
+        run: npm run lint
       - name: Build
-        run: yarn run ci-build
+        run: npm run ci-build

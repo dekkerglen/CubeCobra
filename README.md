@@ -18,11 +18,6 @@ Node 20
 
 NodeJS: https://nodejs.org/en/download/
 
-After installing node, ensure you are running Yarn version 4.4.0 to match the project's package.json. With a terminal do:
-- Install yarn via npm to start: `npm install -g yarn`
-- Upgrade to newest yarn (also known as Berry): `yarn set version 4.4.0`
-- Validate correct version is installed: `yarn --version`
-
 ### Redis
 
 Redis Server:
@@ -77,8 +72,8 @@ VSCode (with the ESLint and Prettier extension) is the recommended environment. 
 For the first setup, you will need to run:
 
 ```sh
-yarn install && yarn build
-yarn setup:local
+npm install && npm run build
+npm run setup:local
 ```
 
 This will:
@@ -96,7 +91,7 @@ If you are on Windows, you will need to set bash as your script shell:
 You will need to make sure you have `bash` installed somewhere and run the following command [with your `bash` path in place of the path below].
 
 ```sh
-yarn config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
+npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
 ```
 
 ### Running CubeCobra
@@ -104,7 +99,7 @@ yarn config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
 Then you can start the program like so:
 
 ```sh
-yarn start:dev
+npm run start:dev
 ```
 
 This script will:
@@ -166,12 +161,12 @@ Here is a table on how to fill out the env vars:
 
 ### Updating Card Definitions and Analytics
 
-In the initial setup scripts, `yarn update-cards` is what creates the card definitions. Running this script will pull the latest data from scryfall.
+In the initial setup scripts, `npm run update-cards` is what creates the card definitions. Running this script will pull the latest data from scryfall.
 
 If you want card analytics, can run the following script:
 
 ```sh
-yarn update-all
+npm run update-all
 ```
 
 This will, in sequence:
