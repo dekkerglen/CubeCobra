@@ -218,6 +218,10 @@ export const convertFromLegacyCardColorCategory = (colorCategory: string): Color
   }
 }
 
+/*
+* Hybrid color category is explicitly set on cards by cube owners. This function therefore won't
+* return Hybrid as an option, those cards will be funneled into the Multicolored category
+*/
 export const cardColorCategory = (card: Card): ColorCategory => {
   if (card.colorCategory) {
     const converted = convertFromLegacyCardColorCategory(card.colorCategory);
