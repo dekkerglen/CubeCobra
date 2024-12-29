@@ -301,7 +301,7 @@ const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
-      className="flex flex-col gap-2"
+      className="markdown flex flex-col gap-2"
       remarkPlugins={ALL_PLUGINS as any}
       rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
       components={RENDERERS as any}

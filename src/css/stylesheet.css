@@ -278,3 +278,14 @@ img.mana-symbol-sm {
 		max-width: 12.5%;
   }
 }
+
+/* Loose lists (https: //spec.commonmark.org/0.31.2/#lists) have a <p> within the list items. Using inline-block and bottom margin
+* results in a blank line after the list item, and in conjunction with list-style-position: inside on the list element itself
+* ensures the <p> content starts on the same line as the item marker (eg 1 or *). Without inline-block, the list-style-position would
+* move the item content to the next line.
+*/
+.markdown ul p,
+.markdown ol p {
+	display: inline-block;
+	margin-bottom: 1rem;
+}
