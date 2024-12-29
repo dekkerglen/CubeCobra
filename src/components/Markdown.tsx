@@ -155,7 +155,7 @@ const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
   const tag = node.inParagraph ? 'span' : 'div';
   return (
-    <div className="w-1/2 lg:w-1/4 p-2">
+    <div className="w-1/2 lg:w-1/4 p-2 markdown-card-image">
       <Link href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
         <FoilCardImage autocard card={{ details } as any} className="clickable" wrapperTag={tag} />
       </Link>

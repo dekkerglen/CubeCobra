@@ -2589,6 +2589,12 @@ img.mana-symbol-sm {
   margin-bottom: 1rem;
 }
 
+/* Add margin to images rendered within centered markdown blocks */
+
+.markdown .text-center .markdown-card-image {
+  margin: auto;
+}
+
 @media (min-width: 640px) {
   .sm\:container {
     width: 100%;
