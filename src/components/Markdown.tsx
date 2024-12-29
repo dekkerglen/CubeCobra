@@ -48,15 +48,15 @@ interface RenderBlockQuoteProps {
   children: ReactNode;
 }
 const renderBlockQuote: React.FC<RenderBlockQuoteProps> = (node) => (
-  <div className="border border-border background-background-secondary mb-4 p-4">{node.children}</div>
+  <div className="border border-border bg-bg-active mb-4 p-4">{node.children}</div>
 );
 
-interface RenderImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {}
+interface RenderImageProps extends React.ImgHTMLAttributes<HTMLImageElement> { }
 const renderImage: React.FC<RenderImageProps> = (node) => (
   <img className="max-w-full" src={node.src} alt={node.alt} title={node.title} />
 );
 
-interface RenderLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {}
+interface RenderLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> { }
 const renderLink: React.FC<RenderLinkProps> = (node) => {
   const ref = node.href ?? '';
 
