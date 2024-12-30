@@ -6,6 +6,7 @@ const fetch = require('node-fetch');
 const _ = require('lodash')
 const sharp = require('sharp');
 const Cube = require('../dynamo/models/cube');
+const { convertFromLegacyCardColorCategory } = require('../dist/utils/Card');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
@@ -228,6 +229,9 @@ function CSVtoCards(csvString, carddb) {
   } of camelizedRows) {
     if (name) {
       const upperSet = (set || '').toUpperCase();
+
+      const validatedColorCategory = convertFromLegacyCardColorCategory(colorCategory);
+
       const card = {
         name,
         cmc: cmc || null,
@@ -242,7 +246,7 @@ function CSVtoCards(csvString, carddb) {
         tags: tags && tags.length > 0 ? tags.split(';').map((t) => t.trim()) : [],
         notes: notes || '',
         rarity: rarity || null,
-        colorCategory: colorCategory || null,
+        colorCategory: validatedColorCategory || null,
       };
 
       const potentialIds = carddb.allVersions(card);

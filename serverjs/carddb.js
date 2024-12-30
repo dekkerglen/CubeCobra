@@ -58,7 +58,7 @@ function getPlaceholderCard(scryfall_id) {
     colors: [],
     color_identity: [],
     parsed_cost: [],
-    colorcategory: 'c',
+    colorcategory: 'Colorless',
     error: true,
   };
 }

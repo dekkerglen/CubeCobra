@@ -753,13 +753,26 @@ function convertCard(card, metadata, isExtra) {
     newcard.image_flip = card.card_faces[1].image_uris.normal;
   }
   if (newcard.type.toLowerCase().includes('land')) {
-    newcard.colorcategory = 'l';
+    newcard.colorcategory = 'Lands';
   } else if (newcard.color_identity.length === 0) {
-    newcard.colorcategory = 'c';
+    newcard.colorcategory = 'Colorless';
   } else if (newcard.color_identity.length > 1) {
-    newcard.colorcategory = 'm';
+    newcard.colorcategory = 'Multicolored';
   } else if (newcard.color_identity.length === 1) {
-    newcard.colorcategory = newcard.color_identity[0].toLowerCase();
+    const legacyColorCategoryToCurrentMap = new Map([
+      ['w', 'White'],
+      ['u', 'Blue'],
+      ['b', 'Black'],
+      ['r', 'Red'],
+      ['g', 'Green'],
+    ]);
+
+    const colorFromIdentity = newcard.color_identity[0].toLowerCase();
+    if (legacyColorCategoryToCurrentMap.get(colorFromIdentity) !== undefined) {
+      newcard.colorcategory = legacyColorCategoryToCurrentMap.get(colorFromIdentity);
+    } else {
+      newcard.colorcategory = colorFromIdentity;
+    }
   }
 
   const tokens = getTokens(card, newcard);

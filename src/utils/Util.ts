@@ -225,7 +225,7 @@ const colorToColorClass: { [key in ColorCategory]: string } = {
   Red: 'red',
   Green: 'green',
   Colorless: 'colorless',
-  Multicolor: 'multi',
+  Multicolored: 'multi',
   Hybrid: 'multi',
   Lands: 'lands',
 };

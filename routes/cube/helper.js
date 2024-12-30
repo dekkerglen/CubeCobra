@@ -1,6 +1,7 @@
 const carddb = require('../../serverjs/carddb');
 const { render, redirect } = require('../../serverjs/render');
 const util = require('../../serverjs/util');
+const cardutil = require('../../dist/utils/Card');
 const { CSVtoCards } = require('../../serverjs/cubefn');
 
 // Bring in models
@@ -195,6 +196,9 @@ function writeCard(res, card, maybe) {
   } else {
     imgBackUrl = '';
   }
+
+  const colorCategory = cardutil.convertFromLegacyCardColorCategory(card.colorCategory);
+
   res.write(`"${name.replaceAll(/"/g, '""')}",`);
   res.write(`${card.cmc || cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
@@ -202,7 +206,7 @@ function writeCard(res, card, maybe) {
   res.write(`"${carddb.cardFromId(card.cardID).set}",`);
   res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
   res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);
-  res.write(`${card.colorCategory || colorcategory},`);
+  res.write(`${colorCategory || colorcategory},`);
   res.write(`${card.status || ''},`);
   res.write(`${card.finish || ''},`);
   res.write(`${maybe},`);

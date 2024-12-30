@@ -48,15 +48,15 @@ interface RenderBlockQuoteProps {
   children: ReactNode;
 }
 const renderBlockQuote: React.FC<RenderBlockQuoteProps> = (node) => (
-  <div className="border border-border background-background-secondary mb-4 p-4">{node.children}</div>
+  <div className="border border-border bg-bg-active mb-4 p-4">{node.children}</div>
 );
 
-interface RenderImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {}
+interface RenderImageProps extends React.ImgHTMLAttributes<HTMLImageElement> { }
 const renderImage: React.FC<RenderImageProps> = (node) => (
   <img className="max-w-full" src={node.src} alt={node.alt} title={node.title} />
 );
 
-interface RenderLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {}
+interface RenderLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> { }
 const renderLink: React.FC<RenderLinkProps> = (node) => {
   const ref = node.href ?? '';
 
@@ -155,7 +155,7 @@ const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
   const tag = node.inParagraph ? 'span' : 'div';
   return (
-    <div className="w-1/2 lg:w-1/4 p-2">
+    <div className="w-1/2 lg:w-1/4 p-2 markdown-card-image">
       <Link href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
         <FoilCardImage autocard card={{ details } as any} className="clickable" wrapperTag={tag} />
       </Link>
@@ -301,7 +301,7 @@ const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
-      className="flex flex-col gap-2"
+      className="markdown flex flex-col gap-2"
       remarkPlugins={ALL_PLUGINS as any}
       rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
       components={RENDERERS as any}

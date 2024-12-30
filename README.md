@@ -18,11 +18,6 @@ Node 20
 
 NodeJS: https://nodejs.org/en/download/
 
-After installing node, ensure you are running Yarn version 4.4.0 to match the project's package.json. With a terminal do:
-- Install yarn via npm to start: `npm install -g yarn`
-- Upgrade to newest yarn (also known as Berry): `yarn set version 4.4.0`
-- Validate correct version is installed: `yarn --version`
-
 ### Redis
 
 Redis Server:
@@ -77,8 +72,8 @@ VSCode (with the ESLint and Prettier extension) is the recommended environment. 
 For the first setup, you will need to run:
 
 ```sh
-yarn install && yarn build
-yarn setup:local
+npm install && npm run build
+npm run setup:local
 ```
 
 This will:
@@ -96,15 +91,37 @@ If you are on Windows, you will need to set bash as your script shell:
 You will need to make sure you have `bash` installed somewhere and run the following command [with your `bash` path in place of the path below].
 
 ```sh
-yarn config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
+npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
 ```
+
+### reCAPTCHA account
+
+To combat spam CubeCobra uses Google reCAPTCHA (V2) in actions such as creating cubes. Thus in order to use the site locally
+you must have a reCAPTCHA account, which thankfully are free (no credit card needed) with 10,000 assertions a month. To setup the
+account follow these steps:
+
+1. Go to https://www.google.com/recaptcha/admin/create
+2. Enter any label you wish (suggest CubeCobraLocalDev)
+3. Set "reCAPTCHA type" to V2, with "I'm not a robot" tickbox enabled
+4. Enter "localhost" as the domain
+  1. If you have setup your local CubeCobra to be accessible under a non-localhost domain (see [Running CubeCobra](#running-cubecobra)) then include that domain as well
+5. Close the "Google Cloud Platform" section, as GCP is not required
+6. Save. See screenshot as an example of the desired settings:
+  ![Creating a reCAPTCHA site](./docs/readme/reCAPTCHA-create.png)
+7. The generated "Site key" and "Secret key" values will be shown (You can always get these again from the reCAPTCHA settings if necessary). Use them to update your local .env file accordingly:
+  1. Edit your .env file (which was created created during [Initial Setup](#initial-setup))
+  2. Paste the value of the "Site key" as the value of the CAPTCHA_SITE_KEY environment variable
+  3. Paste the value of the "Secret key" as the value of the CAPTCHA_SECRET_KEY environment variable
+  4. Save the .env file changes
+
+
 
 ### Running CubeCobra
 
 Then you can start the program like so:
 
 ```sh
-yarn start:dev
+npm run start:dev
 ```
 
 This script will:
@@ -163,15 +180,17 @@ Here is a table on how to fill out the env vars:
 | CACHE_ENABLED          | Whether or not to enable caching.                                                            |           |
 | AUTOSCALING_GROUP      | The name of the autoscaling group this instance is run in, used for the distributed cache.   |           |
 | CACHE_SECRET           | The secret for the distributed cache.                                                        |           |
+| CAPTCHA_SITE_KEY       | The reCAPTCHA site key                                                                       | Yes       |
+| CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                     | Yes       |
 
 ### Updating Card Definitions and Analytics
 
-In the initial setup scripts, `yarn update-cards` is what creates the card definitions. Running this script will pull the latest data from scryfall.
+In the initial setup scripts, `npm run update-cards` is what creates the card definitions. Running this script will pull the latest data from scryfall.
 
 If you want card analytics, can run the following script:
 
 ```sh
-yarn update-all
+npm run update-all
 ```
 
 This will, in sequence:

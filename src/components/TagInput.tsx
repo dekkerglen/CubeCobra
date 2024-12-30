@@ -34,7 +34,11 @@ const TagInput: React.FC<TagInputProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
-    setFilteredSuggestions(suggestions.filter((suggestion) => suggestion.toLowerCase().includes(value.toLowerCase())));
+    /*
+    * If value is empty then no suggestions should match. String includes("") is true, so if you typed and saw suggestsions, then removed
+    * what you typed, those suggestions would still show.
+    */
+    setFilteredSuggestions(suggestions.filter((suggestion) => value.trim() != "" && suggestion.toLowerCase().includes(value.toLowerCase())));
   };
 
   const handleAddTag = (tagText: string) => {
@@ -42,6 +46,8 @@ const TagInput: React.FC<TagInputProps> = ({
       addTag({ text: tagText, id: tagText });
       setInputValue('');
       setFilteredSuggestions([]);
+      //Reset position to before suggestions
+      setPosition(-1);
     }
   };
 
@@ -60,7 +66,19 @@ const TagInput: React.FC<TagInputProps> = ({
       setPosition((p) => (p > -1 ? p - 1 : p));
     } else if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
-      handleAddTag(inputValue);
+      const showingSuggestions = filteredSuggestions.length > 0 && !(filteredSuggestions.length === 1 && filteredSuggestions[0] === inputValue);
+
+      /*
+      * In comparison to AutocompleteInput, which will auto-select the first suggestion showing on a TAB or Enter, or if the input text
+      * matches the single hidden suggestion, we don't do that for tags. Only if there is a suggestion actively highlighted (via keyboard focus)
+      * will TAB/Enter use it, otherwise whatever has been typed will be used given that tags can be anything.
+      */
+      if (showingSuggestions && position >= 0 && position < filteredSuggestions.length) {
+        handleAddTag(filteredSuggestions[position]);
+
+      } else {
+        handleAddTag(inputValue);
+      }
     }
   };
 
