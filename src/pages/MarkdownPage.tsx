@@ -704,6 +704,55 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
             </Col>
           </Row>
         </CardBody>
+        <CardBody className="border-top">
+          <Text semibold md>
+            Header linking
+          </Text>
+          <p>
+            Headers in markdown can be linked to within the page by creating anchors with fragment (#) URLs. The content of the fragment
+            is the text content of the header in lowercase, with whitespace replaced by "-" (dash) and non-letter/numbers characters removed (see examples).
+            Each heading must have unique text (within the page) for the linking to work.
+          </p>
+          <p>Examples:</p>
+          <ul>
+            <li>A header with text "This is my cube" can be linked from fragment "#this-is-my-cube"</li>
+            <li>Non-letters such as emoji's or symbols will be removed: "😄 emoji ♥" can be linked from fragment "#-emoji-"</li>
+            <li>Non-ASCII letters work: "The Héroïne" can be linked from fragment "#the-héroïne"</li>
+          </ul>
+          <br />
+          <Row>
+            <Col xs={12} sm={6}>
+              <Card>
+                <CardHeader>Source</CardHeader>
+                <CardBody>
+                  <p>
+                    <code># My cube is awesome!</code>
+                    <code>[Read the cube themes](#what-are-the-themes-of-the-cube)</code>
+                    <code>[All about the money](#all-cards-must-be-less-than-50-)</code>
+                    <br />
+                    <code>## What are the themes of the cube?</code>
+                    <br />
+                    <code>### All cards must be less than 50 ¢</code>
+                    <br />
+                    <code>[Back to top](#my-cube-is-awesome)</code>
+                  </p>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card>
+                <CardHeader>Result</CardHeader>
+                <CardBody>
+                  <Markdown
+                    markdown={
+                      '# My cube is awesome!\n[Read the cube themes](#what-are-the-themes-of-the-cube)\n[All about the money](#all-cards-must-be-less-than-50-)\n## What are the themes of the cube?\n### All cards must be less than 50 ¢\n[Back to top](#my-cube-is-awesome)'
+                    }
+                  />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        </CardBody>
       </Flexbox>
     </Card>
   </MainLayout>
