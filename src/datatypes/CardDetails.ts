@@ -1,13 +1,7 @@
-export type ColorCategory =
-  | 'White'
-  | 'Blue'
-  | 'Black'
-  | 'Red'
-  | 'Green'
-  | 'Colorless'
-  | 'Multicolor'
-  | 'Hybrid'
-  | 'Lands';
+
+export const COLOR_CATEGORIES = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Multicolored', 'Hybrid', 'Lands'] as const;
+export type ColorCategory = typeof COLOR_CATEGORIES[number];
+
 export default interface CardDetails {
   scryfall_id: string;
   oracle_id: string;

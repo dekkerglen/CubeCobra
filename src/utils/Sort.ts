@@ -21,8 +21,10 @@ import {
   cardTix,
   cardType,
   COLOR_COMBINATIONS,
+  convertFromLegacyCardColorCategory,
 } from 'utils/Card';
 import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
+import { COLOR_CATEGORIES } from 'datatypes/CardDetails';
 
 const COLOR_MAP: Record<string, string> = {
   W: 'White',
@@ -297,7 +299,8 @@ function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): st
 
   /* Start of sort Options */
   if (sort === 'Color Category') {
-    ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
+    //Slice creates a copy of the readonly COLOR_CATEGORIES array (as it is a const assertion), as a regular array
+    ret = COLOR_CATEGORIES.slice();
   } else if (sort === 'Color Category Full') {
     ret = SINGLE_COLOR.concat(['Colorless'])
       .concat(GUILDS)
@@ -490,9 +493,11 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
   let ret: string[] = [];
   /* Start of sort options */
   if (sort === 'Color Category') {
-    ret = [card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
+    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string)
+    ret = [convertedColorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
   } else if (sort === 'Color Category Full') {
-    const colorCategory = card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
+    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string)
+    const colorCategory = convertedColorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
     if (colorCategory === 'Multicolored') {
       ret = [getColorCombination(cardColorIdentity(card))];
     } else {
