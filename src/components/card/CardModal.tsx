@@ -340,7 +340,11 @@ const CardModal: React.FC<CardModalProps> = ({
                     tags={cardTags(card).map((tag): TagData => ({ text: tag, id: tag }))}
                     readOnly={!canEdit}
                     addTag={(tag: TagData) => {
-                      updateField('tags', [...cardTags(card), tag.text]);
+                      //Prevent duplicate tags from being added
+                      let existingTags = cardTags(card);
+                      if (!existingTags.includes(tag.text)) {
+                        updateField('tags', [...cardTags(card), tag.text]);
+                      }
                     }}
                     deleteTag={(index: number) => {
                       const newTags = [...cardTags(card)];
