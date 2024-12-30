@@ -10,8 +10,6 @@ import ResponsiveDiv from 'components/base/ResponsiveDiv';
 
 const BANNER_RATE: number = 5; // an alternate message appears with probability of 1/BANNER_RATE
 
-const DELVER_RATE: number = 2; // an alternate message appears with probability of 1/DELVER_RATE
-
 const options: React.ReactNode[] = [
   <Text lg>
     Enjoying Cube Cobra? You can help support Cube Cobra by purchasing playmats at our{' '}
@@ -38,7 +36,6 @@ interface BannerProps {
 const Banner: React.FC<BannerProps> = ({ className }) => {
   const user: UserContextValue | null = useContext(UserContext);
   const [option] = useState<number>(Math.floor(Math.random() * options.length * BANNER_RATE));
-  const [delverOption] = useState<number>(Math.floor(Math.random() * DELVER_RATE));
 
   if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
 
@@ -49,30 +46,6 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
           <CardBody className="bg-advert overflow-hidden rounded-md">{options[option]}</CardBody>
         </Card>
       </div>
-    );
-  }
-
-  if (delverOption === 0) {
-    return (
-      <Flexbox direction="row" justify="between" gap="2" className={`${className}`}>
-        <ResponsiveDiv lg className="flex-grow py-2">
-          <a href="https://www.kickstarter.com/projects/volatilerig/delver-pass" target="_blank" rel="noreferrer">
-            <img src="/content/delverbanner.png" className="h-full" />
-          </a>
-        </ResponsiveDiv>
-        <ResponsiveDiv xl className="pb-8 py-2">
-          <Card className="h-full bg-advert">
-            <CardBody className="bg-advert h-full rounded-md">
-              <Flexbox direction="col" justify="center" className="h-full">
-                <Text lg>
-                  Tired of seeing advertisments? Become a supporter of Cube Cobra to remove all advertisments and gain
-                  access to exclusive features! <Link href="/donate">Find out more.</Link>
-                </Text>
-              </Flexbox>
-            </CardBody>
-          </Card>
-        </ResponsiveDiv>
-      </Flexbox>
     );
   }
 

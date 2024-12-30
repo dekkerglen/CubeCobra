@@ -395,6 +395,12 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
     }
 
     if (updatedCube.shortId !== cube.shortId) {
+
+      if (util.hasProfanity(updatedCube.shortId)) {
+        req.flash('danger', 'Could not update cube, the short id contains a banned word. If you feel this was a mistake, please contact us.');
+        return redirect(req, res, '/cube/overview/' + cube.id);
+      }
+
       const taken = await CubeHash.getSortedByName(`shortid:${updatedCube.shortId.toLowerCase()}`);
 
       if (taken.items.length === 1 && taken.items[0].cube !== cube.id) {

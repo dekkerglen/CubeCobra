@@ -4,71 +4,90 @@ const cardutil = require('../dist/utils/Card');
 const { redirect } = require('./render');
 const carddb = require('./carddb');
 
+const Filter = require('bad-words');
+const filter = new Filter();
+const removeWords = ['hell', 'sadist', 'God'];
+filter.removeWords(...removeWords);
+const addWords = [
+  'dhabi',
+  'dubai',
+  'persian',
+  'escort',
+  'call girl',
+  'scandal',
+  'onlyfans',
+  'leaked',
+  'pdf',
+  'download',
+  'xbox',
+  'gift card',
+  'vbucks',
+  'v-bucks',
+  'streaming',
+  'bitcoin',
+  'cryptocurrency',
+  'crypto',
+  'nft',
+  'coinbase',
+  'ozempic',
+  'xanax',
+  'viagra',
+  'tramadol',
+  'adderall',
+  'percocet',
+  'oxycontin',
+  'vicodin',
+  'hydrocodone',
+  'codeine',
+  'morphine',
+  'fentanyl',
+  'ambien',
+  'valium',
+  'ativan',
+  'dilaudid',
+  'alprazolam',
+  'meridia',
+  'phentermine',
+  'fioricet',
+  'google play',
+  'coin master',
+  'robux',
+  'roblox',
+  'monopoly go',
+  'monopoly-go',
+  'fullmovie',
+  'ultimate guide',
+  'vbucks',
+  'nude',
+  'deepnude',
+  'undress',
+  'deepfake',
+];
+filter.addWords(...addWords);
+
+/**
+ * Transforms a string with Unicode substitutions into regular text.
+ * @param {string} text - The input string with Unicode substitutions.
+ * @returns {string} - The transformed string with regular text.
+ */
+function normalizeUnicode(text) {
+  if (!text) return '';
+
+  // Normalize the Unicode string to its canonical form
+  return text.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function hasProfanity(text) {
   if (!text) return false;
 
-  const Filter = require('bad-words');
-  const filter = new Filter();
-  const removeWords = ['hell', 'sadist', 'God'];
-  filter.removeWords(...removeWords);
-  const addWords = [
-    'dhabi',
-    'dubai',
-    'persian',
-    'escort',
-    'call girl',
-    'scandal',
-    'onlyfans',
-    'leaked',
-    'pdf',
-    'download',
-    'xbox',
-    'gift card',
-    'vbucks',
-    'v-bucks',
-    'streaming',
-    'bitcoin',
-    'cryptocurrency',
-    'crypto',
-    'nft',
-    'coinbase',
-    'ozempic',
-    'xanax',
-    'viagra',
-    'tramadol',
-    'adderall',
-    'percocet',
-    'oxycontin',
-    'vicodin',
-    'hydrocodone',
-    'codeine',
-    'morphine',
-    'fentanyl',
-    'ambien',
-    'valium',
-    'ativan',
-    'dilaudid',
-    'alprazolam',
-    'meridia',
-    'phentermine',
-    'fioricet',
-    'google play',
-    'coin master',
-    'robux',
-    'roblox',
-    'monopoly go',
-    'monopoly-go',
-    'fullmovie',
-    'ultimate guide',
-    'v bucks',
-    'nude',
-    'deepnude',
-    'undress',
-    'deepfake',    
+  const variations = [
+    text,
+    text.replace(/[^a-zA-Z0-9 ]/g, ''),
+    normalizeUnicode(text),
+    normalizeUnicode(text).replace(/[^a-zA-Z0-9 ]/g, ''),
   ];
-  filter.addWords(...addWords);
 
-  return filter.isProfane(text.toLowerCase());
+  return variations.some((variation) => filter.isProfane(variation));
 }
 
 function validateEmail(email) {
