@@ -99,22 +99,22 @@ const Edit = ({ card, revert }: { card: CardData; revert: () => void }) => (
 
 const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; revert: () => void }) => {
   const [loading, setLoading] = useState(true);
-  const [details, setDetails] = useState<CardDetails | null>();
-  const [details2, setDetails2] = useState<CardDetails | null>();
+  const [newCardDetails, setNewCardDetails] = useState<CardDetails | null>();
+  const [oldCardDetails, setOldCardDetails] = useState<CardDetails | null>();
 
   useEffect(() => {
     const getData = async () => {
       const response = await fetch(`/cube/api/getcardfromid/${card.cardID}`);
       if (response.ok) {
         const data = await response.json();
-        setDetails(data.card);
+        setNewCardDetails(data.card);
         setLoading(false);
       }
 
       const response2 = await fetch(`/cube/api/getcardfromid/${oldCard.cardID}`);
       if (response2.ok) {
         const data = await response2.json();
-        setDetails2(data.card);
+        setOldCardDetails(data.card);
         setLoading(false);
       }
 
@@ -129,14 +129,14 @@ const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; re
       <span className="mx-1" style={{ color: 'blue' }}>
         <ArrowSwitchIcon />
       </span>
-      {!loading && details ? (
-        <TextAutocard card={{ ...oldCard, details }}>{details.name}</TextAutocard>
+      {!loading && oldCardDetails ? (
+        <TextAutocard card={{ ...oldCard, details: oldCardDetails }}>{oldCardDetails.name}</TextAutocard>
       ) : (
         <Spinner sm />
       )}
       <ArrowRightIcon className="mx-1" />
-      {!loading && details2 ? (
-        <TextAutocard card={{ ...card, details: details2 }}>{details2.name}</TextAutocard>
+      {!loading && newCardDetails ? (
+        <TextAutocard card={{ ...card, details: newCardDetails }}>{newCardDetails.name}</TextAutocard>
       ) : (
         <Spinner sm />
       )}
