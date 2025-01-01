@@ -31,15 +31,16 @@ export class TopNavigationPage {
     this.securityQuestionText = page.locator('label[for="answer"]');
     this.cardsLink = page.getByText('Cards', { exact: true }).nth(1);
     this.searchCardsLink = page.getByRole('link', { name: 'Search Cards' }).first();
+    //this.clickTestCube = page.
   }
 
-  userLogin = async () => {
+  userLogin = async ({ userData }) => {
     await this.loginLink.waitFor();
     await this.loginLink.click();
     await this.emailField.waitFor();
-    await this.emailField.fill('test@test.com');
+    await this.emailField.fill(userData.email);
     await this.passwordField.waitFor();
-    await this.passwordField.fill('riley123');
+    await this.passwordField.fill(userData.password);
     await this.loginButton.waitFor();
     await this.loginButton.click();
     await this.page.waitForURL(/\/dashboard/);
@@ -47,10 +48,14 @@ export class TopNavigationPage {
   clickYourCubes = async () => {
     await this.yourCubeDropdown.waitFor();
     await this.yourCubeDropdown.click();
+    await this.createNewCubeLink.waitFor();
+  };
+  clickCards = async () => {
+    await this.cardsLink.waitFor();
+    await this.cardsLink.click();
   };
   clickCreateANewCube = async (cubeName: string) => {
-    this.clickYourCubes();
-    await this.createNewCubeLink.waitFor();
+    await this.clickYourCubes();
     await this.createNewCubeLink.click();
     await this.cubeNameField.waitFor();
     await this.cubeNameField.fill(cubeName);
@@ -62,12 +67,8 @@ export class TopNavigationPage {
     // need a way to bypass captcha
     await this.page.pause();
   };
-  clickCards = async () => {
-    await this.cardsLink.waitFor();
-    await this.cardsLink.click();
-  };
   clickSearchCard = async () => {
-    this.clickCards();
+    await this.clickCards();
     await this.searchCardsLink.waitFor();
     await this.searchCardsLink.click();
     await this.page.waitForURL(/\/tool/);
