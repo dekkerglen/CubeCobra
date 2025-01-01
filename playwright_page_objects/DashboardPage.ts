@@ -1,13 +1,23 @@
-export class DashboardPage {
-  page: any;
-  loginLink2: any;
-  yourCubeTesting: any;
+import { Page } from 'playwright';
 
-  constructor(page) {
+import { getYourCube } from './../playwrightUtils/getYourCube';
+
+export class DashboardPage {
+  page: Page;
+  yourCube: any;
+
+  constructor(page: Page) {
     this.page = page;
   }
-  validateTestCubeDisplays = async (name, cards, followers) => {
-    this.yourCubeTesting = this.page.getByRole('link', { name: `${name} ${cards} Card Cube ${followers}` });
-    await this.yourCubeTesting.waitFor();
-  };
+
+  async validateTestCubeDisplays(name: string, cards: string, followers: string) {
+    this.yourCube = await getYourCube(this.page, name, cards, followers);
+    await this.yourCube.waitFor();
+  }
+
+  async clickCubeFromYourCube(name: string, cards: string, followers: string) {
+    this.yourCube = await getYourCube(this.page, name, cards, followers);
+    await this.yourCube.waitFor();
+    await this.yourCube.click();
+  }
 }
