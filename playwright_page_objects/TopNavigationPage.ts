@@ -48,7 +48,6 @@ export class TopNavigationPage {
   clickYourCubes = async () => {
     await this.yourCubeDropdown.waitFor();
     await this.yourCubeDropdown.click();
-    await this.createNewCubeLink.waitFor();
   };
   clickCards = async () => {
     await this.cardsLink.waitFor();
