@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 
-import { getMagicAnswer } from '../playwright_data/securityQuestions';
+import { getMagicAnswer } from './../playwright_data/securityQuestions';
 
 export class TopNavigationPage {
   page: any;

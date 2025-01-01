@@ -1,11 +1,11 @@
 import { test } from '@playwright/test';
 
-import { newCubeData } from '../playwright_data/cubeData';
-import { userData } from '../playwright_data/testUsers';
-import { CubeOverviewPage } from '../playwright_page_objects/CubeOverviewPage';
-import { DashboardPage } from '../playwright_page_objects/DashboardPage';
-import { SearchPage } from '../playwright_page_objects/SearchPage';
-import { TopNavigationPage } from '../playwright_page_objects/topNavigationPage';
+import { newCubeData } from './../playwright_data/cubeData';
+import { userData } from './../playwright_data/testUsers';
+import { CubeOverviewPage } from './../playwright_page_objects/CubeOverviewPage';
+import { DashboardPage } from './../playwright_page_objects/DashboardPage';
+import { SearchPage } from './../playwright_page_objects/SearchPage';
+import { TopNavigationPage } from './../playwright_page_objects/topNavigationPage';
 
 test('login and create a new cube from the navigation bar', async ({ page }) => {
   await page.goto('/');
