@@ -339,14 +339,15 @@ function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): st
     ret = tags.sort();
   } else if (sort === 'Date Added') {
     //Convert addedTmsp from a number (or sometimes a string) into Date objects, then to locale string for the labelling and grouping
-    const days = (cube ?? []).map((card) => cardAddedTime(card) ?? new Date(0)).map((date) => date.toLocaleDateString('en-US'));
+    const days = (cube ?? [])
+      .map((card) => cardAddedTime(card) ?? new Date(0))
+      .map((date) => date.toLocaleDateString('en-US'));
     //Remove duplicates from days using Set
     const uniqueDays = [...new Set(days)];
     //Now sort the unique locale strings in order using their date timestamps, as string sorting dates is not well defined
     uniqueDays.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-    ret = uniqueDays
-
+    ret = uniqueDays;
   } else if (sort === 'Status') {
     ret = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
   } else if (sort === 'Finish') {
@@ -494,10 +495,10 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
   let ret: string[] = [];
   /* Start of sort options */
   if (sort === 'Color Category') {
-    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string)
+    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string);
     ret = [convertedColorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
   } else if (sort === 'Color Category Full') {
-    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string)
+    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string);
     const colorCategory = convertedColorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
     if (colorCategory === 'Multicolored') {
       ret = [getColorCombination(cardColorIdentity(card))];
