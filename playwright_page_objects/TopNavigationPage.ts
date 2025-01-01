@@ -1,3 +1,5 @@
+import { Page } from "@playwright/test";
+
 import { getMagicAnswer } from "../playwright_data/securityQuestions";
 
 export class TopNavigationPage {
@@ -16,7 +18,7 @@ export class TopNavigationPage {
     cardsLink: any;
     searchCardsLink: any;
     
-    constructor(page) {
+    constructor(page: Page) {
         this.page = page;
         this.loginLink = page.getByText('Login').first()
         this.emailField = page.getByLabel('Username or Email Address')
@@ -43,13 +45,13 @@ export class TopNavigationPage {
         await this.loginButton.click()
         await this.page.waitForURL(/\/dashboard/)
     }
-    createNewCube = async () => {
+    createNewCube = async (cubeName: string) => {
         await this.yourCubeDropdown.waitFor()
         await this.yourCubeDropdown.click()
         await this.createNewCubeLink.waitFor()
         await this.createNewCubeLink.click()
         await this.cubeNameField.waitFor()
-        await this.cubeNameField.fill('Testing')
+        await this.cubeNameField.fill(cubeName)
         await this.cubeSecurityQuestionField.waitFor()
         const question = await this.securityQuestionText.innerText()
         console.log(question)
@@ -58,12 +60,11 @@ export class TopNavigationPage {
         // need a way to bypass captcha
         await this.page.pause()
     }
-    searchCardDropDownLink = async () => {
+    clickSearchCardDropDownLink = async () => {
         await this.cardsLink.waitFor()
         await this.cardsLink.click()
         await this.searchCardsLink.waitFor()
         await this.searchCardsLink.click()
         await this.page.waitForURL(/\/tool/)
-        await this.page.pause()
     }
     }
