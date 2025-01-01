@@ -179,7 +179,7 @@ export const cardType = (card: Partial<Card>): string => card.type_line ?? card.
 
 export const cardRarity = (card: Card): string => card.rarity ?? card.details?.rarity ?? '';
 
-export const cardAddedTime = (card: Card): Date | null => (card.addedTmsp ? new Date(card.addedTmsp) : null);
+export const cardAddedTime = (card: Card): Date | null => (card.addedTmsp ? new Date(Number(card.addedTmsp)) : null);
 
 export const cardImageUrl = (card: Card): string =>
   card.imgUrl ?? card.details?.image_normal ?? card.details?.image_small ?? '';
