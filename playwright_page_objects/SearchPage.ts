@@ -18,6 +18,5 @@ export class SearchPage {
     await this.searchButton.waitFor();
     await this.searchButton.click();
     await this.searchResult.waitFor();
-    await this.page.pause();
   };
 }
