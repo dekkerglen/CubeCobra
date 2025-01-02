@@ -1,3 +1,4 @@
+// You will need to manually create a cube and input the information here, you can also use the info below when creating your cube locally
 export const existingCubeData = {
   title: 'Existing',
   cardCount: '0',
@@ -10,6 +11,7 @@ export const newCubeData = {
   followerCount: '0',
   description: /^This is a brand new cube!$/,
 };
+// You will need to manually create a cube and input the information here, you can also use the info below when creating your cube locally
 export const addRemoveCube = {
   title: 'Add/Remove',
   cardCount: '1',
