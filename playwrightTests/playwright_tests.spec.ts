@@ -1,4 +1,5 @@
 import { test } from '@playwright/test';
+import * as dotenv from 'dotenv';
 
 import { testCardSoldierOfFortune } from '../playwrightData/cardData';
 import { addRemoveCube, existingCubeData, newCubeData } from '../playwrightData/cubeData';
@@ -8,6 +9,7 @@ import { CubeOverviewPage } from '../playwrightPageObjects/CubeOverviewPage';
 import { DashboardPage } from '../playwrightPageObjects/DashboardPage';
 import { SearchPage } from '../playwrightPageObjects/SearchPage';
 import { TopNavigationPage } from '../playwrightPageObjects/topNavigationPage';
+dotenv.config();
 
 test.skip('should login and create a new cube from the navigation bar', async ({ page }) => {
   await page.goto('/');
