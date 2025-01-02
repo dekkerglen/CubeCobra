@@ -119,10 +119,7 @@ const recommend = (oracles) => {
 
 const build = (oracles) => {
   if (!encoder || !deckbuilderDecoder) {
-    return {
-      mainboard: [],
-      sideboard: [],
-    };
+    return [];
   }
 
   const array = tf.tidy(() => {
