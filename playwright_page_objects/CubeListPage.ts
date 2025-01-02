@@ -7,6 +7,7 @@ export class CubeListPage {
   editLink: any;
   cardToAddField: any;
   addButton: any;
+  overviewLink: any;
 
   constructor(page: any) {
     this.page = page;
@@ -20,6 +21,7 @@ export class CubeListPage {
     this.editLink = page.getByText('Edit').first();
     this.cardToAddField = page.getByPlaceholder('Card to Add');
     this.addButton = page.getByRole('button', { name: 'Add' });
+    this.overviewLink = page.getByRole('link', { name: 'Overview' });
   }
   clickCard = async (clickCardText) => {
     this.cubeCard = this.page
@@ -45,5 +47,10 @@ export class CubeListPage {
     await this.addButton.click();
     await this.saveChangeButton.waitFor();
     await this.saveChangeButton.click();
+  };
+  clickOverview = async () => {
+    await this.overviewLink.waitFor();
+    await this.overviewLink.click();
+    await this.page.waitForURL(/\/overview/);
   };
 }

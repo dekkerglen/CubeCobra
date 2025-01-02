@@ -1,6 +1,6 @@
 export const existingCubeData = {
   title: 'Existing',
-  cardCount: '1',
+  cardCount: '0',
   followerCount: '0',
   description: /^This is a existing cube!$/,
 };

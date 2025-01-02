@@ -43,10 +43,9 @@ test('validate test cube from dashboard, click cube and validate overview page',
   );
   const cubeOverviewPage = new CubeOverviewPage(page);
   await cubeOverviewPage.validateCubeDescription(existingCubeData.description);
-  await page.pause();
 });
 
-test.only('add and remove card from cube, validate overview blog post', async ({ page }) => {
+test('add and remove card from cube, validate overview blog post', async ({ page }) => {
   await page.goto('/');
   const topNavigationPage = new TopNavigationPage(page);
   await topNavigationPage.userLogin({ userData });
@@ -58,4 +57,7 @@ test.only('add and remove card from cube, validate overview blog post', async ({
   await cubeListPage.addToCube(soldierOfFortune.name);
   await cubeListPage.clickCard(soldierOfFortune.name);
   await cubeListPage.removefromCube();
+  await cubeListPage.clickOverview();
+  await cubeOverviewPage.validateChangeLog();
+  await page.pause();
 });
