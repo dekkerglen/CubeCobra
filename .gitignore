@@ -560,3 +560,7 @@ push-docker.ps1
 .tool-versions
 
 target.zip
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
