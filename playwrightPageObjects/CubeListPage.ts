@@ -2,7 +2,6 @@ export class CubeListPage {
   page: any;
   cubeCard: any;
   removeFromCubeButton: any;
-  changeLogRemove: any;
   saveChangeButton: any;
   editLink: any;
   cardToAddField: any;
@@ -13,30 +12,29 @@ export class CubeListPage {
     this.page = page;
 
     this.removeFromCubeButton = page.getByRole('button', { name: 'Remove from cube' });
-    this.changeLogRemove = page
-      .locator('div')
-      .filter({ hasText: /^Mainboard Changelist\+0, -1, 0 Total×Soldier of Fortune$/ })
-      .first();
     this.saveChangeButton = page.getByRole('button', { name: 'Save Changes' });
     this.editLink = page.getByText('Edit').first();
     this.cardToAddField = page.getByPlaceholder('Card to Add');
     this.addButton = page.getByRole('button', { name: 'Add' });
     this.overviewLink = page.getByRole('link', { name: 'Overview' });
   }
-  clickCard = async (clickCardText) => {
+  // Click card on cube list by passing card name as an argument
+  clickCard = async (cardName: string) => {
     this.cubeCard = this.page
       .locator('div')
-      .filter({ hasText: new RegExp(`^${clickCardText}$`) })
+      .filter({ hasText: new RegExp(`^${cardName}$`) })
       .first();
     await this.cubeCard.waitFor();
     await this.cubeCard.click();
   };
+  // Remove card from opened card modal
   removefromCube = async () => {
     await this.removeFromCubeButton.waitFor();
     await this.removeFromCubeButton.click();
     await this.saveChangeButton.waitFor();
     await this.saveChangeButton.click();
   };
+  // Add card to cube by passing card name as an argument
   addToCube = async (cardName) => {
     await this.page.waitForTimeout(3000);
     await this.editLink.waitFor();
@@ -48,6 +46,7 @@ export class CubeListPage {
     await this.saveChangeButton.waitFor();
     await this.saveChangeButton.click();
   };
+  // Clicks the Overview link from the Cube List page
   clickOverview = async () => {
     await this.overviewLink.waitFor();
     await this.overviewLink.click();

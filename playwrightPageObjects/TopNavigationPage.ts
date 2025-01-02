@@ -33,7 +33,7 @@ export class TopNavigationPage {
     this.searchCardsLink = page.getByRole('link', { name: 'Search Cards' }).first();
     //this.clickTestCube = page.
   }
-
+  // Logs in user
   userLogin = async ({ testUser1 }) => {
     await this.loginLink.waitFor();
     await this.loginLink.click();
@@ -45,14 +45,17 @@ export class TopNavigationPage {
     await this.loginButton.click();
     await this.page.waitForURL(/\/dashboard/);
   };
+  // Clicks the Your Cubes link on the navigation bar
   clickYourCubes = async () => {
     await this.yourCubeDropdown.waitFor();
     await this.yourCubeDropdown.click();
   };
+  // Clicks the Cards link on the navigation bar
   clickCards = async () => {
     await this.cardsLink.waitFor();
     await this.cardsLink.click();
   };
+  // Clicks the Create a New Cube link under Your Cubes on the navigation bar
   clickCreateANewCube = async (cubeName: string) => {
     await this.clickYourCubes();
     await this.createNewCubeLink.click();
@@ -66,6 +69,7 @@ export class TopNavigationPage {
     // need a way to bypass captcha
     await this.page.pause();
   };
+  // Clicks Search Cards under the Card link on the navigation bar
   clickSearchCard = async () => {
     await this.clickCards();
     await this.searchCardsLink.waitFor();

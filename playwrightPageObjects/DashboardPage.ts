@@ -9,12 +9,12 @@ export class DashboardPage {
   constructor(page: Page) {
     this.page = page;
   }
-
+  // Validates cube is displayed on the Dashboard Page
   async validateTestCubeDisplays(name: string, cards: string, followers: string) {
     this.yourCube = await getYourCube(this.page, name, cards, followers);
     await this.yourCube.waitFor();
   }
-
+  // Clicks on a cube displayed on the Dashboard page
   async clickCubeFromYourCube(name: string, cards: string, followers: string) {
     this.yourCube = await getYourCube(this.page, name, cards, followers);
     await this.yourCube.waitFor();

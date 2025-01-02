@@ -10,7 +10,7 @@ export class SearchPage {
     this.cardSearchField = page.getByPlaceholder('name:"Ambush Viper"');
     this.searchButton = page.getByRole('button', { name: 'Search' });
   }
-  // input only card name for argument
+  // Searches card name entered as an argument
   searchCard = async (card: string) => {
     this.searchResult = this.page.getByRole('link', { name: card });
     await this.cardSearchField.waitFor();

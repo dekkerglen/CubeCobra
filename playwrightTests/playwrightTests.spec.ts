@@ -1,6 +1,6 @@
 import { test } from '@playwright/test';
 
-import { soldierOfFortune } from '../playwrightData/cardData';
+import { testCardSoldierOfFortune } from '../playwrightData/cardData';
 import { addRemoveCube, existingCubeData, newCubeData } from '../playwrightData/cubeData';
 import { testUser1 } from '../playwrightData/testUsers';
 import { CubeListPage } from '../playwrightPageObjects/CubeListPage';
@@ -25,7 +25,7 @@ test('should successuflly use the card search page', async ({ page }) => {
   await topNavigationPage.clickSearchCard();
 
   const searchPage = new SearchPage(page);
-  await searchPage.searchCard(soldierOfFortune.name);
+  await searchPage.searchCard(testCardSoldierOfFortune.name);
 });
 
 test('should open cube from Your Cube dashboard section, then click and validate cube overview and description', async ({
@@ -65,9 +65,9 @@ test('should add and remove card from cube then validate change log blog post', 
   await cubeOverviewPage.clickList();
 
   const cubeListPage = new CubeListPage(page);
-  await cubeListPage.addToCube(soldierOfFortune.name);
-  await cubeListPage.clickCard(soldierOfFortune.name);
+  await cubeListPage.addToCube(testCardSoldierOfFortune.name);
+  await cubeListPage.clickCard(testCardSoldierOfFortune.name);
   await cubeListPage.removefromCube();
   await cubeListPage.clickOverview();
-  await cubeOverviewPage.validateChangeLog();
+  await cubeOverviewPage.validateNuetralChangeLog();
 });
