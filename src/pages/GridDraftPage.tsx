@@ -1,5 +1,4 @@
 import { Card } from 'components/base/Card';
-import Input from 'components/base/Input';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import CSRFForm from 'components/CSRFForm';
@@ -136,7 +135,8 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
             action={`/cube/deck/submitdeck/${initialDraft.cube}`}
             formData={{ body: initialDraft.id }}
           >
-            <Input type="hidden" name="body" value={initialDraft.id} />
+            {/* CSRFForm requires children, and null is a valid React node which does nothing */}
+            {null}
           </CSRFForm>
           <ErrorBoundary>
             <GridDraftPack

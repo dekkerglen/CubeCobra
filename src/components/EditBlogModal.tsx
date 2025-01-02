@@ -42,7 +42,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cu
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-            {post && <Input type="hidden" name="id" value={post.id} />}
+            {post && <input type="hidden" name="id" value={post.id} />}
             <TextEntry name="markdown" value={markdown} setValue={setMarkdown} maxLength={10000} />
           </Flexbox>
         </ModalBody>
