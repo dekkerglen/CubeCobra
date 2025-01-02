@@ -1,15 +1,15 @@
 import { test } from '@playwright/test';
 
-import { CubeListPage } from '../playwright_page_objects/CubeListPage';
-import { soldierOfFortune } from './../playwright_data/cardData';
-import { addRemoveCube, existingCubeData, newCubeData } from './../playwright_data/cubeData';
-import { userData } from './../playwright_data/testUsers';
-import { CubeOverviewPage } from './../playwright_page_objects/CubeOverviewPage';
-import { DashboardPage } from './../playwright_page_objects/DashboardPage';
-import { SearchPage } from './../playwright_page_objects/SearchPage';
-import { TopNavigationPage } from './../playwright_page_objects/topNavigationPage';
+import { soldierOfFortune } from '../playwrightData/cardData';
+import { addRemoveCube, existingCubeData, newCubeData } from '../playwrightData/cubeData';
+import { userData } from '../playwrightData/testUsers';
+import { CubeListPage } from '../playwrightPageObjects/CubeListPage';
+import { CubeOverviewPage } from '../playwrightPageObjects/CubeOverviewPage';
+import { DashboardPage } from '../playwrightPageObjects/DashboardPage';
+import { SearchPage } from '../playwrightPageObjects/SearchPage';
+import { TopNavigationPage } from '../playwrightPageObjects/topNavigationPage';
 
-test.skip('login and create a new cube from the navigation bar', async ({ page }) => {
+test.skip('should login and create a new cube from the navigation bar', async ({ page }) => {
   await page.goto('/');
   const topNavigationPage = new TopNavigationPage(page);
   await topNavigationPage.userLogin({ userData });
@@ -17,7 +17,7 @@ test.skip('login and create a new cube from the navigation bar', async ({ page }
   await topNavigationPage.clickCreateANewCube(newCubeData.title);
 });
 
-test('validate tool search cards', async ({ page }) => {
+test('should successuflly use the card search page', async ({ page }) => {
   await page.goto('/');
   const topNavigationPage = new TopNavigationPage(page);
   await topNavigationPage.clickSearchCard();
@@ -26,7 +26,9 @@ test('validate tool search cards', async ({ page }) => {
   await searchPage.searchCard('Soldier of Fortune');
 });
 
-test('validate test cube from dashboard, click cube and validate overview page', async ({ page }) => {
+test('should open cube from Your Cube dashboard section, then click and validate cube overview and description', async ({
+  page,
+}) => {
   await page.goto('/');
   const topNavigationPage = new TopNavigationPage(page);
   await topNavigationPage.userLogin({ userData });
@@ -45,7 +47,7 @@ test('validate test cube from dashboard, click cube and validate overview page',
   await cubeOverviewPage.validateCubeDescription(existingCubeData.description);
 });
 
-test('add and remove card from cube, validate overview blog post', async ({ page }) => {
+test('should add and remove card from cube then validate change log blog post', async ({ page }) => {
   await page.goto('/');
   const topNavigationPage = new TopNavigationPage(page);
   await topNavigationPage.userLogin({ userData });
