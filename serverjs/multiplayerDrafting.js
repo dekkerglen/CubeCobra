@@ -611,8 +611,8 @@ const dumpDraft = async (draftId) => {
   }
 
   const packs = {};
-  for (let i = 0; i < metadata.totalPacks; i++) {
-    for (let j = 0; j < metadata.seats; j++) {
+  for (let i = 0; i < metadata.seats; i++) {
+    for (let j = 0; j < metadata.totalPacks; j++) {
       const ref = packRef(draftId, i, j);
 
       packs[ref] = {
