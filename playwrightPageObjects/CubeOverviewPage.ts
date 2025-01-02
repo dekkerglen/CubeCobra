@@ -31,17 +31,14 @@ export class CubeOverviewPage {
   };
   // Validates changelog correctly displays after card is added then removed
   validateNuetralChangeLog = async () => {
-    await this.page.pause();
     await this.blogPostNuetralChangeLog.waitFor();
   };
   // Validates changelog correctly displays after card is removed
   validateAddedChangeLog = async () => {
-    await this.page.pause();
     await this.blogPostAddedChangeLog.waitFor();
   };
   // Validates changelog correctly displays after card is added
   validateRemovedChangeLog = async () => {
-    await this.page.pause();
     await this.blogPostRemovedChangeLog.waitFor();
   };
 }
