@@ -179,7 +179,7 @@ export const cardType = (card: Partial<Card>): string => card.type_line ?? card.
 
 export const cardRarity = (card: Card): string => card.rarity ?? card.details?.rarity ?? '';
 
-export const cardAddedTime = (card: Card): Date | null => (card.addedTmsp ? new Date(card.addedTmsp) : null);
+export const cardAddedTime = (card: Card): Date | null => (card.addedTmsp ? new Date(Number(card.addedTmsp)) : null);
 
 export const cardImageUrl = (card: Card): string =>
   card.imgUrl ?? card.details?.image_normal ?? card.details?.image_small ?? '';
@@ -189,9 +189,9 @@ export const cardImageBackUrl = (card: Card): string => card.imgBackUrl ?? card.
 export const cardNotes = (card: Card): string | null => card.notes ?? null;
 
 /*
-* Helper to convert the old color category types into current Type. Existing cards may have their colorCategory
-* set to the legacy value and used in places such as CSV export, which then can import instead of the current values.
-*/
+ * Helper to convert the old color category types into current Type. Existing cards may have their colorCategory
+ * set to the legacy value and used in places such as CSV export, which then can import instead of the current values.
+ */
 export const convertFromLegacyCardColorCategory = (colorCategory: string): ColorCategory | null => {
   const legacyColorCategoryToCurrentMap = new Map([
     ['w', 'White'],
@@ -216,12 +216,12 @@ export const convertFromLegacyCardColorCategory = (colorCategory: string): Color
   } else {
     return null;
   }
-}
+};
 
 /*
-* Hybrid color category is explicitly set on cards by cube owners. This function therefore won't
-* return Hybrid as an option, those cards will be funneled into the Multicolored category
-*/
+ * Hybrid color category is explicitly set on cards by cube owners. This function therefore won't
+ * return Hybrid as an option, those cards will be funneled into the Multicolored category
+ */
 export const cardColorCategory = (card: Card): ColorCategory => {
   if (card.colorCategory) {
     const converted = convertFromLegacyCardColorCategory(card.colorCategory);
