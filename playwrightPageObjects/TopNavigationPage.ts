@@ -34,13 +34,13 @@ export class TopNavigationPage {
     //this.clickTestCube = page.
   }
 
-  userLogin = async ({ userData }) => {
+  userLogin = async ({ testUser1 }) => {
     await this.loginLink.waitFor();
     await this.loginLink.click();
     await this.emailField.waitFor();
-    await this.emailField.fill(userData.email);
+    await this.emailField.fill(testUser1.email);
     await this.passwordField.waitFor();
-    await this.passwordField.fill(userData.password);
+    await this.passwordField.fill(testUser1.password);
     await this.loginButton.waitFor();
     await this.loginButton.click();
     await this.page.waitForURL(/\/dashboard/);
