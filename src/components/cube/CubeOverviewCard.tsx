@@ -29,17 +29,23 @@ const FollowersModalLink = withModal(Link, FollowersModal);
 const CubeIdModalLink = withModal(Link, CubeIdModal);
 const QRCodeModalLink = withModal(Link, QRCodeModal);
 const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
+interface PrivateCubeIconProps {
+  visibility: string;
+}
 
-const PrivateCubeIcon = () => (
-  <Tooltip
-    text="This cube is set as private."
-    wrapperTag="span"
-    className="text-secondary"
-    style={{ position: 'relative', top: '-3px' }}
-  >
-    <EyeClosedIcon size={24} />
-  </Tooltip>
-);
+const PrivateCubeIcon: React.FC<PrivateCubeIconProps> = ({ visibility }) => {
+  const visibilityWord = visibility == 'pr' ? 'private' : 'unlisted';
+  return (
+    <Tooltip
+      text={`This cube is set as ${visibilityWord}.`}
+      wrapperTag="span"
+      className="text-secondary"
+      style={{ position: 'relative', top: '-3px' }}
+    >
+      <EyeClosedIcon size={24} />
+    </Tooltip>
+  );
+};
 
 interface CubeOverviewCardProps {
   priceOwned: number;
@@ -89,7 +95,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
             <CardHeader>
               <Flexbox direction="row" justify="between">
                 <Text xl semibold>
-                  {cube.name} {cube.visibility !== 'pu' && <PrivateCubeIcon />}
+                  {cube.name} {cube.visibility !== 'pu' && <PrivateCubeIcon visibility={cube.visibility} />}
                 </Text>
                 <TextBadge name="Cube ID">
                   <CubeIdModalLink
