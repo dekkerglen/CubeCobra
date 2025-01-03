@@ -1,16 +1,17 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { Card } from 'components/base/Card';
 
+import { DndContext } from '@dnd-kit/core';
+
+import { Card } from 'components/base/Card';
 import DeckStacks from 'components/DeckStacks';
 import Pack from 'components/Pack';
 import AutocardContext from 'contexts/AutocardContext';
-import DraftLocation, { locations, addCard, removeCard } from 'drafting/DraftLocation';
+import { CSRFContext } from 'contexts/CSRFContext';
+import Draft from 'datatypes/Draft';
+import DraftLocation, { addCard, locations, removeCard } from 'drafting/DraftLocation';
 import { draftStateToTitle, getCardCol, setupPicks } from 'drafting/draftutil';
 import useMount from 'hooks/UseMount';
 import { cardCmc, cardType, makeSubtitle } from 'utils/Card';
-import Draft from 'datatypes/Draft';
-import { DndContext } from '@dnd-kit/core';
-import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CubeDraftProps {
   draft: Draft;
@@ -89,7 +90,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
 
       await callApi('/multiplayer/draftpick', { draft: draft.id, seat, pick });
     },
-    [hideCard, stepQueue, pack, draft.id, tryPopPack, seat],
+    [hideCard, stepQueue, pack, callApi, draft.id, tryPopPack],
   );
 
   const updatePack = async (data: any) => {
@@ -113,7 +114,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
           draft: draft.id,
         });
         if (res) {
-          let json = await res.json();
+          const json = await res.json();
           status = json.result;
 
           if (json.picks === 0) {
