@@ -178,41 +178,6 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     return { row, col };
   }, []);
 
-  //When a card is chosen from the pack
-  const applyCardSelectionForStep = useCallback(
-    (packIndex: number, locationType: location, row: number, col: number) => {
-      const cardIndex = pack[packIndex];
-
-      if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
-        if (locationType === locations.deck) {
-          setMainboard(
-            addCard(mainboard, new DraftLocation(locations.deck, row, col, mainboard[row][col].length), cardIndex),
-          );
-        } else if (locationType === locations.sideboard) {
-          setSideboard(
-            addCard(sideboard, new DraftLocation(locations.deck, row, col, sideboard[row][col].length), cardIndex),
-          );
-        }
-      } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
-        setTrashed([...trashed, cardIndex]);
-      }
-
-      makePick(packIndex);
-    },
-    [mainboard, makePick, pack, sideboard, stepQueue, trashed],
-  );
-
-  const selectCardByIndex = useCallback(
-    (packIndex: number) => {
-      const cardIndex = pack[packIndex];
-      const card = draft.cards[cardIndex];
-
-      const { row, col } = getCardsDeckStackPosition(card);
-      applyCardSelectionForStep(packIndex, locations.deck, row, col);
-    },
-    [pack, draft.cards, getCardsDeckStackPosition, applyCardSelectionForStep],
-  );
-
   const getLocationReferences = useCallback(
     (type: location): { board: any[][][]; setter: React.Dispatch<React.SetStateAction<any[][][]>> } => {
       if (type === locations.deck) {
@@ -228,6 +193,34 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
       }
     },
     [mainboard, sideboard],
+  );
+
+  //When a card is chosen from the pack
+  const applyCardSelectionForStep = useCallback(
+    (packIndex: number, locationType: location, row: number, col: number) => {
+      const cardIndex = pack[packIndex];
+
+      if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
+        const { board, setter } = getLocationReferences(locationType);
+        setter(addCard(board, new DraftLocation(locationType, row, col, board[row][col].length), cardIndex));
+      } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
+        setTrashed([...trashed, cardIndex]);
+      }
+
+      makePick(packIndex);
+    },
+    [getLocationReferences, makePick, pack, stepQueue, trashed],
+  );
+
+  const selectCardByIndex = useCallback(
+    (packIndex: number) => {
+      const cardIndex = pack[packIndex];
+      const card = draft.cards[cardIndex];
+
+      const { row, col } = getCardsDeckStackPosition(card);
+      applyCardSelectionForStep(packIndex, locations.deck, row, col);
+    },
+    [pack, draft.cards, getCardsDeckStackPosition, applyCardSelectionForStep],
   );
 
   const moveCardBetweenDeckStacks = useCallback(
