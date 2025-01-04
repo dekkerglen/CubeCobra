@@ -197,12 +197,22 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
 
   //When a card is chosen from the pack
   const applyCardSelectionForStep = useCallback(
-    (packIndex: number, locationType: location, row: number, col: number) => {
+    (packIndex: number, locationType: location, row: number, col: number, targetIndex: number = -1) => {
       const cardIndex = pack[packIndex];
 
       if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
         const { board, setter } = getLocationReferences(locationType);
-        setter(addCard(board, new DraftLocation(locationType, row, col, board[row][col].length), cardIndex));
+        const gridPositionCardCount = board[row][col].length;
+        /*
+         * Move card into the stack within the target grid position (row/col). If the index isn't known, such as
+         * because we clicked to move, then adds to the end of the stack. Be extra careful that the target index fits within
+         * the array of cards in this grid position
+         */
+        const placementIndex =
+          targetIndex === -1 || targetIndex < 0 || targetIndex > gridPositionCardCount
+            ? gridPositionCardCount
+            : targetIndex;
+        setter(addCard(board, new DraftLocation(locationType, row, col, placementIndex), cardIndex));
       } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
         setTrashed([...trashed, cardIndex]);
       }
@@ -271,7 +281,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
 
       if (source.type === locations.pack) {
         if (target.type === locations.deck || target.type === locations.sideboard) {
-          applyCardSelectionForStep(source.index, target.type, target.row, target.col);
+          applyCardSelectionForStep(source.index, target.type, target.row, target.col, target.index);
         }
 
         return;
