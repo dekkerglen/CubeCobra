@@ -10,7 +10,7 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import CardInterface from 'datatypes/Card';
 import Draft from 'datatypes/Draft';
 import DraftLocation, { addCard, location, locations, removeCard } from 'drafting/DraftLocation';
-import { draftStateToTitle, getCardCol, setupPicks } from 'drafting/draftutil';
+import { draftStateToTitle, setupPicks } from 'drafting/draftutil';
 import useMount from 'hooks/UseMount';
 import { cardCmc, cardType, makeSubtitle } from 'utils/Card';
 
@@ -22,6 +22,16 @@ interface CubeDraftProps {
   };
 }
 
+const getCardsDeckStackPosition = (card: CardInterface): { row: number; col: number } => {
+  const isCreature = cardType(card).toLowerCase().includes('creature');
+  const cmc = cardCmc(card);
+
+  const row = isCreature ? 0 : 1;
+  const col = Math.max(0, Math.min(7, cmc));
+
+  return { row, col };
+};
+
 const fetchPicks = async (callApi: any, draft: Draft, seat: number) => {
   const res = await callApi('/multiplayer/getpicks', {
     draft: draft.id,
@@ -31,7 +41,8 @@ const fetchPicks = async (callApi: any, draft: Draft, seat: number) => {
   const picks = setupPicks(2, 8);
 
   for (const index of json.picks) {
-    picks[0][getCardCol(draft, index)].push(index);
+    const { row, col } = getCardsDeckStackPosition(draft.cards[index]);
+    picks[row][col].push(index);
   }
 
   return picks;
@@ -168,16 +179,6 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     run();
   });
 
-  const getCardsDeckStackPosition = useCallback((card: CardInterface): { row: number; col: number } => {
-    const isCreature = cardType(card).toLowerCase().includes('creature');
-    const cmc = cardCmc(card);
-
-    const row = isCreature ? 0 : 1;
-    const col = Math.max(0, Math.min(7, cmc));
-
-    return { row, col };
-  }, []);
-
   const getLocationReferences = useCallback(
     (type: location): { board: any[][][]; setter: React.Dispatch<React.SetStateAction<any[][][]>> } => {
       if (type === locations.deck) {
@@ -230,7 +231,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
       const { row, col } = getCardsDeckStackPosition(card);
       applyCardSelectionForStep(packIndex, locations.deck, row, col);
     },
-    [pack, draft.cards, getCardsDeckStackPosition, applyCardSelectionForStep],
+    [pack, draft.cards, applyCardSelectionForStep],
   );
 
   const moveCardBetweenDeckStacks = useCallback(
