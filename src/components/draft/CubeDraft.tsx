@@ -252,6 +252,32 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     [getLocationReferences],
   );
 
+  /*
+   * Clicking on a card within either deck stack moves it to the other. Unlike a drag where we have different source and targets,
+   * on a click we only have the source. We determine the target location based on the source card's cmc/type (getCardsDeckStackPosition)
+   * though if moving to the sideboard only the CMC matters to determine the column.
+   */
+  /*const applyCardClickOnDeckStack = useCallback(
+    (source: DraftLocation) => {
+      //Determine the card which was clicked in the board, so we can calculate its standard row/col destination
+      const { board: sourceBoard } = getLocationReferences(source.type);
+      const cardIndex = sourceBoard[source.row][source.col][source.index];
+      const card = draft.cards[cardIndex];
+      const { row, col } = getCardsDeckStackPosition(card);
+
+      const targetLocation = source.type === locations.deck ? locations.sideboard : locations.deck;
+      //The sideboard only has one row, unlike the deck with has 1 row for creatures and 1 for non-creatures
+      const targetRow = targetLocation === locations.sideboard ? 0 : row;
+      const { board: targetBoard } = getLocationReferences(targetLocation);
+
+      //The card should be added to the end of the stack of cards at the grid position (row/col). Be extra careful
+      //with the boards (using .? operator) even though they are pre-populated via setupPicks() at the top
+      const targetIndex = targetBoard?.[targetRow]?.[col]?.[source.index] || 0;
+      moveCardBetweenDeckStacks(source, new DraftLocation(targetLocation, targetRow, col, targetIndex));
+    },
+    [draft.cards, getLocationReferences, moveCardBetweenDeckStacks],
+  );*/
+
   //Move card between Pack and/or DeckStacks
   const onMoveCard = useCallback(
     async (event: any) => {
@@ -271,7 +297,12 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
         if (dragTime < 200) {
           return selectCardByIndex(source.index);
         }
-      } else if (source.equals(target)) {
+        //TODO: Uncomment alongside the sideboard DeckStacks
+      } /*else if (source.equals(target) && (source.type === locations.deck || source.type === locations.sideboard)) {
+        //Clicking a card within the deck or sideboard should move it from one to the other
+        applyCardClickOnDeckStack(source);
+        return;
+      }*/ else if (source.equals(target)) {
         return;
       }
 
