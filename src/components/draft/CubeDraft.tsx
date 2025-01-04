@@ -313,6 +313,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
       }
 
       if (source.type === locations.pack) {
+        //Dragged a card from the pack to the deck or sideboard (the latter is off)
         if (target.type === locations.deck || target.type === locations.sideboard) {
           applyCardSelectionForStep(source.index, target.type, target.row, target.col, target.index);
         }
@@ -320,6 +321,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
         return;
       }
 
+      //Otherwise the drag had nothing to do with the pack
       moveCardBetweenDeckStacks(source, target);
     },
     [moveCardBetweenDeckStacks, dragStartTime, selectCardByIndex, applyCardSelectionForStep],
@@ -334,6 +336,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     ) {
       setLoading(true);
       setTimeout(() => {
+        //Automatically select a card from the pack, by picking a random index position within the available card pack
         selectCardByIndex(Math.floor(Math.random() * pack.length));
       }, 1000);
     }
