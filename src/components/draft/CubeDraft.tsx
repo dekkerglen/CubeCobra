@@ -244,8 +244,9 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
       } else {
         const { board: targetBoard, setter: targetSetter } = getLocationReferences(target.type);
         const [card, newCards] = removeCard(sourceBoard, source);
-        sourceSetter(addCard(targetBoard, target, card));
-        targetSetter(newCards);
+        //Add card to the target, then update the source with the cards minus the moved card
+        targetSetter(addCard(targetBoard, target, card));
+        sourceSetter(newCards);
       }
     },
     [getLocationReferences],
