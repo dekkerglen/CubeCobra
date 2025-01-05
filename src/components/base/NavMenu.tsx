@@ -57,13 +57,18 @@ const NavMenu: React.FC<NavMenuProps> = ({ label, children, wide, navBar }) => {
         >
           {label}
         </a>
-        {isOpen && (
-          <div className="w-full bg-bg shadow-lg rounded-md border border-border">
-            <Flexbox direction="col" gap="1" className="p-2">
-              {children}
-            </Flexbox>
-          </div>
-        )}
+        <div
+          className={classNames('w-full bg-bg shadow-lg rounded-md border border-border', {
+            'opacity-100 max-h-screen': isOpen,
+            'opacity-0 pointer-events-none max-h-0': !isOpen,
+            'w-64': !wide,
+            'w-96': wide,
+          })}
+        >
+          <Flexbox direction="col" gap="1" className="p-2">
+            {children}
+          </Flexbox>
+        </div>
       </ResponsiveDiv>
 
       {/* Desktop */}
