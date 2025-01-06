@@ -1,16 +1,18 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { Card } from 'components/base/Card';
 
+import { DndContext } from '@dnd-kit/core';
+
+import { Card } from 'components/base/Card';
 import DeckStacks from 'components/DeckStacks';
 import Pack from 'components/Pack';
 import AutocardContext from 'contexts/AutocardContext';
-import DraftLocation, { locations, addCard, removeCard } from 'drafting/DraftLocation';
-import { draftStateToTitle, getCardCol, setupPicks } from 'drafting/draftutil';
+import { CSRFContext } from 'contexts/CSRFContext';
+import CardInterface from 'datatypes/Card';
+import Draft from 'datatypes/Draft';
+import DraftLocation, { addCard, location, locations, removeCard } from 'drafting/DraftLocation';
+import { draftStateToTitle, setupPicks } from 'drafting/draftutil';
 import useMount from 'hooks/UseMount';
 import { cardCmc, cardType, makeSubtitle } from 'utils/Card';
-import Draft from 'datatypes/Draft';
-import { DndContext } from '@dnd-kit/core';
-import { CSRFContext } from 'contexts/CSRFContext';
 
 interface CubeDraftProps {
   draft: Draft;
@@ -19,6 +21,16 @@ interface CubeDraftProps {
     emit: (event: string, data: any) => void;
   };
 }
+
+const getCardsDeckStackPosition = (card: CardInterface): { row: number; col: number } => {
+  const isCreature = cardType(card).toLowerCase().includes('creature');
+  const cmc = cardCmc(card);
+
+  const row = isCreature ? 0 : 1;
+  const col = Math.max(0, Math.min(7, cmc));
+
+  return { row, col };
+};
 
 const fetchPicks = async (callApi: any, draft: Draft, seat: number) => {
   const res = await callApi('/multiplayer/getpicks', {
@@ -29,7 +41,8 @@ const fetchPicks = async (callApi: any, draft: Draft, seat: number) => {
   const picks = setupPicks(2, 8);
 
   for (const index of json.picks) {
-    picks[0][getCardCol(draft, index)].push(index);
+    const { row, col } = getCardsDeckStackPosition(draft.cards[index]);
+    picks[row][col].push(index);
   }
 
   return picks;
@@ -89,7 +102,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
 
       await callApi('/multiplayer/draftpick', { draft: draft.id, seat, pick });
     },
-    [hideCard, stepQueue, pack, draft.id, tryPopPack, seat],
+    [hideCard, stepQueue, pack, callApi, draft.id, tryPopPack],
   );
 
   const updatePack = async (data: any) => {
@@ -113,7 +126,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
           draft: draft.id,
         });
         if (res) {
-          let json = await res.json();
+          const json = await res.json();
           status = json.result;
 
           if (json.picks === 0) {
@@ -166,25 +179,107 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     run();
   });
 
-  const onClickCard = useCallback(
-    (cardIndex: number) => {
-      console.log('click', cardIndex);
-      const card = draft.cards[pack[cardIndex]];
-
-      const isCreature = cardType(card).toLowerCase().includes('creature');
-      const cmc = cardCmc(card);
-
-      const row = isCreature ? 0 : 1;
-      const col = Math.max(0, Math.min(7, cmc));
-
-      setMainboard(
-        addCard(mainboard, new DraftLocation(locations.deck, row, col, mainboard[row][col].length), pack[cardIndex]),
-      );
-      makePick(cardIndex);
+  const getLocationReferences = useCallback(
+    (type: location): { board: any[][][]; setter: React.Dispatch<React.SetStateAction<any[][][]>> } => {
+      if (type === locations.deck) {
+        return {
+          board: mainboard,
+          setter: setMainboard,
+        };
+      } else {
+        return {
+          board: sideboard,
+          setter: setSideboard,
+        };
+      }
     },
-    [pack, mainboard, draft.cards, makePick, setMainboard],
+    [mainboard, sideboard],
   );
 
+  //When a card is chosen from the pack
+  const applyCardSelectionForStep = useCallback(
+    (packIndex: number, locationType: location, row: number, col: number, targetIndex: number = -1) => {
+      const cardIndex = pack[packIndex];
+
+      if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
+        const { board, setter } = getLocationReferences(locationType);
+        const gridPositionCardCount = board[row][col].length;
+        /*
+         * Move card into the stack within the target grid position (row/col). If the index isn't known, such as
+         * because we clicked to move, then adds to the end of the stack. Be extra careful that the target index fits within
+         * the array of cards in this grid position
+         */
+        const placementIndex =
+          targetIndex === -1 || targetIndex < 0 || targetIndex > gridPositionCardCount
+            ? gridPositionCardCount
+            : targetIndex;
+        setter(addCard(board, new DraftLocation(locationType, row, col, placementIndex), cardIndex));
+      } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
+        setTrashed([...trashed, cardIndex]);
+      }
+
+      makePick(packIndex);
+    },
+    [getLocationReferences, makePick, pack, stepQueue, trashed],
+  );
+
+  const selectCardByIndex = useCallback(
+    (packIndex: number) => {
+      const cardIndex = pack[packIndex];
+      const card = draft.cards[cardIndex];
+
+      const { row, col } = getCardsDeckStackPosition(card);
+      applyCardSelectionForStep(packIndex, locations.deck, row, col);
+    },
+    [pack, draft.cards, applyCardSelectionForStep],
+  );
+
+  const moveCardBetweenDeckStacks = useCallback(
+    (source: DraftLocation, target: DraftLocation) => {
+      const { board: sourceBoard, setter: sourceSetter } = getLocationReferences(source.type);
+
+      //Moving within the same DeckStack
+      if (source.type === target.type) {
+        const [card, newCards] = removeCard(sourceBoard, source);
+        sourceSetter(addCard(newCards, target, card));
+      } else {
+        const { board: targetBoard, setter: targetSetter } = getLocationReferences(target.type);
+        const [card, newCards] = removeCard(sourceBoard, source);
+        //Add card to the target, then update the source with the cards minus the moved card
+        targetSetter(addCard(targetBoard, target, card));
+        sourceSetter(newCards);
+      }
+    },
+    [getLocationReferences],
+  );
+
+  /*
+   * Clicking on a card within either deck stack moves it to the other. Unlike a drag where we have different source and targets,
+   * on a click we only have the source. We determine the target location based on the source card's cmc/type (getCardsDeckStackPosition)
+   * though if moving to the sideboard only the CMC matters to determine the column.
+   */
+  /*const applyCardClickOnDeckStack = useCallback(
+    (source: DraftLocation) => {
+      //Determine the card which was clicked in the board, so we can calculate its standard row/col destination
+      const { board: sourceBoard } = getLocationReferences(source.type);
+      const cardIndex = sourceBoard[source.row][source.col][source.index];
+      const card = draft.cards[cardIndex];
+      const { row, col } = getCardsDeckStackPosition(card);
+
+      const targetLocation = source.type === locations.deck ? locations.sideboard : locations.deck;
+      //The sideboard only has one row, unlike the deck with has 1 row for creatures and 1 for non-creatures
+      const targetRow = targetLocation === locations.sideboard ? 0 : row;
+      const { board: targetBoard } = getLocationReferences(targetLocation);
+
+      //The card should be added to the end of the stack of cards at the grid position (row/col). Be extra careful
+      //with the boards (using .? operator) even though they are pre-populated via setupPicks() at the top
+      const targetIndex = targetBoard?.[targetRow]?.[col]?.[source.index] || 0;
+      moveCardBetweenDeckStacks(source, new DraftLocation(targetLocation, targetRow, col, targetIndex));
+    },
+    [draft.cards, getLocationReferences, moveCardBetweenDeckStacks],
+  );*/
+
+  //Move card between Pack and/or DeckStacks
   const onMoveCard = useCallback(
     async (event: any) => {
       const { active, over } = event;
@@ -201,9 +296,14 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
         const dragTime = Date.now() - (dragStartTime ?? 0);
 
         if (dragTime < 200) {
-          return onClickCard(source.index);
+          return selectCardByIndex(source.index);
         }
-      } else if (source.equals(target)) {
+        //TODO: Uncomment alongside the sideboard DeckStacks
+      } /*else if (source.equals(target) && (source.type === locations.deck || source.type === locations.sideboard)) {
+        //Clicking a card within the deck or sideboard should move it from one to the other
+        applyCardClickOnDeckStack(source);
+        return;
+      }*/ else if (source.equals(target)) {
         return;
       }
 
@@ -213,44 +313,18 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
       }
 
       if (source.type === locations.pack) {
-        if (target.type === locations.deck) {
-          if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
-            setMainboard(addCard(mainboard, target, pack[source.index]));
-          } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
-            setTrashed([...trashed, pack[source.index]]);
-          }
+        //Dragged a card from the pack to the deck or sideboard (the latter is off)
+        if (target.type === locations.deck || target.type === locations.sideboard) {
+          applyCardSelectionForStep(source.index, target.type, target.row, target.col, target.index);
+        }
 
-          makePick(source.index);
-        } else if (target.type === locations.sideboard) {
-          if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
-            setSideboard(addCard(sideboard, target, pack[source.index]));
-          } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
-            setTrashed([...trashed, pack[source.index]]);
-          }
-
-          makePick(source.index);
-        }
-      } else if (source.type === locations.deck) {
-        if (target.type === locations.deck) {
-          const [card, newCards] = removeCard(mainboard, source);
-          setMainboard(addCard(newCards, target, card));
-        } else if (target.type === locations.sideboard) {
-          const [card, newCards] = removeCard(mainboard, source);
-          setSideboard(addCard(sideboard, target, card));
-          setMainboard(newCards);
-        }
-      } else if (source.type === locations.sideboard) {
-        if (target.type === locations.deck) {
-          const [card, newCards] = removeCard(sideboard, source);
-          setMainboard(addCard(mainboard, target, card));
-          setSideboard(newCards);
-        } else if (target.type === locations.sideboard) {
-          const [card, newCards] = removeCard(sideboard, source);
-          setSideboard(addCard(newCards, target, card));
-        }
+        return;
       }
+
+      //Otherwise the drag had nothing to do with the pack
+      moveCardBetweenDeckStacks(source, target);
     },
-    [stepQueue, makePick, mainboard, pack, trashed, onClickCard, dragStartTime, sideboard],
+    [moveCardBetweenDeckStacks, dragStartTime, selectCardByIndex, applyCardSelectionForStep],
   );
 
   useEffect(() => {
@@ -262,10 +336,11 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     ) {
       setLoading(true);
       setTimeout(() => {
-        onClickCard(Math.floor(Math.random() * pack.length));
+        //Automatically select a card from the pack, by picking a random index position within the available card pack
+        selectCardByIndex(Math.floor(Math.random() * pack.length));
       }, 1000);
     }
-  }, [stepQueue, onClickCard, pack, loading]);
+  }, [stepQueue, selectCardByIndex, pack, loading]);
 
   return (
     <DndContext onDragEnd={onMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
