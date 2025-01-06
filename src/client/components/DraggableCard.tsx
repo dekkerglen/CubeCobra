@@ -35,7 +35,12 @@ const DraggableCard: React.FC<DraggableCardProps> = ({ card, location, className
 
   return (
     <>
-      <div ref={setDragRef} className={onClick ? 'clickable' : undefined} {...listeners} {...attributes}>
+      <div
+        ref={setDragRef}
+        className={classNames('no-touch-action', { clickable: !!onClick })}
+        {...listeners}
+        {...attributes}
+      >
         <div ref={setDropRef}>
           <FoilCardImage card={card} autocard className={previewClasses} onClick={() => onClick && onClick(card)} />
         </div>
