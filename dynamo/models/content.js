@@ -1,6 +1,6 @@
 const sanitizeHtml = require('sanitize-html');
 const htmlToText = require('html-to-text');
-const { getImageData } = require('../../serverjs/util');
+const { getImageData } = require('../../serverjs/imageutil');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
 const uuid = require('uuid');

@@ -305,33 +305,6 @@ function flatten(arr, n) {
   return toNonNullArray([].concat(...mapNonNull(arr, (a) => flatten(a, n - 1))));
 }
 
-// uri
-// artist
-// id
-function getImageData(imagename) {
-  const exact = carddb.imagedict[imagename.toLowerCase()];
-
-  if (exact) {
-    return exact;
-  }
-
-  const name = cardutil.normalizeName(imagename);
-  const ids = carddb.nameToId[name];
-  if (ids) {
-    const byName = carddb.cardFromId(ids[0]);
-    if (byName.scryfall_id) {
-      return {
-        uri: byName.art_crop,
-        artist: byName.artist,
-        id: byName.scryfall_id,
-        imageName: imagename,
-      };
-    }
-  }
-
-  return carddb.imagedict['doubling cube [10e-321]'];
-}
-
 module.exports = {
   shuffle(array, seed) {
     if (!seed) {
@@ -373,6 +346,5 @@ module.exports = {
   toNonNullArray,
   flatten,
   mapNonNull,
-  getImageData,
-  validateEmail
+  validateEmail,
 };
