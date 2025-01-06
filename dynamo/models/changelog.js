@@ -120,7 +120,11 @@ const hydrateChangelog = (changelog) => {
 const getChangelog = async (cubeId, id) => {
   const changelog = await getObject(process.env.DATA_BUCKET, `changelog/${cubeId}/${id}.json`);
 
-  return hydrateChangelog(changelog);
+  try {
+    return hydrateChangelog(changelog);
+  } catch {
+    return changelog;
+  }
 };
 
 const parseHtml = (html) => {

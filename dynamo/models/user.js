@@ -1,6 +1,5 @@
-const { getImageData } = require('../../serverjs/util');
+const { getImageData } = require('../../serverjs/imageutil');
 const createClient = require('../util');
-const { deleteById } = require('./cube');
 
 const FIELDS = {
   ID: 'id',
@@ -171,10 +170,9 @@ module.exports = {
   batchAdd: async (documents) => {
     return client.batchPut(documents);
   },
-  deleteById: async (id) => client.delete({id}),
+  deleteById: async (id) => client.delete({ id }),
   batchGet: async (ids) => batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
   createTable: async () => client.createTable(),
-  deleteById: async (id) => client.delete({id}),
   convertUser: (user) => ({
     [FIELDS.ID]: `${user._id}`,
     [FIELDS.USERNAME]: user.username,
@@ -189,7 +187,7 @@ module.exports = {
     [FIELDS.IMAGE_NAME]: user.image_name,
     [FIELDS.ROLES]: user.roles,
     [FIELDS.THEME]: user.theme,
-    [FIELDS.HIDE_FEATURED]: user.hide_featured
+    [FIELDS.HIDE_FEATURED]: user.hide_featured,
   }),
   ROLES,
   FIELDS,

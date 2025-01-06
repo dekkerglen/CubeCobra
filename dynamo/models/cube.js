@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 const _ = require('lodash');
-const { getImageData } = require('../../serverjs/util');
+const { getImageData } = require('../../serverjs/imageutil');
 const createClient = require('../util');
 const { getObject, putObject, deleteObject } = require('../s3client');
 const { getHashRowsForMetadata } = require('./cubeHash');
