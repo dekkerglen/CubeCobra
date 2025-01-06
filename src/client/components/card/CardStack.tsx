@@ -1,5 +1,7 @@
 import React, { ReactNode } from 'react';
+
 import { useDroppable } from '@dnd-kit/core';
+
 import DraftLocation from '../../drafting/DraftLocation';
 import { Col, ColProps } from '../base/Layout';
 

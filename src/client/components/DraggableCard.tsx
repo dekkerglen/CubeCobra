@@ -1,8 +1,10 @@
 import React from 'react';
+
+import { DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
 import classNames from 'classnames';
+
 import Card from '../datatypes/Card';
 import DraftLocation from '../drafting/DraftLocation';
-import { DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
 import FoilCardImage from './FoilCardImage';
 
 interface DraggableCardProps {

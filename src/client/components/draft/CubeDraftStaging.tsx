@@ -1,18 +1,20 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
-import useMount from 'hooks/UseMount';
-import UserContext from 'contexts/UserContext';
-import DomainContext from 'contexts/DomainContext';
-import { Card, CardBody, CardHeader, CardFooter } from 'components/base/Card';
-import { Row, Col } from 'components/base/Layout';
-import Text from 'components/base/Text';
+
+import { LockIcon, PasteIcon } from '@primer/octicons-react';
+
 import Button from 'components/base/Button';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import Input from 'components/base/Input';
+import { Col, Row } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
-import Username from 'components/Username';
-import { PasteIcon, LockIcon } from '@primer/octicons-react';
-import Draft from 'datatypes/Draft';
+import Text from 'components/base/Text';
 import { SortableItem, SortableList } from 'components/DND';
+import Username from 'components/Username';
 import { CSRFContext } from 'contexts/CSRFContext';
+import DomainContext from 'contexts/DomainContext';
+import UserContext from 'contexts/UserContext';
+import Draft from 'datatypes/Draft';
+import useMount from 'hooks/UseMount';
 
 const BOT_NAME = 'Bot';
 
@@ -79,7 +81,7 @@ const CubeDraftStaging: React.FC<CubeDraftStagingProps> = ({ draft, socket, star
       setPlayerNameMap(json.users);
     };
     run();
-  }, [players]);
+  }, [callApi, players]);
 
   const onSortEnd = useCallback(
     async (event: any) => {
@@ -109,7 +111,7 @@ const CubeDraftStaging: React.FC<CubeDraftStagingProps> = ({ draft, socket, star
         });
       }
     },
-    [order, draft.id],
+    [order, callApi, draft.id],
   );
 
   console.log(order, playerNameMap);
