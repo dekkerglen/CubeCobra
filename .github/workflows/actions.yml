@@ -29,6 +29,7 @@ jobs:
         with:
           config_path: 'eslint.config.mjs'
           extra_args: '--max-warnings=0'
+          reporter: github-pr-review
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
         if: always()
@@ -38,6 +39,6 @@ jobs:
           filter_mode: file
           level: warning
           prettier_flags: '**/*.{js,jsx,ts,tsx}'
-          reporter: github-pr-check
+          reporter: github-pr-review
       - name: Build
         run: npm run ci-build
