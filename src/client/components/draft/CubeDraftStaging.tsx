@@ -180,7 +180,7 @@ const CubeDraftStaging: React.FC<CubeDraftStagingProps> = ({ draft, socket, star
                   </div>
                   <SortableList items={order.map((_, i) => `${i}`)} onDragEnd={(event: any) => onSortEnd(event)}>
                     {order.slice(1).map((player, i) => (
-                      <SortableItem key={i + 1} id={`${i + 1}`} className="my-3">
+                      <SortableItem key={i + 1} id={`${i + 1}`} className="my-3 no-touch-action">
                         {player ? <Username user={playerNameMap[player]} nolink /> : BOT_NAME}
                       </SortableItem>
                     ))}

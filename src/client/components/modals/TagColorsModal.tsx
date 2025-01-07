@@ -24,7 +24,7 @@ interface TagColorRowProps {
 }
 
 const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChange, id }) => (
-  <SortableItem id={id} className="p-2">
+  <SortableItem id={id} className="p-2 no-touch-action">
     <Card>
       <Flexbox direction="row" justify="between">
         <Flexbox direction="row" justify="start" alignItems="center">
