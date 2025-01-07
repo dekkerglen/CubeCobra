@@ -11,7 +11,8 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const bucketName = 'cubecobra'; 
+/* Test */
+const bucketName = 'cubecobra';   
 const zipFileName = `builds/${VERSION}.zip`;
 
 const output = fs.createWriteStream('target.zip');
