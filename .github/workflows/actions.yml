@@ -38,7 +38,7 @@ jobs:
         # Always run both eslint and prettier
         if: always()
         # Ref: https://github.com/EPMatt/reviewdog-action-prettier
-        uses: EPMatt/reviewdog-action-prettier@v1
+        uses: recitalsoftware/reviewdog-action-prettier@v1
         with:
           fail_on_error: true
           filter_mode: file
