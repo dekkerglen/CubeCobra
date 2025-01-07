@@ -1210,6 +1210,10 @@ video {
           user-select: none;
 }
 
+.resize {
+  resize: both;
+}
+
 .list-inside {
   list-style-position: inside;
 }
@@ -2597,6 +2601,13 @@ img.mana-symbol-sm {
 
 .markdown .text-center .markdown-card-image {
   margin: auto;
+}
+
+/* Used in conjunction with DraggableCard and DndContext. Per https: //docs.dndkit.com/api-documentation/sensors/pointer#touch-action turns off
+* the mobile browser's default touch actions on elements with the class, which is necessary for dragging to work as expected with DndContext. */
+
+.no-touch-action {
+  touch-action: none;
 }
 
 @media (min-width: 640px) {

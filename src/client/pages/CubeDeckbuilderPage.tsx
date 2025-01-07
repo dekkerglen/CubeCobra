@@ -1,9 +1,10 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import Cube from '../datatypes/Cube';
-import Draft from '../datatypes/Draft';
-
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
+
+import { cardType, makeSubtitle } from 'utils/Card';
+
+import { Card } from '../components/base/Card';
 import DeckbuilderNavbar from '../components/DeckbuilderNavbar';
 import DeckStacks from '../components/DeckStacks';
 import DynamicFlash from '../components/DynamicFlash';
@@ -11,13 +12,13 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
 import UserContext from '../contexts/UserContext';
+import Cube from '../datatypes/Cube';
+import Draft from '../datatypes/Draft';
 import DraftSeat from '../datatypes/DraftSeat';
 import User from '../datatypes/User';
 import DraftLocation, { addCard, locations, moveCard, removeCard } from '../drafting/DraftLocation';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
-import { cardType, makeSubtitle } from 'utils/Card';
-import { Card } from '../components/base/Card';
 
 const getMatchingSeat = (seats: DraftSeat[], userid?: string) =>
   seats
@@ -43,6 +44,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
     (event: DragEndEvent) => {
       const { active, over } = event;
 
+      //If drag and drop ends without a collision, eg outside the drag/drop area, do nothing
       if (!over) {
         return;
       }
@@ -107,7 +109,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
         setTarget(addCard(targetLocation, target, card));
       }
     },
-    [locations, mainboard, sideboard, setMainboard, setSideboard, initialDeck, dragStartTime],
+    [mainboard, sideboard, setMainboard, setSideboard, initialDeck, dragStartTime],
   );
 
   const addBasics = useCallback(
@@ -119,7 +121,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
       console.log(newDeck);
       setMainboard(newDeck);
     },
-    [mainboard, basics, initialDeck],
+    [mainboard, basics],
   );
 
   return (

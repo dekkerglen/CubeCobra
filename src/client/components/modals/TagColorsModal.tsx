@@ -1,16 +1,19 @@
+import React, { useCallback, useContext, useMemo, useState } from 'react';
+
+import { GrabberIcon } from '@primer/octicons-react';
+
+import { getTagColorClass } from 'utils/Util';
+
+import { CSRFContext } from '../../contexts/CSRFContext';
+import CubeContext, { TAG_COLORS } from '../../contexts/CubeContext';
+import { TagColor } from '../../datatypes/Cube';
+import { Card } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Select from '../base/Select';
 import Tag from '../base/Tag';
-import LoadingButton from '../LoadingButton';
-import CubeContext, { TAG_COLORS } from '../../contexts/CubeContext';
-import { TagColor } from '../../datatypes/Cube';
-import React, { useCallback, useContext, useMemo, useState } from 'react';
-import { getTagColorClass } from 'utils/Util';
 import { SortableItem, SortableList } from '../DND';
-import { Card } from '../base/Card';
-import { GrabberIcon } from '@primer/octicons-react';
-import { CSRFContext } from '../../contexts/CSRFContext';
+import LoadingButton from '../LoadingButton';
 
 interface TagColorRowProps {
   tag: string;
@@ -21,7 +24,7 @@ interface TagColorRowProps {
 }
 
 const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChange, id }) => (
-  <SortableItem id={id} className="p-2">
+  <SortableItem id={id} className="p-2 no-touch-action">
     <Card>
       <Flexbox direction="row" justify="between">
         <Flexbox direction="row" justify="start" alignItems="center">
@@ -69,7 +72,7 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
       setLoading(false);
       setOpen(false);
     },
-    [cube.id, setTagColors, modalColors, setOpen],
+    [csrfFetch, cube.id, modalColors, setOpen, setTagColors],
   );
 
   const handleChangeColor = useCallback(
@@ -89,6 +92,11 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
   const handleSortEnd = useCallback(
     (event: any) => {
       const { active, over } = event;
+
+      //If sort (drag and drop) ends without a collision, eg outside the sortable area, do nothing
+      if (!over) {
+        return;
+      }
 
       if (active.id !== over.id) {
         const newModalColors = [...modalColors];

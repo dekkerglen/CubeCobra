@@ -1,11 +1,12 @@
+import React from 'react';
+
+import Card from '../datatypes/Card';
+import Location, { location } from '../drafting/DraftLocation';
 import { CardBody, CardHeader } from './base/Card';
 import { Flexbox, NumCols, Row } from './base/Layout';
 import Text from './base/Text';
 import CardStack from './card/CardStack';
 import DraggableCard from './DraggableCard';
-import Card from '../datatypes/Card';
-import Location, { location } from '../drafting/DraftLocation';
-import React from 'react';
 
 interface DeckStacksProps {
   cards: Card[][][];

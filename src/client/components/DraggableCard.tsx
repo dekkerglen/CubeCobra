@@ -1,8 +1,10 @@
 import React from 'react';
+
+import { DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
 import classNames from 'classnames';
+
 import Card from '../datatypes/Card';
 import DraftLocation from '../drafting/DraftLocation';
-import { DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
 import FoilCardImage from './FoilCardImage';
 
 interface DraggableCardProps {
@@ -33,7 +35,12 @@ const DraggableCard: React.FC<DraggableCardProps> = ({ card, location, className
 
   return (
     <>
-      <div ref={setDragRef} className={onClick ? 'clickable' : undefined} {...listeners} {...attributes}>
+      <div
+        ref={setDragRef}
+        className={classNames('no-touch-action', { clickable: !!onClick })}
+        {...listeners}
+        {...attributes}
+      >
         <div ref={setDropRef}>
           <FoilCardImage card={card} autocard className={previewClasses} onClick={() => onClick && onClick(card)} />
         </div>

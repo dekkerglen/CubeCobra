@@ -284,6 +284,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     async (event: any) => {
       const { active, over } = event;
 
+      //If drag and drop ends without a collision, eg outside the drag/drop area, do nothing
       if (!over) {
         return;
       }
