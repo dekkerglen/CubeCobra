@@ -1,6 +1,12 @@
 name: CI Tests
 
-on: [push, pull_request]
+# Pull request will trigger when PR is opened or updated, and more (https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request)
+# Thus limit push checks to master branch so things run after the PR is merged. Without the limit multiple actions run on each PR
+on:
+  pull_request:
+  push:
+    branches:
+      - 'master'
 
 jobs:
   build:
@@ -17,14 +23,18 @@ jobs:
       - name: Setup
         run: npm ci
       - name: Run eslint on changed files
+        # Always run both eslint and prettier
+        if: always()
         uses: tj-actions/eslint-changed-files@v25
         with:
           config_path: 'eslint.config.mjs'
           extra_args: '--max-warnings=0'
       - name: Run Prettier on changed files
+        # Always run both eslint and prettier
+        if: always()
         uses: creyD/prettier_action@v4.3
         with:
           only_changed: true
-          prettier_options: --max-warnings 0 **/*.{js,jsx,ts,tsx}
+          prettier_options: --check
       - name: Build
         run: npm run ci-build
