@@ -32,7 +32,7 @@ jobs:
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
         if: always()
-        uses: EPMatt/reviewdog-action-prettier@v1
+        uses: ./.github/actions/prettier
         with:
           fail_on_error: true
           filter_mode: file
