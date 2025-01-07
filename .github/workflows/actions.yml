@@ -12,13 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Permissions based on https://github.com/reviewdog/action-suggester?tab=readme-ov-file#required-permissions,
-    # and the test steps depend on reviewdog
-    permissions:
-      contents: read
-      checks: write
-      issues: write
-      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -43,12 +36,10 @@ jobs:
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
         if: always()
-        # Ref: https://github.com/EPMatt/reviewdog-action-prettier
-        uses: EPMatt/reviewdog-action-prettier@v1
+        uses: ./.github/actions/prettier
         with:
           fail_on_error: true
           filter_mode: file
-          github_token: ${{ secrets.github_token }}
           level: warning
           prettier_flags: '**/*.{js,jsx,ts,tsx}'
           reporter: github-pr-check
