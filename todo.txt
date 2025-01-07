@@ -15,7 +15,7 @@ empty searches for packages have infinite spinning wheel
 after multiplayer draft, non-host seats error
 seat names should include player name or bot instead of just the deck color
 in multiplayer drafts, the non host seats look like bots ???
-
+aa
 
 Investigate
 	- validate patreon integration
