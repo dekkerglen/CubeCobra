@@ -1,6 +1,7 @@
 /node_modules/
 private/
 /dist/
+/build/
 /.vscode/
 src/generated/
 jobs/export/
