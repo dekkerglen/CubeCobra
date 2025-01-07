@@ -8,7 +8,8 @@ jobs/export/
 /model/
 .DS_Store
 /.yarn/install-state.gz
-/one_shot_scripts/convert_tsx.json
+/scripts/convert_tsx.json
+/coverage
 
 .python-version
 

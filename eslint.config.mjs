@@ -137,7 +137,7 @@ export default [
       '*.js',
       '*.mjs',
       'jobs/**/*',
-      'one_shot_scripts/**/*',
+      'scripts/**/*',
       'config/**/*',
       'dynamo/**/*',
       'lambda/**/*',
@@ -178,7 +178,7 @@ export default [
     },
   },
   {
-    files: ['one_shot_scripts/**/*'],
+    files: ['scripts/**/*'],
     rules: {
       'no-await-in-loop': 0,
     },

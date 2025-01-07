@@ -5,7 +5,7 @@
     "fixtures/**/*.js",
     "jobs/**/*.js",
     "models/**/*.js",
-    "one_shot_scripts/**/*.js",
+    "scripts/**/*.js",
     "public/js/**/*.js",
     "routes/**/*.js",
     "serverjs/**/*.js",

@@ -7,7 +7,7 @@ const carddb = require('../serverjs/carddb');
 const CubeAnalytic = require('../dynamo/models/cubeAnalytic');
 
 const Draft = require('../dynamo/models/draft');
-const { getDrafterState } = require('../dist/drafting/draftutil');
+const { getDrafterState } = require('../../dist/drafting/draftutil');
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {

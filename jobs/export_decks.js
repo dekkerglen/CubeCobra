@@ -3,7 +3,7 @@ require('dotenv').config();
 const fs = require('fs');
 const carddb = require('../serverjs/carddb');
 
-const { getDrafterState } = require('../dist/drafting/draftutil');
+const { getDrafterState } = require('../../dist/drafting/draftutil');
 const Draft = require('../dynamo/models/draft');
 
 const draftCardIndexToOracle = (cardIndex, draftCards) => {

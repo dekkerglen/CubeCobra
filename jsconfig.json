@@ -7,17 +7,17 @@
             "analytics/*": ["./src/analytics/*"],
             "components/*": ["./src/components/*"],
             "contexts/*": ["./src/contexts/*"],
-            "drafting/*": ["./src/drafting/*"],
+            "drafting/*": ["src/client/drafting/*"],
             "filtering/*": ["./src/filtering/*"],
-            "generated/*": ["./src/generated/*"],
+            "generated/*": ["src/client/generated/*"],
             "hooks/*": ["./src/hooks/*"],
             "layouts/*": ["./src/layouts/*"],
-            "markdown/*": ["./src/markdown/*"],
+            "markdown/*": ["src/client/markdown/*"],
             "pages/*": ["./src/pages/*"],
-            "proptypes/*": ["./src/proptypes/*"],
+            "proptypes/*": ["src/client/proptypes/*"],
             "res/*": ["./src/res/*"],
             "utils/*": ["./src/utils/*"]
         }
     },
-    "include": ["src/**/*", "app.js", "serverjs/*", "routes/*"]
+    "include": ["src/**/*", "src/app.js", "util/*", "src/routes/*"]
 }

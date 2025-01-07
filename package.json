@@ -8,17 +8,10 @@
     "node": ">=20.0.0 <21.0.0"
   },
   "scripts": {
-    "build": "npm run nearley && tsc -b && npm run webpack && npx tailwindcss -i ./src/css/stylesheet.css -o ./public/css/stylesheet.css",
+    "build": "npm run nearley && tsc -b && npm run webpack && npx tailwindcss -i ./src/client/css/stylesheet.css -o ./public/css/stylesheet.css",
     "lint": "npm run prettier-base --check && npm run eslint -- --max-warnings 0",
     "bash": "bash",
-    "beautify": "npm run prettier",
-    "list-files": "bash -c 'shopt -s nullglob\n echo {__tests__,fixtures,jobs,models,one_shot_scripts,public/js,routes,serverjs,src}/{**/*,*}.{js,jsx,ts,tsx} {app,force_update,server}.js webpack.*.mjs eslint.config.mjs babel.config.mjs'",
-    "prettier-base": "prettier $(npm run --silent list-files)",
-    "prettier": "npm run prettier-base --write",
-    "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.m?[jt]sx?$')",
-    "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.m?[jt]sx?$')",
-    "eslint": "eslint --quiet $(npm run --silent list-files)",
-    "nodemon": "nodemon --max-old-space-size=8192 --ignore src --ignore public --ignore private --ignore temp --ignore dist/pages --ignore __tests__",
+    "nodemon": "nodemon --max-old-space-size=8192 --ignore src/client --ignore public --ignore private --ignore temp --ignore dist/pages --ignore __tests__ src/app.js",
     "webpack": "NODE_OPTIONS=--max_old_space-size=18192 webpack --mode production --config webpack.prod.mjs",
     "webpack-dev-server": "npx webpack serve --config webpack.dev.mjs",
     "test": "npm run test-loud --silent",
@@ -45,10 +38,10 @@
     "setup:local": "npm start:localstack && npm setup:local:env && npm setup:local:localstack && npm setup:local:files && npm setup:local:db && npm update-cards",
     "setup:local:localstack": "./scripts/local/init_localstack.sh",
     "setup:local:env": "cp .env_EXAMPLE .env",
-    "setup:local:files": "node one_shot_scripts/create_local_files.js",
-    "setup:local:db": "node --max-old-space-size=8192 one_shot_scripts/createTables.js",
+    "setup:local:files": "node scripts/create_local_files.js",
+    "setup:local:db": "node --max-old-space-size=8192 scripts/createTables.js",
     "start:dev": "npm start:localstack && npm devstart",
-    "publish": "npm run build && node publish.js"
+    "publish": "npm run build && node ./scripts/publish.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
