@@ -1,10 +1,10 @@
 const sanitizeHtml = require('sanitize-html');
-const htmlToText = require('html-to-text');
+const { convert } = require('html-to-text');
+const User = require('./user');
 const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
 const uuid = require('uuid');
-const User = require('./user');
 
 const removeSpan = (text) =>
   sanitizeHtml(text, {
@@ -298,8 +298,7 @@ module.exports = {
     [FIELDS.USERNAME]: episode.username,
     [FIELDS.TYPE_STATUS_COMP]: `${TYPES.EPISODE}:${STATUS.PUBLISHED}`,
     [FIELDS.TYPE_OWNER_COMP]: `${TYPES.EPISODE}:${episode.owner}`,
-    [FIELDS.SHORT]: htmlToText
-      .fromString(removeSpan(episode.description), {
+    [FIELDS.SHORT]: convert(removeSpan(episode.description), {
         wordwrap: 130,
       })
       .substring(0, 200),

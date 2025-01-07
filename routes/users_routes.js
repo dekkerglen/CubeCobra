@@ -726,6 +726,16 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
       }
     }
 
+    if (util.hasProfanity(req.body.username)) {
+      req.flash('danger', 'username may not use profanity. If you believe this is in error, please contact us.');
+      return redirect(req, res, '/user/account');
+    }
+
+    if (util.hasProfanity(req.body.body)) {
+      req.flash('danger', 'About me may not use profanity. If you believe this is in error, please contact us.');
+      return redirect(req, res, '/user/account');
+    }
+
     user.username = req.body.username;
     user.usernameLower = req.body.username.toLowerCase();
     user.about = req.body.body;

@@ -1,6 +1,5 @@
 const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
-const { deleteById } = require('./cube');
 
 const FIELDS = {
   ID: 'id',

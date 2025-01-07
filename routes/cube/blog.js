@@ -22,7 +22,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     }
 
     const { user } = req;
-
+    
     if (req.body.id && req.body.id.length > 0) {
       // update an existing blog post
       const blog = await Blog.getUnhydrated(req.body.id);
@@ -46,6 +46,13 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     if (!isCubeViewable(cube, user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/cube/blog/404');
+    }
+
+    // if this cube has no cards, we deny them from making any changes
+    // this is a spam prevention measure
+    if (cube.cardCount === 0) {
+      req.flash('danger', 'Cannot post a blog for an empty cube. Please add cards to the cube first.');
+      return redirect(req, res, '/cube/blog/' + cube.id);
     }
 
     // post new blog

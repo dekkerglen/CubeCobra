@@ -142,7 +142,12 @@ function validateEmail(email) {
     'qejjyl.com',
     'jxpomup.com',
     'zlorkun.com',
-    'gufum.com'
+    'gufum.com',
+    'gmailbrt.com',    
+    'gholar.com',
+    'logsmarter.net',
+    'pixdd.com',
+    'matmayer.com'
   ]
 
   const domain = email.split('@')[1];
@@ -308,7 +313,7 @@ function flatten(arr, n) {
 // uri
 // artist
 // id
-function getImageData(imagename) {
+const getImageData = (imagename) => {
   const exact = carddb.imagedict[imagename.toLowerCase()];
 
   if (exact) {

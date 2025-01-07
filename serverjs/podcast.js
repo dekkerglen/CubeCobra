@@ -1,4 +1,4 @@
-const htmlToText = require('html-to-text');
+const { convert } = require('html-to-text');
 const sanitizeHtml = require('sanitize-html');
 const { getFeedEpisodes, getFeedData } = require('./rss');
 
@@ -57,8 +57,7 @@ const updatePodcast = async (podcast) => {
         podcastLink: episode.link,
         url: episode.source,
         status: Content.STATUS.PUBLISHED,
-        short: htmlToText
-          .fromString(removeSpan(episode.description), {
+        short: convert(removeSpan(episode.description), {
             wordwrap: 130,
           })
           .substring(0, 200),
