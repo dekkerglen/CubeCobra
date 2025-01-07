@@ -8,6 +8,7 @@ import UserContext from '../../contexts/UserContext';
 import Card from '../../datatypes/Card';
 import { getCardTagColorClass } from 'utils/Util';
 import { ListGroupItem } from '../base/ListGroup';
+import DisplayContext from 'contexts/DisplayContext';
 
 export interface AutocardListItemProps {
   card: Card;
@@ -39,6 +40,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
+  const {showInlineTagEmojis} = useContext(DisplayContext);
   const [cardName, cardId] = useMemo(
     () =>
       card && card.details ? [card.details.name, card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK],
@@ -66,9 +68,29 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     return getCardTagColorClass(tagColors, card);
   }, [card, tagColors, user]);
 
+  const findEmojisInTags = (tags: string[]):string[] => {
+    const emojiRegex = /\p{Emoji}/gu;
+    const emojis: string[] = [];
+
+    for (const tag of tags) {
+      const matches = tag.match(emojiRegex);
+      if (matches) {
+        emojis.push(...matches);
+      }
+    }
+
+    return emojis;
+  };
+
+  const emojiTags = useMemo(
+    () =>
+      card && card.tags ? findEmojisInTags(card.tags) : [],
+    [card]
+  )
+
   return (
     <AutocardDiv
-      className={cx(`bg-card-${colorClassname} ${className}`)}
+      className={cx(`flex justify-between bg-card-${colorClassname} ${className}`)}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
       inModal={inModal}
@@ -78,6 +100,10 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     >
       {children && <span>{children}</span>}
       <span>{cardName}</span>
+      {showInlineTagEmojis ?
+        <span className="text-right">{emojiTags.join('')}</span>
+        : ''
+      }
     </AutocardDiv>
   );
 };
