@@ -35,6 +35,6 @@ jobs:
         uses: creyD/prettier_action@v4.3
         with:
           only_changed: true
-          prettier_options: --check
+          prettier_options: --check **/*.{js,jsx,ts,tsx}
       - name: Build
         run: npm run ci-build
