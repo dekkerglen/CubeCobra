@@ -110,17 +110,6 @@ export default [
     },
   },
   {
-    files: ['src/**/*'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: ['./*', '../*'],
-        },
-      ],
-    },
-  },
-  {
     files: ['src/**/*.js'],
     rules: {
       'react/jsx-key': 'off',
