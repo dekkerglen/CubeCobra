@@ -37,9 +37,10 @@ jobs:
         if: always()
         uses: EPMatt/reviewdog-action-prettier@v1
         with:
-          reporter: github-pr-check
-          level: warning
           fail_on_error: true
+          filter_mode: file
+          level: warning
           prettier_flags: '**/*.{js,jsx,ts,tsx}'
+          reporter: github-pr-check
       - name: Build
         run: npm run ci-build
