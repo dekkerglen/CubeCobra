@@ -9,7 +9,8 @@
   },
   "scripts": {
     "build": "npm run nearley && tsc -b && npm run webpack && npx tailwindcss -i ./src/client/css/stylesheet.css -o ./public/css/stylesheet.css",
-    "lint": "npm run prettier-base --check && npm run eslint -- --max-warnings 0",
+    "lint": "npx prettier --check $(npm run --silent list-files); npx eslint --max-warnings 0 $(npm run --silent list-files)",
+    "list-files": "bash -c 'shopt -s nullglob\n echo {jobs,scripts,src}/{**/*,*}.{js,jsx,ts,tsx} force_update.js webpack.*.mjs eslint.config.mjs babel.config.mjs'",
     "bash": "bash",
     "nodemon": "nodemon --max-old-space-size=8192 --ignore src/client --ignore public --ignore private --ignore temp --ignore dist/pages --ignore __tests__ src/app.js",
     "webpack": "NODE_OPTIONS=--max_old_space-size=18192 webpack --mode production --config webpack.prod.mjs",
