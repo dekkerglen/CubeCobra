@@ -14,7 +14,10 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          # Get all history for all branches and tags, so changed files can be found
+          fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -32,9 +35,11 @@ jobs:
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
         if: always()
-        uses: creyD/prettier_action@v4.3
+        uses: EPMatt/reviewdog-action-prettier@v1
         with:
-          only_changed: true
-          prettier_options: --check **/*.{js,jsx,ts,tsx}
+          reporter: github-pr-check
+          level: warning
+          fail_on_error: true
+          prettier_flags: '**/*.{js,jsx,ts,tsx}'
       - name: Build
         run: npm run ci-build
