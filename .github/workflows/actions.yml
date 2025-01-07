@@ -28,6 +28,7 @@ jobs:
       - name: Run eslint on changed files
         # Always run both eslint and prettier
         if: always()
+        # Ref https://github.com/tj-actions/eslint-changed-files
         uses: tj-actions/eslint-changed-files@v25
         with:
           config_path: 'eslint.config.mjs'
@@ -35,10 +36,12 @@ jobs:
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
         if: always()
+        # Ref: https://github.com/EPMatt/reviewdog-action-prettier
         uses: EPMatt/reviewdog-action-prettier@v1
         with:
           fail_on_error: true
           filter_mode: file
+          github_token: ${{ secrets.github_token }}
           level: warning
           prettier_flags: '**/*.{js,jsx,ts,tsx}'
           reporter: github-pr-check
