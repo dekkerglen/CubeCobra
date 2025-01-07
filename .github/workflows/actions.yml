@@ -18,5 +18,15 @@ jobs:
         run: npm ci
       - name: Check Code Style
         run: npm run lint
+      - name: Run eslint on changed files
+        uses: tj-actions/eslint-changed-files@v25
+        with:
+          config_path: 'eslint.config.mjs'
+          extra_args: '--max-warnings=0'
+      - name: Run Prettier on changed files
+        uses: creyD/prettier_action@v4.3
+        with:
+          only_changed: true
+          prettier_options: --max-warnings 0 **/*.{js,jsx,ts,tsx}
       - name: Build
         run: npm run ci-build
