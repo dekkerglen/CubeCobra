@@ -5,6 +5,7 @@ const express = require('express');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util');
+const imageutil = require('../serverjs/imageutil');
 const Comment = require('../dynamo/models/comment');
 const User = require('../dynamo/models/user');
 const Content = require('../dynamo/models/content');
@@ -121,7 +122,7 @@ router.post(
         ...comment,
         owner: req.user,
         id,
-        image: util.getImageData(req.user.imageName),
+        image: imageutil.getImageData(req.user.imageName),
       },
     });
   }),

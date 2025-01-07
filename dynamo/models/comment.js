@@ -4,7 +4,7 @@ require('dotenv').config();
 const uuid = require('uuid');
 
 const createClient = require('../util');
-const util = require('../../serverjs/util');
+const imageutil = require('../../serverjs/imageutil');
 const User = require('./user');
 
 const FIELDS = {
@@ -29,7 +29,7 @@ const client = createClient({
       name: 'ByOwner',
       partitionKey: FIELDS.OWNER,
       sortKey: FIELDS.DATE,
-    }
+    },
   ],
   attributes: {
     [FIELDS.ID]: 'S',
@@ -60,7 +60,7 @@ const hydrate = async (item) => {
   }
 
   item.owner = await User.getById(item.owner);
-  item.image = util.getImageData(item.owner.imageName);
+  item.image = imageutil.getImageData(item.owner.imageName);
 
   return item;
 };
@@ -85,7 +85,7 @@ const batchHydrate = async (items) => {
     }
 
     item.owner = owners.find((owner) => owner.id === item.owner);
-    item.image = util.getImageData(item.owner ? item.owner.imageName : 'Ambush Viper');
+    item.image = imageutil.getImageData(item.owner ? item.owner.imageName : 'Ambush Viper');
 
     return item;
   });
