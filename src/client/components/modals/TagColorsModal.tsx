@@ -93,6 +93,11 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
     (event: any) => {
       const { active, over } = event;
 
+      //If sort (drag and drop) ends without a collision, eg outside the sortable area, do nothing
+      if (!over) {
+        return;
+      }
+
       if (active.id !== over.id) {
         const newModalColors = [...modalColors];
 

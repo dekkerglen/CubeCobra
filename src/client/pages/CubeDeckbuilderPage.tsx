@@ -44,6 +44,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
     (event: DragEndEvent) => {
       const { active, over } = event;
 
+      //If drag and drop ends without a collision, eg outside the drag/drop area, do nothing
       if (!over) {
         return;
       }
