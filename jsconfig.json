@@ -19,5 +19,5 @@
             "utils/*": ["./src/utils/*"]
         }
     },
-    "include": ["src/**/*", "src/app.js", "util/*", "src/routes/*"]
+    "include": ["src/**/*", "src/app.js", "util/*", "src/routes/*", "server.js"]
 }

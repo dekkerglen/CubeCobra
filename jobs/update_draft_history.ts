@@ -1,13 +1,12 @@
-// Load Environment Variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const EloRating = require('elo-rating');
-const fs = require('fs');
-const carddb = require('../serverjs/carddb');
-const CubeAnalytic = require('../dynamo/models/cubeAnalytic');
-
-const Draft = require('../dynamo/models/draft');
-const { getDrafterState } = require('../../dist/drafting/draftutil');
+import EloRating from 'elo-rating';
+import fs from 'fs';
+import * as carddb from '../src/util/carddb';
+import CubeAnalytic from '../src/dynamo/models/cubeAnalytic';
+import Draft from '../src/dynamo/models/draft';
+import { getDrafterState } from '../src/client/drafting/draftutil';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {
@@ -35,7 +34,7 @@ const incrementDict = (dict, key) => {
 };
 
 const loadAndProcessCubeDraftAnalytics = (cube) => {
-  const source = JSON.parse(fs.readFileSync(`./temp/cube_draft_history/${cube}`));
+  const source = JSON.parse(fs.readFileSync(`./temp/cube_draft_history/${cube}`, 'utf-8'));
 
   const cubeAnalytics = {};
 
@@ -98,12 +97,12 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
 
   await carddb.initializeCardDb();
 
-  const logsByDay = {};
-  const keys = [];
+  const logsByDay: any = {};
+  const keys: string[] = [];
 
   // load all draftlogs into memory
-  let lastKey = null;
-  let draftLogs = [];
+  let lastKey: any = null;
+  let draftLogs: any[] = [];
   do {
     const result = await Draft.scan(1000000, lastKey);
     draftLogs = draftLogs.concat(result.items);
@@ -133,8 +132,8 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
 
   // sort the keys ascending
   keys.sort((a, b) => {
-    const [aYear, aMonth, aDay] = a.split('-');
-    const [bYear, bMonth, bDay] = b.split('-');
+    const [aYear, aMonth, aDay] = a.split('-').map((x) => parseInt(x, 10));
+    const [bYear, bMonth, bDay] = b.split('-').map((x) => parseInt(x, 10));
 
     if (aYear !== bYear) {
       return aYear - bYear;
@@ -165,7 +164,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
 
       // only do this if the next day is not loaded
       if (i + 1 < keys.length && !fs.existsSync(`./temp/global_draft_history/${keys[i + 1]}.json`)) {
-        const loaded = JSON.parse(await fs.promises.readFile(`./temp/global_draft_history/${key}.json`));
+        const loaded = JSON.parse(await fs.promises.readFile(`./temp/global_draft_history/${key}.json`, 'utf-8'));
 
         eloByOracleId = loaded.eloByOracleId;
         picksByOracleId = loaded.picksByOracleId;
@@ -174,7 +173,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
       console.log(`Starting ${i + 1} / ${keys.length}: for ${key}`);
       const logRows = logsByDay[key] || [];
 
-      const logRowBatches = [];
+      const logRowBatches: any[] = [];
       const batchSize = 100;
       for (let j = 0; j < logRows.length; j += batchSize) {
         logRowBatches.push(logRows.slice(j, j + batchSize));
@@ -213,7 +212,9 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
           let eloByCubeAndOracleId = {};
           try {
             if (fs.existsSync(`./temp/cube_draft_history/${draft.cube}.json`)) {
-              const loaded = JSON.parse(await fs.promises.readFile(`./temp/cube_draft_history/${draft.cube}.json`));
+              const loaded = JSON.parse(
+                await fs.promises.readFile(`./temp/cube_draft_history/${draft.cube}.json`, 'utf-8'),
+              );
 
               eloByCubeAndOracleId = loaded.eloByCubeAndOracleId;
               picksByCubeAndOracleId = loaded.picksByCubeAndOracleId;
@@ -243,7 +244,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
               for (let j = 0; j < draft.seats[0].pickorder.length; j++) {
                 const drafterState = getDrafterState(draft, 0, j);
 
-                const picked = drafterState.selection;
+                const picked: number = drafterState.selection as number;
                 const pack = drafterState.cardsInPack;
 
                 if (picked < 0 || picked >= draft.cards.length || !draft.cards[picked]) {
@@ -320,7 +321,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
 
   // upload the files to S3
   const allCubes = fs.readdirSync('./temp/cube_draft_history');
-  const batches = [];
+  const batches: any[] = [];
   const batchSize = 100;
   for (let j = 0; j < allCubes.length; j += batchSize) {
     batches.push(allCubes.slice(j, j + batchSize));

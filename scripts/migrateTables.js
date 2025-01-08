@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const carddb = require('../serverjs/carddb');
+const carddb = require('../util/carddb');
 
 const content = require('../dynamo/models/content');
 const notification = require('../dynamo/models/notification');
