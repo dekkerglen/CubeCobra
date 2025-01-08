@@ -22,6 +22,7 @@ interface SelectProps {
   id?: string;
   dense?: boolean;
   disabled?: boolean;
+  onPointerDown?: React.PointerEventHandler<HTMLSelectElement>;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -35,6 +36,7 @@ const Select: React.FC<SelectProps> = ({
   dense,
   className = '',
   disabled,
+  onPointerDown,
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (disabled) {
@@ -69,7 +71,14 @@ const Select: React.FC<SelectProps> = ({
           </a>
         )}
       </Flexbox>
-      <select className={classes} defaultValue={defaultValue} onChange={handleChange} id={id} value={value}>
+      <select
+        onPointerDown={onPointerDown}
+        className={classes}
+        defaultValue={defaultValue}
+        onChange={handleChange}
+        id={id}
+        value={value}
+      >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

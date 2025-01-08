@@ -23,24 +23,36 @@ interface TagColorRowProps {
   id: string;
 }
 
-const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChange, id }) => (
-  <SortableItem id={id} className="p-2 no-touch-action">
-    <Card>
-      <Flexbox direction="row" justify="between">
-        <Flexbox direction="row" justify="start" alignItems="center">
-          <GrabberIcon size={16} className="cursor-grab" />
-          <Tag text={tag} colorClass={tagClass} />
+const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChange, id }) => {
+  /* In Firefox when the select is clicked it was also triggering the sortable context, such that
+   * while the options are open the whole row is moving around. And once the option is chosen its still
+   * dragging, like a burr you cannot shake off. Stopping the onPointerDown event from propagating is
+   * the solution I found.
+   */
+  const preventDragStart = (event: React.PointerEvent<HTMLSelectElement>) => {
+    event.stopPropagation();
+  };
+
+  return (
+    <SortableItem id={id} className="p-2 no-touch-action">
+      <Card>
+        <Flexbox direction="row" justify="between" className="cursor-grab">
+          <Flexbox direction="row" justify="start" alignItems="center">
+            <GrabberIcon size={16} className="cursor-grab" />
+            <Tag text={tag} colorClass={tagClass} />
+          </Flexbox>
+          <Select
+            options={TAG_COLORS.map(([name, v]) => ({ value: v || 'none', label: name }))}
+            value={value || 'none'}
+            setValue={onChange}
+            dense
+            onPointerDown={preventDragStart}
+          />
         </Flexbox>
-        <Select
-          options={TAG_COLORS.map(([name, v]) => ({ value: v || 'none', label: name }))}
-          value={value || 'none'}
-          setValue={onChange}
-          dense
-        />
-      </Flexbox>
-    </Card>
-  </SortableItem>
-);
+      </Card>
+    </SortableItem>
+  );
+};
 
 interface TagColorsModalProps {
   isOpen: boolean;
