@@ -1,6 +1,6 @@
 const cubeId = '63ddcf7a75838178427ea858';
 
-const carddb = require('../serverjs/carddb');
+const carddb = require('../util/carddb');
 
 const ChangeLog = require('../dynamo/models/changelog');
 const Cube = require('../dynamo/models/cube');

@@ -1,5 +1,5 @@
 const uuid = require('uuid');
-const { cardType } = require('../../dist/utils/Card');
+const { cardType } = require('../client/utils/Card');
 const carddb = require('./carddb');
 const { draftbotPick, deckbuild } = require('./draftbots');
 
@@ -27,7 +27,7 @@ const {
   get,
 } = require('./redis');
 
-const { setupPicks, getCardCol, getStepList } = require('../../dist/drafting/draftutil');
+const { setupPicks, getCardCol, getStepList } = require('../client/drafting/draftutil');
 
 // returns a reference to a draft's metadata hash
 const lobbyRef = (draftId) => `lobby:${draftId}`;

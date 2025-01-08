@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const carddb = require('../serverjs/carddb');
+const carddb = require('../util/carddb');
 const Cube = require('../dynamo/models/cube');
 const _ = require('lodash');
 

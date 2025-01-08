@@ -1,7 +1,7 @@
 const express = require('express');
 
-const sortutil = require('../../../dist/utils/Sort');
-const filterutil = require('../../../dist/filtering/FilterCards');
+const sortutil = require('../../client/utils/Sort');
+const filterutil = require('../../client/filtering/FilterCards');
 const carddb = require('../../util/carddb');
 const util = require('../../util/util');
 

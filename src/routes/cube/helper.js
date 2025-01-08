@@ -1,7 +1,7 @@
 const carddb = require('../../util/carddb');
 const { render, redirect } = require('../../util/render');
 const util = require('../../util/util');
-const cardutil = require('../../../dist/utils/Card');
+const cardutil = require('../../client/utils/Card');
 const { CSVtoCards } = require('../../util/cubefn');
 
 // Bring in models

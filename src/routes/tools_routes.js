@@ -4,9 +4,9 @@ require('dotenv').config();
 const express = require('express');
 
 const carddb = require('../util/carddb');
-const cardutil = require('../../dist/utils/Card');
-const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../../dist/utils/Sort');
-const { makeFilter, filterCardsDetails } = require('../../dist/filtering/FilterCards');
+const cardutil = require('../client/utils/Card');
+const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../client/utils/Sort');
+const { makeFilter, filterCardsDetails } = require('../client/filtering/FilterCards');
 const generateMeta = require('../util/meta');
 const util = require('../util/util');
 const { csrfProtection } = require('./middleware');

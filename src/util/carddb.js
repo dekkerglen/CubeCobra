@@ -2,8 +2,8 @@
 const fs = require('fs');
 const json = require('big-json');
 
-const { SortFunctions } = require('../../dist/utils/Sort');
-const { filterCardsDetails } = require('../../dist/filtering/FilterCards');
+const { SortFunctions } = require('../client/utils/Sort');
+const { filterCardsDetails } = require('../client/filtering/FilterCards');
 
 let data = {
   cardtree: {},

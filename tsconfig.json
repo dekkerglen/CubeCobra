@@ -1,5 +1,5 @@
 {
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "server.js"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "outDir": "build",
@@ -22,14 +22,11 @@
       "res/*": ["src/client/res/*"],
       "utils/*": ["src/client/utils/*"]
     },
-
-    /* Bundler mode */
-    "moduleResolution": "Bundler",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-
-    /* Linting */
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,
