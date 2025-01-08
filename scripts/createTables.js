@@ -1,22 +1,22 @@
 // Load Environment Variables
 require('dotenv').config();
 
-const content = require('../dynamo/models/content');
-const notification = require('../dynamo/models/notification');
-const user = require('../dynamo/models/user');
-const notice = require('../dynamo/models/notice');
-const cubeMetadata = require('../dynamo/models/cube');
-const cubeHash = require('../dynamo/models/cubeHash');
-const cubeChangelog = require('../dynamo/models/changelog');
-const blog = require('../dynamo/models/blog');
-const cardhistory = require('../dynamo/models/cardhistory');
-const comment = require('../dynamo/models/comment');
-const draft = require('../dynamo/models/draft');
-const pack = require('../dynamo/models/package');
-const patron = require('../dynamo/models/patron');
-const passwordReset = require('../dynamo/models/passwordReset');
-const featuredQueue = require('../dynamo/models/featuredQueue');
-const feed = require('../dynamo/models/feed');
+const content = require('../src/dynamo/models/content');
+const notification = require('../src/dynamo/models/notification');
+const user = require('../src/dynamo/models/user');
+const notice = require('../src/dynamo/models/notice');
+const cubeMetadata = require('../src/dynamo/models/cube');
+const cubeHash = require('../src/dynamo/models/cubeHash');
+const cubeChangelog = require('../src/dynamo/models/changelog');
+const blog = require('../src/dynamo/models/blog');
+const cardhistory = require('../src/dynamo/models/cardhistory');
+const comment = require('../src/dynamo/models/comment');
+const draft = require('../src/dynamo/models/draft');
+const pack = require('../src/dynamo/models/package');
+const patron = require('../src/dynamo/models/patron');
+const passwordReset = require('../src/dynamo/models/passwordReset');
+const featuredQueue = require('../src/dynamo/models/featuredQueue');
+const feed = require('../src/dynamo/models/feed');
 
 const tables = [
   content,

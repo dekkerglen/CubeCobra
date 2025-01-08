@@ -9,10 +9,10 @@ const fetch = require('node-fetch');
 const AWS = require('aws-sdk');
 const json = require('big-json');
 const stream = require('stream');
-const cardutil = require('../../dist/utils/Card');
+const cardutil = require('../dist/utils/Card');
 
-const util = require('../serverjs/util');
-const carddb = require('../serverjs/carddb');
+const util = require('../src/util/util');
+const carddb = require('../src/util/carddb');
 
 const catalog = {};
 
