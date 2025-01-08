@@ -57,6 +57,8 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
     toggleShowCustomImages,
     showMaybeboard,
     toggleShowMaybeboard,
+    showInlineTagEmojis,
+    toggleShowInlineTagEmojis,
     openCollapse,
     setOpenCollapse,
   } = useContext(DisplayContext);
@@ -91,6 +93,9 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           <Link onClick={toggleShowMaybeboard}>{showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}</Link>
           <Link onClick={() => setShowUnsorted(!cube.showUnsorted)}>
             {cube.showUnsorted ? 'Hide Unsorted cards' : 'Show Unsorted cards'}
+          </Link>
+          <Link onClick={toggleShowInlineTagEmojis}>
+            {showInlineTagEmojis ? 'Hide inline emoji tags' : 'Show inline emoji tags'}
           </Link>
         </Flexbox>
       </NavMenu>
