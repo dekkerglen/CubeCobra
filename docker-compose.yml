@@ -1,0 +1,58 @@
+services:
+  node:
+    container_name: cube
+    image: node:20.18.0
+    volumes:
+      - ./:/home/node/app
+    user: "node"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis://redis:6379
+      - AWS_ENDPOINT=http://localstack:4566
+    env_file:
+      - .env
+    ports:
+      # Webpack / browser entry point
+      - 8080:8080
+      # Node
+      - 5000:5000
+    expose:
+      - "8080"
+      - "5000"
+    command: "npm run devstart"
+    init: true
+    networks:
+      - cubecobra
+    depends_on:
+      - redis
+      - localstack
+  redis:
+    image: redis:7.4.1
+    container_name: redis
+    networks:
+      - cubecobra
+    # not necessary for dockerized
+    ports:
+      - 6379:6379
+  localstack:
+    # Localstack community does not persist anything out of the box, that is available in localstack-pro.
+    # This variant (https://hub.docker.com/r/gresau/localstack-persist) causes the state to be persisted on actions and reloaded when the container starts
+    image: gresau/localstack-persist:3.8
+    container_name: localstack
+    volumes:
+      - localstack:/persisted-data
+      # Provide initialization script run once localstack is ready. Creates the s3 bucket
+      - ./docker/localstack-init.sh:/etc/localstack/init/ready.d/localstack-init.sh
+    networks:
+      - cubecobra
+    ports:
+      - 4566:4566
+
+volumes:
+  localstack:
+
+
+networks:
+  # Rename. by default network is prefixed by folder name
+  cubecobra:
