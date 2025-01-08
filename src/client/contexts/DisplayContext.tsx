@@ -8,7 +8,9 @@ export interface DisplayContextValue {
   showCustomImages: boolean;
   toggleShowCustomImages: () => void;
   showMaybeboard: boolean;
+  showInlineTagEmojis: boolean;
   toggleShowMaybeboard: () => void;
+  toggleShowInlineTagEmojis: () => void;
   openCollapse: string | null;
   setOpenCollapse: React.Dispatch<React.SetStateAction<string | null>>;
   cardsPerRow: NumCols;
@@ -18,8 +20,10 @@ export interface DisplayContextValue {
 const DisplayContext = React.createContext<DisplayContextValue>({
   showCustomImages: true,
   showMaybeboard: false,
+  showInlineTagEmojis: false,
   toggleShowCustomImages: () => {},
   toggleShowMaybeboard: () => {},
+  toggleShowInlineTagEmojis: () => {},
   openCollapse: null,
   setOpenCollapse: () => {},
   cardsPerRow: 8,
@@ -54,11 +58,26 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setShowMaybeboard((prev) => !prev);
   }, [cubeID, showMaybeboard]);
 
+  const [showInlineTagEmojis, setShowInlineTagEmojis] = useState<boolean>(() => {
+    return (
+      typeof localStorage !== 'undefined' &&
+      typeof cubeID === 'string' &&
+      localStorage.getItem(`inline-tag-emojis-${cubeID}`) === 'true'
+    );
+  });
+
+  const toggleShowInlineTagEmojis = useCallback(() => {
+    if (cubeID) localStorage.setItem(`inline-tag-emojis-${cubeID}`, (!showInlineTagEmojis).toString());
+    setShowInlineTagEmojis((prev) => !prev);
+  }, [cubeID, showInlineTagEmojis])
+
   const value: DisplayContextValue = {
     showCustomImages,
     toggleShowCustomImages,
     showMaybeboard,
     toggleShowMaybeboard,
+    showInlineTagEmojis,
+    toggleShowInlineTagEmojis,
     openCollapse,
     setOpenCollapse,
     cardsPerRow,
