@@ -1,4 +1,4 @@
-const Content = require('../dynamo/models/content');
+const Content = require('../src/dynamo/models/content');
 
 (async () => {
   let lastKey = null;

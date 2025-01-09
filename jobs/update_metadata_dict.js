@@ -1,8 +1,8 @@
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../util/carddb');
-const { encode } = require('../util/ml');
+const carddb = require('../src/util/carddb');
+const { encode } = require('../src/util/ml');
 
 const correlationLimit = 36;
 

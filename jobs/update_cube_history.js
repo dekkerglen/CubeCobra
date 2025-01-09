@@ -2,11 +2,11 @@
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../util/carddb');
+const carddb = require('../src/util/carddb');
 
-const ChangeLog = require('../dynamo/models/changelog');
-const CardHistory = require('../dynamo/models/cardhistory');
-const { getCubeTypes } = require('../util/cubefn');
+const ChangeLog = require('../src/dynamo/models/changelog');
+const CardHistory = require('../src/dynamo/models/cardhistory');
+const { getCubeTypes } = require('../src/util/cubefn');
 
 const saveCubesHistory = async (cubes, key) => {
   const uniqueOracles = [...new Set(Object.values(cubes).flat())];

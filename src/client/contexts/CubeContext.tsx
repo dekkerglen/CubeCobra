@@ -12,22 +12,23 @@ import React, {
 
 import { Object } from 'core-js';
 
+import { cardName, normalizeName } from 'utils/Card';
+import { deepCopy } from 'utils/Util';
+
 import { UncontrolledAlertProps } from '../components/base/Alert';
 import CardModal from '../components/card/CardModal';
 import GroupModal from '../components/GroupModal';
-import DisplayContext from './DisplayContext';
-import UserContext from './UserContext';
 import Card, { BoardType, boardTypes, Changes } from '../datatypes/Card';
 import CardDetails from '../datatypes/CardDetails';
 import Cube, { TagColor } from '../datatypes/Cube';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useMount from '../hooks/UseMount';
 import useQueryParam from '../hooks/useQueryParam';
-import { cardName, normalizeName } from 'utils/Card';
-import { deepCopy } from 'utils/Util';
-import FilterContext from './FilterContext';
-import { CSRFContext } from './CSRFContext';
 import ChangesContext from './ChangesContext';
+import { CSRFContext } from './CSRFContext';
+import DisplayContext from './DisplayContext';
+import FilterContext from './FilterContext';
+import UserContext from './UserContext';
 
 export interface CubeWithCards extends Cube {
   cards: {
@@ -243,18 +244,18 @@ export function CubeContextProvider({
   const allTags = useMemo(() => {
     const tags = new Set<string>();
 
-    for (const [board, list] of Object.entries(cards)) {
-      if (board !== 'id') {
-        for (const card of list) {
-          for (const tag of card.tags || []) {
-            tags.add(tag);
-          }
-        }
+    //Use cube.cards instead of cards to get the most up-to-date tags, as "cards" is only the initial state
+    const mainboard = cube?.cards?.mainboard || [];
+    const maybeboard = cube?.cards?.maybeboard || [];
+
+    for (const card of [...mainboard, ...maybeboard]) {
+      for (const tag of card.tags || []) {
+        tags.add(tag);
       }
     }
 
     return [...tags];
-  }, [cards]);
+  }, [cube.cards]);
 
   const [tagColors, setTagColors] = useState<TagColor[]>([
     ...(cube.tagColors || []),
@@ -290,7 +291,7 @@ export function CubeContextProvider({
         console.error('Request failed.');
       }
     },
-    [showTagColors],
+    [csrfFetch, setShowTagColors],
   );
 
   useEffect(() => {
@@ -335,7 +336,7 @@ export function CubeContextProvider({
       setVersionDict(json.dict);
     };
     getData();
-  }, [cube.cards, loadVersionDict]);
+  }, [csrfFetch, cube.cards, loadVersionDict]);
 
   const addCard = useCallback(
     (card: Card, board: BoardType) => {
@@ -728,7 +729,7 @@ export function CubeContextProvider({
       setModalSelection([]);
       setLoading(false);
     },
-    [clearChanges, changes, cube, useBlog, unfilteredChangedCards],
+    [csrfFetch, changes, cube, useBlog, unfilteredChangedCards, clearChanges, setVersion, version],
   );
 
   const bulkEditCard = useCallback(
@@ -864,7 +865,7 @@ export function CubeContextProvider({
 
       setLoading(false);
     },
-    [cube, setCube],
+    [csrfFetch, cube, setCube],
   );
 
   const saveSorts = useCallback(async () => {
@@ -890,7 +891,7 @@ export function CubeContextProvider({
       },
     });
     setLoading(false);
-  }, [sortPrimary, defaultSorts, sortSecondary, sortTertiary, sortQuaternary, cube]);
+  }, [sortPrimary, defaultSorts, sortSecondary, sortTertiary, sortQuaternary, cube, csrfFetch]);
 
   const resetSorts = useCallback(() => {
     setSortPrimary(cube.defaultSorts?.[0] || 'Color Category');

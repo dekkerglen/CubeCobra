@@ -1,22 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { ColorChecksAddon } from '../ColorCheck';
-import FoilCardImage from '../FoilCardImage';
-import TagInput from '../TagInput';
-import TextBadge from '../TextBadge';
-import Badge from '../base/Badge';
-import Button from '../base/Button';
-import Input from '../base/Input';
-import { Col, Flexbox, Row } from '../base/Layout';
-import { Modal, ModalBody, ModalHeader } from '../base/Modal';
-import Select from '../base/Select';
-import Spinner from '../base/Spinner';
-import Text from '../base/Text';
-import TextArea from '../base/TextArea';
-import Tooltip from '../base/Tooltip';
-import Card, { BoardType } from '../../datatypes/Card';
-import { TagColor } from '../../datatypes/Cube';
-import TagData from '../../datatypes/TagData';
+import { ArrowSwitchIcon } from '@primer/octicons-react';
+
+import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
 import { getTCGLink } from 'utils/Affiliate';
 import {
   cardCmc,
@@ -37,8 +23,29 @@ import {
   normalizeName,
 } from 'utils/Card';
 import { getLabels } from 'utils/Sort';
-import Tag from '../base/Tag';
 import { getTagColorClass } from 'utils/Util';
+
+import Card, { BoardType } from '../../datatypes/Card';
+import { TagColor } from '../../datatypes/Cube';
+import TagData from '../../datatypes/TagData';
+import Badge from '../base/Badge';
+import Button from '../base/Button';
+import Input from '../base/Input';
+import { Col, Flexbox, Row } from '../base/Layout';
+import { Modal, ModalBody, ModalHeader } from '../base/Modal';
+import Select from '../base/Select';
+import Spinner from '../base/Spinner';
+import Tag from '../base/Tag';
+import Text from '../base/Text';
+import TextArea from '../base/TextArea';
+import Tooltip from '../base/Tooltip';
+import { ColorChecksAddon } from '../ColorCheck';
+import FoilOverlay, { FoilOverlayProps } from '../FoilOverlay';
+import TagInput from '../TagInput';
+import TextBadge from '../TextBadge';
+
+type FoilCardImageProps = FoilOverlayProps & ImageFallbackProps;
+const FoilCardImage: React.FC<FoilCardImageProps> = FoilOverlay(ImageFallback);
 
 export interface CardModalProps {
   isOpen: boolean;
@@ -93,6 +100,15 @@ const CardModal: React.FC<CardModalProps> = ({
 
   const disabled = !canEdit || card.markedForDelete;
 
+  const [prevCardID, setPrevCardID] = useState(card.cardID);
+  const [imageUsed, setImageUsed] = useState(card?.details?.image_normal);
+  //When the card id changes then update the image used. If we just checked card, it would be different
+  //if any field in the modal is edited, which would lead the image to reset to the front face.
+  if (prevCardID !== card.cardID) {
+    setPrevCardID(card.cardID);
+    setImageUsed(card?.details?.image_normal);
+  }
+
   return (
     <Modal xl isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>
@@ -104,7 +120,30 @@ const CardModal: React.FC<CardModalProps> = ({
           <Row>
             <Col xs={12} sm={4}>
               <Flexbox direction="col" gap="2">
-                <FoilCardImage card={card} finish={card.finish} />
+                <FoilCardImage
+                  card={card}
+                  className="w-full"
+                  src={imageUsed}
+                  fallbackSrc="/content/default_card.png"
+                  alt={cardName(card)}
+                />
+                {card?.details?.image_flip && (
+                  <Button
+                    className="mt-1"
+                    color="accent"
+                    outline
+                    block
+                    onClick={() => {
+                      if (imageUsed === card?.details?.image_normal) {
+                        setImageUsed(card?.details?.image_flip);
+                      } else {
+                        setImageUsed(card?.details?.image_normal);
+                      }
+                    }}
+                  >
+                    <ArrowSwitchIcon size={16} /> Transform
+                  </Button>
+                )}
                 <Flexbox direction="row" gap="2" wrap="wrap">
                   {card.details?.prices && Number.isFinite(cardPrice(card)) && (
                     <TextBadge name="Price" className="mt-2 me-2">
@@ -341,7 +380,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     readOnly={!canEdit}
                     addTag={(tag: TagData) => {
                       //Prevent duplicate tags from being added
-                      let existingTags = cardTags(card);
+                      const existingTags = cardTags(card);
                       if (!existingTags.includes(tag.text)) {
                         updateField('tags', [...cardTags(card), tag.text]);
                       }
