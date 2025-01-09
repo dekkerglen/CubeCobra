@@ -2,13 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const { body } = require('express-validator');
 
-const { makeFilter } = require('../../../dist/filtering/FilterCards');
-const cardutil = require('../../../dist/utils/Card');
+const { makeFilter } = require('../../client/filtering/FilterCards');
+const cardutil = require('../../client/utils/Card');
 const carddb = require('../../util/carddb');
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../util/util');
 const { deckbuild, calculateBasics } = require('../../util/draftbots');
-const { xorStrings } = require('../../../dist/utils/Util');
+const { xorStrings } = require('../../client/utils/Util');
 
 const { recommend } = require('../../util/ml');
 const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../util/cubefn');

@@ -1,8 +1,9 @@
-const { updateCardbase } = require('./serverjs/updatecards');
-const { downloadFromS3 } = require('../jobs/download_model');
+require('module-alias/register');
+const { updateCardbase } = require('./build/util/updatecards');
+const { downloadFromS3 } = require('./build/util/downloadModel');
 const forever = require('forever-monitor');
 
-const child = new forever.Monitor('app.js', {
+const child = new forever.Monitor('build/app.js', {
   silent: false,
   args: [],
   command: 'node --max-old-space-size=6000',

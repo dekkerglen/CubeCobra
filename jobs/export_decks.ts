@@ -1,12 +1,12 @@
 require('dotenv').config();
 
-const fs = require('fs');
-const carddb = require('../serverjs/carddb');
+import fs from 'fs';
+import carddb from '../src/util/carddb';
 
-const { getDrafterState } = require('../../dist/drafting/draftutil');
-const Draft = require('../dynamo/models/draft');
+import { getDrafterState } from '../src/client/drafting/draftutil';
+import Draft from '../src/dynamo/models/draft';
 
-const draftCardIndexToOracle = (cardIndex, draftCards) => {
+const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {
   const card = draftCards[cardIndex];
   if (!card) {
     return -1;
@@ -15,26 +15,37 @@ const draftCardIndexToOracle = (cardIndex, draftCards) => {
   return card.details.oracle_id;
 };
 
-const draftCardIndexToOracleIndex = (cardIndex, draftCards, oracleToIndex) => {
+const draftCardIndexToOracleIndex = (cardIndex: any, draftCards: any, oracleToIndex: { [x: string]: any }) => {
   return oracleToIndex[draftCardIndexToOracle(cardIndex, draftCards)] || -1;
 };
 
-const processDeck = (draft, oracleToIndex) => {
-  const seats = [];
+const processDeck = (draft: { seats: any[]; id: any; cube: any; cards: any; basics: any }, oracleToIndex: any) => {
+  const seats: {
+    id: any;
+    cube: any;
+    owner: any;
+    mainboard: number[];
+    sideboard: number[];
+    basics: number[];
+  }[] = [];
 
   if (!draft.seats) {
     return [];
   }
 
-  draft.seats.forEach((seat) => {
+  draft.seats.forEach((seat: { owner: { id: any }; mainboard: any[]; sideboard: any[] }) => {
     if (seat.owner) {
       seats.push({
         id: draft.id,
         cube: draft.cube,
         owner: seat.owner.id,
-        mainboard: seat.mainboard.flat(2).map((pick) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex)),
-        sideboard: seat.sideboard.flat(2).map((pick) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex)),
-        basics: (draft.basics || []).map((pick) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex)),
+        mainboard: seat.mainboard
+          .flat(2)
+          .map((pick: any) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex)),
+        sideboard: seat.sideboard
+          .flat(2)
+          .map((pick: any) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex)),
+        basics: (draft.basics || []).map((pick: any) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex)),
       });
     }
   });
@@ -42,14 +53,29 @@ const processDeck = (draft, oracleToIndex) => {
   return seats;
 };
 
-const processPicks = (draft, oracleToIndex) => {
-  const picks = [];
+const processPicks = (
+  draft: {
+    seats: any[];
+    InitialState: { [s: string]: unknown } | ArrayLike<unknown>;
+    type: any;
+    cards: any;
+    cube: any;
+  },
+  oracleToIndex: any,
+) => {
+  const picks: {
+    cube: any;
+    owner: any;
+    pack: any[];
+    picked: any;
+    pool: any[];
+  }[] = [];
 
   if (!draft.seats) {
     return [];
   }
 
-  draft.seats.forEach((seat) => {
+  draft.seats.forEach((seat: { pickorder: any; owner: { id: any } }) => {
     if (
       draft.InitialState &&
       Object.entries(draft.InitialState).length > 0 &&
@@ -61,10 +87,12 @@ const processPicks = (draft, oracleToIndex) => {
         const drafterState = getDrafterState(draft, 0, j);
 
         const picked = draftCardIndexToOracleIndex(drafterState.selection, draft.cards, oracleToIndex);
-        const pack = drafterState.cardsInPack.map((pick) =>
+        const pack = drafterState.cardsInPack.map((pick: any) =>
           draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex),
         );
-        const pool = drafterState.picked.map((pick) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex));
+        const pool = drafterState.picked.map((pick: any) =>
+          draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex),
+        );
 
         picks.push({
           cube: draft.cube,
@@ -89,8 +117,8 @@ const processPicks = (draft, oracleToIndex) => {
   );
 
   // load all draftlogs into memory
-  let lastKey = null;
-  let draftLogs = [];
+  let lastKey: any = null;
+  let draftLogs: any[] = [];
   do {
     const result = await Draft.scan(1000000, lastKey);
     draftLogs = draftLogs.concat(result.items);
@@ -101,7 +129,7 @@ const processPicks = (draft, oracleToIndex) => {
 
   console.log('Loaded all draftlogs');
 
-  const batches = [];
+  const batches: any[] = [];
 
   for (let i = 0; i < draftLogs.length; i += 1000) {
     batches.push(draftLogs.slice(i, i + 1000));
@@ -117,10 +145,12 @@ const processPicks = (draft, oracleToIndex) => {
   for (let i = 0; i < batches.length; i += 1) {
     const batch = batches[i];
 
-    const drafts = await Draft.batchGet(batch.filter((item) => item.complete).map((row) => row.id));
+    const drafts = await Draft.batchGet(
+      batch.filter((item: { complete: any }) => item.complete).map((row: { id: any }) => row.id),
+    );
 
-    const processedDrafts = drafts.map((draft) => processDeck(draft, oracleToIndex));
-    const processedPicks = drafts.map((draft) => processPicks(draft, oracleToIndex));
+    const processedDrafts = drafts.map((draft: any) => processDeck(draft, oracleToIndex));
+    const processedPicks = drafts.map((draft: any) => processPicks(draft, oracleToIndex));
 
     fs.writeFileSync(`./temp/export/decks/${i}.json`, JSON.stringify(processedDrafts.flat()));
     fs.writeFileSync(`./temp/export/picks/${i}.json`, JSON.stringify(processedPicks.flat()));
