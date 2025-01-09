@@ -5,7 +5,7 @@ const uuid = require('uuid');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
 const carddb = require('../../util/carddb');
-const cardutil = require('../../../dist/utils/Card');
+const cardutil = require('../../client/utils/Card');
 
 const CARD_LIMIT = 10000;
 

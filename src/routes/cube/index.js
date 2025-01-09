@@ -3,8 +3,8 @@ const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 
-const createdraft = require('../../../dist/drafting/createdraft');
-const miscutil = require('../../../dist/utils/Util');
+const createdraft = require('../../client/drafting/createdraft');
+const miscutil = require('../../client/utils/Util');
 const carddb = require('../../util/carddb');
 const { render, redirect } = require('../../util/render');
 const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');

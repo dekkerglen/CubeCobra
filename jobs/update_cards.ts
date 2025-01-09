@@ -1,20 +1,31 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-const JSONStream = require('JSONStream');
-const es = require('event-stream');
-const fetch = require('node-fetch');
-const AWS = require('aws-sdk');
-const json = require('big-json');
-const stream = require('stream');
-const cardutil = require('../dist/utils/Card');
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+import JSONStream from 'JSONStream';
+import es from 'event-stream';
+import fetch from 'node-fetch';
+import AWS from 'aws-sdk';
+import json from 'big-json';
+import stream from 'stream';
+import * as cardutil from '../src/client/utils/Card';
+import * as util from '../src/util/util';
+import * as carddb from '../src/util/carddb';
 
-const util = require('../src/util/util');
-const carddb = require('../src/util/carddb');
-
-const catalog = {};
+const catalog = {
+  dict: {},
+  names: [],
+  nameToId: {},
+  full_names: [],
+  imagedict: {},
+  cardimages: {},
+  oracleToId: {},
+  english: {},
+  metadatadict: {},
+  indexToOracleId: [],
+};
 
 /* // '?' denotes a value may be null or missing
  * cardDetailsSchema = {
@@ -163,6 +174,7 @@ function addCardToCatalog(card, isExtra) {
   if (isExtra !== true) {
     const cardImages = {
       image_normal: card.image_normal,
+      image_flip: undefined,
     };
     if (card.image_flip) {
       cardImages.image_flip = card.image_flip;
@@ -187,7 +199,7 @@ function addCardToCatalog(card, isExtra) {
 }
 
 async function writeFile(filepath, data) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     try {
       // data is too big to stringify, so we write it to a file using big-json
       const stringifyStream = json.createStringifyStream({
@@ -297,7 +309,7 @@ function arraySetEqual(target, candidate) {
 }
 
 function getTokens(card, catalogCard) {
-  const mentionedTokens = [];
+  const mentionedTokens: any[] = [];
   const recordedTokens = getScryfallTokensForCard(card);
   const specialTokens = getTokensForSpecialCaseCard(card);
   if (specialTokens.length > 0) {
@@ -329,7 +341,7 @@ function getTokens(card, catalogCard) {
             tokenName = result[2] ? result[2] : tokenSubTypesString;
           } // if not specificaly named, use the type
 
-          const tokenAbilities = [];
+          const tokenAbilities: any[] = [];
           if (result[10]) {
             const tmpTokenKeywords = result[10]
               .toLowerCase()
@@ -372,7 +384,7 @@ function getTokens(card, catalogCard) {
             continue;
           }
 
-          const tokenColor = [];
+          const tokenColor: string[] = [];
           if (tokenColorString) {
             const colorStrings = tokenColorString.trim().split(' ');
             for (const rawColor of colorStrings) {
@@ -420,7 +432,7 @@ function getTokens(card, catalogCard) {
 
             const candidateTypes = candidate.type.toLowerCase().replace(' —', '').replace('token ', '').split(' ');
 
-            const creatureTypes = [];
+            const creatureTypes: string[] = [];
             tokenSuperTypesString
               .toLowerCase()
               .split(' ')
@@ -527,7 +539,7 @@ function convertParsedCost(card, isExtra = false) {
     return [];
   }
 
-  let parsedCost = [];
+  let parsedCost: string[] = [];
   if (typeof card.card_faces === 'undefined' || card.layout === 'flip') {
     parsedCost = card.mana_cost
       .substr(1, card.mana_cost.length - 2)
@@ -553,7 +565,7 @@ function convertParsedCost(card, isExtra = false) {
 
   if (parsedCost) {
     parsedCost.forEach((item, index) => {
-      parsedCost[index] = item.split('/').join('-');
+      parsedCost[index] = item.replace('/', '-');
     });
   }
   return parsedCost;
@@ -656,7 +668,7 @@ function getFaceAttributeSource(card, isExtra) {
 
 function convertCard(card, metadata, isExtra) {
   const faceAttributeSource = getFaceAttributeSource(card, isExtra);
-  const newcard = {};
+  const newcard: any = {};
   if (isExtra) {
     card = { ...card };
     card.card_faces = [faceAttributeSource];
@@ -797,7 +809,7 @@ function addLanguageMapping(card) {
     }
   }
 
-  const name = cardutil.normalizeName(convertName(card));
+  const name = cardutil.normalizeName(convertName(card, false));
   for (const otherId of catalog.nameToId[name]) {
     const otherCard = catalog.dict[otherId];
     if (card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
@@ -822,7 +834,7 @@ async function writeCatalog(basePath = 'private') {
   await writeFile(path.join(basePath, 'imagedict.json'), catalog.imagedict);
   await writeFile(path.join(basePath, 'cardimages.json'), catalog.cardimages);
   await writeFile(path.join(basePath, 'metadatadict.json'), catalog.metadatadict);
-  await writeFile(path.join(basePath, 'indexToOracle.json'), catalog.indexToOracle);
+  await writeFile(path.join(basePath, 'indexToOracle.json'), catalog.indexToOracleId);
 
   console.info('All JSON files saved.');
 }
@@ -831,7 +843,7 @@ function saveEnglishCard(card, metadata) {
   if (card.layout === 'transform') {
     addCardToCatalog(convertCard(card, metadata, true), true);
   }
-  addCardToCatalog(convertCard(card, metadata));
+  addCardToCatalog(convertCard(card, metadata, false), false);
 }
 
 async function saveAllCards(metadatadict, indexToOracle) {
@@ -839,7 +851,9 @@ async function saveAllCards(metadatadict, indexToOracle) {
   await new Promise((resolve) =>
     fs
       .createReadStream('./private/cards.json')
+      // @ts-ignore
       .pipe(JSONStream.parse('*'))
+      // @ts-ignore
       .pipe(es.mapSync((item) => saveEnglishCard(item, metadatadict[item.oracle_id])))
       .on('close', resolve),
   );
@@ -848,12 +862,14 @@ async function saveAllCards(metadatadict, indexToOracle) {
   await new Promise((resolve) =>
     fs
       .createReadStream('./private/all-cards.json')
+      // @ts-ignore
       .pipe(JSONStream.parse('*'))
+      // @ts-ignore
       .pipe(es.mapSync(addLanguageMapping))
       .on('close', resolve),
   );
 
-  catalog.indexToOracle = indexToOracle;
+  catalog.indexToOracleId = indexToOracle;
   catalog.metadatadict = metadatadict;
 
   console.info('Saving cardbase files...');
@@ -896,12 +912,12 @@ const uploadStream = (key) => {
   const pass = new stream.PassThrough();
   return {
     writeStream: pass,
-    promise: s3.upload({ Bucket: process.env.DATA_BUCKET, Key: key, Body: pass }).promise(),
+    promise: s3.upload({ Bucket: process.env.DATA_BUCKET || '', Key: key, Body: pass }).promise(),
   };
 };
 
 const uploadLargeObjectToS3 = async (file, key) => {
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     try {
       const { writeStream, promise } = uploadStream(key);
       const readStream = fs.createReadStream(file);
@@ -933,7 +949,7 @@ const uploadCardDb = async () => {
   console.log('Uploading manifest...');
   await s3
     .upload({
-      Bucket: process.env.DATA_BUCKET,
+      Bucket: process.env.DATA_BUCKET || '',
       Key: `cards/manifest.json`,
       Body: JSON.stringify({ date_exported: new Date() }),
     })
@@ -945,8 +961,8 @@ const uploadCardDb = async () => {
 
 const loadMetadatadict = async () => {
   if (fs.existsSync('./temp') && fs.existsSync('./temp/metadatadict.json')) {
-    const metadatadict = JSON.parse(fs.readFileSync('./temp/metadatadict.json'));
-    const indexToOracle = JSON.parse(fs.readFileSync('./temp/indexToOracle.json'));
+    const metadatadict = JSON.parse(fs.readFileSync('./temp/metadatadict.json', 'utf8'));
+    const indexToOracle = JSON.parse(fs.readFileSync('./temp/indexToOracle.json', 'utf8'));
 
     return {
       metadatadict,

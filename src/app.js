@@ -1,4 +1,4 @@
-// Load Environment Variables
+require('module-alias/register');
 require('dotenv').config();
 
 const express = require('express');
@@ -65,12 +65,12 @@ app.use(
 );
 
 // Load view engine
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'pug');
 
 // Set Public Folder
 app.use(express.static(path.join(__dirname, '../public')));
-app.use('/js', express.static(path.join(__dirname, 'dist')));
+app.use('/js', express.static(path.join(__dirname, '../dist')));
 app.use('/jquery-ui', express.static(`${__dirname}/node_modules/jquery-ui-dist/`));
 
 // Express session middleware

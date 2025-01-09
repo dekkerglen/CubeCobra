@@ -1,7 +1,7 @@
 const _ = require('lodash');
-const Cube = require('../dynamo/models/cube');
-const CubeHash = require('../dynamo/models/cubeHash');
-const carddb = require('../serverjs/carddb');
+const Cube = require('../src/dynamo/models/cube');
+const CubeHash = require('../src/dynamo/models/cubeHash');
+const carddb = require('../src/util/carddb');
 
 (async () => {
   try {

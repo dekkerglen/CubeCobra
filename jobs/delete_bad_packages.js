@@ -1,5 +1,5 @@
-const Package = require('../dynamo/models/package');
-const carddb = require('../serverjs/carddb');
+const Package = require('../src/dynamo/models/package');
+const carddb = require('../src/util/carddb');
 
 (async () => {
   await carddb.initializeCardDb();

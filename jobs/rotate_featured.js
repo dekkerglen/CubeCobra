@@ -1,7 +1,7 @@
-const fq = require('../serverjs/featuredQueue');
-const FeaturedQueue = require('../dynamo/models/featuredQueue');
-const util = require('../serverjs/util');
-const User = require('../dynamo/models/user');
+const fq = require('../src/util/featuredQueue');
+const FeaturedQueue = require('../src/dynamo/models/featuredQueue');
+const util = require('../src/util/util');
+const User = require('../src/dynamo/models/user');
 
 (async () => {
   try {

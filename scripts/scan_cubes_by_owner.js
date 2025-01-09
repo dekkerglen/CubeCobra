@@ -1,7 +1,7 @@
 // Load Environment Variables
 require('dotenv').config();
 
-const Cube = require('../dynamo/models/cube');
+const Cube = require('../src/dynamo/models/cube');
 const fs = require('fs');
 
 (async () => {
