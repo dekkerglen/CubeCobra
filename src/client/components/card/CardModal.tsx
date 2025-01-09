@@ -99,7 +99,15 @@ const CardModal: React.FC<CardModalProps> = ({
   );
 
   const disabled = !canEdit || card.markedForDelete;
+
+  const [prevCardID, setPrevCardID] = useState(card.cardID);
   const [imageUsed, setImageUsed] = useState(card?.details?.image_normal);
+  //When the card id changes then update the image used. If we just checked card, it would be different
+  //if any field in the modal is edited, which would lead the image to reset to the front face.
+  if (prevCardID !== card.cardID) {
+    setPrevCardID(card.cardID);
+    setImageUsed(card?.details?.image_normal);
+  }
 
   return (
     <Modal xl isOpen={isOpen} setOpen={setOpen}>
