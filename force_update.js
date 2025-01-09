@@ -1,4 +1,4 @@
-const { updateCardbase } = require('./serverjs/updatecards');
+const { updateCardbase } = require('./src/util/updatecards');
 const { downloadFromS3 } = require('./jobs/download_model');
 
 (async () => {
