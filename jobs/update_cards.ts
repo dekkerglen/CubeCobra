@@ -1,21 +1,31 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-const JSONStream = require('JSONStream');
-const es = require('event-stream');
-const fetch = require('node-fetch');
-const AWS = require('aws-sdk');
-const json = require('big-json');
-const stream = require('stream');
-const cardutil = require('../dist/utils/Card');
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+import JSONStream from 'JSONStream';
+import es from 'event-stream';
+import fetch from 'node-fetch';
+import AWS from 'aws-sdk';
+import json from 'big-json';
+import stream from 'stream';
+import * as cardutil from '../src/client/utils/Card';
+import * as util from '../src/util/util';
+import * as carddb from '../src/util/carddb';
 
-const util = require('../src/util/util');
-const carddb = require('../src/util/carddb');
-
-const catalog = {};
+const catalog = {
+  dict: {},
+  names: [],
+  nameToId: {},
+  full_names: [],
+  imagedict: {},
+  cardimages: {},
+  oracleToId: {},
+  english: {},
+  metadatadict: {},
+  indexToOracleId: [],
+};
 
 /* // '?' denotes a value may be null or missing
  * cardDetailsSchema = {
@@ -555,7 +565,7 @@ function convertParsedCost(card, isExtra = false) {
 
   if (parsedCost) {
     parsedCost.forEach((item, index) => {
-      parsedCost[index] = item.split('/').join('-');
+      parsedCost[index] = item.replace('/', '-');
     });
   }
   return parsedCost;
