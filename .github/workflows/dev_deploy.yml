@@ -4,9 +4,9 @@ name: Deploy master to dev server
 
 on:
   workflow_run:
-    workflows: ["CI Tests"]
+    workflows: ['CI Tests']
     branches: [master]
-    types: 
+    types:
       - completed
 
   # Allows you to run this workflow manually from the Actions tab
@@ -19,17 +19,17 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.repository == 'dekkerglen/CubeCobra' }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
+
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      
+
       - name: Cache node modules
         uses: actions/cache@v1
         with:
@@ -63,7 +63,7 @@ jobs:
         id: format-time
         with:
           pattern: '[:\.]+'
-          string: "${{ steps.current-time.outputs.time }}"
+          string: '${{ steps.current-time.outputs.time }}'
           replace-with: '-'
           flags: 'g'
 
@@ -75,7 +75,7 @@ jobs:
           application_name: cubecobra-beta
           environment_name: cubecobra-beta
           region: us-east-2
-          version_label: "cubecobra-${{ steps.format-time.outputs.replaced }}"
+          version_label: 'cubecobra-${{ steps.format-time.outputs.replaced }}'
           deployment_package: deploy.zip
 
       - name: Deployed!
