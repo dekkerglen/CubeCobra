@@ -124,7 +124,7 @@ interface RenderSymbolProps {
 }
 const renderSymbol: React.FC<RenderSymbolProps> = ({ value }) => {
   if (!value) return null;
-  const symbol = value.replace('/', '-').toLowerCase();
+  const symbol = value.split('/').join('-').toLowerCase();
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="w-6 h-6 inline" />;
 };
 
