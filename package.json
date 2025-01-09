@@ -45,7 +45,7 @@
     "setup:local:db": "node --max-old-space-size=8192 scripts/createTables.js",
     "start:dev": "npm start:localstack && npm devstart",
     "publish": "npm run build && node ./scripts/publish.js"
-  },  
+  },
   "_moduleAliases": {
     "analytics": "build/client/analytics",
     "components": "build/client/components",
@@ -208,6 +208,7 @@
     "style-loader": "^4.0.0",
     "tailwindcss": "^3.4.13",
     "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.0.0",
     "webpack-cli": "^5.1.4",
