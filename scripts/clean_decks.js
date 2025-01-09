@@ -1,4 +1,4 @@
-const Draft = require('../dynamo/models/draft');
+const Draft = require('../src/dynamo/models/draft');
 
 (async () => {
   let lastKey = null;

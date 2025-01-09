@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 const Cube = require('../models/old/cube');
 
-const cubeModel = require('../dynamo/models/cube');
+const cubeModel = require('../src/dynamo/models/cube');
 
 const skip = 0;
 const batchSize = 100;
@@ -59,8 +59,7 @@ const query = {};
     const documentProcessed = i - skip;
     const timeRemaining = (timeElapsed / documentProcessed) * documentsRemaining;
     console.log(
-      `Cube: Finished: ${Math.min(i + batchSize, count)} of ${count} items. Time elapsed: ${
-        Math.round(timeElapsed / 36) / 100
+      `Cube: Finished: ${Math.min(i + batchSize, count)} of ${count} items. Time elapsed: ${Math.round(timeElapsed / 36) / 100
       } hours. Time remaining: ${Math.round(timeRemaining / 36) / 100} hours`,
     );
   }
