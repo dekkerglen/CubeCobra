@@ -3,7 +3,7 @@ import syntax from 'markdown/symbols/micromark-symbols';
 import { add } from 'markdown/utils';
 
 // characters allowed inside a symbol definition by default
-const DEFAULT_ALLOWED = 'wubrgcmtsqepxyz/-0123456789';
+const DEFAULT_ALLOWED = 'wubrgcmtsqepxyzhako/-0123456789';
 
 function symbols(options) {
   const data = this.data();

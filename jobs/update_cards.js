@@ -553,7 +553,7 @@ function convertParsedCost(card, isExtra = false) {
 
   if (parsedCost) {
     parsedCost.forEach((item, index) => {
-      parsedCost[index] = item.replace('/', '-');
+      parsedCost[index] = item.split('/').join('-');
     });
   }
   return parsedCost;
