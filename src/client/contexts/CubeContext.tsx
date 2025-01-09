@@ -243,18 +243,18 @@ export function CubeContextProvider({
   const allTags = useMemo(() => {
     const tags = new Set<string>();
 
-    for (const [board, list] of Object.entries(cards)) {
-      if (board !== 'id') {
-        for (const card of list) {
-          for (const tag of card.tags || []) {
-            tags.add(tag);
-          }
-        }
+    //Use cube.cards instead of cards to get the most up-to-date tags, as "cards" is only the initial state
+    const mainboard = cube?.cards?.mainboard || [];
+    const maybeboard = cube?.cards?.maybeboard || [];
+
+    for (const card of [...mainboard, ...maybeboard]) {
+      for (const tag of card.tags || []) {
+        tags.add(tag);
       }
     }
 
     return [...tags];
-  }, [cards]);
+  }, [cube.cards]);
 
   const [tagColors, setTagColors] = useState<TagColor[]>([
     ...(cube.tagColors || []),
