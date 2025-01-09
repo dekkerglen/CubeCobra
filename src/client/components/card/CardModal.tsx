@@ -1,21 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { ColorChecksAddon } from '../ColorCheck';
-import TagInput from '../TagInput';
-import TextBadge from '../TextBadge';
-import Badge from '../base/Badge';
-import Button from '../base/Button';
-import Input from '../base/Input';
-import { Col, Flexbox, Row } from '../base/Layout';
-import { Modal, ModalBody, ModalHeader } from '../base/Modal';
-import Select from '../base/Select';
-import Spinner from '../base/Spinner';
-import Text from '../base/Text';
-import TextArea from '../base/TextArea';
-import Tooltip from '../base/Tooltip';
-import Card, { BoardType } from '../../datatypes/Card';
-import { TagColor } from '../../datatypes/Cube';
-import TagData from '../../datatypes/TagData';
+import { ArrowSwitchIcon } from '@primer/octicons-react';
+
+import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
 import { getTCGLink } from 'utils/Affiliate';
 import {
   cardCmc,
@@ -36,11 +23,26 @@ import {
   normalizeName,
 } from 'utils/Card';
 import { getLabels } from 'utils/Sort';
-import Tag from '../base/Tag';
 import { getTagColorClass } from 'utils/Util';
-import { ArrowSwitchIcon } from '@primer/octicons-react';
-import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
+
+import Card, { BoardType } from '../../datatypes/Card';
+import { TagColor } from '../../datatypes/Cube';
+import TagData from '../../datatypes/TagData';
+import Badge from '../base/Badge';
+import Button from '../base/Button';
+import Input from '../base/Input';
+import { Col, Flexbox, Row } from '../base/Layout';
+import { Modal, ModalBody, ModalHeader } from '../base/Modal';
+import Select from '../base/Select';
+import Spinner from '../base/Spinner';
+import Tag from '../base/Tag';
+import Text from '../base/Text';
+import TextArea from '../base/TextArea';
+import Tooltip from '../base/Tooltip';
+import { ColorChecksAddon } from '../ColorCheck';
 import FoilOverlay, { FoilOverlayProps } from '../FoilOverlay';
+import TagInput from '../TagInput';
+import TextBadge from '../TextBadge';
 
 type FoilCardImageProps = FoilOverlayProps & ImageFallbackProps;
 const FoilCardImage: React.FC<FoilCardImageProps> = FoilOverlay(ImageFallback);
@@ -370,7 +372,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     readOnly={!canEdit}
                     addTag={(tag: TagData) => {
                       //Prevent duplicate tags from being added
-                      let existingTags = cardTags(card);
+                      const existingTags = cardTags(card);
                       if (!existingTags.includes(tag.text)) {
                         updateField('tags', [...cardTags(card), tag.text]);
                       }
