@@ -1,11 +1,11 @@
 // Load Environment Variables
 require('dotenv').config();
 
-const Cube = require('../dynamo/models/cube');
-const User = require('../dynamo/models/user');
-const Blog = require('../dynamo/models/blog');
-const Draft = require('../dynamo/models/draft');
-const Comment = require('../dynamo/models/comment');
+const Cube = require('../src/dynamo/models/cube');
+const User = require('../src/dynamo/models/user');
+const Blog = require('../src/dynamo/models/blog');
+const Draft = require('../src/dynamo/models/draft');
+const Comment = require('../src/dynamo/models/comment');
 
 const usersToBan = [
 ];

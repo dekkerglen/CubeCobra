@@ -1,9 +1,9 @@
 const cubeId = '63ddcf7a75838178427ea858';
 
-const carddb = require('../util/carddb');
+const carddb = require('../src/util/carddb');
 
-const ChangeLog = require('../dynamo/models/changelog');
-const Cube = require('../dynamo/models/cube');
+const ChangeLog = require('../src/dynamo/models/changelog');
+const Cube = require('../src/dynamo/models/cube');
 
 const numNull = (arr) => {
   const serialized = JSON.stringify(arr);

@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../util/carddb');
+const carddb = require('../src/util/carddb');
 
 (async () => {
   await carddb.initializeCardDb();

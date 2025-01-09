@@ -1,8 +1,8 @@
 // Load Environment Variables
 require('dotenv').config();
 const fs = require('fs');
-const Draft = require('../dynamo/models/draft');
-const { getObject, putObject } = require('../dynamo/s3client');
+const Draft = require('../src/dynamo/models/draft');
+const { getObject, putObject } = require('../src/dynamo/s3client');
 
 const unstringify = async (draftLog) => {
   const cards = getObject(process.env.DATA_BUCKET, `cardlist/${draftLog.id}.json`);

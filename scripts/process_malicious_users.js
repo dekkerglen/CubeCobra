@@ -7,7 +7,7 @@ const { parser } = require('stream-json');
 const { streamObject } = require('stream-json/streamers/StreamObject');
 const { Writable } = require('stream');
 
-const Draft = require('../dynamo/models/draft');
+const Draft = require('../src/dynamo/models/draft');
 
 (async () => {
   const potentiallyMaliciousOwners = [];
@@ -24,9 +24,9 @@ const Draft = require('../dynamo/models/draft');
 
         // If the user has at least one cube and all of their cubes are empty, they are potentially malicious
         if (cubes.length >= 1 && cubes.every(cube => cube.cardCount === 0)) {
-        
+
           // If the user has more than 5 cubes, they are potentially malicious
-          if(cubes.length > 5) {
+          if (cubes.length > 5) {
             potentiallyMaliciousOwners.push([
               key,
               ...cubes.map(cube => cube.name),
