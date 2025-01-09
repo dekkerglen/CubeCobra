@@ -1,4 +1,5 @@
 import React from 'react';
+
 import classNames from 'classnames';
 
 interface FlexboxProps {
@@ -268,4 +269,4 @@ const Col: React.FC<ColProps> = ({ xs, sm, md, lg, xl, xxl, children, className 
   return <div className={classes}>{children}</div>;
 };
 
-export { Flexbox, Row, Col };
+export { Col, Flexbox, Row };

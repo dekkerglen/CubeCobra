@@ -45,7 +45,7 @@
     "setup:local:db": "node --max-old-space-size=8192 scripts/createTables.js",
     "start:dev": "npm start:localstack && npm devstart",
     "publish": "npm run build && node ./scripts/publish.js"
-  },  
+  },
   "_moduleAliases": {
     "analytics": "build/client/analytics",
     "components": "build/client/components",
