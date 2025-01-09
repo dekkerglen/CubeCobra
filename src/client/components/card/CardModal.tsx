@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { ColorChecksAddon } from '../ColorCheck';
-import FoilCardImage from '../FoilCardImage';
 import TagInput from '../TagInput';
 import TextBadge from '../TextBadge';
 import Badge from '../base/Badge';
@@ -39,6 +38,12 @@ import {
 import { getLabels } from 'utils/Sort';
 import Tag from '../base/Tag';
 import { getTagColorClass } from 'utils/Util';
+import { ArrowSwitchIcon } from '@primer/octicons-react';
+import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
+import FoilOverlay, { FoilOverlayProps } from '../FoilOverlay';
+
+type FoilCardImageProps = FoilOverlayProps & ImageFallbackProps;
+const FoilCardImage: React.FC<FoilCardImageProps> = FoilOverlay(ImageFallback);
 
 export interface CardModalProps {
   isOpen: boolean;
@@ -92,6 +97,7 @@ const CardModal: React.FC<CardModalProps> = ({
   );
 
   const disabled = !canEdit || card.markedForDelete;
+  const [imageUsed, setImageUsed] = useState(card?.details?.image_normal);
 
   return (
     <Modal xl isOpen={isOpen} setOpen={setOpen}>
@@ -104,7 +110,30 @@ const CardModal: React.FC<CardModalProps> = ({
           <Row>
             <Col xs={12} sm={4}>
               <Flexbox direction="col" gap="2">
-                <FoilCardImage card={card} finish={card.finish} />
+                <FoilCardImage
+                  card={card}
+                  className="w-full"
+                  src={imageUsed}
+                  fallbackSrc="/content/default_card.png"
+                  alt={cardName(card)}
+                />
+                {card?.details?.image_flip && (
+                  <Button
+                    className="mt-1"
+                    color="accent"
+                    outline
+                    block
+                    onClick={() => {
+                      if (imageUsed === card?.details?.image_normal) {
+                        setImageUsed(card?.details?.image_flip);
+                      } else {
+                        setImageUsed(card?.details?.image_normal);
+                      }
+                    }}
+                  >
+                    <ArrowSwitchIcon size={16} /> Transform
+                  </Button>
+                )}
                 <Flexbox direction="row" gap="2" wrap="wrap">
                   {card.details?.prices && Number.isFinite(cardPrice(card)) && (
                     <TextBadge name="Price" className="mt-2 me-2">
