@@ -1,0 +1,34 @@
+name: Build and Push Docker Image to ECR
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-push-prod:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+
+    env:
+      role: arn:aws:iam::123456789012:role/replace-me
+      region: us-east-2
+      repository: "replace-me!"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.role }}
+          aws-region: ${{ env.region }}
+
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ env.repository }}
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:latest .
+          docker push $REGISTRY/$REPOSITORY:latest
