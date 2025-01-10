@@ -1,4 +1,5 @@
-import Card from 'datatypes/Card';
+import Card, { CARD_STATUSES } from 'datatypes/Card';
+import { COLOR_CATEGORIES } from 'datatypes/CardDetails';
 import {
   cardAddedTime,
   cardArtist,
@@ -24,7 +25,6 @@ import {
   convertFromLegacyCardColorCategory,
 } from 'utils/Card';
 import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
-import { COLOR_CATEGORIES } from 'datatypes/CardDetails';
 
 const COLOR_MAP: Record<string, string> = {
   W: 'White',
@@ -349,7 +349,7 @@ function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): st
 
     ret = uniqueDays;
   } else if (sort === 'Status') {
-    ret = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
+    ret = CARD_STATUSES.slice();
   } else if (sort === 'Finish') {
     ret = ['Non-foil', 'Foil', 'Etched'];
   } else if (sort === 'Guilds') {

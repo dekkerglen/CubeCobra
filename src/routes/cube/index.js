@@ -3,6 +3,8 @@ const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 
+const { CARD_STATUSES } = require('../../client/datatypes/Card');
+
 const createdraft = require('../../client/drafting/createdraft');
 const miscutil = require('../../client/utils/Util');
 const carddb = require('../../util/carddb');
@@ -587,7 +589,9 @@ router.get('/overview/:id', async (req, res) => {
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
     for (const card of mainboard) {
-      if (!['Not Owned', 'Proxied'].includes(card.status) && card.details.prices) {
+      //Per CardStatus in datatypes/Card.ts
+      const isOwned = ['Ordered', 'Owned', 'Premium Owned'].includes(card.status);
+      if (isOwned && card.details.prices) {
         if (card.finish === 'Foil') {
           totalPriceOwned += card.details.prices.usd_foil || card.details.prices.usd || 0;
         } else {
@@ -1609,7 +1613,7 @@ router.post('/updatesettings/:id', ensureAuth, async (req, res) => {
     if (disableAlerts !== 'true' && disableAlerts !== 'false') {
       errors.push({ msg: 'Invalid value for disableAlerts' });
     }
-    if (!['Owned', 'Not Owned'].includes(defaultStatus)) {
+    if (!CARD_STATUSES.includes(defaultStatus)) {
       errors.push({ msg: 'Status must be valid.' });
     }
     if (!['recent', 'first'].includes(defaultPrinting)) {

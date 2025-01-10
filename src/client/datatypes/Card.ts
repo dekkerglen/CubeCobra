@@ -16,6 +16,9 @@ export interface Changes {
   version?: number;
 }
 
+export const CARD_STATUSES = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied', 'Borrowed'] as const;
+export type CardStatus = (typeof CARD_STATUSES)[number];
+
 interface Card {
   index?: number;
   board?: BoardType;
@@ -29,7 +32,7 @@ interface Card {
   colorCategory?: ColorCategory;
   tags?: string[];
   finish?: string;
-  status?: string;
+  status?: CardStatus | 'Not Found';
   cmc?: string | number;
   type_line?: string;
   rarity?: string;

@@ -140,7 +140,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                   <Flexbox direction="row" gap="2">
                     {Number.isFinite(priceOwned) && (
                       <TextBadge name="Owned">
-                        <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
+                        <Tooltip text="TCGPlayer Market Price as owned (cards marked as any type of ownership, or Ordered)">
                           ${Math.round(priceOwned).toLocaleString()}
                         </Tooltip>
                       </TextBadge>
