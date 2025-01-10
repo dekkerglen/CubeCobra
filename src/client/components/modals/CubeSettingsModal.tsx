@@ -74,6 +74,8 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
                 { value: 'Ordered', label: 'Ordered' },
                 { value: 'Owned', label: 'Owned' },
                 { value: 'Premium Owned', label: 'Premium Owned' },
+                { value: 'Proxied', label: 'Proxied' },
+                { value: 'Borrowed', label: 'Borrowed' },
               ]}
             />
             <Select

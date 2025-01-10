@@ -525,8 +525,8 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
               </p>
               <p>
                 You can use <code>status:</code> to filter by cards with the given status. Available options are
-                &quot;Not Owned&quot;, &quot;Ordered&quot;, &quot;Owned&quot;, &quot;Premium Owned&quot;, and
-                &quot;Proxied&quot;.
+                &quot;Not Owned&quot;, &quot;Ordered&quot;, &quot;Owned&quot;, &quot;Premium Owned&quot;, 
+                &quot;Proxied&quot;, and &quot;Borrowed&quot;.
               </p>
               <Text semibold>Examples:</Text>
               <Table

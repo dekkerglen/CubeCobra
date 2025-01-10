@@ -146,6 +146,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
                   { value: 'Owned', label: 'Owned' },
                   { value: 'Premium Owned', label: 'Premium Owned' },
                   { value: 'Proxied', label: 'Proxied' },
+                  { value: 'Borrowed', label: 'Borrowed' },
                 ]}
               />
             </Col>

@@ -349,7 +349,7 @@ function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): st
 
     ret = uniqueDays;
   } else if (sort === 'Status') {
-    ret = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
+    ret = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied', 'Borrowed'];
   } else if (sort === 'Finish') {
     ret = ['Non-foil', 'Foil', 'Etched'];
   } else if (sort === 'Guilds') {

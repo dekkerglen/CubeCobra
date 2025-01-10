@@ -319,6 +319,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
                   { value: 'Owned', label: 'Owned' },
                   { value: 'Premium Owned', label: 'Premium Owned' },
                   { value: 'Proxied', label: 'Proxied' },
+                  { value: 'Borrowed', label: 'Borrowed' },
                 ]}
                 value={status}
                 setValue={setStatus}
