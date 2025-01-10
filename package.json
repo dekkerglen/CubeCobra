@@ -155,7 +155,6 @@
     "sanitize-html": "^2.11.0",
     "seedrandom": "^3.0.5",
     "serialize-javascript": "^6.0.2",
-    "sharp": "^0.33.5",
     "shuffle-seed": "^1.1.6",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",
