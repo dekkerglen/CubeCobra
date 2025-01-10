@@ -10,6 +10,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
+import { CARD_STATUSES } from '../datatypes/Card';
+
 interface FiltersPageProps {
   loginCallback: string;
 }
@@ -524,9 +526,11 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 &quot;Non-foil&quot; and &quot;Foil&quot;.
               </p>
               <p>
-                You can use <code>status:</code> to filter by cards with the given status. Available options are
-                &quot;Not Owned&quot;, &quot;Ordered&quot;, &quot;Owned&quot;, &quot;Premium Owned&quot;,
-                &quot;Proxied&quot;, and &quot;Borrowed&quot;.
+                You can use <code>status:</code> to filter by cards with the given status. Available options are&nbsp;
+                {
+                  /* Replace the last comma with ", and" for nice English */
+                  CARD_STATUSES.map((status) => `"${status}"`).join(', ').replace(/,(?!.*,)/gmi, ', and')
+                }.
               </p>
               <Text semibold>Examples:</Text>
               <Table
@@ -541,7 +545,7 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                   },
                   {
                     query: <code>status:&quot;Premium Owned&quot;</code>,
-                    description: 'All cards marked with the &quot;Premium Owned&quot; status.',
+                    description: 'All cards marked with the "Premium Owned" status.',
                   },
                 ]}
               />
