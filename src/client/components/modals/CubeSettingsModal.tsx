@@ -48,7 +48,7 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
         <CSRFForm ref={formRef} formData={formData} method="POST" action={`/cube/updatesettings/${cube.id}`}>
           <Flexbox direction="col" gap="2">
             <Checkbox
-              label="Hide Total Prices"
+              label="Show Total Prices"
               checked={formData.priceVisibility === 'true'}
               setChecked={(checked) => setFormData({ ...formData, priceVisibility: `${checked}` })}
             />
