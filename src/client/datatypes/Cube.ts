@@ -1,6 +1,6 @@
 import User from './User';
 import { DraftFormat } from './Draft';
-import Card from './Card';
+import Card, { CardStatus } from './Card';
 
 export interface CubeImage {
   uri: string;
@@ -39,7 +39,7 @@ interface Cube {
   showUnsorted?: boolean;
   formats: DraftFormat[];
   following: string[];
-  defaultStatus: string;
+  defaultStatus: CardStatus;
   defaultPrinting: string;
   disableAlerts: boolean;
   basics: string[];

@@ -5,9 +5,10 @@ import { XIcon } from '@primer/octicons-react';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/Card';
 
 import AutocardContext from '../contexts/AutocardContext';
-import Card, { BoardType } from '../datatypes/Card';
+import Card, { BoardType, CardStatus } from '../datatypes/Card';
 import { TagColor } from '../datatypes/Cube';
 import TagData from '../datatypes/TagData';
+import { getLabels } from '../utils/Sort';
 import Button from './base/Button';
 import Input from './base/Input';
 import { Col, Flexbox, Row } from './base/Layout';
@@ -129,7 +130,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
 
     if (status !== '') {
       updates.forEach((card: Card) => {
-        card.status = status;
+        card.status = status as CardStatus;
       });
     }
 
@@ -314,15 +315,12 @@ const GroupModal: React.FC<GroupModalProps> = ({
             <Flexbox direction="col" gap="2">
               <Select
                 label="Set status of all"
-                options={[
-                  { value: '', label: 'None' },
-                  { value: 'Not Owned', label: 'Not Owned' },
-                  { value: 'Ordered', label: 'Ordered' },
-                  { value: 'Owned', label: 'Owned' },
-                  { value: 'Premium Owned', label: 'Premium Owned' },
-                  { value: 'Proxied', label: 'Proxied' },
-                  { value: 'Borrowed', label: 'Borrowed' },
-                ]}
+                options={[{ value: '', label: 'None' }].concat(
+                  getLabels(null, 'Status', false).map((status: string) => ({
+                    value: status,
+                    label: status,
+                  })),
+                )}
                 value={status}
                 setValue={setStatus}
               />

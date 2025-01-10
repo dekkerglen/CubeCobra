@@ -11,6 +11,8 @@ import LoadingButton from 'components/LoadingButton';
 import CubeContext from 'contexts/CubeContext';
 import Cube from 'datatypes/Cube';
 
+import { getLabels } from '../../utils/Sort';
+
 interface CubeSettingsModalProps {
   addAlert: (color: string, message: string) => void;
   onCubeUpdate: (cube: Cube) => void;
@@ -70,14 +72,10 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
               label="Default Status"
               value={formData.defaultStatus}
               setValue={(defaultStatus) => setFormData({ ...formData, defaultStatus })}
-              options={[
-                { value: 'Not Owned', label: 'Not Owned' },
-                { value: 'Ordered', label: 'Ordered' },
-                { value: 'Owned', label: 'Owned' },
-                { value: 'Premium Owned', label: 'Premium Owned' },
-                { value: 'Proxied', label: 'Proxied' },
-                { value: 'Borrowed', label: 'Borrowed' },
-              ]}
+              options={getLabels(null, 'Status', false).map((status: string) => ({
+                value: status,
+                label: status,
+              }))}
             />
             <Select
               label="Default Printing"
