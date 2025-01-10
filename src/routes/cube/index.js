@@ -3,6 +3,8 @@ const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 
+const { CARD_STATUSES } = require('../../client/datatypes/Card');
+
 const createdraft = require('../../client/drafting/createdraft');
 const miscutil = require('../../client/utils/Util');
 const carddb = require('../../util/carddb');
@@ -1609,7 +1611,7 @@ router.post('/updatesettings/:id', ensureAuth, async (req, res) => {
     if (disableAlerts !== 'true' && disableAlerts !== 'false') {
       errors.push({ msg: 'Invalid value for disableAlerts' });
     }
-    if (!['Owned', 'Not Owned'].includes(defaultStatus)) {
+    if (!CARD_STATUSES.includes(defaultStatus)) {
       errors.push({ msg: 'Status must be valid.' });
     }
     if (!['recent', 'first'].includes(defaultPrinting)) {
