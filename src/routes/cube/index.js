@@ -21,7 +21,7 @@ const {
   generateSamplepackImage,
   cachePromise,
   isCubeViewable,
-  isCubeListed
+  isCubeListed,
 } = require('../../util/cubefn');
 
 const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, updateCubeAndBlog } = require('./helper');
@@ -43,7 +43,6 @@ router.use('/blog', require('./blog'));
 router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));
-
 
 router.get('/dumpdraft/:id', async (req, res) => {
   const dump = await dumpDraft(req.params.id);
@@ -73,7 +72,10 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
     const emptyCubes = cubes.items.filter((cube) => cube.cardCount === 0);
 
     if (emptyCubes.length >= 2) {
-      req.flash('danger', 'You may only have two empty cubes at a time. To create a new cube, please delete an empty cube, or add cards to it.');
+      req.flash(
+        'danger',
+        'You may only have two empty cubes at a time. To create a new cube, please delete an empty cube, or add cards to it.',
+      );
       return redirect(req, res, `/user/view/${user.id}`);
     }
 
@@ -157,7 +159,7 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
       'Thank you for the report! Our moderators will review the report can decide whether to take action.',
     );
 
-    return redirect(req, res,  `/cube/overview/${req.params.id}`);
+    return redirect(req, res, `/cube/overview/${req.params.id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
@@ -165,13 +167,9 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
 
 router.get('/recents', async (req, res) => {
   const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
-  
-  
 
   return render(req, res, 'RecentlyUpdateCubesPage', {
-    items: result.items.filter((cube) =>
-      isCubeListed(cube, req.user),
-    ),
+    items: result.items.filter((cube) => isCubeListed(cube, req.user)),
     lastKey: result.lastKey,
   });
 });
@@ -183,9 +181,7 @@ router.post('/getmorerecents', ensureAuth, async (req, res) => {
 
   return res.status(200).send({
     success: 'true',
-    items: result.items.filter((cube) =>
-      isCubeListed(cube, req.user),
-    ),
+    items: result.items.filter((cube) => isCubeListed(cube, req.user)),
     lastKey: result.lastKey,
   });
 });
@@ -388,16 +384,21 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
       req.flash('danger', 'Cannot update the cube overview for an empty cube. Please add cards to the cube first.');
       return redirect(req, res, '/cube/overview/' + cube.id);
     }
-    
+
     if (util.hasProfanity(updatedCube.name)) {
-      req.flash('danger', 'Could not update cube, the name contains a banned word. If you feel this was a mistake, please contact us.');
+      req.flash(
+        'danger',
+        'Could not update cube, the name contains a banned word. If you feel this was a mistake, please contact us.',
+      );
       return redirect(req, res, '/cube/overview/' + cube.id);
     }
 
     if (updatedCube.shortId !== cube.shortId) {
-
       if (util.hasProfanity(updatedCube.shortId)) {
-        req.flash('danger', 'Could not update cube, the short id contains a banned word. If you feel this was a mistake, please contact us.');
+        req.flash(
+          'danger',
+          'Could not update cube, the short id contains a banned word. If you feel this was a mistake, please contact us.',
+        );
         return redirect(req, res, '/cube/overview/' + cube.id);
       }
 
@@ -826,7 +827,7 @@ router.post('/getmoredecks/:id', async (req, res) => {
       decks: query.items,
       lastKey: query.lastKey,
     });
-  } catch(e) {
+  } catch (e) {
     return res.status(500).send({
       success: 'false',
     });
@@ -851,7 +852,7 @@ router.get('/playtest/:id', async (req, res) => {
       {
         cube,
         decks: decks.items,
-        decksLastKey: decks.lastEvaluatedKey
+        decksLastKey: decks.lastEvaluatedKey,
       },
       {
         title: `${abbreviate(cube.name)} - Playtest`,
@@ -951,7 +952,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
       pack = await generatePack(cube, cards, carddb, req.params.seed);
     } catch (err) {
       // this is probably a 400, not a 500, as the user can fix it by trying again.
-      req.flash('danger', "Failed to generate pack: " + err.message);
+      req.flash('danger', 'Failed to generate pack: ' + err.message);
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
@@ -996,7 +997,6 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
 
-    
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
       let pack;
       try {
@@ -1027,7 +1027,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     });
 
     res.writeHead(200, {
-      'Content-Type': 'image/webp',
+      'Content-Type': 'image/jpeg',
     });
     return res.end(imageBuffer);
   } catch (err) {
@@ -1063,7 +1063,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
 
     // decode base64
     const list = Buffer.from(encodedFile, 'base64').toString('utf8');
-    
+
     const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
@@ -1404,12 +1404,15 @@ router.post(
       }
 
       // setup draft
-      const format = createdraft.getDraftFormat({
-        id: parseInt(req.body.id),
-        packs: parseInt(req.body.packs),
-        players: parseInt(req.body.seats),
-        cards: parseInt(req.body.cards),
-      }, cube);
+      const format = createdraft.getDraftFormat(
+        {
+          id: parseInt(req.body.id),
+          packs: parseInt(req.body.packs),
+          players: parseInt(req.body.seats),
+          cards: parseInt(req.body.cards),
+        },
+        cube,
+      );
 
       console.log(format);
 
@@ -1419,13 +1422,7 @@ router.post(
 
       let populated = {};
       try {
-        populated = createdraft.createDraft(
-          cube,
-          format,
-          mainboard,
-          parseInt(req.body.seats),
-          req.user
-        );
+        populated = createdraft.createDraft(cube, format, mainboard, parseInt(req.body.seats), req.user);
       } catch (err) {
         // This is a 4XX error, not a 5XX error
         console.error(err);

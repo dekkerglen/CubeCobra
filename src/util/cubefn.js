@@ -3,8 +3,9 @@ const Papa = require('papaparse');
 const sanitizeHtml = require('sanitize-html');
 
 const fetch = require('node-fetch');
-const _ = require('lodash')
-const sharp = require('sharp');
+const _ = require('lodash');
+const { Jimp } = require('jimp');
+
 const Cube = require('../dynamo/models/cube');
 const { convertFromLegacyCardColorCategory } = require('../client/utils/Card');
 
@@ -206,7 +207,7 @@ function camelizeDataRows(data) {
 
 function CSVtoCards(csvString, carddb) {
   const { data } = Papa.parse(csvString.trim(), { header: true });
-  const camelizedRows = camelizeDataRows(data)
+  const camelizedRows = camelizeDataRows(data);
   const missing = [];
   const newCards = [];
   const newMaybe = [];
@@ -305,30 +306,30 @@ async function compareCubes(cardsA, cardsB) {
 }
 
 const generateSamplepackImage = async (sources = [], width, height) => {
+  //Read the images from their source URLs as Jimp objects
   const images = await Promise.all(
     sources.map(async (source) => {
-      const res = await fetch(source.src);
-
       return {
-        input: await sharp(Buffer.from(await res.arrayBuffer()))
-          .resize({ width: source.width, height: source.height })
-          .toBuffer(),
+        input: await Jimp.read(source.src),
         top: source.y,
         left: source.x,
       };
     }),
   );
 
-  const options = {
-    create: {
-      width,
-      height,
-      channels: 3,
-      background: { r: 255, g: 255, b: 255 },
-    },
-  };
+  //Composite all the images together, using the left/top coordinates calculated earlier
+  const baseImage = new Jimp({ width, height });
+  for (const { input, top, left } of images) {
+    baseImage.composite(input, left, top);
+  }
 
-  return sharp(options).composite(images).webp({ reductionEffort: 6, alphaQuality: 0 }).toBuffer();
+  /* Jimp doesn't have webp support built-in and the plugin requires wasm.
+   * Jpeg file sizes are much closer to webp than PNGs.
+   * See https://jimp-dev.github.io/jimp/api/jimp/interfaces/jpegoptions/ as reference for the Jpeg options
+   */
+  return baseImage.getBuffer('image/jpeg', {
+    quality: 90,
+  });
 };
 
 // A cache for promises that are expensive to compute and will always produce
@@ -413,7 +414,7 @@ const methods = {
       seed = Date.now().toString();
     }
     const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
-    const format = getDraftFormat({ id: formatId, packs: 1, players: 1, }, cube);
+    const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
     const draft = createDraft(cube, format, cards.mainboard, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
