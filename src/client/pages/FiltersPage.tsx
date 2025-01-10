@@ -1,14 +1,14 @@
 import React from 'react';
 
-import Accordion from 'components/base/Accordion';
 import Banner from 'components/Banner';
+import Accordion from 'components/base/Accordion';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Flexbox } from 'components/base/Layout';
+import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import { Flexbox } from 'components/base/Layout';
-import Table from 'components/base/Table';
 
 interface FiltersPageProps {
   loginCallback: string;
@@ -525,7 +525,7 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
               </p>
               <p>
                 You can use <code>status:</code> to filter by cards with the given status. Available options are
-                &quot;Not Owned&quot;, &quot;Ordered&quot;, &quot;Owned&quot;, &quot;Premium Owned&quot;, 
+                &quot;Not Owned&quot;, &quot;Ordered&quot;, &quot;Owned&quot;, &quot;Premium Owned&quot;,
                 &quot;Proxied&quot;, and &quot;Borrowed&quot;.
               </p>
               <Text semibold>Examples:</Text>

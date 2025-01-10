@@ -1,18 +1,13 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
-import Text from './base/Text';
-import Tooltip from './base/Tooltip';
-import AutocardListItem from './card/AutocardListItem';
-import { ColorChecksAddon } from './ColorCheck';
-import MassBuyButton from './MassBuyButton';
-import TagInput from './TagInput';
-import TextBadge from './TextBadge';
+
+import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/Card';
+
 import AutocardContext from '../contexts/AutocardContext';
 import Card, { BoardType } from '../datatypes/Card';
 import { TagColor } from '../datatypes/Cube';
 import TagData from '../datatypes/TagData';
-import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/Card';
 import Button from './base/Button';
 import Input from './base/Input';
 import { Col, Flexbox, Row } from './base/Layout';
@@ -21,6 +16,13 @@ import { ListGroup } from './base/ListGroup';
 import { Modal, ModalBody, ModalHeader } from './base/Modal';
 import RadioButtonGroup from './base/RadioButtonGroup';
 import Select from './base/Select';
+import Text from './base/Text';
+import Tooltip from './base/Tooltip';
+import AutocardListItem from './card/AutocardListItem';
+import { ColorChecksAddon } from './ColorCheck';
+import MassBuyButton from './MassBuyButton';
+import TagInput from './TagInput';
+import TextBadge from './TextBadge';
 
 function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: number }[] {
   return cards.filter((card) => card.board !== undefined && card.index !== undefined) as {
