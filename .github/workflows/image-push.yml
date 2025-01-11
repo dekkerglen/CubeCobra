@@ -11,6 +11,7 @@ on:
 
 jobs:
   build-and-push-prod:
+    if: github.repository == 'dekkerglen/CubeCobra'
     name: Build and Push to ECR
     runs-on: ubuntu-latest
 
