@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 
-import Comment from '../datatypes/Comment';
+import Comment from '../../datatypes/Comment';
 import { findUserLinks } from 'markdown/parser';
 import { wait } from 'utils/Util';
 import { CSRFContext } from '../contexts/CSRFContext';

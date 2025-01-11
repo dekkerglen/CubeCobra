@@ -21,7 +21,7 @@ import CubeContext from '../../contexts/CubeContext';
 import UserContext from '../../contexts/UserContext';
 import useAlerts from '../../hooks/UseAlerts';
 import { getCubeDescription, getCubeId } from 'utils/Util';
-import User from '../../datatypes/User';
+import User from '../../../datatypes/User';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import ConfirmActionModal from '../modals/ConfirmActionModal';
 

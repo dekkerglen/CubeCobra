@@ -7,7 +7,7 @@ import { calculateAsfans } from '../drafting/createdraft';
 import useQueryParam from '../hooks/useQueryParam';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 import CubeContext from '../contexts/CubeContext';
-import Card from '../datatypes/Card';
+import Card from '../../datatypes/Card';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import { Col, Flexbox, Row } from '../components/base/Layout';

@@ -2,8 +2,12 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 
-import { cardType, makeSubtitle } from 'utils/Card';
+import { cardType, makeSubtitle } from 'utils/cardutil';
 
+import Cube from '../../datatypes/Cube';
+import Draft from '../../datatypes/Draft';
+import DraftSeat from '../../datatypes/DraftSeat';
+import User from '../../datatypes/User';
 import { Card } from '../components/base/Card';
 import DeckbuilderNavbar from '../components/DeckbuilderNavbar';
 import DeckStacks from '../components/DeckStacks';
@@ -12,10 +16,6 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
 import UserContext from '../contexts/UserContext';
-import Cube from '../datatypes/Cube';
-import Draft from '../datatypes/Draft';
-import DraftSeat from '../datatypes/DraftSeat';
-import User from '../datatypes/User';
 import DraftLocation, { addCard, locations, moveCard, removeCard } from '../drafting/DraftLocation';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';

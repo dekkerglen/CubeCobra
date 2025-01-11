@@ -7,7 +7,7 @@ import Button from 'components/base/Button';
 import CardData, { BoardChanges } from 'datatypes/Card';
 import { PlusCircleIcon, NoEntryIcon, ToolsIcon, ArrowSwitchIcon, ArrowRightIcon } from '@primer/octicons-react';
 import Spinner from 'components/base/Spinner';
-import CardDetails from 'datatypes/CardDetails';
+import { CardDetails } from 'datatypes/Card';
 import withAutocard from 'components/WithAutocard';
 
 const TextAutocard = withAutocard('span');

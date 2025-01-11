@@ -76,7 +76,7 @@ export const getErrorsInFormat = (format: DraftFormat) => {
       if (stepAmount !== null) {
         amount += stepAmount;
       } else {
-        amount++;
+        amount += 1;
       }
     }
 
@@ -100,18 +100,30 @@ export const createDefaultDraftFormat = (packsPerPlayer: number, cardsPerPack: n
   };
 };
 
+export interface DraftmancerPick {
+  booster: number[];
+  pick: number;
+}
+
+export interface DraftmancerLog {
+  sessionID: string;
+  players: DraftmancerPick[][];
+}
+
 export default interface Draft {
   seats: DraftSeat[];
   cards: Card[];
   cube: string;
-  InitialState: DraftState;
+  InitialState?: DraftState;
+  DraftmancerLog?: DraftmancerLog;
   basics: number[];
   id: string;
-  seed: string;
+  seed?: string;
   // g: grid, d: draft, u: upload, s: sealed
   type: 'g' | 'd' | 'u' | 's';
-  owner: string | User;
+  owner?: string | User;
   cubeOwner: string | User;
-  date: Date;
+  date: Date | number;
   name: string;
+  complete: boolean;
 }

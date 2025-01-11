@@ -1,19 +1,20 @@
 import React, { useContext, useState } from 'react';
+
 import socketIOClient from 'socket.io-client';
 
+import Text from 'components/base/Text';
 import CubeDraft from 'components/draft/CubeDraft';
 import CubeDraftError from 'components/draft/CubeDraftError';
 import CubeDraftStaging from 'components/draft/CubeDraftStaging';
 import RenderToRoot from 'components/RenderToRoot';
+import { CSRFContext } from 'contexts/CSRFContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
+import Cube from 'datatypes/Cube';
+import Draft from 'datatypes/Draft';
 import useMount from 'hooks/UseMount';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import Cube from 'datatypes/Cube';
-import Draft from 'datatypes/Draft';
-import Text from 'components/base/Text';
-import { CSRFContext } from 'contexts/CSRFContext';
 
 const socket = socketIOClient('/', { rejectUnauthorized: false });
 

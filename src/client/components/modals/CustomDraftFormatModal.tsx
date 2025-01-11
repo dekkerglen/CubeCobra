@@ -4,7 +4,7 @@ import CSRFForm from '../CSRFForm';
 import CustomPackCard from '../CustomPackCard';
 import TextEntry from '../TextEntry';
 import CubeContext from '../../contexts/CubeContext';
-import { createDefaultDraftFormat, DEFAULT_PACK, DraftFormat, getErrorsInFormat } from '../../datatypes/Draft';
+import { createDefaultDraftFormat, DEFAULT_PACK, DraftFormat, getErrorsInFormat } from '../../../datatypes/Draft';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import Input from '../base/Input';

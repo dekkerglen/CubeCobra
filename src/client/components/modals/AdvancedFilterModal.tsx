@@ -9,7 +9,7 @@ import Select from 'components/base/Select';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import NumericField from 'components/NumericField';
 import CubeContext from 'contexts/CubeContext';
-import { FilterValues } from 'datatypes/CardDetails';
+import { FilterValues } from 'datatypes/Card';
 
 export interface AdvancedFilterModalProps {
   isOpen: boolean;

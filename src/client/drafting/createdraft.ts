@@ -1,10 +1,10 @@
 import seedrandom from 'seedrandom';
 
-import Card from 'datatypes/Card';
-import Cube from 'datatypes/Cube';
-import Draft, { createDefaultDraftFormat, DraftFormat, DraftState } from 'datatypes/Draft';
-import User from 'datatypes/User';
-import { fromEntries } from 'utils/Util';
+import Card from '../../datatypes/Card';
+import Cube from '../../datatypes/Cube';
+import Draft, { createDefaultDraftFormat, DraftFormat, DraftState } from '../../datatypes/Draft';
+import User from '../../datatypes/User';
+import { fromEntries } from '../utils/Util';
 import { compileFilter, Filter } from './draftFilter';
 
 type RNGFunction = () => number;
@@ -216,6 +216,7 @@ export const createDraft = (
     cubeOwner: cube.owner,
     date: new Date(),
     name: '',
+    complete: false,
   };
 
   draft.seats = draft.InitialState!.map((_, seatIndex) => ({

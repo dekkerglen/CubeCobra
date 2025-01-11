@@ -3,7 +3,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import useLocalStorage from 'hooks/useLocalStorage';
 import Card, { BoardType, Changes } from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
-import { cardsAreEquivalent } from 'utils/Card';
+import { cardsAreEquivalent } from 'utils/cardutil';
 import DisplayContext from './DisplayContext';
 
 export interface ChangesContextValue {

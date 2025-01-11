@@ -1,3 +1,5 @@
+import React from 'react';
+
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -9,7 +11,6 @@ import CardType from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import React from 'react';
 
 interface SamplePackPageProps {
   seed: string;

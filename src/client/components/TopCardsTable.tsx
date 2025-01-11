@@ -4,7 +4,7 @@ import Paginate from './base/Pagination';
 import Text from './base/Text';
 import withAutocard from './WithAutocard';
 import FilterContext from '../contexts/FilterContext';
-import CardDetails from '../datatypes/CardDetails';
+import { CardDetails } from '../../datatypes/Card';
 import Query from 'utils/Query';
 import { ORDERED_SORTS } from 'utils/Sort';
 import Banner from './Banner';
@@ -15,7 +15,7 @@ import ResponsiveDiv from './base/ResponsiveDiv';
 import Select from './base/Select';
 import DynamicFlash from './DynamicFlash';
 import FilterCollapse from './FilterCollapse';
-import { cardElo, detailsToCard } from 'utils/Card';
+import { cardElo, detailsToCard } from 'utils/cardutil';
 import Table from './base/Table';
 import Spinner from './base/Spinner';
 

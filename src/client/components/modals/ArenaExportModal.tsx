@@ -5,7 +5,7 @@ import Text from '../base/Text';
 import TextArea from '../base/TextArea';
 import CubeContext from '../../contexts/CubeContext';
 import FilterContext from '../../contexts/FilterContext';
-import CardDetails from '../../datatypes/CardDetails';
+import { CardDetails } from '../../../datatypes/Card';
 import useAlerts, { Alerts } from '../../hooks/UseAlerts';
 import React, { useContext, useEffect, useState } from 'react';
 import { sortForDownload } from 'utils/Sort';

@@ -15,7 +15,7 @@ import { formatDate } from 'utils/Date';
 import { Col, Row, Flexbox } from './base/Layout';
 import Spinner from './base/Spinner';
 import Select from './base/Select';
-import History, { CubeType } from '../datatypes/History';
+import History, { CubeType } from '../../datatypes/History';
 import useQueryParam from '../hooks/useQueryParam';
 import { CSRFContext } from '../contexts/CSRFContext';
 

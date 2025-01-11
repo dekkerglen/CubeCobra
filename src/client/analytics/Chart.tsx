@@ -16,7 +16,7 @@ import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import useQueryParam from '../hooks/useQueryParam';
 import { calculateAsfans } from '../drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
-import Card from '../datatypes/Card';
+import Card from '../../datatypes/Card';
 import CubeContext from '../contexts/CubeContext';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';

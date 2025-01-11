@@ -1,15 +1,16 @@
 import React from 'react';
+
+import Banner from 'components/Banner';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
-import Banner from 'components/Banner';
 import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserPreview from 'components/UserPreview';
-import MainLayout from 'layouts/MainLayout';
 import Cube from 'datatypes/Cube';
 import User from 'datatypes/User';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
+import MainLayout from 'layouts/MainLayout';
 
 interface UserSocialPageProps {
   followedCubes: Cube[];

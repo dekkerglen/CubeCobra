@@ -265,7 +265,7 @@ const hydrate = async (document) => {
 };
 
 const dehydrate = (document) => {
-  if (document.owner.id) {
+  if (document.owner && document.owner.id) {
     document.owner = document.owner.id;
   }
 

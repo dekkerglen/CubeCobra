@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from 'react';
+
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -12,7 +14,6 @@ import RenderToRoot from 'components/RenderToRoot';
 import VideoType from 'datatypes/Video';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-import React, { useEffect, useState } from 'react';
 
 interface EditVideoPageProps {
   loginCallback?: string;

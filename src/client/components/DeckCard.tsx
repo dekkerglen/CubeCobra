@@ -1,8 +1,8 @@
 import { Card, CardBody, CardHeader } from './base/Card';
 import { Col, Flexbox, Row } from './base/Layout';
 import Text from './base/Text';
-import Deck from '../datatypes/Draft';
-import DeckSeat from '../datatypes/DraftSeat';
+import Deck from '../../datatypes/Draft';
+import DeckSeat from '../../datatypes/DraftSeat';
 import React, { useMemo } from 'react';
 
 import CardGrid from './card/CardGrid';
@@ -10,7 +10,7 @@ import CommentsSection from './comments/CommentsSection';
 import FoilCardImage from './FoilCardImage';
 import Markdown from './Markdown';
 import Username from './Username';
-import CardType from '../datatypes/Card';
+import CardType from '../../datatypes/Card';
 import { sortDeep } from 'utils/Sort';
 import DecksPickBreakdown from './DecksPickBreakdown';
 

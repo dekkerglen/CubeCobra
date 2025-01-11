@@ -1,5 +1,5 @@
 import BlogPost from './blog/BlogPost';
-import BlogPostType from '../datatypes/BlogPost';
+import BlogPostType from '../../datatypes/BlogPost';
 import React, { useState } from 'react';
 import IndefinitePaginatedList from './IndefinitePaginatedList';
 

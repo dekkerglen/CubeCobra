@@ -10,7 +10,7 @@ import FoilCardImage from './FoilCardImage';
 import LinkModal, { LinkModalProps } from './LinkModal';
 import withAutocard, { WithAutocardProps } from './WithAutocard';
 import withModal, { WithModalProps } from './WithModal';
-import CardDetails from '../datatypes/CardDetails';
+import { CardDetails } from '../../datatypes/Card';
 import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
 import { isInternalURL, isSamePageURL } from 'utils/Util';
 import Text from './base/Text';

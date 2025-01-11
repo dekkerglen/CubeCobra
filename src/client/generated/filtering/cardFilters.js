@@ -9,7 +9,6 @@ const reversedSetOperation = (op, value) => {
 };
 
 
-import { CARD_CATEGORY_DETECTORS } from 'utils/Card';
 import {
   defaultOperation,
   stringOperation,
@@ -24,8 +23,9 @@ import {
   setElementOperation,
   setCountOperation,
   devotionOperation,
-} from 'filtering/FuncOperations';
+} from '../../filtering/FuncOperations';
 import {
+  CARD_CATEGORY_DETECTORS,
   cardCmc,
   cardColors,
   cardColorIdentity,
@@ -57,7 +57,7 @@ import {
   cardLegalIn,
   cardBannedIn,
   cardRestrictedIn
-} from 'utils/Card';
+} from '../../utils/cardutil';
 
 
 const negated = (inner) => {

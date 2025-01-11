@@ -1,6 +1,6 @@
 import React, { ComponentProps, ElementType } from 'react';
 
-import Card from '../datatypes/Card';
+import Card from '../../datatypes/Card';
 
 export interface FoilOverlayProps {
   wrapperTag?: ElementType;

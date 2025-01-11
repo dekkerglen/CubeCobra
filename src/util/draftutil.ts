@@ -1,6 +1,6 @@
-import Draft from 'datatypes/Draft';
-import { cardCmc, cardType } from 'utils/Card';
-import { cmcColumn } from 'utils/Util';
+import { cardCmc, cardType } from '../client/utils/cardutil';
+import { cmcColumn } from '../client/utils/Util';
+import Draft from '../datatypes/Draft';
 
 interface Step {
   action: string;
@@ -104,6 +104,10 @@ export const getStepList = (initialState: any[]): FlattenedStep[] =>
     .flat();
 
 export const nextStep = (draft: Draft, cardsPicked: number): string | null => {
+  if (!draft.InitialState) {
+    return null;
+  }
+
   const steps = getStepList(draft.InitialState);
 
   let picks = 0;
@@ -122,6 +126,18 @@ export const nextStep = (draft: Draft, cardsPicked: number): string | null => {
 };
 
 export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: number): DrafterState => {
+  if (!draft.InitialState) {
+    return {
+      picked: [],
+      trashed: [],
+      pickQueue: [],
+      trashQueue: [],
+      cardsPicked: [],
+      cardsInPack: [],
+      picksList: [],
+    };
+  }
+
   // build list of steps and match to pick and pack number
   const steps = getStepList(draft.InitialState);
 
@@ -289,6 +305,10 @@ export const draftStateToTitle = (
 
   let pack = 1;
   let pick = 1;
+
+  if (!draft.InitialState) {
+    return '';
+  }
 
   const steplist = getStepList(draft.InitialState);
   let pickCount = 0;

@@ -2,7 +2,7 @@ import React from 'react';
 
 import { ListGroup, ListGroupItem } from '../base/ListGroup';
 import AutocardListItem from './AutocardListItem';
-import Card from '../../datatypes/Card';
+import Card from '../../../datatypes/Card';
 
 export interface CardListGroupProps {
   cards: Card[];

@@ -12,8 +12,8 @@ import PagedTable from '../PagedTable';
 import TagInput from '../TagInput';
 import withAutocard from '../WithAutocard';
 import CubeContext from '../../contexts/CubeContext';
-import CardType from '../../datatypes/Card';
-import TagData from '../../datatypes/TagData';
+import CardType from '../../../datatypes/Card';
+import TagData from '../../../datatypes/TagData';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
   cardCmc,
@@ -24,7 +24,7 @@ import {
   cardTags,
   cardType,
   normalizeName,
-} from 'utils/Card';
+} from 'utils/cardutil';
 import { getLabels, sortForDownload } from 'utils/Sort';
 
 const GroupModalButton = withGroupModal(Button);

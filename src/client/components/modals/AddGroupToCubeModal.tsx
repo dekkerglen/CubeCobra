@@ -1,14 +1,14 @@
 import React, { useCallback, useContext, useState } from 'react';
 
 import LoadingButton from '../LoadingButton';
-import CardDetails from '../../datatypes/CardDetails';
-import CubePropType from '../../datatypes/Cube';
+import { CardDetails } from '../../../datatypes/Card';
+import CubePropType from '../../../datatypes/Cube';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../base/Modal';
 import Button from '../base/Button';
 import Alert from '../base/Alert';
 import CardList from '../base/CardList';
 import Select from '../base/Select';
-import { detailsToCard } from 'utils/Card';
+import { detailsToCard } from 'utils/cardutil';
 import { Flexbox } from '../base/Layout';
 import { CSRFContext } from '../../contexts/CSRFContext';
 

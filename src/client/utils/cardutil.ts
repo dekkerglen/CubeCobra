@@ -1,8 +1,7 @@
-import Card from 'datatypes/Card';
-import CardDetailsType, { ColorCategory, COLOR_CATEGORIES } from 'datatypes/CardDetails';
-import CategoryOverrides from 'res/CategoryOverrides.json';
-import LandCategories from 'res/LandCategories.json';
-import { arraysEqual } from 'utils/Util';
+import Card, { CardDetails as CardDetailsType, COLOR_CATEGORIES, ColorCategory } from '../../datatypes/Card';
+import CategoryOverrides from '../res/CategoryOverrides.json';
+import LandCategories from '../res/LandCategories.json';
+import { arraysEqual } from './Util';
 
 export const ELO_DEFAULT = 1200;
 

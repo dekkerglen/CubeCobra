@@ -1,9 +1,9 @@
 import Button from './base/Button';
 import Form from './Form';
-import Card from '../datatypes/Card';
+import Card from '../../datatypes/Card';
 import React from 'react';
 import { tcgMassEntryUrl, tcgplayerAffiliate } from 'utils/Affiliate';
-import { cardIsToken, cardName } from 'utils/Card';
+import { cardIsToken, cardName } from 'utils/cardutil';
 
 interface MassBuyButtonProps {
   cards: Card[];

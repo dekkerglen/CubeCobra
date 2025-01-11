@@ -21,6 +21,8 @@ const { render } = require('./util/render');
 const { setup } = require('./util/socketio');
 const flash = require('connect-flash');
 
+import router from './router/router';
+
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason) => {
   cloudwatch.error('Unhandled Rejection at: Promise ', reason, reason.stack);
@@ -210,6 +212,7 @@ app.use((req, res, next) => {
   next();
 }); 
 
+app.use(router);
 
 // Route files; they manage their own CSRF protection
 app.use('/patreon', require('./routes/patreon_routes'));

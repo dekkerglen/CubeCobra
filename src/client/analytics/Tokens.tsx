@@ -3,7 +3,7 @@ import React, { useContext, useMemo } from 'react';
 import Markdown from '../components/Markdown';
 import MassBuyButton from '../components/MassBuyButton';
 import { getTCGLink } from 'utils/Affiliate';
-import CardType from '../datatypes/Card';
+import CardType from '../../datatypes/Card';
 import CubeContext from '../contexts/CubeContext';
 import { Flexbox } from '../components/base/Layout';
 import Text from '../components/base/Text';

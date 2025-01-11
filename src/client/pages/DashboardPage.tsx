@@ -1,12 +1,8 @@
+import React, { useContext } from 'react';
+
 import classNames from 'classnames';
+
 import Banner from 'components/Banner';
-import CubePreview from 'components/cube/CubePreview';
-import CubesCard from 'components/cube/CubesCard';
-import DynamicFlash from 'components/DynamicFlash';
-import Feed from 'components/Feed';
-import RecentDraftsCard from 'components/RecentDraftsCard';
-import RenderToRoot from 'components/RenderToRoot';
-import withModal from 'components/WithModal';
 import Button from 'components/base/Button';
 import { Card, CardFooter, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -15,13 +11,19 @@ import Text from 'components/base/Text';
 import ArticlePreview from 'components/content/ArticlePreview';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import VideoPreview from 'components/content/VideoPreview';
+import CubePreview from 'components/cube/CubePreview';
+import CubesCard from 'components/cube/CubesCard';
+import DynamicFlash from 'components/DynamicFlash';
+import Feed from 'components/Feed';
 import CreateCubeModal from 'components/modals/CreateCubeModal';
+import RecentDraftsCard from 'components/RecentDraftsCard';
+import RenderToRoot from 'components/RenderToRoot';
+import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import BlogPost from 'datatypes/BlogPost';
 import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
 import MainLayout from 'layouts/MainLayout';
-import React, { useContext } from 'react';
 
 interface DashboardPageProps {
   posts: BlogPost[];

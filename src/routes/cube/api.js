@@ -3,7 +3,7 @@ const express = require('express');
 const { body } = require('express-validator');
 
 const { makeFilter } = require('../../client/filtering/FilterCards');
-const cardutil = require('../../client/utils/Card');
+const cardutil = require('../../client/utils/cardutil');
 const carddb = require('../../util/carddb');
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../util/util');

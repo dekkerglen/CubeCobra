@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 const fs = require('fs');
 const json = require('big-json');
 

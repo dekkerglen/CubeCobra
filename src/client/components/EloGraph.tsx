@@ -11,7 +11,7 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { Line } from 'react-chartjs-2';
-import History from '../datatypes/History';
+import History from '../../datatypes/History';
 
 import { formatDate } from 'utils/Date';
 import { Row, Col, Flexbox } from './base/Layout';

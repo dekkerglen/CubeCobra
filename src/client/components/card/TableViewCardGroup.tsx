@@ -4,7 +4,7 @@ import AutocardListItem from './AutocardListItem';
 import withCardModal from '../modals/WithCardModal';
 import withGroupModal from '../modals/WithGroupModal';
 import CubeContext from '../../contexts/CubeContext';
-import Card from '../../datatypes/Card';
+import Card from '../../../datatypes/Card';
 import { sortDeep } from 'utils/Sort';
 import { ListGroup, ListGroupItem } from '../base/ListGroup';
 import classNames from 'classnames';

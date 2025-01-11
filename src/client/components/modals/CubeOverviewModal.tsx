@@ -12,10 +12,10 @@ import LoadingButton from '../LoadingButton';
 import MtgImage from '../MtgImage';
 import TagInput from '../TagInput';
 import TextEntry from '../TextEntry';
-import Cube from '../../datatypes/Cube';
+import Cube from '../../../datatypes/Cube';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getCubeDescription } from 'utils/Util';
-import Image from '../../datatypes/Image';
+import Image from '../../../datatypes/Image';
 import { CSRFContext } from '../../contexts/CSRFContext';
 interface CubeOverviewModalProps {
   isOpen: boolean;

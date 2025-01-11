@@ -3,9 +3,9 @@ import React, { useContext, useMemo } from 'react';
 import ImageFallback from '../ImageFallback';
 import withAutocard from '../WithAutocard';
 import DisplayContext from '../../contexts/DisplayContext';
-import Card from '../../datatypes/Card';
-import CardDetails from '../../datatypes/CardDetails';
-import { cardImageUrl } from 'utils/Card';
+import Card from '../../../datatypes/Card';
+import { CardDetails } from '../../../datatypes/Card';
+import { cardImageUrl } from 'utils/cardutil';
 
 const ImageAutocard = withAutocard<typeof ImageFallback>(ImageFallback);
 

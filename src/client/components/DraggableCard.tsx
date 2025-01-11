@@ -3,7 +3,7 @@ import React from 'react';
 import { DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
 import classNames from 'classnames';
 
-import Card from '../datatypes/Card';
+import Card from '../../datatypes/Card';
 import DraftLocation from '../drafting/DraftLocation';
 import FoilCardImage from './FoilCardImage';
 

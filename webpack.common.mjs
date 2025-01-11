@@ -51,7 +51,7 @@ const config = {
       analytics: path.resolve(__dirname, 'src/client/analytics/'),
       components: path.resolve(__dirname, 'src/client/components/'),
       contexts: path.resolve(__dirname, 'src/client/contexts/'),
-      datatypes: path.resolve(__dirname, 'src/client/datatypes/'),
+      datatypes: path.resolve(__dirname, 'datatypes/'),
       drafting: path.resolve(__dirname, 'src/client/drafting/'),
       filtering: path.resolve(__dirname, 'src/client/filtering/'),
       generated: path.resolve(__dirname, 'src/client/generated/'),
@@ -60,7 +60,7 @@ const config = {
       markdown: path.resolve(__dirname, 'src/client/markdown/'),
       pages: path.resolve(__dirname, 'src/client/pages/'),
       res: path.resolve(__dirname, 'src/client/res/'),
-      utils: path.resolve(__dirname, 'src/client/utils/')
+      utils: path.resolve(__dirname, 'src/client/utils/'),
     }
   },
 };

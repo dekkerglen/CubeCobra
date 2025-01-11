@@ -1,6 +1,6 @@
 import React, { Dispatch } from 'react';
 
-import Cube from '../../datatypes/Cube';
+import Cube from '../../../datatypes/Cube';
 import { Flexbox } from '../base/Layout';
 import Checkbox from '../base/Checkbox';
 import Select from '../base/Select';

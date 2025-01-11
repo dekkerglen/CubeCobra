@@ -1,7 +1,7 @@
 import CSRFForm from './CSRFForm';
 import Markdown from './Markdown';
 import CubeContext from '../contexts/CubeContext';
-import { DraftFormat } from '../datatypes/Draft';
+import { DraftFormat } from '../../datatypes/Draft';
 import React, { useContext, useMemo, useState } from 'react';
 import Button from './base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from './base/Card';

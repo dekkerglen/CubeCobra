@@ -8,9 +8,9 @@ import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import Notification from 'components/nav/Notification';
 import RenderToRoot from 'components/RenderToRoot';
-import MainLayout from 'layouts/MainLayout';
-import type { Notification as NotificationType } from 'datatypes/Notification';
 import { CSRFContext } from 'contexts/CSRFContext';
+import type { Notification as NotificationType } from 'datatypes/Notification';
+import MainLayout from 'layouts/MainLayout';
 
 interface NotificationsPageProps {
   notifications: NotificationType[];

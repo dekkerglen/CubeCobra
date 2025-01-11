@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 const _ = require('lodash')
 const sharp = require('sharp');
 const Cube = require('../dynamo/models/cube');
-const { convertFromLegacyCardColorCategory } = require('../client/utils/Card');
+const { convertFromLegacyCardColorCategory } = require('../client/utils/cardutil');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../client/drafting/createdraft');

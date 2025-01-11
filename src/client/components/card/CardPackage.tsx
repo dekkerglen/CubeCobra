@@ -6,14 +6,14 @@ import AddGroupToCubeModal from '../modals/AddGroupToCubeModal';
 import Username from '../Username';
 import withModal from '../WithModal';
 import UserContext from '../../contexts/UserContext';
-import CardPackageData, { APPROVED } from '../../datatypes/CardPackage';
+import CardPackageData, { APPROVED } from '../../../datatypes/CardPackage';
 import Button from '../base/Button';
 import { Card, CardBody, CardHeader } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 import CardGrid from './CardGrid';
 import Voter from '../base/Voter';
-import { cardId, detailsToCard } from 'utils/Card';
+import { cardId, detailsToCard } from 'utils/cardutil';
 import { StarFillIcon } from '@primer/octicons-react';
 import { CSRFContext } from '../../contexts/CSRFContext';
 

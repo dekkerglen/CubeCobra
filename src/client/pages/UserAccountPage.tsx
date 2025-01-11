@@ -1,3 +1,5 @@
+import React from 'react';
+
 import Banner from 'components/Banner';
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
@@ -13,7 +15,6 @@ import Cube from 'datatypes/Cube';
 import Patron from 'datatypes/Patron';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-import React from 'react';
 
 interface UserAccountPageProps {
   defaultNav: string;

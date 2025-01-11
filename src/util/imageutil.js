@@ -1,6 +1,6 @@
 //Split this into its own file to prevent cyclic dependencies
 
-const cardutil = require('../client/utils/Card');
+const cardutil = require('../client/utils/cardutil');
 const carddb = require('./carddb');
 
 // uri

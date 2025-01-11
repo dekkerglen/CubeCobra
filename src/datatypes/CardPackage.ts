@@ -1,4 +1,4 @@
-import CardDetails from './CardDetails';
+import { CardDetails } from './Card';
 
 export const APPROVED = 'a' as const;
 export const SUBMITTED = 's' as const;

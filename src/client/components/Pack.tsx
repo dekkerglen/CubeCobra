@@ -5,7 +5,7 @@ import Text from './base/Text';
 import DraggableCard from './DraggableCard';
 import FoilCardImage from './FoilCardImage';
 import DraftLocation from '../drafting/DraftLocation';
-import CardType from '../datatypes/Card';
+import CardType from '../../datatypes/Card';
 
 interface PackProps {
   pack: CardType[];

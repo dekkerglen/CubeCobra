@@ -4,7 +4,7 @@ import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 import CardGrid from '../card/CardGrid';
 import { arrayShuffle } from 'utils/Util';
-import Card from '../../datatypes/Card';
+import Card from '../../../datatypes/Card';
 import Button from '../base/Button';
 
 interface SampleHandModalProps {

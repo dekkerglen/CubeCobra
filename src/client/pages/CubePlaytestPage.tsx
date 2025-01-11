@@ -1,18 +1,21 @@
 import React, { useContext, useMemo } from 'react';
 
+import Button from 'components/base/Button';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import Controls from 'components/base/Controls';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import Text from 'components/base/Text';
 import CustomDraftCard from 'components/CustomDraftCard';
-import CustomDraftFormatModal from 'components/modals/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import GridDraftCard from 'components/GridDraftCard';
+import CustomDraftFormatModal from 'components/modals/CustomDraftFormatModal';
+import UploadDecklistModal from 'components/modals/UploadDecklistModal';
 import PlaytestDecksCard from 'components/PlaytestDecksCard';
 import RenderToRoot from 'components/RenderToRoot';
 import SamplePackCard from 'components/SamplePackCard';
 import SealedCard from 'components/SealedCard';
 import StandardDraftCard from 'components/StandardDraftCard';
-import UploadDecklistModal from 'components/modals/UploadDecklistModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import Cube from 'datatypes/Cube';
@@ -53,7 +56,7 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest" hasControls={user != null && cube.owner.id == user.id}>
+      <CubeLayout cube={cube} activeLink="playtest" hasControls={user !== null && cube.owner.id === user.id}>
         <Flexbox direction="col" gap="2" className="mb-2">
           {user && cube.owner.id === user.id && (
             <Controls>
@@ -84,6 +87,25 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
                   />
                 ))}
                 {defaultDraftFormat !== -1 && <StandardDraftCard defaultDraftFormat={defaultDraftFormat} />}
+                <Card>
+                  <CardHeader>Multiplayer Draft</CardHeader>
+                  <CardBody>
+                    <Text>
+                      Draft with other players and bots online using Draftmancer! Playtest data is uploaded back to
+                      CubeCobra.
+                    </Text>
+                  </CardBody>
+                  <CardFooter>
+                    <Button
+                      block
+                      type="link"
+                      color="primary"
+                      href={`https://beta.draftmancer.com/?cubeCobraID=${cube.id}&cubeCobraName=${encodeURIComponent(cube.name)}`}
+                    >
+                      Draft on Draftmancer
+                    </Button>
+                  </CardFooter>
+                </Card>
                 <SealedCard />
                 <GridDraftCard />
               </Flexbox>

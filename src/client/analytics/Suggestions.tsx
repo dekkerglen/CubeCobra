@@ -4,7 +4,7 @@ import CubeContext from '../contexts/CubeContext';
 import Suggestion from './Suggestion';
 import ImageSuggestion from './ImageSuggestion';
 import FilterContext from '../contexts/FilterContext';
-import CardType from '../datatypes/Card';
+import CardType from '../../datatypes/Card';
 import Checkbox from '../components/base/Checkbox';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import { Card, CardBody, CardHeader } from '../components/base/Card';

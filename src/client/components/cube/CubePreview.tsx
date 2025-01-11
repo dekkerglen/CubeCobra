@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Cube from '../../datatypes/Cube';
+import Cube from '../../../datatypes/Cube';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';

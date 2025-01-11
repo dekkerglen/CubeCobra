@@ -11,7 +11,7 @@
       "analytics/*": ["src/client/analytics/*"],
       "components/*": ["src/client/components/*"],
       "contexts/*": ["src/client/contexts/*"],
-      "datatypes/*": ["src/client/datatypes/*"],
+      "datatypes/*": ["src/datatypes/*"],
       "drafting/*": ["src/client/drafting/*"],
       "filtering/*": ["src/client/filtering/*"],
       "generated/*": ["src/client/generated/*"],
@@ -20,7 +20,7 @@
       "markdown/*": ["src/client/markdown/*"],
       "pages/*": ["src/client/pages/*"],
       "res/*": ["src/client/res/*"],
-      "utils/*": ["src/client/utils/*"]
+      "utils/*": ["src/client/utils/*"],
     },
     "module": "commonjs",
     "moduleResolution": "node",
