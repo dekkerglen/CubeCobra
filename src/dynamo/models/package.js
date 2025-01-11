@@ -126,9 +126,9 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
-      limit: 36,
+      Limit: 36,
     };
-    
+
     if (keywords) {
       const words = keywords ? keywords.toLowerCase().split(' ') : null;
 
@@ -168,7 +168,7 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
-      limit: 36,
+      Limit: 36,
     };
 
     if (keywords) {
@@ -209,7 +209,7 @@ module.exports = {
         ':owner': owner,
       },
       ExclusiveStartKey: lastKey,
-      limit: 100,
+      Limit: 100,
     };
 
     const result = await client.query(query);
