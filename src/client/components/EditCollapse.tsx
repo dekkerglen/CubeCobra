@@ -25,7 +25,7 @@ interface GetCardResponse {
 
 export const getCard = async (
   csrfFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
-  defaultprinting: string,
+  defaultPrinting: string,
   name: string,
   setAlerts?: Dispatch<SetStateAction<UncontrolledAlertProps[]>>,
 ): Promise<CardDetails | null> => {
@@ -34,7 +34,7 @@ export const getCard = async (
       method: 'POST',
       body: JSON.stringify({
         name,
-        defaultprinting,
+        defaultPrinting,
       }),
       headers: {
         'Content-Type': 'application/json',
