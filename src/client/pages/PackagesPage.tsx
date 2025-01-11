@@ -1,26 +1,26 @@
 import React, { useCallback, useContext, useState } from 'react';
 
 import Banner from 'components/Banner';
-import CardPackage from 'components/card/CardPackage';
-import CreatePackageModal from 'components/modals/CreatePackageModal';
-import DynamicFlash from 'components/DynamicFlash';
-import withModal from 'components/WithModal';
-import UserContext from 'contexts/UserContext';
-import MainLayout from 'layouts/MainLayout';
 import Alert from 'components/base/Alert';
-import CardPackageData from 'datatypes/CardPackage';
 import Button from 'components/base/Button';
-import Spinner from 'components/base/Spinner';
-import { Row, Col, Flexbox } from 'components/base/Layout';
-import Input from 'components/base/Input';
-import Select from 'components/base/Select';
 import Controls from 'components/base/Controls';
-import Text from 'components/base/Text';
-import useQueryParam from 'hooks/useQueryParam';
-import RenderToRoot from 'components/RenderToRoot';
-import ResponsiveDiv from 'components/base/ResponsiveDiv';
+import Input from 'components/base/Input';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
+import Select from 'components/base/Select';
+import Spinner from 'components/base/Spinner';
+import Text from 'components/base/Text';
+import CardPackage from 'components/card/CardPackage';
+import DynamicFlash from 'components/DynamicFlash';
+import CreatePackageModal from 'components/modals/CreatePackageModal';
+import RenderToRoot from 'components/RenderToRoot';
+import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
+import UserContext from 'contexts/UserContext';
+import CardPackageData from 'datatypes/CardPackage';
+import useQueryParam from 'hooks/useQueryParam';
+import MainLayout from 'layouts/MainLayout';
 
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 
@@ -71,7 +71,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
 
       return {};
     },
-    [activePage, currentLastKey, filter, sort, ascending],
+    [csrfFetch],
   );
 
   const fetchMoreData = useCallback(async () => {
@@ -81,7 +81,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
     setPackages([...packages, ...result.packages]);
     setLastKey(result.lastKey);
     setLoading(false);
-  }, [getData, currentLastKey, filter, sort, ascending, packages]);
+  }, [getData, type, filter, sort, ascending, currentLastKey, packages]);
 
   const getNewData = useCallback(
     async (t: string | null, f: string | null, s: string | null, a: string | null) => {
@@ -95,7 +95,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
       setLastKey(result.lastKey);
       setLoading(false);
     },
-    [type, filter, sort, ascending],
+    [getData],
   );
 
   const loader = (
