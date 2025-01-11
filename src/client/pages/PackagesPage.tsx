@@ -218,7 +218,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
             </CreatePackageModalLink>
           </Flexbox>
         )}
-        {items.length === 0 ? (
+        {packages.length === 0 ? (
           <p>No packages found</p>
         ) : (
           <Flexbox direction="col" gap="2">
