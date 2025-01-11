@@ -114,6 +114,7 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added })
                       value={addValue}
                       setValue={setAddValue}
                       placeholder="Card to Add"
+                      defaultPrinting={cube.defaultPrinting}
                     />
                   </Col>
                   <Col xs={4}>

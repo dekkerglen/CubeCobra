@@ -201,6 +201,7 @@ export interface AutocompleteInputProps extends InputProps {
   onSubmit?: (event: React.FormEvent<HTMLInputElement>, match?: string) => void;
   wrapperClassName?: string;
   cubeId?: string;
+  defaultPrinting?: string;
 }
 
 const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
@@ -210,6 +211,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   setValue,
   onSubmit,
   cubeId,
+  defaultPrinting = null,
   ...props
 }) => {
   const [tree, setTree] = useState<TreeNode>({});
@@ -314,7 +316,11 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
           {matches.map((match, index) => (
             <AutocardDiv
               inModal
-              image={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
+              image={
+                cubeId
+                  ? `/tool/cardimageforcube/${match}/${cubeId}`
+                  : `/tool/cardimage/${match}` + (defaultPrinting !== null ? `?defaultPrinting=${defaultPrinting}` : '')
+              }
               key={index}
               onClick={(e) => handleClickSuggestion(e)}
               className={classNames(

@@ -237,6 +237,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
                 autoComplete="off"
                 data-lpignore
                 className="square-right"
+                defaultPrinting={cube.defaultPrinting}
               />
               <Button color="primary" disabled={addValue.length === 0} onClick={(e) => handleAdd(e, addValue)}>
                 Add
