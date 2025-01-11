@@ -299,7 +299,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         }
       }
     },
-    [position, acceptSuggestion, matches, showMatches, onSubmit],
+    [position, acceptSuggestion, matches, showMatches, onSubmit, value],
   );
 
   return (

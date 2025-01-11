@@ -123,7 +123,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, boardToEdit],
+    [csrfFetch, cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, boardToEdit],
   );
 
   const handleRemoveReplace = useCallback(
@@ -180,7 +180,17 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [addValue, changedCards, boardToEdit, setAlerts, cube.defaultPrinting, cube.defaultStatus, swapCard, removeCard],
+    [
+      addValue,
+      changedCards,
+      boardToEdit,
+      setAlerts,
+      csrfFetch,
+      cube.defaultPrinting,
+      cube.defaultStatus,
+      swapCard,
+      removeCard,
+    ],
   );
 
   const submit = useCallback(async () => {

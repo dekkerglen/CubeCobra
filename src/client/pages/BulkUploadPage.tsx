@@ -74,7 +74,7 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added })
         console.error(e);
       }
     },
-    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard],
+    [csrfFetch, cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard],
   );
 
   return (
