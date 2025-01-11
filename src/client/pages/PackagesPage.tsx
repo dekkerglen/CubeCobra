@@ -28,10 +28,9 @@ interface PackagesPageProps {
   loginCallback?: string;
   items: CardPackageData[];
   lastKey: string | null;
-  activePage: 'approved' | 'submitted' | 'user';
 }
 
-const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items, lastKey, activePage }) => {
+const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items, lastKey }) => {
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
 
@@ -89,8 +88,6 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
       setPackages([]);
       const result = await getData(t, f, s, a, null);
 
-      console.log(result);
-
       setPackages(result.packages);
       setLastKey(result.lastKey);
       setLoading(false);
@@ -103,8 +100,6 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
       <Spinner className="position-absolute" />
     </div>
   );
-
-  console.log(currentLastKey);
 
   return (
     <MainLayout loginCallback={loginCallback}>
