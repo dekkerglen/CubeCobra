@@ -1,18 +1,22 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import fs from 'fs';
-import path from 'path';
-import https from 'https';
-import JSONStream from 'JSONStream';
-import es from 'event-stream';
-import fetch from 'node-fetch';
+import { ScryfallCard } from '@scryfall/api-types';
 import AWS from 'aws-sdk';
 import json from 'big-json';
+import es from 'event-stream';
+import fs from 'fs';
+import https from 'https';
+import JSONStream from 'JSONStream';
+import fetch from 'node-fetch';
+import path from 'path';
 import stream from 'stream';
-import * as cardutil from '../src/client/utils/Card';
-import * as util from '../src/util/util';
-import * as carddb from '../src/util/carddb';
+
+import { CardDetails } from 'datatypes/Card';
+
+import * as cardutil from '../client/utils/cardutil';
+import * as carddb from '../util/carddb';
+import * as util from '../util/util';
 
 const catalog = {
   dict: {},
@@ -109,7 +113,7 @@ function initializeCatalog() {
 
 initializeCatalog();
 
-function downloadFile(url, filePath) {
+function downloadFile(url: string, filePath: string) {
   const folder = filePath.substring(0, filePath.lastIndexOf('/'));
   const folderExists = fs.existsSync(folder);
   if (!folderExists) fs.mkdirSync(path.join(__dirname, `../${folder}`));
@@ -161,7 +165,7 @@ async function downloadDefaultCards() {
   ]);
 }
 
-function addCardToCatalog(card, isExtra) {
+function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
   catalog.dict[card.scryfall_id] = card;
   const normalizedFullName = cardutil.normalizeName(card.full_name);
   const normalizedName = cardutil.normalizeName(card.name);
@@ -172,9 +176,8 @@ function addCardToCatalog(card, isExtra) {
     imageName: normalizedFullName,
   };
   if (isExtra !== true) {
-    const cardImages = {
+    const cardImages: any = {
       image_normal: card.image_normal,
-      image_flip: undefined,
     };
     if (card.image_flip) {
       cardImages.image_flip = card.image_flip;

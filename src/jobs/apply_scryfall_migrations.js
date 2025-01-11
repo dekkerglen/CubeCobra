@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
-const carddb = require('../src/util/carddb');
-const Cube = require('../src/dynamo/models/cube');
+const carddb = require('../util/carddb');
+const Cube = require('../dynamo/models/cube');
 const _ = require('lodash');
 
 const lastRun = new Date('2000-01-01');

@@ -2,6 +2,10 @@
   "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "server.js"],
   "exclude": ["node_modules"],
   "compilerOptions": {
+    "typeRoots": [
+      "node_modules/@types",
+      "src/types"
+    ],
     "outDir": "build",
     "esModuleInterop": true,
     "target": "ES2020",

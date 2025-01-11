@@ -1,4 +1,4 @@
-interface Card {
+export interface CardAnalytic {
   cardName?: string;
   picks: number;
   passes: number;
@@ -9,6 +9,6 @@ interface Card {
 
 export default interface CubeAnalytic {
   cube: string;
-  cards: Card[];
+  cards: CardAnalytic[];
   useCubeElo?: boolean;
 }

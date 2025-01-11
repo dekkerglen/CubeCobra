@@ -1,9 +1,9 @@
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../src/util/carddb');
+const carddb = require('../util/carddb');
 
-const Cube = require('../src/dynamo/models/cube');
+const Cube = require('../dynamo/models/cube');
 
 const processCube = async (cube, oracleToIndex) => {
   try {

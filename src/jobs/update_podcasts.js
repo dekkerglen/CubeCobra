@@ -1,8 +1,8 @@
 // Load Environment Variables
 require('dotenv').config();
 
-const { updatePodcast } = require('../src/util/podcast');
-const Content = require('../src/dynamo/models/content');
+const { updatePodcast } = require('../util/podcast');
+const Content = require('../dynamo/models/content');
 
 const tryUpdate = async (podcast) => {
   try {

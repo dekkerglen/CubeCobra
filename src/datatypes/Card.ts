@@ -65,6 +65,7 @@ export interface CardDetails {
   popularity?: string;
   cubeCount?: number;
   pickCount?: number;
+  isExtra?: boolean;
 }
 
 export const allFields = [

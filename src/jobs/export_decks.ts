@@ -1,10 +1,10 @@
 require('dotenv').config();
 
 import fs from 'fs';
-import carddb from '../src/util/carddb';
+import carddb from '../util/carddb';
 
 import { getDrafterState } from '../src/client/drafting/draftutil';
-import Draft from '../src/dynamo/models/draft';
+import Draft from '../dynamo/models/draft';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {
   const card = draftCards[cardIndex];

@@ -1,12 +1,17 @@
+/* eslint-disable no-console */
 import dotenv from 'dotenv';
 dotenv.config();
 
 import EloRating from 'elo-rating';
 import fs from 'fs';
-import * as carddb from '../src/util/carddb';
-import CubeAnalytic from '../src/dynamo/models/cubeAnalytic';
-import Draft from '../src/dynamo/models/draft';
-import { getDrafterState } from '../src/client/drafting/draftutil';
+
+import type DraftType from 'datatypes/Draft';
+
+import type { CardAnalytic } from '../datatypes/CubeAnalytic';
+import CubeAnalytic from '../dynamo/models/cubeAnalytic';
+import Draft from '../dynamo/models/draft';
+import * as carddb from '../util/carddb';
+import { getDrafterState } from '../util/draftutil';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {
@@ -16,7 +21,7 @@ process.on('unhandledRejection', (reason, p) => {
 const ELO_SPEED = 0.1;
 const CUBE_ELO_SPEED = 2;
 
-const adjustElo = (winnerElo, loserElo, speed) => {
+const adjustElo = (winnerElo: number, loserElo: number, speed: number) => {
   const { playerRating, opponentRating } = EloRating.calculate(winnerElo, loserElo, true);
 
   const winnerEloChange = (playerRating - winnerElo) * speed;
@@ -25,7 +30,7 @@ const adjustElo = (winnerElo, loserElo, speed) => {
   return [winnerEloChange, loserEloChange];
 };
 
-const incrementDict = (dict, key) => {
+const incrementDict = (dict: { [x: string]: number }, key: string) => {
   if (!dict[key]) {
     dict[key] = 0;
   }
@@ -33,10 +38,16 @@ const incrementDict = (dict, key) => {
   dict[key] += 1;
 };
 
-const loadAndProcessCubeDraftAnalytics = (cube) => {
-  const source = JSON.parse(fs.readFileSync(`./temp/cube_draft_history/${cube}`, 'utf-8'));
+const loadAndProcessCubeDraftAnalytics = (cube: string) => {
+  const source = JSON.parse(fs.readFileSync(`./temp/cube_draft_history/${cube}`, 'utf-8')) as {
+    eloByCubeAndOracleId: Record<string, number>;
+    picksByCubeAndOracleId: Record<string, number>;
+    passesByCubeAndOracleId: Record<string, number>;
+    mainboardsByCubeAndOracleId: Record<string, number>;
+    sideboardsByCubeAndOracleId: Record<string, number>;
+  };
 
-  const cubeAnalytics = {};
+  const cubeAnalytics: Record<string, Partial<CardAnalytic>> = {};
 
   for (const [key, value] of Object.entries(source.eloByCubeAndOracleId)) {
     cubeAnalytics[key] = {
@@ -95,6 +106,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
     fs.mkdirSync('./temp/all_drafts');
   }
 
+  // @ts-expect-error TODO: migrate carddb to ts
   await carddb.initializeCardDb();
 
   const logsByDay: any = {};
@@ -154,8 +166,8 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
     fs.writeFileSync(`./temp/drafts_by_day/${key}.json`, JSON.stringify(logRows));
   }
 
-  let eloByOracleId = {};
-  let picksByOracleId = {};
+  let eloByOracleId: Record<string, number> = {};
+  let picksByOracleId: Record<string, number> = {};
 
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
@@ -173,7 +185,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
       console.log(`Starting ${i + 1} / ${keys.length}: for ${key}`);
       const logRows = logsByDay[key] || [];
 
-      const logRowBatches: any[] = [];
+      const logRowBatches: DraftType[][] = [];
       const batchSize = 100;
       for (let j = 0; j < logRows.length; j += batchSize) {
         logRowBatches.push(logRows.slice(j, j + batchSize));
@@ -181,7 +193,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
 
       let index = 0;
       for (const batch of logRowBatches) {
-        const drafts = await Draft.batchGet(batch.filter((item) => item.complete).map((row) => row.id));
+        const drafts: DraftType[] = await Draft.batchGet(batch.filter((item) => item.complete).map((row) => row.id));
 
         // save these drafts to avoid having to load them again, used in update_metadata_dict
         fs.writeFileSync(
@@ -194,7 +206,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
                   .flat(3)
                   .map((cardIndex) => {
                     if (typeof cardIndex === 'number' && cardIndex < draft.cards.length && cardIndex >= 0) {
-                      return draft.cards[cardIndex].details.oracle_id;
+                      return draft.cards[cardIndex]?.details?.oracle_id ?? null;
                     }
                     return null;
                   })
@@ -225,13 +237,17 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
 
             for (const card of draft.seats[0].mainboard.flat(3)) {
               if (typeof card === 'number' && card < draft.cards.length && card >= 0) {
-                incrementDict(mainboardsByCubeAndOracleId, draft.cards[card].details.oracle_id);
+                if (draft.cards[card]?.details?.oracle_id) {
+                  incrementDict(mainboardsByCubeAndOracleId, draft.cards[card]?.details?.oracle_id);
+                }
               }
             }
 
             for (const card of draft.seats[0].sideboard.flat(3)) {
               if (typeof card === 'number' && card < draft.cards.length && card >= 0) {
-                incrementDict(sideboardsByCubeAndOracleId, draft.cards[card].details.oracle_id);
+                if (draft.cards[card]?.details?.oracle_id) {
+                  incrementDict(sideboardsByCubeAndOracleId, draft.cards[card]?.details?.oracle_id);
+                }
               }
             }
 
@@ -251,42 +267,53 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
                   continue;
                 }
 
-                incrementDict(picksByCubeAndOracleId, draft.cards[picked].details.oracle_id);
-                incrementDict(picksByOracleId, draft.cards[picked].details.oracle_id);
+                if (draft.cards[picked]?.details?.oracle_id) {
+                  incrementDict(picksByCubeAndOracleId, draft.cards[picked].details.oracle_id);
+                  incrementDict(picksByOracleId, draft.cards[picked].details.oracle_id);
+                }
 
                 for (const card of pack) {
                   if (card < draft.cards.length && card >= 0) {
-                    incrementDict(passesByCubeAndOracleId, draft.cards[card].details.oracle_id);
+                    if (draft.cards[card]?.details?.oracle_id) {
+                      incrementDict(passesByCubeAndOracleId, draft.cards[card]?.details?.oracle_id);
+                    }
                   }
                 }
 
                 for (const [eloDict, speed] of [
-                  [eloByOracleId, ELO_SPEED],
-                  [eloByCubeAndOracleId, CUBE_ELO_SPEED],
+                  [eloByOracleId, ELO_SPEED] as [Record<string, number>, number],
+                  [eloByCubeAndOracleId, CUBE_ELO_SPEED] as [Record<string, number>, number],
                 ]) {
-                  if (!eloDict[draft.cards[picked].details.oracle_id]) {
-                    eloDict[draft.cards[picked].details.oracle_id] = 1200;
+                  const oracleId = draft.cards[picked]?.details?.oracle_id;
+                  if (!oracleId) {
+                    continue;
                   }
+
+                  if (!eloDict[oracleId]) {
+                    eloDict[oracleId] = 1200;
+                  }
+
                   for (const card of pack) {
-                    if (card < draft.cards.length && card >= 0) {
-                      if (!eloDict[draft.cards[card].details.oracle_id]) {
-                        eloDict[draft.cards[card].details.oracle_id] = 1200;
+                    const cardOracle = draft.cards[card]?.details?.oracle_id;
+                    if (cardOracle && card < draft.cards.length && card >= 0) {
+                      if (!eloDict[cardOracle]) {
+                        eloDict[cardOracle] = 1200;
                       }
 
                       const [winnerEloChange, loserEloChange] = adjustElo(
-                        eloDict[draft.cards[picked].details.oracle_id],
-                        eloDict[draft.cards[card].details.oracle_id],
+                        eloDict[oracleId],
+                        eloDict[cardOracle],
                         speed,
                       );
 
-                      eloDict[draft.cards[picked].details.oracle_id] += winnerEloChange;
-                      eloDict[draft.cards[card].details.oracle_id] += loserEloChange;
+                      eloDict[oracleId] += winnerEloChange;
+                      eloDict[cardOracle] += loserEloChange;
                     }
                   }
                 }
               }
             }
-          } catch (err) {
+          } catch (err: any) {
             console.log(`Error processing draft ${draft.id}: ${err.message}`);
             console.log(err);
           }
@@ -332,7 +359,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
   for (const batch of batches) {
     console.log(`Uploading ${batch.length} / ${allCubes.length} cube draft histories`);
     await CubeAnalytic.batchPut(
-      Object.fromEntries(batch.map((cube) => [cube.split('.')[0], loadAndProcessCubeDraftAnalytics(cube)])),
+      Object.fromEntries(batch.map((cube: string) => [cube.split('.')[0], loadAndProcessCubeDraftAnalytics(cube)])),
     );
 
     processed += batch.length;
