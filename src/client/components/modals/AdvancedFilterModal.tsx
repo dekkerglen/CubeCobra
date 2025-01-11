@@ -133,6 +133,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
               data-lpignore
               className="tag-autocomplete-input"
               wrapperClassName="tag-autocomplete-wrapper"
+              showImages={false}
             />
           )}
           <Row>
