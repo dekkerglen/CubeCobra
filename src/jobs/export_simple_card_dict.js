@@ -1,17 +1,17 @@
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../util/carddb');
+const {getVersionsByOracleId, getMostReasonableById, initializeCardDb, getAllOracleIds} = require('../util/carddb');
 
 (async () => {
-  await carddb.initializeCardDb();
+  await initializeCardDb();
 
-  const allOracleIds = carddb.allOracleIds();
+  const allOracleIds = getAllOracleIds();
 
   const result = Object.fromEntries(
     allOracleIds.map((oracleId) => {
-      const card = carddb.getVersionsByOracleId(oracleId)[0];
-      const reasonable = carddb.getMostReasonableById(card);
+      const card = getVersionsByOracleId(oracleId)[0];
+      const reasonable = getMostReasonableById(card);
 
       return [
         oracleId,

@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { ScryfallCard } from '@scryfall/api-types';
 import AWS from 'aws-sdk';
 import json from 'big-json';
 import es from 'event-stream';
@@ -12,13 +11,111 @@ import fetch from 'node-fetch';
 import path from 'path';
 import stream from 'stream';
 
-import { CardDetails } from 'datatypes/Card';
+import { CardDetails, ColorCategory } from 'datatypes/Card';
 
 import * as cardutil from '../client/utils/cardutil';
-import * as carddb from '../util/carddb';
+import { CardMetadata, fileToAttribute, reasonableCard } from '../util/carddb';
 import * as util from '../util/util';
 
-const catalog = {
+interface ScryfallCard {
+  id: string;
+  name: string;
+  lang: string;
+  set: string;
+  collector_number: string;
+  set_name: string;
+  released_at: string;
+  reprint: boolean;
+  border_color: string;
+  promo: boolean;
+  digital: boolean;
+  finishes: string[];
+  prices: {
+    usd: string | null;
+    usd_foil: string | null;
+    usd_etched: string | null;
+    eur: string | null;
+    tix: string | null;
+  };
+  image_uris: {
+    small: string;
+    normal: string;
+    art_crop: string;
+  };
+  card_faces?: ScryfallCard[];
+  loyalty?: string;
+  power?: string;
+  toughness?: string;
+  type_line: string;
+  oracle_text: string;
+  mana_cost: string;
+  cmc: number;
+  colors: string[];
+  color_identity: string[];
+  legalities: {
+    legacy: string;
+    modern: string;
+    standard: string;
+    pioneer: string;
+    pauper: string;
+    brawl: string;
+    historic: string;
+    commander: string;
+    penny: string;
+    vintage: string;
+  };
+  layout: string;
+  rarity: string;
+  artist: string;
+  scryfall_uri: string;
+  mtgo_id: number;
+  textless: boolean;
+  tcgplayer_id: string;
+  oracle_id: string;
+  full_art: boolean;
+  flavor_text: string;
+  frame_effects: string[];
+  frame: string;
+  card_back_id: string;
+  artist_id: string;
+  illustration_id: string;
+  content_warning: boolean;
+  variation: boolean;
+  preview: {
+    source: string;
+    source_uri: string;
+    previewed_at: string;
+  };
+  related_uris: {
+    gatherer: string;
+    tcgplayer_decks: string;
+    edhrec: string;
+    mtgtop8: string;
+  };
+  all_parts: {
+    object: string;
+    id: string;
+    component: string;
+    name: string;
+    type_line: string;
+    uri: string;
+  }[];
+}
+
+interface Catalog {
+  dict: Record<string, CardDetails>;
+  names: string[];
+  nameToId: Record<string, string[]>;
+  full_names: string[];
+  imagedict: Record<string, any>;
+  cardimages: Record<string, any>;
+  oracleToId: Record<string, string[]>;
+  english: Record<string, string>;
+  metadatadict: Record<string, CardMetadata>;
+  indexToOracleId: string[];
+}
+
+const catalog: Catalog = {
   dict: {},
   names: [],
   nameToId: {},
@@ -30,88 +127,6 @@ const catalog = {
   metadatadict: {},
   indexToOracleId: [],
 };
-
-/* // '?' denotes a value may be null or missing
- * cardDetailsSchema = {
- *   color_identity: [Char],
- *   set: String,
- *   set_name: String,
- *   finishes: [String],
- *   collector_number: String,
- *   released_at: Date,
- *   reprint: Boolean,
- *   promo: Boolean,
- *   prices: {
- *     usd: Float?,
- *     usd_foil: Float?,
- *     eur: Float?,
- *     tix: Float?,
- *   },
- *   elo: Integer,
- *   digital: Boolean,
- *   isToken: Boolean,
- *   border_color: String,
- *   name: String,
- *   // normalized to lowercase
- *   name_lower: String,
- *   // name [set-collector_number]
- *   full_name: String,
- *   artist: String?,
- *   scryfall_uri: URI,
- *   rarity: String,
- *   oracle_text: String?,
- *   // Scryfall ID
- *   scryfall_id: UUID,
- *   oracle_id: UUID,
- *   cmc: Float
- *   // one of "legal", "not_legal", "restricted", "banned"
- *   legalities: {
- *     Legacy: String,
- *     Modern: String,
- *     Standard: String,
- *     Pauper: String,
- *     Pioneer: String,
- *     Brawl: String,
- *     Historic: String,
- *     Commander: String,
- *     Penny: String,
- *     Vintage: String,
- *   },
- *   // Hybrid looks like w-u
- *   parsed_cost: [String],
- *   colors: [Char]?,
- *   type: String,
- *   full_art: Boolean,
- *   language: String,
- *   mtgo_id: Integer?,
- *   layout: String,
- *   tcgplayer_id: String?,
- *   loyalty: String?
- *   power: String?
- *   toughness: String?
- *   image_small: URI?
- *   image_normal: URI?
- *   art_crop: URI?
- *   image_flip: URI?
- *   // Lowercase
- *   colorcategory: Char
- *   // Card IDs
- *   tokens: [UUID]?
- */
-function initializeCatalog() {
-  catalog.dict = {};
-  catalog.names = [];
-  catalog.nameToId = {};
-  catalog.full_names = [];
-  catalog.imagedict = {};
-  catalog.cardimages = {};
-  catalog.oracleToId = {};
-  catalog.english = {};
-  catalog.metadatadict = {};
-  catalog.indexToOracleId = [];
-}
-
-initializeCatalog();
 
 function downloadFile(url: string, filePath: string) {
   const folder = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -182,7 +197,7 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
     if (card.image_flip) {
       cardImages.image_flip = card.image_flip;
     }
-    if (carddb.reasonableCard(card)) {
+    if (reasonableCard(card)) {
       catalog.cardimages[normalizedName] = cardImages;
     }
   }
@@ -201,7 +216,7 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
   util.binaryInsert(normalizedFullName, catalog.full_names);
 }
 
-async function writeFile(filepath, data) {
+async function writeFile(filepath: string, data: any) {
   return new Promise<void>((resolve, reject) => {
     try {
       // data is too big to stringify, so we write it to a file using big-json
@@ -226,67 +241,11 @@ async function writeFile(filepath, data) {
   });
 }
 
-const specialCaseCards = {
-  "Outlaws' Merriment": [
-    'db951f76-b785-453e-91b9-b3b8a5c1cfd4',
-    'cd3ca6d5-4b2c-46d4-95f3-f0f2fa47f447',
-    'c994ea90-71f4-403f-9418-2b72cc2de14d',
-  ],
-
-  "Trostani's Summoner": [
-    '703e7ecf-3d73-40c1-8cfe-0758778817cf',
-    '5fc993a7-a1ce-4403-a0a0-2afc9f9eca42',
-    '214a48bc-4a1c-44e3-9415-a73af3d4fd95',
-  ],
-
-  // This card didn't have a printed token until Commander Collection: Black, and the printed version is a double-faced
-  // token
-  // TODO(#2196): When the card parser can handle DFC tokens, we can remove this special case
-  Ophiomancer: ['13e4832d-8530-4b85-b738-51d0c18f28ec'],
-
-  // These two are a bit of a problem. Normaly when an ability creates copies the scryfall tokens associated with it are fetched.
-  // This works great in most cases, but these two already have a token in scryfall only it's the wrong token. It's a token refering to
-  // the first ability and not the one that generates the copies.
-  'Saheeli, the Gifted': ['761507d5-d36a-4123-a074-95d7f6ffb4c5', 'a020dc47-3747-4123-9954-f0e87a858b8c'],
-  'Daretti, Ingenious Iconoclast': ['7c82af53-2de8-4cd6-84bf-fb39d2693de2', 'a020dc47-3747-4123-9954-f0e87a858b8c'],
-
-  // There simply does not seem to exist a 3/1 red elemental token with haste but without trample so i choose the closest thing.
-  'Chandra, Flamecaller': ['bc6f27f7-0248-4c04-8022-41073966e4d8'],
-
-  // the cards below are transform cards that are on here due to the way
-  // we currently do not populate the oracle text of transform cards.
-  'Arlinn Kord': ['bd05e304-1a16-436d-a05c-4a38a839759b'],
-  'Bloodline Keeper': ['71496671-f7ba-4014-a895-d70a27979db7'],
-  'Docent of Perfection': ['e4439a8b-ef98-428d-a274-53c660b23afe'],
-  'Dowsing Dagger': ['642d1d93-22d0-43f9-8691-6790876185a0'],
-  'Extricator of Sin': ['11d25bde-a303-4b06-a3e1-4ad642deae58'],
-  'Garruk Relentless': ['bd05e304-1a16-436d-a05c-4a38a839759b', '7a49607c-427a-474c-ad77-60cd05844b3c'],
-  'Golden Guardian': ['a7820eb9-6d7f-4bc4-b421-4e4420642fb7'],
-  'Hanweir Militia Captain': ['94ed2eca-1579-411d-af6f-c7359c65de30'],
-  'Huntmaster of the Fells': ['bd05e304-1a16-436d-a05c-4a38a839759b'],
-  "Jace, Vryn's Prodigy": ['458e37b1-a849-41ae-b63c-3e09ffd814e4'],
-  "Legion's Landing": ['09293ae7-0629-417b-9eda-9bd3f6d8e118'],
-  'Liliana, Heretical Healer': ['8e214f84-01ee-49c1-8801-4e550b5ade5d'],
-  'Mayor of Avabruck': ['bd05e304-1a16-436d-a05c-4a38a839759b'],
-  'Nissa, Vastwood Seer': ['0affd414-f774-48d1-af9e-bff74e58e1ca'],
-  'Shrill Howler': ['11d25bde-a303-4b06-a3e1-4ad642deae58'],
-  'Storm the Vault': ['e6fa7d35-9a7a-40fc-9b97-b479fc157ab0'],
-  'Treasure Map': ['e6fa7d35-9a7a-40fc-9b97-b479fc157ab0'],
-  'Westvale Abbey': ['94ed2eca-1579-411d-af6f-c7359c65de30'],
-};
-
-function getScryfallTokensForCard(card) {
+function getScryfallTokensForCard(card: ScryfallCard) {
   const allParts = card.all_parts || [];
   return allParts
     .filter((element) => element.component === 'token' || element.type_line.startsWith('Emblem'))
     .map(({ id }) => id);
-}
-
-function getTokensForSpecialCaseCard(card) {
-  if (card.card_faces) {
-    return specialCaseCards[card.card_faces[0].name] || [];
-  }
-  return specialCaseCards[card.name] || [];
 }
 
 const specialCaseTokens = {
@@ -298,7 +257,7 @@ const specialCaseTokens = {
   Energy: 'a446b9f8-cb22-408a-93ff-bee44a0dccc0',
 };
 
-function arraySetEqual(target, candidate) {
+function arraySetEqual<T>(target: T[], candidate: T[]) {
   let isValid = candidate.length === target.length;
   if (!isValid) return false;
 
@@ -311,13 +270,10 @@ function arraySetEqual(target, candidate) {
   return isValid;
 }
 
-function getTokens(card, catalogCard) {
+function getTokens(card: ScryfallCard, catalogCard: CardDetails) {
   const mentionedTokens: any[] = [];
   const recordedTokens = getScryfallTokensForCard(card);
-  const specialTokens = getTokensForSpecialCaseCard(card);
-  if (specialTokens.length > 0) {
-    mentionedTokens.push(...recordedTokens);
-  } else if (recordedTokens.length > 0) {
+  if (recordedTokens.length > 0) {
     catalogCard.tokens = recordedTokens;
   } else if (catalogCard.oracle_text !== null) {
     if (catalogCard.oracle_text.includes(' token')) {
@@ -366,7 +322,7 @@ function getTokens(card, catalogCard) {
           const isACopy = !!(result[12] || result[8]);
 
           if (Object.keys(specialCaseTokens).includes(tokenName)) {
-            mentionedTokens.push(specialCaseTokens[tokenName]);
+            mentionedTokens.push(specialCaseTokens[tokenName as keyof typeof specialCaseTokens]);
             continue;
           }
 
@@ -501,15 +457,21 @@ function getTokens(card, catalogCard) {
   return mentionedTokens;
 }
 
-function convertCmc(card, isExtra, faceAttributeSource) {
-  if (isExtra) {
-    return 0;
+function convertCmc(card: ScryfallCard, preflipped: boolean, faceAttributeSource: ScryfallCard) {
+  if (preflipped) {
+    if (faceAttributeSource.cmc) {
+      return faceAttributeSource.cmc;
+    }
   }
-  return typeof faceAttributeSource.cmc === 'number' ? faceAttributeSource.cmc : card.cmc;
+
+  return card.cmc || 0;
 }
 
-function convertLegalities(card, isExtra) {
-  if (isExtra) {
+function convertLegalities(
+  card: ScryfallCard,
+  preflipped?: boolean,
+): Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'> {
+  if (preflipped) {
     return {
       Legacy: 'not_legal',
       Modern: 'not_legal',
@@ -524,26 +486,26 @@ function convertLegalities(card, isExtra) {
     };
   }
   return {
-    Legacy: card.legalities.legacy,
-    Modern: card.legalities.modern,
-    Standard: card.legalities.standard,
-    Pioneer: card.legalities.pioneer,
-    Pauper: card.legalities.pauper,
-    Brawl: card.legalities.brawl,
-    Historic: card.legalities.historic,
-    Commander: card.legalities.commander,
-    Penny: card.legalities.penny,
-    Vintage: card.legalities.vintage,
+    Legacy: card.legalities.legacy as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Modern: card.legalities.modern as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Standard: card.legalities.standard as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Pioneer: card.legalities.pioneer as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Pauper: card.legalities.pauper as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Brawl: card.legalities.brawl as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Historic: card.legalities.historic as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Commander: card.legalities.commander as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Penny: card.legalities.penny as 'legal' | 'not_legal' | 'banned' | 'restricted',
+    Vintage: card.legalities.vintage as 'legal' | 'not_legal' | 'banned' | 'restricted',
   };
 }
 
-function convertParsedCost(card, isExtra = false) {
-  if (isExtra) {
+function convertParsedCost(card: ScryfallCard, preflipped?: boolean) {
+  if (preflipped) {
     return [];
   }
 
   let parsedCost: string[] = [];
-  if (typeof card.card_faces === 'undefined' || card.layout === 'flip') {
+  if (!card.card_faces || card.layout === 'flip') {
     parsedCost = card.mana_cost
       .substr(1, card.mana_cost.length - 2)
       .toLowerCase()
@@ -563,7 +525,8 @@ function convertParsedCost(card, isExtra = false) {
       .split('}{')
       .reverse();
   } else {
-    console.error(`Error converting parsed colors: (isExtra:${isExtra}) ${card.name}`);
+    // eslint-disable-next-line no-console
+    console.error(`Error converting parsed colors: (isExtra:${preflipped}) ${card.name}`);
   }
 
   if (parsedCost) {
@@ -574,20 +537,22 @@ function convertParsedCost(card, isExtra = false) {
   return parsedCost;
 }
 
-function convertColors(card, isExtra = false) {
-  if (isExtra) {
-    if (typeof card.card_faces === 'undefined' || card.card_faces.length < 2) {
+function convertColors(card: ScryfallCard, preflipped?: boolean) {
+  if (preflipped) {
+    if (!card.card_faces || card.card_faces.length < 2) {
       return [];
     }
+
     // special case: Adventure faces currently do not have colors on Scryfall (but probably should)
     if (card.layout === 'adventure') {
       return Array.from(card.colors);
     }
+
     // TODO: handle cards with more than 2 faces
     return Array.from(card.card_faces[1].colors);
   }
 
-  if (typeof card.card_faces === 'undefined') {
+  if (!card.card_faces) {
     return Array.from(card.colors);
   }
 
@@ -606,15 +571,16 @@ function convertColors(card, isExtra = false) {
     return Array.from(card.card_faces[0].colors);
   }
 
-  console.error(`Error converting colors: (isExtra:${isExtra}) ${card.name}`);
+  // eslint-disable-next-line no-console
+  console.error(`Error converting colors: (isExtra:${preflipped}) ${card.name}`);
   return [];
 }
 
-function convertType(card, isExtra, faceAttributeSource) {
+function convertType(card: ScryfallCard, preflipped: boolean, faceAttributeSource: ScryfallCard) {
   let type = faceAttributeSource.type_line;
   if (!type) {
     type = card.type_line;
-    if (isExtra) {
+    if (preflipped) {
       type = type.substring(type.indexOf('/') + 2);
     } else if (type.includes('//')) {
       type = type.substring(0, type.indexOf('/'));
@@ -626,23 +592,24 @@ function convertType(card, isExtra, faceAttributeSource) {
   }
 
   if (!type) {
-    console.error(`Error converting type: (isExtra:${isExtra}) ${card.name} (id: ${card.scryfall_id})`);
+    // eslint-disable-next-line no-console
+    console.error(`Error converting type: (isExtra:${preflipped}) ${card.name} (id: ${card.id})`);
     return '';
   }
   return type.trim();
 }
 
-function convertId(card, isExtra) {
-  if (isExtra) {
+function convertId(card: ScryfallCard, preflipped: boolean) {
+  if (preflipped) {
     return `${card.id}2`;
   }
   return card.id;
 }
 
-function convertName(card, isExtra) {
+function convertName(card: ScryfallCard, preflipped: boolean) {
   let str = card.name;
 
-  if (isExtra) {
+  if (preflipped) {
     str = str.substring(str.indexOf('/') + 2); // second name
   } else if (card.name.includes('/') && card.layout !== 'split') {
     // NOTE: we want split cards to include both names
@@ -657,10 +624,10 @@ function convertName(card, isExtra) {
   return str.trim();
 }
 
-function getFaceAttributeSource(card, isExtra) {
+function getFaceAttributeSource(card: ScryfallCard, preflipped: boolean) {
   let faceAttributeSource;
-  if (isExtra) {
-    [, faceAttributeSource] = card.card_faces;
+  if (preflipped && card.card_faces) {
+    faceAttributeSource = card.card_faces[1];
   } else if (card.card_faces) {
     [faceAttributeSource] = card.card_faces;
   } else {
@@ -669,10 +636,11 @@ function getFaceAttributeSource(card, isExtra) {
   return faceAttributeSource;
 }
 
-function convertCard(card, metadata, isExtra) {
-  const faceAttributeSource = getFaceAttributeSource(card, isExtra);
-  const newcard: any = {};
-  if (isExtra) {
+function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boolean): CardDetails {
+  const faceAttributeSource = getFaceAttributeSource(card as ScryfallCard, preflipped);
+
+  const newcard: Partial<CardDetails> = {};
+  if (preflipped) {
     card = { ...card };
     card.card_faces = [faceAttributeSource];
   }
@@ -680,7 +648,7 @@ function convertCard(card, metadata, isExtra) {
   newcard.popularity = 0;
   newcard.cubeCount = 0;
   newcard.pickCount = 0;
-  newcard.isExtra = !!isExtra;
+  newcard.isExtra = !!preflipped;
   if (metadata) {
     newcard.elo = metadata.elo;
     newcard.popularity = metadata.popularity;
@@ -688,7 +656,7 @@ function convertCard(card, metadata, isExtra) {
     newcard.pickCount = metadata.picks;
   }
 
-  const name = convertName(card, isExtra);
+  const name = convertName(card, preflipped);
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
   newcard.set_name = card.set_name;
@@ -708,16 +676,16 @@ function convertCard(card, metadata, isExtra) {
     card.set.toLowerCase() === 'exp' || // expeditions
     card.set.toLowerCase() === 'amh1'; // mh1 art cards
   newcard.prices = {
-    usd: card.prices.usd ? parseFloat(card.prices.usd) : null,
-    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : null,
-    usd_etched: card.prices.usd_etched ? parseFloat(card.prices.usd_etched) : null,
-    eur: card.prices.eur ? parseFloat(card.prices.eur) : null,
-    tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
+    usd: card.prices.usd ? parseFloat(card.prices.usd) : undefined,
+    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : undefined,
+    usd_etched: card.prices.usd_etched ? parseFloat(card.prices.usd_etched) : undefined,
+    eur: card.prices.eur ? parseFloat(card.prices.eur) : undefined,
+    tix: card.prices.tix ? parseFloat(card.prices.tix) : undefined,
   };
 
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
-  newcard.border_color = card.border_color;
+  newcard.border_color = card.border_color as 'black' | 'white' | 'silver' | 'gold' | undefined;
   newcard.name = name;
   newcard.name_lower = cardutil.normalizeName(name);
   newcard.full_name = `${name} [${card.set}-${card.collector_number}]`;
@@ -730,14 +698,14 @@ function convertCard(card, metadata, isExtra) {
     // concatenate all card face text to allow it to be found in searches
     newcard.oracle_text = card.card_faces.map((face) => face.oracle_text).join('\n');
   }
-  newcard.scryfall_id = convertId(card, isExtra);
+  newcard.scryfall_id = convertId(card, preflipped);
   // reversible cards have a separate oracle ID on each face
   newcard.oracle_id = faceAttributeSource.oracle_id || card.oracle_id;
-  newcard.cmc = convertCmc(card, isExtra, faceAttributeSource);
-  newcard.legalities = convertLegalities(card, isExtra);
-  newcard.parsed_cost = convertParsedCost(card, isExtra);
-  newcard.colors = convertColors(card, isExtra);
-  newcard.type = convertType(card, isExtra, faceAttributeSource);
+  newcard.cmc = convertCmc(card, preflipped, faceAttributeSource);
+  newcard.legalities = convertLegalities(card, preflipped);
+  newcard.parsed_cost = convertParsedCost(card, preflipped);
+  newcard.colors = convertColors(card, preflipped);
+  newcard.type = convertType(card, preflipped, faceAttributeSource);
   newcard.full_art = card.full_art;
   newcard.language = card.lang;
   newcard.mtgo_id = card.mtgo_id;
@@ -784,21 +752,21 @@ function convertCard(card, metadata, isExtra) {
 
     const colorFromIdentity = newcard.color_identity[0].toLowerCase();
     if (legacyColorCategoryToCurrentMap.get(colorFromIdentity) !== undefined) {
-      newcard.colorcategory = legacyColorCategoryToCurrentMap.get(colorFromIdentity);
+      newcard.colorcategory = legacyColorCategoryToCurrentMap.get(colorFromIdentity) as ColorCategory;
     } else {
-      newcard.colorcategory = colorFromIdentity;
+      newcard.colorcategory = colorFromIdentity as ColorCategory;
     }
   }
 
-  const tokens = getTokens(card, newcard);
+  const tokens = getTokens(card, newcard as CardDetails);
   if (tokens.length > 0) {
     newcard.tokens = tokens;
   }
 
-  return newcard;
+  return newcard as CardDetails;
 }
 
-function addLanguageMapping(card) {
+function addLanguageMapping(card: ScryfallCard) {
   if (card.lang === 'en') {
     return;
   }
@@ -839,35 +807,35 @@ async function writeCatalog(basePath = 'private') {
   await writeFile(path.join(basePath, 'metadatadict.json'), catalog.metadatadict);
   await writeFile(path.join(basePath, 'indexToOracle.json'), catalog.indexToOracleId);
 
+  // eslint-disable-next-line no-console
   console.info('All JSON files saved.');
 }
 
-function saveEnglishCard(card, metadata) {
+function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata) {
   if (card.layout === 'transform') {
     addCardToCatalog(convertCard(card, metadata, true), true);
   }
   addCardToCatalog(convertCard(card, metadata, false), false);
 }
 
-async function saveAllCards(metadatadict, indexToOracle) {
+async function saveAllCards(metadatadict: Record<string, CardMetadata>, indexToOracle: string[]) {
+  // eslint-disable-next-line no-console
   console.info('Processing cards...');
   await new Promise((resolve) =>
     fs
       .createReadStream('./private/cards.json')
-      // @ts-ignore
       .pipe(JSONStream.parse('*'))
-      // @ts-ignore
+      // @ts-expect-error idk why but this works
       .pipe(es.mapSync((item) => saveEnglishCard(item, metadatadict[item.oracle_id])))
       .on('close', resolve),
   );
 
+  // eslint-disable-next-line no-console
   console.info('Creating language mappings...');
   await new Promise((resolve) =>
     fs
       .createReadStream('./private/all-cards.json')
-      // @ts-ignore
       .pipe(JSONStream.parse('*'))
-      // @ts-ignore
       .pipe(es.mapSync(addLanguageMapping))
       .on('close', resolve),
   );
@@ -875,31 +843,41 @@ async function saveAllCards(metadatadict, indexToOracle) {
   catalog.indexToOracleId = indexToOracle;
   catalog.metadatadict = metadatadict;
 
+  // eslint-disable-next-line no-console
   console.info('Saving cardbase files...');
   await writeCatalog('./private');
 }
 
-const downloadFromScryfall = async (metadatadict, indexToOracle) => {
+const downloadFromScryfall = async (metadatadict: Record<string, CardMetadata>, indexToOracle: string[]) => {
+  // eslint-disable-next-line no-console
   console.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
     await downloadDefaultCards();
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Downloading card data failed:');
-    console.error(error.message, error);
+    // eslint-disable-next-line no-console
+    console.error(error);
+    // eslint-disable-next-line no-console
     console.error('Cardbase was not updated');
     return;
   }
 
+  // eslint-disable-next-line no-console
   console.info('Creating objects...');
   try {
     await saveAllCards(metadatadict, indexToOracle);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Updating cardbase objects failed:');
-    console.error(error.message, error);
+    // eslint-disable-next-line no-console
+    console.error(error);
+    // eslint-disable-next-line no-console
     console.error('Cardbase update may not have fully completed');
   }
 
+  // eslint-disable-next-line no-console
   console.info('Finished cardbase update...');
 };
 
@@ -911,7 +889,7 @@ const s3 = new AWS.S3({
   region: process.env.AWS_REGION || 'us-east-2',
 });
 
-const uploadStream = (key) => {
+const uploadStream = (key: string) => {
   const pass = new stream.PassThrough();
   return {
     writeStream: pass,
@@ -919,7 +897,7 @@ const uploadStream = (key) => {
   };
 };
 
-const uploadLargeObjectToS3 = async (file, key) => {
+const uploadLargeObjectToS3 = async (file: any, key: string) => {
   await new Promise<void>((resolve, reject) => {
     try {
       const { writeStream, promise } = uploadStream(key);
@@ -941,14 +919,17 @@ const uploadLargeObjectToS3 = async (file, key) => {
 };
 
 const uploadCardDb = async () => {
-  for (const file of Object.keys(carddb.fileToAttribute)) {
+  for (const file of Object.keys(fileToAttribute)) {
+    // eslint-disable-next-line no-console
     console.log(`Uploading ${file}...`);
 
     await uploadLargeObjectToS3(`private/${file}`, `cards/${file}`);
 
+    // eslint-disable-next-line no-console
     console.log(`Finished ${file}`);
   }
 
+  // eslint-disable-next-line no-console
   console.log('Uploading manifest...');
   await s3
     .upload({
@@ -957,8 +938,10 @@ const uploadCardDb = async () => {
       Body: JSON.stringify({ date_exported: new Date() }),
     })
     .promise();
+  // eslint-disable-next-line no-console
   console.log('Finished manifest');
 
+  // eslint-disable-next-line no-console
   console.log('done');
 };
 
@@ -973,6 +956,7 @@ const loadMetadatadict = async () => {
     };
   }
 
+  // eslint-disable-next-line no-console
   console.log("Couldn't find metadatadict.json");
   return {
     metadatadict: {},
@@ -986,10 +970,12 @@ const loadMetadatadict = async () => {
     await downloadFromScryfall(metadatadict, indexToOracle);
     await uploadCardDb();
 
+    // eslint-disable-next-line no-console
     console.log('Complete');
 
     process.exit();
   } catch (error) {
-    console.error(error.message, error);
+    // eslint-disable-next-line no-console
+    console.error(error);
   }
 })();

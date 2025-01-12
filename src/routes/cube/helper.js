@@ -1,4 +1,4 @@
-const carddb = require('../../util/carddb');
+const { getIdsFromName, getMostReasonable, cardFromId } = require('../../util/carddb');
 const { render, redirect } = require('../../util/render');
 const util = require('../../util/util');
 const cardutil = require('../../client/utils/cardutil');
@@ -114,7 +114,7 @@ async function bulkUpload(req, res, list, cube) {
       // upload is in CSV format
       let newCards;
       let newMaybe;
-      ({ newCards, newMaybe, missing } = CSVtoCards(list, carddb));
+      ({ newCards, newMaybe, missing } = CSVtoCards(list));
       changelog.push(...newCards.map((card) => ({ addedID: card.cardID, removedID: null })));
 
       mainboard.push(...newCards);
@@ -138,10 +138,10 @@ async function bulkUpload(req, res, list, cube) {
 
         let selectedId;
         if (set) {
-          const potentialIds = carddb.getIdsFromName(name);
+          const potentialIds = getIdsFromName(name);
           if (potentialIds && potentialIds.length > 0) {
             const matchingItem = potentialIds.find((id) => {
-              const card = carddb.cardFromId(id);
+              const card = cardFromId(id);
               return (
                 card.set.toLowerCase() === set.toLowerCase() &&
                 (!collectorNum || card.collector_number === collectorNum)
@@ -151,12 +151,12 @@ async function bulkUpload(req, res, list, cube) {
             selectedId = matchingItem || potentialIds[0];
           }
         } else {
-          const selectedCard = carddb.getMostReasonable(name, cube.defaultPrinting);
+          const selectedCard = getMostReasonable(name, cube.defaultPrinting);
           selectedId = selectedCard ? selectedCard.scryfall_id : null;
         }
 
         if (selectedId) {
-          const details = carddb.cardFromId(selectedId);
+          const details = cardFromId(selectedId);
           if (!details.error) {
             for (let i = 0; i < count; i++) {
               util.addCardToCube(mainboard, cube, details);
@@ -182,9 +182,9 @@ async function bulkUpload(req, res, list, cube) {
 
 function writeCard(res, card, maybe) {
   if (!card.type_line) {
-    card.type_line = carddb.cardFromId(card.cardID).type;
+    card.type_line = cardFromId(card.cardID).type;
   }
-  const { name, rarity, colorcategory, cmc, color_identity: colorIdentity } = carddb.cardFromId(card.cardID);
+  const { name, rarity, colorcategory, cmc, color_identity: colorIdentity } = cardFromId(card.cardID);
   let { imgUrl, imgBackUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
@@ -203,8 +203,8 @@ function writeCard(res, card, maybe) {
   res.write(`${card.cmc || cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
   res.write(`${(card.colors || colorIdentity || []).join('')},`);
-  res.write(`"${carddb.cardFromId(card.cardID).set}",`);
-  res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
+  res.write(`"${cardFromId(card.cardID).set}",`);
+  res.write(`"${cardFromId(card.cardID).collector_number}",`);
   res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);
   res.write(`${colorCategory || colorcategory},`);
   res.write(`${card.status || ''},`);
@@ -219,7 +219,7 @@ function writeCard(res, card, maybe) {
     res.write(tag);
   });
   res.write(`","${card.notes || ''}",`);
-  res.write(`${carddb.cardFromId(card.cardID).mtgo_id || ''}`);
+  res.write(`${cardFromId(card.cardID).mtgo_id || ''}`);
   res.write('\r\n');
 }
 
@@ -228,9 +228,9 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.setHeader('Content-type', 'text/plain');
   res.charset = 'UTF-8';
 
-  exportBoardToMtgo(res, mainCards, cards)
+  exportBoardToMtgo(res, mainCards, cards);
   res.write('\r\n\r\n');
-  exportBoardToMtgo(res, sideCards, cards)
+  exportBoardToMtgo(res, sideCards, cards);
   return res.end();
 };
 
@@ -238,7 +238,7 @@ const exportBoardToMtgo = (res, boardCards, allCards) => {
   const cardSet = {};
   for (const cardIndex of boardCards.flat()) {
     const cardID = cardIndex.cardID || allCards[cardIndex].cardID;
-    const { name } = carddb.cardFromId(cardID);
+    const { name } = cardFromId(cardID);
     if (cardSet[name]) {
       cardSet[name] += 1;
     } else {
@@ -249,7 +249,7 @@ const exportBoardToMtgo = (res, boardCards, allCards) => {
     const name = key.replace(' // ', '/');
     res.write(`${value} ${name}\r\n`);
   }
-}
+};
 
 const shuffle = (a) => {
   for (let i = a.length - 1; i > 0; i--) {
@@ -261,7 +261,7 @@ const shuffle = (a) => {
 
 const addBasics = (document, basics) => {
   const populatedBasics = basics.map((cardID) => {
-    const details = carddb.cardFromId(cardID);
+    const details = cardFromId(cardID);
     if (document.cards) {
       const populatedCard = {
         cardID: details.scryfall_id,

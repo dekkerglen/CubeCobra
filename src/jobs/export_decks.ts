@@ -1,10 +1,12 @@
+/* eslint-disable no-console */
 require('dotenv').config();
 
 import fs from 'fs';
-import carddb from '../util/carddb';
 
-import { getDrafterState } from '../src/client/drafting/draftutil';
+import type DraftType from '../datatypes/Draft';
 import Draft from '../dynamo/models/draft';
+import { initializeCardDb } from '../util/carddb';
+import { getDrafterState } from '../util/draftutil';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {
   const card = draftCards[cardIndex];
@@ -84,7 +86,7 @@ const processPicks = (
       seat.owner
     ) {
       for (let j = 0; j < draft.seats[0].pickorder.length; j++) {
-        const drafterState = getDrafterState(draft, 0, j);
+        const drafterState = getDrafterState(draft as any as DraftType, 0, j);
 
         const picked = draftCardIndexToOracleIndex(drafterState.selection, draft.cards, oracleToIndex);
         const pack = drafterState.cardsInPack.map((pick: any) =>
@@ -109,7 +111,7 @@ const processPicks = (
 };
 
 (async () => {
-  await carddb.initializeCardDb();
+  await initializeCardDb();
 
   const indexToOracleMap = JSON.parse(fs.readFileSync('./temp/export/indexToOracleMap.json', 'utf8'));
   const oracleToIndex = Object.fromEntries(

@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import Copyright from '../components/Copyright';
-import Text from '../components/base/Text';
+
 import { Col, Row } from '../components/base/Layout';
+import Text from '../components/base/Text';
+import Copyright from '../components/Copyright';
 
 interface FooterLinkProps {
   href: string;

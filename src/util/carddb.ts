@@ -2,10 +2,20 @@ import json from 'big-json';
 import fs from 'fs';
 
 import { CardDetails } from 'datatypes/Card';
-import { detailsToCard } from 'utils/cardutil';
 
 import { filterCardsDetails, FilterFunction } from '../client/filtering/FilterCards';
+import { detailsToCard } from '../client/utils/cardutil';
 import { SortFunctions } from '../client/utils/Sort';
+
+export interface CardMetadata {
+  cubedWith: Record<string, number[]>;
+  draftedWith: Record<string, number[]>;
+  synergistic: Record<string, number[]>;
+  elo: number;
+  popularity: number;
+  cubes: number;
+  picks: number;
+}
 
 interface Catalog {
   cardtree: Record<string, any>;
@@ -18,7 +28,7 @@ interface Catalog {
   english: Record<string, string>;
   _carddict: Record<string, any>;
   indexToOracle: string[];
-  metadatadict: Record<string, Record<string, Record<string, number[]>>>;
+  metadatadict: Record<string, CardMetadata>;
   printedCardList: any[];
 }
 
@@ -37,7 +47,7 @@ const catalog: Catalog = {
   printedCardList: [], // for card filters
 };
 
-const fileToAttribute: Record<string, keyof Catalog> = {
+export const fileToAttribute: Record<string, keyof Catalog> = {
   'carddict.json': '_carddict',
   'cardtree.json': 'cardtree',
   'names.json': 'cardnames',
@@ -52,7 +62,7 @@ const fileToAttribute: Record<string, keyof Catalog> = {
 };
 
 // eslint-disable-next-line camelcase
-function getPlaceholderCard(scryfall_id: string): CardDetails {
+export function getPlaceholderCard(scryfall_id: string): CardDetails {
   // placeholder card if we don't find the one due to a scryfall ID update bug
   return {
     scryfall_id,
@@ -96,7 +106,7 @@ function getPlaceholderCard(scryfall_id: string): CardDetails {
   };
 }
 
-function cardFromId(id: string): CardDetails {
+export function cardFromId(id: string): CardDetails {
   let details;
   if (catalog._carddict[id]) {
     details = catalog._carddict[id];
@@ -115,7 +125,7 @@ async function loadJSONFile(filename: string, attribute: keyof Catalog) {
       const readStream = fs.createReadStream(filename);
       const parseStream = json.createParseStream();
 
-      parseStream.on('catalog', (parsed) => {
+      parseStream.on('data', (parsed) => {
         catalog[attribute] = parsed;
       });
 
@@ -123,7 +133,7 @@ async function loadJSONFile(filename: string, attribute: keyof Catalog) {
 
       readStream.on('end', () => {
         // eslint-disable-next-line no-console
-        console.info(`Loaded ${filename}.`);
+        console.info(`Loaded ${filename} into ${attribute}`);
         resolve();
       });
     } catch (e) {
@@ -132,13 +142,13 @@ async function loadJSONFile(filename: string, attribute: keyof Catalog) {
   });
 }
 
-async function loadAllFiles() {
+export async function loadAllFiles() {
   await Promise.all(
     Object.entries(fileToAttribute).map(([filename, attribute]) => loadJSONFile(`private/${filename}`, attribute)),
   );
 }
 
-async function initializeCardDb() {
+export async function initializeCardDb() {
   // eslint-disable-next-line no-console
   console.info('Loading carddb...');
   await loadAllFiles();
@@ -149,7 +159,7 @@ async function initializeCardDb() {
   console.info('Finished loading carddb.');
 }
 
-function reasonableCard(card: CardDetails): boolean {
+export function reasonableCard(card: CardDetails): boolean {
   return (
     !card.isExtra &&
     !card.promo &&
@@ -165,11 +175,11 @@ function reasonableCard(card: CardDetails): boolean {
   );
 }
 
-function reasonableId(id: string): boolean {
+export function reasonableId(id: string): boolean {
   return reasonableCard(cardFromId(id));
 }
 
-function getNameForComparison(name: string): string {
+export function getNameForComparison(name: string): string {
   return name
     .trim()
     .normalize('NFD') // convert to consistent unicode format
@@ -177,7 +187,7 @@ function getNameForComparison(name: string): string {
     .toLowerCase();
 }
 
-function getIdsFromName(name: string): string[] {
+export function getIdsFromName(name: string): string[] {
   // this is a fully-spcecified card name
   if (name.includes('[') && name.includes(']')) {
     name = name.toLowerCase();
@@ -192,7 +202,7 @@ function getIdsFromName(name: string): string[] {
 }
 
 // Printing = 'recent' or 'first'
-function getMostReasonable(cardName: string, printing = 'recent', filter?: FilterFunction): CardDetails | null {
+export function getMostReasonable(cardName: string, printing = 'recent', filter?: FilterFunction): CardDetails | null {
   let ids = getIdsFromName(cardName);
   if (ids === undefined || ids.length === 0) {
     // Try getting it by ID in case this is an ID.
@@ -236,7 +246,7 @@ function getMostReasonable(cardName: string, printing = 'recent', filter?: Filte
   return cardFromId(ids.find(reasonableId) || ids[0]);
 }
 
-function getMostReasonableById(id: string, printing = 'recent', filter?: FilterFunction): CardDetails | null {
+export function getMostReasonableById(id: string, printing = 'recent', filter?: FilterFunction): CardDetails | null {
   const card = cardFromId(id);
   if (card.error) {
     return null;
@@ -244,28 +254,28 @@ function getMostReasonableById(id: string, printing = 'recent', filter?: FilterF
   return getMostReasonable(card.name, printing, filter);
 }
 
-function getFirstReasonable(ids: string[]): CardDetails {
+export function getFirstReasonable(ids: string[]): CardDetails {
   return cardFromId(ids.find(reasonableId) || ids[0]);
 }
 
-function getEnglishVersion(id: string): string {
+export function getEnglishVersion(id: string): string {
   return catalog.english[id];
 }
 
-function getVersionsByOracleId(oracleId: string): string[] {
+export function getVersionsByOracleId(oracleId: string): string[] {
   return catalog.oracleToId[oracleId];
 }
 
-const getReasonableCardByOracle = (oracleId: string): CardDetails => {
+export function getReasonableCardByOracle(oracleId: string): CardDetails {
   const ids = catalog.oracleToId[oracleId];
   return getFirstReasonable(ids);
-};
+}
 
-function isOracleBasic(oracleId: string): boolean {
+export function isOracleBasic(oracleId: string): boolean {
   return cardFromId(catalog.oracleToId[oracleId][0]).type.includes('Basic');
 }
 
-function getRelatedCards(oracleId: string): Record<string, Record<string, CardDetails[]>> {
+export function getRelatedCards(oracleId: string): Record<string, Record<string, CardDetails[]>> {
   const related = catalog.metadatadict[oracleId];
 
   if (!related) {
@@ -291,20 +301,29 @@ function getRelatedCards(oracleId: string): Record<string, Record<string, CardDe
     };
   }
 
-  return Object.fromEntries(
-    Object.entries(related).map(([label, category]) => [
-      label,
-      Object.fromEntries(
-        Object.entries(category).map(([type, indexes]) => [
-          type,
-          indexes.map((id) => cardFromId(catalog.indexToOracle[id])),
-        ]),
-      ),
-    ]),
-  );
+  return {
+    cubedWith: {
+      top: related.cubedWith.top.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      creatures: related.cubedWith.creatures.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      spells: related.cubedWith.spells.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      other: related.cubedWith.other.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+    },
+    draftedWith: {
+      top: related.draftedWith.top.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      creatures: related.draftedWith.creatures.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      spells: related.draftedWith.spells.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      other: related.draftedWith.other.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+    },
+    synergistic: {
+      top: related.synergistic.top.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      creatures: related.synergistic.creatures.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      spells: related.synergistic.spells.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      other: related.synergistic.other.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+    },
+  };
 }
 
-const getAllMostReasonable = (filter: FilterFunction): CardDetails[] => {
+export function getAllMostReasonable(filter: FilterFunction): CardDetails[] {
   const cards = filterCardsDetails(catalog.printedCardList, filter);
 
   const keys = new Set();
@@ -316,30 +335,22 @@ const getAllMostReasonable = (filter: FilterFunction): CardDetails[] => {
     }
   }
   return filtered.filter((card) => card !== null) as CardDetails[];
-};
+}
 
-module.exports = {
-  ...catalog,
-  cardFromId,
-  getIdsFromName,
-  getEnglishVersion,
-  getVersionsByOracleId,
-  allVersions: (card: CardDetails) => getIdsFromName(card.name),
-  allCards: () => Object.values(catalog._carddict),
-  allOracleIds: () => Object.keys(catalog.oracleToId),
-  initializeCardDb,
-  loadJSONFile,
-  getPlaceholderCard,
-  getMostReasonable,
-  getMostReasonableById,
-  getFirstReasonable,
-  reasonableId,
-  reasonableCard,
-  normalizedName: (card: CardDetails) => card.name_lower,
-  fileToAttribute,
-  loadAllFiles,
-  isOracleBasic,
-  getReasonableCardByOracle,
-  getRelatedCards,
-  getAllMostReasonable,
-};
+export function allVersions(card: CardDetails) {
+  return getIdsFromName(card.name);
+}
+
+export function allCards() {
+  return Object.values(catalog._carddict);
+}
+
+export function getAllOracleIds() {
+  return Object.keys(catalog.oracleToId);
+}
+
+export function normalizedName(card: CardDetails) {
+  return card.name_lower;
+}
+
+export default catalog;

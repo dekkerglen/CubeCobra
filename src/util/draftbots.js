@@ -1,4 +1,4 @@
-const carddb = require('./carddb');
+import carddb, { cardFromId, getReasonableCardByOracle } from './carddb';
 const { draft, build } = require('./ml');
 
 /*
@@ -15,8 +15,8 @@ const { draft, build } = require('./ml');
 const draftbotPick = (drafterState) => {
   const { cardsInPack, picked } = drafterState;
 
-  const packOracles = cardsInPack.map((oracle) => carddb.cardFromId(carddb.oracleToId[oracle][0]).oracle_id);
-  const poolOracles = picked.map((oracle) => carddb.cardFromId(carddb.oracleToId[oracle][0]).oracle_id);
+  const packOracles = cardsInPack.map((oracle) => cardFromId(carddb.oracleToId[oracle][0]).oracle_id);
+  const poolOracles = picked.map((oracle) => cardFromId(carddb.oracleToId[oracle][0]).oracle_id);
 
   const result = draft(packOracles, poolOracles);
 
@@ -39,7 +39,7 @@ const assessColors = (oracles) => {
 
   let count = 0;
   for (const oracle of oracles) {
-    const details = carddb.cardFromId(carddb.oracleToId[oracle][0]);
+    const details = cardFromId(carddb.oracleToId[oracle][0]);
 
     if (!details.type.includes('Land')) {
       count += 1;
@@ -144,8 +144,8 @@ const deckbuild = (pool, basics) => {
 
   const result = build(poolOracles);
 
-  const nonlands = result.filter((item) => !carddb.cardFromId(carddb.oracleToId[item.oracle][0]).type.includes('Land'));
-  const lands = result.filter((item) => carddb.cardFromId(carddb.oracleToId[item.oracle][0]).type.includes('Land'));
+  const nonlands = result.filter((item) => !cardFromId(carddb.oracleToId[item.oracle][0]).type.includes('Land'));
+  const lands = result.filter((item) => cardFromId(carddb.oracleToId[item.oracle][0]).type.includes('Land'));
 
   const mainboard = nonlands.map((item) => item.oracle).slice(0, 23);
   const sideboard = [];
@@ -156,7 +156,7 @@ const deckbuild = (pool, basics) => {
   const colors = assessColors(mainboard).filter((color) => color !== 'C');
 
   const landsInColors = lands.filter((item) =>
-    listOverlaps(colors, carddb.getReasonableCardByOracle(item.oracle).color_identity),
+    listOverlaps(colors, getReasonableCardByOracle(item.oracle).color_identity),
   );
 
   mainboard.push(...landsInColors.slice(0, 17).map((item) => item.oracle));
@@ -165,9 +165,7 @@ const deckbuild = (pool, basics) => {
     sideboard.push(...landsInColors.slice(17).map((item) => item.oracle));
   }
 
-  mainboard.push(
-    ...calculateBasics(mainboard.map(carddb.getReasonableCardByOracle), basics).map((card) => card.oracle_id),
-  );
+  mainboard.push(...calculateBasics(mainboard.map(getReasonableCardByOracle), basics).map((card) => card.oracle_id));
 
   return {
     mainboard: mainboard.sort(),

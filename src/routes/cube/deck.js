@@ -1,6 +1,10 @@
 const express = require('express');
 const { body } = require('express-validator');
-const carddb = require('../../util/carddb');
+const {
+  cardFromId,
+  getIdsFromName,
+  getMostReasonable,
+} = require('../../util/carddb');
 const { render, redirect } = require('../../util/render');
 const util = require('../../util/util');
 const generateMeta = require('../../util/meta');
@@ -41,7 +45,7 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const details = cardFromId(deck.cards[cardIndex].cardID);
           const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
           if (main[name]) {
             main[name] += 1;
@@ -59,7 +63,7 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
     for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const details = cardFromId(deck.cards[cardIndex].cardID);
           const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
           if (side[name]) {
             side[name] += 1;
@@ -97,7 +101,7 @@ router.get('/download/forge/:id/:seat', async (req, res) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const details = cardFromId(deck.cards[cardIndex].cardID);
           const name = `${details.name}|${details.set.toUpperCase()}`;
           if (main[name]) {
             main[name] += 1;
@@ -116,7 +120,7 @@ router.get('/download/forge/:id/:seat', async (req, res) => {
     for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const details = cardFromId(deck.cards[cardIndex].cardID);
           const name = `${details.name}|${details.set.toUpperCase()}`;
           if (side[name]) {
             side[name] += 1;
@@ -151,7 +155,7 @@ router.get('/download/txt/:id/:seat', async (req, res) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const { name } = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const { name } = cardFromId(deck.cards[cardIndex].cardID);
           res.write(`${name}\r\n`);
         }
       }
@@ -193,7 +197,7 @@ router.get('/download/arena/:id/:seat', async (req, res) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const details = cardFromId(deck.cards[cardIndex].cardID);
           const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
           if (main[name]) {
             main[name] += 1;
@@ -212,7 +216,7 @@ router.get('/download/arena/:id/:seat', async (req, res) => {
     for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const details = cardFromId(deck.cards[cardIndex].cardID);
           const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
           if (side[name]) {
             side[name] += 1;
@@ -248,7 +252,7 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const details = cardFromId(deck.cards[cardIndex].cardID);
           const name = `${details.name}`;
           if (main[name]) {
             main[name] += 1;
@@ -267,7 +271,7 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
     for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const details = cardFromId(deck.cards[cardIndex].cardID);
           const name = `${details.name}`;
           if (side[name]) {
             side[name] += 1;
@@ -436,7 +440,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
     const cardsArray = [];
     for (const card of base.cards) {
-      const newCard = { ...card, details: carddb.cardFromId(card.cardID) };
+      const newCard = { ...card, details: cardFromId(card.cardID) };
       cardsArray.push(newCard);
     }
 
@@ -640,24 +644,24 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         let selected = null;
         // does not have set info
         const normalizedName = cardutil.normalizeName(item);
-        const potentialIds = carddb.getIdsFromName(normalizedName);
+        const potentialIds = getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
-          const inCube = mainboard.find((card) => carddb.cardFromId(card.cardID).name_lower === normalizedName);
+          const inCube = mainboard.find((card) => cardFromId(card.cardID).name_lower === normalizedName);
           if (inCube) {
             selected = {
               finish: inCube.finish,
               imgBackUrl: inCube.imgBackUrl,
               imgUrl: inCube.imgUrl,
               cardID: inCube.cardID,
-              details: carddb.cardFromId(inCube.cardID),
+              details: cardFromId(inCube.cardID),
             };
           } else {
-            const reasonableCard = carddb.getMostReasonable(normalizedName, cube.defaultPrinting);
+            const reasonableCard = getMostReasonable(normalizedName, cube.defaultPrinting);
             const reasonableId = reasonableCard ? reasonableCard.scryfall_id : null;
             const selectedId = reasonableId || potentialIds[0];
             selected = {
               cardID: selectedId,
-              details: carddb.cardFromId(selectedId),
+              details: cardFromId(selectedId),
             };
           }
         }

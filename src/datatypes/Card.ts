@@ -62,7 +62,7 @@ export interface CardDetails {
 
   // Computed values
   elo?: number;
-  popularity?: string;
+  popularity?: number;
   cubeCount?: number;
   pickCount?: number;
   isExtra?: boolean;

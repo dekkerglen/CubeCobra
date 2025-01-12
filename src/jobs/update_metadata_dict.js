@@ -1,7 +1,8 @@
+/* eslint-disable no-console */
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../util/carddb');
+import carddb, { cardFromId,initializeCardDb } from '../util/carddb';
 const { encode } = require('../util/ml');
 
 const correlationLimit = 36;
@@ -13,7 +14,7 @@ const cosineSimilarity = (a, magA, b, magB) => {
 
 (async () => {
   console.log('Loading card database');
-  await carddb.initializeCardDb();
+  await initializeCardDb();
 
   // load most recent cube history
   const cubeHistoryFiles = fs.readdirSync('./temp/cubes_history').sort();
@@ -37,7 +38,7 @@ const cosineSimilarity = (a, magA, b, magB) => {
   const oracleToIndex = Object.fromEntries(Object.keys(carddb.oracleToId).map((key, index) => [key, index]));
   const indexToOracle = Object.keys(carddb.oracleToId);
   const oracleToType = Object.fromEntries(
-    Object.keys(carddb.oracleToId).map((oracle) => [oracle, carddb.cardFromId(carddb.oracleToId[oracle][0]).type]),
+    Object.keys(carddb.oracleToId).map((oracle) => [oracle, cardFromId(carddb.oracleToId[oracle][0]).type]),
   );
 
   const isOracleCreature = Object.fromEntries(
@@ -136,7 +137,7 @@ const cosineSimilarity = (a, magA, b, magB) => {
   // calculate cubedwith
   processed = 0;
   for (const cube of Object.keys(cubeHistory)) {
-    const oracles = [...new Set(cubeHistory[cube].map((cardId) => carddb.cardFromId(cardId).oracle_id))];
+    const oracles = [...new Set(cubeHistory[cube].map((cardId) => cardFromId(cardId).oracle_id))];
 
     for (let i = 0; i < oracles.length; i += 1) {
       cubeCount[oracleToIndex[oracles[i]]] += 1;

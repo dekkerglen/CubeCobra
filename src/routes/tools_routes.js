@@ -3,7 +3,16 @@ require('dotenv').config();
 
 const express = require('express');
 
-const carddb = require('../util/carddb');
+import carddb, {
+  cardFromId,
+  getAllMostReasonable,
+  getEnglishVersion,
+  getIdsFromName,
+  getMostReasonable,
+  getMostReasonableById,
+  getReasonableCardByOracle,
+  getRelatedCards,
+} from '../util/carddb';
 const cardutil = require('../client/utils/cardutil');
 const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../client/utils/Sort');
 const { makeFilter, filterCardsDetails } = require('../client/filtering/FilterCards');
@@ -28,7 +37,7 @@ const searchCards = (filter, sort = 'Elo', page = 0, direction = 'descending', d
   const cards = [];
 
   if (distinct === 'names') {
-    cards.push(...carddb.getAllMostReasonable(filter));
+    cards.push(...getAllMostReasonable(filter));
   } else {
     cards.push(...filterCardsDetails(carddb.printedCardList, filter));
   }
@@ -185,24 +194,24 @@ router.get('/card/:id', async (req, res) => {
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
-    const ids = carddb.getIdsFromName(possibleName);
+    const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
-    const english = carddb.getEnglishVersion(id);
+    const english = getEnglishVersion(id);
     if (english) {
       id = english;
     }
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(id);
+    const card = cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return redirect(req, res, '/404');
@@ -215,16 +224,16 @@ router.get('/card/:id', async (req, res) => {
       history.items.push({});
     }
 
-    const related = carddb.getRelatedCards(card.oracle_id);
+    const related = getRelatedCards(card.oracle_id);
 
     const draftedWith = {};
     const cubedWith = {};
     const synergistic = {};
 
     for (const category of ['top', 'spells', 'creatures', 'other']) {
-      draftedWith[category] = related.draftedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-      cubedWith[category] = related.cubedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-      synergistic[category] = related.synergistic[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
+      draftedWith[category] = related.draftedWith[category].map((oracle) => getReasonableCardByOracle(oracle));
+      cubedWith[category] = related.cubedWith[category].map((oracle) => getReasonableCardByOracle(oracle));
+      synergistic[category] = related.synergistic[category].map((oracle) => getReasonableCardByOracle(oracle));
     }
 
     return render(
@@ -237,7 +246,7 @@ router.get('/card/:id', async (req, res) => {
         lastKey: history.lastKey,
         versions: carddb.oracleToId[card.oracle_id]
           .filter((cid) => cid !== card.scryfall_id)
-          .map((cardid) => carddb.cardFromId(cardid)),
+          .map((cardid) => cardFromId(cardid)),
         draftedWith,
         cubedWith,
         synergistic,
@@ -263,24 +272,24 @@ router.get('/cardjson/:id', async (req, res) => {
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
-    const ids = carddb.getIdsFromName(possibleName);
+    const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
-    const english = carddb.getEnglishVersion(id);
+    const english = getEnglishVersion(id);
     if (english) {
       id = english;
     }
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(id);
+    const card = cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return redirect(req, res, '/404');
@@ -293,16 +302,16 @@ router.get('/cardjson/:id', async (req, res) => {
       history.items.push({});
     }
 
-    const related = carddb.getRelatedCards(card.oracle_id);
+    const related = getRelatedCards(card.oracle_id);
 
     const draftedWith = {};
     const cubedWith = {};
     const synergistic = {};
 
     for (const category of ['top', 'spells', 'creatures', 'other']) {
-      draftedWith[category] = related.draftedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-      cubedWith[category] = related.cubedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-      synergistic[category] = related.synergistic[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
+      draftedWith[category] = related.draftedWith[category].map((oracle) => getReasonableCardByOracle(oracle));
+      cubedWith[category] = related.cubedWith[category].map((oracle) => getReasonableCardByOracle(oracle));
+      synergistic[category] = related.synergistic[category].map((oracle) => getReasonableCardByOracle(oracle));
     }
 
     return res.json({
@@ -311,7 +320,7 @@ router.get('/cardjson/:id', async (req, res) => {
       lastKey: history.lastKey,
       versions: carddb.oracleToId[card.oracle_id]
         .filter((cid) => cid !== card.scryfall_id)
-        .map((cardid) => carddb.cardFromId(cardid)),
+        .map((cardid) => cardFromId(cardid)),
       draftedWith,
       cubedWith,
       synergistic,
@@ -327,24 +336,24 @@ router.get('/cardimage/:id', async (req, res) => {
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
-    const ids = carddb.getIdsFromName(possibleName);
+    const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
-    const english = carddb.getEnglishVersion(id);
+    const english = getEnglishVersion(id);
     if (english) {
       id = english;
     }
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(id);
+    const card = cardFromId(id);
     if (card.error) {
       res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache for 1 month
       return redirect(req, res, '/content/default_card.png');
@@ -367,13 +376,13 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
     const main = cards.mainboard;
 
     const found = main
-      .map((card) => ({ details: carddb.cardFromId(card.cardID), ...card }))
+      .map((card) => ({ details: cardFromId(card.cardID), ...card }))
       .find(
         (card) => id === card.cardID || id.toLowerCase() === card.details.name_lower || id === card.details.oracleId,
       );
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(found ? found.cardID : '');
+    const card = cardFromId(found ? found.cardID : '');
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return redirect(req, res, '/404');
@@ -391,24 +400,24 @@ router.get('/cardimageflip/:id', async (req, res) => {
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
-    const ids = carddb.getIdsFromName(possibleName);
+    const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
-    const english = carddb.getEnglishVersion(id);
+    const english = getEnglishVersion(id);
     if (english) {
       id = english;
     }
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(id);
+    const card = cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return redirect(req, res, '/404');
@@ -435,13 +444,13 @@ router.get('/searchcards', async (req, res) =>
 router.post('/mtgconnect', async (req, res) => {
   const { oracles } = req.body;
 
-  const cards = oracles.map((oracle) => carddb.getReasonableCardByOracle(oracle));
+  const cards = oracles.map((oracle) => getReasonableCardByOracle(oracle));
 
   const result = [];
 
   for (const card of cards) {
-    const related = carddb.getRelatedCards(card.oracle_id);
-    const synergistic = related.synergistic.top.map((oracle) => carddb.getReasonableCardByOracle(oracle));
+    const related = getRelatedCards(card.oracle_id);
+    const synergistic = related.synergistic.top.map((oracle) => getReasonableCardByOracle(oracle));
 
     result.push({
       name: card.name,

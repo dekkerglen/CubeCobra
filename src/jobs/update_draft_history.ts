@@ -10,7 +10,7 @@ import type DraftType from 'datatypes/Draft';
 import type { CardAnalytic } from '../datatypes/CubeAnalytic';
 import CubeAnalytic from '../dynamo/models/cubeAnalytic';
 import Draft from '../dynamo/models/draft';
-import * as carddb from '../util/carddb';
+import { initializeCardDb } from '../util/carddb';
 import { getDrafterState } from '../util/draftutil';
 
 // global listeners for promise rejections
@@ -106,8 +106,7 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
     fs.mkdirSync('./temp/all_drafts');
   }
 
-  // @ts-expect-error TODO: migrate carddb to ts
-  await carddb.initializeCardDb();
+  await initializeCardDb();
 
   const logsByDay: any = {};
   const keys: string[] = [];

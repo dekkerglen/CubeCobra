@@ -88,7 +88,11 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
                 ))}
                 {defaultDraftFormat !== -1 && <StandardDraftCard defaultDraftFormat={defaultDraftFormat} />}
                 <Card>
-                  <CardHeader>Multiplayer Draft</CardHeader>
+                  <CardHeader>
+                    <Text semibold lg>
+                      Multiplayer Draft
+                    </Text>
+                  </CardHeader>
                   <CardBody>
                     <Text>
                       Draft with other players and bots online using Draftmancer! Playtest data is uploaded back to
@@ -100,7 +104,7 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
                       block
                       type="link"
                       color="primary"
-                      href={`https://beta.draftmancer.com/?cubeCobraID=${cube.id}&cubeCobraName=${encodeURIComponent(cube.name)}`}
+                      href={`https://draftmancer.com/?cubeCobraID=${cube.id}&cubeCobraName=${encodeURIComponent(cube.name)}`}
                     >
                       Draft on Draftmancer
                     </Button>

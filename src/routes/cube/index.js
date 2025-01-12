@@ -5,7 +5,10 @@ const RSS = require('rss');
 
 const createdraft = require('../../client/drafting/createdraft');
 const miscutil = require('../../client/utils/Util');
-const carddb = require('../../util/carddb');
+const {
+  getIdsFromName,
+  cardFromId
+} = require('../../util/carddb');
 const { render, redirect } = require('../../util/render');
 const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');
 const util = require('../../util/util');
@@ -482,7 +485,7 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
   } catch (err) {
     req.logger.error(err.message, err.stack);
     req.flash('danger', 'Error updating cube');
-    return redirect(req, res, '/cube/overview/' + cube.id);
+    return redirect(req, res, '/');
   }
 });
 
@@ -562,8 +565,8 @@ router.get('/overview/:id', async (req, res) => {
     const nameToCards = {};
     for (const card of mainboard) {
       if (!nameToCards[card.details.name]) {
-        const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
-        nameToCards[card.details.name] = allVersionsOfCard.map((id) => carddb.cardFromId(id));
+        const allVersionsOfCard = getIdsFromName(card.details.name) || [];
+        nameToCards[card.details.name] = allVersionsOfCard.map((id) => cardFromId(id));
       }
     }
 
@@ -828,6 +831,7 @@ router.post('/getmoredecks/:id', async (req, res) => {
     });
   } catch(e) {
     return res.status(500).send({
+      error: e,
       success: 'false',
     });
   }
@@ -885,7 +889,7 @@ router.get('/analysis/:id', async (req, res) => {
         for (const card of list) {
           if (card.details.tokens) {
             for (const oracle of card.details.tokens) {
-              const tokenDetails = carddb.cardFromId(oracle);
+              const tokenDetails = cardFromId(oracle);
               tokenMap[oracle] = {
                 tags: [],
                 status: 'Not Owned',
@@ -948,7 +952,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
 
     let pack;
     try {
-      pack = await generatePack(cube, cards, carddb, req.params.seed);
+      pack = await generatePack(cube, cards, req.params.seed);
     } catch (err) {
       // this is probably a 400, not a 500, as the user can fix it by trying again.
       req.flash('danger', "Failed to generate pack: " + err.message);
@@ -1000,7 +1004,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
       let pack;
       try {
-        pack = await generatePack(cube, cards, carddb, req.params.seed);
+        pack = await generatePack(cube, cards, req.params.seed);
       } catch (err) {
         req.flash('danger', err.message);
         return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -1109,15 +1113,15 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
 
     if (lines && (lines[0].match(/,/g) || []).length > 3) {
       const added = [];
-      const { newCards, newMaybe, missing } = CSVtoCards(items, carddb);
+      const { newCards, newMaybe, missing } = CSVtoCards(items);
 
       const newList = {
         mainboard: newCards.map((card) => ({
-          details: carddb.cardFromId(card.cardID),
+          details: cardFromId(card.cardID),
           ...card,
         })),
         maybeboard: newMaybe.map((card) => ({
-          details: carddb.cardFromId(card.cardID),
+          details: cardFromId(card.cardID),
           ...card,
         })),
       };
@@ -1297,7 +1301,7 @@ router.post(
         let index2 = 0;
 
         // sort by color
-        const details = carddb.cardFromId(card.cardID);
+        const details = cardFromId(card.cardID);
         const type = card.type_line || details.type;
         const colors = card.colors || details.colors;
 
@@ -1411,8 +1415,6 @@ router.post(
         cards: parseInt(req.body.cards),
       }, cube);
 
-      console.log(format);
-
       const draft = {
         complete: false,
       };
@@ -1428,7 +1430,6 @@ router.post(
         );
       } catch (err) {
         // This is a 4XX error, not a 5XX error
-        console.error(err);
         req.flash('danger', err.message);
         return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
@@ -1674,8 +1675,6 @@ router.get(
       req.flash('danger', 'Invalid request.');
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(cubeid)}`);
     }
-
-    console.log(formatId);
     cube.defaultFormat = formatId;
 
     await Cube.update(cube);

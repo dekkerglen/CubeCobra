@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const uuid = require('uuid');
 const createClient = require('../util');
-const carddb = require('../../util/carddb');
+const { cardFromId } = require('../../util/carddb');
 const { getObject, putObject } = require('../s3client');
 const User = require('./user');
 const Cube = require('./cube');
@@ -80,7 +80,7 @@ const assessColors = (mainboard, cards) => {
 
   let count = 0;
   for (const card of mainboard.flat(3)) {
-    const details = carddb.cardFromId(cards[card].cardID);
+    const details = cardFromId(cards[card].cardID);
     if (!details.type.includes('Land')) {
       count += 1;
       for (const color of details.color_identity) {
@@ -124,7 +124,7 @@ const addDetails = (cards) => {
 
   cards.forEach((card) => {
     card.details = {
-      ...carddb.cardFromId(card.cardID),
+      ...cardFromId(card.cardID),
     };
   });
   return cards;

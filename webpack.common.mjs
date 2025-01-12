@@ -206,13 +206,6 @@ export const serverConfig = merge(config, {
     'pages/FeaturedCubesQueuePage': './src/client/pages/FeaturedCubesQueuePage.tsx',
     'pages/PackagesPage': './src/client/pages/PackagesPage.tsx',
     'pages/RecentlyUpdateCubesPage': './src/client/pages/RecentlyUpdateCubesPage.tsx',
-    'drafting/createdraft': './src/client/drafting/createdraft.ts',
-    'drafting/draftutil': './src/client/drafting/draftutil.ts',
-    'filtering/FilterCards': './src/client/filtering/FilterCards.ts',
-    'utils/Card': './src/client/utils/Card.ts',
-    'utils/Sort': './src/client/utils/Sort.ts',
-    'utils/Util': './src/client/utils/Util.ts',
-    'markdown/parser': './src/client/markdown/parser.js',
   },
   output: {
     filename: '[name].js',

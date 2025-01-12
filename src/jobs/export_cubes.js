@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../util/carddb');
+const { initializeCardDb, getAllOracleIds } = require('../util/carddb');
 
 const Cube = require('../dynamo/models/cube');
 
@@ -21,16 +21,18 @@ const processCube = async (cube, oracleToIndex) => {
       following: cube.following,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error(err);
+    // eslint-disable-next-line no-console
     console.log(`Error processing cube ${cube.id}`);
     return null;
   }
 };
 
 (async () => {
-  await carddb.initializeCardDb();
+  await initializeCardDb();
 
-  const allOracles = carddb.allOracleIds();
+  const allOracles = getAllOracleIds();
   const oracleToIndex = Object.fromEntries(allOracles.map((oracle, index) => [oracle, index]));
   const indexToOracleMap = Object.fromEntries(allOracles.map((oracle, index) => [index, oracle]));
 
@@ -47,6 +49,7 @@ const processCube = async (cube, oracleToIndex) => {
 
     cubes.push(...processedCubes.filter((cube) => cube !== null));
 
+    // eslint-disable-next-line no-console
     console.log(`Processed ${processed} cubes`);
   } while (lastKey);
 

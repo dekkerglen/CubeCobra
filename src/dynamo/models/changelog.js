@@ -4,7 +4,7 @@ require('dotenv').config();
 const uuid = require('uuid');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
-const carddb = require('../../util/carddb');
+import carddb, { cardFromId } from '../../util/carddb';
 const cardutil = require('../../client/utils/cardutil');
 
 const CARD_LIMIT = 10000;
@@ -82,34 +82,34 @@ const hydrateChangelog = (changelog) => {
     if (value.adds) {
       for (let i = 0; i < value.adds.length; i++) {
         value.adds[i].details = {
-          ...carddb.cardFromId(value.adds[i].cardID),
+          ...cardFromId(value.adds[i].cardID),
         };
       }
     }
     if (value.removes) {
       for (let i = 0; i < value.removes.length; i++) {
         value.removes[i].oldCard.details = {
-          ...carddb.cardFromId(value.removes[i].oldCard.cardID),
+          ...cardFromId(value.removes[i].oldCard.cardID),
         };
       }
     }
     if (value.swaps) {
       for (let i = 0; i < value.swaps.length; i++) {
         value.swaps[i].oldCard.details = {
-          ...carddb.cardFromId(value.swaps[i].oldCard.cardID),
+          ...cardFromId(value.swaps[i].oldCard.cardID),
         };
         value.swaps[i].card.details = {
-          ...carddb.cardFromId(value.swaps[i].card.cardID),
+          ...cardFromId(value.swaps[i].card.cardID),
         };
       }
     }
     if (value.edits) {
       for (let i = 0; i < value.edits.length; i++) {
         value.edits[i].oldCard.details = {
-          ...carddb.cardFromId(value.edits[i].oldCard.cardID),
+          ...cardFromId(value.edits[i].oldCard.cardID),
         };
         value.edits[i].newCard.details = {
-          ...carddb.cardFromId(value.edits[i].newCard.cardID),
+          ...cardFromId(value.edits[i].newCard.cardID),
         };
       }
     }

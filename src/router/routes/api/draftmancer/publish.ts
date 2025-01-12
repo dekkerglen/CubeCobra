@@ -8,7 +8,7 @@ import DraftType, { DraftmancerLog, DraftmancerPick } from '../../../../datatype
 import type DraftSeatType from '../../../../datatypes/DraftSeat';
 import Cube from '../../../../dynamo/models/cube';
 import Draft from '../../../../dynamo/models/draft';
-import carddb from '../../../../util/carddb';
+import { cardFromId, getReasonableCardByOracle } from '../../../../util/carddb';
 import { setupPicks } from '../../../../util/draftutil';
 
 interface Pick {
@@ -90,8 +90,7 @@ const validatePublishDraftBody = (req: Request, res: Response, next: NextFunctio
 };
 
 const upsertCardAndGetIndex = (cards: CardDetails[], oracleId: string): number => {
-  // @ts-expect-error TODO: define carddb type
-  const card = carddb.getReasonableCardByOracle(oracleId);
+  const card = getReasonableCardByOracle(oracleId);
   const index = cards.findIndex((c) => c.oracle_id === oracleId);
 
   if (index === -1) {
@@ -108,11 +107,8 @@ const handler = async (req: Request, res: Response) => {
   try {
     const cube: CubeType = await Cube.getById(publishDraftBody.cubeID);
 
-    console.log('cube', cube);
-
     // start with basics, we add the rest of the cards after
-    // @ts-expect-error TODO: define carddb type
-    const cards: CardDetails[] = [...cube.basics.map((card) => carddb.cardFromId(card))];
+    const cards: CardDetails[] = [...cube.basics.map((card) => cardFromId(card))];
     const basics: number[] = [...Array(cube.basics.length).keys()];
 
     const seats: DraftSeatType[] = [];

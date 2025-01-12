@@ -2,7 +2,7 @@ const express = require('express');
 
 const sortutil = require('../../client/utils/Sort');
 const filterutil = require('../../client/filtering/FilterCards');
-const carddb = require('../../util/carddb');
+const { cardFromId } = require('../../util/carddb');
 const util = require('../../util/util');
 
 const { isCubeViewable } = require('../../util/cubefn');
@@ -31,7 +31,7 @@ const sortCardsByQuery = (req, cards) => {
     req.query.secondary,
     req.query.tertiary,
     req.query.quaternary,
-    req.query.showother === "true", //Coerce string parameter to boolean
+    req.query.showother === 'true', //Coerce string parameter to boolean
   );
 };
 
@@ -47,7 +47,7 @@ router.get('/cubecobra/:id', async (req, res) => {
     let { mainboard } = cards;
 
     for (const card of mainboard) {
-      const details = carddb.cardFromId(card.cardID);
+      const details = cardFromId(card.cardID);
       card.details = details;
     }
 
@@ -79,7 +79,7 @@ router.get('/csv/:id', async (req, res) => {
     const { maybeboard } = cards;
 
     for (const card of [...mainboard, ...maybeboard]) {
-      const details = carddb.cardFromId(card.cardID);
+      const details = cardFromId(card.cardID);
       card.details = details;
     }
 
@@ -116,7 +116,7 @@ router.get('/forge/:id', async (req, res) => {
     let { mainboard } = cards;
 
     for (const card of mainboard) {
-      const details = carddb.cardFromId(card.cardID);
+      const details = cardFromId(card.cardID);
       card.details = details;
     }
 
@@ -151,7 +151,7 @@ router.get('/mtgo/:id', async (req, res) => {
     const { maybeboard } = cards;
 
     for (const card of mainboard) {
-      const details = carddb.cardFromId(card.cardID);
+      const details = cardFromId(card.cardID);
       card.details = details;
     }
 
@@ -176,7 +176,7 @@ router.get('/xmage/:id', async (req, res) => {
     let { mainboard } = cards;
 
     for (const card of mainboard) {
-      const details = carddb.cardFromId(card.cardID);
+      const details = cardFromId(card.cardID);
       card.details = details;
     }
 
@@ -212,7 +212,7 @@ router.get('/plaintext/:id', async (req, res) => {
     for (const [boardname, list] of Object.entries(cards)) {
       if (boardname !== 'id') {
         for (const card of list) {
-          const details = carddb.cardFromId(card.cardID);
+          const details = cardFromId(card.cardID);
           card.details = details;
         }
         const sorted = sortCardsByQuery(req, list);

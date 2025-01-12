@@ -4,11 +4,17 @@ const { body } = require('express-validator');
 
 const { makeFilter } = require('../../client/filtering/FilterCards');
 const cardutil = require('../../client/utils/cardutil');
-const carddb = require('../../util/carddb');
+import carddb, {
+  allVersions,
+  cardFromId,
+  getAllMostReasonable,
+  getIdsFromName,
+  getMostReasonable,
+  getReasonableCardByOracle
+} from '../../util/carddb';
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../util/util');
 const { deckbuild, calculateBasics } = require('../../util/draftbots');
-const { xorStrings } = require('../../client/utils/Util');
 
 const { recommend } = require('../../util/ml');
 const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../util/cubefn');
@@ -80,7 +86,7 @@ router.get(
     const cardnames = [];
 
     for (const card of cubeCards[req.params.board]) {
-      util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
+      util.binaryInsert(cardFromId(card.cardID).name, cardnames);
     }
 
     const result = util.turnToTree(cardnames);
@@ -118,7 +124,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) =>
     res.status(200).send({
       success: 'true',
-      details: req.body.cards.map((id) => carddb.cardFromId(id)),
+      details: req.body.cards.map((id) => cardFromId(id)),
     }),
   ),
 );
@@ -240,7 +246,7 @@ router.get(
 
     const cubeCards = await Cube.getCards(cube.id);
 
-    const names = cubeCards.mainboard.map((card) => carddb.cardFromId(card.cardID).name);
+    const names = cubeCards.mainboard.map((card) => cardFromId(card.cardID).name);
     res.contentType('text/plain');
     res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));
@@ -306,7 +312,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const { name, defaultPrinting } = req.body;
 
-    const card = carddb.getMostReasonable(name, defaultPrinting);
+    const card = getMostReasonable(name, defaultPrinting);
     if (card) {
       return res.status(200).send({
         success: 'true',
@@ -322,7 +328,7 @@ router.post(
 router.get(
   '/getimage/:name',
   util.wrapAsyncApi(async (req, res) => {
-    const reasonable = carddb.getMostReasonable(cardutil.decodeName(req.params.name));
+    const reasonable = getMostReasonable(cardutil.decodeName(req.params.name));
     const img = reasonable ? carddb.imagedict[reasonable.name] : null;
     if (!img) {
       return res.status(200).send({
@@ -339,7 +345,7 @@ router.get(
 router.get(
   '/getcardfromid/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const card = carddb.cardFromId(req.params.id);
+    const card = cardFromId(req.params.id);
     return res.status(200).send({
       success: 'true',
       card,
@@ -350,9 +356,9 @@ router.get(
 router.get(
   '/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cardIds = carddb.allVersions(carddb.cardFromId(req.params.id));
+    const cardIds = allVersions(cardFromId(req.params.id));
 
-    const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
+    const cards = cardIds.map((id) => Object.assign({}, cardFromId(id)));
     return res.status(200).send({
       success: 'true',
       cards,
@@ -368,10 +374,10 @@ router.post(
   ),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
-    const allIds = allDetails.map(({ name }) => carddb.getIdsFromName(name) || []);
+    const allDetails = req.body.map((cardID) => cardFromId(cardID));
+    const allIds = allDetails.map(({ name }) => getIdsFromName(name) || []);
     const allVersions = allIds.map((versions) =>
-      versions.map((id) => carddb.cardFromId(id)).sort((a, b) => -a.released_at.localeCompare(b.released_at)),
+      versions.map((id) => cardFromId(id)).sort((a, b) => -a.released_at.localeCompare(b.released_at)),
     );
 
     const result = util.fromEntries(
@@ -424,7 +430,7 @@ router.post(
     }
 
     const adds = req.body.cards.map((id) => {
-      const c = util.newCard(carddb.cardFromId(id));
+      const c = util.newCard(cardFromId(id));
       c.tags = [tag];
       c.notes = `Added from package "${tag}": ${process.env.DOMAIN}/packages/${req.body.packid}`;
       return c;
@@ -444,7 +450,7 @@ router.post(
     if (tag) {
       cubeCards[req.body.board].push(...adds);
     } else {
-      cubeCards[req.body.board].push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
+      cubeCards[req.body.board].push(...req.body.cards.map((id) => util.newCard(cardFromId(id))));
     }
 
     await Cube.updateCards(req.params.id, cubeCards);
@@ -825,7 +831,7 @@ router.post('/adds', async (req, res) => {
       });
     }
 
-    const eligible = carddb.getAllMostReasonable(filter);
+    const eligible = getAllMostReasonable(filter);
     length = eligible.length;
 
     const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
@@ -837,7 +843,7 @@ router.post('/adds', async (req, res) => {
 
   return res.status(200).send({
     adds: slice.map((item) => {
-      const card = carddb.getReasonableCardByOracle(item.oracle);
+      const card = getReasonableCardByOracle(item.oracle);
       return {
         details: card,
         cardID: card.scryfall_id,
@@ -866,7 +872,7 @@ router.post('/cuts', async (req, res) => {
       });
     }
 
-    const eligible = carddb.getAllMostReasonable(filter);
+    const eligible = getAllMostReasonable(filter);
 
     const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
 
@@ -875,7 +881,7 @@ router.post('/cuts', async (req, res) => {
 
   return res.status(200).send({
     cuts: slice.map((item) => {
-      const card = carddb.getReasonableCardByOracle(item.oracle);
+      const card = getReasonableCardByOracle(item.oracle);
       return {
         details: card,
         cardID: card.scryfall_id,

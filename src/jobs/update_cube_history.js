@@ -1,8 +1,9 @@
+/* eslint-disable no-console */
 // Load Environment Variables
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../util/carddb');
+const { initializeCardDb, cardFromId } = require('../util/carddb');
 
 const ChangeLog = require('../dynamo/models/changelog');
 const CardHistory = require('../dynamo/models/cardhistory');
@@ -42,7 +43,7 @@ const loadCubesHistory = async (key) => {
 };
 
 (async () => {
-  await carddb.initializeCardDb();
+  await initializeCardDb();
 
   if (!fs.existsSync('./temp')) {
     fs.mkdirSync('./temp');
@@ -180,11 +181,10 @@ const loadCubesHistory = async (key) => {
       const data = {};
 
       for (const cube of Object.values(cubes)) {
-        const cubeCards = cube.map((id) => carddb.cardFromId(id));
+        const cubeCards = cube.map((id) => cardFromId(id));
         const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
         const { pauper, peasant, type } = getCubeTypes(
-          cubeCards.map((card) => ({ cardID: card.scryfall_id })),
-          carddb,
+          cubeCards.map((card) => ({ cardID: card.scryfall_id }))
         );
 
         const size = cube.length;
