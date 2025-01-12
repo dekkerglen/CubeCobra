@@ -82,6 +82,32 @@ const batchHydrate = async (packs) => {
   return packs;
 };
 
+const applyKeywordFilter = (query /*: Query*/, keywords /*: string*/) => {
+  if (!keywords) {
+    return query;
+  }
+
+  const words = keywords?.toLowerCase()?.split(' ') || [];
+
+  // all words must exist in the keywords
+  query.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');
+
+  query.ExpressionAttributeNames = {
+    ...query.ExpressionAttributeNames,
+    '#keywords': FIELDS.KEYWORDS,
+  };
+
+  query.ExpressionAttributeValues = {
+    ...query.ExpressionAttributeValues,
+    ...words.reduce((acc, word) => {
+      acc[`:${word}`] = word;
+      return acc;
+    }, {}),
+  };
+
+  return query;
+};
+
 module.exports = {
   getById: async (id) => hydrate((await client.get(id)).Item),
   put: async (document) => {
@@ -171,27 +197,7 @@ module.exports = {
       Limit: 36,
     };
 
-    if (keywords) {
-      const words = keywords ? keywords.toLowerCase().split(' ') : null;
-
-      // all words must exist in the keywords
-      query.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');
-
-      query.ExpressionAttributeNames = {
-        ...query.ExpressionAttributeNames,
-        '#keywords': FIELDS.KEYWORDS,
-      };
-
-      query.ExpressionAttributeValues = {
-        ...query.ExpressionAttributeValues,
-        ...words.reduce((acc, word) => {
-          acc[`:${word}`] = word;
-          return acc;
-        }, {}),
-      };
-    }
-
-    const result = await client.query(query);
+    const result = await client.query(applyKeywordFilter(query, keywords));
 
     return {
       items: await batchHydrate(result.Items),
