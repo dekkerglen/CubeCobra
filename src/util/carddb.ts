@@ -275,6 +275,10 @@ export function isOracleBasic(oracleId: string): boolean {
   return cardFromId(catalog.oracleToId[oracleId][0]).type.includes('Basic');
 }
 
+const indexToReasonable = (index: number): CardDetails => {
+  return getFirstReasonable(catalog.oracleToId[catalog.indexToOracle[index]]);
+};
+
 export function getRelatedCards(oracleId: string): Record<string, Record<string, CardDetails[]>> {
   const related = catalog.metadatadict[oracleId];
 
@@ -303,22 +307,22 @@ export function getRelatedCards(oracleId: string): Record<string, Record<string,
 
   return {
     cubedWith: {
-      top: related.cubedWith.top.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      creatures: related.cubedWith.creatures.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      spells: related.cubedWith.spells.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      other: related.cubedWith.other.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      top: related.cubedWith.top.map(indexToReasonable),
+      creatures: related.cubedWith.creatures.map(indexToReasonable),
+      spells: related.cubedWith.spells.map(indexToReasonable),
+      other: related.cubedWith.other.map(indexToReasonable),
     },
     draftedWith: {
-      top: related.draftedWith.top.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      creatures: related.draftedWith.creatures.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      spells: related.draftedWith.spells.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      other: related.draftedWith.other.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      top: related.draftedWith.top.map(indexToReasonable),
+      creatures: related.draftedWith.creatures.map(indexToReasonable),
+      spells: related.draftedWith.spells.map(indexToReasonable),
+      other: related.draftedWith.other.map(indexToReasonable),
     },
     synergistic: {
-      top: related.synergistic.top.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      creatures: related.synergistic.creatures.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      spells: related.synergistic.spells.map((id) => getFirstReasonable(catalog.oracleToId[id])),
-      other: related.synergistic.other.map((id) => getFirstReasonable(catalog.oracleToId[id])),
+      top: related.synergistic.top.map(indexToReasonable),
+      creatures: related.synergistic.creatures.map(indexToReasonable),
+      spells: related.synergistic.spells.map(indexToReasonable),
+      other: related.synergistic.other.map(indexToReasonable),
     },
   };
 }

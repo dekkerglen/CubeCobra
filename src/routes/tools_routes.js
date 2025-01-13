@@ -226,16 +226,6 @@ router.get('/card/:id', async (req, res) => {
 
     const related = getRelatedCards(card.oracle_id);
 
-    const draftedWith = {};
-    const cubedWith = {};
-    const synergistic = {};
-
-    for (const category of ['top', 'spells', 'creatures', 'other']) {
-      draftedWith[category] = related.draftedWith[category].map((oracle) => getReasonableCardByOracle(oracle));
-      cubedWith[category] = related.cubedWith[category].map((oracle) => getReasonableCardByOracle(oracle));
-      synergistic[category] = related.synergistic[category].map((oracle) => getReasonableCardByOracle(oracle));
-    }
-
     return render(
       req,
       res,
@@ -247,9 +237,9 @@ router.get('/card/:id', async (req, res) => {
         versions: carddb.oracleToId[card.oracle_id]
           .filter((cid) => cid !== card.scryfall_id)
           .map((cardid) => cardFromId(cardid)),
-        draftedWith,
-        cubedWith,
-        synergistic,
+        draftedWith: related.draftedWith,
+        cubedWith: related.cubedWith,
+        synergistic: related.synergistic,
       },
       {
         title: `${card.name}`,
@@ -262,6 +252,7 @@ router.get('/card/:id', async (req, res) => {
       },
     );
   } catch (err) {
+    console.error(err);
     return util.handleRouteError(req, res, err, '/404');
   }
 });
@@ -304,16 +295,6 @@ router.get('/cardjson/:id', async (req, res) => {
 
     const related = getRelatedCards(card.oracle_id);
 
-    const draftedWith = {};
-    const cubedWith = {};
-    const synergistic = {};
-
-    for (const category of ['top', 'spells', 'creatures', 'other']) {
-      draftedWith[category] = related.draftedWith[category].map((oracle) => getReasonableCardByOracle(oracle));
-      cubedWith[category] = related.cubedWith[category].map((oracle) => getReasonableCardByOracle(oracle));
-      synergistic[category] = related.synergistic[category].map((oracle) => getReasonableCardByOracle(oracle));
-    }
-
     return res.json({
       card,
       history: history.items.reverse(),
@@ -321,9 +302,9 @@ router.get('/cardjson/:id', async (req, res) => {
       versions: carddb.oracleToId[card.oracle_id]
         .filter((cid) => cid !== card.scryfall_id)
         .map((cardid) => cardFromId(cardid)),
-      draftedWith,
-      cubedWith,
-      synergistic,
+      draftedWith: related.draftedWith,
+      cubedWith: related.cubedWith,
+      synergistic: related.synergistic,
     });
   } catch (err) {
     return res.json({ error: err.message });

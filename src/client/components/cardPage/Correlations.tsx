@@ -27,8 +27,9 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
         <CardGrid
           cards={top.map(detailsToCard)}
           xs={3}
-          lg={4}
-          xxl={6}
+          md={4}
+          lg={6}
+          xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
         />
@@ -39,8 +40,9 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
         <CardGrid
           cards={creatures.map(detailsToCard)}
           xs={3}
-          lg={4}
-          xxl={6}
+          md={4}
+          lg={6}
+          xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
         />
@@ -51,8 +53,9 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
         <CardGrid
           cards={spells.map(detailsToCard)}
           xs={3}
-          lg={4}
-          xxl={6}
+          md={4}
+          lg={6}
+          xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
         />
@@ -63,8 +66,9 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
         <CardGrid
           cards={other.map(detailsToCard)}
           xs={3}
-          lg={4}
-          xxl={6}
+          md={4}
+          lg={6}
+          xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
         />
