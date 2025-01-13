@@ -90,11 +90,12 @@ const renderLink: React.FC<RenderLinkProps> = (node) => {
 };
 
 const renderCode: React.FC = (node: any) => {
-  const mode = getComputedStyle(document.body).getPropertyValue('--mode').trim();
-  const style = mode === 'dark' ? a11yDark : a11yLight;
+  //With tailwind CSS the HTML element has the class dark or not. Before it was the body
+  const isDarkMode = document.documentElement.classList.contains('dark');
+  const style = isDarkMode ? a11yDark : a11yLight;
 
   return (
-    <SyntaxHighlighter language={node.children[0]?.props?.className?.replace('language-', '') || 'text'} style={style}>
+    <SyntaxHighlighter language={node.children?.props?.className?.replace('language-', '') || 'text'} style={style}>
       {node.node?.children[0]?.children[0]?.value?.trimEnd() || ''}
     </SyntaxHighlighter>
   );
