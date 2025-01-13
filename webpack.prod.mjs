@@ -21,7 +21,7 @@ const config = {
       minimize: true,
       debug: false,
     }),
-    new webpack.IgnorePlugin({ resourceRegExp: /^(\.\/locale)|(moment)$/ }),
+    new webpack.IgnorePlugin({ resourceRegExp: /^(\.\/locale)|(moment)$/ })
   ],
   optimization: {
     minimize: true,
@@ -30,11 +30,26 @@ const config = {
         parallel: true,
       }),
     ],
-    usedExports: true,
+    sideEffects: true,
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        commons: {
+          name: 'commons',
+          chunks: 'initial',
+          minChunks: 2,
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      },
+    },
   },
   infrastructureLogging: {
     level: 'verbose',
- }
+  }
 };
 
 const clientConfig = merge(commonClientConfig, config, {});
