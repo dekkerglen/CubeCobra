@@ -1,6 +1,16 @@
-const clone = require('clone');
+import clone from 'clone';
 
-let peers = [];
+let peers: any[] = [];
+
+interface CacheItem {
+  value: any;
+  date: number;
+  size: number;
+}
+
+interface Cache {
+  [key: string]: CacheItem;
+}
 
 /*
 cache: {
@@ -11,12 +21,12 @@ cache: {
   },
 }
 */
-const cache = {};
+const cache: Cache = {};
 let cacheSize = 0;
 // 1GB
 const cacheLimit = 1024 * 1024 * 1024;
 
-const evict = (key) => {
+const evict = (key: string) => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
   }
@@ -27,7 +37,7 @@ const evict = (key) => {
   }
 };
 
-const batchEvict = (keys) => {
+const batchEvict = (keys: string[]) => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
   }
@@ -41,12 +51,15 @@ const evictOldest = () => {
   let oldestKey = null;
   let oldestDate = null;
   for (const key in cache) {
-    if (cache[key].date < oldestDate) {
+    if (oldestDate === null || cache[key].date < oldestDate) {
       oldestKey = key;
       oldestDate = cache[key].date;
     }
   }
-  evict(oldestKey);
+
+  if (oldestKey !== null) {
+    evict(oldestKey);
+  }
 };
 
 // Load the AWS SDK for Node.js
@@ -64,7 +77,7 @@ AWS.config.update({
 const autoscaling = new AWS.AutoScaling();
 const ec2 = new AWS.EC2();
 
-const fetchWithTimeout = async (url, options, timeout = 5000) => {
+const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 5000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   const response = await fetch(url, {
@@ -87,13 +100,13 @@ const updatePeers = async () => {
 
       // get ip from ec2 instance id
       const ips = await Promise.all(
-        instances.map((instance) =>
+        instances.map((instance: any) =>
           ec2
             .describeInstances({
               InstanceIds: [instance.InstanceId],
             })
             .promise()
-            .then((res) => res.Reservations[0].Instances[0].PublicIpAddress),
+            .then((res: any) => res.Reservations[0].Instances[0].PublicIpAddress),
         ),
       );
 
@@ -121,7 +134,7 @@ const updatePeers = async () => {
   }
 };
 
-const invalidate = async (key) => {
+export const invalidate = async (key: string) => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
   }
@@ -155,7 +168,7 @@ const invalidate = async (key) => {
   }
 };
 
-const batchInvalidate = async (keys) => {
+export const batchInvalidate = async (keys: string[]) => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
   }
@@ -189,7 +202,7 @@ const batchInvalidate = async (keys) => {
   }
 };
 
-const put = (key, value) => {
+export const put = (key: string, value: any) => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
   }
@@ -216,7 +229,7 @@ const put = (key, value) => {
   cacheSize += size;
 };
 
-const get = (key) => {
+export const get = (key: string): any | null => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return null;
   }
@@ -229,11 +242,11 @@ const get = (key) => {
   return null;
 };
 
-const batchGet = (keys) => {
+export const batchGet = (keys: string[]) => {
   return keys.map((key) => get(key));
 };
 
-const batchPut = (dict) => {
+export const batchPut = (dict: object) => {
   Object.entries(dict).forEach(([key, value]) => put(key, value));
 };
 
