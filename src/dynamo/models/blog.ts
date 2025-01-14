@@ -1,8 +1,3 @@
-// Load Environment Variables
-import dotenv from 'dotenv';
-dotenv.config();
-
-//import Converter from 'aws-sdk2/aws/dynamodb/Converter';
 import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -10,7 +5,7 @@ import { cardFromId } from '../../util/carddb';
 import createClient from '../util';
 const Changelog = require('./changelog');
 import BlogPost from '../../datatypes/BlogPost';
-import { BoardChanges, Changes } from '../../datatypes/Card';
+import { BoardChanges, BoardType, Changes } from '../../datatypes/Card';
 import CubeType from '../../datatypes/Cube';
 import UserType from '../../datatypes/User';
 import Cube from './cube';
@@ -135,19 +130,14 @@ const batchHydrate = async (documents?: DocumentClient.ItemList): Promise<BlogPo
   });
 };
 
-function isBoardChanges(boardChanges: any): boardChanges is BoardChanges {
-  return (
-    Array.isArray(boardChanges.adds) &&
-    Array.isArray(boardChanges.removes) &&
-    Array.isArray(boardChanges.swaps) &&
-    Array.isArray(boardChanges.edits)
-  );
-}
-
-module.exports = {
+const blog = {
   getById: async (id: string): Promise<BlogPost | undefined> => hydrate((await client.get(id)).Item),
   getUnhydrated: async (id: string): Promise<DocumentClient.AttributeMap | undefined> => (await client.get(id)).Item,
-  getByCube: async (cube: string, limit: number, lastKey?: DocumentClient.Key) => {
+  getByCube: async (
+    cube: string,
+    limit: number,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: BlogPost[]; lastKey?: DocumentClient.Key }> => {
     const result = await client.query({
       IndexName: 'ByCube',
       KeyConditionExpression: `#p1 = :cube`,
@@ -221,18 +211,18 @@ module.exports = {
   },
   batchGet: async (ids: string[]): Promise<BlogPost[] | undefined> => batchHydrate(await client.batchGet(ids)),
   createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
-  changelogToText: (changelog: any): string => {
+  changelogToText: (changelog: Changes): string => {
     let result = '';
 
     for (const [board, name] of [
       ['mainboard', 'Mainboard'],
       ['sideboard', 'Sideboard'],
     ]) {
-      if (!isBoardChanges(changelog[board])) {
+      if (!changelog[board as BoardType]) {
         continue;
       }
 
-      const boardChanges = changelog[board] as BoardChanges;
+      const boardChanges = changelog[board as BoardType] as BoardChanges;
 
       result += `${name}:\n`;
 
@@ -263,3 +253,5 @@ module.exports = {
   },
   FIELDS,
 };
+module.exports = blog;
+export default blog;
