@@ -1,24 +1,39 @@
-// dotenv
-require('dotenv').config();
+// Load Environment Variables
+import dotenv from 'dotenv';
+dotenv.config();
 
-const uuid = require('uuid');
-const TurndownService = require('turndown');
-const createClient = require('../util');
+//import Converter from 'aws-sdk2/aws/dynamodb/Converter';
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { v4 as uuidv4 } from 'uuid';
+
+import { cardFromId } from '../../util/carddb';
+import createClient from '../util';
 const Changelog = require('./changelog');
-const { cardFromId } = require('../../util/carddb');
-const User = require('./user');
-const Cube = require('./cube');
+import BlogPost from '../../datatypes/BlogPost';
+import { BoardChanges, Changes } from '../../datatypes/Card';
+import CubeType from '../../datatypes/Cube';
+import UserType from '../../datatypes/User';
+import Cube from './cube';
+import User from './user';
 
-const turndownService = new TurndownService();
+enum FIELDS {
+  ID = 'id',
+  BODY = 'body',
+  OWNER = 'owner',
+  DATE = 'date',
+  CUBE_ID = 'cube',
+  TITLE = 'title',
+  CHANGELIST_ID = 'changelist',
+}
 
-const FIELDS = {
-  ID: 'id',
-  BODY: 'body',
-  OWNER: 'owner',
-  DATE: 'date',
-  CUBE_ID: 'cube',
-  TITLE: 'title',
-  CHANGELIST_ID: 'changelist',
+type CreateBlogPost = {
+  [FIELDS.ID]?: string;
+  [FIELDS.BODY]?: string;
+  [FIELDS.OWNER]: string;
+  [FIELDS.DATE]?: number;
+  [FIELDS.CUBE_ID]: string;
+  [FIELDS.TITLE]: string;
+  [FIELDS.CHANGELIST_ID]?: string;
 };
 
 const client = createClient({
@@ -42,74 +57,97 @@ const client = createClient({
       sortKey: FIELDS.DATE,
     },
   ],
-  FIELDS,
 });
 
-const hydrate = async (document) => {
+const createHydratedBlog = (
+  document: DocumentClient.AttributeMap,
+  owner: any,
+  cubeName: string,
+  Changelog?: Partial<Changes>,
+): BlogPost => {
+  return {
+    id: document.id,
+    body: document.body,
+    date: document.date,
+    cube: document.cube,
+    title: document.title,
+    owner: owner,
+    cubeName: cubeName,
+    Changelog: Changelog,
+  };
+};
+
+const hydrate = async (document?: DocumentClient.AttributeMap): Promise<BlogPost | undefined> => {
   if (!document) {
     return document;
   }
 
-  document.owner = await User.getById(document.owner);
+  let cubeName = 'Unknown';
+
+  const owner = await User.getById(document.owner);
 
   if (document.cube && document.cube !== 'DEVBLOG') {
     const cube = await Cube.getById(document.cube);
     if (cube) {
-      document.cubeName = cube.name;
-    } else {
-      document.cubeName = 'Unknown';
+      cubeName = cube.name;
     }
   }
 
   if (!document.changelist) {
-    return document;
+    return createHydratedBlog(document, owner, cubeName);
   }
 
   const changelog = await Changelog.getById(document.cube, document.changelist);
 
-  delete document.changelist;
-
-  return {
-    ...document,
-    Changelog: changelog,
-  };
+  return createHydratedBlog(document, owner, cubeName, changelog);
 };
 
-const batchHydrate = async (documents) => {
+const batchHydrate = async (documents?: DocumentClient.ItemList): Promise<BlogPost[] | undefined> => {
+  if (!documents) {
+    return undefined;
+  }
+
   const keys = documents
     .filter((document) => document.changelist)
     .map((document) => ({ cube: document.cube, id: document.changelist }));
   const changelists = await Changelog.batchGet(keys);
 
-  const owners = await User.batchGet(documents.map((document) => document.owner));
-  const cubes = await Cube.batchGet(documents.map((document) => document.cube));
+  const owners: UserType[] = await User.batchGet(documents.map((document) => document.owner));
+  const cubes: CubeType[] = await Cube.batchGet(documents.map((document) => document.cube));
 
   return documents.map((document) => {
-    document.owner = owners.find((owner) => owner.id === document.owner);
+    const owner = owners.find((owner) => owner.id === document.owner);
+    let cubeName = 'Unknown';
     if (document.cube && document.cube !== 'DEVBLOG') {
       const cube = cubes.find((c) => c.id === document.cube);
       if (cube) {
-        document.cubeName = cube.name;
-      } else {
-        document.cubeName = 'Unknown';
+        cubeName = cube.name;
       }
     }
 
+    let Changelog;
     if (document.changelist) {
       const id = keys.findIndex((key) => key.id === document.changelist);
-      document.Changelog = changelists[id];
+      Changelog = changelists[id];
     }
 
-    delete document.changelist;
-
-    return document;
+    return createHydratedBlog(document, owner, cubeName, Changelog);
   });
 };
 
+function isBoardChanges(boardChanges: any): boardChanges is BoardChanges {
+  return (
+    Array.isArray(boardChanges.adds) &&
+    Array.isArray(boardChanges.removes) &&
+    Array.isArray(boardChanges.swaps) &&
+    Array.isArray(boardChanges.edits)
+  );
+}
+
 module.exports = {
-  getById: async (id) => hydrate((await client.get(id)).Item),
-  getUnhydrated: async (id) => (await client.get(id)).Item,
-  getByCube: async (cube, limit, lastKey) => {
+  getById: async (id: string): Promise<BlogPost | undefined> => hydrate((await client.get(id)).Item),
+  getUnhydrated: async (id: string): Promise<DocumentClient.AttributeMap | undefined> => (await client.get(id)).Item,
+  getByCube: async (cube: string, limit: number, lastKey?: DocumentClient.Key) => {
     const result = await client.query({
       IndexName: 'ByCube',
       KeyConditionExpression: `#p1 = :cube`,
@@ -128,7 +166,11 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  getByOwner: async (owner, limit, lastKey) => {
+  getByOwner: async (
+    owner: string,
+    limit: number,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: BlogPost[]; lastKey?: DocumentClient.Key }> => {
     const result = await client.query({
       IndexName: 'ByOwner',
       KeyConditionExpression: `#p1 = :owner`,
@@ -147,13 +189,8 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document) => {
-    const id = document[FIELDS.ID] || uuid.v4();
-
-    if (document.owner.id) {
-      document[FIELDS.OWNER] = document.owner.id;
-    }
-
+  put: async (document: CreateBlogPost): Promise<string> => {
+    const id = document[FIELDS.ID] || uuidv4();
     client.put({
       [FIELDS.ID]: id,
       [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
@@ -163,77 +200,62 @@ module.exports = {
       [FIELDS.TITLE]: document[FIELDS.TITLE],
       [FIELDS.CHANGELIST_ID]: document[FIELDS.CHANGELIST_ID],
     });
+
     return id;
   },
-  delete: async (id) => {
+  delete: async (id: DocumentClient.Key): Promise<void> => {
     await client.delete({ id });
   },
-  batchPut: async (documents) => {
+  batchPut: async (documents: CreateBlogPost[]): Promise<void> => {
     await client.batchPut(
       documents.map((document) => ({
         [FIELDS.ID]: document[FIELDS.ID],
         [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
         [FIELDS.DATE]: document[FIELDS.DATE] || Date.now().valueOf(),
-        [FIELDS.OWNER]: document[FIELDS.OWNER].id || document[FIELDS.OWNER],
-        [FIELDS.BODY]: document[FIELDS.BODY].substring(0, 10000),
+        [FIELDS.OWNER]: document[FIELDS.OWNER],
+        [FIELDS.BODY]: document[FIELDS.BODY] ? document[FIELDS.BODY].substring(0, 10000) : null,
         [FIELDS.TITLE]: document[FIELDS.TITLE],
         [FIELDS.CHANGELIST_ID]: document[FIELDS.CHANGELIST_ID],
       })),
     );
   },
-  batchGet: async (ids) => batchHydrate(await client.batchGet(ids)),
-  createTable: async () => client.createTable(),
-  convertBlog: (blog) => {
-    const changelog = Changelog.getChangelogFromBlog(blog);
-    let body = blog.markdown || blog.body || '';
-
-    if (blog.dev === 'true') {
-      body = blog.html ? turndownService.turndown(blog.html) : blog.body;
-    }
-
-    return {
-      [FIELDS.ID]: `${blog._id}`,
-      [FIELDS.CUBE_ID]: blog.dev === 'true' ? `DEVBLOG` : `${blog.cube}`,
-      [FIELDS.DATE]: blog.date.valueOf(),
-      [FIELDS.OWNER]: `${blog.owner}`,
-      [FIELDS.BODY]: body,
-      [FIELDS.TITLE]: blog.title,
-      [FIELDS.CHANGELIST_ID]: changelog.length > 0 ? `${blog._id}` : undefined,
-    };
-  },
-  changelogToText: (changelog) => {
+  batchGet: async (ids: string[]): Promise<BlogPost[] | undefined> => batchHydrate(await client.batchGet(ids)),
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  changelogToText: (changelog: any): string => {
     let result = '';
 
     for (const [board, name] of [
       ['mainboard', 'Mainboard'],
       ['sideboard', 'Sideboard'],
     ]) {
-      if (changelog[board]) {
-        result += `${name}:\n`;
+      if (!isBoardChanges(changelog[board])) {
+        continue;
+      }
 
-        if (changelog[board].adds) {
-          result += `Added:\n${changelog[board].adds.map((add) => cardFromId(add.cardID).name).join('\n')}\n`;
-        }
+      const boardChanges = changelog[board] as BoardChanges;
 
-        if (changelog[board].removes) {
-          result += `Removed:\n${changelog[board].removes
-            .map((remove) => cardFromId(remove.oldCard.cardID).name)
-            .join('\n')}\n`;
-        }
+      result += `${name}:\n`;
 
-        if (changelog[board].swaps) {
-          result += `Swapped:\n${changelog[board].swaps
-            .map(
-              (swap) => `${cardFromId(swap.oldCard.cardID).name} -> ${cardFromId(swap.card.cardID).name}`,
-            )
-            .join('\n')}\n`;
-        }
+      if (boardChanges.adds) {
+        result += `Added:\n${boardChanges.adds.map((add) => cardFromId(add.cardID).name).join('\n')}\n`;
+      }
 
-        if (changelog[board].edits) {
-          result += `Edited:\n${changelog[board].edits
-            .map((edit) => `${cardFromId(edit.oldCard.cardID).name}`)
-            .join('\n')}\n`;
-        }
+      if (boardChanges.removes) {
+        result += `Removed:\n${boardChanges.removes
+          .map((remove) => cardFromId(remove.oldCard.cardID).name)
+          .join('\n')}\n`;
+      }
+
+      if (boardChanges.swaps) {
+        result += `Swapped:\n${boardChanges.swaps
+          .map((swap) => `${cardFromId(swap.oldCard.cardID).name} -> ${cardFromId(swap.card.cardID).name}`)
+          .join('\n')}\n`;
+      }
+
+      if (boardChanges.edits) {
+        result += `Edited:\n${boardChanges.edits
+          .map((edit) => `${cardFromId(edit.oldCard.cardID).name}`)
+          .join('\n')}\n`;
       }
     }
 
