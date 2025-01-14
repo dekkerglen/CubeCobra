@@ -36,7 +36,7 @@ interface ClientInterface {
   batchDelete: (keys: DocumentClient.Key[]) => Promise<void>;
 }
 
-export default function createClient(config: ClientConfig): ClientInterface {
+const createClient = (config: ClientConfig): ClientInterface => {
   return {
     createTable: async (): Promise<DocumentClient.CreateTableOutput> => {
       const KeySchema: DocumentClient.KeySchema = [
@@ -253,4 +253,6 @@ export default function createClient(config: ClientConfig): ClientInterface {
       }
     },
   };
-}
+};
+module.exports = createClient;
+export default createClient;
