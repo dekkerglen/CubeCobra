@@ -29,14 +29,14 @@ interface ClientInterface {
   get: (id: string) => Promise<DocumentClient.GetItemOutput>;
   scan: (params: Omit<DocumentClient.ScanInput, 'TableName'>) => Promise<DocumentClient.ScanOutput>;
   query: (params: Omit<DocumentClient.QueryInput, 'TableName'>) => Promise<DocumentClient.QueryOutput>;
-  put: (params: Omit<DocumentClient.PutItemInput, 'TableName'>) => Promise<DocumentClient.PutItemOutput>;
+  put: (Item: DocumentClient.PutItemInputAttributeMap) => Promise<DocumentClient.PutItemOutput>;
   delete: (key: DocumentClient.Key) => Promise<void>;
   batchGet: (ids: string[]) => Promise<any[]>;
   batchPut: (documents: DocumentClient.AttributeMap[]) => Promise<void>;
   batchDelete: (keys: DocumentClient.Key[]) => Promise<void>;
 }
 
-module.exports = function createClient(config: ClientConfig): ClientInterface {
+export default function createClient(config: ClientConfig): ClientInterface {
   return {
     createTable: async (): Promise<DocumentClient.CreateTableOutput> => {
       const KeySchema: DocumentClient.KeySchema = [
@@ -253,4 +253,4 @@ module.exports = function createClient(config: ClientConfig): ClientInterface {
       }
     },
   };
-};
+}
