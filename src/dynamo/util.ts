@@ -34,7 +34,6 @@ interface ClientInterface {
   batchGet: (ids: string[]) => Promise<any[]>;
   batchPut: (documents: DocumentClient.AttributeMap[]) => Promise<void>;
   batchDelete: (keys: DocumentClient.Key[]) => Promise<void>;
-  //TODO: is Request<DocumentClient.BatchGetItemOutput, AWSError> ??
 }
 
 module.exports = function createClient(config: ClientConfig): ClientInterface {
@@ -139,20 +138,6 @@ module.exports = function createClient(config: ClientConfig): ClientInterface {
         throw new Error(`Error scanning table ${config.name}: ${error.message}`);
       }
     },
-    /*getByKey: async (key: string) => {
-      try {
-        return await documentClient
-          .get({
-            TableName: tableName(config.name),
-            Key: {
-              ...key,
-            },
-          })
-          .promise();
-      } catch (error: any) {
-        throw new Error(`Error getting item from table ${config.name} with key ${key}: ${error.message}`);
-      }
-    },*/
     put: async (Item: DocumentClient.PutItemInputAttributeMap): Promise<DocumentClient.PutItemOutput> => {
       try {
         if (!Item[config.partitionKey]) {
