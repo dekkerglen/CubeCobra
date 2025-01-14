@@ -165,7 +165,6 @@
     "stream-json": "^1.9.1",
     "tmp": "^0.2.3",
     "tsconfig-paths": "^4.2.0",
-    "turndown": "^7.1.1",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
     "util": "^0.12.4",
