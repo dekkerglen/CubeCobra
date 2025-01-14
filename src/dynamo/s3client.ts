@@ -4,8 +4,6 @@ dotenv.config();
 
 import AWS from 'aws-sdk';
 
-import { get, invalidate, put } from './cache';
-
 // Load the AWS SDK for Node.js
 
 // Set the region
@@ -20,15 +18,8 @@ const s3 = new AWS.S3({
   endpoint: process.env.AWS_ENDPOINT || undefined,
 });
 
-const getObject = async (bucket: string, key: string, skipcache = false): Promise<any> => {
+const getObject = async (bucket: string, key: string): Promise<any> => {
   try {
-    // Check cache
-    const cached = get(key);
-
-    if (cached && !skipcache) {
-      return cached;
-    }
-
     const res = await s3
       .getObject({
         Bucket: bucket,
@@ -36,22 +27,13 @@ const getObject = async (bucket: string, key: string, skipcache = false): Promis
       })
       .promise();
 
-    const value = JSON.parse(res!.Body!.toString());
-
-    // Update cache
-    await put(key, value);
-
-    return value;
+    return JSON.parse(res!.Body!.toString());
   } catch {
     return null;
   }
 };
 
 const putObject = async (bucket: string, key: string, value: any): Promise<void> => {
-  // Update cache
-  await invalidate(key);
-  put(key, value);
-
   await s3
     .putObject({
       Bucket: bucket,

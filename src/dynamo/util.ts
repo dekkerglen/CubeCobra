@@ -5,7 +5,6 @@ dotenv.config();
 import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 import { v4 as uuidv4 } from 'uuid';
 
-import { batchGet, batchInvalidate, batchPut, get, invalidate, put } from './cache';
 import client from './client';
 import documentClient from './documentClient';
 
@@ -33,7 +32,7 @@ interface ClientInterface {
   put: (params: Omit<DocumentClient.PutItemInput, 'TableName'>) => Promise<DocumentClient.PutItemOutput>;
   delete: (key: DocumentClient.Key) => Promise<void>;
   batchGet: (ids: string[]) => Promise<any[]>;
-  batchPut: (documents: DocumentClient.AttributeMap[], skipCache: boolean) => Promise<void>;
+  batchPut: (documents: DocumentClient.AttributeMap[]) => Promise<void>;
   batchDelete: (keys: DocumentClient.Key[]) => Promise<void>;
   //TODO: is Request<DocumentClient.BatchGetItemOutput, AWSError> ??
 }
@@ -113,12 +112,6 @@ module.exports = function createClient(config: ClientConfig): ClientInterface {
         throw new Error(`Error getting item from table ${config.name} with, id is null`);
       }
 
-      const item = get(`${config.name}:${id}`);
-
-      if (item) {
-        return { Item: item };
-      }
-
       try {
         const result = await documentClient
           .get({
@@ -128,10 +121,6 @@ module.exports = function createClient(config: ClientConfig): ClientInterface {
             },
           })
           .promise();
-
-        if (result.Item) {
-          put(`${config.name}:${id}`, result.Item);
-        }
 
         return result;
       } catch (error: any) {
@@ -164,21 +153,13 @@ module.exports = function createClient(config: ClientConfig): ClientInterface {
         throw new Error(`Error getting item from table ${config.name} with key ${key}: ${error.message}`);
       }
     },*/
-    put: async (
-      Item: DocumentClient.PutItemInputAttributeMap,
-      skipCache: boolean = false,
-    ): Promise<DocumentClient.PutItemOutput> => {
+    put: async (Item: DocumentClient.PutItemInputAttributeMap): Promise<DocumentClient.PutItemOutput> => {
       try {
         if (!Item[config.partitionKey]) {
           Item = {
             [config.partitionKey]: uuidv4(),
             ...Item,
           };
-        }
-
-        if (!skipCache) {
-          await invalidate(`${config.name}:${Item[config.partitionKey]}`);
-          put(`${config.name}:${Item[config.partitionKey]}`, Item);
         }
 
         await documentClient.put({ TableName: tableName(config.name), Item }).promise();
@@ -215,16 +196,16 @@ module.exports = function createClient(config: ClientConfig): ClientInterface {
         }
 
         const singletonIds = [...new Set(ids)];
-
-        const cacheHits = batchGet(singletonIds.map((id) => `${config.name}:${id}`));
-        const cacheMisses = cacheHits.map((hit, index) => (hit ? null : singletonIds[index])).filter((id) => id);
-
         const results: any[] = [];
-        for (let i = 0; i < cacheMisses.length; i += 25) {
+
+        const chunkSize = 25;
+        for (let i = 0; i < singletonIds.length; i += chunkSize) {
+          const chunk = singletonIds.slice(i, i + chunkSize);
+
           const params: DocumentClient.BatchGetItemInput = {
             RequestItems: {
               [tableName(config.name)]: {
-                Keys: cacheMisses.slice(i, i + 25).map((id) => ({
+                Keys: chunk.map((id) => ({
                   [config.partitionKey]: id,
                 })),
               },
@@ -236,23 +217,13 @@ module.exports = function createClient(config: ClientConfig): ClientInterface {
             results.push(...result.Responses[tableName(config.name)]);
           }
         }
-        return [...cacheHits.filter((hit) => hit), ...results];
+        return [...results];
       } catch (error: any) {
         throw new Error(`Error batch getting items from table ${config.name}: ${error.message}`);
       }
     },
-    batchPut: async (documents: DocumentClient.AttributeMap[], skipCache: boolean = false): Promise<void> => {
+    batchPut: async (documents: DocumentClient.AttributeMap[]): Promise<void> => {
       try {
-        if (!skipCache) {
-          batchPut(
-            Object.fromEntries(
-              documents.map((document) => [`${config.name}:${document[config.partitionKey]}`, document]),
-            ),
-          );
-
-          await batchInvalidate(documents.map((document) => `${config.name}:${document[config.partitionKey]}`));
-        }
-
         const batches = [];
         for (let i = 0; i < documents.length; i += 25) {
           const batch = documents.slice(i, i + 25).map((document) => ({
