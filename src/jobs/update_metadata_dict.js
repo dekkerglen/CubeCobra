@@ -1,8 +1,9 @@
+require('module-alias/register');
 /* eslint-disable no-console */
 require('dotenv').config();
 
 const fs = require('fs');
-import carddb, { cardFromId,initializeCardDb } from '../util/carddb';
+import carddb, { cardFromId, initializeCardDb } from '../util/carddb';
 const { encode } = require('../util/ml');
 
 const correlationLimit = 36;

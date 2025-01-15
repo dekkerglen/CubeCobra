@@ -178,7 +178,7 @@ const parseHtml = (html) => {
   return changelog;
 };
 
-module.exports = {
+const Changelog = {
   getById: getChangelog,
   getByCube: async (cubeId, limit, lastKey) => {
     const result = await client.query({
@@ -317,3 +317,7 @@ module.exports = {
   },
   FIELDS,
 };
+
+module.exports = Changelog;
+
+export default Changelog;

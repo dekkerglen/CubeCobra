@@ -1,21 +1,31 @@
 /* eslint-disable no-console */
 // Load Environment Variables
-require('dotenv').config();
+import dotenv from 'dotenv';
 
-const fs = require('fs');
-const { initializeCardDb, cardFromId } = require('../util/carddb');
+import 'module-alias/register';
+dotenv.config();
 
-const ChangeLog = require('../dynamo/models/changelog');
-const CardHistory = require('../dynamo/models/cardhistory');
-const { getCubeTypes } = require('../util/cubefn');
+import fs from 'fs';
 
-const saveCubesHistory = async (cubes, key) => {
+import CardHistory from '../dynamo/models/cardhistory';
+import ChangeLog from '../dynamo/models/changelog';
+import { cardFromId, initializeCardDb } from '../util/carddb';
+import { getCubeTypes } from '../util/cubefn';
+
+interface CubeHistory {
+  cubes: Record<string, number[]>;
+  indexToOracleMap: Record<number, string>;
+}
+
+type CubeDict = Record<string, string[]>;
+
+const saveCubesHistory = async (cubes: CubeDict, key: string) => {
   const uniqueOracles = [...new Set(Object.values(cubes).flat())];
 
   const oracleToIndexMap = Object.fromEntries(uniqueOracles.map((oracle, index) => [oracle, index]));
   const indexToOracleMap = Object.fromEntries(uniqueOracles.map((oracle, index) => [index, oracle]));
 
-  const cubeHistory = {
+  const cubeHistory: CubeHistory = {
     cubes: {},
     indexToOracleMap,
   };
@@ -27,11 +37,11 @@ const saveCubesHistory = async (cubes, key) => {
   fs.writeFileSync(`temp/cubes_history/${key}.json`, JSON.stringify(cubeHistory));
 };
 
-const loadCubesHistory = async (key) => {
-  const data = JSON.parse(fs.readFileSync(`temp/cubes_history/${key}.json`));
+const loadCubesHistory = async (key: string) => {
+  const data: CubeHistory = JSON.parse(fs.readFileSync(`temp/cubes_history/${key}.json`, 'utf-8'));
 
   if (data.cubes) {
-    const cubes = {};
+    const cubes: CubeDict = {};
     for (const [cubeId, cube] of Object.entries(data.cubes)) {
       cubes[cubeId] = cube.map((index) => data.indexToOracleMap[index]);
     }
@@ -183,9 +193,7 @@ const loadCubesHistory = async (key) => {
       for (const cube of Object.values(cubes)) {
         const cubeCards = cube.map((id) => cardFromId(id));
         const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
-        const { pauper, peasant, type } = getCubeTypes(
-          cubeCards.map((card) => ({ cardID: card.scryfall_id }))
-        );
+        const { pauper, peasant, type } = getCubeTypes(cubeCards.map((card) => ({ cardID: card.scryfall_id })));
 
         const size = cube.length;
 
