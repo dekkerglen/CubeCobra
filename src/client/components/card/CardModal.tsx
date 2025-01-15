@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 
@@ -28,6 +28,8 @@ import { getTagColorClass } from 'utils/Util';
 import Card, { BoardType } from '../../../datatypes/Card';
 import { TagColor } from '../../../datatypes/Cube';
 import TagData from '../../../datatypes/TagData';
+import DisplayContext from '../../contexts/DisplayContext';
+import { cardImageBackUrl, cardImageUrl } from '../../utils/cardutil';
 import Badge from '../base/Badge';
 import Button from '../base/Button';
 import Input from '../base/Input';
@@ -100,13 +102,29 @@ const CardModal: React.FC<CardModalProps> = ({
 
   const disabled = !canEdit || card.markedForDelete;
 
+  const { showCustomImages } = useContext(DisplayContext);
+
+  const getCardFrontImage = function (card: Card) {
+    return (showCustomImages && cardImageUrl(card)) || card?.details?.image_normal;
+  };
+  const getCardBackImage = function (card: Card) {
+    return (showCustomImages && cardImageBackUrl(card)) || card?.details?.image_flip;
+  };
+
   const [prevCardID, setPrevCardID] = useState(card.cardID);
-  const [imageUsed, setImageUsed] = useState(card?.details?.image_normal);
-  //When the card id changes then update the image used. If we just checked card, it would be different
+  const [isFrontImage, setIsFrontImage] = useState(true);
+  const [imageUsed, setImageUsed] = useState(getCardFrontImage(card));
+  //When the card id changes, then update the image used. If we just checked card, it would be different
   //if any field in the modal is edited, which would lead the image to reset to the front face.
   if (prevCardID !== card.cardID) {
+    setIsFrontImage(true);
     setPrevCardID(card.cardID);
-    setImageUsed(card?.details?.image_normal);
+    setImageUsed(getCardFrontImage(card));
+    //If the image for the current side changes, such as by providing or removing a custom image, then update the image to display
+  } else if (isFrontImage && getCardFrontImage(card) !== imageUsed) {
+    setImageUsed(getCardFrontImage(card));
+  } else if (!isFrontImage && getCardBackImage(card) !== imageUsed) {
+    setImageUsed(getCardBackImage(card));
   }
 
   return (
@@ -134,14 +152,16 @@ const CardModal: React.FC<CardModalProps> = ({
                     outline
                     block
                     onClick={() => {
-                      if (imageUsed === card?.details?.image_normal) {
-                        setImageUsed(card?.details?.image_flip);
+                      if (isFrontImage) {
+                        setImageUsed(getCardBackImage(card));
+                        setIsFrontImage(false);
                       } else {
-                        setImageUsed(card?.details?.image_normal);
+                        setImageUsed(getCardFrontImage(card));
+                        setIsFrontImage(true);
                       }
                     }}
                   >
-                    <ArrowSwitchIcon size={16} /> Transform
+                    <ArrowSwitchIcon size={16} /> Transform {isFrontImage ? '(To back)' : '(To front)'}
                   </Button>
                 )}
                 <Flexbox direction="row" gap="2" wrap="wrap">
