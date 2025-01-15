@@ -1,6 +1,6 @@
-import User from './User';
-import { DraftFormat } from './Draft';
 import Card, { CardStatus } from './Card';
+import { DraftFormat } from './Draft';
+import User from './User';
 
 export interface CubeImage {
   uri: string;

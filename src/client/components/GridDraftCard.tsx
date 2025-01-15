@@ -1,12 +1,12 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import CSRFForm from './CSRFForm';
 import CubeContext from '../contexts/CubeContext';
-import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
-import Text from './base/Text';
-import Select, { rangeOptions } from './base/Select';
 import Button from './base/Button';
+import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
 import { Flexbox } from './base/Layout';
+import Select, { rangeOptions } from './base/Select';
+import Text from './base/Text';
+import CSRFForm from './CSRFForm';
 
 const GridDraftCard: React.FC = () => {
   const { cube } = useContext(CubeContext);

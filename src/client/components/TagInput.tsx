@@ -1,11 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
+
+import classNames from 'classnames';
 
 import TagData from 'datatypes/TagData';
 import { getTagColorClass } from 'utils/Util';
-import { Flexbox } from './base/Layout';
+
 import Input from './base/Input';
+import { Flexbox } from './base/Layout';
 import Tag from './base/Tag';
-import classNames from 'classnames';
 
 interface TagInputProps {
   tags: TagData[];
@@ -39,7 +41,7 @@ const TagInput: React.FC<TagInputProps> = ({
      * what you typed, those suggestions would still show.
      */
     setFilteredSuggestions(
-      suggestions.filter((suggestion) => value.trim() != '' && suggestion.toLowerCase().includes(value.toLowerCase())),
+      suggestions.filter((suggestion) => value.trim() !== '' && suggestion.toLowerCase().includes(value.toLowerCase())),
     );
   };
 

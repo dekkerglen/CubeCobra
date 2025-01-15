@@ -1,14 +1,14 @@
 import React, { useContext } from 'react';
 
-import Article from 'components/content/Article';
 import Banner from 'components/Banner';
+import { Card, CardHeader } from 'components/base/Card';
+import Text from 'components/base/Text';
+import Article from 'components/content/Article';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
-import MainLayout from 'layouts/MainLayout';
 import ArticleType from 'datatypes/Article';
-import { Card, CardHeader } from 'components/base/Card';
-import Text from 'components/base/Text';
+import MainLayout from 'layouts/MainLayout';
 
 interface ArticlePageProps {
   loginCallback?: string;

@@ -1,6 +1,7 @@
-import BlogPost from './blog/BlogPost';
-import BlogPostType from '../../datatypes/BlogPost';
 import React, { useState } from 'react';
+
+import BlogPostType from '../../datatypes/BlogPost';
+import BlogPost from './blog/BlogPost';
 import IndefinitePaginatedList from './IndefinitePaginatedList';
 
 interface FeedProps {

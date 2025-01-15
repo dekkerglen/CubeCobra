@@ -1,18 +1,19 @@
 import React, { useContext, useState } from 'react';
 
+import Query from 'utils/Query';
+
+import Card from '../../datatypes/Card';
+import Cube from '../../datatypes/Cube';
 import CompareView from '../components/CompareView';
 import CubeCompareNavbar from '../components/cube/CubeCompareNavbar';
 import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
+import { ChangesContextProvider } from '../contexts/ChangesContext';
 import { CubeContextProvider } from '../contexts/CubeContext';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
-import Card from '../../datatypes/Card';
-import Cube from '../../datatypes/Cube';
-import MainLayout from '../layouts/MainLayout';
-import Query from 'utils/Query';
 import FilterContext, { FilterContextProvider } from '../contexts/FilterContext';
-import { ChangesContextProvider } from '../contexts/ChangesContext';
+import MainLayout from '../layouts/MainLayout';
 
 interface CubeComparePageProps {
   cards: Card[];

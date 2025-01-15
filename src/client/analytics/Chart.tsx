@@ -1,26 +1,28 @@
 import React, { useContext, useMemo } from 'react';
-import { Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  TimeScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  CategoryScale,
-  Tooltip,
-  Legend,
-  BarElement,
-} from 'chart.js';
 
-import AsfanDropdown from '../components/analytics/AsfanDropdown';
-import useQueryParam from '../hooks/useQueryParam';
-import { calculateAsfans } from '../drafting/createdraft';
+import {
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  TimeScale,
+  Tooltip,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+
 import { sortIntoGroups, SORTS } from 'utils/Sort';
+
 import Card from '../../datatypes/Card';
-import CubeContext from '../contexts/CubeContext';
+import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
+import CubeContext from '../contexts/CubeContext';
+import { calculateAsfans } from '../drafting/createdraft';
+import useQueryParam from '../hooks/useQueryParam';
 
 console.log('ChartJS', ChartJS);
 console.log('BarElement', BarElement);

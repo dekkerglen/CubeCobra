@@ -1,10 +1,11 @@
 import React, { useContext, useMemo, useState } from 'react';
+
+import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
-import Select from '../base/Select';
 import Checkbox from '../base/Checkbox';
 import { Flexbox } from '../base/Layout';
+import Select from '../base/Select';
 import CSRFForm from '../CSRFForm';
-import UserContext from '../../contexts/UserContext';
 
 const UserThemeForm: React.FC = () => {
   const user = useContext(UserContext);

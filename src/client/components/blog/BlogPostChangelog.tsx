@@ -4,9 +4,10 @@ import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon
 
 import withAutocard from 'components/WithAutocard';
 import Card, { BoardType } from 'datatypes/Card';
+
 import { Flexbox } from '../base/Layout';
-import Text from '../base/Text';
 import Link from '../base/Link';
+import Text from '../base/Text';
 
 export interface AddProps {
   card: Card;

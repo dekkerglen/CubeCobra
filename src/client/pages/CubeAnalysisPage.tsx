@@ -1,7 +1,5 @@
 import React, { useContext } from 'react';
 
-import { cardIsLabel, getLabels } from 'utils/Sort';
-
 import {
   cardCmc,
   cardDevotion,
@@ -17,6 +15,7 @@ import {
   mainboardRate,
   pickRate,
 } from 'utils/cardutil';
+import { cardIsLabel, getLabels } from 'utils/Sort';
 
 import CardType from '../../datatypes/Card';
 import Cube, { CubeCards } from '../../datatypes/Cube';

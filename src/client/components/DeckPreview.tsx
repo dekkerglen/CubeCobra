@@ -1,15 +1,17 @@
 import React, { useContext, useMemo } from 'react';
-import UserContext from '../contexts/UserContext';
-import TimeAgo from 'react-timeago';
-import DeckDeleteModal from './modals/DeckDeleteModal';
-import Draft from '../../datatypes/Draft';
-import Text from './base/Text';
-import { Flexbox } from './base/Layout';
-import User from '../../datatypes/User';
-import withModal from './WithModal';
-import Button from './base/Button';
+
 import { XIcon } from '@primer/octicons-react';
+import TimeAgo from 'react-timeago';
+
+import Draft from '../../datatypes/Draft';
+import User from '../../datatypes/User';
+import UserContext from '../contexts/UserContext';
+import Button from './base/Button';
+import { Flexbox } from './base/Layout';
 import Link from './base/Link';
+import Text from './base/Text';
+import DeckDeleteModal from './modals/DeckDeleteModal';
+import withModal from './WithModal';
 
 const DeleteModalButton = withModal(Button, DeckDeleteModal);
 

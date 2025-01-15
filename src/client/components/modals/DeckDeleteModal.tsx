@@ -1,8 +1,9 @@
 import React, { useContext } from 'react';
+
 import ConfirmDeleteModal from 'components/modals/ConfirmDeleteModal';
+import { CSRFContext } from 'contexts/CSRFContext';
 import Draft from 'datatypes/Draft';
 import User from 'datatypes/User';
-import { CSRFContext } from 'contexts/CSRFContext';
 
 interface DeckDeleteModalProps {
   deck: Draft;

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 
 import classNames from 'classnames';
+
 import Banner from 'components/Banner';
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
@@ -8,11 +9,11 @@ import Link from 'components/base/Link';
 import { Tabs } from 'components/base/Tabs';
 import Text from 'components/base/Text';
 import ErrorBoundary from 'components/ErrorBoundary';
+import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 import FollowersModal from 'components/modals/FollowersModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import User from 'datatypes/User';
-import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 
 interface UserLayoutProps {
   user: User;

@@ -2,13 +2,14 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import cx from 'classnames';
 
-import withAutocard from '../WithAutocard';
+import DisplayContext from 'contexts/DisplayContext';
+import { getCardTagColorClass } from 'utils/Util';
+
+import Card from '../../../datatypes/Card';
 import TagColorContext from '../../contexts/TagColorContext';
 import UserContext from '../../contexts/UserContext';
-import Card from '../../../datatypes/Card';
-import { getCardTagColorClass } from 'utils/Util';
 import { ListGroupItem } from '../base/ListGroup';
-import DisplayContext from 'contexts/DisplayContext';
+import withAutocard from '../WithAutocard';
 
 export interface AutocardListItemProps {
   card: Card;

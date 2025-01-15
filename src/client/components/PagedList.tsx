@@ -1,7 +1,8 @@
 import React from 'react';
+
+import { Flexbox } from 'components/base/Layout';
 import Paginate from 'components/base/Pagination';
 import useQueryParam from 'hooks/useQueryParam';
-import { Flexbox } from 'components/base/Layout';
 
 interface PagedListProps {
   pageSize?: number;

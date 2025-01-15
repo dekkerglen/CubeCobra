@@ -1,18 +1,20 @@
 import React, { ReactNode, useContext } from 'react';
 
+import classNames from 'classnames';
+
+import { getCubeId } from 'utils/Util';
+
+import Card, { BoardType } from '../../datatypes/Card';
+import Cube from '../../datatypes/Cube';
+import Banner from '../components/Banner';
 import { Flexbox } from '../components/base/Layout';
 import { Tabs } from '../components/base/Tabs';
 import CubeSubtitle from '../components/cube/CubeSubtitle';
 import ErrorBoundary from '../components/ErrorBoundary';
-import CubeContext, { CubeContextProvider } from '../contexts/CubeContext';
-import TagColorContext from '../contexts/TagColorContext';
-import Card, { BoardType } from '../../datatypes/Card';
-import Cube from '../../datatypes/Cube';
-import { getCubeId } from 'utils/Util';
-import classNames from 'classnames';
-import Banner from '../components/Banner';
-import { FilterContextProvider } from '../contexts/FilterContext';
 import { ChangesContextProvider } from '../contexts/ChangesContext';
+import CubeContext, { CubeContextProvider } from '../contexts/CubeContext';
+import { FilterContextProvider } from '../contexts/FilterContext';
+import TagColorContext from '../contexts/TagColorContext';
 
 interface CubeLayoutInnerProps {
   children: ReactNode;

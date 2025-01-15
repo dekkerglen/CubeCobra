@@ -4,9 +4,9 @@ import { GrabberIcon } from '@primer/octicons-react';
 
 import { getTagColorClass } from 'utils/Util';
 
+import { TagColor } from '../../../datatypes/Cube';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext, { TAG_COLORS } from '../../contexts/CubeContext';
-import { TagColor } from '../../../datatypes/Cube';
 import { Card } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';

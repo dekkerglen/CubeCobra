@@ -1,5 +1,5 @@
-import Image from './Image';
 import Content from './Content';
+import Image from './Image';
 
 interface Article extends Content {
   image?: Image;

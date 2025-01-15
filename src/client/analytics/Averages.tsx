@@ -1,18 +1,19 @@
 import React, { useContext, useMemo } from 'react';
 
-import AsfanDropdown from '../components/analytics/AsfanDropdown';
-import { Col, Flexbox, Row } from '../components/base/Layout';
-import Select from '../components/base/Select';
-import ErrorBoundary from '../components/ErrorBoundary';
-import { compareStrings, SortableTable } from '../components/SortableTable';
-import CubeContext from '../contexts/CubeContext';
-import Card from '../../datatypes/Card';
-import { calculateAsfans } from '../drafting/createdraft';
-import useQueryParam from '../hooks/useQueryParam';
 import { cardType } from 'utils/cardutil';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 import { weightedAverage, weightedMedian, weightedStdDev } from 'utils/Stats';
+
+import Card from '../../datatypes/Card';
+import AsfanDropdown from '../components/analytics/AsfanDropdown';
+import { Col, Flexbox, Row } from '../components/base/Layout';
+import Select from '../components/base/Select';
 import Text from '../components/base/Text';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { compareStrings, SortableTable } from '../components/SortableTable';
+import CubeContext from '../contexts/CubeContext';
+import { calculateAsfans } from '../drafting/createdraft';
+import useQueryParam from '../hooks/useQueryParam';
 
 interface Characteristic {
   get: (card: Card) => number | string;

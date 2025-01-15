@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+
+import Button from 'components/base/Button';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Collapse from 'components/base/Collapse';
+import { Col, Flexbox,Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
+import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
 import Cube from 'datatypes/Cube';
-import Text from 'components/base/Text';
-import Link from 'components/base/Link';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Row, Col, Flexbox } from 'components/base/Layout';
-import Button from 'components/base/Button';
-import Collapse from 'components/base/Collapse';
 
 interface CubesCardProps {
   cubes: Cube[];

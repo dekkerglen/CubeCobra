@@ -1,14 +1,16 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Text from 'components/base/Text';
-import { Flexbox } from 'components/base/Layout';
-import ChangesContext from 'contexts/ChangesContext';
+
+import { ArrowRightIcon,ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
+
 import Button from 'components/base/Button';
-import CardData, { BoardChanges } from 'datatypes/Card';
-import { PlusCircleIcon, NoEntryIcon, ToolsIcon, ArrowSwitchIcon, ArrowRightIcon } from '@primer/octicons-react';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Flexbox } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
-import { CardDetails } from 'datatypes/Card';
+import Text from 'components/base/Text';
 import withAutocard from 'components/WithAutocard';
+import ChangesContext from 'contexts/ChangesContext';
+import CardData, { BoardChanges } from 'datatypes/Card';
+import { CardDetails } from 'datatypes/Card';
 
 const TextAutocard = withAutocard('span');
 

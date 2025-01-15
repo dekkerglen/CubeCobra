@@ -1,11 +1,12 @@
 import React, { useContext, useMemo } from 'react';
 
-import ImageFallback from '../ImageFallback';
-import withAutocard from '../WithAutocard';
-import DisplayContext from '../../contexts/DisplayContext';
+import { cardImageUrl } from 'utils/cardutil';
+
 import Card from '../../../datatypes/Card';
 import { CardDetails } from '../../../datatypes/Card';
-import { cardImageUrl } from 'utils/cardutil';
+import DisplayContext from '../../contexts/DisplayContext';
+import ImageFallback from '../ImageFallback';
+import withAutocard from '../WithAutocard';
 
 const ImageAutocard = withAutocard<typeof ImageFallback>(ImageFallback);
 
@@ -29,7 +30,7 @@ const CardImage: React.FC<CardImageProps> = ({
   onClick,
 }) => {
   const current = useMemo<Card>(() => {
-    let result: Card = card || {
+    const result: Card = card || {
       cardID: '',
       details: {} as CardDetails,
     };

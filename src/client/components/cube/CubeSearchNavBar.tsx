@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 
 import Banner from '../Banner';
 import Button from '../base/Button';
-import Input from '../base/Input';
-import Select from '../base/Select';
-import Text from '../base/Text';
 import Controls from '../base/Controls';
+import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import ResponsiveDiv from '../base/ResponsiveDiv';
+import Select from '../base/Select';
+import Text from '../base/Text';
 
 interface CubeSearchNavBarProps {
   query?: string;

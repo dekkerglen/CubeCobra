@@ -1,13 +1,15 @@
 import React, { useContext, useMemo } from 'react';
 
-import AutocardListItem from './AutocardListItem';
+import classNames from 'classnames';
+
+import { sortDeep } from 'utils/Sort';
+
+import Card from '../../../datatypes/Card';
+import CubeContext from '../../contexts/CubeContext';
+import { ListGroup, ListGroupItem } from '../base/ListGroup';
 import withCardModal from '../modals/WithCardModal';
 import withGroupModal from '../modals/WithGroupModal';
-import CubeContext from '../../contexts/CubeContext';
-import Card from '../../../datatypes/Card';
-import { sortDeep } from 'utils/Sort';
-import { ListGroup, ListGroupItem } from '../base/ListGroup';
-import classNames from 'classnames';
+import AutocardListItem from './AutocardListItem';
 
 export interface TableViewCardGroupProps {
   cards: Card[];

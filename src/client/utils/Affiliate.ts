@@ -1,5 +1,5 @@
 import Card from '../../datatypes/Card';
-import { cardSetName, cardName } from './cardutil';
+import { cardName,cardSetName } from './cardutil';
 
 export const tcgplayerAffiliate = 'https://tcgplayer.pxf.io/c/5760114/1830156/21018';
 export const tcgMassEntryUrl = 'https://store.tcgplayer.com/massentry';

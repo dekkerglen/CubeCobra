@@ -1,16 +1,17 @@
 import React, { useContext, useMemo } from 'react';
 
-import AsfanDropdown from '../components/analytics/AsfanDropdown';
-import ErrorBoundary from '../components/ErrorBoundary';
-import { compareStrings, SortableTable } from '../components/SortableTable';
-import { calculateAsfans } from '../drafting/createdraft';
-import useQueryParam from '../hooks/useQueryParam';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
-import CubeContext from '../contexts/CubeContext';
+
 import Card from '../../datatypes/Card';
+import AsfanDropdown from '../components/analytics/AsfanDropdown';
+import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
-import { Col, Flexbox, Row } from '../components/base/Layout';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { compareStrings, SortableTable } from '../components/SortableTable';
+import CubeContext from '../contexts/CubeContext';
+import { calculateAsfans } from '../drafting/createdraft';
+import useQueryParam from '../hooks/useQueryParam';
 
 const Asfans: React.FC = () => {
   const { cube, changedCards } = useContext(CubeContext);

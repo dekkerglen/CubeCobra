@@ -1,8 +1,8 @@
 import React, { ReactNode } from 'react';
-import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
-import classNames from 'classnames';
 
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { XIcon } from '@primer/octicons-react';
+import classNames from 'classnames';
 
 interface ModalProps {
   children: ReactNode;

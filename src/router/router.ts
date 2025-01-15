@@ -14,7 +14,7 @@ const registerRoutes = (directory: string, base: string) => {
   }
   for (const file of files) {
     const trimmed = file.split('.')[0];
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const { routes } = require(path.join(__dirname, `./routes${base}/${trimmed}`));
 
     for (const route of routes) {

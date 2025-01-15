@@ -1,22 +1,22 @@
 import React, { Dispatch, SetStateAction, useCallback, useContext, useRef, useState } from 'react';
 
+import { BoardType } from '../../datatypes/Card';
+import { CardDetails } from '../../datatypes/Card';
+import { CSRFContext } from '../contexts/CSRFContext';
+import CubeContext from '../contexts/CubeContext';
+import DisplayContext, { DisplayContextValue } from '../contexts/DisplayContext';
+import useLocalStorage from '../hooks/useLocalStorage';
+import Alert, { UncontrolledAlertProps } from './base/Alert';
 import AutocompleteInput from './base/AutocompleteInput';
+import Button from './base/Button';
+import Checkbox from './base/Checkbox';
+import Collapse from './base/Collapse';
+import Input from './base/Input';
+import { Col, Flexbox, Row } from './base/Layout';
+import Select from './base/Select';
 import Changelist from './Changelist';
 import LoadingButton from './LoadingButton';
 import TextEntry from './TextEntry';
-import CubeContext from '../contexts/CubeContext';
-import DisplayContext, { DisplayContextValue } from '../contexts/DisplayContext';
-import { BoardType } from '../../datatypes/Card';
-import { CardDetails } from '../../datatypes/Card';
-import useLocalStorage from '../hooks/useLocalStorage';
-import Alert, { UncontrolledAlertProps } from './base/Alert';
-import Collapse from './base/Collapse';
-import { Col, Flexbox, Row } from './base/Layout';
-import Select from './base/Select';
-import Button from './base/Button';
-import Checkbox from './base/Checkbox';
-import Input from './base/Input';
-import { CSRFContext } from '../contexts/CSRFContext';
 
 interface GetCardResponse {
   success: 'true' | 'false';

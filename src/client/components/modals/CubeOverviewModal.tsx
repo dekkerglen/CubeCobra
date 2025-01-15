@@ -1,3 +1,10 @@
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+
+import { getCubeDescription } from 'utils/Util';
+
+import Cube from '../../../datatypes/Cube';
+import Image from '../../../datatypes/Image';
+import { CSRFContext } from '../../contexts/CSRFContext';
 import AutocompleteInput from '../base/AutocompleteInput';
 import Button from '../base/Button';
 import { Card, CardHeader } from '../base/Card';
@@ -12,11 +19,6 @@ import LoadingButton from '../LoadingButton';
 import MtgImage from '../MtgImage';
 import TagInput from '../TagInput';
 import TextEntry from '../TextEntry';
-import Cube from '../../../datatypes/Cube';
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { getCubeDescription } from 'utils/Util';
-import Image from '../../../datatypes/Image';
-import { CSRFContext } from '../../contexts/CSRFContext';
 interface CubeOverviewModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Flexbox } from './Layout';
-import Text from './Text';
 
-import { ArrowLeftIcon, ArrowRightIcon, MoveToStartIcon, MoveToEndIcon } from '@primer/octicons-react';
+import { ArrowLeftIcon, ArrowRightIcon, MoveToEndIcon,MoveToStartIcon } from '@primer/octicons-react';
+
 import Button from './Button';
+import { Flexbox } from './Layout';
 import Spinner from './Spinner';
+import Text from './Text';
 
 interface PaginateProps {
   count: number;

@@ -1,22 +1,25 @@
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
+
+import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+
+import { cardCmc, cardOracleId, cardType } from 'utils/cardutil';
+
+import Card from '../../datatypes/Card';
+import Draft from '../../datatypes/Draft';
+import { setupPicks } from '../../util/draftutil';
+import { CSRFContext } from '../contexts/CSRFContext';
+import useToggle from '../hooks/UseToggle';
+import Button from './base/Button';
+import Collapse from './base/Collapse';
+import Controls from './base/Controls';
+import { Flexbox } from './base/Layout';
+import Link from './base/Link';
+import ResponsiveDiv from './base/ResponsiveDiv';
+import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
 import BasicsModal from './modals/BasicsModal';
 import DeckDeleteModal from './modals/DeckDeleteModal';
 import withModal from './WithModal';
-import Card from '../../datatypes/Card';
-import { setupPicks } from '../../util/draftutil';
-import React, { useCallback, useContext, useMemo, useRef } from 'react';
-import { cardCmc, cardOracleId, cardType } from 'utils/cardutil';
-import Controls from './base/Controls';
-import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
-import { Flexbox } from './base/Layout';
-import ResponsiveDiv from './base/ResponsiveDiv';
-import useToggle from '../hooks/UseToggle';
-import Link from './base/Link';
-import Button from './base/Button';
-import Collapse from './base/Collapse';
-import CSRFForm from './CSRFForm';
-import Draft from '../../datatypes/Draft';
-import { CSRFContext } from '../contexts/CSRFContext';
 
 const DeleteDeckModalLink = withModal(Link, DeckDeleteModal);
 const BasicsModalLink = withModal(Link, BasicsModal);

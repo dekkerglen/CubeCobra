@@ -1,13 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
-import { Row, Col, Flexbox } from 'components/base/Layout';
-import { Card } from 'components/base/Card';
-import Text from 'components/base/Text';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
-import LoadingButton from 'components/LoadingButton';
-import Cube from 'datatypes/Cube';
 import Button from 'components/base/Button';
+import { Card } from 'components/base/Card';
+import { Col, Flexbox,Row } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import Text from 'components/base/Text';
+import LoadingButton from 'components/LoadingButton';
 import { CSRFContext } from 'contexts/CSRFContext';
+import Cube from 'datatypes/Cube';
 
 interface CustomizeBasicsModalProps {
   isOpen: boolean;

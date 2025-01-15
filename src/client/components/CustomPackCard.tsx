@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
+
 import { buildDefaultSteps, DEFAULT_STEPS, DraftAction, Pack } from '../../datatypes/Draft';
 import useToggle from '../hooks/UseToggle';
 import Button from './base/Button';
