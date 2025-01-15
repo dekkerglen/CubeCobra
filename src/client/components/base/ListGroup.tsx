@@ -1,7 +1,9 @@
 import React, { FC, ReactNode, useContext } from 'react';
+
 import classNames from 'classnames';
-import { Flexbox } from './Layout';
+
 import UserContext from '../../contexts/UserContext';
+import { Flexbox } from './Layout';
 
 interface ListGroupProps {
   children: ReactNode;

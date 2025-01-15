@@ -1,5 +1,7 @@
 import React from 'react';
-import { StarIcon, StarFillIcon } from '@primer/octicons-react';
+
+import { StarFillIcon,StarIcon } from '@primer/octicons-react';
+
 import Spinner from './Spinner';
 
 interface VoterProps {

@@ -5,7 +5,7 @@ const uuid = require('uuid');
 const TurndownService = require('turndown');
 const createClient = require('../util');
 const Changelog = require('./changelog');
-const carddb = require('../../util/carddb');
+const { cardFromId } = require('../../util/carddb');
 const User = require('./user');
 const Cube = require('./cube');
 
@@ -212,26 +212,26 @@ module.exports = {
         result += `${name}:\n`;
 
         if (changelog[board].adds) {
-          result += `Added:\n${changelog[board].adds.map((add) => carddb.cardFromId(add.cardID).name).join('\n')}\n`;
+          result += `Added:\n${changelog[board].adds.map((add) => cardFromId(add.cardID).name).join('\n')}\n`;
         }
 
         if (changelog[board].removes) {
           result += `Removed:\n${changelog[board].removes
-            .map((remove) => carddb.cardFromId(remove.oldCard.cardID).name)
+            .map((remove) => cardFromId(remove.oldCard.cardID).name)
             .join('\n')}\n`;
         }
 
         if (changelog[board].swaps) {
           result += `Swapped:\n${changelog[board].swaps
             .map(
-              (swap) => `${carddb.cardFromId(swap.oldCard.cardID).name} -> ${carddb.cardFromId(swap.card.cardID).name}`,
+              (swap) => `${cardFromId(swap.oldCard.cardID).name} -> ${cardFromId(swap.card.cardID).name}`,
             )
             .join('\n')}\n`;
         }
 
         if (changelog[board].edits) {
           result += `Edited:\n${changelog[board].edits
-            .map((edit) => `${carddb.cardFromId(edit.oldCard.cardID).name}`)
+            .map((edit) => `${cardFromId(edit.oldCard.cardID).name}`)
             .join('\n')}\n`;
         }
       }

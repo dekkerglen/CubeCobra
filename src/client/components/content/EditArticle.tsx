@@ -1,4 +1,5 @@
-import ArticlePreview from 'components/content/ArticlePreview';
+import React from 'react';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -6,10 +7,14 @@ import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
+import ArticlePreview from 'components/content/ArticlePreview';
 import ArticleType from 'datatypes/Article';
-import { CONVERT_STATUS } from 'datatypes/Content';
-import React from 'react';
 
+const CONVERT_STATUS = {
+  p: 'Published',
+  r: 'In Review',
+  d: 'Draft',
+};
 interface EditArticleProps {
   article: ArticleType;
   title: string;

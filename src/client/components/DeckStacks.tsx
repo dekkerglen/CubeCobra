@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Card from '../datatypes/Card';
+import Card from '../../datatypes/Card';
 import Location, { location } from '../drafting/DraftLocation';
 import { CardBody, CardHeader } from './base/Card';
 import { Flexbox, NumCols, Row } from './base/Layout';

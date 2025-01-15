@@ -7,11 +7,11 @@ import Text from 'components/base/Text';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import { CSRFContext } from 'contexts/CSRFContext';
 import Draft from 'datatypes/Draft';
 import User from 'datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
-import { CSRFContext } from 'contexts/CSRFContext';
 
 interface UserDecksPageProps {
   owner: User;

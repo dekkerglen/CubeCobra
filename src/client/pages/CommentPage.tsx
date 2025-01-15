@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 
-import { Card, CardHeader } from 'components/base/Card';
 import Banner from 'components/Banner';
+import { Card, CardHeader } from 'components/base/Card';
+import Link from 'components/base/Link';
 import Comment from 'components/comments/Comment';
 import CommentsSection from 'components/comments/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import MainLayout from 'layouts/MainLayout';
 import CommentType from 'datatypes/Comment';
-import Link from 'components/base/Link';
+import MainLayout from 'layouts/MainLayout';
 
 const translateType: { [key: string]: string } = {
   comment: 'Comment',

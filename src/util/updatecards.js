@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const AWS = require('aws-sdk');
-const carddb = require('./carddb');
+const { fileToAttribute, loadAllFiles } = require('./carddb');
 
 const downloadFromS3 = async (basePath = 'private') => {
   const s3 = new AWS.S3({
@@ -13,7 +13,7 @@ const downloadFromS3 = async (basePath = 'private') => {
   });
 
   await Promise.all(
-    Object.keys(carddb.fileToAttribute).map(async (file) => {
+    Object.keys(fileToAttribute).map(async (file) => {
       const res = await s3
         .getObject({
           Bucket: process.env.DATA_BUCKET,
@@ -31,7 +31,7 @@ async function updateCardbase(basePath = 'private', defaultPath = null, allPath 
   }
 
   await downloadFromS3(basePath, defaultPath, allPath);
-  await carddb.loadAllFiles();
+  await loadAllFiles();
 }
 
 module.exports = {

@@ -1,13 +1,14 @@
 import React from 'react';
 
+import { encodeName } from 'utils/cardutil';
+
+import Card from '../../datatypes/Card';
+import { CardDetails } from '../../datatypes/Card';
+import Cube from '../../datatypes/Cube';
+import Text from '../components/base/Text';
 import AddToCubeModal from '../components/modals/AddToCubeModal';
 import withAutocard from '../components/WithAutocard';
 import withModal from '../components/WithModal';
-import { encodeName } from 'utils/Card';
-import Card from '../datatypes/Card';
-import Cube from '../datatypes/Cube';
-import CardDetails from '../datatypes/CardDetails';
-import Text from '../components/base/Text';
 
 interface SuggestionProps {
   card: Card;

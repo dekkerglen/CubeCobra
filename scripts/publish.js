@@ -61,12 +61,10 @@ const ignore = [
   '.gitignore',
   '.git/**',
   'test/**',
-  'scripts/**',
   'model/**',
-  'scripts/**',
-  'scripts/**',
   'temp/**',
   'private/**',
+  'src/**',
   'publish.js',
   'README.md',
 ];

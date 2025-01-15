@@ -2,6 +2,13 @@ import React, { useContext, useState } from 'react';
 
 import { EyeClosedIcon, LinkExternalIcon } from '@primer/octicons-react';
 
+import { getCubeDescription, getCubeId } from 'utils/Util';
+
+import User from '../../../datatypes/User';
+import { CSRFContext } from '../../contexts/CSRFContext';
+import CubeContext from '../../contexts/CubeContext';
+import UserContext from '../../contexts/UserContext';
+import useAlerts from '../../hooks/UseAlerts';
 import Button from '../base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from '../base/Card';
 import { Col, Flexbox, Row } from '../base/Layout';
@@ -9,21 +16,15 @@ import Link from '../base/Link';
 import Tag from '../base/Tag';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
-import CubeIdModal from './CubeIdModal';
-import FollowersModal from '../modals/FollowersModal';
 import Markdown from '../Markdown';
+import ConfirmActionModal from '../modals/ConfirmActionModal';
+import FollowersModal from '../modals/FollowersModal';
 import QRCodeModal from '../modals/QRCodeModal';
 import MtgImage from '../MtgImage';
 import TextBadge from '../TextBadge';
 import Username from '../Username';
 import withModal from '../WithModal';
-import CubeContext from '../../contexts/CubeContext';
-import UserContext from '../../contexts/UserContext';
-import useAlerts from '../../hooks/UseAlerts';
-import { getCubeDescription, getCubeId } from 'utils/Util';
-import User from '../../datatypes/User';
-import { CSRFContext } from '../../contexts/CSRFContext';
-import ConfirmActionModal from '../modals/ConfirmActionModal';
+import CubeIdModal from './CubeIdModal';
 
 const FollowersModalLink = withModal(Link, FollowersModal);
 const CubeIdModalLink = withModal(Link, CubeIdModal);

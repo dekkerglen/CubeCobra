@@ -444,13 +444,13 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
       await Draft.delete(draftId);
     }
 
-    commentResponse = await Comment.queryByOwner(userToBan);
-    lastkey = commentResponse.LastEvaluatedKey;
-    comments = commentResponse.items;
+    let commentResponse = await Comment.queryByOwner(userToBan);
+    let lastkey = commentResponse.LastEvaluatedKey;
+    let comments = commentResponse.items;
 
-    while (lastKey) {
+    while (lastkey) {
       const nextResponse = await Comment.queryByOwner(userToBan, lastKey);
-      lastKey = nextResponse.LastEvaluatedKey;
+      lastkey = nextResponse.LastEvaluatedKey;
       comments = comments.concat(nextResponse.items);
     }
 

@@ -1,9 +1,9 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
 
-import Link from '../base/Link';
 import Collapse from '../base/Collapse';
-import TextArea from '../base/TextArea';
+import Link from '../base/Link';
 import Text from '../base/Text';
+import TextArea from '../base/TextArea';
 
 export interface CommentEntryProps {
   submit: (text: string) => void;

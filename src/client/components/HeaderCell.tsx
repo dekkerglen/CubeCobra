@@ -1,5 +1,6 @@
-import { SortConfig } from '../hooks/UseSortableData';
 import React from 'react';
+
+import { SortConfig } from '../hooks/UseSortableData';
 import { Flexbox } from './base/Layout';
 import Text from './base/Text';
 

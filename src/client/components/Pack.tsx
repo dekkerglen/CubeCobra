@@ -1,11 +1,12 @@
 import React from 'react';
+
+import CardType from '../../datatypes/Card';
+import DraftLocation from '../drafting/DraftLocation';
 import { Card, CardBody, CardHeader } from './base/Card';
 import { Col, Row } from './base/Layout';
 import Text from './base/Text';
 import DraggableCard from './DraggableCard';
 import FoilCardImage from './FoilCardImage';
-import DraftLocation from '../drafting/DraftLocation';
-import CardType from '../datatypes/Card';
 
 interface PackProps {
   pack: CardType[];

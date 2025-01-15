@@ -3,8 +3,8 @@ import React, { ReactNode } from 'react';
 import useToggle from '../../hooks/UseToggle';
 import { Card, CardBody, CardHeader } from './Card';
 import Collapse from './Collapse';
-import Text from './Text';
 import { Flexbox } from './Layout';
+import Text from './Text';
 
 export interface AccordionProps {
   defaultExpand?: boolean;

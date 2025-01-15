@@ -1,8 +1,9 @@
+import React, { useMemo, useState } from 'react';
+
 import Button from '../base/Button';
 import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import CSRFForm from '../CSRFForm';
-import React, { useMemo, useState } from 'react';
 
 const UserPasswordForm: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');

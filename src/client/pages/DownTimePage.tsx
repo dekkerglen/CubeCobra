@@ -1,9 +1,10 @@
 import React from 'react';
+
 import { Card, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
+import Link from '../components/base/Link';
 import Text from '../components/base/Text';
 import RenderToRoot from '../components/RenderToRoot';
-import Link from '../components/base/Link';
 
 const DownTimePage: React.FC = () => (
   <Col xs={12} md={8} xl={5} className="mx-auto">

@@ -1,11 +1,11 @@
 import React from 'react';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Text from 'components/base/Text';
 
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Flexbox } from 'components/base/Layout';
+import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import { Flexbox } from 'components/base/Layout';
 
 interface ErrorPageProps {
   title: string;

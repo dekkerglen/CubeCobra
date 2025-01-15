@@ -2,15 +2,15 @@ import React, { MouseEventHandler, useContext, useEffect, useState } from 'react
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 
-import withAutocard from './WithAutocard';
-import Text from './base/Text';
-import withCardModal from './modals/WithCardModal';
+import CardData, { boardTypes } from '../../datatypes/Card';
+import { CardDetails } from '../../datatypes/Card';
 import CubeContext from '../contexts/CubeContext';
-import CardData, { boardTypes } from '../datatypes/Card';
-import CardDetails from '../datatypes/CardDetails';
 import { Card } from './base/Card';
 import { Flexbox } from './base/Layout';
 import Spinner from './base/Spinner';
+import Text from './base/Text';
+import withCardModal from './modals/WithCardModal';
+import withAutocard from './WithAutocard';
 
 interface RemoveButtonProps {
   onClick: MouseEventHandler;

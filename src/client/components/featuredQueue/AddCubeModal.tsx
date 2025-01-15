@@ -1,10 +1,11 @@
 import React from 'react';
-import CSRFForm from '../CSRFForm';
-import Text from '../base/Text';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
-import Input from '../base/Input';
+
 import Button from '../base/Button';
+import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+import Text from '../base/Text';
+import CSRFForm from '../CSRFForm';
 
 interface AddCubeModalProps {
   isOpen: boolean;

@@ -1,23 +1,23 @@
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { LinkIcon } from '@primer/octicons-react';
+import { slug } from 'github-slugger';
 // @ts-expect-error This library has no types.
 import ReactMarkdown, { MarkdownProps } from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 
+import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
+import { isInternalURL, isSamePageURL } from 'utils/Util';
+
+import { CardDetails } from '../../datatypes/Card';
+import { Flexbox } from './base/Layout';
+import Link, { LinkProps } from './base/Link';
+import Text from './base/Text';
 import FoilCardImage from './FoilCardImage';
 import LinkModal, { LinkModalProps } from './LinkModal';
 import withAutocard, { WithAutocardProps } from './WithAutocard';
 import withModal, { WithModalProps } from './WithModal';
-import CardDetails from '../datatypes/CardDetails';
-import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
-import { isInternalURL, isSamePageURL } from 'utils/Util';
-import Text from './base/Text';
-import Link, { LinkProps } from './base/Link';
-import { Flexbox } from './base/Layout';
-
-import { slug } from 'github-slugger';
 
 /*
  * Duplicating the behaviour of the rehype-slug plugin with respect to generating a heading ID from its text.
@@ -90,11 +90,12 @@ const renderLink: React.FC<RenderLinkProps> = (node) => {
 };
 
 const renderCode: React.FC = (node: any) => {
-  const mode = getComputedStyle(document.body).getPropertyValue('--mode').trim();
-  const style = mode === 'dark' ? a11yDark : a11yLight;
+  //With tailwind CSS the HTML element has the class dark or not. Before it was the body
+  const isDarkMode = document.documentElement.classList.contains('dark');
+  const style = isDarkMode ? a11yDark : a11yLight;
 
   return (
-    <SyntaxHighlighter language={node.children[0]?.props?.className?.replace('language-', '') || 'text'} style={style}>
+    <SyntaxHighlighter language={node.children?.props?.className?.replace('language-', '') || 'text'} style={style}>
       {node.node?.children[0]?.children[0]?.value?.trimEnd() || ''}
     </SyntaxHighlighter>
   );

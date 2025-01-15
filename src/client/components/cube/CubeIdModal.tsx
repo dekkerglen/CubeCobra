@@ -1,10 +1,12 @@
 import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+
+import { PasteIcon } from '@primer/octicons-react';
+
 import Button from '../base/Button';
 import Input from '../base/Input';
-import { PasteIcon } from '@primer/octicons-react';
-import Text from '../base/Text';
 import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+import Text from '../base/Text';
 
 interface CubeIdModalProps {
   setOpen: (open: boolean) => void;

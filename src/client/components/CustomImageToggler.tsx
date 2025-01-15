@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+
 import DisplayContext from '../contexts/DisplayContext';
 import Link from './base/Link';
 

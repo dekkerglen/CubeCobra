@@ -1,13 +1,13 @@
 import React from 'react';
 
 import Banner from 'components/Banner';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Flexbox,Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
+import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Row, Col, Flexbox } from 'components/base/Layout';
-import Text from 'components/base/Text';
-import Link from 'components/base/Link';
 
 interface ContactPageProps {
   loginCallback?: string;

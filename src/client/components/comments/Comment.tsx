@@ -1,9 +1,10 @@
 import React, { useContext, useState } from 'react';
 
+import classNames from 'classnames';
 import TimeAgo from 'react-timeago';
 
-import CommentEntry from 'components/comments/CommentEntry';
 import Link from 'components/base/Link';
+import CommentEntry from 'components/comments/CommentEntry';
 import Markdown from 'components/Markdown';
 import ReportCommentModal from 'components/modals/ReportCommentModal';
 import ShareCommentModal from 'components/modals/ShareCommentModal';
@@ -12,10 +13,10 @@ import UserContext from 'contexts/UserContext';
 import CommentData from 'datatypes/Comment';
 import useComments, { EditRequest } from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
+
 import Collapse from '../base/Collapse';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
-import classNames from 'classnames';
 
 export interface ShareCommentModalButtonProps {
   modalprops: {

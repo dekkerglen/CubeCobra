@@ -1,7 +1,7 @@
 const uuid = require('uuid');
 const createClient = require('../util');
 const User = require('./user');
-const carddb = require('../../util/carddb');
+const { cardFromId } = require('../../util/carddb');
 
 const FIELDS = {
   ID: 'id',
@@ -60,7 +60,7 @@ const hydrate = async (pack) => {
     if (c.scryfall_id) {
       return c;
     }
-    return carddb.cardFromId(c);
+    return cardFromId(c);
   });
 
   return pack;
@@ -75,7 +75,7 @@ const batchHydrate = async (packs) => {
       if (c.scryfall_id) {
         return c;
       }
-      return carddb.cardFromId(c);
+      return cardFromId(c);
     });
   });
 

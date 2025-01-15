@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useCallback, useContext,useState } from 'react';
+
+import { CSRFContext } from '../contexts/CSRFContext';
 import { Card, CardBody, CardHeader } from './base/Card';
-import Text from './base/Text';
 import { Col, Flexbox, Row } from './base/Layout';
 import Pagination from './base/Pagination';
-import { CSRFContext } from '../contexts/CSRFContext';
+import Text from './base/Text';
 
 interface IndefinitePaginatedListProps<T> {
   items: T[];

@@ -1,11 +1,12 @@
 import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+
 import Button from 'components/base/Button';
+import { Flexbox } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import Cube from 'datatypes/Cube';
-import Select from 'components/base/Select';
-import { Flexbox } from 'components/base/Layout';
 
 interface AddFeaturedModalProps {
   isOpen: boolean;

@@ -1,5 +1,7 @@
-import classNames from 'classnames';
 import React, { ReactNode } from 'react';
+
+import classNames from 'classnames';
+
 import Text from './Text';
 
 export interface TableProps {

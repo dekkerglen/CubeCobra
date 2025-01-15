@@ -1,20 +1,21 @@
 import React from 'react';
 
 import { Card } from 'components/base/Card';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import { TabContent, Tabs } from 'components/base/Tabs';
-import CardType from 'datatypes/CardDetails';
+import Text from 'components/base/Text';
+import { CardDetails } from 'datatypes/Card';
 import HistoryType from 'datatypes/History';
 import useQueryParam from 'hooks/useQueryParam';
+
 import CardBreakdownElo from './Elo';
 import CardBreakdownInfo from './Info';
-import CardBreakdownStats from './Stats';
 import CardBreakdownPlayRate from './PlayRate';
-import Text from 'components/base/Text';
-import { Row, Col, Flexbox } from 'components/base/Layout';
-import Link from 'components/base/Link';
+import CardBreakdownStats from './Stats';
 
 interface CardPageProps {
-  card: CardType;
+  card: CardDetails;
   history: HistoryType[];
 }
 
@@ -59,9 +60,9 @@ const CardBreakdown: React.FC<CardPageProps> = ({ card, history }) => {
         <Col xs={12} md={7} xl={8} xxl={9}>
           <TabContent
             contents={[
-              <CardBreakdownInfo card={card} history={history} />,
-              <CardBreakdownElo card={card} history={history} />,
-              <CardBreakdownPlayRate card={card} history={history} />,
+              <CardBreakdownInfo card={card} history={history} key="info" />,
+              <CardBreakdownElo card={card} history={history} key="elo" />,
+              <CardBreakdownPlayRate card={card} history={history} key="playrate" />,
             ]}
             activeTab={parseInt(selectedTab || '0', 10)}
           />

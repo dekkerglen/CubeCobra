@@ -1,7 +1,9 @@
 import React from 'react';
-import { CardBody, CardHeader } from 'components/base/Card';
+
 import ReactPlayer from 'react-player';
 import TimeAgo from 'react-timeago';
+
+import { CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import Markdown from 'components/Markdown';

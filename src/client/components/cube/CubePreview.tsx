@@ -1,11 +1,12 @@
 import React from 'react';
 
-import Cube from '../../datatypes/Cube';
 import { getCubeDescription, getCubeId } from 'utils/Util';
+
+import Cube from '../../../datatypes/Cube';
 import { Flexbox } from '../base/Layout';
+import Link from '../base/Link';
 import Text from '../base/Text';
 import { Tile } from '../base/Tile';
-import Link from '../base/Link';
 
 interface CubePreviewProps {
   cube: Cube;

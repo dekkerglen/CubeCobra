@@ -1,16 +1,16 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import AdvancedFilterModal from './modals/AdvancedFilterModal';
+import { allFields, FilterValues, isColorField, isNumField } from '../../datatypes/Card';
+import CubeContext from '../contexts/CubeContext';
+import FilterContext from '../contexts/FilterContext';
+import Button from './base/Button';
 import Collapse from './base/Collapse';
 import Input from './base/Input';
 import { Flexbox } from './base/Layout';
-import CubeContext from '../contexts/CubeContext';
-import FilterContext from '../contexts/FilterContext';
-import { allFields, FilterValues, isColorField, isNumField } from '../datatypes/CardDetails';
-import Button from './base/Button';
 import Link from './base/Link';
-import Text from './base/Text';
 import ResponsiveDiv from './base/ResponsiveDiv';
+import Text from './base/Text';
+import AdvancedFilterModal from './modals/AdvancedFilterModal';
 
 interface FilterCollapseProps {
   isOpen: boolean;

@@ -1,15 +1,16 @@
 import React from 'react';
 
+import { getCardHoarderLink, getCardKingdomLink, getCardMarketLink, getTCGLink } from 'utils/Affiliate';
+import { detailsToCard } from 'utils/cardutil';
+
+import { CardDetails } from '../../../datatypes/Card';
 import Button from '../base/Button';
 import { Card, CardBody, CardHeader } from '../base/Card';
 import { Flexbox } from '../base/Layout';
-import CardType from '../../datatypes/CardDetails';
-import { getCardHoarderLink, getCardKingdomLink, getCardMarketLink, getTCGLink } from 'utils/Affiliate';
-import { detailsToCard } from 'utils/Card';
 import Text from '../base/Text';
 
 interface PurchaseProps {
-  card: CardType;
+  card: CardDetails;
 }
 
 const Purchase: React.FC<PurchaseProps> = ({ card }) => {

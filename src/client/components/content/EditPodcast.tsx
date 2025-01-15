@@ -1,11 +1,17 @@
+import React from 'react';
+
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
-import { CONVERT_STATUS } from 'datatypes/Content';
 import PodcastType from 'datatypes/Podcast';
-import React from 'react';
+
 import PodcastPreview from './PodcastPreview';
 
+const CONVERT_STATUS = {
+  p: 'Published',
+  r: 'In Review',
+  d: 'Draft',
+};
 interface EditPodcastProps {
   podcast: PodcastType;
   url: string;
