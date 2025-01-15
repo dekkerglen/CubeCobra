@@ -80,7 +80,7 @@ const loadCubesHistory = async (key: string): Promise<CubeDict> => {
   const keys = [];
 
   // load all changelogs into memory
-  let lastKey = null;
+  let lastKey;
   let changelogs: ChangeLogType[] = [];
   do {
     const result = await ChangeLog.scan(1000000, lastKey);
