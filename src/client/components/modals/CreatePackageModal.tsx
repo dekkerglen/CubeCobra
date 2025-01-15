@@ -5,7 +5,7 @@ import AutocompleteInput from '../base/AutocompleteInput';
 import Button from '../base/Button';
 import { Card } from '../base/Card';
 import Input from '../base/Input';
-import { Col, Flexbox,Row } from '../base/Layout';
+import { Col, Flexbox, Row } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import LoadingButton from '../LoadingButton';
 
@@ -42,7 +42,7 @@ const CreatePackageModal: React.FC<CreatePackageModalProps> = ({ isOpen, setOpen
   };
 
   const save = async () => {
-    const response = await csrfFetch(`/packages/submit/`, {
+    const response = await csrfFetch(`/packages/submit`, {
       method: 'POST',
       body: JSON.stringify({ cards, packageName }),
       headers: {

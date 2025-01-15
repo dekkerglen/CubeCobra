@@ -82,6 +82,32 @@ const batchHydrate = async (packs) => {
   return packs;
 };
 
+const applyKeywordFilter = (query /*: Query*/, keywords /*: string*/) => {
+  if (!keywords) {
+    return query;
+  }
+
+  const words = keywords?.toLowerCase()?.split(' ') || [];
+
+  // all words must exist in the keywords
+  query.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');
+
+  query.ExpressionAttributeNames = {
+    ...query.ExpressionAttributeNames,
+    '#keywords': FIELDS.KEYWORDS,
+  };
+
+  query.ExpressionAttributeValues = {
+    ...query.ExpressionAttributeValues,
+    ...words.reduce((acc, word) => {
+      acc[`:${word}`] = word;
+      return acc;
+    }, {}),
+  };
+
+  return query;
+};
+
 module.exports = {
   getById: async (id) => hydrate((await client.get(id)).Item),
   put: async (document) => {
@@ -126,9 +152,9 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
-      limit: 36,
+      Limit: 36,
     };
-    
+
     if (keywords) {
       const words = keywords ? keywords.toLowerCase().split(' ') : null;
 
@@ -168,30 +194,10 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
-      limit: 36,
+      Limit: 36,
     };
 
-    if (keywords) {
-      const words = keywords ? keywords.toLowerCase().split(' ') : null;
-
-      // all words must exist in the keywords
-      query.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');
-
-      query.ExpressionAttributeNames = {
-        ...query.ExpressionAttributeNames,
-        '#keywords': FIELDS.KEYWORDS,
-      };
-
-      query.ExpressionAttributeValues = {
-        ...query.ExpressionAttributeValues,
-        ...words.reduce((acc, word) => {
-          acc[`:${word}`] = word;
-          return acc;
-        }, {}),
-      };
-    }
-
-    const result = await client.query(query);
+    const result = await client.query(applyKeywordFilter(query, keywords));
 
     return {
       items: await batchHydrate(result.Items),
@@ -209,10 +215,33 @@ module.exports = {
         ':owner': owner,
       },
       ExclusiveStartKey: lastKey,
-      limit: 100,
+      Limit: 100, //Higher limit because this function is used to load all packages for a user into memory
     };
 
     const result = await client.query(query);
+
+    return {
+      items: await batchHydrate(result.Items),
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  queryByOwnerSortedByDate: async (owner, keywords, ascending, lastKey) => {
+    //ByOwner secondary index is sorted by Date
+    const query = {
+      IndexName: 'ByOwner',
+      KeyConditionExpression: '#owner = :owner',
+      ExpressionAttributeNames: {
+        '#owner': FIELDS.OWNER,
+      },
+      ExpressionAttributeValues: {
+        ':owner': owner,
+      },
+      ScanIndexForward: ascending,
+      ExclusiveStartKey: lastKey,
+      Limit: 36,
+    };
+
+    const result = await client.query(applyKeywordFilter(query, keywords));
 
     return {
       items: await batchHydrate(result.Items),

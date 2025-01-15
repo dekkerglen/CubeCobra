@@ -11,6 +11,51 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
+/*
+ * There is no index on the Packages table for Owner and sorted by Vote count. Thus in order
+ * to get the packages sorted by vote count, we have to load all the packages for a user, filter
+ * by keywords, and then sort them in memory. This is not ideal, but it is the best we can do until
+ * an index is added.
+ * TODO: Add secondary index for Owner and sorted by Vote count
+ */
+const getAllByOwnerSortedByVoteCount = async (ownerId, keywords, ascending) => {
+  let packages = {
+    items: [],
+    lastKey: null,
+  };
+
+  //Get all packages for the owner into memory
+  do {
+    const result = await Package.queryByOwner(ownerId, packages.lastKey);
+
+    packages.items.push(...result.items);
+    packages.lastKey = result.lastKey;
+  } while (packages.lastKey);
+
+  const sortByVotes = (a, b) => {
+    if (ascending) {
+      return a.voters.length - b.voters.length;
+    } else {
+      return b.voters.length - a.voters.length;
+    }
+  };
+
+  if (keywords) {
+    const words = keywords?.toLowerCase()?.split(' ') || [];
+
+    // all words must exist in the keywords
+    const filterByKeywords = (a) => {
+      //Check that ALL filtering word exists in the package keywords
+      return words.filter((x) => a.keywords.includes(x)).length === words.length;
+    };
+
+    packages.items = packages.items.filter(filterByKeywords);
+  }
+  packages.items.sort(sortByVotes);
+
+  return packages;
+};
+
 const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
   let packages = {
     items: [],
@@ -18,29 +63,10 @@ const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
   };
 
   if (type === 'u' && req.user) {
-    do {
-      const result = await Package.queryByOwner(req.user.id, packages.lastKey);
-
-      packages.items.push(...result.items);
-      packages.lastKey = result.lastKey;
-    } while (packages.lastKey);
-
     if (sort === 'votes' || sort === '') {
-      packages.items.sort((a, b) => {
-        if (ascending) {
-          return a.voters.length - b.voters.length;
-        } else {
-          return b.voters.length - a.voters.length;
-        }
-      });
+      packages = await getAllByOwnerSortedByVoteCount(req.user.id, keywords, ascending);
     } else {
-      packages.items.sort((a, b) => {
-        if (ascending) {
-          return a.date - b.date;
-        } else {
-          return b.date - a.date;
-        }
-      });
+      packages = await Package.queryByOwnerSortedByDate(req.user.id, keywords, ascending, packages.lastKey);
     }
   } else {
     if (sort === 'votes' || sort === '') {

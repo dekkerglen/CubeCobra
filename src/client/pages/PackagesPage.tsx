@@ -28,10 +28,9 @@ interface PackagesPageProps {
   loginCallback?: string;
   items: CardPackageData[];
   lastKey: string | null;
-  activePage: 'approved' | 'submitted' | 'user';
 }
 
-const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items, lastKey, activePage }) => {
+const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items, lastKey }) => {
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
 
@@ -71,7 +70,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
 
       return {};
     },
-    [activePage, currentLastKey, filter, sort, ascending],
+    [csrfFetch],
   );
 
   const fetchMoreData = useCallback(async () => {
@@ -81,7 +80,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
     setPackages([...packages, ...result.packages]);
     setLastKey(result.lastKey);
     setLoading(false);
-  }, [getData, currentLastKey, filter, sort, ascending, packages]);
+  }, [getData, type, filter, sort, ascending, currentLastKey, packages]);
 
   const getNewData = useCallback(
     async (t: string | null, f: string | null, s: string | null, a: string | null) => {
@@ -89,13 +88,11 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
       setPackages([]);
       const result = await getData(t, f, s, a, null);
 
-      console.log(result);
-
       setPackages(result.packages);
       setLastKey(result.lastKey);
       setLoading(false);
     },
-    [type, filter, sort, ascending],
+    [getData],
   );
 
   const loader = (
@@ -103,8 +100,6 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
       <Spinner className="position-absolute" />
     </div>
   );
-
-  console.log(currentLastKey);
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -218,7 +213,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
             </CreatePackageModalLink>
           </Flexbox>
         )}
-        {items.length === 0 ? (
+        {packages.length === 0 ? (
           <p>No packages found</p>
         ) : (
           <Flexbox direction="col" gap="2">
