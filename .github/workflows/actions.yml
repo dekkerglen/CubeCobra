@@ -18,10 +18,13 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
+
       - name: Enable Corepack
         run: corepack enable
+
       - name: Setup
         run: npm ci
+
       - name: Run eslint on changed files
         # Always run both eslint and prettier
         if: always()
@@ -30,6 +33,7 @@ jobs:
           config_path: 'eslint.config.mjs'
           extra_args: '--max-warnings=0'
           reporter: github-pr-review
+
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
         if: always()
@@ -40,5 +44,18 @@ jobs:
           level: warning
           prettier_flags: '**/*.{js,jsx,ts,tsx}'
           reporter: github-pr-review
+
+      - name: Run tests
+        if: success()
+        run: npm run test:ci
+
+      - name: Upload Jest Coverage Report
+        if: success()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-coverage
+          path: coverage
+
       - name: Build
         run: npm run ci-build
