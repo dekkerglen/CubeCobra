@@ -8,7 +8,7 @@ const { getObject, putObject, deleteObject } = require('../s3client');
 const { getHashRowsForMetadata } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
 const User = require('./user');
-import { cardFromId, getPlaceholderCard } from'../../util/carddb';
+import { cardFromId, getPlaceholderCard } from '../../util/carddb';
 const cloudwatch = require('../../util/cloudwatch');
 
 const DEFAULT_BASICS = [
@@ -225,8 +225,8 @@ const exportData = {
     await client.delete({ id });
     await deleteObject(process.env.DATA_BUCKET, `cube/${id}.json`);
   },
-  getById: async (id, skipCache = false) => {
-    const byId = await client.get(id, skipCache);
+  getById: async (id) => {
+    const byId = await client.get(id);
     if (byId.Item) {
       return hydrate(byId.Item);
     }
@@ -234,7 +234,7 @@ const exportData = {
     const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
     if (byShortId.items.length > 0) {
       const cubeId = byShortId.items[0].cube;
-      const query = await client.get(cubeId, skipCache);
+      const query = await client.get(cubeId);
       return hydrate(query.Item);
     }
 

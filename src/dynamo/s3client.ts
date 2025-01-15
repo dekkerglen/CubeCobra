@@ -1,53 +1,39 @@
 // Load Environment Variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const AWS = require('aws-sdk');
-const { get, put, invalidate } = require('./cache');
+import AWS from 'aws-sdk';
 
 // Load the AWS SDK for Node.js
 
 // Set the region
 AWS.config.update({
-  endpoint: process.env.AWS_ENDPOINT || undefined,
   s3ForcePathStyle: !!process.env.AWS_ENDPOINT,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
 });
 
-const s3 = new AWS.S3();
+const s3 = new AWS.S3({
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+});
 
-const getObject = async (bucket, key, skipcache = false) => {
+const getObject = async (bucket: string, key: string): Promise<any> => {
   try {
-    // Check cache
-    const cached = get(key);
-
-    if (cached && !skipcache) {
-      return cached;
-    }
-
     const res = await s3
       .getObject({
         Bucket: bucket,
         Key: key,
       })
       .promise();
-    const value = JSON.parse(res.Body.toString());
 
-    // Update cache
-    await put(key, value);
-
-    return value;
+    return JSON.parse(res!.Body!.toString());
   } catch {
     return null;
   }
 };
 
-const putObject = async (bucket, key, value) => {
-  // Update cache
-  await invalidate(key);
-  put(key, value);
-
+const putObject = async (bucket: string, key: string, value: any): Promise<void> => {
   await s3
     .putObject({
       Bucket: bucket,
@@ -57,7 +43,7 @@ const putObject = async (bucket, key, value) => {
     .promise();
 };
 
-const deleteObject = async (bucket, key) => {
+const deleteObject = async (bucket: string, key: string): Promise<void> => {
   await s3
     .deleteObject({
       Bucket: bucket,
