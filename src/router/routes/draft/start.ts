@@ -13,23 +13,23 @@ import { redirect } from '../../../util/render';
 import util from '../../../util/util';
 
 interface StartDraftBody {
-  id: string; // id of the format
-  seats: string;
-  packs: string;
-  cards: string;
+  id?: string; // id of the format
+  seats?: string;
+  packs?: string;
+  cards?: string;
 }
 
 const StartDraftBodySchema = Joi.object({
-  packs: Joi.number().integer().min(1).max(16).required(),
-  cards: Joi.number().integer().min(1).max(25).required(),
-  seats: Joi.number().integer().min(2).max(17).required(),
-  id: Joi.string().required(),
+  packs: Joi.number().integer().min(1).max(16),
+  cards: Joi.number().integer().min(1).max(25),
+  seats: Joi.number().integer().min(2).max(17),
+  id: Joi.string(),
 }).unknown(true); // allow additional fields
 
 const validateBody = (req: Request, res: Response, next: NextFunction) => {
   const { error } = StartDraftBodySchema.validate(req.body);
   if (error) {
-    req.flash('danger', 'Invalid request');
+    req.flash('danger', 'Invalid request: ' + error.message);
     return redirect(req, res, '/404');
   }
   next();
@@ -63,10 +63,10 @@ const handler = async (req: Request, res: Response) => {
     // setup draft
     const format = getDraftFormat(
       {
-        id: parseInt(body.id),
-        packs: parseInt(body.packs),
-        players: parseInt(body.seats),
-        cards: parseInt(body.cards),
+        id: parseInt(body.id || '-1'),
+        packs: parseInt(body.packs || '3'),
+        players: parseInt(body.seats || '8'),
+        cards: parseInt(body.cards || '15'),
       },
       cube,
     );

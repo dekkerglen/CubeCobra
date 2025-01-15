@@ -2,7 +2,7 @@ import seedrandom from 'seedrandom';
 
 import Card from '../../datatypes/Card';
 import Cube from '../../datatypes/Cube';
-import Draft, { createDefaultDraftFormat, DraftFormat, DraftState } from '../../datatypes/Draft';
+import Draft, { buildDefaultSteps, createDefaultDraftFormat, DraftFormat, DraftState } from '../../datatypes/Draft';
 import User from '../../datatypes/User';
 import { fromEntries } from '../utils/Util';
 import { compileFilter, Filter } from './draftFilter';
@@ -164,7 +164,7 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
       }
 
       result.initialState[seat][packNum] = {
-        steps: format.packs[packNum].steps || [],
+        steps: format.packs[packNum].steps || buildDefaultSteps(cards.length),
         cards: [],
       };
 
