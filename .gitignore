@@ -563,3 +563,4 @@ push-docker.ps1
 .tool-versions
 
 target.zip
+src/client/generated/filtering/cardFilters.js
