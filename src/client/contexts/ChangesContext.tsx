@@ -104,7 +104,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
           swaps: [],
         };
 
-        if (cards && changes.mainboard.removes.length > 0) {
+        if (cards && (changes.mainboard.removes || []).length > 0) {
           // we go through and see if the index matches the oldCard
           fixedChanges.mainboard.removes = changes.mainboard.removes.filter((remove) => {
             return cardsAreEquivalent(remove.oldCard, cards.mainboard[remove.index]);
@@ -127,7 +127,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
           swaps: [],
         };
 
-        if (cards && changes.maybeboard.removes.length > 0) {
+        if (cards && (changes.maybeboard.removes || []).length > 0) {
           // we go through and see if the index matches the oldCard
           fixedChanges.maybeboard.removes = changes.maybeboard.removes.filter((remove) => {
             return cardsAreEquivalent(remove.oldCard, cards.maybeboard[remove.index]);
@@ -148,9 +148,9 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
       if (changes.mainboard && fixedChanges.mainboard) {
         if (
-          fixedChanges.mainboard.removes.length !== changes.mainboard.removes.length ||
-          fixedChanges.mainboard.edits.length !== changes.mainboard.edits.length ||
-          fixedChanges.mainboard.swaps.length !== changes.mainboard.swaps.length
+          fixedChanges.mainboard.removes.length !== (changes.mainboard.removes || []).length ||
+          fixedChanges.mainboard.edits.length !== (changes.mainboard.edits || []).length ||
+          fixedChanges.mainboard.swaps.length !== (changes.mainboard.swaps || []).length
         ) {
           equal = false;
         }
@@ -158,9 +158,9 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
       if (changes.maybeboard && fixedChanges.maybeboard) {
         if (
-          fixedChanges.maybeboard.removes.length !== changes.maybeboard.removes.length ||
-          fixedChanges.maybeboard.edits.length !== changes.maybeboard.edits.length ||
-          fixedChanges.maybeboard.swaps.length !== changes.maybeboard.swaps.length
+          fixedChanges.maybeboard.removes.length !== (changes.maybeboard.removes || []).length ||
+          fixedChanges.maybeboard.edits.length !== (changes.maybeboard.edits || []).length ||
+          fixedChanges.maybeboard.swaps.length !== (changes.maybeboard.swaps || []).length
         ) {
           equal = false;
         }

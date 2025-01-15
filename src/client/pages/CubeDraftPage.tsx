@@ -71,9 +71,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   const [dragStartTime, setDragStartTime] = useState<number | null>(null);
   const { csrfFetch } = useContext(CSRFContext);
 
-  // eslint-disable-next-line no-console
-  console.log(state);
-
   const getLocationReferences = useCallback(
     (type: location): { board: any[][][]; setter: React.Dispatch<React.SetStateAction<any[][][]>> } => {
       if (type === locations.deck) {
@@ -163,9 +160,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         });
 
         if (response.ok) {
-          // eslint-disable-next-line no-console
-          console.log('response', response);
-
           const json = (await response.json()) as PredictResponse;
 
           // get the highest rated card
@@ -225,8 +219,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         newState.seats[0].pack.splice(index, 1);
       }
 
-      // pop the current step
-      const nextStep = newState.stepQueue.shift();
+      // get the next step
+      let nextStep = newState.stepQueue[0];
 
       // either pass the pack, open the next pack, or end the draft
       if (!nextStep) {
@@ -246,7 +240,13 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         }
 
         newState.pick += 1;
+
+        // pop the step
+        newState.stepQueue.shift();
       }
+
+      // get the next step
+      nextStep = newState.stepQueue[0];
 
       if (nextStep.action === 'endpack') {
         // we open the next pack or end the draft
@@ -262,6 +262,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         for (let i = 0; i < state.seats.length; i++) {
           newState.seats[i].pack = draft.InitialState ? draft.InitialState[i][newState.pack - 1].cards : [];
         }
+
+        // pop the step
+        newState.stepQueue.shift();
       }
 
       setState(newState);
@@ -354,7 +357,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       }
 
       if (target.type === locations.pack) {
-        // console.error("Can't move cards inside pack.");
         return;
       }
 

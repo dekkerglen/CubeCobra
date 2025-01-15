@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express-serve-static-core';
 import Joi from 'joi';
 
-import { detailsToCard } from '../../../../client/utils/cardutil';
+import { cardCmc, cardType, detailsToCard } from '../../../../client/utils/cardutil';
 import { CardDetails } from '../../../../datatypes/Card';
 import type CubeType from '../../../../datatypes/Cube';
 import DraftType, { DraftmancerLog, DraftmancerPick } from '../../../../datatypes/Draft';
@@ -9,6 +9,7 @@ import type DraftSeatType from '../../../../datatypes/DraftSeat';
 import Cube from '../../../../dynamo/models/cube';
 import Draft from '../../../../dynamo/models/draft';
 import { cardFromId, getReasonableCardByOracle } from '../../../../util/carddb';
+import { deckbuild } from '../../../../util/draftbots';
 import { setupPicks } from '../../../../util/draftutil';
 
 interface Pick {
@@ -119,8 +120,8 @@ const handler = async (req: Request, res: Response) => {
 
     for (const player of publishDraftBody.players) {
       const draftmancerPicks: DraftmancerPick[] = [];
-      const mainboard: number[][][] = setupPicks(2, 8);
-      const sideboard: number[][][] = setupPicks(1, 8);
+      let mainboard: number[][][] = setupPicks(2, 8);
+      let sideboard: number[][][] = setupPicks(1, 8);
       const pickorder: number[] = [];
       const trashorder: number[] = [];
 
@@ -161,6 +162,59 @@ const handler = async (req: Request, res: Response) => {
         const col = Math.max(0, Math.min(7, Math.floor(cmc)));
 
         sideboard[0][col].push(index);
+      }
+
+      // we need to build the bot decks
+      if (player.isBot) {
+        const mainboardBuilt = deckbuild(
+          pickorder.map((index) => cards[index]),
+          basics.map((index) => cards[index]),
+        ).mainboard;
+
+        const pool = pickorder.slice();
+
+        const newMainboard = [];
+
+        for (const oracle of mainboardBuilt) {
+          const poolIndex = pool.findIndex((cardindex) => cards[cardindex].oracle_id === oracle);
+          if (poolIndex === -1) {
+            // try basics
+            const basicsIndex = basics.findIndex((cardindex) => cards[cardindex].oracle_id === oracle);
+            if (basicsIndex !== -1) {
+              newMainboard.push(basics[basicsIndex]);
+            }
+          } else {
+            newMainboard.push(pool[poolIndex]);
+            pool.splice(poolIndex, 1);
+          }
+        }
+
+        // format mainboard
+        const formattedMainboard = setupPicks(2, 8);
+        const formattedSideboard = setupPicks(1, 8);
+
+        for (const index of newMainboard) {
+          const card = cards[index];
+          const row =
+            cardType(detailsToCard(card)).includes('Creature') || cardType(detailsToCard(card)).includes('Basic')
+              ? 0
+              : 1;
+          const column = Math.max(0, Math.min(cardCmc(detailsToCard(card)), 7));
+
+          formattedMainboard[row][column].push(index);
+        }
+
+        for (const index of pool) {
+          if (!basics.includes(index)) {
+            const card = cards[index];
+            const column = Math.max(0, Math.min(cardCmc(detailsToCard(card)), 7));
+
+            formattedSideboard[0][column].push(index);
+          }
+        }
+
+        mainboard = formattedMainboard;
+        sideboard = formattedSideboard;
       }
 
       const seat: DraftSeatType = {
