@@ -1,32 +1,31 @@
-// dotenv
-require('dotenv').config();
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 
-const createClient = require('../util');
+import createClient from '../util';
 
-const TYPES = {
-  MONTH: 'month',
-  WEEK: 'week',
-  DAY: 'day',
-};
+export enum TYPES {
+  MONTH = 'month',
+  WEEK = 'week',
+  DAY = 'day',
+}
 
-const FIELDS = {
-  ORACLE_TYPE_COMP: 'OTComp',
-  ORACLE_ID: 'oracle',
-  DATE: 'date',
-  ELO: 'elo',
-  PICKS: 'picks',
-  SIZE180: 'size180',
-  SIZE360: 'size360',
-  SIZE450: 'size450',
-  SIZE540: 'size540',
-  SIZE720: 'size720',
-  PAUPER: 'pauper',
-  PEASANT: 'peasant',
-  LEGACY: 'legacy',
-  MODERN: 'modern',
-  VINTAGE: 'vintage',
-  TOTAL: 'total',
-};
+export enum FIELDS {
+  ORACLE_TYPE_COMP = 'OTComp',
+  ORACLE_ID = 'oracle',
+  DATE = 'date',
+  ELO = 'elo',
+  PICKS = 'picks',
+  SIZE180 = 'size180',
+  SIZE360 = 'size360',
+  SIZE450 = 'size450',
+  SIZE540 = 'size540',
+  SIZE720 = 'size720',
+  PAUPER = 'pauper',
+  PEASANT = 'peasant',
+  LEGACY = 'legacy',
+  MODERN = 'modern',
+  VINTAGE = 'vintage',
+  TOTAL = 'total',
+}
 
 const client = createClient({
   name: 'CARD_HISTORY',
@@ -36,11 +35,15 @@ const client = createClient({
     [FIELDS.ORACLE_TYPE_COMP]: 'S',
     [FIELDS.DATE]: 'N',
   },
-  FIELDS,
 });
 
-module.exports = {
-  getByOracleAndType: async (oracle, type, limit, lastKey) => {
+const cardhistory = {
+  getByOracleAndType: async (
+    oracle: string,
+    type: TYPES,
+    limit: number,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
     const result = await client.query({
       KeyConditionExpression: `${FIELDS.ORACLE_TYPE_COMP} = :oracle`,
       ExpressionAttributeValues: {
@@ -56,58 +59,17 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document) => {
-    return client.put(document, true);
+  put: async (document: DocumentClient.PutItemInputAttributeMap): Promise<DocumentClient.PutItemOutput> => {
+    return client.put(document);
   },
-  batchPut: async (documents) => {
+  batchPut: async (documents: DocumentClient.PutItemInputAttributeMap[]): Promise<void> => {
     await client.batchPut(documents);
   },
-  createTable: async () => client.createTable(),
-  convertCardHistory: (history) => {
-    const res = [];
-
-    for (const datapoint of history.history) {
-      const { data } = datapoint;
-
-      // 2020-6-16
-      if (datapoint.date && history.oracleId) {
-        const [year, month, day] = datapoint.date.split('-');
-        const date = new Date(year, month - 1, day);
-
-        res.push({
-          [FIELDS.ORACLE_TYPE_COMP]: `${history.oracleId}:${TYPES.DAY}`,
-          [FIELDS.ORACLE_ID]: history.oracleId,
-          [FIELDS.DATE]: date.valueOf(),
-          [FIELDS.ELO]: data.elo,
-          [FIELDS.PICKS]: data.picks,
-          [FIELDS.SIZE180]: data.size180,
-          [FIELDS.SIZE360]: data.size360,
-          [FIELDS.SIZE450]: data.size450,
-          [FIELDS.SIZE540]: data.size540,
-          [FIELDS.SIZE720]: data.size720,
-          [FIELDS.PAUPER]: data.pauper,
-          [FIELDS.PEASANT]: data.peasant,
-          [FIELDS.LEGACY]: data.legacy,
-          [FIELDS.MODERN]: data.modern,
-          [FIELDS.VINTAGE]: data.vintage,
-          [FIELDS.TOTAL]: data.total,
-        });
-      }
-    }
-
-    const keys = new Set();
-    const items = [];
-
-    for (const item of res) {
-      const key = `${item[FIELDS.ORACLE_TYPE_COMP]}-${item[FIELDS.DATE]}`;
-      if (!keys.has(key)) {
-        keys.add(key);
-        items.push(item);
-      }
-    }
-
-    return items;
-  },
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  //TODO: Revisit if needed here or exporting above is fine, once everything is using esm imports
   FIELDS,
   TYPES,
 };
+
+module.exports = cardhistory;
+export default cardhistory;
