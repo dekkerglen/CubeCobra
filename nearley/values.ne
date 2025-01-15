@@ -50,9 +50,9 @@ legalityValue -> ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i 
 
 statusOpValue -> equalityOperator statusValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
-statusValue -> ("owned"i | "proxied"i | "ordered"i) {% ([[status]]) => status.toLowerCase() %} 
-  | "'" ("owned"i | "proxied"i | "ordered"i | "not owned"i | "premium owned"i) "'" {% ([, [status]]) => status.toLowerCase() %}
-  | "\"" ("owned"i | "proxied"i | "ordered"i | "not owned"i | "premium owned"i) "\"" {% ([, [status]]) => status.toLowerCase() %}
+statusValue -> ("owned"i | "proxied"i | "ordered"i | "borrowed"i) {% ([[status]]) => status.toLowerCase() %} 
+  | "'" ("owned"i | "proxied"i | "ordered"i | "not owned"i | "premium owned"i | "borrowed"i) "'" {% ([, [status]]) => status.toLowerCase() %}
+  | "\"" ("owned"i | "proxied"i | "ordered"i | "not owned"i | "premium owned"i | "borrowed"i) "\"" {% ([, [status]]) => status.toLowerCase() %}
 
 rarityOpValue -> anyOperator rarityValue {% ([op, value]) => rarityOperation(op, value) %}
 

@@ -11,6 +11,8 @@ import NumericField from 'components/NumericField';
 import CubeContext from 'contexts/CubeContext';
 import { FilterValues } from 'datatypes/Card';
 
+import { getLabels } from '../../utils/Sort';
+
 export interface AdvancedFilterModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
@@ -139,14 +141,12 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
                 label="Status"
                 value={values.status}
                 setValue={(v: string) => updateValue(v, 'status')}
-                options={[
-                  { value: '', label: 'Any' },
-                  { value: 'Not Owned', label: 'Not Owned' },
-                  { value: 'Ordered', label: 'Ordered' },
-                  { value: 'Owned', label: 'Owned' },
-                  { value: 'Premium Owned', label: 'Premium Owned' },
-                  { value: 'Proxied', label: 'Proxied' },
-                ]}
+                options={[{ value: '', label: 'Any' }].concat(
+                  getLabels(null, 'Status', false).map((status: string) => ({
+                    value: status,
+                    label: status,
+                  })),
+                )}
               />
             </Col>
             <Col md={6}>

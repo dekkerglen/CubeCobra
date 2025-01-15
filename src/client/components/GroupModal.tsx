@@ -1,18 +1,14 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
-import Text from './base/Text';
-import Tooltip from './base/Tooltip';
-import AutocardListItem from './card/AutocardListItem';
-import { ColorChecksAddon } from './ColorCheck';
-import MassBuyButton from './MassBuyButton';
-import TagInput from './TagInput';
-import TextBadge from './TextBadge';
-import AutocardContext from '../contexts/AutocardContext';
-import Card, { BoardType } from '../../datatypes/Card';
-import { TagColor } from '../../datatypes/Cube';
-import TagData from '../../datatypes/TagData';
+
+import { TagColor } from 'datatypes/Cube';
+import TagData from 'datatypes/TagData';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/cardutil';
+
+import AutocardContext from '../contexts/AutocardContext';
+import Card, { BoardType, CardStatus } from '../datatypes/Card';
+import { getLabels } from '../utils/Sort';
 import Button from './base/Button';
 import Input from './base/Input';
 import { Col, Flexbox, Row } from './base/Layout';
@@ -21,6 +17,13 @@ import { ListGroup } from './base/ListGroup';
 import { Modal, ModalBody, ModalHeader } from './base/Modal';
 import RadioButtonGroup from './base/RadioButtonGroup';
 import Select from './base/Select';
+import Text from './base/Text';
+import Tooltip from './base/Tooltip';
+import AutocardListItem from './card/AutocardListItem';
+import { ColorChecksAddon } from './ColorCheck';
+import MassBuyButton from './MassBuyButton';
+import TagInput from './TagInput';
+import TextBadge from './TextBadge';
 
 function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: number }[] {
   return cards.filter((card) => card.board !== undefined && card.index !== undefined) as {
@@ -123,11 +126,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const applyChanges = useCallback(() => {
     const updates = JSON.parse(JSON.stringify(cards));
 
-    console.log(updates);
-
     if (status !== '') {
       updates.forEach((card: Card) => {
-        card.status = status;
+        card.status = status as CardStatus;
       });
     }
 
@@ -312,14 +313,12 @@ const GroupModal: React.FC<GroupModalProps> = ({
             <Flexbox direction="col" gap="2">
               <Select
                 label="Set status of all"
-                options={[
-                  { value: '', label: 'None' },
-                  { value: 'Not Owned', label: 'Not Owned' },
-                  { value: 'Ordered', label: 'Ordered' },
-                  { value: 'Owned', label: 'Owned' },
-                  { value: 'Premium Owned', label: 'Premium Owned' },
-                  { value: 'Proxied', label: 'Proxied' },
-                ]}
+                options={[{ value: '', label: 'None' }].concat(
+                  getLabels(null, 'Status', false).map((status: string) => ({
+                    value: status,
+                    label: status,
+                  })),
+                )}
                 value={status}
                 setValue={setStatus}
               />
