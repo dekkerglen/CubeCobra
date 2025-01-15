@@ -10,7 +10,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
-import { CARD_STATUSES } from '../datatypes/Card';
+import { CARD_STATUSES } from '../../datatypes/Card';
 
 interface FiltersPageProps {
   loginCallback: string;
@@ -529,8 +529,11 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 You can use <code>status:</code> to filter by cards with the given status. Available options are&nbsp;
                 {
                   /* Replace the last comma with ", and" for nice English */
-                  CARD_STATUSES.map((status) => `"${status}"`).join(', ').replace(/,(?!.*,)/gmi, ', and')
-                }.
+                  CARD_STATUSES.map((status) => `"${status}"`)
+                    .join(', ')
+                    .replace(/,(?!.*,)/gim, ', and')
+                }
+                .
               </p>
               <Text semibold>Examples:</Text>
               <Table

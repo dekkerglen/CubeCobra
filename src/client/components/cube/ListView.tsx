@@ -1,3 +1,20 @@
+import React, { useCallback, useContext, useMemo, useState } from 'react';
+
+import {
+  cardCmc,
+  cardColorIdentity,
+  cardFullName,
+  cardIndex,
+  cardName,
+  cardTags,
+  cardType,
+  normalizeName,
+} from 'utils/cardutil';
+import { getLabels, sortForDownload } from 'utils/Sort';
+
+import CardType from '../../../datatypes/Card';
+import TagData from '../../../datatypes/TagData';
+import CubeContext from '../../contexts/CubeContext';
 import Button from '../base/Button';
 import { Card } from '../base/Card';
 import Checkbox from '../base/Checkbox';
@@ -11,21 +28,6 @@ import withGroupModal from '../modals/WithGroupModal';
 import PagedTable from '../PagedTable';
 import TagInput from '../TagInput';
 import withAutocard from '../WithAutocard';
-import CubeContext from '../../contexts/CubeContext';
-import CardType from '../../datatypes/Card';
-import TagData from '../../datatypes/TagData';
-import React, { useCallback, useContext, useMemo, useState } from 'react';
-import {
-  cardCmc,
-  cardColorIdentity,
-  cardFullName,
-  cardIndex,
-  cardName,
-  cardTags,
-  cardType,
-  normalizeName,
-} from 'utils/Card';
-import { getLabels, sortForDownload } from 'utils/Sort';
 
 const GroupModalButton = withGroupModal(Button);
 
@@ -205,7 +207,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
       <TagInput
         tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
         addTag={(tag: TagData) => {
-          let existingTags = cardTags(card);
+          const existingTags = cardTags(card);
           if (!existingTags.includes(tag.text)) {
             updateField(card, 'tags', [...cardTags(card), tag.text]);
           }

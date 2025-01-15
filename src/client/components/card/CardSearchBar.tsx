@@ -1,7 +1,8 @@
 import React from 'react';
-import { Flexbox } from '../base/Layout';
-import Input from '../base/Input';
+
 import Button from '../base/Button';
+import Input from '../base/Input';
+import { Flexbox } from '../base/Layout';
 
 const CardSearchBar: React.FC = () => {
   const [search, setSearch] = React.useState('');

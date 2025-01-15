@@ -1,24 +1,27 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
+
 import {
-  Chart as ChartJS,
-  TimeScale,
-  LinearScale,
-  PointElement,
-  LineElement,
   CategoryScale,
-  Tooltip,
+  Chart as ChartJS,
   Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  TimeScale,
+  Tooltip,
 } from 'chart.js';
-import 'chartjs-adapter-date-fns';
 import { Line } from 'react-chartjs-2';
-import History from '../datatypes/History';
+
+import 'chartjs-adapter-date-fns';
 
 import { formatDate } from 'utils/Date';
-import { Row, Col, Flexbox } from './base/Layout';
+
+import History from '../../datatypes/History';
+import { CSRFContext } from '../contexts/CSRFContext';
+import { Col, Flexbox,Row } from './base/Layout';
 import Select from './base/Select';
 import Spinner from './base/Spinner';
 import Text from './base/Text';
-import { CSRFContext } from '../contexts/CSRFContext';
 
 interface EloGraphProps {
   defaultHistories: History[];

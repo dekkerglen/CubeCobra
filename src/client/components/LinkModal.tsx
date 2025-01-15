@@ -1,8 +1,7 @@
 import React from 'react';
 
-import { Modal, ModalHeader, ModalBody, ModalFooter } from './base/Modal';
-
 import Button from './base/Button';
+import { Modal, ModalBody, ModalFooter,ModalHeader } from './base/Modal';
 
 export interface LinkModalProps {
   link: string;

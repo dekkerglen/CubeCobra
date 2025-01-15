@@ -1,8 +1,9 @@
 import React from 'react';
-import { Col, Flexbox, Row } from 'components/base/Layout';
-import { CardHeader, CardBody } from 'components/base/Card';
-import Text from 'components/base/Text';
+
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import { CardBody,CardHeader } from 'components/base/Card';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import Username from 'components/Username';

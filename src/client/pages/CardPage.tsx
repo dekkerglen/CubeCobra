@@ -1,39 +1,39 @@
 import React from 'react';
 
+import Banner from 'components/Banner';
 import { Col, Row } from 'components/base/Layout';
 import CardBreakdown from 'components/cardPage/CardBreakdown';
+import Correlations from 'components/cardPage/Correlations';
 import CardPurchase from 'components/cardPage/Purchase';
 import CardVersions from 'components/cardPage/Versions';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import CardType from 'datatypes/CardDetails';
+import { CardDetails } from 'datatypes/Card';
 import HistoryType from 'datatypes/History';
 import MainLayout from 'layouts/MainLayout';
-import Correlations from 'components/cardPage/Correlations';
-import Banner from 'components/Banner';
 
 interface CardPageProps {
-  card: CardType;
+  card: CardDetails;
   history: HistoryType[];
   draftedWith: {
-    top: CardType[];
-    creatures: CardType[];
-    spells: CardType[];
-    other: CardType[];
+    top: CardDetails[];
+    creatures: CardDetails[];
+    spells: CardDetails[];
+    other: CardDetails[];
   };
   cubedWith: {
-    top: CardType[];
-    creatures: CardType[];
-    spells: CardType[];
-    other: CardType[];
+    top: CardDetails[];
+    creatures: CardDetails[];
+    spells: CardDetails[];
+    other: CardDetails[];
   };
   synergistic: {
-    top: CardType[];
-    creatures: CardType[];
-    spells: CardType[];
-    other: CardType[];
+    top: CardDetails[];
+    creatures: CardDetails[];
+    spells: CardDetails[];
+    other: CardDetails[];
   };
-  versions: CardType[];
+  versions: CardDetails[];
   loginCallback: string;
 }
 

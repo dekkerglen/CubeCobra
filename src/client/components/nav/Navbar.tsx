@@ -2,22 +2,21 @@ import React, { useContext } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
-import { CardFooter } from '../base/Card';
-import NavButton from '../base/NavButton';
-import CardSearchBar from '../card/CardSearchBar';
-import LoginModal from '../modals/LoginModal';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
+import { CardFooter } from '../base/Card';
 import Collapse from '../base/Collapse';
 import Container from '../base/Container';
 import { Flexbox } from '../base/Layout';
+import NavButton from '../base/NavButton';
 import NavLink from '../base/NavLink';
 import NavMenu from '../base/NavMenu';
 import ResponsiveDiv from '../base/ResponsiveDiv';
-import NotificationsNav from './NotificationsNav';
+import CardSearchBar from '../card/CardSearchBar';
 import CreateCubeModal from '../modals/CreateCubeModal';
-
+import LoginModal from '../modals/LoginModal';
 import withModal from '../WithModal';
+import NotificationsNav from './NotificationsNav';
 
 const LoginButton = withModal(NavButton, LoginModal);
 const CreateCubeButton = withModal(NavButton, CreateCubeModal);

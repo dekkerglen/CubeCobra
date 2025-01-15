@@ -1,17 +1,18 @@
 import React from 'react';
 
+import { detailsToCard } from 'utils/cardutil';
+
+import { CardDetails } from '../../../datatypes/Card';
 import { Card, CardBody } from '../base/Card';
 import Link from '../base/Link';
 import PagedTable from '../base/PagedTable';
 import withAutocard from '../WithAutocard';
-import CardType from '../../datatypes/CardDetails';
-import { detailsToCard } from 'utils/Card';
 
 const AutocardA = withAutocard(Link);
 
 interface CardPageProps {
-  card: CardType;
-  versions: CardType[];
+  card: CardDetails;
+  versions: CardDetails[];
 }
 
 const capStringLength = (str: string, maxLength: number) => {

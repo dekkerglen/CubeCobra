@@ -620,7 +620,7 @@ router.get('/c/:id', (req, res) => {
 });
 
 router.get('/d/:id', (req, res) => {
-  redirect(req, res, `/cube/draft/${req.params.id}`);
+  redirect(req, res, `/draft/${req.params.id}`);
 });
 
 router.get('/leave', (req, res) => {

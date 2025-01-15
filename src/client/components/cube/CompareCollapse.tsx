@@ -1,9 +1,10 @@
 import React, { useCallback, useContext, useState } from 'react';
-import { Flexbox } from '../base/Layout';
-import Button from '../base/Button';
-import Input from '../base/Input';
+
 import CubeContext from '../../contexts/CubeContext';
+import Button from '../base/Button';
 import Collapse from '../base/Collapse';
+import Input from '../base/Input';
+import { Flexbox } from '../base/Layout';
 
 interface CompareCollapseProps {
   isOpen: boolean;

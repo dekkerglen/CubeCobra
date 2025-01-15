@@ -1,11 +1,12 @@
+import React, { useMemo, useState } from 'react';
+
+import BlogPost from '../../datatypes/BlogPost';
 import Button from './base/Button';
 import Input from './base/Input';
+import { Flexbox } from './base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from './base/Modal';
 import CSRFForm from './CSRFForm';
 import TextEntry from './TextEntry';
-import BlogPost from '../datatypes/BlogPost';
-import React, { useMemo, useState } from 'react';
-import { Flexbox } from './base/Layout';
 
 interface EditBlogModalProps {
   isOpen: boolean;

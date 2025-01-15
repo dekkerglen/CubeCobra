@@ -1,11 +1,12 @@
 import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
-import Text from 'components/base/Text';
-import Cube from 'datatypes/Cube';
-import CSRFForm from 'components/CSRFForm';
-import { Flexbox } from 'components/base/Layout';
+
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
+import { Flexbox } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import Text from 'components/base/Text';
+import CSRFForm from 'components/CSRFForm';
+import Cube from 'datatypes/Cube';
 
 interface MoveModalProps {
   isOpen: boolean;

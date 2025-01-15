@@ -1,12 +1,12 @@
 import React, { useContext, useState } from 'react';
-import { Card, CardBody } from './base/Card';
-import Text from './base/Text';
-import Link from './base/Link';
 
-import Advertisment from './Advertisment';
 import UserContext, { UserContextValue } from '../contexts/UserContext';
+import Advertisment from './Advertisment';
+import { Card, CardBody } from './base/Card';
 import { Flexbox } from './base/Layout';
+import Link from './base/Link';
 import ResponsiveDiv from './base/ResponsiveDiv';
+import Text from './base/Text';
 
 const BANNER_RATE: number = 5; // an alternate message appears with probability of 1/BANNER_RATE
 

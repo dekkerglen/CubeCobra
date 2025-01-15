@@ -1,10 +1,10 @@
 import React, { useContext, useMemo } from 'react';
 
-import CubeContext from 'contexts/CubeContext';
-import { getCubeDescription } from 'utils/Util';
+import { Flexbox } from 'components/base/Layout';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Text from 'components/base/Text';
-import { Flexbox } from 'components/base/Layout';
+import CubeContext from 'contexts/CubeContext';
+import { getCubeDescription } from 'utils/Util';
 
 const CubeSubtitle: React.FC = () => {
   const { cube, unfilteredChangedCards } = useContext(CubeContext);

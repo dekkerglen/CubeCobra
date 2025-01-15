@@ -1,16 +1,17 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import LoadingButton from '../LoadingButton';
-import CardDetails from '../../datatypes/CardDetails';
-import CubePropType from '../../datatypes/Cube';
-import { Modal, ModalHeader, ModalBody, ModalFooter } from '../base/Modal';
-import Button from '../base/Button';
-import Alert from '../base/Alert';
-import CardList from '../base/CardList';
-import Select from '../base/Select';
-import { detailsToCard } from 'utils/Card';
-import { Flexbox } from '../base/Layout';
+import { detailsToCard } from 'utils/cardutil';
+
+import { CardDetails } from '../../../datatypes/Card';
+import CubePropType from '../../../datatypes/Cube';
 import { CSRFContext } from '../../contexts/CSRFContext';
+import Alert from '../base/Alert';
+import Button from '../base/Button';
+import CardList from '../base/CardList';
+import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalFooter,ModalHeader } from '../base/Modal';
+import Select from '../base/Select';
+import LoadingButton from '../LoadingButton';
 
 export interface AddGroupToCubeModalProps {
   cards: CardDetails[];

@@ -217,10 +217,6 @@ We keep all card definitions in large pre-processed files, so that nodes in prod
 
 An external process is responsible for updating the card definitions, and uploading to S3. This same process is also responsible for updating the card analytics, and data exports.
 
-### Multiplayer Drafting
-
-We use redis for concurrency control for multiplayer drafting. All redis operations are handled in `multiplayerDrafting.js`
-
 ### Scheduled jobs
 
 Each instance of the express server runs a job using node-schedule on a nightly basis to update the in-memory carddb from s3.

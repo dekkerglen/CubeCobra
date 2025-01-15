@@ -1,16 +1,17 @@
 import React, { useContext, useState } from 'react';
+
+import { CardDetails } from '../../../datatypes/Card';
+import User from '../../../datatypes/User';
+import { CSRFContext } from '../../contexts/CSRFContext';
+import UserContext from '../../contexts/UserContext';
+import useLocalStorage from '../../hooks/useLocalStorage';
+import Alert from '../base/Alert';
+import Button from '../base/Button';
+import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalFooter,ModalHeader } from '../base/Modal';
+import Select from '../base/Select';
 import ImageFallback from '../ImageFallback';
 import LoadingButton from '../LoadingButton';
-import UserContext from '../../contexts/UserContext';
-import CardDetails from '../../datatypes/CardDetails';
-import User from '../../datatypes/User';
-import useLocalStorage from '../../hooks/useLocalStorage';
-import { Modal, ModalBody, ModalHeader, ModalFooter } from '../base/Modal';
-import Button from '../base/Button';
-import Select from '../base/Select';
-import Alert from '../base/Alert';
-import { Flexbox } from '../base/Layout';
-import { CSRFContext } from '../../contexts/CSRFContext';
 
 export interface AddToCubeModalProps {
   card: CardDetails;

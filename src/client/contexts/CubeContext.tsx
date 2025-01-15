@@ -12,15 +12,15 @@ import React, {
 
 import { Object } from 'core-js';
 
-import { cardName, normalizeName } from 'utils/Card';
+import { cardName, normalizeName } from 'utils/cardutil';
 import { deepCopy } from 'utils/Util';
 
+import Card, { BoardType, boardTypes, Changes } from '../../datatypes/Card';
+import { CardDetails } from '../../datatypes/Card';
+import Cube, { TagColor } from '../../datatypes/Cube';
 import { UncontrolledAlertProps } from '../components/base/Alert';
 import CardModal from '../components/card/CardModal';
 import GroupModal from '../components/GroupModal';
-import Card, { BoardType, boardTypes, Changes } from '../datatypes/Card';
-import CardDetails from '../datatypes/CardDetails';
-import Cube, { TagColor } from '../datatypes/Cube';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useMount from '../hooks/UseMount';
 import useQueryParam from '../hooks/useQueryParam';

@@ -1,10 +1,11 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+import React, { useEffect,useMemo, useState } from 'react';
+
 import Button from '../base/Button';
 import Input from '../base/Input';
+import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 import CSRFForm from '../CSRFForm';
-import { Flexbox } from '../base/Layout';
 
 interface UploadBulkReplaceModalProps {
   isOpen: boolean;

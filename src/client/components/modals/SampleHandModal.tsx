@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+
+import { arrayShuffle } from 'utils/Util';
+
+import Card from '../../../datatypes/Card';
+import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 import CardGrid from '../card/CardGrid';
-import { arrayShuffle } from 'utils/Util';
-import Card from '../../datatypes/Card';
-import Button from '../base/Button';
 
 interface SampleHandModalProps {
   deck: Card[];

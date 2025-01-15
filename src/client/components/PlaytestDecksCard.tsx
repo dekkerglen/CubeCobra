@@ -1,11 +1,13 @@
 import React, { useCallback, useContext, useState } from 'react';
+
 import { Card, CardFooter, CardHeader } from 'components/base/Card';
-import DeckPreview from 'components/DeckPreview';
-import Draft from 'datatypes/Draft';
 import Text from 'components/base/Text';
+import DeckPreview from 'components/DeckPreview';
+import { CSRFContext } from 'contexts/CSRFContext';
+import Draft from 'datatypes/Draft';
+
 import { Flexbox } from './base/Layout';
 import Pagination from './base/Pagination';
-import { CSRFContext } from 'contexts/CSRFContext';
 
 interface PlaytestDecksCardProps {
   decks: Draft[];

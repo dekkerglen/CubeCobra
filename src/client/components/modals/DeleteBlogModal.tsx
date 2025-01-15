@@ -1,8 +1,9 @@
 import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+
 import Button from 'components/base/Button';
-import Text from 'components/base/Text';
 import { Flexbox } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import Text from 'components/base/Text';
 import BlogPost from 'datatypes/BlogPost';
 
 interface DeleteCubeModalProps {

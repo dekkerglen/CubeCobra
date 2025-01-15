@@ -1,5 +1,6 @@
-import Alert from '../components/base/Alert';
 import React, { useCallback, useState } from 'react';
+
+import Alert from '../components/base/Alert';
 
 interface Alert {
   color: string;

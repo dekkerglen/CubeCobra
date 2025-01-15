@@ -1,5 +1,3 @@
-import Card, { CARD_STATUSES } from 'datatypes/Card';
-import { COLOR_CATEGORIES } from 'datatypes/CardDetails';
 import {
   cardAddedTime,
   cardArtist,
@@ -23,8 +21,10 @@ import {
   cardType,
   COLOR_COMBINATIONS,
   convertFromLegacyCardColorCategory,
-} from 'utils/Card';
+} from 'utils/cardutil';
 import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
+
+import Card, { CARD_STATUSES, COLOR_CATEGORIES } from '../../datatypes/Card';
 
 const COLOR_MAP: Record<string, string> = {
   W: 'White',

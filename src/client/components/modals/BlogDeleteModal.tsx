@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 
-import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { CSRFContext } from '../../contexts/CSRFContext';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export interface BlogDeleteModalProps {
   isOpen: boolean;

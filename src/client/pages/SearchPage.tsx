@@ -1,18 +1,18 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Pagination from 'components/base/Pagination';
+import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
+import CubeSearchController from 'components/cube/CubeSearchController';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import MainLayout from 'layouts/MainLayout';
-import Cube from 'datatypes/Cube';
-import { Row, Col, Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
-import useQueryParam from 'hooks/useQueryParam';
-import CubeSearchController from 'components/cube/CubeSearchController';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { CSRFContext } from 'contexts/CSRFContext';
-import Spinner from 'components/base/Spinner';
+import Cube from 'datatypes/Cube';
+import useQueryParam from 'hooks/useQueryParam';
+import MainLayout from 'layouts/MainLayout';
 
 interface SearchPageProps {
   cubes: Cube[];

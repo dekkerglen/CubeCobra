@@ -1,6 +1,7 @@
 import React from 'react';
-import { Modal, ModalHeader, ModalBody } from '../base/Modal';
+
 import Button from '../base/Button';
+import { Modal, ModalBody,ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 
 interface ConfirmActionModalProps {

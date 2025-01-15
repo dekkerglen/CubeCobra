@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+
 import { CheckIcon, PasteIcon } from '@primer/octicons-react';
+
 import { Flexbox } from '../base/Layout';
 
 interface CardIdBadgeProps {

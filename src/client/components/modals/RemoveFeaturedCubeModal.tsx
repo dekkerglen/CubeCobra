@@ -1,6 +1,7 @@
 import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+
 import Button from '../base/Button';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 import CSRFForm from '../CSRFForm';
 
