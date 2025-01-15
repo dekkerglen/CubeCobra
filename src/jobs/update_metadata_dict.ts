@@ -8,10 +8,36 @@ const { encode } = require('../util/ml');
 
 const correlationLimit = 36;
 
-const cosineSimilarity = (a, magA, b, magB) => {
+const cosineSimilarity = (a: number[], magA: number, b: number[], magB: number) => {
   const dotProduct = a.reduce((acc, val, index) => acc + val * b[index], 0);
   return dotProduct / (magA * magB);
 };
+
+type CubeDict = Record<string, string[]>;
+
+interface CubeHistory {
+  cubes: Record<string, number[]>;
+  indexToOracleMap: Record<number, string>;
+}
+
+type OracleId = number;
+
+interface Related {
+  top: OracleId[];
+  creatures: OracleId[];
+  spells: OracleId[];
+  other: OracleId[];
+}
+
+interface Metadata {
+  cubedWith: Related;
+  draftedWith: Related;
+  synergistic: Related;
+  elo: number;
+  picks: number;
+  cubes: number;
+  popularity: number;
+}
 
 (async () => {
   console.log('Loading card database');
@@ -19,10 +45,10 @@ const cosineSimilarity = (a, magA, b, magB) => {
 
   // load most recent cube history
   const cubeHistoryFiles = fs.readdirSync('./temp/cubes_history').sort();
-  const cubeHistoryData = JSON.parse(
+  const cubeHistoryData: CubeHistory = JSON.parse(
     fs.readFileSync(`./temp/cubes_history/${cubeHistoryFiles[cubeHistoryFiles.length - 1]}`),
   );
-  const cubeHistory = {};
+  const cubeHistory: CubeDict = {};
 
   for (const [cubeId, cube] of Object.entries(cubeHistoryData.cubes)) {
     cubeHistory[cubeId] = cube.map((index) => cubeHistoryData.indexToOracleMap[index]);
@@ -70,7 +96,7 @@ const cosineSimilarity = (a, magA, b, magB) => {
 
   const cubeCount = new Int32Array(oracleCount);
 
-  const incrementCorrelation = (matrix, oracleId1, oracleId2) => {
+  const incrementCorrelation = (matrix: Int32Array, oracleId1: string, oracleId2: string) => {
     if (oracleId1 === oracleId2) {
       return;
     }
@@ -88,7 +114,7 @@ const cosineSimilarity = (a, magA, b, magB) => {
   for (let i = 0; i < oracleCount; i += 1) {
     const encoding = encode([indexToOracle[i]]);
     encodings.push(encoding);
-    magnitudes.push(Math.sqrt(encoding.reduce((acc, val) => acc + val * val, 0)));
+    magnitudes.push(Math.sqrt(encoding.reduce((acc: number, val: number) => acc + val * val, 0)));
 
     if (i % 100 === 0) {
       console.log(`Processed ${Math.min(i, oracleCount)} / ${oracleCount} oracles`);
@@ -156,32 +182,7 @@ const cosineSimilarity = (a, magA, b, magB) => {
   }
   console.log(`Processed ${Object.keys(cubeHistory).length} / ${Object.keys(cubeHistory).length} cubes`);
 
-  /*
-  {
-    cubedWith: {
-      top: [OracleId],
-      creatures: [OracleId],
-      spells: [OracleId],
-      other: [OracleId],
-    },
-    draftedWith: {
-      top: [OracleId],
-      creatures: [OracleId],
-      spells: [OracleId],
-      other: [OracleId],
-    },
-    synegistic: {
-      top: [OracleId],
-      creatures: [OracleId],
-      spells: [OracleId],
-      other: [OracleId],
-    },
-    elo: Number,
-    picks: Number,
-    cubes: Number,
-  };
-  */
-  const metadatadict = {};
+  const metadatadict: Record<string, Metadata> = {};
 
   processed = 0;
 
@@ -191,9 +192,24 @@ const cosineSimilarity = (a, magA, b, magB) => {
       picks: 0,
       cubes: cubeCount[oracleToIndex[oracle]],
       popularity: (100 * cubeCount[oracleToIndex[oracle]]) / Object.keys(cubeHistory).length,
-      cubedWith: {},
-      draftedWith: {},
-      synergistic: {},
+      cubedWith: {
+        top: [],
+        creatures: [],
+        spells: [],
+        other: [],
+      },
+      draftedWith: {
+        top: [],
+        creatures: [],
+        spells: [],
+        other: [],
+      },
+      synergistic: {
+        top: [],
+        creatures: [],
+        spells: [],
+        other: [],
+      },
     };
 
     if (draftHistory.eloByOracleId[oracle]) {
@@ -203,11 +219,13 @@ const cosineSimilarity = (a, magA, b, magB) => {
       metadatadict[oracle].picks = draftHistory.picksByOracleId[oracle];
     }
 
-    for (const [targetDict, sourceMatrix] of [
+    const sourceMatrices: [Related, Int32Array | Float32Array][] = [
       [metadatadict[oracle].draftedWith, draftedWith],
       [metadatadict[oracle].cubedWith, cubedWith],
       [metadatadict[oracle].synergistic, synergyWith],
-    ]) {
+    ];
+
+    for (const [targetDict, sourceMatrix] of sourceMatrices) {
       const cards = [
         ...sourceMatrix.slice(oracleToIndex[oracle] * oracleCount, (oracleToIndex[oracle] + 1) * oracleCount),
       ]

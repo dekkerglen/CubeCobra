@@ -7,17 +7,34 @@ dotenv.config();
 
 import fs from 'fs';
 
+import type ChangeLogType from 'datatypes/ChangeLog';
+
 import CardHistory from '../dynamo/models/cardhistory';
 import ChangeLog from '../dynamo/models/changelog';
 import { cardFromId, initializeCardDb } from '../util/carddb';
 import { getCubeTypes } from '../util/cubefn';
+
+type CubeDict = Record<string, string[]>;
 
 interface CubeHistory {
   cubes: Record<string, number[]>;
   indexToOracleMap: Record<number, string>;
 }
 
-type CubeDict = Record<string, string[]>;
+interface Totals {
+  size180: number;
+  size360: number;
+  size450: number;
+  size540: number;
+  size720: number;
+  pauper: number;
+  peasant: number;
+  legacy: number;
+  modern: number;
+  vintage: number;
+  pioneer: number;
+  total: number;
+}
 
 const saveCubesHistory = async (cubes: CubeDict, key: string) => {
   const uniqueOracles = [...new Set(Object.values(cubes).flat())];
@@ -37,19 +54,15 @@ const saveCubesHistory = async (cubes: CubeDict, key: string) => {
   fs.writeFileSync(`temp/cubes_history/${key}.json`, JSON.stringify(cubeHistory));
 };
 
-const loadCubesHistory = async (key: string) => {
+const loadCubesHistory = async (key: string): Promise<CubeDict> => {
   const data: CubeHistory = JSON.parse(fs.readFileSync(`temp/cubes_history/${key}.json`, 'utf-8'));
 
-  if (data.cubes) {
-    const cubes: CubeDict = {};
-    for (const [cubeId, cube] of Object.entries(data.cubes)) {
-      cubes[cubeId] = cube.map((index) => data.indexToOracleMap[index]);
-    }
-
-    return cubes;
+  const cubes: CubeDict = {};
+  for (const [cubeId, cube] of Object.entries(data.cubes)) {
+    cubes[cubeId] = cube.map((index) => data.indexToOracleMap[index]);
   }
 
-  return data;
+  return cubes;
 };
 
 (async () => {
@@ -63,12 +76,12 @@ const loadCubesHistory = async (key: string) => {
     fs.mkdirSync('./temp/cubes_history');
   }
 
-  const logsByDay = {};
+  const logsByDay: Record<string, ChangeLogType[]> = {};
   const keys = [];
 
   // load all changelogs into memory
   let lastKey = null;
-  let changelogs = [];
+  let changelogs: ChangeLogType[] = [];
   do {
     const result = await ChangeLog.scan(1000000, lastKey);
     changelogs = changelogs.concat(result.items);
@@ -78,7 +91,7 @@ const loadCubesHistory = async (key: string) => {
   } while (lastKey);
 
   console.log('Loaded all changelogs');
-  let firstDate = null;
+  let firstDate: Date = new Date();
 
   for (const log of changelogs) {
     const date = new Date(log.date);
@@ -114,8 +127,8 @@ const loadCubesHistory = async (key: string) => {
 
   // sort the keys ascending
   keys.sort((a, b) => {
-    const [yearA, monthA, dayA] = a.split('-');
-    const [yearB, monthB, dayB] = b.split('-');
+    const [yearA, monthA, dayA] = a.split('-').map((x) => parseInt(x, 10));
+    const [yearB, monthB, dayB] = b.split('-').map((x) => parseInt(x, 10));
 
     if (yearA !== yearB) {
       return yearA - yearB;
@@ -130,8 +143,8 @@ const loadCubesHistory = async (key: string) => {
 
   console.log(`Loaded ${keys.length} days of logs`);
 
-  let cubes = {};
-  let oracleToElo = {};
+  let cubes: CubeDict = {};
+  let oracleToElo: Record<string, number> = {};
 
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
@@ -174,7 +187,7 @@ const loadCubesHistory = async (key: string) => {
 
       await saveCubesHistory(cubes, key);
 
-      const totals = {
+      const totals: Totals = {
         size180: 0,
         size360: 0,
         size450: 0,
@@ -185,10 +198,11 @@ const loadCubesHistory = async (key: string) => {
         legacy: 0,
         modern: 0,
         vintage: 0,
+        pioneer: 0,
         total: 0,
       };
 
-      const data = {};
+      const data: Record<string, Totals> = {};
 
       for (const cube of Object.values(cubes)) {
         const cubeCards = cube.map((id) => cardFromId(id));
@@ -197,7 +211,7 @@ const loadCubesHistory = async (key: string) => {
 
         const size = cube.length;
 
-        const categories = ['total'];
+        const categories: [keyof Totals] = ['total'];
 
         if (size <= 180) {
           categories.push('size180');
@@ -253,6 +267,7 @@ const loadCubesHistory = async (key: string) => {
               peasant: 0,
               legacy: 0,
               modern: 0,
+              pioneer: 0,
               vintage: 0,
             };
           }
@@ -264,7 +279,7 @@ const loadCubesHistory = async (key: string) => {
       }
 
       if (fs.existsSync(`temp/global_draft_history/${key}.json`)) {
-        const eloFile = fs.readFileSync(`temp/global_draft_history/${key}.json`);
+        const eloFile = fs.readFileSync(`temp/global_draft_history/${key}.json`, 'utf-8');
         oracleToElo = JSON.parse(eloFile).eloByOracleId;
       }
 
