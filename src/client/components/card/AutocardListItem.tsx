@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import cx from 'classnames';
+import emojiRegex from 'emoji-regex';
 
 import DisplayContext from 'contexts/DisplayContext';
 import { getCardTagColorClass } from 'utils/Util';
@@ -10,6 +11,7 @@ import TagColorContext from '../../contexts/TagColorContext';
 import UserContext from '../../contexts/UserContext';
 import { ListGroupItem } from '../base/ListGroup';
 import withAutocard from '../WithAutocard';
+
 
 export interface AutocardListItemProps {
   card: Card;
@@ -70,18 +72,18 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   }, [card, tagColors, user]);
 
   const findEmojisInTags = (tags: string[]): string[] => {
-    const emojiRegex = /\p{Emoji}/gu;
-    const emojis: string[] = [];
+    const regex = emojiRegex();
+    const emojis: string[] = []
 
     for (const tag of tags) {
-      const matches = tag.match(emojiRegex);
-      if (matches) {
-        emojis.push(...matches);
+      const emojisInTag = tag.match(regex);
+      if (emojisInTag) {
+        emojis.push(...emojisInTag);
       }
     }
 
-    return emojis;
-  };
+    return [...new Set(emojis)]
+  }
 
   const emojiTags = useMemo(() => (card && card.tags ? findEmojisInTags(card.tags) : []), [card]);
 
