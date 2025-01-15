@@ -25,7 +25,7 @@ interface GetCardResponse {
 
 export const getCard = async (
   csrfFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
-  defaultprinting: string,
+  defaultPrinting: string,
   name: string,
   setAlerts?: Dispatch<SetStateAction<UncontrolledAlertProps[]>>,
 ): Promise<CardDetails | null> => {
@@ -34,7 +34,7 @@ export const getCard = async (
       method: 'POST',
       body: JSON.stringify({
         name,
-        defaultprinting,
+        defaultPrinting,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, boardToEdit],
+    [csrfFetch, cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, boardToEdit],
   );
 
   const handleRemoveReplace = useCallback(
@@ -180,7 +180,17 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [addValue, changedCards, boardToEdit, setAlerts, cube.defaultPrinting, cube.defaultStatus, swapCard, removeCard],
+    [
+      addValue,
+      changedCards,
+      boardToEdit,
+      setAlerts,
+      csrfFetch,
+      cube.defaultPrinting,
+      cube.defaultStatus,
+      swapCard,
+      removeCard,
+    ],
   );
 
   const submit = useCallback(async () => {
@@ -227,6 +237,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
                 autoComplete="off"
                 data-lpignore
                 className="square-right"
+                defaultPrinting={cube.defaultPrinting}
               />
               <Button color="primary" disabled={addValue.length === 0} onClick={(e) => handleAdd(e, addValue)}>
                 Add

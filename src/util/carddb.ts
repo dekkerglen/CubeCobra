@@ -239,8 +239,8 @@ export function getMostReasonable(cardName: string, printing = 'recent', filter?
 
   ids = cards.map((card) => card.details.scryfall_id);
 
-  // Ids are stored in reverse chronological order, so reverse if we want first printing.
-  if (printing !== 'recent') {
+  // Ids have been sorted from oldest to newest. So reverse if we want the newest printing.
+  if (printing === 'recent') {
     ids = [...ids];
     ids.reverse();
   }

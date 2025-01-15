@@ -315,11 +315,13 @@ router.get('/cardimage/:id', async (req, res) => {
   try {
     let { id } = req.params;
 
+    const defaultPrinting = req?.query?.defaultPrinting;
+
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
     const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName, defaultPrinting).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
