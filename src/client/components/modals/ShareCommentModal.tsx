@@ -1,10 +1,13 @@
 import React, { useContext } from 'react';
+
 import { PasteIcon } from '@primer/octicons-react';
-import { Modal, ModalHeader, ModalBody } from 'components/base/Modal';
+
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
-import Comment from 'datatypes/Comment';
+import { Modal, ModalBody,ModalHeader } from 'components/base/Modal';
 import DomainContext from 'contexts/DomainContext';
+import Comment from 'datatypes/Comment';
+
 import { Flexbox } from '../base/Layout';
 
 interface ShareCommentModalProps {

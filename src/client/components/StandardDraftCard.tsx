@@ -1,12 +1,12 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import CSRFForm from './CSRFForm';
 import CubeContext from '../contexts/CubeContext';
 import Button from './base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
 import { Flexbox } from './base/Layout';
 import Select, { rangeOptions } from './base/Select';
 import Text from './base/Text';
+import CSRFForm from './CSRFForm';
 
 interface StandardDraftCardProps {
   defaultDraftFormat: number;
@@ -31,7 +31,7 @@ const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultDraftForma
 
   return (
     <Card>
-      <CSRFForm method="POST" action={`/cube/startdraft/${cube.id}`} formData={formData} ref={formRef}>
+      <CSRFForm method="POST" action={`/draft/start/${cube.id}`} formData={formData} ref={formRef}>
         <CardHeader>
           <Text lg semibold>
             {defaultDraftFormat === -1 && 'Default Format: '}Standard Draft

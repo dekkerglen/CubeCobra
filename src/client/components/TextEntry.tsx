@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 
-import ErrorBoundary from './ErrorBoundary';
-import Markdown from './Markdown';
 import { Card, CardBody } from './base/Card';
 import Link from './base/Link';
 import { TabbedView } from './base/Tabs';
 import Text from './base/Text';
 import TextArea from './base/TextArea';
+import ErrorBoundary from './ErrorBoundary';
+import Markdown from './Markdown';
 
 interface TextEntryProps {
   name?: string;

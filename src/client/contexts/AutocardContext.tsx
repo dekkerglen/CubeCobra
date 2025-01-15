@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import Card from '../datatypes/Card';
-import { cardFinish, cardTags } from 'utils/Card';
+import { cardFinish, cardTags } from 'utils/cardutil';
+
+import Card from '../../datatypes/Card';
 import { Flexbox } from '../components/base/Layout';
 import Tag from '../components/base/Tag';
 

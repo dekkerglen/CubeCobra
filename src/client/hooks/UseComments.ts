@@ -1,8 +1,9 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 
-import Comment from '../datatypes/Comment';
 import { findUserLinks } from 'markdown/parser';
 import { wait } from 'utils/Util';
+
+import Comment from '../../datatypes/Comment';
 import { CSRFContext } from '../contexts/CSRFContext';
 
 export interface EditRequest {

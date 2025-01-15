@@ -1,11 +1,12 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
-import Button from '../base/Button';
-import CSRFForm from '../CSRFForm';
+
 import CubeContext from '../../contexts/CubeContext';
+import Button from '../base/Button';
+import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 import TextArea from '../base/TextArea';
-import { Flexbox } from '../base/Layout';
+import CSRFForm from '../CSRFForm';
 
 interface UploadDecklistModalProps {
   isOpen: boolean;

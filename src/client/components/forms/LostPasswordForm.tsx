@@ -1,8 +1,9 @@
 import React from 'react';
-import CSRFForm from '../CSRFForm';
+
+import Button from '../base/Button';
 import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
-import Button from '../base/Button';
+import CSRFForm from '../CSRFForm';
 
 const LostPasswordForm: React.FC = () => {
   const formRef = React.useRef<HTMLFormElement>(null);

@@ -1,8 +1,9 @@
 import React from 'react';
+
+import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
-import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';

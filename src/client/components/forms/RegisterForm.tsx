@@ -1,10 +1,12 @@
 import React, { useContext, useMemo, useState } from 'react';
-import CSRFForm from '../CSRFForm';
-import Input from '../base/Input';
-import Button from '../base/Button';
-import { Flexbox } from '../base/Layout';
+
 import ReCAPTCHA from 'react-google-recaptcha';
+
 import CaptchaContext from '../../contexts/CaptchaContext';
+import Button from '../base/Button';
+import Input from '../base/Input';
+import { Flexbox } from '../base/Layout';
+import CSRFForm from '../CSRFForm';
 import ChallengeInput, { generateChallenge } from './ChallengeInput';
 
 interface RegisterFormProps {

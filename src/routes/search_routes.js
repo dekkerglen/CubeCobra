@@ -1,6 +1,6 @@
 const express = require('express');
 
-const carddb = require('../util/carddb');
+const { getMostReasonable, getReasonableCardByOracle, cardFromId } = require('../util/carddb');
 const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
 
@@ -51,7 +51,7 @@ const getCardQueries = (tokens) => {
     }
 
     if (split[0] === 'card') {
-      const card = carddb.getMostReasonable(split[1]);
+      const card = getMostReasonable(split[1]);
 
       if (card) {
         queries.push({ type: 'card', value: card.oracle_id });
@@ -103,7 +103,7 @@ const getHumanReadableQuery = (cardQueries, keywordQueries, tagQueries) => {
     if (query.value === '') {
       result.push(`Ignoring card query: could not identify card`);
     } else {
-      const card = carddb.getReasonableCardByOracle(query.value);
+      const card = getReasonableCardByOracle(query.value);
       result.push(`Cube contains ${card.name}`);
     }
   }
@@ -267,10 +267,10 @@ const searchWithTagQueries = async (tagQueries, cardQueries, keywordQueries, ord
 
     const cubeWithCardFilter = cubes.filter((cube, index) => {
       const cards = cubeCards[index];
-      const oracleIds = cards.mainboard.map((card) => carddb.cardFromId(card.cardID).oracle_id);
+      const oracleIds = cards.mainboard.map((card) => cardFromId(card.cardID).oracle_id);
 
       for (const query of cardQueries) {
-        if (!oracleIds.some((oracle_id) => oracle_id === query.value)) {
+        if (!oracleIds.some((o) => o === query.value)) {
           return false;
         }
       }

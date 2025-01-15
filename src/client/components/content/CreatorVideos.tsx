@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import VideoPreview from 'components/content/VideoPreview';
-import Video from 'datatypes/Video';
-import Spinner from 'components/base/Spinner';
-import { Col, Flexbox, Row } from 'components/base/Layout';
 import Button from 'components/base/Button';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Spinner from 'components/base/Spinner';
+import VideoPreview from 'components/content/VideoPreview';
 import { CSRFContext } from 'contexts/CSRFContext';
+import Video from 'datatypes/Video';
 
 interface CreatorVideosProps {
   videos: Video[];

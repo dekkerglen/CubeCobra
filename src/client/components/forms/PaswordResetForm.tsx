@@ -1,8 +1,9 @@
 import React from 'react';
-import CSRFForm from '../CSRFForm';
-import Input from '../base/Input';
+
 import Button from '../base/Button';
+import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
+import CSRFForm from '../CSRFForm';
 
 interface LoginModalProps {
   code: string;

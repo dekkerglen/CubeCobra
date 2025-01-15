@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const uuid = require('uuid');
 const createClient = require('../util');
-const carddb = require('../../util/carddb');
+const { cardFromId } = require('../../util/carddb');
 const { getObject, putObject } = require('../s3client');
 const User = require('./user');
 const Cube = require('./cube');
@@ -17,6 +17,7 @@ const FIELDS = {
   COMPLETE: 'complete',
   NAME: 'name',
   SEAT_NAMES: 'seatNames',
+  DRAFTMANCER_LOG: 'DraftmancerLog',
 };
 
 const TYPES = {
@@ -80,7 +81,7 @@ const assessColors = (mainboard, cards) => {
 
   let count = 0;
   for (const card of mainboard.flat(3)) {
-    const details = carddb.cardFromId(cards[card].cardID);
+    const details = cardFromId(cards[card].cardID);
     if (!details.type.includes('Land')) {
       count += 1;
       for (const color of details.color_identity) {
@@ -124,7 +125,7 @@ const addDetails = (cards) => {
 
   cards.forEach((card) => {
     card.details = {
-      ...carddb.cardFromId(card.cardID),
+      ...cardFromId(card.cardID),
     };
   });
   return cards;
@@ -265,7 +266,7 @@ const hydrate = async (document) => {
 };
 
 const dehydrate = (document) => {
-  if (document.owner.id) {
+  if (document.owner && document.owner.id) {
     document.owner = document.owner.id;
   }
 
@@ -441,6 +442,7 @@ module.exports = {
       [FIELDS.COMPLETE]: document.complete,
       [FIELDS.NAME]: `${names[0]} ${REVERSE_TYPES[document.type]} of ${cube.name}`,
       [FIELDS.SEAT_NAMES]: names,
+      [FIELDS.DRAFTMANCER_LOG]: document.DraftmancerLog,
     });
 
     for (const seat of document.seats) {

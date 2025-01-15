@@ -1,7 +1,7 @@
-import classNames from 'classnames';
 import React, { useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
+import classNames from 'classnames';
 
 export interface AlertProps {
   color: string;

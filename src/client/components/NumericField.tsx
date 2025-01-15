@@ -1,6 +1,7 @@
 import React from 'react';
-import { Flexbox } from './base/Layout';
+
 import Input from './base/Input';
+import { Flexbox } from './base/Layout';
 import Select from './base/Select';
 
 interface NumericFieldProps {

@@ -1,12 +1,13 @@
 import React, { useContext } from 'react';
-import { Flexbox, Row, Col } from '../base/Layout';
+
+import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
+import { Col,Flexbox, Row } from '../base/Layout';
 import Text from '../base/Text';
 import CubePreview from '../cube/CubePreview';
 import AddFeaturedModal from '../modals/AddFeaturedModal';
 import RemoveFeaturedCubeModal from '../modals/RemoveFeaturedCubeModal';
 import withModal from '../WithModal';
-import UserContext from '../../contexts/UserContext';
 
 const AddFeaturedButton = withModal(Button, AddFeaturedModal);
 const RemoveFeaturedButton = withModal(Button, RemoveFeaturedCubeModal);

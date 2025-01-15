@@ -1,8 +1,8 @@
 import React from 'react';
 
+import Card from '../../../datatypes/Card';
 import { Col, NumCols, Row } from '../base/Layout';
 import FoilCardImage from '../FoilCardImage';
-import Card from '../../datatypes/Card';
 import { CardImageProps } from './CardImage';
 
 export interface CardGridProps {

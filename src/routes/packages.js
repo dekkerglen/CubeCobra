@@ -2,7 +2,7 @@ const express = require('express');
 
 const { render, redirect } = require('../util/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
-const carddb = require('../util/carddb');
+const { cardFromId } = require('../util/carddb');
 
 const Package = require('../dynamo/models/package');
 const User = require('../dynamo/models/user');
@@ -12,8 +12,6 @@ const router = express.Router();
 router.use(csrfProtection);
 
 const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
-  console.log('getPackages', type, keywords, ascending, sort, lastKey);
-
   let packages = {
     items: [],
     lastKey,
@@ -138,8 +136,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
 
   for (const card of cards) {
     pack.keywords.push(
-      ...carddb
-        .cardFromId(card)
+      ...cardFromId(card)
         .name_lower.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
         .split(' '),
     );

@@ -8,7 +8,7 @@ const { getObject, putObject, deleteObject } = require('../s3client');
 const { getHashRowsForMetadata } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
 const User = require('./user');
-const carddb = require('../../util/carddb');
+import { cardFromId, getPlaceholderCard } from '../../util/carddb';
 const cloudwatch = require('../../util/cloudwatch');
 
 const DEFAULT_BASICS = [
@@ -101,12 +101,12 @@ const addDetails = (cards) => {
   for (let i = 0; i < cards.length; i++) {
     if (cards[i]) {
       cards[i].details = {
-        ...carddb.cardFromId(cards[i].cardID),
+        ...cardFromId(cards[i].cardID),
       };
       cards[i].index = i;
     } else {
       cards[i] = {
-        details: carddb.getPlaceholderCard(null),
+        details: getPlaceholderCard(null),
         index: i,
       };
     }
@@ -185,7 +185,7 @@ const numNull = (arr) => {
   return parsed.filter((card) => card === null).length;
 };
 
-module.exports = {
+const exportData = {
   getCards,
   updateCards: async (id, newCards) => {
     const nullCards = numNull(newCards.mainboard) + numNull(newCards.maybeboard);
@@ -225,8 +225,8 @@ module.exports = {
     await client.delete({ id });
     await deleteObject(process.env.DATA_BUCKET, `cube/${id}.json`);
   },
-  getById: async (id, skipCache = false) => {
-    const byId = await client.get(id, skipCache);
+  getById: async (id) => {
+    const byId = await client.get(id);
     if (byId.Item) {
       return hydrate(byId.Item);
     }
@@ -234,7 +234,7 @@ module.exports = {
     const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
     if (byShortId.items.length > 0) {
       const cubeId = byShortId.items[0].cube;
-      const query = await client.get(cubeId, skipCache);
+      const query = await client.get(cubeId);
       return hydrate(query.Item);
     }
 
@@ -453,3 +453,7 @@ module.exports = {
   PRICE_VISIBILITY,
   FIELDS,
 };
+
+module.exports = exportData;
+
+export default exportData;

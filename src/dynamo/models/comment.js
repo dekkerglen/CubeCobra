@@ -35,6 +35,7 @@ const client = createClient({
     [FIELDS.ID]: 'S',
     [FIELDS.DATE]: 'N',
     [FIELDS.PARENT]: 'S',
+    [FIELDS.OWNER]: 'S',
   },
   FIELDS,
 });

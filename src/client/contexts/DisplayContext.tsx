@@ -1,8 +1,9 @@
 import React, { ReactNode, useCallback, useState } from 'react';
 
-import useLocalStorage from '../hooks/useLocalStorage';
-import { NumCols } from '../components/base/Layout';
 import Query from 'utils/Query';
+
+import { NumCols } from '../components/base/Layout';
+import useLocalStorage from '../hooks/useLocalStorage';
 
 export interface DisplayContextValue {
   showCustomImages: boolean;

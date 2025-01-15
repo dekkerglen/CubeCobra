@@ -1,3 +1,5 @@
+import React from 'react';
+
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
@@ -5,7 +7,6 @@ import DynamicFlash from 'components/DynamicFlash';
 import PasswordResetForm from 'components/forms/PaswordResetForm';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import React from 'react';
 
 interface PasswordResetPageProps {
   loginCallback?: string;

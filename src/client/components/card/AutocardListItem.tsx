@@ -2,13 +2,14 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import cx from 'classnames';
 
-import withAutocard from '../WithAutocard';
+import DisplayContext from 'contexts/DisplayContext';
+import { getCardTagColorClass } from 'utils/Util';
+
+import Card from '../../../datatypes/Card';
 import TagColorContext from '../../contexts/TagColorContext';
 import UserContext from '../../contexts/UserContext';
-import Card from '../../datatypes/Card';
-import { getCardTagColorClass } from 'utils/Util';
 import { ListGroupItem } from '../base/ListGroup';
-import DisplayContext from 'contexts/DisplayContext';
+import withAutocard from '../WithAutocard';
 
 export interface AutocardListItemProps {
   card: Card;
@@ -40,7 +41,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
-  const {showInlineTagEmojis} = useContext(DisplayContext);
+  const { showInlineTagEmojis } = useContext(DisplayContext);
   const [cardName, cardId] = useMemo(
     () =>
       card && card.details ? [card.details.name, card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK],
@@ -68,7 +69,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     return getCardTagColorClass(tagColors, card);
   }, [card, tagColors, user]);
 
-  const findEmojisInTags = (tags: string[]):string[] => {
+  const findEmojisInTags = (tags: string[]): string[] => {
     const emojiRegex = /\p{Emoji}/gu;
     const emojis: string[] = [];
 
@@ -82,11 +83,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     return emojis;
   };
 
-  const emojiTags = useMemo(
-    () =>
-      card && card.tags ? findEmojisInTags(card.tags) : [],
-    [card]
-  )
+  const emojiTags = useMemo(() => (card && card.tags ? findEmojisInTags(card.tags) : []), [card]);
 
   return (
     <AutocardDiv
@@ -100,10 +97,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     >
       {children && <span>{children}</span>}
       <span>{cardName}</span>
-      {showInlineTagEmojis ?
-        <span className="text-right">{emojiTags.join('')}</span>
-        : ''
-      }
+      {showInlineTagEmojis ? <span className="text-right">{emojiTags.join('')}</span> : ''}
     </AutocardDiv>
   );
 };

@@ -4,9 +4,10 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
-import { formatDateTime } from 'utils/Date';
-import Pagination from '../base/Pagination';
 import { CSRFContext } from 'contexts/CSRFContext';
+import { formatDateTime } from 'utils/Date';
+
+import Pagination from '../base/Pagination';
 
 interface CubeHistoryProps {
   changes: Record<string, any>[];

@@ -1,19 +1,20 @@
 import React from 'react';
 
-import { Card, CardBody } from '../base/Card';
-import CardGrid from '../card/CardGrid';
-import CardType from '../../datatypes/CardDetails';
-import { TabbedView } from '../base/Tabs';
+import { cardId, detailsToCard } from 'utils/cardutil';
+
+import { CardDetails } from '../../../datatypes/Card';
 import useQueryParam from '../../hooks/useQueryParam';
-import { cardId, detailsToCard } from 'utils/Card';
-import Text from '../base/Text';
+import { Card, CardBody } from '../base/Card';
 import { Flexbox } from '../base/Layout';
+import { TabbedView } from '../base/Tabs';
+import Text from '../base/Text';
+import CardGrid from '../card/CardGrid';
 
 interface ContentProps {
-  top: CardType[];
-  creatures: CardType[];
-  spells: CardType[];
-  other: CardType[];
+  top: CardDetails[];
+  creatures: CardDetails[];
+  spells: CardDetails[];
+  other: CardDetails[];
 }
 
 const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
@@ -26,8 +27,9 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
         <CardGrid
           cards={top.map(detailsToCard)}
           xs={3}
-          lg={4}
-          xxl={6}
+          md={4}
+          lg={6}
+          xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
         />
@@ -38,8 +40,9 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
         <CardGrid
           cards={creatures.map(detailsToCard)}
           xs={3}
-          lg={4}
-          xxl={6}
+          md={4}
+          lg={6}
+          xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
         />
@@ -50,8 +53,9 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
         <CardGrid
           cards={spells.map(detailsToCard)}
           xs={3}
-          lg={4}
-          xxl={6}
+          md={4}
+          lg={6}
+          xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
         />
@@ -62,8 +66,9 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
         <CardGrid
           cards={other.map(detailsToCard)}
           xs={3}
-          lg={4}
-          xxl={6}
+          md={4}
+          lg={6}
+          xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
         />
@@ -74,22 +79,22 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
 
 interface CorrelationProps {
   draftedWith: {
-    top: CardType[];
-    creatures: CardType[];
-    spells: CardType[];
-    other: CardType[];
+    top: CardDetails[];
+    creatures: CardDetails[];
+    spells: CardDetails[];
+    other: CardDetails[];
   };
   cubedWith: {
-    top: CardType[];
-    creatures: CardType[];
-    spells: CardType[];
-    other: CardType[];
+    top: CardDetails[];
+    creatures: CardDetails[];
+    spells: CardDetails[];
+    other: CardDetails[];
   };
   synergistic: {
-    top: CardType[];
-    creatures: CardType[];
-    spells: CardType[];
-    other: CardType[];
+    top: CardDetails[];
+    creatures: CardDetails[];
+    spells: CardDetails[];
+    other: CardDetails[];
   };
 }
 

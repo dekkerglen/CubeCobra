@@ -51,7 +51,7 @@ const config = {
       analytics: path.resolve(__dirname, 'src/client/analytics/'),
       components: path.resolve(__dirname, 'src/client/components/'),
       contexts: path.resolve(__dirname, 'src/client/contexts/'),
-      datatypes: path.resolve(__dirname, 'src/client/datatypes/'),
+      datatypes: path.resolve(__dirname, 'datatypes/'),
       drafting: path.resolve(__dirname, 'src/client/drafting/'),
       filtering: path.resolve(__dirname, 'src/client/filtering/'),
       generated: path.resolve(__dirname, 'src/client/generated/'),
@@ -60,7 +60,7 @@ const config = {
       markdown: path.resolve(__dirname, 'src/client/markdown/'),
       pages: path.resolve(__dirname, 'src/client/pages/'),
       res: path.resolve(__dirname, 'src/client/res/'),
-      utils: path.resolve(__dirname, 'src/client/utils/')
+      utils: path.resolve(__dirname, 'src/client/utils/'),
     }
   },
 };
@@ -206,13 +206,6 @@ export const serverConfig = merge(config, {
     'pages/FeaturedCubesQueuePage': './src/client/pages/FeaturedCubesQueuePage.tsx',
     'pages/PackagesPage': './src/client/pages/PackagesPage.tsx',
     'pages/RecentlyUpdateCubesPage': './src/client/pages/RecentlyUpdateCubesPage.tsx',
-    'drafting/createdraft': './src/client/drafting/createdraft.ts',
-    'drafting/draftutil': './src/client/drafting/draftutil.ts',
-    'filtering/FilterCards': './src/client/filtering/FilterCards.ts',
-    'utils/Card': './src/client/utils/Card.ts',
-    'utils/Sort': './src/client/utils/Sort.ts',
-    'utils/Util': './src/client/utils/Util.ts',
-    'markdown/parser': './src/client/markdown/parser.js',
   },
   output: {
     filename: '[name].js',

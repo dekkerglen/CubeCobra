@@ -1,11 +1,12 @@
 import React from 'react';
+
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import Link from 'components/base/Link';
 
 interface DonatePageProps {
   loginCallback?: string;

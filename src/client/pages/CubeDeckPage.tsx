@@ -1,29 +1,30 @@
-import { Col, Flexbox, Row } from 'components/base/Layout';
-import Cube from 'datatypes/Cube';
-import Draft from 'datatypes/Draft';
 import React, { useContext } from 'react';
 
+import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+
+import Button from 'components/base/Button';
+import Collapse from 'components/base/Collapse';
+import Controls from 'components/base/Controls';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
+import NavMenu from 'components/base/NavMenu';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
+import Select from 'components/base/Select';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
+import SampleHandModal from 'components/modals/SampleHandModal';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
-import Controls from 'components/base/Controls';
-import Link from 'components/base/Link';
-import NavMenu from 'components/base/NavMenu';
-import Select from 'components/base/Select';
-import SampleHandModal from 'components/modals/SampleHandModal';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
+import Cube from 'datatypes/Cube';
+import Draft from 'datatypes/Draft';
+import User from 'datatypes/User';
 import useQueryParam from 'hooks/useQueryParam';
+import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import User from 'datatypes/User';
-import ResponsiveDiv from 'components/base/ResponsiveDiv';
-import Collapse from 'components/base/Collapse';
-import Button from 'components/base/Button';
-import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
-import useToggle from 'hooks/UseToggle';
 
 const SampleHandModalLink = withModal(Link, SampleHandModal);
 
@@ -42,7 +43,7 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
   const controls = (
     <>
       {user && draft.owner && user.id === (draft.owner as User).id && (
-        <Link href={`/cube/deck/deckbuilder/${draft.id}`}>Edit</Link>
+        <Link href={`/draft/deckbuilder/${draft.id}`}>Edit</Link>
       )}
       <SampleHandModalLink
         modalprops={{

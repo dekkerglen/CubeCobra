@@ -10,7 +10,7 @@ import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hl
 import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
 import { isInternalURL, isSamePageURL } from 'utils/Util';
 
-import CardDetails from '../datatypes/CardDetails';
+import { CardDetails } from '../../datatypes/Card';
 import { Flexbox } from './base/Layout';
 import Link, { LinkProps } from './base/Link';
 import Text from './base/Text';

@@ -4,8 +4,8 @@ import Banner from 'components/Banner';
 import BlogPost from 'components/blog/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import MainLayout from 'layouts/MainLayout';
 import BlogPostType from 'datatypes/BlogPost';
+import MainLayout from 'layouts/MainLayout';
 
 interface BlogPostPageProps {
   post: BlogPostType;

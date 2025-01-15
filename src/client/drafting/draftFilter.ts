@@ -1,4 +1,4 @@
-import Card from '../datatypes/Card';
+import Card from '../../datatypes/Card';
 import { makeFilter, operatorsRegex } from '../filtering/FilterCards';
 
 export interface Filter {

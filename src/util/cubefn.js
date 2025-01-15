@@ -6,7 +6,8 @@ const fetch = require('node-fetch');
 const _ = require('lodash')
 const sharp = require('sharp');
 const Cube = require('../dynamo/models/cube');
-const { convertFromLegacyCardColorCategory } = require('../client/utils/Card');
+const { convertFromLegacyCardColorCategory } = require('../client/utils/cardutil');
+const { cardFromId, allVersions, reasonableId } = require('../util/carddb');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../client/drafting/createdraft');
@@ -61,26 +62,26 @@ function cardIsLegal(card, legality) {
   return card.legalities[legality] === 'legal' || card.legalities[legality] === 'banned';
 }
 
-function getCubeTypes(cards, carddb) {
+function getCubeTypes(cards) {
   let pauper = true;
   let peasant = false;
   let type = FORMATS.length - 1;
   for (const card of cards) {
-    if (pauper && !cardIsLegal(carddb.cardFromId(card.cardID), 'Pauper')) {
+    if (pauper && !cardIsLegal(cardFromId(card.cardID), 'Pauper')) {
       pauper = false;
       peasant = true;
     }
     if (!pauper && peasant) {
       // check rarities of all card versions
-      const versions = carddb.allVersions(carddb.cardFromId(card.cardID));
+      const versions = allVersions(cardFromId(card.cardID));
       if (versions) {
-        const rarities = versions.map((id) => carddb.cardFromId(id).rarity);
+        const rarities = versions.map((id) => cardFromId(id).rarity);
         if (!rarities.includes('common') && !rarities.includes('uncommon')) {
           peasant = false;
         }
       }
     }
-    while (type > 0 && !cardIsLegal(carddb.cardFromId(card.cardID), intToLegality(type))) {
+    while (type > 0 && !cardIsLegal(cardFromId(card.cardID), intToLegality(type))) {
       type -= 1;
     }
   }
@@ -88,8 +89,8 @@ function getCubeTypes(cards, carddb) {
   return { pauper, peasant, type };
 }
 
-function setCubeType(cube, carddb) {
-  const { pauper, peasant, type } = getCubeTypes(cube.cards, carddb);
+function setCubeType(cube) {
+  const { pauper, peasant, type } = getCubeTypes(cube.cards);
 
   cube.type = intToLegality(type);
   if (pauper) {
@@ -105,7 +106,7 @@ function setCubeType(cube, carddb) {
     cube.categories = Array.from(new Set(`${cube.type}`.toLowerCase().split(' ')));
   }
 
-  cube.cardOracles = Array.from(new Set(cube.cards.map((card) => carddb.cardFromId(card.cardID).oracle_id)));
+  cube.cardOracles = Array.from(new Set(cube.cards.map((card) => cardFromId(card.cardID).oracle_id)));
   cube.keywords = `${cube.type} ${cube.name} ${cube.owner_name}`
     .replace(/[^\w\s]/gi, '')
     .toLowerCase()
@@ -195,16 +196,11 @@ function cubeCardTags(cubeCards) {
   return tags;
 }
 
-function maybeCards(cube, carddb) {
-  const maybe = (cube.maybe || []).filter((card) => card.cardID);
-  return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
-}
-
 function camelizeDataRows(data) {
   return data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [_.camelCase(key), value])));
 }
 
-function CSVtoCards(csvString, carddb) {
+function CSVtoCards(csvString) {
   const { data } = Papa.parse(csvString.trim(), { header: true });
   const camelizedRows = camelizeDataRows(data)
   const missing = [];
@@ -249,17 +245,17 @@ function CSVtoCards(csvString, carddb) {
         colorCategory: validatedColorCategory || null,
       };
 
-      const potentialIds = carddb.allVersions(card);
+      const potentialIds = allVersions(card);
       if (potentialIds && potentialIds.length > 0) {
         // First, try to find the correct set.
         const matchingSetAndNumber = potentialIds.find((id) => {
-          const dbCard = carddb.cardFromId(id);
+          const dbCard = cardFromId(id);
           return (
             upperSet === dbCard.set.toUpperCase() && card.collector_number === dbCard.collector_number.toUpperCase()
           );
         });
-        const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === upperSet);
-        const nonPromo = potentialIds.find(carddb.reasonableId);
+        const matchingSet = potentialIds.find((id) => cardFromId(id).set.toUpperCase() === upperSet);
+        const nonPromo = potentialIds.find(reasonableId);
         const first = potentialIds[0];
         card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
         if (typeof maybeboard === 'string' && maybeboard.toLowerCase() === 'true') {
@@ -408,7 +404,7 @@ const methods = {
       selfClosing: ['br'],
     });
   },
-  generatePack: async (cube, cards, carddb, seed) => {
+  generatePack: async (cube, cards, seed) => {
     if (!seed) {
       seed = Date.now().toString();
     }
@@ -419,7 +415,7 @@ const methods = {
       seed,
       pack: draft.InitialState[0][0].cards.map((cardIndex) => ({
         ...draft.cards[cardIndex],
-        details: carddb.cardFromId(draft.cards[cardIndex].cardID),
+        details: cardFromId(draft.cards[cardIndex].cardID),
       })),
     };
   },
@@ -432,7 +428,6 @@ const methods = {
   abbreviate,
   buildTagColors,
   cubeCardTags,
-  maybeCards,
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
