@@ -192,7 +192,8 @@ export function getIdsFromName(name: string): string[] {
   if (name.includes('[') && name.includes(']')) {
     name = name.toLowerCase();
     const split = name.split('[');
-    return getIdsFromName(split[0])
+
+    return (getIdsFromName(split[0]) || [])
       .map((id) => cardFromId(id))
       .filter((card) => getNameForComparison(card.full_name) === getNameForComparison(name))
       .map((card) => card.scryfall_id);
