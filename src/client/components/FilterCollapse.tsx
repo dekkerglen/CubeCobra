@@ -94,13 +94,28 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
               }
             }}
           />
-          <Button color="primary" onClick={() => setFilterInput(searchFilterInput || '')}>
-            <span className="px-4 whitespace-nowrap">{buttonLabel}</span>
-          </Button>
+          <ResponsiveDiv md>
+            <Button color="primary" onClick={() => setFilterInput(searchFilterInput || '')}>
+              <span className="px-4 whitespace-nowrap">{buttonLabel}</span>
+            </Button>
+          </ResponsiveDiv>
+          <ResponsiveDiv md baseVisible={true}>
+            <Button color="primary" onClick={() => setFilterInput(searchFilterInput || '')} className="h-full">
+              <span className="px-1 whitespace-nowrap">{buttonLabel}</span>
+            </Button>
+          </ResponsiveDiv>
           {showReset && (
             <ResponsiveDiv md>
               <Button color="danger" onClick={reset} className="h-full">
                 <span className="px-4 whitespace-nowrap">Reset</span>
+              </Button>
+            </ResponsiveDiv>
+          )}
+          {/* For mobile */}
+          {showReset && (
+            <ResponsiveDiv md baseVisible={true}>
+              <Button color="danger" onClick={reset} className="h-full">
+                <span className="px-1 whitespace-nowrap">Reset</span>
               </Button>
             </ResponsiveDiv>
           )}
