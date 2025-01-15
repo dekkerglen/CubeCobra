@@ -20,7 +20,7 @@ interface ClientConfig {
   name: string;
   partitionKey: string;
   attributes: Record<string, string>;
-  indexes: Array<IndexConfig>;
+  indexes?: Array<IndexConfig>;
   sortKey?: string;
 }
 
