@@ -1,18 +1,45 @@
 // Load Environment Variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const uuid = require('uuid');
-const client = require('./client');
-const documentClient = require('./documentClient');
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { v4 as uuidv4 } from 'uuid';
 
-const cache = require('./cache');
+import client from './client';
+import documentClient from './documentClient';
 
-const tableName = (name) => `${process.env.DYNAMO_PREFIX}_${name}`;
+const tableName = (name: string): string => `${process.env.DYNAMO_PREFIX}_${name}`;
 
-module.exports = function createClient(config) {
+interface IndexConfig {
+  name: string;
+  partitionKey: string;
+  sortKey: string;
+}
+
+interface ClientConfig {
+  name: string;
+  partitionKey: string;
+  attributes: Record<string, string>;
+  indexes: Array<IndexConfig>;
+  sortKey?: string;
+}
+
+interface ClientInterface {
+  createTable: () => Promise<DocumentClient.CreateTableOutput>;
+  get: (id: string) => Promise<DocumentClient.GetItemOutput>;
+  scan: (params: Omit<DocumentClient.ScanInput, 'TableName'>) => Promise<DocumentClient.ScanOutput>;
+  query: (params: Omit<DocumentClient.QueryInput, 'TableName'>) => Promise<DocumentClient.QueryOutput>;
+  put: (Item: DocumentClient.PutItemInputAttributeMap) => Promise<DocumentClient.PutItemOutput>;
+  delete: (key: DocumentClient.Key) => Promise<void>;
+  batchGet: (ids: string[]) => Promise<any[]>;
+  batchPut: (documents: DocumentClient.AttributeMap[]) => Promise<void>;
+  batchDelete: (keys: DocumentClient.Key[]) => Promise<void>;
+}
+
+const createClient = (config: ClientConfig): ClientInterface => {
   return {
-    createTable: async () => {
-      const KeySchema = [
+    createTable: async (): Promise<DocumentClient.CreateTableOutput> => {
+      const KeySchema: DocumentClient.KeySchema = [
         {
           AttributeName: config.partitionKey,
           KeyType: 'HASH',
@@ -26,7 +53,7 @@ module.exports = function createClient(config) {
         });
       }
 
-      const params = {
+      const params: DocumentClient.CreateTableInput = {
         TableName: tableName(config.name),
         AttributeDefinitions: Object.entries(config.attributes).map(([key, value]) => ({
           AttributeName: key,
@@ -37,7 +64,7 @@ module.exports = function createClient(config) {
         Tags: [
           {
             Key: 'environment',
-            Value: process.env.DYNAMO_PREFIX,
+            Value: process.env.DYNAMO_PREFIX || '',
           },
         ],
       };
@@ -79,15 +106,9 @@ module.exports = function createClient(config) {
 
       return client.createTable(params).promise();
     },
-    get: async (id) => {
+    get: async (id: string): Promise<DocumentClient.GetItemOutput> => {
       if (!id) {
         throw new Error(`Error getting item from table ${config.name} with, id is null`);
-      }
-
-      const item = cache.get(`${config.name}:${id}`);
-
-      if (item) {
-        return { Item: item };
       }
 
       try {
@@ -100,16 +121,12 @@ module.exports = function createClient(config) {
           })
           .promise();
 
-        if (result.Item) {
-          cache.put(`${config.name}:${id}`, result.Item);
-        }
-
         return result;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(`Error getting item from table ${config.name} with id ${id}: ${error.message}`);
       }
     },
-    scan: async (params) => {
+    scan: async (params: Omit<DocumentClient.ScanInput, 'TableName'>): Promise<DocumentClient.ScanOutput> => {
       try {
         return await documentClient
           .scan({
@@ -117,54 +134,35 @@ module.exports = function createClient(config) {
             ...params,
           })
           .promise();
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(`Error scanning table ${config.name}: ${error.message}`);
       }
     },
-    getByKey: async (key) => {
-      try {
-        return await documentClient
-          .get({
-            TableName: tableName(config.name),
-            Key: {
-              ...key,
-            },
-          })
-          .promise();
-      } catch (error) {
-        throw new Error(`Error getting item from table ${config.name} with key ${key}: ${error.message}`);
-      }
-    },
-    put: async (Item, skipCache = false) => {
+    put: async (Item: DocumentClient.PutItemInputAttributeMap): Promise<DocumentClient.PutItemOutput> => {
       try {
         if (!Item[config.partitionKey]) {
           Item = {
-            [config.partitionKey]: uuid.v4(),
+            [config.partitionKey]: uuidv4(),
             ...Item,
           };
         }
 
-        if (!skipCache) {
-          await cache.invalidate(`${config.name}:${Item[config.partitionKey]}`);
-          cache.put(`${config.name}:${Item[config.partitionKey]}`, Item);
-        }
-
         await documentClient.put({ TableName: tableName(config.name), Item }).promise();
         return Item[config.partitionKey];
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(`Error putting item into table ${config.name}: ${error.message}`);
       }
     },
-    query: async (params) => {
+    query: async (params: Omit<DocumentClient.QueryInput, 'TableName'>): Promise<DocumentClient.QueryOutput> => {
       try {
         return await documentClient
           .query({ TableName: tableName(config.name), Limit: params.Limit || 36, ...params })
           .promise();
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(`Error querying table ${config.name}: ${error.message}. Query: ${JSON.stringify(params)}`);
       }
     },
-    delete: async (key) => {
+    delete: async (key: DocumentClient.Key): Promise<void> => {
       try {
         await documentClient
           .delete({
@@ -172,53 +170,45 @@ module.exports = function createClient(config) {
             Key: key,
           })
           .promise();
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(`Error deleting item from table ${config.name} with key ${key}: ${error.message}`);
       }
     },
-    batchGet: async (ids) => {
+    batchGet: async (ids: string[]): Promise<any[]> => {
       try {
         if (ids.length === 0) {
           return [];
         }
 
         const singletonIds = [...new Set(ids)];
+        const results: any[] = [];
 
-        const cacheHits = cache.batchGet(singletonIds.map((id) => `${config.name}:${id}`));
-        const cacheMisses = cacheHits.map((hit, index) => (hit ? null : singletonIds[index])).filter((id) => id);
+        const chunkSize = 25;
+        for (let i = 0; i < singletonIds.length; i += chunkSize) {
+          const chunk = singletonIds.slice(i, i + chunkSize);
 
-        const results = [];
-        for (let i = 0; i < cacheMisses.length; i += 25) {
-          const params = {
+          const params: DocumentClient.BatchGetItemInput = {
             RequestItems: {
               [tableName(config.name)]: {
-                Keys: cacheMisses.slice(i, i + 25).map((id) => ({
+                Keys: chunk.map((id) => ({
                   [config.partitionKey]: id,
                 })),
               },
             },
           };
 
-          const result = await documentClient.batchGet(params).promise();
-          results.push(...result.Responses[tableName(config.name)]);
+          const result: DocumentClient.BatchGetItemOutput = await documentClient.batchGet(params).promise();
+          if (result.Responses) {
+            results.push(...result.Responses[tableName(config.name)]);
+          }
         }
-        return [...cacheHits.filter((hit) => hit), ...results];
-      } catch (error) {
+        return [...results];
+      } catch (error: any) {
         throw new Error(`Error batch getting items from table ${config.name}: ${error.message}`);
       }
     },
-    batchPut: async (documents, skipCache = false) => {
+    batchPut: async (documents: DocumentClient.AttributeMap[]): Promise<void> => {
       try {
-        if (!skipCache) {
-          cache.batchPut(
-            Object.fromEntries(
-              documents.map((document) => [`${config.name}:${document[config.partitionKey]}`, document]),
-            ),
-          );
-
-          await cache.batchInvalidate(documents.map((document) => `${config.name}:${document[config.partitionKey]}`));
-        }
-
         const batches = [];
         for (let i = 0; i < documents.length; i += 25) {
           const batch = documents.slice(i, i + 25).map((document) => ({
@@ -226,7 +216,7 @@ module.exports = function createClient(config) {
               Item: document,
             },
           }));
-          const params = {
+          const params: DocumentClient.BatchWriteItemInput = {
             RequestItems: {
               [tableName(config.name)]: batch,
             },
@@ -235,22 +225,22 @@ module.exports = function createClient(config) {
         }
 
         await Promise.all(batches.map((params) => documentClient.batchWrite(params).promise()));
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(`Error batch putting items into table ${config.name}: ${error.message}`);
       }
     },
-    batchDelete: async (keys) => {
+    batchDelete: async (keys: DocumentClient.Key[]): Promise<void> => {
       try {
-        const batches = [];
+        const batches: DocumentClient.BatchWriteItemInput[] = [];
         for (let i = 0; i < keys.length; i += 25) {
-          const batch = keys.slice(i, i + 25).map((key) => ({
+          const batch: DocumentClient.WriteRequests = keys.slice(i, i + 25).map((key) => ({
             DeleteRequest: {
               Key: {
                 ...key,
               },
             },
           }));
-          const params = {
+          const params: DocumentClient.BatchWriteItemInput = {
             RequestItems: {
               [tableName(config.name)]: batch,
             },
@@ -258,9 +248,11 @@ module.exports = function createClient(config) {
           batches.push(params);
         }
         await Promise.all(batches.map((params) => documentClient.batchWrite(params).promise()));
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(`Error batch deleting items from table ${config.name}: ${error.message}`);
       }
     },
   };
 };
+module.exports = createClient;
+export default createClient;
