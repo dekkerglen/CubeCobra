@@ -11,6 +11,7 @@ jobs/export/
 /.yarn/install-state.gz
 /scripts/convert_tsx.json
 /coverage
+/src/client/generated/
 
 .python-version
 

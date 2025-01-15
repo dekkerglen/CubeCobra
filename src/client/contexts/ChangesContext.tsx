@@ -50,7 +50,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       updateChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [version, updateChanges],
+    [version, updateChanges, setOpenCollapse],
   );
 
   const clearChanges = useCallback(() => {
@@ -67,18 +67,18 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
       if (
         changes.mainboard &&
-        (changes.mainboard.removes.length > 0 ||
-          changes.mainboard.swaps.length > 0 ||
-          changes.mainboard.edits.length > 0)
+        ((changes.mainboard.removes || []).length > 0 ||
+          (changes.mainboard.swaps || []).length > 0 ||
+          (changes.mainboard.edits || []).length > 0)
       ) {
         onlyAdds = false;
       }
 
       if (
         changes.maybeboard &&
-        (changes.maybeboard.removes.length > 0 ||
-          changes.maybeboard.swaps.length > 0 ||
-          changes.maybeboard.edits.length > 0)
+        ((changes.maybeboard.removes || []).length > 0 ||
+          (changes.maybeboard.swaps || []).length > 0 ||
+          (changes.maybeboard.edits || []).length > 0)
       ) {
         onlyAdds = false;
       }
@@ -190,7 +190,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       clearChanges,
       versionMismatch,
     };
-  }, [changes, setChanges]);
+  }, [cards, changes, clearChanges, setChanges, version]);
 
   return <ChangesContext.Provider value={value}>{children}</ChangesContext.Provider>;
 };

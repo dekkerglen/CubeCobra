@@ -17,6 +17,7 @@ const FIELDS = {
   COMPLETE: 'complete',
   NAME: 'name',
   SEAT_NAMES: 'seatNames',
+  DRAFTMANCER_LOG: 'DraftmancerLog',
 };
 
 const TYPES = {
@@ -441,6 +442,7 @@ module.exports = {
       [FIELDS.COMPLETE]: document.complete,
       [FIELDS.NAME]: `${names[0]} ${REVERSE_TYPES[document.type]} of ${cube.name}`,
       [FIELDS.SEAT_NAMES]: names,
+      [FIELDS.DRAFTMANCER_LOG]: document.DraftmancerLog,
     });
 
     for (const seat of document.seats) {

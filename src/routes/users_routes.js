@@ -591,6 +591,11 @@ router.get('/blog/:userid', async (req, res) => {
   try {
     const user = await User.getByIdOrUsername(req.params.userid);
 
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/404');
+    }
+
     const posts = await Blog.getByOwner(req.params.userid, 10);
     const followers = await User.batchGet(user.following || []);
 
