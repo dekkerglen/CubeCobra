@@ -17,10 +17,10 @@ interface AddFeaturedModalProps {
 const AddFeaturedModal: React.FC<AddFeaturedModalProps> = ({ isOpen, setOpen, cubes }) => {
   const [selectedCube, setSelectedCube] = React.useState<string>('');
   const formRef = React.useRef<HTMLFormElement>(null);
-  const formData = React.useMemo(() => ({ cube: selectedCube }), [selectedCube]);
+  const formData = React.useMemo(() => ({ cubeId: selectedCube }), [selectedCube]);
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen}>
+    <Modal isOpen={isOpen} setOpen={setOpen} sm>
       <CSRFForm method="POST" action="/user/queuefeatured" ref={formRef} formData={formData}>
         <ModalHeader setOpen={setOpen}>
           <Text semibold lg>
@@ -30,14 +30,17 @@ const AddFeaturedModal: React.FC<AddFeaturedModalProps> = ({ isOpen, setOpen, cu
         <ModalBody>
           <Select
             id="featuredCube"
-            options={cubes.map((cube) => ({ value: cube.id, label: cube.name }))}
+            options={[
+              { value: '', label: 'Select a Cube' },
+              ...cubes.map((cube) => ({ value: cube.id, label: cube.name })),
+            ]}
             label="Cube"
             value={selectedCube?.toString()}
             setValue={(value) => setSelectedCube(value)}
           />
         </ModalBody>
         <ModalFooter>
-          <Flexbox direction="row" justify="between" className="w-full">
+          <Flexbox direction="row" justify="between" className="w-full" gap="2">
             <Button color="primary" block onClick={() => formRef.current?.submit()}>
               Submit
             </Button>

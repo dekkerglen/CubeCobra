@@ -290,14 +290,21 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
 });
 
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
-  const featured = await FeaturedQueue.querySortedByDate(null, 10000);
-  const cubes = await Cube.batchGet(featured.items.map((f) => f.cube));
-  const sortedCubes = featured.items.map((f) => cubes.find((c) => c.id === f.cube)).filter((c) => c);
+  let featured = [];
+  let lastkey = null;
+
+  do {
+    const response = await FeaturedQueue.querySortedByDate(lastkey);
+    featured = featured.concat(response.items);
+    lastkey = response.lastKey;
+  } while (lastkey);
+
+  const cubes = await Cube.batchGet(featured.map((f) => f.cube));
+  const sortedCubes = featured.map((f) => cubes.find((c) => c.id === f.cube)).filter((c) => c);
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes: sortedCubes,
-    featured,
-    lastRotation: featured.items[0].featuredOn,
+    lastRotation: featured[0].featuredOn,
   });
 });
 

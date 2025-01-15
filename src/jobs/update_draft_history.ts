@@ -1,13 +1,14 @@
 /* eslint-disable no-console */
 import dotenv from 'dotenv';
+
+import 'module-alias/register';
 dotenv.config();
 
 import EloRating from 'elo-rating';
 import fs from 'fs';
 
-import type DraftType from 'datatypes/Draft';
-
 import type { CardAnalytic } from '../datatypes/CubeAnalytic';
+import type DraftType from '../datatypes/Draft';
 import CubeAnalytic from '../dynamo/models/cubeAnalytic';
 import Draft from '../dynamo/models/draft';
 import { initializeCardDb } from '../util/carddb';

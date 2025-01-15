@@ -11,6 +11,7 @@ const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 const { render, redirect } = require('../util/render');
 
+
 // Bring in models
 const User = require('../dynamo/models/user');
 const PasswordReset = require('../dynamo/models/passwordReset');
@@ -820,31 +821,31 @@ router.get('/social', ensureAuth, async (req, res) => {
 });
 
 router.post('/queuefeatured', ensureAuth, async (req, res) => {
-  const redirect = '/user/account?nav=patreon';
+  const redirectTo = '/user/account?nav=patreon';
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
-    return redirect(req, res, redirect);
+    return redirect(req, res, redirectTo);
   }
 
   const cube = await Cube.getById(req.body.cubeId);
   if (!cube) {
     req.flash('danger', 'Cube not found');
-    return redirect(req, res, redirect);
+    return redirect(req, res, redirectTo);
   }
   if (cube.owner.id !== req.user.id) {
     req.flash('danger', 'Only an owner of a cube can add it to the queue');
-    return redirect(req, res, redirect);
+    return redirect(req, res, redirectTo);
   }
 
   if (cube.visibility === Cube.VISIBILITY.PRIVATE) {
     req.flash('danger', 'Private cubes cannot be featured');
-    return redirect(req, res, redirect);
+    return redirect(req, res, redirectTo);
   }
 
   const patron = await Patron.getById(req.user.id);
   if (!fq.canBeFeatured(patron)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');
-    return redirect(req, res, redirect);
+    return redirect(req, res, redirectTo);
   }
 
   const shouldUpdate = await fq.doesUserHaveFeaturedCube(req.user.id);
@@ -861,7 +862,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     req.flash('danger', err.message);
   }
 
-  return redirect(req, res, redirect);
+  return redirect(req, res, redirectTo);
 });
 
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
