@@ -2,12 +2,12 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
 
+import Card, { BoardType, CardStatus } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/cardutil';
 
 import AutocardContext from '../contexts/AutocardContext';
-import Card, { BoardType, CardStatus } from '../datatypes/Card';
 import { getLabels } from '../utils/Sort';
 import Button from './base/Button';
 import Input from './base/Input';

@@ -116,9 +116,13 @@ export function isNumField(field: string): field is NumField {
   return numFields.includes(field as NumField);
 }
 
+export const CARD_STATUSES = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied', 'Borrowed'] as const;
+
 export const colorFields = ['color', 'colorIdentity'] as const;
 
 export type ColorField = (typeof colorFields)[number];
+
+export type CardStatus = (typeof CARD_STATUSES)[number];
 
 export function isColorField(field: string): field is ColorField {
   return colorFields.includes(field as ColorField);

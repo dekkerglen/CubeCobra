@@ -3,7 +3,7 @@ const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 
-const { CARD_STATUSES } = require('../../client/datatypes/Card');
+const { CARD_STATUSES } = require('../../datatypes/Card');
 
 const miscutil = require('../../client/utils/Util');
 const {
