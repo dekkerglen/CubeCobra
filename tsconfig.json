@@ -25,6 +25,7 @@
       "pages/*": ["src/client/pages/*"],
       "res/*": ["src/client/res/*"],
       "utils/*": ["src/client/utils/*"],
+      "src/*": ["src/*"]
     },
     "module": "commonjs",
     "moduleResolution": "node",

@@ -1,6 +1,6 @@
 {
   "name": "cubecobra",
-  "version": "1.0.43",
+  "version": "1.0.44",
   "description": "",
   "private": true,
   "main": "app.js",
@@ -16,7 +16,7 @@
     "bash": "bash",
     "nodemon": "nodemon --exec ts-node --ignore src/client --ignore public --ignore private --ignore temp --ignore dist/pages --ignore __tests__ src/app.js",
     "webpack": "NODE_OPTIONS=--max_old_space-size=18192 webpack --mode production --config webpack.prod.mjs",
-    "webpack-dev-server": "npx webpack serve --config webpack.dev.mjs",
+    "webpack-dev-server": "NODE_OPTIONS=--max_old_space-size=18192 npx webpack serve --config webpack.dev.mjs",
     "test": "npm run test-loud --silent",
     "test:watch": "npm run webpack --watch & npm run test-loud --watch --verbose false",
     "nearley": "sh nearley/helper.sh",
@@ -44,7 +44,7 @@
     "setup:local:files": "node scripts/create_local_files.js",
     "setup:local:db": "node --max-old-space-size=8192 scripts/createTables.js",
     "start:dev": "npm run start:localstack && npm run devstart",
-    "publish": "npm run build && node ./scripts/publish.js",    
+    "publish": "npm run build && node ./scripts/publish.js",
     "postinstall": "node ./scripts/setup-aliases.js"
   },
   "_moduleAliases": {
@@ -159,8 +159,6 @@
     "serialize-javascript": "^6.0.2",
     "sharp": "^0.33.5",
     "shuffle-seed": "^1.1.6",
-    "socket.io": "^4.7.2",
-    "socket.io-client": "^4.7.2",
     "stream": "^0.0.3",
     "stream-chain": "^3.3.2",
     "stream-json": "^1.9.1",

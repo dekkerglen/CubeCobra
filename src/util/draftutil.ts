@@ -1,6 +1,6 @@
 import { cardCmc, cardType } from '../client/utils/cardutil';
 import { cmcColumn } from '../client/utils/Util';
-import Draft from '../datatypes/Draft';
+import Draft, { DraftStep } from '../datatypes/Draft';
 
 interface Step {
   action: string;
@@ -258,7 +258,7 @@ export const getDefaultPosition = (card: any, picks: any[][][]): [number, number
   return [row, col, colIndex];
 };
 
-export const stepListToTitle = (steps: Step[]): string => {
+export const stepListToTitle = (steps: DraftStep[]): string => {
   if (steps.length <= 1) {
     return 'Finishing up draft...';
   }
@@ -288,60 +288,6 @@ export const stepListToTitle = (steps: Step[]): string => {
   }
 
   return 'Making random selection...';
-};
-
-export const draftStateToTitle = (
-  draft: Draft,
-  picks: any[][][],
-  trashed: any[],
-  loading: boolean,
-  stepQueue: Step[],
-): string => {
-  let stepText = stepListToTitle(stepQueue);
-  // get count of picks
-  const totalPicks = picks.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
-  // get count of trashes
-  const totalTrashed = trashed.length;
-
-  let pack = 1;
-  let pick = 1;
-
-  if (!draft.InitialState) {
-    return '';
-  }
-
-  const steplist = getStepList(draft.InitialState);
-  let pickCount = 0;
-  let trashCount = 0;
-
-  for (const step of steplist) {
-    if (step.action === 'endpack') {
-      pack += 1;
-      pick = 1;
-    } else if (step.action === 'pick' || step.action === 'pickrandom') {
-      if (totalPicks <= pickCount && totalTrashed <= trashCount) {
-        break;
-      }
-      pickCount += 1;
-      pick += 1;
-    } else if (step.action === 'trash' || step.action === 'trashrandom') {
-      if (totalPicks <= pickCount && totalTrashed <= trashCount) {
-        break;
-      }
-      trashCount += 1;
-      pick += 1;
-    }
-  }
-
-  if (!stepText.includes('Waiting') && loading) {
-    stepText = 'Waiting for cards...';
-  }
-
-  if (stepText.includes('Finishing up draft')) {
-    return stepText;
-  }
-
-  return `Pack ${pack} Pick ${pick}: ${stepText}`;
 };
 
 export const getCardCol: (draft: Draft, cardIndex: number) => number = (draft: Draft, cardIndex: number) =>

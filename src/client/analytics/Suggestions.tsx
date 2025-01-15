@@ -1,16 +1,16 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import CubeContext from '../contexts/CubeContext';
-import Suggestion from './Suggestion';
-import ImageSuggestion from './ImageSuggestion';
-import FilterContext from '../contexts/FilterContext';
 import CardType from '../../datatypes/Card';
+import Button from '../components/base/Button';
+import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Checkbox from '../components/base/Checkbox';
 import { Col, Flexbox, Row } from '../components/base/Layout';
-import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Text from '../components/base/Text';
-import Button from '../components/base/Button';
 import { CSRFContext } from '../contexts/CSRFContext';
+import CubeContext from '../contexts/CubeContext';
+import FilterContext from '../contexts/FilterContext';
+import ImageSuggestion from './ImageSuggestion';
+import Suggestion from './Suggestion';
 
 const PAGE_SIZE = 100;
 
@@ -57,7 +57,7 @@ const Suggestions: React.FC = () => {
       setAddsLoading(false);
     };
     run();
-  }, [cube.id, filterInput]);
+  }, [csrfFetch, cube.id, filterInput]);
 
   useEffect(() => {
     const run = async () => {
@@ -81,7 +81,7 @@ const Suggestions: React.FC = () => {
       setCutsLoading(false);
     };
     run();
-  }, [cube.id, filterInput]);
+  }, [csrfFetch, cube.id, filterInput]);
 
   const loadMoreAdds = useCallback(async () => {
     setAddsLoading(true);
@@ -101,7 +101,7 @@ const Suggestions: React.FC = () => {
     const json = await res.json();
     setAddCards([...addCards, ...json.adds]);
     setAddsLoading(false);
-  }, [addCards, cube.id, filterInput]);
+  }, [addCards, csrfFetch, cube.id, filterInput]);
 
   const cardsToUse = maybeOnly ? addsInMaybe : addCards;
   const reversedCuts = [...cutCards].reverse();

@@ -43,7 +43,7 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
   const controls = (
     <>
       {user && draft.owner && user.id === (draft.owner as User).id && (
-        <Link href={`/cube/deck/deckbuilder/${draft.id}`}>Edit</Link>
+        <Link href={`/draft/deckbuilder/${draft.id}`}>Edit</Link>
       )}
       <SampleHandModalLink
         modalprops={{

@@ -2,7 +2,7 @@ import Card from './Card';
 import DraftSeat from './DraftSeat';
 import User from './User';
 
-export type DraftAction = 'pick' | 'pass' | 'trash' | 'pickrandom' | 'trashrandom';
+export type DraftAction = 'pick' | 'pass' | 'trash' | 'pickrandom' | 'trashrandom' | 'endpack';
 
 export type DraftStep = {
   action: DraftAction;

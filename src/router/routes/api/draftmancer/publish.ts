@@ -193,6 +193,7 @@ const handler = async (req: Request, res: Response) => {
       cubeOwner: cube.owner,
       date: new Date().valueOf(),
       complete: true,
+      DraftmancerLog: draftmancerLog,
     };
 
     const draftId = await Draft.put(draft);

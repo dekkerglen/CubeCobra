@@ -18,6 +18,7 @@ if (isProduction) {
     pages: path.join(__dirname, '../build/client/pages'),
     res: path.join(__dirname, '../build/client/res'),
     utils: path.join(__dirname, '../build/client/utils'),
+    src: path.join(__dirname, '../build'),
   });
 } else {
   moduleAlias.addAliases({
@@ -34,5 +35,6 @@ if (isProduction) {
     pages: path.join(__dirname, '../src/client/pages'),
     res: path.join(__dirname, '../src/client/res'),
     utils: path.join(__dirname, '../src/client/utils'),
+    src: path.join(__dirname, '../src'),
   });
 }

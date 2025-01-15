@@ -182,7 +182,7 @@ export const createDraft = (
   format: DraftFormat,
   cubeCards: Card[],
   seats: number,
-  user: User,
+  user?: User,
   seed: string | false = false,
 ): Draft => {
   if (!seed) {
@@ -212,7 +212,7 @@ export const createDraft = (
     basics: [],
     id: '',
     type: 'd',
-    owner: user.id,
+    owner: user?.id,
     cubeOwner: cube.owner,
     date: new Date(),
     name: '',
@@ -221,7 +221,8 @@ export const createDraft = (
 
   draft.seats = draft.InitialState!.map((_, seatIndex) => ({
     bot: seatIndex !== 0,
-    name: seatIndex === 0 ? user.username : `Bot ${seatIndex}`,
+    owner: seatIndex === 0 ? user?.id : '',
+    name: seatIndex === 0 ? user?.username : `Bot ${seatIndex}`,
     mainboard: [new Array(8).fill([]), new Array(8).fill([])], // organized draft picks
     sideboard: [new Array(8).fill([]), new Array(8).fill([])],
     pickorder: [],

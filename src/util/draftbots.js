@@ -139,7 +139,7 @@ const calculateBasics = (mainboard, basics) => {
   return result;
 };
 
-const deckbuild = (pool, basics) => {
+export const deckbuild = (pool, basics) => {
   const poolOracles = pool.map((card) => card.oracle_id);
 
   const result = build(poolOracles);

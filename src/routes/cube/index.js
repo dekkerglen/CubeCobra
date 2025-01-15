@@ -3,7 +3,6 @@ const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 
-const createdraft = require('../../client/drafting/createdraft');
 const miscutil = require('../../client/utils/Util');
 const {
   getIdsFromName,
@@ -13,8 +12,6 @@ const { render, redirect } = require('../../util/render');
 const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');
 const util = require('../../util/util');
 const generateMeta = require('../../util/meta');
-const { createLobby } = require('../../util/multiplayerDrafting');
-const { dumpDraft } = require('../../util/multiplayerDrafting');
 
 const {
   generatePack,
@@ -47,12 +44,6 @@ router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));
 
-
-router.get('/dumpdraft/:id', async (req, res) => {
-  const dump = await dumpDraft(req.params.id);
-
-  return res.status(200).send(dump);
-});
 
 router.post('/add', ensureAuth, recaptcha, async (req, res) => {
   try {
@@ -1365,91 +1356,7 @@ router.post(
         );
       }
 
-      return redirect(req, res, `/cube/deck/deckbuilder/${deckId}`);
-    } catch (err) {
-      return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
-    }
-  },
-);
-
-router.post(
-  '/startdraft/:id',
-  ensureAuth,
-  body('id').toInt(),
-  body('botsOnly').toBoolean(),
-  body('seats').toInt({
-    min: 2,
-    max: 16,
-  }),
-  body('packs').toInt({
-    min: 1,
-    max: 36,
-  }),
-  body('cards').toInt({
-    min: 1,
-    max: 90,
-  }),
-  async (req, res) => {
-    try {
-      const cube = await Cube.getById(req.params.id);
-
-      if (!isCubeViewable(cube, req.user)) {
-        req.flash('danger', 'Cube not found');
-        return redirect(req, res, '/404');
-      }
-
-      const cubeCards = await Cube.getCards(req.params.id);
-      const { mainboard } = cubeCards;
-
-      if (mainboard.length === 0) {
-        // This is a 4XX error, not a 5XX error
-        req.flash('danger', 'This cube has no cards!');
-        return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
-      }
-
-      // setup draft
-      const format = createdraft.getDraftFormat({
-        id: parseInt(req.body.id),
-        packs: parseInt(req.body.packs),
-        players: parseInt(req.body.seats),
-        cards: parseInt(req.body.cards),
-      }, cube);
-
-      const draft = {
-        complete: false,
-      };
-
-      let populated = {};
-      try {
-        populated = createdraft.createDraft(
-          cube,
-          format,
-          mainboard,
-          parseInt(req.body.seats),
-          req.user
-        );
-      } catch (err) {
-        // This is a 4XX error, not a 5XX error
-        req.flash('danger', err.message);
-        return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
-      }
-
-      draft.InitialState = populated.InitialState;
-      draft.seats = populated.seats;
-      draft.cube = cube.id;
-      draft.owner = req.user.id;
-      draft.cubeOwner = cube.owner.id;
-      draft.type = Draft.TYPES.DRAFT;
-      draft.date = new Date().valueOf();
-      draft.cards = populated.cards;
-      addBasics(draft, cube.basics);
-
-      const draftId = await Draft.put(draft);
-      draft.id = draftId;
-
-      await createLobby(draft, req.user);
-
-      return redirect(req, res, `/cube/draft/${draftId}`);
+      return redirect(req, res, `/draft/deckbuilder/${deckId}`);
     } catch (err) {
       return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
@@ -1500,44 +1407,6 @@ router.get('/griddraft/:id', async (req, res) => {
   }
 });
 
-router.get('/draft/:id', async (req, res) => {
-  try {
-    const draft = await Draft.getById(req.params.id);
-
-    if (!draft) {
-      req.flash('danger', 'Draft not found');
-      return redirect(req, res, '/404');
-    }
-
-    const cube = await Cube.getById(draft.cube);
-
-    if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', 'Cube not found');
-      return redirect(req, res, '/404');
-    }
-
-    return render(
-      req,
-      res,
-      'CubeDraftPage',
-      {
-        cube,
-        initialDraft: draft,
-      },
-      {
-        title: `${abbreviate(cube.name)} - Draft`,
-        metadata: generateMeta(
-          `Cube Cobra Draft: ${cube.name}`,
-          cube.description,
-          cube.image.uri,
-          `https://cubecobra.com/cube/draft/${encodeURIComponent(req.params.id)}`,
-        ),
-      },
-    );
-  } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
-  }
-});
 
 router.post('/remove/:id', ensureAuth, async (req, res) => {
   try {
