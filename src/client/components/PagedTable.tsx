@@ -2,8 +2,9 @@ import React from 'react';
 
 import Paginate from 'components/base/Pagination';
 import useQueryParam from 'hooks/useQueryParam';
-import Table, { TableProps } from './base/Table';
+
 import { Flexbox } from './base/Layout';
+import Table, { TableProps } from './base/Table';
 
 interface PagedTableProps extends TableProps {
   pageSize: number;

@@ -2,15 +2,6 @@ import React, { useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 
-import AddToCubeModal from '../modals/AddToCubeModal';
-import Button from '../base/Button';
-import CardIdBadge from '../card/CardIdBadge';
-import ImageFallback from '../ImageFallback';
-import TextBadge from '../TextBadge';
-import withModal from '../WithModal';
-import CardType from '../../datatypes/CardDetails';
-import HistoryType from '../../datatypes/History';
-import Text from '../base/Text';
 import {
   cardCubeCount,
   cardElo,
@@ -21,8 +12,18 @@ import {
   cardPriceEur,
   cardTix,
   detailsToCard,
-} from 'utils/Card';
+} from 'utils/cardutil';
+
+import { CardDetails } from '../../../datatypes/Card';
+import HistoryType from '../../../datatypes/History';
+import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
+import Text from '../base/Text';
+import CardIdBadge from '../card/CardIdBadge';
+import ImageFallback from '../ImageFallback';
+import AddToCubeModal from '../modals/AddToCubeModal';
+import TextBadge from '../TextBadge';
+import withModal from '../WithModal';
 
 const AddModal = withModal(Button, AddToCubeModal);
 
@@ -35,7 +36,7 @@ const formatPrice = (price: number | undefined) => {
 };
 
 interface CardPageProps {
-  card: CardType;
+  card: CardDetails;
   history: HistoryType[];
 }
 

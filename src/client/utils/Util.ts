@@ -1,7 +1,8 @@
 import Card from 'datatypes/Card';
-import { ColorCategory } from 'datatypes/CardDetails';
+import { ColorCategory } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
-import { cardCmc, cardColorIdentityCategory, cardType } from 'utils/Card';
+
+import { cardCmc, cardColorIdentityCategory, cardType } from './cardutil';
 
 export function arraysEqual(a: any, b: any): boolean {
   if (a === b) return true;

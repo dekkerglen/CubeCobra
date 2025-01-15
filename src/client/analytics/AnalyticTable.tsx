@@ -1,17 +1,18 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import AsfanDropdown from '../components/analytics/AsfanDropdown';
-import ErrorBoundary from '../components/ErrorBoundary';
-import { compareStrings, SortableTable, valueRenderer } from '../components/SortableTable';
-import { calculateAsfans } from '../drafting/createdraft';
-import useQueryParam from '../hooks/useQueryParam';
 import { cardCanBeSorted, sortGroupsOrdered, SORTS } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
-import Card from '../datatypes/Card';
-import CubeContext from '../contexts/CubeContext';
+
+import Card from '../../datatypes/Card';
+import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { compareStrings, SortableTable, valueRenderer } from '../components/SortableTable';
+import CubeContext from '../contexts/CubeContext';
+import { calculateAsfans } from '../drafting/createdraft';
+import useQueryParam from '../hooks/useQueryParam';
 
 type SortWithTotalResult = [string, number][];
 

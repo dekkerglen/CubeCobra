@@ -1,14 +1,15 @@
 import React, { useContext } from 'react';
 
-import Text from './base/Text';
-import AutocardListItem from './card/AutocardListItem';
-import CubeContext from '../contexts/CubeContext';
-import CardType from '../datatypes/Card';
-import { CardDetails } from 'utils/Card';
+import { CardDetails } from 'utils/cardutil';
 import { getLabels, sortIntoGroups } from 'utils/Sort';
+
+import CardType from '../../datatypes/Card';
+import CubeContext from '../contexts/CubeContext';
 import { Card, CardBody } from './base/Card';
 import { Col, Flexbox, Row } from './base/Layout';
 import { ListGroup, ListGroupItem } from './base/ListGroup';
+import Text from './base/Text';
+import AutocardListItem from './card/AutocardListItem';
 import AddToCubeModal from './modals/AddToCubeModal';
 import withModal from './WithModal';
 

@@ -1,10 +1,10 @@
 import seedrandom from 'seedrandom';
 
-import Card from 'datatypes/Card';
-import Cube from 'datatypes/Cube';
-import Draft, { createDefaultDraftFormat, DraftFormat, DraftState } from 'datatypes/Draft';
-import User from 'datatypes/User';
-import { fromEntries } from 'utils/Util';
+import Card from '../../datatypes/Card';
+import Cube from '../../datatypes/Cube';
+import Draft, { buildDefaultSteps, createDefaultDraftFormat, DraftFormat, DraftState } from '../../datatypes/Draft';
+import User from '../../datatypes/User';
+import { fromEntries } from '../utils/Util';
 import { compileFilter, Filter } from './draftFilter';
 
 type RNGFunction = () => number;
@@ -164,7 +164,7 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
       }
 
       result.initialState[seat][packNum] = {
-        steps: format.packs[packNum].steps || [],
+        steps: format.packs[packNum].steps || buildDefaultSteps(cards.length),
         cards: [],
       };
 
@@ -182,7 +182,7 @@ export const createDraft = (
   format: DraftFormat,
   cubeCards: Card[],
   seats: number,
-  user: User,
+  user?: User,
   seed: string | false = false,
 ): Draft => {
   if (!seed) {
@@ -212,15 +212,17 @@ export const createDraft = (
     basics: [],
     id: '',
     type: 'd',
-    owner: user.id,
+    owner: user?.id,
     cubeOwner: cube.owner,
     date: new Date(),
     name: '',
+    complete: false,
   };
 
   draft.seats = draft.InitialState!.map((_, seatIndex) => ({
     bot: seatIndex !== 0,
-    name: seatIndex === 0 ? user.username : `Bot ${seatIndex}`,
+    owner: seatIndex === 0 ? user?.id : '',
+    name: seatIndex === 0 ? user?.username : `Bot ${seatIndex}`,
     mainboard: [new Array(8).fill([]), new Array(8).fill([])], // organized draft picks
     sideboard: [new Array(8).fill([]), new Array(8).fill([])],
     pickorder: [],

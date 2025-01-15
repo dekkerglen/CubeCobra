@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import User from '../datatypes/User';
+import User from '../../datatypes/User';
 
 export interface UserContextValue extends User {}
 

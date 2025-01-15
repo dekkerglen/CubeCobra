@@ -1,9 +1,10 @@
 import React, { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import withAutocard from '../WithAutocard';
-import AutocardContext from '../../contexts/AutocardContext';
-import Input, { InputProps } from './Input';
 import classNames from 'classnames';
+
+import AutocardContext from '../../contexts/AutocardContext';
+import withAutocard from '../WithAutocard';
+import Input, { InputProps } from './Input';
 
 export interface AutocardLiProps {
   inModal: boolean;
@@ -270,7 +271,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      let enterPressed = event.keyCode === 13;
+      const enterPressed = event.keyCode === 13;
       if (event.keyCode === 40) {
         // DOWN key
         event.preventDefault();

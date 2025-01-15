@@ -1,7 +1,9 @@
 import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
-import Button from '../base/Button';
+
 import QRCode from 'react-qr-code';
+
+import Button from '../base/Button';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 
 interface QRCodeModalProps {
   isOpen: boolean;

@@ -1,3 +1,5 @@
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card, CardHeader } from 'components/base/Card';
@@ -7,10 +9,9 @@ import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import MtgImage from 'components/MtgImage';
 import TextEntry from 'components/TextEntry';
-import UserContext from 'contexts/UserContext';
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import Image from 'datatypes/Image';
 import { CSRFContext } from 'contexts/CSRFContext';
+import UserContext from 'contexts/UserContext';
+import Image from 'datatypes/Image';
 
 const UserProfile: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);

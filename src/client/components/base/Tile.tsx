@@ -1,5 +1,7 @@
 import React from 'react';
+
 import classNames from 'classnames';
+
 import AspectRatioBox from './AspectRatioBox';
 
 interface TileProps {

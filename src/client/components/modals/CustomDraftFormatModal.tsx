@@ -1,10 +1,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import CSRFForm from '../CSRFForm';
-import CustomPackCard from '../CustomPackCard';
-import TextEntry from '../TextEntry';
+import { createDefaultDraftFormat, DEFAULT_PACK, DraftFormat, getErrorsInFormat } from '../../../datatypes/Draft';
 import CubeContext from '../../contexts/CubeContext';
-import { createDefaultDraftFormat, DEFAULT_PACK, DraftFormat, getErrorsInFormat } from '../../datatypes/Draft';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import Input from '../base/Input';
@@ -13,6 +10,9 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import RadioButtonGroup from '../base/RadioButtonGroup';
 import Select from '../base/Select';
 import Text from '../base/Text';
+import CSRFForm from '../CSRFForm';
+import CustomPackCard from '../CustomPackCard';
+import TextEntry from '../TextEntry';
 
 interface CustomDraftFormatModalProps {
   isOpen: boolean;

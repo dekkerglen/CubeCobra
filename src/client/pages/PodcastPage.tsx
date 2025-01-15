@@ -1,12 +1,13 @@
 import React from 'react';
-import { Card } from 'components/base/Card';
+
 import Banner from 'components/Banner';
+import { Card } from 'components/base/Card';
+import Podcast from 'components/content/Podcast';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import MainLayout from 'layouts/MainLayout';
-import Podcast from 'components/content/Podcast';
 import Episode from 'datatypes/Episode';
 import PodcastType from 'datatypes/Podcast';
+import MainLayout from 'layouts/MainLayout';
 
 interface PodcastPageProps {
   loginCallback?: string;

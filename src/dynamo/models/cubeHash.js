@@ -1,6 +1,6 @@
 const createClient = require('../util');
 
-const carddb = require('../../util/carddb');
+const { cardFromId } = require('../../util/carddb');
 
 const FIELDS = {
   HASH: 'hash',
@@ -95,10 +95,10 @@ const hashOracles = (cards) => {
   const res = [];
 
   for (const card of cards.mainboard) {
-    const oracle = carddb.cardFromId(card.cardID).oracle_id;
+    const oracle = cardFromId(card.cardID).oracle_id;
 
     if (oracle) {
-      res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
+      res.push(`oracle:${cardFromId(card.cardID).oracle_id}`);
     }
   }
 

@@ -131,7 +131,7 @@ export default [
       'dynamo/**/*',
       'lambda/**/*',
       'routes/**/*',
-      'serverjs/**/*',
+      'src/**/*',
       'models/**/*',
     ],
     languageOptions: {
@@ -144,7 +144,7 @@ export default [
     },
   },
   {
-    files: ['dynamo/**/*', 'routes/**/*', 'serverjs/**/*', 'models/**/*'],
+    files: ['dynamo/**/*', 'routes/**/*', 'src/**/*', 'models/**/*'],
     rules: {
       'no-console': 'error',
     },

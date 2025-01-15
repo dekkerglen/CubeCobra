@@ -21,13 +21,13 @@ import {
   cardTix,
   cardType,
   normalizeName,
-} from 'utils/Card';
+} from 'utils/cardutil';
 import { getLabels } from 'utils/Sort';
 import { getTagColorClass } from 'utils/Util';
 
-import Card, { BoardType } from '../../datatypes/Card';
-import { TagColor } from '../../datatypes/Cube';
-import TagData from '../../datatypes/TagData';
+import Card, { BoardType } from '../../../datatypes/Card';
+import { TagColor } from '../../../datatypes/Cube';
+import TagData from '../../../datatypes/TagData';
 import Badge from '../base/Badge';
 import Button from '../base/Button';
 import Input from '../base/Input';

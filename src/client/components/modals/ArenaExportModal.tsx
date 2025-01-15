@@ -1,14 +1,16 @@
+import React, { useContext, useEffect, useState } from 'react';
+
+import { sortForDownload } from 'utils/Sort';
+
+import { CardDetails } from '../../../datatypes/Card';
+import CubeContext from '../../contexts/CubeContext';
+import FilterContext from '../../contexts/FilterContext';
+import useAlerts, { Alerts } from '../../hooks/UseAlerts';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 import TextArea from '../base/TextArea';
-import CubeContext from '../../contexts/CubeContext';
-import FilterContext from '../../contexts/FilterContext';
-import CardDetails from '../../datatypes/CardDetails';
-import useAlerts, { Alerts } from '../../hooks/UseAlerts';
-import React, { useContext, useEffect, useState } from 'react';
-import { sortForDownload } from 'utils/Sort';
 
 interface ArenaExportModalProps {
   isOpen: boolean;

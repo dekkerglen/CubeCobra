@@ -1,7 +1,8 @@
 import React, { Component, Fragment, ReactNode } from 'react';
-import Text from './base/Text';
-import Container from './base/Container';
+
 import { Card } from './base/Card';
+import Container from './base/Container';
+import Text from './base/Text';
 interface ErrorBoundaryProps {
   className?: string;
   children: ReactNode;

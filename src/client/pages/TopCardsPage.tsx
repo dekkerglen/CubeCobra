@@ -1,8 +1,9 @@
 import React from 'react';
-import TopCardsTable from 'components/TopCardsTable';
+
 import RenderToRoot from 'components/RenderToRoot';
-import MainLayout from 'layouts/MainLayout';
+import TopCardsTable from 'components/TopCardsTable';
 import { FilterContextProvider } from 'contexts/FilterContext';
+import MainLayout from 'layouts/MainLayout';
 interface TopCardsPageProps {
   loginCallback?: string;
 }

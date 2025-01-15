@@ -1,7 +1,7 @@
 import React from 'react';
 
-import User from 'datatypes/User';
 import Link from 'components/base/Link';
+import User from 'datatypes/User';
 
 interface UsernameProps {
   user?: string | User;

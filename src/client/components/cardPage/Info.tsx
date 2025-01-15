@@ -1,18 +1,19 @@
 import React from 'react';
 
+import { getCardKingdomLink, getTCGLink, nameToDashedUrlComponent } from 'utils/Affiliate';
+import { detailsToCard } from 'utils/cardutil';
+
+import { CardDetails } from '../../../datatypes/Card';
+import HistoryType from '../../../datatypes/History';
+import Button from '../base/Button';
 import { CardBody } from '../base/Card';
-import LegalityBadge from '../card/CardLegalityBadge';
-import Markdown from '../Markdown';
-import CardType from '../../datatypes/CardDetails';
-import HistoryType from '../../datatypes/History';
 import { Col, Flexbox, Row } from '../base/Layout';
 import Text from '../base/Text';
-import Button from '../base/Button';
-import { getTCGLink, getCardKingdomLink, nameToDashedUrlComponent } from 'utils/Affiliate';
-import { detailsToCard } from 'utils/Card';
+import LegalityBadge from '../card/CardLegalityBadge';
+import Markdown from '../Markdown';
 
 interface CardPageProps {
-  card: CardType;
+  card: CardDetails;
   history: HistoryType[];
 }
 

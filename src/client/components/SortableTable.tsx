@@ -1,11 +1,12 @@
 import React from 'react';
 
+import classNames from 'classnames';
 import { CSVLink } from 'react-csv';
 
-import HeaderCell from './HeaderCell';
-import useSortableData, { SortConfig } from '../hooks/UseSortableData';
 import { fromEntries } from 'utils/Util';
-import classNames from 'classnames';
+
+import useSortableData, { SortConfig } from '../hooks/UseSortableData';
+import HeaderCell from './HeaderCell';
 
 interface ColumnProps {
   title: string;

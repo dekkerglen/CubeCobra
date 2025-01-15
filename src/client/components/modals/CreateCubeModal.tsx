@@ -1,16 +1,16 @@
 import React, { useContext, useMemo, useState } from 'react';
 
+import ReCAPTCHA from 'react-google-recaptcha';
+
+import CaptchaContext from '../../contexts/CaptchaContext';
+import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Spinner from '../base/Spinner';
-import CaptchaContext from '../../contexts/CaptchaContext';
-import ReCAPTCHA from 'react-google-recaptcha';
-
 import CSRFForm from '../CSRFForm';
 import ChallengeInput, { generateChallenge } from '../forms/ChallengeInput';
-import UserContext from '../../contexts/UserContext';
 
 type Props = {
   isOpen: boolean;

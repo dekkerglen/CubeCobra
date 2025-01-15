@@ -1,23 +1,5 @@
 import React, { useContext } from 'react';
 
-import AnalyticTable from '../analytics/AnalyticTable';
-import Asfans from '../analytics/Asfans';
-import Averages from '../analytics/Averages';
-import ChartComponent from '../analytics/Chart';
-import Playtest from '../analytics/PlaytestData';
-import Suggestions from '../analytics/Suggestions';
-import Tokens from '../analytics/Tokens';
-import { Card } from '../components/base/Card';
-import { TabbedView } from '../components/base/Tabs';
-import Text from '../components/base/Text';
-import DynamicFlash from '../components/DynamicFlash';
-import FilterCollapse from '../components/FilterCollapse';
-import RenderToRoot from '../components/RenderToRoot';
-import CubeContext from '../contexts/CubeContext';
-import CardType from '../datatypes/Card';
-import useQueryParam from '../hooks/useQueryParam';
-import CubeLayout from '../layouts/CubeLayout';
-import MainLayout from '../layouts/MainLayout';
 import {
   cardCmc,
   cardDevotion,
@@ -32,9 +14,28 @@ import {
   cardToughness,
   mainboardRate,
   pickRate,
-} from 'utils/Card';
+} from 'utils/cardutil';
 import { cardIsLabel, getLabels } from 'utils/Sort';
-import Cube, { CubeCards } from '../datatypes/Cube';
+
+import CardType from '../../datatypes/Card';
+import Cube, { CubeCards } from '../../datatypes/Cube';
+import AnalyticTable from '../analytics/AnalyticTable';
+import Asfans from '../analytics/Asfans';
+import Averages from '../analytics/Averages';
+import ChartComponent from '../analytics/Chart';
+import Playtest from '../analytics/PlaytestData';
+import Suggestions from '../analytics/Suggestions';
+import Tokens from '../analytics/Tokens';
+import { Card } from '../components/base/Card';
+import { TabbedView } from '../components/base/Tabs';
+import Text from '../components/base/Text';
+import DynamicFlash from '../components/DynamicFlash';
+import FilterCollapse from '../components/FilterCollapse';
+import RenderToRoot from '../components/RenderToRoot';
+import CubeContext from '../contexts/CubeContext';
+import useQueryParam from '../hooks/useQueryParam';
+import CubeLayout from '../layouts/CubeLayout';
+import MainLayout from '../layouts/MainLayout';
 
 interface CubeAnalysisPageProps {
   cubeAnalytics: any;

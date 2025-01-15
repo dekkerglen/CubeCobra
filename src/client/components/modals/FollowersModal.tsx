@@ -1,9 +1,10 @@
 import React from 'react';
-import { Modal, ModalBody, ModalHeader } from 'components/base/Modal';
+
 import { Col, Row } from 'components/base/Layout';
+import { Modal, ModalBody, ModalHeader } from 'components/base/Modal';
+import Text from 'components/base/Text';
 import UserPreview from 'components/UserPreview';
 import User from 'datatypes/User';
-import Text from 'components/base/Text';
 
 interface FollowersModalProps {
   followers: User[];

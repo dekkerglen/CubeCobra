@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
-import Advertisment from './Advertisment';
+
 import UserContext from '../contexts/UserContext';
+import Advertisment from './Advertisment';
 
 interface MobileBannerProps {
   placementId: string;

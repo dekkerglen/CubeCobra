@@ -1,13 +1,14 @@
 import React, { ComponentType, ReactElement } from 'react';
+
 import { createRoot } from 'react-dom/client';
 
-import ErrorBoundary from './ErrorBoundary';
 import AdsContext from '../contexts/AdsContext';
 import { AutocardContextProvider } from '../contexts/AutocardContext';
-import DomainContext, { DomainContextValue } from '../contexts/DomainContext';
-import UserContext, { UserContextValue } from '../contexts/UserContext';
 import CaptchaContext from '../contexts/CaptchaContext';
 import { CSRFContextProvider } from '../contexts/CSRFContext';
+import DomainContext, { DomainContextValue } from '../contexts/DomainContext';
+import UserContext, { UserContextValue } from '../contexts/UserContext';
+import ErrorBoundary from './ErrorBoundary';
 
 declare global {
   interface Window {

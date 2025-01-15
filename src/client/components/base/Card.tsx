@@ -1,4 +1,5 @@
 import React from 'react';
+
 import classNames from 'classnames';
 
 interface CardProps {
@@ -37,4 +38,4 @@ const CardFooter: React.FC<CardFooterProps> = ({ className, children }) => {
   return <div className={classNames('py-2 px-4 border-t border-border', className)}>{children}</div>;
 };
 
-export { Card, CardHeader, CardFooter, CardBody };
+export { Card, CardBody, CardFooter, CardHeader };

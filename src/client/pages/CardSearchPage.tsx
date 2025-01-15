@@ -1,8 +1,9 @@
 import React from 'react';
+
 import CardSearch from 'components/card/CardSearch';
 import RenderToRoot from 'components/RenderToRoot';
-import MainLayout from 'layouts/MainLayout';
 import { FilterContextProvider } from 'contexts/FilterContext';
+import MainLayout from 'layouts/MainLayout';
 
 interface CardSearchPageProps {
   loginCallback?: string;
