@@ -1,19 +1,29 @@
-// dotenv
-require('dotenv').config();
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { v4 as uuidv4 } from 'uuid';
 
-const uuid = require('uuid');
+import Comment from '../../datatypes/Comment';
+import { CubeImage } from '../../datatypes/Cube';
+import User from '../../datatypes/User';
+import { getImageData } from '../../util/imageutil';
+import createClient from '../util';
+import UserModel from './user';
 
-const createClient = require('../util');
-const imageutil = require('../../util/imageutil');
-const User = require('./user');
+enum FIELDS {
+  ID = 'id',
+  PARENT = 'parent',
+  TYPE = 'type',
+  OWNER = 'owner',
+  BODY = 'body',
+  DATE = 'date',
+}
 
-const FIELDS = {
-  ID: 'id',
-  PARENT: 'parent',
-  TYPE: 'type',
-  OWNER: 'owner',
-  BODY: 'body',
-  DATE: 'date',
+type CreateComment = {
+  [FIELDS.ID]?: string;
+  [FIELDS.BODY]: string;
+  [FIELDS.OWNER]?: string | null;
+  [FIELDS.DATE]: number;
+  [FIELDS.PARENT]: string;
+  [FIELDS.TYPE]: string;
 };
 
 const client = createClient({
@@ -37,64 +47,75 @@ const client = createClient({
     [FIELDS.PARENT]: 'S',
     [FIELDS.OWNER]: 'S',
   },
-  FIELDS,
 });
 
-const hydrate = async (item) => {
+const createHydratedComment = (document: DocumentClient.AttributeMap, owner: User, image: CubeImage): Comment => {
+  return {
+    id: document.id,
+    parent: document.parent,
+    date: document.date,
+    type: document.type,
+    body: document.body,
+    owner: owner,
+    image: image,
+  };
+};
+
+const getAnonymousUser = (): User => {
+  return {
+    id: '404',
+    username: 'Anonymous',
+  } as User;
+};
+
+const createHydratedCommentWithoutOwner = (item: DocumentClient.AttributeMap): Comment => {
+  return createHydratedComment(item, getAnonymousUser(), getImageData('Ambush Viper'));
+};
+
+const hydrate = async (item?: DocumentClient.AttributeMap): Promise<Comment | undefined> => {
   if (!item) {
     return item;
   }
 
   if (!item.owner || item.owner === 'null') {
-    return {
-      ...item,
-      owner: {
-        id: '404',
-        username: 'Anonymous',
-      },
-      image: {
-        uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
-        artist: 'Allan Pollack',
-        id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
-      },
-    };
+    return createHydratedCommentWithoutOwner(item);
   }
 
-  item.owner = await User.getById(item.owner);
-  item.image = imageutil.getImageData(item.owner.imageName);
-
-  return item;
+  const owner: User = await UserModel.getById(item.owner);
+  return createHydratedComment(item, owner, getImageData(owner.imageName));
 };
 
-const batchHydrate = async (items) => {
-  const owners = await User.batchGet(items.filter((item) => item.owner).map((item) => item.owner));
+const batchHydrate = async (items: DocumentClient.ItemList | undefined): Promise<Comment[] | undefined> => {
+  if (!items) {
+    return [];
+  }
+  const owners = await UserModel.batchGet(items.filter((item) => item.owner).map((item) => item.owner));
 
   return items.map((item) => {
     if (!item.owner || item.owner === 'null') {
-      return {
-        ...item,
-        owner: {
-          id: '404',
-          username: 'Anonymous',
-        },
-        image: {
-          uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
-          artist: 'Allan Pollack',
-          id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
-        },
-      };
+      return createHydratedCommentWithoutOwner(item);
     }
 
-    item.owner = owners.find((owner) => owner.id === item.owner);
-    item.image = imageutil.getImageData(item.owner ? item.owner.imageName : 'Ambush Viper');
+    let owner: User | undefined = owners.find((owner: User) => owner.id === item.owner);
+    let image: CubeImage;
 
-    return item;
+    if (!owner) {
+      owner = getAnonymousUser();
+      image = getImageData('Ambush Viper');
+    } else {
+      image = getImageData(owner.imageName);
+    }
+
+    return createHydratedComment(item, owner, image);
   });
 };
 
-module.exports = {
-  getById: async (id) => hydrate((await client.get(id)).Item),
-  queryByParentAndType: async (parent, lastKey) => {
+const comment = {
+  getById: async (id: string): Promise<Comment | undefined> => hydrate((await client.get(id)).Item),
+  queryByParentAndType: async (
+    parent: string,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
     const result = await client.query({
       IndexName: 'ByParent',
       KeyConditionExpression: `#p1 = :parent`,
@@ -114,7 +135,10 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  queryByOwner: async (owner, lastKey) => {
+  queryByOwner: async (
+    owner: string,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
     const result = await client.query({
       IndexName: 'ByOwner',
       KeyConditionExpression: `#p1 = :owner`,
@@ -133,10 +157,11 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document) => {
-    const id = document[FIELDS.ID] || uuid.v4();
+  put: async (document: CreateComment | Comment): Promise<DocumentClient.PutItemOutput> => {
+    const id = document[FIELDS.ID] || uuidv4();
 
-    if (document.owner && document.owner.id) {
+    //Type guard to know if owner is a string (their id) or a hydrated User type
+    if (document.owner && typeof document.owner !== 'string' && document.owner.id) {
       document.owner = document.owner.id;
     }
 
@@ -149,28 +174,16 @@ module.exports = {
       [FIELDS.TYPE]: document.type,
     });
   },
-  batchPut: async (documents) => {
+  batchPut: async (documents: DocumentClient.AttributeMap[]): Promise<void> => {
     // only used for migration
     await client.batchPut(documents);
   },
-  createTable: async () => client.createTable(),
-  convertComment: (comment) => {
-    return [
-      {
-        [FIELDS.ID]: `${comment._id}`,
-        [FIELDS.OWNER]: `${comment.owner}`,
-        [FIELDS.BODY]: comment.content,
-        [FIELDS.DATE]: comment.date.valueOf(),
-        [FIELDS.PARENT]: `${comment.parent}`,
-        [FIELDS.TYPE]: `${comment.parentType}`,
-      },
-    ];
-  },
-
-  scan: async (lastKey) => {
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  scan: async (
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
-      ScanIndexForward: true,
     });
     return {
       items: result.Items,
@@ -179,3 +192,6 @@ module.exports = {
   },
   FIELDS,
 };
+
+module.exports = comment;
+export default comment;
