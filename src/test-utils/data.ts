@@ -1,4 +1,6 @@
 import Card, { CardDetails } from 'datatypes/Card';
+import Cube, { CubeImage } from 'datatypes/Cube';
+import User from 'datatypes/User';
 
 /**
  * Create a Card for testing by providing sane defaults but allow for overriding
@@ -34,10 +36,10 @@ const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => ({
   scryfall_uri: 'https://scryfall.com/my-card',
   rarity: 'rare',
   legalities: {
-    'modern': 'banned',
-    'standard': 'not_legal',
-    'vintage': 'restricted',
-    'commander': 'legal'
+    modern: 'banned',
+    standard: 'not_legal',
+    vintage: 'restricted',
+    commander: 'legal',
   },
   oracle_text: 'oracle text goes here',
   cmc: 5,
@@ -51,10 +53,10 @@ const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => ({
   mtgo_id: 12345,
   full_art: true,
   prices: {
-    usd: 10.10,
-    eur: 9.00,
+    usd: 10.1,
+    eur: 9.0,
     tix: 3,
-    usd_etched: 12.50,
+    usd_etched: 12.5,
     usd_foil: 15.25,
   },
   tokens: [],
@@ -62,4 +64,48 @@ const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => ({
   ...overrides,
 });
 
-export { createCard, createCardDetails };
+const createCube = (overrides?: Partial<Cube>): Cube => ({
+  id: '34c888d0-493a-4613-b38e-595076c23af2',
+  shortId: 'test-cube',
+  owner: createUser(),
+  name: 'test cube',
+  visibility: '',
+  priceVisibility: '',
+  featured: false,
+  categoryPrefixes: [],
+  tagColors: [],
+  defaultFormat: 0,
+  numDecks: 0,
+  description: '',
+  imageName: '',
+  date: 0,
+  defaultSorts: [],
+  formats: [],
+  following: [],
+  defaultStatus: 'Not Owned',
+  defaultPrinting: '',
+  disableAlerts: false,
+  basics: [],
+  tags: [],
+  keywords: [],
+  cardCount: 0,
+  image: createCubeImage(),
+  version: 0,
+  ...overrides,
+});
+
+const createUser = (overrides?: Partial<User>): User => ({
+  id: 'test-user',
+  username: 'test-user',
+  ...overrides,
+});
+
+const createCubeImage = (overrides?: Partial<CubeImage>): CubeImage => ({
+  uri: '/content/images/card.png',
+  artist: 'magic artist',
+  id: '12345',
+  imageName: 'card name',
+  ...overrides,
+});
+
+export { createCard, createCardDetails, createCube, createCubeImage, createUser };
