@@ -1,11 +1,11 @@
 import express, { Application } from 'express';
 import { PublishDraftBody, routes } from 'src/router/routes/api/draftmancer/publish';
-import { createCardDetails, createCube } from 'src/test-utils/data';
 import { getReasonableCardByOracle } from 'src/util/carddb';
 import request from 'supertest';
 
 import Cube from '../../src/dynamo/models/cube';
 import Draft from '../../src/dynamo/models/draft';
+import { createCardDetails, createCube } from '../test-utils/data';
 
 jest.mock('../../src/util/draftbots', () => ({
   deckbuild: jest.fn(),

@@ -4,7 +4,8 @@ module.exports = {
 
   testMatch: [
     '**/tests/**/*.[jt]s?(x)',
-    '**/?(*.)+(spec|test).[jt]s?(x)'
+    '**/?(*.)+(spec|test).[jt]s?(x)',
+    '!**/tests/test-utils/*' // Ignore the test-utils code
   ],
 
   collectCoverage: true,

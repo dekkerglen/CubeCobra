@@ -1,9 +1,8 @@
 import { DisplayContextValue } from 'contexts/DisplayContext';
 
-
 const defaultDisplayContext: DisplayContextValue = {
   cardsPerRow: 5,
-  openCollapse: "",
+  openCollapse: '',
   setCardsPerRow: jest.fn(),
   setOpenCollapse: jest.fn(),
   showCustomImages: false,
@@ -11,7 +10,7 @@ const defaultDisplayContext: DisplayContextValue = {
   showMaybeboard: false,
   toggleShowMaybeboard: jest.fn(),
   showInlineTagEmojis: false,
-  toggleShowInlineTagEmojis: jest.fn()
+  toggleShowInlineTagEmojis: jest.fn(),
 };
 
 export { defaultDisplayContext };

@@ -1,6 +1,6 @@
-import { createCard, createCardDetails } from 'src/test-utils/data';
-
 import { getCardMarketLink, getTCGLink, tcgplayerAffiliate } from 'utils/Affiliate';
+
+import { createCard, createCardDetails } from '../test-utils/data';
 
 describe('TCGPlayer', () => {
   it('should generate a valid link for a card with a TCGPlayer ID', () => {
