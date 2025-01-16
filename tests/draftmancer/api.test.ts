@@ -4,22 +4,22 @@ import { createCardDetails, createCube } from 'src/test-utils/data';
 import { getReasonableCardByOracle } from 'src/util/carddb';
 import request from 'supertest';
 
-import Cube from '../../../../dynamo/models/cube';
-import Draft from '../../../../dynamo/models/draft';
+import Cube from '../../src/dynamo/models/cube';
+import Draft from '../../src/dynamo/models/draft';
 
-jest.mock('../../../../util/draftbots', () => ({
+jest.mock('../../src/util/draftbots', () => ({
   deckbuild: jest.fn(),
 }));
 
-jest.mock('../../../../dynamo/models/cube', () => ({
+jest.mock('../../src/dynamo/models/cube', () => ({
   getById: jest.fn(),
 }));
 
-jest.mock('../../../../util/carddb', () => ({
+jest.mock('../../src/util/carddb', () => ({
   getReasonableCardByOracle: jest.fn(),
 }));
 
-jest.mock('../../../../dynamo/models/draft', () => ({
+jest.mock('../../src/dynamo/models/draft', () => ({
   put: jest.fn(),
 }));
 
