@@ -47,7 +47,19 @@
     "test": "npx jest --coverage=false",
     "test:watch": "npx jest --watch --coverage=false",
     "test:coverage": "npx jest --coverage",
-    "test:ci": "npx jest --coverage --coverageReporters json-summary"
+    "test:ci": "npx jest --coverage --coverageReporters json-summary",
+    "prepare": "husky"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "_moduleAliases": {
     "analytics": "build/client/analytics",
@@ -214,6 +226,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^15.9.0",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "nodemon": "^3.1.4",
