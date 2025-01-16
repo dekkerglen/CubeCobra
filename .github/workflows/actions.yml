@@ -15,6 +15,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            - ~/.npm
+            - node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-        
+        
+
       - uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -23,6 +36,7 @@ jobs:
         run: corepack enable
 
       - name: Setup
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Run eslint on changed files
