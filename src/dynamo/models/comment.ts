@@ -20,7 +20,7 @@ enum FIELDS {
 type CreateComment = {
   [FIELDS.ID]?: string;
   [FIELDS.BODY]: string;
-  [FIELDS.OWNER]?: string | null;
+  [FIELDS.OWNER]?: string;
   [FIELDS.DATE]: number;
   [FIELDS.PARENT]: string;
   [FIELDS.TYPE]: string;

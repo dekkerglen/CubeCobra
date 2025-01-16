@@ -148,7 +148,7 @@ router.post(
     document.body = content.substring(0, 5000);
 
     if (remove) {
-      document.owner = null;
+      delete document.owner;
     }
 
     await Comment.put(document);

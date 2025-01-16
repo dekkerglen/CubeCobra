@@ -7,8 +7,7 @@ const Blog = require('../src/dynamo/models/blog');
 const Draft = require('../src/dynamo/models/draft');
 const Comment = require('../src/dynamo/models/comment');
 
-const usersToBan = [
-];
+const usersToBan = [];
 
 let aggregates = {
   commentsWiped: 0,
@@ -19,7 +18,7 @@ let aggregates = {
 };
 
 const wipeComment = async (comment) => {
-  comment.owner = null;
+  delete comment.owner;
   comment.body = '[deleted]';
 
   await Comment.put(comment);

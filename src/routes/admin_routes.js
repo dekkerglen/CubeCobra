@@ -189,7 +189,7 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   report.status = Notice.STATUS.PROCESSED;
   await Notice.put(report);
 
-  comment.owner = null;
+  delete comment.owner;
   comment.body = '[removed by moderator]';
   // the -1000 is to prevent weird time display error
   comment.date = Date.now() - 1000;
@@ -467,7 +467,7 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
     for (const comment of comments) {
       delete comment.owner;
       comment.body = '[deleted]';
-    
+
       await Comment.put(comment);
     }
 
