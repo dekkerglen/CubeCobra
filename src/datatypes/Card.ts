@@ -43,6 +43,7 @@ export interface CardDetails {
   toughness?: string;
   parsed_cost: string[];
   finishes: string[];
+  promo_types?: string[];
   border_color: 'black' | 'white' | 'silver' | 'gold';
   language: string;
   tcgplayer_id?: string;
