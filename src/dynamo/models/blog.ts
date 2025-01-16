@@ -1,13 +1,13 @@
 import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 import { v4 as uuidv4 } from 'uuid';
 
-import { cardFromId } from '../../util/carddb';
-import createClient from '../util';
-const Changelog = require('./changelog');
 import BlogPost from '../../datatypes/BlogPost';
 import { BoardChanges, BoardType, Changes } from '../../datatypes/Card';
 import CubeType from '../../datatypes/Cube';
 import UserType from '../../datatypes/User';
+import { cardFromId } from '../../util/carddb';
+import createClient from '../util';
+import Changelog from './changelog';
 import Cube from './cube';
 import User from './user';
 
