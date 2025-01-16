@@ -56,7 +56,7 @@ const client = createClient({
 
 const createHydratedBlog = (
   document: DocumentClient.AttributeMap,
-  owner: any,
+  owner: any, //TODO: User type
   cubeName: string,
   Changelog?: Partial<Changes>,
 ): BlogPost => {
