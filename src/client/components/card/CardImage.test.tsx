@@ -58,12 +58,12 @@ describe('CardImage Component', () => {
 
     render(
       <DisplayContext.Provider value={{ ...defaultDisplayContext, showCustomImages: true }}>
-        <CardImage card={card}/>
-      </DisplayContext.Provider>
+        <CardImage card={card} />
+      </DisplayContext.Provider>,
     );
 
     const image = screen.getByRole('img');
     expect(image).toHaveAttribute('src', '/mock/custom-image.png');
     expect(cardImageUrl).toHaveBeenCalledWith(card);
-  })
+  });
 });
