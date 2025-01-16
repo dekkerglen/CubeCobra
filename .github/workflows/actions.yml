@@ -1,11 +1,5 @@
 name: CI Tests
 
-permissions:
-  contents: write
-  pull-requests: write
-  repository-projects: write
-  checks: write
-
 # Pull request will trigger when PR is opened or updated, and more (https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request)
 # Thus limit push checks to master branch so things run after the PR is merged. Without the limit multiple actions run on each PR
 on:
@@ -39,7 +33,6 @@ jobs:
           config_path: 'eslint.config.mjs'
           extra_args: '--max-warnings=0'
           reporter: github-pr-review
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
@@ -51,17 +44,10 @@ jobs:
           level: warning
           prettier_flags: '**/*.{js,jsx,ts,tsx}'
           reporter: github-pr-review
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests
         if: success()
         run: npm run test:ci
-
-      - name: Jest Coverage Comment
-        if: success()
-        uses: MishaKav/jest-coverage-comment@main
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Jest Coverage Report
         if: success()
