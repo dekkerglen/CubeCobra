@@ -44,10 +44,10 @@
     "start:dev": "npm run start:localstack && npm run devstart",
     "publish": "npm run build && node ./scripts/publish.js",
     "postinstall": "node ./scripts/setup-aliases.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage"
+    "test": "npx jest --coverage=false",
+    "test:watch": "npx jest --watch --coverage=false",
+    "test:coverage": "npx jest --coverage",
+    "test:ci": "npx jest --coverage --coverageReporters json-summary"
   },
   "_moduleAliases": {
     "analytics": "build/client/analytics",

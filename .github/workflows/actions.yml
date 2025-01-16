@@ -49,6 +49,10 @@ jobs:
         if: success()
         run: npm run test:ci
 
+      - name: Jest Coverage Comment
+        if: success()
+        uses: MishaKav/jest-coverage-comment@main
+
       - name: Upload Jest Coverage Report
         if: success()
         continue-on-error: true

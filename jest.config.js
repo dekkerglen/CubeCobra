@@ -9,7 +9,7 @@ module.exports = {
 
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  coverageReporters: ['text'],
+  coverageReporters: ['json', 'text'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
