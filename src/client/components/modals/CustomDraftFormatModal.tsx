@@ -33,7 +33,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
       id: `${formatIndex}`,
       serializedFormat: JSON.stringify(format),
     };
-  }, [format]);
+  }, [format, formatIndex]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>
@@ -63,6 +63,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
               label="Multiples"
               selected={format.multiples ? 'true' : 'false'}
               setSelected={(value) => setFormat({ ...format, multiples: value === 'true' })}
+              allowOptionTextWrapping={true}
               options={[
                 { value: 'true', label: 'Allow any number of copies of each card in the draft (e.g. set draft)' },
                 {
