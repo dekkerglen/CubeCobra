@@ -106,15 +106,15 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
         if (cards && (changes.mainboard.removes || []).length > 0) {
           // we go through and see if the index matches the oldCard
-          fixedChanges.mainboard.removes = changes.mainboard.removes.filter((remove) => {
+          fixedChanges.mainboard.removes = (changes.mainboard.removes || []).filter((remove) => {
             return cardsAreEquivalent(remove.oldCard, cards.mainboard[remove.index]);
           });
 
-          fixedChanges.mainboard.edits = changes.mainboard.edits.filter((edit) => {
+          fixedChanges.mainboard.edits = (changes.mainboard.edits || []).filter((edit) => {
             return cardsAreEquivalent(edit.oldCard, cards.mainboard[edit.index]);
           });
 
-          fixedChanges.mainboard.swaps = changes.mainboard.swaps.filter((swap) => {
+          fixedChanges.mainboard.swaps = (changes.mainboard.swaps || []).filter((swap) => {
             return cardsAreEquivalent(swap.oldCard, cards.mainboard[swap.index]);
           });
         }
@@ -129,15 +129,15 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
         if (cards && (changes.maybeboard.removes || []).length > 0) {
           // we go through and see if the index matches the oldCard
-          fixedChanges.maybeboard.removes = changes.maybeboard.removes.filter((remove) => {
+          fixedChanges.maybeboard.removes = (changes.maybeboard.removes || []).filter((remove) => {
             return cardsAreEquivalent(remove.oldCard, cards.maybeboard[remove.index]);
           });
 
-          fixedChanges.maybeboard.edits = changes.maybeboard.edits.filter((edit) => {
+          fixedChanges.maybeboard.edits = (changes.maybeboard.edits || []).filter((edit) => {
             return cardsAreEquivalent(edit.oldCard, cards.maybeboard[edit.index]);
           });
 
-          fixedChanges.maybeboard.swaps = changes.maybeboard.swaps.filter((swap) => {
+          fixedChanges.maybeboard.swaps = (changes.maybeboard.swaps || []).filter((swap) => {
             return cardsAreEquivalent(swap.oldCard, cards.maybeboard[swap.index]);
           });
         }
@@ -148,9 +148,9 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
       if (changes.mainboard && fixedChanges.mainboard) {
         if (
-          fixedChanges.mainboard.removes.length !== (changes.mainboard.removes || []).length ||
-          fixedChanges.mainboard.edits.length !== (changes.mainboard.edits || []).length ||
-          fixedChanges.mainboard.swaps.length !== (changes.mainboard.swaps || []).length
+          (fixedChanges.mainboard.removes || []).length !== (changes.mainboard.removes || []).length ||
+          (fixedChanges.mainboard.edits || []).length !== (changes.mainboard.edits || []).length ||
+          (fixedChanges.mainboard.swaps || []).length !== (changes.mainboard.swaps || []).length
         ) {
           equal = false;
         }
@@ -158,9 +158,9 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
       if (changes.maybeboard && fixedChanges.maybeboard) {
         if (
-          fixedChanges.maybeboard.removes.length !== (changes.maybeboard.removes || []).length ||
-          fixedChanges.maybeboard.edits.length !== (changes.maybeboard.edits || []).length ||
-          fixedChanges.maybeboard.swaps.length !== (changes.maybeboard.swaps || []).length
+          (fixedChanges.maybeboard.removes || []).length !== (changes.maybeboard.removes || []).length ||
+          (fixedChanges.maybeboard.edits || []).length !== (changes.maybeboard.edits || []).length ||
+          (fixedChanges.maybeboard.swaps || []).length !== (changes.maybeboard.swaps || []).length
         ) {
           equal = false;
         }

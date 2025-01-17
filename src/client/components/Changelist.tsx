@@ -121,7 +121,7 @@ const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; re
       return null;
     };
     getData();
-  }, [card.cardID]);
+  }, [card.cardID, oldCard.cardID]);
 
   return (
     <Flexbox direction="row" gap="1">
@@ -156,7 +156,12 @@ const Changelist: React.FC = () => {
     <div>
       {boardTypes.map((board) => {
         const { adds, removes, swaps, edits } = changes[board] || { adds: [], removes: [], swaps: [], edits: [] };
-        if (adds.length === 0 && removes.length === 0 && swaps.length === 0 && edits.length === 0) {
+        if (
+          (adds || []).length === 0 &&
+          (removes || []).length === 0 &&
+          (swaps || []).length === 0 &&
+          (edits || []).length === 0
+        ) {
           return false;
         }
         return (
@@ -167,8 +172,8 @@ const Changelist: React.FC = () => {
                   {capitalizeFirstLetter(board)} Changelist
                 </Text>
                 <div className="text-secondary">
-                  +{adds.length + edits.length}, -{removes.length + edits.length},{' '}
-                  {cube.cards[board].length + adds.length - removes.length} Total
+                  +{(adds || []).length + (edits || []).length}, -{(removes || []).length + (edits || []).length},{' '}
+                  {cube.cards[board].length + (adds || []).length - (removes || []).length} Total
                 </div>
               </Flexbox>
             </Text>

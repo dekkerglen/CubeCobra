@@ -1,14 +1,18 @@
 import dotenv from 'dotenv';
+
+import 'module-alias/register';
 dotenv.config();
 
 import AWS from 'aws-sdk';
 import json from 'big-json';
 import es from 'event-stream';
 import fs from 'fs';
-import https from 'https';
+import { createWriteStream } from 'fs';
 import JSONStream from 'JSONStream';
 import fetch from 'node-fetch';
+import { join } from 'path';
 import path from 'path';
+import { pipeline } from 'stream';
 import stream from 'stream';
 
 import { CardDetails, ColorCategory } from 'datatypes/Card';
@@ -128,30 +132,26 @@ const catalog: Catalog = {
   indexToOracleId: [],
 };
 
-function downloadFile(url: string, filePath: string) {
-  const folder = filePath.substring(0, filePath.lastIndexOf('/'));
-  const folderExists = fs.existsSync(folder);
-  if (!folderExists) fs.mkdirSync(path.join(__dirname, `../${folder}`));
-  const file = fs.createWriteStream(filePath);
-  return new Promise((resolve, reject) => {
-    https
-      .get(url, (response) => {
-        if (response.statusCode !== 200) {
-          response.resume();
-          reject(new Error(`Request to '${url}' failed with status code ${response.statusCode}`));
-          return;
-        }
+async function downloadFile(url: string, filePath: string) {
+  const folder = join(__dirname, `../${filePath.substring(0, filePath.lastIndexOf('/'))}`);
+  if (!fs.existsSync(folder)) {
+    fs.mkdirSync(folder, { recursive: true });
+  }
 
-        const pipe = response.pipe(file);
-        response.on('error', (err) => {
-          reject(new Error(`Response error downloading file from '${url}':\n${err.message}`));
-          response.unpipe(pipe);
-          pipe.destroy();
-        });
-        pipe.on('error', (err) => reject(new Error(`Pipe error downloading file from '${url}':\n${err.message}`)));
-        pipe.on('finish', resolve);
-      })
-      .on('error', (err) => reject(new Error(`Download error for '${url}':\n${err.message}`)));
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Request to '${url}' failed with status: ${response.statusText}`);
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const fileStream = createWriteStream(filePath);
+    pipeline(response.body, fileStream, (err) => {
+      if (err) {
+        reject(new Error(`Download error for '${url}':\n${err.message}`));
+      } else {
+        resolve();
+      }
+    });
   });
 }
 

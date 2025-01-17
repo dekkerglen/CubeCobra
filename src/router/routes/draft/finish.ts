@@ -38,17 +38,11 @@ const FinishDraftBodySchema = Joi.object({
         }),
       )
       .required(),
-    stepQueue: Joi.array()
-      .items(
-        Joi.object({
-          action: Joi.string().required(),
-          data: Joi.any().required(),
-        }),
-      )
-      .required(),
     pack: Joi.number().required(),
     pick: Joi.number().required(),
-  }).required(),
+  })
+    .required()
+    .unknown(true),
   mainboard: Joi.array()
     .items(Joi.array().items(Joi.array().items(Joi.number())))
     .required(),
