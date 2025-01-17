@@ -157,6 +157,7 @@ export const CardDetails = (card: Card): CardDetailsType =>
     tokens: [],
     set_name: '',
     finishes: [],
+    promo_types: [],
   };
 
 export const cardCmc = (card: Card): number => {
@@ -457,10 +458,9 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
     !details.promo &&
     !details.digital &&
     details.border_color !== 'gold' &&
+    details.promo_types === undefined &&
     details.language === 'en' &&
     details.tcgplayer_id !== undefined &&
-    details.set !== 'myb' &&
-    details.set !== 'mb1' &&
     details.collector_number.indexOf('★') === -1,
   dfc: (details) => ['transform', 'modal_dfc', 'meld', 'double_faced_token', 'double_sided'].includes(details.layout),
   mdfc: (details) => details.layout === 'modal_dfc',

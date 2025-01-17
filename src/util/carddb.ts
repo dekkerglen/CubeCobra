@@ -166,10 +166,9 @@ export function reasonableCard(card: CardDetails): boolean {
     !card.digital &&
     !card.isToken &&
     card.border_color !== 'gold' &&
+    card.promo_types === undefined &&
     card.language === 'en' &&
     card.tcgplayer_id !== undefined &&
-    card.set !== 'myb' &&
-    card.set !== 'mb1' &&
     card.collector_number.indexOf('★') === -1 &&
     card.layout !== 'art_series'
   );
