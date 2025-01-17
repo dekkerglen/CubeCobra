@@ -16,7 +16,7 @@ interface EditBlogModalProps {
 }
 
 const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cubeID }) => {
-  const [markdown, setMarkdown] = useState<string>(post ? post.body : '');
+  const [markdown, setMarkdown] = useState<string>(post?.body ?? '');
   const formRef = React.createRef<HTMLFormElement>();
   const [title, setTitle] = useState<string>(post?.title ?? '');
   const formData = useMemo(

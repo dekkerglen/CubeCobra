@@ -1,7 +1,7 @@
 import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 import { v4 as uuidv4 } from 'uuid';
 
-import BlogPost from '../../datatypes/BlogPost';
+import BlogPost, { UnhydratedBlogPost } from '../../datatypes/BlogPost';
 import { BoardChanges, BoardType, Changes } from '../../datatypes/Card';
 import CubeType from '../../datatypes/Cube';
 import UserType from '../../datatypes/User';
@@ -11,59 +11,39 @@ import Changelog from './changelog';
 import Cube from './cube';
 import User from './user';
 
-enum FIELDS {
-  ID = 'id',
-  BODY = 'body',
-  OWNER = 'owner',
-  DATE = 'date',
-  CUBE_ID = 'cube',
-  TITLE = 'title',
-  CHANGELIST_ID = 'changelist',
-}
-
-type CreateBlogPost = {
-  [FIELDS.ID]?: string;
-  [FIELDS.BODY]?: string;
-  [FIELDS.OWNER]: string;
-  [FIELDS.DATE]?: number;
-  [FIELDS.CUBE_ID]: string;
-  [FIELDS.TITLE]: string;
-  [FIELDS.CHANGELIST_ID]?: string;
-};
-
 const client = createClient({
   name: 'BLOG',
-  partitionKey: FIELDS.ID,
+  partitionKey: 'id',
   attributes: {
-    [FIELDS.CUBE_ID]: 'S',
-    [FIELDS.DATE]: 'N',
-    [FIELDS.ID]: 'S',
-    [FIELDS.OWNER]: 'S',
+    cube: 'S',
+    date: 'N',
+    id: 'S',
+    owner: 'S',
   },
   indexes: [
     {
       name: 'ByCube',
-      partitionKey: FIELDS.CUBE_ID,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'cube',
+      sortKey: 'date',
     },
     {
       name: 'ByOwner',
-      partitionKey: FIELDS.OWNER,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'owner',
+      sortKey: 'date',
     },
   ],
 });
 
 const createHydratedBlog = (
-  document: DocumentClient.AttributeMap,
+  document: UnhydratedBlogPost,
   owner: any, //TODO: User type
   cubeName: string,
   Changelog?: Partial<Changes>,
 ): BlogPost => {
   return {
-    id: document.id,
-    body: document.body,
-    date: document.date,
+    id: document.id!,
+    body: document.body || '', //Body can be empty or null, such as an automated changelog post, but BlogPost wants a string
+    date: document.date!,
     cube: document.cube,
     title: document.title,
     owner: owner,
@@ -72,7 +52,7 @@ const createHydratedBlog = (
   };
 };
 
-const hydrate = async (document?: DocumentClient.AttributeMap): Promise<BlogPost | undefined> => {
+const hydrate = async (document?: UnhydratedBlogPost): Promise<BlogPost | undefined> => {
   if (!document) {
     return document;
   }
@@ -97,7 +77,7 @@ const hydrate = async (document?: DocumentClient.AttributeMap): Promise<BlogPost
   return createHydratedBlog(document, owner, cubeName, changelog);
 };
 
-const batchHydrate = async (documents?: DocumentClient.ItemList): Promise<BlogPost[] | undefined> => {
+const batchHydrate = async (documents?: UnhydratedBlogPost[]): Promise<BlogPost[] | undefined> => {
   if (!documents) {
     return undefined;
   }
@@ -130,9 +110,23 @@ const batchHydrate = async (documents?: DocumentClient.ItemList): Promise<BlogPo
   });
 };
 
+const fillRequiredDetails = (document: UnhydratedBlogPost): UnhydratedBlogPost => {
+  return {
+    id: document.id || uuidv4(),
+    cube: document.cube,
+    date: document.date || Date.now().valueOf(),
+    owner: document.owner,
+    body: document.body ? document.body.substring(0, 10000) : undefined,
+    title: document.title,
+    changelist: document.changelist,
+  };
+};
+
 const blog = {
-  getById: async (id: string): Promise<BlogPost | undefined> => hydrate((await client.get(id)).Item),
-  getUnhydrated: async (id: string): Promise<DocumentClient.AttributeMap | undefined> => (await client.get(id)).Item,
+  getById: async (id: string): Promise<BlogPost | undefined> =>
+    hydrate((await client.get(id)).Item as UnhydratedBlogPost),
+  getUnhydrated: async (id: string): Promise<UnhydratedBlogPost | undefined> =>
+    (await client.get(id)).Item as UnhydratedBlogPost,
   getByCube: async (
     cube: string,
     limit: number,
@@ -145,14 +139,14 @@ const blog = {
         ':cube': cube,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.CUBE_ID,
+        '#p1': 'cube',
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
       Limit: limit || 36,
     });
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedBlogPost[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -168,46 +162,28 @@ const blog = {
         ':owner': owner,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.OWNER,
+        '#p1': 'owner',
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
       Limit: limit || 36,
     });
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedBlogPost[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document: CreateBlogPost): Promise<string> => {
-    const id = document[FIELDS.ID] || uuidv4();
-    client.put({
-      [FIELDS.ID]: id,
-      [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
-      [FIELDS.DATE]: document[FIELDS.DATE] || Date.now().valueOf(),
-      [FIELDS.OWNER]: document[FIELDS.OWNER],
-      [FIELDS.BODY]: document[FIELDS.BODY] ? document[FIELDS.BODY].substring(0, 10000) : null,
-      [FIELDS.TITLE]: document[FIELDS.TITLE],
-      [FIELDS.CHANGELIST_ID]: document[FIELDS.CHANGELIST_ID],
-    });
+  put: async (document: UnhydratedBlogPost): Promise<string> => {
+    const filled = fillRequiredDetails(document);
+    client.put(filled);
 
-    return id;
+    return filled.id!;
   },
   delete: async (id: DocumentClient.Key): Promise<void> => {
     await client.delete({ id });
   },
-  batchPut: async (documents: CreateBlogPost[]): Promise<void> => {
-    await client.batchPut(
-      documents.map((document) => ({
-        [FIELDS.ID]: document[FIELDS.ID],
-        [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
-        [FIELDS.DATE]: document[FIELDS.DATE] || Date.now().valueOf(),
-        [FIELDS.OWNER]: document[FIELDS.OWNER],
-        [FIELDS.BODY]: document[FIELDS.BODY] ? document[FIELDS.BODY].substring(0, 10000) : null,
-        [FIELDS.TITLE]: document[FIELDS.TITLE],
-        [FIELDS.CHANGELIST_ID]: document[FIELDS.CHANGELIST_ID],
-      })),
-    );
+  batchPut: async (documents: UnhydratedBlogPost[]): Promise<void> => {
+    await client.batchPut(documents.map((document) => fillRequiredDetails(document)));
   },
   batchGet: async (ids: string[]): Promise<BlogPost[] | undefined> => batchHydrate(await client.batchGet(ids)),
   createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
@@ -251,7 +227,6 @@ const blog = {
 
     return result;
   },
-  FIELDS,
 };
 module.exports = blog;
 export default blog;
