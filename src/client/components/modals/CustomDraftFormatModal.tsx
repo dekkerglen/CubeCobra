@@ -33,7 +33,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
       id: `${formatIndex}`,
       serializedFormat: JSON.stringify(format),
     };
-  }, [format]);
+  }, [format, formatIndex]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>
