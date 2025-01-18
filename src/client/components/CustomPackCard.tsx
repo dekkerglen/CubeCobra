@@ -107,7 +107,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
                 className="me-2"
                 color="accent"
                 onClick={() => {
-                  setPack({ ...pack, slots: [...pack.slots, ''] });
+                  setPack({ ...pack, slots: [...pack.slots, '*'] });
                 }}
                 data-pack-index={packIndex}
               >
