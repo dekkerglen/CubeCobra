@@ -197,7 +197,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
             if (currentStep.action === 'pick') {
               newState.seats[i].picks.unshift(state.seats[i].pack[pick]);
             } else if (currentStep.action === 'trash') {
-              newState.seats[i].picks.unshift(state.seats[i].pack[pick]);
+              newState.seats[i].trashed.unshift(state.seats[i].pack[pick]);
             }
             newState.seats[i].pack.splice(pick, 1);
           }
