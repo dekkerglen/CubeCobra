@@ -114,14 +114,18 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
     async (index: number, location: location, row: number, col: number) => {
       //first update mainboard or sideboard so it's snappy
       const { board, setter } = getLocationReferences(location);
-      board[row][col].push(state.seats[0].pack[index]);
-      setter(board);
 
       setLoading(true);
       const newState = { ...state };
 
       // look at the current step
       const currentStep = newState.stepQueue[0];
+
+      //The board only changes when ther is a pick (human or auto) action
+      if (currentStep.action.includes('pick')) {
+        board[row][col].push(state.seats[0].pack[index]);
+        setter(board);
+      }
 
       // if amount is more than 1
       if (currentStep.amount && currentStep.amount > 1) {
