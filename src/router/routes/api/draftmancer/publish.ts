@@ -37,7 +37,7 @@ interface Player {
   decklist: Decklist;
 }
 
-interface PublishDraftBody {
+export interface PublishDraftBody {
   cubeID: string;
   sessionID: string;
   timestamp: number;
@@ -79,7 +79,7 @@ const PublishDraftBodySchema = Joi.object({
       }),
     )
     .required(),
-  apiKey: Joi.string().equal(process.env.DRAFTMANCER_API_KEY).required(),
+  apiKey: Joi.string().required(),
 });
 
 const validatePublishDraftBody = (req: Request, res: Response, next: NextFunction) => {
@@ -102,8 +102,12 @@ const upsertCardAndGetIndex = (cards: CardDetails[], oracleId: string): number =
   return index;
 };
 
-const handler = async (req: Request, res: Response) => {
+export const handler = async (req: Request, res: Response) => {
   const publishDraftBody = req.body as PublishDraftBody;
+
+  if (publishDraftBody.apiKey !== process.env.DRAFTMANCER_API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
   try {
     const cube: CubeType = await Cube.getById(publishDraftBody.cubeID);
