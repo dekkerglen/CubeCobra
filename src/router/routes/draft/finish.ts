@@ -1,12 +1,13 @@
 import Joi from 'joi';
 
 import { setupPicks } from '../../..//util/draftutil';
-import { cardCmc, cardOracleId, cardType } from '../../../client/utils/cardutil';
+import { cardCmc, cardOracleId } from '../../../client/utils/cardutil';
 import DraftType, { DraftStep } from '../../../datatypes/Draft';
 import Draft from '../../../dynamo/models/draft';
 import { csrfProtection } from '../../../routes/middleware';
 import { NextFunction, Request, Response } from '../../../types/express';
 import { deckbuild } from '../../../util/draftbots';
+import { getCardDefaultRowColumn } from '../../../util/draftutil';
 
 export interface Seat {
   picks: number[];
@@ -128,10 +129,9 @@ const handler = async (req: Request, res: Response) => {
 
       for (const index of newMainboard) {
         const card = draft.cards[index];
-        const row = cardType(card).includes('Creature') || cardType(card).includes('Basic') ? 0 : 1;
-        const column = Math.max(0, Math.min(cardCmc(card), 7));
+        const { row, col } = getCardDefaultRowColumn(card);
 
-        formattedMainboard[row][column].push(index);
+        formattedMainboard[row][col].push(index);
       }
 
       for (const index of pool) {

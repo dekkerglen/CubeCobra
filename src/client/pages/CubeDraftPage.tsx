@@ -10,7 +10,6 @@ import Pack from 'components/Pack';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
-import CardType from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
 import Draft, { DraftStep } from 'datatypes/Draft';
 import DraftLocation, { addCard, location, removeCard } from 'drafting/DraftLocation';
@@ -18,25 +17,15 @@ import { locations } from 'drafting/DraftLocation';
 import useLocalStorage from 'hooks/useLocalStorage';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import { cardCmc, cardType, makeSubtitle } from 'utils/cardutil';
+import { makeSubtitle } from 'utils/cardutil';
 
-import { setupPicks } from '../../util/draftutil';
+import { getCardDefaultRowColumn, setupPicks } from '../../util/draftutil';
 
 interface CubeDraftPageProps {
   cube: Cube;
   draft: Draft;
   loginCallback?: string;
 }
-
-const getCardsDeckStackPosition = (card: CardType): { row: number; col: number } => {
-  const isCreature = cardType(card).toLowerCase().includes('creature');
-  const cmc = cardCmc(card);
-
-  const row = isCreature ? 0 : 1;
-  const col = Math.max(0, Math.min(7, cmc));
-
-  return { row, col };
-};
 
 const getInitialState = (draft: Draft): State => {
   const stepQueue: DraftStep[] = [];
@@ -278,7 +267,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       const cardIndex = state.seats[0].pack[packIndex];
       const card = draft.cards[cardIndex];
 
-      const { row, col } = getCardsDeckStackPosition(card);
+      const { row, col } = getCardDefaultRowColumn(card);
       makePick(packIndex, locations.deck, row, col);
     },
     [state.seats, draft.cards, makePick],
@@ -305,7 +294,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
 
   /*
    * Clicking on a card within either deck stack moves it to the other. Unlike a drag where we have different source and targets,
-   * on a click we only have the source. We determine the target location based on the source card's cmc/type (getCardsDeckStackPosition)
+   * on a click we only have the source. We determine the target location based on the source card's cmc/type (getCardDefaultRowColumn)
    * though if moving to the sideboard only the CMC matters to determine the column.
    */
   const applyCardClickOnDeckStack = useCallback(
@@ -314,7 +303,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       const { board: sourceBoard } = getLocationReferences(source.type);
       const cardIndex = sourceBoard[source.row][source.col][source.index];
       const card = draft.cards[cardIndex];
-      const { row, col } = getCardsDeckStackPosition(card);
+      const { row, col } = getCardDefaultRowColumn(card);
 
       const targetLocation = source.type === locations.deck ? locations.sideboard : locations.deck;
       //The sideboard only has one row, unlike the deck with has 1 row for creatures and 1 for non-creatures
