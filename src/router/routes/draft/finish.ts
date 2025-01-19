@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import { setupPicks } from '../../..//util/draftutil';
-import { cardCmc, cardOracleId } from '../../../client/utils/cardutil';
+import { cardOracleId } from '../../../client/utils/cardutil';
 import DraftType, { DraftStep } from '../../../datatypes/Draft';
 import Draft from '../../../dynamo/models/draft';
 import { csrfProtection } from '../../../routes/middleware';
@@ -137,9 +137,9 @@ const handler = async (req: Request, res: Response) => {
       for (const index of pool) {
         if (!draft.basics.includes(index)) {
           const card = draft.cards[index];
-          const column = Math.max(0, Math.min(cardCmc(card), 7));
+          const { col } = getCardDefaultRowColumn(card);
 
-          formattedSideboard[0][column].push(index);
+          formattedSideboard[0][col].push(index);
         }
       }
 
