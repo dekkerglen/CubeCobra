@@ -1,0 +1,45 @@
+name: Build and Push Docker Image to ECR
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-push-prod:
+    if: github.repository == 'dekkerglen/CubeCobra'
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+
+    env:
+      role: ${{ secrets.GITHUB_ROLE_ARN }}
+      region: us-east-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.role }}
+          aws-region: ${{ env.region }}
+
+      - run: |
+          ECR_REPO_NAME=$(aws cloudformation describe-stacks \
+            --stack-name CubeCobraDevStack \
+            --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue" \
+            --output text)
+
+          echo "ECR_REPO_NAME=${ECR_REPO_NAME}" >> $GITHUB_ENV
+
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPO_NAME:latest .
+          docker push $REGISTRY/$ECR_REPO_NAME:latest
