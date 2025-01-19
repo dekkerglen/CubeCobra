@@ -330,6 +330,10 @@ router.post(
       min: 8,
       max: 24,
     }),
+    body('password2', 'Confirm Password is required').notEmpty(),
+    body('password2', 'Confirm Password must match password.').custom((value, { req }) => {
+      return value === req.body.password;
+    }),
     ...usernameValid,
   ],
   recaptcha,
