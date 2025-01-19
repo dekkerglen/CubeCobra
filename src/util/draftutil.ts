@@ -1,5 +1,6 @@
 import { cardCmc, cardType } from '../client/utils/cardutil';
 import { cmcColumn } from '../client/utils/Util';
+import Card from '../datatypes/Card';
 import Draft, { DraftStep } from '../datatypes/Draft';
 
 interface Step {
@@ -251,11 +252,21 @@ export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: nu
   return states[seatNumber];
 };
 
-export const getDefaultPosition = (card: any, picks: any[][][]): [number, number, number] => {
-  const row = cardType(card).toLowerCase().includes('creature') ? 0 : 1;
-  const col = cmcColumn(card);
+export const getDefaultPosition = (card: Card, picks: any[][][]): [number, number, number] => {
+  const { row, col } = getCardDefaultRowColumn(card);
   const colIndex = picks[row][col].length;
   return [row, col, colIndex];
+};
+
+export const getCardDefaultRowColumn = (card: Card): { row: number; col: number } => {
+  const isCreature = cardType(card).toLowerCase().includes('creature');
+  //Some cards, like Assault//Battery, have a CMC that is a decimal (and then there are un-cards). cmcColumn normalizes between 0 and 8
+  const cmc = cmcColumn(card);
+
+  const row = isCreature ? 0 : 1;
+  const col = Math.max(0, Math.min(7, cmc));
+
+  return { row, col };
 };
 
 export const stepListToTitle = (steps: DraftStep[]): string => {
