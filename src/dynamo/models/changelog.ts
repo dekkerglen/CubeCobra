@@ -1,19 +1,19 @@
-// dotenv
-require('dotenv').config();
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { v4 as uuidv4 } from 'uuid';
 
-const uuid = require('uuid');
-const createClient = require('../util');
-const { getObject, putObject } = require('../s3client');
-import carddb, { cardFromId } from '../../util/carddb';
-const cardutil = require('../../client/utils/cardutil');
+import { Changes } from '../../datatypes/Card';
+import ChangelogType from '../../datatypes/ChangeLog';
+import { cardFromId } from '../../util/carddb';
+import { getBucketName, getObject, putObject } from '../s3client';
+import createClient from '../util';
 
 const CARD_LIMIT = 10000;
 
-const FIELDS = {
-  CUBE_ID: 'cube',
-  DATE: 'date',
-  ID: 'id',
-};
+enum FIELDS {
+  CUBE_ID = 'cube',
+  DATE = 'date',
+  ID = 'id',
+}
 
 const client = createClient({
   name: 'CUBE_CHANGELOG',
@@ -23,12 +23,9 @@ const client = createClient({
     [FIELDS.CUBE_ID]: 'S',
     [FIELDS.DATE]: 'N',
   },
-  FIELDS,
 });
 
-const BLOG_HTML_PARSE = />([^</]+)<\//g;
-
-const sanitizeChangelog = (changelog) => {
+const sanitizeChangelog = (changelog: Changes): Changes => {
   for (const [, value] of Object.entries(changelog)) {
     if (value.adds) {
       for (let i = 0; i < value.adds.length; i++) {
@@ -56,7 +53,7 @@ const sanitizeChangelog = (changelog) => {
   return changelog;
 };
 
-const hydrateChangelog = (changelog) => {
+const hydrateChangelog = (changelog: Changes): Changes => {
   let totalCards = 0;
 
   for (const [, value] of Object.entries(changelog)) {
@@ -117,8 +114,8 @@ const hydrateChangelog = (changelog) => {
   return changelog;
 };
 
-const getChangelog = async (cubeId, id) => {
-  const changelog = await getObject(process.env.DATA_BUCKET, `changelog/${cubeId}/${id}.json`);
+const getChangelog = async (cubeId: string, id: string): Promise<Changes> => {
+  const changelog = await getObject(getBucketName(), `changelog/${cubeId}/${id}.json`);
 
   try {
     return hydrateChangelog(changelog);
@@ -127,60 +124,13 @@ const getChangelog = async (cubeId, id) => {
   }
 };
 
-const parseHtml = (html) => {
-  const changelog = {
-    mainboard: {},
-  };
-
-  const items = html.split(/<\/?br\/?>/g);
-  for (const item of items) {
-    const tokens = [...item.matchAll(BLOG_HTML_PARSE)].map(([, token]) => token);
-    if (tokens.length === 2) {
-      const [operator, cardname] = tokens;
-      const name = cardutil.normalizeName(cardname);
-      const ids = carddb.nameToId[name];
-
-      if (operator === '+') {
-        if (!changelog.mainboard.adds) {
-          changelog.mainboard.adds = [];
-        }
-        if (ids) {
-          changelog.mainboard.adds.push({ cardID: ids[0] });
-        }
-      } else if (operator === '-' || operator === '–') {
-        if (!changelog.mainboard.removes) {
-          changelog.mainboard.removes = [];
-        }
-        if (ids) {
-          changelog.mainboard.removes.push({ oldCard: { cardID: ids[0] } });
-        }
-      }
-    } else if (tokens.length === 3) {
-      const [operator, removed, added] = tokens;
-      if (operator === '→') {
-        if (!changelog.mainboard.swaps) {
-          changelog.mainboard.swaps = [];
-        }
-
-        const addedIds = carddb.nameToId[cardutil.normalizeName(added)];
-        const removedIds = carddb.nameToId[cardutil.normalizeName(removed)];
-
-        if (addedIds && removedIds) {
-          changelog.mainboard.swaps.push({
-            oldCard: { cardID: removedIds[0] },
-            card: { cardID: addedIds[0] },
-          });
-        }
-      }
-    }
-  }
-
-  return changelog;
-};
-
 const Changelog = {
   getById: getChangelog,
-  getByCube: async (cubeId, limit, lastKey) => {
+  getByCube: async (
+    cubeId: string,
+    limit: number,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
     const result = await client.query({
       KeyConditionExpression: `#p1 = :cube`,
       ExpressionAttributeValues: {
@@ -195,7 +145,7 @@ const Changelog = {
     });
 
     const items = await Promise.all(
-      result.Items.map(async (item) => ({
+      (result.Items || []).map(async (item) => ({
         cubeId,
         date: item.date,
         changelog: await getChangelog(cubeId, item[FIELDS.ID]),
@@ -207,9 +157,9 @@ const Changelog = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (changelog, cube) => {
-    const id = uuid.v4();
-    await putObject(process.env.DATA_BUCKET, `changelog/${cube}/${id}.json`, sanitizeChangelog(changelog));
+  put: async (changelog: Changes, cube: string): Promise<string> => {
+    const id = uuidv4();
+    await putObject(getBucketName(), `changelog/${cube}/${id}.json`, sanitizeChangelog(changelog));
     await client.put({
       [FIELDS.ID]: id,
       [FIELDS.CUBE_ID]: cube,
@@ -217,7 +167,7 @@ const Changelog = {
     });
     return id;
   },
-  batchPut: async (documents) => {
+  batchPut: async (documents: DocumentClient.PutItemInputAttributeMap[]): Promise<void> => {
     await client.batchPut(
       documents.map((document) => ({
         [FIELDS.ID]: document.id,
@@ -228,82 +178,32 @@ const Changelog = {
     await Promise.all(
       documents.map(async (document) =>
         putObject(
-          process.env.DATA_BUCKET,
+          getBucketName(),
           `changelog/${document.cubeId}/${document.id}.json`,
           sanitizeChangelog(document.changelog),
         ),
       ),
     );
   },
-  createTable: async () => client.createTable(),
-  getChangelogFromBlog: (blog) => {
-    const { cube, date } = blog;
-
-    let changelog = null;
-    if (blog.changed_cards) {
-      changelog = {
-        mainboard: {},
-      };
-      for (const { removedID, addedID } of blog.changed_cards) {
-        if (addedID && removedID) {
-          // swap
-          if (!changelog.mainboard.swaps) {
-            changelog.mainboard.swaps = [];
-          }
-          changelog.mainboard.swaps.push({
-            card: { cardID: addedID },
-            oldCard: { cardID: removedID },
-          });
-        } else if (addedID) {
-          // add
-          if (!changelog.mainboard.adds) {
-            changelog.mainboard.adds = [];
-          }
-          changelog.mainboard.adds.push({ cardID: addedID });
-        } else if (removedID) {
-          // remove
-          if (!changelog.mainboard.removes) {
-            changelog.mainboard.removes = [];
-          }
-          changelog.mainboard.removes.push({
-            oldCard: { cardID: removedID },
-          });
-        }
-      }
-    } else if (blog.changelist) {
-      changelog = parseHtml(blog.changelist);
-    } else if (blog.html && blog.html.includes('span')) {
-      changelog = parseHtml(blog.html);
-    }
-
-    if (!changelog || Object.entries(changelog.mainboard).length === 0) {
-      return [];
-    }
-
-    return [
-      {
-        id: `${blog._id}`,
-        cubeId: `${cube}`,
-        changelog,
-        date: date.valueOf() || Date.now().valueOf(),
-      },
-    ];
-  },
-  scan: async (limit, lastKey) => {
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  scan: async (
+    limit: number,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items: ChangelogType[]; lastKey?: DocumentClient.Key }> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
       Limit: limit || 36,
     });
 
     return {
-      items: result.Items,
+      items: (result.Items as ChangelogType[]) || [],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  batchGet: async (keys) => {
+  batchGet: async (keys: DocumentClient.Key[]): Promise<Changes[]> => {
     const result = await Promise.all(
       keys.map(async (key) => {
-        const data = await getObject(process.env.DATA_BUCKET, `changelog/${key.cube}/${key.id}.json`);
+        const data = await getObject(getBucketName(), `changelog/${key.cube}/${key.id}.json`);
         try {
           const hydrated = hydrateChangelog(data);
           return hydrated;

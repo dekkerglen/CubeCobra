@@ -177,11 +177,9 @@ Here is a table on how to fill out the env vars:
 | SESSION                | The name of the session cookie. You can leave the default value.                             | Yes       |
 | TCG_PLAYER_PRIVATE_KEY | The private key for the TCGPlayer API.                                                       |           |
 | TCG_PLAYER_PUBLIC_KEY  | The public key for the TCGPlayer API.                                                        |           |
-| CACHE_ENABLED          | Whether or not to enable caching.                                                            |           |
-| AUTOSCALING_GROUP      | The name of the autoscaling group this instance is run in, used for the distributed cache.   |           |
-| CACHE_SECRET           | The secret for the distributed cache.                                                        |           |
 | CAPTCHA_SITE_KEY       | The reCAPTCHA site key                                                                       | Yes       |
 | CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                     | Yes       |
+| DRAFTMANCER_API_KEY    | The Draftmancer API key                                                                      | Yes       |
 
 ### Updating Card Definitions and Analytics
 

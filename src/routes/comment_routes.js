@@ -76,6 +76,7 @@ router.post(
     const { body, mentions = [], parent, type } = req.body;
     const { user } = req;
 
+    //TODO: Type
     if (!['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'].includes(type)) {
       return res.status(400).send({
         success: 'false',
@@ -147,7 +148,7 @@ router.post(
     document.body = content.substring(0, 5000);
 
     if (remove) {
-      document.owner = null;
+      delete document.owner;
     }
 
     await Comment.put(document);

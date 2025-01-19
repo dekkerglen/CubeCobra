@@ -1,3 +1,4 @@
+import { CubeImage } from './Cube';
 import User from './User';
 
 export default interface Comment {
@@ -7,10 +8,5 @@ export default interface Comment {
   owner: User;
   body: string;
   date: number;
-  image?: {
-    id: string;
-    uri: string;
-    artist: string;
-    imageName: string;
-  };
+  image?: CubeImage;
 }

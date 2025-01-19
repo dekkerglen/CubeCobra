@@ -1,12 +1,12 @@
 //Split this into its own file to prevent cyclic dependencies
 
 const cardutil = require('../client/utils/cardutil');
-import carddb, { cardFromId, getIdsFromName } from'./carddb';
+import carddb, { cardFromId, getIdsFromName } from './carddb';
 
 // uri
 // artist
 // id
-function getImageData(imagename) {
+export function getImageData(imagename) {
   const exact = carddb.imagedict[imagename.toLowerCase()];
 
   if (exact) {

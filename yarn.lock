@@ -2113,11 +2113,6 @@
   dependencies:
     make-plural "^7.0.0"
 
-"@mixmark-io/domino@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.npmjs.org/@mixmark-io/domino/-/domino-2.2.0.tgz"
-  integrity sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==
-
 "@mongodb-js/saslprep@^1.1.5":
   version "1.1.9"
   resolved "https://registry.npmjs.org/@mongodb-js/saslprep/-/saslprep-1.1.9.tgz"
@@ -12945,13 +12940,6 @@ tsscmp@1.0.6:
   version "1.0.6"
   resolved "https://registry.npmjs.org/tsscmp/-/tsscmp-1.0.6.tgz"
   integrity sha512-LxhtAkPDTkVCMQjt2h6eBVY28KCjikZqZfMcC15YBeNjkgUpdCfBu5HoiOTDu86v6smE8yOjyEktJ8hlbANHQA==
-
-turndown@^7.1.1:
-  version "7.2.0"
-  resolved "https://registry.npmjs.org/turndown/-/turndown-7.2.0.tgz"
-  integrity sha512-eCZGBN4nNNqM9Owkv9HAtWRYfLA4h909E/WGAWWBpmB275ehNhZyk87/Tpvjbp0jjNl9XwCsbe6bm6CqFsgD+A==
-  dependencies:
-    "@mixmark-io/domino" "^2.2.0"
 
 type-check@^0.4.0, type-check@~0.4.0:
   version "0.4.0"

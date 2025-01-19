@@ -2,13 +2,28 @@ import { Changes } from './Card';
 import Commentable from './Commentable';
 import User from './User';
 
-export default interface BlogPost extends Commentable {
-  id: string;
-  body: string;
-  owner: string | User;
-  date: number;
-  title?: string;
+//Type related directly to DynamoDB
+export type UnhydratedBlogPost = {
+  id?: string;
+  body?: string | null;
+  owner: string;
+  date?: number;
   cube: string;
-  cubeName: string;
-  Changelog?: Partial<Changes>;
-}
+  title?: string;
+  changelist?: string;
+};
+
+/* "extend" the UnhydratedBlogPost with replacements for properties, such as where the prop is always present or
+ * by Hydrating it is no longer a simple type
+ */
+type BlogPost = Commentable &
+  Omit<UnhydratedBlogPost, 'id' | 'owner' | 'body' | 'date' | 'changelist'> & {
+    id: string;
+    body: string | null;
+    owner: User;
+    date: number;
+    cubeName: string;
+    Changelog?: Partial<Changes>;
+  };
+
+export default BlogPost;
