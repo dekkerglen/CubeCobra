@@ -11,7 +11,6 @@ const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 const { render, redirect } = require('../util/render');
 
-
 // Bring in models
 const User = require('../dynamo/models/user');
 const PasswordReset = require('../dynamo/models/passwordReset');
@@ -124,12 +123,11 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
       'Thank you for the report! Our moderators will review the report can decide whether to take action.',
     );
 
-    return redirect(req, res,  `/user/view/${req.params.id}`);
+    return redirect(req, res, `/user/view/${req.params.id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/user/view/${req.params.id}`);
   }
 });
-
 
 // Lost password form
 router.get('/lostpassword', (req, res) => {
@@ -303,7 +301,6 @@ router.post(
 
       req.flash('success', 'Password updated successfully');
       return redirect(req, res, '/user/login');
-
     } catch (err) {
       return util.handleRouteError(req, res, err, `/user/login`);
     }
@@ -330,6 +327,10 @@ router.post(
       min: 8,
       max: 24,
     }),
+    body('password2', 'Confirm Password is required').notEmpty(),
+    body('password2', 'Confirm Password must match password.').custom((value, { req }) => {
+      return value === req.body.password;
+    }),
     ...usernameValid,
   ],
   recaptcha,
@@ -337,7 +338,7 @@ router.post(
   async (req, res) => {
     try {
       const email = req.body.email.toLowerCase();
-      const { username, password } = req.body;     
+      const { username, password } = req.body;
 
       const attempt = { email, username };
 
@@ -379,7 +380,7 @@ router.post(
         roles: [],
         theme: 'default',
         emailVerified: false,
-        token:  uuid.v4(),
+        token: uuid.v4(),
         dateCreated: new Date().valueOf(),
       };
 
