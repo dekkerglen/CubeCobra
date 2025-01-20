@@ -40,7 +40,12 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
   const ownerId = typeof deck.owner === 'object' ? (deck.owner as User).id : deck.owner;
 
   return (
-    <a className="block py-1 px-2 hover:bg-bg-active hover:cursor-pointer" href={`/cube/deck/${deck.id}`}>
+    <div
+      className="block py-1 px-2 hover:bg-bg-active hover:cursor-pointer"
+      onClick={() => {
+        window.location.href = `/cube/deck/${deck.id}`;
+      }}
+    >
       <Flexbox direction="row" className="my-1" justify="between">
         <Flexbox direction="col">
           <Text sm semibold className="truncate flex-grow">
@@ -57,7 +62,7 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
           </DeleteModalButton>
         )}
       </Flexbox>
-    </a>
+    </div>
   );
 };
 

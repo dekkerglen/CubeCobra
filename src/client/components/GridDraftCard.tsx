@@ -44,7 +44,6 @@ const GridDraftCard: React.FC = () => {
             <Select
               label="Type"
               id="type"
-              defaultValue="bot"
               options={[
                 { value: 'bot', label: 'Against Bot' },
                 { value: '2playerlocal', label: '2 Player Local' },
