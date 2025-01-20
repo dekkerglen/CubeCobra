@@ -106,6 +106,9 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
   if (!fs.existsSync('./temp/all_drafts')) {
     fs.mkdirSync('./temp/all_drafts');
   }
+  if (!fs.existsSync('./temp/drafts_by_day')) {
+    fs.mkdirSync('./temp/drafts_by_day');
+  }
 
   await initializeCardDb();
 
