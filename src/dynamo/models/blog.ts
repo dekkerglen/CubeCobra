@@ -132,6 +132,9 @@ const blog = {
     limit: number,
     lastKey?: DocumentClient.Key,
   ): Promise<{ items?: BlogPost[]; lastKey?: DocumentClient.Key }> => {
+    //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
+    const cubeAttr: keyof UnhydratedBlogPost = 'cube';
+
     const result = await client.query({
       IndexName: 'ByCube',
       KeyConditionExpression: `#p1 = :cube`,
@@ -139,7 +142,7 @@ const blog = {
         ':cube': cube,
       },
       ExpressionAttributeNames: {
-        '#p1': 'cube',
+        '#p1': cubeAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
@@ -155,6 +158,8 @@ const blog = {
     limit: number,
     lastKey?: DocumentClient.Key,
   ): Promise<{ items?: BlogPost[]; lastKey?: DocumentClient.Key }> => {
+    const ownerAttr: keyof UnhydratedBlogPost = 'owner';
+
     const result = await client.query({
       IndexName: 'ByOwner',
       KeyConditionExpression: `#p1 = :owner`,
@@ -162,7 +167,7 @@ const blog = {
         ':owner': owner,
       },
       ExpressionAttributeNames: {
-        '#p1': 'owner',
+        '#p1': ownerAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,

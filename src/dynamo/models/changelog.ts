@@ -125,13 +125,15 @@ const Changelog = {
     limit: number,
     lastKey?: DocumentClient.Key,
   ): Promise<{ items?: CubeChangeLog[]; lastKey?: DocumentClient.Key }> => {
+    const cubeAttr: keyof ChangelogType = 'cube';
+
     const result = await client.query({
       KeyConditionExpression: `#p1 = :cube`,
       ExpressionAttributeValues: {
         ':cube': cubeId,
       },
       ExpressionAttributeNames: {
-        '#p1': 'cube',
+        '#p1': cubeAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
