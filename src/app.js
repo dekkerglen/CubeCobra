@@ -220,7 +220,6 @@ app.use('/cube', require('./routes/cube/index'));
 app.use('/public', require('./routes/cube/api_public'));
 app.use('/user', require('./routes/users_routes'));
 app.use('/tool', require('./routes/tools_routes'));
-app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
 app.use('/packages', require('./routes/packages'));
