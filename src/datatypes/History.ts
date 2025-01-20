@@ -12,11 +12,22 @@ export type CubeType =
   | 'cubeCount'
   | 'total';
 
-export default interface History extends Record<CubeType, [number, number] | undefined> {
-  date: number;
-  cubes: number;
-  elo: number;
+export enum Period {
+  MONTH = 'month',
+  WEEK = 'week',
+  DAY = 'day',
+}
+
+//Type related directly to DynamoDB
+export interface UnhydratedCardHistory extends Record<CubeType, [number, number] | undefined> {
+  OTComp: string; //Oracle id colon Period
   oracle: string;
+  date: number;
+  elo: number;
   picks: number;
-  OTComp: string;
+}
+
+//This History is not related to CardHistory
+export default interface History extends UnhydratedCardHistory {
+  cubes: number;
 }

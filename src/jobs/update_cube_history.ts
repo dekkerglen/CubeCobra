@@ -9,6 +9,7 @@ import fs from 'fs';
 
 import type ChangeLogType from 'datatypes/ChangeLog';
 
+import { Period, UnhydratedCardHistory } from '../datatypes/History';
 import CardHistory from '../dynamo/models/cardhistory';
 import ChangeLog from '../dynamo/models/changelog';
 import { cardFromId, initializeCardDb } from '../util/carddb';
@@ -63,6 +64,34 @@ const loadCubesHistory = async (key: string): Promise<CubeDict> => {
   }
 
   return cubes;
+};
+
+const mapTotalsToCardHistory = (
+  oracle: string,
+  type: Period,
+  history: Totals,
+  totals: Totals,
+  date: number,
+  elo: number,
+): UnhydratedCardHistory => {
+  return {
+    OTComp: `${oracle}:${type}`,
+    oracle,
+    date,
+    picks: 0,
+    size180: [history.size180, totals.size180],
+    size360: [history.size360, totals.size360],
+    size450: [history.size450, totals.size450],
+    size540: [history.size540, totals.size540],
+    size720: [history.size720, totals.size720],
+    pauper: [history.pauper, totals.pauper],
+    peasant: [history.peasant, totals.peasant],
+    legacy: [history.legacy, totals.legacy],
+    modern: [history.modern, totals.modern],
+    vintage: [history.vintage, totals.vintage],
+    total: [history.total, totals.total],
+    elo: elo,
+  } as UnhydratedCardHistory;
 };
 
 (async () => {
@@ -287,71 +316,26 @@ const loadCubesHistory = async (key: string): Promise<CubeDict> => {
       const date = new Date(parseInt(year, 10), parseInt(month, 10), parseInt(day, 10)).valueOf();
 
       await CardHistory.batchPut(
-        Object.entries(data).map(([oracle, history]) => ({
-          [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.DAY}`,
-          [CardHistory.FIELDS.ORACLE_ID]: oracle,
-          [CardHistory.FIELDS.DATE]: date,
-          [CardHistory.FIELDS.PICKS]: 0,
-          [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
-          [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
-          [CardHistory.FIELDS.SIZE450]: [history.size450, totals.size450],
-          [CardHistory.FIELDS.SIZE540]: [history.size540, totals.size540],
-          [CardHistory.FIELDS.SIZE720]: [history.size720, totals.size720],
-          [CardHistory.FIELDS.PAUPER]: [history.pauper, totals.pauper],
-          [CardHistory.FIELDS.PEASANT]: [history.peasant, totals.peasant],
-          [CardHistory.FIELDS.LEGACY]: [history.legacy, totals.legacy],
-          [CardHistory.FIELDS.MODERN]: [history.modern, totals.modern],
-          [CardHistory.FIELDS.VINTAGE]: [history.vintage, totals.vintage],
-          [CardHistory.FIELDS.TOTAL]: [history.total, totals.total],
-          [CardHistory.FIELDS.ELO]: oracleToElo[oracle],
-        })),
+        Object.entries(data).map(([oracle, history]) =>
+          mapTotalsToCardHistory(oracle, Period.DAY, history, totals, date, oracleToElo[oracle]),
+        ),
       );
 
       // if key is a sunday
       if (new Date(key).getDay() === 0) {
         await CardHistory.batchPut(
-          Object.entries(data).map(([oracle, history]) => ({
-            [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.WEEK}`,
-            [CardHistory.FIELDS.ORACLE_ID]: oracle,
-            [CardHistory.FIELDS.DATE]: date,
-            [CardHistory.FIELDS.PICKS]: 0,
-            [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
-            [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
-            [CardHistory.FIELDS.SIZE450]: [history.size450, totals.size450],
-            [CardHistory.FIELDS.SIZE540]: [history.size540, totals.size540],
-            [CardHistory.FIELDS.SIZE720]: [history.size720, totals.size720],
-            [CardHistory.FIELDS.PAUPER]: [history.pauper, totals.pauper],
-            [CardHistory.FIELDS.PEASANT]: [history.peasant, totals.peasant],
-            [CardHistory.FIELDS.LEGACY]: [history.legacy, totals.legacy],
-            [CardHistory.FIELDS.MODERN]: [history.modern, totals.modern],
-            [CardHistory.FIELDS.VINTAGE]: [history.vintage, totals.vintage],
-            [CardHistory.FIELDS.TOTAL]: [history.total, totals.total],
-            [CardHistory.FIELDS.ELO]: oracleToElo[oracle],
-          })),
+          Object.entries(data).map(([oracle, history]) =>
+            mapTotalsToCardHistory(oracle, Period.WEEK, history, totals, date, oracleToElo[oracle]),
+          ),
         );
       }
 
       // if key is first of the month
       if (new Date(key).getDate() === 1) {
         await CardHistory.batchPut(
-          Object.entries(data).map(([oracle, history]) => ({
-            [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.MONTH}`,
-            [CardHistory.FIELDS.ORACLE_ID]: oracle,
-            [CardHistory.FIELDS.DATE]: date,
-            [CardHistory.FIELDS.PICKS]: 0,
-            [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
-            [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
-            [CardHistory.FIELDS.SIZE450]: [history.size450, totals.size450],
-            [CardHistory.FIELDS.SIZE540]: [history.size540, totals.size540],
-            [CardHistory.FIELDS.SIZE720]: [history.size720, totals.size720],
-            [CardHistory.FIELDS.PAUPER]: [history.pauper, totals.pauper],
-            [CardHistory.FIELDS.PEASANT]: [history.peasant, totals.peasant],
-            [CardHistory.FIELDS.LEGACY]: [history.legacy, totals.legacy],
-            [CardHistory.FIELDS.MODERN]: [history.modern, totals.modern],
-            [CardHistory.FIELDS.VINTAGE]: [history.vintage, totals.vintage],
-            [CardHistory.FIELDS.TOTAL]: [history.total, totals.total],
-            [CardHistory.FIELDS.ELO]: oracleToElo[oracle],
-          })),
+          Object.entries(data).map(([oracle, history]) =>
+            mapTotalsToCardHistory(oracle, Period.MONTH, history, totals, date, oracleToElo[oracle]),
+          ),
         );
       }
 
