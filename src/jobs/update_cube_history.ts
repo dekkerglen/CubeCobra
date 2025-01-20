@@ -90,7 +90,7 @@ const mapTotalsToCardHistory = (
     modern: [history.modern, totals.modern],
     vintage: [history.vintage, totals.vintage],
     total: [history.total, totals.total],
-    elo: elo,
+    elo: elo || 1200,
   } as UnhydratedCardHistory;
 };
 

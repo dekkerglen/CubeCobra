@@ -23,7 +23,7 @@ export interface UnhydratedCardHistory extends Record<CubeType, [number, number]
   OTComp: string; //Oracle id colon Period
   oracle: string;
   date: number;
-  elo: number;
+  elo?: number;
   picks: number;
 }
 
