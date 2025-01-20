@@ -11,6 +11,7 @@ export const COLOR_CATEGORIES = [
 ] as const;
 export type ColorCategory = (typeof COLOR_CATEGORIES)[number];
 
+export const DefaultElo = 1200;
 export interface CardDetails {
   scryfall_id: string;
   oracle_id: string;

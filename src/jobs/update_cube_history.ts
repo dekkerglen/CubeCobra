@@ -7,6 +7,7 @@ dotenv.config();
 
 import fs from 'fs';
 
+import { DefaultElo } from 'datatypes/Card';
 import type ChangeLogType from 'datatypes/ChangeLog';
 
 import { Period, UnhydratedCardHistory } from '../datatypes/History';
@@ -90,7 +91,7 @@ const mapTotalsToCardHistory = (
     modern: [history.modern, totals.modern],
     vintage: [history.vintage, totals.vintage],
     total: [history.total, totals.total],
-    elo: elo || 1200,
+    elo: elo || DefaultElo,
   } as UnhydratedCardHistory;
 };
 
