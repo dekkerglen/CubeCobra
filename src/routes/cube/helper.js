@@ -197,12 +197,13 @@ function writeCard(res, card, maybe) {
     imgBackUrl = '';
   }
 
+  const colorColors = cardutil.cardColors(card);
   const colorCategory = cardutil.convertFromLegacyCardColorCategory(card.colorCategory);
 
   res.write(`"${name.replaceAll(/"/g, '""')}",`);
   res.write(`${card.cmc || cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
-  res.write(`${(card.colors || colorIdentity || []).join('')},`);
+  res.write(`${colorColors.join('')},`);
   res.write(`"${cardFromId(card.cardID).set}",`);
   res.write(`"${cardFromId(card.cardID).collector_number}",`);
   res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);

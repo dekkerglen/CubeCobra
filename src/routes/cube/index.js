@@ -5,6 +5,7 @@ const RSS = require('rss');
 
 const { CARD_STATUSES } = require('../../datatypes/Card');
 
+const cardutil = require('../../client/utils/cardutil');
 const miscutil = require('../../client/utils/Util');
 const {
   getIdsFromName,
@@ -1298,7 +1299,7 @@ router.post(
         // sort by color
         const details = cardFromId(card.cardID);
         const type = card.type_line || details.type;
-        const colors = card.colors || details.colors;
+        const colors = cardutil.cardColors(card);
 
         if (type.toLowerCase().includes('land')) {
           index1 = 7;
