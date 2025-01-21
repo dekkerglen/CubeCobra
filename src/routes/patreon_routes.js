@@ -7,7 +7,7 @@ const express = require('express');
 const { ensureAuth } = require('./middleware');
 const util = require('../util/util');
 
-import { Levels as PatronLevels, Statuses as PatronStatuses } from '../datatypes/Patron';
+import { PatronLevels, PatronStatuses } from '../datatypes/Patron';
 const Patron = require('../dynamo/models/patron');
 const User = require('../dynamo/models/user');
 const { redirect } = require('../util/render');

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 
-import { Levels as PatronLevels } from '../../../datatypes/Patron';
+import Patron, { PatronLevels } from '../../../datatypes/Patron';
+import { canBeFeatured } from '../../../util/featuredQueueUtil';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import { Col, Flexbox, Row } from '../base/Layout';
@@ -14,9 +15,7 @@ const AddFeaturedButton = withModal(Button, AddFeaturedModal);
 const RemoveFeaturedButton = withModal(Button, RemoveFeaturedCubeModal);
 
 interface UserPatreonConfigProps {
-  patron: {
-    level: number;
-  };
+  patron: Patron;
   featured?: {
     cube: any;
     position: number;
@@ -62,7 +61,7 @@ const UserPatreonConfig: React.FC<UserPatreonConfigProps> = ({ patron, featured 
               </RemoveFeaturedButton>
             </Col>
           </Row>
-        ) : [2, 3].includes(patron.level) ? (
+        ) : canBeFeatured(patron) ? (
           <>
             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
             <AddFeaturedButton block outline color="accent" modalprops={{ cubes: user?.cubes || [] }}>

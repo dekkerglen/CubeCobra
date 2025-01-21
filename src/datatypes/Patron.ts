@@ -3,7 +3,7 @@ export type UnhydratedPatron = {
   email: string;
   user: string; //If this used or is its owner?
   level: number;
-  status: boolean; //is boolean or string?
+  status: string;
   owner: string;
 };
 
@@ -14,14 +14,14 @@ type Patron = Omit<UnhydratedPatron, 'id'> & {
 
 //Numeric enum to map between number sorted in Dynamo and the Patreon integration
 //And typescript is magic enough that accessing Levels with number or string works, giving the other!
-export enum Levels {
+export enum PatronLevels {
   'Patron' = 0, //Does this mean patorn but not at a pre-defined level?
   'Cobra Hatchling' = 1,
   'Coiling Oracle' = 2,
   'Lotus Cobra' = 3,
 }
 
-export enum Statuses {
+export enum PatronStatuses {
   ACTIVE = 'a',
   INACTIVE = 'i',
 }

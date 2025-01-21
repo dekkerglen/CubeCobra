@@ -1,11 +1,7 @@
-import { Levels as PatronLevels, Statuses as PatronStatuses } from '../datatypes/Patron';
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
 const Patron = require('../dynamo/models/patron');
-
-function canBeFeatured(patron) {
-  return patron && patron.status === PatronStatuses.ACTIVE && patron.level > PatronLevels['Cobra Hatchling'];
-}
+import { canBeFeatured } from './featuredQueueUtil';
 
 async function rotateFeatured(queue) {
   if (queue.length < 4) {
