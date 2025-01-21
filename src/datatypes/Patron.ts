@@ -1,16 +1,12 @@
 export type UnhydratedPatron = {
-  id?: string; //Don't think exists
   email: string;
-  user: string; //If this used or is its owner?
   level: number;
   status: string;
   owner: string;
 };
 
-//TODO: Add PatronLevel string, add isPatron (level > 1, eg featureQueue)
-type Patron = Omit<UnhydratedPatron, 'id'> & {
-  id: string;
-};
+//TODO: Patron is not hydrated, but we could add PatronLevel string and more
+type Patron = UnhydratedPatron;
 
 //Numeric enum to map between number sorted in Dynamo and the Patreon integration
 //And typescript is magic enough that accessing Levels with number or string works, giving the other!
