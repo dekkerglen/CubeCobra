@@ -39,7 +39,10 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
           </Text>
           <p>
             Our Markdown syntax is based on the CommonMark specification, which includes all the common Markdown
-            constructs you may already be familiar with. <Link href="https://commonmark.org/help/" target="_blank" rel="noopener noreferrer">Learn more.</Link>
+            constructs you may already be familiar with.{' '}
+            <Link href="https://commonmark.org/help/" target="_blank" rel="noopener noreferrer">
+              Learn more.
+            </Link>
           </p>
         </CardBody>
         <CardBody className="border-top">
@@ -627,6 +630,40 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
               </Card>
             </Col>
           </Row>
+          <br />
+          <p>To use a card link or image with an id inside a table, the pipe must be escaped with a slash.</p>
+          <Row>
+            <Col xs={12} sm={6}>
+              <Card>
+                <CardHeader>Source</CardHeader>
+                <CardBody>
+                  <p>
+                    <code>| Column A | Column B |</code>
+                    <br />
+                    <code>| - | - |</code>
+                    <br />
+                    <code>| [[!/Delver of Secrets&#92;|28059d09-2c7d-4c61-af55-8942107a7c1f]] | Image |</code>
+                    <br />
+                    <code>| [[Old Border Mystic Snake&#92;|f098a28c-5f9b-4a2c-b109-c342365eb948]] | Card link |</code>
+                    <br />
+                    <code>| [[Ambush Viper]] | Card link without id |</code>
+                  </p>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card>
+                <CardHeader>Result</CardHeader>
+                <CardBody>
+                  <Markdown
+                    markdown={
+                      '| Column A | Column B |\n| - | - |\n| [[!/Delver of Secrets\\|28059d09-2c7d-4c61-af55-8942107a7c1f]] | Image |\n| [[Old Border Mystic Snake\\|f098a28c-5f9b-4a2c-b109-c342365eb948]] | Card link |\n| [[Ambush Viper]] | Card link without id |'
+                    }
+                  />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         </CardBody>
         <CardBody className="border-top">
           <Text semibold md>
@@ -673,7 +710,11 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
           <p>
             When writing a code block, specifying a language will enable syntax highlighting for that language. You can
             specify{' '}
-            <Link href="https://github.com/react-syntax-highlighter/react-syntax-highlighter/blob/master/AVAILABLE_LANGUAGES_HLJS.MD" target="_blank" rel="noopener noreferrer">
+            <Link
+              href="https://github.com/react-syntax-highlighter/react-syntax-highlighter/blob/master/AVAILABLE_LANGUAGES_HLJS.MD"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               the following languages.
             </Link>
           </p>
@@ -709,14 +750,18 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
             Header linking
           </Text>
           <p>
-            Headers in markdown can be linked to within the page by creating anchors with fragment (#) URLs. The content of the fragment
-            is the text content of the header in lowercase, with whitespace replaced by "-" (dash) and non-letter/numbers characters removed (see examples).
-            Each heading must have unique text (within the page) for the linking to work.
+            Headers in markdown can be linked to within the page by creating anchors with fragment (#) URLs. The content
+            of the fragment is the text content of the header in lowercase, with whitespace replaced by "-" (dash) and
+            non-letter/numbers characters removed (see examples). Each heading must have unique text (within the page)
+            for the linking to work.
           </p>
           <p>Examples:</p>
           <ul>
             <li>A header with text "This is my cube" can be linked from fragment "#this-is-my-cube"</li>
-            <li>Non-letters such as emoji's or symbols will be removed: "😄 emoji ♥" can be linked from fragment "#-emoji-"</li>
+            <li>
+              Non-letters such as emoji's or symbols will be removed: "😄 emoji ♥" can be linked from fragment
+              "#-emoji-"
+            </li>
             <li>Non-ASCII letters work: "The Héroïne" can be linked from fragment "#the-héroïne"</li>
           </ul>
           <br />
