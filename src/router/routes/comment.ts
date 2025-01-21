@@ -93,7 +93,7 @@ export const editCommentHandler = async (req: Request, res: Response) => {
   comment.body = content.substring(0, 5000);
 
   if (remove) {
-    delete comment.owner;
+    comment.owner = { id: '404', username: 'Anonymous' };
   }
 
   await Comment.put(comment);

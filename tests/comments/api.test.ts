@@ -15,6 +15,7 @@ import * as util from '../../src/util/render';
 import * as routeUtil from '../../src/util/util';
 
 jest.mock('../../src/dynamo/models/comment', () => ({
+  ...jest.requireActual('../../src/dynamo/models/comment'),
   getById: jest.fn(),
   queryByParentAndType: jest.fn(),
   put: jest.fn(),
@@ -24,15 +25,13 @@ jest.mock('../../src/dynamo/models/user', () => ({
   getByUsername: jest.fn(),
 }));
 
-jest.mock('../../src/datatypes/Comment', () => {
-  return {
-    ...jest.requireActual('../../src/datatypes/Comment'),
-    isCommentType: jest.fn() as unknown as (value: unknown) => value is ReturnType<typeof isCommentType>,
-    isNotifiableCommentType: jest.fn() as unknown as (
-      value: unknown,
-    ) => value is ReturnType<typeof isNotifiableCommentType>,
-  };
-});
+jest.mock('../../src/datatypes/Comment', () => ({
+  ...jest.requireActual('../../src/datatypes/Comment'),
+  isCommentType: jest.fn() as unknown as (value: unknown) => value is ReturnType<typeof isCommentType>,
+  isNotifiableCommentType: jest.fn() as unknown as (
+    value: unknown,
+  ) => value is ReturnType<typeof isNotifiableCommentType>,
+}));
 
 jest.mock('../../src/dynamo/models/user', () => ({
   getByUsername: jest.fn(),
@@ -280,12 +279,14 @@ describe('Edit Comment', () => {
     // Edit to delete
     req.body.comment.remove = true;
     await editCommentHandler(req as Request, res as Response);
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith({ success: 'true' });
     expect(Comment.put).toHaveBeenCalledWith(
       expect.objectContaining({
         id: '123',
         body: 'This is the updated comment content.',
+        owner: expect.objectContaining({ id: '404' }),
       }),
     );
   });

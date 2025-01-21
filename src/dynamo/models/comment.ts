@@ -61,7 +61,7 @@ const createHydratedComment = (document: DocumentClient.AttributeMap, owner: Use
   };
 };
 
-const getAnonymousUser = (): User => {
+export const getAnonymousUser = (): User => {
   return {
     id: '404',
     username: 'Anonymous',
