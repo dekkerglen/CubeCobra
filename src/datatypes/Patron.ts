@@ -1,7 +1,29 @@
-export default interface Patron {
-  id: string;
+export type UnhydratedPatron = {
+  id?: string; //Don't think exists
   email: string;
-  user: string;
+  user: string; //If this used or is its owner?
   level: number;
-  active: boolean;
+  status: boolean; //is boolean or string?
+  owner: string;
+};
+
+//TODO: Add PatronLevel string, add isPatron (level > 1, eg featureQueue)
+type Patron = Omit<UnhydratedPatron, 'id'> & {
+  id: string;
+};
+
+//Numeric enum to map between number sorted in Dynamo and the Patreon integration
+//And typescript is magic enough that accessing Levels with number or string works, giving the other!
+export enum Levels {
+  'Patron' = 0, //Does this mean patorn but not at a pre-defined level?
+  'Cobra Hatchling' = 1,
+  'Coiling Oracle' = 2,
+  'Lotus Cobra' = 3,
 }
+
+export enum Statuses {
+  ACTIVE = 'a',
+  INACTIVE = 'i',
+}
+
+export default Patron;

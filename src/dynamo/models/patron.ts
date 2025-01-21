@@ -1,72 +1,37 @@
-const createClient = require('../util');
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 
-const FIELDS = {
-  OWNER: 'owner',
-  EMAIL: 'email',
-  STATUS: 'status',
-  LEVEL: 'level',
-};
-
-const STATUSES = {
-  ACTIVE: 'a',
-  INACTIVE: 'i',
-};
-
-const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
+import { UnhydratedPatron } from '../../datatypes/Patron';
+import createClient from '../util';
 
 const client = createClient({
   name: 'PATRON',
-  partitionKey: FIELDS.OWNER,
+  partitionKey: 'owner',
   attributes: {
-    [FIELDS.OWNER]: 'S',
-    [FIELDS.EMAIL]: 'S',
+    owner: 'S',
+    email: 'S',
   },
   indexes: [
     {
       name: 'ByEmail',
-      partitionKey: FIELDS.EMAIL,
+      partitionKey: 'email',
+      sortKey: 'email', //TODO: ???
     },
   ],
-  FIELDS,
 });
 
 module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
-  getByEmail: async (email) =>
-    (
-      await client.query({
-        IndexName: 'ByEmail',
-        KeyConditionExpression: 'email = :email',
-        ExpressionAttributeValues: {
-          ':email': email,
-        },
-      })
-    ).Items[0],
-  put: async (document) => client.put(document),
-  batchPut: async (documents) => {
-    const keys = new Set();
-    const items = [];
-
-    for (const document of documents) {
-      if (!keys.has(document.owner)) {
-        keys.add(document.owner);
-        items.push(document);
-      }
-    }
-
-    await client.batchPut(items);
+  getById: async (id: string): Promise<UnhydratedPatron> => (await client.get(id)).Item as UnhydratedPatron,
+  getByEmail: async (email: string): Promise<UnhydratedPatron | undefined> => {
+    const result = await client.query({
+      IndexName: 'ByEmail',
+      KeyConditionExpression: 'email = :email',
+      ExpressionAttributeValues: {
+        ':email': email,
+      },
+    });
+    return result.Items ? (result.Items[0] as UnhydratedPatron) : undefined;
   },
-  createTable: async () => client.createTable(),
-  convertPatron: (document) => {
-    return {
-      [FIELDS.OWNER]: `${document.user}`,
-      [FIELDS.EMAIL]: document.email,
-      [FIELDS.STATUS]: document.active ? STATUSES.ACTIVE : STATUSES.INACTIVE,
-      [FIELDS.LEVEL]: LEVELS.findIndex((level) => level === document.level),
-    };
-  },
-  deleteById: async (id) => client.delete({ id }),
-  FIELDS,
-  STATUSES,
-  LEVELS,
+  put: async (document: UnhydratedPatron): Promise<DocumentClient.PutItemInputAttributeMap> => client.put(document),
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  deleteById: async (id: DocumentClient.Key): Promise<void> => client.delete({ id }),
 };

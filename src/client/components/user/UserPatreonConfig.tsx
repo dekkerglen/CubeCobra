@@ -1,8 +1,9 @@
 import React, { useContext } from 'react';
 
+import { Levels as PatronLevels } from '../../../datatypes/Patron';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
-import { Col,Flexbox, Row } from '../base/Layout';
+import { Col, Flexbox, Row } from '../base/Layout';
 import Text from '../base/Text';
 import CubePreview from '../cube/CubePreview';
 import AddFeaturedModal from '../modals/AddFeaturedModal';
@@ -11,8 +12,6 @@ import withModal from '../WithModal';
 
 const AddFeaturedButton = withModal(Button, AddFeaturedModal);
 const RemoveFeaturedButton = withModal(Button, RemoveFeaturedCubeModal);
-
-const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
 
 interface UserPatreonConfigProps {
   patron: {
@@ -31,7 +30,7 @@ const UserPatreonConfig: React.FC<UserPatreonConfigProps> = ({ patron, featured 
     <Flexbox direction="col" gap="2">
       {user?.roles?.includes('Patron') ? (
         <p>
-          Your account is linked at the <b>{LEVELS[patron.level]}</b> level.
+          Your account is linked at the <b>{PatronLevels[patron.level]}</b> level.
         </p>
       ) : (
         <p>Your account is linked, but you are not an active patron.</p>
