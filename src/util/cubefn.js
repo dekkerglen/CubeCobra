@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 const _ = require('lodash')
 const sharp = require('sharp');
 const Cube = require('../dynamo/models/cube');
-const { convertFromLegacyCardColorCategory } = require('../client/utils/cardutil');
+const { cardColors, convertFromLegacyCardColorCategory } = require('../client/utils/cardutil');
 const { cardFromId, allVersions, reasonableId } = require('../util/carddb');
 
 const util = require('./util');
@@ -48,7 +48,9 @@ function cardsAreEquivalent(card, details) {
   if (!util.arraysEqual(card.tags, details.tags)) {
     return false;
   }
-  if (!util.arraysEqual(card.colors, details.colors)) {
+  const cardColors = typeof card.colors === 'string' ? [...card.colors] : card.colors;
+  const detailsColors = typeof details.colors === 'string' ? [...details.colors] : details.colors;
+  if (!util.arraysEqual(cardColors, detailsColors)) {
     return false;
   }
   if (card.finish && details.finish && card.finish !== details.finish) {
