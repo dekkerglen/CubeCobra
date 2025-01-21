@@ -314,6 +314,10 @@ const generateSamplepackImage = async (sources = [], width, height) => {
 
       const res = await fetch(source.src, fetchOptions);
 
+      if (!res.ok) {
+        console.log(`Failed to fetch image: ${source.src}. Response statuses: ${res.status}, ${res.statusText}`);
+      }
+
       return {
         input: await sharp(Buffer.from(await res.arrayBuffer()))
           .resize({ width: source.width, height: source.height })
