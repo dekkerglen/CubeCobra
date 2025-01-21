@@ -245,5 +245,8 @@
     "webpack-dev-server": "^5.0.4",
     "webpack-node-externals": "^3.0.0"
   },
-  "packageManager": "npm@4.4.0"
+  "packageManager": "npm@4.4.0",
+  "overrides": {
+    "mdast-util-gfm-autolink-literal": "2.0.0"
+  }
 }
