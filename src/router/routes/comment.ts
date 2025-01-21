@@ -200,13 +200,13 @@ export const routes = [
   },
   {
     path: '/getcomments',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, getCommentsHandler],
   },
   {
     path: '/edit',
     method: 'post',
-    handler: [ensureAuth, csrfProtection, reportHandler],
+    handler: [ensureAuth, csrfProtection, editCommentHandler],
   },
   {
     path: '/addcomment',
