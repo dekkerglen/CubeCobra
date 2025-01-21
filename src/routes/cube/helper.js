@@ -184,7 +184,7 @@ function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = cardFromId(card.cardID).type;
   }
-  const { name, rarity, colorcategory, cmc, color_identity: colorIdentity } = cardFromId(card.cardID);
+  const { name, rarity, colorcategory, cmc } = cardFromId(card.cardID);
   let { imgUrl, imgBackUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
