@@ -14,7 +14,6 @@ const client = createClient({
     {
       name: 'ByEmail',
       partitionKey: 'email',
-      sortKey: 'email', //TODO: ???
     },
   ],
 });
