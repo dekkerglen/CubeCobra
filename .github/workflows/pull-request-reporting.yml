@@ -10,7 +10,7 @@ on:
       - completed
 
 env:
-  REVIEWDOG_BASE_OPTIONS: '-reporter "github-pr-review" -filter-mode="added" -fail-on-error="false" -level="error"'
+  REVIEWDOG_BASE_OPTIONS: '-reporter github-pr-review -filter-mode=added -fail-on-error=false -level=error'
 
 jobs:
   download:
@@ -21,34 +21,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-      # From https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#using-data-from-the-triggering-workflow
-      # - name: 'Download artifact'
-      #   uses: actions/github-script@v6
-      #   with:
-      #     script: |
-      #       let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
-      #       owner: context.repo.owner,
-      #       repo: context.repo.repo,
-      #       run_id: context.payload.workflow_run.id,
-      #       });
-      #       let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
-      #       return artifact.name == "pr_number"
-      #       })[0];
-      #       let download = await github.rest.actions.downloadArtifact({
-      #       owner: context.repo.owner,
-      #       repo: context.repo.repo,
-      #       artifact_id: matchArtifact.id,
-      #       archive_format: 'zip',
-      #       });
-      #       const fs = require('fs');
-      #       const path = require('path');
-      #       const temp = '${{ runner.temp }}/artifacts';
-      #       if (!fs.existsSync(temp)){
-      #       fs.mkdirSync(temp);
-      #       }
-      #       fs.writeFileSync(path.join(temp, 'pr_number.zip'), Buffer.from(download.data));
-      #- name: 'Unzip artifact'
-      #  run: unzip pr_number.zip -d "${{ runner.temp }}/artifacts"
       - uses: reviewdog/action-setup@v1
         with:
           reviewdog_version: v0.20.3

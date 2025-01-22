@@ -60,8 +60,8 @@ jobs:
         if: always()
         env:
           DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
-        # Always do true after to ensure the step passes, since we are reporting later
-        run: npx eslint --max-warnings 0 $(cat $DIFF) > eslint.out; true
+        # Even if error run true so the step passes
+        run: npx eslint --max-warnings 0 $(cat $DIFF) > eslint.out || true
       - name: Upload eslint Report
         if: always()
         continue-on-error: true
@@ -75,7 +75,7 @@ jobs:
         if: always()
         env:
           DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
-        run: npm run lint:prettier 2> prettier.out; true
+        run: npm run lint:prettier 2> prettier.out || true
       - name: Upload Prettier Report
         if: always()
         continue-on-error: true
