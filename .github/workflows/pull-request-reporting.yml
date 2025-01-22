@@ -8,6 +8,7 @@ on:
     workflows: [CI Tests]
     types:
       - completed
+# TODO: Minimal permissions
 
 env:
   REVIEWDOG_BASE_OPTIONS: '-reporter=github-pr-review -filter-mode=nofilter -fail-on-error=false -level=error'
