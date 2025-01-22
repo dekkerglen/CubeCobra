@@ -244,7 +244,7 @@ async function writeFile(filepath: string, data: any) {
 function getScryfallTokensForCard(card: ScryfallCard) {
   const allParts = card.all_parts || [];
   return allParts
-    .filter((element) => element.component === 'token' || element.type_line.startsWith('Emblem'))
+    .filter((element) => element.component === 'token' || element.type_line.includes('Emblem') || element.type_line.includes('Dungeon') || (element.type_line.includes('Card') && !element.name.includes('Checklist')))
     .map(({ id }) => id);
 }
 
