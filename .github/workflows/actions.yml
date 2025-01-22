@@ -42,12 +42,12 @@ jobs:
       - name: Test
         run: npm run --silent list-files
       - name: Test2
-        run: git diff ${{ github.base_ref }} --name-only
+        run: git diff ${{ GITHUB_BASE_REF }}...HEAD --name-only
 
       - name: Run eslint on changed files
         # Always run both eslint and prettier
         if: always()
-        run: npm run lint:eslint > eslint.out
+        run: npm run lint:eslint
       - name: Upload eslint Report
         if: always()
         continue-on-error: true
