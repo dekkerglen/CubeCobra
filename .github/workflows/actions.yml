@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # Run on pushes to dekkerglen/CubeCobra master branch, or any pull request
-    if: ${{ (github.event.action == 'push' && github.repository == 'dekkerglen/CubeCobra') || github.event.action != 'push' }}
+    if: ${{ (github.event_name == 'push' && github.repository == 'dekkerglen/CubeCobra') || github.event_name != 'push' }}
 
     steps:
       - uses: actions/checkout@v4
