@@ -248,6 +248,7 @@ const specialCaseTokens = {
   "City's Blessing": 'ba64ed3e-93c5-406f-a38d-65cc68472122',
   "The Monarch": '40b79918-22a7-4fff-82a6-8ebfe6e87185',
   "Energy Reserve": 'a446b9f8-cb22-408a-93ff-bee44a0dccc0',
+  "Day // Night": '9c0f7843-4cbb-4d0f-8887-ec823a9238da',
 };
 
 function getScryfallTokensForCard(card: ScryfallCard) {
@@ -444,6 +445,9 @@ function getTokens(card: ScryfallCard, catalogCard: CardDetails) {
     }
     if (catalogCard.oracle_text.includes('{E}')) {
       mentionedTokens.push(specialCaseTokens["Energy Reserve"]);
+    }
+    if (catalogCard.oracle_text.includes('becomes day') || catalogCard.oracle_text.includes('becomes night') || catalogCard.oracle_text.includes('Daybound')) {
+      mentionedTokens.push(specialCaseTokens["Day // Night"]);
     }
 
     if (catalogCard.oracle_text.includes('emblem')) {
