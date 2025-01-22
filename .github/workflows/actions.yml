@@ -43,7 +43,7 @@ jobs:
         run: npm run --silent list-files
       - name: Test2
         run: git diff ${{ github.base_ref }}...HEAD --name-only
-      - uses: GrantBirki/git-diff-action@vX.X.X
+      - uses: GrantBirki/git-diff-action@v2.7.0
         id: git-diff-action
         with:
           base_branch: HEAD^1 # compare the PR merge commit against its first parent
