@@ -1,8 +1,5 @@
-import { Request, Response } from 'src/types/express';
-
-import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from 'datatypes/Comment';
-import User from 'datatypes/User';
-
+import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '../../datatypes/Comment';
+import User from '../../datatypes/User';
 import Blog from '../../dynamo/models/blog';
 import Comment from '../../dynamo/models/comment';
 import Content from '../../dynamo/models/content';
@@ -11,6 +8,7 @@ import Notice from '../../dynamo/models/notice';
 import Package from '../../dynamo/models/package';
 import * as DynamoUser from '../../dynamo/models/user';
 import { csrfProtection, ensureAuth } from '../../routes/middleware';
+import { Request, Response } from '../../types/express';
 import { getImageData } from '../../util/imageutil';
 import util from '../../util/util';
 

@@ -1,16 +1,15 @@
+import { isCommentType, isNotifiableCommentType } from '../../src/datatypes/Comment';
+import Comment from '../../src/dynamo/models/comment';
+import Notice from '../../src/dynamo/models/notice';
+import * as DynamoUser from '../../src/dynamo/models/user';
 import {
   addCommentHandler,
   editCommentHandler,
   getCommentsHandler,
   getHandler,
   reportHandler,
-} from 'src/router/routes/comment';
-import { Request, Response } from 'src/types/express';
-
-import { isCommentType, isNotifiableCommentType } from '../../src/datatypes/Comment';
-import Comment from '../../src/dynamo/models/comment';
-import Notice from '../../src/dynamo/models/notice';
-import * as DynamoUser from '../../src/dynamo/models/user';
+} from '../../src/router/routes/comment';
+import { Request, Response } from '../../src/types/express';
 import * as util from '../../src/util/render';
 import * as routeUtil from '../../src/util/util';
 
