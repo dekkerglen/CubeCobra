@@ -47,6 +47,7 @@ module.exports = {
       displayName: 'other-tests',
       testEnvironment: 'node',
       testMatch: ['**/tests/**/*.test.ts'], // Non-component tests
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
     },
   ],
 };
