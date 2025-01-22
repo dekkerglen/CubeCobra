@@ -241,22 +241,21 @@ async function writeFile(filepath: string, data: any) {
   });
 }
 
-const specialCaseTokens = {
-  Food: 'bf36408d-ed85-497f-8e68-d3a922c388a0',
-  Treasure: 'e6fa7d35-9a7a-40fc-9b97-b479fc157ab0',
-  "Poison Counter": '470618f6-f67f-44c6-a086-285632508915',
-  "City's Blessing": 'ba64ed3e-93c5-406f-a38d-65cc68472122',
-  "The Monarch": '40b79918-22a7-4fff-82a6-8ebfe6e87185',
-  "Energy Reserve": 'a446b9f8-cb22-408a-93ff-bee44a0dccc0',
-  "Day // Night": '9c0f7843-4cbb-4d0f-8887-ec823a9238da',
-};
-
 function getScryfallTokensForCard(card: ScryfallCard) {
   const allParts = card.all_parts || [];
   return allParts
-    .filter((element) => element.component === 'token' || element.type_line.startsWith('Emblem') || Object.keys(specialCaseTokens).includes(element.name))
+    .filter((element) => element.component === 'token' || element.type_line.startsWith('Emblem'))
     .map(({ id }) => id);
 }
+
+const specialCaseTokens = {
+  Food: 'bf36408d-ed85-497f-8e68-d3a922c388a0',
+  Treasure: 'e6fa7d35-9a7a-40fc-9b97-b479fc157ab0',
+  Poison: '470618f6-f67f-44c6-a086-285632508915',
+  "City's Blessing": 'ba64ed3e-93c5-406f-a38d-65cc68472122',
+  Monarch: '40b79918-22a7-4fff-82a6-8ebfe6e87185',
+  Energy: 'a446b9f8-cb22-408a-93ff-bee44a0dccc0',
+};
 
 function arraySetEqual<T>(target: T[], candidate: T[]) {
   let isValid = candidate.length === target.length;
@@ -438,16 +437,13 @@ function getTokens(card: ScryfallCard, catalogCard: CardDetails) {
       mentionedTokens.push(specialCaseTokens["City's Blessing"]);
     }
     if (catalogCard.oracle_text.includes('poison counter')) {
-      mentionedTokens.push(specialCaseTokens["Poison Counter"]);
+      mentionedTokens.push(specialCaseTokens.Poison);
     }
     if (catalogCard.oracle_text.includes('you become the monarch')) {
-      mentionedTokens.push(specialCaseTokens["The Monarch"]);
+      mentionedTokens.push(specialCaseTokens.Monarch);
     }
     if (catalogCard.oracle_text.includes('{E}')) {
-      mentionedTokens.push(specialCaseTokens["Energy Reserve"]);
-    }
-    if (catalogCard.oracle_text.includes('becomes day') || catalogCard.oracle_text.includes('becomes night') || catalogCard.oracle_text.includes('Daybound')) {
-      mentionedTokens.push(specialCaseTokens["Day // Night"]);
+      mentionedTokens.push(specialCaseTokens.Energy);
     }
 
     if (catalogCard.oracle_text.includes('emblem')) {
