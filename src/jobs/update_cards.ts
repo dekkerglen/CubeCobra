@@ -246,6 +246,7 @@ const miscTokens = ['Manifest', 'A Mysterious Creature']
 function getScryfallTokensForCard(card: ScryfallCard) {
   const allParts = card.all_parts || [];
   return allParts
+    // the 'Card' type includes helper cards that aren't technically tokens like Monarch, Day-Night tracker, etc. Exclude "CheckLists" for flip cards
     .filter((element) => element.component === 'token' || element.type_line.includes('Emblem') || element.type_line.includes('Dungeon') || (element.type_line.includes('Card') && !element.name.includes('Checklist')) || miscTokens.includes(element.name))
     .map(({ id }) => id);
 }
