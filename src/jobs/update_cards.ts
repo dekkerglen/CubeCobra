@@ -271,7 +271,7 @@ function arraySetEqual<T>(target: T[], candidate: T[]) {
 }
 
 function getExtraTokensForDungeons(card: ScryfallCard) {
-  const extraTokens: any[] = [];
+  const extraTokens: string[] = [];
   const allParts = card.all_parts || [];
   if (allParts.some((element) => element.name == 'Undercity // The Initiative')) {
     extraTokens.push(specialCaseTokens.Treasure);
@@ -295,8 +295,7 @@ function getTokens(card: ScryfallCard, catalogCard: CardDetails) {
   const mentionedTokens: any[] = [];
   const recordedTokens = getScryfallTokensForCard(card);
   if (recordedTokens.length > 0) {
-    catalogCard.tokens = recordedTokens;
-    mentionedTokens.push(getExtraTokensForDungeons(card))
+    catalogCard.tokens = recordedTokens.concat(getExtraTokensForDungeons(card));
   } else if (catalogCard.oracle_text !== null) {
     if (catalogCard.oracle_text.includes(' token')) {
       // find the ability that generates the token to reduce the amount of text to get confused by.
