@@ -25,11 +25,13 @@ jobs:
         with:
           reviewdog_version: v0.20.3
       - name: Run reviewdog for eslint
+        if: always()
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat artifacts/eslint.out | reviewdog $REVIEWDOG_BASE_OPTIONS -f "eslint" -name "eslint"
       - name: Run reviewdog for prettier
+        if: always()
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Prettier does not have a readable format that reviewdog understands, so we have to give it line formatting code via -efm
