@@ -9,7 +9,7 @@ export interface AlertProps {
   className?: string;
 }
 
-//Foo
+//Fooasd
 export interface UncontrolledAlertProps {
   color: 'danger' | 'warning' | 'success' | 'info';
   message: string;
