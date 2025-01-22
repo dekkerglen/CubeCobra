@@ -26,7 +26,7 @@ const NavMenu: React.FC<NavMenuProps> = ({ label, children, wide, navBar }) => {
       return;
     }
 
-    //asdsdaa
+    //asdsdaafff
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);

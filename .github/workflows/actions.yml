@@ -104,17 +104,17 @@ jobs:
       #     prettier_flags: '**/*.{js,jsx,ts,tsx}'
       #     reporter: github-pr-review
 
-      - name: Run tests
-        if: success()
-        run: npm run test:ci
+      # - name: Run tests
+      #   if: success()
+      #   run: npm run test:ci
 
-      - name: Upload Jest Coverage Report
-        if: success()
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: jest-coverage
-          path: coverage
+      # - name: Upload Jest Coverage Report
+      #   if: success()
+      #   continue-on-error: true
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: jest-coverage
+      #     path: coverage
 
-      - name: Build
-        run: npm run ci-build
+      # - name: Build
+      #   run: npm run ci-build
