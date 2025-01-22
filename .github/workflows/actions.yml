@@ -15,7 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
+        with:
+          # Get history so we can do git diff
+          fetch-depth: 0
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v4
