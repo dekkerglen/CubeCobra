@@ -45,10 +45,11 @@ jobs:
           json_diff_file_output: diff.json # write the JSON diff output to a file called 'diff.json'
           raw_diff_file_output: diff.txt # write the raw diff output to a file called 'diff.txt' (just in case)
           file_output_only: "true" # do not print any diff output to the console (safety first)
-          search_path: '.' # look in the entire repo for changes
           max_buffer_size: "1000000" # the default git diff buffer size, increase if you have issues
           # Align file filters with lint-staged. They are single quoted so Git interprets them instead of the shell
-          git_options: "--name-only --diff-filter=ACMR -- '*.js' '*.jsx' '*.ts' '*.tsx'"
+          search_path: "'*.js' '*.jsx' '*.ts' '*.tsx'"
+          # Only care about file names and non-deleted files
+          git_options: "--name-only --diff-filter=ACMR"
       - name: Test3
         env:
           DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
