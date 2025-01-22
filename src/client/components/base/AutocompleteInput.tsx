@@ -180,11 +180,13 @@ export const treeCache: Record<string, Promise<TreeNode | null>> = {};
 const fetchTree = async (treeUrl: string, treePath: string): Promise<TreeNode | null> => {
   const response = await fetch(treeUrl);
   if (!response.ok) {
+    // eslint-disable-next-line no-console
     console.error(`Failed to fetch autocomplete tree: ${response.status}`);
     return null;
   }
   const json = await response.json();
   if (json.success !== 'true') {
+    // eslint-disable-next-line no-console
     console.error('Error getting autocomplete tree.');
     return null;
   }
@@ -229,6 +231,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         }
         setTree((await treeCache[treeUrl]) ?? {});
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Error getting autocomplete tree.', e);
       }
     };
@@ -323,7 +326,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
                   cubeId
                     ? `/tool/cardimageforcube/${encodeURIComponent(match)}/${cubeId}`
                     : `/tool/cardimage/${encodeURIComponent(match)}` +
-                    (defaultPrinting !== null ? `?defaultPrinting=${defaultPrinting}` : '')
+                      (defaultPrinting !== null ? `?defaultPrinting=${defaultPrinting}` : '')
                 }
                 key={index}
                 onClick={(e) => handleClickSuggestion(e)}
