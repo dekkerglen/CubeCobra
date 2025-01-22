@@ -241,7 +241,9 @@ async function writeFile(filepath: string, data: any) {
   });
 }
 
-const miscTokens = ['Manifest', 'A Mysterious Creature']
+// These tokens don't match any of the filters below. The first 4 are "face down" tokens, and Halfling is a "Tolkien" creature
+// This list was calculated with a script that parsed every scryfall object that was part of a 'token' set that didn't match the below filters
+const miscTokens = ['Manifest', 'A Mysterious Creature', 'Cyberman', 'Morph', 'Halfling']
 
 function getScryfallTokensForCard(card: ScryfallCard) {
   const allParts = card.all_parts || [];
