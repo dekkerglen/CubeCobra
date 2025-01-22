@@ -1,0 +1,65 @@
+# Exists because pull_request action doesn't grant permissions if the source is from a fork.
+# So instead of trying to add comments for issues in the pull_request run, we download the reports
+# here and comment. This workflow will run in the context of the main repo and thus have permissions
+name: Pull Request Reporting
+
+on:
+  workflow_run:
+    workflows: [CI Tests]
+    types:
+      - completed
+
+env:
+  REVIEWDOG_BASE_OPTIONS: '-reporter "github-pr-review" -filter-mode="added" -fail-on-error="false" -level="error"'
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Download all
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      # From https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#using-data-from-the-triggering-workflow
+      # - name: 'Download artifact'
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+      #       owner: context.repo.owner,
+      #       repo: context.repo.repo,
+      #       run_id: context.payload.workflow_run.id,
+      #       });
+      #       let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+      #       return artifact.name == "pr_number"
+      #       })[0];
+      #       let download = await github.rest.actions.downloadArtifact({
+      #       owner: context.repo.owner,
+      #       repo: context.repo.repo,
+      #       artifact_id: matchArtifact.id,
+      #       archive_format: 'zip',
+      #       });
+      #       const fs = require('fs');
+      #       const path = require('path');
+      #       const temp = '${{ runner.temp }}/artifacts';
+      #       if (!fs.existsSync(temp)){
+      #       fs.mkdirSync(temp);
+      #       }
+      #       fs.writeFileSync(path.join(temp, 'pr_number.zip'), Buffer.from(download.data));
+      #- name: 'Unzip artifact'
+      #  run: unzip pr_number.zip -d "${{ runner.temp }}/artifacts"
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: v0.20.3
+      - name: Run reviewdog for eslint
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat artifacts/eslint.out | reviewdog $REVIEWDOG_BASE_OPTIONS -f "eslint" -name "eslint"
+      - name: Run reviewdog for prettier
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Prettier does not have a readable format that reviewdog understands, so we have to give it line formatting code via -efm
+        run: |
+          cat artifacts/prettier.out | reviewdog $REVIEWDOG_BASE_OPTIONS -name "prettier" -efm="%E[%trror] %f: %m (%l:%c)" -efm="%C[error]%r" -efm="%Z[error]%r" -efm="%-G%r"
