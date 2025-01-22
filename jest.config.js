@@ -20,7 +20,6 @@ const baseConfig = {
     '^res/(.*)$': '<rootDir>/src/client/res/$1',
     '^utils/(.*)$': '<rootDir>/src/client/utils/$1',
     '^src/(.*)$': '<rootDir>/src/$1',
-    '\\.(css|less|scss|sass)$': '<rootDir>/src/__mocks__/styleMock.js',
   },
   testPathIgnorePatterns: ['/node_modules/', '/build/'],
 };
