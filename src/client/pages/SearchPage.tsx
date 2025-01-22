@@ -14,7 +14,7 @@ import Cube from 'datatypes/Cube';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 
-//asdsa
+//asdsaasdasd
 interface SearchPageProps {
   cubes: Cube[];
   loginCallback?: string;
