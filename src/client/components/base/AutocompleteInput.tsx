@@ -321,9 +321,9 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
                 inModal
                 image={
                   cubeId
-                    ? `/tool/cardimageforcube/${match}/${cubeId}`
-                    : `/tool/cardimage/${match}` +
-                      (defaultPrinting !== null ? `?defaultPrinting=${defaultPrinting}` : '')
+                    ? `/tool/cardimageforcube/${encodeURIComponent(match)}/${cubeId}`
+                    : `/tool/cardimage/${encodeURIComponent(match)}` +
+                    (defaultPrinting !== null ? `?defaultPrinting=${defaultPrinting}` : '')
                 }
                 key={index}
                 onClick={(e) => handleClickSuggestion(e)}
