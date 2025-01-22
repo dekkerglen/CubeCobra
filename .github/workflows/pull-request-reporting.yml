@@ -10,12 +10,14 @@ on:
       - completed
 
 env:
-  REVIEWDOG_BASE_OPTIONS: '-reporter=github-check -filter-mode=added -fail-on-error=false -level=error'
+  REVIEWDOG_BASE_OPTIONS: '-reporter=github-pr-review -filter-mode=nofilter -fail-on-error=false -level=error'
 
 jobs:
   download:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Filter out skips and bad statuses
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       # Reviewdog needs the git checkout
       - uses: actions/checkout@v4
@@ -32,19 +34,27 @@ jobs:
       - uses: reviewdog/action-setup@v1
         with:
           reviewdog_version: v0.20.3
-      - name: Test
-        if: always()
-        run: ls -R && ls -R artifacts/
       - name: Run reviewdog for eslint
         if: always()
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI_PULL_REQUEST: ${{ github.event.workflow_run.pull_requests[0].number }} 
+          CI_REPO_OWNER: ${{ github.event.workflow_run.repository.owner.login }} 
+          CI_REPO_NAME: ${{ github.event.workflow_run.head_repository.name }} 
+          CI_COMMIT: ${{ github.event.workflow_run.head_sha }} 
+          CI_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           cat artifacts/eslint.out | reviewdog $REVIEWDOG_BASE_OPTIONS -f "eslint" -name "eslint"
       - name: Run reviewdog for prettier
         if: always()
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI_PULL_REQUEST: ${{ github.event.workflow_run.pull_requests[0].number }} 
+          CI_REPO_OWNER: ${{ github.event.workflow_run.repository.owner.login }} 
+          CI_REPO_NAME: ${{ github.event.workflow_run.head_repository.name }} 
+          CI_COMMIT: ${{ github.event.workflow_run.head_sha }} 
+          CI_BRANCH: ${{ github.event.workflow_run.head_branch }}
         # Prettier does not have a readable format that reviewdog understands, so we have to give it line formatting code via -efm
         run: |
-          cat artifacts/prettier.out | reviewdog $REVIEWDOG_BASE_OPTIONS -name "prettier" -efm="%E[%trror] %f: %m (%l:%c)" -efm="%C[error]%r" -efm="%Z[error]%r" -efm="%-G%r"
+          cat artifacts/prettier.out | reviewdog $REVIEWDOG_BASE_OPTIONS -name "prettier" \
+          -efm='%E[%trror] %f: %m (%l:%c)' -efm='%C[error]%r' -efm='%Z[error]%r' -efm='%-G%r'

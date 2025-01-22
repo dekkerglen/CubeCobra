@@ -12,6 +12,7 @@ const tryUpdate = async (podcast) => {
   }
 };
 
+//Test
 const run = async () => {
   const podcasts = await Content.getByTypeAndStatus(Content.TYPES.PODCAST, Content.STATUS.PUBLISHED);
 
