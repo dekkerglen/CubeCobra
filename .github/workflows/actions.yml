@@ -39,6 +39,11 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Test
+        run: npm run --silent list-files
+      - name: Test2
+        run: git diff ${{ github.base_ref }} --name-only
+
       - name: Run eslint on changed files
         # Always run both eslint and prettier
         if: always()
@@ -49,6 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: eslint.out
+          path: eslint.out
 
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
@@ -60,6 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: prettier.out
+          path: prettier.out
             
       # - name: Run eslint on changed files
       #   # Always run both eslint and prettier
