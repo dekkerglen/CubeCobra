@@ -51,12 +51,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
 
   return (
     <MainLayout>
-      <CubeLayout
-        cards={cards}
-        cube={cube}
-        activeLink="overview"
-        hasControls={user != null && cube.owner.id == user.id}
-      >
+      <CubeLayout cards={cards} cube={cube} activeLink="overview" hasControls={!!user && cube.owner.id === user.id}>
         <Flexbox direction="col" gap="2" className="mb-2">
           {user && cube.owner.id === user.id && (
             <Controls>
