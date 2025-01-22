@@ -38,11 +38,6 @@ jobs:
       - name: Setup
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
-
-      - name: Test
-        run: npm run --silent list-files
-      - name: Test2
-        run: git diff ${{ github.base_ref }}...HEAD --name-only
       - uses: GrantBirki/git-diff-action@v2.7.0
         id: git-diff-action
         with:
@@ -63,7 +58,7 @@ jobs:
         if: always()
         env:
           DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
-        run: npx eslint --max-warnings 0 $(cat $DIFF)
+        run: npx eslint --max-warnings 0 $(cat $DIFF) > eslint.out
       - name: Upload eslint Report
         if: always()
         continue-on-error: true
