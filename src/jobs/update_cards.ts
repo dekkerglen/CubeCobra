@@ -253,7 +253,7 @@ const specialCaseTokens = {
 function getScryfallTokensForCard(card: ScryfallCard) {
   const allParts = card.all_parts || [];
   return allParts
-    .filter((element) => element.component === 'token' || element.type_line.startsWith('Emblem'))
+    .filter((element) => element.component === 'token' || element.type_line.startsWith('Emblem') || Object.keys(specialCaseTokens).includes(element.name))
     .map(({ id }) => id);
 }
 
