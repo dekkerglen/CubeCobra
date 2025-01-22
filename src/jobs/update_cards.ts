@@ -270,11 +270,33 @@ function arraySetEqual<T>(target: T[], candidate: T[]) {
   return isValid;
 }
 
+function getExtraTokensForDungeons(card: ScryfallCard) {
+  const extraTokens: any[] = [];
+  const allParts = card.all_parts || [];
+  if (allParts.some((element) => element.name == 'Undercity // The Initiative')) {
+    extraTokens.push(specialCaseTokens.Treasure);
+    // 4/1 Skeleton with menace
+    extraTokens.push('cf4c245f-af2f-46a7-81f3-670a04940901')
+  }
+  // As of today, if one dungeon is included, all are, so only check for one
+  if (allParts.some((element) => element.name == 'Dungeon of the Mad Mage')) {
+    extraTokens.push(specialCaseTokens.Treasure);
+    // 1/1 Skeleton
+    extraTokens.push('fa6fdb57-82f3-4695-b1fa-1f301ea4ef83')
+    // 1/1 Goblin
+    extraTokens.push('1425e965-7eea-419c-a7ec-c8169fa9edbf')
+    // The Atropal
+    extraTokens.push('65f8e40f-fb5e-4ab8-add3-a8b87e7bcdd9')
+  }
+  return extraTokens;
+}
+
 function getTokens(card: ScryfallCard, catalogCard: CardDetails) {
   const mentionedTokens: any[] = [];
   const recordedTokens = getScryfallTokensForCard(card);
   if (recordedTokens.length > 0) {
     catalogCard.tokens = recordedTokens;
+    mentionedTokens.push(getExtraTokensForDungeons(card))
   } else if (catalogCard.oracle_text !== null) {
     if (catalogCard.oracle_text.includes(' token')) {
       // find the ability that generates the token to reduce the amount of text to get confused by.
