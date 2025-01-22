@@ -81,6 +81,11 @@ const hydrate = async (item?: DocumentClient.AttributeMap): Promise<Comment | un
     return createHydratedCommentWithoutOwner(item);
   }
 
+  // TODO: Is this the best way to determine the comment has been deleted though?
+  if (item.owner === '404') {
+    return createHydratedCommentWithoutOwner(item);
+  }
+
   const owner: User = await UserModel.getById(item.owner);
   return createHydratedComment(item, owner, getImageData(owner.imageName));
 };
