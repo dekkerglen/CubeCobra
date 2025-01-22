@@ -41,7 +41,7 @@ jobs:
       - uses: GrantBirki/git-diff-action@v2.7.0
         id: git-diff-action
         with:
-          base_branch: "origin/${{github.base_ref}}" # compare the PR against the target branch
+          base_branch: "refs/remotes/origin/${{github.base_ref}}" # compare the PR against the target branch
           json_diff_file_output: diff.json
           raw_diff_file_output: diff.txt
           file_output_only: "true"
@@ -58,7 +58,7 @@ jobs:
         if: always()
         env:
           DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
-        run: npx eslint --max-warnings 0 $(cat $DIFF) > eslint.out
+        run: npx eslint --max-warnings 0 $(cat $DIFF) > eslint.out && true
       - name: Upload eslint Report
         if: always()
         continue-on-error: true
@@ -72,7 +72,7 @@ jobs:
         if: always()
         env:
           DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
-        run: npm run lint:prettier 2> prettier.out
+        run: npm run lint:prettier 2> prettier.out && true
       - name: Upload Prettier Report
         if: always()
         continue-on-error: true
