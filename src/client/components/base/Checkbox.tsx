@@ -24,5 +24,5 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, setChecked }) => {
   );
 };
 
-//aaaggg asfasf
+//aaaggg asfasffff
 export default Checkbox;
