@@ -21,9 +21,13 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
       - uses: reviewdog/action-setup@v1
         with:
           reviewdog_version: v0.20.3
+      - name: Test
+        if: always()
+        run: ls -R && ls -R artifacts/
       - name: Run reviewdog for eslint
         if: always()
         env:
