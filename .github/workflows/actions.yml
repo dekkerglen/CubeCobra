@@ -43,11 +43,27 @@ jobs:
         run: npm run --silent list-files
       - name: Test2
         run: git diff ${{ github.base_ref }}...HEAD --name-only
-
+      - uses: GrantBirki/git-diff-action@vX.X.X
+        id: git-diff-action
+        with:
+          base_branch: HEAD^1 # compare the PR merge commit against its first parent
+          json_diff_file_output: diff.json # write the JSON diff output to a file called 'diff.json'
+          raw_diff_file_output: diff.txt # write the raw diff output to a file called 'diff.txt' (just in case)
+          file_output_only: "true" # do not print any diff output to the console (safety first)
+          search_path: '.' # look in the entire repo for changes
+          max_buffer_size: "1000000" # the default git diff buffer size, increase if you have issues
+          # Align file filters with lint-staged. They are single quoted so Git interprets them instead of the shell
+          git_options: "--name-only --diff-filter=ACMR -- '*.js' '*.jsx' '*.ts' '*.tsx'"
+      - name: Test3
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+        run: cat $DIFF
       - name: Run eslint on changed files
         # Always run both eslint and prettier
         if: always()
-        run: npm run lint:eslint
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+        run: npx eslint --max-warnings 0 $(cat $DIFF)
       - name: Upload eslint Report
         if: always()
         continue-on-error: true
@@ -59,7 +75,9 @@ jobs:
       - name: Run Prettier on changed files
         # Always run both eslint and prettier
         if: always()
-        run: npm run lint:prettier > prettier.out
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+        run: npm run lint:prettier 2> prettier.out
       - name: Upload Prettier Report
         if: always()
         continue-on-error: true

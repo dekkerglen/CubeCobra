@@ -14,7 +14,7 @@
     "lint": "npm run lint:prettier; npm run lint:eslint",
     "lint:prettier": "npx prettier --check $(npm run --silent list-files)",
     "lint:eslint": "npx eslint --max-warnings 0 $(npm run --silent list-files)",
-    "list-files": "bash -c 'shopt -s nullglob\n echo {jobs,scripts,src}/{**/*,*}.{js,jsx,ts,tsx} force_update.js webpack.*.mjs eslint.config.mjs babel.config.mjs'",
+    "list-files": "bash -c 'shopt -s nullglob\n echo {jobs,scripts,src}/{**/*,*}.{js,jsx,ts,tsx} force_update.js webpack.*.mjs eslint.config.mjs babel.config.js'",
     "bash": "bash",
     "nodemon": "nodemon --exec ts-node --ignore src/client --ignore public --ignore private --ignore temp --ignore dist/pages --ignore __tests__ src/app.js",
     "webpack": "NODE_OPTIONS=--max_old_space-size=18192 webpack --mode production --config webpack.prod.mjs",
@@ -58,7 +58,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.{js,jsx,ts,tsx}": [
       "prettier --write",
       "eslint --fix"
     ]
