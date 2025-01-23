@@ -51,7 +51,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
       }
     }
     setLoading(false);
-  }, [items, currentLastKey, page]);
+  }, [items, currentLastKey, page]); //bar
 
   const pager = (
     <Pagination

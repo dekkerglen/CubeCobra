@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const fs = require('fs');
+//foo
 const {getVersionsByOracleId, getMostReasonableById, initializeCardDb, getAllOracleIds} = require('../util/carddb');
 
 (async () => {

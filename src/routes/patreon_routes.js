@@ -18,6 +18,7 @@ const patreonOAuthClient = patreonOAuth(process.env.PATREON_CLIENT_ID, process.e
 
 const router = express.Router();
 
+//Foo
 const isValidPatreonSignature = (signature, body) => {
   const hmac = crypto.createHmac('md5', process.env.PATREON_HOOK_SECRET);
   const data = hmac.update(JSON.stringify(body));

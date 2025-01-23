@@ -252,6 +252,7 @@ router.get('/card/:id', async (req, res) => {
       },
     );
   } catch (err) {
+    //Foo
     console.error(err);
     return util.handleRouteError(req, res, err, '/404');
   }
