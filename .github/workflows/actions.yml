@@ -12,9 +12,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Run on pushes to dekkerglen/CubeCobra master branch, or any pull request
+    if: ${{ (github.event_name == 'push' && github.repository == 'dekkerglen/CubeCobra') || github.event_name != 'push' }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Get history so we can do git diff
+          fetch-depth: 0
 
       - name: Cache node_modules
         id: cache-node-modules
@@ -39,26 +44,34 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
+      - uses: GrantBirki/git-diff-action@v2.7.0
+        id: git-diff-action
+        with:
+          base_branch: "refs/remotes/origin/${{github.base_ref}}" # compare the PR against the target branch
+          json_diff_file_output: diff.json
+          raw_diff_file_output: diff.txt
+          file_output_only: "true"
+          # Align file filters with lint-staged. They are single quoted so Git interprets them instead of the shell
+          search_path: "'*.js' '*.jsx' '*.ts' '*.tsx'"
+          # Only care about file names and non-deleted files
+          git_options: "--name-only --diff-filter=ACMR"
       - name: Run eslint on changed files
-        # Always run both eslint and prettier
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+        # Even if error run true so the step passes
+        run: npx eslint -c .github/eslint.config.mjs -f @microsoft/eslint-formatter-sarif --max-warnings 0 $(cat $DIFF) > eslint.sarif || true
+      - name: Upload eslint Report
         if: always()
-        uses: tj-actions/eslint-changed-files@v25
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
         with:
-          config_path: 'eslint.config.mjs'
-          extra_args: '--max-warnings=0'
-          reporter: github-pr-review
-
-      - name: Run Prettier on changed files
-        # Always run both eslint and prettier
-        if: always()
-        uses: ./.github/actions/prettier
+          name: eslint.sarif
+          path: eslint.sarif
+      - uses: github/codeql-action/upload-sarif@v3
         with:
-          fail_on_error: true
-          filter_mode: file
-          level: warning
-          prettier_flags: '**/*.{js,jsx,ts,tsx}'
-          reporter: github-pr-review
-
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: eslint.sarif
+          category: eslint
       - name: Run tests
         if: success()
         run: npm run test:ci
