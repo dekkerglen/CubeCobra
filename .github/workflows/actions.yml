@@ -84,7 +84,7 @@ jobs:
       - uses: github/codeql-action/upload-sarif@v3
         with:
           # Path to SARIF file relative to the root of the repository
-          sarif_file: artifacts/eslint.sarif
+          sarif_file: eslint.sarif
           category: eslint
             
       # - name: Run eslint on changed files
