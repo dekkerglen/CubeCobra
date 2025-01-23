@@ -1,8 +1,10 @@
 import React, { useContext } from 'react';
 
+import Patron, { PatronLevels } from '../../../datatypes/Patron';
+import { canBeFeatured } from '../../../util/featuredQueueUtil';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
-import { Col,Flexbox, Row } from '../base/Layout';
+import { Col, Flexbox, Row } from '../base/Layout';
 import Text from '../base/Text';
 import CubePreview from '../cube/CubePreview';
 import AddFeaturedModal from '../modals/AddFeaturedModal';
@@ -12,12 +14,8 @@ import withModal from '../WithModal';
 const AddFeaturedButton = withModal(Button, AddFeaturedModal);
 const RemoveFeaturedButton = withModal(Button, RemoveFeaturedCubeModal);
 
-const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
-
 interface UserPatreonConfigProps {
-  patron: {
-    level: number;
-  };
+  patron: Patron;
   featured?: {
     cube: any;
     position: number;
@@ -31,7 +29,7 @@ const UserPatreonConfig: React.FC<UserPatreonConfigProps> = ({ patron, featured 
     <Flexbox direction="col" gap="2">
       {user?.roles?.includes('Patron') ? (
         <p>
-          Your account is linked at the <b>{LEVELS[patron.level]}</b> level.
+          Your account is linked at the <b>{PatronLevels[patron.level]}</b> level.
         </p>
       ) : (
         <p>Your account is linked, but you are not an active patron.</p>
@@ -63,7 +61,7 @@ const UserPatreonConfig: React.FC<UserPatreonConfigProps> = ({ patron, featured 
               </RemoveFeaturedButton>
             </Col>
           </Row>
-        ) : [2, 3].includes(patron.level) ? (
+        ) : canBeFeatured(patron) ? (
           <>
             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
             <AddFeaturedButton block outline color="accent" modalprops={{ cubes: user?.cubes || [] }}>

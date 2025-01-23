@@ -3,7 +3,7 @@ import React, { useContext, useMemo } from 'react';
 import { encodeName, mainboardRate, pickRate } from 'utils/cardutil';
 import { fromEntries } from 'utils/Util';
 
-import Card from '../../datatypes/Card';
+import Card, { DefaultElo } from '../../datatypes/Card';
 import { Flexbox } from '../components/base/Layout';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { compareStrings, SortableTable } from '../components/SortableTable';
@@ -61,7 +61,7 @@ const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
             exportValue: oracle,
             ...cardDict[oracle],
           },
-          elo: Math.round(elo || 1200),
+          elo: Math.round(elo || DefaultElo),
           mainboard: mainboardRate({ mainboards: mainboards || 0, sideboards: sideboards || 0 }),
           pickrate: pickRate({ picks: picks || 0, passes: passes || 0 }),
           picks: picks || 0,

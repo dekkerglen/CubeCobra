@@ -1,9 +1,12 @@
-import Card, { CardDetails as CardDetailsType, COLOR_CATEGORIES, ColorCategory } from '../../datatypes/Card';
+import Card, {
+  CardDetails as CardDetailsType,
+  COLOR_CATEGORIES,
+  ColorCategory,
+  DefaultElo,
+} from '../../datatypes/Card';
 import CategoryOverrides from '../res/CategoryOverrides.json';
 import LandCategories from '../res/LandCategories.json';
 import { arraysEqual } from './Util';
-
-export const ELO_DEFAULT = 1200;
 
 export const COLOR_COMBINATIONS: string[][] = [
   [],
@@ -436,7 +439,7 @@ export const cardImageFlip = (card: Card): string => card.details?.image_flip ??
 
 export const cardTokens = (card: Card): string[] => card.details?.tokens ?? [];
 
-export const cardElo = (card: Card): number => (card.details ? card.details?.elo || 1200 : 1200);
+export const cardElo = (card: Card): number => (card.details ? card.details?.elo || DefaultElo : DefaultElo);
 
 export const cardPopularity = (card: Card): number => card.details?.popularity ?? 0;
 

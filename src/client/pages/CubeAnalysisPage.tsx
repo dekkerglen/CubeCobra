@@ -17,7 +17,7 @@ import {
 } from 'utils/cardutil';
 import { cardIsLabel, getLabels } from 'utils/Sort';
 
-import CardType from '../../datatypes/Card';
+import CardType, { DefaultElo } from '../../datatypes/Card';
 import Cube, { CubeCards } from '../../datatypes/Cube';
 import AnalyticTable from '../analytics/AnalyticTable';
 import Asfans from '../analytics/Asfans';
@@ -53,7 +53,7 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
   });
 
   const getCubeElo = (card: any) =>
-    cubeAnalytics[card.details.oracle_id] ? Math.round(cubeAnalytics[card.details.oracle_id].elo) : 1200;
+    cubeAnalytics[card.details.oracle_id] ? Math.round(cubeAnalytics[card.details.oracle_id].elo) : DefaultElo;
 
   const getPickRate = (card: any) =>
     cubeAnalytics[card.details.oracle_id] ? pickRate(cubeAnalytics[card.details.oracle_id]) : 0;

@@ -2,26 +2,20 @@ import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Changes } from '../../datatypes/Card';
-import ChangelogType from '../../datatypes/ChangeLog';
+import ChangelogType, { CubeChangeLog } from '../../datatypes/ChangeLog';
 import { cardFromId } from '../../util/carddb';
 import { getBucketName, getObject, putObject } from '../s3client';
 import createClient from '../util';
 
 const CARD_LIMIT = 10000;
 
-enum FIELDS {
-  CUBE_ID = 'cube',
-  DATE = 'date',
-  ID = 'id',
-}
-
 const client = createClient({
   name: 'CUBE_CHANGELOG',
-  partitionKey: FIELDS.CUBE_ID,
-  sortKey: FIELDS.DATE,
+  partitionKey: 'cube',
+  sortKey: 'date',
   attributes: {
-    [FIELDS.CUBE_ID]: 'S',
-    [FIELDS.DATE]: 'N',
+    cube: 'S',
+    date: 'N',
   },
 });
 
@@ -130,25 +124,27 @@ const Changelog = {
     cubeId: string,
     limit: number,
     lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
+  ): Promise<{ items?: CubeChangeLog[]; lastKey?: DocumentClient.Key }> => {
+    const cubeAttr: keyof ChangelogType = 'cube';
+
     const result = await client.query({
       KeyConditionExpression: `#p1 = :cube`,
       ExpressionAttributeValues: {
         ':cube': cubeId,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.CUBE_ID,
+        '#p1': cubeAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
       Limit: limit || 36,
     });
 
-    const items = await Promise.all(
-      (result.Items || []).map(async (item) => ({
+    const items: CubeChangeLog[] = await Promise.all(
+      ((result.Items as ChangelogType[]) || []).map(async (item) => ({
         cubeId,
         date: item.date,
-        changelog: await getChangelog(cubeId, item[FIELDS.ID]),
+        changelog: await getChangelog(cubeId, item.id),
       })),
     );
 
@@ -161,29 +157,11 @@ const Changelog = {
     const id = uuidv4();
     await putObject(getBucketName(), `changelog/${cube}/${id}.json`, sanitizeChangelog(changelog));
     await client.put({
-      [FIELDS.ID]: id,
-      [FIELDS.CUBE_ID]: cube,
-      [FIELDS.DATE]: new Date().valueOf(),
-    });
+      id,
+      cube,
+      date: new Date().valueOf(),
+    } as ChangelogType);
     return id;
-  },
-  batchPut: async (documents: DocumentClient.PutItemInputAttributeMap[]): Promise<void> => {
-    await client.batchPut(
-      documents.map((document) => ({
-        [FIELDS.ID]: document.id,
-        [FIELDS.CUBE_ID]: document.cubeId,
-        [FIELDS.DATE]: document.date || Date.now().valueOf(),
-      })),
-    );
-    await Promise.all(
-      documents.map(async (document) =>
-        putObject(
-          getBucketName(),
-          `changelog/${document.cubeId}/${document.id}.json`,
-          sanitizeChangelog(document.changelog),
-        ),
-      ),
-    );
   },
   createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
   scan: async (
@@ -215,7 +193,6 @@ const Changelog = {
 
     return result;
   },
-  FIELDS,
 };
 
 module.exports = Changelog;

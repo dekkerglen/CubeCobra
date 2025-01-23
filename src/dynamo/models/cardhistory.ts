@@ -1,51 +1,29 @@
 import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 
+import { Period, UnhydratedCardHistory } from '../../datatypes/History';
 import createClient from '../util';
 
-export enum TYPES {
-  MONTH = 'month',
-  WEEK = 'week',
-  DAY = 'day',
-}
-
-export enum FIELDS {
-  ORACLE_TYPE_COMP = 'OTComp',
-  ORACLE_ID = 'oracle',
-  DATE = 'date',
-  ELO = 'elo',
-  PICKS = 'picks',
-  SIZE180 = 'size180',
-  SIZE360 = 'size360',
-  SIZE450 = 'size450',
-  SIZE540 = 'size540',
-  SIZE720 = 'size720',
-  PAUPER = 'pauper',
-  PEASANT = 'peasant',
-  LEGACY = 'legacy',
-  MODERN = 'modern',
-  VINTAGE = 'vintage',
-  TOTAL = 'total',
-}
+const partitionKey = 'OTComp';
 
 const client = createClient({
   name: 'CARD_HISTORY',
-  partitionKey: FIELDS.ORACLE_TYPE_COMP,
-  sortKey: FIELDS.DATE,
+  partitionKey: partitionKey,
+  sortKey: 'date',
   attributes: {
-    [FIELDS.ORACLE_TYPE_COMP]: 'S',
-    [FIELDS.DATE]: 'N',
+    [partitionKey]: 'S',
+    date: 'N',
   },
 });
 
 const cardhistory = {
   getByOracleAndType: async (
     oracle: string,
-    type: TYPES,
+    type: Period,
     limit: number,
     lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
+  ): Promise<{ items?: UnhydratedCardHistory[]; lastKey?: DocumentClient.Key }> => {
     const result = await client.query({
-      KeyConditionExpression: `${FIELDS.ORACLE_TYPE_COMP} = :oracle`,
+      KeyConditionExpression: `${partitionKey} = :oracle`,
       ExpressionAttributeValues: {
         ':oracle': `${oracle}:${type}`,
       },
@@ -55,20 +33,17 @@ const cardhistory = {
     });
 
     return {
-      items: result.Items,
+      items: result.Items as UnhydratedCardHistory[],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document: DocumentClient.PutItemInputAttributeMap): Promise<DocumentClient.PutItemOutput> => {
+  put: async (document: UnhydratedCardHistory): Promise<DocumentClient.PutItemOutput> => {
     return client.put(document);
   },
-  batchPut: async (documents: DocumentClient.PutItemInputAttributeMap[]): Promise<void> => {
+  batchPut: async (documents: UnhydratedCardHistory[]): Promise<void> => {
     await client.batchPut(documents);
   },
   createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
-  //TODO: Revisit if needed here or exporting above is fine, once everything is using esm imports
-  FIELDS,
-  TYPES,
 };
 
 module.exports = cardhistory;

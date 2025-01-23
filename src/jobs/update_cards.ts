@@ -15,7 +15,7 @@ import path from 'path';
 import { pipeline } from 'stream';
 import stream from 'stream';
 
-import { CardDetails, ColorCategory } from 'datatypes/Card';
+import { CardDetails, ColorCategory, DefaultElo } from 'datatypes/Card';
 
 import * as cardutil from '../client/utils/cardutil';
 import { CardMetadata, fileToAttribute, reasonableCard } from '../util/carddb';
@@ -649,7 +649,7 @@ function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boo
     card = { ...card };
     card.card_faces = [faceAttributeSource];
   }
-  newcard.elo = 1200;
+  newcard.elo = DefaultElo;
   newcard.popularity = 0;
   newcard.cubeCount = 0;
   newcard.pickCount = 0;

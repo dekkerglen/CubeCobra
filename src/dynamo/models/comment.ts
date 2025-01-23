@@ -1,57 +1,39 @@
 import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 import { v4 as uuidv4 } from 'uuid';
 
-import Comment from '../../datatypes/Comment';
+import Comment, { UnhydratedComment } from '../../datatypes/Comment';
 import { CubeImage } from '../../datatypes/Cube';
 import User from '../../datatypes/User';
 import { getImageData } from '../../util/imageutil';
 import createClient from '../util';
 import UserModel from './user';
 
-enum FIELDS {
-  ID = 'id',
-  PARENT = 'parent',
-  TYPE = 'type',
-  OWNER = 'owner',
-  BODY = 'body',
-  DATE = 'date',
-}
-
-type CreateComment = {
-  [FIELDS.ID]?: string;
-  [FIELDS.BODY]: string;
-  [FIELDS.OWNER]?: string;
-  [FIELDS.DATE]: number;
-  [FIELDS.PARENT]: string;
-  [FIELDS.TYPE]: string;
-};
-
 const client = createClient({
   name: 'COMMENTS',
-  partitionKey: FIELDS.ID,
+  partitionKey: 'id',
   indexes: [
     {
       name: 'ByParent',
-      partitionKey: FIELDS.PARENT,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'parent',
+      sortKey: 'date',
     },
     {
       name: 'ByOwner',
-      partitionKey: FIELDS.OWNER,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'owner',
+      sortKey: 'date',
     },
   ],
   attributes: {
-    [FIELDS.ID]: 'S',
-    [FIELDS.DATE]: 'N',
-    [FIELDS.PARENT]: 'S',
-    [FIELDS.OWNER]: 'S',
+    id: 'S',
+    date: 'N',
+    parent: 'S',
+    owner: 'S',
   },
 });
 
-const createHydratedComment = (document: DocumentClient.AttributeMap, owner: User, image: CubeImage): Comment => {
+const createHydratedComment = (document: UnhydratedComment, owner: User, image: CubeImage): Comment => {
   return {
-    id: document.id,
+    id: document.id!,
     parent: document.parent,
     date: document.date,
     type: document.type,
@@ -68,11 +50,11 @@ const getAnonymousUser = (): User => {
   } as User;
 };
 
-const createHydratedCommentWithoutOwner = (item: DocumentClient.AttributeMap): Comment => {
+const createHydratedCommentWithoutOwner = (item: UnhydratedComment): Comment => {
   return createHydratedComment(item, getAnonymousUser(), getImageData('Ambush Viper'));
 };
 
-const hydrate = async (item?: DocumentClient.AttributeMap): Promise<Comment | undefined> => {
+const hydrate = async (item?: UnhydratedComment): Promise<Comment | undefined> => {
   if (!item) {
     return item;
   }
@@ -85,7 +67,7 @@ const hydrate = async (item?: DocumentClient.AttributeMap): Promise<Comment | un
   return createHydratedComment(item, owner, getImageData(owner.imageName));
 };
 
-const batchHydrate = async (items: DocumentClient.ItemList | undefined): Promise<Comment[] | undefined> => {
+const batchHydrate = async (items?: UnhydratedComment[]): Promise<Comment[] | undefined> => {
   if (!items) {
     return [];
   }
@@ -111,11 +93,15 @@ const batchHydrate = async (items: DocumentClient.ItemList | undefined): Promise
 };
 
 const comment = {
-  getById: async (id: string): Promise<Comment | undefined> => hydrate((await client.get(id)).Item),
+  getById: async (id: string): Promise<Comment | undefined> =>
+    hydrate((await client.get(id)).Item as UnhydratedComment),
   queryByParentAndType: async (
     parent: string,
     lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
+  ): Promise<{ items?: Comment[]; lastKey?: DocumentClient.Key }> => {
+    //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
+    const parentAttr: keyof UnhydratedComment = 'parent';
+
     const result = await client.query({
       IndexName: 'ByParent',
       KeyConditionExpression: `#p1 = :parent`,
@@ -123,7 +109,7 @@ const comment = {
         ':parent': parent,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.PARENT,
+        '#p1': parentAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
@@ -131,14 +117,16 @@ const comment = {
     });
 
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedComment[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
   queryByOwner: async (
     owner: string,
     lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
+  ): Promise<{ items?: Comment[]; lastKey?: DocumentClient.Key }> => {
+    const ownerAttr: keyof UnhydratedComment = 'owner';
+
     const result = await client.query({
       IndexName: 'ByOwner',
       KeyConditionExpression: `#p1 = :owner`,
@@ -146,51 +134,49 @@ const comment = {
         ':owner': owner,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.OWNER,
+        '#p1': ownerAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
 
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedComment[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document: CreateComment | Comment): Promise<DocumentClient.PutItemOutput> => {
-    const id = document[FIELDS.ID] || uuidv4();
+  put: async (document: UnhydratedComment | Comment): Promise<DocumentClient.PutItemOutput> => {
+    const id = document.id || uuidv4();
 
+    let ownerId: string | undefined;
     //Type guard to know if owner is a string (their id) or a hydrated User type
     if (document.owner && typeof document.owner !== 'string' && document.owner.id) {
-      document.owner = document.owner.id;
+      ownerId = document.owner.id;
+    } else if (document.owner && typeof document.owner === 'string') {
+      ownerId = document.owner;
     }
 
     return client.put({
-      [FIELDS.ID]: id,
-      [FIELDS.DATE]: document.date,
-      [FIELDS.BODY]: document.body,
-      [FIELDS.OWNER]: document.owner,
-      [FIELDS.PARENT]: document.parent,
-      [FIELDS.TYPE]: document.type,
-    });
-  },
-  batchPut: async (documents: DocumentClient.AttributeMap[]): Promise<void> => {
-    // only used for migration
-    await client.batchPut(documents);
+      id: id,
+      date: document.date,
+      body: document.body,
+      owner: ownerId,
+      parent: document.parent,
+      type: document.type,
+    } as UnhydratedComment);
   },
   createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
   scan: async (
     lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: DocumentClient.ItemList; lastKey?: DocumentClient.Key }> => {
+  ): Promise<{ items?: UnhydratedComment[]; lastKey?: DocumentClient.Key }> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
     });
     return {
-      items: result.Items,
+      items: result.Items as UnhydratedComment[],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  FIELDS,
 };
 
 module.exports = comment;
