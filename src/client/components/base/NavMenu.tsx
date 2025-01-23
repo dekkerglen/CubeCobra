@@ -12,6 +12,7 @@ interface NavMenuProps {
   navBar?: boolean;
 }
 
+//fdhdfhfdh
 const NavMenu: React.FC<NavMenuProps> = ({ label, children, wide, navBar }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
