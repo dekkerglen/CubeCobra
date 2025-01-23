@@ -1,34 +1,44 @@
-const express = require('express');
+import Blog from '../../../dynamo/models/blog';
+import Cube from '../../../dynamo/models/cube';
+import Feed from '../../../dynamo/models/feed';
+import User from '../../../dynamo/models/user';
+import { csrfProtection, ensureAuth } from '../../../routes/middleware';
+import { Request, Response } from '../../../types/express';
+import { abbreviate, isCubeViewable } from '../../../util/cubefn';
+import generateMeta from '../../../util/meta';
+import { render } from '../../../util/render';
+import util from '../../../util/util';
 
-const { ensureAuth } = require('../middleware');
-const util = require('../../util/util');
-const { render, redirect } = require('../../util/render');
-const generateMeta = require('../../util/meta');
+const { redirect } = require('../../../util/render');
 
-const { abbreviate, isCubeViewable } = require('../../util/cubefn');
-
-const Cube = require('../../dynamo/models/cube');
-const Blog = require('../../dynamo/models/blog');
-const User = require('../../dynamo/models/user');
-const Feed = require('../../dynamo/models/feed');
-
-const router = express.Router();
-
-router.post('/post/:id', ensureAuth, async (req, res) => {
+export const createBlogHandler = async (req: Request, res: Response) => {
   try {
     if (req.body.title.length < 5 || req.body.title.length > 100) {
       req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
+
       return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
 
     const { user } = req;
-    
+
+    if (!user) {
+      req.flash('danger', 'Please Login to publish a blog post.');
+
+      return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+    }
+
     if (req.body.id && req.body.id.length > 0) {
       // update an existing blog post
       const blog = await Blog.getUnhydrated(req.body.id);
+      if (!blog) {
+        req.flash('danger', 'Blog not found.');
+
+        return redirect(req, res, '/404');
+      }
 
       if (blog.owner !== user.id) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');
+
         return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
       }
 
@@ -38,6 +48,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       await Blog.put(blog);
 
       req.flash('success', 'Blog update successful');
+
       return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
 
@@ -45,6 +56,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
 
     if (!isCubeViewable(cube, user)) {
       req.flash('danger', 'Cube not found');
+
       return redirect(req, res, '/cube/blog/404');
     }
 
@@ -52,24 +64,26 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     // this is a spam prevention measure
     if (cube.cardCount === 0) {
       req.flash('danger', 'Cannot post a blog for an empty cube. Please add cards to the cube first.');
+
       return redirect(req, res, '/cube/blog/' + cube.id);
     }
 
-    // post new blog
     if (cube.owner.id !== user.id) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
       return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
 
-    const id = await Blog.put({
-      body: req.body.markdown.substring(0, 10000),
+    const id: string = await Blog.put({
+      body: req.body.markdown?.substring(0, 10000) || '',
       owner: user.id,
       date: new Date().valueOf(),
       cube: cube.id,
       title: req.body.title,
     });
 
-    const followers = [...new Set([...(req.user.following || []), ...cube.following, ...(req.body.mentions || [])])];
+    const followers: string[] = [
+      ...new Set([...(user.following || []), ...cube.following, ...(req.body.mentions || [])]),
+    ];
 
     const feedItems = followers.map((userId) => ({
       id,
@@ -97,44 +111,57 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     }
 
     req.flash('success', 'Blog post successful');
+
     return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/blog/${encodeURIComponent(req.params.id)}`);
   }
-});
+};
 
-router.get('/blogpost/:id', async (req, res) => {
+export const getBlogPostHandler = async (req: Request, res: Response) => {
   try {
     const post = await Blog.getById(req.params.id);
-
     if (!post) {
       req.flash('danger', 'Blog post not found');
+
       return redirect(req, res, '/404');
     }
 
-    if (post.cube !== 'DEVBLOG') {
+    if (post.cube !== 'DEVLOG') {
       const cube = await Cube.getById(post.cube);
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Blog post not found');
+
         return redirect(req, res, '/404');
       }
     }
 
-    return render(req, res, 'BlogPostPage', {
-      post,
-    });
+    return render(req, res, 'BlogPostPage', { post });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
-});
+};
 
-router.get('/remove/:id', ensureAuth, async (req, res) => {
+export const deleteBlogHandler = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const { user } = req;
+
+    if (!user) {
+      req.flash('danger', 'Please login to delete a blog post.');
+
+      return redirect(req, res, `/cube/blog/${encodeURIComponent(id)}`);
+    }
+
     const blog = await Blog.getById(id);
 
-    if (blog.owner.id !== req.user.id) {
+    if (!blog) {
+      req.flash('danger', 'Blog post not found');
+      return redirect(req, res, '/404');
+    }
+
+    if (blog.owner.id !== user.id) {
       req.flash('danger', 'Unauthorized');
       return redirect(req, res, '/404');
     }
@@ -143,13 +170,12 @@ router.get('/remove/:id', ensureAuth, async (req, res) => {
 
     req.flash('success', 'Post Removed');
     return redirect(req, res, `/cube/blog/${encodeURIComponent(blog.cube)}`);
-  } catch {
-    req.flash('danger', 'Error deleting post.');
-    return redirect(req, res, '/404');
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
   }
-});
+};
 
-router.post('/getmoreblogsbycube/:id', async (req, res) => {
+export const getMoreBlogPostsForCubeHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
   const posts = await Blog.getByCube(req.params.id, 20, lastKey);
 
@@ -158,9 +184,9 @@ router.post('/getmoreblogsbycube/:id', async (req, res) => {
     items: posts.items,
     lastKey: posts.lastKey,
   });
-});
+};
 
-router.get('/:id', async (req, res) => {
+export const getBlogPostsForCubeHandler = async (req: Request, res: Response) => {
   try {
     const cube = await Cube.getById(req.params.id);
 
@@ -193,6 +219,32 @@ router.get('/:id', async (req, res) => {
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
   }
-});
+};
 
-module.exports = router;
+export const routes = [
+  {
+    method: 'post',
+    path: '/post/:id',
+    handler: [ensureAuth, csrfProtection, createBlogHandler],
+  },
+  {
+    method: 'get',
+    path: '/blogpost/:id',
+    handler: [csrfProtection, getBlogPostHandler],
+  },
+  {
+    method: 'get',
+    path: '/remove/:id',
+    handler: [ensureAuth, csrfProtection, deleteBlogHandler],
+  },
+  {
+    method: 'post',
+    path: '/getmoreblogsbycube/:id',
+    handler: [csrfProtection, getMoreBlogPostsForCubeHandler],
+  },
+  {
+    method: 'get',
+    path: '/:id',
+    handler: [csrfProtection, getBlogPostsForCubeHandler],
+  },
+];

@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import BlogPost from 'datatypes/BlogPost';
 import Card, { CardDetails } from 'datatypes/Card';
 import Cube, { CubeImage } from 'datatypes/Cube';
 import User from 'datatypes/User';
@@ -8,7 +9,7 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const NUMBERS = '0123456789';
 const ALPHANUMERIC = `${LETTERS}${NUMBERS}`;
 
-const generateRandomString = (alphabet: string, minLength: number, maxLength?: number): string => {
+export const generateRandomString = (alphabet: string, minLength: number, maxLength?: number): string => {
   const length = maxLength ? Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength : minLength;
 
   return Array.from({ length }, () => alphabet.charAt(Math.floor(Math.random() * alphabet.length))).join('');
@@ -19,7 +20,7 @@ const generateRandomString = (alphabet: string, minLength: number, maxLength?: n
  *
  * @param overrides
  */
-const createCard = (overrides?: Partial<Card>): Card => ({
+export const createCard = (overrides?: Partial<Card>): Card => ({
   cardID: uuidv4(),
   ...overrides,
 });
@@ -28,7 +29,7 @@ const createCard = (overrides?: Partial<Card>): Card => ({
  * Create a CardDetails for testing by providing sane defaults but allow for overriding
  * @param overrides
  */
-const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => ({
+export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => ({
   error: false,
   language: generateRandomString(LETTERS, 2).toLowerCase(),
   layout: '',
@@ -76,7 +77,7 @@ const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => ({
   ...overrides,
 });
 
-const createCube = (overrides?: Partial<Cube>): Cube => ({
+export const createCube = (overrides?: Partial<Cube>): Cube => ({
   id: uuidv4(),
   shortId: generateRandomString(ALPHANUMERIC, 10).toLowerCase(),
   owner: createUser(),
@@ -106,14 +107,14 @@ const createCube = (overrides?: Partial<Cube>): Cube => ({
   ...overrides,
 });
 
-const createUser = (overrides?: Partial<User>): User => ({
+export const createUser = (overrides?: Partial<User>): User => ({
   id: uuidv4(),
   username: generateRandomString(LETTERS, 5, 10).toLowerCase(),
   imageName: 'Ambush Viper',
   ...overrides,
 });
 
-const createCubeImage = (overrides?: Partial<CubeImage>): CubeImage => ({
+export const createCubeImage = (overrides?: Partial<CubeImage>): CubeImage => ({
   uri: `/content/images/${uuidv4()}.png`,
   artist: `${generateRandomString(LETTERS, 3, 10)} ${generateRandomString(LETTERS, 5, 15)}`,
   id: uuidv4(),
@@ -121,4 +122,10 @@ const createCubeImage = (overrides?: Partial<CubeImage>): CubeImage => ({
   ...overrides,
 });
 
-export { createCard, createCardDetails, createCube, createCubeImage, createUser };
+export const createBlogPost = (overrides?: Partial<BlogPost>): BlogPost => {
+  return {
+    id: uuidv4(),
+    cube: createCube().id,
+    ...overrides,
+  } as BlogPost;
+};

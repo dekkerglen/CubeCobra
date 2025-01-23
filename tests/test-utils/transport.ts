@@ -9,21 +9,13 @@ export const createMockRequest = (partialRequest?: Partial<Request>): Request =>
     query: {},
     params: {},
     headers: {},
-    user: {
-      id: '0001',
-      username: 'admin',
-    },
     ...partialRequest,
   } as Request;
 };
 
 export const createMockResponse = (overrides?: Partial<Response>): Response => {
   const res: Partial<Response> = {
-    status: (code: number) => {
-      res.statusCode = code;
-      return res as Response;
-    },
-
+    status: jest.fn().mockReturnThis(),
     json: jest.fn(),
     send: jest.fn(),
     ...overrides,
@@ -47,6 +39,16 @@ class CallBuilder {
 
   withRequest(request: Partial<Request>): CallBuilder {
     this.request = request;
+    return this;
+  }
+
+  withParams(params: any): CallBuilder {
+    this.request.params = params;
+    return this;
+  }
+
+  withBody(body: any): CallBuilder {
+    this.request.body = body;
     return this;
   }
 
