@@ -58,6 +58,15 @@ jobs:
         env:
           DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
         run: cat $DIFF
+      - name: Upload diff
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+        with:
+          name: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+          path: ${{ steps.git-diff-action.outputs.raw-diff-path }}
       - name: Run eslint on changed files
         # Always run both eslint and prettier
         if: always()
