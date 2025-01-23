@@ -56,7 +56,7 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest" hasControls={user !== null && cube.owner.id === user.id}>
+      <CubeLayout cube={cube} activeLink="playtest" hasControls={!!user && cube.owner.id === user.id}>
         <Flexbox direction="col" gap="2" className="mb-2">
           {user && cube.owner.id === user.id && (
             <Controls>

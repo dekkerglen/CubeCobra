@@ -35,7 +35,7 @@ const RenderToRoot = <P,>(Element: ComponentType<P>): ComponentType<P> => {
           <AutocardContextProvider>
             <AdsContext.Provider value={reactProps.nitroPayEnabled}>
               <DomainContext.Provider value={reactProps.domain}>
-                <UserContext.Provider value={reactProps.user}>
+                <UserContext.Provider value={reactProps.user || null}>
                   <Element {...reactProps} />
                 </UserContext.Provider>
               </DomainContext.Provider>
