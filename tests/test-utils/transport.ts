@@ -32,18 +32,6 @@ export const createMockResponse = (overrides?: Partial<Response>): Response => {
   return res as Response;
 };
 
-/**
- * Calls a handler and passes the partial request if provided
- * @param handler
- * @param request
- */
-export const callHandler = async (
-  handler: (request: Request, response: Response) => void,
-  request?: Partial<Request>,
-) => {
-  return handler(createMockRequest(request), createMockResponse());
-};
-
 type Handler = (req: Request, res: Response) => Promise<any | void>;
 
 class CallBuilder {
