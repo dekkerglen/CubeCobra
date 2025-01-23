@@ -63,28 +63,14 @@ jobs:
         env:
           DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
         # Even if error run true so the step passes
-        run: npx eslint --max-warnings 0 $(cat $DIFF) > eslint.out || true
+        run: npx eslint -c .github/eslint.config.mjs -f @microsoft/eslint-formatter-sarif --max-warnings 0 $(cat $DIFF) > eslint.sarif || true
       - name: Upload eslint Report
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: eslint.out
-          path: eslint.out
-
-      - name: Run Prettier on changed files
-        # Always run both eslint and prettier
-        if: always()
-        env:
-          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
-        run: npm run lint:prettier 2> prettier.out || true
-      - name: Upload Prettier Report
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: prettier.out
-          path: prettier.out
+          name: eslint.sarif
+          path: eslint.sarif
             
       # - name: Run eslint on changed files
       #   # Always run both eslint and prettier
