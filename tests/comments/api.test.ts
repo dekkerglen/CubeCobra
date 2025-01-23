@@ -9,9 +9,11 @@ import {
   getHandler,
   reportHandler,
 } from '../../src/router/routes/comment';
-import { Request, Response } from '../../src/types/express';
+import { Response } from '../../src/types/express';
 import * as util from '../../src/util/render';
 import * as routeUtil from '../../src/util/util';
+import { createUser } from '../test-utils/data';
+import { call } from '../test-utils/transport';
 
 jest.mock('../../src/dynamo/models/comment', () => ({
   ...jest.requireActual('../../src/dynamo/models/comment'),
@@ -54,15 +56,7 @@ jest.mock('../../src/util/util', () => ({
 }));
 
 describe('Get Comment', () => {
-  let req: Partial<Request>;
   const flashMock = jest.fn();
-
-  beforeEach(async () => {
-    req = {
-      params: { id: '12345' },
-      flash: flashMock,
-    };
-  });
 
   afterEach(async () => {
     jest.clearAllMocks();
@@ -76,10 +70,19 @@ describe('Get Comment', () => {
 
     (Comment.getById as jest.Mock).mockResolvedValue(mockComment);
 
-    await getHandler(req as Request, {} as Response);
+    await call(getHandler)
+      .withFlash(flashMock)
+      .withRequest({ params: { id: mockComment.id } })
+      .send();
 
-    expect(Comment.getById).toHaveBeenCalledWith('12345');
-    expect(util.render).toHaveBeenCalledWith(req, {}, 'CommentPage', { comment: mockComment }, { title: 'Comment' });
+    expect(Comment.getById).toHaveBeenCalledWith(mockComment.id);
+    expect(util.render).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      'CommentPage',
+      { comment: mockComment },
+      { title: 'Comment' },
+    );
 
     expect(flashMock).not.toHaveBeenCalled();
     expect(util.redirect).not.toHaveBeenCalled();
@@ -88,12 +91,15 @@ describe('Get Comment', () => {
   it('alerts when comment is not found', async () => {
     (Comment.getById as jest.Mock).mockResolvedValue(undefined);
 
-    await getHandler(req as Request, {} as Response);
+    await call(getHandler)
+      .withFlash(flashMock)
+      .withRequest({ params: { id: '12345' } })
+      .send();
 
     expect(Comment.getById).toHaveBeenCalledWith('12345');
     expect(util.render).not.toHaveBeenCalled();
     expect(flashMock).toHaveBeenCalled();
-    expect(util.redirect).toHaveBeenCalledWith(req, {}, '/404');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
   });
 
   it('handles errors gracefully', async () => {
@@ -101,9 +107,13 @@ describe('Get Comment', () => {
     (Comment.getById as jest.Mock).mockRejectedValue(error);
     (routeUtil.handleRouteError as jest.Mock).mockImplementation(() => {});
 
-    await getHandler(req as Request, {} as Response);
+    await call(getHandler)
+      .withFlash(flashMock)
+      .withRequest({ params: { id: '12345' } })
+      .send();
+
     expect(Comment.getById).toHaveBeenCalledWith('12345');
-    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(req, {}, error, '/404');
+    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
     expect(flashMock).not.toHaveBeenCalled();
     expect(util.redirect).not.toHaveBeenCalled();
     expect(util.render).not.toHaveBeenCalled();
@@ -112,30 +122,28 @@ describe('Get Comment', () => {
 
 describe('Report Comment', () => {
   const flashMock = jest.fn();
-  let req: Partial<Request>;
-
-  beforeEach(async () => {
-    req = {
-      flash: flashMock,
-      body: {
-        commentid: '12345',
-        info: 'Report info',
-        reason: 'Report reason',
-      },
-      user: { id: '123', username: 'reporter' },
-    };
-  });
 
   it('handles a report', async () => {
+    const reporter = createUser({ username: 'reporter' });
     (Notice.put as jest.Mock).mockResolvedValue(undefined);
 
-    await reportHandler(req as Request, {} as Response);
+    await call(reportHandler)
+      .as(reporter)
+      .withFlash(flashMock)
+      .withRequest({
+        body: {
+          commentid: '12345',
+          info: 'Report info',
+          reason: 'Report reason',
+        },
+      })
+      .send();
 
     expect(Notice.put).toHaveBeenCalledWith(
       expect.objectContaining({
         subject: '12345',
         body: 'Report reason\n\nReport info',
-        user: '123',
+        user: reporter.id,
         type: Notice.TYPE.COMMENT_REPORT,
       }),
     );
@@ -145,17 +153,9 @@ describe('Report Comment', () => {
 });
 
 describe('Get Comments', () => {
-  let req: Partial<Request>;
   let res: Partial<Response>;
 
   beforeEach(() => {
-    req = {
-      body: {
-        parent: 'parent123',
-        lastKey: 'lastKey123',
-      },
-    };
-
     res = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
@@ -174,7 +174,15 @@ describe('Get Comments', () => {
 
     (Comment.queryByParentAndType as jest.Mock).mockResolvedValue(mockComments);
 
-    await getCommentsHandler(req as Request, res as Response);
+    await call(getCommentsHandler)
+      .withRequest({
+        body: {
+          parent: 'parent123',
+          lastKey: 'lastKey123',
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(Comment.queryByParentAndType).toHaveBeenCalledWith('parent123', 'lastKey123');
     expect(res.status).toHaveBeenCalledWith(200);
@@ -189,36 +197,26 @@ describe('Get Comments', () => {
     const mockError = new Error('Something went wrong');
     (Comment.queryByParentAndType as jest.Mock).mockRejectedValue(mockError);
 
-    await getCommentsHandler(req as Request, res as Response);
+    await call(getCommentsHandler)
+      .withRequest({
+        body: {
+          parent: 'parent123',
+          lastKey: 'lastKey123',
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(Comment.queryByParentAndType).toHaveBeenCalledWith('parent123', 'lastKey123');
-    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(req, res, mockError, '/404');
+    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), mockError, '/404');
     expect(res.status).not.toHaveBeenCalledWith(200);
   });
 });
 
 describe('Edit Comment', () => {
-  let req: Partial<Request>;
   let res: Partial<Response>;
 
-  const mockComment = {
-    id: '123',
-    body: 'Original content',
-    owner: { id: '123' },
-  };
-
   beforeEach(() => {
-    req = {
-      body: {
-        comment: {
-          id: '123',
-          content: 'This is the updated comment content.',
-          remove: false,
-        },
-      },
-      user: { id: '123', username: 'commenter' },
-    };
-
     res = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
@@ -232,7 +230,18 @@ describe('Edit Comment', () => {
   it('should return 404 if the comment does not exist', async () => {
     (Comment.getById as jest.Mock).mockResolvedValue(null);
 
-    await editCommentHandler(req as Request, res as Response);
+    await call(editCommentHandler)
+      .withRequest({
+        body: {
+          comment: {
+            id: '123',
+            content: 'This is the updated comment content.',
+            remove: false,
+          },
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(Comment.getById).toHaveBeenCalledWith('123');
     expect(res.status).toHaveBeenCalledWith(404);
@@ -245,10 +254,22 @@ describe('Edit Comment', () => {
   it('should return 404 if the user is not the owner of the comment', async () => {
     (Comment.getById as jest.Mock).mockResolvedValue({
       id: '123',
-      owner: { id: 'another-user' },
+      owner: createUser({ id: 'commenter' }),
     });
 
-    await editCommentHandler(req as Request, res as Response);
+    await call(editCommentHandler)
+      .as(createUser({ id: 'editor', username: 'editor' }))
+      .withRequest({
+        body: {
+          comment: {
+            id: '123',
+            content: 'This is a comment',
+            remove: false,
+          },
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(Comment.getById).toHaveBeenCalledWith('123');
     expect(res.status).toHaveBeenCalledWith(404);
@@ -258,54 +279,76 @@ describe('Edit Comment', () => {
     });
   });
 
-  it('should update the comment successfully', async () => {
-    (Comment.getById as jest.Mock).mockResolvedValue(mockComment);
+  it('should delete a comment successfully', async () => {
+    const commenter = createUser({ id: 'commenter' });
+    const comment = {
+      id: 'comment-to-delete',
+      content: 'My comment to delete!',
+      owner: commenter,
+    };
+
+    (Comment.getById as jest.Mock).mockResolvedValue(comment);
     (Comment.put as jest.Mock).mockResolvedValue(undefined);
 
-    await editCommentHandler(req as Request, res as Response);
+    await call(editCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: { comment: { ...comment, remove: true } },
+      })
+      .withResponse(res)
+      .send();
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith({ success: 'true' });
+    expect(Comment.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'comment-to-delete',
+        owner: expect.objectContaining({ id: '404' }),
+      }),
+    );
+  });
+
+  it('should update the comment successfully', async () => {
+    const commenter = createUser({ id: 'commenter' });
+
+    (Comment.getById as jest.Mock).mockResolvedValue({
+      id: '123',
+      body: 'Original content',
+      owner: commenter,
+    });
+    (Comment.put as jest.Mock).mockResolvedValue(undefined);
+
+    await call(editCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: {
+          comment: {
+            id: '123',
+            content: 'This is the updated comment content.',
+            remove: false,
+          },
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(Comment.getById).toHaveBeenCalledWith('123');
     expect(Comment.put).toHaveBeenCalledWith(
       expect.objectContaining({
         id: '123',
         body: 'This is the updated comment content.',
-        owner: { id: '123' },
+        owner: commenter,
       }),
     );
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith({ success: 'true' });
-
-    // Edit to delete
-    req.body.comment.remove = true;
-    await editCommentHandler(req as Request, res as Response);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({ success: 'true' });
-    expect(Comment.put).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: '123',
-        body: 'This is the updated comment content.',
-        owner: expect.objectContaining({ id: '404' }),
-      }),
-    );
   });
 });
 
 describe('Add Comment', () => {
-  let req: Partial<Request>;
   let res: Partial<Response>;
 
   beforeEach(() => {
-    req = {
-      body: {
-        body: 'This is a new comment',
-        mentions: ['mentionUser'],
-        parent: 'parent-id',
-        type: 'comment',
-      },
-      user: { id: 'user-id', username: 'commenter', imageName: 'test-image' },
-    };
-
     res = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
@@ -328,8 +371,17 @@ describe('Add Comment', () => {
   it('should return 400 for an invalid comment type', async () => {
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(false);
 
-    req.body.type = 'invalid';
-    await addCommentHandler(req as Request, res as Response);
+    await call(addCommentHandler)
+      .as(createUser())
+      .withRequest({
+        body: {
+          body: 'This is a new comment',
+          parent: 'parent-id',
+          type: 'invalid',
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.send).toHaveBeenCalledWith({
@@ -339,14 +391,26 @@ describe('Add Comment', () => {
   });
 
   it('should create a comment and return the comment data', async () => {
+    const commenter = createUser();
+
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
     (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
 
-    await addCommentHandler(req as Request, res as Response);
+    await call(addCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: {
+          body: 'This is a new comment',
+          parent: 'parent-id',
+          type: 'comment',
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(Comment.put).toHaveBeenCalledWith(
       expect.objectContaining({
-        owner: 'user-id',
+        owner: commenter.id,
         body: 'This is a new comment',
         parent: 'parent-id',
         type: 'comment',
@@ -357,28 +421,42 @@ describe('Add Comment', () => {
     expect(res.send).toHaveBeenCalledWith({
       success: 'true',
       comment: expect.objectContaining({
-        owner: req.user,
+        owner: commenter,
         id: 'comment-id',
       }),
     });
   });
 
   it('should notify the owner of the parent resource if it is a notifiable comment type', async () => {
+    const commenter = createUser();
+
     (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
     (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
 
-    await addCommentHandler(req as Request, res as Response);
+    await call(addCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: {
+          body: 'This is a new comment',
+          parent: 'parent-id',
+          type: 'comment',
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(routeUtil.addNotification).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'another-user' }),
-      req.user,
+      commenter,
       '/comment/comment-id',
-      `${req.user?.username} left a comment in response to your comment.`,
+      `${commenter.username} left a comment in response to your comment.`,
     );
   });
 
   it('should notify mentioned users', async () => {
+    const commenter = createUser();
+
     (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
     (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
@@ -386,31 +464,40 @@ describe('Add Comment', () => {
       Promise.resolve({ id: `id-${username}`, username: username }),
     );
 
-    req.body.mentions = ['mention-user-1', 'mention-user-2'];
-
-    await addCommentHandler(req as Request, res as Response);
+    await call(addCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: {
+          body: 'This is a new comment',
+          parent: 'parent-id',
+          type: 'comment',
+          mentions: ['mention-user-1', 'mention-user-2'],
+        },
+      })
+      .withResponse(res)
+      .send();
 
     expect(routeUtil.addNotification).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'another-user' }),
-      req.user,
+      commenter,
       '/comment/comment-id',
-      `${req.user?.username} left a comment in response to your comment.`,
+      `${commenter.username} left a comment in response to your comment.`,
     );
 
     expect(routeUtil.addNotification).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({ username: 'mention-user-1' }),
-      req.user,
+      commenter,
       '/comment/comment-id',
-      `${req.user?.username} mentioned you in their comment`,
+      `${commenter.username} mentioned you in their comment`,
     );
 
     expect(routeUtil.addNotification).toHaveBeenNthCalledWith(
       3,
       expect.objectContaining({ username: 'mention-user-2' }),
-      req.user,
+      commenter,
       '/comment/comment-id',
-      `${req.user?.username} mentioned you in their comment`,
+      `${commenter.username} mentioned you in their comment`,
     );
   });
 });
