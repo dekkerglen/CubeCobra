@@ -150,6 +150,24 @@ describe('Report Comment', () => {
 
     expect(flashMock).toHaveBeenCalledWith('success', expect.anything());
   });
+
+  it('should handle errors gracefully', async () => {
+    const error = new Error('Something went wrong');
+    (Notice.put as jest.Mock).mockRejectedValue(error);
+
+    await call(reportHandler)
+      .withFlash(flashMock)
+      .withRequest({
+        body: {
+          commentid: '12345',
+          info: 'Report info',
+          reason: 'Report reason',
+        },
+      })
+      .send();
+
+    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
+  });
 });
 
 describe('Get Comments', () => {
