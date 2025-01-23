@@ -1,0 +1,50 @@
+# Exists because pull_request action doesn't grant permissions if the source is from a fork.
+# So instead of trying to add comments for issues in the pull_request run, we download the reports
+# here and comment. This workflow will run in the context of the main repo and thus have permissions
+name: Pull Request Reporting
+
+on:
+  workflow_run:
+    workflows: [CI Tests]
+    types:
+      - completed
+#permissions:
+#  checks: write
+#  pull-requests: write
+
+env:
+  REVIEWDOG_BASE_OPTIONS: '-reporter=github-check -filter-mode=nofilter -fail-on-error=false -level=error'
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Filter out skips and bad statuses
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      # Reviewdog needs the git checkout
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      # Download all
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: v0.20.3
+      - name: Run reviewdog for eslint
+        if: always()
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI_PULL_REQUEST: ${{ github.event.workflow_run.pull_requests[0].number }} 
+          CI_REPO_OWNER: ${{ github.event.workflow_run.repository.owner.login }} 
+          CI_REPO_NAME: ${{ github.event.workflow_run.head_repository.name }} 
+          CI_COMMIT: ${{ github.event.workflow_run.head_sha }} 
+          CI_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          cat artifacts/eslint.sarif | reviewdog $REVIEWDOG_BASE_OPTIONS -f "sarif" -name "eslint"
