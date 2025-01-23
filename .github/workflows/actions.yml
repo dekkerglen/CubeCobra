@@ -30,7 +30,8 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-        
-        
+      - name: Test
+        run: echo "${{github.event_name}} | ${{ github.repository }}" 
 
       - uses: actions/setup-node@v3
         with:
