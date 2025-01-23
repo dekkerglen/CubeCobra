@@ -5,6 +5,7 @@ const RSS = require('rss');
 
 const { CARD_STATUSES } = require('../../datatypes/Card');
 
+const cardutil = require('../../client/utils/cardutil');
 const miscutil = require('../../client/utils/Util');
 const {
   getIdsFromName,
@@ -153,7 +154,7 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
       'Thank you for the report! Our moderators will review the report can decide whether to take action.',
     );
 
-    return redirect(req, res,  `/cube/overview/${req.params.id}`);
+    return redirect(req, res, `/cube/overview/${req.params.id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
@@ -161,8 +162,8 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
 
 router.get('/recents', async (req, res) => {
   const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
-  
-  
+
+
 
   return render(req, res, 'RecentlyUpdateCubesPage', {
     items: result.items.filter((cube) =>
@@ -384,7 +385,7 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
       req.flash('danger', 'Cannot update the cube overview for an empty cube. Please add cards to the cube first.');
       return redirect(req, res, '/cube/overview/' + cube.id);
     }
-    
+
     if (util.hasProfanity(updatedCube.name)) {
       req.flash('danger', 'Could not update cube, the name contains a banned word. If you feel this was a mistake, please contact us.');
       return redirect(req, res, '/cube/overview/' + cube.id);
@@ -824,7 +825,7 @@ router.post('/getmoredecks/:id', async (req, res) => {
       decks: query.items,
       lastKey: query.lastKey,
     });
-  } catch(e) {
+  } catch (e) {
     return res.status(500).send({
       error: e,
       success: 'false',
@@ -995,7 +996,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
 
-    
+
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
       let pack;
       try {
@@ -1062,7 +1063,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
 
     // decode base64
     const list = Buffer.from(encodedFile, 'base64').toString('utf8');
-    
+
     const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
@@ -1298,7 +1299,7 @@ router.post(
         // sort by color
         const details = cardFromId(card.cardID);
         const type = card.type_line || details.type;
-        const colors = card.colors || details.colors;
+        const colors = cardutil.cardColors(card);
 
         if (type.toLowerCase().includes('land')) {
           index1 = 7;

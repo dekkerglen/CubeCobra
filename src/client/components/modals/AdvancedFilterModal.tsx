@@ -9,8 +9,8 @@ import Select from 'components/base/Select';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import NumericField from 'components/NumericField';
 import CubeContext from 'contexts/CubeContext';
-import { FilterValues } from 'datatypes/Card';
 
+import { DefaultElo, FilterValues } from '../../../datatypes/Card';
 import { getLabels } from '../../utils/Sort';
 
 export interface AdvancedFilterModalProps {
@@ -212,7 +212,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
           <NumericField
             name="elo"
             humanName="elo"
-            placeholder={'Any integer number, e.g. "1200"'}
+            placeholder={`Any integer number, e.g. "${DefaultElo}"`}
             value={values.elo}
             operator={values.eloOp}
             setValue={(value: string) => updateValue(value, 'elo')}

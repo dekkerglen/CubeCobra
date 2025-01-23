@@ -2604,6 +2604,12 @@ img.mana-symbol-sm {
   touch-action: none;
 }
 
+/* Make external images within centering blocks display beside it each instead of stacked vertically */
+
+.markdown .text-center img.max-w-full {
+  display: inline-block;
+}
+
 @media (min-width: 640px) {
   .sm\:container {
     width: 100%;

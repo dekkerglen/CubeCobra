@@ -16,9 +16,10 @@ import 'chartjs-adapter-date-fns';
 
 import { formatDate } from 'utils/Date';
 
+import { DefaultElo } from '../../datatypes/Card';
 import History from '../../datatypes/History';
 import { CSRFContext } from '../contexts/CSRFContext';
-import { Col, Flexbox,Row } from './base/Layout';
+import { Col, Flexbox, Row } from './base/Layout';
 import Select from './base/Select';
 import Spinner from './base/Spinner';
 import Text from './base/Text';
@@ -56,7 +57,7 @@ const EloGraph: React.FC<EloGraphProps> = ({ defaultHistories, cardId }) => {
           borderColor: '#28A745',
           backgroundColor: '#28A745',
           label: 'Elo',
-          data: history.map((point) => point.elo || 1200),
+          data: history.map((point) => point.elo || DefaultElo),
         },
       ],
     };
@@ -130,7 +131,7 @@ const EloGraph: React.FC<EloGraphProps> = ({ defaultHistories, cardId }) => {
       setHistory(json.data);
       setLoading(false);
     },
-    [cardId, setZoom, setPeriod],
+    [csrfFetch, cardId, setZoom, setPeriod],
   );
 
   return (

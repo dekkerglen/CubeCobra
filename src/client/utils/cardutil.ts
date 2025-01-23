@@ -1,9 +1,12 @@
-import Card, { CardDetails as CardDetailsType, COLOR_CATEGORIES, ColorCategory } from '../../datatypes/Card';
+import Card, {
+  CardDetails as CardDetailsType,
+  COLOR_CATEGORIES,
+  ColorCategory,
+  DefaultElo,
+} from '../../datatypes/Card';
 import CategoryOverrides from '../res/CategoryOverrides.json';
 import LandCategories from '../res/LandCategories.json';
 import { arraysEqual } from './Util';
-
-export const ELO_DEFAULT = 1200;
 
 export const COLOR_COMBINATIONS: string[][] = [
   [],
@@ -75,7 +78,7 @@ export function cardsAreEquivalent(a?: Card, b?: Card): boolean {
     a.type_line === b.type_line &&
     a.status === b.status &&
     a.cmc === b.cmc &&
-    arraysEqual(a.colors, b.colors) &&
+    arraysEqual(cardColors(a), cardColors(b)) &&
     arraysEqual(a.tags, b.tags) &&
     a.finish === b.finish &&
     a.imgUrl === b.imgUrl &&
@@ -393,7 +396,26 @@ export const detailsToCard = (details: CardDetailsType): Card => {
   };
 };
 
-export const cardColors = (card: Card): string[] => card.colors ?? card.details?.colors ?? [];
+export const cardColors = (card: Card): string[] => {
+  //Old data may have colors (or details.colors) as a string like WBG instead of [W, B, G]
+  if (card.colors) {
+    if (typeof card.colors === 'string') {
+      return [...card.colors];
+    }
+
+    return card.colors;
+  }
+
+  if (card.details) {
+    if (typeof card.details.colors === 'string') {
+      return [...card.details.colors];
+    }
+
+    return card.details.colors;
+  }
+
+  return [];
+};
 
 export const cardLanguage = (card: Card): string => card.details?.language ?? '';
 
@@ -417,7 +439,7 @@ export const cardImageFlip = (card: Card): string => card.details?.image_flip ??
 
 export const cardTokens = (card: Card): string[] => card.details?.tokens ?? [];
 
-export const cardElo = (card: Card): number => (card.details ? card.details?.elo || 1200 : 1200);
+export const cardElo = (card: Card): number => (card.details ? card.details?.elo || DefaultElo : DefaultElo);
 
 export const cardPopularity = (card: Card): number => card.details?.popularity ?? 0;
 

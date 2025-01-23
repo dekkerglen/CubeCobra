@@ -40,7 +40,7 @@
     "setup:local:localstack": "./scripts/local/init_localstack.sh",
     "setup:local:env": "cp .env_EXAMPLE .env",
     "setup:local:files": "node scripts/create_local_files.js",
-    "setup:local:db": "node --max-old-space-size=8192 scripts/createTables.js",
+    "setup:local:db": "NODE_OPTIONS=--max-old-space-size=8192 ts-node scripts/createTables.js",
     "start:dev": "npm run start:localstack && npm run devstart",
     "publish": "npm run build && node ./scripts/publish.js",
     "postinstall": "node ./scripts/setup-aliases.js",
@@ -245,5 +245,8 @@
     "webpack-dev-server": "^5.0.4",
     "webpack-node-externals": "^3.0.0"
   },
-  "packageManager": "npm@4.4.0"
+  "packageManager": "npm@4.4.0",
+  "overrides": {
+    "mdast-util-gfm-autolink-literal": "2.0.0"
+  }
 }
