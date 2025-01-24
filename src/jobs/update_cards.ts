@@ -275,11 +275,34 @@ function arraySetEqual<T>(target: T[], candidate: T[]) {
   return isValid;
 }
 
+// As of writing Scryfall doesn't include the tokens that dungeons may create.
+// If that changes, this function can be deleted
+function getExtraTokensForDungeons(card: ScryfallCard) {
+  const extraTokens: string[] = [];
+  const allParts = card.all_parts || [];
+  if (allParts.some((element) => element.name === 'Undercity // The Initiative')) {
+    extraTokens.push(specialCaseTokens.Treasure);
+    // 4/1 Skeleton with menace
+    extraTokens.push('cf4c245f-af2f-46a7-81f3-670a04940901')
+  }
+  // As of writing, if one dungeon is included, all are, so only check for one
+  if (allParts.some((element) => element.name === 'Dungeon of the Mad Mage')) {
+    extraTokens.push(specialCaseTokens.Treasure);
+    // 1/1 Skeleton
+    extraTokens.push('b63b11cd-4a96-49d5-aee1-b0ff02ef49bb')
+    // 1/1 Goblin
+    extraTokens.push('b37f4fdb-1533-4c38-a654-f715fbef6abf')
+    // The Atropal
+    extraTokens.push('65f8e40f-fb5e-4ab8-add3-a8b87e7bcdd9')
+  }
+  return extraTokens;
+}
+
 function getTokens(card: ScryfallCard, catalogCard: CardDetails) {
   const mentionedTokens: any[] = [];
   const recordedTokens = getScryfallTokensForCard(card);
   if (recordedTokens.length > 0) {
-    catalogCard.tokens = recordedTokens;
+    catalogCard.tokens = recordedTokens.concat(getExtraTokensForDungeons(card));
   } else if (catalogCard.oracle_text !== null) {
     if (catalogCard.oracle_text.includes(' token')) {
       // find the ability that generates the token to reduce the amount of text to get confused by.
