@@ -6,6 +6,8 @@ on:
 jobs:
   release:
     if: github.repository == 'dekkerglen/CubeCobraCDK' && github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get_version.outputs.version }}
