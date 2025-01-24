@@ -261,13 +261,13 @@ interface renderUlProps {
   children: ReactNode;
 }
 
-const renderUl: React.FC<renderUlProps> = (node) => <ul className="list-disc list-inside ps-2">{node.children}</ul>;
+const renderUl: React.FC<renderUlProps> = (node) => <ul className="list-disc ml-4 ps-2">{node.children}</ul>;
 
 interface renderOlProps {
   children: ReactNode;
 }
 
-const renderOl: React.FC<renderOlProps> = (node) => <ol className="list-decimal list-inside ps-2">{node.children}</ol>;
+const renderOl: React.FC<renderOlProps> = (node) => <ol className="list-decimal ml-4 ps-2">{node.children}</ol>;
 
 const RENDERERS = {
   // overridden defaults

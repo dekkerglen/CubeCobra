@@ -33,7 +33,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
       id: `${formatIndex}`,
       serializedFormat: JSON.stringify(format),
     };
-  }, [format]);
+  }, [format, formatIndex]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>
@@ -63,6 +63,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
               label="Multiples"
               selected={format.multiples ? 'true' : 'false'}
               setSelected={(value) => setFormat({ ...format, multiples: value === 'true' })}
+              allowOptionTextWrapping={true}
               options={[
                 { value: 'true', label: 'Allow any number of copies of each card in the draft (e.g. set draft)' },
                 {
@@ -84,7 +85,8 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
               Card values can either be single tags or filter parameters or a comma separated list to create a ratio
               (e.g. 3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). tags
               can be specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>. <code>*</code> can be
-              used to match any card.
+              used to match any card. Space separated filters act as an AND, eg <code>set:inv r:common</code> matches a
+              card from the Invasion set AND is a common.
             </Text>
             {(format.packs ?? []).map((pack, packIndex) => (
               <CustomPackCard

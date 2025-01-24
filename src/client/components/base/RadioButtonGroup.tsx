@@ -1,5 +1,7 @@
 import React from 'react';
 
+import classNames from 'classnames';
+
 import { Flexbox } from './Layout';
 
 interface RadioButtonGroupProps {
@@ -7,9 +9,16 @@ interface RadioButtonGroupProps {
   selected: string;
   setSelected: (selected: string) => void;
   options: { value: string; label: string }[];
+  allowOptionTextWrapping?: boolean;
 }
 
-const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({ label, selected, setSelected, options }) => {
+const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
+  label,
+  selected,
+  setSelected,
+  options,
+  allowOptionTextWrapping = true,
+}) => {
   return (
     <Flexbox direction="col" gap="2">
       {label && <label className="block text-sm font-medium text-text">{label}</label>}
@@ -21,7 +30,9 @@ const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({ label, selected, se
             checked={selected === option.value}
             onChange={() => setSelected(option.value)}
           />
-          <span className="text-text whitespace-nowrap">{option.label}</span>
+          <span className={classNames('text-text', { 'whitespace-nowrap': !allowOptionTextWrapping })}>
+            {option.label}
+          </span>
         </label>
       ))}
     </Flexbox>

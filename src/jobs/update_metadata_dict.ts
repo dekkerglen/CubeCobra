@@ -3,6 +3,7 @@ require('module-alias/register');
 require('dotenv').config();
 
 const fs = require('fs');
+import { DefaultElo } from '../datatypes/Card';
 import carddb, { cardFromId, initializeCardDb } from '../util/carddb';
 const { encode } = require('../util/ml');
 
@@ -188,7 +189,7 @@ interface Metadata {
 
   for (const oracle of indexToOracle) {
     metadatadict[oracle] = {
-      elo: 1200,
+      elo: DefaultElo,
       picks: 0,
       cubes: cubeCount[oracleToIndex[oracle]],
       popularity: (100 * cubeCount[oracleToIndex[oracle]]) / Object.keys(cubeHistory).length,

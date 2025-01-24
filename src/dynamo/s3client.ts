@@ -18,7 +18,7 @@ const s3 = new AWS.S3({
   endpoint: process.env.AWS_ENDPOINT || undefined,
 });
 
-const getObject = async (bucket: string, key: string): Promise<any> => {
+export const getObject = async (bucket: string, key: string): Promise<any> => {
   try {
     const res = await s3
       .getObject({
@@ -33,7 +33,7 @@ const getObject = async (bucket: string, key: string): Promise<any> => {
   }
 };
 
-const putObject = async (bucket: string, key: string, value: any): Promise<void> => {
+export const putObject = async (bucket: string, key: string, value: any): Promise<void> => {
   await s3
     .putObject({
       Bucket: bucket,
@@ -43,7 +43,7 @@ const putObject = async (bucket: string, key: string, value: any): Promise<void>
     .promise();
 };
 
-const deleteObject = async (bucket: string, key: string): Promise<void> => {
+export const deleteObject = async (bucket: string, key: string): Promise<void> => {
   await s3
     .deleteObject({
       Bucket: bucket,
@@ -52,8 +52,17 @@ const deleteObject = async (bucket: string, key: string): Promise<void> => {
     .promise();
 };
 
+export const getBucketName = (): string => {
+  //So S3 actions don't complain that an environment variable could be undefined
+  if (!process.env.DATA_BUCKET) {
+    throw new Error('Bucket is not set');
+  }
+  return process.env.DATA_BUCKET;
+};
+
 module.exports = {
   getObject,
   putObject,
   deleteObject,
+  getBucketName,
 };

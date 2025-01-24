@@ -11,6 +11,7 @@ export const COLOR_CATEGORIES = [
 ] as const;
 export type ColorCategory = (typeof COLOR_CATEGORIES)[number];
 
+export const DefaultElo = 1200;
 export interface CardDetails {
   scryfall_id: string;
   oracle_id: string;
@@ -43,6 +44,7 @@ export interface CardDetails {
   toughness?: string;
   parsed_cost: string[];
   finishes: string[];
+  promo_types?: string[];
   border_color: 'black' | 'white' | 'silver' | 'gold';
   language: string;
   tcgplayer_id?: string;

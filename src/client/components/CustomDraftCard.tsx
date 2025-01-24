@@ -26,7 +26,7 @@ const range = (lo: number, hi: number): number[] => Array.from(Array(hi - lo).ke
 
 const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultDraftFormat, formatIndex }) => {
   const { cube, canEdit } = useContext(CubeContext);
-  const [seats, setSeats] = useState('8');
+  const [seats, setSeats] = useState(format?.defaultSeats?.toString() || '8');
   const formRef = React.createRef<HTMLFormElement>();
 
   const formData = useMemo(
@@ -34,7 +34,7 @@ const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultDraftF
       seats: `${seats}`,
       id: `${formatIndex}`,
     }),
-    [seats],
+    [formatIndex, seats],
   );
 
   return (

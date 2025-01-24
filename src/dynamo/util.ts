@@ -13,14 +13,14 @@ const tableName = (name: string): string => `${process.env.DYNAMO_PREFIX}_${name
 interface IndexConfig {
   name: string;
   partitionKey: string;
-  sortKey: string;
+  sortKey?: string;
 }
 
 interface ClientConfig {
   name: string;
   partitionKey: string;
   attributes: Record<string, string>;
-  indexes: Array<IndexConfig>;
+  indexes?: Array<IndexConfig>;
   sortKey?: string;
 }
 

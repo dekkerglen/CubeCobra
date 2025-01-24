@@ -2,11 +2,11 @@ import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
-import { cardCmc, cardOracleId, cardType } from 'utils/cardutil';
+import { cardOracleId } from 'utils/cardutil';
 
 import Card from '../../datatypes/Card';
 import Draft from '../../datatypes/Draft';
-import { setupPicks } from '../../util/draftutil';
+import { getCardDefaultRowColumn, setupPicks } from '../../util/draftutil';
 import { CSRFContext } from '../contexts/CSRFContext';
 import useToggle from '../hooks/UseToggle';
 import Button from './base/Button';
@@ -102,18 +102,17 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
 
       for (const index of newMainboard) {
         const card = cards[index];
-        const row = cardType(card).toLowerCase().includes('creature') || cardType(card).includes('Basic') ? 0 : 1;
-        const column = Math.max(0, Math.min(cardCmc(card), 7));
+        const { row, col } = getCardDefaultRowColumn(card);
 
-        formattedMainboard[row][column].push(index);
+        formattedMainboard[row][col].push(index);
       }
 
       for (const index of pool) {
         if (!basics.includes(index)) {
           const card = cards[index];
-          const column = Math.max(0, Math.min(cardCmc(card), 7));
+          const { col } = getCardDefaultRowColumn(card);
 
-          formattedSideboard[0][column].push(index);
+          formattedSideboard[0][col].push(index);
         }
       }
 
@@ -122,7 +121,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
     } else {
       console.error(json);
     }
-  }, [mainboard, sideboard, basics, cards, setDeck, setSideboard]);
+  }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard]);
 
   const controls = (
     <>

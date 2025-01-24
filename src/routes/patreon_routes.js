@@ -7,6 +7,7 @@ const express = require('express');
 const { ensureAuth } = require('./middleware');
 const util = require('../util/util');
 
+import { PatronLevels, PatronStatuses } from '../datatypes/Patron';
 const Patron = require('../dynamo/models/patron');
 const User = require('../dynamo/models/user');
 const { redirect } = require('../util/render');
@@ -93,15 +94,15 @@ router.post('/hook', async (req, res) => {
       if (rewards.length === 0) {
         document.level = 0;
       } else {
-        document.level = Patron.LEVELS.indexOf(rewards[0].attributes.title);
+        document.level = PatronLevels[rewards[0].attributes.title];
       }
 
-      document.status = Patron.STATUSES.ACTIVE;
+      document.status = PatronStatuses.ACTIVE;
       if (!user.roles.includes('Patron')) {
         user.roles.push('Patron');
       }
     } else if (action === 'pledges:delete') {
-      document.status = Patron.STATUSES.INACTIVE;
+      document.status = PatronStatuses.INACTIVE;
       user.roles = user.roles.filter((role) => role !== 'Patron');
     } else {
       req.logger.error(`Recieved an unsupported patreon hook action: "${action}"`);
@@ -130,7 +131,7 @@ router.get('/redirect', ensureAuth, async (req, res) => {
   const patron = await Patron.getById(req.user.id);
 
   // if this user is already a patron, error
-  if (patron && patron.status === Patron.STATUSES.ACTIVE) {
+  if (patron && patron.status === PatronStatuses.ACTIVE) {
     req.flash('danger', `A Patreon account has already been linked.`);
     return redirect(req, res, '/user/account?nav=patreon');
   }
@@ -159,7 +160,7 @@ router.get('/redirect', ensureAuth, async (req, res) => {
       const newPatron = {
         email,
         owner: req.user.id,
-        status: Patron.STATUSES.INACTIVE,
+        status: PatronStatuses.INACTIVE,
       };
       if (!rawJson.included) {
         req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
@@ -179,7 +180,7 @@ router.get('/redirect', ensureAuth, async (req, res) => {
       }
 
       if (!pledges[0].relationships.reward || !pledges[0].relationships.reward.data) {
-        newPatron.level = 0;
+        newPatron.level = PatronLevels['Patron'];
       } else {
         const rewardId = pledges[0].relationships.reward.data.id;
 
@@ -194,13 +195,13 @@ router.get('/redirect', ensureAuth, async (req, res) => {
         }
 
         if (rewards.length === 0) {
-          newPatron.level = 0;
+          newPatron.level = PatronLevels['Patron'];
         } else {
-          newPatron.level = Patron.LEVELS.indexOf(rewards[0].attributes.title);
+          newPatron.level = PatronLevels[rewards[0].attributes.title];
         }
       }
 
-      newPatron.status = Patron.STATUSES.ACTIVE;
+      newPatron.status = PatronStatuses.ACTIVE;
 
       await Patron.put(newPatron);
 

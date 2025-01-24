@@ -1,10 +1,7 @@
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
 const Patron = require('../dynamo/models/patron');
-
-function canBeFeatured(patron) {
-  return patron && patron.status === Patron.STATUSES.ACTIVE && patron.level > 1;
-}
+import { canBeFeatured } from './featuredQueueUtil';
 
 async function rotateFeatured(queue) {
   if (queue.length < 4) {
