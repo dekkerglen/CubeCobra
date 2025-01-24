@@ -17,13 +17,12 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install Semantic Release
-        run: npm install semantic-release @semantic-release/git @semantic-release/npm -g
+      - run: npm ci
 
       - name: Run Semantic Release
         id: semantic_release
         run: |
-          semantic-release --ci
+          npx semantic-release --ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
