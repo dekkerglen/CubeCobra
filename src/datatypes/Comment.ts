@@ -1,4 +1,4 @@
-import { createTypeGuard } from '../../src/util/typeGuards';
+import { createTypeGuard } from '../util/typeGuards';
 import { CubeImage } from './Cube';
 import User from './User';
 
