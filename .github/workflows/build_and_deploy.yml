@@ -1,0 +1,83 @@
+name: Build and Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    if: github.repository == 'dekkerglen/CubeCobraCDK' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Semantic Release
+        run: npm install semantic-release @semantic-release/git @semantic-release/npm -g
+
+      - name: Run Semantic Release
+        id: semantic_release
+        run: |
+          semantic-release --ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Version from Tag
+        id: get_version
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+  build:
+    if: github.repository == 'dekkerglen/CubeCobraCDK' && github.ref == 'refs/heads/master'
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload archive to S3
+        run: npm run publish
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+
+  deploy_dev:
+    if: github.repository == 'dekkerglen/CubeCobraCDK' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: CDK Deploy in Development
+        uses: dekkerglen/CubeCobraCDK/.github/workflows/deploy-release.yml@main
+        with:
+          stack: CubeCobraDevStack
+
+  deploy_prod:
+    if: github.repository == 'dekkerglen/CubeCobraCDK' && github.ref == 'refs/heads/master'
+    needs:
+      - build
+      - deploy_dev
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - name: CDK Deploy in Production
+        uses: dekkerglen/CubeCobraCDK/.github/workflows/deploy-release.yml@main
+        with:
+          stack: CubeCobraProdStack
