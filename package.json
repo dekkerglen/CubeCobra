@@ -34,7 +34,7 @@
     "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-cards",
     "update-hashes": "node --max-old-space-size=8192 src/jobs/repair_hashes.js",
     "upload-exports": "aws s3 sync temp/export s3://cubecobra",
-    "exports": "NODE_OPTIONS=--max-old-space-size=8192 ts-node src/jobs/export_cubes.js && NODE_OPTIONS=--max-old-space-size=8192 ts-node src/jobs/export_decks.ts && NODE_OPTIONS=--max-old-space-size=8192 ts-node src/jobs/export_simple_card_dict.js && npm run upload-exports",
+    "exports": "NODE_OPTIONS=--max-old-space-size=8192 ts-node src/jobs/export_cubes.ts && NODE_OPTIONS=--max-old-space-size=8192 ts-node src/jobs/export_decks.ts && NODE_OPTIONS=--max-old-space-size=8192 ts-node src/jobs/export_simple_card_dict.ts && npm run upload-exports",
     "rotate-queue": "node --max-old-space-size=8192 src/jobs/rotate_featured.js",
     "sync-podcasts": "node --max-old-space-size=8192 src/jobs/update_podcasts.js",
     "start:localstack": "./scripts/local/start_localstack.sh",

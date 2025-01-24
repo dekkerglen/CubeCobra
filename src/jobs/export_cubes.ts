@@ -1,16 +1,23 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+import fs from 'fs';
+dotenv.config();
 
-const fs = require('fs');
-const { initializeCardDb, getAllOracleIds } = require('../util/carddb');
+import 'module-alias/register';
+
+import Card from 'datatypes/Card';
+import { cardOracleId } from 'utils/cardutil';
+
+import type CubeType from '../datatypes/Cube';
+import { getAllOracleIds, initializeCardDb } from '../util/carddb';
 
 const Cube = require('../dynamo/models/cube');
 
-const processCube = async (cube, oracleToIndex) => {
+const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>) => {
   try {
     const cards = await Cube.getCards(cube.id);
 
     return {
-      cards: cards.mainboard.map((card) => oracleToIndex[card.details.oracle_id] || -1),
+      cards: cards.mainboard.map((card: Card) => oracleToIndex[cardOracleId(card)] || -1),
       id: cube.id,
       name: cube.name,
       owner: cube.owner.username,
@@ -36,16 +43,16 @@ const processCube = async (cube, oracleToIndex) => {
   const oracleToIndex = Object.fromEntries(allOracles.map((oracle, index) => [oracle, index]));
   const indexToOracleMap = Object.fromEntries(allOracles.map((oracle, index) => [index, oracle]));
 
-  let lastKey = null;
+  let lastKey: any = null;
   let processed = 0;
-  const cubes = [];
+  const cubes: CubeType[] = [];
 
   do {
     const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC, lastKey, 100);
     lastKey = result.lastKey;
     processed += result.items.length;
 
-    const processedCubes = await Promise.all(result.items.map((item) => processCube(item, oracleToIndex)));
+    const processedCubes = await Promise.all(result.items.map((item: CubeType) => processCube(item, oracleToIndex)));
 
     cubes.push(...processedCubes.filter((cube) => cube !== null));
 

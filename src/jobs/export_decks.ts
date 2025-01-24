@@ -1,7 +1,9 @@
 /* eslint-disable no-console */
-require('dotenv').config();
-
+import dotenv from 'dotenv';
+dotenv.config();
 import fs from 'fs';
+
+import 'module-alias/register';
 
 import type DraftType from '../datatypes/Draft';
 import Draft from '../dynamo/models/draft';
