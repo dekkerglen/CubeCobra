@@ -5575,6 +5575,13 @@ conventional-changelog-angular@^8.0.0:
   dependencies:
     compare-func "^2.0.0"
 
+conventional-changelog-conventionalcommits@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.npmjs.org/conventional-changelog-conventionalcommits/-/conventional-changelog-conventionalcommits-8.0.0.tgz"
+  integrity sha512-eOvlTO6OcySPyyyk8pKz2dP4jjElYunj9hn9/s0OB+gapTO8zwS9UQWrZ1pmF2hFs3vw1xhonOLGcGjy/zgsuA==
+  dependencies:
+    compare-func "^2.0.0"
+
 conventional-changelog-writer@^8.0.0:
   version "8.0.0"
   resolved "https://registry.npmjs.org/conventional-changelog-writer/-/conventional-changelog-writer-8.0.0.tgz"
