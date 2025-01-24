@@ -59,26 +59,3 @@ jobs:
         run: npm run publish
         env:
           VERSION: ${{ needs.release.outputs.version }}
-
-  deploy_dev:
-    if: github.repository == 'dekkerglen/CubeCobraCDK' && github.ref == 'refs/heads/master'
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: CDK Deploy in Development
-        uses: dekkerglen/CubeCobraCDK/.github/workflows/deploy-release.yml@main
-        with:
-          stack: CubeCobraDevStack
-
-  deploy_prod:
-    if: github.repository == 'dekkerglen/CubeCobraCDK' && github.ref == 'refs/heads/master'
-    needs:
-      - build
-      - deploy_dev
-    environment: production
-    runs-on: ubuntu-latest
-    steps:
-      - name: CDK Deploy in Production
-        uses: dekkerglen/CubeCobraCDK/.github/workflows/deploy-release.yml@main
-        with:
-          stack: CubeCobraProdStack
