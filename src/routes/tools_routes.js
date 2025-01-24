@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 
+import { Period } from '../datatypes/History';
 import carddb, {
   cardFromId,
   getAllMostReasonable,
@@ -218,7 +219,7 @@ router.get('/card/:id', async (req, res) => {
     }
 
     // otherwise just go to this ID.
-    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
+    const history = await CardHistory.getByOracleAndType(card.oracle_id, Period.WEEK, 52);
 
     if (history.items.length === 0) {
       history.items.push({});
@@ -287,7 +288,7 @@ router.get('/cardjson/:id', async (req, res) => {
     }
 
     // otherwise just go to this ID.
-    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
+    const history = await CardHistory.getByOracleAndType(card.oracle_id, Period.WEEK, 52);
 
     if (history.items.length === 0) {
       history.items.push({});

@@ -298,3 +298,8 @@ img.mana-symbol-sm {
 .no-touch-action {
   touch-action: none;
 }
+
+/* Make external images within centering blocks display beside it each instead of stacked vertically */
+.markdown .text-center img.max-w-full {
+	display: inline-block;
+}

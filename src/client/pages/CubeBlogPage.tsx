@@ -33,7 +33,7 @@ const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, login
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="blog" hasControls={user != null && cube.owner.id == user.id}>
+      <CubeLayout cube={cube} activeLink="blog" hasControls={!!user && cube.owner.id === user.id}>
         <Controls>
           <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
             <CreateBlogModalLink color="primary" modalprops={{ cubeID: cube.id, post: null }}>

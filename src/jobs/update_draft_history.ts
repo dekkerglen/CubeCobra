@@ -7,6 +7,7 @@ dotenv.config();
 import EloRating from 'elo-rating';
 import fs from 'fs';
 
+import { DefaultElo } from '../datatypes/Card';
 import type { CardAnalytic } from '../datatypes/CubeAnalytic';
 import type DraftType from '../datatypes/Draft';
 import CubeAnalytic from '../dynamo/models/cubeAnalytic';
@@ -105,6 +106,9 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
   }
   if (!fs.existsSync('./temp/all_drafts')) {
     fs.mkdirSync('./temp/all_drafts');
+  }
+  if (!fs.existsSync('./temp/drafts_by_day')) {
+    fs.mkdirSync('./temp/drafts_by_day');
   }
 
   await initializeCardDb();
@@ -290,14 +294,14 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
                   }
 
                   if (!eloDict[oracleId]) {
-                    eloDict[oracleId] = 1200;
+                    eloDict[oracleId] = DefaultElo;
                   }
 
                   for (const card of pack) {
                     const cardOracle = draft.cards[card]?.details?.oracle_id;
                     if (cardOracle && card < draft.cards.length && card >= 0) {
                       if (!eloDict[cardOracle]) {
-                        eloDict[cardOracle] = 1200;
+                        eloDict[cardOracle] = DefaultElo;
                       }
 
                       const [winnerEloChange, loserEloChange] = adjustElo(

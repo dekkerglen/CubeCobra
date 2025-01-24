@@ -305,7 +305,19 @@ async function compareCubes(cardsA, cardsB) {
 const generateSamplepackImage = async (sources = [], width, height) => {
   const images = await Promise.all(
     sources.map(async (source) => {
-      const res = await fetch(source.src);
+      const fetchOptions = source.src.includes('imgur') ? {
+        headers: {
+          //Imgur returns a 429 error using the default node-fetch useragent, but it is happy with curl!
+          "User-Agent": "curl/8.5.0"
+        }
+      } : {};
+
+      const res = await fetch(source.src, fetchOptions);
+
+      if (!res.ok) {
+        // eslint-disable-next-line no-console
+        console.log(`Failed to fetch image: ${source.src}. Response statuses: ${res.status}, ${res.statusText}`);
+      }
 
       return {
         input: await sharp(Buffer.from(await res.arrayBuffer()))
