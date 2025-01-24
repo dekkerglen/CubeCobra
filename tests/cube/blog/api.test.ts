@@ -58,13 +58,7 @@ describe('Create Blog Post', () => {
   });
 
   it('should fail if the blog title is too short', async () => {
-    await call(createBlogHandler)
-      .withFlash(flashMock)
-      .withRequest({
-        params: { id: 'cube-id' },
-        body: { title: 'Hi' },
-      })
-      .send();
+    await call(createBlogHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).withBody({ title: 'Hi' }).send();
 
     expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
     expect(flashMock).toHaveBeenCalledWith('danger', 'Blog title length must be between 5 and 100 characters.');
@@ -73,10 +67,8 @@ describe('Create Blog Post', () => {
   it('should fail if the blog title is too long', async () => {
     await call(createBlogHandler)
       .withFlash(flashMock)
-      .withRequest({
-        params: { id: 'cube-id' },
-        body: { title: 'Very long blog title'.repeat(50) },
-      })
+      .withParams({ id: 'cube-id' })
+      .withBody({ title: 'Very long blog title'.repeat(50) })
       .send();
 
     expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
