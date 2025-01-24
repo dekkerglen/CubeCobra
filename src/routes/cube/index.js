@@ -42,7 +42,6 @@ const Changelog = require('../../dynamo/models/changelog');
 const router = express.Router();
 router.use(csrfProtection);
 
-router.use('/blog', require('./blog'));
 router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));

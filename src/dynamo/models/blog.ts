@@ -184,7 +184,7 @@ const blog = {
 
     return filled.id!;
   },
-  delete: async (id: DocumentClient.Key): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     await client.delete({ id });
   },
   batchPut: async (documents: UnhydratedBlogPost[]): Promise<void> => {

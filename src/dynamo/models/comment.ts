@@ -43,7 +43,7 @@ const createHydratedComment = (document: UnhydratedComment, owner: User, image: 
   };
 };
 
-const getAnonymousUser = (): User => {
+export const getAnonymousUser = (): User => {
   return {
     id: '404',
     username: 'Anonymous',
@@ -60,6 +60,11 @@ const hydrate = async (item?: UnhydratedComment): Promise<Comment | undefined> =
   }
 
   if (!item.owner || item.owner === 'null') {
+    return createHydratedCommentWithoutOwner(item);
+  }
+
+  // TODO: Is this the best way to determine the comment has been deleted though?
+  if (item.owner === '404') {
     return createHydratedCommentWithoutOwner(item);
   }
 

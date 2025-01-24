@@ -1,22 +1,10 @@
-module.exports = {
+const baseConfig = {
   preset: 'ts-jest',
-  testEnvironment: 'jsdom',
 
-  testMatch: [
-    '**/tests/**/*.[jt]s?(x)',
-    '**/?(*.)+(spec|test).[jt]s?(x)',
-    '!**/tests/test-utils/*' // Ignore the test-utils code
-  ],
-
-  collectCoverage: true,
-  coverageDirectory: 'coverage',
-  coverageReporters: ['json', 'text'],
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/index.{js,ts}',
-  ],
-
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
+    '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.config.js' }],
+  },
   moduleNameMapper: {
     '^analytics/(.*)$': '<rootDir>/src/client/analytics/$1',
     '^components/(.*)$': '<rootDir>/src/client/components/$1',
@@ -32,17 +20,34 @@ module.exports = {
     '^res/(.*)$': '<rootDir>/src/client/res/$1',
     '^utils/(.*)$': '<rootDir>/src/client/utils/$1',
     '^src/(.*)$': '<rootDir>/src/$1',
-    '\\.(css|less|scss|sass)$': '<rootDir>/src/__mocks__/styleMock.js'
   },
+  testPathIgnorePatterns: ['/node_modules/', '/build/'],
+};
 
-  setupFilesAfterEnv: [
-    '<rootDir>/jest.setup.js'
+module.exports = {
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageReporters: ['json', 'text'],
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/index.{js,ts}',
   ],
 
-  transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
-    '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.config.js' }]
-  },
-
-  testPathIgnorePatterns: ['/node_modules/', '/build/'],
+  projects: [
+    {
+      ...baseConfig,
+      displayName: 'component-tests',
+      testEnvironment: 'jsdom',
+      testMatch: ['**/tests/**/*.test.tsx'], // Component tests
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+    },
+    {
+      ...baseConfig,
+      displayName: 'other-tests',
+      testEnvironment: 'node',
+      testMatch: ['**/tests/**/*.test.ts'], // Non-component tests
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+    },
+  ],
 };
