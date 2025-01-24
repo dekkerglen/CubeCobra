@@ -1,3 +1,4 @@
+import { createTypeGuard } from '../../src/util/typeGuards';
 import { CubeImage } from './Cube';
 import User from './User';
 
@@ -15,5 +16,26 @@ type Comment = Omit<UnhydratedComment, 'id' | 'owner'> & {
   owner: User;
   image?: CubeImage;
 };
+
+const allCommentTypes = [
+  'comment',
+  'blog',
+  'deck',
+  'card',
+  'article',
+  'podcast',
+  'video',
+  'episode',
+  'package',
+] as const;
+
+export type CommentType = (typeof allCommentTypes)[number];
+export type NotifiableCommentType = Exclude<CommentType, 'card'>;
+
+export const isCommentType = createTypeGuard<CommentType>(allCommentTypes);
+
+const notifiableTypes = allCommentTypes.filter((type) => type !== 'card') as NotifiableCommentType[];
+
+export const isNotifiableCommentType = createTypeGuard<NotifiableCommentType>(notifiableTypes);
 
 export default Comment;
