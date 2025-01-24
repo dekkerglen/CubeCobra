@@ -36,6 +36,7 @@ jest.mock('../../../src/dynamo/models/blog', () => ({
   getById: jest.fn(),
   delete: jest.fn(),
   getByCube: jest.fn(),
+  getUnhydrated: jest.fn(),
 }));
 
 jest.mock('../../../src/dynamo/models/feed', () => ({
@@ -194,6 +195,53 @@ describe('Create Blog Post', () => {
       error,
       '/cube/blog/12345',
     );
+  });
+});
+
+describe('Edit Blog Post', () => {
+  const flashMock = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should 404 when trying to edit a missing blog post', async () => {
+    (Blog.getUnhydrated as jest.Mock).mockResolvedValue(undefined);
+
+    await call(createBlogHandler)
+      .as(createUser())
+      .withFlash(flashMock)
+      .withBody({ title: 'My blog title', id: 'not-real' })
+      .send();
+
+    expect(flashMock).toHaveBeenCalledWith('danger', 'Blog not found.');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
+  });
+
+  it('should update a blog post', async () => {
+    const user = createUser();
+    const blog = createBlogPost({ owner: user, title: 'My blog title' });
+
+    (Blog.getUnhydrated as jest.Mock).mockResolvedValue({ ...blog, owner: user.id });
+    (Blog.put as jest.Mock).mockResolvedValue(undefined);
+
+    await call(createBlogHandler)
+      .as(user)
+      .withFlash(flashMock)
+      .withParams({ id: 'cube-id' })
+      .withBody({ title: blog.title, id: blog.id, markdown: 'My updated blog post' })
+      .send();
+
+    expect(Blog.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: 'My updated blog post',
+        owner: user.id,
+        title: blog.title,
+      }),
+    );
+
+    expect(flashMock).toHaveBeenCalledWith('success', 'Blog update successful');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
   });
 });
 
