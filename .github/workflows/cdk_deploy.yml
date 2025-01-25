@@ -1,0 +1,103 @@
+name: CDK Deployment
+
+on:
+  workflow_dispatch: # Manual deployment
+    inputs:
+      version:
+        description: The version of the CubeCobra application to deploy (v.*)
+        required: true
+        type: string
+      environment:
+        description: The deployment environment
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - production
+
+  workflow_call: # Allows triggering from the main deploy workflow
+    inputs:
+      version:
+        description: The version of the CubeCobra application to deploy (v.*)
+        required: true
+        type: string
+      environment:
+        description: The deployment environment
+        required: true
+        default: development
+        type: string
+
+env:
+  EMAIL_USER: ${{ secrets.EMAIL_USER }}
+  EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+  JOBS_TOKEN: ${{ secrets.JOBS_TOKEN }}
+  PATREON_CLIENT_ID: ${{ secrets.PATREON_CLIENT_ID }}
+  PATREON_CLIENT_SECRET: ${{ secrets.PATREON_CLIENT_SECRET }}
+  PATREON_HOOK_SECRET: ${{ secrets.PATREON_HOOK_SECRET }}
+  REDIS_HOST: ${{ secrets.REDIS_HOST }}
+  SESSION_TOKEN: ${{ secrets.SESSION_TOKEN }}
+  SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+  TCG_PLAYER_PUBLIC_KEY: ${{ secrets.TCG_PLAYER_PUBLIC_KEY }}
+  TCG_PLAYER_PRIVATE_KEY: ${{ secrets.TCG_PLAYER_PRIVATE_KEY }}
+
+
+defaults:
+  run:
+    working-directory: ./cdk
+
+permissions:
+  id-token: write
+
+jobs:
+  plan:
+    if: github.repository == 'dekkerglen/CubeCobraCDK'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.CDK_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npx cdk diff
+
+  deploy:
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    if: github.repository == 'dekkerglen/CubeCobraCDK'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.CDK_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: CDK Deploy
+        run: |
+          npx cdk deploy --all --require-approval never \
+            --context environment=${{ inputs.environment }} \
+            --context version=${{ inputs.version }}
