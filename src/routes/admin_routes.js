@@ -3,9 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 const { body } = require('express-validator');
-const mailer = require('nodemailer');
-const path = require('path');
-const Email = require('email-templates');
+import sendEmail from '../util/email';
 const { ensureRole, csrfProtection, flashValidationErrors } = require('./middleware');
 
 const User = require('../dynamo/models/user');
@@ -72,38 +70,9 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
     );
   }
 
-  const smtpTransport = mailer.createTransport({
-    name: 'CubeCobra.com',
-    secure: true,
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_CONFIG_USERNAME,
-      pass: process.env.EMAIL_CONFIG_PASSWORD,
-    },
-  });
-
-  const message = new Email({
-    message: {
-      from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: document.owner.email,
-      subject: 'Your content has been published',
-    },
-    send: true,
-    juiceResources: {
-      webResources: {
-        relativeTo: path.join(__dirname, '..', 'public'),
-        images: true,
-      },
-    },
-    transport: smtpTransport,
-  });
-
-  message.send({
-    template: 'content_publish',
-    locals: {
-      title: document.title,
-      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
-    },
+  await sendEmail(document.owner.email, 'Your content has been published', 'content_publish', {
+    title: document.title,
+    url: `https://cubecobra.com/content/${document.type}/${document.id}`,
   });
 
   req.flash('success', `Content published: ${document.title}`);
@@ -133,38 +102,9 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
     );
   }
 
-  const smtpTransport = mailer.createTransport({
-    name: 'CubeCobra.com',
-    secure: true,
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_CONFIG_USERNAME,
-      pass: process.env.EMAIL_CONFIG_PASSWORD,
-    },
-  });
-
-  const message = new Email({
-    message: {
-      from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: document.owner.email,
-      subject: 'Your Content was not published',
-    },
-    send: true,
-    juiceResources: {
-      webResources: {
-        relativeTo: path.join(__dirname, '..', 'public'),
-        images: true,
-      },
-    },
-    transport: smtpTransport,
-  });
-
-  await message.send({
-    template: 'content_decline',
-    locals: {
-      title: document.title,
-      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
-    },
+  await sendEmail(document.owner.email, 'Your Content was not published', 'content_decline', {
+    title: document.title,
+    url: `https://cubecobra.com/content/${document.type}/${document.id}`,
   });
 
   req.flash('success', `Content declined: ${document.title}`);
@@ -213,36 +153,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   application.status = Notice.STATUS.PROCESSED;
   Notice.put(application);
 
-  const smtpTransport = mailer.createTransport({
-    name: 'CubeCobra.com',
-    secure: true,
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_CONFIG_USERNAME,
-      pass: process.env.EMAIL_CONFIG_PASSWORD,
-    },
-  });
-
-  const message = new Email({
-    message: {
-      from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: application.user.email,
-      subject: 'Cube Cobra Content Creator',
-    },
-    send: true,
-    juiceResources: {
-      webResources: {
-        relativeTo: path.join(__dirname, '..', 'public'),
-        images: true,
-      },
-    },
-    transport: smtpTransport,
-  });
-
-  await message.send({
-    template: 'application_approve',
-    locals: {},
-  });
+  await sendEmail(application.user.email, 'Cube Cobra Content Creator', 'application_approve');
 
   req.flash('success', `Application for ${application.user.username} approved.`);
   return redirect(req, res, `/admin/notices`);
@@ -254,36 +165,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   application.status = Notice.STATUS.PROCESSED;
   Notice.put(application);
 
-  const smtpTransport = mailer.createTransport({
-    name: 'CubeCobra.com',
-    secure: true,
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_CONFIG_USERNAME,
-      pass: process.env.EMAIL_CONFIG_PASSWORD,
-    },
-  });
-
-  const message = new Email({
-    message: {
-      from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: application.user.email,
-      subject: 'Cube Cobra Content Creator',
-    },
-    send: true,
-    juiceResources: {
-      webResources: {
-        relativeTo: path.join(__dirname, '..', 'public'),
-        images: true,
-      },
-    },
-    transport: smtpTransport,
-  });
-
-  await message.send({
-    template: 'application_decline',
-    locals: {},
-  });
+  await sendEmail(application.user.email, 'Cube Cobra Content Creator', 'application_decline');
 
   req.flash('danger', `Application declined.`);
   return redirect(req, res, `/admin/notices`);
