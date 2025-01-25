@@ -1,35 +1,33 @@
-const uuid = require('uuid');
-const createClient = require('../util');
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { v4 as uuidv4 } from 'uuid';
 
-const FIELDS = {
-  ID: 'id',
-  OWNER: 'owner',
-  DATE: 'date',
-};
+import PasswordReset, { UnhydratedPasswordReset } from '../../datatypes/PasswordReset';
+import createClient from '../util';
 
 const client = createClient({
   name: 'RESETS',
-  partitionKey: FIELDS.ID,
+  partitionKey: 'id',
   attributes: {
-    [FIELDS.ID]: 'S',
+    id: 'S',
   },
-  FIELDS,
 });
 
-module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
-  put: async (document) => {
-    const id = document[FIELDS.ID] || uuid.v4();
+const passwordReset = {
+  getById: async (id: string): Promise<PasswordReset> => (await client.get(id)).Item as PasswordReset,
+  put: async (document: UnhydratedPasswordReset) => {
+    const id = document.id || uuidv4();
     await client.put({
-      [FIELDS.ID]: id,
-      [FIELDS.OWNER]: document[FIELDS.OWNER],
-      [FIELDS.DATE]: document[FIELDS.DATE],
+      id: id,
+      owner: document.owner,
+      date: document.date,
     });
     return id;
   },
-  batchPut: async (documents) => {
+  batchPut: async (documents: PasswordReset[]): Promise<void> => {
     await client.batchPut(documents);
   },
-  createTable: async () => client.createTable(),
-  FIELDS,
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
 };
+
+module.exports = passwordReset;
+export default passwordReset;
