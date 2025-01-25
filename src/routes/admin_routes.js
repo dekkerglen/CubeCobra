@@ -68,12 +68,15 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
       `/content/${document.type}/${document.id}`,
       `${req.user.username} has approved and published your content: ${document.title}`,
     );
-  }
 
-  await sendEmail(document.owner.email, 'Your content has been published', 'content_publish', {
-    title: document.title,
-    url: `https://cubecobra.com/content/${document.type}/${document.id}`,
-  });
+    //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+    const owner = await User.getByIdWithSensitiveData(document.owner.id);
+
+    await sendEmail(owner.email, 'Your content has been published', 'content_publish', {
+      title: document.title,
+      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
+    });
+  }
 
   req.flash('success', `Content published: ${document.title}`);
 
@@ -100,12 +103,15 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
       `/content/${document.type}/${document.id}`,
       `${req.user.username} has declined to publish your content: ${document.title}`,
     );
-  }
 
-  await sendEmail(document.owner.email, 'Your Content was not published', 'content_decline', {
-    title: document.title,
-    url: `https://cubecobra.com/content/${document.type}/${document.id}`,
-  });
+    //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+    const owner = await User.getByIdWithSensitiveData(document.owner.id);
+
+    await sendEmail(owner.email, 'Your Content was not published', 'content_decline', {
+      title: document.title,
+      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
+    });
+  }
 
   req.flash('success', `Content declined: ${document.title}`);
 
@@ -150,10 +156,13 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   }
   await User.update(application.user);
 
+  //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+  const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
+
   application.status = Notice.STATUS.PROCESSED;
   Notice.put(application);
 
-  await sendEmail(application.user.email, 'Cube Cobra Content Creator', 'application_approve');
+  await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_approve');
 
   req.flash('success', `Application for ${application.user.username} approved.`);
   return redirect(req, res, `/admin/notices`);
@@ -165,7 +174,10 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   application.status = Notice.STATUS.PROCESSED;
   Notice.put(application);
 
-  await sendEmail(application.user.email, 'Cube Cobra Content Creator', 'application_decline');
+  //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+  const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
+
+  await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_decline');
 
   req.flash('danger', `Application declined.`);
   return redirect(req, res, `/admin/notices`);

@@ -320,9 +320,8 @@ module.exports = {
     [FIELDS.TYPE_STATUS_COMP]: `${TYPES.EPISODE}:${STATUS.PUBLISHED}`,
     [FIELDS.TYPE_OWNER_COMP]: `${TYPES.EPISODE}:${episode.owner}`,
     [FIELDS.SHORT]: convert(removeSpan(episode.description), {
-        wordwrap: 130,
-      })
-      .substring(0, 200),
+      wordwrap: 130,
+    }).substring(0, 200),
   }),
   convertPodcast: (podcast) => ({
     [FIELDS.ID]: `${podcast._id}`,
