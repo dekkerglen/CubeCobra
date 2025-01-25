@@ -24,11 +24,13 @@ interface ClientConfig {
   sortKey?: string;
 }
 
+export type QueryInput = Omit<DocumentClient.QueryInput, 'TableName'>;
+
 interface ClientInterface {
   createTable: () => Promise<DocumentClient.CreateTableOutput>;
   get: (id: string) => Promise<DocumentClient.GetItemOutput>;
   scan: (params: Omit<DocumentClient.ScanInput, 'TableName'>) => Promise<DocumentClient.ScanOutput>;
-  query: (params: Omit<DocumentClient.QueryInput, 'TableName'>) => Promise<DocumentClient.QueryOutput>;
+  query: (params: QueryInput) => Promise<DocumentClient.QueryOutput>;
   put: (Item: DocumentClient.PutItemInputAttributeMap) => Promise<DocumentClient.PutItemOutput>;
   delete: (key: DocumentClient.Key) => Promise<void>;
   batchGet: (ids: string[]) => Promise<any[]>;
