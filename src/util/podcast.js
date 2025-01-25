@@ -58,9 +58,8 @@ const updatePodcast = async (podcast) => {
         url: episode.source,
         status: Content.STATUS.PUBLISHED,
         short: convert(removeSpan(episode.description), {
-            wordwrap: 130,
-          })
-          .substring(0, 200),
+          wordwrap: 130,
+        }).substring(0, 200),
       };
 
       return Content.put(podcastEpisode, Content.TYPES.EPISODE);

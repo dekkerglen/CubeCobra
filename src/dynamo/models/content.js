@@ -191,16 +191,23 @@ module.exports = {
       throw new Error('Invalid document: No partition key provided');
     }
 
+    //If the owner is a User object, get its Id without modifying the incoming document
+    let ownerId;
     if (document.owner.id) {
-      document.owner = document.owner.id;
+      ownerId = document.owner.id;
+    } else {
+      ownerId = document.owner;
     }
 
     document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
-    document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${document.owner}`;
+    document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${ownerId}`;
 
     await putBody(document);
     delete document.body;
-    return client.put(document);
+    return client.put({
+      ...document,
+      owner: ownerId,
+    });
   },
   put: async (document, type) => {
     document.id = document[FIELDS.ID] || uuid.v4();
@@ -215,29 +222,43 @@ module.exports = {
       delete document.image;
     }
 
+    let ownerId;
     if (document.owner.id) {
-      document.owner = document.owner.id;
+      ownerId = document.owner.id;
+    } else {
+      ownerId = document.owner;
     }
 
     return client.put({
       [FIELDS.TYPE]: type,
-      [FIELDS.TYPE_OWNER_COMP]: `${type}:${document.owner}`,
+      [FIELDS.TYPE_OWNER_COMP]: `${type}:${ownerId}`,
       [FIELDS.TYPE_STATUS_COMP]: `${type}:${document.status}`,
       ...document,
+      owner: ownerId,
     });
   },
   batchPut: async (documents) => {
-    await Promise.all(
-      documents.map(async (document) => {
-        if (document.owner && document.owner.id) {
-          document.owner = document.owner.id;
-        }
+    const docs = documents.map((document) => {
+      let ownerId;
+      if (document.owner && document.owner.id) {
+        ownerId = document.owner.id;
+      } else {
+        ownerId = document.owner;
+      }
 
+      return {
+        ...document,
+        owner: ownerId,
+      };
+    });
+
+    await Promise.all(
+      docs.map(async (document) => {
         await putBody(document);
         delete document.body;
       }),
     );
-    client.batchPut(documents);
+    client.batchPut(docs);
   },
   batchDelete: async (keys) => {
     return client.batchDelete(keys);
