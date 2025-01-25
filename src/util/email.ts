@@ -7,16 +7,9 @@ import { createTransport } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import path from 'path';
 
-const getTransportOptions = (): SMTPTransport.Options => {
+const getTransportOptions = (): SMTPTransport.Options | undefined => {
   //With SMTP host/port we assume local development mailing
-  if (process.env.EMAIL_CONFIG_SMTP_HOST && process.env.EMAIL_CONFIG_SMTP_PORT) {
-    return {
-      name: 'CubeCobra.com',
-      secure: false,
-      host: process.env.EMAIL_CONFIG_SMTP_HOST,
-      port: Number(process.env.EMAIL_CONFIG_SMTP_PORT),
-    };
-  } else {
+  if (process.env.EMAIL_CONFIG_USERNAME && process.env.EMAIL_CONFIG_PASSWORD) {
     return {
       name: 'CubeCobra.com',
       secure: true,
@@ -26,11 +19,21 @@ const getTransportOptions = (): SMTPTransport.Options => {
         pass: process.env.EMAIL_CONFIG_PASSWORD,
       },
     };
+  } else if (process.env.EMAIL_CONFIG_SMTP_HOST && process.env.EMAIL_CONFIG_SMTP_PORT) {
+    return {
+      name: 'CubeCobra.com',
+      secure: false,
+      host: process.env.EMAIL_CONFIG_SMTP_HOST,
+      port: Number(process.env.EMAIL_CONFIG_SMTP_PORT),
+    };
+  } else {
+    return undefined;
   }
 };
 
 const getTransport = () => {
-  return createTransport(getTransportOptions());
+  const options = getTransportOptions();
+  return options ? createTransport(options) : undefined;
 };
 
 export const sendEmail = async (
@@ -39,6 +42,13 @@ export const sendEmail = async (
   templateName: string,
   templateLocals: Record<string, any> = {},
 ): Promise<any> => {
+  const transport = getTransport();
+  if (!transport) {
+    // eslint-disable-next-line no-console -- Warn so clear why an email isn't being sent
+    console.warn('No email transport is configured, skipping sending');
+    return undefined;
+  }
+
   const message = new Email({
     message: {
       from: process.env.EMAIL_CONFIG_FROM || 'Cube Cobra Team <support@cubecobra.com>',
