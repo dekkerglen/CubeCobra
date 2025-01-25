@@ -10,14 +10,24 @@ on:
       - master
 
 jobs:
-  build-and-push-prod:
+  build-and-push:
     if: github.repository == 'dekkerglen/CubeCobra'
     name: Build and Push to ECR
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        target:
+          - environment: development
+            stack: CubeCobraDevStack
+          - environment: production
+            stack: CubeCobraProdStack
+
     env:
-      role: ${{ secrets.GITHUB_ROLE_ARN }}
-      region: us-east-1
+      role: ${{ secrets.CDK_IAM_ROLE }}
+      region: us-east-2
+
+    environment: ${{ matrix.target }}
 
     steps:
       - uses: actions/checkout@v4
@@ -27,9 +37,12 @@ jobs:
           role-to-assume: ${{ env.role }}
           aws-region: ${{ env.region }}
 
-      - run: |
+      - name: Get ECR Repository Name from CDK Stack
+        env:
+          STACK_NAME: ${{ matrix.target.environment }}
+        run: |
           ECR_REPO_NAME=$(aws cloudformation describe-stacks \
-            --stack-name CubeCobraDevStack \
+            --stack-name ${STACK_NAME} \
             --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue" \
             --output text)
 
