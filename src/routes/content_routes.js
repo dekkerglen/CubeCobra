@@ -476,7 +476,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
   podcast.description = fields.description;
   podcast.podcastLink = fields.url;
   podcast.image = fields.image;
-  podcast.status = 'inReview';
+  podcast.status = Content.STATUS.IN_REVIEW;
 
   await Content.update(podcast);
   req.flash(
@@ -507,7 +507,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
   video.imageName = imagename.substring(0, 1000);
   video.url = url.substring(0, 1000);
   video.body = body.substring(0, 1000000);
-  video.status = 'inReview';
+  video.status = Content.STATUS.IN_REVIEW;
 
   await Content.update(video);
   req.flash(
