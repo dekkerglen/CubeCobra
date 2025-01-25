@@ -4,7 +4,8 @@ const { render, redirect } = require('../util/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const { cardFromId } = require('../util/carddb');
 
-const Package = require('../dynamo/models/package');
+import { CardPackageStatus } from '../datatypes/CardPackage';
+import Package from '../dynamo/models/package';
 const User = require('../dynamo/models/user');
 
 const router = express.Router();
@@ -80,7 +81,7 @@ const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
 };
 
 router.get('/', async (req, res) => {
-  const type = req.query.t || Package.STATUSES.APPROVED;
+  const type = req.query.t || CardPackageStatus.APPROVED;
   const keywords = req.query.kw || '';
   const ascending = req.query.a === 'true';
   const sort = req.query.s || 'votes';
@@ -94,7 +95,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/getmore', async (req, res) => {
-  const type = req.body.type || Package.STATUSES.APPROVED;
+  const type = req.body.type || CardPackageStatus.APPROVED;
   const keywords = req.body.keywords || '';
   const ascending = req.body.ascending === 'true';
   const sort = req.body.sort || 'votes';
@@ -205,7 +206,7 @@ router.get('/downvote/:id', ensureAuth, async (req, res) => {
 router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-  pack.status = Package.STATUSES.APPROVED;
+  pack.status = CardPackageStatus.APPROVED;
   await Package.put(pack);
 
   return res.status(200).send({
@@ -216,7 +217,7 @@ router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
 router.get('/unapprove/:id', ensureRole('Admin'), async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-  pack.status = Package.STATUSES.SUBMITTED;
+  pack.status = CardPackageStatus.SUBMITTED;
   await Package.put(pack);
 
   return res.status(200).send({

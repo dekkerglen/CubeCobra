@@ -1,88 +1,94 @@
-const uuid = require('uuid');
-const createClient = require('../util');
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { v4 as uuidv4 } from 'uuid';
+
+import { CardDetails } from '../../datatypes/Card';
+import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '../../datatypes/CardPackage';
+import UserType from '../../datatypes/User';
+import createClient, { QueryInput } from '../util';
+
 const User = require('./user');
 const { cardFromId } = require('../../util/carddb');
 
-const FIELDS = {
-  ID: 'id',
-  TITLE: 'title',
-  DATE: 'date',
-  OWNER: 'owner',
-  STATUS: 'status',
-  CARDS: 'cards',
-  VOTERS: 'voters',
-  KEYWORDS: 'keywords',
-  VOTECOUNT: 'voteCount',
-};
-
-const STATUSES = {
-  APPROVED: 'a',
-  SUBMITTED: 's',
-};
-
 const client = createClient({
   name: 'PACKAGE',
-  partitionKey: FIELDS.ID,
+  partitionKey: 'id',
   indexes: [
     {
       name: 'ByVoteCount',
-      partitionKey: FIELDS.STATUS,
-      sortKey: FIELDS.VOTECOUNT,
+      partitionKey: 'status',
+      sortKey: 'votecount',
     },
     {
       name: 'ByDate',
-      partitionKey: FIELDS.STATUS,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'status',
+      sortKey: 'date',
     },
     {
       name: 'ByOwner',
-      partitionKey: FIELDS.OWNER,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'owner',
+      sortKey: 'date',
     },
   ],
   attributes: {
-    [FIELDS.ID]: 'S',
-    [FIELDS.STATUS]: 'S',
-    [FIELDS.VOTECOUNT]: 'N',
-    [FIELDS.DATE]: 'N',
-    [FIELDS.OWNER]: 'S',
+    id: 'S',
+    status: 'S',
+    votecount: 'N',
+    date: 'N',
+    owner: 'S',
   },
-  FIELDS,
 });
 
-const hydrate = async (pack) => {
+//Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
+const statusAttr: keyof UnhydratedCardPackage = 'status';
+const ownerAttr: keyof UnhydratedCardPackage = 'owner';
+const keywordsAttr: keyof UnhydratedCardPackage = 'keywords';
+
+const createHydratedPackage = (
+  document: UnhydratedCardPackage,
+  owner: UserType, //TODO: User type
+  cards: CardDetails[],
+): CardPackage => {
+  return {
+    id: document.id!,
+    title: document.title,
+    date: document.date,
+    owner,
+    status: document.status,
+    cards: cards,
+    keywords: document.keywords,
+    voters: document.voters,
+    votecount: document.votecount,
+  } as CardPackage;
+};
+
+const hydrate = async (pack?: UnhydratedCardPackage): Promise<CardPackage | undefined> => {
   if (!pack) {
     return pack;
   }
 
-  pack.owner = await User.getById(pack.owner);
-  pack.cards = pack.cards.map((c) => {
-    if (c.scryfall_id) {
-      return c;
-    }
+  const owner = await User.getById(pack.owner);
+  const cards = pack.cards.map((c) => {
     return cardFromId(c);
   });
 
-  return pack;
+  return createHydratedPackage(pack, owner, cards);
 };
 
-const batchHydrate = async (packs) => {
-  const owners = await User.batchGet(packs.map((pack) => pack.owner));
+const batchHydrate = async (packs: UnhydratedCardPackage[]): Promise<CardPackage[]> => {
+  const owners: UserType[] = await User.batchGet(packs.map((pack) => pack.owner));
 
-  packs.forEach((pack) => {
-    pack.owner = owners.find((owner) => owner.id === pack.owner);
-    pack.cards = pack.cards.map((c) => {
-      if (c.scryfall_id) {
-        return c;
-      }
+  return packs.map((pack) => {
+    const owner = owners.find((owner) => owner.id === pack.owner);
+    const cards = pack.cards.map((c) => {
       return cardFromId(c);
     });
-  });
 
-  return packs;
+    //Technically it is possible to not find an owner but let's assume our data is correct
+    return createHydratedPackage(pack, owner!, cards);
+  });
 };
 
-const applyKeywordFilter = (query /*: Query*/, keywords /*: string*/) => {
+const applyKeywordFilter = (query: QueryInput, keywords: string): QueryInput => {
   if (!keywords) {
     return query;
   }
@@ -94,12 +100,12 @@ const applyKeywordFilter = (query /*: Query*/, keywords /*: string*/) => {
 
   query.ExpressionAttributeNames = {
     ...query.ExpressionAttributeNames,
-    '#keywords': FIELDS.KEYWORDS,
+    '#keywords': keywordsAttr,
   };
 
   query.ExpressionAttributeValues = {
     ...query.ExpressionAttributeValues,
-    ...words.reduce((acc, word) => {
+    ...words.reduce((acc: Record<string, string>, word) => {
       acc[`:${word}`] = word;
       return acc;
     }, {}),
@@ -108,44 +114,56 @@ const applyKeywordFilter = (query /*: Query*/, keywords /*: string*/) => {
   return query;
 };
 
-module.exports = {
-  getById: async (id) => hydrate((await client.get(id)).Item),
-  put: async (document) => {
-    const id = document[FIELDS.ID] || uuid.v4();
+type QueryResponse = { items?: CardPackage[]; lastKey?: DocumentClient.Key };
 
-    if (document.owner.id) {
-      document.owner = document.owner.id;
+const packages = {
+  getById: async (id: string): Promise<CardPackage | undefined> =>
+    hydrate((await client.get(id)).Item as UnhydratedCardPackage),
+  put: async (document: UnhydratedCardPackage | CardPackage): Promise<string> => {
+    const id = document.id || uuidv4();
+
+    let ownerId: string | undefined;
+    if (document.owner && typeof document.owner !== 'string' && document.owner.id) {
+      ownerId = document.owner.id;
+    } else if (document.owner && typeof document.owner === 'string') {
+      ownerId = document.owner;
     }
 
+    let cardIds: string[] = [];
     if (document.cards) {
-      document.cards = document.cards.map((card) => {
-        if (card.scryfall_id) {
+      cardIds = document.cards.map((card) => {
+        if (typeof card !== 'string' && card.scryfall_id) {
           return card.scryfall_id;
+        } else {
+          return card as string;
         }
-
-        return card;
       });
     }
 
     await client.put({
-      [FIELDS.ID]: id,
-      [FIELDS.TITLE]: document[FIELDS.TITLE],
-      [FIELDS.DATE]: document[FIELDS.DATE],
-      [FIELDS.OWNER]: document[FIELDS.OWNER],
-      [FIELDS.STATUS]: document[FIELDS.STATUS],
-      [FIELDS.CARDS]: document[FIELDS.CARDS],
-      [FIELDS.VOTERS]: document[FIELDS.VOTERS],
-      [FIELDS.KEYWORDS]: document[FIELDS.KEYWORDS],
-      [FIELDS.VOTECOUNT]: document[FIELDS.VOTERS].length,
+      id,
+      title: document.title,
+      date: document.date,
+      owner: ownerId,
+      status: document.status,
+      cards: cardIds,
+      voters: document.voters,
+      keywords: document.keywords,
+      votecount: document.voters.length,
     });
     return id;
   },
-  querySortedByDate: async (status, keywords, ascending, lastKey) => {
+  querySortedByDate: async (
+    status: CardPackageStatus,
+    keywords: string,
+    ascending: boolean,
+    lastKey?: DocumentClient.Key,
+  ): Promise<QueryResponse> => {
     const query = {
       IndexName: 'ByDate',
       KeyConditionExpression: '#status = :status',
       ExpressionAttributeNames: {
-        '#status': FIELDS.STATUS,
+        '#status': statusAttr,
       },
       ExpressionAttributeValues: {
         ':status': status,
@@ -153,85 +171,75 @@ module.exports = {
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
       Limit: 36,
-    };
-
-    if (keywords) {
-      const words = keywords ? keywords.toLowerCase().split(' ') : null;
-
-      // all words must exist in the keywords
-      query.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');
-
-      query.ExpressionAttributeNames = {
-        ...query.ExpressionAttributeNames,
-        '#keywords': FIELDS.KEYWORDS,
-      };
-
-      query.ExpressionAttributeValues = {
-        ...query.ExpressionAttributeValues,
-        ...words.reduce((acc, word) => {
-          acc[`:${word}`] = word;
-          return acc;
-        }, {}),
-      };
-    }
-
-    const result = await client.query(query);
-
-    return {
-      items: await batchHydrate(result.Items),
-      lastKey: result.LastEvaluatedKey,
-    };
-  },
-  querySortedByVoteCount: async (status, keywords, ascending, lastKey) => {
-    const query = {
-      IndexName: 'ByVoteCount',
-      KeyConditionExpression: '#status = :status',
-      ExpressionAttributeNames: {
-        '#status': FIELDS.STATUS,
-      },
-      ExpressionAttributeValues: {
-        ':status': status,
-      },
-      ScanIndexForward: ascending,
-      ExclusiveStartKey: lastKey,
-      Limit: 36,
-    };
+    } as QueryInput;
 
     const result = await client.query(applyKeywordFilter(query, keywords));
 
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedCardPackage[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  queryByOwner: async (owner, lastKey) => {
+  querySortedByVoteCount: async (
+    status: CardPackageStatus,
+    keywords: string,
+    ascending: boolean,
+    lastKey?: DocumentClient.Key,
+  ): Promise<QueryResponse> => {
+    const query = {
+      IndexName: 'ByVoteCount',
+      KeyConditionExpression: '#status = :status',
+      ExpressionAttributeNames: {
+        '#status': statusAttr,
+      },
+      ExpressionAttributeValues: {
+        ':status': status,
+      },
+      ScanIndexForward: ascending,
+      ExclusiveStartKey: lastKey,
+      Limit: 36,
+    } as QueryInput;
+
+    const result = await client.query(applyKeywordFilter(query, keywords));
+
+    return {
+      items: await batchHydrate(result.Items as UnhydratedCardPackage[]),
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  queryByOwner: async (owner: string, lastKey?: DocumentClient.Key): Promise<QueryResponse> => {
     const query = {
       IndexName: 'ByOwner',
       KeyConditionExpression: '#owner = :owner',
       ExpressionAttributeNames: {
-        '#owner': FIELDS.OWNER,
+        '#owner': ownerAttr,
       },
       ExpressionAttributeValues: {
         ':owner': owner,
       },
       ExclusiveStartKey: lastKey,
       Limit: 100, //Higher limit because this function is used to load all packages for a user into memory
-    };
+    } as QueryInput;
 
     const result = await client.query(query);
 
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedCardPackage[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  queryByOwnerSortedByDate: async (owner, keywords, ascending, lastKey) => {
+  queryByOwnerSortedByDate: async (
+    owner: string,
+    keywords: string,
+    ascending: boolean,
+    lastKey?: DocumentClient.Key,
+  ): Promise<QueryResponse> => {
     //ByOwner secondary index is sorted by Date
     const query = {
       IndexName: 'ByOwner',
       KeyConditionExpression: '#owner = :owner',
       ExpressionAttributeNames: {
-        '#owner': FIELDS.OWNER,
+        '#owner': ownerAttr,
       },
       ExpressionAttributeValues: {
         ':owner': owner,
@@ -244,39 +252,27 @@ module.exports = {
     const result = await client.query(applyKeywordFilter(query, keywords));
 
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedCardPackage[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  batchPut: async (documents) => client.batchPut(documents),
-  createTable: async () => client.createTable(),
-  scan: async (lastKey) => {
+  batchPut: async (documents: UnhydratedCardPackage[]): Promise<void> => client.batchPut(documents),
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  scan: async (lastKey: DocumentClient.Key): Promise<QueryResponse> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
     });
 
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedCardPackage[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  batchDelete: async (keys) => {
+  batchDelete: async (keys: DocumentClient.Key[]): Promise<void> => {
     client.batchDelete(keys);
   },
-  convertPackage: (pack) => {
-    return {
-      [FIELDS.ID]: `${pack._id}`,
-      [FIELDS.TITLE]: pack.title,
-      [FIELDS.DATE]: pack.date.valueOf(),
-      [FIELDS.OWNER]: `${pack.userid}`,
-      [FIELDS.STATUS]: pack.approved ? STATUSES.APPROVED : STATUSES.SUBMITTED,
-      [FIELDS.CARDS]: pack.cards,
-      [FIELDS.VOTERS]: pack.voters.map((voter) => `${voter}`),
-      [FIELDS.KEYWORDS]: pack.keywords,
-      [FIELDS.VOTECOUNT]: pack.voters.length,
-    };
-  },
-  delete: async (id) => client.delete({ id }),
-  FIELDS,
-  STATUSES,
+  delete: async (id: string): Promise<void> => client.delete({ id }),
 };
+
+module.exports = packages;
+export default packages;
