@@ -60,22 +60,17 @@ jobs:
         env:
           VERSION: ${{ needs.release.outputs.version }}
 
-  deploy_dev:
-    environment: 'development'
-    uses: ./.github/workflows/cdk_deploy.yml@main
+  deploy:
+    uses: ./.github/workflows/cdk_deploy.yml
     needs:
       - build
       - release
+    strategy:
+      matrix:
+        target:
+          - development
+          - production
     with:
       version: ${{ needs.release.outputs.version }}
-      environment: 'development'
-
-  deploy_prod:
-    environment: 'production'
-    uses: ./.github/workflows/cdk_deploy.yml@main
-    needs:
-      - build
-      - release
-    with:
-      version: ${{ needs.release.outputs.version }}
-      environment: 'production'
+      environment: ${{ matrix.target }}
+    secrets: inherit
