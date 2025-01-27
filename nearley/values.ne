@@ -167,7 +167,7 @@ noQuoteStringValue ->
     | "and"i [^ \t\n"'\\=<>:] 
     | "o"i [^rR \t\n"'\\=<>:]
     | "or"i [^ \t\n"'\\=<>:]
-    ) [^ \t\n"'\\=<>:]:* {% ([startChars, chars]) => startChars.concat(chars).join('').toLowerCase() %}
+    ) [^ \t\n"\\=<>]:* {% ([startChars, chars]) => startChars.concat(chars).join('').toLowerCase() %}
 # "
 
 manaCostOpValue -> equalityOperator manaCostValue {% ([op, value]) => manaCostOperation(op, value) %}

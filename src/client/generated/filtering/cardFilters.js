@@ -1364,7 +1364,7 @@ var grammar = {
     {"name": "noQuoteStringValue$subexpression$2$subexpression$5", "symbols": [/[oO]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "noQuoteStringValue$subexpression$2", "symbols": ["noQuoteStringValue$subexpression$2$subexpression$5", /[^ \t\n"'\\=<>:]/]},
     {"name": "noQuoteStringValue$ebnf$1", "symbols": []},
-    {"name": "noQuoteStringValue$ebnf$1", "symbols": ["noQuoteStringValue$ebnf$1", /[^ \t\n"'\\=<>:]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "noQuoteStringValue$ebnf$1", "symbols": ["noQuoteStringValue$ebnf$1", /[^ \t\n"\\=<>]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "noQuoteStringValue", "symbols": ["noQuoteStringValue$subexpression$2", "noQuoteStringValue$ebnf$1"], "postprocess": ([startChars, chars]) => startChars.concat(chars).join('').toLowerCase()},
     {"name": "manaCostOpValue", "symbols": ["equalityOperator", "manaCostValue"], "postprocess": ([op, value]) => manaCostOperation(op, value)},
     {"name": "manaCostValue$ebnf$1", "symbols": ["manaSymbol"]},
