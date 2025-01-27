@@ -77,13 +77,14 @@ describe('Filter syntax', () => {
     'The Ultimate Nightmare of Wizards of the Coast® Customer Service',
     'Ratonhnhaké꞉ton',
     'Kongming, "Sleeping Dragon"',
+    "Urza's Bauble",
   ];
 
   it.each(workingNamesWithInterestingCharacters)('Working names with interesting characters (%s)', async (name) => {
     assertValidNameFilter(makeFilter(name));
   });
 
-  const failingNamesWithInterestingCharacters = ["Urza's Bauble", 'Hazmat Suit (Used)'];
+  const failingNamesWithInterestingCharacters = ['Hazmat Suit (Used)'];
 
   it.each(failingNamesWithInterestingCharacters)('Failing names with interesting characters (%s)', async (name) => {
     const result = makeFilter(name);
