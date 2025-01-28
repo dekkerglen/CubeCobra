@@ -12,6 +12,7 @@ import { Response } from '../../../src/types/express';
 import * as util from '../../../src/util/render';
 import * as routeUtil from '../../../src/util/util';
 import { createBlogPost, createCube, createUser } from '../../test-utils/data';
+import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call } from '../../test-utils/transport';
 
 jest.mock('../../../src/util/util', () => ({
@@ -449,5 +450,32 @@ describe('View Blog Posts', () => {
       },
       expect.anything(),
     );
+  });
+});
+
+describe('Blog Routes', () => {
+  it('should register its own routes', async () => {
+    expectRegisteredRoutes([
+      {
+        method: 'post',
+        path: '/cube/blog/post/:id',
+      },
+      {
+        method: 'get',
+        path: '/cube/blog/blogpost/:id',
+      },
+      {
+        method: 'get',
+        path: '/cube/blog/remove/:id',
+      },
+      {
+        method: 'post',
+        path: '/cube/blog/getmoreblogsbycube/:id',
+      },
+      {
+        method: 'get',
+        path: '/cube/blog/:id',
+      },
+    ]);
   });
 });

@@ -136,59 +136,6 @@ router.get('/topcards', async (req, res) => {
   }
 });
 
-router.post('/cardhistory', async (req, res) => {
-  try {
-    const { id, zoom, period } = req.body;
-
-    let zoomValue = 10000;
-
-    if (zoom === 'month') {
-      switch (period) {
-        case 'day':
-          zoomValue = 30;
-          break;
-        case 'week':
-          zoomValue = 4;
-          break;
-        case 'month':
-          zoomValue = 2;
-          break;
-        default:
-          zoomValue = 0;
-          break;
-      }
-    } else if (zoom === 'year') {
-      switch (period) {
-        case 'day':
-          zoomValue = 365;
-          break;
-        case 'week':
-          zoomValue = 52;
-          break;
-        case 'month':
-          zoomValue = 12;
-          break;
-        default:
-          zoomValue = 0;
-          break;
-      }
-    }
-
-    const history = await CardHistory.getByOracleAndType(id, period, zoomValue);
-
-    return res.status(200).send({
-      success: 'true',
-      data: history.items.reverse(),
-    });
-  } catch (err) {
-    req.logger.error(err.message, err.stack);
-    return res.status(500).send({
-      success: 'false',
-      data: [],
-    });
-  }
-});
-
 router.get('/card/:id', async (req, res) => {
   try {
     let { id } = req.params;
