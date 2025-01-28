@@ -4,7 +4,7 @@ import Card from '../../datatypes/Card';
 import Cube from '../../datatypes/Cube';
 import Draft, { buildDefaultSteps, createDefaultDraftFormat, DraftFormat, DraftState } from '../../datatypes/Draft';
 import User from '../../datatypes/User';
-import { fromEntries } from '../utils/Util';
+import { arraysEqual, fromEntries } from '../utils/Util';
 import { compileFilter, Filter } from './draftFilter';
 
 type RNGFunction = () => number;
@@ -142,38 +142,109 @@ export const getDraftFormat = (params: DraftParams, cube: Cube): DraftFormat => 
   return createDefaultDraftFormat(params.packs, params.cards || 15);
 };
 
+type PackCreationCardSlot = {
+  seat: number;
+  packNum: number;
+  cardNum: number;
+  slotFilter: string[];
+};
+
 const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn): CreatePacksResult => {
   let ok = true;
   let messages: string[] = [];
-  const result: CreatePacksResult = { ok, messages, initialState: [], cards: [] };
+
+  const cardsPerDrafter = format.packs.reduce(
+    (accumulator, currentValue) => accumulator + currentValue.slots.length,
+    0,
+  );
+  //In custom drafts the packs are not required to be the same size, thus using reduce rather than simple packs * pack size
+  const totalCards = seats * cardsPerDrafter;
+
+  const result: CreatePacksResult = {
+    ok,
+    messages,
+    initialState: [],
+    //Cards are no longer found in order of seat, pack, slot. Pre-allocate the array so we can splice in each card as found
+    cards: new Array(totalCards),
+  };
+
+  /* Perform a two phase approach to creating packs. In the first phase all card slots with a filter
+   * are performed, and then in the second phase the rest of the slots are done. This is to ensure that
+   * the filtered slots across all packs/seats use the maximal set of cards that match their filter. Or in other
+   * words, we don't want the non-filtered slots to consume cards that might match filtered card slots.
+   */
+  const filteredCardSlots: PackCreationCardSlot[] = [];
+  const unfilteredCardSlots: PackCreationCardSlot[] = [];
+
   for (let seat = 0; seat < seats; seat++) {
     result.initialState.push([]);
     for (let packNum = 0; packNum < format.packs.length; packNum++) {
       result.initialState[seat].push({ steps: [], cards: [] });
-      const cards: Card[] = [];
       for (let cardNum = 0; cardNum < format.packs[packNum].slots.length; cardNum++) {
-        const result = nextCardFn(format.packs[packNum].slots[cardNum].split(','));
-        if (result.messages && result.messages.length > 0) {
-          messages = messages.concat(result.messages);
-        }
-        if (result.card) {
-          cards.push(result.card);
+        const slotFilter = format.packs[packNum].slots[cardNum].split(',');
+
+        const slot = {
+          seat,
+          packNum,
+          cardNum,
+          slotFilter,
+        };
+
+        const hasFilter = !(arraysEqual(slotFilter, ['']) || arraysEqual(slotFilter, ['*']));
+        if (hasFilter) {
+          filteredCardSlots.push(slot);
         } else {
-          ok = false;
+          unfilteredCardSlots.push(slot);
         }
       }
 
       result.initialState[seat][packNum] = {
-        steps: format.packs[packNum].steps || buildDefaultSteps(cards.length),
-        cards: [],
+        //Will replace this after all the card slots in the pack have a card index
+        steps: [],
+        //Preallocate the space for all the card index numbers for this pack
+        cards: Array(format.packs[packNum].slots.length),
       };
-
-      for (const card of cards) {
-        result.cards.push(card);
-        result.initialState[seat][packNum].cards.push(result.cards.length - 1);
-      }
     }
   }
+
+  const cardsBeforeThisPack = (packNumber: number): number => {
+    let sum = 0;
+    for (let num = 0; num < packNumber; num++) {
+      sum += format.packs[num].slots.length;
+    }
+    return sum;
+  };
+
+  for (const slot of [...filteredCardSlots, ...unfilteredCardSlots]) {
+    const { seat, packNum, cardNum, slotFilter } = slot;
+
+    const cardResult = nextCardFn(slotFilter);
+    if (cardResult.messages && cardResult.messages.length > 0) {
+      messages = messages.concat(cardResult.messages);
+    }
+    if (cardResult.card) {
+      //Determine where we slice this card in based on the original seat/pack/card in pack
+      const cardIndex = seat * cardsPerDrafter + cardsBeforeThisPack(packNum) + cardNum;
+      result.cards.splice(cardIndex, 1, cardResult.card);
+      //Even though cards in the pack may not be set in array order, the end result is ordered from N to N+(pack length)
+      //eg seat 0, pack 1 contains indices 15, 16, 17, through 24 for a standard 15 card pack
+      result.initialState[seat][packNum].cards.splice(cardNum, 1, cardIndex);
+    } else {
+      ok = false;
+    }
+
+    //Interestingly with pre-allocated size, using every(typeof currentValue !== "undefined") doesn't work because there are not actually items to execute the callback on!
+    const allocatedCards = result.initialState[seat][packNum].cards.filter(
+      (currentValue) => typeof currentValue !== 'undefined',
+    );
+
+    //All cards in the seat/pack are now initialized, as the set of defined card indices matches the pack's length
+    if (allocatedCards.length === format.packs[packNum].slots.length) {
+      result.initialState[seat][packNum].steps =
+        format.packs[packNum].steps || buildDefaultSteps(result.initialState[seat][packNum].cards.length);
+    }
+  }
+
   return result;
 };
 
