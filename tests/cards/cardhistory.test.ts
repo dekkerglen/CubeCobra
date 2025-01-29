@@ -1,5 +1,5 @@
 import CardHistory from '../../src/dynamo/models/cardhistory';
-import { getCardHistoryHandler, getZoomValue } from '../../src/router/routes/cardhistory';
+import { getCardHistoryHandler, getZoomValue } from '../../src/router/routes/tool/cardHistory';
 import { Response } from '../../src/types/express';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';
@@ -145,7 +145,7 @@ describe('Card History Routes', () => {
   it('should register its own routes', async () => {
     expectRegisteredRoutes([
       {
-        path: '/cardhistory/',
+        path: '/tool/cardHistory/',
         method: 'post',
       },
     ]);

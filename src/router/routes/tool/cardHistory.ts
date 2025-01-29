@@ -1,8 +1,7 @@
-import CardHistory from 'src/dynamo/models/cardhistory';
-
-import { createTypeGuard } from '../../../src/util/typeGuards';
-import { csrfProtection } from '../../routes/middleware';
-import { Request, Response } from '../../types/express';
+import CardHistory from '../../../dynamo/models/cardhistory';
+import { csrfProtection } from '../../../routes/middleware';
+import { Request, Response } from '../../../types/express';
+import { createTypeGuard } from '../../../util/typeGuards';
 
 const zoomValues = ['month', 'year'] as const;
 const periodValues = ['day', 'week', 'month'] as const;
