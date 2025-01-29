@@ -36,7 +36,7 @@ interface PrivateCubeIconProps {
 }
 
 const PrivateCubeIcon: React.FC<PrivateCubeIconProps> = ({ visibility }) => {
-  const visibilityWord = visibility == 'pr' ? 'private' : 'unlisted';
+  const visibilityWord = visibility === 'pr' ? 'private' : 'unlisted';
   return (
     <Tooltip
       text={`This cube is set as ${visibilityWord}.`}
@@ -72,6 +72,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
       headers: {},
     }).then((response) => {
       if (!response.ok) {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(response);
       }
     });
@@ -85,6 +86,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
       headers: {},
     }).then((response) => {
       if (!response.ok) {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(response);
       }
     });
