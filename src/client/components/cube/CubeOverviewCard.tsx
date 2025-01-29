@@ -5,9 +5,9 @@ import { EyeClosedIcon, LinkExternalIcon } from '@primer/octicons-react';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 
 import User from '../../../datatypes/User';
+import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
-import DomainContext from '../../contexts/DomainContext';
 import UserContext from '../../contexts/UserContext';
 import useAlerts from '../../hooks/UseAlerts';
 import Button from '../base/Button';
@@ -62,7 +62,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
   const user = useContext(UserContext);
   const [followedState, setFollowedState] = useState(followed);
   const { addAlert } = useAlerts();
-  const baseUrl = useContext(DomainContext);
+  const baseUrl = useContext(BaseUrlContext);
 
   const follow = () => {
     setFollowedState(true);

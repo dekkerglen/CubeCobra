@@ -5,9 +5,9 @@ import { PasteIcon } from '@primer/octicons-react';
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import { Modal, ModalBody, ModalHeader } from 'components/base/Modal';
-import DomainContext from 'contexts/DomainContext';
 import Comment from 'datatypes/Comment';
 
+import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { Flexbox } from '../base/Layout';
 
 interface ShareCommentModalProps {
@@ -17,7 +17,7 @@ interface ShareCommentModalProps {
 }
 
 const ShareCommentModal: React.FC<ShareCommentModalProps> = ({ comment, isOpen, setOpen }) => {
-  const baseUrl = useContext(DomainContext);
+  const baseUrl = useContext(BaseUrlContext);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} md>
