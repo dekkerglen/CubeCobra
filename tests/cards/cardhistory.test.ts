@@ -145,7 +145,7 @@ describe('Card History Routes', () => {
   it('should register its own routes', async () => {
     expectRegisteredRoutes([
       {
-        path: '/tool/cardHistory/',
+        path: '/tool/cardhistory/',
         method: 'post',
       },
     ]);
