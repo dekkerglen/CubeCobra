@@ -22,7 +22,7 @@ const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
 const Draft = require('../../dynamo/models/draft');
-const Package = require('../../dynamo/models/package');
+import Package from '../../dynamo/models/package';
 const Blog = require('../../dynamo/models/blog');
 const Changelog = require('../../dynamo/models/changelog');
 const Feed = require('../../dynamo/models/feed');

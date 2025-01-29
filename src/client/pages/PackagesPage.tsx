@@ -18,9 +18,10 @@ import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
-import CardPackageData from 'datatypes/CardPackage';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
+
+import CardPackageData, { CardPackageStatus } from '../../datatypes/CardPackage';
 
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 
@@ -34,7 +35,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
 
-  const [type, setType] = useQueryParam('t', 'a');
+  const [type, setType] = useQueryParam('t', CardPackageStatus.APPROVED);
   const [filter, setFilter] = useQueryParam('kw', '');
   const [sort, setSort] = useQueryParam('s', 'votes');
   const [ascending, setAscending] = useQueryParam('a', 'false');
