@@ -254,6 +254,7 @@ router.get('/card/:id', async (req, res) => {
       },
     );
   } catch (err) {
+    // eslint-disable-next-line no-console -- Error debugging
     console.error(err);
     return util.handleRouteError(req, res, err, '/404');
   }
