@@ -72,7 +72,7 @@ export const sendEmail = async (
     locals: {
       ...templateLocals,
       //Ensure the common ones cannot be overridden by adding second
-      base_url: utils.getBaseUrl(),
+      baseUrl: utils.getBaseUrl(),
     },
   });
 };
