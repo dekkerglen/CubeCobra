@@ -2,13 +2,11 @@ const express = require('express');
 
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
-const mailer = require('nodemailer');
 const { body } = require('express-validator');
-const Email = require('email-templates');
-const path = require('path');
 const { isCubeListed } = require('../util/cubefn');
 const util = require('../util/util');
 const fq = require('../util/featuredQueue');
+import sendEmail from '../util/email';
 const { render, redirect } = require('../util/render');
 
 // Bring in models
@@ -214,37 +212,8 @@ router.post(
 
       const id = await PasswordReset.put(passwordReset);
 
-      const smtpTransport = mailer.createTransport({
-        name: 'CubeCobra.com',
-        secure: true,
-        service: 'Gmail',
-        auth: {
-          user: process.env.EMAIL_CONFIG_USERNAME,
-          pass: process.env.EMAIL_CONFIG_PASSWORD,
-        },
-      });
-
-      const email = new Email({
-        message: {
-          from: 'Cube Cobra Team <support@cubecobra.com>',
-          to: user.email,
-          subject: 'Password Reset',
-        },
-        send: true,
-        juiceResources: {
-          webResources: {
-            relativeTo: path.join(__dirname, '..', 'public'),
-            images: true,
-          },
-        },
-        transport: smtpTransport,
-      });
-
-      await email.send({
-        template: 'password_reset',
-        locals: {
+      await sendEmail(user.email, 'Password Reset', 'password_reset', {
           id,
-        },
       });
 
       req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
@@ -388,38 +357,9 @@ router.post(
       newUser.passwordHash = await bcrypt.hash(password, salt);
       const id = await User.put(newUser);
 
-      const smtpTransport = mailer.createTransport({
-        name: 'CubeCobra.com',
-        secure: true,
-        service: 'Gmail',
-        auth: {
-          user: process.env.EMAIL_CONFIG_USERNAME,
-          pass: process.env.EMAIL_CONFIG_PASSWORD,
-        },
-      });
-
-      const message = new Email({
-        message: {
-          from: 'Cube Cobra Team <support@cubecobra.com>',
-          to: email,
-          subject: 'Please verify your new Cube Cobra account',
-        },
-        send: true,
-        juiceResources: {
-          webResources: {
-            relativeTo: path.join(__dirname, '..', 'public'),
-            images: true,
-          },
-        },
-        transport: smtpTransport,
-      });
-
-      message.send({
-        template: 'confirm_email',
-        locals: {
-          id,
-          token: newUser.token,
-        },
+      await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
+        id,
+        token: newUser.token,
       });
 
       req.flash('success', 'Account successfully created. Please check your email for a verification link to login.');

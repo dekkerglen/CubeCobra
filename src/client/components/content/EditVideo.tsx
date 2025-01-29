@@ -112,7 +112,7 @@ const EditVideo: React.FC<EditVideoProps> = ({
         </Col>
       </Row>
       <Text>
-        Write any supplmental text here. Cube Cobra uses a variation of markdown you can read about{' '}
+        Write any supplemental text here. Cube Cobra uses a variation of markdown you can read about{' '}
         <Link href="/markdown" target="_blank">
           here
         </Link>
