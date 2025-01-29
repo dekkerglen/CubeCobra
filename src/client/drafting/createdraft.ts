@@ -164,7 +164,7 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
     ok,
     messages,
     initialState: [],
-    //Cards are no longer found in order of seat, pack, slot. Pre-allocate the array so we can splice in each card as found
+    //Cards are no longer inserted in order of seat, pack, slot. Pre-allocate the array so we can splice in each card as found
     cards: new Array(totalCards),
   };
 
@@ -215,6 +215,7 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
     return sum;
   };
 
+  let sumCardIndices = 0;
   for (const slot of [...filteredCardSlots, ...unfilteredCardSlots]) {
     const { seat, packNum, cardNum, slotFilter } = slot;
 
@@ -229,6 +230,10 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
       //Even though cards in the pack may not be set in array order, the end result is ordered from N to N+(pack length)
       //eg seat 0, pack 1 contains indices 15, 16, 17, through 24 for a standard 15 card pack
       result.initialState[seat][packNum].cards.splice(cardNum, 1, cardIndex);
+      sumCardIndices = result.initialState[seat][packNum].cards.reduce(
+        (accumulator, index) => accumulator + index,
+        sumCardIndices,
+      );
     } else {
       ok = false;
     }
@@ -243,6 +248,24 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
       result.initialState[seat][packNum].steps =
         format.packs[packNum].steps || buildDefaultSteps(result.initialState[seat][packNum].cards.length);
     }
+  }
+
+  //Final assertions
+
+  //The card indices across all packs should be 0 through totalCards-1. The sum of N consecutive integers (starting from zero) is N*(N-1)/2
+  const expectedSumCardIndices = (totalCards * (totalCards - 1)) / 2;
+  if (sumCardIndices !== expectedSumCardIndices) {
+    messages = messages.concat('Unexpected number of cards');
+    result.ok = false;
+  }
+
+  //Also every pack should have all slots initialized, none left with undefined from pre-allocation
+  const countUndefinedPicks = result.initialState.flatMap((seat) =>
+    seat.flatMap((pack) => pack.cards.filter((i) => typeof i !== 'undefined')),
+  ).length;
+  if (countUndefinedPicks !== 0) {
+    messages = messages.concat('Some pack slots did not get a card');
+    result.ok = false;
   }
 
   return result;
