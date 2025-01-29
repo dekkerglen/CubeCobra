@@ -18,7 +18,7 @@ declare global {
 
 export interface UniversalReactProps {
   nitroPayEnabled: boolean;
-  domain: DomainContextValue;
+  baseUrl: DomainContextValue;
   user: UserContextValue;
   theme: string;
   captchaSiteKey: string;
@@ -34,7 +34,7 @@ const RenderToRoot = <P,>(Element: ComponentType<P>): ComponentType<P> => {
         <CaptchaContext.Provider value={reactProps.captchaSiteKey}>
           <AutocardContextProvider>
             <AdsContext.Provider value={reactProps.nitroPayEnabled}>
-              <DomainContext.Provider value={reactProps.domain}>
+              <DomainContext.Provider value={reactProps.baseUrl}>
                 <UserContext.Provider value={reactProps.user || null}>
                   <Element {...reactProps} />
                 </UserContext.Provider>

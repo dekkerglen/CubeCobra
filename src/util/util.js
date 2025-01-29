@@ -90,7 +90,9 @@ function hasProfanity(text) {
 
 function validateEmail(email) {
   if (email.includes('+')) {
-    throw new Error('CubeCobra does not support plus email addressing, please remove the "+descriptor" from your email and try again.');
+    throw new Error(
+      'CubeCobra does not support plus email addressing, please remove the "+descriptor" from your email and try again.',
+    );
   }
 
   const bannedDomains = [
@@ -141,17 +143,19 @@ function validateEmail(email) {
     'jxpomup.com',
     'zlorkun.com',
     'gufum.com',
-    'gmailbrt.com',    
+    'gmailbrt.com',
     'gholar.com',
     'logsmarter.net',
     'pixdd.com',
-    'matmayer.com'
-  ]
+    'matmayer.com',
+  ];
 
   const domain = email.split('@')[1];
 
   if (bannedDomains.includes(domain)) {
-    throw new Error('CubeCobra does not support email addresses from this domain, please use a different email address.');
+    throw new Error(
+      'CubeCobra does not support email addresses from this domain, please use a different email address.',
+    );
   }
 
   return true;
@@ -308,6 +312,10 @@ function flatten(arr, n) {
   return toNonNullArray([].concat(...mapNonNull(arr, (a) => flatten(a, n - 1))));
 }
 
+function getBaseUrl() {
+  return (process.env?.HTTP_ONLY === 'true' ? 'http://' : 'https://') + process.env.DOMAIN;
+}
+
 module.exports = {
   shuffle(array, seed) {
     if (!seed) {
@@ -350,4 +358,5 @@ module.exports = {
   flatten,
   mapNonNull,
   validateEmail,
+  getBaseUrl,
 };

@@ -596,6 +596,7 @@ router.get('/overview/:id', async (req, res) => {
       totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -615,7 +616,7 @@ router.get('/overview/:id', async (req, res) => {
           `Cube Cobra Overview: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/cube/overview/${req.params.id}`,
+          `${baseUrl}/cube/overview/${req.params.id}`,
         ),
       },
     );
@@ -642,10 +643,11 @@ router.get('/rss/:id', async (req, res) => {
       items.push(...queryResult.items);
     } while (queryResult.lastKey);
 
+    const baseUrl = util.getBaseUrl();
     const feed = new RSS({
       title: cube.name,
-      feed_url: `https://cubecobra.com/cube/rss/${cube.id}`,
-      site_url: 'https://cubecobra.com',
+      feed_url: `${baseUrl}/cube/rss/${cube.id}`,
+      site_url: baseUrl,
     });
 
     items.forEach((blog) => {
@@ -705,6 +707,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
     const { aOracles, bOracles, inBoth, allCards } = await compareCubes(cardsA, cardsB);
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -727,7 +730,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
           'Cube Cobra Compare cubes',
           `Comparing "${cubeA.name}" To "${cubeB.name}"`,
           cubeA.image.uri,
-          `https://cubecobra.com/cube/compare/${idA}/to/${idB}`,
+          `${baseUrl}/cube/compare/${idA}/to/${idB}`,
         ),
       },
     );
@@ -746,6 +749,7 @@ router.get('/list/:id', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -760,7 +764,7 @@ router.get('/list/:id', async (req, res) => {
           `Cube Cobra List: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/cube/list/${req.params.id}`,
+          `${baseUrl}/cube/list/${req.params.id}`,
         ),
       },
     );
@@ -779,6 +783,7 @@ router.get('/history/:id', async (req, res) => {
 
     const query = await Changelog.getByCube(cube.id, 36);
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -794,7 +799,7 @@ router.get('/history/:id', async (req, res) => {
           `Cube Cobra List: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/cube/list/${req.params.id}`,
+          `${baseUrl}/cube/list/${req.params.id}`,
         ),
       },
     );
@@ -843,6 +848,7 @@ router.get('/playtest/:id', async (req, res) => {
 
     const decks = await Draft.getByCube(cube.id);
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -850,7 +856,7 @@ router.get('/playtest/:id', async (req, res) => {
       {
         cube,
         decks: decks.items,
-        decksLastKey: decks.lastEvaluatedKey
+        decksLastKey: decks.lastEvaluatedKey,
       },
       {
         title: `${abbreviate(cube.name)} - Playtest`,
@@ -858,7 +864,7 @@ router.get('/playtest/:id', async (req, res) => {
           `Cube Cobra Playtest: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/cube/playtest/${req.params.id}`,
+          `${baseUrl}/cube/playtest/${req.params.id}`,
         ),
       },
     );
@@ -904,6 +910,7 @@ router.get('/analysis/:id', async (req, res) => {
 
     const cubeAnalytics = await CubeAnalytic.getByCube(cube.id);
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -920,7 +927,7 @@ router.get('/analysis/:id', async (req, res) => {
           `Cube Cobra Analysis: ${cube.name}`,
           miscutil.getCubeDescription(cube),
           cube.image_uri,
-          `https://cubecobra.com/cube/analysis/${req.params.id}`,
+          `${baseUrl}/cube/analysis/${req.params.id}`,
         ),
         title: `${abbreviate(cube.name)} - Analysis`,
       },
@@ -957,6 +964,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
     const height = Math.ceil(pack.pack.length / width);
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -971,8 +979,8 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
         metadata: generateMeta(
           'Cube Cobra Sample Pack',
           `A sample pack from ${cube.name}`,
-          `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-          `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
+          `${baseUrl}/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
+          `${baseUrl}/cube/samplepack/${req.params.id}/${pack.seed}`,
           CARD_WIDTH * width,
           CARD_HEIGHT * height,
         ),
@@ -1388,6 +1396,7 @@ router.get('/griddraft/:id', async (req, res) => {
       return redirect(req, res, '/404');
     }
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -1402,7 +1411,7 @@ router.get('/griddraft/:id', async (req, res) => {
           `Cube Cobra Grid Draft: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/cube/griddraft/${req.params.id}`,
+          `${baseUrl}/cube/griddraft/${req.params.id}`,
         ),
       },
     );

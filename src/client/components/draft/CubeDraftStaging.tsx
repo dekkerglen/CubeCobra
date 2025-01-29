@@ -33,7 +33,7 @@ const CubeDraftStaging: React.FC<CubeDraftStagingProps> = ({ draft, socket, star
   const [players, setPlayers] = useState<string[]>([]);
   const [playerNameMap, setPlayerNameMap] = useState<Record<string, string>>({});
   const user = useContext(UserContext);
-  const domain = useContext(DomainContext);
+  const baseUrl = useContext(DomainContext);
 
   useMount(() => {
     const run = async () => {
@@ -161,10 +161,10 @@ const CubeDraftStaging: React.FC<CubeDraftStagingProps> = ({ draft, socket, star
             <Col xs={12} lg={6}>
               <p>Use the following link to invite players to your draft:</p>
               <div className="flex items-center">
-                <Input value={`https://${domain}/d/${draft.id}`} readOnly />
+                <Input value={`${baseUrl}/d/${draft.id}`} readOnly />
                 <Button
                   className="btn-sm ml-2"
-                  onClick={() => navigator.clipboard.writeText(`https://${domain}/d/${draft.id}`)}
+                  onClick={() => navigator.clipboard.writeText(`${baseUrl}/d/${draft.id}`)}
                   aria-label="Copy short ID"
                 >
                   <PasteIcon size={16} />

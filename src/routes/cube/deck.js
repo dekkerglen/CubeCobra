@@ -1,10 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const {
-  cardFromId,
-  getIdsFromName,
-  getMostReasonable,
-} = require('../../util/carddb');
+const { cardFromId, getIdsFromName, getMostReasonable } = require('../../util/carddb');
 const { render, redirect } = require('../../util/render');
 const util = require('../../util/util');
 const generateMeta = require('../../util/meta');
@@ -635,6 +631,7 @@ router.get('/:id', async (req, res) => {
       return redirect(req, res, '/404');
     }
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -649,7 +646,7 @@ router.get('/:id', async (req, res) => {
           `Cube Cobra Deck: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/cube/deck/${req.params.id}`,
+          `${baseUrl}/cube/deck/${req.params.id}`,
         ),
       },
     );

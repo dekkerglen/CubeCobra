@@ -196,6 +196,7 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
     }
 
     const query = await Blog.getByCube(cube.id, 20);
+    const baseUrl = util.getBaseUrl();
 
     return render(
       req,
@@ -212,7 +213,7 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
           `Cube Cobra Blog: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/cube/blog/${encodeURIComponent(req.params.id)}`,
+          `${baseUrl}/cube/blog/${encodeURIComponent(req.params.id)}`,
         ),
       },
     );

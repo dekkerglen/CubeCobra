@@ -36,6 +36,7 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -50,7 +51,7 @@ const handler = async (req: Request, res: Response) => {
           `Cube Cobra Draft: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/draft/deckbuilder/${req.params.id}`,
+          `${baseUrl}/draft/deckbuilder/${req.params.id}`,
         ),
       },
     );

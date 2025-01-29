@@ -7,6 +7,7 @@ import { getCubeDescription, getCubeId } from 'utils/Util';
 import User from '../../../datatypes/User';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
+import DomainContext from '../../contexts/DomainContext';
 import UserContext from '../../contexts/UserContext';
 import useAlerts from '../../hooks/UseAlerts';
 import Button from '../base/Button';
@@ -61,6 +62,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
   const user = useContext(UserContext);
   const [followedState, setFollowedState] = useState(followed);
   const { addAlert } = useAlerts();
+  const baseUrl = useContext(DomainContext);
 
   const follow = () => {
     setFollowedState(true);
@@ -127,10 +129,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                     <Username user={cube.owner} />
                   </Text>{' '}
                   • <Link href={`/cube/rss/${cube.id}`}>RSS</Link> •{' '}
-                  <QRCodeModalLink
-                    href="#"
-                    modalprops={{ link: `https://cubecobra.com/c/${cube.id}`, cubeName: cube.name }}
-                  >
+                  <QRCodeModalLink href="#" modalprops={{ link: `${baseUrl}/c/${cube.id}`, cubeName: cube.name }}>
                     QR Code
                   </QRCodeModalLink>
                 </Text>

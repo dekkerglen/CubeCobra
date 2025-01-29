@@ -227,6 +227,7 @@ router.get('/card/:id', async (req, res) => {
 
     const related = getRelatedCards(card.oracle_id);
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -248,7 +249,7 @@ router.get('/card/:id', async (req, res) => {
           `${card.name} - Cube Cobra`,
           `Analytics for ${card.name} on CubeCobra`,
           card.image_normal,
-          `https://cubecobra.com/card/${req.params.id}`,
+          `${baseUrl}/card/${req.params.id}`,
         ),
       },
     );

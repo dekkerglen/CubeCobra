@@ -7,7 +7,7 @@ import { createTransport } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import path from 'path';
 
-const IS_HTTPS = process.env?.HTTP_ONLY === 'true' ? false : true;
+import utils from './util';
 
 const getTransportOptions = (): SMTPTransport.Options | undefined => {
   //With SMTP host/port we assume local development mailing
@@ -72,7 +72,7 @@ export const sendEmail = async (
     locals: {
       ...templateLocals,
       //Ensure the common ones cannot be overridden by adding second
-      base_url: (IS_HTTPS ? 'https://' : 'http://') + process.env.DOMAIN,
+      base_url: utils.getBaseUrl(),
     },
   });
 };
