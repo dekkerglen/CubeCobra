@@ -161,8 +161,8 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
   const totalCards = seats * cardsPerDrafter;
 
   const result: CreatePacksResult = {
-    ok,
-    messages,
+    ok: true,
+    messages: [],
     initialState: [],
     //Cards are no longer inserted in order of seat, pack, slot. Pre-allocate the array so we can splice in each card as found
     cards: new Array(totalCards),
@@ -221,7 +221,7 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
 
     const cardResult = nextCardFn(slotFilter);
     if (cardResult.messages && cardResult.messages.length > 0) {
-      messages = messages.concat(cardResult.messages);
+      result.messages = result.messages.concat(cardResult.messages);
     }
     if (cardResult.card) {
       //Determine where we slice this card in based on the original seat/pack/card in pack
@@ -230,12 +230,9 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
       //Even though cards in the pack may not be set in array order, the end result is ordered from N to N+(pack length)
       //eg seat 0, pack 1 contains indices 15, 16, 17, through 24 for a standard 15 card pack
       result.initialState[seat][packNum].cards.splice(cardNum, 1, cardIndex);
-      sumCardIndices = result.initialState[seat][packNum].cards.reduce(
-        (accumulator, index) => accumulator + index,
-        sumCardIndices,
-      );
+      sumCardIndices += cardIndex;
     } else {
-      ok = false;
+      result.ok = false;
     }
 
     //Interestingly with pre-allocated size, using every(typeof currentValue !== "undefined") doesn't work because there are not actually items to execute the callback on!
@@ -255,16 +252,21 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
   //The card indices across all packs should be 0 through totalCards-1. The sum of N consecutive integers (starting from zero) is N*(N-1)/2
   const expectedSumCardIndices = (totalCards * (totalCards - 1)) / 2;
   if (sumCardIndices !== expectedSumCardIndices) {
-    messages = messages.concat('Unexpected number of cards');
+    //Since these assertions are new only add their message if there aren't existing error messages to show
+    if (result.messages.length === 0) {
+      result.messages = result.messages.concat('Unexpected number of cards');
+    }
     result.ok = false;
   }
 
   //Also every pack should have all slots initialized, none left with undefined from pre-allocation
-  const countUndefinedPicks = result.initialState.flatMap((seat) =>
+  const countDefinedPicks = result.initialState.flatMap((seat) =>
     seat.flatMap((pack) => pack.cards.filter((i) => typeof i !== 'undefined')),
   ).length;
-  if (countUndefinedPicks !== 0) {
-    messages = messages.concat('Some pack slots did not get a card');
+  if (countDefinedPicks !== totalCards) {
+    if (result.messages.length === 0) {
+      result.messages = result.messages.concat('Some pack slots did not get a card unexpectedly');
+    }
     result.ok = false;
   }
 
