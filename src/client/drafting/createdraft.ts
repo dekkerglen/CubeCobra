@@ -16,12 +16,12 @@ interface DraftParams {
   players: number;
 }
 
-interface DraftResult {
+export interface DraftResult {
   card: Card | undefined;
   messages: string[];
 }
 
-type NextCardFn = (cardFilters: string[]) => DraftResult;
+export type NextCardFn = (cardFilters: string[]) => DraftResult;
 
 interface AsfanResult {
   card: boolean;
@@ -30,7 +30,7 @@ interface AsfanResult {
 
 type AsfanFn = (cardFilters: string[]) => AsfanResult;
 
-interface CreatePacksResult {
+export interface CreatePacksResult {
   ok: boolean;
   messages: string[];
   initialState: DraftState;
@@ -149,10 +149,8 @@ type PackCreationCardSlot = {
   slotFilter: string[];
 };
 
-const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn): CreatePacksResult => {
-  let ok = true;
-  let messages: string[] = [];
-
+//Exporting for testing purposes
+export const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn): CreatePacksResult => {
   const cardsPerDrafter = format.packs.reduce(
     (accumulator, currentValue) => accumulator + currentValue.slots.length,
     0,
