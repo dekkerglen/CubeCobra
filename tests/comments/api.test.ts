@@ -13,6 +13,7 @@ import { Response } from '../../src/types/express';
 import * as util from '../../src/util/render';
 import * as routeUtil from '../../src/util/util';
 import { createUser } from '../test-utils/data';
+import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';
 
 jest.mock('../../src/dynamo/models/comment', () => ({
@@ -492,7 +493,6 @@ describe('Add Comment', () => {
           mentions: ['mention-user-1', 'mention-user-2'],
         },
       })
-      .withResponse(res)
       .send();
 
     expect(routeUtil.addNotification).toHaveBeenCalledWith(
@@ -517,5 +517,32 @@ describe('Add Comment', () => {
       '/comment/comment-id',
       `${commenter.username} mentioned you in their comment`,
     );
+  });
+});
+
+describe('Comment Routes', () => {
+  it('should register its own routes', async () => {
+    expectRegisteredRoutes([
+      {
+        path: '/comment/:id',
+        method: 'get',
+      },
+      {
+        path: '/comment/report',
+        method: 'post',
+      },
+      {
+        path: '/comment/getcomments',
+        method: 'post',
+      },
+      {
+        path: '/comment/edit',
+        method: 'post',
+      },
+      {
+        path: '/comment/addcomment',
+        method: 'post',
+      },
+    ]);
   });
 });
