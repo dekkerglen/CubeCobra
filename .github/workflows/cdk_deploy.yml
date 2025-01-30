@@ -35,12 +35,15 @@ env:
   PATREON_CLIENT_ID: ${{ secrets.PATREON_CLIENT_ID }}
   PATREON_CLIENT_SECRET: ${{ secrets.PATREON_CLIENT_SECRET }}
   PATREON_HOOK_SECRET: ${{ secrets.PATREON_HOOK_SECRET }}
-  REDIS_HOST: ${{ secrets.REDIS_HOST }}
   SESSION_TOKEN: ${{ secrets.SESSION_TOKEN }}
   SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
   TCG_PLAYER_PUBLIC_KEY: ${{ secrets.TCG_PLAYER_PUBLIC_KEY }}
   TCG_PLAYER_PRIVATE_KEY: ${{ secrets.TCG_PLAYER_PRIVATE_KEY }}
-
+  CAPTCHA_SITE_KEY: ${{ secrets.CAPTCHA_SITE_KEY }}
+  CAPTCHA_SECRET_KEY: ${{ secrets.CAPTCHA_SECRET_KEY }}
+  DRAFTMANCER_API_KEY: ${{ secrets.DRAFTMANCER_API_KEY }}
+  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+  STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
 
 defaults:
   run:
@@ -72,7 +75,9 @@ jobs:
 
       - run: npm test
 
-      - run: npx cdk diff
+      - run: npx cdk diff \
+          --context environment=${{ inputs.environment }} \
+          --context version=${{ inputs.version }}
 
   deploy:
     needs: plan
@@ -95,6 +100,8 @@ jobs:
         with:
           role-to-assume: ${{ secrets.CDK_IAM_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - run: npm ci
 
       - name: CDK Deploy
         run: |

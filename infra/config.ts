@@ -1,4 +1,5 @@
 export interface EnvironmentConfiguration {
+  stackName: string;
   account: string;
   region: string;
   dataBucket: string;
@@ -15,6 +16,7 @@ export interface EnvironmentConfiguration {
 
 export const environments: { [key: string]: EnvironmentConfiguration } = {
   development: {
+    stackName: 'CubeCobraDevStack',
     account: '816705121310',
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-production',
@@ -30,6 +32,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
   },
 
   production: {
+    stackName: 'CubeCobraProdStack',
     account: '816705121310',
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-production',

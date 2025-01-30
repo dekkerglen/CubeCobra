@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { StackProps } from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import { CfnInstanceProfile, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { CfnInstanceProfile, ManagedPolicy,Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 
 import { Certificates } from './certificates';
@@ -31,14 +31,18 @@ interface CubeCobraStackParams {
   patreonClientId: string;
   patreonClientSecret: string;
   patreonHookSecret: string;
-  patreonRedirectUri: string;
-  redisHost: string;
+  patreonRedirect: string;
   sessionToken: string;
   sessionSecret: string;
   tcgPlayerPublicKey: string;
   tcgPlayerPrivateKey: string;
   fleetSize: number;
   jobs?: Map<string, ScheduledJobProps>;
+  captchaSiteKey: string;
+  captchaSecretKey: string;
+  draftmancerApiKey: string;
+  stripeSecretKey: string;
+  stripePublicKey: string;
 }
 
 export type Environment = 'production' | 'development';
@@ -50,6 +54,8 @@ export class CubeCobraStack extends cdk.Stack {
     const cert = new Certificates(this, 'Certificates', { domain: params.domain });
 
     const role = new Role(this, 'InstanceRole', { assumedBy: new ServicePrincipal('ec2.amazonaws.com') });
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AWSElasticBeanstalkWebTier'));
+
     const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', { roles: [role.roleName] });
 
     const appBucket = Bucket.fromBucketName(this, 'AppBucket', params.appBucket);
@@ -117,14 +123,17 @@ function createEnvironmentVariables(
     PATREON_CLIENT_ID: params.patreonClientId,
     PATREON_CLIENT_SECRET: params.patreonClientSecret,
     PATREON_HOOK_SECRET: params.patreonHookSecret,
-    PATREON_REDIRECT_URI: params.patreonRedirectUri,
+    PATREON_REDIRECT: params.patreonRedirect,
     PORT: '8080',
-    REDIS_HOST: params.redisHost,
-    REDIS_SETUP: 'false',
     SESSION: params.sessionToken,
     SESSION_SECRET: params.sessionSecret,
     TCG_PLAYER_PRIVATE_KEY: params.tcgPlayerPrivateKey,
     TCG_PLAYER_PUBLIC_KEY: params.tcgPlayerPublicKey,
     USE_S3: 'true',
+    CAPTCHA_SITE_KEY: params.captchaSiteKey,
+    CAPTCHA_SECRET_KEY: params.captchaSecretKey,
+    DRAFTMANCER_API_KEY: params.draftmancerApiKey,
+    STRIPE_SECRET_KEY: params.stripeSecretKey,
+    STRIPE_PUBLIC_KEY: params.stripePublicKey,
   };
 }
