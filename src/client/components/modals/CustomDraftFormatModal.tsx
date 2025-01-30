@@ -83,10 +83,12 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
             />
             <Text>
               Card values can either be single tags or filter parameters or a comma separated list to create a ratio
-              (e.g. 3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). tags
+              (e.g. 3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). Tags
               can be specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>. <code>*</code> can be
               used to match any card. Space separated filters act as an AND, eg <code>set:inv r:common</code> matches a
-              card from the Invasion set AND is a common.
+              card from the Invasion set AND is a common. Free slots, those either <code>*</code> or empty, will be
+              processed after all other slots are filled (across all packs), to ensure that they don't use up cards such
+              that a filtered slot fails to match any remaining card.
             </Text>
             {(format.packs ?? []).map((pack, packIndex) => (
               <CustomPackCard
