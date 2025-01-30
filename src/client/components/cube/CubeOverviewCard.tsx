@@ -5,6 +5,7 @@ import { EyeClosedIcon, LinkExternalIcon } from '@primer/octicons-react';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 
 import User from '../../../datatypes/User';
+import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
 import UserContext from '../../contexts/UserContext';
@@ -35,7 +36,7 @@ interface PrivateCubeIconProps {
 }
 
 const PrivateCubeIcon: React.FC<PrivateCubeIconProps> = ({ visibility }) => {
-  const visibilityWord = visibility == 'pr' ? 'private' : 'unlisted';
+  const visibilityWord = visibility === 'pr' ? 'private' : 'unlisted';
   return (
     <Tooltip
       text={`This cube is set as ${visibilityWord}.`}
@@ -61,6 +62,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
   const user = useContext(UserContext);
   const [followedState, setFollowedState] = useState(followed);
   const { addAlert } = useAlerts();
+  const baseUrl = useContext(BaseUrlContext);
 
   const follow = () => {
     setFollowedState(true);
@@ -70,6 +72,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
       headers: {},
     }).then((response) => {
       if (!response.ok) {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(response);
       }
     });
@@ -83,6 +86,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
       headers: {},
     }).then((response) => {
       if (!response.ok) {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(response);
       }
     });
@@ -127,10 +131,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                     <Username user={cube.owner} />
                   </Text>{' '}
                   • <Link href={`/cube/rss/${cube.id}`}>RSS</Link> •{' '}
-                  <QRCodeModalLink
-                    href="#"
-                    modalprops={{ link: `https://cubecobra.com/c/${cube.id}`, cubeName: cube.name }}
-                  >
+                  <QRCodeModalLink href="#" modalprops={{ link: `${baseUrl}/c/${cube.id}`, cubeName: cube.name }}>
                     QR Code
                   </QRCodeModalLink>
                 </Text>

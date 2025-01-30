@@ -6,6 +6,7 @@ const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const { render, redirect } = require('../util/render');
 const { getFeedData } = require('../util/rss');
 const { updatePodcast } = require('../util/podcast');
+const util = require('../util/util');
 const generateMeta = require('../util/meta');
 const Notice = require('../dynamo/models/notice');
 const Content = require('../dynamo/models/content');
@@ -160,6 +161,7 @@ router.get('/article/:id', async (req, res) => {
     }
   }
 
+  const baseUrl = util.getBaseUrl();
   return render(
     req,
     res,
@@ -171,7 +173,7 @@ router.get('/article/:id', async (req, res) => {
         article.title,
         article.short || 'An article posted to Cube Cobra',
         article.image.uri,
-        `https://cubecobra.com/content/article/${req.params.id}`,
+        `${baseUrl}/content/article/${req.params.id}`,
       ),
     },
   );
@@ -192,6 +194,7 @@ router.get('/podcast/:id', async (req, res) => {
     episodes = [...episodes, ...result.items.filter((item) => item.podcast === podcast.id)];
   }
 
+  const baseUrl = util.getBaseUrl();
   return render(
     req,
     res,
@@ -203,7 +206,7 @@ router.get('/podcast/:id', async (req, res) => {
         podcast.title,
         `Listen to ${podcast.title} on Cube Cobra!`,
         podcast.image,
-        `https://cubecobra.com/content/podcast/${req.params.id}`,
+        `${baseUrl}/content/podcast/${req.params.id}`,
       ),
     },
   );
@@ -217,6 +220,7 @@ router.get('/episode/:id', async (req, res) => {
     return redirect(req, res, '/content/browse');
   }
 
+  const baseUrl = util.getBaseUrl();
   return render(
     req,
     res,
@@ -228,7 +232,7 @@ router.get('/episode/:id', async (req, res) => {
         episode.title,
         `Listen to ${episode.title} on Cube Cobra!`,
         episode.image,
-        `https://cubecobra.com/content/episode/${req.params.id}`,
+        `${baseUrl}/content/episode/${req.params.id}`,
       ),
     },
   );
@@ -242,6 +246,7 @@ router.get('/video/:id', async (req, res) => {
     return redirect(req, res, '/content/browse');
   }
 
+  const baseUrl = util.getBaseUrl();
   return render(
     req,
     res,
@@ -253,7 +258,7 @@ router.get('/video/:id', async (req, res) => {
         video.title,
         video.short || 'A video posted to Cube Cobra',
         video.image.uri,
-        `https://cubecobra.com/content/video/${req.params.id}`,
+        `${baseUrl}/content/video/${req.params.id}`,
       ),
     },
   );

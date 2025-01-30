@@ -7,6 +7,8 @@ import { createTransport } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import path from 'path';
 
+import utils from './util';
+
 const getTransportOptions = (): SMTPTransport.Options | undefined => {
   //With SMTP host/port we assume local development mailing
   if (process.env.EMAIL_CONFIG_USERNAME && process.env.EMAIL_CONFIG_PASSWORD) {
@@ -67,7 +69,11 @@ export const sendEmail = async (
 
   return await message.send({
     template: templateName,
-    locals: templateLocals,
+    locals: {
+      ...templateLocals,
+      //Ensure the common ones cannot be overridden by adding second
+      baseUrl: utils.getBaseUrl(),
+    },
   });
 };
 export default sendEmail;

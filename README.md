@@ -183,6 +183,7 @@ Here is a table on how to fill out the env vars:
 | CAPTCHA_SITE_KEY       | The reCAPTCHA site key                                                                       | Yes       |
 | CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                     | Yes       |
 | DRAFTMANCER_API_KEY    | The Draftmancer API key                                                                      | Yes       |
+| HTTP_ONLY              | Default is unset. If set to exactly "true", generate http:// instead of https:// links       | No        |
 
 ### Updating Card Definitions and Analytics
 

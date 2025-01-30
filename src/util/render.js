@@ -4,6 +4,7 @@ require('dotenv').config();
 const serialize = require('serialize-javascript');
 const Cube = require('../dynamo/models/cube');
 const Notification = require('../dynamo/models/notification');
+const utils = require('./util');
 
 const getCubes = async (req, callback) => {
   if (!req.user) {
@@ -46,7 +47,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
 
     reactProps.loginCallback = req.baseUrl + req.path;
     reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';
-    reactProps.domain = process.env.DOMAIN;
+    reactProps.baseUrl = utils.getBaseUrl();
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
     if (res.locals.csrfToken) {
       reactProps.csrfToken = res.locals.csrfToken;
