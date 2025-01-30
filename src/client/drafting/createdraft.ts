@@ -218,6 +218,7 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
     const { seat, packNum, cardNum, slotFilter } = slot;
 
     const cardResult = nextCardFn(slotFilter);
+    //FYI - The primary nextCardFn throws an Error if it cannot find a card for the filter, so result.messages won't matter
     if (cardResult.messages && cardResult.messages.length > 0) {
       result.messages = result.messages.concat(cardResult.messages);
     }
@@ -245,15 +246,12 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
     }
   }
 
-  //Final assertions
+  //Final assertions - These should never fail unless something has disasterously gone wrong
 
   //The card indices across all packs should be 0 through totalCards-1. The sum of N consecutive integers (starting from zero) is N*(N-1)/2
   const expectedSumCardIndices = (totalCards * (totalCards - 1)) / 2;
   if (sumCardIndices !== expectedSumCardIndices) {
-    //Since these assertions are new only add their message if there aren't existing error messages to show
-    if (result.messages.length === 0) {
-      result.messages = result.messages.concat('Unexpected number of cards');
-    }
+    result.messages = result.messages.concat('Unexpected number of cards');
     result.ok = false;
   }
 
@@ -262,9 +260,7 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
     seat.flatMap((pack) => pack.cards.filter((i) => typeof i !== 'undefined')),
   ).length;
   if (countDefinedPicks !== totalCards) {
-    if (result.messages.length === 0) {
-      result.messages = result.messages.concat('Some pack slots did not get a card unexpectedly');
-    }
+    result.messages = result.messages.concat('Some pack slots did not get a card unexpectedly');
     result.ok = false;
   }
 
