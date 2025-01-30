@@ -18,16 +18,6 @@ Node 20
 
 NodeJS: https://nodejs.org/en/download/
 
-### Redis
-
-Redis Server:
-
-- Windows: https://github.com/microsoftarchive/redis
-- Mac: `brew install redis`
-- Linux: `apt-get install redis`
-
-After installing redis, start the server. On mac, a shortcut to do this is `brew services start redis`. You can seet the status with `brew services list`.
-
 ### Localstack
 
 [Localstack][localstack] provides a local emulation of AWS Services required to run CubeCobra including S3, DynamoDB and Cloudwatch.
