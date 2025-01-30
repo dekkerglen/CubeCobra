@@ -55,6 +55,7 @@ permissions:
 jobs:
   plan:
     if: github.repository == 'dekkerglen/CubeCobraCDK'
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
 
     steps:
