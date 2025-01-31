@@ -6,6 +6,7 @@ import Card, {
   isGenericHybridManaSymbol,
   isHybridManaSymbol,
   isManaSymbol,
+  isPhyrexianManaSymbol,
   ManaSymbol,
 } from '../../datatypes/Card';
 import CategoryOverrides from '../res/CategoryOverrides.json';
@@ -494,6 +495,13 @@ export const cardManaSymbols = (card: Card): ManaSymbol[] => {
 
       if (isGenericHybridManaSymbol(part)) {
         return part.split('-')[1] as ManaSymbol;
+      }
+
+      if (isPhyrexianManaSymbol(part)) {
+        return part
+          .split('-')
+          .filter((part) => part !== 'P')
+          .map((part: string) => part as ManaSymbol);
       }
     })
     .flat()

@@ -211,6 +211,12 @@ describe('cardManaSymbols', () => {
       'C',
       'R',
     ]);
+    expect(cardManaSymbols(createCardFromDetails({ parsed_cost: ['G-P', 'G-W-P', 'G'] }))).toEqual([
+      'G',
+      'G',
+      'W',
+      'G',
+    ]);
   });
 
   it('should separate generic-color hybrid mana and ignore generic cost', () => {

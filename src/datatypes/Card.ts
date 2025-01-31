@@ -186,6 +186,21 @@ export const isGenericHybridManaSymbol = (value: unknown): value is GenericHybri
   return /^[0-9]+-[WUBRGC]$/.test(value);
 };
 
+export const PhyrexianManaSymbols = [
+  'W-P',
+  'U-P',
+  'B-P',
+  'R-P',
+  'G-P',
+  'C-P',
+  'G-W-P',
+  'R-G-P',
+  'R-W-P',
+  'G-U-P',
+] as const;
+export type PhyrexianManaSymbol = (typeof PhyrexianManaSymbols)[number];
+export const isPhyrexianManaSymbol = createTypeGuard<PhyrexianManaSymbol>(PhyrexianManaSymbols);
+
 export const BasicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Waste'] as const;
 export type BasicLand = (typeof BasicLands)[number];
 
