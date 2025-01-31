@@ -15,7 +15,8 @@ import path from 'path';
 import { pipeline } from 'stream';
 import stream from 'stream';
 
-import { CardDetails, ColorCategory, DefaultElo, ManaSymbol } from 'datatypes/Card';
+import { CardDetails, ColorCategory, DefaultElo } from 'datatypes/Card';
+import { ManaSymbol } from 'datatypes/Mana';
 
 import * as cardutil from '../client/utils/cardutil';
 import { CardMetadata, fileToAttribute, reasonableCard } from '../util/carddb';

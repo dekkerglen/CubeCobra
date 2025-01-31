@@ -1,4 +1,6 @@
-import Card, { ManaSymbol, ManaSymbols } from '../../datatypes/Card';
+import { ManaSymbol, ManaSymbols } from 'datatypes/Mana';
+
+import Card from '../../datatypes/Card';
 import {
   BASIC_LAND_MANA_MAPPING,
   cardCmc,
@@ -54,15 +56,17 @@ export const getCardCountByColor = (deck: Deck) => {
 /**
  * For a given deck, returns the number of sources for each color including fetches. This only includes lands.
  */
-export const getSourcesDistribution = (deck: Deck): ColorDistribution => {
+export const getSourcesDistribution = (deck: Deck, includeNonLands: boolean = false): ColorDistribution => {
   const distribution = {
     ...Object.fromEntries(ManaSymbols.map((symbol) => [symbol, 0])),
     total: 0,
   } as ColorDistribution;
 
-  const landsInDeck = deck.filter((card: Card) => cardIsLand(card));
+  const manaProducersInDeck = deck.filter((card: Card) =>
+    includeNonLands ? cardManaProduced(card).length > 0 || cardIsLand(card) : cardIsLand(card),
+  );
 
-  for (const card of landsInDeck) {
+  for (const card of manaProducersInDeck) {
     // If the land produces mana we'll just add it as a source already
     const produces = cardManaProduced(card);
     if (produces.length > 0) {
