@@ -1,6 +1,5 @@
-import { ManaSymbol, ManaSymbols } from 'datatypes/Mana';
-
 import Card from '../../datatypes/Card';
+import { ManaSymbol, ManaSymbols } from '../../datatypes/Mana';
 import {
   BASIC_LAND_MANA_MAPPING,
   cardCmc,

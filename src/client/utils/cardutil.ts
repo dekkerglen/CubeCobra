@@ -1,17 +1,16 @@
-import {
-  isGenericHybridManaSymbol,
-  isHybridManaSymbol,
-  isManaSymbol,
-  isPhyrexianManaSymbol,
-  ManaSymbol,
-} from 'datatypes/Mana';
-
 import Card, {
   CardDetails as CardDetailsType,
   COLOR_CATEGORIES,
   ColorCategory,
   DefaultElo,
 } from '../../datatypes/Card';
+import {
+  isGenericHybridManaSymbol,
+  isHybridManaSymbol,
+  isManaSymbol,
+  isPhyrexianManaSymbol,
+  ManaSymbol,
+} from '../../datatypes/Mana';
 import CategoryOverrides from '../res/CategoryOverrides.json';
 import LandCategories from '../res/LandCategories.json';
 import { arraysEqual } from './Util';

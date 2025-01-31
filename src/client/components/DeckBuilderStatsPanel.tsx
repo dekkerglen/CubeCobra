@@ -6,9 +6,9 @@ import { Bar } from 'react-chartjs-2';
 import { Card as CardComponent, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
 import DisplayContext from 'contexts/DisplayContext';
-import { getCardCountByColor, getCurveByColors, getManaSymbolCount, getSourcesDistribution } from 'utils/deckutil';
 
 import Card from '../../datatypes/Card';
+import { getCardCountByColor, getCurveByColors, getManaSymbolCount, getSourcesDistribution } from '../utils/deckutil';
 import Tooltip from './base/Tooltip';
 
 // Register Chart.js components

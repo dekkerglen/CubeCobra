@@ -1,4 +1,4 @@
-import { createTypeGuard } from 'src/util/typeGuards';
+import { createTypeGuard } from '../util/typeGuards';
 
 export const ManaSymbols = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
 export type ManaSymbol = (typeof ManaSymbols)[number];
