@@ -117,7 +117,7 @@ const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
                 swaps.map((swap) => (
                   <Swap key={`${swap.oldCard.cardID}->${swap.card.cardID}`} oldCard={swap.oldCard} card={swap.card} />
                 ))}
-              {edits && edits.map((edit) => <Edit key={edit.oldCard.cardID} card={edit.oldCard} />)}
+              {edits && edits.map((edit) => <Edit key={edit.oldCard.cardID} card={edit.newCard} />)}
             </ul>
           </div>
         );
