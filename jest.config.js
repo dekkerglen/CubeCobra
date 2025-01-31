@@ -5,6 +5,7 @@ const baseConfig = {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
     '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.config.js' }],
   },
+
   moduleNameMapper: {
     '^analytics/(.*)$': '<rootDir>/src/client/analytics/$1',
     '^components/(.*)$': '<rootDir>/src/client/components/$1',
@@ -21,7 +22,12 @@ const baseConfig = {
     '^utils/(.*)$': '<rootDir>/src/client/utils/$1',
     '^src/(.*)$': '<rootDir>/src/$1',
   },
+
   testPathIgnorePatterns: ['/node_modules/', '/build/'],
+
+  globals: {
+    'NODE_ENV': 'test',
+  },
 };
 
 module.exports = {
