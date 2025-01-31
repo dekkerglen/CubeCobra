@@ -1,3 +1,5 @@
+import { createTypeGuard } from '../util/typeGuards';
+
 export const COLOR_CATEGORIES = [
   'White',
   'Blue',
@@ -12,6 +14,7 @@ export const COLOR_CATEGORIES = [
 export type ColorCategory = (typeof COLOR_CATEGORIES)[number];
 
 export const DefaultElo = 1200;
+
 export interface CardDetails {
   scryfall_id: string;
   oracle_id: string;
@@ -28,6 +31,7 @@ export interface CardDetails {
   artist: string;
   scryfall_uri: string;
   rarity: string;
+  produced_mana?: ManaSymbol[];
   legalities: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>; // An empty object, could be more specific if needed
   oracle_text: string;
   image_small?: string;
@@ -152,6 +156,48 @@ export interface Changes {
   version?: number;
 }
 
+export const ManaSymbols = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
+export type ManaSymbol = (typeof ManaSymbols)[number];
+export const isManaSymbol = createTypeGuard<ManaSymbol>(ManaSymbols);
+
+export const HybridManaSymbols = [
+  'W-U',
+  'U-B',
+  'B-R',
+  'R-G',
+  'G-W',
+  'W-B',
+  'U-R',
+  'B-G',
+  'R-W',
+  'G-U',
+  'C-W',
+  'C-U',
+  'C-B',
+  'C-R',
+  'C-G',
+] as const;
+export type HybridManaSymbol = (typeof HybridManaSymbols)[number];
+export const isHybridManaSymbol = createTypeGuard<HybridManaSymbol>(HybridManaSymbols);
+
+export type GenericHybridManaSymbol = `${number}-${ManaSymbol}`;
+export const isGenericHybridManaSymbol = (value: unknown): value is GenericHybridManaSymbol => {
+  if (typeof value !== 'string') return false;
+  return /^[0-9]+-[WUBRGC]$/.test(value);
+};
+
+export const BasicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Waste'] as const;
+export type BasicLand = (typeof BasicLands)[number];
+
+export const BASIC_LAND_MAPPING: Record<BasicLand, ManaSymbol> = {
+  Plains: 'W',
+  Island: 'U',
+  Swamp: 'B',
+  Mountain: 'R',
+  Forest: 'G',
+  Waste: 'C',
+};
+
 export default interface Card {
   index?: number;
   board?: BoardType;
@@ -161,7 +207,7 @@ export default interface Card {
   imgUrl?: string;
   imgBackUrl?: string;
   cardID: string;
-  colors?: ('W' | 'U' | 'B' | 'R' | 'G')[];
+  colors?: Exclude<ManaSymbol, 'C'>[];
   colorCategory?: ColorCategory;
   tags?: string[];
   finish?: string;
