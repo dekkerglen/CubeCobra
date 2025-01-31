@@ -15,7 +15,7 @@ import path from 'path';
 import { pipeline } from 'stream';
 import stream from 'stream';
 
-import { CardDetails, ColorCategory, DefaultElo } from 'datatypes/Card';
+import { CardDetails, ColorCategory, DefaultElo, ManaSymbol } from 'datatypes/Card';
 
 import * as cardutil from '../client/utils/cardutil';
 import { CardMetadata, fileToAttribute, reasonableCard } from '../util/carddb';
@@ -56,6 +56,7 @@ interface ScryfallCard {
   cmc: number;
   colors: string[];
   color_identity: string[];
+  produced_mana: string[];
   legalities: {
     legacy: string;
     modern: string;
@@ -243,14 +244,23 @@ async function writeFile(filepath: string, data: any) {
 
 // These tokens don't match any of the filters below. The first 4 are "face down" tokens, and Halfling is a "Tolkien" creature
 // This list was calculated with a script that parsed every scryfall object that was part of a 'token' set that didn't match the below filters
-const miscTokens = ['Manifest', 'A Mysterious Creature', 'Cyberman', 'Morph', 'Halfling']
+const miscTokens = ['Manifest', 'A Mysterious Creature', 'Cyberman', 'Morph', 'Halfling'];
 
 function getScryfallTokensForCard(card: ScryfallCard) {
   const allParts = card.all_parts || [];
-  return allParts
-    // the 'Card' type includes helper cards that aren't technically tokens like Monarch, Day-Night tracker, etc. Exclude "CheckLists" for flip cards
-    .filter((element) => element.component === 'token' || element.type_line.includes('Emblem') || element.type_line.includes('Dungeon') || (element.type_line.includes('Card') && !element.name.includes('Checklist')) || miscTokens.includes(element.name))
-    .map(({ id }) => id);
+  return (
+    allParts
+      // the 'Card' type includes helper cards that aren't technically tokens like Monarch, Day-Night tracker, etc. Exclude "CheckLists" for flip cards
+      .filter(
+        (element) =>
+          element.component === 'token' ||
+          element.type_line.includes('Emblem') ||
+          element.type_line.includes('Dungeon') ||
+          (element.type_line.includes('Card') && !element.name.includes('Checklist')) ||
+          miscTokens.includes(element.name),
+      )
+      .map(({ id }) => id)
+  );
 }
 
 // As of writing Scryfall doesn't include the tokens that dungeons may create.
@@ -262,18 +272,18 @@ function getExtraTokensForDungeons(card: ScryfallCard) {
     // Treasure
     extraTokens.push('1be23c27-d8b6-4f59-8ab8-9ce80e9e29dd');
     // 4/1 Skeleton with menace
-    extraTokens.push('cf4c245f-af2f-46a7-81f3-670a04940901')
+    extraTokens.push('cf4c245f-af2f-46a7-81f3-670a04940901');
   }
   // As of writing, if one dungeon is included, all are, so only check for one
   if (allParts.some((element) => element.name === 'Dungeon of the Mad Mage')) {
     // Treasure
     extraTokens.push('1be23c27-d8b6-4f59-8ab8-9ce80e9e29dd');
     // 1/1 Skeleton
-    extraTokens.push('b63b11cd-4a96-49d5-aee1-b0ff02ef49bb')
+    extraTokens.push('b63b11cd-4a96-49d5-aee1-b0ff02ef49bb');
     // 1/1 Goblin
-    extraTokens.push('b37f4fdb-1533-4c38-a654-f715fbef6abf')
+    extraTokens.push('b37f4fdb-1533-4c38-a654-f715fbef6abf');
     // The Atropal
-    extraTokens.push('65f8e40f-fb5e-4ab8-add3-a8b87e7bcdd9')
+    extraTokens.push('65f8e40f-fb5e-4ab8-add3-a8b87e7bcdd9');
   }
   return extraTokens;
 }
@@ -517,6 +527,11 @@ function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boo
   newcard.artist = card.artist;
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
+  if (card.produced_mana) {
+    newcard.produced_mana = card.produced_mana.map((p) => p.toUpperCase() as ManaSymbol);
+  } else {
+    newcard.produced_mana = [];
+  }
   if (typeof card.card_faces === 'undefined') {
     newcard.oracle_text = card.oracle_text;
   } else {

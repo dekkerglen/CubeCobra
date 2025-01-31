@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
+import DeckBuilderStatsToggler from 'components/DeckBuilderStatsToggler';
 import { cardOracleId } from 'utils/cardutil';
 
 import Card from '../../datatypes/Card';
@@ -88,6 +89,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
           if (basicsIndex !== -1) {
             newMainboard.push(basics[basicsIndex]);
           } else {
+            // eslint-disable-next-line no-console
             console.error(`Could not find card ${oracle} in pool or basics`);
           }
         } else {
@@ -119,6 +121,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
       setDeck(formattedMainboard);
       setSideboard(formattedSideboard);
     } else {
+      // eslint-disable-next-line no-console
       console.error(json);
     }
   }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard]);
@@ -143,6 +146,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
       </BasicsModalLink>
       <Link onClick={() => autoBuildDeck()}>Build for Me</Link>
       <CustomImageToggler />
+      <DeckBuilderStatsToggler />
     </>
   );
 

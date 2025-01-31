@@ -3,6 +3,10 @@ import Card, {
   COLOR_CATEGORIES,
   ColorCategory,
   DefaultElo,
+  isGenericHybridManaSymbol,
+  isHybridManaSymbol,
+  isManaSymbol,
+  ManaSymbol,
 } from '../../datatypes/Card';
 import CategoryOverrides from '../res/CategoryOverrides.json';
 import LandCategories from '../res/LandCategories.json';
@@ -42,6 +46,15 @@ export const COLOR_COMBINATIONS: string[][] = [
   ['W', 'U', 'B', 'R'],
   ['W', 'U', 'B', 'R', 'G'],
 ];
+
+export const BASIC_LAND_MANA_MAPPING: { [key: string]: ManaSymbol } = {
+  Plains: 'W',
+  Island: 'U',
+  Swamp: 'B',
+  Mountain: 'R',
+  Forest: 'G',
+  Waste: 'C',
+};
 
 // export const COLOR_INCLUSION_MAP: Record<string, Record<string, boolean>> = fromEntries(
 //   COLOR_COMBINATIONS.map((colors) => [
@@ -417,6 +430,10 @@ export const cardColors = (card: Card): string[] => {
   return [];
 };
 
+export const cardColorsAsManaSymbols = (card: Card): ManaSymbol[] => {
+  return cardColors(card).map((symbol: string) => symbol.toUpperCase() as ManaSymbol);
+};
+
 export const cardLanguage = (card: Card): string => card.details?.language ?? '';
 
 export const cardMtgoId = (card: Card): number => card.details?.mtgo_id ?? -1;
@@ -457,6 +474,32 @@ export const cardDevotion = (card: Card, color: string): number => {
   return cost?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 };
 
+export const cardManaSymbols = (card: Card): ManaSymbol[] => {
+  const cost = cardCost(card);
+  if (!cost) {
+    return [];
+  }
+
+  return cost
+    .map((part: string) => {
+      part = part.toUpperCase();
+
+      if (isManaSymbol(part)) {
+        return part as ManaSymbol;
+      }
+
+      if (isHybridManaSymbol(part)) {
+        return part.split('-').map((part: string) => part as ManaSymbol);
+      }
+
+      if (isGenericHybridManaSymbol(part)) {
+        return part.split('-')[1] as ManaSymbol;
+      }
+    })
+    .flat()
+    .filter(Boolean) as ManaSymbol[];
+};
+
 const typeIsSpecialZoneType = (type: string): boolean =>
   /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(type);
 
@@ -464,6 +507,12 @@ export const cardIsSpecialZoneType = (card: Card): boolean => typeIsSpecialZoneT
 
 const isCreatureLand = (details: any): boolean =>
   details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/);
+
+export const cardManaProduced = (card: Card): ManaSymbol[] => card.details?.produced_mana ?? [];
+
+export const cardIsLand = (card: Card): boolean => {
+  return cardType(card).includes('Land') || card.colorCategory === 'Lands';
+};
 
 export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),

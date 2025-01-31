@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import BlogPost from 'datatypes/BlogPost';
-import Card, { CardDetails } from 'datatypes/Card';
-import Cube, { CubeImage } from 'datatypes/Cube';
-import User from 'datatypes/User';
+import BlogPost from '../../src/datatypes/BlogPost';
+import Card, { BASIC_LAND_MAPPING, BasicLand, CardDetails } from '../../src/datatypes/Card';
+import Cube, { CubeImage } from '../../src/datatypes/Cube';
+import User from '../../src/datatypes/User';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const NUMBERS = '0123456789';
@@ -24,6 +24,10 @@ export const createCard = (overrides?: Partial<Card>): Card => ({
   cardID: uuidv4(),
   ...overrides,
 });
+
+export const createCardFromDetails = (overrides?: Partial<CardDetails>): Card => {
+  return createCard({ details: createCardDetails(overrides) });
+};
 
 /**
  * Create a CardDetails for testing by providing sane defaults but allow for overriding
@@ -128,4 +132,15 @@ export const createBlogPost = (overrides?: Partial<BlogPost>): BlogPost => {
     cube: createCube().id,
     ...overrides,
   } as BlogPost;
+};
+
+export const createBasicLand = (name: BasicLand): Card => {
+  return createCard({
+    type_line: `Basic Land - ${name}`,
+    details: createCardDetails({
+      name: name,
+      type: `Basic Land - ${name}`,
+      produced_mana: [BASIC_LAND_MAPPING[name]],
+    }),
+  });
 };
