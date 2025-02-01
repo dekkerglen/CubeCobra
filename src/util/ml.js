@@ -2,7 +2,7 @@ const tf = require('@tensorflow/tfjs-node');
 const fs = require('fs');
 const cloudwatch = require('./cloudwatch');
 
-const indexToOracle = process.env.NODE_ENV === 'test' ? {} : JSON.parse(fs.readFileSync('./model/indexToOracleMap.json'));
+const indexToOracle = JSON.parse(fs.readFileSync('./model/indexToOracleMap.json'));
 const oracleToIndex = Object.fromEntries(Object.entries(indexToOracle).map(([key, value]) => [value, key]));
 
 const numOracles = Object.keys(oracleToIndex).length;
