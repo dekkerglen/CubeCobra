@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { BASIC_LAND_MANA_MAPPING } from '../../src/client/utils/cardutil';
 import BlogPost from '../../src/datatypes/BlogPost';
-import Card, { BASIC_LAND_MAPPING, BasicLand, CardDetails } from '../../src/datatypes/Card';
+import Card, { BasicLand, CardDetails } from '../../src/datatypes/Card';
 import Cube, { CubeImage } from '../../src/datatypes/Cube';
 import User from '../../src/datatypes/User';
 
@@ -140,7 +141,7 @@ export const createBasicLand = (name: BasicLand): Card => {
     details: createCardDetails({
       name: name,
       type: `Basic Land - ${name}`,
-      produced_mana: [BASIC_LAND_MAPPING[name]],
+      produced_mana: [BASIC_LAND_MANA_MAPPING[name]],
     }),
   });
 };

@@ -159,15 +159,6 @@ export interface Changes {
 export const BasicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Waste'] as const;
 export type BasicLand = (typeof BasicLands)[number];
 
-export const BASIC_LAND_MAPPING: Record<BasicLand, ManaSymbol> = {
-  Plains: 'W',
-  Island: 'U',
-  Swamp: 'B',
-  Mountain: 'R',
-  Forest: 'G',
-  Waste: 'C',
-};
-
 export default interface Card {
   index?: number;
   board?: BoardType;
