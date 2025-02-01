@@ -485,58 +485,70 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
 });
 
 router.post('/feature/:id', ensureAuth, async (req, res) => {
-  const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
   try {
     const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
-      return redirect(req, res, redirect);
+      return res.status(403).send({
+        success: 'false',
+      });
     }
 
     const cube = await Cube.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return redirect(req, res, redirect);
+      return res.status(404).send({
+        success: 'false',
+      });
     }
     if (cube.visibility !== Cube.VISIBILITY.PUBLIC) {
       req.flash('danger', 'Cannot feature a private cube');
-      return redirect(req, res, redirect);
+      return res.status(403).send({
+        success: 'false',
+      });
     }
 
     cube.featured = true;
     await Cube.update(cube);
 
     req.flash('success', 'Cube updated successfully.');
-    return redirect(req, res, redirect);
+    return res.status(200).send({
+      success: 'true',
+    });
   } catch (err) {
-    return util.handleRouteError(req, res, err, redirect);
+    return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
   }
 });
 
 router.post('/unfeature/:id', ensureAuth, async (req, res) => {
-  const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
   try {
     const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
-      return redirect(req, res, redirect);
+      return res.status(403).send({
+        success: 'false',
+      });
     }
 
     const cube = await Cube.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return redirect(req, res, redirect);
+      return res.status(404).send({
+        success: 'false',
+      });
     }
 
     cube.featured = false;
     await Cube.update(cube);
 
     req.flash('success', 'Cube updated successfully.');
-    return redirect(req, res, redirect);
+    return res.status(200).send({
+      success: 'true',
+    });
   } catch (err) {
-    return util.handleRouteError(req, res, err, redirect);
+    return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
   }
 });
 
