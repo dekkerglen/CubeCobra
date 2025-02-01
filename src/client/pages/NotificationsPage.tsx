@@ -51,7 +51,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
       }
     }
     setLoading(false);
-  }, [items, currentLastKey, page]);
+  }, [csrfFetch, currentLastKey, items, page]);
 
   const pager = (
     <Pagination
@@ -59,7 +59,6 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
-        console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();
         } else {
