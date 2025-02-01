@@ -424,18 +424,21 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     // const baseUser = await User.getById(base.owner);
     // const cubeOwner = await User.getById(cube.owner);
 
+    //TODO: Can remove after fixing models to not muck with the original input
+    const cubeOwner = cube.owner;
+
     const id = await Draft.put(deck);
     await Cube.update(cube);
 
     if (cube.owner.id !== user.id && !cube.disableAlerts) {
       await util.addNotification(
-        cube.owner,
+        cubeOwner,
         user,
         `/cube/deck/${id}`,
         `${user.username} rebuilt a deck from your cube: ${cube.name}`,
       );
     }
-    if (base.owner && !base.owner.id === user.id) {
+    if (base.owner && base.owner.id !== user.id) {
       await util.addNotification(
         base.owner,
         user,

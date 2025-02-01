@@ -319,11 +319,13 @@ router.post(
       user.followedCubes.push(cube.id);
     }
 
+    //TODO: Can remove after fixing models to not muck with the original input
+    const cubeOwner = cube.owner;
     await User.update(user);
     await Cube.update(cube);
 
     await util.addNotification(
-      cube.owner,
+      cubeOwner,
       user,
       `/cube/overview/${cube.id}`,
       `${user.username} followed your cube: ${cube.name}`,
@@ -1357,11 +1359,12 @@ router.post(
 
       cube.numDecks += 1;
 
+      const cubeOwner = cube.owner;
       await Cube.update(cube);
 
-      if (!cube.disableNotifications && cube.owner) {
+      if (!cube.disableNotifications && cubeOwner) {
         await util.addNotification(
-          cube.owner,
+          cubeOwner,
           user,
           `/cube/deck/${deckId}`,
           `${user.username} built a sealed deck from your cube: ${cube.name}`,

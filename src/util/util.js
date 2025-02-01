@@ -262,7 +262,7 @@ function fromEntries(entries) {
   return obj;
 }
 
-async function addNotification(to, from, url, text) {
+async function addNotification(to/*: User*/, from/*: User*/, url, text) {
   if (to.username === from.username) {
     return; // we don't need to give notifications to ourselves
   }
