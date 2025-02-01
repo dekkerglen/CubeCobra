@@ -490,7 +490,7 @@ describe('Add Comment', () => {
           body: 'This is a new comment',
           parent: 'parent-id',
           type: 'comment',
-          mentions: ['mention-user-1', 'mention-user-2'],
+          mentions: 'mentionuser1;mentionuser2',
         },
       })
       .send();
@@ -504,7 +504,7 @@ describe('Add Comment', () => {
 
     expect(routeUtil.addNotification).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ username: 'mention-user-1' }),
+      expect.objectContaining({ username: 'mentionuser1' }),
       commenter,
       '/comment/comment-id',
       `${commenter.username} mentioned you in their comment`,
@@ -512,7 +512,7 @@ describe('Add Comment', () => {
 
     expect(routeUtil.addNotification).toHaveBeenNthCalledWith(
       3,
-      expect.objectContaining({ username: 'mention-user-2' }),
+      expect.objectContaining({ username: 'mentionuser2' }),
       commenter,
       '/comment/comment-id',
       `${commenter.username} mentioned you in their comment`,
