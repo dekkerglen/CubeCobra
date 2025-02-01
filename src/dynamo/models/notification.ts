@@ -1,50 +1,41 @@
-const uuid = require('uuid');
-const createClient = require('../util');
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 
-const FIELDS = {
-  ID: 'id',
-  DATE: 'date',
-  TO: 'to',
-  FROM: 'from',
-  URL: 'url',
-  BODY: 'body',
-  STATUS: 'status',
-  FROM_USERNAME: 'fromUsername',
-  TO_STATUS_COMP: 'toStatusComp',
-};
-
-const STATUS = {
-  READ: 'r',
-  UNREAD: 'u',
-};
+import Notification, { NewNotification, NotificationStatus } from '../../datatypes/Notification';
+import createClient from '../util';
 
 const client = createClient({
   name: 'NOTIFICATIONS',
-  partitionKey: FIELDS.ID,
+  partitionKey: 'id',
   attributes: {
-    [FIELDS.ID]: 'S',
-    [FIELDS.DATE]: 'N',
-    [FIELDS.TO_STATUS_COMP]: 'S',
-    [FIELDS.TO]: 'S',
+    id: 'S',
+    date: 'N',
+    toStatusComp: 'S',
+    to: 'S',
   },
   indexes: [
     {
-      partitionKey: FIELDS.TO,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'to',
+      sortKey: 'date',
       name: 'ByTo',
     },
     {
-      partitionKey: FIELDS.TO_STATUS_COMP,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'toStatusComp',
+      sortKey: 'date',
       name: 'ByToStatusComp',
     },
   ],
-  FIELDS,
 });
 
 module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
-  getByToAndStatus: async (to, status, lastKey) => {
+  getById: async (id: string): Promise<Notification> => (await client.get(id)).Item as Notification,
+  getByToAndStatus: async (
+    to: string,
+    status: NotificationStatus,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: Notification[]; lastKey?: DocumentClient.Key }> => {
+    //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
+    const toStatusCompAttr: keyof Notification = 'toStatusComp';
+
     const result = await client.query({
       IndexName: 'ByToStatusComp',
       KeyConditionExpression: `#p1 = :tscomp`,
@@ -52,17 +43,23 @@ module.exports = {
         ':tscomp': `${to}:${status}`,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.TO_STATUS_COMP,
+        '#p1': toStatusCompAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
+
     return {
-      items: result.Items,
+      items: result.Items as Notification[],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  getByTo: async (to, lastKey) => {
+  getByTo: async (
+    to: string,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: Notification[]; lastKey?: DocumentClient.Key }> => {
+    const toAttr: keyof Notification = 'to';
+
     const result = await client.query({
       IndexName: 'ByTo',
       KeyConditionExpression: `#p1 = :to`,
@@ -70,55 +67,39 @@ module.exports = {
         ':to': `${to}`,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.TO,
+        '#p1': toAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
     return {
-      items: result.Items,
+      items: result.Items as Notification[],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  update: async (document) => {
-    if (!document[FIELDS.ID]) {
+  update: async (document: Notification): Promise<DocumentClient.PutItemOutput> => {
+    if (!document.id) {
       throw new Error('Invalid document: No partition key provided');
     }
-    document[FIELDS.TO_STATUS_COMP] = `${document.to}:${document.status}`;
+    document.toStatusComp = `${document.to}:${document.status}`;
     return client.put(document);
   },
-  put: async (document) =>
-    client.put({
-      [FIELDS.TO_STATUS_COMP]: `${document.to}:${STATUS.UNREAD}`,
-      [FIELDS.STATUS]: STATUS.UNREAD,
+  put: async (document: NewNotification): Promise<DocumentClient.PutItemOutput> => {
+    const notification = {
       ...document,
-    }),
-  batchPut: async (documents) =>
+      toStatusComp: `${document.to}:${NotificationStatus.UNREAD}`,
+      status: NotificationStatus.UNREAD,
+    } as NewNotification;
+
+    //put generates the id for the notification automatically
+    return client.put(notification);
+  },
+  batchPut: async (documents: Notification[]) =>
     client.batchPut(
       documents.map((item) => ({
         ...item,
-        [FIELDS.TO_STATUS_COMP]: `${item.to}:${item.status}`,
+        toStatusComp: `${item.to}:${item.status}`,
       })),
     ),
-  createTable: async () => client.createTable(),
-  getNotificationsFromUser: (user) => {
-    const notifications = [
-      ...user.notifications.map((item) => ({ [FIELDS.STATUS]: STATUS.UNREAD, ...item })),
-      ...user.old_notifications.map((item) => ({ [FIELDS.STATUS]: STATUS.READ, ...item })),
-    ];
-
-    return notifications.map((item) => ({
-      [FIELDS.ID]: uuid.v4(),
-      [FIELDS.DATE]: item.date.valueOf(),
-      [FIELDS.TO]: `${user._id}`,
-      [FIELDS.FROM]: `${item.user_from}`,
-      [FIELDS.FROM_USERNAME]: item.user_from_name,
-      [FIELDS.URL]: item.url,
-      [FIELDS.BODY]: item.text,
-      [FIELDS.STATUS]: item[FIELDS.STATUS],
-      [FIELDS.TO_STATUS_COMP]: `${user._id}:${item[FIELDS.STATUS]}`,
-    }));
-  },
-  STATUS,
-  FIELDS,
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
 };

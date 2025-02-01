@@ -9,7 +9,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import Notification from 'components/nav/Notification';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import type { Notification as NotificationType } from 'datatypes/Notification';
+import NotificationType from 'datatypes/Notification';
 import MainLayout from 'layouts/MainLayout';
 
 interface NotificationsPageProps {

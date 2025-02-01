@@ -6,6 +6,8 @@ const Cube = require('../dynamo/models/cube');
 const Notification = require('../dynamo/models/notification');
 const utils = require('./util');
 
+const { NotificationStatus } = require('../datatypes/Notification');
+
 const getCubes = async (req, callback) => {
   if (!req.user) {
     callback([]);
@@ -28,7 +30,7 @@ const redirect = (req, res, to) => {
 const render = (req, res, page, reactProps = {}, options = {}) => {
   getCubes(req, async (cubes) => {
     if (req.user) {
-      const notifications = await Notification.getByToAndStatus(req.user.id, Notification.STATUS.UNREAD);
+      const notifications = await Notification.getByToAndStatus(req.user.id, NotificationStatus.UNREAD);
 
       reactProps.user = {
         id: req.user.id,
