@@ -117,6 +117,26 @@ describe('getFetchableColors', () => {
 
     expect(getFetchableColors(deck, nonFetchLand)).toEqual(new Set());
   });
+
+  it('should support special fetch cases', () => {
+    const deck: Card[] = [
+      createBasicLand('Plains'),
+      createBasicLand('Mountain'),
+      createBasicLand('Mountain'),
+      createBasicLand('Island'),
+      createBasicLand('Swamp'),
+    ];
+
+    const myriadLandscape = createCardFromDetails({
+      name: 'Myriad Landscape',
+      type: 'Land',
+      oracle_id: '2549bc57-9ffb-4053-9f10-f2a5f792b845',
+      oracle_text:
+        'Myriad Landscape enters tapped.\n{T}: Add {C}.\n{2}, {T}, Sacrifice Myriad Landscape: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.',
+    });
+
+    expect(getFetchableColors(deck, myriadLandscape)).toEqual(new Set(['W', 'R', 'U', 'B']));
+  });
 });
 
 describe('getSourcesDistribution', () => {

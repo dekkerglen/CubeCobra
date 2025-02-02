@@ -7,6 +7,7 @@ import {
   cardIsLand,
   cardManaProduced,
   cardManaSymbols,
+  cardOracleId,
   cardOracleText,
   cardType,
 } from '../utils/cardutil';
@@ -94,6 +95,31 @@ export const getSourcesDistribution = (deck: Deck, includeNonLands: boolean = fa
 const fetchPattern =
   /[Ss]earch your library for (?:a (?<anyBasic>basic land) card|a basic (?<basicType1>[A-Za-z]+)(?:, (?<basicType2>[A-Za-z]+))?(?:,? or (?<basicType3>[A-Za-z]+))? card|an? (?<landType1>[A-Za-z]+) or (?<landType2>[A-Za-z]+) card)/;
 
+const fetchWithMyriadLandscape = (deck: Deck): Set<ManaSymbol> => {
+  // {2}, {T}, Sacrifice Myriad Landscape: Search your library for up to two basic land cards that share a land type,
+  // put them onto the battlefield tapped, then shuffle.
+
+  // You can fetch a single basic with Myriad Landscape so we don't need to worry about only basics that have 2 or more copies in the deck
+  const fetchableColors = new Set<ManaSymbol>();
+
+  for (const card of deck) {
+    if (!cardType(card).includes('Land')) {
+      continue;
+    }
+
+    if (cardType(card).includes('Basic Land')) {
+      fetchableColors.add((card.details?.produced_mana ?? [])[0]);
+    }
+  }
+
+  return fetchableColors;
+};
+
+// Some fetches have special handling that is tricky to handle with a regexp. This maps oracleIDs to functions containing the fetching logic.
+const specialFetches: Record<string, (deck: Deck) => Set<ManaSymbol>> = {
+  '2549bc57-9ffb-4053-9f10-f2a5f792b845': fetchWithMyriadLandscape,
+};
+
 /**
  * Returns all the colors that can be fetched from the deck with the provided fetch land. This is useful to determine
  * if a given fetch land should count as a source for any color.
@@ -102,6 +128,12 @@ const fetchPattern =
  */
 export const getFetchableColors = (deck: Deck, fetchLand: Card): Set<ManaSymbol> => {
   const fetchableColors = new Set<ManaSymbol>();
+
+  // First check if the card is a special case we're handling
+  const fn = specialFetches[cardOracleId(fetchLand)];
+  if (fn) {
+    return fn(deck);
+  }
 
   const match = cardOracleText(fetchLand).match(fetchPattern);
 
