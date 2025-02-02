@@ -64,6 +64,7 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
   type: 'Instant',
   colors: ['w', 'b'],
   color_identity: ['w', 'b', 'r'],
+  keywords: [],
   colorcategory: 'Lands',
   parsed_cost: ['1', 'w', 'b'],
   finishes: ['nonfoil', 'etched'],

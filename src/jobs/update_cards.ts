@@ -57,6 +57,7 @@ interface ScryfallCard {
   cmc: number;
   colors: string[];
   color_identity: string[];
+  keywords: string[];
   produced_mana: string[];
   legalities: {
     legacy: string;
@@ -551,6 +552,7 @@ function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boo
   newcard.language = card.lang;
   newcard.mtgo_id = card.mtgo_id;
   newcard.layout = card.layout;
+  newcard.keywords = card.keywords;
 
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;

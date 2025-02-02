@@ -43,6 +43,7 @@ export interface CardDetails {
   colors: string[];
   color_identity: string[];
   colorcategory: ColorCategory;
+  keywords: string[];
   loyalty?: string;
   power?: string;
   toughness?: string;

@@ -164,6 +164,7 @@ export const CardDetails = (card: Card): CardDetailsType =>
     type: '',
     colors: [],
     color_identity: [],
+    keywords: [],
     colorcategory: 'Colorless',
     parsed_cost: [],
     border_color: 'black',
