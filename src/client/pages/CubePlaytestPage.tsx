@@ -35,7 +35,7 @@ const CreateCustomFormatLink = withModal(Link, CustomDraftFormatModal);
 
 const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksLastKey, loginCallback = '/' }) => {
   const user = useContext(UserContext);
-  const defaultDraftFormat = cube.defaultFormat ?? -1;
+  const defaultFormat = cube.defaultFormat ?? -1;
 
   // Sort formats alphabetically.
   const formatsSorted = useMemo(
@@ -43,15 +43,15 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
       cube.formats
         .map((format, index) => ({ ...format, index }))
         .sort((a, b) => {
-          if (a.index === defaultDraftFormat) {
+          if (a.index === defaultFormat) {
             return -1;
           }
-          if (b.index === defaultDraftFormat) {
+          if (b.index === defaultFormat) {
             return 1;
           }
           return a.title.localeCompare(b.title);
         }),
-    [cube.formats, defaultDraftFormat],
+    [cube.formats, defaultFormat],
   );
 
   return (
@@ -77,16 +77,16 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
             <Col xs={12} md={6} xl={6}>
               <Flexbox direction="col" gap="2">
                 <SamplePackCard />
-                {defaultDraftFormat === -1 && <StandardDraftCard defaultDraftFormat={defaultDraftFormat} />}
+                {defaultFormat === -1 && <StandardDraftCard defaultFormat={defaultFormat} />}
                 {formatsSorted.map((format) => (
                   <CustomDraftCard
                     key={format.index}
                     format={format}
-                    defaultDraftFormat={defaultDraftFormat}
+                    defaultFormat={defaultFormat}
                     formatIndex={format.index}
                   />
                 ))}
-                {defaultDraftFormat !== -1 && <StandardDraftCard defaultDraftFormat={defaultDraftFormat} />}
+                {defaultFormat !== -1 && <StandardDraftCard defaultFormat={defaultFormat} />}
                 <Card>
                   <CardHeader>
                     <Text semibold lg>

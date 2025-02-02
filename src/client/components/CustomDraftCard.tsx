@@ -18,13 +18,13 @@ const DeleteFormatButton = withModal(Button, ConfirmActionModal);
 
 interface CustomDraftCardProps {
   format: DraftFormat;
-  defaultDraftFormat: number;
+  defaultFormat: number;
   formatIndex: number;
 }
 
 const range = (lo: number, hi: number): number[] => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 
-const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultDraftFormat, formatIndex }) => {
+const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultFormat, formatIndex }) => {
   const { cube, canEdit } = useContext(CubeContext);
   const [seats, setSeats] = useState(format?.defaultSeats?.toString() || '8');
   const formRef = React.createRef<HTMLFormElement>();
@@ -42,7 +42,7 @@ const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultDraftF
       <CSRFForm method="POST" key="createDraft" action={`/draft/start/${cube.id}`} formData={formData} ref={formRef}>
         <CardHeader>
           <Text lg semibold>
-            {defaultDraftFormat === formatIndex && 'Default Format: '}
+            {defaultFormat === formatIndex && 'Default Format: '}
             {format.title} (Custom Draft)
           </Text>
         </CardHeader>
@@ -71,7 +71,7 @@ const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultDraftF
                 <EditFormatButton block modalprops={{ formatIndex }} color="accent" className="whitespace-nowrap">
                   <span className="whitespace-nowrap">Edit</span>
                 </EditFormatButton>
-                {defaultDraftFormat !== formatIndex && (
+                {defaultFormat !== formatIndex && (
                   <Button
                     block
                     color="accent"
