@@ -218,13 +218,16 @@ app.post('/healthcheck', (req, res) => {
 app.use((req, res, next) => {
   if (req.user && req.user.roles.includes('Banned')) {
     req.session.destroy(() => {
-      req.flash('danger', 'Your account has been banned, please contact CubeCobra staff if you believe this is in error.');
+      req.flash(
+        'danger',
+        'Your account has been banned, please contact CubeCobra staff if you believe this is in error.',
+      );
       return res.redirect('/');
     });
   }
 
   next();
-}); 
+});
 
 app.use(router);
 
