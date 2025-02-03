@@ -32,6 +32,22 @@ const app = express();
 // gzip middleware
 app.use(compression());
 
+//If this isn't a local developer environment, improve security by only allowing HTTPS
+if (process.env?.NODE_ENV !== 'development') {
+  app.use((req, res) => {
+    //Tell the browser to automatically use HTTPS in the future (for next 1 year)
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+    //Redirect to HTTPS for security
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+      /* Use DOMAIN environment variable instead of relying on req.headers.host.
+       * That protects us from uncontrolled redirects to another domain, which is a type of
+       * HTTP Host header attack (see https://portswigger.net/web-security/host-header#how-to-prevent-http-host-header-attacks)
+       */
+      res.redirect('https://' + process.env.DOMAIN + req.url);
+    }
+  });
+}
+
 // request timeout middleware
 app.use((req, res, next) => {
   req.setTimeout(60 * 1000, () => {
