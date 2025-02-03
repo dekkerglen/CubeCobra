@@ -2,7 +2,8 @@
   "name": "infra",
   "version": "0.1.0",
   "bin": {
-    "infra": "app/infra.js"
+    "infra": "app/infra.js",
+    "bootstrap": "app/bootstrap.js"
   },
   "scripts": {
     "build": "tsc",

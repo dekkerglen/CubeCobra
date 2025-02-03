@@ -11,6 +11,21 @@ This directory contains the CubeCobra CDK code that manages our infrastructure i
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
 
+## Bootstrapping
+
+There are resources needed before CDK can be automated. By deploying once per environment with `--context bootstrap=true`
+these resources will be created. For each new environment, run:
+
+```bash
+npx cdk diff --context environment=<environment> --context bootstrap=true
+
+# then
+
+npx cdk deploy --context environment=<environment> --context bootstrap=true
+```
+
+This should create all the required resources to then deploy the main stack.
+
 ## Manual Deployment
 
 The following environment variables must be set:

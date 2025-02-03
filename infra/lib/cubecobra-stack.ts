@@ -2,12 +2,14 @@ import * as cdk from 'aws-cdk-lib';
 import { StackProps } from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import { CfnInstanceProfile, ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { ParameterValueType } from 'aws-cdk-lib/aws-ssm/lib/parameter';
 
 import { Certificates } from './certificates';
 import { ECR } from './ecr';
 import { ElasticBeanstalk } from './elastic-beanstalk';
-import { Pipeline } from './pipeline';
 import { Route53 } from './route53';
 import { ScheduledJob, ScheduledJobProps } from './scheduled-job';
 
@@ -82,13 +84,14 @@ export class CubeCobraStack extends cdk.Stack {
     // Create the ECS cluster where we'll schedule jobs
     const fargateCluster = new ecs.Cluster(this, 'SharedFargateCluster');
 
-    // Build everything we need to run our deployment pipelines on GitHub
-    const pipeline = new Pipeline(this, 'Pipeline', {
-      githubRepositories: ['dekkerglen/CubeCobra'],
-    });
+    const roleArn = ssm.StringParameter.valueForTypedStringParameterV2(
+      this,
+      '/cdk/bootstrap/github-actions-role-arn',
+      ParameterValueType.STRING,
+    );
 
-    // Create an ECR repository and grant the proper access to our pipeline role
-    const ecr = new ECR(this, 'Ecr', pipeline.githubRole);
+    const githubRole = iam.Role.fromRoleArn(this, 'ImportedGitHubActionsRole', roleArn, { mutable: true }) as iam.Role;
+    const ecr = new ECR(this, 'Ecr', githubRole);
 
     // Register all the scheduled jobs we have
     params.jobs?.forEach((jobProps, jobName) => {
