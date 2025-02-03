@@ -47,7 +47,7 @@ env:
 
 defaults:
   run:
-    working-directory: ./cdk
+    working-directory: infra
 
 permissions:
   id-token: write
