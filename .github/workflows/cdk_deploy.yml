@@ -1,10 +1,10 @@
 name: CDK Deployment
 
 on:
-  workflow_dispatch: # Manual deployment
+  workflow_dispatch: # Manual deployment via the GitHub UI
     inputs:
       version:
-        description: The version of the CubeCobra application to deploy (v.*)
+        description: The version of the CubeCobra application to deploy (e.g. v1.2.3)
         required: true
         type: string
       environment:
@@ -16,16 +16,15 @@ on:
           - development
           - production
 
-  workflow_call: # Allows triggering from the main deploy workflow
+  workflow_call: # Allows triggering from other deploy workflows
     inputs:
       version:
-        description: The version of the CubeCobra application to deploy (v.*)
+        description: The version of the CubeCobra application to deploy (e.g. v1.2.3)
         required: true
         type: string
       environment:
         description: The deployment environment
         required: true
-        default: development
         type: string
 
 env:
@@ -54,7 +53,7 @@ permissions:
 
 jobs:
   plan:
-    if: github.repository == 'dekkerglen/CubeCobraCDK'
+    if: github.repository == 'dekkerglen/CubeCobra'
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
 
@@ -84,7 +83,7 @@ jobs:
     needs: plan
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    if: github.repository == 'dekkerglen/CubeCobraCDK'
+    if: github.repository == 'dekkerglen/CubeCobra'
 
     steps:
       - uses: actions/checkout@v4
