@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { StackProps } from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import { CfnInstanceProfile, ManagedPolicy,Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { CfnInstanceProfile, ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 
 import { Certificates } from './certificates';
@@ -118,6 +118,7 @@ function createEnvironmentVariables(
     EMAIL_CONFIG_PASSWORD: params.emailPass,
     EMAIL_CONFIG_USERNAME: params.emailUser,
     ENV: params.env,
+    NODE_ENV: params.env,
     JOBS_TOKEN: params.jobsToken,
     NITROPAY_ENABLED: params.nitroPayEnabled ? 'true' : 'false',
     PATREON_CLIENT_ID: params.patreonClientId,
