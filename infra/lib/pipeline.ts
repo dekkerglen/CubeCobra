@@ -20,6 +20,11 @@ export class Pipeline extends Construct {
       clientIds: ['sts.amazonaws.com'],
     });
 
+    new CfnOutput(this, `${id}OidcProviderArn`, {
+      value: this.oidcProvider.openIdConnectProviderArn,
+      description: 'The ARN of the GitHub OIDC Provider',
+    });
+
     this.githubRole = new iam.Role(this, `${id}GitHubRole`, {
       assumedBy: new iam.FederatedPrincipal(
         this.oidcProvider.openIdConnectProviderArn,
