@@ -98,9 +98,7 @@ const Footer: React.FC = () => {
                   <FooterLink href="/contact">Contact</FooterLink>
                 </li>
                 <li className="mb-2">
-                  <FooterLink href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
-                    Merchandise
-                  </FooterLink>
+                  <FooterLink href="/merchandise">Merchandise</FooterLink>
                 </li>
                 <li className="mb-2">
                   <FooterLink href="/donate">Donate</FooterLink>
