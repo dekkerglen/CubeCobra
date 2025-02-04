@@ -21,6 +21,8 @@ const Draft = require('../dynamo/models/draft');
 const Notice = require('../dynamo/models/notice');
 const uuid = require('uuid');
 
+import { NotificationStatus } from '../datatypes/Notification';
+
 const router = express.Router();
 
 const { ensureAuth, csrfProtection, flashValidationErrors, recaptcha } = require('./middleware');
@@ -54,8 +56,8 @@ router.get('/notification/:id', ensureAuth, async (req, res) => {
       return redirect(req, res, '/404');
     }
 
-    if (notification.status === Notification.STATUS.UNREAD) {
-      notification.status = Notification.STATUS.READ;
+    if (notification.status === NotificationStatus.UNREAD) {
+      notification.status = NotificationStatus.READ;
       await Notification.update(notification);
     }
 
@@ -74,7 +76,7 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
     let items, lastKey;
 
     do {
-      const result = await Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD, lastKey);
+      const result = await Notification.getByToAndStatus(`${req.user.id}`, NotificationStatus.UNREAD, lastKey);
 
       items = result.items;
       lastKey = result.lastKey;
@@ -82,7 +84,7 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
       await Notification.batchPut(
         items.map((notification) => ({
           ...notification,
-          status: Notification.STATUS.READ,
+          status: NotificationStatus.READ,
         })),
       );
     } while (lastKey);

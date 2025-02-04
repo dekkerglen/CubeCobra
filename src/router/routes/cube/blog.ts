@@ -11,6 +11,8 @@ import util from '../../../util/util';
 
 const { redirect } = require('../../../util/render');
 
+import UserType from '../../../datatypes/User';
+
 export const createBlogHandler = async (req: Request, res: Response) => {
   try {
     if (req.body.title.length < 5 || req.body.title.length > 100) {
@@ -81,8 +83,29 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       title: req.body.title,
     });
 
+    //Front-end joins the mentioned usernames with ; for the Form
+    const userMentions: string[] = req.body.mentions ? req.body.mentions.split(';') : [];
+    const mentionedUsers: UserType[] = [];
+
+    // mentions are only added for new posts and ignored on edits
+    if (userMentions.length > 0) {
+      for (const mention of userMentions) {
+        const mentioned: UserType = await User.getByUsername(mention);
+
+        if (mentioned) {
+          mentionedUsers.push(mentioned);
+          await util.addNotification(
+            mentioned,
+            user,
+            `/cube/blog/blogpost/${id}`,
+            `${user.username} mentioned you in their blog post`,
+          );
+        }
+      }
+    }
+
     const followers: string[] = [
-      ...new Set([...(user.following || []), ...cube.following, ...(req.body.mentions || [])]),
+      ...new Set([...(user.following || []), ...cube.following, ...mentionedUsers.map((u) => u.id)]),
     ];
 
     const feedItems = followers.map((userId) => ({
@@ -93,22 +116,6 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     }));
 
     await Feed.batchPut(feedItems);
-
-    // mentions are only added for new posts and ignored on edits
-    if (req.body.mentions) {
-      for (const mention of req.body.mentions) {
-        const mentioned = await User.getByUsername(mention);
-
-        if (mentioned) {
-          await util.addNotification(
-            mentioned,
-            user,
-            `/cube/blog/blogpost/${id}`,
-            `${user.username} mentioned you in their blog post`,
-          );
-        }
-      }
-    }
 
     req.flash('success', 'Blog post successful');
 

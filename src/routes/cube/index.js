@@ -319,11 +319,13 @@ router.post(
       user.followedCubes.push(cube.id);
     }
 
+    //TODO: Can remove after fixing models to not muck with the original input
+    const cubeOwner = cube.owner;
     await User.update(user);
     await Cube.update(cube);
 
     await util.addNotification(
-      cube.owner,
+      cubeOwner,
       user,
       `/cube/overview/${cube.id}`,
       `${user.username} followed your cube: ${cube.name}`,
@@ -483,58 +485,70 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
 });
 
 router.post('/feature/:id', ensureAuth, async (req, res) => {
-  const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
   try {
     const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
-      return redirect(req, res, redirect);
+      return res.status(403).send({
+        success: 'false',
+      });
     }
 
     const cube = await Cube.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return redirect(req, res, redirect);
+      return res.status(404).send({
+        success: 'false',
+      });
     }
     if (cube.visibility !== Cube.VISIBILITY.PUBLIC) {
       req.flash('danger', 'Cannot feature a private cube');
-      return redirect(req, res, redirect);
+      return res.status(403).send({
+        success: 'false',
+      });
     }
 
     cube.featured = true;
     await Cube.update(cube);
 
     req.flash('success', 'Cube updated successfully.');
-    return redirect(req, res, redirect);
+    return res.status(200).send({
+      success: 'true',
+    });
   } catch (err) {
-    return util.handleRouteError(req, res, err, redirect);
+    return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
   }
 });
 
 router.post('/unfeature/:id', ensureAuth, async (req, res) => {
-  const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
   try {
     const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
-      return redirect(req, res, redirect);
+      return res.status(403).send({
+        success: 'false',
+      });
     }
 
     const cube = await Cube.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return redirect(req, res, redirect);
+      return res.status(404).send({
+        success: 'false',
+      });
     }
 
     cube.featured = false;
     await Cube.update(cube);
 
     req.flash('success', 'Cube updated successfully.');
-    return redirect(req, res, redirect);
+    return res.status(200).send({
+      success: 'true',
+    });
   } catch (err) {
-    return util.handleRouteError(req, res, err, redirect);
+    return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
   }
 });
 
@@ -1357,11 +1371,12 @@ router.post(
 
       cube.numDecks += 1;
 
+      const cubeOwner = cube.owner;
       await Cube.update(cube);
 
-      if (!cube.disableNotifications && cube.owner) {
+      if (!cube.disableNotifications && cubeOwner) {
         await util.addNotification(
-          cube.owner,
+          cubeOwner,
           user,
           `/cube/deck/${deckId}`,
           `${user.username} built a sealed deck from your cube: ${cube.name}`,

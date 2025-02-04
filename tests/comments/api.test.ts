@@ -490,7 +490,7 @@ describe('Add Comment', () => {
           body: 'This is a new comment',
           parent: 'parent-id',
           type: 'comment',
-          mentions: ['mention-user-1', 'mention-user-2'],
+          mentions: 'mentionuser1;mentionuser2',
         },
       })
       .send();
@@ -504,7 +504,7 @@ describe('Add Comment', () => {
 
     expect(routeUtil.addNotification).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ username: 'mention-user-1' }),
+      expect.objectContaining({ username: 'mentionuser1' }),
       commenter,
       '/comment/comment-id',
       `${commenter.username} mentioned you in their comment`,
@@ -512,11 +512,43 @@ describe('Add Comment', () => {
 
     expect(routeUtil.addNotification).toHaveBeenNthCalledWith(
       3,
-      expect.objectContaining({ username: 'mention-user-2' }),
+      expect.objectContaining({ username: 'mentionuser2' }),
       commenter,
       '/comment/comment-id',
       `${commenter.username} mentioned you in their comment`,
     );
+  });
+
+  it('no mentioned users', async () => {
+    const commenter = createUser();
+
+    (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
+    (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
+    (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
+    (DynamoUser.getByUsername as jest.Mock).mockImplementation((username: string) =>
+      Promise.resolve({ id: `id-${username}`, username: username }),
+    );
+
+    await call(addCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: {
+          body: 'This is a new comment',
+          parent: 'parent-id',
+          type: 'comment',
+          mentions: '',
+        },
+      })
+      .send();
+
+    expect(routeUtil.addNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'another-user' }),
+      commenter,
+      '/comment/comment-id',
+      `${commenter.username} left a comment in response to your comment.`,
+    );
+
+    expect(routeUtil.addNotification).toHaveBeenCalledTimes(1);
   });
 });
 
