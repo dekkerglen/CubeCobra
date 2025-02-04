@@ -131,7 +131,7 @@ After accessing the application locally you will need to create a new user accou
 
 ### Environment Variables & Connecting to AWS
 
-Environment variables are populated from the `.env` file. There is no `.env` file checked in, so the setup script copies `.env_EXAMPLE` to `.env` and with some default values to support CubeCobra backed by LocalStack.
+Environment variables are populated from the `.env` file. There is no `.env` file checked in, so the setup script copies `.env_EXAMPLE` to `.env` and with some default values to support CubeCobra backed by LocalStack. The `.env_EXAMPLE` file is also loaded in the context of the Jest tests.
 
 You can run a local instance of Cube Cobra against real AWS resources rather than LocalStack, if desired. After setting up S3, DynamoDB, and Cloudwatch using your AWS account, you can insert your credentials into the `.env` file.
 
@@ -174,6 +174,7 @@ Here is a table on how to fill out the env vars:
 | CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                     | Yes       |
 | DRAFTMANCER_API_KEY    | The Draftmancer API key                                                                      | Yes       |
 | HTTP_ONLY              | Default is unset. If set to exactly "true", generate http:// instead of https:// links       | No        |
+| STRIPE_SECRET_KEY      | Stripe secret key. Must have a value                                                         | Yes       |
 
 ### Updating Card Definitions and Analytics
 

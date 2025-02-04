@@ -100,7 +100,7 @@ export const editCommentHandler = async (req: Request, res: Response) => {
 };
 
 export const addCommentHandler = async (req: Request, res: Response) => {
-  const { body, mentions = [], parent, type } = req.body;
+  const { body, mentions = '', parent, type } = req.body;
   const { user } = req;
 
   if (!isCommentType(type)) {

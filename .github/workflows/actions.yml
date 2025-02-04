@@ -25,8 +25,7 @@ jobs:
             - node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-        
-        
+            ${{ runner.os }}-node-
 
       - uses: actions/setup-node@v3
         with:
@@ -60,7 +59,7 @@ jobs:
           reporter: github-pr-review
 
       - name: Run tests
-        if: success()
+        if: always()
         run: npm run test:ci
 
       - name: Upload Jest Coverage Report
