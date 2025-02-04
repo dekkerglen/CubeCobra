@@ -27,4 +27,4 @@ jobs:
 
       - run: npm ci
 
-      - run: npm test:ci
+      - run: npm run test:ci
