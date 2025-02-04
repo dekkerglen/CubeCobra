@@ -136,7 +136,11 @@ const createAsfanFn = (cards: Card[], duplicates: boolean = false): AsfanFn => {
 };
 
 export const getDraftFormat = (params: DraftParams, cube: Cube): DraftFormat => {
-  if (params.id >= 0) {
+  /* Even if there is an draft ID, ensure that it exists in the cube. Relates to a bug
+   * where deleting the custom draft format that was marked as default, didn't update the cube
+   * back to not having a default format.
+   */
+  if (params.id >= 0 && cube.formats.at(params.id)) {
     return cube.formats[params.id];
   }
   return createDefaultDraftFormat(params.packs, params.cards || 15);

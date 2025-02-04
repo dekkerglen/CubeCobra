@@ -384,7 +384,7 @@ const exportData = {
     [FIELDS.CATEGORY_OVERRIDE]: cube.overrideCategory ? cube.categoryOverride : null,
     [FIELDS.CATEGORY_PREFIXES]: cube.overrideCategory ? cube.categoryPrefixes : null,
     [FIELDS.TAG_COLORS]: cube.tag_colors.map((item) => ({ color: item.color, tag: item.tag })),
-    [FIELDS.DEFAULT_DRAFT_FORMAT]: cube.defaultDraftFormat,
+    [FIELDS.DEFAULT_DRAFT_FORMAT]: cube.defaultFormat,
     [FIELDS.NUM_DECKS]: cube.numDecks,
     [FIELDS.DESCRIPTION]: cube.description,
     [FIELDS.IMAGE_NAME]: cube.image_name,

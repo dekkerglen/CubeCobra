@@ -1479,9 +1479,13 @@ router.get('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(), 
 
     cube.formats.splice(index, 1);
     // update defaultFormat if necessary
-    if (index === cube.defaultDraftFormat) {
+    if (index === cube.defaultFormat) {
+      //When the current default format is deleted, revert to no default specified
       cube.defaultFormat = -1;
-    } else if (index < cube.defaultDraftFormat) {
+    } else if (index < cube.defaultFormat) {
+      /* If the format deleted isn't the default but is a custom format before it in the list, shift
+       * the default format index to keep the alignment
+       */
       cube.defaultFormat -= 1;
     }
 
