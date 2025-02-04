@@ -160,7 +160,6 @@
     "react-qr-code": "^2.0.15",
     "react-syntax-highlighter": "^15.3.0",
     "react-timeago": "^7.1.0",
-    "redis": "^3.1.2",
     "rehype-katex": "^7.0.0",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.0",

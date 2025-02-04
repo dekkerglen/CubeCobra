@@ -1,5 +1,4 @@
-import User from 'datatypes/User';
-
+import User from '../../src/datatypes/User';
 import { Request, Response } from '../../src/types/express';
 import { createUser } from './data';
 

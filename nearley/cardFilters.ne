@@ -25,6 +25,7 @@ import {
   cardOracleText,
   cardSet,
   cardCollectorNumber,
+  cardNotes,
   cardPower,
   cardToughness,
   cardTags,
@@ -102,6 +103,7 @@ condition -> (
   | restrictedCondition
   | layoutCondition
   | collectorNumberCondition
+  | notesCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -180,6 +182,8 @@ devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i 
   | ("d"i | "dev"i | "devotion"i | "devotionto"i) devotionOpValue {% ([, valuePred]) => genericCondition('parsed_cost', (c) => c, valuePred) %}
 
 collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
+
+notesCondition -> "notes"i stringOpValue {% ([, valuePred]) => genericCondition('notes', cardNotes, valuePred) %}
 
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 

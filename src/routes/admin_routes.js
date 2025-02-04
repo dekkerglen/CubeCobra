@@ -72,9 +72,10 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
     //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
     const owner = await User.getByIdWithSensitiveData(document.owner.id);
 
+    const baseUrl = util.getBaseUrl();
     await sendEmail(owner.email, 'Your content has been published', 'content_publish', {
       title: document.title,
-      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
+      url: `${baseUrl}/content/${document.type}/${document.id}`,
     });
   }
 
@@ -107,9 +108,10 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
     //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
     const owner = await User.getByIdWithSensitiveData(document.owner.id);
 
+    const baseUrl = util.getBaseUrl();
     await sendEmail(owner.email, 'Your Content was not published', 'content_decline', {
       title: document.title,
-      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
+      url: `${baseUrl}/content/${document.type}/${document.id}`,
     });
   }
 

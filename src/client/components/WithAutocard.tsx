@@ -4,6 +4,8 @@ import AutocardContext from 'contexts/AutocardContext';
 import DisplayContext from 'contexts/DisplayContext';
 import Card from 'datatypes/Card';
 
+import TagColorContext from '../contexts/TagColorContext';
+
 export interface WithAutocardProps {
   card?: Card;
   image?: string;
@@ -16,11 +18,14 @@ const withAutocard = <T extends ElementType>(Tag: T) => {
     ({ card, image, inModal, ...props }, ref) => {
       const { showCustomImages } = useContext(DisplayContext);
       const { showCard, hideCard } = useContext(AutocardContext);
+      const tagColors = useContext(TagColorContext);
 
       return (
         <Tag
           ref={ref}
-          onMouseEnter={() => showCard(image ? { details: { image_normal: image } } : card, inModal, showCustomImages)}
+          onMouseEnter={() =>
+            showCard(image ? { details: { image_normal: image } } : card, inModal, showCustomImages, tagColors)
+          }
           onMouseLeave={() => hideCard()}
           {...(props as any)}
         />
