@@ -13,6 +13,8 @@ const Content = require('../dynamo/models/content');
 
 const ensureContentCreator = ensureRole('ContentCreator');
 
+import { NoticeType } from '../datatypes/Notice';
+
 const router = express.Router();
 
 router.use(csrfProtection);
@@ -35,7 +37,7 @@ router.post('/submitapplication', ensureAuth, async (req, res) => {
       user: req.user.id,
       body: req.body.info,
       date: new Date().valueOf(),
-      type: Notice.TYPE.APPLICATION,
+      type: NoticeType.APPLICATION,
     };
     await Notice.put(application);
 

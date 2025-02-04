@@ -21,6 +21,7 @@ const Draft = require('../dynamo/models/draft');
 const Notice = require('../dynamo/models/notice');
 const uuid = require('uuid');
 
+import { NoticeType } from '../datatypes/Notice';
 import { NotificationStatus } from '../datatypes/Notification';
 
 const router = express.Router();
@@ -113,7 +114,7 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
       body: `"${user.username}" was reported by ${req.user.username}`,
       user: req.user ? req.user.id : null,
       date: Date.now().valueOf(),
-      type: Notice.TYPE.CUBE_REPORT,
+      type: NoticeType.CUBE_REPORT,
     };
 
     await Notice.put(report);

@@ -18,6 +18,8 @@ const { render, redirect } = require('../util/render');
 const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 
+import { NoticeStatus } from '../datatypes/Notice';
+
 const ensureAdmin = ensureRole('Admin');
 
 const router = express.Router();
@@ -25,7 +27,7 @@ const router = express.Router();
 router.use(csrfProtection);
 
 router.get('/dashboard', ensureAdmin, async (req, res) => {
-  const noticeCount = await Notice.getByStatus(Notice.STATUS.ACTIVE);
+  const noticeCount = await Notice.getByStatus(NoticeStatus.ACTIVE);
   const contentInReview = await Content.getByStatus(Content.STATUS.IN_REVIEW);
 
   return render(req, res, 'AdminDashboardPage', {
@@ -44,7 +46,7 @@ router.get('/reviewcontent', ensureAdmin, async (req, res) => {
 });
 
 router.get('/notices', ensureAdmin, async (req, res) => {
-  const notices = await Notice.getByStatus(Notice.STATUS.ACTIVE);
+  const notices = await Notice.getByStatus(NoticeStatus.ACTIVE);
   return render(req, res, 'NoticePage', { notices: notices.items });
 });
 
@@ -123,7 +125,7 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
 router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
 
-  report.status = Notice.STATUS.PROCESSED;
+  report.status = NoticeStatus.PROCESSED;
   await Notice.put(report);
 
   req.flash('success', 'This report has been ignored.');
@@ -134,7 +136,7 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
   const comment = await Comment.getById(report.subject);
 
-  report.status = Notice.STATUS.PROCESSED;
+  report.status = NoticeStatus.PROCESSED;
   await Notice.put(report);
 
   delete comment.owner;
@@ -161,7 +163,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
   const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
 
-  application.status = Notice.STATUS.PROCESSED;
+  application.status = NoticeStatus.PROCESSED;
   Notice.put(application);
 
   await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_approve');
@@ -173,7 +175,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
 router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   const application = await Notice.getById(req.params.id);
 
-  application.status = Notice.STATUS.PROCESSED;
+  application.status = NoticeStatus.PROCESSED;
   Notice.put(application);
 
   //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
@@ -375,7 +377,7 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
 
     await User.put(user);
 
-    notice.status = Notice.STATUS.PROCESSED;
+    notice.status = NoticeStatus.PROCESSED;
     await Notice.put(notice);
 
     req.flash(

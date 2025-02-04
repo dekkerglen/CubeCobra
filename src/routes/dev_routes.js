@@ -1,10 +1,12 @@
 const express = require('express');
 
 const { csrfProtection, ensureRole } = require('./middleware');
-const { render, redirect } = require('../util/render');
+const { render } = require('../util/render');
 
 const Blog = require('../dynamo/models/blog');
 const Feed = require('../dynamo/models/feed');
+
+import { FeedTypes } from '../datatypes/Feed';
 
 const router = express.Router();
 
@@ -46,7 +48,7 @@ router.post('/blogpost', ensureRole('Admin'), async (req, res) => {
       id,
       to: user,
       date: blogpost.date,
-      type: Feed.TYPES.BLOG,
+      type: FeedTypes.BLOG,
     }));
 
     await Feed.batchPut(feedItems);

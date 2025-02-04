@@ -7,14 +7,13 @@ const { CARD_STATUSES } = require('../../datatypes/Card');
 
 const cardutil = require('../../client/utils/cardutil');
 const miscutil = require('../../client/utils/Util');
-const {
-  getIdsFromName,
-  cardFromId
-} = require('../../util/carddb');
+const { getIdsFromName, cardFromId } = require('../../util/carddb');
 const { render, redirect } = require('../../util/render');
 const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');
 const util = require('../../util/util');
 const generateMeta = require('../../util/meta');
+
+import { NoticeType } from '../../datatypes/Notice';
 
 const {
   generatePack,
@@ -143,7 +142,7 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
       body: `"${cube.name}" was reported by ${req.user.username}`,
       user: req.user ? req.user.id : null,
       date: Date.now().valueOf(),
-      type: Notice.TYPE.CUBE_REPORT,
+      type: NoticeType.CUBE_REPORT,
     };
 
     await Notice.put(report);

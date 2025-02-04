@@ -28,6 +28,8 @@ const Changelog = require('../../dynamo/models/changelog');
 const Feed = require('../../dynamo/models/feed');
 const User = require('../../dynamo/models/user');
 
+import { FeedTypes } from '../../datatypes/Feed';
+
 const router = express.Router();
 
 // API routes
@@ -478,7 +480,7 @@ router.post(
         id,
         to: user,
         date: new Date().valueOf(),
-        type: Feed.TYPES.BLOG,
+        type: FeedTypes.BLOG,
       }));
 
       await Feed.batchPut(feedItems);
@@ -743,7 +745,7 @@ router.post('/commit', async (req, res) => {
           id: blogId,
           to: user,
           date: new Date().valueOf(),
-          type: Feed.TYPES.BLOG,
+          type: FeedTypes.BLOG,
         }));
 
         await Feed.batchPut(feedItems);

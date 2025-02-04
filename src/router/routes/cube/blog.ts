@@ -11,6 +11,7 @@ import util from '../../../util/util';
 
 const { redirect } = require('../../../util/render');
 
+import { FeedTypes } from '../../../datatypes/Feed';
 import UserType from '../../../datatypes/User';
 
 export const createBlogHandler = async (req: Request, res: Response) => {
@@ -112,7 +113,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       id,
       to: userId,
       date: new Date().valueOf(),
-      type: Feed.TYPES.BLOG,
+      type: FeedTypes.BLOG,
     }));
 
     await Feed.batchPut(feedItems);

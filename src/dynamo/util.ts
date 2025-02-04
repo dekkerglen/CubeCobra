@@ -144,8 +144,9 @@ const createClient = (config: ClientConfig): ClientInterface => {
       try {
         if (!Item[config.partitionKey]) {
           Item = {
-            [config.partitionKey]: uuidv4(),
             ...Item,
+            //Append the id AFTER the existing properties. If Item has id but it is falsey, then prepending won't replace the value
+            [config.partitionKey]: uuidv4(),
           };
         }
 
