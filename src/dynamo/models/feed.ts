@@ -1,44 +1,42 @@
-const createClient = require('../util');
-const Blog = require('./blog');
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 
-const FIELDS = {
-  ID: 'id',
-  TO: 'to',
-  DATE: 'date',
-  TYPE: 'type',
-};
+import BlogPost from '../../datatypes/BlogPost';
+import { Feed, FeedTypes, UnhydratedFeed } from '../../datatypes/Feed';
+import createClient from '../util';
+import Blog from './blog';
 
 const client = createClient({
   name: 'FEED',
-  partitionKey: FIELDS.ID,
-  sortKey: FIELDS.TO,
+  partitionKey: 'id',
+  sortKey: 'to',
   indexes: [
     {
       name: 'ByTo',
-      partitionKey: FIELDS.TO,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'to',
+      sortKey: 'date',
     },
   ],
   attributes: {
-    [FIELDS.ID]: 'S',
-    [FIELDS.TO]: 'S',
-    [FIELDS.DATE]: 'N',
+    id: 'S',
+    to: 'S',
+    date: 'N',
   },
-  FIELDS,
 });
 
-const TYPES = {
-  BLOG: 'b',
-};
+const feed = {
+  batchPut: async (documents: UnhydratedFeed[]): Promise<void> => client.batchPut(documents),
+  getByTo: async (
+    user: string,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: Feed[]; lastKey?: DocumentClient.Key }> => {
+    //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
+    const toAttr: keyof UnhydratedFeed = 'to';
 
-module.exports = {
-  batchPut: async (documents) => client.batchPut(documents, true),
-  getByTo: async (user, lastKey) => {
     const result = await client.query({
       IndexName: 'ByTo',
       KeyConditionExpression: '#to = :to',
       ExpressionAttributeNames: {
-        '#to': FIELDS.TO,
+        '#to': toAttr,
       },
       ExpressionAttributeValues: {
         ':to': user,
@@ -47,39 +45,58 @@ module.exports = {
       ScanIndexForward: false,
     });
 
-    const byType = {};
-    result.Items.forEach((item) => {
-      const type = item[FIELDS.TYPE];
+    if (!result.Items) {
+      return {
+        items: [],
+        lastKey: result.LastEvaluatedKey,
+      };
+    }
+
+    const items = result.Items as UnhydratedFeed[];
+
+    //Using [key in FeedTypes]? as unlike Record<FeedTypes, ..> it doesn't require the initial object to have all keys set
+    const byType: { [key in FeedTypes]?: string[] } = {};
+    //Group the Feed items by type
+    items.forEach((item) => {
+      const type = item.type;
       if (!byType[type]) {
         byType[type] = [];
       }
-      byType[type].push(item);
+      byType[type].push(item.id);
     });
 
+    //Fetch all related information for the feed types
     const results = await Promise.all(
-      Object.keys(byType).map(async (type) => {
-        if (type === TYPES.BLOG) {
-          return Blog.batchGet(byType[type].map((item) => item[FIELDS.ID]));
+      Object.entries(byType).map(async ([type, ids]) => {
+        if (type === FeedTypes.BLOG) {
+          return Blog.batchGet(ids);
         }
         return [];
       }),
     );
 
-    // sort back together into one list
-    const itemsById = {};
+    // organize the BlogPosts into a flat map of BlogPost id to BlogPost
+    const itemsById: Record<string, BlogPost> = {};
     results.flat().forEach((item) => {
-      itemsById[item.id] = item;
+      if (item) {
+        itemsById[item.id] = item;
+      }
     });
 
+    //Consolidate the Feed items with the BlogPosts and only return those with a document
     return {
-      items: result.Items.map((document) => ({
-        type: document[FIELDS.TYPE],
-        document: itemsById[document[FIELDS.ID]],
-      })).filter((item) => item.document),
+      items: items
+        .map((document) => ({
+          type: document.type,
+          document: itemsById[document.id],
+        }))
+        .filter((item) => item.document),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  createTable: async () => client.createTable(),
-  FIELDS,
-  TYPES,
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
 };
+
+module.exports = feed;
+
+export default feed;
