@@ -3,8 +3,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { cardFinish, cardTags } from 'utils/cardutil';
 
 import Card from '../../datatypes/Card';
+import { TagColor } from '../../datatypes/Cube';
 import { Flexbox } from '../components/base/Layout';
 import Tag from '../components/base/Tag';
+import { getTagColorClass } from '../utils/Util';
 
 interface Tag {
   value: string;
@@ -98,7 +100,7 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
 };
 
 export interface AutocardContextValue {
-  showCard: (card: any, inModal: boolean, showCustomImages: boolean) => void;
+  showCard: (card: any, inModal: boolean, showCustomImages: boolean, tagColors: TagColor[]) => void;
   hideCard: () => void;
   stopAutocard: boolean;
   setStopAutocard: React.Dispatch<React.SetStateAction<boolean>>;
@@ -121,7 +123,7 @@ export const AutocardContextProvider: React.FC<{ children: JSX.Element }> = ({ c
   const [zIndex, setZIndex] = useState(500);
 
   const showCard = useCallback(
-    (card: Card, inModal: boolean, showCustomImages: boolean) => {
+    (card: Card, inModal: boolean, showCustomImages: boolean, tagColors: TagColor[]) => {
       if (!stopAutocard) {
         setHidden(false);
         setFoilOverlay(cardFinish(card) === 'Foil');
@@ -130,7 +132,7 @@ export const AutocardContextProvider: React.FC<{ children: JSX.Element }> = ({ c
         setTags(
           cardTags(card).map((tag) => ({
             value: tag,
-            colorClass: '',
+            colorClass: getTagColorClass(tagColors, tag),
           })),
         );
         setZIndex(inModal ? 1500 : 500);

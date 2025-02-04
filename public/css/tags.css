@@ -1,57 +1,69 @@
 .tag {
-	background-color: var(--header);
-	font-size: 85%;
-	padding: 0.5em .75em;
-	margin: .25em .1em;
-	display: inline-block;
-	border: 1px solid var(--border-light);
-	transition: all .1s linear;
+  background-color: var(--header);
+  font-size: 85%;
+  padding: 0.5em 0.75em;
+  margin: 0.25em 0.1em;
+  display: inline-block;
+  border: 1px solid var(--border-light);
+  transition: all 0.1s linear;
 }
 
 .tag-sort-placeholder {
   height: 44px;
-	background-color: var(--bg-hover);
+  background-color: var(--bg-hover);
   margin-left: -15px;
   margin-right: -15px;
 }
 
 .tag-sort-helper {
-	background-color: var(--bg);
-	border: 1px solid var(--border-light);
+  background-color: var(--bg);
+  border: 1px solid var(--border-light);
 }
 
-.tag-color,
-.tag-color .tdname,
-.tag-color > a {
-  color: var(--bg) !important;
-}
+/* In order to have WCAG 2.0 level AA contrast between the tag background and foreground colors,
+ * we must explicitly set the foreground color rather than based on light or dark theme. Used
+ * https://webaim.org/resources/contrastchecker/ to check contrast and found colors that fit well
+ * for the backgrounds, though had to make small color adjustments to some background to get passing
+ * grades. Targeted WCAG 2.0 level AAA which needs a 7.5 contrast ratio between text and background,
+ * compared to AA which is 4.5 ratio.
+ */
 .tag-red {
   background-color: #8e1600 !important;
+  color: #f0f0f0 !important;
 }
 .tag-brown {
   background-color: #654321 !important;
+  color: #f0f0f0 !important;
 }
 .tag-orange {
   background-color: #ff7034 !important;
+  color: #020202 !important;
 }
 .tag-yellow {
   background-color: #e0b83d !important;
+  color: #020202 !important;
 }
 .tag-green {
-  background-color: #228c22 !important;
+  background-color: #2cb52c !important;
+  color: #020202 !important;
 }
 .tag-turquoise {
-  background-color: #008081 !important;
+  background-color: #00adaf !important;
+  color: #020202 !important;
 }
 .tag-blue {
-  background-color: #115da8 !important;
+  background-color: #0e4d8b !important;
+  color: #f0f0f0 !important;
 }
 .tag-purple {
-  background-color: #663399 !important;
+  background-color: #633295 !important;
+  color: #f0f0f0 !important;
 }
 .tag-violet {
-  background-color: #b200ed !important;
+  background-color: #da6fff !important;
+  color: #020202 !important;
 }
 .tag-pink {
   background-color: #ff69b4 !important;
+  color: #020202 !important;
 }
