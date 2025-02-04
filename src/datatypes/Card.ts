@@ -1,3 +1,5 @@
+import { ManaSymbol } from './Mana';
+
 export const COLOR_CATEGORIES = [
   'White',
   'Blue',
@@ -12,6 +14,7 @@ export const COLOR_CATEGORIES = [
 export type ColorCategory = (typeof COLOR_CATEGORIES)[number];
 
 export const DefaultElo = 1200;
+
 export interface CardDetails {
   scryfall_id: string;
   oracle_id: string;
@@ -28,6 +31,7 @@ export interface CardDetails {
   artist: string;
   scryfall_uri: string;
   rarity: string;
+  produced_mana?: ManaSymbol[];
   legalities: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>; // An empty object, could be more specific if needed
   oracle_text: string;
   image_small?: string;
@@ -39,6 +43,7 @@ export interface CardDetails {
   colors: string[];
   color_identity: string[];
   colorcategory: ColorCategory;
+  keywords: string[];
   loyalty?: string;
   power?: string;
   toughness?: string;
@@ -152,6 +157,9 @@ export interface Changes {
   version?: number;
 }
 
+export const BasicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Waste'] as const;
+export type BasicLand = (typeof BasicLands)[number];
+
 export default interface Card {
   index?: number;
   board?: BoardType;
@@ -161,7 +169,7 @@ export default interface Card {
   imgUrl?: string;
   imgBackUrl?: string;
   cardID: string;
-  colors?: ('W' | 'U' | 'B' | 'R' | 'G')[];
+  colors?: Exclude<ManaSymbol, 'C'>[];
   colorCategory?: ColorCategory;
   tags?: string[];
   finish?: string;

@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 
+import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
 import { cardType, makeSubtitle } from 'utils/cardutil';
 
 import Cube from '../../datatypes/Cube';
@@ -126,6 +127,12 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
             setDeck={setMainboard}
             setSideboard={setSideboard}
             seat={0}
+          />
+          <DeckBuilderStatsPanel
+            cards={mainboard
+              .flat()
+              .flat()
+              .map((index) => initialDeck.cards[index])}
           />
           <DynamicFlash />
           <Card className="my-3">

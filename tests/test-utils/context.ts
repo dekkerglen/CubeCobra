@@ -11,6 +11,8 @@ const defaultDisplayContext: DisplayContextValue = {
   toggleShowMaybeboard: jest.fn(),
   showInlineTagEmojis: false,
   toggleShowInlineTagEmojis: jest.fn(),
+  showDeckBuilderStatsPanel: false,
+  toggleShowDeckBuilderStatsPanel: jest.fn(),
 };
 
 export { defaultDisplayContext };

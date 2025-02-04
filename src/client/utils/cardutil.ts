@@ -4,6 +4,13 @@ import Card, {
   ColorCategory,
   DefaultElo,
 } from '../../datatypes/Card';
+import {
+  isGenericHybridManaSymbol,
+  isHybridManaSymbol,
+  isManaSymbol,
+  isPhyrexianManaSymbol,
+  ManaSymbol,
+} from '../../datatypes/Mana';
 import CategoryOverrides from '../res/CategoryOverrides.json';
 import LandCategories from '../res/LandCategories.json';
 import { arraysEqual } from './Util';
@@ -42,6 +49,15 @@ export const COLOR_COMBINATIONS: string[][] = [
   ['W', 'U', 'B', 'R'],
   ['W', 'U', 'B', 'R', 'G'],
 ];
+
+export const BASIC_LAND_MANA_MAPPING: { [key: string]: ManaSymbol } = {
+  Plains: 'W',
+  Island: 'U',
+  Swamp: 'B',
+  Mountain: 'R',
+  Forest: 'G',
+  Waste: 'C',
+};
 
 // export const COLOR_INCLUSION_MAP: Record<string, Record<string, boolean>> = fromEntries(
 //   COLOR_COMBINATIONS.map((colors) => [
@@ -148,6 +164,7 @@ export const CardDetails = (card: Card): CardDetailsType =>
     type: '',
     colors: [],
     color_identity: [],
+    keywords: [],
     colorcategory: 'Colorless',
     parsed_cost: [],
     border_color: 'black',
@@ -233,38 +250,7 @@ export const cardColorCategory = (card: Card): ColorCategory => {
     }
   }
 
-  if (cardType(card).includes('Land')) {
-    return 'Lands';
-  }
-
-  const colors = cardColorIdentity(card);
-
-  if (colors.length === 0) {
-    return 'Colorless';
-  }
-  if (colors.length > 1) {
-    return 'Multicolored';
-  }
-
-  if (colors.length === 1) {
-    if (colors.includes('W')) {
-      return 'White';
-    }
-    if (colors.includes('U')) {
-      return 'Blue';
-    }
-    if (colors.includes('B')) {
-      return 'Black';
-    }
-    if (colors.includes('R')) {
-      return 'Red';
-    }
-    if (colors.includes('G')) {
-      return 'Green';
-    }
-  }
-
-  return 'Colorless';
+  return cardColorIdentityCategory(card);
 };
 
 /// Get the color category from the color identity instead of what the user has set
@@ -417,6 +403,10 @@ export const cardColors = (card: Card): string[] => {
   return [];
 };
 
+export const cardColorsAsManaSymbols = (card: Card): ManaSymbol[] => {
+  return cardColors(card).map((symbol: string) => symbol.toUpperCase() as ManaSymbol);
+};
+
 export const cardLanguage = (card: Card): string => card.details?.language ?? '';
 
 export const cardMtgoId = (card: Card): number => card.details?.mtgo_id ?? -1;
@@ -457,6 +447,39 @@ export const cardDevotion = (card: Card, color: string): number => {
   return cost?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 };
 
+export const cardManaSymbols = (card: Card): ManaSymbol[] => {
+  const cost = cardCost(card);
+  if (!cost) {
+    return [];
+  }
+
+  return cost
+    .map((part: string) => {
+      part = part.toUpperCase();
+
+      if (isManaSymbol(part)) {
+        return part as ManaSymbol;
+      }
+
+      if (isHybridManaSymbol(part)) {
+        return part.split('-').map((part: string) => part as ManaSymbol);
+      }
+
+      if (isGenericHybridManaSymbol(part)) {
+        return part.split('-')[1] as ManaSymbol;
+      }
+
+      if (isPhyrexianManaSymbol(part)) {
+        return part
+          .split('-')
+          .filter((part) => part !== 'P')
+          .map((part: string) => part as ManaSymbol);
+      }
+    })
+    .flat()
+    .filter(Boolean) as ManaSymbol[];
+};
+
 const typeIsSpecialZoneType = (type: string): boolean =>
   /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(type);
 
@@ -464,6 +487,12 @@ export const cardIsSpecialZoneType = (card: Card): boolean => typeIsSpecialZoneT
 
 const isCreatureLand = (details: any): boolean =>
   details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/);
+
+export const cardManaProduced = (card: Card): ManaSymbol[] => card.details?.produced_mana ?? [];
+
+export const cardIsLand = (card: Card): boolean => {
+  return cardType(card).includes('Land') || card.colorCategory === 'Lands';
+};
 
 export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),

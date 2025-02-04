@@ -103,6 +103,8 @@ export function getPlaceholderCard(scryfall_id: string): CardDetails {
     prices: {},
     tokens: [],
     set_name: '',
+    produced_mana: [],
+    keywords: [],
   };
 }
 
