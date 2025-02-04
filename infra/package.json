@@ -9,7 +9,8 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "test:ci": "npx jest --coverage --coverageReporters text"
   },
   "type": "module",
   "devDependencies": {

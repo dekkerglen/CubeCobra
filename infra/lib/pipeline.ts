@@ -8,6 +8,11 @@ interface PipelineProps {
   githubRepositories: string[];
 }
 
+/**
+ * Pipeline creates the OpenID Connect provider and the IAM role needed for GitHub actions to access AWS.
+ *
+ * This avoids long-live credentials and automates authentication. Permissions are scoped and tokens are short-lived.
+ */
 export class Pipeline extends Construct {
   public readonly githubRole: Role;
   private oidcProvider: OpenIdConnectProvider;
