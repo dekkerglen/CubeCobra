@@ -5,7 +5,7 @@ import TimeAgo from 'react-timeago';
 
 import { cardId, detailsToCard } from 'utils/cardutil';
 
-import CardPackageData, { APPROVED } from '../../../datatypes/CardPackage';
+import CardPackageData, { CardPackageStatus } from '../../../datatypes/CardPackage';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
@@ -46,7 +46,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
       }
     }
     setLoading(false);
-  }, [cardPackage.id, loading, voted]);
+  }, [cardPackage.id, csrfFetch, loading, voted]);
 
   const approve = async () => csrfFetch(`/packages/approve/${cardPackage.id}`);
 
@@ -78,7 +78,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
               </AddGroupToCubeModalLink>
               {user && user.roles && user.roles.includes('Admin') && (
                 <>
-                  {cardPackage.status === APPROVED ? (
+                  {cardPackage.status === CardPackageStatus.APPROVED ? (
                     <Button outline color="primary" onClick={unapprove}>
                       Remove Approval
                     </Button>

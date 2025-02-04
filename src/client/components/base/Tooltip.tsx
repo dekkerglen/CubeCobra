@@ -6,10 +6,20 @@ interface TooltipProps {
   className?: string;
   style?: React.CSSProperties;
   children: React.ReactNode;
+  position?: 'top' | 'bottom';
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ text, wrapperTag: WrapperTag = 'div', className, style, children }) => {
+const Tooltip: React.FC<TooltipProps> = ({
+  text,
+  wrapperTag: WrapperTag = 'div',
+  className,
+  style,
+  children,
+  position = 'top',
+}) => {
   const [visible, setVisible] = useState(false);
+
+  const tooltipPositionClasses = position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
 
   return (
     <WrapperTag
@@ -20,7 +30,9 @@ const Tooltip: React.FC<TooltipProps> = ({ text, wrapperTag: WrapperTag = 'div',
     >
       {children}
       {visible && (
-        <div className="absolute bottom-full mb-2 w-max px-2 py-1 text-sm text-white bg-black rounded shadow-lg">
+        <div
+          className={`absolute ${tooltipPositionClasses} w-max px-2 py-1 text-sm text-white bg-black rounded shadow-lg`}
+        >
           {text}
         </div>
       )}

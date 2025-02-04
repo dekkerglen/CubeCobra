@@ -4,7 +4,7 @@ import TimeAgo from 'react-timeago';
 
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
-import type { Notification as NotificationType } from 'datatypes/Notification';
+import NotificationType from 'datatypes/Notification';
 
 interface NotificationProps {
   notification: NotificationType;

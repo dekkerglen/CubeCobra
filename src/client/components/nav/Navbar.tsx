@@ -2,6 +2,8 @@ import React, { useContext } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
+import Tooltip from 'components/base/Tooltip';
+
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import { CardFooter } from '../base/Card';
@@ -54,7 +56,7 @@ const navItems = [
       { label: 'Contact', href: '/contact' },
       {
         label: 'Merchandise',
-        href: 'https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372',
+        href: '/merchandise',
       },
       { label: 'Donate', href: '/donate' },
       { label: 'Github', href: 'https://github.com/dekkerglen/CubeCobra' },
@@ -129,13 +131,15 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
       <Container xxl>
         <Flexbox direction="col">
           <Flexbox justify="between" alignItems="center" direction="row" gap="4">
-            <a href="/">
-              <img
-                className="h-10"
-                src="/content/banner.png"
-                alt="Cube Cobra: a site for Magic: the Gathering Cubing"
-              />
-            </a>
+            <Tooltip text="新年快乐! Happy Year of the Snake!" position="bottom">
+              <a href="/merchandise">
+                <img
+                  className="h-10"
+                  src="/content/banner_red.png"
+                  alt="Cube Cobra: a site for Magic: the Gathering Cubing"
+                />
+              </a>
+            </Tooltip>
             <ResponsiveDiv baseVisible lg>
               <Button color="secondary" onClick={toggle}>
                 {expanded ? <ChevronUpIcon size={32} /> : <ThreeBarsIcon size={32} />}

@@ -57,7 +57,12 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
           </Text>
         </Flexbox>
         {canEdit && (
-          <DeleteModalButton color="secondary" outline modalprops={{ deck, cubeID: deck.cube, nextURL }}>
+          <DeleteModalButton
+            color="secondary"
+            outline
+            modalprops={{ deck, cubeID: deck.cube, nextURL }}
+            stopProgagation={true}
+          >
             <XIcon size={16} className="mx-1" />
           </DeleteModalButton>
         )}

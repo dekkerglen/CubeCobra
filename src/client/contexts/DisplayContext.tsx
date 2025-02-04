@@ -16,6 +16,8 @@ export interface DisplayContextValue {
   setOpenCollapse: React.Dispatch<React.SetStateAction<string | null>>;
   cardsPerRow: NumCols;
   setCardsPerRow: React.Dispatch<React.SetStateAction<NumCols>>;
+  showDeckBuilderStatsPanel: boolean;
+  toggleShowDeckBuilderStatsPanel: () => void;
 }
 
 const DisplayContext = React.createContext<DisplayContextValue>({
@@ -29,6 +31,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   setOpenCollapse: () => {},
   cardsPerRow: 8,
   setCardsPerRow: () => {},
+  showDeckBuilderStatsPanel: false,
+  toggleShowDeckBuilderStatsPanel: () => {},
 });
 
 interface DisplayContextProviderProps {
@@ -67,10 +71,19 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     );
   });
 
+  const [showDeckBuilderStatsPanel, setShowDeckBuilderStatsPanel] = useState<boolean>(() => {
+    return typeof localStorage !== 'undefined' && localStorage.getItem('show-deckbuilder-stats') === 'true';
+  });
+
   const toggleShowInlineTagEmojis = useCallback(() => {
     if (cubeID) localStorage.setItem(`inline-tag-emojis-${cubeID}`, (!showInlineTagEmojis).toString());
     setShowInlineTagEmojis((prev) => !prev);
-  }, [cubeID, showInlineTagEmojis])
+  }, [cubeID, showInlineTagEmojis]);
+
+  const toggleShowDeckBuilderStatsPanel = useCallback(() => {
+    localStorage.setItem('show-deckbuilder-stats', (!showDeckBuilderStatsPanel).toString());
+    setShowDeckBuilderStatsPanel((prev) => !prev);
+  }, [showDeckBuilderStatsPanel]);
 
   const value: DisplayContextValue = {
     showCustomImages,
@@ -83,6 +96,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setOpenCollapse,
     cardsPerRow,
     setCardsPerRow,
+    showDeckBuilderStatsPanel,
+    toggleShowDeckBuilderStatsPanel,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };

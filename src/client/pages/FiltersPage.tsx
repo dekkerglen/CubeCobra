@@ -459,6 +459,36 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 ]}
               />
             </Accordion>
+            <Accordion title="Notes">
+              <p>
+                You can use <code>notes:</code> to filter cards by the contents of their notes.
+              </p>
+              <Text semibold>Examples:</Text>
+              <Table
+                rows={[
+                  {
+                    query: <code>notes:Signpost</code>,
+                    description: 'All cards in a cube whose notes contains "Signpost", case insensitive.',
+                  },
+                  {
+                    query: <code>notes:"is fun"</code>,
+                    description: 'All cards in a cube whose notes contains "is fun", case insensitive.',
+                  },
+                  {
+                    query: <code>notes="Too powerful"</code>,
+                    description: 'All cards in a cube whose notes are exactly "Too powerful", case insensitive.',
+                  },
+                  {
+                    query: <code>notes=""</code>,
+                    description: 'All cards with no notes (single or double quotes are equivalent).',
+                  },
+                  {
+                    query: <code>{`notes!=''`}</code>,
+                    description: 'All cards with non-empty notes.',
+                  },
+                ]}
+              />
+            </Accordion>
             <Accordion title="Legality">
               <p>
                 You can use <code>leg:</code>, <code>legal:</code>, or <code>legality:</code> to filter cards by

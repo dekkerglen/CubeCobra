@@ -4,7 +4,7 @@ import Card from '../../datatypes/Card';
 import Cube from '../../datatypes/Cube';
 import Draft, { buildDefaultSteps, createDefaultDraftFormat, DraftFormat, DraftState } from '../../datatypes/Draft';
 import User from '../../datatypes/User';
-import { fromEntries } from '../utils/Util';
+import { arraysEqual, fromEntries } from '../utils/Util';
 import { compileFilter, Filter } from './draftFilter';
 
 type RNGFunction = () => number;
@@ -16,12 +16,12 @@ interface DraftParams {
   players: number;
 }
 
-interface DraftResult {
+export interface DraftResult {
   card: Card | undefined;
   messages: string[];
 }
 
-type NextCardFn = (cardFilters: string[]) => DraftResult;
+export type NextCardFn = (cardFilters: string[]) => DraftResult;
 
 interface AsfanResult {
   card: boolean;
@@ -30,7 +30,7 @@ interface AsfanResult {
 
 type AsfanFn = (cardFilters: string[]) => AsfanResult;
 
-interface CreatePacksResult {
+export interface CreatePacksResult {
   ok: boolean;
   messages: string[];
   initialState: DraftState;
@@ -136,44 +136,138 @@ const createAsfanFn = (cards: Card[], duplicates: boolean = false): AsfanFn => {
 };
 
 export const getDraftFormat = (params: DraftParams, cube: Cube): DraftFormat => {
-  if (params.id >= 0) {
+  /* Even if there is an draft ID, ensure that it exists in the cube. Relates to a bug
+   * where deleting the custom draft format that was marked as default, didn't update the cube
+   * back to not having a default format.
+   */
+  if (params.id >= 0 && cube.formats.at(params.id)) {
     return cube.formats[params.id];
   }
   return createDefaultDraftFormat(params.packs, params.cards || 15);
 };
 
-const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn): CreatePacksResult => {
-  let ok = true;
-  let messages: string[] = [];
-  const result: CreatePacksResult = { ok, messages, initialState: [], cards: [] };
+type PackCreationCardSlot = {
+  seat: number;
+  packNum: number;
+  cardNum: number;
+  slotFilter: string[];
+};
+
+//Exporting for testing purposes
+export const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn): CreatePacksResult => {
+  const cardsPerDrafter = format.packs.reduce(
+    (accumulator, currentValue) => accumulator + currentValue.slots.length,
+    0,
+  );
+  //In custom drafts the packs are not required to be the same size, thus using reduce rather than simple packs * pack size
+  const totalCards = seats * cardsPerDrafter;
+
+  const result: CreatePacksResult = {
+    ok: true,
+    messages: [],
+    initialState: [],
+    //Cards are no longer inserted in order of seat, pack, slot. Pre-allocate the array so we can splice in each card as found
+    cards: new Array(totalCards),
+  };
+
+  /* Perform a two phase approach to creating packs. In the first phase all card slots with a filter
+   * are performed, and then in the second phase the rest of the slots are done. This is to ensure that
+   * the filtered slots across all packs/seats use the maximal set of cards that match their filter. Or in other
+   * words, we don't want the non-filtered slots to consume cards that might match filtered card slots.
+   */
+  const filteredCardSlots: PackCreationCardSlot[] = [];
+  const unfilteredCardSlots: PackCreationCardSlot[] = [];
+
   for (let seat = 0; seat < seats; seat++) {
     result.initialState.push([]);
     for (let packNum = 0; packNum < format.packs.length; packNum++) {
       result.initialState[seat].push({ steps: [], cards: [] });
-      const cards: Card[] = [];
       for (let cardNum = 0; cardNum < format.packs[packNum].slots.length; cardNum++) {
-        const result = nextCardFn(format.packs[packNum].slots[cardNum].split(','));
-        if (result.messages && result.messages.length > 0) {
-          messages = messages.concat(result.messages);
-        }
-        if (result.card) {
-          cards.push(result.card);
+        const slotFilter = format.packs[packNum].slots[cardNum].split(',');
+
+        const slot = {
+          seat,
+          packNum,
+          cardNum,
+          slotFilter,
+        };
+
+        const hasFilter = !(arraysEqual(slotFilter, ['']) || arraysEqual(slotFilter, ['*']));
+        if (hasFilter) {
+          filteredCardSlots.push(slot);
         } else {
-          ok = false;
+          unfilteredCardSlots.push(slot);
         }
       }
 
       result.initialState[seat][packNum] = {
-        steps: format.packs[packNum].steps || buildDefaultSteps(cards.length),
-        cards: [],
+        //Will replace this after all the card slots in the pack have a card index
+        steps: [],
+        //Preallocate the space for all the card index numbers for this pack
+        cards: Array(format.packs[packNum].slots.length),
       };
-
-      for (const card of cards) {
-        result.cards.push(card);
-        result.initialState[seat][packNum].cards.push(result.cards.length - 1);
-      }
     }
   }
+
+  const cardsBeforeThisPack = (packNumber: number): number => {
+    let sum = 0;
+    for (let num = 0; num < packNumber; num++) {
+      sum += format.packs[num].slots.length;
+    }
+    return sum;
+  };
+
+  let sumCardIndices = 0;
+  for (const slot of [...filteredCardSlots, ...unfilteredCardSlots]) {
+    const { seat, packNum, cardNum, slotFilter } = slot;
+
+    const cardResult = nextCardFn(slotFilter);
+    //FYI - The primary nextCardFn throws an Error if it cannot find a card for the filter, so result.messages won't matter
+    if (cardResult.messages && cardResult.messages.length > 0) {
+      result.messages = result.messages.concat(cardResult.messages);
+    }
+    if (cardResult.card) {
+      //Determine where we slice this card in based on the original seat/pack/card in pack
+      const cardIndex = seat * cardsPerDrafter + cardsBeforeThisPack(packNum) + cardNum;
+      result.cards.splice(cardIndex, 1, cardResult.card);
+      //Even though cards in the pack may not be set in array order, the end result is ordered from N to N+(pack length)
+      //eg seat 0, pack 1 contains indices 15, 16, 17, through 24 for a standard 15 card pack
+      result.initialState[seat][packNum].cards.splice(cardNum, 1, cardIndex);
+      sumCardIndices += cardIndex;
+    } else {
+      result.ok = false;
+    }
+
+    //Interestingly with pre-allocated size, using every(typeof currentValue !== "undefined") doesn't work because there are not actually items to execute the callback on!
+    const allocatedCards = result.initialState[seat][packNum].cards.filter(
+      (currentValue) => typeof currentValue !== 'undefined',
+    );
+
+    //All cards in the seat/pack are now initialized, as the set of defined card indices matches the pack's length
+    if (allocatedCards.length === format.packs[packNum].slots.length) {
+      result.initialState[seat][packNum].steps =
+        format.packs[packNum].steps || buildDefaultSteps(result.initialState[seat][packNum].cards.length);
+    }
+  }
+
+  //Final assertions - These should never fail unless something has disasterously gone wrong
+
+  //The card indices across all packs should be 0 through totalCards-1. The sum of N consecutive integers (starting from zero) is N*(N-1)/2
+  const expectedSumCardIndices = (totalCards * (totalCards - 1)) / 2;
+  if (sumCardIndices !== expectedSumCardIndices) {
+    result.messages = result.messages.concat('Unexpected number of cards');
+    result.ok = false;
+  }
+
+  //Also every pack should have all slots initialized, none left with undefined from pre-allocation
+  const countDefinedPicks = result.initialState.flatMap((seat) =>
+    seat.flatMap((pack) => pack.cards.filter((i) => typeof i !== 'undefined')),
+  ).length;
+  if (countDefinedPicks !== totalCards) {
+    result.messages = result.messages.concat('Some pack slots did not get a card unexpectedly');
+    result.ok = false;
+  }
+
   return result;
 };
 

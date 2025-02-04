@@ -1,10 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const {
-  cardFromId,
-  getIdsFromName,
-  getMostReasonable,
-} = require('../../util/carddb');
+const { cardFromId, getIdsFromName, getMostReasonable } = require('../../util/carddb');
 const { render, redirect } = require('../../util/render');
 const util = require('../../util/util');
 const generateMeta = require('../../util/meta');
@@ -428,18 +424,21 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     // const baseUser = await User.getById(base.owner);
     // const cubeOwner = await User.getById(cube.owner);
 
+    //TODO: Can remove after fixing models to not muck with the original input
+    const cubeOwner = cube.owner;
+
     const id = await Draft.put(deck);
     await Cube.update(cube);
 
     if (cube.owner.id !== user.id && !cube.disableAlerts) {
       await util.addNotification(
-        cube.owner,
+        cubeOwner,
         user,
         `/cube/deck/${id}`,
         `${user.username} rebuilt a deck from your cube: ${cube.name}`,
       );
     }
-    if (base.owner && !base.owner.id === user.id) {
+    if (base.owner && base.owner.id !== user.id) {
       await util.addNotification(
         base.owner,
         user,
@@ -635,6 +634,7 @@ router.get('/:id', async (req, res) => {
       return redirect(req, res, '/404');
     }
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -649,7 +649,7 @@ router.get('/:id', async (req, res) => {
           `Cube Cobra Deck: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `https://cubecobra.com/cube/deck/${req.params.id}`,
+          `${baseUrl}/cube/deck/${req.params.id}`,
         ),
       },
     );

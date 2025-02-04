@@ -16,6 +16,7 @@ import { pipeline } from 'stream';
 import stream from 'stream';
 
 import { CardDetails, ColorCategory, DefaultElo } from 'datatypes/Card';
+import { ManaSymbol } from 'datatypes/Mana';
 
 import * as cardutil from '../client/utils/cardutil';
 import { CardMetadata, fileToAttribute, reasonableCard } from '../util/carddb';
@@ -56,6 +57,8 @@ interface ScryfallCard {
   cmc: number;
   colors: string[];
   color_identity: string[];
+  keywords: string[];
+  produced_mana: string[];
   legalities: {
     legacy: string;
     modern: string;
@@ -243,36 +246,23 @@ async function writeFile(filepath: string, data: any) {
 
 // These tokens don't match any of the filters below. The first 4 are "face down" tokens, and Halfling is a "Tolkien" creature
 // This list was calculated with a script that parsed every scryfall object that was part of a 'token' set that didn't match the below filters
-const miscTokens = ['Manifest', 'A Mysterious Creature', 'Cyberman', 'Morph', 'Halfling']
+const miscTokens = ['Manifest', 'A Mysterious Creature', 'Cyberman', 'Morph', 'Halfling'];
 
 function getScryfallTokensForCard(card: ScryfallCard) {
   const allParts = card.all_parts || [];
-  return allParts
-    // the 'Card' type includes helper cards that aren't technically tokens like Monarch, Day-Night tracker, etc. Exclude "CheckLists" for flip cards
-    .filter((element) => element.component === 'token' || element.type_line.includes('Emblem') || element.type_line.includes('Dungeon') || (element.type_line.includes('Card') && !element.name.includes('Checklist')) || miscTokens.includes(element.name))
-    .map(({ id }) => id);
-}
-
-const specialCaseTokens = {
-  Food: 'bf36408d-ed85-497f-8e68-d3a922c388a0',
-  Treasure: 'e6fa7d35-9a7a-40fc-9b97-b479fc157ab0',
-  Poison: '470618f6-f67f-44c6-a086-285632508915',
-  "City's Blessing": 'ba64ed3e-93c5-406f-a38d-65cc68472122',
-  Monarch: '40b79918-22a7-4fff-82a6-8ebfe6e87185',
-  Energy: 'a446b9f8-cb22-408a-93ff-bee44a0dccc0',
-};
-
-function arraySetEqual<T>(target: T[], candidate: T[]) {
-  let isValid = candidate.length === target.length;
-  if (!isValid) return false;
-
-  for (let idx = 0; idx < target.length; idx++) {
-    if (!candidate.includes(target[idx])) {
-      isValid = false;
-      break;
-    }
-  }
-  return isValid;
+  return (
+    allParts
+      // the 'Card' type includes helper cards that aren't technically tokens like Monarch, Day-Night tracker, etc. Exclude "CheckLists" for flip cards
+      .filter(
+        (element) =>
+          element.component === 'token' ||
+          element.type_line.includes('Emblem') ||
+          element.type_line.includes('Dungeon') ||
+          (element.type_line.includes('Card') && !element.name.includes('Checklist')) ||
+          miscTokens.includes(element.name),
+      )
+      .map(({ id }) => id)
+  );
 }
 
 // As of writing Scryfall doesn't include the tokens that dungeons may create.
@@ -281,208 +271,27 @@ function getExtraTokensForDungeons(card: ScryfallCard) {
   const extraTokens: string[] = [];
   const allParts = card.all_parts || [];
   if (allParts.some((element) => element.name === 'Undercity // The Initiative')) {
-    extraTokens.push(specialCaseTokens.Treasure);
+    // Treasure
+    extraTokens.push('1be23c27-d8b6-4f59-8ab8-9ce80e9e29dd');
     // 4/1 Skeleton with menace
-    extraTokens.push('cf4c245f-af2f-46a7-81f3-670a04940901')
+    extraTokens.push('cf4c245f-af2f-46a7-81f3-670a04940901');
   }
   // As of writing, if one dungeon is included, all are, so only check for one
   if (allParts.some((element) => element.name === 'Dungeon of the Mad Mage')) {
-    extraTokens.push(specialCaseTokens.Treasure);
+    // Treasure
+    extraTokens.push('1be23c27-d8b6-4f59-8ab8-9ce80e9e29dd');
     // 1/1 Skeleton
-    extraTokens.push('b63b11cd-4a96-49d5-aee1-b0ff02ef49bb')
+    extraTokens.push('b63b11cd-4a96-49d5-aee1-b0ff02ef49bb');
     // 1/1 Goblin
-    extraTokens.push('b37f4fdb-1533-4c38-a654-f715fbef6abf')
+    extraTokens.push('b37f4fdb-1533-4c38-a654-f715fbef6abf');
     // The Atropal
-    extraTokens.push('65f8e40f-fb5e-4ab8-add3-a8b87e7bcdd9')
+    extraTokens.push('65f8e40f-fb5e-4ab8-add3-a8b87e7bcdd9');
   }
   return extraTokens;
 }
 
-function getTokens(card: ScryfallCard, catalogCard: CardDetails) {
-  const mentionedTokens: any[] = [];
-  const recordedTokens = getScryfallTokensForCard(card);
-  if (recordedTokens.length > 0) {
-    catalogCard.tokens = recordedTokens.concat(getExtraTokensForDungeons(card));
-  } else if (catalogCard.oracle_text !== null) {
-    if (catalogCard.oracle_text.includes(' token')) {
-      // find the ability that generates the token to reduce the amount of text to get confused by.
-      const abilities = catalogCard.oracle_text.split('\n');
-      for (const ability of abilities) {
-        if (ability.includes(' token')) {
-          const reString =
-            '((?:(?:([A-Za-z ,]+), a (legendary))|[Xa-z ]+))(?: ([0-9X]+/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:\'s \\w+)?)?)?(?:(?: with |\\. It has )?((?:(".*")|[a-z]+| and )+)+)?(?:.*(a copy of))?';
-          const re = new RegExp(reString);
-          const result = re.exec(ability);
-
-          if (!result) continue;
-
-          let tokenPowerAndToughness = result[4];
-          const tokenColorString = result[5] ? result[5] : result[1];
-          const tokenSubTypesString = result[6] ? result[6].trim() : '';
-          let tokenSuperTypesString = result[7] ? result[7].trim() : '';
-          if (result[3]) tokenSuperTypesString = `legendary ${tokenSuperTypesString}`;
-          let tokenName;
-          if (result[9]) {
-            tokenName = result[9].trim();
-          } else {
-            tokenName = result[2] ? result[2] : tokenSubTypesString;
-          } // if not specificaly named, use the type
-
-          const tokenAbilities: any[] = [];
-          if (result[10]) {
-            const tmpTokenKeywords = result[10]
-              .toLowerCase()
-              .replace(/ *"[^"]*" */g, '')
-              .replace(' and ', ',')
-              .split(',');
-            tmpTokenKeywords.forEach((part) => {
-              if (part.length > 0) tokenAbilities.push(part);
-            });
-          }
-
-          if (result[11]) {
-            const tmpTokenAbilities = result[11].toLowerCase().split('"');
-            tmpTokenAbilities.forEach((part) => {
-              if (part.length > 0) tokenAbilities.push(part);
-            });
-          }
-
-          const isACopy = !!(result[12] || result[8]);
-
-          if (Object.keys(specialCaseTokens).includes(tokenName)) {
-            mentionedTokens.push(specialCaseTokens[tokenName as keyof typeof specialCaseTokens]);
-            continue;
-          }
-
-          if (isACopy) {
-            // most likely a token that could be a copy of any creature but it could have a specific token
-            if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control."))
-              // populate
-              continue;
-
-            const cardTokens = getScryfallTokensForCard(card);
-
-            if (cardTokens.length > 0) {
-              mentionedTokens.push(...cardTokens);
-            } // if there is no specified tokens for the card use the generic copy token
-            else {
-              mentionedTokens.push('a020dc47-3747-4123-9954-f0e87a858b8c');
-            }
-            continue;
-          }
-
-          const tokenColor: string[] = [];
-          if (tokenColorString) {
-            const colorStrings = tokenColorString.trim().split(' ');
-            for (const rawColor of colorStrings) {
-              switch (rawColor.toLowerCase()) {
-                case 'red':
-                  tokenColor.push('R');
-                  break;
-                case 'white':
-                  tokenColor.push('W');
-                  break;
-                case 'green':
-                  tokenColor.push('G');
-                  break;
-                case 'black':
-                  tokenColor.push('B');
-                  break;
-                case 'blue':
-                  tokenColor.push('U');
-                  break;
-                default:
-              }
-            }
-          }
-          let tokenPower;
-          let tokenToughness;
-          if (tokenPowerAndToughness) {
-            if (tokenPowerAndToughness.length > 0) {
-              tokenPowerAndToughness = tokenPowerAndToughness.replace(/X/g, '*');
-              [tokenPower, tokenToughness] = tokenPowerAndToughness.split('/');
-            }
-          } else if (ability.includes('power and toughness are each equal')) {
-            tokenPower = '*';
-            tokenToughness = '*';
-          }
-
-          const dbHits = catalog.nameToId[tokenName.toLowerCase()];
-          if (dbHits === undefined) {
-            // for all the cards that produce tokens but do not have any in the database
-            result.push('');
-            continue;
-          }
-          for (const dbHit of dbHits) {
-            const candidate = catalog.dict[dbHit];
-            const areColorsValid = arraySetEqual(tokenColor, candidate.colors);
-
-            const candidateTypes = candidate.type.toLowerCase().replace(' —', '').replace('token ', '').split(' ');
-
-            const creatureTypes: string[] = [];
-            tokenSuperTypesString
-              .toLowerCase()
-              .split(' ')
-              .forEach((type) => {
-                creatureTypes.push(type);
-              });
-            tokenSubTypesString
-              .toLowerCase()
-              .split(' ')
-              .forEach((type) => {
-                creatureTypes.push(type);
-              });
-            const areTypesValid = arraySetEqual(creatureTypes, candidateTypes);
-
-            let areAbilitiesValid = false;
-            if (candidate.oracle_text !== undefined && candidate.oracle_text.length > 0) {
-              areAbilitiesValid = arraySetEqual(
-                tokenAbilities,
-                candidate.oracle_text
-                  .toLowerCase()
-                  .replace(/ *\([^)]*\) */g, '')
-                  .split(', '),
-              );
-            } else {
-              areAbilitiesValid = arraySetEqual(tokenAbilities, []);
-            }
-
-            if (
-              candidate.power === tokenPower &&
-              candidate.toughness === tokenToughness &&
-              areColorsValid &&
-              areTypesValid &&
-              areAbilitiesValid
-            ) {
-              mentionedTokens.push(candidate.scryfall_id);
-              break;
-            }
-          }
-        }
-      }
-    }
-    if (catalogCard.oracle_text.includes('Ascend (')) {
-      mentionedTokens.push(specialCaseTokens["City's Blessing"]);
-    }
-    if (catalogCard.oracle_text.includes('poison counter')) {
-      mentionedTokens.push(specialCaseTokens.Poison);
-    }
-    if (catalogCard.oracle_text.includes('you become the monarch')) {
-      mentionedTokens.push(specialCaseTokens.Monarch);
-    }
-    if (catalogCard.oracle_text.includes('{E}')) {
-      mentionedTokens.push(specialCaseTokens.Energy);
-    }
-
-    if (catalogCard.oracle_text.includes('emblem')) {
-      const hits = catalog.nameToId[`${card.name.toLowerCase()} emblem`];
-      if (Array.isArray(hits) && hits.length > 0) {
-        mentionedTokens.push(hits[0]);
-      }
-    }
-  }
-
-  return mentionedTokens;
+function getTokens(card: ScryfallCard) {
+  return getScryfallTokensForCard(card).concat(getExtraTokensForDungeons(card));
 }
 
 function convertCmc(card: ScryfallCard, preflipped: boolean, faceAttributeSource: ScryfallCard) {
@@ -720,6 +529,11 @@ function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boo
   newcard.artist = card.artist;
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
+  if (card.produced_mana) {
+    newcard.produced_mana = card.produced_mana.map((p) => p.toUpperCase() as ManaSymbol);
+  } else {
+    newcard.produced_mana = [];
+  }
   if (typeof card.card_faces === 'undefined') {
     newcard.oracle_text = card.oracle_text;
   } else {
@@ -738,6 +552,7 @@ function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boo
   newcard.language = card.lang;
   newcard.mtgo_id = card.mtgo_id;
   newcard.layout = card.layout;
+  newcard.keywords = card.keywords;
 
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;
@@ -786,7 +601,7 @@ function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boo
     }
   }
 
-  const tokens = getTokens(card, newcard as CardDetails);
+  const tokens = getTokens(card);
   if (tokens.length > 0) {
     newcard.tokens = tokens;
   }

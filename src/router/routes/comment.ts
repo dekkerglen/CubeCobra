@@ -100,7 +100,7 @@ export const editCommentHandler = async (req: Request, res: Response) => {
 };
 
 export const addCommentHandler = async (req: Request, res: Response) => {
-  const { body, mentions = [], parent, type } = req.body;
+  const { body, mentions = '', parent, type } = req.body;
   const { user } = req;
 
   if (!isCommentType(type)) {
@@ -132,7 +132,9 @@ export const addCommentHandler = async (req: Request, res: Response) => {
     }
   }
 
-  for (const mention of mentions) {
+  //Front-end joins the mentioned usernames with ; for the Form
+  const userMentions: string[] = mentions ? mentions.split(';') : []; //Stupid JS thing where split of empty string is an array of empty string
+  for (const mention of userMentions) {
     const mentioned = await DynamoUser.getByUsername(mention);
     if (mentioned) {
       await util.addNotification(mentioned, user, `/comment/${id}`, `${user?.username} mentioned you in their comment`);

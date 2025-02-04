@@ -136,59 +136,6 @@ router.get('/topcards', async (req, res) => {
   }
 });
 
-router.post('/cardhistory', async (req, res) => {
-  try {
-    const { id, zoom, period } = req.body;
-
-    let zoomValue = 10000;
-
-    if (zoom === 'month') {
-      switch (period) {
-        case 'day':
-          zoomValue = 30;
-          break;
-        case 'week':
-          zoomValue = 4;
-          break;
-        case 'month':
-          zoomValue = 2;
-          break;
-        default:
-          zoomValue = 0;
-          break;
-      }
-    } else if (zoom === 'year') {
-      switch (period) {
-        case 'day':
-          zoomValue = 365;
-          break;
-        case 'week':
-          zoomValue = 52;
-          break;
-        case 'month':
-          zoomValue = 12;
-          break;
-        default:
-          zoomValue = 0;
-          break;
-      }
-    }
-
-    const history = await CardHistory.getByOracleAndType(id, period, zoomValue);
-
-    return res.status(200).send({
-      success: 'true',
-      data: history.items.reverse(),
-    });
-  } catch (err) {
-    req.logger.error(err.message, err.stack);
-    return res.status(500).send({
-      success: 'false',
-      data: [],
-    });
-  }
-});
-
 router.get('/card/:id', async (req, res) => {
   try {
     let { id } = req.params;
@@ -227,6 +174,7 @@ router.get('/card/:id', async (req, res) => {
 
     const related = getRelatedCards(card.oracle_id);
 
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -248,11 +196,12 @@ router.get('/card/:id', async (req, res) => {
           `${card.name} - Cube Cobra`,
           `Analytics for ${card.name} on CubeCobra`,
           card.image_normal,
-          `https://cubecobra.com/card/${req.params.id}`,
+          `${baseUrl}/card/${req.params.id}`,
         ),
       },
     );
   } catch (err) {
+    // eslint-disable-next-line no-console -- Error debugging
     console.error(err);
     return util.handleRouteError(req, res, err, '/404');
   }
