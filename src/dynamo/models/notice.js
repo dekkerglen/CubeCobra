@@ -81,13 +81,17 @@ module.exports = {
     };
   },
   put: async (document) => {
+    let userId;
     if (document[FIELDS.USER].id) {
-      document[FIELDS.USER] = document[FIELDS.USER].id;
+      userId = document[FIELDS.USER].id;
+    } else {
+      userId = document[FIELDS.USER];
     }
 
     await client.put({
       [FIELDS.STATUS]: STATUS.ACTIVE,
       ...document,
+      [FIELDS.USER]: userId,
     });
   },
   batchPut: async (documents) => client.batchPut(documents),

@@ -1,23 +1,24 @@
-import { Card } from '../components/base/Card';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftutils';
+import { makeSubtitle } from 'utils/cardutil';
+import { fromEntries, toNullableInt } from 'utils/Util';
+
+import Cube from '../../datatypes/Cube';
+import Draft from '../../datatypes/Draft';
+import { getDefaultPosition } from '../../util/draftutil';
+import { Card } from '../components/base/Card';
 import CSRFForm from '../components/CSRFForm';
 import DeckStacks from '../components/DeckStacks';
 import GridDraftPack from '../components/draft/GridDraftPack';
 import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
+import { CSRFContext } from '../contexts/CSRFContext';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
-import Cube from '../datatypes/Cube';
-import Draft from '../datatypes/Draft';
 import DraftLocation, { addCard, locations } from '../drafting/DraftLocation';
-import { getDefaultPosition } from '../drafting/draftutil';
-import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftutils';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
-import { makeSubtitle } from 'utils/Card';
-import { fromEntries, toNullableInt } from 'utils/Util';
-import { CSRFContext } from '../contexts/CSRFContext';
 
 const MUTATIONS = {
   makePick: ({

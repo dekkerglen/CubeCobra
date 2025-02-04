@@ -1,10 +1,11 @@
+import React, { useState } from 'react';
+
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 import TextArea from '../base/TextArea';
 import CSRFForm from '../CSRFForm';
-import React, { useState } from 'react';
 
 interface PasteBulkModalProps {
   isOpen: boolean;

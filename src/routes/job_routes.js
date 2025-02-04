@@ -19,10 +19,8 @@ router.post('/featuredcubes/rotate', async (req, res) => {
     return res.statusCode(401).send('Invalid token.');
   }
 
-  const queue = await FeaturedQueue.querySortedByDate();
-  const { items } = queue;
-
-  const rotate = await fq.rotateFeatured(items);
+  const response = await FeaturedQueue.querySortedByDate(null, 4);
+  const rotate = await fq.rotateFeatured(response.items);
 
   if (rotate.success === 'false') {
     return res.statusCode(500).send('featured cube rotation failed: ' + rotate.messages.join('\n'));

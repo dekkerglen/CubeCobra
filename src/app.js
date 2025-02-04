@@ -12,14 +12,14 @@ const compression = require('compression');
 const uuid = require('uuid');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
-const socketio = require('socket.io');
 const DynamoDBStore = require('dynamodb-store');
 const cloudwatch = require('./util/cloudwatch');
 const { updateCardbase } = require('./util/updatecards');
 const carddb = require('./util/carddb');
 const { render } = require('./util/render');
-const { setup } = require('./util/socketio');
 const flash = require('connect-flash');
+
+import router from './router/router';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason) => {
@@ -31,6 +31,24 @@ const app = express();
 
 // gzip middleware
 app.use(compression());
+
+//If this isn't a local developer environment, improve security by only allowing HTTPS
+if (process.env?.NODE_ENV !== 'development') {
+  app.use((req, res, next) => {
+    //Redirect to HTTPS for security, assuming the AWS ALB isn't forwarding the HTTPS request along
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+      /* Use DOMAIN environment variable instead of relying on req.headers.host.
+       * That protects us from uncontrolled redirects to another domain, which is a type of
+       * HTTP Host header attack (see https://portswigger.net/web-security/host-header#how-to-prevent-http-host-header-attacks)
+       */
+      res.redirect('https://' + process.env.DOMAIN + req.url);
+    } else {
+      //If the request has good security, tell the browser to automatically use HTTPS in the future (for next 1 year)
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+      next();
+    }
+  });
+}
 
 // request timeout middleware
 app.use((req, res, next) => {
@@ -202,14 +220,18 @@ app.post('/healthcheck', (req, res) => {
 app.use((req, res, next) => {
   if (req.user && req.user.roles.includes('Banned')) {
     req.session.destroy(() => {
-      req.flash('danger', 'Your account has been banned, please contact CubeCobra staff if you believe this is in error.');
+      req.flash(
+        'danger',
+        'Your account has been banned, please contact CubeCobra staff if you believe this is in error.',
+      );
       return res.redirect('/');
     });
   }
 
   next();
-}); 
+});
 
+app.use(router);
 
 // Route files; they manage their own CSRF protection
 app.use('/patreon', require('./routes/patreon_routes'));
@@ -219,10 +241,8 @@ app.use('/cube', require('./routes/cube/index'));
 app.use('/public', require('./routes/cube/api_public'));
 app.use('/user', require('./routes/users_routes'));
 app.use('/tool', require('./routes/tools_routes'));
-app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
-app.use('/multiplayer', require('./routes/multiplayer'));
 app.use('/packages', require('./routes/packages'));
 app.use('/api/private', require('./routes/api/private'));
 app.use('/job', require('./routes/job_routes'));
@@ -251,15 +271,14 @@ app.use((err, req, res) => {
 
 // scryfall updates this data at 9, so this will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
+  // eslint-disable-next-line no-console
   console.info('starting midnight cardbase update...');
   await updateCardbase();
 });
 
 // Start server after carddb is initialized.
 carddb.initializeCardDb().then(async () => {
-  const server = http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
+  http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
+  // eslint-disable-next-line no-console
   console.info(`Server started on port ${process.env.PORT || 5000}...`);
-
-  // init socket io
-  setup(socketio(server));
 });

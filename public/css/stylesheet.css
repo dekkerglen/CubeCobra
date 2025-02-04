@@ -545,7 +545,47 @@ video {
   display: none;
 }
 
+/* festive */
+
 :root {
+  --bg: 240 240 240;
+  --bg-active: 233 233 233;
+  --bg-secondary: 52 58 64;
+  --bg-accent:  250 250 250;
+  --text-secondary: 128 128 128;
+  --text-secondary-active: 255 255 255;
+  --border: 212 212 212;
+  --border-active : 180 180 180;
+  --border-secondary: 187 187 187;
+  --text: 33 37 41;
+  --link: 0 123 255;
+  --link-active: 0 86 179;
+  --button-text: 255 255 255;
+  --button-text-secondary: 33 37 41;
+  --button-primary: 8 119 21;
+  --button-primary-active : 0 75 13;
+  --button-danger: 188 21 37;
+  --button-danger-active: 139 0 0;
+  --button-accent: 0 123 255;
+  --button-accent-active: 0 86 179;
+  --button-secondary: 108 117 125;
+  --button-secondary-active: 74 80 87;
+  --focus-ring: 3 102 214;
+  --advert: 251 241 185;
+  --article : 116 198 135;
+  --podcast: 64 154 191;
+  --video: 254 66 66;
+  --card-white: 255 255 235;
+  --card-blue:  212 237 255;
+  --card-black: 214 204 214;
+  --card-red: 255 200 200;
+  --card-green: 233 255 212;
+  --card-multi: 252 248 169;
+  --card-colorless: 233 231 235;
+  --card-lands: 255 224 192;
+}
+
+:root[class~="light"] {
   --bg: 240 240 240;
   --bg-active: 233 233 233;
   --bg-secondary: 52 58 64;
@@ -732,6 +772,10 @@ video {
 
 .top-0 {
   top: 0px;
+}
+
+.top-full {
+  top: 100%;
 }
 
 .z-10 {
@@ -1212,10 +1256,6 @@ video {
 
 .resize {
   resize: both;
-}
-
-.list-inside {
-  list-style-position: inside;
 }
 
 .list-decimal {
@@ -1745,6 +1785,11 @@ video {
   background-color: rgb(219 234 254 / var(--tw-bg-opacity));
 }
 
+.bg-blue-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(59 130 246 / var(--tw-bg-opacity));
+}
+
 .bg-button-accent {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--button-accent) / var(--tw-bg-opacity));
@@ -1825,6 +1870,11 @@ video {
   background-color: rgb(220 252 231 / var(--tw-bg-opacity));
 }
 
+.bg-green-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(34 197 94 / var(--tw-bg-opacity));
+}
+
 .bg-link {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--link) / var(--tw-bg-opacity));
@@ -1835,9 +1885,19 @@ video {
   background-color: rgb(var(--podcast) / var(--tw-bg-opacity));
 }
 
+.bg-purple-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(147 51 234 / var(--tw-bg-opacity));
+}
+
 .bg-red-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 226 226 / var(--tw-bg-opacity));
+}
+
+.bg-red-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity));
 }
 
 .bg-teal-100 {
@@ -1854,9 +1914,19 @@ video {
   background-color: rgb(var(--video) / var(--tw-bg-opacity));
 }
 
+.bg-white {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+}
+
 .bg-yellow-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 249 195 / var(--tw-bg-opacity));
+}
+
+.bg-yellow-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(253 224 71 / var(--tw-bg-opacity));
 }
 
 .bg-opacity-50 {
@@ -2585,15 +2655,13 @@ img.mana-symbol-sm {
   }
 }
 
-/* Loose lists (https: //spec.commonmark.org/0.31.2/#lists) have a <p> within the list items. Using inline-block and bottom margin
-* results in a blank line after the list item, and in conjunction with list-style-position: inside on the list element itself
-* ensures the <p> content starts on the same line as the item marker (eg 1 or *). Without inline-block, the list-style-position would
-* move the item content to the next line.
+/* Loose lists (https: //spec.commonmark.org/0.31.2/#lists) have a <p> within the list items. Use bottom margin to emulate
+* a blank line after the list item. No longer using list-style-position: inside with it, so don't have to muck with inline-block
+* to prevent the <p> from starting one a new line after the marker.
 */
 
 .markdown ul p,
 .markdown ol p {
-  display: inline-block;
   margin-bottom: 1rem;
 }
 
@@ -2608,6 +2676,12 @@ img.mana-symbol-sm {
 
 .no-touch-action {
   touch-action: none;
+}
+
+/* Make external images within centering blocks display beside it each instead of stacked vertically */
+
+.markdown .text-center img.max-w-full {
+  display: inline-block;
 }
 
 @media (min-width: 640px) {

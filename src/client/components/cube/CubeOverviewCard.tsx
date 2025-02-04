@@ -1,7 +1,15 @@
-import React, { useContext, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import { EyeClosedIcon, LinkExternalIcon } from '@primer/octicons-react';
 
+import { getCubeDescription, getCubeId } from 'utils/Util';
+
+import User from '../../../datatypes/User';
+import BaseUrlContext from '../../contexts/BaseUrlContext';
+import { CSRFContext } from '../../contexts/CSRFContext';
+import CubeContext from '../../contexts/CubeContext';
+import UserContext from '../../contexts/UserContext';
+import useAlerts from '../../hooks/UseAlerts';
 import Button from '../base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from '../base/Card';
 import { Col, Flexbox, Row } from '../base/Layout';
@@ -9,21 +17,15 @@ import Link from '../base/Link';
 import Tag from '../base/Tag';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
-import CubeIdModal from './CubeIdModal';
-import FollowersModal from '../modals/FollowersModal';
 import Markdown from '../Markdown';
+import ConfirmActionModal from '../modals/ConfirmActionModal';
+import FollowersModal from '../modals/FollowersModal';
 import QRCodeModal from '../modals/QRCodeModal';
 import MtgImage from '../MtgImage';
 import TextBadge from '../TextBadge';
 import Username from '../Username';
 import withModal from '../WithModal';
-import CubeContext from '../../contexts/CubeContext';
-import UserContext from '../../contexts/UserContext';
-import useAlerts from '../../hooks/UseAlerts';
-import { getCubeDescription, getCubeId } from 'utils/Util';
-import User from '../../datatypes/User';
-import { CSRFContext } from '../../contexts/CSRFContext';
-import ConfirmActionModal from '../modals/ConfirmActionModal';
+import CubeIdModal from './CubeIdModal';
 
 const FollowersModalLink = withModal(Link, FollowersModal);
 const CubeIdModalLink = withModal(Link, CubeIdModal);
@@ -34,7 +36,7 @@ interface PrivateCubeIconProps {
 }
 
 const PrivateCubeIcon: React.FC<PrivateCubeIconProps> = ({ visibility }) => {
-  const visibilityWord = visibility == 'pr' ? 'private' : 'unlisted';
+  const visibilityWord = visibility === 'pr' ? 'private' : 'unlisted';
   return (
     <Tooltip
       text={`This cube is set as ${visibilityWord}.`}
@@ -60,6 +62,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
   const user = useContext(UserContext);
   const [followedState, setFollowedState] = useState(followed);
   const { addAlert } = useAlerts();
+  const baseUrl = useContext(BaseUrlContext);
 
   const follow = () => {
     setFollowedState(true);
@@ -69,6 +72,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
       headers: {},
     }).then((response) => {
       if (!response.ok) {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(response);
       }
     });
@@ -82,10 +86,27 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
       headers: {},
     }).then((response) => {
       if (!response.ok) {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(response);
       }
     });
   };
+
+  const toggleFeatured = useCallback(() => {
+    const action = cube.featured ? 'unfeature' : 'feature';
+    csrfFetch(`/cube/${action}/${cube.id}`, {
+      method: 'POST',
+      headers: {},
+    }).then((response) => {
+      if (!response.ok) {
+        // eslint-disable-next-line no-console -- Debugging
+        console.error(response);
+      } else {
+        //Reload the page to see new state. TODO: Update state directly
+        window.location.reload();
+      }
+    });
+  }, [csrfFetch, cube]);
 
   return (
     <Flexbox direction="col" gap="2">
@@ -126,10 +147,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                     <Username user={cube.owner} />
                   </Text>{' '}
                   • <Link href={`/cube/rss/${cube.id}`}>RSS</Link> •{' '}
-                  <QRCodeModalLink
-                    href="#"
-                    modalprops={{ link: `https://cubecobra.com/c/${cube.id}`, cubeName: cube.name }}
-                  >
+                  <QRCodeModalLink href="#" modalprops={{ link: `${baseUrl}/c/${cube.id}`, cubeName: cube.name }}>
                     QR Code
                   </QRCodeModalLink>
                 </Text>
@@ -140,7 +158,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                   <Flexbox direction="row" gap="2">
                     {Number.isFinite(priceOwned) && (
                       <TextBadge name="Owned">
-                        <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
+                        <Tooltip text="TCGPlayer Market Price as owned (cards marked as any type of ownership, or Ordered)">
                           ${Math.round(priceOwned).toLocaleString()}
                         </Tooltip>
                       </TextBadge>
@@ -155,12 +173,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                   </Flexbox>
                 )}
                 {user && user.roles && user.roles.includes('Admin') && (
-                  <Button
-                    color="accent"
-                    type="link"
-                    disabled={cube.visibility !== 'pu'}
-                    href={`/cube/${cube.featured ? 'unfeature/' : 'feature/'}${cube.id}`}
-                  >
+                  <Button color="accent" disabled={cube.visibility !== 'pu'} onClick={toggleFeatured}>
                     {cube.featured ? 'Remove from featured' : 'Add to featured'}
                   </Button>
                 )}

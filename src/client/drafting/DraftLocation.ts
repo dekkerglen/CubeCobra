@@ -82,7 +82,7 @@ export const removeCard = (cards: number[][][], source: DraftLocation): [number,
 };
 
 export const moveCard = (cards: number[][][], source: DraftLocation, target: DraftLocation): number[][][] => {
-  let newCards = [...cards];
+  const newCards = [...cards];
 
   if (source.type !== target.type) {
     throw new Error('Cannot move card between different locations');

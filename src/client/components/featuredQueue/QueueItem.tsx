@@ -1,14 +1,14 @@
-import { Col, Flexbox } from 'components/base/Layout';
-import Text from 'components/base/Text';
-import Cube from 'datatypes/Cube';
 import React from 'react';
 
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
+import { Col, Flexbox } from 'components/base/Layout';
+import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import CubePreview from 'components/cube/CubePreview';
 import MoveModal from 'components/featuredQueue/MoveModal';
 import withModal from 'components/WithModal';
+import Cube from 'datatypes/Cube';
 
 const MoveButton = withModal(Button, MoveModal);
 

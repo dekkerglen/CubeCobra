@@ -1,22 +1,22 @@
 import React, { Dispatch, SetStateAction, useCallback, useContext, useRef, useState } from 'react';
 
+import { BoardType } from '../../datatypes/Card';
+import { CardDetails } from '../../datatypes/Card';
+import { CSRFContext } from '../contexts/CSRFContext';
+import CubeContext from '../contexts/CubeContext';
+import DisplayContext, { DisplayContextValue } from '../contexts/DisplayContext';
+import useLocalStorage from '../hooks/useLocalStorage';
+import Alert, { UncontrolledAlertProps } from './base/Alert';
 import AutocompleteInput from './base/AutocompleteInput';
+import Button from './base/Button';
+import Checkbox from './base/Checkbox';
+import Collapse from './base/Collapse';
+import Input from './base/Input';
+import { Col, Flexbox, Row } from './base/Layout';
+import Select from './base/Select';
 import Changelist from './Changelist';
 import LoadingButton from './LoadingButton';
 import TextEntry from './TextEntry';
-import CubeContext from '../contexts/CubeContext';
-import DisplayContext, { DisplayContextValue } from '../contexts/DisplayContext';
-import { BoardType } from '../datatypes/Card';
-import CardDetails from '../datatypes/CardDetails';
-import useLocalStorage from '../hooks/useLocalStorage';
-import Alert, { UncontrolledAlertProps } from './base/Alert';
-import Collapse from './base/Collapse';
-import { Col, Flexbox, Row } from './base/Layout';
-import Select from './base/Select';
-import Button from './base/Button';
-import Checkbox from './base/Checkbox';
-import Input from './base/Input';
-import { CSRFContext } from '../contexts/CSRFContext';
 
 interface GetCardResponse {
   success: 'true' | 'false';
@@ -25,7 +25,7 @@ interface GetCardResponse {
 
 export const getCard = async (
   csrfFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
-  defaultprinting: string,
+  defaultPrinting: string,
   name: string,
   setAlerts?: Dispatch<SetStateAction<UncontrolledAlertProps[]>>,
 ): Promise<CardDetails | null> => {
@@ -34,7 +34,7 @@ export const getCard = async (
       method: 'POST',
       body: JSON.stringify({
         name,
-        defaultprinting,
+        defaultPrinting,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, boardToEdit],
+    [csrfFetch, cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, boardToEdit],
   );
 
   const handleRemoveReplace = useCallback(
@@ -180,7 +180,17 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [addValue, changedCards, boardToEdit, setAlerts, cube.defaultPrinting, cube.defaultStatus, swapCard, removeCard],
+    [
+      addValue,
+      changedCards,
+      boardToEdit,
+      setAlerts,
+      csrfFetch,
+      cube.defaultPrinting,
+      cube.defaultStatus,
+      swapCard,
+      removeCard,
+    ],
   );
 
   const submit = useCallback(async () => {
@@ -227,6 +237,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
                 autoComplete="off"
                 data-lpignore
                 className="square-right"
+                defaultPrinting={cube.defaultPrinting}
               />
               <Button color="primary" disabled={addValue.length === 0} onClick={(e) => handleAdd(e, addValue)}>
                 Add

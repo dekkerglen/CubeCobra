@@ -9,7 +9,6 @@ const reversedSetOperation = (op, value) => {
 };
 
 
-import { CARD_CATEGORY_DETECTORS } from 'utils/Card';
 import {
   defaultOperation,
   stringOperation,
@@ -24,8 +23,9 @@ import {
   setElementOperation,
   setCountOperation,
   devotionOperation,
-} from 'filtering/FuncOperations';
+} from '../../filtering/FuncOperations';
 import {
+  CARD_CATEGORY_DETECTORS,
   cardCmc,
   cardColors,
   cardColorIdentity,
@@ -33,6 +33,7 @@ import {
   cardOracleText,
   cardSet,
   cardCollectorNumber,
+  cardNotes,
   cardPower,
   cardToughness,
   cardTags,
@@ -57,7 +58,7 @@ import {
   cardLegalIn,
   cardBannedIn,
   cardRestrictedIn
-} from 'utils/Card';
+} from '../../utils/cardutil';
 
 
 const negated = (inner) => {
@@ -210,6 +211,8 @@ var grammar = {
     {"name": "statusValue$subexpression$1", "symbols": ["statusValue$subexpression$1$subexpression$2"]},
     {"name": "statusValue$subexpression$1$subexpression$3", "symbols": [/[oO]/, /[rR]/, /[dD]/, /[eE]/, /[rR]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "statusValue$subexpression$1", "symbols": ["statusValue$subexpression$1$subexpression$3"]},
+    {"name": "statusValue$subexpression$1$subexpression$4", "symbols": [/[bB]/, /[oO]/, /[rR]/, /[rR]/, /[oO]/, /[wW]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "statusValue$subexpression$1", "symbols": ["statusValue$subexpression$1$subexpression$4"]},
     {"name": "statusValue", "symbols": ["statusValue$subexpression$1"], "postprocess": ([[status]]) => status.toLowerCase()},
     {"name": "statusValue$subexpression$2$subexpression$1", "symbols": [/[oO]/, /[wW]/, /[nN]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "statusValue$subexpression$2", "symbols": ["statusValue$subexpression$2$subexpression$1"]},
@@ -221,6 +224,8 @@ var grammar = {
     {"name": "statusValue$subexpression$2", "symbols": ["statusValue$subexpression$2$subexpression$4"]},
     {"name": "statusValue$subexpression$2$subexpression$5", "symbols": [/[pP]/, /[rR]/, /[eE]/, /[mM]/, /[iI]/, /[uU]/, /[mM]/, {"literal":" "}, /[oO]/, /[wW]/, /[nN]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "statusValue$subexpression$2", "symbols": ["statusValue$subexpression$2$subexpression$5"]},
+    {"name": "statusValue$subexpression$2$subexpression$6", "symbols": [/[bB]/, /[oO]/, /[rR]/, /[rR]/, /[oO]/, /[wW]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "statusValue$subexpression$2", "symbols": ["statusValue$subexpression$2$subexpression$6"]},
     {"name": "statusValue", "symbols": [{"literal":"'"}, "statusValue$subexpression$2", {"literal":"'"}], "postprocess": ([, [status]]) => status.toLowerCase()},
     {"name": "statusValue$subexpression$3$subexpression$1", "symbols": [/[oO]/, /[wW]/, /[nN]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "statusValue$subexpression$3", "symbols": ["statusValue$subexpression$3$subexpression$1"]},
@@ -232,6 +237,8 @@ var grammar = {
     {"name": "statusValue$subexpression$3", "symbols": ["statusValue$subexpression$3$subexpression$4"]},
     {"name": "statusValue$subexpression$3$subexpression$5", "symbols": [/[pP]/, /[rR]/, /[eE]/, /[mM]/, /[iI]/, /[uU]/, /[mM]/, {"literal":" "}, /[oO]/, /[wW]/, /[nN]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "statusValue$subexpression$3", "symbols": ["statusValue$subexpression$3$subexpression$5"]},
+    {"name": "statusValue$subexpression$3$subexpression$6", "symbols": [/[bB]/, /[oO]/, /[rR]/, /[rR]/, /[oO]/, /[wW]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "statusValue$subexpression$3", "symbols": ["statusValue$subexpression$3$subexpression$6"]},
     {"name": "statusValue", "symbols": [{"literal":"\""}, "statusValue$subexpression$3", {"literal":"\""}], "postprocess": ([, [status]]) => status.toLowerCase()},
     {"name": "rarityOpValue", "symbols": ["anyOperator", "rarityValue"], "postprocess": ([op, value]) => rarityOperation(op, value)},
     {"name": "rarityValue$subexpression$1$subexpression$1", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
@@ -1621,6 +1628,7 @@ var grammar = {
     {"name": "condition$subexpression$1", "symbols": ["restrictedCondition"]},
     {"name": "condition$subexpression$1", "symbols": ["layoutCondition"]},
     {"name": "condition$subexpression$1", "symbols": ["collectorNumberCondition"]},
+    {"name": "condition$subexpression$1", "symbols": ["notesCondition"]},
     {"name": "condition", "symbols": ["condition$subexpression$1"], "postprocess": ([[condition]]) => condition},
     {"name": "cmcCondition$subexpression$1$subexpression$1", "symbols": [/[mM]/, /[vV]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "cmcCondition$subexpression$1", "symbols": ["cmcCondition$subexpression$1$subexpression$1"]},
@@ -1866,6 +1874,8 @@ var grammar = {
     {"name": "collectorNumberCondition$subexpression$1$subexpression$2", "symbols": [/[nN]/, /[uU]/, /[mM]/, /[bB]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "collectorNumberCondition$subexpression$1", "symbols": ["collectorNumberCondition$subexpression$1$subexpression$2"]},
     {"name": "collectorNumberCondition", "symbols": ["collectorNumberCondition$subexpression$1", "stringExactOpValue"], "postprocess": ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred)},
+    {"name": "notesCondition$subexpression$1", "symbols": [/[nN]/, /[oO]/, /[tT]/, /[eE]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "notesCondition", "symbols": ["notesCondition$subexpression$1", "stringOpValue"], "postprocess": ([, valuePred]) => genericCondition('notes', cardNotes, valuePred)},
     {"name": "isCondition$subexpression$1", "symbols": [/[iI]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "isCondition", "symbols": ["isCondition$subexpression$1", "isOpValue"], "postprocess": ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred)},
     {"name": "notCondition$subexpression$1", "symbols": [/[nN]/, /[oO]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},

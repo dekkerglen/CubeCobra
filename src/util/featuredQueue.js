@@ -1,14 +1,18 @@
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
 const Patron = require('../dynamo/models/patron');
-
-function canBeFeatured(patron) {
-  return patron && patron.status === Patron.STATUSES.ACTIVE && patron.level > 1;
-}
+import { canBeFeatured } from './featuredQueueUtil';
 
 async function rotateFeatured(queue) {
   if (queue.length < 4) {
     throw new Error(`Not enough cubes in queue to rotate (need 4, have ${queue.length})`);
+  }
+
+  const lastRotation = queue[0].featuredOn;
+
+  // if last rotation was less than 6 days ago, do not rotate
+  if (lastRotation && Date.now().valueOf() - lastRotation < 6 * 24 * 60 * 60 * 1000) {
+    return {};
   }
 
   const [old1, old2, new1, new2] = queue.slice(0, 4);

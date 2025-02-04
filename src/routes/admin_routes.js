@@ -3,9 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 const { body } = require('express-validator');
-const mailer = require('nodemailer');
-const path = require('path');
-const Email = require('email-templates');
+import sendEmail from '../util/email';
 const { ensureRole, csrfProtection, flashValidationErrors } = require('./middleware');
 
 const User = require('../dynamo/models/user');
@@ -70,41 +68,16 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
       `/content/${document.type}/${document.id}`,
       `${req.user.username} has approved and published your content: ${document.title}`,
     );
-  }
 
-  const smtpTransport = mailer.createTransport({
-    name: 'CubeCobra.com',
-    secure: true,
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_CONFIG_USERNAME,
-      pass: process.env.EMAIL_CONFIG_PASSWORD,
-    },
-  });
+    //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+    const owner = await User.getByIdWithSensitiveData(document.owner.id);
 
-  const message = new Email({
-    message: {
-      from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: document.owner.email,
-      subject: 'Your content has been published',
-    },
-    send: true,
-    juiceResources: {
-      webResources: {
-        relativeTo: path.join(__dirname, '..', 'public'),
-        images: true,
-      },
-    },
-    transport: smtpTransport,
-  });
-
-  message.send({
-    template: 'content_publish',
-    locals: {
+    const baseUrl = util.getBaseUrl();
+    await sendEmail(owner.email, 'Your content has been published', 'content_publish', {
       title: document.title,
-      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
-    },
-  });
+      url: `${baseUrl}/content/${document.type}/${document.id}`,
+    });
+  }
 
   req.flash('success', `Content published: ${document.title}`);
 
@@ -131,41 +104,16 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
       `/content/${document.type}/${document.id}`,
       `${req.user.username} has declined to publish your content: ${document.title}`,
     );
-  }
 
-  const smtpTransport = mailer.createTransport({
-    name: 'CubeCobra.com',
-    secure: true,
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_CONFIG_USERNAME,
-      pass: process.env.EMAIL_CONFIG_PASSWORD,
-    },
-  });
+    //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+    const owner = await User.getByIdWithSensitiveData(document.owner.id);
 
-  const message = new Email({
-    message: {
-      from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: document.owner.email,
-      subject: 'Your Content was not published',
-    },
-    send: true,
-    juiceResources: {
-      webResources: {
-        relativeTo: path.join(__dirname, '..', 'public'),
-        images: true,
-      },
-    },
-    transport: smtpTransport,
-  });
-
-  await message.send({
-    template: 'content_decline',
-    locals: {
+    const baseUrl = util.getBaseUrl();
+    await sendEmail(owner.email, 'Your Content was not published', 'content_decline', {
       title: document.title,
-      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
-    },
-  });
+      url: `${baseUrl}/content/${document.type}/${document.id}`,
+    });
+  }
 
   req.flash('success', `Content declined: ${document.title}`);
 
@@ -189,7 +137,7 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   report.status = Notice.STATUS.PROCESSED;
   await Notice.put(report);
 
-  comment.owner = null;
+  delete comment.owner;
   comment.body = '[removed by moderator]';
   // the -1000 is to prevent weird time display error
   comment.date = Date.now() - 1000;
@@ -210,39 +158,13 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   }
   await User.update(application.user);
 
+  //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+  const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
+
   application.status = Notice.STATUS.PROCESSED;
   Notice.put(application);
 
-  const smtpTransport = mailer.createTransport({
-    name: 'CubeCobra.com',
-    secure: true,
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_CONFIG_USERNAME,
-      pass: process.env.EMAIL_CONFIG_PASSWORD,
-    },
-  });
-
-  const message = new Email({
-    message: {
-      from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: application.user.email,
-      subject: 'Cube Cobra Content Creator',
-    },
-    send: true,
-    juiceResources: {
-      webResources: {
-        relativeTo: path.join(__dirname, '..', 'public'),
-        images: true,
-      },
-    },
-    transport: smtpTransport,
-  });
-
-  await message.send({
-    template: 'application_approve',
-    locals: {},
-  });
+  await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_approve');
 
   req.flash('success', `Application for ${application.user.username} approved.`);
   return redirect(req, res, `/admin/notices`);
@@ -254,50 +176,31 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   application.status = Notice.STATUS.PROCESSED;
   Notice.put(application);
 
-  const smtpTransport = mailer.createTransport({
-    name: 'CubeCobra.com',
-    secure: true,
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_CONFIG_USERNAME,
-      pass: process.env.EMAIL_CONFIG_PASSWORD,
-    },
-  });
+  //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+  const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
 
-  const message = new Email({
-    message: {
-      from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: application.user.email,
-      subject: 'Cube Cobra Content Creator',
-    },
-    send: true,
-    juiceResources: {
-      webResources: {
-        relativeTo: path.join(__dirname, '..', 'public'),
-        images: true,
-      },
-    },
-    transport: smtpTransport,
-  });
-
-  await message.send({
-    template: 'application_decline',
-    locals: {},
-  });
+  await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_decline');
 
   req.flash('danger', `Application declined.`);
   return redirect(req, res, `/admin/notices`);
 });
 
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
-  const featured = await FeaturedQueue.querySortedByDate(null, 10000);
-  const cubes = await Cube.batchGet(featured.items.map((f) => f.cube));
-  const sortedCubes = featured.items.map((f) => cubes.find((c) => c.id === f.cube)).filter((c) => c);
+  let featured = [];
+  let lastkey = null;
+
+  do {
+    const response = await FeaturedQueue.querySortedByDate(lastkey);
+    featured = featured.concat(response.items);
+    lastkey = response.lastKey;
+  } while (lastkey);
+
+  const cubes = await Cube.batchGet(featured.map((f) => f.cube));
+  const sortedCubes = featured.map((f) => cubes.find((c) => c.id === f.cube)).filter((c) => c);
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes: sortedCubes,
-    featured,
-    lastRotation: featured.items[0].featuredOn,
+    lastRotation: featured[0].featuredOn,
   });
 });
 
@@ -444,13 +347,13 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
       await Draft.delete(draftId);
     }
 
-    commentResponse = await Comment.queryByOwner(userToBan);
-    lastkey = commentResponse.LastEvaluatedKey;
-    comments = commentResponse.items;
+    let commentResponse = await Comment.queryByOwner(userToBan);
+    let lastkey = commentResponse.LastEvaluatedKey;
+    let comments = commentResponse.items;
 
-    while (lastKey) {
+    while (lastkey) {
       const nextResponse = await Comment.queryByOwner(userToBan, lastKey);
-      lastKey = nextResponse.LastEvaluatedKey;
+      lastkey = nextResponse.LastEvaluatedKey;
       comments = comments.concat(nextResponse.items);
     }
 
@@ -460,7 +363,7 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
     for (const comment of comments) {
       delete comment.owner;
       comment.body = '[deleted]';
-    
+
       await Comment.put(comment);
     }
 

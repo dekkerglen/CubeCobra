@@ -1,5 +1,10 @@
 import React from 'react';
 
+import Banner from 'components/Banner';
+import Controls from 'components/base/Controls';
+import { Flexbox } from 'components/base/Layout';
+import { TabContent, Tabs } from 'components/base/Tabs';
+import Text from 'components/base/Text';
 import CreatorArticles from 'components/content/CreatorArticles';
 import CreatorPodcasts from 'components/content/CreatorPodcasts';
 import CreatorVideos from 'components/content/CreatorVideos';
@@ -7,11 +12,6 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-import { TabContent, Tabs } from 'components/base/Tabs';
-import Text from 'components/base/Text';
-import Controls from 'components/base/Controls';
-import Banner from 'components/Banner';
-import { Flexbox } from 'components/base/Layout';
 
 interface ContentItems {
   items: any[];

@@ -1,3 +1,5 @@
+import React, { useContext, useState } from 'react';
+
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
 import { Flexbox } from 'components/base/Layout';
@@ -8,7 +10,8 @@ import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
 import CubeContext from 'contexts/CubeContext';
 import Cube from 'datatypes/Cube';
-import React, { useContext, useState } from 'react';
+
+import { getLabels } from '../../utils/Sort';
 
 interface CubeSettingsModalProps {
   addAlert: (color: string, message: string) => void;
@@ -45,7 +48,7 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
         <CSRFForm ref={formRef} formData={formData} method="POST" action={`/cube/updatesettings/${cube.id}`}>
           <Flexbox direction="col" gap="2">
             <Checkbox
-              label="Hide Total Prices"
+              label="Show Total Prices"
               checked={formData.priceVisibility === 'true'}
               setChecked={(checked) => setFormData({ ...formData, priceVisibility: `${checked}` })}
             />
@@ -69,12 +72,10 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
               label="Default Status"
               value={formData.defaultStatus}
               setValue={(defaultStatus) => setFormData({ ...formData, defaultStatus })}
-              options={[
-                { value: 'Not Owned', label: 'Not Owned' },
-                { value: 'Ordered', label: 'Ordered' },
-                { value: 'Owned', label: 'Owned' },
-                { value: 'Premium Owned', label: 'Premium Owned' },
-              ]}
+              options={getLabels(null, 'Status', false).map((status: string) => ({
+                value: status,
+                label: status,
+              }))}
             />
             <Select
               label="Default Printing"

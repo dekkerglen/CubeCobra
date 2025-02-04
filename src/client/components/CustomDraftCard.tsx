@@ -1,31 +1,32 @@
-import CSRFForm from './CSRFForm';
-import Markdown from './Markdown';
-import CubeContext from '../contexts/CubeContext';
-import { DraftFormat } from '../datatypes/Draft';
 import React, { useContext, useMemo, useState } from 'react';
+
+import { DraftFormat } from '../../datatypes/Draft';
+import CubeContext from '../contexts/CubeContext';
 import Button from './base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
+import { Flexbox } from './base/Layout';
 import Select from './base/Select';
 import Text from './base/Text';
+import CSRFForm from './CSRFForm';
+import Markdown from './Markdown';
 import ConfirmActionModal from './modals/ConfirmActionModal';
 import CustomDraftFormatModal from './modals/CustomDraftFormatModal';
 import withModal from './WithModal';
-import { Flexbox } from './base/Layout';
 
 const EditFormatButton = withModal(Button, CustomDraftFormatModal);
 const DeleteFormatButton = withModal(Button, ConfirmActionModal);
 
 interface CustomDraftCardProps {
   format: DraftFormat;
-  defaultDraftFormat: number;
+  defaultFormat: number;
   formatIndex: number;
 }
 
 const range = (lo: number, hi: number): number[] => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 
-const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultDraftFormat, formatIndex }) => {
+const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultFormat, formatIndex }) => {
   const { cube, canEdit } = useContext(CubeContext);
-  const [seats, setSeats] = useState('8');
+  const [seats, setSeats] = useState(format?.defaultSeats?.toString() || '8');
   const formRef = React.createRef<HTMLFormElement>();
 
   const formData = useMemo(
@@ -33,21 +34,15 @@ const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultDraftF
       seats: `${seats}`,
       id: `${formatIndex}`,
     }),
-    [seats],
+    [formatIndex, seats],
   );
 
   return (
     <Card>
-      <CSRFForm
-        method="POST"
-        key="createDraft"
-        action={`/cube/startdraft/${cube.id}`}
-        formData={formData}
-        ref={formRef}
-      >
+      <CSRFForm method="POST" key="createDraft" action={`/draft/start/${cube.id}`} formData={formData} ref={formRef}>
         <CardHeader>
           <Text lg semibold>
-            {defaultDraftFormat === formatIndex && 'Default Format: '}
+            {defaultFormat === formatIndex && 'Default Format: '}
             {format.title} (Custom Draft)
           </Text>
         </CardHeader>
@@ -76,7 +71,7 @@ const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultDraftF
                 <EditFormatButton block modalprops={{ formatIndex }} color="accent" className="whitespace-nowrap">
                   <span className="whitespace-nowrap">Edit</span>
                 </EditFormatButton>
-                {defaultDraftFormat !== formatIndex && (
+                {defaultFormat !== formatIndex && (
                   <Button
                     block
                     color="accent"

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
+import CubePreview from 'components/cube/CubePreview';
+import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
 import RenderToRoot from 'components/RenderToRoot';
 import Cube from 'datatypes/Cube';
 import MainLayout from 'layouts/MainLayout';
-import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
-import CubePreview from 'components/cube/CubePreview';
 
 interface SearchPageProps {
   items: Cube[];

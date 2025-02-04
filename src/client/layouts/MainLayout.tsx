@@ -1,15 +1,15 @@
 import React from 'react';
 
+import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import ErrorBoundary from 'components/ErrorBoundary';
 import MobileBanner from 'components/MobileBanner';
+import Navbar from 'components/nav/Navbar';
 import SideBanner from 'components/SideBanner';
+import VideoBanner from 'components/VideoBanner';
 import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
-import Navbar from 'components/nav/Navbar';
-import ResponsiveDiv from 'components/base/ResponsiveDiv';
-import Container from 'components/base/Container';
-import VideoBanner from 'components/VideoBanner';
 
 interface MainLayoutProps {
   children: React.ReactNode;

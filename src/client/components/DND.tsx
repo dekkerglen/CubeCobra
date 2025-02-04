@@ -1,7 +1,8 @@
+import React from 'react';
+
 import { DndContext } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React from 'react';
 
 interface SortableItemProps {
   id: string;

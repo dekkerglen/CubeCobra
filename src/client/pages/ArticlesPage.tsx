@@ -4,11 +4,10 @@ import Banner from 'components/Banner';
 import { Flexbox } from 'components/base/Layout';
 import ArticlePreview from 'components/content/ArticlePreview';
 import DynamicFlash from 'components/DynamicFlash';
+import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
 import RenderToRoot from 'components/RenderToRoot';
 import ArticleType from 'datatypes/Article';
 import MainLayout from 'layouts/MainLayout';
-
-import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
 interface ArticlesPageProps {
   loginCallback?: string;
   articles: ArticleType[];

@@ -1,10 +1,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import CSRFForm from '../CSRFForm';
-import CustomPackCard from '../CustomPackCard';
-import TextEntry from '../TextEntry';
+import { createDefaultDraftFormat, DEFAULT_PACK, DraftFormat, getErrorsInFormat } from '../../../datatypes/Draft';
 import CubeContext from '../../contexts/CubeContext';
-import { createDefaultDraftFormat, DEFAULT_PACK, DraftFormat, getErrorsInFormat } from '../../datatypes/Draft';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import Input from '../base/Input';
@@ -13,6 +10,9 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import RadioButtonGroup from '../base/RadioButtonGroup';
 import Select from '../base/Select';
 import Text from '../base/Text';
+import CSRFForm from '../CSRFForm';
+import CustomPackCard from '../CustomPackCard';
+import TextEntry from '../TextEntry';
 
 interface CustomDraftFormatModalProps {
   isOpen: boolean;
@@ -33,7 +33,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
       id: `${formatIndex}`,
       serializedFormat: JSON.stringify(format),
     };
-  }, [format]);
+  }, [format, formatIndex]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>
@@ -63,6 +63,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
               label="Multiples"
               selected={format.multiples ? 'true' : 'false'}
               setSelected={(value) => setFormat({ ...format, multiples: value === 'true' })}
+              allowOptionTextWrapping={true}
               options={[
                 { value: 'true', label: 'Allow any number of copies of each card in the draft (e.g. set draft)' },
                 {
@@ -82,9 +83,12 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
             />
             <Text>
               Card values can either be single tags or filter parameters or a comma separated list to create a ratio
-              (e.g. 3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). tags
+              (e.g. 3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). Tags
               can be specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>. <code>*</code> can be
-              used to match any card.
+              used to match any card. Space separated filters act as an AND, eg <code>set:inv r:common</code> matches a
+              card from the Invasion set AND is a common. Free slots, those either <code>*</code> or empty, will be
+              processed after all other slots are filled (across all packs), to ensure that they don't use up cards such
+              that a filtered slot fails to match any remaining card.
             </Text>
             {(format.packs ?? []).map((pack, packIndex) => (
               <CustomPackCard

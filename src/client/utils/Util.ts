@@ -1,7 +1,8 @@
 import Card from 'datatypes/Card';
-import { ColorCategory } from 'datatypes/CardDetails';
+import { ColorCategory } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
-import { cardCmc, cardColorIdentityCategory, cardType } from 'utils/Card';
+
+import { cardCmc, cardColorIdentityCategory, cardType } from './cardutil';
 
 export function arraysEqual(a: any, b: any): boolean {
   if (a === b) return true;
@@ -173,23 +174,38 @@ export function getCubeId(cube: { shortId?: string; id: string }): string {
   return cube.shortId || cube.id;
 }
 
-export function getCubeDescription(
+export function getCubeCardCountSnippet(
   cube: { categoryPrefixes?: string[]; categoryOverride?: string; cardCount?: number },
   changedCards?: { mainboard?: any[] },
 ): string {
-  const overridePrefixes =
-    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
-
   const cardCount =
     changedCards && changedCards.mainboard && changedCards.mainboard?.length > 0
       ? changedCards.mainboard.length
       : cube.cardCount;
 
+  return `${cardCount} Card`;
+}
+
+export function getCubeCategoryDescriptionSnippet(cube: {
+  categoryPrefixes?: string[];
+  categoryOverride?: string;
+  cardCount?: number;
+}): string {
+  const overridePrefixes =
+    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
+
   if (cube.categoryOverride) {
-    return `${cardCount} Card ${overridePrefixes}${cube.categoryOverride} Cube`;
+    return `${overridePrefixes}${cube.categoryOverride} Cube`;
   }
 
-  return `${cardCount} Card ${overridePrefixes}Cube`;
+  return `${overridePrefixes}Cube`;
+}
+
+export function getCubeDescription(
+  cube: { categoryPrefixes?: string[]; categoryOverride?: string; cardCount?: number },
+  changedCards?: { mainboard?: any[] },
+): string {
+  return `${getCubeCardCountSnippet(cube, changedCards)} ${getCubeCategoryDescriptionSnippet(cube)}`;
 }
 
 export function isInternalURL(to: string): boolean {

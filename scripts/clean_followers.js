@@ -1,10 +1,10 @@
 const _ = require('lodash');
 const Cube = require('../src/dynamo/models/cube');
-const carddb = require('../src/util/carddb');
+const { initializeCardDb } = require('../src/util/carddb');
 
 (async () => {
   try {
-    await carddb.initializeCardDb();
+    await initializeCardDb();
     console.log('Cleaning cube followers');
 
     // scan cubes

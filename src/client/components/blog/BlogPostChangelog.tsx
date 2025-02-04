@@ -3,10 +3,11 @@ import React from 'react';
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 
 import withAutocard from 'components/WithAutocard';
-import Card, { BoardType } from 'datatypes/Card';
+import Card, { BoardChanges, Changes } from 'datatypes/Card';
+
 import { Flexbox } from '../base/Layout';
-import Text from '../base/Text';
 import Link from '../base/Link';
+import Text from '../base/Text';
 
 export interface AddProps {
   card: Card;
@@ -84,20 +85,13 @@ const Swap: React.FC<SwapProps> = ({ oldCard, card }) => {
 };
 
 export interface BlogPostChangelogProps {
-  changelog: {
-    [key in BoardType]?: {
-      adds?: Card[];
-      removes?: { oldCard: Card }[];
-      swaps?: { oldCard: Card; card: Card }[];
-      edits?: { oldCard: Card }[];
-    };
-  };
+  changelog: Changes;
 }
 
 const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
   return (
     <div>
-      {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]) => {
+      {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]: [string, BoardChanges]) => {
         if (
           (!adds || adds.length === 0) &&
           (!removes || removes.length === 0) &&
@@ -123,7 +117,7 @@ const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
                 swaps.map((swap) => (
                   <Swap key={`${swap.oldCard.cardID}->${swap.card.cardID}`} oldCard={swap.oldCard} card={swap.card} />
                 ))}
-              {edits && edits.map((edit) => <Edit key={edit.oldCard.cardID} card={edit.oldCard} />)}
+              {edits && edits.map((edit) => <Edit key={edit.oldCard.cardID} card={edit.newCard} />)}
             </ul>
           </div>
         );

@@ -1,9 +1,12 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 
-import { cardType, makeSubtitle } from 'utils/Card';
+import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
+import { cardType, makeSubtitle } from 'utils/cardutil';
 
+import Cube from '../../datatypes/Cube';
+import Draft from '../../datatypes/Draft';
 import { Card } from '../components/base/Card';
 import DeckbuilderNavbar from '../components/DeckbuilderNavbar';
 import DeckStacks from '../components/DeckStacks';
@@ -11,19 +14,9 @@ import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
-import UserContext from '../contexts/UserContext';
-import Cube from '../datatypes/Cube';
-import Draft from '../datatypes/Draft';
-import DraftSeat from '../datatypes/DraftSeat';
-import User from '../datatypes/User';
 import DraftLocation, { addCard, locations, moveCard, removeCard } from '../drafting/DraftLocation';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
-
-const getMatchingSeat = (seats: DraftSeat[], userid?: string) =>
-  seats
-    .map((seat, index) => [seat, index] as [DraftSeat, number])
-    .find((tuple) => (tuple[0]?.owner as User).id === userid)?.[1] ?? 0;
 
 interface CubeDeckbuilderPageProps {
   cube: Cube;
@@ -32,10 +25,8 @@ interface CubeDeckbuilderPageProps {
 }
 
 const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initialDeck, loginCallback }) => {
-  const user = useContext(UserContext);
-  const [seat] = useState(getMatchingSeat(initialDeck.seats, user?.id));
-  const [mainboard, setMainboard] = useState<number[][][]>(initialDeck.seats[seat].mainboard);
-  const [sideboard, setSideboard] = useState<number[][][]>(initialDeck.seats[seat].sideboard);
+  const [mainboard, setMainboard] = useState<number[][][]>(initialDeck.seats[0].mainboard);
+  const [sideboard, setSideboard] = useState<number[][][]>(initialDeck.seats[0].sideboard);
   const [dragStartTime, setDragStartTime] = useState<number | null>(null);
 
   const { basics } = initialDeck;
@@ -65,8 +56,6 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
             source.type === 'deck'
               ? DraftLocation.sideboard(0, source.col, sideboard[0][source.col].length)
               : DraftLocation.deck(isCreature ? 0 : 1, source.col, mainboard[isCreature ? 0 : 1][source.col].length);
-
-          console.log(newTarget);
 
           // moving cards between mainboard and sideboard
           const sourceLocation = source.type === 'deck' ? mainboard : sideboard;
@@ -114,11 +103,9 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
 
   const addBasics = useCallback(
     (numBasics: number[]) => {
-      console.log(numBasics);
       const toAdd = numBasics.map((count, index) => new Array(count).fill(basics[index])).flat();
       const newDeck = [...mainboard];
       newDeck[1][0] = ([] as any[]).concat(newDeck[1][0], toAdd);
-      console.log(newDeck);
       setMainboard(newDeck);
     },
     [mainboard, basics],
@@ -139,7 +126,13 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
             className="mb-3"
             setDeck={setMainboard}
             setSideboard={setSideboard}
-            seat={seat}
+            seat={0}
+          />
+          <DeckBuilderStatsPanel
+            cards={mainboard
+              .flat()
+              .flat()
+              .map((index) => initialDeck.cards[index])}
           />
           <DynamicFlash />
           <Card className="my-3">

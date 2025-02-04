@@ -1,12 +1,12 @@
 //Split this into its own file to prevent cyclic dependencies
 
-const cardutil = require('../client/utils/Card');
-const carddb = require('./carddb');
+const cardutil = require('../client/utils/cardutil');
+import carddb, { cardFromId, getIdsFromName } from './carddb';
 
 // uri
 // artist
 // id
-function getImageData(imagename) {
+export function getImageData(imagename) {
   const exact = carddb.imagedict[imagename.toLowerCase()];
 
   if (exact) {
@@ -14,9 +14,10 @@ function getImageData(imagename) {
   }
 
   const name = cardutil.normalizeName(imagename);
-  const ids = carddb.nameToId[name];
+  const ids = getIdsFromName(name);
+
   if (ids) {
-    const byName = carddb.cardFromId(ids[0]);
+    const byName = cardFromId(ids[0]);
     if (byName.scryfall_id) {
       return {
         uri: byName.art_crop,

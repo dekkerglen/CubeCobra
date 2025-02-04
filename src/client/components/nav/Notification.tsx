@@ -1,8 +1,10 @@
 import React from 'react';
+
 import TimeAgo from 'react-timeago';
-import Text from 'components/base/Text';
-import type { Notification as NotificationType } from 'datatypes/Notification';
+
 import Link from 'components/base/Link';
+import Text from 'components/base/Text';
+import NotificationType from 'datatypes/Notification';
 
 interface NotificationProps {
   notification: NotificationType;

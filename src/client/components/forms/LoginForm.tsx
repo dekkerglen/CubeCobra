@@ -1,6 +1,7 @@
 import React from 'react';
-import CSRFForm from '../CSRFForm';
+
 import Input from '../base/Input';
+import CSRFForm from '../CSRFForm';
 
 interface LoginModalProps {
   loginCallback: string;

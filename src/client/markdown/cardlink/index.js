@@ -28,8 +28,18 @@ function oncard(node, index, parent) {
     node.inParagraph = true;
   }
 
-  [node.name, node.id] = node.value.split('|');
-  if (typeof node.id === 'undefined') node.id = node.name;
+  /* Per https://github.com/micromark/micromark-extension-gfm-table?tab=readme-ov-file#syntax tables don't allow
+   * pipes (|) in their cell contents unless escaped. So let's first check if there is the escaped version to split
+   * Card name and id, otherwise check for just a normal pipe
+   */
+  [node.name, node.id] = node.value.split('\\|');
+  if (typeof node.id === 'undefined') {
+    [node.name, node.id] = node.value.split('|');
+  }
+
+  if (typeof node.id === 'undefined') {
+    node.id = node.name;
+  }
 
   node.data.hName = node.type;
   node.data.hProperties = { name: node.name, id: node.id, dfc: node.dfc, inParagraph: node.inParagraph };

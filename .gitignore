@@ -11,6 +11,7 @@ jobs/export/
 /.yarn/install-state.gz
 /scripts/convert_tsx.json
 /coverage
+/src/client/generated/
 
 .python-version
 
@@ -562,3 +563,4 @@ push-docker.ps1
 .tool-versions
 
 target.zip
+src/client/generated/filtering/cardFilters.js

@@ -1,22 +1,26 @@
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
+
+import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+
+import DeckBuilderStatsToggler from 'components/DeckBuilderStatsToggler';
+import { cardOracleId } from 'utils/cardutil';
+
+import Card from '../../datatypes/Card';
+import Draft from '../../datatypes/Draft';
+import { getCardDefaultRowColumn, setupPicks } from '../../util/draftutil';
+import { CSRFContext } from '../contexts/CSRFContext';
+import useToggle from '../hooks/UseToggle';
+import Button from './base/Button';
+import Collapse from './base/Collapse';
+import Controls from './base/Controls';
+import { Flexbox } from './base/Layout';
+import Link from './base/Link';
+import ResponsiveDiv from './base/ResponsiveDiv';
+import CSRFForm from './CSRFForm';
 import CustomImageToggler from './CustomImageToggler';
 import BasicsModal from './modals/BasicsModal';
 import DeckDeleteModal from './modals/DeckDeleteModal';
 import withModal from './WithModal';
-import Card from '../datatypes/Card';
-import { setupPicks } from '../drafting/draftutil';
-import React, { useCallback, useContext, useMemo, useRef } from 'react';
-import { cardCmc, cardOracleId, cardType } from 'utils/Card';
-import Controls from './base/Controls';
-import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
-import { Flexbox } from './base/Layout';
-import ResponsiveDiv from './base/ResponsiveDiv';
-import useToggle from '../hooks/UseToggle';
-import Link from './base/Link';
-import Button from './base/Button';
-import Collapse from './base/Collapse';
-import CSRFForm from './CSRFForm';
-import Draft from '../datatypes/Draft';
-import { CSRFContext } from '../contexts/CSRFContext';
 
 const DeleteDeckModalLink = withModal(Link, DeckDeleteModal);
 const BasicsModalLink = withModal(Link, BasicsModal);
@@ -85,6 +89,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
           if (basicsIndex !== -1) {
             newMainboard.push(basics[basicsIndex]);
           } else {
+            // eslint-disable-next-line no-console
             console.error(`Could not find card ${oracle} in pool or basics`);
           }
         } else {
@@ -99,27 +104,27 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
 
       for (const index of newMainboard) {
         const card = cards[index];
-        const row = cardType(card).toLowerCase().includes('creature') || cardType(card).includes('Basic') ? 0 : 1;
-        const column = Math.max(0, Math.min(cardCmc(card), 7));
+        const { row, col } = getCardDefaultRowColumn(card);
 
-        formattedMainboard[row][column].push(index);
+        formattedMainboard[row][col].push(index);
       }
 
       for (const index of pool) {
         if (!basics.includes(index)) {
           const card = cards[index];
-          const column = Math.max(0, Math.min(cardCmc(card), 7));
+          const { col } = getCardDefaultRowColumn(card);
 
-          formattedSideboard[0][column].push(index);
+          formattedSideboard[0][col].push(index);
         }
       }
 
       setDeck(formattedMainboard);
       setSideboard(formattedSideboard);
     } else {
+      // eslint-disable-next-line no-console
       console.error(json);
     }
-  }, [mainboard, sideboard, basics, cards, setDeck, setSideboard]);
+  }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard]);
 
   const controls = (
     <>
@@ -141,6 +146,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
       </BasicsModalLink>
       <Link onClick={() => autoBuildDeck()}>Build for Me</Link>
       <CustomImageToggler />
+      <DeckBuilderStatsToggler />
     </>
   );
 

@@ -1,18 +1,18 @@
 import React from 'react';
+
 import TimeAgo from 'react-timeago';
 
 import Button from 'components/base/Button';
-import DynamicFlash from 'components/DynamicFlash';
-import RenderToRoot from 'components/RenderToRoot';
-import MainLayout from 'layouts/MainLayout';
-import User from 'datatypes/User';
-import Text from 'components/base/Text';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
-
+import Text from 'components/base/Text';
+import DynamicFlash from 'components/DynamicFlash';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
+import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
+import User from 'datatypes/User';
+import MainLayout from 'layouts/MainLayout';
 
 const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
 

@@ -9,7 +9,9 @@ import Select from 'components/base/Select';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import NumericField from 'components/NumericField';
 import CubeContext from 'contexts/CubeContext';
-import { FilterValues } from 'datatypes/CardDetails';
+
+import { DefaultElo, FilterValues } from '../../../datatypes/Card';
+import { getLabels } from '../../utils/Sort';
 
 export interface AdvancedFilterModalProps {
   isOpen: boolean;
@@ -131,6 +133,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
               data-lpignore
               className="tag-autocomplete-input"
               wrapperClassName="tag-autocomplete-wrapper"
+              showImages={false}
             />
           )}
           <Row>
@@ -139,14 +142,12 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
                 label="Status"
                 value={values.status}
                 setValue={(v: string) => updateValue(v, 'status')}
-                options={[
-                  { value: '', label: 'Any' },
-                  { value: 'Not Owned', label: 'Not Owned' },
-                  { value: 'Ordered', label: 'Ordered' },
-                  { value: 'Owned', label: 'Owned' },
-                  { value: 'Premium Owned', label: 'Premium Owned' },
-                  { value: 'Proxied', label: 'Proxied' },
-                ]}
+                options={[{ value: '', label: 'Any' }].concat(
+                  getLabels(null, 'Status', false).map((status: string) => ({
+                    value: status,
+                    label: status,
+                  })),
+                )}
               />
             </Col>
             <Col md={6}>
@@ -211,7 +212,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
           <NumericField
             name="elo"
             humanName="elo"
-            placeholder={'Any integer number, e.g. "1200"'}
+            placeholder={`Any integer number, e.g. "${DefaultElo}"`}
             value={values.elo}
             operator={values.eloOp}
             setValue={(value: string) => updateValue(value, 'elo')}

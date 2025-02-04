@@ -1,14 +1,21 @@
+import React from 'react';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
-import { CONVERT_STATUS } from 'datatypes/Content';
 import VideoType from 'datatypes/Video';
-import React from 'react';
+
 import VideoPreview from './VideoPreview';
-import Link from 'components/base/Link';
+
+const CONVERT_STATUS = {
+  p: 'Published',
+  r: 'In Review',
+  d: 'Draft',
+};
 
 interface EditVideoProps {
   video: VideoType;
@@ -105,7 +112,7 @@ const EditVideo: React.FC<EditVideoProps> = ({
         </Col>
       </Row>
       <Text>
-        Write any supplmental text here. Cube Cobra uses a variation of markdown you can read about{' '}
+        Write any supplemental text here. Cube Cobra uses a variation of markdown you can read about{' '}
         <Link href="/markdown" target="_blank">
           here
         </Link>

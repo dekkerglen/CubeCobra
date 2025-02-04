@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
-import { buildDefaultSteps, DEFAULT_STEPS, DraftAction, Pack } from '../datatypes/Draft';
+
+import { buildDefaultSteps, DEFAULT_STEPS, DraftAction, Pack } from '../../datatypes/Draft';
 import useToggle from '../hooks/UseToggle';
 import Button from './base/Button';
-import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
+import { Card, CardFooter, CardHeader } from './base/Card';
 import Collapse from './base/Collapse';
 import Input from './base/Input';
 import { Flexbox } from './base/Layout';
@@ -50,7 +51,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
   const steps = useMemo(() => pack.steps ?? buildDefaultSteps(pack.slots.length), [pack]);
   return (
     <Card key={packIndex} className="mb-4 pack-outline">
-      <CardHeader>
+      <CardHeader className="px-2">
         <Flexbox direction="row" gap="2" className="w-full" justify="between">
           <Text semibold lg>
             Pack {packIndex + 1} - {pack.slots.length} cards
@@ -62,13 +63,13 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
           )}
         </Flexbox>
       </CardHeader>
-      <CardBody className="p-1">
+      <div className="p-1">
         <Card key="slots" className="mb-3 m-2">
           <CardHeader onClick={toggleSlotsOpen}>
             <CollapsibleCardTitle isOpen={slotsOpen}>Card Slots</CollapsibleCardTitle>
           </CardHeader>
           <Collapse isOpen={slotsOpen}>
-            <CardBody>
+            <div className="p-2">
               <Flexbox direction="col" gap="2">
                 {pack.slots.map((filter, slotIndex) => (
                   <Flexbox direction="row" gap="2" className="w-full" key={slotIndex} alignItems="center">
@@ -100,13 +101,13 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
                   </Flexbox>
                 ))}
               </Flexbox>
-            </CardBody>
-            <CardFooter>
+            </div>
+            <CardFooter className="px-2">
               <Button
                 className="me-2"
                 color="accent"
                 onClick={() => {
-                  setPack({ ...pack, slots: [...pack.slots, ''] });
+                  setPack({ ...pack, slots: [...pack.slots, '*'] });
                 }}
                 data-pack-index={packIndex}
               >
@@ -120,7 +121,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
             <CollapsibleCardTitle isOpen={stepsOpen}>Steps for Drafting</CollapsibleCardTitle>
           </CardHeader>
           <Collapse isOpen={stepsOpen}>
-            <CardBody>
+            <div className="p-2">
               <Flexbox direction="col" gap="2">
                 {steps.map((step, stepIndex) => (
                   <Flexbox direction="row" gap="2" className="w-full" key={stepIndex} alignItems="center">
@@ -167,7 +168,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
                   </Flexbox>
                 ))}
               </Flexbox>
-            </CardBody>
+            </div>
             <CardFooter>
               <Button
                 className="me-2"
@@ -179,7 +180,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
             </CardFooter>
           </Collapse>
         </Card>
-      </CardBody>
+      </div>
       <CardFooter>
         <Button color="accent" onClick={copyPack}>
           Duplicate Pack

@@ -1,14 +1,16 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Text from 'components/base/Text';
-import { Flexbox } from 'components/base/Layout';
-import ChangesContext from 'contexts/ChangesContext';
+
+import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
+
 import Button from 'components/base/Button';
-import CardData, { BoardChanges } from 'datatypes/Card';
-import { PlusCircleIcon, NoEntryIcon, ToolsIcon, ArrowSwitchIcon, ArrowRightIcon } from '@primer/octicons-react';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Flexbox } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
-import CardDetails from 'datatypes/CardDetails';
+import Text from 'components/base/Text';
 import withAutocard from 'components/WithAutocard';
+import ChangesContext from 'contexts/ChangesContext';
+import CardData, { BoardChanges } from 'datatypes/Card';
+import { CardDetails } from 'datatypes/Card';
 
 const TextAutocard = withAutocard('span');
 
@@ -117,7 +119,7 @@ const Swap = ({ card, oldCard }: { card: CardData; oldCard: CardData }) => {
       return null;
     };
     getData();
-  }, [card.cardID]);
+  }, [card.cardID, oldCard.cardID]);
 
   return (
     <Flexbox direction="row" gap="1">
@@ -142,34 +144,34 @@ const Swap = ({ card, oldCard }: { card: CardData; oldCard: CardData }) => {
 const BoardChangeList = ({ changes }: { changes?: BoardChanges }) => {
   return (
     <>
-      {changes && changes.adds.length > 0 && (
+      {changes && (changes.adds || []).length > 0 && (
         <Flexbox direction="col" gap="1">
           <Text semibold>Adds:</Text>
-          {changes.adds.map((card, index) => (
+          {(changes.adds || []).map((card, index) => (
             <Add key={index} card={card} />
           ))}
         </Flexbox>
       )}
-      {changes && changes.removes.length > 0 && (
+      {changes && (changes.removes || []).length > 0 && (
         <Flexbox direction="col" gap="1">
           <Text semibold>Removes:</Text>
-          {changes.removes.map((remove, index) => (
+          {(changes.removes || []).map((remove, index) => (
             <Remove key={index} card={remove.oldCard} />
           ))}
         </Flexbox>
       )}
-      {changes && changes.edits.length > 0 && (
+      {changes && (changes.edits || []).length > 0 && (
         <Flexbox direction="col" gap="1">
           <Text semibold>Edits:</Text>
-          {changes.edits.map((edit, index) => (
+          {(changes.edits || []).map((edit, index) => (
             <Edit key={index} card={edit.oldCard} />
           ))}
         </Flexbox>
       )}
-      {changes && changes.swaps.length > 0 && (
+      {changes && (changes.swaps || []).length > 0 && (
         <Flexbox direction="col" gap="1">
           <Text semibold>Swaps:</Text>
-          {changes.swaps.map((swap, index) => (
+          {(changes.swaps || []).map((swap, index) => (
             <Swap key={index} card={swap.card} oldCard={swap.oldCard} />
           ))}
         </Flexbox>
@@ -200,15 +202,15 @@ const VersionMismatch: React.FC = () => {
 
   const fixedChangesExist = fixedChanges
     ? (fixedChanges.mainboard &&
-        (fixedChanges.mainboard.adds.length > 0 ||
-          fixedChanges.mainboard.removes.length > 0 ||
-          fixedChanges.mainboard.edits.length > 0 ||
-          fixedChanges.mainboard.swaps.length > 0)) ||
+        ((fixedChanges.mainboard.adds || []).length > 0 ||
+          (fixedChanges.mainboard.removes || []).length > 0 ||
+          (fixedChanges.mainboard.edits || []).length > 0 ||
+          (fixedChanges.mainboard.swaps || []).length > 0)) ||
       (fixedChanges.maybeboard &&
-        (fixedChanges.maybeboard.adds.length > 0 ||
-          fixedChanges.maybeboard.removes.length > 0 ||
-          fixedChanges.maybeboard.edits.length > 0 ||
-          fixedChanges.maybeboard.swaps.length > 0))
+        ((fixedChanges.maybeboard.adds || []).length > 0 ||
+          (fixedChanges.maybeboard.removes || []).length > 0 ||
+          (fixedChanges.maybeboard.edits || []).length > 0 ||
+          (fixedChanges.maybeboard.swaps || []).length > 0))
     : false;
 
   return (

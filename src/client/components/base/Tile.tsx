@@ -1,5 +1,7 @@
 import React from 'react';
+
 import classNames from 'classnames';
+
 import AspectRatioBox from './AspectRatioBox';
 
 interface TileProps {
@@ -10,8 +12,10 @@ interface TileProps {
 
 const Tile: React.FC<TileProps> = ({ className, children, href }) => {
   return (
-    <a
-      href={href}
+    <div
+      onClick={() => {
+        window.location.href = href;
+      }}
       className={classNames(
         'block bg-bg-accent shadow overflow-hidden border border-border',
         'hover:bg-bg-active cursor-pointer hover:border-border-active',
@@ -19,7 +23,7 @@ const Tile: React.FC<TileProps> = ({ className, children, href }) => {
       )}
     >
       <AspectRatioBox ratio={1}>{children}</AspectRatioBox>
-    </a>
+    </div>
   );
 };
 

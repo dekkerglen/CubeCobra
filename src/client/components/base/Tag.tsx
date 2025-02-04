@@ -1,7 +1,7 @@
 import React from 'react';
-import classNames from 'classnames';
 
 import { XIcon } from '@primer/octicons-react';
+import classNames from 'classnames';
 interface TagProps {
   href?: string;
   style?: React.CSSProperties;

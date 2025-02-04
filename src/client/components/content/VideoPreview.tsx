@@ -1,13 +1,15 @@
 import React from 'react';
+
 import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
 import Video from 'datatypes/Video';
+
+import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 import { Tile } from '../base/Tile';
-import { Flexbox } from '../base/Layout';
 
 export interface VideoPreviewProps {
   video: Video;

@@ -1,9 +1,10 @@
 import React, { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import withAutocard from '../WithAutocard';
-import AutocardContext from '../../contexts/AutocardContext';
-import Input, { InputProps } from './Input';
 import classNames from 'classnames';
+
+import AutocardContext from '../../contexts/AutocardContext';
+import withAutocard from '../WithAutocard';
+import Input, { InputProps } from './Input';
 
 export interface AutocardLiProps {
   inModal: boolean;
@@ -179,11 +180,13 @@ export const treeCache: Record<string, Promise<TreeNode | null>> = {};
 const fetchTree = async (treeUrl: string, treePath: string): Promise<TreeNode | null> => {
   const response = await fetch(treeUrl);
   if (!response.ok) {
+    // eslint-disable-next-line no-console
     console.error(`Failed to fetch autocomplete tree: ${response.status}`);
     return null;
   }
   const json = await response.json();
   if (json.success !== 'true') {
+    // eslint-disable-next-line no-console
     console.error('Error getting autocomplete tree.');
     return null;
   }
@@ -200,6 +203,8 @@ export interface AutocompleteInputProps extends InputProps {
   onSubmit?: (event: React.FormEvent<HTMLInputElement>, match?: string) => void;
   wrapperClassName?: string;
   cubeId?: string;
+  defaultPrinting?: string;
+  showImages?: boolean;
 }
 
 const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
@@ -209,6 +214,8 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   setValue,
   onSubmit,
   cubeId,
+  defaultPrinting = null,
+  showImages = true,
   ...props
 }) => {
   const [tree, setTree] = useState<TreeNode>({});
@@ -224,6 +231,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         }
         setTree((await treeCache[treeUrl]) ?? {});
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Error getting autocomplete tree.', e);
       }
     };
@@ -270,7 +278,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      let enterPressed = event.keyCode === 13;
+      const enterPressed = event.keyCode === 13;
       if (event.keyCode === 40) {
         // DOWN key
         event.preventDefault();
@@ -298,7 +306,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         }
       }
     },
-    [position, acceptSuggestion, matches, showMatches, onSubmit],
+    [position, acceptSuggestion, matches, showMatches, onSubmit, value],
   );
 
   return (
@@ -310,23 +318,44 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
             'absolute border border-border rounded-md top-0 left-0 translate-y-9 w-full flex flex-col overflow-y-visible z-[1050]',
           )}
         >
-          {matches.map((match, index) => (
-            <AutocardDiv
-              inModal
-              image={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
-              key={index}
-              onClick={(e) => handleClickSuggestion(e)}
-              className={classNames(
-                'list-none p-2 bg-bg-accent hover:bg-bg-active cursor-pointer',
-                { 'border-t border-border': index !== 0 },
-                { 'bg-bg-active': index === position },
-                { 'rounded-t-md': index === 0 },
-                { 'rounded-b-md': index === matches.length - 1 },
-              )}
-            >
-              {match}
-            </AutocardDiv>
-          ))}
+          {matches.map((match, index) => {
+            return showImages ? (
+              <AutocardDiv
+                inModal
+                image={
+                  cubeId
+                    ? `/tool/cardimageforcube/${encodeURIComponent(match)}/${cubeId}`
+                    : `/tool/cardimage/${encodeURIComponent(match)}` +
+                      (defaultPrinting !== null ? `?defaultPrinting=${defaultPrinting}` : '')
+                }
+                key={index}
+                onClick={(e) => handleClickSuggestion(e)}
+                className={classNames(
+                  'list-none p-2 bg-bg-accent hover:bg-bg-active cursor-pointer',
+                  { 'border-t border-border': index !== 0 },
+                  { 'bg-bg-active': index === position },
+                  { 'rounded-t-md': index === 0 },
+                  { 'rounded-b-md': index === matches.length - 1 },
+                )}
+              >
+                {match}
+              </AutocardDiv>
+            ) : (
+              <div
+                key={index}
+                onClick={(e) => handleClickSuggestion(e)}
+                className={classNames(
+                  'list-none p-2 bg-bg-accent hover:bg-bg-active cursor-pointer',
+                  { 'border-t border-border': index !== 0 },
+                  { 'bg-bg-active': index === position },
+                  { 'rounded-t-md': index === 0 },
+                  { 'rounded-b-md': index === matches.length - 1 },
+                )}
+              >
+                {match}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

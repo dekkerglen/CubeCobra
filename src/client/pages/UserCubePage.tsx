@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
-import { Col, Flexbox, Row } from 'components/base/Layout';
+
 import Button from 'components/base/Button';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
@@ -8,11 +10,10 @@ import Markdown from 'components/Markdown';
 import MtgImage from 'components/MtgImage';
 import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
+import Cube from 'datatypes/Cube';
+import User from 'datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
-import User from 'datatypes/User';
-import Cube from 'datatypes/Cube';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
 
 interface UserCubePageProps {
   owner: User;

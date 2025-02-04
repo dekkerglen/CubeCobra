@@ -1,14 +1,15 @@
 import React, { useContext } from 'react';
 
-import CommentEntry from 'components/comments/CommentEntry';
 import Link from 'components/base/Link';
+import CommentEntry from 'components/comments/CommentEntry';
 import CommentList from 'components/PagedCommentList';
 import UserContext from 'contexts/UserContext';
+import Comment from 'datatypes/Comment';
 import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
+
 import Collapse from '../base/Collapse';
 import LoadingButton from '../LoadingButton';
-import Comment from 'datatypes/Comment';
 
 export interface CommentsProps {
   parent: string;

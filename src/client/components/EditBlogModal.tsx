@@ -1,11 +1,12 @@
+import React, { useMemo, useState } from 'react';
+
+import BlogPost from '../../datatypes/BlogPost';
 import Button from './base/Button';
 import Input from './base/Input';
+import { Flexbox } from './base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from './base/Modal';
 import CSRFForm from './CSRFForm';
 import TextEntry from './TextEntry';
-import BlogPost from '../datatypes/BlogPost';
-import React, { useMemo, useState } from 'react';
-import { Flexbox } from './base/Layout';
 
 interface EditBlogModalProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface EditBlogModalProps {
 }
 
 const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cubeID }) => {
-  const [markdown, setMarkdown] = useState<string>(post ? post.body : '');
+  const [markdown, setMarkdown] = useState<string>(post?.body ?? '');
   const formRef = React.createRef<HTMLFormElement>();
   const [title, setTitle] = useState<string>(post?.title ?? '');
   const formData = useMemo(

@@ -1,18 +1,18 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import CSRFForm from './CSRFForm';
 import CubeContext from '../contexts/CubeContext';
 import Button from './base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
 import { Flexbox } from './base/Layout';
 import Select, { rangeOptions } from './base/Select';
 import Text from './base/Text';
+import CSRFForm from './CSRFForm';
 
 interface StandardDraftCardProps {
-  defaultDraftFormat: number;
+  defaultFormat: number;
 }
 
-const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultDraftFormat }) => {
+const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultFormat: defaultFormat }) => {
   const { cube, canEdit } = useContext(CubeContext);
   const [packs, setPacks] = useState('3');
   const [cards, setCards] = useState('15');
@@ -31,10 +31,10 @@ const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultDraftForma
 
   return (
     <Card>
-      <CSRFForm method="POST" action={`/cube/startdraft/${cube.id}`} formData={formData} ref={formRef}>
+      <CSRFForm method="POST" action={`/draft/start/${cube.id}`} formData={formData} ref={formRef}>
         <CardHeader>
           <Text lg semibold>
-            {defaultDraftFormat === -1 && 'Default Format: '}Standard Draft
+            {defaultFormat === -1 && 'Default Format: '}Standard Draft
           </Text>
         </CardHeader>
         <CardBody>
@@ -55,7 +55,7 @@ const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultDraftForma
             <Button block color="primary" onClick={() => formRef.current?.submit()}>
               Start Draft
             </Button>
-            {canEdit && defaultDraftFormat !== -1 && (
+            {canEdit && defaultFormat !== -1 && (
               <Button
                 block
                 color="accent"

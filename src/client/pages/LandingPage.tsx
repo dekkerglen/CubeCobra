@@ -2,23 +2,22 @@ import React from 'react';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
-
+import Link from 'components/base/Link';
+import Text from 'components/base/Text';
 import ArticlePreview from 'components/content/ArticlePreview';
+import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
+import VideoPreview from 'components/content/VideoPreview';
 import CubesCard from 'components/cube/CubesCard';
 import CubeSearchNavBar from 'components/cube/CubeSearchNavBar';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
-import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoPreview from 'components/content/VideoPreview';
 import Article from 'datatypes/Article';
 import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
-import MainLayout from 'layouts/MainLayout';
-import Text from 'components/base/Text';
-import Link from 'components/base/Link';
 import Episode from 'datatypes/Episode';
 import Video from 'datatypes/Video';
+import MainLayout from 'layouts/MainLayout';
 
 interface LandingPageProps {
   featured: Cube[];

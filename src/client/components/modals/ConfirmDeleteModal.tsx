@@ -1,8 +1,9 @@
 import React from 'react';
-import Text from '../base/Text';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+import Text from '../base/Text';
 import LoadingButton from '../LoadingButton';
 
 interface ConfirmDeleteModalProps {

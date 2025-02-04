@@ -1,16 +1,16 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import { Flexbox } from 'components/base/Layout';
+import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import BlogPost from 'components/blog/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import { CSRFContext } from 'contexts/CSRFContext';
+import BlogPostType from 'datatypes/BlogPost';
+import User from 'datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
-import User from 'datatypes/User';
-import BlogPostType from 'datatypes/BlogPost';
-import Pagination from 'components/base/Pagination';
-import { Flexbox } from 'components/base/Layout';
-import { CSRFContext } from 'contexts/CSRFContext';
 
 interface UserBlogPageProps {
   owner: User;

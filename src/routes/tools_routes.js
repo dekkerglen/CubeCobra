@@ -3,8 +3,18 @@ require('dotenv').config();
 
 const express = require('express');
 
-const carddb = require('../util/carddb');
-const cardutil = require('../client/utils/Card');
+import { Period } from '../datatypes/History';
+import carddb, {
+  cardFromId,
+  getAllMostReasonable,
+  getEnglishVersion,
+  getIdsFromName,
+  getMostReasonable,
+  getMostReasonableById,
+  getReasonableCardByOracle,
+  getRelatedCards,
+} from '../util/carddb';
+const cardutil = require('../client/utils/cardutil');
 const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../client/utils/Sort');
 const { makeFilter, filterCardsDetails } = require('../client/filtering/FilterCards');
 const generateMeta = require('../util/meta');
@@ -28,7 +38,7 @@ const searchCards = (filter, sort = 'Elo', page = 0, direction = 'descending', d
   const cards = [];
 
   if (distinct === 'names') {
-    cards.push(...carddb.getAllMostReasonable(filter));
+    cards.push(...getAllMostReasonable(filter));
   } else {
     cards.push(...filterCardsDetails(carddb.printedCardList, filter));
   }
@@ -126,107 +136,45 @@ router.get('/topcards', async (req, res) => {
   }
 });
 
-router.post('/cardhistory', async (req, res) => {
-  try {
-    const { id, zoom, period } = req.body;
-
-    let zoomValue = 10000;
-
-    if (zoom === 'month') {
-      switch (period) {
-        case 'day':
-          zoomValue = 30;
-          break;
-        case 'week':
-          zoomValue = 4;
-          break;
-        case 'month':
-          zoomValue = 2;
-          break;
-        default:
-          zoomValue = 0;
-          break;
-      }
-    } else if (zoom === 'year') {
-      switch (period) {
-        case 'day':
-          zoomValue = 365;
-          break;
-        case 'week':
-          zoomValue = 52;
-          break;
-        case 'month':
-          zoomValue = 12;
-          break;
-        default:
-          zoomValue = 0;
-          break;
-      }
-    }
-
-    const history = await CardHistory.getByOracleAndType(id, period, zoomValue);
-
-    return res.status(200).send({
-      success: 'true',
-      data: history.items.reverse(),
-    });
-  } catch (err) {
-    req.logger.error(err.message, err.stack);
-    return res.status(500).send({
-      success: 'false',
-      data: [],
-    });
-  }
-});
-
 router.get('/card/:id', async (req, res) => {
   try {
     let { id } = req.params;
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
-    const ids = carddb.getIdsFromName(possibleName);
+    const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
-    const english = carddb.getEnglishVersion(id);
+    const english = getEnglishVersion(id);
     if (english) {
       id = english;
     }
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(id);
+    const card = cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return redirect(req, res, '/404');
     }
 
     // otherwise just go to this ID.
-    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
+    const history = await CardHistory.getByOracleAndType(card.oracle_id, Period.WEEK, 52);
 
     if (history.items.length === 0) {
       history.items.push({});
     }
 
-    const related = carddb.getRelatedCards(card.oracle_id);
+    const related = getRelatedCards(card.oracle_id);
 
-    const draftedWith = {};
-    const cubedWith = {};
-    const synergistic = {};
-
-    for (const category of ['top', 'spells', 'creatures', 'other']) {
-      draftedWith[category] = related.draftedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-      cubedWith[category] = related.cubedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-      synergistic[category] = related.synergistic[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-    }
-
+    const baseUrl = util.getBaseUrl();
     return render(
       req,
       res,
@@ -237,10 +185,10 @@ router.get('/card/:id', async (req, res) => {
         lastKey: history.lastKey,
         versions: carddb.oracleToId[card.oracle_id]
           .filter((cid) => cid !== card.scryfall_id)
-          .map((cardid) => carddb.cardFromId(cardid)),
-        draftedWith,
-        cubedWith,
-        synergistic,
+          .map((cardid) => cardFromId(cardid)),
+        draftedWith: related.draftedWith,
+        cubedWith: related.cubedWith,
+        synergistic: related.synergistic,
       },
       {
         title: `${card.name}`,
@@ -248,11 +196,13 @@ router.get('/card/:id', async (req, res) => {
           `${card.name} - Cube Cobra`,
           `Analytics for ${card.name} on CubeCobra`,
           card.image_normal,
-          `https://cubecobra.com/card/${req.params.id}`,
+          `${baseUrl}/card/${req.params.id}`,
         ),
       },
     );
   } catch (err) {
+    // eslint-disable-next-line no-console -- Error debugging
+    console.error(err);
     return util.handleRouteError(req, res, err, '/404');
   }
 });
@@ -263,47 +213,37 @@ router.get('/cardjson/:id', async (req, res) => {
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
-    const ids = carddb.getIdsFromName(possibleName);
+    const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
-    const english = carddb.getEnglishVersion(id);
+    const english = getEnglishVersion(id);
     if (english) {
       id = english;
     }
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(id);
+    const card = cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return redirect(req, res, '/404');
     }
 
     // otherwise just go to this ID.
-    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
+    const history = await CardHistory.getByOracleAndType(card.oracle_id, Period.WEEK, 52);
 
     if (history.items.length === 0) {
       history.items.push({});
     }
 
-    const related = carddb.getRelatedCards(card.oracle_id);
-
-    const draftedWith = {};
-    const cubedWith = {};
-    const synergistic = {};
-
-    for (const category of ['top', 'spells', 'creatures', 'other']) {
-      draftedWith[category] = related.draftedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-      cubedWith[category] = related.cubedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-      synergistic[category] = related.synergistic[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
-    }
+    const related = getRelatedCards(card.oracle_id);
 
     return res.json({
       card,
@@ -311,10 +251,10 @@ router.get('/cardjson/:id', async (req, res) => {
       lastKey: history.lastKey,
       versions: carddb.oracleToId[card.oracle_id]
         .filter((cid) => cid !== card.scryfall_id)
-        .map((cardid) => carddb.cardFromId(cardid)),
-      draftedWith,
-      cubedWith,
-      synergistic,
+        .map((cardid) => cardFromId(cardid)),
+      draftedWith: related.draftedWith,
+      cubedWith: related.cubedWith,
+      synergistic: related.synergistic,
     });
   } catch (err) {
     return res.json({ error: err.message });
@@ -325,26 +265,28 @@ router.get('/cardimage/:id', async (req, res) => {
   try {
     let { id } = req.params;
 
+    const defaultPrinting = req?.query?.defaultPrinting;
+
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
-    const ids = carddb.getIdsFromName(possibleName);
+    const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName, defaultPrinting).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
-    const english = carddb.getEnglishVersion(id);
+    const english = getEnglishVersion(id);
     if (english) {
       id = english;
     }
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(id);
+    const card = cardFromId(id);
     if (card.error) {
       res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache for 1 month
       return redirect(req, res, '/content/default_card.png');
@@ -367,13 +309,13 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
     const main = cards.mainboard;
 
     const found = main
-      .map((card) => ({ details: carddb.cardFromId(card.cardID), ...card }))
+      .map((card) => ({ details: cardFromId(card.cardID), ...card }))
       .find(
         (card) => id === card.cardID || id.toLowerCase() === card.details.name_lower || id === card.details.oracleId,
       );
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(found ? found.cardID : '');
+    const card = cardFromId(found ? found.cardID : '');
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return redirect(req, res, '/404');
@@ -391,24 +333,24 @@ router.get('/cardimageflip/:id', async (req, res) => {
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
-    const ids = carddb.getIdsFromName(possibleName);
+    const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
-    const english = carddb.getEnglishVersion(id);
+    const english = getEnglishVersion(id);
     if (english) {
       id = english;
     }
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
-    const card = carddb.cardFromId(id);
+    const card = cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return redirect(req, res, '/404');
@@ -435,13 +377,13 @@ router.get('/searchcards', async (req, res) =>
 router.post('/mtgconnect', async (req, res) => {
   const { oracles } = req.body;
 
-  const cards = oracles.map((oracle) => carddb.getReasonableCardByOracle(oracle));
+  const cards = oracles.map((oracle) => getReasonableCardByOracle(oracle));
 
   const result = [];
 
   for (const card of cards) {
-    const related = carddb.getRelatedCards(card.oracle_id);
-    const synergistic = related.synergistic.top.map((oracle) => carddb.getReasonableCardByOracle(oracle));
+    const related = getRelatedCards(card.oracle_id);
+    const synergistic = related.synergistic.top.map((oracle) => getReasonableCardByOracle(oracle));
 
     result.push({
       name: card.name,

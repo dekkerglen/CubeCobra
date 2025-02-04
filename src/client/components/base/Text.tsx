@@ -1,4 +1,5 @@
 import React from 'react';
+
 import classNames from 'classnames';
 
 interface TextProps {
@@ -62,7 +63,7 @@ const Text: React.FC<TextProps> = ({
     className,
   );
 
-  let optionalProps = {};
+  const optionalProps = {};
   if (id !== '') {
     //@ts-ignore
     optionalProps['id'] = id;

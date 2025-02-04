@@ -1,4 +1,7 @@
+import React, { useCallback, useContext, useState } from 'react';
+
 import { ChevronUpIcon, QuestionIcon, ThreeBarsIcon } from '@primer/octicons-react';
+
 import Button from 'components/base/Button';
 import { Flexbox, NumCols } from 'components/base/Layout';
 import CompareCollapse from 'components/cube/CompareCollapse';
@@ -13,9 +16,10 @@ import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
+import UserContext from 'contexts/UserContext';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
-import React, { useCallback, useContext, useState } from 'react';
+
 import Checkbox from '../base/Checkbox';
 import Collapse from '../base/Collapse';
 import Controls from '../base/Controls';
@@ -26,7 +30,6 @@ import Select from '../base/Select';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
 import TagColorsModal from '../modals/TagColorsModal';
-import UserContext from 'contexts/UserContext';
 
 const ArenaExportModalItem = withModal(Link, ArenaExportModal);
 const PasteBulkModalItem = withModal(Link, PasteBulkModal);

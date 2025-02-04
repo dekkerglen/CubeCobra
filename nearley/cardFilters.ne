@@ -1,7 +1,6 @@
 @include "./filterBase.ne"
 
 @{%
-import { CARD_CATEGORY_DETECTORS } from 'utils/Card';
 import {
   defaultOperation,
   stringOperation,
@@ -16,8 +15,9 @@ import {
   setElementOperation,
   setCountOperation,
   devotionOperation,
-} from 'filtering/FuncOperations';
+} from '../../filtering/FuncOperations';
 import {
+  CARD_CATEGORY_DETECTORS,
   cardCmc,
   cardColors,
   cardColorIdentity,
@@ -25,6 +25,7 @@ import {
   cardOracleText,
   cardSet,
   cardCollectorNumber,
+  cardNotes,
   cardPower,
   cardToughness,
   cardTags,
@@ -49,7 +50,7 @@ import {
   cardLegalIn,
   cardBannedIn,
   cardRestrictedIn
-} from 'utils/Card';
+} from '../../utils/cardutil';
 %} # %}
 
 @{%
@@ -102,6 +103,7 @@ condition -> (
   | restrictedCondition
   | layoutCondition
   | collectorNumberCondition
+  | notesCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -180,6 +182,8 @@ devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i 
   | ("d"i | "dev"i | "devotion"i | "devotionto"i) devotionOpValue {% ([, valuePred]) => genericCondition('parsed_cost', (c) => c, valuePred) %}
 
 collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
+
+notesCondition -> "notes"i stringOpValue {% ([, valuePred]) => genericCondition('notes', cardNotes, valuePred) %}
 
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 

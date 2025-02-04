@@ -1,18 +1,21 @@
 import React, { useContext, useMemo } from 'react';
 
+import Button from 'components/base/Button';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import Controls from 'components/base/Controls';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import Text from 'components/base/Text';
 import CustomDraftCard from 'components/CustomDraftCard';
-import CustomDraftFormatModal from 'components/modals/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import GridDraftCard from 'components/GridDraftCard';
+import CustomDraftFormatModal from 'components/modals/CustomDraftFormatModal';
+import UploadDecklistModal from 'components/modals/UploadDecklistModal';
 import PlaytestDecksCard from 'components/PlaytestDecksCard';
 import RenderToRoot from 'components/RenderToRoot';
 import SamplePackCard from 'components/SamplePackCard';
 import SealedCard from 'components/SealedCard';
 import StandardDraftCard from 'components/StandardDraftCard';
-import UploadDecklistModal from 'components/modals/UploadDecklistModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import Cube from 'datatypes/Cube';
@@ -32,7 +35,7 @@ const CreateCustomFormatLink = withModal(Link, CustomDraftFormatModal);
 
 const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksLastKey, loginCallback = '/' }) => {
   const user = useContext(UserContext);
-  const defaultDraftFormat = cube.defaultFormat ?? -1;
+  const defaultFormat = cube.defaultFormat ?? -1;
 
   // Sort formats alphabetically.
   const formatsSorted = useMemo(
@@ -40,20 +43,20 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
       cube.formats
         .map((format, index) => ({ ...format, index }))
         .sort((a, b) => {
-          if (a.index === defaultDraftFormat) {
+          if (a.index === defaultFormat) {
             return -1;
           }
-          if (b.index === defaultDraftFormat) {
+          if (b.index === defaultFormat) {
             return 1;
           }
           return a.title.localeCompare(b.title);
         }),
-    [cube.formats, defaultDraftFormat],
+    [cube.formats, defaultFormat],
   );
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest" hasControls={user != null && cube.owner.id == user.id}>
+      <CubeLayout cube={cube} activeLink="playtest" hasControls={!!user && cube.owner.id === user.id}>
         <Flexbox direction="col" gap="2" className="mb-2">
           {user && cube.owner.id === user.id && (
             <Controls>
@@ -74,16 +77,39 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
             <Col xs={12} md={6} xl={6}>
               <Flexbox direction="col" gap="2">
                 <SamplePackCard />
-                {defaultDraftFormat === -1 && <StandardDraftCard defaultDraftFormat={defaultDraftFormat} />}
+                {defaultFormat === -1 && <StandardDraftCard defaultFormat={defaultFormat} />}
                 {formatsSorted.map((format) => (
                   <CustomDraftCard
                     key={format.index}
                     format={format}
-                    defaultDraftFormat={defaultDraftFormat}
+                    defaultFormat={defaultFormat}
                     formatIndex={format.index}
                   />
                 ))}
-                {defaultDraftFormat !== -1 && <StandardDraftCard defaultDraftFormat={defaultDraftFormat} />}
+                {defaultFormat !== -1 && <StandardDraftCard defaultFormat={defaultFormat} />}
+                <Card>
+                  <CardHeader>
+                    <Text semibold lg>
+                      Multiplayer Draft
+                    </Text>
+                  </CardHeader>
+                  <CardBody>
+                    <Text>
+                      Draft with other players and bots online using Draftmancer! Playtest data is uploaded back to
+                      CubeCobra.
+                    </Text>
+                  </CardBody>
+                  <CardFooter>
+                    <Button
+                      block
+                      type="link"
+                      color="primary"
+                      href={`https://draftmancer.com/?cubeCobraID=${cube.id}&cubeCobraName=${encodeURIComponent(cube.name)}`}
+                    >
+                      Draft on Draftmancer
+                    </Button>
+                  </CardFooter>
+                </Card>
                 <SealedCard />
                 <GridDraftCard />
               </Flexbox>

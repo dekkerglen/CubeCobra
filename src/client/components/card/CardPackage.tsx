@@ -1,21 +1,22 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import { StarFillIcon } from '@primer/octicons-react';
 import TimeAgo from 'react-timeago';
 
-import AddGroupToCubeModal from '../modals/AddGroupToCubeModal';
-import Username from '../Username';
-import withModal from '../WithModal';
+import { cardId, detailsToCard } from 'utils/cardutil';
+
+import CardPackageData, { CardPackageStatus } from '../../../datatypes/CardPackage';
+import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
-import CardPackageData, { APPROVED } from '../../datatypes/CardPackage';
 import Button from '../base/Button';
 import { Card, CardBody, CardHeader } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
-import CardGrid from './CardGrid';
 import Voter from '../base/Voter';
-import { cardId, detailsToCard } from 'utils/Card';
-import { StarFillIcon } from '@primer/octicons-react';
-import { CSRFContext } from '../../contexts/CSRFContext';
+import AddGroupToCubeModal from '../modals/AddGroupToCubeModal';
+import Username from '../Username';
+import withModal from '../WithModal';
+import CardGrid from './CardGrid';
 
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 
@@ -45,7 +46,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
       }
     }
     setLoading(false);
-  }, [cardPackage.id, loading, voted]);
+  }, [cardPackage.id, csrfFetch, loading, voted]);
 
   const approve = async () => csrfFetch(`/packages/approve/${cardPackage.id}`);
 
@@ -77,7 +78,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
               </AddGroupToCubeModalLink>
               {user && user.roles && user.roles.includes('Admin') && (
                 <>
-                  {cardPackage.status === APPROVED ? (
+                  {cardPackage.status === CardPackageStatus.APPROVED ? (
                     <Button outline color="primary" onClick={unapprove}>
                       Remove Approval
                     </Button>

@@ -2,47 +2,72 @@ const express = require('express');
 
 const { render, redirect } = require('../util/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
-const carddb = require('../util/carddb');
+const { cardFromId } = require('../util/carddb');
 
-const Package = require('../dynamo/models/package');
+import { CardPackageStatus } from '../datatypes/CardPackage';
+import Package from '../dynamo/models/package';
 const User = require('../dynamo/models/user');
 
 const router = express.Router();
 
 router.use(csrfProtection);
 
-const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
-  console.log('getPackages', type, keywords, ascending, sort, lastKey);
+/*
+ * There is no index on the Packages table for Owner and sorted by Vote count. Thus in order
+ * to get the packages sorted by vote count, we have to load all the packages for a user, filter
+ * by keywords, and then sort them in memory. This is not ideal, but it is the best we can do until
+ * an index is added.
+ * TODO: Add secondary index for Owner and sorted by Vote count
+ */
+const getAllByOwnerSortedByVoteCount = async (ownerId, keywords, ascending) => {
+  let packages = {
+    items: [],
+    lastKey: null,
+  };
 
+  //Get all packages for the owner into memory
+  do {
+    const result = await Package.queryByOwner(ownerId, packages.lastKey);
+
+    packages.items.push(...result.items);
+    packages.lastKey = result.lastKey;
+  } while (packages.lastKey);
+
+  const sortByVotes = (a, b) => {
+    if (ascending) {
+      return a.voters.length - b.voters.length;
+    } else {
+      return b.voters.length - a.voters.length;
+    }
+  };
+
+  if (keywords) {
+    const words = keywords?.toLowerCase()?.split(' ') || [];
+
+    // all words must exist in the keywords
+    const filterByKeywords = (a) => {
+      //Check that ALL filtering word exists in the package keywords
+      return words.filter((x) => a.keywords.includes(x)).length === words.length;
+    };
+
+    packages.items = packages.items.filter(filterByKeywords);
+  }
+  packages.items.sort(sortByVotes);
+
+  return packages;
+};
+
+const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
   let packages = {
     items: [],
     lastKey,
   };
 
   if (type === 'u' && req.user) {
-    do {
-      const result = await Package.queryByOwner(req.user.id, packages.lastKey);
-
-      packages.items.push(...result.items);
-      packages.lastKey = result.lastKey;
-    } while (packages.lastKey);
-
     if (sort === 'votes' || sort === '') {
-      packages.items.sort((a, b) => {
-        if (ascending) {
-          return a.voters.length - b.voters.length;
-        } else {
-          return b.voters.length - a.voters.length;
-        }
-      });
+      packages = await getAllByOwnerSortedByVoteCount(req.user.id, keywords, ascending);
     } else {
-      packages.items.sort((a, b) => {
-        if (ascending) {
-          return a.date - b.date;
-        } else {
-          return b.date - a.date;
-        }
-      });
+      packages = await Package.queryByOwnerSortedByDate(req.user.id, keywords, ascending, packages.lastKey);
     }
   } else {
     if (sort === 'votes' || sort === '') {
@@ -56,7 +81,7 @@ const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
 };
 
 router.get('/', async (req, res) => {
-  const type = req.query.t || Package.STATUSES.APPROVED;
+  const type = req.query.t || CardPackageStatus.APPROVED;
   const keywords = req.query.kw || '';
   const ascending = req.query.a === 'true';
   const sort = req.query.s || 'votes';
@@ -70,7 +95,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/getmore', async (req, res) => {
-  const type = req.body.type || Package.STATUSES.APPROVED;
+  const type = req.body.type || CardPackageStatus.APPROVED;
   const keywords = req.body.keywords || '';
   const ascending = req.body.ascending === 'true';
   const sort = req.body.sort || 'votes';
@@ -138,8 +163,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
 
   for (const card of cards) {
     pack.keywords.push(
-      ...carddb
-        .cardFromId(card)
+      ...cardFromId(card)
         .name_lower.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
         .split(' '),
     );
@@ -182,7 +206,7 @@ router.get('/downvote/:id', ensureAuth, async (req, res) => {
 router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-  pack.status = Package.STATUSES.APPROVED;
+  pack.status = CardPackageStatus.APPROVED;
   await Package.put(pack);
 
   return res.status(200).send({
@@ -193,7 +217,7 @@ router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
 router.get('/unapprove/:id', ensureRole('Admin'), async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-  pack.status = Package.STATUSES.SUBMITTED;
+  pack.status = CardPackageStatus.SUBMITTED;
   await Package.put(pack);
 
   return res.status(200).send({

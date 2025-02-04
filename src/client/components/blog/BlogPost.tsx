@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 
+import { PencilIcon, TrashIcon } from '@primer/octicons-react';
 import TimeAgo from 'react-timeago';
 
-import { PencilIcon, TrashIcon } from '@primer/octicons-react';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -11,8 +11,8 @@ import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import CommentsSection from 'components/comments/CommentsSection';
 import EditBlogModal from 'components/EditBlogModal';
-import DeleteBlogModal from 'components/modals/DeleteBlogModal';
 import Markdown from 'components/Markdown';
+import DeleteBlogModal from 'components/modals/DeleteBlogModal';
 import Username from 'components/Username';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';

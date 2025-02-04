@@ -6,11 +6,13 @@ export interface WithModalProps<U> {
   className?: string;
   modalprops?: Omit<U, 'setOpen' | 'isOpen' | 'toggle'>;
   altClick?: () => void;
+  //Commonly would set stopProgagation to true if the button to open the modal lives within another clickable block like a row
+  stopProgagation?: boolean;
 }
 
 const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>) => {
   const Result: React.FC<WithModalProps<U> & ComponentProps<T>> = (allProps: WithModalProps<U> & ComponentProps<T>) => {
-    const { children, className, modalprops = {}, altClick } = allProps;
+    const { children, className, modalprops = {}, altClick, stopProgagation } = allProps;
     const [isOpen, setIsOpen] = useState(false);
     const toggle = useCallback(
       (event?: MouseEvent<HTMLElement>) => {
@@ -29,10 +31,14 @@ const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>)
           return altClick();
         }
 
+        if (stopProgagation) {
+          event.stopPropagation();
+        }
+
         event.preventDefault();
         return toggle();
       },
-      [altClick, toggle],
+      [altClick, stopProgagation, toggle],
     );
 
     return (

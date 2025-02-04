@@ -1,14 +1,16 @@
 import React from 'react';
 
-import Accordion from 'components/base/Accordion';
 import Banner from 'components/Banner';
+import Accordion from 'components/base/Accordion';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Flexbox } from 'components/base/Layout';
+import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import { Flexbox } from 'components/base/Layout';
-import Table from 'components/base/Table';
+
+import { CARD_STATUSES } from '../../datatypes/Card';
 
 interface FiltersPageProps {
   loginCallback: string;
@@ -457,6 +459,36 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 ]}
               />
             </Accordion>
+            <Accordion title="Notes">
+              <p>
+                You can use <code>notes:</code> to filter cards by the contents of their notes.
+              </p>
+              <Text semibold>Examples:</Text>
+              <Table
+                rows={[
+                  {
+                    query: <code>notes:Signpost</code>,
+                    description: 'All cards in a cube whose notes contains "Signpost", case insensitive.',
+                  },
+                  {
+                    query: <code>notes:"is fun"</code>,
+                    description: 'All cards in a cube whose notes contains "is fun", case insensitive.',
+                  },
+                  {
+                    query: <code>notes="Too powerful"</code>,
+                    description: 'All cards in a cube whose notes are exactly "Too powerful", case insensitive.',
+                  },
+                  {
+                    query: <code>notes=""</code>,
+                    description: 'All cards with no notes (single or double quotes are equivalent).',
+                  },
+                  {
+                    query: <code>{`notes!=''`}</code>,
+                    description: 'All cards with non-empty notes.',
+                  },
+                ]}
+              />
+            </Accordion>
             <Accordion title="Legality">
               <p>
                 You can use <code>leg:</code>, <code>legal:</code>, or <code>legality:</code> to filter cards by
@@ -524,9 +556,14 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 &quot;Non-foil&quot; and &quot;Foil&quot;.
               </p>
               <p>
-                You can use <code>status:</code> to filter by cards with the given status. Available options are
-                &quot;Not Owned&quot;, &quot;Ordered&quot;, &quot;Owned&quot;, &quot;Premium Owned&quot;, and
-                &quot;Proxied&quot;.
+                You can use <code>status:</code> to filter by cards with the given status. Available options are&nbsp;
+                {
+                  /* Replace the last comma with ", and" for nice English */
+                  CARD_STATUSES.map((status) => `"${status}"`)
+                    .join(', ')
+                    .replace(/,(?!.*,)/gim, ', and')
+                }
+                .
               </p>
               <Text semibold>Examples:</Text>
               <Table
@@ -541,7 +578,7 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                   },
                   {
                     query: <code>status:&quot;Premium Owned&quot;</code>,
-                    description: 'All cards marked with the &quot;Premium Owned&quot; status.',
+                    description: 'All cards marked with the "Premium Owned" status.',
                   },
                 ]}
               />

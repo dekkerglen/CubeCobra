@@ -1,15 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import Button from 'components/base/Button';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Container from 'components/base/Container';
+import { Flexbox } from 'components/base/Layout';
+import Text from 'components/base/Text';
+import TextArea from 'components/base/TextArea';
 import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Button from 'components/base/Button';
-import Container from 'components/base/Container';
-import { Flexbox } from 'components/base/Layout';
-import TextArea from 'components/base/TextArea';
-import Text from 'components/base/Text';
 
 interface AdminDashboardPageProps {
   loginCallback?: string;
@@ -18,7 +18,12 @@ interface AdminDashboardPageProps {
 const ApplicationPage: React.FC<AdminDashboardPageProps> = ({ loginCallback = '/' }) => {
   const [info, setInfo] = React.useState<string>('');
   const formRef = React.useRef<HTMLFormElement>(null);
-  const formData = React.useMemo(() => ({}), []);
+  const formData = useMemo(
+    () => ({
+      info,
+    }),
+    [info],
+  );
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -51,7 +56,7 @@ const ApplicationPage: React.FC<AdminDashboardPageProps> = ({ loginCallback = '/
                   value={info}
                   onChange={(e) => setInfo(e.target.value)}
                 />
-                <Button color="primary" block outline>
+                <Button color="primary" block outline onClick={() => formRef.current?.submit()}>
                   Submit
                 </Button>
               </Flexbox>

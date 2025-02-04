@@ -1,23 +1,27 @@
+import React, { useCallback, useContext, useMemo, useState } from 'react';
+
 import {
+  CategoryScale,
   Chart as ChartJS,
   Legend,
   LinearScale,
   LineElement,
   PointElement,
   TimeScale,
-  CategoryScale,
   Tooltip,
 } from 'chart.js';
-import 'chartjs-adapter-date-fns';
-import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
+
+import 'chartjs-adapter-date-fns';
+
 import { formatDate } from 'utils/Date';
-import { Col, Row, Flexbox } from './base/Layout';
-import Spinner from './base/Spinner';
-import Select from './base/Select';
-import History, { CubeType } from '../datatypes/History';
-import useQueryParam from '../hooks/useQueryParam';
+
+import History, { CubeType } from '../../datatypes/History';
 import { CSRFContext } from '../contexts/CSRFContext';
+import useQueryParam from '../hooks/useQueryParam';
+import { Col, Flexbox,Row } from './base/Layout';
+import Select from './base/Select';
+import Spinner from './base/Spinner';
 
 interface PlayRateGraphProps {
   defaultHistories: History[];
