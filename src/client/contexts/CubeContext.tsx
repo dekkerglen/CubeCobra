@@ -534,9 +534,14 @@ export function CubeContextProvider({
             // @ts-expect-error ts is incorrectly erroring here
             newChanges[card.board].removes = [];
           }
+
+          //Instead of defaulting findIndex to -1 using `... || -1`, default the removes to an empty array.
+          //If the found index was 0, that is falsey so `... || -1` would trigger and the card wouldn't be found
+          const edits = newChanges[card.board]?.edits || [];
+
           // if this card has been edited, remove the edit
-          const editIndex = newChanges[card.board]?.edits?.findIndex((e) => e.index === card.index) || -1;
-          if (editIndex !== -1) {
+          const editIndex = edits.findIndex((e) => e.index === card.index);
+          if (editIndex !== -1 && edits) {
             newChanges[card.board]?.edits?.splice(editIndex, 1);
           }
 
@@ -792,9 +797,10 @@ export function CubeContextProvider({
           };
           delete newCard.details;
 
-          // if this card has already been edited, overwrite the edit
-          const index = newChanges[edit.board]?.edits?.findIndex((e) => e.index === edit.index) || -1;
           const edits = newChanges[edit.board]?.edits || [];
+
+          // if this card has already been edited, overwrite the edit
+          const index = edits.findIndex((e) => e.index === edit.index);
           if (index !== -1 && edits) {
             edits[index].newCard = newCard;
           } else {
@@ -813,8 +819,9 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const edit of list) {
-        const editIndex = newChanges[edit.board]?.edits?.findIndex((e) => e.index === edit.index) || -1;
-        if (editIndex !== -1) {
+        const edits = newChanges[edit.board]?.edits || [];
+        const editIndex = edits.findIndex((e) => e.index === edit.index);
+        if (editIndex !== -1 && edits) {
           newChanges[edit.board]?.edits?.splice(editIndex, 1);
         }
       }
@@ -831,8 +838,9 @@ export function CubeContextProvider({
       for (const remove of list) {
         // if this card has been edited, remove the edit
         if (newChanges[remove.board]?.edits) {
-          const editIndex = newChanges[remove.board]?.edits?.findIndex((e) => e.index === remove.index) || -1;
-          if (editIndex !== -1) {
+          const edits = newChanges[remove.board]?.edits || [];
+          const editIndex = edits.findIndex((e) => e.index === remove.index);
+          if (editIndex !== -1 && edits) {
             newChanges[remove.board]?.edits?.splice(editIndex, 1);
           }
         }
@@ -857,8 +865,9 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const remove of list) {
-        const removeIndex = newChanges[remove.board]?.removes?.findIndex((e) => e.index === remove.index) || -1;
-        if (removeIndex !== -1) {
+        const removes = newChanges[remove.board]?.removes || [];
+        const removeIndex = removes.findIndex((e) => e.index === remove.index);
+        if (removeIndex !== -1 && removes) {
           newChanges[remove.board]?.removes?.splice(removeIndex, 1);
         }
       }
