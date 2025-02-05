@@ -16,7 +16,7 @@ import { Object } from 'core-js';
 import { cardName, normalizeName } from 'utils/cardutil';
 import { deepCopy } from 'utils/Util';
 
-import Card, { BoardType, boardTypes, Changes } from '../../datatypes/Card';
+import Card, { BoardType, boardTypes, Changes, CubeCardChange } from '../../datatypes/Card';
 import { CardDetails } from '../../datatypes/Card';
 import Cube, { TagColor } from '../../datatypes/Cube';
 import { UncontrolledAlertProps } from '../components/base/Alert';
@@ -264,6 +264,24 @@ export function CubeContextProvider({
       .filter((tag) => !(cube.tagColors || []).map((tc) => tc.tag).includes(tag))
       .map((tag) => ({ tag, color: 'no-color' })),
   ]);
+
+  /* Modifies the CubeCardChanges in place, if the index is found in its set */
+  const removeCardByIndexFromChangeset = <Type extends CubeCardChange>(
+    changeSet: Type[] | undefined,
+    cardIndex: number,
+  ) => {
+    if (!changeSet) {
+      return;
+    }
+
+    //Instead of defaulting findIndex to -1 using `... || -1`, default the removes to an empty array.
+    //If the found index was 0, that is falsey so `... || -1` would trigger and the card wouldn't be found
+    const changes = changeSet || [];
+    const itemIndex = changes.findIndex((e) => e.index === cardIndex);
+    if (itemIndex !== -1 && changes) {
+      changes.splice(itemIndex, 1);
+    }
+  };
 
   useMount(() => {
     // if there are changes
@@ -535,15 +553,7 @@ export function CubeContextProvider({
             newChanges[card.board].removes = [];
           }
 
-          //Instead of defaulting findIndex to -1 using `... || -1`, default the removes to an empty array.
-          //If the found index was 0, that is falsey so `... || -1` would trigger and the card wouldn't be found
-          const edits = newChanges[card.board]?.edits || [];
-
-          // if this card has been edited, remove the edit
-          const editIndex = edits.findIndex((e) => e.index === card.index);
-          if (editIndex !== -1 && edits) {
-            newChanges[card.board]?.edits?.splice(editIndex, 1);
-          }
+          removeCardByIndexFromChangeset(newChanges[card.board]?.edits, card.index);
 
           // @ts-expect-error ts is incorrectly erroring here
           newChanges[card.board]?.removes.push({
@@ -819,11 +829,7 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const edit of list) {
-        const edits = newChanges[edit.board]?.edits || [];
-        const editIndex = edits.findIndex((e) => e.index === edit.index);
-        if (editIndex !== -1 && edits) {
-          newChanges[edit.board]?.edits?.splice(editIndex, 1);
-        }
+        removeCardByIndexFromChangeset(newChanges[edit.board]?.edits, edit.index);
       }
 
       setChanges(newChanges);
@@ -838,11 +844,12 @@ export function CubeContextProvider({
       for (const remove of list) {
         // if this card has been edited, remove the edit
         if (newChanges[remove.board]?.edits) {
-          const edits = newChanges[remove.board]?.edits || [];
-          const editIndex = edits.findIndex((e) => e.index === remove.index);
-          if (editIndex !== -1 && edits) {
-            newChanges[remove.board]?.edits?.splice(editIndex, 1);
-          }
+          removeCardByIndexFromChangeset(newChanges[remove.board]?.edits, remove.index);
+        }
+
+        // if this card has been swapped, remove the swap
+        if (newChanges[remove.board]?.swaps) {
+          removeCardByIndexFromChangeset(newChanges[remove.board]?.swaps, remove.index);
         }
 
         if (!newChanges[remove.board]) {
@@ -871,11 +878,7 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const remove of list) {
-        const removes = newChanges[remove.board]?.removes || [];
-        const removeIndex = removes.findIndex((e) => e.index === remove.index);
-        if (removeIndex !== -1 && removes) {
-          newChanges[remove.board]?.removes?.splice(removeIndex, 1);
-        }
+        removeCardByIndexFromChangeset(newChanges[remove.board]?.removes, remove.index);
       }
 
       setChanges(newChanges);
