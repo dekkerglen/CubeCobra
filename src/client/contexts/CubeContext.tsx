@@ -848,10 +848,16 @@ export function CubeContextProvider({
         if (!newChanges[remove.board]) {
           newChanges[remove.board] = { adds: [], removes: [], swaps: [], edits: [] };
         }
-        newChanges[remove.board]?.removes?.push({
-          index: remove.index,
-          oldCard: cube.cards[remove.board][remove.index],
-        });
+
+        const removes = newChanges[remove.board]?.removes || [];
+        const removeIndex = removes.findIndex((e) => e.index === remove.index);
+        //Don't add the same card to the removals list
+        if (removeIndex === -1 && removes) {
+          newChanges[remove.board]?.removes?.push({
+            index: remove.index,
+            oldCard: cube.cards[remove.board][remove.index],
+          });
+        }
       }
 
       setChanges(newChanges);
