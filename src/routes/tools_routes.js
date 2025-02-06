@@ -11,9 +11,9 @@ import carddb, {
   getIdsFromName,
   getMostReasonable,
   getMostReasonableById,
+  getOracleForMl,
   getReasonableCardByOracle,
-  getRelatedCards,
-} from '../util/carddb';
+  getRelatedCards} from '../util/carddb';
 const cardutil = require('../client/utils/cardutil');
 const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../client/utils/Sort');
 const { makeFilter, filterCardsDetails } = require('../client/filtering/FilterCards');
@@ -173,6 +173,7 @@ router.get('/card/:id', async (req, res) => {
     }
 
     const related = getRelatedCards(card.oracle_id);
+    const mlSubstitution = getOracleForMl(card.oracle_id);
 
     const baseUrl = util.getBaseUrl();
     return render(
@@ -181,6 +182,7 @@ router.get('/card/:id', async (req, res) => {
       'CardPage',
       {
         card,
+        mlSubstitution: mlSubstitution ? cardFromId(mlSubstitution) : null,
         history: history.items.reverse(),
         lastKey: history.lastKey,
         versions: carddb.oracleToId[card.oracle_id]

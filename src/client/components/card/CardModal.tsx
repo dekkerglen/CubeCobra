@@ -3,7 +3,10 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 
 import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
-import { getTCGLink } from 'utils/Affiliate';
+import CardKingdomButton from 'components/purchase/CardKingdomButton';
+import CardMarketButton from 'components/purchase/CardMarketButton';
+import ManaPoolButton from 'components/purchase/ManaPoolButton';
+import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
 import {
   cardCmc,
   cardColorCategory,
@@ -128,7 +131,7 @@ const CardModal: React.FC<CardModalProps> = ({
   }
 
   return (
-    <Modal xl isOpen={isOpen} setOpen={setOpen}>
+    <Modal lg isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>
         {cardName(card)} {card.markedForDelete && <Badge color="danger">Marked for Removal</Badge>}
         {card.editIndex !== undefined && <Badge color="warning">*Pending Edit*</Badge>}
@@ -136,7 +139,7 @@ const CardModal: React.FC<CardModalProps> = ({
       <ModalBody>
         {versions ? (
           <Row>
-            <Col xs={12} sm={4}>
+            <Col xs={12} sm={6}>
               <Flexbox direction="col" gap="2">
                 <FoilCardImage
                   card={card}
@@ -149,7 +152,6 @@ const CardModal: React.FC<CardModalProps> = ({
                   <Button
                     className="mt-1"
                     color="accent"
-                    outline
                     block
                     onClick={() => {
                       if (isFrontImage) {
@@ -196,95 +198,26 @@ const CardModal: React.FC<CardModalProps> = ({
                     </TextBadge>
                   )}
                 </Flexbox>
-                {canEdit && (
-                  <>
-                    {card.markedForDelete ? (
-                      <Button
-                        color="primary"
-                        block
-                        outline
-                        onClick={() => revertRemove(card.removeIndex!, card.board!)}
-                      >
-                        Revert Removal
-                      </Button>
-                    ) : (
-                      <>
-                        <Button
-                          color="danger"
-                          block
-                          outline
-                          onClick={() => {
-                            removeCard(card.index!, card.board!);
-                            setOpen(false);
-                          }}
-                        >
-                          Remove from cube
-                        </Button>
-                        {card.board === 'mainboard' ? (
-                          <Button
-                            color="accent"
-                            block
-                            outline
-                            onClick={() => {
-                              moveCard(card.index!, card.board!, 'maybeboard');
-                              setOpen(false);
-                            }}
-                          >
-                            Move to Maybeboard
-                          </Button>
-                        ) : (
-                          <Button
-                            color="accent"
-                            block
-                            outline
-                            onClick={() => {
-                              moveCard(card.index!, card.board!, 'mainboard');
-                              setOpen(false);
-                            }}
-                          >
-                            Move to Mainboard
-                          </Button>
-                        )}
-                      </>
-                    )}
-                    {card.editIndex !== undefined && (
-                      <Button
-                        color="primary"
-                        block
-                        outline
-                        onClick={() => {
-                          if (card.editIndex !== undefined && card.board !== undefined) {
-                            revertEdit(card.editIndex, card.board);
-                          }
-                        }}
-                      >
-                        Revert Edit
-                      </Button>
-                    )}
-                  </>
-                )}
-                <Button type="link" block outline color="accent" href={card.details?.scryfall_uri} target="_blank">
+                <Button type="link" outline block color="accent" href={card.details?.scryfall_uri} target="_blank">
                   View on Scryfall
                 </Button>
-                <Button type="link" block outline color="accent" href={`/tool/card/${card.cardID}`} target="_blank">
+                <Button type="link" outline block color="accent" href={`/tool/card/${card.cardID}`} target="_blank">
                   View Card Analytics
                 </Button>
                 {card.details && (
-                  <Button
-                    type="link"
-                    className="my-1"
-                    block
-                    outline
-                    color="accent"
-                    href={getTCGLink(card)}
-                    target="_blank"
-                  >
-                    Buy
-                  </Button>
+                  <>
+                    <Text md semibold>
+                      Purchase
+                    </Text>
+                    <TCGPlayerButton card={card.details} />
+                    <CardKingdomButton card={card.details} />
+                    <ManaPoolButton card={card.details} />
+                    <CardMarketButton card={card.details} />
+                  </>
                 )}
               </Flexbox>
             </Col>
-            <Col xs={12} sm={8}>
+            <Col xs={12} sm={6}>
               <Flexbox direction="col" gap="2">
                 <Select
                   label="Version"
@@ -419,6 +352,64 @@ const CardModal: React.FC<CardModalProps> = ({
                       <Tag key={tag} colorClass={getTagColorClass(tagColors, tag)} text={tag} />
                     ))}
                   </Flexbox>
+                )}
+                {canEdit && (
+                  <>
+                    {card.markedForDelete ? (
+                      <Button color="primary" block onClick={() => revertRemove(card.removeIndex!, card.board!)}>
+                        Revert Removal
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          color="danger"
+                          block
+                          onClick={() => {
+                            removeCard(card.index!, card.board!);
+                            setOpen(false);
+                          }}
+                        >
+                          Remove from cube
+                        </Button>
+                        {card.board === 'mainboard' ? (
+                          <Button
+                            color="accent"
+                            block
+                            onClick={() => {
+                              moveCard(card.index!, card.board!, 'maybeboard');
+                              setOpen(false);
+                            }}
+                          >
+                            Move to Maybeboard
+                          </Button>
+                        ) : (
+                          <Button
+                            color="accent"
+                            block
+                            onClick={() => {
+                              moveCard(card.index!, card.board!, 'mainboard');
+                              setOpen(false);
+                            }}
+                          >
+                            Move to Mainboard
+                          </Button>
+                        )}
+                      </>
+                    )}
+                    {card.editIndex !== undefined && (
+                      <Button
+                        color="primary"
+                        block
+                        onClick={() => {
+                          if (card.editIndex !== undefined && card.board !== undefined) {
+                            revertEdit(card.editIndex, card.board);
+                          }
+                        }}
+                      >
+                        Revert Edit
+                      </Button>
+                    )}
+                  </>
                 )}
               </Flexbox>
             </Col>

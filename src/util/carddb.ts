@@ -7,14 +7,23 @@ import { filterCardsDetails, FilterFunction } from '../client/filtering/FilterCa
 import { detailsToCard } from '../client/utils/cardutil';
 import { SortFunctions } from '../client/utils/Sort';
 
+type OracleIdIndex = number;
+
+export interface Related {
+  top: OracleIdIndex[];
+  creatures: OracleIdIndex[];
+  spells: OracleIdIndex[];
+  other: OracleIdIndex[];
+}
 export interface CardMetadata {
-  cubedWith: Record<string, number[]>;
-  draftedWith: Record<string, number[]>;
-  synergistic: Record<string, number[]>;
+  cubedWith: Related;
+  draftedWith: Related;
+  synergistic: Related;
   elo: number;
   popularity: number;
   cubes: number;
   picks: number;
+  mostSimilar: OracleIdIndex;
 }
 
 interface Catalog {
@@ -327,6 +336,17 @@ export function getRelatedCards(oracleId: string): Record<string, Record<string,
       other: related.synergistic.other.map(indexToReasonable),
     },
   };
+}
+
+// if the oracle id is not in the training data, we will use the similar card in the metadata dict
+export function getOracleForMl(oracleId: string): string {
+  const related = catalog.metadatadict[oracleId];
+
+  if (!related) {
+    return oracleId;
+  }
+
+  return indexToReasonable(related.mostSimilar).oracle_id;
 }
 
 export function getAllMostReasonable(filter: FilterFunction): CardDetails[] {

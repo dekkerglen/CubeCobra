@@ -30,7 +30,7 @@ import CubeIdModal from './CubeIdModal';
 const FollowersModalLink = withModal(Link, FollowersModal);
 const CubeIdModalLink = withModal(Link, CubeIdModal);
 const QRCodeModalLink = withModal(Link, QRCodeModal);
-const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
+const ConfirmActionModalButton = withModal(Link, ConfirmActionModal);
 interface PrivateCubeIconProps {
   visibility: string;
 }
@@ -135,25 +135,43 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
             <MtgImage image={cube.image} showArtist className="w-full" />
             <CardBody>
               <Flexbox direction="col" gap="1">
-                <Text semibold md>
-                  {getCubeDescription(cube)}
-                </Text>
-                <FollowersModalLink href="#" modalprops={{ followers }}>
-                  {(cube.following || []).length} {(cube.following || []).length === 1 ? 'follower' : 'followers'}
-                </FollowersModalLink>
-                <Text>
+                <Flexbox direction="row" justify="between">
+                  <Text semibold md>
+                    {getCubeDescription(cube)}
+                  </Text>
+                  <FollowersModalLink href="#" modalprops={{ followers }}>
+                    {(cube.following || []).length} {(cube.following || []).length === 1 ? 'follower' : 'followers'}
+                  </FollowersModalLink>
+                </Flexbox>
+                <Flexbox direction="row" justify="between">
                   <Text italic>
                     {'Designed by '}
                     <Username user={cube.owner} />
-                  </Text>{' '}
-                  • <Link href={`/cube/rss/${cube.id}`}>RSS</Link> •{' '}
+                  </Text>
+                </Flexbox>
+                <Flexbox direction="row" justify="between" wrap="wrap">
+                  <Link href={`/cube/rss/${cube.id}`}>RSS Feed</Link>
+                  {' • '}
                   <QRCodeModalLink href="#" modalprops={{ link: `${baseUrl}/c/${cube.id}`, cubeName: cube.name }}>
                     QR Code
                   </QRCodeModalLink>
-                </Text>
-                <Link href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}>
-                  View in Cube Map <LinkExternalIcon size={16} />
-                </Link>
+                  {' • '}
+                  <Link href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}>
+                    View in Cube Map <LinkExternalIcon size={16} />
+                  </Link>
+                  {' • '}
+                  <ConfirmActionModalButton
+                    modalprops={{
+                      title: 'Report Cube',
+                      message:
+                        'Are you sure you want to report this cube? A moderator will review the report and take appropriate action.',
+                      target: `/cube/report/${cube.id}`,
+                      buttonText: 'Report Cube',
+                    }}
+                  >
+                    Report Cube
+                  </ConfirmActionModalButton>
+                </Flexbox>
                 {cube.priceVisibility === 'pu' && (
                   <Flexbox direction="row" gap="2">
                     {Number.isFinite(priceOwned) && (
@@ -188,19 +206,6 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                       Follow
                     </Button>
                   ))}
-                <ConfirmActionModalButton
-                  color="danger"
-                  block
-                  modalprops={{
-                    title: 'Report Cube',
-                    message:
-                      'Are you sure you want to report this cube? A moderator will review the report and take appropriate action.',
-                    target: `/cube/report/${cube.id}`,
-                    buttonText: 'Report Cube',
-                  }}
-                >
-                  Report Cube
-                </ConfirmActionModalButton>
               </Flexbox>
             </CardBody>
           </Card>

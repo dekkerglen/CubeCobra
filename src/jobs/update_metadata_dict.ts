@@ -3,15 +3,18 @@ require('module-alias/register');
 require('dotenv').config();
 
 const fs = require('fs');
-import { DefaultElo } from '../datatypes/Card';
-import carddb, { cardFromId, initializeCardDb } from '../util/carddb';
-const { encode } = require('../util/ml');
-
+const { DefaultElo } = require('../datatypes/Card');
+import carddb, { cardFromId, CardMetadata, initializeCardDb, Related } from '../util/carddb';
+const { encode, oracleInData } = require('../util/ml');
 const correlationLimit = 36;
+// import { HierarchicalNSW } from 'hnswlib-node';
+
+const dotProduct = (a: number[], b: number[]) => {
+  return a.reduce((acc, val, index) => acc + val * b[index], 0);
+};
 
 const cosineSimilarity = (a: number[], magA: number, b: number[], magB: number) => {
-  const dotProduct = a.reduce((acc, val, index) => acc + val * b[index], 0);
-  return dotProduct / (magA * magB);
+  return dotProduct(a, b) / (magA * magB);
 };
 
 type CubeDict = Record<string, string[]>;
@@ -19,25 +22,6 @@ type CubeDict = Record<string, string[]>;
 interface CubeHistory {
   cubes: Record<string, number[]>;
   indexToOracleMap: Record<number, string>;
-}
-
-type OracleId = number;
-
-interface Related {
-  top: OracleId[];
-  creatures: OracleId[];
-  spells: OracleId[];
-  other: OracleId[];
-}
-
-interface Metadata {
-  cubedWith: Related;
-  draftedWith: Related;
-  synergistic: Related;
-  elo: number;
-  picks: number;
-  cubes: number;
-  popularity: number;
 }
 
 (async () => {
@@ -134,7 +118,10 @@ interface Metadata {
       synergyWith[index1] = value;
       synergyWith[index2] = value;
     }
-    console.log(`Processed ${Math.min(i, oracleCount)} / ${oracleCount} oracle pairs`);
+
+    if (i % 100 === 0) {
+      console.log(`Processed ${Math.min(i, oracleCount)} / ${oracleCount} oracle pairs`);
+    }
   }
   console.log(`Processed ${oracleCount} / ${oracleCount} oracle pairs`);
 
@@ -183,16 +170,132 @@ interface Metadata {
   }
   console.log(`Processed ${Object.keys(cubeHistory).length} / ${Object.keys(cubeHistory).length} cubes`);
 
-  const metadatadict: Record<string, Metadata> = {};
+  const metadatadict: Record<string, CardMetadata> = {};
+  // const normalizedDeckWith = new Float32Array(oracleCount * oracleCount);
+  // // const deckedWithDistances = new Float32Array(oracleCount * oracleCount);
+
+  // for (let i = 0; i < oracleCount; i += 1) {
+  //   // normalize the draftedWith matrix
+  //   const row = draftedWith.slice(i * oracleCount, (i + 1) * oracleCount);
+  //   const magnitude = Math.sqrt(row.reduce((acc, val) => acc + val * val, 0));
+
+  //   for (let j = 0; j < oracleCount; j += 1) {
+  //     normalizedDeckWith[i * oracleCount + j] = draftedWith[i * oracleCount + j] / magnitude;
+  //   }
+
+  //   if (i % 100 === 0) {
+  //     console.log(`Normalized ${Math.min(i, oracleCount)} / ${oracleCount} deckedWith rows`);
+  //   }
+  // }
+
+  const oracleSubsetCount = Math.floor(oracleCount / 10);
+  const cardPopularities: { count: number; oracle: string }[] = [];
+  for (let i = 0; i < oracleCount; i += 1) {
+    cardPopularities.push({ count: cubeCount[i], oracle: indexToOracle[i] });
+  }
+
+  const idToOracleSubset = cardPopularities
+    .filter((item) => oracleInData(item.oracle))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, oracleSubsetCount)
+    .map((item) => oracleToIndex[item.oracle]);
+
+  const deckedWithPopular = new Int32Array(oracleSubsetCount * oracleSubsetCount);
+
+  for (let i = 0; i < oracleSubsetCount; i += 1) {
+    for (let j = i + 1; j < oracleSubsetCount; j += 1) {
+      const oracle1 = indexToOracle[idToOracleSubset[i]];
+      const oracle2 = indexToOracle[idToOracleSubset[j]];
+
+      // get the index of the oracle in the draftedWith matrix
+      deckedWithPopular[i * oracleSubsetCount + j] =
+        draftedWith[oracleToIndex[oracle1] * oracleCount + oracleToIndex[oracle2]];
+      deckedWithPopular[j * oracleSubsetCount + i] =
+        draftedWith[oracleToIndex[oracle1] * oracleCount + oracleToIndex[oracle2]];
+    }
+  }
+
+  const deckedWithDistances = new Float32Array(oracleSubsetCount * oracleSubsetCount);
+  // normalize the deckedWithDistances matrix
+  for (let i = 0; i < oracleSubsetCount; i += 1) {
+    // normalize
+    const row = deckedWithPopular.slice(i * oracleSubsetCount, (i + 1) * oracleSubsetCount);
+    const magnitude = Math.sqrt(row.reduce((acc, val) => acc + val * val, 0));
+
+    for (let j = 0; j < oracleSubsetCount; j += 1) {
+      deckedWithDistances[i * oracleSubsetCount + j] = deckedWithPopular[i * oracleSubsetCount + j] / magnitude;
+    }
+  }
+
+  // const hnswGraph = new HierarchicalNSW('cosine', oracleCount);
+  // hnswGraph.initIndex(oracleCount);
+
+  // for (let i = 0; i < oracleCount; i += 1) {
+  //   // if this oracle is in the data, add it to the graph
+  //   // because we only care about finding oracles in the data
+  //   if (oracleInData(indexToOracle[i])) {
+  //     console.log(
+  //       `Adding oracle ${indexToOracle[i]}: [${[...normalizedDeckWith.slice(i * oracleCount, (i + 1) * oracleCount)].join(', ')}]`,
+  //     );
+  //     hnswGraph.addPoint([...normalizedDeckWith.slice(i * oracleCount, (i + 1) * oracleCount)], i);
+  //   }
+
+  //   if (i % 100 === 0) {
+  //     console.log(`Added ${Math.min(i, oracleCount)} / ${oracleCount} oracles to the hnsw graph`);
+  //   }
+  // }
 
   processed = 0;
 
   for (const oracle of indexToOracle) {
+    // const mostSimilar = hnswGraph.searchKnn(
+    //   [...deckedWithDistances.slice(oracleToIndex[oracle] * oracleCount, (oracleToIndex[oracle] + 1) * oracleCount)],
+    //   1,
+    // );
+
+    let mostSimilarIndex = oracleToIndex[oracle];
+
+    if (!oracleInData(oracle)) {
+      // construct an array of correlations from deckedWith, only using the subset of oracles in the data
+      const vector = [];
+
+      for (let i = 0; i < oracleSubsetCount; i += 1) {
+        const oracle2 = indexToOracle[idToOracleSubset[i]];
+        vector.push(draftedWith[oracleToIndex[oracle] * oracleCount + oracleToIndex[oracle2]]);
+      }
+
+      // normalize the vector
+      const magnitude = Math.sqrt(vector.reduce((acc, val) => acc + val * val, 0));
+      for (let i = 0; i < oracleSubsetCount; i += 1) {
+        vector[i] /= magnitude;
+      }
+
+      // find most similar vector in deckedWithDistances
+      let maxSimilarity = dotProduct(vector, [...deckedWithDistances.slice(0, oracleSubsetCount)]);
+      let mostSimilar = 0;
+
+      for (let i = 1; i < oracleSubsetCount; i += 1) {
+        const similarity = dotProduct(vector, [
+          ...deckedWithDistances.slice(i * oracleSubsetCount, (i + 1) * oracleSubsetCount),
+        ]);
+        if (similarity > maxSimilarity) {
+          maxSimilarity = similarity;
+          mostSimilar = i;
+        }
+      }
+
+      // most similar is an oracle subset, need to convert to oracle id, then to oracle index
+      const mostSimilarOracle = indexToOracle[idToOracleSubset[mostSimilar]];
+      console.log(`Most similar to ${oracle} is ${mostSimilarOracle}`);
+      mostSimilarIndex = oracleToIndex[mostSimilarOracle];
+    }
+
     metadatadict[oracle] = {
       elo: DefaultElo,
       picks: 0,
       cubes: cubeCount[oracleToIndex[oracle]],
       popularity: (100 * cubeCount[oracleToIndex[oracle]]) / Object.keys(cubeHistory).length,
+      mostSimilar: mostSimilarIndex,
       cubedWith: {
         top: [],
         creatures: [],

@@ -1,5 +1,7 @@
+import slugify from 'slugify';
+
 import Card from '../../datatypes/Card';
-import { cardName,cardSetName } from './cardutil';
+import { cardCollectorNumber, cardName, cardSet, cardSetName } from './cardutil';
 
 export const tcgplayerAffiliate = 'https://tcgplayer.pxf.io/c/5760114/1830156/21018';
 export const tcgMassEntryUrl = 'https://store.tcgplayer.com/massentry';
@@ -41,5 +43,10 @@ export const getCardKingdomLink = (card: Card): string =>
   `https://www.cardkingdom.com/mtg/${ck(cardSetName(card))}/${ck(
     cardName(card),
   )}?partner=CubeCobra&utm_source=CubeCobra&utm_medium=affiliate&utm_campaign=CubeCobra`;
+
+export const getManaPoolLink = (card: Card): string =>
+  `https://manapool.com/card/${cardSet(card).toLowerCase()}/${cardCollectorNumber(card)}/${slugify(cardName(card), {
+    lower: true,
+  })}?ref=cubecobra`;
 
 export default { getTCGLink, tcgMassEntryUrl, tcgplayerAffiliate };

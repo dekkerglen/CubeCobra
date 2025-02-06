@@ -21,7 +21,7 @@ import Text from './base/Text';
 import Tooltip from './base/Tooltip';
 import AutocardListItem from './card/AutocardListItem';
 import { ColorChecksAddon } from './ColorCheck';
-import MassBuyButton from './MassBuyButton';
+import TCGPlayerBulkButton from './purchase/TCGPlayerBulkButton';
 import TagInput from './TagInput';
 import TextBadge from './TextBadge';
 
@@ -196,11 +196,11 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const totalPriceTix = cards.length ? cards.reduce((total, card) => total + (cardTix(card) ?? 0), 0) : 0;
 
   return (
-    <Modal xl isOpen={isOpen} setOpen={setOpen}>
+    <Modal lg isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>Edit Selected ({cards.length} cards)</ModalHeader>
       <ModalBody>
         <Row>
-          <Col xs={4}>
+          <Col xs={6}>
             <Flexbox direction="col" gap="2">
               <div className="overflow-y-auto">
                 <ListGroup>
@@ -251,65 +251,13 @@ const GroupModal: React.FC<GroupModalProps> = ({
                   </TextBadge>
                 )}
               </Flexbox>
-              <Row>
-                <Col xs={12}>
-                  <Button block color="danger" onClick={removeAll}>
-                    Remove all from cube
-                  </Button>
-                </Col>
-                <Col xs={12}>
-                  <Button
-                    color="accent"
-                    block
-                    onClick={() => {
-                      bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
-                      setOpen(false);
-                    }}
-                  >
-                    Move all to Maybeboard
-                  </Button>
-                </Col>
-                <Col xs={12}>
-                  <Button
-                    color="accent"
-                    block
-                    onClick={() => {
-                      bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
-                      setOpen(false);
-                    }}
-                  >
-                    Move all to Mainboard
-                  </Button>
-                </Col>
-              </Row>
-              {anyCardRemoved && (
-                <Row>
-                  <Col xs={12}>
-                    <Button className="my-1" block color="primary" onClick={revertRemoval}>
-                      Revert removal of removed cards
-                    </Button>
-                  </Col>
-                </Row>
-              )}
-              {anyCardChanged && (
-                <Row>
-                  <Col xs={12}>
-                    <Button className="my-1" block color="primary" onClick={bulkRevertEditAll}>
-                      Revert changes of edited cards
-                    </Button>
-                  </Col>
-                </Row>
-              )}
-              <Row>
-                <Col xs={12}>
-                  <MassBuyButton className="my-1" block cards={cards}>
-                    Buy All
-                  </MassBuyButton>
-                </Col>
-              </Row>
+              <Text md semibold>
+                Purchase
+              </Text>
+              <TCGPlayerBulkButton cards={cards} />
             </Flexbox>
           </Col>
-          <Col xs={8}>
+          <Col xs={6}>
             <Flexbox direction="col" gap="2">
               <Select
                 label="Set status of all"
@@ -372,9 +320,42 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 tagColors={tagColors}
                 suggestions={allTags}
               />
-              <Button className="my-1" block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
+              <Button block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
                 Apply to all
               </Button>
+              <Button block color="danger" onClick={removeAll}>
+                Remove all from cube
+              </Button>
+              <Button
+                color="accent"
+                block
+                onClick={() => {
+                  bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
+                  setOpen(false);
+                }}
+              >
+                Move all to Maybeboard
+              </Button>
+              <Button
+                color="accent"
+                block
+                onClick={() => {
+                  bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
+                  setOpen(false);
+                }}
+              >
+                Move all to Mainboard
+              </Button>
+              {anyCardRemoved && (
+                <Button block color="primary" onClick={revertRemoval}>
+                  Revert removal of removed cards
+                </Button>
+              )}
+              {anyCardChanged && (
+                <Button block color="primary" onClick={bulkRevertEditAll}>
+                  Revert changes of edited cards
+                </Button>
+              )}
             </Flexbox>
           </Col>
         </Row>

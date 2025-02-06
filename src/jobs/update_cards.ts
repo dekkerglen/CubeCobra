@@ -473,7 +473,13 @@ function getFaceAttributeSource(card: ScryfallCard, preflipped: boolean) {
   return faceAttributeSource;
 }
 
-function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boolean): CardDetails {
+function convertCard(
+  card: ScryfallCard,
+  metadata: CardMetadata,
+  ckPrice: number | undefined,
+  mpPrice: number | undefined,
+  preflipped: boolean,
+): CardDetails {
   const faceAttributeSource = getFaceAttributeSource(card as ScryfallCard, preflipped);
 
   const newcard: Partial<CardDetails> = {};
@@ -518,6 +524,8 @@ function convertCard(card: ScryfallCard, metadata: CardMetadata, preflipped: boo
     usd_etched: card.prices.usd_etched ? parseFloat(card.prices.usd_etched) : undefined,
     eur: card.prices.eur ? parseFloat(card.prices.eur) : undefined,
     tix: card.prices.tix ? parseFloat(card.prices.tix) : undefined,
+    ck: ckPrice,
+    mp: mpPrice,
   };
 
   newcard.digital = card.digital;
@@ -654,22 +662,31 @@ async function writeCatalog(basePath = 'private') {
   console.info('All JSON files saved.');
 }
 
-function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata) {
+function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata, ckPrice: number, mpPrice: number) {
   if (card.layout === 'transform') {
-    addCardToCatalog(convertCard(card, metadata, true), true);
+    addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
   }
-  addCardToCatalog(convertCard(card, metadata, false), false);
+  addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, false), false);
 }
 
-async function saveAllCards(metadatadict: Record<string, CardMetadata>, indexToOracle: string[]) {
+async function saveAllCards(
+  metadatadict: Record<string, CardMetadata>,
+  indexToOracle: string[],
+  ckPrices: Record<string, number>,
+  mpPrices: Record<string, number>,
+) {
   // eslint-disable-next-line no-console
   console.info('Processing cards...');
   await new Promise((resolve) =>
     fs
       .createReadStream('./private/cards.json')
       .pipe(JSONStream.parse('*'))
-      // @ts-expect-error idk why but this works
-      .pipe(es.mapSync((item) => saveEnglishCard(item, metadatadict[item.oracle_id])))
+      .pipe(
+        // @ts-expect-error idk why but this works
+        es.mapSync((item) =>
+          saveEnglishCard(item, metadatadict[item.oracle_id], ckPrices[item.scryfall_id], mpPrices[item.scryfall_id]),
+        ),
+      )
       .on('close', resolve),
   );
 
@@ -691,7 +708,12 @@ async function saveAllCards(metadatadict: Record<string, CardMetadata>, indexToO
   await writeCatalog('./private');
 }
 
-const downloadFromScryfall = async (metadatadict: Record<string, CardMetadata>, indexToOracle: string[]) => {
+const downloadFromScryfall = async (
+  metadatadict: Record<string, CardMetadata>,
+  indexToOracle: string[],
+  ckPrices: Record<string, number>,
+  mpPrices: Record<string, number>,
+) => {
   // eslint-disable-next-line no-console
   console.info('Downloading files from scryfall...');
   try {
@@ -710,7 +732,7 @@ const downloadFromScryfall = async (metadatadict: Record<string, CardMetadata>, 
   // eslint-disable-next-line no-console
   console.info('Creating objects...');
   try {
-    await saveAllCards(metadatadict, indexToOracle);
+    await saveAllCards(metadatadict, indexToOracle, ckPrices, mpPrices);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Updating cardbase objects failed:');
@@ -807,10 +829,47 @@ const loadMetadatadict = async () => {
   };
 };
 
+const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
+  // do a get on https://api.cardkingdom.com/api/pricelist
+  const res = await fetch('https://api.cardkingdom.com/api/pricelist', {
+    method: 'GET',
+    headers: {
+      accept: 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Download of card kingdom prices failed with code ${res.status}`);
+  }
+
+  const json = await res.json();
+
+  return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, card.price_retrail]));
+};
+
+const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
+  const res = await fetch('https://manapool.com/api/v1/prices/singles', {
+    method: 'GET',
+    headers: {
+      accept: 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Download of card kingdom prices failed with code ${res.status}`);
+  }
+
+  const json = await res.json();
+
+  return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, card.price_cents / 100]));
+};
+
 (async () => {
   try {
     const { metadatadict, indexToOracle } = await loadMetadatadict();
-    await downloadFromScryfall(metadatadict, indexToOracle);
+    const manaPoolPrices = await loadManaPoolPrices();
+    const cardKingdomPrices = await loadCardKingdomPrices();
+    await downloadFromScryfall(metadatadict, indexToOracle, manaPoolPrices, cardKingdomPrices);
     await uploadCardDb();
 
     // eslint-disable-next-line no-console

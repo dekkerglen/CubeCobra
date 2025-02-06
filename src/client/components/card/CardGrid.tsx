@@ -21,7 +21,7 @@ export interface CardGridProps {
 function CardGrid({ cards, cardProps, xs, sm, md, lg, xl, xxl, hrefFn, onClick }: CardGridProps) {
   if (hrefFn) {
     return (
-      <Row xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl}>
+      <Row xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl} gutters={1}>
         {cards.map((card, cardIndex) => (
           <Col key={cardIndex} xs={1}>
             <a href={hrefFn(card)} className="hover:cursor-pointer">
@@ -34,7 +34,7 @@ function CardGrid({ cards, cardProps, xs, sm, md, lg, xl, xxl, hrefFn, onClick }
   }
 
   return (
-    <Row xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl}>
+    <Row xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl} gutters={1}>
       {cards.map((card, cardIndex) => (
         <Col key={cardIndex} xs={1}>
           <FoilCardImage

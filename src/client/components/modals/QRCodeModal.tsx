@@ -2,6 +2,8 @@ import React from 'react';
 
 import QRCode from 'react-qr-code';
 
+import { Flexbox } from 'components/base/Layout';
+
 import Button from '../base/Button';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 
@@ -34,12 +36,14 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, setOpen, link, cubeNa
       </div>
     </ModalBody>
     <ModalFooter>
-      <Button color="primary" onClick={() => saveQRImage(cubeName)}>
-        Download
-      </Button>
-      <Button color="secondary" onClick={() => setOpen(false)}>
-        Close
-      </Button>
+      <Flexbox direction="row" gap="2">
+        <Button block color="primary" onClick={() => saveQRImage(cubeName)}>
+          Download
+        </Button>
+        <Button block color="secondary" onClick={() => setOpen(false)}>
+          Close
+        </Button>
+      </Flexbox>
     </ModalFooter>
   </Modal>
 );

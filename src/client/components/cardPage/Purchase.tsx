@@ -1,10 +1,12 @@
 import React from 'react';
 
-import { getCardHoarderLink, getCardKingdomLink, getCardMarketLink, getTCGLink } from 'utils/Affiliate';
-import { detailsToCard } from 'utils/cardutil';
+import CardHoarderButton from 'components/purchase/CardHoarderButton';
+import CardKingdomButton from 'components/purchase/CardKingdomButton';
+import CardMarketButton from 'components/purchase/CardMarketButton';
+import ManaPoolButton from 'components/purchase/ManaPoolButton';
+import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
 
 import { CardDetails } from '../../../datatypes/Card';
-import Button from '../base/Button';
 import { Card, CardBody, CardHeader } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
@@ -23,50 +25,11 @@ const Purchase: React.FC<PurchaseProps> = ({ card }) => {
       </CardHeader>
       <CardBody>
         <Flexbox direction="col" gap="2">
-          <Button type="link" outline color="accent" block href={getTCGLink(detailsToCard(card))} target="_blank">
-            <Flexbox direction="row" justify="between" className="w-full">
-              <Text semibold>TCGPlayer</Text>
-              {card.prices.usd && <Text semibold>{`$${card.prices.usd.toFixed(2)}`}</Text>}
-            </Flexbox>
-          </Button>
-          <Button
-            type="link"
-            outline
-            color="accent"
-            block
-            href={getCardKingdomLink(detailsToCard(card))}
-            target="_blank"
-          >
-            <Flexbox direction="row" justify="between" className="w-full">
-              <Text semibold>Card Kingdom</Text>
-            </Flexbox>
-          </Button>
-          <Button
-            type="link"
-            outline
-            color="accent"
-            block
-            href={getCardMarketLink(detailsToCard(card))}
-            target="_blank"
-          >
-            <Flexbox direction="row" justify="between" className="w-full">
-              <Text semibold>CardMarket</Text>
-              {card.prices.eur && <Text semibold>{`€${card.prices.eur.toFixed(2)}`}</Text>}
-            </Flexbox>
-          </Button>
-          <Button
-            type="link"
-            outline
-            color="accent"
-            block
-            href={getCardHoarderLink(detailsToCard(card))}
-            target="_blank"
-          >
-            <Flexbox direction="row" justify="between" className="w-full">
-              <Text semibold>CardHoarder</Text>
-              {card.prices.tix && <Text semibold>{`${card.prices.tix.toFixed(2)} TIX`}</Text>}{' '}
-            </Flexbox>
-          </Button>
+          <TCGPlayerButton card={card} />
+          <CardKingdomButton card={card} />
+          <ManaPoolButton card={card} />
+          <CardMarketButton card={card} />
+          <CardHoarderButton card={card} />
         </Flexbox>
       </CardBody>
     </Card>

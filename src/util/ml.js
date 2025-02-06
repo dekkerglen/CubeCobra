@@ -179,4 +179,5 @@ module.exports = {
   build,
   draft,
   encode,
+  oracleInData: (oracle) => oracleToIndex[oracle] !== undefined,
 };

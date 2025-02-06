@@ -46,7 +46,7 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
       setImageDict(json.dict);
     };
     getData();
-  }, []);
+  }, [csrfFetch]);
 
   const changeImage = useCallback(
     (image: string) => {

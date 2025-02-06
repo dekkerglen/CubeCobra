@@ -12,7 +12,6 @@ import UserContext from '../../contexts/UserContext';
 import { ListGroupItem } from '../base/ListGroup';
 import withAutocard from '../WithAutocard';
 
-
 export interface AutocardListItemProps {
   card: Card;
   noCardModal?: boolean;
@@ -73,7 +72,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   const findEmojisInTags = (tags: string[]): string[] => {
     const regex = emojiRegex();
-    const emojis: string[] = []
+    const emojis: string[] = [];
 
     for (const tag of tags) {
       const emojisInTag = tag.match(regex);
@@ -82,8 +81,8 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
       }
     }
 
-    return [...new Set(emojis)]
-  }
+    return [...new Set(emojis)];
+  };
 
   const emojiTags = useMemo(() => (card && card.tags ? findEmojisInTags(card.tags) : []), [card]);
 
@@ -97,8 +96,13 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
       last={last}
       first={first}
     >
-      {children && <span>{children}</span>}
-      <span>{cardName}</span>
+      {children ? (
+        <span>
+          {children} <span>{cardName}</span>
+        </span>
+      ) : (
+        <span>{cardName}</span>
+      )}
       {showInlineTagEmojis ? <span className="text-right">{emojiTags.join('')}</span> : ''}
     </AutocardDiv>
   );

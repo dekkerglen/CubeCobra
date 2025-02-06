@@ -32,6 +32,11 @@ const app = express();
 // gzip middleware
 app.use(compression());
 
+// do this before https redirect
+app.post('/healthcheck', (req, res) => {
+  res.status(200).send('OK');
+});
+
 //If this isn't a local developer environment, improve security by only allowing HTTPS
 if (process.env?.NODE_ENV !== 'development') {
   app.use((req, res, next) => {
@@ -213,9 +218,6 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
   );
 }
 
-app.post('/healthcheck', (req, res) => {
-  res.status(200).send('OK');
-});
 
 app.use((req, res, next) => {
   if (req.user && req.user.roles.includes('Banned')) {

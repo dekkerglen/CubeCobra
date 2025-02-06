@@ -63,6 +63,8 @@ export interface CardDetails {
     usd_foil?: number;
     usd_etched?: number;
     tix?: number;
+    ck?: number; // Cardkingdom price
+    mp?: number; // Manapool price
   };
   tokens: string[];
   set_name: string;

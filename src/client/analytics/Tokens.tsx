@@ -5,11 +5,11 @@ import { getTCGLink } from 'utils/Affiliate';
 import CardType from '../../datatypes/Card';
 import { Card, CardBody } from '../components/base/Card';
 import { Flexbox } from '../components/base/Layout';
-import { Col,Row } from '../components/base/Layout';
+import { Col, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Text from '../components/base/Text';
 import Markdown from '../components/Markdown';
-import MassBuyButton from '../components/MassBuyButton';
+import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
 import CubeContext from '../contexts/CubeContext';
 
 const compareCards = (x: CardType, y: CardType) => x.details?.name.localeCompare(y.details?.name || '') || 0;
@@ -42,7 +42,7 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
         //Equivalent tokens from different sets have their own unique id, but share an oracle id.
         //Eg 2 1/1 white bird tokens from different sets have card Ids A and B, but share oracle id C
         const oracleId = tokenMap[token].details?.oracle_id;
-        if (oracleId == undefined) {
+        if (oracleId === undefined) {
           continue;
         }
 
@@ -71,7 +71,7 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
         })
         .join('\n\n'),
     }));
-  }, [cards]);
+  }, [cards, tokenMap]);
 
   return (
     <Flexbox direction="col" gap="2" className="m-2">
@@ -79,9 +79,7 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
         Tokens
       </Text>
       <Text>All the tokens and emblems your cube uses and what cards require each of them.</Text>
-      <MassBuyButton color="primary" cards={data.map(({ card }) => card)}>
-        Buy All Tokens
-      </MassBuyButton>
+      <TCGPlayerBulkButton cards={data.map(({ card }) => card)} />
       <Row>
         {data.map(({ card, cardDescription }, index) => (
           <Col key={index} xs={6} md={4} lg={3} xxl={2}>
