@@ -16,7 +16,7 @@ import { Object } from 'core-js';
 import { cardName, normalizeName } from 'utils/cardutil';
 import { deepCopy } from 'utils/Util';
 
-import Card, { BoardType, boardTypes, Changes } from '../../datatypes/Card';
+import Card, { BoardType, boardTypes, Changes, CubeCardChange } from '../../datatypes/Card';
 import { CardDetails } from '../../datatypes/Card';
 import Cube, { TagColor } from '../../datatypes/Cube';
 import { UncontrolledAlertProps } from '../components/base/Alert';
@@ -264,6 +264,24 @@ export function CubeContextProvider({
       .filter((tag) => !(cube.tagColors || []).map((tc) => tc.tag).includes(tag))
       .map((tag) => ({ tag, color: 'no-color' })),
   ]);
+
+  /* Modifies the CubeCardChanges in place, if the index is found in its set */
+  const removeCardByIndexFromChangeset = <Type extends CubeCardChange>(
+    changeSet: Type[] | undefined,
+    cardIndex: number,
+  ) => {
+    if (!changeSet) {
+      return;
+    }
+
+    //Instead of defaulting findIndex to -1 using `... || -1`, default the removes to an empty array.
+    //If the found index was 0, that is falsey so `... || -1` would trigger and the card wouldn't be found
+    const changes = changeSet || [];
+    const itemIndex = changes.findIndex((e) => e.index === cardIndex);
+    if (itemIndex !== -1 && changes) {
+      changes.splice(itemIndex, 1);
+    }
+  };
 
   useMount(() => {
     // if there are changes
@@ -534,11 +552,8 @@ export function CubeContextProvider({
             // @ts-expect-error ts is incorrectly erroring here
             newChanges[card.board].removes = [];
           }
-          // if this card has been edited, remove the edit
-          const editIndex = newChanges[card.board]?.edits?.findIndex((e) => e.index === card.index) || -1;
-          if (editIndex !== -1) {
-            newChanges[card.board]?.edits?.splice(editIndex, 1);
-          }
+
+          removeCardByIndexFromChangeset(newChanges[card.board]?.edits, card.index);
 
           // @ts-expect-error ts is incorrectly erroring here
           newChanges[card.board]?.removes.push({
@@ -792,9 +807,10 @@ export function CubeContextProvider({
           };
           delete newCard.details;
 
-          // if this card has already been edited, overwrite the edit
-          const index = newChanges[edit.board]?.edits?.findIndex((e) => e.index === edit.index) || -1;
           const edits = newChanges[edit.board]?.edits || [];
+
+          // if this card has already been edited, overwrite the edit
+          const index = edits.findIndex((e) => e.index === edit.index);
           if (index !== -1 && edits) {
             edits[index].newCard = newCard;
           } else {
@@ -813,10 +829,7 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const edit of list) {
-        const editIndex = newChanges[edit.board]?.edits?.findIndex((e) => e.index === edit.index) || -1;
-        if (editIndex !== -1) {
-          newChanges[edit.board]?.edits?.splice(editIndex, 1);
-        }
+        removeCardByIndexFromChangeset(newChanges[edit.board]?.edits, edit.index);
       }
 
       setChanges(newChanges);
@@ -831,19 +844,27 @@ export function CubeContextProvider({
       for (const remove of list) {
         // if this card has been edited, remove the edit
         if (newChanges[remove.board]?.edits) {
-          const editIndex = newChanges[remove.board]?.edits?.findIndex((e) => e.index === remove.index) || -1;
-          if (editIndex !== -1) {
-            newChanges[remove.board]?.edits?.splice(editIndex, 1);
-          }
+          removeCardByIndexFromChangeset(newChanges[remove.board]?.edits, remove.index);
+        }
+
+        // if this card has been swapped, remove the swap
+        if (newChanges[remove.board]?.swaps) {
+          removeCardByIndexFromChangeset(newChanges[remove.board]?.swaps, remove.index);
         }
 
         if (!newChanges[remove.board]) {
           newChanges[remove.board] = { adds: [], removes: [], swaps: [], edits: [] };
         }
-        newChanges[remove.board]?.removes?.push({
-          index: remove.index,
-          oldCard: cube.cards[remove.board][remove.index],
-        });
+
+        const removes = newChanges[remove.board]?.removes || [];
+        const removeIndex = removes.findIndex((e) => e.index === remove.index);
+        //Don't add the same card to the removals list
+        if (removeIndex === -1 && removes) {
+          newChanges[remove.board]?.removes?.push({
+            index: remove.index,
+            oldCard: cube.cards[remove.board][remove.index],
+          });
+        }
       }
 
       setChanges(newChanges);
@@ -857,10 +878,7 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const remove of list) {
-        const removeIndex = newChanges[remove.board]?.removes?.findIndex((e) => e.index === remove.index) || -1;
-        if (removeIndex !== -1) {
-          newChanges[remove.board]?.removes?.splice(removeIndex, 1);
-        }
+        removeCardByIndexFromChangeset(newChanges[remove.board]?.removes, remove.index);
       }
 
       setChanges(newChanges);
