@@ -5,12 +5,11 @@ const patreon = require('patreon');
 const express = require('express');
 
 const { ensureAuth } = require('./middleware');
-const util = require('../util/util');
 
 import { PatronLevels, PatronStatuses } from '../datatypes/Patron';
 const Patron = require('../dynamo/models/patron');
 const User = require('../dynamo/models/user');
-const { redirect } = require('../util/render');
+const { handleRouteError, redirect } = require('../util/render');
 
 const patreonAPI = patreon.patreon;
 const patreonOAuth = patreon.oauth;
@@ -39,7 +38,7 @@ router.get('/unlink', ensureAuth, async (req, res) => {
     req.flash('success', `Patron account has been unlinked.`);
     return redirect(req, res, '/user/account?nav=patreon');
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/user/account?nav=patreon');
+    return handleRouteError(req, res, err, '/user/account?nav=patreon');
   }
 });
 

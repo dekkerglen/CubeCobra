@@ -9,8 +9,7 @@ import { addBasics } from '../../../routes/cube/helper';
 import { csrfProtection } from '../../../routes/middleware';
 import { NextFunction, Request, Response } from '../../../types/express';
 import { isCubeViewable } from '../../../util/cubefn';
-import { redirect } from '../../../util/render';
-import util from '../../../util/util';
+import { handleRouteError, redirect } from '../../../util/render';
 
 interface StartDraftBody {
   id?: string; // id of the format
@@ -100,7 +99,7 @@ const handler = async (req: Request, res: Response) => {
 
     return redirect(req, res, `/draft/${draftId}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    return handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
   }
 };
 

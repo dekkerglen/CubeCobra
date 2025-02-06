@@ -7,7 +7,7 @@ const { isCubeListed } = require('../util/cubefn');
 const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 import sendEmail from '../util/email';
-const { render, redirect } = require('../util/render');
+const { handleRouteError, render, redirect } = require('../util/render');
 
 // Bring in models
 const User = require('../dynamo/models/user');
@@ -126,7 +126,7 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
 
     return redirect(req, res, `/user/view/${req.params.id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/user/view/${req.params.id}`);
+    return handleRouteError(req, res, err, `/user/view/${req.params.id}`);
   }
 });
 
@@ -222,7 +222,7 @@ router.post(
       req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
       return redirect(req, res, '/user/lostpassword');
     } catch (err) {
-      return util.handleRouteError(req, res, err, `/user/lostpassword`);
+      return handleRouteError(req, res, err, `/user/lostpassword`);
     }
   },
 );
@@ -274,7 +274,7 @@ router.post(
       req.flash('success', 'Password updated successfully');
       return redirect(req, res, '/user/login');
     } catch (err) {
-      return util.handleRouteError(req, res, err, `/user/login`);
+      return handleRouteError(req, res, err, `/user/login`);
     }
   },
 );
@@ -368,7 +368,7 @@ router.post(
       req.flash('success', 'Account successfully created. Please check your email for a verification link to login.');
       return redirect(req, res, '/user/login');
     } catch (err) {
-      util.handleRouteError(req, res, err, '/user/register');
+      handleRouteError(req, res, err, '/user/register');
     }
   },
 );
@@ -393,7 +393,7 @@ router.get('/register/confirm/:id/:token', async (req, res) => {
     req.flash('success', 'Email verified. You can now login.');
     return redirect(req, res, '/user/login');
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/user/login');
+    return handleRouteError(req, res, err, '/user/login');
   }
 });
 
@@ -471,7 +471,7 @@ router.get('/view/:id', async (req, res) => {
       following,
     });
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -497,7 +497,7 @@ router.get('/decks/:userid', async (req, res) => {
       lastKey: decks.lastEvaluatedKey,
     });
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -560,7 +560,7 @@ router.get('/blog/:userid', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -697,7 +697,7 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
     req.flash('success', 'User information updated.');
     return redirect(req, res, '/user/account');
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/user/account');
+    return handleRouteError(req, res, err, '/user/account');
   }
 });
 
@@ -760,7 +760,7 @@ router.get('/social', ensureAuth, async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/');
+    return handleRouteError(req, res, err, '/');
   }
 });
 

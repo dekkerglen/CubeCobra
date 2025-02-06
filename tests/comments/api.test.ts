@@ -48,12 +48,12 @@ jest.mock('../../src/dynamo/models/notice', () => {
 });
 
 jest.mock('../../src/util/render', () => ({
+  handleRouteError: jest.fn(),
   redirect: jest.fn(),
   render: jest.fn(),
 }));
 
 jest.mock('../../src/util/util', () => ({
-  handleRouteError: jest.fn(),
   addNotification: jest.fn(),
 }));
 
@@ -107,7 +107,7 @@ describe('Get Comment', () => {
   it('handles errors gracefully', async () => {
     const error = new Error('Something went wrong');
     (Comment.getById as jest.Mock).mockRejectedValue(error);
-    (routeUtil.handleRouteError as jest.Mock).mockImplementation(() => {});
+    (util.handleRouteError as jest.Mock).mockImplementation(() => {});
 
     await call(getHandler)
       .withFlash(flashMock)
@@ -115,7 +115,7 @@ describe('Get Comment', () => {
       .send();
 
     expect(Comment.getById).toHaveBeenCalledWith('12345');
-    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
+    expect(util.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
     expect(flashMock).not.toHaveBeenCalled();
     expect(util.redirect).not.toHaveBeenCalled();
     expect(util.render).not.toHaveBeenCalled();
@@ -168,7 +168,7 @@ describe('Report Comment', () => {
       })
       .send();
 
-    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
+    expect(util.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
   });
 });
 
@@ -228,7 +228,7 @@ describe('Get Comments', () => {
       .send();
 
     expect(Comment.queryByParentAndType).toHaveBeenCalledWith('parent123', 'lastKey123');
-    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), mockError, '/404');
+    expect(util.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), mockError, '/404');
     expect(res.status).not.toHaveBeenCalledWith(200);
   });
 });

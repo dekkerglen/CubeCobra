@@ -5,7 +5,7 @@ import { csrfProtection } from '../../../routes/middleware';
 import { Request, Response } from '../../../types/express';
 import { abbreviate, isCubeViewable } from '../../../util/cubefn';
 import generateMeta from '../../../util/meta';
-import { redirect, render } from '../../../util/render';
+import { handleRouteError, redirect, render } from '../../../util/render';
 import util from '../../../util/util';
 
 const handler = async (req: Request, res: Response) => {
@@ -56,7 +56,7 @@ const handler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 };
 

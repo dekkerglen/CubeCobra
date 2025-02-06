@@ -2,8 +2,7 @@ import Stripe from 'stripe';
 
 import { csrfProtection } from '../../routes/middleware';
 import { Request, Response } from '../../types/express';
-import { redirect, render } from '../../util/render';
-import util from '../../util/util';
+import { handleRouteError, redirect, render } from '../../util/render';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2025-01-27.acacia',
@@ -45,7 +44,7 @@ const handler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 };
 
@@ -82,7 +81,7 @@ const checkout = async (req: Request, res: Response) => {
 
     return redirect(req, res, session.url);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 };
 

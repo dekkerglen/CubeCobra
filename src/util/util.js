@@ -1,6 +1,5 @@
 const shuffleSeed = require('shuffle-seed');
 const Notification = require('../dynamo/models/notification');
-const { redirect } = require('./render');
 
 const Filter = require('bad-words');
 const filter = new Filter();
@@ -262,7 +261,7 @@ function fromEntries(entries) {
   return obj;
 }
 
-async function addNotification(to/*: User*/, from/*: User*/, url, text) {
+async function addNotification(to /*: User*/, from /*: User*/, url, text) {
   if (to.username === from.username) {
     return; // we don't need to give notifications to ourselves
   }
@@ -289,12 +288,6 @@ function wrapAsyncApi(route) {
       });
     }
   };
-}
-
-function handleRouteError(req, res, err, reroute) {
-  req.logger.error(err.message, err.stack);
-  req.flash('danger', err.message);
-  redirect(req, res, reroute);
 }
 
 function toNonNullArray(arr) {
@@ -353,7 +346,6 @@ module.exports = {
   },
   addNotification,
   wrapAsyncApi,
-  handleRouteError,
   toNonNullArray,
   flatten,
   mapNonNull,

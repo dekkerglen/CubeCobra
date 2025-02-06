@@ -83,7 +83,14 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
   });
 };
 
+const handleRouteError = function (req, res, err, reroute) {
+  req.logger.error(err.message, err.stack);
+  req.flash('danger', err.message);
+  redirect(req, res, reroute);
+};
+
 module.exports = {
   render,
   redirect,
+  handleRouteError,
 };

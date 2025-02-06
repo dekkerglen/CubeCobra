@@ -11,7 +11,6 @@ import {
 } from '../../../src/router/routes/cube/blog';
 import { Response } from '../../../src/types/express';
 import * as util from '../../../src/util/render';
-import * as routeUtil from '../../../src/util/util';
 import { createBlogPost, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call } from '../../test-utils/transport';
@@ -23,6 +22,7 @@ jest.mock('../../../src/util/util', () => ({
 
 jest.mock('../../../src/util/render', () => ({
   ...jest.requireActual('../../../src/util/render'),
+  handleRouteError: jest.fn(),
   redirect: jest.fn(),
   render: jest.fn(),
 }));
@@ -44,12 +44,6 @@ jest.mock('../../../src/dynamo/models/blog', () => ({
 jest.mock('../../../src/dynamo/models/feed', () => ({
   ...jest.requireActual('../../../src/dynamo/models/feed'),
   batchPut: jest.fn(),
-}));
-
-jest.mock('../../../src/util/util', () => ({
-  ...jest.requireActual('../../../src/util/util'),
-  handleRouteError: jest.fn(),
-  addNotification: jest.fn(),
 }));
 
 describe('Create Blog Post', () => {
@@ -183,12 +177,7 @@ describe('Create Blog Post', () => {
       .withParams({ id: '12345' })
       .send();
 
-    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      error,
-      '/cube/blog/12345',
-    );
+    expect(util.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/cube/blog/12345');
   });
 });
 
@@ -292,7 +281,7 @@ describe('Get Blog Post', () => {
 
     await call(getBlogPostHandler).withParams({ id: 'blog-id' }).send();
 
-    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
+    expect(util.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
     expect(util.render).not.toHaveBeenCalled();
   });
 });
@@ -420,7 +409,7 @@ describe('View Blog Posts', () => {
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).send();
 
-    expect(routeUtil.handleRouteError).toHaveBeenCalledWith(
+    expect(util.handleRouteError).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
       error,

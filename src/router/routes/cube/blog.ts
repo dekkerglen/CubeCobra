@@ -9,7 +9,7 @@ import generateMeta from '../../../util/meta';
 import { render } from '../../../util/render';
 import util from '../../../util/util';
 
-const { redirect } = require('../../../util/render');
+const { handleRouteError, redirect } = require('../../../util/render');
 
 import { FeedTypes } from '../../../datatypes/Feed';
 import UserType from '../../../datatypes/User';
@@ -122,7 +122,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
     return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+    return handleRouteError(req, res, err, `/cube/blog/${encodeURIComponent(req.params.id)}`);
   }
 };
 
@@ -147,7 +147,7 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
 
     return render(req, res, 'BlogPostPage', { post });
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 };
 
@@ -179,7 +179,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
     req.flash('success', 'Post Removed');
     return redirect(req, res, `/cube/blog/${encodeURIComponent(blog.cube)}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 };
 
@@ -226,7 +226,7 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
+    return handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
   }
 };
 

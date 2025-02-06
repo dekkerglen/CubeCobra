@@ -5,8 +5,7 @@ import { csrfProtection } from '../../../routes/middleware';
 import { Request, Response } from '../../../types/express';
 import { isCubeViewable } from '../../../util/cubefn';
 import { setupPicks } from '../../../util/draftutil';
-import { redirect } from '../../../util/render';
-import util from '../../../util/util';
+import { handleRouteError, redirect } from '../../../util/render';
 
 const handler = async (req: Request, res: Response) => {
   try {
@@ -55,7 +54,7 @@ const handler = async (req: Request, res: Response) => {
 
     return redirect(req, res, `/draft/${id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
 };
 

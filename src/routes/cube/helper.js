@@ -1,5 +1,5 @@
 const { getIdsFromName, getMostReasonable, cardFromId } = require('../../util/carddb');
-const { render, redirect } = require('../../util/render');
+const { handleRouteError, render, redirect } = require('../../util/render');
 const util = require('../../util/util');
 const cardutil = require('../../client/utils/cardutil');
 const { CSVtoCards } = require('../../util/cubefn');
@@ -97,7 +97,7 @@ async function updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelog,
 
     return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
+    return handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }
 }
 

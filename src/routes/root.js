@@ -1,13 +1,12 @@
 const express = require('express');
 
-const util = require('../util/util');
 const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
 const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 const Feed = require('../dynamo/models/feed');
 
-const { render, redirect } = require('../util/render');
+const { handleRouteError, render, redirect } = require('../util/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../util/cubefn');
 
@@ -60,7 +59,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
       featured,
     });
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/landing');
+    return handleRouteError(req, res, err, '/landing');
   }
 });
 
