@@ -35,8 +35,9 @@ app.use(compression());
 //If this isn't a local developer environment, improve security by only allowing HTTPS
 if (process.env?.NODE_ENV !== 'development') {
   app.use((req, res, next) => {
-    //Redirect to HTTPS for security, assuming the AWS ALB isn't forwarding the HTTPS request along
-    if (req.headers['x-forwarded-proto'] !== 'https') {
+    //Redirect to HTTPS for security, assuming the AWS ALB isn't forwarding the HTTPS request along nor is it the ALB health check request
+    const userAgent = req.get('User-Agent') || '';
+    if (req.headers['x-forwarded-proto'] !== 'https' && !userAgent.includes('ELB-HealthChecker')) {
       /* Use DOMAIN environment variable instead of relying on req.headers.host.
        * That protects us from uncontrolled redirects to another domain, which is a type of
        * HTTP Host header attack (see https://portswigger.net/web-security/host-header#how-to-prevent-http-host-header-attacks)
