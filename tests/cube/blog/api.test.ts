@@ -1,3 +1,4 @@
+import { FeedTypes } from '../../../src/datatypes/Feed';
 import Blog from '../../../src/dynamo/models/blog';
 import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
@@ -157,12 +158,12 @@ describe('Create Blog Post', () => {
         expect.objectContaining({
           id: 'blog-id',
           to: 'user-1',
-          type: Feed.TYPES.BLOG,
+          type: FeedTypes.BLOG,
         }),
         expect.objectContaining({
           id: 'blog-id',
           to: 'user-2',
-          type: Feed.TYPES.BLOG,
+          type: FeedTypes.BLOG,
         }),
       ]),
     );

@@ -14,6 +14,8 @@ import withModal from 'components/WithModal';
 import User from 'datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 
+import { NoticeType } from '../../datatypes/Notice';
+
 const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
 
 interface Notice {
@@ -31,9 +33,9 @@ interface NoticePageProps {
 }
 
 const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices }) => {
-  const applications = notices.filter((notice) => notice.type === 'a');
-  const commentReports = notices.filter((notice) => notice.type === 'cr');
-  const cubeReports = notices.filter((notice) => notice.type === 'cur');
+  const applications = notices.filter((notice) => notice.type === NoticeType.APPLICATION);
+  const commentReports = notices.filter((notice) => notice.type === NoticeType.COMMENT_REPORT);
+  const cubeReports = notices.filter((notice) => notice.type === NoticeType.CUBE_REPORT);
 
   return (
     <MainLayout loginCallback={loginCallback}>

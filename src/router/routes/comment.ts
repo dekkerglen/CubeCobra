@@ -1,4 +1,5 @@
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '../../datatypes/Comment';
+import { NoticeType } from '../../datatypes/Notice';
 import User from '../../datatypes/User';
 import Blog from '../../dynamo/models/blog';
 import Comment from '../../dynamo/models/comment';
@@ -38,7 +39,7 @@ export const reportHandler = async (req: Request, res: Response) => {
       body: `${reason}\n\n${info}`,
       user: req.user ? req.user.id : null,
       date: Date.now().valueOf(),
-      type: Notice.TYPE.COMMENT_REPORT,
+      type: NoticeType.COMMENT_REPORT,
     };
 
     await Notice.put(report);
@@ -100,7 +101,7 @@ export const editCommentHandler = async (req: Request, res: Response) => {
 };
 
 export const addCommentHandler = async (req: Request, res: Response) => {
-  const { body, mentions = [], parent, type } = req.body;
+  const { body, mentions = '', parent, type } = req.body;
   const { user } = req;
 
   if (!isCommentType(type)) {

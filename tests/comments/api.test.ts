@@ -1,4 +1,5 @@
 import { isCommentType, isNotifiableCommentType } from '../../src/datatypes/Comment';
+import { NoticeType } from '../../src/datatypes/Notice';
 import Comment from '../../src/dynamo/models/comment';
 import Notice from '../../src/dynamo/models/notice';
 import * as DynamoUser from '../../src/dynamo/models/user';
@@ -145,7 +146,7 @@ describe('Report Comment', () => {
         subject: '12345',
         body: 'Report reason\n\nReport info',
         user: reporter.id,
-        type: Notice.TYPE.COMMENT_REPORT,
+        type: NoticeType.COMMENT_REPORT,
       }),
     );
 
