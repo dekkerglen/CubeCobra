@@ -1,5 +1,4 @@
-import { cardCmc, cardType } from '../client/utils/cardutil';
-import { cmcColumn } from '../client/utils/Util';
+import { cardCmc, cardType, cmcColumn } from '../client/utils/cardutil';
 import Card from '../datatypes/Card';
 import Draft, { DraftStep } from '../datatypes/Draft';
 

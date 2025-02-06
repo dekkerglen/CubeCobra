@@ -2,8 +2,7 @@ import React from 'react';
 
 import classNames from 'classnames';
 
-import { cardId, cardName } from 'utils/cardutil';
-import { getCardColorClass } from 'utils/Util';
+import { cardId, cardName, getCardColorClass } from 'utils/cardutil';
 
 import CardType from '../../../datatypes/Card';
 import withAutocard from '../WithAutocard';
