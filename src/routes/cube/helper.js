@@ -10,6 +10,8 @@ const Blog = require('../../dynamo/models/blog');
 const Feed = require('../../dynamo/models/feed');
 const Changelog = require('../../dynamo/models/changelog');
 
+const { FeedTypes } = require('../../datatypes/Feed');
+
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
@@ -83,7 +85,7 @@ async function updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelog,
         id,
         to: user,
         date: new Date().valueOf(),
-        type: Feed.TYPES.BLOG,
+        type: FeedTypes.BLOG,
       }));
 
       await Feed.batchPut(feedItems);
