@@ -16,7 +16,7 @@ import MainLayout from 'layouts/MainLayout';
 interface FeaturedCubesQueuePageProps {
   cubes: Cube[];
   daysBetweenRotations: number;
-  lastRotation: Date;
+  lastRotation: number;
   loginCallback: string;
 }
 

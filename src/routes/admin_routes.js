@@ -202,7 +202,7 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes: sortedCubes,
-    lastRotation: featured[0].featuredOn,
+    lastRotation: featured.length > 0 ? featured[0].featuredOn : new Date(0).valueOf(),
   });
 });
 
