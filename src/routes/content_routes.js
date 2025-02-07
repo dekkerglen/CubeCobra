@@ -13,6 +13,7 @@ const Content = require('../dynamo/models/content');
 
 const ensureContentCreator = ensureRole('ContentCreator');
 
+import { ContentStatus, ContentType } from '../datatypes/Content';
 import { NoticeType } from '../datatypes/Notice';
 
 const router = express.Router();
@@ -50,14 +51,14 @@ router.post('/submitapplication', ensureAuth, async (req, res) => {
 });
 
 router.get('/creators', ensureContentCreator, async (req, res) => {
-  const articles = await Content.getByTypeAndOwner(Content.TYPES.ARTICLE, req.user.id);
-  const videos = await Content.getByTypeAndOwner(Content.TYPES.VIDEO, req.user.id);
-  const podcasts = await Content.getByTypeAndOwner(Content.TYPES.PODCAST, req.user.id);
+  const articles = await Content.getByTypeAndOwner(ContentType.ARTICLE, req.user.id);
+  const videos = await Content.getByTypeAndOwner(ContentType.VIDEO, req.user.id);
+  const podcasts = await Content.getByTypeAndOwner(ContentType.PODCAST, req.user.id);
   return render(req, res, 'CreatorsPage', { articles, videos, podcasts });
 });
 
 router.get('/browse', async (req, res) => {
-  const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
+  const content = await Content.getByStatus(ContentStatus.PUBLISHED);
 
   return render(req, res, 'BrowseContentPage', {
     content: content.items.filter((item) => ['a', 'v', 'e'].includes(item.type)),
@@ -67,7 +68,7 @@ router.get('/browse', async (req, res) => {
 
 router.post('/getmore', async (req, res) => {
   const { lastKey } = req.body;
-  const content = await Content.getByStatus(Content.STATUS.PUBLISHED, lastKey);
+  const content = await Content.getByStatus(ContentStatus.PUBLISHED, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -77,14 +78,14 @@ router.post('/getmore', async (req, res) => {
 });
 
 router.get('/articles', async (req, res) => {
-  const content = await Content.getByTypeAndStatus(Content.TYPES.ARTICLE, Content.STATUS.PUBLISHED);
+  const content = await Content.getByTypeAndStatus(ContentType.ARTICLE, ContentStatus.PUBLISHED);
 
   return render(req, res, 'ArticlesPage', { articles: content.items, lastKey: content.lastKey });
 });
 
 router.post('/getmorearticles', async (req, res) => {
   const { lastKey } = req.body;
-  const content = await Content.getByTypeAndStatus(Content.TYPES.ARTICLE, Content.STATUS.PUBLISHED, lastKey);
+  const content = await Content.getByTypeAndStatus(ContentType.ARTICLE, ContentStatus.PUBLISHED, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -94,14 +95,14 @@ router.post('/getmorearticles', async (req, res) => {
 });
 
 router.get('/videos', async (req, res) => {
-  const content = await Content.getByTypeAndStatus(Content.TYPES.VIDEO, Content.STATUS.PUBLISHED);
+  const content = await Content.getByTypeAndStatus(ContentType.VIDEO, ContentStatus.PUBLISHED);
 
   return render(req, res, 'VideosPage', { videos: content.items, lastKey: content.lastKey });
 });
 
 router.post('/getmorevideos', async (req, res) => {
   const { lastKey } = req.body;
-  const content = await Content.getByTypeAndStatus(Content.TYPES.VIDEO, Content.STATUS.PUBLISHED, lastKey);
+  const content = await Content.getByTypeAndStatus(ContentType.VIDEO, ContentStatus.PUBLISHED, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -111,8 +112,8 @@ router.post('/getmorevideos', async (req, res) => {
 });
 
 router.get('/podcasts', async (req, res) => {
-  const content = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);
-  const podcasts = await Content.getByTypeAndStatus(Content.TYPES.PODCAST, Content.STATUS.PUBLISHED);
+  const content = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED);
+  const podcasts = await Content.getByTypeAndStatus(ContentType.PODCAST, ContentStatus.PUBLISHED);
 
   return render(req, res, 'PodcastsPage', {
     episodes: content.items,
@@ -123,7 +124,7 @@ router.get('/podcasts', async (req, res) => {
 
 router.post('/getmorepodcasts', async (req, res) => {
   const { lastKey } = req.body;
-  const content = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, lastKey);
+  const content = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -152,7 +153,7 @@ router.get('/article/:id', async (req, res) => {
     return redirect(req, res, '/content/browse');
   }
 
-  if (article.status !== Content.STATUS.PUBLISHED) {
+  if (article.status !== ContentStatus.PUBLISHED) {
     if (!req.user || req.user.id !== article.owner.id) {
       req.flash('danger', 'Article not found');
       return redirect(req, res, '/content/browse');
@@ -188,11 +189,11 @@ router.get('/podcast/:id', async (req, res) => {
     req.flash('danger', 'Podcast not found');
     return redirect(req, res, '/content/browse');
   }
-  let result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);
+  let result = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED);
   let episodes = result.items.filter((item) => item.podcast === podcast.id);
 
   while (result.lastKey) {
-    result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, result.lastKey);
+    result = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED, result.lastKey);
     episodes = [...episodes, ...result.items.filter((item) => item.podcast === podcast.id)];
   }
 
@@ -279,7 +280,7 @@ router.get('/article/edit/:id', ensureContentCreator, async (req, res) => {
     return redirect(req, res, `/content/article/${article.id}`);
   }
 
-  if (article.status === Content.STATUS.PUBLISHED) {
+  if (article.status === ContentStatus.PUBLISHED) {
     req.flash('danger', 'Unauthorized: Articles cannot be editted after being published.');
     return redirect(req, res, `/content/article/${article.id}`);
   }
@@ -346,7 +347,7 @@ router.get('/video/edit/:id', ensureContentCreator, async (req, res) => {
     return redirect(req, res, `/content/video/${video.id}`);
   }
 
-  if (video.status === Content.STATUS.PUBLISHED) {
+  if (video.status === ContentStatus.PUBLISHED) {
     req.flash('danger', 'Unauthorized: Videos cannot be editted after being published.');
     return redirect(req, res, `/content/video/${video.id}`);
   }
@@ -364,7 +365,7 @@ router.post('/editarticle', ensureContentCreator, async (req, res) => {
     return redirect(req, res, `/content/article/${article.id}`);
   }
 
-  if (article.status === Content.STATUS.PUBLISHED) {
+  if (article.status === ContentStatus.PUBLISHED) {
     req.flash('danger', 'Unauthorized: Articles cannot be editted after being published.');
     return redirect(req, res, `/content/article/${article.id}`);
   }
@@ -416,7 +417,7 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
     return redirect(req, res, `/content/video/${video.id}`);
   }
 
-  if (video.status === Content.STATUS.PUBLISHED) {
+  if (video.status === ContentStatus.PUBLISHED) {
     req.flash('danger', 'Unauthorized: videos cannot be editted after being published.');
     return redirect(req, res, `/content/video/${video.id}`);
   }
@@ -442,7 +443,7 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
     return redirect(req, res, `/content/article/${article.id}`);
   }
 
-  if (article.status === Content.STATUS.PUBLISHED) {
+  if (article.status === ContentStatus.PUBLISHED) {
     req.flash('danger', 'Unauthorized: Articles cannot be editted after being published.');
     return redirect(req, res, `/content/article/${article.id}`);
   }
@@ -451,7 +452,7 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
   article.short = short.substring(0, 1000);
   article.imageName = imagename.substring(0, 1000);
   article.body = body.substring(0, 1000000);
-  article.status = Content.STATUS.IN_REVIEW;
+  article.status = ContentStatus.IN_REVIEW;
 
   await Content.update(article);
   req.flash(
@@ -472,7 +473,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
     return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
-  if (podcast.status === Content.STATUS.PUBLISHED) {
+  if (podcast.status === ContentStatus.PUBLISHED) {
     req.flash('danger', 'Unauthorized: podcasts cannot be editted after being published.');
     return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
@@ -483,7 +484,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
   podcast.description = fields.description;
   podcast.podcastLink = fields.url;
   podcast.image = fields.image;
-  podcast.status = Content.STATUS.IN_REVIEW;
+  podcast.status = ContentStatus.IN_REVIEW;
 
   await Content.update(podcast);
   req.flash(
@@ -504,7 +505,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
     return redirect(req, res, `/content/video/${video.id}`);
   }
 
-  if (video.status === Content.STATUS.PUBLISHED) {
+  if (video.status === ContentStatus.PUBLISHED) {
     req.flash('danger', 'Unauthorized: videos cannot be editted after being published.');
     return redirect(req, res, `/content/video/${video.id}`);
   }
@@ -514,7 +515,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
   video.imageName = imagename.substring(0, 1000);
   video.url = url.substring(0, 1000);
   video.body = body.substring(0, 1000000);
-  video.status = Content.STATUS.IN_REVIEW;
+  video.status = ContentStatus.IN_REVIEW;
 
   await Content.update(video);
   req.flash(
@@ -534,11 +535,11 @@ router.get('/newarticle', ensureContentCreator, async (req, res) => {
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
     short: 'This is a brand new article!',
     imageName: 'emmessi tome [mb1-1579]',
-    status: Content.STATUS.DRAFT,
+    status: ContentStatus.DRAFT,
     username: req.user.username,
   };
 
-  const id = await Content.put(article, Content.TYPES.ARTICLE);
+  const id = await Content.put(article, ContentType.ARTICLE);
 
   return redirect(req, res, `/content/article/edit/${id}`);
 });
@@ -550,11 +551,11 @@ router.get('/newpodcast', ensureContentCreator, async (req, res) => {
     image:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
     date: new Date().valueOf(),
-    status: Content.STATUS.DRAFT,
+    status: ContentStatus.DRAFT,
     username: req.user.username,
   };
 
-  const id = await Content.put(podcast, Content.TYPES.PODCAST);
+  const id = await Content.put(podcast, ContentType.PODCAST);
 
   return redirect(req, res, `/content/podcast/edit/${id}`);
 });
@@ -568,11 +569,11 @@ router.get('/newvideo', ensureContentCreator, async (req, res) => {
     image:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
     imageName: 'emmessi tome [mb1-1579]',
-    status: Content.STATUS.DRAFT,
+    status: ContentStatus.DRAFT,
     username: req.user.username,
   };
 
-  const id = await Content.put(video, Content.TYPES.VIDEO);
+  const id = await Content.put(video, ContentType.VIDEO);
 
   return redirect(req, res, `/content/video/edit/${id}`);
 });

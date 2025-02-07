@@ -1,15 +1,18 @@
-const sanitizeHtml = require('sanitize-html');
-const { convert } = require('html-to-text');
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { v4 as uuidv4 } from 'uuid';
+
 const User = require('./user');
 const { getImageData } = require('../../util/imageutil');
-const createClient = require('../util');
-const { getObject, putObject } = require('../s3client');
-const uuid = require('uuid');
 
-const removeSpan = (text) =>
-  sanitizeHtml(text, {
-    allowedTags: sanitizeHtml.defaults.allowedTags.filter((tag) => tag !== 'span'),
-  });
+import Article from '../../datatypes/Article';
+import { Content, ContentType, UnhydratedContent } from '../../datatypes/Content';
+import Episode from '../../datatypes/Episode';
+import Image from '../../datatypes/Image';
+import Podcast from '../../datatypes/Podcast';
+import UserType from '../../datatypes/User';
+import Video from '../../datatypes/Video';
+import { getBucketName, getObject, putObject } from '../s3client';
+import createClient from '../util';
 
 const FIELDS = {
   ID: 'id',
@@ -33,51 +36,55 @@ const FIELDS = {
   PODCAST_LINK: 'podcastLink',
 };
 
-const CONVERT_STATUS = {
-  inReview: 'r',
-  draft: 'd',
-  published: 'p',
+const createHydratedContent = (document: UnhydratedContent, owner: UserType, image: Image): Content => {
+  //Because type is a known set we don't need a default/unknown type case
+  switch (document.type as ContentType) {
+    case ContentType.ARTICLE:
+      return {
+        ...document,
+        owner: owner,
+        image: image,
+      } as Article;
+    case ContentType.EPISODE:
+      return {
+        ...document,
+        owner: owner,
+      } as Episode;
+    case ContentType.PODCAST:
+      return {
+        ...document,
+        owner: owner,
+      } as Podcast;
+    case ContentType.VIDEO:
+      return {
+        ...document,
+        owner: owner,
+        image: image,
+      } as Video;
+  }
 };
 
-const STATUS = {
-  IN_REVIEW: 'r',
-  DRAFT: 'd',
-  PUBLISHED: 'p',
-};
-
-const TYPES = {
-  VIDEO: 'v',
-  ARTICLE: 'a',
-  EPISODE: 'e',
-  PODCAST: 'p',
-};
-
-const hydrate = async (content) => {
+const hydrate = async (content: UnhydratedContent): Promise<Content> => {
   if (!content) {
     return content;
   }
 
-  if (content.owner) {
-    content.owner = await User.getById(content.owner);
-  }
+  const owner: UserType = content.owner ? await User.getById(content.owner) : undefined;
+  const image: Image = content.imageName ? getImageData(content.imageName) : undefined;
 
-  if (content.imageName) {
-    content.image = getImageData(content.imageName);
-  }
-
-  return content;
+  return createHydratedContent(content, owner, image);
 };
 
-const batchHydrate = async (contents) => {
-  const owners = await User.batchGet(contents.map((content) => content.owner));
+const batchHydrate = async (contents: UnhydratedContent[]): Promise<Content[]> => {
+  const owners: UserType[] = await User.batchGet(contents.map((content) => content.owner));
 
   return contents.map((content) => {
-    content.owner = owners.find((owner) => owner.id === content.owner);
-    if (content.imageName) {
-      content.image = getImageData(content.imageName);
-    }
+    const owner = owners.find((owner) => owner.id === content.owner);
 
-    return content;
+    const image: Image = content.imageName ? getImageData(content.imageName) : undefined;
+
+    //We should always find the owner
+    return createHydratedContent(content, owner!, image);
   });
 };
 
@@ -85,35 +92,34 @@ const client = createClient({
   name: 'CONTENT',
   partitionKey: FIELDS.ID,
   attributes: {
-    [FIELDS.ID]: 'S',
-    [FIELDS.DATE]: 'N',
-    [FIELDS.STATUS]: 'S',
-    [FIELDS.TYPE_STATUS_COMP]: 'S',
-    [FIELDS.TYPE_OWNER_COMP]: 'S',
+    id: 'S',
+    date: 'N',
+    status: 'S',
+    typeStatusComp: 'S',
+    typeOwnerComp: 'S',
   },
   indexes: [
     {
-      partitionKey: FIELDS.STATUS,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'status',
+      sortKey: 'date',
       name: 'ByStatus',
     },
     {
-      partitionKey: FIELDS.TYPE_OWNER_COMP,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'typeOwnerComp',
+      sortKey: 'date',
       name: 'ByTypeOwnerComp',
     },
     {
-      partitionKey: FIELDS.TYPE_STATUS_COMP,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'typeStatusComp',
+      sortKey: 'date',
       name: 'ByTypeStatusComp',
     },
   ],
-  FIELDS,
 });
 
-const addBody = async (content) => {
+const addBody = async (content: UnhydratedContent): Promise<UnhydratedContent> => {
   try {
-    const document = await getObject(process.env.DATA_BUCKET, `content/${content.id}.json`);
+    const document = await getObject(getBucketName(), `content/${content.id}.json`);
 
     return {
       ...content,
@@ -124,15 +130,29 @@ const addBody = async (content) => {
   }
 };
 
-const putBody = async (content) => {
-  if (content.body && content.body.length > 0) {
-    await putObject(process.env.DATA_BUCKET, `content/${content.id}.json`, content.body);
+const putBody = async (content: Article | Episode | Podcast | Video) => {
+  if (content.body) {
+    await putBodyRaw(content.id, content.body);
   }
 };
 
-module.exports = {
-  getById: async (id) => hydrate(await addBody((await client.get(id)).Item)),
-  getByStatus: async (status, lastKey) => {
+const putBodyRaw = async (id: string, body?: string) => {
+  if (body && body.length > 0) {
+    await putObject(getBucketName(), `content/${id}.json`, body);
+  }
+};
+
+//TODO: Getters for each variant
+const content = {
+  getById: async (id: string): Promise<Content> =>
+    hydrate(await addBody((await client.get(id)).Item as UnhydratedContent)),
+  getByStatus: async (
+    status: string,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: Content[]; lastKey?: DocumentClient.Key }> => {
+    //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
+    const statusAttr: keyof UnhydratedContent = 'status';
+
     const result = await client.query({
       IndexName: 'ByStatus',
       KeyConditionExpression: `#p1 = :status`,
@@ -140,17 +160,23 @@ module.exports = {
         ':status': status,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.STATUS,
+        '#p1': statusAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedContent[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  getByTypeAndStatus: async (type, status, lastKey) => {
+  getByTypeAndStatus: async (
+    type: ContentType,
+    status: string,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: Content[]; lastKey?: DocumentClient.Key }> => {
+    const typeStatusCompAttr: keyof UnhydratedContent = 'typeStatusComp';
+
     const result = await client.query({
       IndexName: 'ByTypeStatusComp',
       KeyConditionExpression: `#p1 = :stcomp`,
@@ -158,17 +184,23 @@ module.exports = {
         ':stcomp': `${type}:${status}`,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.TYPE_STATUS_COMP,
+        '#p1': typeStatusCompAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedContent[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  getByTypeAndOwner: async (type, owner, lastKey) => {
+  getByTypeAndOwner: async (
+    type: ContentType,
+    owner: string,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: Content[]; lastKey?: DocumentClient.Key }> => {
+    const typeOwnerCompAttr: keyof UnhydratedContent = 'typeOwnerComp';
+
     const result = await client.query({
       IndexName: 'ByTypeOwnerComp',
       KeyConditionExpression: `#p1 = :tocomp`,
@@ -176,18 +208,18 @@ module.exports = {
         ':tocomp': `${type}:${owner}`,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.TYPE_OWNER_COMP,
+        '#p1': typeOwnerCompAttr,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
     return {
-      items: await batchHydrate(result.Items),
+      items: await batchHydrate(result.Items as UnhydratedContent[]),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  update: async (document) => {
-    if (!document[FIELDS.ID]) {
+  update: async (document: Content): Promise<DocumentClient.PutItemOutput> => {
+    if (!document.id) {
       throw new Error('Invalid document: No partition key provided');
     }
 
@@ -199,8 +231,8 @@ module.exports = {
       ownerId = document.owner;
     }
 
-    document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
-    document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${ownerId}`;
+    document.typeStatusComp = `${document.type}:${document.status}`;
+    document.typeOwnerComp = `${document.type}:${ownerId}`;
 
     await putBody(document);
     delete document.body;
@@ -209,8 +241,8 @@ module.exports = {
       owner: ownerId,
     });
   },
-  put: async (document, type) => {
-    document.id = document[FIELDS.ID] || uuid.v4();
+  put: async (document: Article | Episode | Podcast | Video, type: ContentType) => {
+    document.id = document.id || uuidv4();
 
     if (document.body) {
       await putBody(document);
@@ -222,22 +254,23 @@ module.exports = {
       delete document.image;
     }
 
-    let ownerId;
-    if (document.owner.id) {
+    let ownerId: string | undefined;
+    //Type guard to know if owner is a string (their id) or a hydrated User type
+    if (document.owner && typeof document.owner !== 'string' && document.owner.id) {
       ownerId = document.owner.id;
-    } else {
+    } else if (document.owner && typeof document.owner === 'string') {
       ownerId = document.owner;
     }
 
     return client.put({
-      [FIELDS.TYPE]: type,
-      [FIELDS.TYPE_OWNER_COMP]: `${type}:${ownerId}`,
-      [FIELDS.TYPE_STATUS_COMP]: `${type}:${document.status}`,
       ...document,
+      type,
+      typeOwnerComp: `${type}:${ownerId}`,
+      typeStatusComp: `${type}:${document.status}`,
       owner: ownerId,
     });
   },
-  batchPut: async (documents) => {
+  batchPut: async (documents: (Article | Episode | Podcast | Video)[]) => {
     const docs = documents.map((document) => {
       let ownerId;
       if (document.owner && document.owner.id) {
@@ -254,91 +287,26 @@ module.exports = {
 
     await Promise.all(
       docs.map(async (document) => {
-        await putBody(document);
+        await putBodyRaw(document.id, document.body);
         delete document.body;
       }),
     );
     client.batchPut(docs);
   },
-  batchDelete: async (keys) => {
+  batchDelete: async (keys: DocumentClient.Key[]): Promise<void> => {
     return client.batchDelete(keys);
   },
-  scan: async (lastKey) => {
+  scan: async (lastKey: DocumentClient.Key): Promise<{ items?: UnhydratedContent[]; lastKey?: DocumentClient.Key }> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
     });
     return {
-      items: result.Items,
+      items: result.Items as UnhydratedContent[],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  createTable: async () => client.createTable(),
-  convertVideo: (video) => ({
-    [FIELDS.ID]: `${video._id}`,
-    [FIELDS.DATE]: video.date.valueOf(),
-    [FIELDS.STATUS]: CONVERT_STATUS[video.status],
-    [FIELDS.OWNER]: `${video.owner}`,
-    [FIELDS.TYPE]: TYPES.VIDEO,
-    [FIELDS.TITLE]: video.title,
-    [FIELDS.BODY]: video.body,
-    [FIELDS.SHORT]: video.short,
-    [FIELDS.URL]: video.url,
-    [FIELDS.IMAGE_NAME]: video.imagename,
-    [FIELDS.USERNAME]: video.username,
-    [FIELDS.TYPE_STATUS_COMP]: `${TYPES.VIDEO}:${CONVERT_STATUS[video.status]}`,
-    [FIELDS.TYPE_OWNER_COMP]: `${TYPES.VIDEO}:${video.owner}`,
-  }),
-  convertArticle: (article) => ({
-    [FIELDS.ID]: `${article._id}`,
-    [FIELDS.DATE]: article.date.valueOf(),
-    [FIELDS.STATUS]: CONVERT_STATUS[article.status],
-    [FIELDS.OWNER]: `${article.owner}`,
-    [FIELDS.TYPE]: TYPES.ARTICLE,
-    [FIELDS.TITLE]: article.title,
-    [FIELDS.BODY]: article.body,
-    [FIELDS.SHORT]: article.short,
-    [FIELDS.IMAGE_NAME]: article.imagename,
-    [FIELDS.USERNAME]: article.username,
-    [FIELDS.TYPE_STATUS_COMP]: `${TYPES.ARTICLE}:${CONVERT_STATUS[article.status]}`,
-    [FIELDS.TYPE_OWNER_COMP]: `${TYPES.ARTICLE}:${article.owner}`,
-  }),
-  convertEpisode: (episode) => ({
-    [FIELDS.ID]: `${episode._id}`,
-    [FIELDS.DATE]: episode.date.valueOf(),
-    [FIELDS.STATUS]: STATUS.PUBLISHED,
-    [FIELDS.OWNER]: `${episode.owner}`,
-    [FIELDS.TYPE]: TYPES.EPISODE,
-    [FIELDS.TITLE]: episode.title,
-    [FIELDS.PODCAST_NAME]: episode.podcastname,
-    [FIELDS.BODY]: removeSpan(episode.description),
-    [FIELDS.PODCAST_ID]: `${episode.podcast}`,
-    [FIELDS.URL]: episode.source,
-    [FIELDS.IMAGE_LINK]: episode.image,
-    [FIELDS.PODCAST_GUID]: episode.guid,
-    [FIELDS.PODCAST_LINK]: episode.link,
-    [FIELDS.USERNAME]: episode.username,
-    [FIELDS.TYPE_STATUS_COMP]: `${TYPES.EPISODE}:${STATUS.PUBLISHED}`,
-    [FIELDS.TYPE_OWNER_COMP]: `${TYPES.EPISODE}:${episode.owner}`,
-    [FIELDS.SHORT]: convert(removeSpan(episode.description), {
-      wordwrap: 130,
-    }).substring(0, 200),
-  }),
-  convertPodcast: (podcast) => ({
-    [FIELDS.ID]: `${podcast._id}`,
-    [FIELDS.DATE]: podcast.date.valueOf(),
-    [FIELDS.STATUS]: CONVERT_STATUS[podcast.status],
-    [FIELDS.OWNER]: `${podcast.owner}`,
-    [FIELDS.TYPE]: TYPES.PODCAST,
-    [FIELDS.TITLE]: podcast.title,
-    [FIELDS.BODY]: removeSpan(podcast.description),
-    [FIELDS.PODCAST_LINK]: podcast.url,
-    [FIELDS.URL]: podcast.rss,
-    [FIELDS.IMAGE_LINK]: podcast.image,
-    [FIELDS.USERNAME]: podcast.username,
-    [FIELDS.TYPE_STATUS_COMP]: `${TYPES.PODCAST}:${CONVERT_STATUS[podcast.status]}`,
-    [FIELDS.TYPE_OWNER_COMP]: `${TYPES.PODCAST}:${podcast.owner}`,
-  }),
-  STATUS,
-  TYPES,
-  FIELDS,
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
 };
+
+module.exports = content;
+export default content;

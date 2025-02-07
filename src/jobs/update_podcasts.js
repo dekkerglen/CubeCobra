@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const { updatePodcast } = require('../util/podcast');
 const Content = require('../dynamo/models/content');
+import { ContentStatus, ContentType } from '../datatypes/Content';
 
 const tryUpdate = async (podcast) => {
   try {
@@ -13,7 +14,7 @@ const tryUpdate = async (podcast) => {
 };
 
 const run = async () => {
-  const podcasts = await Content.getByTypeAndStatus(Content.TYPES.PODCAST, Content.STATUS.PUBLISHED);
+  const podcasts = await Content.getByTypeAndStatus(ContentType.PODCAST, ContentStatus.PUBLISHED);
 
   console.log({ message: 'Updating podcasts...' });
 

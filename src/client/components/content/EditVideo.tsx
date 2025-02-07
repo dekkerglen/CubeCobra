@@ -7,15 +7,10 @@ import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
+import { ContentStatusEnglish } from 'datatypes/Content';
 import VideoType from 'datatypes/Video';
 
 import VideoPreview from './VideoPreview';
-
-const CONVERT_STATUS = {
-  p: 'Published',
-  r: 'In Review',
-  d: 'Draft',
-};
 
 interface EditVideoProps {
   video: VideoType;
@@ -79,7 +74,7 @@ const EditVideo: React.FC<EditVideoProps> = ({
         <Col xs={12} md={6} lg={8} xxl={9}>
           <Flexbox direction="col" gap="2" className="m-2">
             <Text semibold md>
-              {`Status: ${CONVERT_STATUS[video.status]}`}
+              {`Status: ${ContentStatusEnglish[video.status]}`}
             </Text>
             <Input label="Title" maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} />
             <Input label="Video URL" maxLength={200} value={url} onChange={(e) => setUrl(e.target.value)} />
