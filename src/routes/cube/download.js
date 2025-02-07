@@ -3,7 +3,6 @@ const express = require('express');
 const sortutil = require('../../client/utils/Sort');
 const filterutil = require('../../client/filtering/FilterCards');
 const { cardFromId } = require('../../util/carddb');
-const util = require('../../util/util');
 
 const { isCubeViewable } = require('../../util/cubefn');
 const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper');
