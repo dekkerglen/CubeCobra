@@ -1,56 +1,47 @@
-const createClient = require('../util');
+import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 
-const FIELDS = {
-  CUBE: 'cube',
-  DATE: 'date',
-  OWNER: 'owner',
-  FEATURED_ON: 'featuredOn',
-  STATUS: 'status',
-};
-
-const STATUS = {
-  ACTIVE: 'a',
-  INACTIVE: 'i',
-};
+import { FeaturedQueueItem, FeaturedQueueStatus, NewFeaturedQueueItem } from '../../datatypes/FeaturedQueue';
+import createClient, { QueryInput } from '../util';
 
 const client = createClient({
   name: 'FEATURED_QUEUE',
-  partitionKey: FIELDS.CUBE,
+  partitionKey: 'cube',
   indexes: [
     {
       name: 'ByDate',
-      partitionKey: FIELDS.STATUS,
-      sortKey: FIELDS.DATE,
+      partitionKey: 'status',
+      sortKey: 'date',
     },
   ],
   attributes: {
-    [FIELDS.CUBE]: 'S',
-    [FIELDS.DATE]: 'N',
-    [FIELDS.STATUS]: 'S',
+    cube: 'S',
+    date: 'N',
+    status: 'S',
   },
-  FIELDS,
 });
 
 module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
-  put: async (document) => {
+  put: async (document: NewFeaturedQueueItem): Promise<void> => {
     await client.put({
-      [FIELDS.CUBE]: document[FIELDS.CUBE],
-      [FIELDS.DATE]: document[FIELDS.DATE],
-      [FIELDS.OWNER]: document[FIELDS.OWNER],
-      [FIELDS.FEATURED_ON]: document[FIELDS.FEATURED_ON],
-      [FIELDS.STATUS]: STATUS.ACTIVE,
+      ...document,
+      status: FeaturedQueueStatus.ACTIVE,
     });
   },
-  querySortedByDate: async (lastKey, limit = 36) => {
-    const query = {
+  querySortedByDate: async (
+    lastKey?: DocumentClient.Key,
+    limit = 36,
+  ): Promise<{ items?: FeaturedQueueItem[]; lastKey?: DocumentClient.Key }> => {
+    //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
+    const statusAttr: keyof FeaturedQueueItem = 'status';
+
+    const query: QueryInput = {
       IndexName: 'ByDate',
       KeyConditionExpression: '#status = :status',
       ExpressionAttributeNames: {
-        '#status': FIELDS.STATUS,
+        '#status': statusAttr,
       },
       ExpressionAttributeValues: {
-        ':status': STATUS.ACTIVE,
+        ':status': FeaturedQueueStatus.ACTIVE,
       },
       Limit: limit,
     };
@@ -60,21 +51,28 @@ module.exports = {
     const result = await client.query(query);
 
     return {
-      items: result.Items,
+      items: result.Items as FeaturedQueueItem[],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  queryWithOwnerFilter: async (ownerID, lastKey) => {
-    const query = {
+  queryWithOwnerFilter: async (
+    ownerID: string,
+    lastKey?: DocumentClient.Key,
+  ): Promise<{ items?: FeaturedQueueItem[]; lastKey?: DocumentClient.Key }> => {
+    //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
+    const statusAttr: keyof FeaturedQueueItem = 'status';
+    const ownerAttr: keyof FeaturedQueueItem = 'owner';
+
+    const query: QueryInput = {
       IndexName: 'ByDate',
       KeyConditionExpression: '#status = :status',
       FilterExpression: '#owner = :owner',
       ExpressionAttributeNames: {
-        '#status': FIELDS.STATUS,
-        '#owner': FIELDS.OWNER,
+        '#status': statusAttr,
+        '#owner': ownerAttr,
       },
       ExpressionAttributeValues: {
-        ':status': STATUS.ACTIVE,
+        ':status': FeaturedQueueStatus.ACTIVE,
         ':owner': ownerID,
       },
     };
@@ -84,21 +82,11 @@ module.exports = {
     const result = await client.query(query);
 
     return {
-      items: result.Items,
+      items: result.Items as FeaturedQueueItem[],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  batchPut: async (documents) => client.batchPut(documents),
-  createTable: async () => client.createTable(),
-  convertQueue: (queue) => {
-    return queue.queue.map((item, index) => ({
-      [FIELDS.CUBE]: `${item.cubeID}`,
-      [FIELDS.OWNER]: `${item.ownerID}`,
-      [FIELDS.DATE]: new Date().valueOf() - 1000 + index * 100, // make sure the 1st element is the oldest
-      [FIELDS.FEATURED_ON]: index < 2 ? new Date().valueOf() : null,
-      [FIELDS.STATUS]: STATUS.ACTIVE,
-    }));
-  },
-  delete: async (id) => client.delete({ cube: id }),
-  FIELDS,
+  batchPut: async (documents: FeaturedQueueItem[]): Promise<void> => client.batchPut(documents),
+  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  delete: async (id: string): Promise<void> => client.delete({ cube: id }),
 };
