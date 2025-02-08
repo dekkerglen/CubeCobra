@@ -31,6 +31,12 @@ describe('TCGPlayer', () => {
 
     expect(getTCGLink(token)).toEqual(`${tcgplayerAffiliate}?u=${encodeURI(uri)}`);
   });
+
+  it('should generate handle no card details', () => {
+    const card = createCard({ details: undefined });
+
+    expect(getTCGLink(card)).toEqual('#');
+  });
 });
 
 describe('CardMarket', () => {
