@@ -72,7 +72,7 @@ describe('ManaPool', () => {
     cardDetails += `Birds of Paradise [7ed] 231★\n`;
     cardDetails += `Oko, Thief of Crowns [ELD] 197`;
 
-    const encodedDeck = btoa(cardDetails);
+    const encodedDeck = btoa(unescape(encodeURIComponent(cardDetails)));
 
     expect(getBulkManaPoolLink(cards)).toEqual(`https://manapool.com/add-deck?ref=cubecobra&deck=${encodedDeck}`);
   });
