@@ -55,8 +55,13 @@ export const getBulkManaPoolLink = (cards: Card[]): string => {
   const cardString = cards
     .map((card) => `${cardName(card)} [${cardSet(card)}] ${cardCollectorNumber(card)}`)
     .join('\n');
-  // base64 encode the card string
-  const encodedCardString = btoa(cardString);
+
+  /* base64 encode the card string
+   * Because the collector number may contain non-latin characters like ★ and btoa only works with latin1 character set,
+   * we use the solution in https://stackoverflow.com/a/70714541 to encode before btoa in order to have valid characters.
+   * Even though unescape is deprecated, it works in all browsers at this time
+   */
+  const encodedCardString = btoa(unescape(encodeURIComponent(cardString)));
   return `https://manapool.com/add-deck?ref=cubecobra&deck=${encodedCardString}`;
 };
 
