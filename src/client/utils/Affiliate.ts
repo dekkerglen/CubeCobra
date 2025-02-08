@@ -28,7 +28,7 @@ export const getCardMarketLink = (card: Card): string =>
     .replace(/[:,."']/g, '')}/${cardName(card).replace(/ /g, '-').replace(/:/g, '').replace(/\./g, '')}`;
 
 export const getCardHoarderLink = (card: Card): string =>
-  `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${cardName(card)}?affiliate_id=cubecobra&utm_source=cubecobra&utm_campaign=affiliate&utm_medium=card`;
+  `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${encodeURIComponent(cardName(card))}?affiliate_id=cubecobra&utm_source=cubecobra&utm_campaign=affiliate&utm_medium=card`;
 
 const ck = (str: string): string =>
   str

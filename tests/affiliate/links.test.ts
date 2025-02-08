@@ -1,5 +1,6 @@
 import {
   getBulkManaPoolLink,
+  getCardHoarderLink,
   getCardMarketLink,
   getManaPoolLink,
   getTCGLink,
@@ -75,5 +76,19 @@ describe('ManaPool', () => {
     const encodedDeck = btoa(unescape(encodeURIComponent(cardDetails)));
 
     expect(getBulkManaPoolLink(cards)).toEqual(`https://manapool.com/add-deck?ref=cubecobra&deck=${encodedDeck}`);
+  });
+});
+
+describe('Card Hoarder', () => {
+  it('should generate a valid link for a card with a Card Hoarder', () => {
+    const card = createCard({
+      details: createCardDetails({ name: 'Oko, Thief of Crowns', set: 'ELD', collector_number: '197' }),
+    });
+
+    const encodedCardName = 'Oko%2C%20Thief%20of%20Crowns';
+
+    expect(getCardHoarderLink(card)).toEqual(
+      `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${encodedCardName}?affiliate_id=cubecobra&utm_source=cubecobra&utm_campaign=affiliate&utm_medium=card`,
+    );
   });
 });
