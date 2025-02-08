@@ -2,10 +2,12 @@ const tf = require('@tensorflow/tfjs-node');
 const fs = require('fs');
 const cloudwatch = require('./cloudwatch');
 
+const { getOracleForMl, getAllOracleIds } = require('./carddb');
 const indexToOracle = JSON.parse(fs.readFileSync('./model/indexToOracleMap.json'));
 const oracleToIndex = Object.fromEntries(Object.entries(indexToOracle).map(([key, value]) => [value, key]));
 
 const numOracles = Object.keys(oracleToIndex).length;
+
 
 let encoder;
 let recommendDecoder;
@@ -52,6 +54,15 @@ tf.loadGraphModel('file://./model/draft_decoder/model.json')
     cloudwatch.error(err.message, err.stack);
   });
 
+// if the oracle is in the data, return the index, otherwise return the substitute
+const getIndexFromOracle = (oracle) => {
+  if (oracleToIndex[oracle] !== undefined) {
+    return oracleToIndex[oracle];
+  }
+
+  return oracleToIndex[getOracleForMl(oracle)];
+};
+
 const softmax = (array) => {
   const max = Math.max(...array);
   const exps = array.map((x) => Math.exp(x - max));
@@ -74,7 +85,7 @@ const encode = (oracles) => {
     return [];
   }
 
-  const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
+  const vector = [encodeIndeces(oracles.map((oracle) => getIndexFromOracle(oracle)))];
 
   return tf.tidy(() => {
     const tensor = tf.tensor(vector);
@@ -83,6 +94,7 @@ const encode = (oracles) => {
 };
 
 const recommend = (oracles) => {
+  const allOracleIds = getAllOracleIds();
   if (!encoder || !recommendDecoder) {
     return {
       adds: [],
@@ -90,7 +102,7 @@ const recommend = (oracles) => {
     };
   }
 
-  const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
+  const vector = [encodeIndeces(oracles.map((oracle) => getIndexFromOracle(oracle)))];
 
   const array = tf.tidy(() => {
     const tensor = tf.tensor(vector);
@@ -101,11 +113,19 @@ const recommend = (oracles) => {
 
   const res = [];
 
-  for (let i = 0; i < numOracles; i++) {
-    res.push({
-      oracle: indexToOracle[i],
-      rating: array[i],
-    });
+  for (let i = 0; i < allOracleIds.length; i++) {
+    if (oracleToIndex[allOracleIds[i]] !== undefined) {
+      res.push({
+        oracle: allOracleIds[i],
+        rating: array[oracleToIndex[allOracleIds[i]]],
+      });
+    } else {
+      const substitute = getOracleForMl(allOracleIds[i]);
+      res.push({
+        oracle: allOracleIds[i],
+        rating: array[oracleToIndex[substitute]],
+      });
+    }
   }
 
   const adds = res.sort((a, b) => b.rating - a.rating).filter((card) => !oracles.includes(card.oracle));
@@ -118,12 +138,13 @@ const recommend = (oracles) => {
 };
 
 const build = (oracles) => {
+  const allOracleIds = getAllOracleIds();
   if (!encoder || !deckbuilderDecoder) {
     return [];
   }
 
   const array = tf.tidy(() => {
-    const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
+    const vector = [encodeIndeces(oracles.map((oracle) => getIndexFromOracle(oracle)))];
     const tensor = tf.tensor(vector);
 
     const encoded = encoder.predict(tensor);
@@ -132,14 +153,20 @@ const build = (oracles) => {
 
   const res = [];
 
-  for (let i = 0; i < numOracles; i++) {
-    const oracle = indexToOracle[i];
-
-    if (oracles.includes(oracle)) {
-      res.push({
-        oracle: indexToOracle[i],
-        rating: array[i],
-      });
+  for (let i = 0; i < allOracleIds.length; i++) {
+    if (oracles.includes(allOracleIds[i])) {
+      if (oracleToIndex[allOracleIds[i]]) {
+        res.push({
+          oracle: allOracleIds[i],
+          rating: array[oracleToIndex[allOracleIds[i]]],
+        });
+      } else {
+        const substitute = getOracleForMl(allOracleIds[i]);
+        res.push({
+          oracle: allOracleIds[i],
+          rating: array[oracleToIndex[substitute]],
+        });
+      }
     }
   }
 
@@ -147,14 +174,15 @@ const build = (oracles) => {
 };
 
 const draft = (pack, pool) => {
+  const allOracleIds = getAllOracleIds();
   const array = tf.tidy(() => {
-    const vector = [encodeIndeces(pool.map((oracle) => oracleToIndex[oracle]))];
+    const vector = [encodeIndeces(pool.map((oracle) => getIndexFromOracle(oracle)))];
     const tensor = tf.tensor(vector);
     const encoded = encoder.predict(tensor);
     return draftDecoder.predict([encoded]).dataSync();
   });
 
-  const packVector = encodeIndeces(pack.map((oracle) => oracleToIndex[oracle]));
+  const packVector = encodeIndeces(pack.map((oracle) => getIndexFromOracle(oracle)));
   const mask = packVector.map((x) => 1e9 * (1 - x));
 
   const softmaxed = softmax(array.map((x, i) => x * packVector[i] - mask[i]));
@@ -168,6 +196,23 @@ const draft = (pack, pool) => {
         oracle: indexToOracle[i],
         rating: softmaxed[i],
       });
+    }
+  }
+
+  for (let i = 0; i < allOracleIds.length; i++) {
+    if (pack.includes(allOracleIds[i])) {
+      if (oracleToIndex[allOracleIds[i]]) {
+        res.push({
+          oracle: allOracleIds[i],
+          rating: softmaxed[oracleToIndex[allOracleIds[i]]],
+        });
+      } else {
+        const substitute = getOracleForMl(allOracleIds[i]);
+        res.push({
+          oracle: allOracleIds[i],
+          rating: softmaxed[oracleToIndex[substitute]],
+        });
+      }
     }
   }
 

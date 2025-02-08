@@ -44,9 +44,20 @@ export const getCardKingdomLink = (card: Card): string =>
     cardName(card),
   )}?partner=CubeCobra&utm_source=CubeCobra&utm_medium=affiliate&utm_campaign=CubeCobra`;
 
+export const cardKingdomBulkLink = `https://www.cardkingdom.com/builder?utm_source=CubeCobra&utm_medium=deck&utm_campaign=CubeCobra`;
+
 export const getManaPoolLink = (card: Card): string =>
   `https://manapool.com/card/${cardSet(card).toLowerCase()}/${cardCollectorNumber(card)}/${slugify(cardName(card), {
     lower: true,
   })}?ref=cubecobra`;
+
+export const getBulkManaPoolLink = (cards: Card[]): string => {
+  const cardString = cards
+    .map((card) => `${cardName(card)} [${cardSet(card)}] ${cardCollectorNumber(card)}`)
+    .join('\n');
+  // base64 encode the card string
+  const encodedCardString = btoa(cardString);
+  return `https://manapool.com/add-deck?ref=cubecobra&deck=${encodedCardString}`;
+};
 
 export default { getTCGLink, tcgMassEntryUrl, tcgplayerAffiliate };

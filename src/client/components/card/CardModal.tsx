@@ -3,10 +3,12 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 
 import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
+import AddToCubeModal from 'components/modals/AddToCubeModal';
 import CardKingdomButton from 'components/purchase/CardKingdomButton';
 import CardMarketButton from 'components/purchase/CardMarketButton';
 import ManaPoolButton from 'components/purchase/ManaPoolButton';
 import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
+import withModal from 'components/WithModal';
 import {
   cardCmc,
   cardColorCategory,
@@ -51,6 +53,7 @@ import TextBadge from '../TextBadge';
 
 type FoilCardImageProps = FoilOverlayProps & ImageFallbackProps;
 const FoilCardImage: React.FC<FoilCardImageProps> = FoilOverlay(ImageFallback);
+const AddToCubeButton = withModal(Button, AddToCubeModal);
 
 export interface CardModalProps {
   isOpen: boolean;
@@ -204,6 +207,18 @@ const CardModal: React.FC<CardModalProps> = ({
                 <Button type="link" outline block color="accent" href={`/tool/card/${card.cardID}`} target="_blank">
                   View Card Analytics
                 </Button>
+                {card.details && (
+                  <AddToCubeButton
+                    color="accent"
+                    block
+                    outline
+                    modalprops={{
+                      card: card.details,
+                    }}
+                  >
+                    Add to another Cube
+                  </AddToCubeButton>
+                )}
                 {card.details && (
                   <>
                     <Text md semibold>

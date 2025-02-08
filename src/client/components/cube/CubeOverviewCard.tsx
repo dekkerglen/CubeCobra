@@ -2,6 +2,9 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import { EyeClosedIcon, LinkExternalIcon } from '@primer/octicons-react';
 
+import CardKingdomBulkButton from 'components/purchase/CardKingdomBulkButton';
+import ManaPoolBulkButton from 'components/purchase/ManaPoolBulkButton';
+import TCGPlayerBulkButton from 'components/purchase/TCGPlayerBulkButton';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 
 import User from '../../../datatypes/User';
@@ -173,22 +176,30 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                   </ConfirmActionModalButton>
                 </Flexbox>
                 {cube.priceVisibility === 'pu' && (
-                  <Flexbox direction="row" gap="2">
-                    {Number.isFinite(priceOwned) && (
-                      <TextBadge name="Owned">
-                        <Tooltip text="TCGPlayer Market Price as owned (cards marked as any type of ownership, or Ordered)">
-                          ${Math.round(priceOwned).toLocaleString()}
-                        </Tooltip>
-                      </TextBadge>
-                    )}
-                    {Number.isFinite(pricePurchase) && (
-                      <TextBadge name="Buy">
-                        <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
-                          ${Math.round(pricePurchase).toLocaleString()}
-                        </Tooltip>
-                      </TextBadge>
-                    )}
-                  </Flexbox>
+                  <>
+                    <Flexbox direction="row" gap="2">
+                      {Number.isFinite(priceOwned) && (
+                        <TextBadge name="Owned">
+                          <Tooltip text="TCGPlayer Market Price as owned (cards marked as any type of ownership, or Ordered)">
+                            ${Math.round(priceOwned).toLocaleString()}
+                          </Tooltip>
+                        </TextBadge>
+                      )}
+                      {Number.isFinite(pricePurchase) && (
+                        <TextBadge name="Buy">
+                          <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
+                            ${Math.round(pricePurchase).toLocaleString()}
+                          </Tooltip>
+                        </TextBadge>
+                      )}
+                    </Flexbox>
+                    <Text md semibold>
+                      Purchase
+                    </Text>
+                    <TCGPlayerBulkButton cards={cube.cards.mainboard} />
+                    <ManaPoolBulkButton cards={cube.cards.mainboard} />
+                    <CardKingdomBulkButton cards={cube.cards.mainboard} />
+                  </>
                 )}
                 {user && user.roles && user.roles.includes('Admin') && (
                   <Button color="accent" disabled={cube.visibility !== 'pu'} onClick={toggleFeatured}>

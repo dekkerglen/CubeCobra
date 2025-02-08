@@ -21,6 +21,8 @@ import Text from './base/Text';
 import Tooltip from './base/Tooltip';
 import AutocardListItem from './card/AutocardListItem';
 import { ColorChecksAddon } from './ColorCheck';
+import CardKingdomBulkButton from './purchase/CardKingdomBulkButton';
+import ManaPoolBulkButton from './purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from './purchase/TCGPlayerBulkButton';
 import TagInput from './TagInput';
 import TextBadge from './TextBadge';
@@ -255,6 +257,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 Purchase
               </Text>
               <TCGPlayerBulkButton cards={cards} />
+              <ManaPoolBulkButton cards={cards} />
+              <CardKingdomBulkButton cards={cards} />
             </Flexbox>
           </Col>
           <Col xs={6}>

@@ -342,7 +342,7 @@ export function getRelatedCards(oracleId: string): Record<string, Record<string,
 export function getOracleForMl(oracleId: string): string {
   const related = catalog.metadatadict[oracleId];
 
-  if (!related) {
+  if (!related || related.mostSimilar === undefined) {
     return oracleId;
   }
 

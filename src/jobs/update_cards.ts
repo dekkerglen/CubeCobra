@@ -683,9 +683,7 @@ async function saveAllCards(
       .pipe(JSONStream.parse('*'))
       .pipe(
         // @ts-expect-error idk why but this works
-        es.mapSync((item) =>
-          saveEnglishCard(item, metadatadict[item.oracle_id], ckPrices[item.scryfall_id], mpPrices[item.scryfall_id]),
-        ),
+        es.mapSync((item) => saveEnglishCard(item, metadatadict[item.oracle_id], ckPrices[item.id], mpPrices[item.id])),
       )
       .on('close', resolve),
   );
@@ -844,7 +842,9 @@ const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
 
   const json = await res.json();
 
-  return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, card.price_retrail]));
+  console.log(`Loaded ${json.data.length} cards from Mana Pool`);
+
+  return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_retail)]));
 };
 
 const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
@@ -856,12 +856,14 @@ const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
   });
 
   if (!res.ok) {
-    throw new Error(`Download of card kingdom prices failed with code ${res.status}`);
+    throw new Error(`Download of mana pool prices failed with code ${res.status}`);
   }
 
   const json = await res.json();
 
-  return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, card.price_cents / 100]));
+  console.log(`Loaded ${json.data.length} cards from Mana Pool`);
+
+  return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
 
 (async () => {
@@ -869,7 +871,7 @@ const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
     const { metadatadict, indexToOracle } = await loadMetadatadict();
     const manaPoolPrices = await loadManaPoolPrices();
     const cardKingdomPrices = await loadCardKingdomPrices();
-    await downloadFromScryfall(metadatadict, indexToOracle, manaPoolPrices, cardKingdomPrices);
+    await downloadFromScryfall(metadatadict, indexToOracle, cardKingdomPrices, manaPoolPrices);
     await uploadCardDb();
 
     // eslint-disable-next-line no-console

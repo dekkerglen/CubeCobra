@@ -320,6 +320,10 @@ export const cardPrice = (card: Card): number | undefined => {
 
 export const cardPriceEur = (card: Card): number | undefined => card.details?.prices.eur ?? undefined;
 
+export const cardPriceManaPool = (card: Card): number | undefined => card.details?.prices.mp ?? undefined;
+
+export const cardPriceCardKingdom = (card: Card): number | undefined => card.details?.prices.ck ?? undefined;
+
 export const cardTix = (card: Card): number | undefined => card.details?.prices.tix ?? undefined;
 
 export const cardIsFullArt = (card: Card): boolean => card.details?.full_art ?? false;
