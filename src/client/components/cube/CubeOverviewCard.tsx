@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import { EyeClosedIcon, LinkExternalIcon } from '@primer/octicons-react';
 
@@ -95,22 +95,6 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
     });
   };
 
-  const toggleFeatured = useCallback(() => {
-    const action = cube.featured ? 'unfeature' : 'feature';
-    csrfFetch(`/cube/${action}/${cube.id}`, {
-      method: 'POST',
-      headers: {},
-    }).then((response) => {
-      if (!response.ok) {
-        // eslint-disable-next-line no-console -- Debugging
-        console.error(response);
-      } else {
-        //Reload the page to see new state. TODO: Update state directly
-        window.location.reload();
-      }
-    });
-  }, [csrfFetch, cube]);
-
   return (
     <Flexbox direction="col" gap="2">
       <Row>
@@ -202,7 +186,12 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                   </>
                 )}
                 {user && user.roles && user.roles.includes('Admin') && (
-                  <Button color="accent" disabled={cube.visibility !== 'pu'} onClick={toggleFeatured}>
+                  <Button
+                    color="accent"
+                    type="link"
+                    disabled={cube.visibility !== 'pu'}
+                    href={`/cube/${cube.featured ? 'unfeature/' : 'feature/'}${cube.id}`}
+                  >
                     {cube.featured ? 'Remove from featured' : 'Add to featured'}
                   </Button>
                 )}
