@@ -3,11 +3,10 @@ const express = require('express');
 const sortutil = require('../../client/utils/Sort');
 const filterutil = require('../../client/filtering/FilterCards');
 const { cardFromId } = require('../../util/carddb');
-const util = require('../../util/util');
 
 const { isCubeViewable } = require('../../util/cubefn');
 const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper');
-const { redirect } = require('../../util/render');
+const { handleRouteError, redirect } = require('../../util/render');
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
@@ -61,7 +60,7 @@ router.get('/cubecobra/:id', async (req, res) => {
     }
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -99,7 +98,7 @@ router.get('/csv/:id', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -133,7 +132,7 @@ router.get('/forge/:id', async (req, res) => {
     }
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -159,7 +158,7 @@ router.get('/mtgo/:id', async (req, res) => {
 
     return exportToMtgo(res, cube.name, mainboard, maybeboard);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -190,7 +189,7 @@ router.get('/xmage/:id', async (req, res) => {
     }
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -227,7 +226,7 @@ router.get('/plaintext/:id', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 

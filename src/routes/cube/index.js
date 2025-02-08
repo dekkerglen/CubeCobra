@@ -8,7 +8,7 @@ const { CARD_STATUSES } = require('../../datatypes/Card');
 const cardutil = require('../../client/utils/cardutil');
 const miscutil = require('../../client/utils/Util');
 const { getIdsFromName, cardFromId } = require('../../util/carddb');
-const { render, redirect } = require('../../util/render');
+const { handleRouteError, render, redirect } = require('../../util/render');
 const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');
 const util = require('../../util/util');
 const generateMeta = require('../../util/meta');
@@ -23,7 +23,7 @@ const {
   generateSamplepackImage,
   cachePromise,
   isCubeViewable,
-  isCubeListed
+  isCubeListed,
 } = require('../../util/cubefn');
 
 const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, updateCubeAndBlog } = require('./helper');
@@ -44,7 +44,6 @@ router.use(csrfProtection);
 router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));
-
 
 router.post('/add', ensureAuth, recaptcha, async (req, res) => {
   try {
@@ -68,7 +67,10 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
     const emptyCubes = cubes.items.filter((cube) => cube.cardCount === 0);
 
     if (emptyCubes.length >= 2) {
-      req.flash('danger', 'You may only have two empty cubes at a time. To create a new cube, please delete an empty cube, or add cards to it.');
+      req.flash(
+        'danger',
+        'You may only have two empty cubes at a time. To create a new cube, please delete an empty cube, or add cards to it.',
+      );
       return redirect(req, res, `/user/view/${user.id}`);
     }
 
@@ -125,7 +127,7 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
     req.flash('success', 'Cube created!');
     return redirect(req, res, `/cube/view/${cube.id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/user/view/${req.user.id}`);
+    return handleRouteError(req, res, err, `/user/view/${req.user.id}`);
   }
 });
 
@@ -154,19 +156,15 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
 
     return redirect(req, res, `/cube/overview/${req.params.id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
 });
 
 router.get('/recents', async (req, res) => {
   const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
 
-
-
   return render(req, res, 'RecentlyUpdateCubesPage', {
-    items: result.items.filter((cube) =>
-      isCubeListed(cube, req.user),
-    ),
+    items: result.items.filter((cube) => isCubeListed(cube, req.user)),
     lastKey: result.lastKey,
   });
 });
@@ -178,9 +176,7 @@ router.post('/getmorerecents', ensureAuth, async (req, res) => {
 
   return res.status(200).send({
     success: 'true',
-    items: result.items.filter((cube) =>
-      isCubeListed(cube, req.user),
-    ),
+    items: result.items.filter((cube) => isCubeListed(cube, req.user)),
     lastKey: result.lastKey,
   });
 });
@@ -245,7 +241,7 @@ router.get('/clone/:id', async (req, res) => {
     req.flash('success', 'Cube Cloned');
     return redirect(req, res, `/cube/overview/${cube.id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
+    return handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }
 });
 
@@ -290,7 +286,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     req.flash('success', message);
     return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    return handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
   }
 });
 
@@ -387,14 +383,19 @@ router.post('/editoverview', ensureAuth, async (req, res) => {
     }
 
     if (util.hasProfanity(updatedCube.name)) {
-      req.flash('danger', 'Could not update cube, the name contains a banned word. If you feel this was a mistake, please contact us.');
+      req.flash(
+        'danger',
+        'Could not update cube, the name contains a banned word. If you feel this was a mistake, please contact us.',
+      );
       return redirect(req, res, '/cube/overview/' + cube.id);
     }
 
     if (updatedCube.shortId !== cube.shortId) {
-
       if (util.hasProfanity(updatedCube.shortId)) {
-        req.flash('danger', 'Could not update cube, the short id contains a banned word. If you feel this was a mistake, please contact us.');
+        req.flash(
+          'danger',
+          'Could not update cube, the short id contains a banned word. If you feel this was a mistake, please contact us.',
+        );
         return redirect(req, res, '/cube/overview/' + cube.id);
       }
 
@@ -509,7 +510,7 @@ router.get('/feature/:id', ensureAuth, async (req, res) => {
     req.flash('success', 'Cube updated successfully.');
     return redirect(req, res, redirectUrl);
   } catch (err) {
-    return util.handleRouteError(req, res, err, redirectUrl);
+    return handleRouteError(req, res, err, redirectUrl);
   }
 });
 
@@ -535,7 +536,7 @@ router.get('/unfeature/:id', ensureAuth, async (req, res) => {
     req.flash('success', 'Cube updated successfully.');
     return redirect(req, res, redirectUrl);
   } catch (err) {
-    return util.handleRouteError(req, res, err, redirectUrl);
+    return handleRouteError(req, res, err, redirectUrl);
   }
 });
 
@@ -622,7 +623,7 @@ router.get('/overview/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/landing/${req.params.id}`);
+    return handleRouteError(req, res, err, `/landing/${req.params.id}`);
   }
 });
 
@@ -681,7 +682,7 @@ router.get('/rss/:id', async (req, res) => {
     res.set('Content-Type', 'text/xml');
     return res.status(200).send(feed.xml());
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -736,7 +737,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -770,7 +771,7 @@ router.get('/list/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
 });
 
@@ -805,7 +806,7 @@ router.get('/history/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
 });
 
@@ -870,7 +871,7 @@ router.get('/playtest/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
 });
 
@@ -934,7 +935,7 @@ router.get('/analysis/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
 });
 
@@ -958,7 +959,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
       pack = await generatePack(cube, cards, req.params.seed);
     } catch (err) {
       // this is probably a 400, not a 500, as the user can fix it by trying again.
-      req.flash('danger', "Failed to generate pack: " + err.message);
+      req.flash('danger', 'Failed to generate pack: ' + err.message);
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
@@ -988,7 +989,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
 });
 
@@ -1003,7 +1004,6 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
-
 
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
       let pack;
@@ -1039,7 +1039,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     });
     return res.end(imageBuffer);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -1060,7 +1060,7 @@ router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
     await bulkUpload(req, res, req.body.body, cube);
     return null;
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 });
 
@@ -1087,7 +1087,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
     await bulkUpload(req, res, list, cube);
     return null;
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
+    return handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }
 });
 
@@ -1148,7 +1148,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
 
     throw new Error('Received empty file');
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 });
 
@@ -1251,7 +1251,7 @@ router.post(
 
       return redirect(req, res, `/cube/griddraft/${id}`);
     } catch (err) {
-      return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+      return handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
   },
 );
@@ -1372,7 +1372,7 @@ router.post(
 
       return redirect(req, res, `/draft/deckbuilder/${deckId}`);
     } catch (err) {
-      return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+      return handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
   },
 );
@@ -1418,10 +1418,9 @@ router.get('/griddraft/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
-
 
 router.post('/remove/:id', ensureAuth, async (req, res) => {
   try {
@@ -1441,7 +1440,7 @@ router.post('/remove/:id', ensureAuth, async (req, res) => {
     req.flash('success', 'Cube Removed');
     return redirect(req, res, '/dashboard');
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 

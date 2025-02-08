@@ -195,6 +195,8 @@ This will, in sequence:
 
 # Concepts
 
+More documentation on specific areas is found within the [docs](./docs) sub-folder.
+
 ## Backend
 
 ### API & Template Rendering

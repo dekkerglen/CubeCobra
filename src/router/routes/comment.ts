@@ -13,7 +13,7 @@ import { Request, Response } from '../../types/express';
 import { getImageData } from '../../util/imageutil';
 import util from '../../util/util';
 
-const { redirect, render } = require('../../util/render');
+const { handleRouteError, redirect, render } = require('../../util/render');
 
 export const getHandler = async (req: Request, res: Response) => {
   try {
@@ -26,7 +26,7 @@ export const getHandler = async (req: Request, res: Response) => {
 
     return render(req, res, 'CommentPage', { comment }, { title: 'Comment' });
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 };
 
@@ -51,7 +51,7 @@ export const reportHandler = async (req: Request, res: Response) => {
 
     return redirect(req, res, `/comment/${commentid}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 };
 
@@ -66,7 +66,7 @@ export const getCommentsHandler = async (req: Request, res: Response) => {
       lastKey: comments.lastKey,
     });
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 };
 

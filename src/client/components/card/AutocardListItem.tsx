@@ -4,7 +4,7 @@ import cx from 'classnames';
 import emojiRegex from 'emoji-regex';
 
 import DisplayContext from 'contexts/DisplayContext';
-import { getCardTagColorClass } from 'utils/Util';
+import { getCardTagColorClass } from 'utils/cardutil';
 
 import Card from '../../../datatypes/Card';
 import TagColorContext from '../../contexts/TagColorContext';

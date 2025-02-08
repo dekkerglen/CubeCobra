@@ -1,3 +1,5 @@
+import { TagColor } from 'datatypes/Cube';
+
 import Card, {
   CardDetails as CardDetailsType,
   COLOR_CATEGORIES,
@@ -595,6 +597,77 @@ export const makeSubtitle = (cards: any[]): string => {
   );
 };
 
+export function cmcColumn(card: Card): number {
+  const cmc = cardCmc(card);
+  // Round to half-integer then take ceiling to support Little Girl
+  const cmcDoubleInt = Math.round(cmc * 2);
+  let cmcInt = Math.round((cmcDoubleInt + (cmcDoubleInt % 2)) / 2);
+  if (cmcInt < 0) {
+    cmcInt = 0;
+  }
+  if (cmcInt > 7) {
+    cmcInt = 7;
+  }
+  return cmcInt;
+}
+
+export function sortInto(card: Card, result: Card[][][]) {
+  const typeLine = cardType(card).toLowerCase();
+  const row = typeLine.includes('creature') ? 0 : 1;
+  const column = cmcColumn(card);
+  if (result[row][column].length === 0) {
+    result[row][column] = [card];
+  } else {
+    result[row][column].push(card);
+  }
+}
+
+export function sortDeck(deck: (any | any[])[]): any[][] {
+  const result = [new Array(8).fill([]), new Array(8).fill([])];
+  for (const item of deck) {
+    if (Array.isArray(item)) {
+      for (const card of item) {
+        sortInto(card, result);
+      }
+    } else {
+      sortInto(item, result);
+    }
+  }
+  return result;
+}
+
+export const colorToColorClass: {
+  [key in ColorCategory]: string;
+} = {
+  White: 'white',
+  Blue: 'blue',
+  Black: 'black',
+  Red: 'red',
+  Green: 'green',
+  Colorless: 'colorless',
+  Multicolored: 'multi',
+  Hybrid: 'multi',
+  Lands: 'lands',
+};
+
+export function getCardColorClass(card: Card): string {
+  if (!card) {
+    return 'colorless';
+  }
+
+  return colorToColorClass[cardColorIdentityCategory(card)];
+}
+
+export function getCardTagColorClass(tagColors: TagColor[], card: Card): string {
+  if (tagColors) {
+    const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
+    if (tagColor && tagColor.color && tagColor.color !== 'no-color' && tagColor.color !== 'None') {
+      return `tag-color tag-${tagColor.color}`;
+    }
+  }
+  return getCardColorClass(card);
+}
+
 export default {
   cardTags,
   cardFinish,
@@ -654,4 +727,9 @@ export default {
   decodeName,
   cardsAreEquivalent,
   makeSubtitle,
+  cmcColumn,
+  sortInto,
+  sortDeck,
+  getCardColorClass,
+  getCardTagColorClass,
 };

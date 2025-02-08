@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const { cardFromId, getIdsFromName, getMostReasonable } = require('../../util/carddb');
-const { render, redirect } = require('../../util/render');
+const { handleRouteError, render, redirect } = require('../../util/render');
 const util = require('../../util/util');
 const generateMeta = require('../../util/meta');
 const cardutil = require('../../client/utils/cardutil');
@@ -73,7 +73,7 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
     }
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -131,7 +131,7 @@ router.get('/download/forge/:id/:seat', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -157,7 +157,7 @@ router.get('/download/txt/:id/:seat', async (req, res) => {
     }
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -171,7 +171,7 @@ router.get('/download/mtgo/:id/:seat', async (req, res) => {
     const seat = deck.seats[req.params.seat];
     return exportToMtgo(res, seat.name, seat.mainboard.flat(), seat.sideboard.flat(), deck.cards);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -227,7 +227,7 @@ router.get('/download/arena/:id/:seat', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -282,7 +282,7 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -347,7 +347,7 @@ router.get('/download/topdecked/:id/:seat', async (req, res) => {
 
     return res.end();
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -449,7 +449,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
     return redirect(req, res, `/draft/deckbuilder/${id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/404`);
+    return handleRouteError(req, res, err, `/404`);
   }
 });
 
@@ -485,7 +485,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     req.flash('success', 'Deck saved successfully');
     return redirect(req, res, `/cube/deck/${deck.id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -499,7 +499,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
 
     return redirect(req, res, `/draft/deckbuilder/${draftid}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    return handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
   }
 });
 
@@ -609,7 +609,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     return redirect(req, res, `/draft/deckbuilder/${id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -654,7 +654,7 @@ router.get('/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 

@@ -20,7 +20,7 @@ const { makeFilter, filterCardsDetails } = require('../client/filtering/FilterCa
 const generateMeta = require('../util/meta');
 const util = require('../util/util');
 const { csrfProtection } = require('./middleware');
-const { render, redirect } = require('../util/render');
+const { handleRouteError, render, redirect } = require('../util/render');
 
 const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
@@ -132,7 +132,7 @@ router.get('/topcards', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -205,7 +205,7 @@ router.get('/card/:id', async (req, res) => {
   } catch (err) {
     // eslint-disable-next-line no-console -- Error debugging
     console.error(err);
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -325,7 +325,7 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
 
     return redirect(req, res, card.image_normal);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -360,7 +360,7 @@ router.get('/cardimageflip/:id', async (req, res) => {
 
     return redirect(req, res, card.image_flip);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err, '/404');
   }
 });
 
