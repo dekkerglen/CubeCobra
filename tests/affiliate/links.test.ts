@@ -1,6 +1,7 @@
 import {
   getBulkManaPoolLink,
   getCardHoarderLink,
+  getCardKingdomLink,
   getCardMarketLink,
   getManaPoolLink,
   getTCGLink,
@@ -89,6 +90,25 @@ describe('Card Hoarder', () => {
 
     expect(getCardHoarderLink(card)).toEqual(
       `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${encodedCardName}?affiliate_id=cubecobra&utm_source=cubecobra&utm_campaign=affiliate&utm_medium=card`,
+    );
+  });
+});
+
+describe('Card Kingdom', () => {
+  it('should generate a valid link for a card with a Card Kingdom', () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Oko, Thief of Crowns',
+        set_name: 'Throne of Eldraine',
+        collector_number: '197',
+      }),
+    });
+
+    const encodedSetName = 'throne-of-eldraine';
+    const encodedCardName = 'oko-thief-of-crowns';
+
+    expect(getCardKingdomLink(card)).toEqual(
+      `https://www.cardkingdom.com/mtg/${encodedSetName}/${encodedCardName}?partner=CubeCobra&utm_source=CubeCobra&utm_medium=affiliate&utm_campaign=CubeCobra`,
     );
   });
 });
