@@ -76,12 +76,40 @@ describe('Filter syntax', () => {
     '_____ Goblin',
     'The Ultimate Nightmare of Wizards of the Coast® Customer Service',
     'Ratonhnhaké꞉ton',
-    'Kongming, "Sleeping Dragon"',
-    "Urza's Bauble",
   ];
 
   it.each(workingNamesWithInterestingCharacters)('Working names with interesting characters (%s)', async (name) => {
     assertValidNameFilter(makeFilter(name));
+    assertValidNameFilter(makeFilter(`'${name}'`));
+    assertValidNameFilter(makeFilter(`"${name}"`));
+    assertValidNameFilter(makeFilter(`name:'${name}'`));
+    assertValidNameFilter(makeFilter(`name:"${name}"`));
+  });
+
+  it('Partial working names with single quotes', async () => {
+    const name = "Urza's Bauble";
+    assertValidNameFilter(makeFilter(name));
+    assertValidNameFilter(makeFilter(`"${name}"`));
+    assertValidNameFilter(makeFilter(`name:"${name}"`));
+
+    //Cannot single-quote surround a name containing a single quote
+    const result = makeFilter(`'${name}'`);
+    expect(result.err).toBeTruthy();
+    const result2 = makeFilter(`name:'${name}'`);
+    expect(result2.err).toBeTruthy();
+  });
+
+  it('Partial working names with double quotes', async () => {
+    const name = 'Kongming, "Sleeping Dragon"';
+    assertValidNameFilter(makeFilter(name));
+    assertValidNameFilter(makeFilter(`'${name}'`));
+    assertValidNameFilter(makeFilter(`name:'${name}'`));
+
+    //Cannot double-quote surround a name containing a double quote
+    const result = makeFilter(`"${name}"`);
+    expect(result.err).toBeTruthy();
+    const result2 = makeFilter(`name:"${name}"`);
+    expect(result2.err).toBeTruthy();
   });
 
   const failingNamesWithInterestingCharacters = ['Hazmat Suit (Used)'];
