@@ -97,6 +97,10 @@ describe('Filter syntax', () => {
     expect(result.err).toBeTruthy();
     const result2 = makeFilter(`name:'${name}'`);
     expect(result2.err).toBeTruthy();
+
+    //But it does work if the quote is escaped
+    assertValidNameFilter(makeFilter(`'Urza\\'s Bauble'`));
+    assertValidNameFilter(makeFilter(`n:'Urza\\'s Bauble'`));
   });
 
   it('Partial working names with double quotes', async () => {
@@ -110,6 +114,10 @@ describe('Filter syntax', () => {
     expect(result.err).toBeTruthy();
     const result2 = makeFilter(`name:"${name}"`);
     expect(result2.err).toBeTruthy();
+
+    //But it does work if the quote is escaped
+    assertValidNameFilter(makeFilter(`"Kongming, \\"Sleeping Dragon\\""`));
+    assertValidNameFilter(makeFilter(`n:'Urza\\'s Bauble'`));
   });
 
   const failingNamesWithInterestingCharacters = ['Hazmat Suit (Used)'];
