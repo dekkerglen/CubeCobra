@@ -120,7 +120,9 @@ describe('Filter syntax', () => {
     assertValidNameFilter(makeFilter(`n:'Urza\\'s Bauble'`));
   });
 
-  const failingNamesWithInterestingCharacters = ['Hazmat Suit (Used)'];
+  const failingNamesWithInterestingCharacters = [
+    'Hazmat Suit (Used)', //The brackets get interpreted as another clause and we only want a single filter
+  ];
 
   it.each(failingNamesWithInterestingCharacters)('Failing names with interesting characters (%s)', async (name) => {
     const result = makeFilter(name);
