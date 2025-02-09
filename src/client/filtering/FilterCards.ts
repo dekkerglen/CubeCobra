@@ -30,7 +30,9 @@ export function defaultFilter(): FilterFunction {
   return result as FilterFunction;
 }
 
-export function makeFilter(filterText: string): { err: any; filter: FilterFunction | null } {
+export type FilterResult = { err: any; filter: FilterFunction | null };
+
+export function makeFilter(filterText: string): FilterResult {
   if (!filterText || filterText.trim() === '') {
     return {
       err: false,
