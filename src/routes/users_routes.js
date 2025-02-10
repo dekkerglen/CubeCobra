@@ -765,7 +765,7 @@ router.get('/social', ensureAuth, async (req, res) => {
 });
 
 router.post('/queuefeatured', ensureAuth, async (req, res) => {
-  const redirectTo = '/user/account?nav=patreon';
+  const redirectTo = '/user/account?nav=patreon&tab=4';
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
     return redirect(req, res, redirectTo);
@@ -796,10 +796,10 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
 
   try {
     if (shouldUpdate) {
-      fq.replaceForUser(req.user.id, cube.id);
+      await fq.replaceForUser(req.user.id, cube.id);
       req.flash('success', 'Successfully replaced cube in queue');
     } else {
-      fq.addNewCubeToQueue(req.user.id, cube.id);
+      await fq.addNewCubeToQueue(req.user.id, cube.id);
       req.flash('success', 'Successfully added cube to queue');
     }
   } catch (err) {
@@ -811,13 +811,13 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
 
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
   try {
-    fq.removeCubeFromQueue(req.user.id);
+    await fq.removeCubeFromQueue(req.user.id);
 
     req.flash('success', 'Successfully removed cube from queue');
   } catch (err) {
     req.flash('danger', err.message);
   }
-  return redirect(req, res, '/user/account?nav=patreon');
+  return redirect(req, res, '/user/account?nav=patreon&tab=4');
 });
 
 module.exports = router;
