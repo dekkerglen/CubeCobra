@@ -107,7 +107,7 @@ async function replaceForUser(userid, cubeid) {
   const item = cubes[index];
 
   if (index < 2) {
-    throw new Error('Cannot replace cube that is currenlty featured');
+    throw new Error('Cannot replace cube that is currently featured');
   }
 
   if (index === -1) {
