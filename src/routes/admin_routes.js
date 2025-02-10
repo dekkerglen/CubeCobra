@@ -386,23 +386,16 @@ router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  const update = await fq.updateFeatured(async (featured) => {
-    const index = featured.queue.findIndex((c) => c.cubeID.equals(req.body.cubeId));
-    if (index === -1) {
-      throw new Error('Cube not found in queue');
-    }
-    if (index < 2) {
-      throw new Error('Cannot remove currently featured cube from queue');
-    }
-    return featured.queue.splice(index, 1);
-  });
-  if (!update.ok) {
-    req.flash('danger', update.message);
+  const queuedCube = await FeaturedQueue.getByCube(req.body.cubeId);
+
+  if (!queuedCube) {
+    req.flash('Cube not found in featured queue');
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  const [removed] = update.return;
-  const user = await User.getById(removed.ownerID);
+  await FeaturedQueue.delete(req.body.cubeId);
+
+  const user = await User.getById(queuedCube.owner);
   await util.addNotification(
     user,
     req.user,

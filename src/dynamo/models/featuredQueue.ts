@@ -21,6 +21,9 @@ const client = createClient({
 });
 
 module.exports = {
+  getByCube: async (id: string): Promise<FeaturedQueueItem> => {
+    return (await client.get(id)).Item as FeaturedQueueItem;
+  },
   put: async (document: NewFeaturedQueueItem): Promise<void> => {
     await client.put({
       ...document,
