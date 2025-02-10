@@ -2,9 +2,8 @@
 require('dotenv').config();
 
 const express = require('express');
-const { body } = require('express-validator');
 import sendEmail from '../util/email';
-const { ensureRole, csrfProtection, flashValidationErrors } = require('./middleware');
+const { ensureRole, csrfProtection } = require('./middleware');
 
 const User = require('../dynamo/models/user');
 const Notice = require('../dynamo/models/notice');

@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- Debugging */
 const fq = require('../util/featuredQueue');
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const util = require('../util/util');
