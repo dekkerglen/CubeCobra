@@ -206,7 +206,7 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
   });
 });
 
-router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
+router.get('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   const queue = await FeaturedQueue.querySortedByDate();
   const { items } = queue;
 

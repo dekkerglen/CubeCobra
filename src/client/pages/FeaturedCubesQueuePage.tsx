@@ -38,7 +38,17 @@ const FeaturedCubesQueuePage: React.FC<FeaturedCubesQueuePageProps> = ({ cubes, 
             <Flexbox direction="col" gap="2">
               <Flexbox direction="row" gap="2" alignItems="center">
                 <AddCubeButton color="primary">Add Cube to Queue</AddCubeButton>
-                <RotateButton color="accent">Rotate featured cubes</RotateButton>
+                <RotateButton
+                  color="accent"
+                  modalprops={{
+                    target: `/admin/featuredcubes/rotate`,
+                    title: 'Confirm Rotation',
+                    message: 'Are you sure you want to rotate the featured cubes?',
+                    buttonText: 'Submit',
+                  }}
+                >
+                  Rotate featured cubes
+                </RotateButton>
                 <Text sm semibold>
                   Last rotation: {new Date(lastRotation).toLocaleDateString()}
                 </Text>
