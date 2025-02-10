@@ -16,7 +16,7 @@ const User = require('../dynamo/models/user');
       console.warn(message);
     }
 
-    if (rotate.status === 'false') {
+    if (rotate.success === 'false') {
       console.error('featured cube rotation failed!');
       return;
     }
