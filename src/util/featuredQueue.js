@@ -31,15 +31,15 @@ async function rotateFeatured(queue) {
   const owner1 = await Patron.getById(old1.owner);
   const owner2 = await Patron.getById(old2.owner);
 
-  for (const [owner, cube] of [
+  for (const [owner, featuredItem] of [
     [owner1, old1],
     [owner2, old2],
   ]) {
     if (canBeFeatured(owner)) {
-      cube.date = Date.now().valueOf();
-      await FeaturedQueue.put(cube);
+      featuredItem.date = Date.now().valueOf();
+      await FeaturedQueue.put(featuredItem);
     } else {
-      await FeaturedQueue.delete(cube.cube);
+      await FeaturedQueue.delete(featuredItem.cube);
     }
   }
 
