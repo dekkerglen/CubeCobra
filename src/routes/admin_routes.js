@@ -237,25 +237,6 @@ router.get('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   return redirect(req, res, '/admin/featuredcubes');
 });
 
-router.post(
-  '/featuredcubes/setperiod',
-  ensureAdmin,
-  util.wrapAsyncApi(async (req, res) => {
-    const days = Number.parseInt(req.body.days, 10);
-    if (!Number.isInteger(days)) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Days between rotations must be an integer',
-      });
-    }
-
-    await fq.updateFeatured(async (featured) => {
-      featured.daysBetweenRotations = days;
-    });
-    return res.send({ success: 'true', period: days });
-  }),
-);
-
 router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
