@@ -272,18 +272,7 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  const update = await fq.updateFeatured(async (featured) => {
-    const index = featured.queue.findIndex((c) => c.cubeID.equals(cube.id));
-    if (index !== -1) {
-      throw new Error('Cube is already in queue');
-    }
-    featured.queue.push({ cubeID: cube.id, ownerID: cube.owner.id });
-  });
-
-  if (!update.ok) {
-    req.flash('danger', update.message);
-    return redirect(req, res, '/admin/featuredcubes');
-  }
+  await fq.addNewCubeToQueue(cube.owner.id, cube.id);
 
   await util.addNotification(
     cube.owner,
