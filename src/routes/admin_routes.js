@@ -2,9 +2,8 @@
 require('dotenv').config();
 
 const express = require('express');
-const { body } = require('express-validator');
 import sendEmail from '../util/email';
-const { ensureRole, csrfProtection, flashValidationErrors } = require('./middleware');
+const { ensureRole, csrfProtection } = require('./middleware');
 
 const User = require('../dynamo/models/user');
 const Notice = require('../dynamo/models/notice');
@@ -202,11 +201,11 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes: sortedCubes,
-    lastRotation: featured[0].featuredOn,
+    lastRotation: featured.length > 0 ? featured[0].featuredOn : new Date(0).valueOf(),
   });
 });
 
-router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
+router.get('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   const queue = await FeaturedQueue.querySortedByDate();
   const { items } = queue;
 
@@ -237,25 +236,6 @@ router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   return redirect(req, res, '/admin/featuredcubes');
 });
 
-router.post(
-  '/featuredcubes/setperiod',
-  ensureAdmin,
-  util.wrapAsyncApi(async (req, res) => {
-    const days = Number.parseInt(req.body.days, 10);
-    if (!Number.isInteger(days)) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Days between rotations must be an integer',
-      });
-    }
-
-    await fq.updateFeatured(async (featured) => {
-      featured.daysBetweenRotations = days;
-    });
-    return res.send({ success: 'true', period: days });
-  }),
-);
-
 router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
@@ -272,18 +252,7 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  const update = await fq.updateFeatured(async (featured) => {
-    const index = featured.queue.findIndex((c) => c.cubeID.equals(cube.id));
-    if (index !== -1) {
-      throw new Error('Cube is already in queue');
-    }
-    featured.queue.push({ cubeID: cube.id, ownerID: cube.owner.id });
-  });
-
-  if (!update.ok) {
-    req.flash('danger', update.message);
-    return redirect(req, res, '/admin/featuredcubes');
-  }
+  await fq.addNewCubeToQueue(cube.owner.id, cube.id);
 
   await util.addNotification(
     cube.owner,
@@ -397,23 +366,16 @@ router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  const update = await fq.updateFeatured(async (featured) => {
-    const index = featured.queue.findIndex((c) => c.cubeID.equals(req.body.cubeId));
-    if (index === -1) {
-      throw new Error('Cube not found in queue');
-    }
-    if (index < 2) {
-      throw new Error('Cannot remove currently featured cube from queue');
-    }
-    return featured.queue.splice(index, 1);
-  });
-  if (!update.ok) {
-    req.flash('danger', update.message);
+  const queuedCube = await FeaturedQueue.getByCube(req.body.cubeId);
+
+  if (!queuedCube) {
+    req.flash('Cube not found in featured queue');
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  const [removed] = update.return;
-  const user = await User.getById(removed.ownerID);
+  await FeaturedQueue.delete(req.body.cubeId);
+
+  const user = await User.getById(queuedCube.owner);
   await util.addNotification(
     user,
     req.user,
@@ -422,34 +384,5 @@ router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
   );
   return redirect(req, res, '/admin/featuredcubes');
 });
-
-router.post(
-  '/featuredcubes/move',
-  ensureAdmin,
-  body('cubeId', 'Cube ID must be sent').not().isEmpty(),
-  body('from', 'Cannot move currently featured cube').isInt({ gt: 2 }).toInt(),
-  body('to', 'Cannot move cube to featured position').isInt({ gt: 2 }).toInt(),
-  flashValidationErrors,
-  async (req, res) => {
-    if (!req.validated) return redirect(req, res, '/admin/featuredcubes');
-    let { from, to } = req.body;
-    // indices are sent in human-readable form (indexing from 1)
-    from -= 1;
-    to -= 1;
-
-    const update = await fq.updateFeatured(async (featured) => {
-      if (featured.queue.length <= from || !featured.queue[from].cubeID.equals(req.body.cubeId))
-        throw new Error('Cube is not at expected position in queue');
-      if (featured.queue.length <= to) throw new Error('Target position is higher than cube length');
-      const [spliced] = featured.queue.splice(from, 1);
-      featured.queue.splice(to, 0, spliced);
-    });
-
-    if (!update.ok) req.flash('danger', update.message);
-    else req.flash('success', 'Successfully moved cube');
-
-    return redirect(req, res, '/admin/featuredcubes');
-  },
-);
 
 module.exports = router;
