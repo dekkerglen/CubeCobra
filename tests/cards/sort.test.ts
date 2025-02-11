@@ -1,17 +1,17 @@
-import { sortForDownload } from '../../src/client/utils/Sort';
+import { cardGetLabels, sortForDownload } from '../../src/client/utils/Sort';
 import Card from '../../src/datatypes/Card';
 import { createCard, createCardDetails } from '../test-utils/data';
 
-describe('Sorting', () => {
+const mapToCardNames = (sorted: Card[]) => {
+  return sorted.map((c) => c.details?.name);
+};
+
+describe('Sorting Collector Numbers', () => {
   const COLLECTOR_NUMBER_SORT = 'Collector number';
 
   const sortWithoutGrouping = (cards: Card[], sort: string) => {
     //Must pass true for showOther because the first sort is undefined
-    return sortForDownload(cards, undefined, undefined, undefined, sort, true);
-  };
-
-  const mapToCardNames = (sorted: Card[]) => {
-    return sorted.map((c) => c.details?.name);
+    return sortForDownload(cards, 'Unsorted', 'Unsorted', 'Unsorted', sort, true);
   };
 
   /* This is not an exhaustive list of non-standard collector numbers, but various examples to illustrate
@@ -181,5 +181,88 @@ describe('Sorting', () => {
     const sorted = sortWithoutGrouping(cards, COLLECTOR_NUMBER_SORT);
 
     expect(mapToCardNames(sorted)).toEqual(['Card 6', 'Card 4', 'Card 5', 'Card 3', 'Card 1', 'Card 2']);
+  });
+});
+
+/* Ideally would use sortDeep to get the cards grouped into buckets to test a larger amount of the sorting code, but
+ * had trouble with Typescript extracting the DeepSorted contents to be able to expect on them.
+ * See priceBuckets constant in src/client/utils/Sort.ts for the groupings
+ */
+describe('Grouping by Price USD', () => {
+  const PRICE_USD_SORT = 'Price USD';
+
+  it('Has USD price for grouping', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd: 4.23,
+        },
+      }),
+    });
+
+    const label = cardGetLabels(card, PRICE_USD_SORT, true);
+
+    expect(label).toEqual(['$4 - $4.99']);
+  });
+
+  it('Has USD foil price for grouping', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd_foil: 23.11,
+        },
+      }),
+    });
+
+    const label = cardGetLabels(card, 'Price USD Foil', true);
+
+    expect(label).toEqual(['$20 - $24.99']);
+  });
+
+  it('Has USD price for grouping, with foil fallback', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd_foil: 999.11,
+        },
+      }),
+    });
+
+    const label = cardGetLabels(card, PRICE_USD_SORT, true);
+
+    expect(label).toEqual(['>= $100']);
+  });
+
+  it('Has USD price for grouping, with etched fallback', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd_etched: 66.6,
+        },
+      }),
+    });
+
+    const label = cardGetLabels(card, PRICE_USD_SORT, true);
+
+    expect(label).toEqual(['$50 - $74.99']);
+  });
+
+  it('No USD price available for grouping', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          eur: 23.11,
+        },
+      }),
+    });
+
+    const label = cardGetLabels(card, PRICE_USD_SORT, true);
+
+    expect(label).toEqual(['No Price Available']);
   });
 });
