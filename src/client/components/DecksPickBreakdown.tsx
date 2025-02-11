@@ -131,9 +131,7 @@ const DraftmancerBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pic
                 onClick={(index) => {
                   let picks = 0;
                   for (let i = 0; i < listindex; i++) {
-                    if (draft.InitialState !== undefined) {
-                      picks += draft.InitialState[0][i].cards.length;
-                    }
+                    picks += picksList[listindex].length;
                   }
                   setPickNumber((picks + index).toString());
                 }}
