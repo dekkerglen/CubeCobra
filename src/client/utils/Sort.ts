@@ -712,7 +712,7 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
   } else if (sort === 'Creature/Non-Creature') {
     ret = cardType(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
   } else if (sort === 'Price USD' || sort === 'Price') {
-    const price = card.details?.prices.usd ?? card.details?.prices.usd_foil;
+    const price = card.details?.prices.usd ?? card.details?.prices.usd_foil ?? card.details?.prices.usd_etched;
     if (price) {
       ret = [getPriceBucket(price, '$')];
     } else {
