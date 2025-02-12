@@ -108,19 +108,41 @@ const addBody = async (content: UnhydratedContent): Promise<UnhydratedContent> =
   }
 };
 
-const putBody = async (content: Article | Episode | Podcast | Video) => {
-  if (content.body) {
-    await putBodyRaw(content.id, content.body);
-  }
-};
-
-const putBodyRaw = async (id: string, body?: string) => {
+const putBody = async (id: string, body?: string) => {
   if (body && body.length > 0) {
     await putObject(getBucketName(), `content/${id}.json`, body);
   }
 };
 
-//TODO: Getters for each variant
+const normalizeContentForWriting = (
+  document: Article | Episode | Podcast | Video,
+): { content: Article | Episode | Podcast | Video; body?: string; ownerId: string } => {
+  //If the owner is a User object, get its Id without modifying the incoming document
+  let ownerId: string;
+  if (document.owner && typeof document.owner !== 'string' && document.owner.id) {
+    ownerId = document.owner.id;
+  } else if (document.owner && typeof document.owner === 'string') {
+    ownerId = document.owner;
+  }
+
+  // if document.image is an object
+  if (document.image && typeof document.image === 'object') {
+    delete document.image;
+  }
+
+  document.typeStatusComp = `${document.type}:${document.status}`;
+  document.typeOwnerComp = `${document.type}:${ownerId!}`;
+
+  const body = document.body;
+  delete document.body;
+
+  return {
+    content: document,
+    ownerId: ownerId!, //We know that ownerId will be set here as the conditions above have handled all types
+    body,
+  };
+};
+
 const content = {
   getById: async (id: string): Promise<Content> =>
     hydrate(await addBody((await client.get(id)).Item as UnhydratedContent)),
@@ -196,77 +218,48 @@ const content = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  update: async (document: Content): Promise<DocumentClient.PutItemOutput> => {
+  update: async (document: Article | Episode | Podcast | Video): Promise<DocumentClient.PutItemOutput> => {
     if (!document.id) {
       throw new Error('Invalid document: No partition key provided');
     }
 
-    //If the owner is a User object, get its Id without modifying the incoming document
-    let ownerId;
-    if (document.owner.id) {
-      ownerId = document.owner.id;
-    } else {
-      ownerId = document.owner;
-    }
+    const { content, body, ownerId } = normalizeContentForWriting(document);
+    await putBody(content.id, body);
 
-    document.typeStatusComp = `${document.type}:${document.status}`;
-    document.typeOwnerComp = `${document.type}:${ownerId}`;
-
-    await putBody(document);
-    delete document.body;
     return client.put({
-      ...document,
+      ...content,
       owner: ownerId,
     });
   },
   put: async (document: Article | Episode | Podcast | Video, type: ContentType) => {
     document.id = document.id || uuidv4();
 
-    if (document.body) {
-      await putBody(document);
-      delete document.body;
-    }
+    const { content, body, ownerId } = normalizeContentForWriting(document);
 
-    // if document.image is an object
-    if (document.image && typeof document.image === 'object') {
-      delete document.image;
-    }
-
-    let ownerId: string | undefined;
-    //Type guard to know if owner is a string (their id) or a hydrated User type
-    if (document.owner && typeof document.owner !== 'string' && document.owner.id) {
-      ownerId = document.owner.id;
-    } else if (document.owner && typeof document.owner === 'string') {
-      ownerId = document.owner;
-    }
+    await putBody(content.id, body);
 
     return client.put({
-      ...document,
+      ...content,
       type,
-      typeOwnerComp: `${type}:${ownerId}`,
-      typeStatusComp: `${type}:${document.status}`,
       owner: ownerId,
     });
   },
   batchPut: async (documents: (Article | Episode | Podcast | Video)[]) => {
     const docs = documents.map((document) => {
-      let ownerId;
-      if (document.owner && document.owner.id) {
-        ownerId = document.owner.id;
-      } else {
-        ownerId = document.owner;
-      }
+      const { content, body, ownerId } = normalizeContentForWriting(document);
 
       return {
-        ...document,
-        owner: ownerId,
+        document: {
+          ...content,
+          owner: ownerId,
+        },
+        body: body,
       };
     });
 
     await Promise.all(
-      docs.map(async (document) => {
-        await putBodyRaw(document.id, document.body);
-        delete document.body;
+      docs.map(async ({ document, body }) => {
+        await putBody(document.id, body);
       }),
     );
     client.batchPut(docs);
