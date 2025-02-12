@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // Load Environment Variables
 require('dotenv').config();
 
