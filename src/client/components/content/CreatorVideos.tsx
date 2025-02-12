@@ -42,7 +42,7 @@ const CreatorVideos: React.FC<CreatorVideosProps> = ({ videos, lastKey }) => {
         setLoading(false);
       }
     }
-  }, [items, currentLastKey]);
+  }, [csrfFetch, currentLastKey, items]);
 
   const loader = (
     <div className="centered py-3 my-4">

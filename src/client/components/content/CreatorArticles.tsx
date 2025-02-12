@@ -41,7 +41,7 @@ const CreatorArticles: React.FC<CreatorArticlesProps> = ({ articles, lastKey }) 
         setLoading(false);
       }
     }
-  }, [items, currentLastKey]);
+  }, [csrfFetch, currentLastKey, items]);
 
   const loader = (
     <div className="centered py-3 my-4">
