@@ -20,11 +20,11 @@ export interface CardGridProps {
   onClick?: (card: Card, index: number) => void;
   className?: string;
   ratings?: number[];
-  selectedIndex?: number; // Add this prop
+  selectedIndex?: number;
 }
 
 const CardGrid: React.FC<CardGridProps> = ({ 
-  cards, cardProps, xs, sm, md, lg, xl, xxl, onClick, className, ratings, selectedIndex 
+  cards, cardProps, xs, sm, md, lg, xl, xxl, hrefFn, onClick, className, ratings, selectedIndex 
 }) => {
   const maxRating = ratings ? Math.max(...(ratings.filter(r => r !== undefined))) : null;
   
@@ -36,9 +36,9 @@ const CardGrid: React.FC<CardGridProps> = ({
         const rating = ratings?.[cardIndex];
         
         const getRatingStyle = () => {
-          if (isHighestRated && wasSelected) return "bg-[#087715]/95"; // Changed from green-500
-          if (isHighestRated) return "bg-[#007BFF]/95"; // Changed from blue-500
-          if (wasSelected) return "bg-[#E6B800]/95"; // Changed from FCF8A9 to a darker yellow
+          if (isHighestRated && wasSelected) return "bg-[#087715]/95";
+          if (isHighestRated) return "bg-[#007BFF]/95";
+          if (wasSelected) return "bg-[#E6B800]/95";
           return "bg-gray-700/80";
         };
         
@@ -53,13 +53,19 @@ const CardGrid: React.FC<CardGridProps> = ({
                   "ring-[5px] ring-[#087715] ring-offset-0 rounded-lg": isHighestRated && wasSelected,
                 }
               )}>
-                <FoilCardImage
-                  card={card}
-                  autocard
-                  onClick={() => onClick?.(card, cardIndex)}
-                  className={onClick ? 'cursor-pointer hover:opacity-80' : undefined}
-                  {...cardProps}
-                />
+                {hrefFn ? (
+                  <a href={hrefFn(card)} className="hover:cursor-pointer">
+                    <FoilCardImage card={card} autocard {...cardProps} />
+                  </a>
+                ) : (
+                  <FoilCardImage
+                    card={card}
+                    autocard
+                    onClick={() => onClick?.(card, cardIndex)}
+                    className={onClick ? 'cursor-pointer' : undefined}  // Removed hover:opacity-50
+                    {...cardProps}
+                  />
+                )}
                 {rating !== undefined && (
                   <div className={classNames(
                     "absolute bottom-2 left-1/2 transform -translate-x-1/2",

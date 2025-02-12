@@ -28,6 +28,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
 
   // Handle both CubeCobra and Draftmancer drafts
   const { cardsInPack, pick = 0, pack = 0, picksList } = useMemo(() => {
+    // Draftmancer drafts
     if (draft.DraftmancerLog) {
       const log = draft.DraftmancerLog.players[seatNumber];
       if (!log) {
@@ -77,7 +78,8 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
         picksList: draftPicksList
       };
     }
-
+    
+    // CubeCobra drafts
     const drafterState = getDrafterState(draft, seatNumber, parseInt(pickNumber));
     return {
       cardsInPack: drafterState.cardsInPack.map(index => ({ cardIndex: index })),
@@ -96,7 +98,6 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
     item => item.cardIndex === (currentPickData ? currentPickData.cardIndex : undefined)
   );
 
-  // Simplified prediction fetching
   useEffect(() => {
     const fetchPredictions = async () => {
       if (!cardsInPack.length) return;

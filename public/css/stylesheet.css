@@ -2351,6 +2351,11 @@ video {
   color: rgb(133 77 14 / var(--tw-text-opacity));
 }
 
+.text-gray-600 {
+  --tw-text-opacity: 1;
+  color: rgb(75 85 99 / var(--tw-text-opacity));
+}
+
 .placeholder-text-secondary::placeholder {
   --tw-placeholder-opacity: 1;
   color: rgb(var(--text-secondary) / var(--tw-placeholder-opacity));
@@ -3059,6 +3064,10 @@ img.mana-symbol-sm {
 
 .hover\:opacity-80:hover {
   opacity: 0.8;
+}
+
+.hover\:opacity-50:hover {
+  opacity: 0.5;
 }
 
 .hover\:brightness-125:hover {
