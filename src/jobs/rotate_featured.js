@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- Debugging */
 const fq = require('../util/featuredQueue');
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const util = require('../util/util');
@@ -16,7 +17,7 @@ const User = require('../dynamo/models/user');
       console.warn(message);
     }
 
-    if (rotate.status === 'false') {
+    if (rotate.success === 'false') {
       console.error('featured cube rotation failed!');
       return;
     }

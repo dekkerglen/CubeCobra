@@ -5,14 +5,24 @@ import { canBeFeatured } from './featuredQueueUtil';
 
 async function rotateFeatured(queue) {
   if (queue.length < 4) {
-    throw new Error(`Not enough cubes in queue to rotate (need 4, have ${queue.length})`);
+    return {
+      success: 'false',
+      messages: [`Not enough cubes in queue to rotate (need 4, have ${queue.length})`],
+      removed: [],
+      added: [],
+    };
   }
 
   const lastRotation = queue[0].featuredOn;
 
   // if last rotation was less than 6 days ago, do not rotate
   if (lastRotation && Date.now().valueOf() - lastRotation < 6 * 24 * 60 * 60 * 1000) {
-    return {};
+    return {
+      success: 'false',
+      messages: [`Last rotation was within 6 days`],
+      removed: [],
+      added: [],
+    };
   }
 
   const [old1, old2, new1, new2] = queue.slice(0, 4);
@@ -21,15 +31,15 @@ async function rotateFeatured(queue) {
   const owner1 = await Patron.getById(old1.owner);
   const owner2 = await Patron.getById(old2.owner);
 
-  for (const [owner, cube] of [
+  for (const [owner, featuredItem] of [
     [owner1, old1],
     [owner2, old2],
   ]) {
     if (canBeFeatured(owner)) {
-      cube.date = Date.now().valueOf();
-      await FeaturedQueue.put(cube);
+      featuredItem.date = Date.now().valueOf();
+      await FeaturedQueue.put(featuredItem);
     } else {
-      await FeaturedQueue.delete(cube.cube);
+      await FeaturedQueue.delete(featuredItem.cube);
     }
   }
 
@@ -97,7 +107,7 @@ async function replaceForUser(userid, cubeid) {
   const item = cubes[index];
 
   if (index < 2) {
-    throw new Error('Cannot replace cube that is currenlty featured');
+    throw new Error('Cannot replace cube that is currently featured');
   }
 
   if (index === -1) {
