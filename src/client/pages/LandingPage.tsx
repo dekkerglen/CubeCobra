@@ -13,6 +13,7 @@ import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import Article from 'datatypes/Article';
+import { ContentType } from 'datatypes/Content';
 import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
 import Episode from 'datatypes/Episode';
@@ -89,9 +90,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, conten
             <Row>
               {content.map((item: Article) => (
                 <Col key={item.id} xxl={3} lg={4} sm={6} className="mb-4">
-                  {item.type === 'a' && <ArticlePreview article={item as Article} />}
-                  {item.type === 'v' && <VideoPreview video={item as Video} />}
-                  {item.type === 'e' && <PodcastEpisodePreview episode={item as any as Episode} />}
+                  {item.type === ContentType.ARTICLE && <ArticlePreview article={item as Article} />}
+                  {item.type === ContentType.VIDEO && <VideoPreview video={item as Video} />}
+                  {item.type === ContentType.EPISODE && <PodcastEpisodePreview episode={item as any as Episode} />}
                 </Col>
               ))}
               <Col xxl={3} lg={4} sm={6} className="mb-4">

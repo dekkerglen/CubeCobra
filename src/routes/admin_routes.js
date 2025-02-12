@@ -17,6 +17,7 @@ const { render, redirect } = require('../util/render');
 const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 
+import { ContentStatus } from '../datatypes/Content';
 import { NoticeStatus } from '../datatypes/Notice';
 
 const ensureAdmin = ensureRole('Admin');
@@ -27,7 +28,7 @@ router.use(csrfProtection);
 
 router.get('/dashboard', ensureAdmin, async (req, res) => {
   const noticeCount = await Notice.getByStatus(NoticeStatus.ACTIVE);
-  const contentInReview = await Content.getByStatus(Content.STATUS.IN_REVIEW);
+  const contentInReview = await Content.getByStatus(ContentStatus.IN_REVIEW);
 
   return render(req, res, 'AdminDashboardPage', {
     noticeCount: noticeCount.items.length,
@@ -40,7 +41,7 @@ router.get('/comments', async (req, res) => {
 });
 
 router.get('/reviewcontent', ensureAdmin, async (req, res) => {
-  const content = await Content.getByStatus(Content.STATUS.IN_REVIEW);
+  const content = await Content.getByStatus(ContentStatus.IN_REVIEW);
   return render(req, res, 'ReviewContentPage', { content: content.items });
 });
 
@@ -52,12 +53,12 @@ router.get('/notices', ensureAdmin, async (req, res) => {
 router.get('/publish/:id', ensureAdmin, async (req, res) => {
   const document = await Content.getById(req.params.id);
 
-  if (document.status !== Content.STATUS.IN_REVIEW) {
+  if (document.status !== ContentStatus.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
     return redirect(req, res, '/admin/reviewcontent');
   }
 
-  document.status = Content.STATUS.PUBLISHED;
+  document.status = ContentStatus.PUBLISHED;
   document.date = new Date().valueOf();
 
   await Content.update(document);
@@ -88,12 +89,12 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
 router.get('/removereview/:id', ensureAdmin, async (req, res) => {
   const document = await Content.getById(req.params.id);
 
-  if (document.status !== Content.STATUS.IN_REVIEW) {
+  if (document.status !== ContentStatus.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
     return redirect(req, res, '/admin/reviewcontent');
   }
 
-  document.status = Content.STATUS.DRAFT;
+  document.status = ContentStatus.DRAFT;
   document.date = new Date().valueOf();
 
   await Content.update(document);

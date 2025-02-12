@@ -5,6 +5,7 @@ import { Col, Flexbox, Row } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import VideoPreview from 'components/content/VideoPreview';
 import { CSRFContext } from 'contexts/CSRFContext';
+import { ContentType } from 'datatypes/Content';
 import Video from 'datatypes/Video';
 
 interface CreatorVideosProps {
@@ -28,7 +29,8 @@ const CreatorVideos: React.FC<CreatorVideosProps> = ({ videos, lastKey }) => {
       },
       body: JSON.stringify({
         lastKey: currentLastKey,
-        type: 'a',
+        //TODO: Video?
+        type: ContentType.ARTICLE,
       }),
     });
 

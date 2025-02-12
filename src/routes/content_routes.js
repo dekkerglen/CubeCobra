@@ -61,7 +61,9 @@ router.get('/browse', async (req, res) => {
   const content = await Content.getByStatus(ContentStatus.PUBLISHED);
 
   return render(req, res, 'BrowseContentPage', {
-    content: content.items.filter((item) => ['a', 'v', 'e'].includes(item.type)),
+    content: content.items.filter((item) =>
+      [ContentType.ARTICLE, ContentType.VIDEO, ContentType.EPISODE].includes(item.type),
+    ),
     lastKey: content.lastKey,
   });
 });
@@ -72,7 +74,9 @@ router.post('/getmore', async (req, res) => {
 
   return res.status(200).send({
     success: 'true',
-    items: content.items.filter((item) => ['a', 'v', 'e'].includes(item.type)),
+    items: content.items.filter((item) =>
+      [ContentType.ARTICLE, ContentType.VIDEO, ContentType.EPISODE].includes(item.type),
+    ),
     lastKey: content.lastKey,
   });
 });

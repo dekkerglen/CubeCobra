@@ -6,6 +6,7 @@ import Spinner from 'components/base/Spinner';
 import ArticlePreview from 'components/content/ArticlePreview';
 import { CSRFContext } from 'contexts/CSRFContext';
 import Article from 'datatypes/Article';
+import { ContentType } from 'datatypes/Content';
 
 interface CreatorArticlesProps {
   articles: Article[];
@@ -28,7 +29,7 @@ const CreatorArticles: React.FC<CreatorArticlesProps> = ({ articles, lastKey }) 
       },
       body: JSON.stringify({
         lastKey: currentLastKey,
-        type: 'a',
+        type: ContentType.ARTICLE,
       }),
     });
 

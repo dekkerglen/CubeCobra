@@ -6,6 +6,8 @@ const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 const Feed = require('../dynamo/models/feed');
 
+import { ContentStatus, ContentType } from '../datatypes/Content';
+
 const { handleRouteError, render, redirect } = require('../util/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../util/cubefn');
@@ -46,7 +48,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
     const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
-    const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
+    const content = await Content.getByStatus(ContentStatus.PUBLISHED);
 
     const decks = await Draft.getByCubeOwner(req.user.id);
 
@@ -55,7 +57,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
       lastKey: posts.lastKey,
       decks: decks.items,
       lastDeckKey: decks.lastEvaluatedKey,
-      content: content.items.filter((item) => item.type !== 'p'),
+      content: content.items.filter((item) => item.type !== ContentType.PODCAST),
       featured,
     });
   } catch (err) {
@@ -92,13 +94,13 @@ router.get('/landing', async (req, res) => {
   const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
   const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
-  const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
+  const content = await Content.getByStatus(ContentStatus.PUBLISHED);
 
   const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
 
   return render(req, res, 'LandingPage', {
     featured,
-    content: content.items.filter((item) => item.type !== 'p'),
+    content: content.items.filter((item) => item.type !== ContentType.PODCAST),
     recentDecks: recentDecks.items.filter((deck) => deck.complete),
   });
 });
@@ -109,7 +111,6 @@ router.get('/version', async (req, res) => {
     host: process.env.DOMAIN,
   });
 });
-
 
 router.get('/contact', (req, res) => {
   return render(req, res, 'ContactPage');

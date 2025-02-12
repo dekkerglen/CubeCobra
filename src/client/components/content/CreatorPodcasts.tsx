@@ -5,6 +5,7 @@ import { Col, Flexbox, Row } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import PodcastPreview from 'components/content/PodcastPreview';
 import { CSRFContext } from 'contexts/CSRFContext';
+import { ContentType } from 'datatypes/Content';
 import Podcast from 'datatypes/Podcast';
 
 interface CreatorPodcastsProps {
@@ -28,7 +29,8 @@ const CreatorPodcasts: React.FC<CreatorPodcastsProps> = ({ podcasts, lastKey }) 
       },
       body: JSON.stringify({
         lastKey: currentLastKey,
-        type: 'a',
+        //TODO: Should this be Podcast?
+        type: ContentType.ARTICLE,
       }),
     });
 
