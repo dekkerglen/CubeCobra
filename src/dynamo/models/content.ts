@@ -14,28 +14,6 @@ import Video from '../../datatypes/Video';
 import { getBucketName, getObject, putObject } from '../s3client';
 import createClient from '../util';
 
-const FIELDS = {
-  ID: 'id',
-  DATE: 'date',
-  STATUS: 'status',
-  OWNER: 'owner',
-  TYPE: 'type',
-  TYPE_STATUS_COMP: 'typeStatusComp',
-  TYPE_OWNER_COMP: 'typeOwnerComp',
-  // optional FIELDS
-  TITLE: 'title',
-  BODY: 'body',
-  SHORT: 'short',
-  URL: 'url',
-  IMAGE_LINK: 'image',
-  IMAGE_NAME: 'imageName',
-  USERNAME: 'username',
-  PODCAST_NAME: 'podcastName',
-  PODCAST_ID: 'podcast',
-  PODCAST_GUID: 'podcastGuid',
-  PODCAST_LINK: 'podcastLink',
-};
-
 const createHydratedContent = (document: UnhydratedContent, owner: UserType, image: Image): Content => {
   //Because type is a known set we don't need a default/unknown type case
   switch (document.type as ContentType) {
@@ -90,7 +68,7 @@ const batchHydrate = async (contents: UnhydratedContent[]): Promise<Content[]> =
 
 const client = createClient({
   name: 'CONTENT',
-  partitionKey: FIELDS.ID,
+  partitionKey: 'id',
   attributes: {
     id: 'S',
     date: 'N',
