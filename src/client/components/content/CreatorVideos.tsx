@@ -29,8 +29,7 @@ const CreatorVideos: React.FC<CreatorVideosProps> = ({ videos, lastKey }) => {
       },
       body: JSON.stringify({
         lastKey: currentLastKey,
-        //TODO: Video?
-        type: ContentType.ARTICLE,
+        type: ContentType.VIDEO,
       }),
     });
 

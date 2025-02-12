@@ -29,8 +29,7 @@ const CreatorPodcasts: React.FC<CreatorPodcastsProps> = ({ podcasts, lastKey }) 
       },
       body: JSON.stringify({
         lastKey: currentLastKey,
-        //TODO: Should this be Podcast?
-        type: ContentType.ARTICLE,
+        type: ContentType.PODCAST,
       }),
     });
 
