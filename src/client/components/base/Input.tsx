@@ -37,6 +37,9 @@ const Input: React.FC<InputProps> = ({
   value,
   disabled = false,
   onEnter,
+  autoCapitalize = 'sentences',
+  autoCorrect = 'on',
+  spellCheck = true,
 }) => {
   return (
     <div className="block w-full">
@@ -83,6 +86,9 @@ const Input: React.FC<InputProps> = ({
         onChange={disabled ? undefined : onChange}
         value={value}
         disabled={disabled}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
+        spellCheck={spellCheck}
       />
     </div>
   );
