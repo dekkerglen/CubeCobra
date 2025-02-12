@@ -6,11 +6,12 @@ import AutocardListItem from './AutocardListItem';
 
 export interface CardListGroupProps {
   cards: Card[];
-  heading: React.ReactNode;
+  heading: string;
   onClick?: (index: number) => void;
+  selectedIndex?: number;
 }
 
-const CardListGroup: React.FC<CardListGroupProps> = ({ cards, heading, onClick }) => {
+const CardListGroup: React.FC<CardListGroupProps> = ({ cards, heading, onClick, selectedIndex }) => {
   return (
     <ListGroup>
       <ListGroupItem heading>{heading}</ListGroupItem>
@@ -20,6 +21,7 @@ const CardListGroup: React.FC<CardListGroupProps> = ({ cards, heading, onClick }
           card={card}
           onClick={() => onClick?.(index)}
           last={index === cards.length - 1}
+          isSelected={index === selectedIndex}
         />
       ))}
     </ListGroup>

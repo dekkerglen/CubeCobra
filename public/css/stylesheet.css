@@ -754,12 +754,20 @@ video {
   bottom: 0px;
 }
 
+.bottom-2 {
+  bottom: 0.5rem;
+}
+
 .bottom-full {
   bottom: 100%;
 }
 
 .left-0 {
   left: 0px;
+}
+
+.left-1\/2 {
+  left: 50%;
 }
 
 .right-0 {
@@ -1152,6 +1160,10 @@ video {
   width: max-content;
 }
 
+.min-w-\[2\.5rem\] {
+  min-width: 2.5rem;
+}
+
 .min-w-fit {
   min-width: fit-content;
 }
@@ -1206,6 +1218,11 @@ video {
 
 .border-collapse {
   border-collapse: collapse;
+}
+
+.-translate-x-1\/2 {
+  --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
 .translate-y-0 {
@@ -1745,6 +1762,18 @@ video {
   border-color: transparent;
 }
 
+.bg-\[\#007BFF\]\/95 {
+  background-color: rgb(0 123 255 / 0.95);
+}
+
+.bg-\[\#087715\]\/95 {
+  background-color: rgb(8 119 21 / 0.95);
+}
+
+.bg-\[\#E6B800\]\/95 {
+  background-color: rgb(230 184 0 / 0.95);
+}
+
 .bg-advert {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--advert) / var(--tw-bg-opacity));
@@ -1858,6 +1887,10 @@ video {
 .bg-gray-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity));
+}
+
+.bg-gray-700\/80 {
+  background-color: rgb(55 65 81 / 0.8);
 }
 
 .bg-gray-800 {
@@ -2375,9 +2408,34 @@ video {
   outline-style: solid;
 }
 
+.ring-\[5px\] {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(5px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.ring-\[\#007BFF\] {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(0 123 255 / var(--tw-ring-opacity));
+}
+
+.ring-\[\#087715\] {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(8 119 21 / var(--tw-ring-opacity));
+}
+
+.ring-\[\#E6B800\] {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(230 184 0 / var(--tw-ring-opacity));
+}
+
 .ring-focus-ring {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(var(--focus-ring) / var(--tw-ring-opacity));
+}
+
+.ring-offset-0 {
+  --tw-ring-offset-width: 0px;
 }
 
 .brightness-125 {
@@ -2401,6 +2459,12 @@ video {
 
 .filter {
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.backdrop-blur-\[2px\] {
+  --tw-backdrop-blur: blur(2px);
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
 }
 
 .transition {
@@ -2991,6 +3055,10 @@ img.mana-symbol-sm {
 .hover\:text-text-secondary-active:hover {
   --tw-text-opacity: 1;
   color: rgb(var(--text-secondary-active) / var(--tw-text-opacity));
+}
+
+.hover\:opacity-80:hover {
+  opacity: 0.8;
 }
 
 .hover\:brightness-125:hover {
