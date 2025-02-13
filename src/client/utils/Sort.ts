@@ -214,6 +214,43 @@ export const ORDERED_SORTS: string[] = [
   'Collector number',
 ];
 
+/**
+ * Pad the collector number with zeros in order for string sorting to work numerically like.
+ * eg After padding, 100 will be greater than 20 in a string comparison
+ */
+const normalizeCollectorNumberForSorting = (card: Card): string => {
+  let collectorNumber = cardCollectorNumber(card);
+  const PAD_AMOUNT = 10;
+
+  /* If the collector number ends with a non-digit, then take it off while padding and append after.
+   * eg. 100★, 55†, 77c
+   * The goal here is to pad the numeric portion of the collector number such that they sort, irrespective of the ending
+   * character. eg 100★ vs 55† => 00100 vs 00055 (padding to 5 for conciseness) instead of 0100★ vs 0055†.
+   * This isn't by any means perfect, as it doesn't work well for cards like Unknown Event: UA03a
+   */
+  let lastCharacter = collectorNumber[collectorNumber.length - 1];
+  if (isNaN(parseInt(lastCharacter, 10))) {
+    collectorNumber = collectorNumber.slice(0, collectorNumber.length - 1);
+  } else {
+    lastCharacter = '';
+  }
+
+  /* The List or Championship promo cards have a dash in their number.
+   * For List cards its in form of SET-NUMBER, and promos are YEAR-NUMBER.
+   * So for these to sort within their groups, we want to pad both sides
+   */
+  const sides = collectorNumber.split('-');
+  if (sides.length === 2) {
+    const [left, right] = sides;
+    //eg. After padding, SHM-120 should come after SHM-44
+    collectorNumber = left.padStart(PAD_AMOUNT, '0') + '-' + right.padStart(PAD_AMOUNT, '0');
+  } else {
+    collectorNumber = collectorNumber.padStart(PAD_AMOUNT, '0');
+  }
+
+  return collectorNumber + lastCharacter;
+};
+
 export const SortFunctions: Record<string, (a: any, b: any) => number> = {
   Alphabetical: alphaCompare,
   'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
@@ -231,10 +268,12 @@ export const SortFunctions: Record<string, (a: any, b: any) => number> = {
   'Cube Count': (a, b) => cardCubeCount(a) - cardCubeCount(b),
   'Pick Count': (a, b) => cardPickCount(a) - cardPickCount(b),
   'Collector number': (a, b) => {
-    if (cardCollectorNumber(a) > cardCollectorNumber(b)) {
+    const aCollectorNumber = normalizeCollectorNumberForSorting(a);
+    const bCollectorNumber = normalizeCollectorNumberForSorting(b);
+    if (aCollectorNumber > bCollectorNumber) {
       return 1;
     }
-    if (cardCollectorNumber(a) < cardCollectorNumber(b)) {
+    if (aCollectorNumber < bCollectorNumber) {
       return -1;
     }
     return 0;
@@ -673,7 +712,7 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
   } else if (sort === 'Creature/Non-Creature') {
     ret = cardType(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
   } else if (sort === 'Price USD' || sort === 'Price') {
-    const price = card.details?.prices.usd ?? card.details?.prices.usd_foil;
+    const price = card.details?.prices.usd ?? card.details?.prices.usd_foil ?? card.details?.prices.usd_etched;
     if (price) {
       ret = [getPriceBucket(price, '$')];
     } else {

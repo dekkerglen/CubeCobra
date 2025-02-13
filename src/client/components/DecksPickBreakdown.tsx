@@ -85,10 +85,15 @@ const DraftmancerBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pic
     const picksList = [];
     let subList = [];
     let cardsInPack: number[] = [];
-    let pick: number = 0;
+    //The pick number within the pack, for the overall pick matching pickNumber
+    let pick: number = 1;
+    //Track the pick number within the pack as we traverse the overall picks, since Draftmancer doesn't segment into packs unlike CubeCobra
+    let currentPackPick: number = 0;
+    //The pack currently within
     let pack = 1;
 
     for (let i = 0; i < log.length; i++) {
+      currentPackPick += 1;
       subList.push(log[i].pick);
       // if this is the last pack, or the next item is a new pack
       if (i === log.length - 1 || log[i].booster.length < log[i + 1].booster.length) {
@@ -97,12 +102,13 @@ const DraftmancerBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pic
 
         if (i < parseInt(pickNumber)) {
           pack += 1;
+          currentPackPick = 0;
         }
       }
 
       if (i === parseInt(pickNumber)) {
         cardsInPack = log[i].booster;
-        pick = log[i].pick;
+        pick = currentPackPick;
       }
     }
 
@@ -131,9 +137,7 @@ const DraftmancerBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pic
                 onClick={(index) => {
                   let picks = 0;
                   for (let i = 0; i < listindex; i++) {
-                    if (draft.InitialState !== undefined) {
-                      picks += draft.InitialState[0][i].cards.length;
-                    }
+                    picks += picksList[i].length;
                   }
                   setPickNumber((picks + index).toString());
                 }}
@@ -142,7 +146,7 @@ const DraftmancerBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pic
         </Flexbox>
       </Col>
       <Col xs={6} sm={8} lg={9} xl={10}>
-        <Text semibold lg>{`Pack ${(pack || 0) + 1}: Pick ${pick}`}</Text>
+        <Text semibold lg>{`Pack ${pack || 0}: Pick ${pick}`}</Text>
         <CardGrid
           xs={2}
           sm={3}
