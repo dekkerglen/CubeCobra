@@ -446,7 +446,7 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 rows={[
                   {
                     query: <code>tag:Signed</code>,
-                    description: 'All cards in a cube who have a tag named Signed, case insensitive.',
+                    description: 'All cards in a cube who have a tag which contains Signed, case insensitive.',
                   },
                   {
                     query: <code>tags=0</code>,
