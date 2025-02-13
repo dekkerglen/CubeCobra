@@ -71,6 +71,9 @@ interface CubeHistory {
   const isOracleBasicLand = Object.fromEntries(
     Object.entries(oracleToType).map(([oracle, type]) => [oracle, type.includes('Basic Land')]),
   );
+  const isOracleLand = Object.fromEntries(
+    Object.entries(oracleToType).map(([oracle, type]) => [oracle, type.includes('Land')]),
+  );
 
   const oracleCount = indexToOracle.length;
 
@@ -195,7 +198,9 @@ interface CubeHistory {
   }
 
   const idToOracleSubset = cardPopularities
-    .filter((item) => oracleInData(item.oracle))
+    // we want to only match up cards with spells to avoid a card just getting matched up to
+    //  a popular land that shares the same color
+    .filter((item) => oracleInData(item.oracle) && !isOracleLand[item.oracle])
     .sort((a, b) => b.count - a.count)
     .slice(0, oracleSubsetCount)
     .map((item) => oracleToIndex[item.oracle]);
@@ -227,32 +232,9 @@ interface CubeHistory {
     }
   }
 
-  // const hnswGraph = new HierarchicalNSW('cosine', oracleCount);
-  // hnswGraph.initIndex(oracleCount);
-
-  // for (let i = 0; i < oracleCount; i += 1) {
-  //   // if this oracle is in the data, add it to the graph
-  //   // because we only care about finding oracles in the data
-  //   if (oracleInData(indexToOracle[i])) {
-  //     console.log(
-  //       `Adding oracle ${indexToOracle[i]}: [${[...normalizedDeckWith.slice(i * oracleCount, (i + 1) * oracleCount)].join(', ')}]`,
-  //     );
-  //     hnswGraph.addPoint([...normalizedDeckWith.slice(i * oracleCount, (i + 1) * oracleCount)], i);
-  //   }
-
-  //   if (i % 100 === 0) {
-  //     console.log(`Added ${Math.min(i, oracleCount)} / ${oracleCount} oracles to the hnsw graph`);
-  //   }
-  // }
-
   processed = 0;
 
   for (const oracle of indexToOracle) {
-    // const mostSimilar = hnswGraph.searchKnn(
-    //   [...deckedWithDistances.slice(oracleToIndex[oracle] * oracleCount, (oracleToIndex[oracle] + 1) * oracleCount)],
-    //   1,
-    // );
-
     let mostSimilarIndex = oracleToIndex[oracle];
 
     if (!oracleInData(oracle)) {

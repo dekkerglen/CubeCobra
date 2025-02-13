@@ -1,5 +1,5 @@
 {
-  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src/util/mljts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "typeRoots": [
