@@ -283,6 +283,7 @@ export const setCountOperation = (op, value) => {
 export const setElementOperation = (op, value) => {
   switch (op.toString()) {
     case ':':
+      return (fieldValue) => fieldValue?.some((elem) => elem?.toLowerCase().includes(value));
     case '=':
       return (fieldValue) => fieldValue?.some((elem) => elem?.toLowerCase() === value);
     case '<>':

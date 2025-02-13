@@ -7,27 +7,39 @@ describe('setElementOperation', () => {
     expect(result).toThrow('Unrecognized operator');
   });
 
-  it('Equality operators', async () => {
-    const result = () => setElementOperation('+=', 'Tag');
-    expect(result).toThrow(Error);
-    expect(result).toThrow('Unrecognized operator');
-  });
-
-  it.each([':', '='])('Equality operator matching (%s)', async (op) => {
+  it('Equality operator matching', async () => {
     //Predicate values are lowercased by the nearley grammar
-    const filterer = setElementOperation(op, 'fetch');
+    const filterer = setElementOperation('=', 'fetch');
 
     //The filter function for tags lowercases the inputs
     const tags = ['brazen', 'Fetch', 'Kindred'];
     expect(filterer(tags)).toBeTruthy();
   });
 
-  it.each([':', '='])('Equality operator NOT matching (%s)', async (op) => {
+  it('Equality operator NOT matching', async () => {
     //Predicate values are lowercased by the nearley grammar
-    const filterer = setElementOperation(op, 'travel');
+    const filterer = setElementOperation('=', 'travel');
 
     //The filter function for tags lowercases the inputs
     const tags = ['brazen', 'Fetch', 'Kindred'];
+    expect(filterer(tags)).toBeFalsy();
+  });
+
+  it('Contains operator matching', async () => {
+    //Predicate values are lowercased by the nearley grammar
+    const filterer = setElementOperation(':', 'fetch');
+
+    //The filter function for tags lowercases the inputs
+    const tags = ['brazen', 'Fetch Land', 'Kindred'];
+    expect(filterer(tags)).toBeTruthy();
+  });
+
+  it('Contains operator NOT matching', async () => {
+    //Predicate values are lowercased by the nearley grammar
+    const filterer = setElementOperation(':', 'rap');
+
+    //The filter function for tags lowercases the inputs
+    const tags = ['brazen', 'Fetch Land', 'Kindred'];
     expect(filterer(tags)).toBeFalsy();
   });
 
