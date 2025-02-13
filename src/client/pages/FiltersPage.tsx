@@ -492,7 +492,8 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
             <Accordion title="Legality">
               <p>
                 You can use <code>leg:</code>, <code>legal:</code>, or <code>legality:</code> to filter cards by
-                legality.
+                legality. Also <code>banned:</code>, <code>ban:</code>, or <code>restricted:</code> to check inversely.
+                The format name can also be double-quoted.
               </p>
               <Text semibold>Examples:</Text>
               <Table
@@ -504,6 +505,15 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                   {
                     query: <code>-leg:Standard</code>,
                     description: 'All cards that are not legal in Standard.',
+                  },
+                  {
+                    query: <code>banned:Modern</code>,
+                    description: 'All cards that are banned in Modern.',
+                  },
+                  {
+                    query: <code>restricted:"Vintage"</code>,
+                    description:
+                      'All cards that are restricted in Vintage (the only format with restrictions currently).',
                   },
                 ]}
               />
