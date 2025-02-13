@@ -21,6 +21,7 @@ export interface AutocardListItemProps {
   last?: boolean;
   first?: boolean;
   className?: string;
+  isSelected?: boolean;  // Add this prop
 }
 
 const AutocardDiv = withAutocard(ListGroupItem);
@@ -39,6 +40,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   last,
   first,
   className,
+  isSelected = false,  // Add default value
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
@@ -88,7 +90,11 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   return (
     <AutocardDiv
-      className={cx(`flex justify-between bg-card-${colorClassname} ${className}`)}
+      className={cx(
+        `flex justify-between bg-card-${colorClassname}`,
+        { 'font-bold': isSelected },
+        className
+      )}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
       inModal={inModal}
