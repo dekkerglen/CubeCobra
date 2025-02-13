@@ -129,9 +129,9 @@ const Suggestions: React.FC = () => {
             </CardHeader>
             {useImages ? (
               <CardBody>
-                <Row>
+                <Row gutters={2}>
                   {cardsToUse.map((add, index) => (
-                    <Col key={add.cardID} xs={12} lg={6} className="p-1">
+                    <Col key={add.cardID} xs={6} md={4} xl={3} className="p-1">
                       <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
                     </Col>
                   ))}
@@ -177,9 +177,9 @@ const Suggestions: React.FC = () => {
             </CardHeader>
             {useImages ? (
               <CardBody>
-                <Row>
+                <Row gutters={2}>
                   {reversedCuts.map((add, index) => (
-                    <Col key={add.cardID} xs={12} lg={6} className="p-1">
+                    <Col key={add.cardID} xs={6} md={4} xl={3} className="p-1">
                       <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
                     </Col>
                   ))}

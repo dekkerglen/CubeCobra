@@ -8,7 +8,7 @@ import useLocalStorage from '../../hooks/useLocalStorage';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
-import { Modal, ModalBody, ModalFooter,ModalHeader } from '../base/Modal';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Select from '../base/Select';
 import ImageFallback from '../ImageFallback';
 import LoadingButton from '../LoadingButton';
@@ -75,7 +75,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
 
   if (!cubes || cubes.length === 0) {
     return (
-      <Modal isOpen={isOpen} setOpen={setOpen} xs>
+      <Modal isOpen={isOpen} setOpen={setOpen} sm>
         <ModalHeader setOpen={setOpen}>{card.name}</ModalHeader>
         <ModalBody className="centered">
           <Flexbox direction="col" alignItems="center" gap="2">

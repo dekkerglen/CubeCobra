@@ -32,6 +32,21 @@ const app = express();
 // gzip middleware
 app.use(compression());
 
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader;
+
+  res.setHeader = (name, value) => {
+    if (res.headersSent) {
+      // eslint-disable-next-line no-console
+      console.warn(`Headers already set at path: ${req.path}`);
+    }
+    return originalSetHeader.call(res, name, value);
+  };
+
+  next();
+});
+
+
 // do this before https redirect
 app.post('/healthcheck', (req, res) => {
   res.status(200).send('OK');
