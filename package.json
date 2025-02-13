@@ -47,7 +47,7 @@
     "test": "npx jest --coverage=false",
     "test:watch": "npx jest --watch --coverage=false",
     "test:coverage": "npx jest --coverage",
-    "test:ci": "npx jest --coverage --coverageReporters json-summary"
+    "test:ci": "npx jest --coverage --coverageReporters json-summary text"
   },
   "husky": {
     "hooks": {
