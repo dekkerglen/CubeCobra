@@ -1,6 +1,6 @@
 import { FilterResult, makeFilter } from '../../src/client/filtering/FilterCards';
 
-describe('Filter syntax', () => {
+describe('Name filter syntax', () => {
   const assertValidNameFilter = (result: FilterResult) => {
     expect(result.err).toBeFalsy();
     expect(result.filter).toBeInstanceOf(Function);
@@ -127,5 +127,72 @@ describe('Filter syntax', () => {
   it.each(failingNamesWithInterestingCharacters)('Failing names with interesting characters (%s)', async (name) => {
     const result = makeFilter(name);
     expect(result.err).toBeTruthy();
+  });
+});
+
+describe('Tag filter syntax', () => {
+  const assertValidTagFilter = (result: FilterResult) => {
+    expect(result.err).toBeFalsy();
+    expect(result.filter).toBeInstanceOf(Function);
+    expect(result.filter?.fieldsUsed).toEqual(['tags']);
+  };
+
+  it('Tag contents filter operations', async () => {
+    assertValidTagFilter(makeFilter('tag:fetch'));
+    assertValidTagFilter(makeFilter('tags:fetch'));
+  });
+
+  it('Tag count filter operations', async () => {
+    //All filters based on the number of tags
+    assertValidTagFilter(makeFilter('tag=3'));
+    assertValidTagFilter(makeFilter('tag!=3'));
+    assertValidTagFilter(makeFilter('tag<>3'));
+    assertValidTagFilter(makeFilter('tag>0'));
+    assertValidTagFilter(makeFilter('tag>=0'));
+    assertValidTagFilter(makeFilter('tag<2'));
+    assertValidTagFilter(makeFilter('tag<=1'));
+  });
+});
+
+const formatFilters = ['legality', 'legal', 'leg', 'banned', 'ban', 'restricted'];
+
+describe.each(formatFilters)('Format filter (%s)', (filterName) => {
+  const assertLegalityFilter = (result: FilterResult) => {
+    expect(result.err).toBeFalsy();
+    expect(result.filter).toBeInstanceOf(Function);
+    //All format type filters use the card's legality information
+    expect(result.filter?.fieldsUsed).toEqual(['legality']);
+  };
+
+  const availableFormats = [
+    'Standard',
+    'Pioneer',
+    'Modern',
+    'Legacy',
+    'Vintage',
+    'Brawl',
+    'Historic',
+    'Pauper',
+    'Penny',
+    'Commander',
+  ];
+
+  it.each(availableFormats)(`${filterName} filtering (%s)`, async (formatName) => {
+    assertLegalityFilter(makeFilter(`${filterName}:${formatName}`));
+    assertLegalityFilter(makeFilter(`${filterName}:"${formatName}"`));
+  });
+
+  it(`${filterName} filtering other operators`, async () => {
+    assertLegalityFilter(makeFilter(`${filterName}=Legacy`));
+    assertLegalityFilter(makeFilter(`${filterName}<>Standard`));
+    assertLegalityFilter(makeFilter(`${filterName}!="Modern"`));
+    assertLegalityFilter(makeFilter(`${filterName}!="Commander"`));
+  });
+
+  it(`${filterName} filtering unknown formats`, async () => {
+    expect(makeFilter(`${filterName}:TinyLeaders`).err).toBeTruthy();
+    expect(makeFilter(`${filterName}:Lega`).err).toBeTruthy();
+    expect(makeFilter(`${filterName}:EDH`).err).toBeTruthy();
+    expect(makeFilter(`${filterName}:"Oathbreaker"`).err).toBeTruthy();
   });
 });
