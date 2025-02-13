@@ -1,6 +1,6 @@
 import { FilterResult, makeFilter } from '../../src/client/filtering/FilterCards';
 
-describe('Filter syntax', () => {
+describe('Name filter syntax', () => {
   const assertValidNameFilter = (result: FilterResult) => {
     expect(result.err).toBeFalsy();
     expect(result.filter).toBeInstanceOf(Function);
@@ -127,5 +127,29 @@ describe('Filter syntax', () => {
   it.each(failingNamesWithInterestingCharacters)('Failing names with interesting characters (%s)', async (name) => {
     const result = makeFilter(name);
     expect(result.err).toBeTruthy();
+  });
+});
+
+describe('Tag filter syntax', () => {
+  const assertValidTagFilter = (result: FilterResult) => {
+    expect(result.err).toBeFalsy();
+    expect(result.filter).toBeInstanceOf(Function);
+    expect(result.filter?.fieldsUsed).toEqual(['tags']);
+  };
+
+  it('Tag contents filter operations', async () => {
+    assertValidTagFilter(makeFilter('tag:fetch'));
+    assertValidTagFilter(makeFilter('tags:fetch'));
+  });
+
+  it('Tag count filter operations', async () => {
+    //All filters based on the number of tags
+    assertValidTagFilter(makeFilter('tag=3'));
+    assertValidTagFilter(makeFilter('tag!=3'));
+    assertValidTagFilter(makeFilter('tag<>3'));
+    assertValidTagFilter(makeFilter('tag>0'));
+    assertValidTagFilter(makeFilter('tag>=0'));
+    assertValidTagFilter(makeFilter('tag<2'));
+    assertValidTagFilter(makeFilter('tag<=1'));
   });
 });
