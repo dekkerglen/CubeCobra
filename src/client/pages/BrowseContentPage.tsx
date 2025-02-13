@@ -9,7 +9,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
 import RenderToRoot from 'components/RenderToRoot';
 import Article from 'datatypes/Article';
-import Content from 'datatypes/Content';
+import Content, { ContentType } from 'datatypes/Content';
 import Episode from 'datatypes/Episode';
 import Video from 'datatypes/Video';
 import MainLayout from 'layouts/MainLayout';
@@ -39,9 +39,9 @@ const BrowseContentPage: React.FC<BrowseContentPageProps> = ({ loginCallback = '
           fetchMoreRoute={`/content/getmore`}
           renderItem={(item) => (
             <>
-              {item.type === 'a' && <ArticlePreview article={item as Article} />}
-              {item.type === 'v' && <VideoPreview video={item as Video} />}
-              {item.type === 'e' && <PodcastEpisodePreview episode={item as Episode} />}
+              {item.type === ContentType.ARTICLE && <ArticlePreview article={item as Article} />}
+              {item.type === ContentType.VIDEO && <VideoPreview video={item as Video} />}
+              {item.type === ContentType.EPISODE && <PodcastEpisodePreview episode={item as Episode} />}
             </>
           )}
           noneMessage="No content found."

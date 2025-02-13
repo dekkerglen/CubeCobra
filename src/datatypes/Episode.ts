@@ -5,6 +5,7 @@ interface Episode extends Content {
   image?: string;
   imageName?: string;
   podcast: string;
+  podcastGuid: string;
 }
 
 export default Episode;

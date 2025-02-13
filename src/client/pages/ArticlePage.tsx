@@ -8,6 +8,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
 import ArticleType from 'datatypes/Article';
+import { ContentStatus } from 'datatypes/Content';
 import MainLayout from 'layouts/MainLayout';
 
 interface ArticlePageProps {
@@ -23,7 +24,7 @@ const ArticlePage: React.FC<ArticlePageProps> = ({ loginCallback = '/', article 
       <Banner />
       <DynamicFlash />
       <Card className="my-2">
-        {user && user.id === article.owner.id && article.status !== 'p' && (
+        {user && user.id === article.owner.id && article.status !== ContentStatus.PUBLISHED && (
           <CardHeader>
             <Text semibold lg>
               <em className="pe-3">*Draft*</em>

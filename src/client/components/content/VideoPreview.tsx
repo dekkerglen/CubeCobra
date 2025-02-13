@@ -5,6 +5,7 @@ import TimeAgo from 'react-timeago';
 import AspectRatioBox from 'components/base/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
+import { ContentStatus } from 'datatypes/Content';
 import Video from 'datatypes/Video';
 
 import { Flexbox } from '../base/Layout';
@@ -17,7 +18,9 @@ export interface VideoPreviewProps {
 
 const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
   return (
-    <Tile href={video.status === 'p' ? `/content/video/${video.id}` : `/content/video/edit/${video.id}`}>
+    <Tile
+      href={video.status === ContentStatus.PUBLISHED ? `/content/video/${video.id}` : `/content/video/edit/${video.id}`}
+    >
       <AspectRatioBox ratio={1.9}>
         {video.image && <MtgImage image={video.image} />}
         <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-video bg-opacity-50 w-full mb-0 p-1">

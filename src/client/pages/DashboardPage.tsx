@@ -21,6 +21,7 @@ import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import BlogPost from 'datatypes/BlogPost';
+import { ContentType } from 'datatypes/Content';
 import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
 import MainLayout from 'layouts/MainLayout';
@@ -124,9 +125,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               <Row>
                 {content.map((item) => (
                   <Col key={item.id} className="mb-3" xs={6}>
-                    {item.type === 'a' && <ArticlePreview article={item} />}
-                    {item.type === 'v' && <VideoPreview video={item} />}
-                    {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
+                    {item.type === ContentType.ARTICLE && <ArticlePreview article={item} />}
+                    {item.type === ContentType.VIDEO && <VideoPreview video={item} />}
+                    {item.type === ContentType.EPISODE && <PodcastEpisodePreview episode={item} />}
                   </Col>
                 ))}
               </Row>

@@ -4,6 +4,8 @@ const { getFeedEpisodes, getFeedData } = require('./rss');
 
 const Content = require('../dynamo/models/content');
 
+import { ContentStatus, ContentType } from '../datatypes/Content';
+
 const removeSpan = (text) =>
   sanitizeHtml(text, {
     allowedTags: sanitizeHtml.defaults.allowedTags.filter((tag) => tag !== 'span'),
@@ -19,7 +21,7 @@ const updatePodcast = async (podcast) => {
   let lastKey = null;
 
   do {
-    const result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, lastKey);
+    const result = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED, lastKey);
     lastKey = result.lastKey;
     existingEpisodes.push(...result.items);
   } while (lastKey);
@@ -56,13 +58,13 @@ const updatePodcast = async (podcast) => {
         podcastGuid: episode.guid,
         podcastLink: episode.link,
         url: episode.source,
-        status: Content.STATUS.PUBLISHED,
+        status: ContentStatus.PUBLISHED,
         short: convert(removeSpan(episode.description), {
           wordwrap: 130,
         }).substring(0, 200),
       };
 
-      return Content.put(podcastEpisode, Content.TYPES.EPISODE);
+      return Content.put(podcastEpisode, ContentType.EPISODE);
     }),
   );
 

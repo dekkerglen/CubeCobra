@@ -7,11 +7,12 @@ import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import { ContentType } from 'datatypes/Content';
 import MainLayout from 'layouts/MainLayout';
 
 interface Document {
   id: string;
-  type: 'a' | 'v' | 'p';
+  type: ContentType.ARTICLE | ContentType.VIDEO | ContentType.PODCAST;
   title: string;
 }
 

@@ -10,6 +10,8 @@ const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 const { updatePodcast } = require('../util/podcast');
 
+import { ContentStatus, ContentType } from '../datatypes/Content';
+
 const router = express.Router();
 
 router.post('/featuredcubes/rotate', async (req, res) => {
@@ -68,7 +70,7 @@ router.post('/podcasts/sync', async (req, res) => {
     return res.statusCode(401).send('Invalid token.');
   }
 
-  const podcasts = await Content.getByTypeAndStatus(Content.TYPES.PODCAST, Content.STATUS.PUBLISHED);
+  const podcasts = await Content.getByTypeAndStatus(ContentType.PODCAST, ContentStatus.PUBLISHED);
 
   for (const podcast of podcasts.items) {
     await tryUpdate(podcast);
