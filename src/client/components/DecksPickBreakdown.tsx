@@ -21,13 +21,17 @@ interface BreakdownProps {
   setPickNumber: (pickNumber: string) => void;
 }
 
-
 const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber, setPickNumber }) => {
   const [ratings, setRatings] = useState<number[]>([]);
   const [showRatings, setShowRatings] = useLocalStorage(`showDraftRatings-${draft.id}`, true);
 
   // Handle both CubeCobra and Draftmancer drafts
-  const { cardsInPack, pick = 0, pack = 0, picksList } = useMemo(() => {
+  const {
+    cardsInPack,
+    pick = 0,
+    pack = 0,
+    picksList,
+  } = useMemo(() => {
     // Draftmancer drafts
     if (draft.DraftmancerLog) {
       const log = draft.DraftmancerLog.players[seatNumber];
@@ -47,19 +51,19 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
 
       for (let i = 0; i < log.length; i++) {
         subList.push({ cardIndex: log[i].pick });
-        
+
         // When we hit a pack boundary or the end
         if (i === log.length - 1 || (i + 1 < log.length && log[i].booster.length < log[i + 1].booster.length)) {
           draftPicksList.push([...subList]);
-          
+
           // If this pack contains our target pick
           if (totalPicks <= pickNum && totalPicks + subList.length > pickNum) {
             currentPick = pickNum - totalPicks + 1;
           }
-          
+
           totalPicks += subList.length;
           subList = [];
-          
+
           // Only increment pack if we haven't reached our target pick
           if (totalPicks <= pickNum) {
             currentPack += 1;
@@ -72,22 +76,22 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
       }
 
       return {
-        cardsInPack: draftCardsInPack.map(index => ({ cardIndex: index })),
+        cardsInPack: draftCardsInPack.map((index) => ({ cardIndex: index })),
         pick: currentPick,
         pack: currentPack,
-        picksList: draftPicksList
+        picksList: draftPicksList,
       };
     }
-    
+
     // CubeCobra drafts
     const drafterState = getDrafterState(draft, seatNumber, parseInt(pickNumber));
     return {
-      cardsInPack: drafterState.cardsInPack.map(index => ({ cardIndex: index })),
+      cardsInPack: drafterState.cardsInPack.map((index) => ({ cardIndex: index })),
       pick: drafterState.pick ?? 0,
       pack: drafterState.pack ?? 0,
-      picksList: drafterState.picksList.map(list => 
-        list.map(item => ({ cardIndex: typeof item === 'number' ? item : item.cardIndex }))
-      )
+      picksList: drafterState.picksList.map((list) =>
+        list.map((item) => ({ cardIndex: typeof item === 'number' ? item : item.cardIndex })),
+      ),
     };
   }, [draft, seatNumber, pickNumber]);
 
@@ -95,7 +99,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
   const currentPackPicks = picksList[pack] ?? [];
   const currentPickData = currentPackPicks[pick - 1];
   const actualPickIndex = cardsInPack.findIndex(
-    item => item.cardIndex === (currentPickData ? currentPickData.cardIndex : undefined)
+    (item) => item.cardIndex === (currentPickData ? currentPickData.cardIndex : undefined),
   );
 
   useEffect(() => {
@@ -119,9 +123,9 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            pack: cardsInPack.map(item => draft.cards[item.cardIndex]?.details?.oracle_id).filter(Boolean),
-            picks: allPicks.map(idx => draft.cards[idx]?.details?.oracle_id).filter(Boolean)
-          })
+            pack: cardsInPack.map((item) => draft.cards[item.cardIndex]?.details?.oracle_id).filter(Boolean),
+            picks: allPicks.map((idx) => draft.cards[idx]?.details?.oracle_id).filter(Boolean),
+          }),
         });
 
         if (response.ok) {
@@ -129,7 +133,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
           const newRatings = new Array(cardsInPack.length).fill(0);
           data.prediction.forEach((pred: { oracle: string; rating: number }) => {
             const cardIndex = cardsInPack.findIndex(
-              idx => draft.cards[idx.cardIndex].details?.oracle_id === pred.oracle
+              (idx) => draft.cards[idx.cardIndex].details?.oracle_id === pred.oracle,
             );
             if (cardIndex !== -1) {
               newRatings[cardIndex] = pred.rating;
@@ -205,14 +209,7 @@ const DecksPickBreakdown: React.FC<DecksPickBreakdownProps> = ({ draft, seatNumb
     return <Text>Sorry, we cannot display the pick breakdown for this draft.</Text>;
   }
 
-  return (
-    <CubeBreakdown 
-      pickNumber={pickNumber} 
-      seatNumber={seatNumber} 
-      draft={draft} 
-      setPickNumber={setPickNumber} 
-    />
-  );
+  return <CubeBreakdown pickNumber={pickNumber} seatNumber={seatNumber} draft={draft} setPickNumber={setPickNumber} />;
 };
 
 export default DecksPickBreakdown;
