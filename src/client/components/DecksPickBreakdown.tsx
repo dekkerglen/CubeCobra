@@ -167,8 +167,8 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
   const onPickClick = (packIndex: number, pickIndex: number) => {
     let picks = 0;
     for (let i = 0; i < packIndex; i++) {
-      if (draft.InitialState?.[0]?.[i]?.cards?.length) {
-        picks += draft.InitialState[0][i].cards.length;
+      if (picksList[i]?.length) {
+        picks += picksList[i].length;
       }
     }
     setPickNumber((picks + pickIndex).toString());
