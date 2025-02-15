@@ -199,7 +199,7 @@ interface RenderH2Props {
 const renderH2: React.FC<RenderH2Props> = (node) => {
   const id = generateHeadingId(node.children);
   return (
-    <Text id={id} xxxl semibold className="mb-4">
+    <Text id={id} xxxl semibold className="mb-2">
       {node.children}
     </Text>
   );
@@ -212,7 +212,7 @@ interface RenderH3Props {
 const renderH3: React.FC<RenderH3Props> = (node) => {
   const id = generateHeadingId(node.children);
   return (
-    <Text id={id} xxl semibold className="mb-4">
+    <Text id={id} xxl semibold className="mb-2">
       {node.children}
     </Text>
   );
@@ -225,7 +225,7 @@ interface RenderH4Props {
 const renderH4: React.FC<RenderH4Props> = (node) => {
   const id = generateHeadingId(node.children);
   return (
-    <Text id={id} xl semibold className="mb-4">
+    <Text id={id} xl semibold className="mb-2">
       {node.children}
     </Text>
   );
@@ -238,7 +238,7 @@ interface RenderH5Props {
 const renderH5: React.FC<RenderH5Props> = (node) => {
   const id = generateHeadingId(node.children);
   return (
-    <Text id={id} lg semibold className="mb-4">
+    <Text id={id} lg semibold className="mb-2">
       {node.children}
     </Text>
   );
@@ -251,7 +251,7 @@ interface RenderH6Props {
 const renderH6: React.FC<RenderH6Props> = (node) => {
   const id = generateHeadingId(node.children);
   return (
-    <Text id={id} md semibold className="mb-4">
+    <Text id={id} md semibold className="mb-2">
       {node.children}
     </Text>
   );
