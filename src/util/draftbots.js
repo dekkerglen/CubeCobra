@@ -119,12 +119,18 @@ const calculateBasics = (mainboard, basics) => {
   const basicsNeeded = 40 - mainboard.length;
 
   const basicLands = basics.filter((card) => card.type.includes('Land'));
+  //Cube basics don't have to be actual land cards (could be land art cards or just regular cards).
+  //We need lands though in order to calculate pip sources and if none are found we bail, and the bot gets no basics added
+  if (basicLands.length === 0) {
+    return [];
+  }
 
   for (let i = 0; i < basicsNeeded; i++) {
     const pips = pipsPerSource([...mainboard, ...result]);
 
     let bestBasic = 0;
     let score = basicLands[0].color_identity.map((color) => pips[color]).reduce((a, b) => a + b, 0);
+    //Cube's are not restricted to having 1 of each basic land. Could have multiple of a basic land type or none of a type
     for (let j = 1; j < basicLands.length; j++) {
       const newScore = basicLands[j].color_identity.map((color) => pips[color]).reduce((a, b) => a + b, 0);
       if (newScore > score) {
