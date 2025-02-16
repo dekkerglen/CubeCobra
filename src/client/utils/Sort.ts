@@ -422,7 +422,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
   } else if (sort === 'Subtype') {
     const types = new Set<string>();
     for (const card of cube || []) {
-      const split = (card.type_line || '').split(/[-–—]/);
+      const split = cardType(card).split(/[-–—]/);
       if (split.length > 1) {
         const subtypes = split[1].trim().split(' ');
         const nonemptySubtypes = subtypes.filter((x) => x.trim());
