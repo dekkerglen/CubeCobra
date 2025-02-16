@@ -13,7 +13,8 @@ import carddb, {
   getMostReasonableById,
   getOracleForMl,
   getReasonableCardByOracle,
-  getRelatedCards} from '../util/carddb';
+  getRelatedCards,
+} from '../util/carddb';
 const cardutil = require('../client/utils/cardutil');
 const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../client/utils/Sort');
 const { makeFilter, filterCardsDetails } = require('../client/filtering/FilterCards');
@@ -22,6 +23,7 @@ const util = require('../util/util');
 const { csrfProtection } = require('./middleware');
 const { handleRouteError, render, redirect } = require('../util/render');
 
+const { PrintFilter } = require('../datatypes/Card');
 const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
 
@@ -34,11 +36,18 @@ const MIN_PICKS = 100;
 /* Page size for results */
 const PAGE_SIZE = 96;
 
-const searchCards = (filter, sort = 'Elo', page = 0, direction = 'descending', distinct = 'names') => {
+const searchCards = (
+  filter,
+  sort = 'Elo',
+  page = 0,
+  direction = 'descending',
+  distinct = 'names',
+  printing = PrintFilter.RECENT,
+) => {
   const cards = [];
 
   if (distinct === 'names') {
-    cards.push(...getAllMostReasonable(filter));
+    cards.push(...getAllMostReasonable(filter, printing));
   } else {
     cards.push(...filterCardsDetails(carddb.printedCardList, filter));
   }

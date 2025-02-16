@@ -1,11 +1,10 @@
 import json from 'big-json';
 import fs from 'fs';
 
-import { CardDetails } from 'datatypes/Card';
-
 import { filterCardsDetails, FilterFunction } from '../client/filtering/FilterCards';
 import { detailsToCard } from '../client/utils/cardutil';
 import { SortFunctions } from '../client/utils/Sort';
+import { CardDetails, PrintFilter } from '../datatypes/Card';
 
 type OracleIdIndex = number;
 
@@ -212,8 +211,11 @@ export function getIdsFromName(name: string): string[] {
   return catalog.nameToId[getNameForComparison(name)];
 }
 
-// Printing = 'recent' or 'first'
-export function getMostReasonable(cardName: string, printing = 'recent', filter?: FilterFunction): CardDetails | null {
+export function getMostReasonable(
+  cardName: string,
+  printing: PrintFilter = PrintFilter.RECENT,
+  filter?: FilterFunction,
+): CardDetails | null {
   let ids = getIdsFromName(cardName);
   if (ids === undefined || ids.length === 0) {
     // Try getting it by ID in case this is an ID.
@@ -250,14 +252,18 @@ export function getMostReasonable(cardName: string, printing = 'recent', filter?
   ids = cards.map((card) => card.details.scryfall_id);
 
   // Ids have been sorted from oldest to newest. So reverse if we want the newest printing.
-  if (printing === 'recent') {
+  if (printing === PrintFilter.RECENT) {
     ids = [...ids];
     ids.reverse();
   }
   return cardFromId(ids.find(reasonableId) || ids[0]);
 }
 
-export function getMostReasonableById(id: string, printing = 'recent', filter?: FilterFunction): CardDetails | null {
+export function getMostReasonableById(
+  id: string,
+  printing: PrintFilter = PrintFilter.RECENT,
+  filter?: FilterFunction,
+): CardDetails | null {
   const card = cardFromId(id);
   if (card.error) {
     return null;
@@ -349,14 +355,17 @@ export function getOracleForMl(oracleId: string): string {
   return indexToReasonable(related.mostSimilar).oracle_id;
 }
 
-export function getAllMostReasonable(filter: FilterFunction): CardDetails[] {
+export function getAllMostReasonable(
+  filter: FilterFunction,
+  printing: PrintFilter = PrintFilter.RECENT,
+): CardDetails[] {
   const cards = filterCardsDetails(catalog.printedCardList, filter);
 
   const keys = new Set();
   const filtered = [];
   for (const card of cards) {
     if (!keys.has(card.name_lower)) {
-      filtered.push(getMostReasonableById(card.scryfall_id, 'recent', filter));
+      filtered.push(getMostReasonableById(card.scryfall_id, printing, filter));
       keys.add(card.name_lower);
     }
   }
