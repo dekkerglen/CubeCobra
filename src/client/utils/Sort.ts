@@ -328,7 +328,7 @@ function getEloBucket(elo: number): string {
   return `${bucketFloor}-${bucketFloor + 49}`;
 }
 
-function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): string[] {
+export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): string[] {
   let ret: string[] = [];
 
   /* Start of sort Options */
