@@ -10,7 +10,7 @@ import carddb, {
   getAllMostReasonable,
   getIdsFromName,
   getMostReasonable,
-  getReasonableCardByOracle
+  getReasonableCardByOracle,
 } from '../../util/carddb';
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../util/util');
@@ -323,23 +323,6 @@ router.post(
     }
     return res.status(200).send({
       success: 'false',
-    });
-  }),
-);
-
-router.get(
-  '/getimage/:name',
-  util.wrapAsyncApi(async (req, res) => {
-    const reasonable = getMostReasonable(cardutil.decodeName(req.params.name));
-    const img = reasonable ? carddb.imagedict[reasonable.name] : null;
-    if (!img) {
-      return res.status(200).send({
-        success: 'false',
-      });
-    }
-    return res.status(200).send({
-      success: 'true',
-      img,
     });
   }),
 );
