@@ -816,7 +816,9 @@ router.post('/adds', async (req, res) => {
       });
     }
 
-    const eligible = getAllMostReasonable(filter);
+    const cube = await Cube.getById(cubeID);
+
+    const eligible = getAllMostReasonable(filter, cube.defaultPrinting);
     length = eligible.length;
 
     const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
@@ -857,7 +859,9 @@ router.post('/cuts', async (req, res) => {
       });
     }
 
-    const eligible = getAllMostReasonable(filter);
+    const cube = await Cube.getById(cubeID);
+
+    const eligible = getAllMostReasonable(filter, cube.defaultPrinting);
 
     const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
 

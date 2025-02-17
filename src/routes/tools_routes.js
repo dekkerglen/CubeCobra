@@ -80,7 +80,13 @@ router.get('/api/topcards', async (req, res) => {
       return;
     }
 
-    const { data, numResults } = searchCards(filter, req.query.s, parseInt(req.query.p, 10), req.query.d);
+    const { data, numResults } = searchCards(
+      filter,
+      req.query.s,
+      parseInt(req.query.p, 10),
+      req.query.d,
+      req?.user?.defaultPrinting,
+    );
     res.status(200).send({
       success: 'true',
       data,
@@ -107,7 +113,14 @@ router.get('/api/searchcards', async (req, res) => {
       });
       return;
     }
-    const { data, numResults } = searchCards(filter, req.query.s, req.query.p, req.query.d, req.query.di);
+    const { data, numResults } = searchCards(
+      filter,
+      req.query.s,
+      req.query.p,
+      req.query.d,
+      req.query.di,
+      req?.user?.defaultPrinting,
+    );
     res.status(200).send({
       success: 'true',
       data,
@@ -126,7 +139,13 @@ router.get('/api/searchcards', async (req, res) => {
 router.get('/topcards', async (req, res) => {
   try {
     const { filter } = makeFilter(`pickcount>=${MIN_PICKS} ${req.query.f}`);
-    const { data, numResults } = await searchCards(filter, req.query.s, parseInt(req.query.p, 10), req.query.d);
+    const { data, numResults } = await searchCards(
+      filter,
+      req.query.s,
+      parseInt(req.query.p, 10),
+      req.query.d,
+      req?.user?.defaultPrinting,
+    );
 
     return render(
       req,
@@ -153,7 +172,7 @@ router.get('/card/:id', async (req, res) => {
     const possibleName = cardutil.decodeName(id);
     const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName, req?.user?.defaultPrinting).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
@@ -164,7 +183,7 @@ router.get('/card/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0], req?.user?.defaultPrinting).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
@@ -226,7 +245,7 @@ router.get('/cardjson/:id', async (req, res) => {
     const possibleName = cardutil.decodeName(id);
     const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = getMostReasonable(possibleName).scryfall_id;
+      id = getMostReasonable(possibleName, req?.user?.defaultPrinting).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
@@ -237,7 +256,7 @@ router.get('/cardjson/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0], req?.user?.defaultPrinting).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
@@ -276,7 +295,7 @@ router.get('/cardimage/:id', async (req, res) => {
   try {
     let { id } = req.params;
 
-    const defaultPrinting = req?.query?.defaultPrinting;
+    const defaultPrinting = req?.query?.defaultPrinting || req?.user?.defaultPrinting;
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
@@ -293,7 +312,7 @@ router.get('/cardimage/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0], defaultPrinting).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
@@ -357,7 +376,7 @@ router.get('/cardimageflip/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0], req?.user?.defaultPrinting).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
