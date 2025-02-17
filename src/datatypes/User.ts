@@ -1,3 +1,4 @@
+import { PrintFilter } from './Card';
 import Cube from './Cube';
 import Image from './Image';
 import { Notification } from './Notification';
@@ -20,4 +21,5 @@ export default interface User {
   hideFeatured?: boolean;
   patron?: string;
   notifications?: Notification[];
+  defaultPrinting?: PrintFilter;
 }
