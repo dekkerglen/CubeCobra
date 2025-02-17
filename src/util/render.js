@@ -44,6 +44,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         hideTagColors: req.user.hideTagColors,
         cubes,
         notifications: notifications.items,
+        defaultPrinting: req.user.defaultPrinting,
       };
     }
 
