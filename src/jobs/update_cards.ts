@@ -33,6 +33,7 @@ interface ScryfallCard {
   reprint: boolean;
   border_color: string;
   promo: boolean;
+  promo_types: string[];
   digital: boolean;
   finishes: string[];
   prices: {
@@ -527,6 +528,7 @@ function convertCard(
     ck: ckPrice,
     mp: mpPrice,
   };
+  newcard.promo_types = card.promo_types || undefined;
 
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
