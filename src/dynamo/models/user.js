@@ -1,4 +1,4 @@
-const { DefaultPrintFilter } = require('datatypes/Card');
+const { DefaultPrintingPreference } = require('../../datatypes/Card');
 const { getImageData } = require('../../util/imageutil');
 const createClient = require('../util');
 
@@ -69,7 +69,7 @@ const hydrate = (user) => {
   user.image = getImageData(user.imageName || 'Ambush Viper');
   //Just nice to set the value instead of having undefined around
   if (!user.defaultPrinting) {
-    user.defaultPrinting = DefaultPrintFilter;
+    user.defaultPrinting = DefaultPrintingPreference;
   }
 
   return user;

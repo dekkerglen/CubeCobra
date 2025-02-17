@@ -21,7 +21,7 @@ const Draft = require('../dynamo/models/draft');
 const Notice = require('../dynamo/models/notice');
 const uuid = require('uuid');
 
-import { DefaultPrintFilter, PrintFilter } from '../datatypes/Card';
+import { DefaultPrintingPreference, PrintingPreference } from '../datatypes/Card';
 import { NoticeType } from '../datatypes/Notice';
 import { NotificationStatus } from '../datatypes/Notification';
 
@@ -355,7 +355,7 @@ router.post(
         emailVerified: false,
         token: uuid.v4(),
         dateCreated: new Date().valueOf(),
-        defaultPrinting: DefaultPrintFilter,
+        defaultPrinting: DefaultPrintingPreference,
       };
 
       const salt = await bcrypt.genSalt(10);
@@ -730,7 +730,11 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
     const user = await User.getById(req.user.id);
 
     const errors = [];
-    if (![PrintFilter.RECENT, PrintFilter.FIRST].includes(req.body.defaultPrinting)) {
+    if (!['default', 'dark'].includes(req.body.theme)) {
+      errors.push({ msg: 'Theme must be valid.' });
+    }
+
+    if (![PrintingPreference.RECENT, PrintingPreference.FIRST].includes(req.body.defaultPrinting)) {
       errors.push({ msg: 'Printing must be valid.' });
     }
 

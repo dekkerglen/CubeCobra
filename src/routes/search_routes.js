@@ -4,7 +4,7 @@ const { getMostReasonable, getReasonableCardByOracle, cardFromId } = require('..
 const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
 
-const { PrintFilter } = require('../datatypes/Card');
+const { PrintingPreference } = require('../datatypes/Card');
 
 const { render } = require('../util/render');
 const { ensureAuth } = require('./middleware');
@@ -42,7 +42,7 @@ const tokenize = (query) => {
   return tokens;
 };
 
-const getCardQueries = (tokens, printing = PrintFilter.RECENT) => {
+const getCardQueries = (tokens, printing = PrintingPreference.RECENT) => {
   const queries = [];
 
   for (const token of tokens) {

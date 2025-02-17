@@ -23,7 +23,7 @@ const util = require('../util/util');
 const { csrfProtection } = require('./middleware');
 const { handleRouteError, render, redirect } = require('../util/render');
 
-const { PrintFilter } = require('../datatypes/Card');
+const { PrintingPreference } = require('../datatypes/Card');
 const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
 
@@ -42,7 +42,7 @@ const searchCards = (
   page = 0,
   direction = 'descending',
   distinct = 'names',
-  printing = PrintFilter.RECENT,
+  printing = PrintingPreference.RECENT,
 ) => {
   const cards = [];
 

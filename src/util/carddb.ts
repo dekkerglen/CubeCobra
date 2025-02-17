@@ -4,7 +4,7 @@ import fs from 'fs';
 import { filterCardsDetails, FilterFunction } from '../client/filtering/FilterCards';
 import { detailsToCard } from '../client/utils/cardutil';
 import { SortFunctions } from '../client/utils/Sort';
-import { CardDetails, PrintFilter } from '../datatypes/Card';
+import { CardDetails, PrintingPreference } from '../datatypes/Card';
 
 type OracleIdIndex = number;
 
@@ -213,7 +213,7 @@ export function getIdsFromName(name: string): string[] {
 
 export function getMostReasonable(
   cardName: string,
-  printing: PrintFilter = PrintFilter.RECENT,
+  printing: PrintingPreference = PrintingPreference.RECENT,
   filter?: FilterFunction,
 ): CardDetails | null {
   let ids = getIdsFromName(cardName);
@@ -252,7 +252,7 @@ export function getMostReasonable(
   ids = cards.map((card) => card.details.scryfall_id);
 
   // Ids have been sorted from oldest to newest. So reverse if we want the newest printing.
-  if (printing === PrintFilter.RECENT) {
+  if (printing === PrintingPreference.RECENT) {
     ids = [...ids];
     ids.reverse();
   }
@@ -261,7 +261,7 @@ export function getMostReasonable(
 
 export function getMostReasonableById(
   id: string,
-  printing: PrintFilter = PrintFilter.RECENT,
+  printing: PrintingPreference = PrintingPreference.RECENT,
   filter?: FilterFunction,
 ): CardDetails | null {
   const card = cardFromId(id);
@@ -357,7 +357,7 @@ export function getOracleForMl(oracleId: string): string {
 
 export function getAllMostReasonable(
   filter: FilterFunction,
-  printing: PrintFilter = PrintFilter.RECENT,
+  printing: PrintingPreference = PrintingPreference.RECENT,
 ): CardDetails[] {
   const cards = filterCardsDetails(catalog.printedCardList, filter);
 

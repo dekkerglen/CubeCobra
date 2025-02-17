@@ -167,11 +167,11 @@ export interface Changes {
 export const BasicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Waste'] as const;
 export type BasicLand = (typeof BasicLands)[number];
 
-export enum PrintFilter {
+export enum PrintingPreference {
   RECENT = 'recent',
   FIRST = 'first',
 }
-export const DefaultPrintFilter = PrintFilter.RECENT;
+export const DefaultPrintingPreference = PrintingPreference.RECENT;
 
 export default interface Card {
   index?: number;
