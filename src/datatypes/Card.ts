@@ -171,6 +171,7 @@ export enum PrintFilter {
   RECENT = 'recent',
   FIRST = 'first',
 }
+export const DefaultPrintFilter = PrintFilter.RECENT;
 
 export default interface Card {
   index?: number;

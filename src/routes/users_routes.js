@@ -21,7 +21,7 @@ const Draft = require('../dynamo/models/draft');
 const Notice = require('../dynamo/models/notice');
 const uuid = require('uuid');
 
-import { PrintFilter } from '../datatypes/Card';
+import { DefaultPrintFilter, PrintFilter } from '../datatypes/Card';
 import { NoticeType } from '../datatypes/Notice';
 import { NotificationStatus } from '../datatypes/Notification';
 
@@ -355,6 +355,7 @@ router.post(
         emailVerified: false,
         token: uuid.v4(),
         dateCreated: new Date().valueOf(),
+        defaultPrinting: DefaultPrintFilter,
       };
 
       const salt = await bcrypt.genSalt(10);
