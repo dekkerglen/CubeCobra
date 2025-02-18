@@ -25,7 +25,7 @@ jest.mock('../../src/util/cardCatalog', () => {
 });
 
 import { FilterFunction } from '../../src/client/filtering/FilterCards';
-import Card, { CardDetails } from '../../src/datatypes/Card';
+import Card, { CardDetails, PrintingPreference } from '../../src/datatypes/Card';
 import { getMostReasonable, reasonableCard } from '../../src/util/carddb';
 import { createCard, createCardDetails } from '../test-utils/data';
 
@@ -146,7 +146,7 @@ describe('getMostReasonable', () => {
     });
 
     fillCatalogWithCards([cardOne]);
-    expect(getMostReasonable('Unknown name', 'recent')).toBeNull();
+    expect(getMostReasonable('Unknown name', PrintingPreference.RECENT)).toBeNull();
   });
 
   it('Match found by name, one possible card', async () => {
@@ -155,7 +155,7 @@ describe('getMostReasonable', () => {
     });
 
     fillCatalogWithCards([cardOne]);
-    expect(getMostReasonable('Card 1', 'recent')).toEqual(cardOne.details);
+    expect(getMostReasonable('Card 1', PrintingPreference.RECENT)).toEqual(cardOne.details);
   });
 
   it('Unreasonable match found by name, but still returned as only card', async () => {
@@ -169,7 +169,7 @@ describe('getMostReasonable', () => {
     });
 
     fillCatalogWithCards([cardOne]);
-    expect(getMostReasonable('Nexus of Fate', 'recent')).toEqual(cardOne.details);
+    expect(getMostReasonable('Nexus of Fate', PrintingPreference.RECENT)).toEqual(cardOne.details);
   });
 
   it('Many unreasonable match found by name, first card by printing returned', async () => {
@@ -193,7 +193,7 @@ describe('getMostReasonable', () => {
     });
 
     fillCatalogWithCards([cardOne, cardTwo]);
-    expect(getMostReasonable('Nexus of Fate', 'first')).toEqual(cardTwo.details);
+    expect(getMostReasonable('Nexus of Fate', PrintingPreference.FIRST)).toEqual(cardTwo.details);
   });
 
   it('Lookup by oracle id', async () => {
@@ -219,7 +219,7 @@ describe('getMostReasonable', () => {
     });
 
     fillCatalogWithCards([cardOne, cardTwo]);
-    expect(getMostReasonable('abcd-efgh', 'first')).toEqual(cardTwo.details);
+    expect(getMostReasonable('abcd-efgh', PrintingPreference.FIRST)).toEqual(cardTwo.details);
   });
 
   it('Lookup by full card name, only considers that exact set/collector number', async () => {
@@ -249,7 +249,7 @@ describe('getMostReasonable', () => {
     });
 
     fillCatalogWithCards([cardOne, cardTwo]);
-    expect(getMostReasonable('Goblin Warleader [CMD-10]', 'recent')).toEqual(cardTwo.details);
+    expect(getMostReasonable('Goblin Warleader [CMD-10]', PrintingPreference.RECENT)).toEqual(cardTwo.details);
   });
 
   it('Matches found by name, sorting by released at primarily', async () => {
@@ -273,8 +273,8 @@ describe('getMostReasonable', () => {
     });
 
     fillCatalogWithCards([cardOne, cardTwo]);
-    expect(getMostReasonable('Giant Spider', 'recent')).toEqual(cardOne.details);
-    expect(getMostReasonable('Giant Spider', 'first')).toEqual(cardTwo.details);
+    expect(getMostReasonable('Giant Spider', PrintingPreference.RECENT)).toEqual(cardOne.details);
+    expect(getMostReasonable('Giant Spider', PrintingPreference.FIRST)).toEqual(cardTwo.details);
   });
 
   it('Matches found by name, collector sorting secondary after released', async () => {
@@ -308,8 +308,8 @@ describe('getMostReasonable', () => {
     });
 
     fillCatalogWithCards([cardOne, cardTwo, cardThree]);
-    expect(getMostReasonable('Giant Spider', 'recent')).toEqual(cardThree.details);
-    expect(getMostReasonable('Giant Spider', 'first')).toEqual(cardTwo.details);
+    expect(getMostReasonable('Giant Spider', PrintingPreference.RECENT)).toEqual(cardThree.details);
+    expect(getMostReasonable('Giant Spider', PrintingPreference.FIRST)).toEqual(cardTwo.details);
   });
 
   it('Matches found by name, filters to none', async () => {
@@ -349,7 +349,7 @@ describe('getMostReasonable', () => {
     filter.fieldsUsed = ['name'];
 
     fillCatalogWithCards([cardOne, cardTwo, cardThree]);
-    expect(getMostReasonable('Giant Spider', 'recent', filter)).toBeNull();
+    expect(getMostReasonable('Giant Spider', PrintingPreference.RECENT, filter)).toBeNull();
   });
 
   it('Matches found by name and filtering', async () => {
@@ -392,6 +392,6 @@ describe('getMostReasonable', () => {
     filter.fieldsUsed = ['set'];
 
     fillCatalogWithCards([cardOne, cardTwo, cardThree]);
-    expect(getMostReasonable('Giant Spider', 'first', filter)).toEqual(cardOne.details);
+    expect(getMostReasonable('Giant Spider', PrintingPreference.FIRST, filter)).toEqual(cardOne.details);
   });
 });
