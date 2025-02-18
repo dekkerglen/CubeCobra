@@ -1,4 +1,4 @@
-import { cardGetLabels, sortForDownload } from '../../src/client/utils/Sort';
+import { cardGetLabels, getLabelsRaw, sortForDownload } from '../../src/client/utils/Sort';
 import Card from '../../src/datatypes/Card';
 import { createCard, createCardDetails } from '../test-utils/data';
 
@@ -7,7 +7,7 @@ const mapToCardNames = (sorted: Card[]) => {
 };
 
 describe('Sorting Collector Numbers', () => {
-  const COLLECTOR_NUMBER_SORT = 'Collector number';
+  const SORT = 'Collector number';
 
   const sortWithoutGrouping = (cards: Card[], sort: string) => {
     //Must pass true for showOther because the first sort is undefined
@@ -40,7 +40,7 @@ describe('Sorting Collector Numbers', () => {
       }),
     ];
 
-    const sorted = sortWithoutGrouping(cards, COLLECTOR_NUMBER_SORT);
+    const sorted = sortWithoutGrouping(cards, SORT);
 
     expect(mapToCardNames(sorted)).toEqual(['Card 2', 'Card 1']);
   });
@@ -60,7 +60,7 @@ describe('Sorting Collector Numbers', () => {
       }),
     ];
 
-    const sorted = sortWithoutGrouping(cards, COLLECTOR_NUMBER_SORT);
+    const sorted = sortWithoutGrouping(cards, SORT);
 
     expect(mapToCardNames(sorted)).toEqual(['Card 3', 'Card 1', 'Card 2']);
   });
@@ -96,7 +96,7 @@ describe('Sorting Collector Numbers', () => {
       }),
     ];
 
-    const sorted = sortWithoutGrouping(cards, COLLECTOR_NUMBER_SORT);
+    const sorted = sortWithoutGrouping(cards, SORT);
 
     expect(mapToCardNames(sorted)).toEqual(['Card 1', 'Card 7', 'Card 6', 'Card 3', 'Card 4', 'Card 2', 'Card 5']);
   });
@@ -133,7 +133,7 @@ describe('Sorting Collector Numbers', () => {
       }),
     ];
 
-    const sorted = sortWithoutGrouping(cards, COLLECTOR_NUMBER_SORT);
+    const sorted = sortWithoutGrouping(cards, SORT);
 
     expect(mapToCardNames(sorted)).toEqual(['Card 7', 'Card 4', 'Card 2', 'Card 1', 'Card 3', 'Card 5', 'Card 6']);
   });
@@ -178,7 +178,7 @@ describe('Sorting Collector Numbers', () => {
       }),
     ];
 
-    const sorted = sortWithoutGrouping(cards, COLLECTOR_NUMBER_SORT);
+    const sorted = sortWithoutGrouping(cards, SORT);
 
     expect(mapToCardNames(sorted)).toEqual(['Card 6', 'Card 4', 'Card 5', 'Card 3', 'Card 1', 'Card 2']);
   });
@@ -189,7 +189,7 @@ describe('Sorting Collector Numbers', () => {
  * See priceBuckets constant in src/client/utils/Sort.ts for the groupings
  */
 describe('Grouping by Price USD', () => {
-  const PRICE_USD_SORT = 'Price USD';
+  const SORT = 'Price USD';
 
   it('Has USD price for grouping', async () => {
     const card = createCard({
@@ -201,9 +201,9 @@ describe('Grouping by Price USD', () => {
       }),
     });
 
-    const label = cardGetLabels(card, PRICE_USD_SORT, true);
+    const labels = cardGetLabels(card, SORT, true);
 
-    expect(label).toEqual(['$4 - $4.99']);
+    expect(labels).toEqual(['$4 - $4.99']);
   });
 
   it('Has USD foil price for grouping', async () => {
@@ -216,9 +216,9 @@ describe('Grouping by Price USD', () => {
       }),
     });
 
-    const label = cardGetLabels(card, 'Price USD Foil', true);
+    const labels = cardGetLabels(card, 'Price USD Foil', true);
 
-    expect(label).toEqual(['$20 - $24.99']);
+    expect(labels).toEqual(['$20 - $24.99']);
   });
 
   it('Has USD price for grouping, with foil fallback', async () => {
@@ -231,9 +231,9 @@ describe('Grouping by Price USD', () => {
       }),
     });
 
-    const label = cardGetLabels(card, PRICE_USD_SORT, true);
+    const labels = cardGetLabels(card, SORT, true);
 
-    expect(label).toEqual(['>= $100']);
+    expect(labels).toEqual(['>= $100']);
   });
 
   it('Has USD price for grouping, with etched fallback', async () => {
@@ -246,9 +246,9 @@ describe('Grouping by Price USD', () => {
       }),
     });
 
-    const label = cardGetLabels(card, PRICE_USD_SORT, true);
+    const labels = cardGetLabels(card, SORT, true);
 
-    expect(label).toEqual(['$50 - $74.99']);
+    expect(labels).toEqual(['$50 - $74.99']);
   });
 
   it('No USD price available for grouping', async () => {
@@ -261,8 +261,326 @@ describe('Grouping by Price USD', () => {
       }),
     });
 
-    const label = cardGetLabels(card, PRICE_USD_SORT, true);
+    const labels = cardGetLabels(card, SORT, true);
 
-    expect(label).toEqual(['No Price Available']);
+    expect(labels).toEqual(['No Price Available']);
+  });
+});
+
+const allowedTypeSeparators = ['-', '–', '—'];
+
+//Subtypes can be anything, so we will validate both the card's labels and the raw labels across multiple cards
+describe('Grouping by Subtype', () => {
+  const SORT = 'Subtype';
+
+  it('Card has type_line but no subtype', async () => {
+    const card = createCard({
+      type_line: 'Sorcery',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual([' Other ']);
+
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual([' Other ']);
+  });
+
+  it('Card has type_line with subtype', async () => {
+    const card = createCard({
+      type_line: 'Sorcery - Arcane',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    //For card labels, ' Other ' is only added if no labels were found for the card
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual(['Arcane']);
+
+    //For raw labels, ' Other ' gets added when the flag is set regardless of if other labels were found
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual(['Arcane', ' Other ']);
+  });
+
+  it('Card has type_line with multiple subtypes', async () => {
+    const card = createCard({
+      type_line: 'Creature - Mouse Lord',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual(['Mouse', 'Lord']);
+
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual(['Mouse', 'Lord', ' Other ']);
+  });
+
+  it('Falls back to card type', async () => {
+    const card = createCard({
+      type_line: undefined,
+      details: createCardDetails({
+        type: 'Instant - Arcane',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual(['Arcane']);
+
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual(['Arcane', ' Other ']);
+  });
+
+  it('Handles separator but no types after', async () => {
+    const card = createCard({
+      type_line: undefined,
+      details: createCardDetails({
+        type: 'Instant - ',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual([' Other ']);
+
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual([' Other ']);
+  });
+
+  it.each(allowedTypeSeparators)(`Handles separator character (%s)`, async (separator) => {
+    const card = createCard({
+      type_line: `Creature ${separator} Tiger`,
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual(['Tiger']);
+
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual(['Tiger', ' Other ']);
+  });
+
+  it('Raw labels are a set of subtypes across multiple cards', async () => {
+    const cards = [
+      createCard({
+        type_line: 'Creature - Mouse Lord',
+        details: createCardDetails({
+          type: 'Instant',
+        }),
+      }),
+      createCard({
+        type_line: 'Creature - Zombie Lord',
+        details: createCardDetails({
+          type: 'Instant',
+        }),
+      }),
+      createCard({
+        type_line: 'Creature - Phyrexian     Scout    Soldier',
+        details: createCardDetails({
+          type: 'Instant',
+        }),
+      }),
+    ];
+
+    const rawLabels = getLabelsRaw(cards, SORT, false);
+    //Here we don't care how the subtypes are sorted in the labels. Other sorting code sorts them
+    expect(rawLabels.sort()).toEqual(['Mouse', 'Scout', 'Soldier', 'Zombie', 'Lord', 'Phyrexian'].sort());
+  });
+});
+
+//Supertypes are fixed so checking getRawLabels is not intesting
+describe('Grouping by Supertype', () => {
+  const SORT = 'Supertype';
+
+  it('Card has type_line but no supertype', async () => {
+    const card = createCard({
+      type_line: 'Sorcery',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual([' Other ']);
+  });
+
+  it('Card has type_line and supertype', async () => {
+    const card = createCard({
+      type_line: 'Legendary Sorcery',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['Legendary']);
+  });
+
+  it('Card has type_line with multiple supertypes', async () => {
+    const card = createCard({
+      type_line: 'Legendary Snow Sorcery - Arcane',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['Legendary', 'Snow']);
+  });
+
+  it('Card has type_line but unknown supertype', async () => {
+    const card = createCard({
+      type_line: 'Miracle Sorcery',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual([' Other ']);
+  });
+
+  it('Falls back to card type', async () => {
+    const card = createCard({
+      type_line: undefined,
+      details: createCardDetails({
+        type: 'Host Creature - Octopus',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['Host']);
+  });
+
+  it('Handles separator but no super types', async () => {
+    const card = createCard({
+      type_line: undefined,
+      details: createCardDetails({
+        type: '- Octopus',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual([' Other ']);
+  });
+
+  it.each(allowedTypeSeparators)(`Handles separator character (%s)`, async (separator) => {
+    const card = createCard({
+      type_line: `Basic ${separator} Forest`,
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['Basic']);
+  });
+});
+
+//Types are fixed so checking getRawLabels is not intesting
+describe('Grouping by type', () => {
+  const SORT = 'Type';
+
+  it('Card has type_line but no type', async () => {
+    const card = createCard({
+      type_line: 'Variable - Food',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual([' Other ']);
+  });
+
+  it('Card has type_line and type', async () => {
+    const card = createCard({
+      type_line: 'Legendary Sorcery',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['Sorcery']);
+  });
+
+  it('Card has type_line with multiple types', async () => {
+    const card = createCard({
+      type_line: 'Artifact Planeswalker',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['Artifact', 'Planeswalker']);
+  });
+
+  it('Card has type_line but unknown type', async () => {
+    const card = createCard({
+      type_line: 'Miracle',
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual([' Other ']);
+  });
+
+  it('Falls back to card type', async () => {
+    const card = createCard({
+      type_line: undefined,
+      details: createCardDetails({
+        type: 'Host Creature - Octopus',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['Creature']);
+  });
+
+  it('Handles separator but no types', async () => {
+    const card = createCard({
+      type_line: undefined,
+      details: createCardDetails({
+        type: '- Octopus',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual([' Other ']);
+  });
+
+  it.each(allowedTypeSeparators)(`Handles separator character (%s)`, async (separator) => {
+    const card = createCard({
+      type_line: `Land ${separator} - Gate`,
+      details: createCardDetails({
+        type: 'Instant',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['Land']);
   });
 });
