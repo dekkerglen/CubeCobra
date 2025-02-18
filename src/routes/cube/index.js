@@ -3,7 +3,7 @@ const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 
-const { CARD_STATUSES } = require('../../datatypes/Card');
+const { CARD_STATUSES, DefaultPrintingPreference, PrintingPreference } = require('../../datatypes/Card');
 
 const cardutil = require('../../client/utils/cardutil');
 const miscutil = require('../../client/utils/Util');
@@ -103,7 +103,7 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
       formats: [],
       following: [],
       defaultStatus: 'Not Owned',
-      defaultPrinting: 'recent',
+      defaultPrinting: DefaultPrintingPreference,
       disableAlerts: false,
       basics: [
         '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
@@ -1500,7 +1500,7 @@ router.post('/updatesettings/:id', ensureAuth, async (req, res) => {
     if (!CARD_STATUSES.includes(defaultStatus)) {
       errors.push({ msg: 'Status must be valid.' });
     }
-    if (!['recent', 'first'].includes(defaultPrinting)) {
+    if (![PrintingPreference.RECENT, PrintingPreference.FIRST].includes(defaultPrinting)) {
       errors.push({ msg: 'Printing must be valid.' });
     }
     if (!Object.values(Cube.VISIBILITY).includes(visibility)) {

@@ -1,5 +1,6 @@
 import React, { useContext, useMemo, useState } from 'react';
 
+import { PrintingPreference } from '../../../datatypes/Card';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import Checkbox from '../base/Checkbox';
@@ -10,11 +11,12 @@ import CSRFForm from '../CSRFForm';
 const UserThemeForm: React.FC = () => {
   const user = useContext(UserContext);
   const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'default');
+  const [defaultPrinting, setDefaultPrinting] = useState(user?.defaultPrinting || PrintingPreference.RECENT);
   const [hideFeaturedCubes, setHideFeaturedCubes] = useState(user?.hideFeatured || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
-    () => ({ theme: selectedTheme, hideFeatured: `${hideFeaturedCubes}` }),
-    [selectedTheme, hideFeaturedCubes],
+    () => ({ theme: selectedTheme, hideFeatured: `${hideFeaturedCubes}`, defaultPrinting }),
+    [selectedTheme, hideFeaturedCubes, defaultPrinting],
   );
 
   return (
@@ -28,6 +30,15 @@ const UserThemeForm: React.FC = () => {
           options={[
             { value: 'default', label: 'Default' },
             { value: 'dark', label: 'Dark' },
+          ]}
+        />
+        <Select
+          label="Default Printing (this applies when searching cards outside a cube)"
+          value={formData.defaultPrinting}
+          setValue={(value) => setDefaultPrinting(value as PrintingPreference)}
+          options={[
+            { value: PrintingPreference.RECENT, label: 'Most Recent' },
+            { value: PrintingPreference.FIRST, label: 'First' },
           ]}
         />
         <Checkbox label="Hide featured cubes" checked={hideFeaturedCubes} setChecked={setHideFeaturedCubes} />

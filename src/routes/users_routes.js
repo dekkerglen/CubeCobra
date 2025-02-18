@@ -21,6 +21,7 @@ const Draft = require('../dynamo/models/draft');
 const Notice = require('../dynamo/models/notice');
 const uuid = require('uuid');
 
+import { DefaultPrintingPreference, PrintingPreference } from '../datatypes/Card';
 import { NoticeType } from '../datatypes/Notice';
 import { NotificationStatus } from '../datatypes/Notification';
 
@@ -216,7 +217,7 @@ router.post(
       const id = await PasswordReset.put(passwordReset);
 
       await sendEmail(user.email, 'Password Reset', 'password_reset', {
-          id,
+        id,
       });
 
       req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
@@ -354,6 +355,7 @@ router.post(
         emailVerified: false,
         token: uuid.v4(),
         dateCreated: new Date().valueOf(),
+        defaultPrinting: DefaultPrintingPreference,
       };
 
       const salt = await bcrypt.genSalt(10);
@@ -727,8 +729,23 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
   try {
     const user = await User.getById(req.user.id);
 
+    const errors = [];
+    if (!['default', 'dark'].includes(req.body.theme)) {
+      errors.push({ msg: 'Theme must be valid.' });
+    }
+
+    if (![PrintingPreference.RECENT, PrintingPreference.FIRST].includes(req.body.defaultPrinting)) {
+      errors.push({ msg: 'Printing must be valid.' });
+    }
+
+    if (errors.length > 0) {
+      req.flash('danger', 'Error updating display settings: ' + errors.map((error) => error.msg).join(', '));
+      return redirect(req, res, '/user/account?nav=display');
+    }
+
     user.theme = req.body.theme;
     user.hideFeatured = req.body.hideFeatured === 'on';
+    user.defaultPrinting = req.body.defaultPrinting;
 
     await User.update(user);
 

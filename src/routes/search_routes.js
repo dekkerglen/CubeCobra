@@ -4,6 +4,8 @@ const { getMostReasonable, getReasonableCardByOracle, cardFromId } = require('..
 const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
 
+const { PrintingPreference } = require('../datatypes/Card');
+
 const { render } = require('../util/render');
 const { ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../util/cubefn');
@@ -40,7 +42,7 @@ const tokenize = (query) => {
   return tokens;
 };
 
-const getCardQueries = (tokens) => {
+const getCardQueries = (tokens, printing = PrintingPreference.RECENT) => {
   const queries = [];
 
   for (const token of tokens) {
@@ -51,7 +53,7 @@ const getCardQueries = (tokens) => {
     }
 
     if (split[0] === 'card') {
-      const card = getMostReasonable(split[1]);
+      const card = getMostReasonable(split[1], printing);
 
       if (card) {
         queries.push({ type: 'card', value: card.oracle_id });
@@ -297,7 +299,7 @@ const searchCubes = async (query, order, lastKey, ascending, user) => {
   // separate query into tokens, respecting quotes
   const tokens = tokenize(query);
 
-  const cardQueries = getCardQueries(tokens);
+  const cardQueries = getCardQueries(tokens, user?.defaultPrinting);
   const keywordQueries = getKeywordQueries(tokens);
   const tagQueries = getTagQueries(tokens);
 
