@@ -7,7 +7,7 @@ import 'module-alias/register';
 
 import type DraftType from '../datatypes/Draft';
 import Draft from '../dynamo/models/draft';
-import { initializeCardDb } from '../util/carddb';
+import { initializeCardDb } from '../util/cardCatalog';
 import { getDrafterState } from '../util/draftutil';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {

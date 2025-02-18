@@ -15,7 +15,7 @@ const rateLimit = require('express-rate-limit');
 const DynamoDBStore = require('dynamodb-store');
 const cloudwatch = require('./util/cloudwatch');
 const { updateCardbase } = require('./util/updatecards');
-const carddb = require('./util/carddb');
+const cardCatalog = require('./util/cardCatalog');
 const { render } = require('./util/render');
 const flash = require('connect-flash');
 
@@ -45,7 +45,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
 
 // do this before https redirect
 app.post('/healthcheck', (req, res) => {
@@ -234,7 +233,6 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
   );
 }
 
-
 app.use((req, res, next) => {
   if (req.user && req.user.roles.includes('Banned')) {
     req.session.destroy(() => {
@@ -295,7 +293,7 @@ schedule.scheduleJob('0 10 * * *', async () => {
 });
 
 // Start server after carddb is initialized.
-carddb.initializeCardDb().then(async () => {
+cardCatalog.initializeCardDb().then(async () => {
   http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
   // eslint-disable-next-line no-console
   console.info(`Server started on port ${process.env.PORT || 5000}...`);

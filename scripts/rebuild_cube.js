@@ -1,6 +1,6 @@
 const cubeId = '63ddcf7a75838178427ea858';
 
-const { initializeCardDb } = require('../src/util/carddb');
+const { initializeCardDb } = require('../src/util/cardCatalog');
 
 const ChangeLog = require('../src/dynamo/models/changelog');
 const Cube = require('../src/dynamo/models/cube');
