@@ -20,7 +20,7 @@ export interface CardMetadata {
   mostSimilar: OracleIdIndex;
 }
 
-interface Catalog {
+export interface Catalog {
   cardtree: Record<string, any>;
   imagedict: Record<string, any>;
   cardimages: Record<string, any>;
