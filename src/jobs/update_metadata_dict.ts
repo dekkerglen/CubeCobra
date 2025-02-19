@@ -4,7 +4,8 @@ require('dotenv').config();
 
 const fs = require('fs');
 const { DefaultElo } = require('../datatypes/Card');
-import carddb, { cardFromId, CardMetadata, initializeCardDb, Related } from '../util/carddb';
+import { CardMetadata, initializeCardDb, Related } from '../util/cardCatalog';
+import carddb, { cardFromId } from '../util/carddb';
 const { encode, oracleInData } = require('../util/ml');
 const correlationLimit = 36;
 // import { HierarchicalNSW } from 'hnswlib-node';

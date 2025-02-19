@@ -9,6 +9,7 @@ import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
 import CubeContext from 'contexts/CubeContext';
+import { PrintingPreference } from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
 
 import { getLabels } from '../../utils/Sort';
@@ -82,8 +83,8 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
               value={formData.defaultPrinting}
               setValue={(defaultPrinting) => setFormData({ ...formData, defaultPrinting })}
               options={[
-                { value: 'recent', label: 'Most Recent' },
-                { value: 'first', label: 'First' },
+                { value: PrintingPreference.RECENT, label: 'Most Recent' },
+                { value: PrintingPreference.FIRST, label: 'First' },
               ]}
             />
           </Flexbox>

@@ -19,7 +19,8 @@ import { CardDetails, ColorCategory, DefaultElo } from 'datatypes/Card';
 import { ManaSymbol } from 'datatypes/Mana';
 
 import * as cardutil from '../client/utils/cardutil';
-import { CardMetadata, fileToAttribute, reasonableCard } from '../util/carddb';
+import { CardMetadata, fileToAttribute } from '../util/cardCatalog';
+import { reasonableCard } from '../util/carddb';
 import * as util from '../util/util';
 
 interface ScryfallCard {
@@ -33,6 +34,7 @@ interface ScryfallCard {
   reprint: boolean;
   border_color: string;
   promo: boolean;
+  promo_types: string[];
   digital: boolean;
   finishes: string[];
   prices: {
@@ -527,6 +529,7 @@ function convertCard(
     ck: ckPrice,
     mp: mpPrice,
   };
+  newcard.promo_types = card.promo_types || undefined;
 
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';

@@ -1,74 +1,8 @@
-import json from 'big-json';
-import fs from 'fs';
-
-import { CardDetails } from 'datatypes/Card';
-
 import { filterCardsDetails, FilterFunction } from '../client/filtering/FilterCards';
 import { detailsToCard } from '../client/utils/cardutil';
 import { SortFunctions } from '../client/utils/Sort';
-
-type OracleIdIndex = number;
-
-export interface Related {
-  top: OracleIdIndex[];
-  creatures: OracleIdIndex[];
-  spells: OracleIdIndex[];
-  other: OracleIdIndex[];
-}
-export interface CardMetadata {
-  cubedWith: Related;
-  draftedWith: Related;
-  synergistic: Related;
-  elo: number;
-  popularity: number;
-  cubes: number;
-  picks: number;
-  mostSimilar: OracleIdIndex;
-}
-
-interface Catalog {
-  cardtree: Record<string, any>;
-  imagedict: Record<string, any>;
-  cardimages: Record<string, any>;
-  cardnames: string[];
-  full_names: string[];
-  nameToId: Record<string, string[]>;
-  oracleToId: Record<string, string[]>;
-  english: Record<string, string>;
-  _carddict: Record<string, any>;
-  indexToOracle: string[];
-  metadatadict: Record<string, CardMetadata>;
-  printedCardList: any[];
-}
-
-const catalog: Catalog = {
-  cardtree: {},
-  imagedict: {},
-  cardimages: {},
-  cardnames: [],
-  full_names: [],
-  nameToId: {},
-  oracleToId: {},
-  english: {},
-  _carddict: {},
-  indexToOracle: [],
-  metadatadict: {},
-  printedCardList: [], // for card filters
-};
-
-export const fileToAttribute: Record<string, keyof Catalog> = {
-  'carddict.json': '_carddict',
-  'cardtree.json': 'cardtree',
-  'names.json': 'cardnames',
-  'nameToId.json': 'nameToId',
-  'oracleToId.json': 'oracleToId',
-  'full_names.json': 'full_names',
-  'imagedict.json': 'imagedict',
-  'cardimages.json': 'cardimages',
-  'english.json': 'english',
-  'indexToOracle.json': 'indexToOracle',
-  'metadatadict.json': 'metadatadict',
-};
+import { CardDetails, PrintingPreference } from '../datatypes/Card';
+import catalog from './cardCatalog';
 
 // eslint-disable-next-line camelcase
 export function getPlaceholderCard(scryfall_id: string): CardDetails {
@@ -130,46 +64,6 @@ export function cardFromId(id: string): CardDetails {
   return details;
 }
 
-async function loadJSONFile(filename: string, attribute: keyof Catalog) {
-  return new Promise<void>((resolve, reject) => {
-    try {
-      const readStream = fs.createReadStream(filename);
-      const parseStream = json.createParseStream();
-
-      parseStream.on('data', (parsed) => {
-        catalog[attribute] = parsed;
-      });
-
-      readStream.pipe(parseStream);
-
-      readStream.on('end', () => {
-        // eslint-disable-next-line no-console
-        console.info(`Loaded ${filename} into ${attribute}`);
-        resolve();
-      });
-    } catch (e) {
-      reject(e);
-    }
-  });
-}
-
-export async function loadAllFiles() {
-  await Promise.all(
-    Object.entries(fileToAttribute).map(([filename, attribute]) => loadJSONFile(`private/${filename}`, attribute)),
-  );
-}
-
-export async function initializeCardDb() {
-  // eslint-disable-next-line no-console
-  console.info('Loading carddb...');
-  await loadAllFiles();
-
-  catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !card.digital && !card.isToken);
-
-  // eslint-disable-next-line no-console
-  console.info('Finished loading carddb.');
-}
-
 export function reasonableCard(card: CardDetails): boolean {
   return (
     !card.isExtra &&
@@ -212,8 +106,11 @@ export function getIdsFromName(name: string): string[] {
   return catalog.nameToId[getNameForComparison(name)];
 }
 
-// Printing = 'recent' or 'first'
-export function getMostReasonable(cardName: string, printing = 'recent', filter?: FilterFunction): CardDetails | null {
+export function getMostReasonable(
+  cardName: string,
+  printing: PrintingPreference = PrintingPreference.RECENT,
+  filter?: FilterFunction,
+): CardDetails | null {
   let ids = getIdsFromName(cardName);
   if (ids === undefined || ids.length === 0) {
     // Try getting it by ID in case this is an ID.
@@ -250,14 +147,18 @@ export function getMostReasonable(cardName: string, printing = 'recent', filter?
   ids = cards.map((card) => card.details.scryfall_id);
 
   // Ids have been sorted from oldest to newest. So reverse if we want the newest printing.
-  if (printing === 'recent') {
+  if (printing === PrintingPreference.RECENT) {
     ids = [...ids];
     ids.reverse();
   }
   return cardFromId(ids.find(reasonableId) || ids[0]);
 }
 
-export function getMostReasonableById(id: string, printing = 'recent', filter?: FilterFunction): CardDetails | null {
+export function getMostReasonableById(
+  id: string,
+  printing: PrintingPreference = PrintingPreference.RECENT,
+  filter?: FilterFunction,
+): CardDetails | null {
   const card = cardFromId(id);
   if (card.error) {
     return null;
@@ -349,14 +250,17 @@ export function getOracleForMl(oracleId: string): string {
   return indexToReasonable(related.mostSimilar).oracle_id;
 }
 
-export function getAllMostReasonable(filter: FilterFunction): CardDetails[] {
+export function getAllMostReasonable(
+  filter: FilterFunction,
+  printing: PrintingPreference = PrintingPreference.RECENT,
+): CardDetails[] {
   const cards = filterCardsDetails(catalog.printedCardList, filter);
 
   const keys = new Set();
   const filtered = [];
   for (const card of cards) {
     if (!keys.has(card.name_lower)) {
-      filtered.push(getMostReasonableById(card.scryfall_id, 'recent', filter));
+      filtered.push(getMostReasonableById(card.scryfall_id, printing, filter));
       keys.add(card.name_lower);
     }
   }
