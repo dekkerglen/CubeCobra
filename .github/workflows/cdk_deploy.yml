@@ -28,8 +28,8 @@ on:
         type: string
 
 env:
-  EMAIL_USER: ${{ secrets.EMAIL_USER }}
-  EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+  EMAIL_CONFIG_USERNAME: ${{ secrets.EMAIL_CONFIG_USERNAME }}
+  EMAIL_CONFIG_PASSWORD: ${{ secrets.EMAIL_CONFIG_PASSWORD }}
   JOBS_TOKEN: ${{ secrets.JOBS_TOKEN }}
   PATREON_CLIENT_ID: ${{ secrets.PATREON_CLIENT_ID }}
   PATREON_CLIENT_SECRET: ${{ secrets.PATREON_CLIENT_SECRET }}

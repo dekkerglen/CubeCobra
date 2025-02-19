@@ -1006,17 +1006,10 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     const cards = await Cube.getCards(cube.id);
 
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
-      let pack;
-      try {
-        pack = await generatePack(cube, cards, req.params.seed);
-      } catch (err) {
-        req.flash('danger', err.message);
-        return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
-      }
+      const pack = await generatePack(cube, cards, req.params.seed);
 
       if (pack.pack.some((card) => !card.imgUrl && !card.details.image_normal)) {
-        req.flash('danger', 'One or more cards in this pack are missing images.');
-        return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+        throw new Error('One or more cards in this pack are missing images.');
       }
 
       // Try to make it roughly 5 times as wide as it is tall in cards.
@@ -1039,7 +1032,8 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     });
     return res.end(imageBuffer);
   } catch (err) {
-    return handleRouteError(req, res, err, '/404');
+    req.flash('danger', err.message);
+    return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
   }
 });
 

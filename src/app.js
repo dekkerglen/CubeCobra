@@ -38,7 +38,7 @@ app.use((req, res, next) => {
   res.setHeader = (name, value) => {
     if (res.headersSent) {
       // eslint-disable-next-line no-console
-      console.warn(`Headers already set at path: ${req.path}`);
+      console.warn(`Headers already set at path: ${req.path} with body ${JSON.stringify(req.body)}`);
     }
     return originalSetHeader.call(res, name, value);
   };

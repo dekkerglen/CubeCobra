@@ -29,7 +29,7 @@ const ensureRole = (role) => async (req, res, next) => {
 const csrfProtection = [
   csurf(),
   (req, res, next) => {
-    const {nickname, recaptcha} = req.body;
+    const {nickname} = req.body;
 
     if (nickname !== undefined && nickname !== 'Your Nickname') {
       // probably a malicious request

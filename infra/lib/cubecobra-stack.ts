@@ -5,7 +5,7 @@ import { CfnInstanceProfile, ManagedPolicy, Role, ServicePrincipal } from 'aws-c
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
-import { ParameterValueType } from 'aws-cdk-lib/aws-ssm/lib/parameter';
+import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
 import { Certificates } from './certificates';
 import { ECR } from './ecr';

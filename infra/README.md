@@ -32,8 +32,8 @@ The following environment variables must be set:
 
 | Name                     |
 |--------------------------|
-| `EMAIL_USER`             |
-| `EMAIL_PASS`             |
+| `EMAIL_CONFIG_USERNAME`             |
+| `EMAIL_CONFIG_PASSWORD`             |
 | `JOBS_TOKEN`             |
 | `PATREON_CLIENT_ID`      |
 | `PATREON_CLIENT_SECRET`  |

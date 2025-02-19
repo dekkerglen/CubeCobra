@@ -1,4 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
+// use dotenv
+import { config as dotenvConfig } from 'dotenv';
+dotenvConfig();
+
 import * as cdk from 'aws-cdk-lib';
 
 import 'source-map-support/register';
@@ -36,8 +40,8 @@ if (bootstrap && bootstrap === 'true') {
     {
       accessKey: process.env.AWS_ACCESS_KEY_ID || '',
       secretKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-      emailUser: process.env.EMAIL_USER || '',
-      emailPass: process.env.EMAIL_PASS || '',
+      emailUser: process.env.EMAIL_CONFIG_USERNAME || '',
+      emailPass: process.env.EMAIL_CONFIG_PASSWORD || '',
       domain: config.domain,
       environmentName: environment,
       version: version,
