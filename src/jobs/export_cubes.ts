@@ -8,7 +8,8 @@ import Card from 'datatypes/Card';
 import { cardOracleId } from 'utils/cardutil';
 
 import type CubeType from '../datatypes/Cube';
-import { getAllOracleIds, initializeCardDb } from '../util/carddb';
+import { initializeCardDb } from '../util/cardCatalog';
+import { getAllOracleIds } from '../util/carddb';
 
 const Cube = require('../dynamo/models/cube');
 

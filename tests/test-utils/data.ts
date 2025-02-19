@@ -46,6 +46,7 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
   collector_number: '123',
   released_at: '',
   promo: false,
+  promo_types: undefined,
   reprint: false,
   digital: false,
   full_name: generateRandomString(LETTERS, 10, 25),

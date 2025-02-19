@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const Cube = require('../src/dynamo/models/cube');
-const { initializeCardDb } = require('../src/util/carddb');
+const { initializeCardDb } = require('../src/util/cardCatalog');
 
 (async () => {
   try {

@@ -13,7 +13,8 @@ import type ChangeLogType from 'datatypes/ChangeLog';
 import { Period, UnhydratedCardHistory } from '../datatypes/History';
 import CardHistory from '../dynamo/models/cardhistory';
 import ChangeLog from '../dynamo/models/changelog';
-import { cardFromId, initializeCardDb } from '../util/carddb';
+import { initializeCardDb } from '../util/cardCatalog';
+import { cardFromId } from '../util/carddb';
 import { getCubeTypes } from '../util/cubefn';
 
 type CubeDict = Record<string, string[]>;

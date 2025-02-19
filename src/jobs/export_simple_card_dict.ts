@@ -4,7 +4,8 @@ import fs from 'fs';
 
 import 'module-alias/register';
 
-import { getAllOracleIds, getMostReasonableById, getVersionsByOracleId, initializeCardDb } from '../util/carddb';
+import { initializeCardDb } from '../util/cardCatalog';
+import { getAllOracleIds, getMostReasonableById, getVersionsByOracleId } from '../util/carddb';
 
 (async () => {
   await initializeCardDb();

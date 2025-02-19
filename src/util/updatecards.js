@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const AWS = require('aws-sdk');
-const { fileToAttribute, loadAllFiles } = require('./carddb');
+const { fileToAttribute, loadAllFiles } = require('./cardCatalog');
 
 const downloadFromS3 = async (basePath = 'private') => {
   const s3 = new AWS.S3({
