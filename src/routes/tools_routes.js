@@ -85,6 +85,7 @@ router.get('/api/topcards', async (req, res) => {
       req.query.s,
       parseInt(req.query.p, 10),
       req.query.d,
+      'names',
       req?.user?.defaultPrinting,
     );
     res.status(200).send({
@@ -144,6 +145,7 @@ router.get('/topcards', async (req, res) => {
       req.query.s,
       parseInt(req.query.p, 10),
       req.query.d,
+      'names',
       req?.user?.defaultPrinting,
     );
 
