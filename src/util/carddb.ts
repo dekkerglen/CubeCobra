@@ -191,6 +191,14 @@ export function getReasonableCardByOracle(oracleId: string): CardDetails {
   return getFirstReasonable(ids);
 }
 
+export function getReasonableCardByOracleWithPrintingPreference(
+  oracleId: string,
+  printingPreference: PrintingPreference,
+): CardDetails {
+  const ids = catalog.oracleToId[oracleId];
+  return getMostReasonableByPrintingPreference(ids, printingPreference)!;
+}
+
 export function isOracleBasic(oracleId: string): boolean {
   return cardFromId(catalog.oracleToId[oracleId][0]).type.includes('Basic');
 }
