@@ -171,7 +171,7 @@ export enum PrintingPreference {
   RECENT = 'recent',
   FIRST = 'first',
 }
-export const DefaultPrintingPreference = PrintingPreference.RECENT;
+export const DefaultPrintingPreference = PrintingPreference.FIRST;
 
 export default interface Card {
   index?: number;
