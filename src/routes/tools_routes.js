@@ -169,12 +169,13 @@ router.get('/topcards', async (req, res) => {
 router.get('/card/:id', async (req, res) => {
   try {
     let { id } = req.params;
+    const printingPreference = req?.user?.defaultPrinting;
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
     const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = getMostReasonable(possibleName, req?.user?.defaultPrinting).scryfall_id;
+      id = getMostReasonable(possibleName, printingPreference).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
@@ -185,7 +186,7 @@ router.get('/card/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0], req?.user?.defaultPrinting).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0], printingPreference).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
@@ -202,8 +203,8 @@ router.get('/card/:id', async (req, res) => {
       history.items.push({});
     }
 
-    const related = getRelatedCards(card.oracle_id);
-    const mlSubstitution = getOracleForMl(card.oracle_id);
+    const related = getRelatedCards(card.oracle_id, printingPreference);
+    const mlSubstitution = getOracleForMl(card.oracle_id, printingPreference);
 
     const baseUrl = util.getBaseUrl();
     return render(
