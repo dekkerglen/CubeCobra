@@ -143,13 +143,17 @@ const packages = {
 
     let cardIds: string[] = [];
     if (document.cards) {
-      cardIds = document.cards.map((card) => {
-        if (typeof card !== 'string' && card.scryfall_id) {
-          return card.scryfall_id;
-        } else {
-          return card as string;
-        }
-      });
+      cardIds = document.cards
+        .map((card) => {
+          if (typeof card !== 'string' && card.scryfall_id) {
+            return card.scryfall_id;
+          } else if (typeof card === 'string') {
+            return card as string;
+          } else {
+            return undefined;
+          }
+        })
+        .filter((cardId) => cardId !== undefined);
     }
 
     await client.put({
