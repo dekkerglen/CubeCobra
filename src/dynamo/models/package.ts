@@ -68,7 +68,13 @@ const hydrate = async (pack?: UnhydratedCardPackage): Promise<CardPackage | unde
 
   const owner = await User.getById(pack.owner);
   const cards = pack.cards.map((c) => {
-    return cardFromId(c);
+    // @ts-expect-error -- Temporary solution for cards accidently saved to dynamo instead of card ids
+    if (typeof c !== 'string' && c.scryfall_id) {
+      // @ts-expect-error -- Temporary solution
+      return cardFromId(c.scryfall_id);
+    } else {
+      return cardFromId(c);
+    }
   });
 
   return createHydratedPackage(pack, owner, cards);
@@ -80,7 +86,13 @@ const batchHydrate = async (packs: UnhydratedCardPackage[]): Promise<CardPackage
   return packs.map((pack) => {
     const owner = owners.find((owner) => owner.id === pack.owner);
     const cards = pack.cards.map((c) => {
-      return cardFromId(c);
+      // @ts-expect-error -- Temporary solution for cards accidently saved to dynamo instead of card ids
+      if (typeof c !== 'string' && c.scryfall_id) {
+        // @ts-expect-error -- Temporary solution
+        return cardFromId(c.scryfall_id);
+      } else {
+        return cardFromId(c);
+      }
     });
 
     //Technically it is possible to not find an owner but let's assume our data is correct
