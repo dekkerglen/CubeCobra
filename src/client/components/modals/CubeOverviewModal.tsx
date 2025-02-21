@@ -49,6 +49,14 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
     getData();
   }, [csrfFetch]);
 
+  useEffect(() => {
+    /* The card count is used by getCubeDescription and unlike the rest of the cube state in this modal,
+     * the count can be changed by other pages. Thus override it to be sure its accurate compared to any local storage
+     */
+    setState({ ...state, cardCount: cube.cardCount });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- We only want this to trigger once, on load
+  }, []);
+
   const changeImage = useCallback(
     (image: string) => {
       setImagename(image);
