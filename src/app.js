@@ -18,6 +18,7 @@ const { updateCardbase } = require('./util/updatecards');
 const cardCatalog = require('./util/cardCatalog');
 const { render } = require('./util/render');
 const flash = require('connect-flash');
+const responseTime = require('response-time');
 
 import router from './router/router';
 
@@ -178,22 +179,6 @@ app.use('/cube/api/history', apiLimiter);
 app.use((req, res, next) => {
   req.uuid = uuid.v4();
 
-  cloudwatch.info(
-    JSON.stringify(
-      {
-        id: req.uuid,
-        method: req.method,
-        path: req.originalUrl,
-        user_id: req.user ? req.user.id : null,
-        username: req.user ? req.user.username : null,
-        remoteAddr: req.ip,
-        body: req.body,
-      },
-      null,
-      2,
-    ),
-  );
-
   req.logger = {
     error: (...messages) => {
       cloudwatch.error(
@@ -222,6 +207,32 @@ app.use((req, res, next) => {
   res.locals.requestId = req.uuid;
   next();
 });
+
+//After static routes so we don't bother logging response times for static assets
+const responseTimer = responseTime((req, res, time) => {
+  const responseHeaders = res.getHeaders();
+  const contentLength = responseHeaders['content-length'] ? parseInt(responseHeaders['content-length'], 10) : -1;
+
+  cloudwatch.info(
+    JSON.stringify(
+      {
+        id: req.uuid,
+        method: req.method,
+        path: req.originalUrl,
+        user_id: req.user ? req.user.id : null,
+        username: req.user ? req.user.username : null,
+        remoteAddr: req.ip,
+        body: req.body,
+        duration: Math.round(time * 100) / 100, //Rounds to 2 decimal places
+        status: res.statusCode,
+        responseSize: contentLength,
+      },
+      null,
+      2,
+    ),
+  );
+});
+app.use(responseTimer);
 
 // check for downtime
 
