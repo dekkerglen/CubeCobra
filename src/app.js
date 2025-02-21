@@ -21,6 +21,7 @@ const flash = require('connect-flash');
 const responseTime = require('response-time');
 
 import router from './router/router';
+import { sanitizeHttpBody } from './util/logging';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason) => {
@@ -222,7 +223,7 @@ const responseTimer = responseTime((req, res, time) => {
         user_id: req.user ? req.user.id : null,
         username: req.user ? req.user.username : null,
         remoteAddr: req.ip,
-        body: req.body,
+        body: sanitizeHttpBody(req.body),
         duration: Math.round(time * 100) / 100, //Rounds to 2 decimal places
         status: res.statusCode,
         responseSize: contentLength,
