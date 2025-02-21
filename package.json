@@ -169,6 +169,7 @@
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
+    "response-time": "^2.3.3",
     "rss": "^1.2.2",
     "rss-parser": "^3.13.0",
     "sanitize-html": "^2.11.0",
