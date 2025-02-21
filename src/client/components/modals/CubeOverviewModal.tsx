@@ -5,6 +5,7 @@ import { getCubeDescription } from 'utils/Util';
 import Cube from '../../../datatypes/Cube';
 import Image from '../../../datatypes/Image';
 import { CSRFContext } from '../../contexts/CSRFContext';
+import useLocalStorage from '../../hooks/useLocalStorage';
 import AutocompleteInput from '../base/AutocompleteInput';
 import Button from '../base/Button';
 import { Card, CardHeader } from '../base/Card';
@@ -27,8 +28,8 @@ interface CubeOverviewModalProps {
 
 const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, cube }) => {
   const { csrfFetch } = useContext(CSRFContext);
-  const [state, setState] = useState<Cube>(JSON.parse(JSON.stringify(cube)));
-  const [imagename, setImagename] = useState(cube.imageName);
+  const [state, setState] = useLocalStorage<Cube>(`${cube.id}-overview-state`, JSON.parse(JSON.stringify(cube)));
+  const [imagename, setImagename] = useLocalStorage(`${cube.id}-overview-imagename`, cube.imageName);
   const [imageDict, setImageDict] = useState<Record<string, Image>>({});
   const formRef = React.createRef<HTMLFormElement>();
 
@@ -55,7 +56,7 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
         setState({ ...state, imageName: image, image: imageDict[image.toLowerCase()] });
       }
     },
-    [imageDict, setState, state],
+    [imageDict, setImagename, setState, state],
   );
 
   return (
