@@ -182,6 +182,7 @@ app.use((req, res, next) => {
 
   req.logger = {
     error: (...messages) => {
+      res.locals.isError = true;
       cloudwatch.error(
         ...messages,
         JSON.stringify(
@@ -213,6 +214,7 @@ app.use((req, res, next) => {
 const responseTimer = responseTime((req, res, time) => {
   const responseHeaders = res.getHeaders();
   const contentLength = responseHeaders['content-length'] ? parseInt(responseHeaders['content-length'], 10) : -1;
+  const isError = res.locals.isError ?? false;
 
   cloudwatch.info(
     JSON.stringify(
@@ -226,6 +228,7 @@ const responseTimer = responseTime((req, res, time) => {
         body: sanitizeHttpBody(req.body),
         duration: Math.round(time * 100) / 100, //Rounds to 2 decimal places
         status: res.statusCode,
+        isError: isError,
         responseSize: contentLength,
       },
       null,
