@@ -8,6 +8,9 @@ export const createMockRequest = (partialRequest?: Partial<Request>): Request =>
     query: {},
     params: {},
     headers: {},
+    logger: {
+      error: jest.fn(),
+    },
     ...partialRequest,
   } as Request;
 };
@@ -38,6 +41,11 @@ class CallBuilder {
 
   withRequest(request: Partial<Request>): CallBuilder {
     this.request = request;
+    return this;
+  }
+
+  withQuery(query: any): CallBuilder {
+    this.request.query = query;
     return this;
   }
 
