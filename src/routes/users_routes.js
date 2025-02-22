@@ -24,6 +24,7 @@ const uuid = require('uuid');
 import { DefaultPrintingPreference, PrintingPreference } from '../datatypes/Card';
 import { NoticeType } from '../datatypes/Notice';
 import { NotificationStatus } from '../datatypes/Notification';
+import { DefaultGridTightnessPreference, GridTightnessPreference } from '../datatypes/User';
 
 const router = express.Router();
 
@@ -356,6 +357,7 @@ router.post(
         token: uuid.v4(),
         dateCreated: new Date().valueOf(),
         defaultPrinting: DefaultPrintingPreference,
+        gridTightness: DefaultGridTightnessPreference,
       };
 
       const salt = await bcrypt.genSalt(10);
@@ -738,6 +740,10 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
       errors.push({ msg: 'Printing must be valid.' });
     }
 
+    if (![GridTightnessPreference.TIGHT, GridTightnessPreference.LOOSE].includes(req.body.gridTightness)) {
+      errors.push({ msg: 'Grid tightness must be valid.' });
+    }
+
     if (errors.length > 0) {
       req.flash('danger', 'Error updating display settings: ' + errors.map((error) => error.msg).join(', '));
       return redirect(req, res, '/user/account?nav=display');
@@ -746,6 +752,7 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
     user.theme = req.body.theme;
     user.hideFeatured = req.body.hideFeatured === 'on';
     user.defaultPrinting = req.body.defaultPrinting;
+    user.gridTightness = req.body.gridTightness;
 
     await User.update(user);
 

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import classNames from 'classnames';
 
 import Card from '../../../datatypes/Card';
+import { GridTightnessPreference } from '../../../datatypes/User';
+import UserContext from '../../contexts/UserContext';
 import { Col, NumCols, Row } from '../base/Layout';
 import FoilCardImage from '../FoilCardImage';
 import { CardImageProps } from './CardImage';
@@ -26,10 +28,20 @@ export interface CardGridProps {
 const CardGrid: React.FC<CardGridProps> = ({ 
   cards, cardProps, xs, sm, md, lg, xl, xxl, hrefFn, onClick, className, ratings, selectedIndex 
 }) => {
-  const maxRating = ratings ? Math.max(...(ratings.filter(r => r !== undefined))) : null;
-  
+  const maxRating = ratings ? Math.max(...ratings.filter((r) => r !== undefined)) : null;
+  const user = useContext(UserContext);
+
   return (
-    <Row xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl} className={className}>
+    <Row
+      xs={xs}
+      sm={sm}
+      md={md}
+      lg={lg}
+      xl={xl}
+      xxl={xxl}
+      className={className}
+      gutters={user?.gridTightness === GridTightnessPreference.TIGHT ? 0 : 2}
+    >
       {cards.map((card, cardIndex) => {
         const isHighestRated = ratings?.[cardIndex] === maxRating;
         const wasSelected = cardIndex === selectedIndex;
