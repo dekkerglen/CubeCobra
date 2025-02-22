@@ -1,8 +1,11 @@
 import { Dispatch, SetStateAction, useMemo, useState } from 'react';
 
+export const SortDirections: string[] = ['ascending', 'descending'];
+export type SortDirectionsType = (typeof SortDirections)[number];
+
 export interface SortConfig {
   key: string;
-  direction: 'ascending' | 'descending';
+  direction: SortDirectionsType;
 }
 
 interface SortFns {
