@@ -5,6 +5,7 @@ import request from 'supertest';
 
 import Cube from '../../src/dynamo/models/cube';
 import Draft from '../../src/dynamo/models/draft';
+import { RequestHandler } from '../../src/types/express';
 import { createCardDetails, createCube } from '../test-utils/data';
 
 jest.mock('../../src/util/draftbots', () => ({
@@ -29,7 +30,8 @@ describe('Publish', () => {
   beforeAll(async () => {
     app = express();
     app.use(express.json());
-    app.post('/api/draftmancer/publish', ...routes[0].handler);
+    //Need to type as our RequestHandler or Typescript gets angry
+    app.post('/api/draftmancer/publish', ...(routes[0].handler as RequestHandler[]));
 
     process.env.DRAFTMANCER_API_KEY = 'api-key';
   });
