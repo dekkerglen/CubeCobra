@@ -4,6 +4,9 @@ import User from 'src/datatypes/User';
 export interface Request extends express.Request {
   user?: User;
   flash: (type: string, message: string) => void;
+  logger: {
+    error: (...args: any[]) => void;
+  };
 }
 
 export interface Response extends express.Response {}
