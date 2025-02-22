@@ -1,6 +1,5 @@
 import CardHistory from '../../src/dynamo/models/cardhistory';
 import { getCardHistoryHandler, getZoomValue } from '../../src/router/routes/tool/cardhistory';
-import { Response } from '../../src/types/express';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';
 
@@ -69,15 +68,6 @@ describe('getZoomValue', () => {
 });
 
 describe('Cards History', () => {
-  let res: Partial<Response>;
-
-  beforeEach(() => {
-    res = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn(),
-    };
-  });
-
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -95,18 +85,17 @@ describe('Cards History', () => {
       ],
     });
 
-    await call(getCardHistoryHandler)
+    const res = await call(getCardHistoryHandler)
       .withBody({
         id: 'id',
         zoom: 'month',
         period: 'day',
       })
-      .withResponse(res)
       .send();
 
     expect(CardHistory.getByOracleAndType).toHaveBeenCalledWith('id', 'day', 30);
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({
       success: 'true',
       data: [
         {
@@ -123,18 +112,17 @@ describe('Cards History', () => {
   it('should handle errors gracefully', async () => {
     (CardHistory.getByOracleAndType as jest.Mock).mockRejectedValue(new Error('something went wrong'));
 
-    await call(getCardHistoryHandler)
+    const res = await call(getCardHistoryHandler)
       .withBody({
         id: 'id',
         zoom: 'month',
         period: 'day',
       })
-      .withResponse(res)
       .send();
 
     expect(CardHistory.getByOracleAndType).toHaveBeenCalledWith('id', 'day', 30);
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(500);
+    expect(res.body).toEqual({
       success: 'false',
       data: [],
     });

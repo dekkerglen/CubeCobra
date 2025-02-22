@@ -1,21 +1,11 @@
 import * as filterCards from '../../src/client/filtering/FilterCards';
 import { getTopCardsPage } from '../../src/router/routes/tool/api/topcards';
-import { Response } from '../../src/types/express';
 import * as tools from '../../src/util/tools';
 import { createCard } from '../test-utils/data';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';
 
 describe('Top cards API', () => {
-  let res: Partial<Response>;
-
-  beforeEach(() => {
-    res = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn(),
-    };
-  });
-
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -32,10 +22,10 @@ describe('Top cards API', () => {
     jest.spyOn(tools, 'searchCards');
     (tools.searchCards as jest.Mock).mockImplementation(() => ({ data: [], numResults: 0 }));
 
-    await call(getTopCardsPage).withQuery({ f: '', d: 'descending', s: 'Elo', p: 0 }).withResponse(res).send();
+    const res = await call(getTopCardsPage).withQuery({ f: '', d: 'descending', s: 'Elo', p: 0 }).send();
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({
       success: 'true',
       data: [],
       numResults: 0,
@@ -52,11 +42,11 @@ describe('Top cards API', () => {
     const searchCards = jest.spyOn(tools, 'searchCards');
     (tools.searchCards as jest.Mock).mockImplementation(() => ({ data: [], numResults: 0 }));
 
-    await call(getTopCardsPage).withQuery({ f: 'tall:yes', d: 'descending', s: 'Elo', p: 0 }).withResponse(res).send();
+    const res = await call(getTopCardsPage).withQuery({ f: 'tall:yes', d: 'descending', s: 'Elo', p: 0 }).send();
 
     expect(searchCards).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(400);
+    expect(res.body).toEqual({
       success: 'false',
       data: [],
       numResults: 0,
@@ -77,10 +67,10 @@ describe('Top cards API', () => {
     jest.spyOn(tools, 'searchCards');
     (tools.searchCards as jest.Mock).mockImplementation(() => ({ data: cards, numResults: 3 }));
 
-    await call(getTopCardsPage).withQuery({ f: '', d: 'descending', s: 'Elo', p: 0 }).withResponse(res).send();
+    const res = await call(getTopCardsPage).withQuery({ f: '', d: 'descending', s: 'Elo', p: 0 }).send();
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({
       success: 'true',
       data: cards,
       numResults: 3,
@@ -93,10 +83,10 @@ describe('Top cards API', () => {
       throw new Error('Failed to search');
     });
 
-    await call(getTopCardsPage).withQuery({ f: '', d: 'descending', s: 'Elo', p: 0 }).withResponse(res).send();
+    const res = await call(getTopCardsPage).withQuery({ f: '', d: 'descending', s: 'Elo', p: 0 }).send();
 
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(500);
+    expect(res.body).toEqual({
       success: 'false',
       data: [],
       numResults: 0,
