@@ -8,7 +8,7 @@ import { CardDetails } from '../../../datatypes/Card';
 import FilterContext from '../../contexts/FilterContext';
 import Banner from '../Banner';
 import Controls from '../base/Controls';
-import { Col, Flexbox,Row } from '../base/Layout';
+import { Col, Flexbox, Row } from '../base/Layout';
 import Link from '../base/Link';
 import Paginate from '../base/Pagination';
 import ResponsiveDiv from '../base/ResponsiveDiv';
@@ -40,6 +40,7 @@ const CardSearch: React.FC = () => {
 
     const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
     if (!response.ok) {
+      // eslint-disable-next-line no-console -- Debugging
       console.error(response);
     }
 
@@ -63,7 +64,7 @@ const CardSearch: React.FC = () => {
       setLoading(false);
       setCards([]);
     }
-  }, [page, direction, distinct, sort, filterInput]);
+  }, [page, direction, distinct, sort, filterInput, fetchData]);
 
   const updatePage = (index: number) => {
     setLoading(true);
