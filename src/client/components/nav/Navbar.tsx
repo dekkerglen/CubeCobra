@@ -3,6 +3,7 @@ import React, { useContext } from 'react';
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
 import Tooltip from 'components/base/Tooltip';
+import { getCubeId } from 'utils/Util';
 
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
@@ -92,7 +93,10 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
           <NavMenu label="Your Cubes" navBar>
             <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
               {(user.cubes || []).map((item) => (
-                <NavLink key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item.id}`}>
+                <NavLink
+                  key={`dropdown_cube_${item.name}`}
+                  href={`/cube/overview/${encodeURIComponent(getCubeId(item))}`}
+                >
                   {item.name}
                 </NavLink>
               ))}
