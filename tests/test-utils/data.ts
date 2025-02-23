@@ -23,6 +23,7 @@ export const generateRandomString = (alphabet: string, minLength: number, maxLen
  */
 export const createCard = (overrides?: Partial<Card>): Card => ({
   cardID: uuidv4(),
+  details: createCardDetails(),
   ...overrides,
 });
 
