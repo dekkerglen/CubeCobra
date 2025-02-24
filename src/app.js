@@ -294,7 +294,9 @@ schedule.scheduleJob('0 10 * * *', async () => {
 
 // Start server after carddb is initialized.
 cardCatalog.initializeCardDb().then(async () => {
-  http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
+  http.createServer(app).listen(process.env.PORT || 5000, process.env.LISTEN_ON || '127.0.0.1');
   // eslint-disable-next-line no-console
-  console.info(`Server started on port ${process.env.PORT || 5000}...`);
+  console.info(
+    `Server started on port ${process.env.PORT || 5000}, listening on ${process.env.LISTEN_ON || '127.0.0.1'}...`,
+  );
 });
