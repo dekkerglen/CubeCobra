@@ -48,7 +48,7 @@ const UserCubePage: React.FC<UserCubePageProps> = ({ owner, followers, following
                 </Col>
               </Row>
               {user && user.id === owner.id && (
-                <Button color="accent" block href="/user/account">
+                <Button type="link" color="accent" block href="/user/account">
                   Update
                 </Button>
               )}
