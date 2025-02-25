@@ -48,6 +48,7 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
     try {
       return calculateAsfans(cube, cards, parseInt(draftFormat || '-1', 10));
     } catch (e) {
+      // eslint-disable-next-line no-console -- Debugging
       console.error(
         'Invalid Draft Format',
         draftFormat,
@@ -56,7 +57,7 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
       );
       return {};
     }
-  }, [cards, draftFormat, useAsfans]);
+  }, [cube, cards, draftFormat, useAsfans]);
 
   const counts = useMemo(
     () =>

@@ -23,6 +23,7 @@ const Asfans: React.FC = () => {
     try {
       return calculateAsfans(cube, cards, parseInt(draftFormat));
     } catch (e) {
+      // eslint-disable-next-line no-console -- Debugging
       console.error('Invalid Draft Format', draftFormat, cube.formats[parseInt(draftFormat)], e);
       return {};
     }
