@@ -1,9 +1,9 @@
 import * as filterCards from '../../src/client/filtering/FilterCards';
-import { getTopCardsPage } from '../../src/router/routes/tool/api/topcards';
+import { getTopCardsPage, validateQuery } from '../../src/router/routes/tool/api/topcards';
 import * as tools from '../../src/util/tools';
 import { createCard } from '../test-utils/data';
 import { expectRegisteredRoutes } from '../test-utils/route';
-import { call } from '../test-utils/transport';
+import { call, middleware } from '../test-utils/transport';
 
 describe('Top cards API', () => {
   afterEach(() => {
@@ -102,5 +102,45 @@ describe('Top Cards Routes', () => {
         method: 'get',
       },
     ]);
+  });
+});
+
+describe('Top Cards validation', () => {
+  const assertPassingValidation = async (queryParams: any) => {
+    const res = await middleware(validateQuery).withQuery(queryParams).send();
+    expect(res.nextCalled).toBeTruthy();
+  };
+
+  const assertFailingValidation = async (queryParams: any) => {
+    const res = await middleware(validateQuery).withQuery(queryParams).send();
+    expect(res.status).toEqual(400);
+    expect(res.nextCalled).toBeFalsy();
+  };
+
+  it('should allow the default parameter values', async () => {
+    await assertPassingValidation({ f: '', d: 'descending', s: 'Elo', p: 0 });
+  });
+
+  it('all parameters must be set', async () => {
+    await assertFailingValidation({ d: 'descending', s: 'Elo', p: 0 });
+    await assertFailingValidation({ f: 'Ambush Viper', s: 'Elo', p: 0 });
+    await assertFailingValidation({ f: 'Ambush Viper', d: 'descending', p: 0 });
+    await assertFailingValidation({ f: 'Ambush Viper', d: 'descending', s: 'Elo' });
+  });
+
+  it('should disallow invalid directions', async () => {
+    await assertFailingValidation({ f: '', d: 'foo', s: 'Elo', p: 0 });
+  });
+
+  it('should disallow invalid sorts', async () => {
+    await assertFailingValidation({ f: '', d: 'ascending', s: 'Prime', p: 0 });
+  });
+
+  it('should disallow negative pages', async () => {
+    await assertFailingValidation({ f: '', d: 'ascending', s: 'Elo', p: -1 });
+  });
+
+  it('page must be an integer', async () => {
+    await assertFailingValidation({ f: '', d: 'ascending', s: 'Elo', p: 1.5 });
   });
 });
