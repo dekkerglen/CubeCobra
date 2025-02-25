@@ -27,6 +27,15 @@ const redirect = (req, res, to) => {
   }
 };
 
+const getBundlesForPage = (page) => {
+  //Webpack-dev-server doesn't do splitting, so only need to include the page bundle which gets compiled on the fly
+  if (process.env?.NODE_ENV !== 'development') {
+    return [`/js/vendors.bundle.js`, `/js/commons.bundle.js`, `/js/${page}.bundle.js`];
+  } else {
+    return [`/js/${page}.bundle.js`];
+  }
+};
+
 const render = (req, res, page, reactProps = {}, options = {}) => {
   getCubes(req, async (cubes) => {
     if (req.user) {
@@ -71,7 +80,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       res.render('main', {
         reactHTML: null, // TODO renable ReactDOMServer.renderToString(React.createElement(page, reactProps)),
         reactProps: serialize(reactProps),
-        page,
+        bundles: getBundlesForPage(page),
         metadata: options.metadata,
         title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
         patron: req.user && (req.user.roles || []).includes('Patron'),

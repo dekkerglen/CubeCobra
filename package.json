@@ -19,7 +19,7 @@
     "webpack-dev-server": "NODE_OPTIONS=--max_old_space-size=18192 npx webpack serve --config webpack.dev.mjs",
     "nearley": "sh nearley/helper.sh",
     "ci-build": "npm run nearley && tsc -b && NODE_OPTIONS=--max_old_space_size=16384 node_modules/.bin/webpack --mode production --config webpack.prod.mjs",
-    "devstart": "npm run nearley --watch & npm run nodemon & npm run webpack-dev-server & npm run tailwind:watch & npx tailwindcss -i ./src/client/css/stylesheet.css -o ./public/css/stylesheet.css --watch=always",
+    "devstart": "npm run nearley --watch & npm run nodemon & npm run webpack-dev-server & npx tailwindcss -i ./src/client/css/stylesheet.css -o ./public/css/stylesheet.css --watch=always",
     "setup": "npm run nearley && npm run webpack --progress && node --max-old-space-size=8192 force_update.js",
     "cards": "node --max-old-space-size=8192 force_update.js",
     "download-model": "node --max-old-space-size=8192 src/jobs/download_model.js",
