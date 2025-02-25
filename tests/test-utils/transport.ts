@@ -8,19 +8,47 @@ export const createMockRequest = (partialRequest?: Partial<Request>): Request =>
     query: {},
     params: {},
     headers: {},
+    logger: {
+      error: jest.fn(),
+    },
     ...partialRequest,
   } as Request;
 };
 
-export const createMockResponse = (overrides?: Partial<Response>): Response => {
-  const res: Partial<Response> = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-    send: jest.fn(),
-    ...overrides,
-  } as Response;
+interface MockResponse extends Response {
+  statusCode: number;
+  responseBody: any;
+  writeEnabled: boolean;
 
-  return res as Response;
+  status(code: number): this;
+
+  json(payload: any): this;
+
+  send(payload: any): this;
+}
+
+export const createMockResponse = (): MockResponse => {
+  const res: Partial<MockResponse> = {
+    statusCode: 200,
+    responseBody: undefined,
+    writeEnabled: true,
+    status(code: number) {
+      this.statusCode = code;
+      return this as MockResponse;
+    },
+    json(payload: any) {
+      this.responseBody = payload;
+      this.writeEnabled = false;
+      return this as MockResponse;
+    },
+    send(payload: any) {
+      this.responseBody = payload;
+      this.writeEnabled = false;
+      return this as MockResponse;
+    },
+  };
+
+  return res as MockResponse;
 };
 
 type Handler = (req: Request, res: Response) => Promise<any | void>;
@@ -28,7 +56,6 @@ type Handler = (req: Request, res: Response) => Promise<any | void>;
 class CallBuilder {
   private readonly handler: Handler;
   private request: Partial<Request> = {};
-  private response: Partial<Response> = {};
   private user?: Partial<User>;
   private flash?: (type: string, message: string) => void;
 
@@ -38,6 +65,11 @@ class CallBuilder {
 
   withRequest(request: Partial<Request>): CallBuilder {
     this.request = request;
+    return this;
+  }
+
+  withQuery(query: any): CallBuilder {
+    this.request.query = query;
     return this;
   }
 
@@ -51,11 +83,6 @@ class CallBuilder {
     return this;
   }
 
-  withResponse(response: Partial<Response>): CallBuilder {
-    this.response = response;
-    return this;
-  }
-
   as(user: User): CallBuilder {
     this.user = user;
     return this;
@@ -66,7 +93,7 @@ class CallBuilder {
     return this;
   }
 
-  async send(): Promise<void> {
+  async send(): Promise<{ status: number; body: any }> {
     if (this.user) {
       this.request = { user: createUser(this.user), ...this.request };
     }
@@ -75,7 +102,12 @@ class CallBuilder {
       this.request = { flash: this.flash, ...this.request };
     }
 
-    return this.handler(createMockRequest(this.request), createMockResponse(this.response));
+    const req = createMockRequest(this.request);
+    const res = createMockResponse();
+
+    await this.handler(req, res);
+
+    return { status: res.statusCode, body: res.responseBody };
   }
 }
 

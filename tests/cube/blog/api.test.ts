@@ -9,7 +9,6 @@ import {
   getBlogPostsForCubeHandler,
   getMoreBlogPostsForCubeHandler,
 } from '../../../src/router/routes/cube/blog';
-import { Response } from '../../../src/types/express';
 import * as util from '../../../src/util/render';
 import { createBlogPost, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
@@ -343,24 +342,18 @@ describe('Delete a Blog Post', () => {
 
 describe('Blog Posts Pagination', () => {
   it('should retrieve more blog posts', async () => {
-    const res: Partial<Response> = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn(),
-    };
-
     const items = [createBlogPost(), createBlogPost()];
     const lastKey = { id: '12345', timestamp: 1234567 };
 
     (Blog.getByCube as jest.Mock).mockResolvedValue({ items, lastKey });
 
-    await call(getMoreBlogPostsForCubeHandler)
+    const res = await call(getMoreBlogPostsForCubeHandler)
       .withParams({ id: 'blog-id' })
       .withBody({ lastKey: 'last-key ' })
-      .withResponse(res)
       .send();
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({
       success: 'true',
       items,
       lastKey,
