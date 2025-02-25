@@ -54,6 +54,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         cubes,
         notifications: notifications.items,
         defaultPrinting: req.user.defaultPrinting,
+        gridTightness: req.user.gridTightness,
       };
     }
 

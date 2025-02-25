@@ -1,6 +1,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import { PrintingPreference } from '../../../datatypes/Card';
+import { DefaultPrintingPreference, PrintingPreference } from '../../../datatypes/Card';
+import { DefaultGridTightnessPreference, GridTightnessPreference } from '../../../datatypes/User';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import Checkbox from '../base/Checkbox';
@@ -11,12 +12,13 @@ import CSRFForm from '../CSRFForm';
 const UserThemeForm: React.FC = () => {
   const user = useContext(UserContext);
   const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'default');
-  const [defaultPrinting, setDefaultPrinting] = useState(user?.defaultPrinting || PrintingPreference.RECENT);
+  const [defaultPrinting, setDefaultPrinting] = useState(user?.defaultPrinting || DefaultPrintingPreference);
+  const [gridTightness, setGridTightness] = useState(user?.gridTightness || DefaultGridTightnessPreference);
   const [hideFeaturedCubes, setHideFeaturedCubes] = useState(user?.hideFeatured || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
-    () => ({ theme: selectedTheme, hideFeatured: `${hideFeaturedCubes}`, defaultPrinting }),
-    [selectedTheme, hideFeaturedCubes, defaultPrinting],
+    () => ({ theme: selectedTheme, hideFeatured: `${hideFeaturedCubes}`, defaultPrinting, gridTightness }),
+    [selectedTheme, hideFeaturedCubes, defaultPrinting, gridTightness],
   );
 
   return (
@@ -39,6 +41,15 @@ const UserThemeForm: React.FC = () => {
           options={[
             { value: PrintingPreference.RECENT, label: 'Most Recent' },
             { value: PrintingPreference.FIRST, label: 'First' },
+          ]}
+        />
+        <Select
+          label="Default grid tightness"
+          value={formData.gridTightness}
+          setValue={(value) => setGridTightness(value as GridTightnessPreference)}
+          options={[
+            { value: GridTightnessPreference.LOOSE, label: 'Loose' },
+            { value: GridTightnessPreference.TIGHT, label: 'Tight (no space)' },
           ]}
         />
         <Checkbox label="Hide featured cubes" checked={hideFeaturedCubes} setChecked={setHideFeaturedCubes} />

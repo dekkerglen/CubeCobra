@@ -1,4 +1,5 @@
 const { DefaultPrintingPreference } = require('../../datatypes/Card');
+const { DefaultGridTightnessPreference } = require('../../datatypes/User');
 const { getImageData } = require('../../util/imageutil');
 const createClient = require('../util');
 
@@ -70,6 +71,10 @@ const hydrate = (user) => {
   //Just nice to set the value instead of having undefined around
   if (!user.defaultPrinting) {
     user.defaultPrinting = DefaultPrintingPreference;
+  }
+  //Ensure a value is always set
+  if (!user.gridTightness) {
+    user.gridTightness = DefaultGridTightnessPreference;
   }
 
   return user;

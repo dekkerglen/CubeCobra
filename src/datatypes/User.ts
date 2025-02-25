@@ -3,6 +3,12 @@ import Cube from './Cube';
 import Image from './Image';
 import { Notification } from './Notification';
 
+export enum GridTightnessPreference {
+  TIGHT = 'tight',
+  LOOSE = 'loose',
+}
+export const DefaultGridTightnessPreference = GridTightnessPreference.LOOSE;
+
 export default interface User {
   id: string;
   username: string;
@@ -22,4 +28,5 @@ export default interface User {
   patron?: string;
   notifications?: Notification[];
   defaultPrinting?: PrintingPreference;
+  gridTightness?: GridTightnessPreference;
 }
