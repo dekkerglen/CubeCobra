@@ -10,7 +10,7 @@ import { searchCards } from '../../../../util/tools';
 const validSortNames = Object.keys(SortFunctions);
 
 const TopCardsQuerySchema = Joi.object({
-  f: Joi.string().empty('').optional(),
+  f: Joi.string().allow('').required(),
   s: Joi.string()
     .valid(...validSortNames)
     .required(),
