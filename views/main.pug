@@ -45,4 +45,5 @@ html(lang='en' class=theme)
  
 		script(type='text/javascript').
 			window.reactProps = !{reactProps};
-		script(src='/js/'+page+'.bundle.js')
+		each src in bundles
+			script(src=src)

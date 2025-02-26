@@ -201,7 +201,26 @@ export const cardType = (card: Partial<Card>): string => card.type_line ?? card.
 
 export const cardRarity = (card: Card): string => card.rarity ?? card.details?.rarity ?? '';
 
-export const cardAddedTime = (card: Card): Date | null => (card.addedTmsp ? new Date(Number(card.addedTmsp)) : null);
+export const cardAddedTime = (card: Card): Date | null => {
+  if (!card.addedTmsp) {
+    return null;
+  }
+
+  //Stored as a date formatted string. This is what the backend does when adding cards via Text/Names
+  const fromString = Date.parse(card.addedTmsp);
+  if (!Number.isNaN(fromString)) {
+    return new Date(fromString);
+  }
+
+  //Stored as a string of a unix timestamp. This is what the UI does when adding cards
+  const n = Number(card.addedTmsp);
+  //addedTmsp is a unix timestamp number
+  if (!Number.isNaN(n)) {
+    return new Date(n);
+  }
+
+  return null;
+};
 
 export const cardImageUrl = (card: Card): string =>
   card.imgUrl ?? card.details?.image_normal ?? card.details?.image_small ?? '';

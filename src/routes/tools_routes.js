@@ -6,7 +6,6 @@ const express = require('express');
 import { Period } from '../datatypes/History';
 import carddb, {
   cardFromId,
-  getAllMostReasonable,
   getEnglishVersion,
   getIdsFromName,
   getMostReasonable,
@@ -16,16 +15,16 @@ import carddb, {
   getRelatedCards,
 } from '../util/carddb';
 const cardutil = require('../client/utils/cardutil');
-const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../client/utils/Sort');
-const { makeFilter, filterCardsDetails } = require('../client/filtering/FilterCards');
+const { makeFilter } = require('../client/filtering/FilterCards');
 const generateMeta = require('../util/meta');
 const util = require('../util/util');
 const { csrfProtection } = require('./middleware');
 const { handleRouteError, render, redirect } = require('../util/render');
 
-const { PrintingPreference } = require('../datatypes/Card');
 const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
+
+const { searchCards } = require('../util/tools');
 
 const router = express.Router();
 
@@ -33,75 +32,6 @@ router.use(csrfProtection);
 
 /* Minimum number of picks for data to show up in Top cards list. */
 const MIN_PICKS = 100;
-/* Page size for results */
-const PAGE_SIZE = 96;
-
-const searchCards = (
-  filter,
-  sort = 'Elo',
-  page = 0,
-  direction = 'descending',
-  distinct = 'names',
-  printing = PrintingPreference.RECENT,
-) => {
-  const cards = [];
-
-  if (distinct === 'names') {
-    cards.push(...getAllMostReasonable(filter, printing));
-  } else {
-    cards.push(...filterCardsDetails(carddb.printedCardList, filter));
-  }
-
-  if (ORDERED_SORTS.includes(sort)) {
-    cards.sort(SortFunctionsOnDetails(sort));
-  }
-
-  if (direction === 'descending') {
-    cards.reverse();
-  }
-
-  page = parseInt(page, 10);
-
-  return {
-    numResults: cards.length,
-    data: cards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-  };
-};
-
-router.get('/api/topcards', async (req, res) => {
-  try {
-    const { err, filter } = makeFilter(`${req.query.f}`);
-    if (err) {
-      res.status(400).send({
-        success: 'false',
-        numResults: 0,
-        data: [],
-      });
-      return;
-    }
-
-    const { data, numResults } = searchCards(
-      filter,
-      req.query.s,
-      parseInt(req.query.p, 10),
-      req.query.d,
-      'names',
-      req?.user?.defaultPrinting,
-    );
-    res.status(200).send({
-      success: 'true',
-      data,
-      numResults,
-    });
-  } catch (err) {
-    req.logger.error(err.message, err.stack);
-    res.status(500).send({
-      success: 'false',
-      numResults: 0,
-      data: [],
-    });
-  }
-});
 
 router.get('/api/searchcards', async (req, res) => {
   try {
@@ -169,12 +99,13 @@ router.get('/topcards', async (req, res) => {
 router.get('/card/:id', async (req, res) => {
   try {
     let { id } = req.params;
+    const printingPreference = req?.user?.defaultPrinting;
 
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
     const ids = getIdsFromName(possibleName);
     if (ids) {
-      id = getMostReasonable(possibleName, req?.user?.defaultPrinting).scryfall_id;
+      id = getMostReasonable(possibleName, printingPreference).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
@@ -185,7 +116,7 @@ router.get('/card/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0], req?.user?.defaultPrinting).scryfall_id;
+      id = getMostReasonableById(carddb.oracleToId[id][0], printingPreference).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
@@ -202,8 +133,8 @@ router.get('/card/:id', async (req, res) => {
       history.items.push({});
     }
 
-    const related = getRelatedCards(card.oracle_id);
-    const mlSubstitution = getOracleForMl(card.oracle_id);
+    const related = getRelatedCards(card.oracle_id, printingPreference);
+    const mlSubstitution = getOracleForMl(card.oracle_id, printingPreference);
 
     const baseUrl = util.getBaseUrl();
     return render(

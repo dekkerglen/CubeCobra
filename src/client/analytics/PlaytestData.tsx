@@ -6,7 +6,7 @@ import { fromEntries } from 'utils/Util';
 import Card, { DefaultElo } from '../../datatypes/Card';
 import { Flexbox } from '../components/base/Layout';
 import ErrorBoundary from '../components/ErrorBoundary';
-import { compareStrings, SortableTable } from '../components/SortableTable';
+import { SortableTable } from '../components/SortableTable';
 import withAutocard from '../components/WithAutocard';
 import CubeContext from '../contexts/CubeContext';
 
@@ -36,6 +36,10 @@ const renderCardLink = (card: Card) => (
 
 const renderPercent = (val: number) => {
   return <>{parseInt((val * 1000).toString(), 10) / 10}%</>;
+};
+
+const compareCardNames = (a: Card, b: Card): number => {
+  return (a?.details?.name_lower || '').localeCompare(b.details?.name_lower || '');
 };
 
 const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
@@ -89,7 +93,7 @@ const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
             { key: 'mainboards', title: 'Mainboard Count', sortable: true, heading: false },
           ]}
           data={data}
-          sortFns={{ label: compareStrings }}
+          sortFns={{ card: compareCardNames }}
         />
       </ErrorBoundary>
     </Flexbox>

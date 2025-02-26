@@ -10,7 +10,6 @@ import {
   getHandler,
   reportHandler,
 } from '../../src/router/routes/comment';
-import { Response } from '../../src/types/express';
 import * as util from '../../src/util/render';
 import * as routeUtil from '../../src/util/util';
 import { createUser } from '../test-utils/data';
@@ -173,15 +172,6 @@ describe('Report Comment', () => {
 });
 
 describe('Get Comments', () => {
-  let res: Partial<Response>;
-
-  beforeEach(() => {
-    res = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn(),
-    };
-  });
-
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -194,19 +184,18 @@ describe('Get Comments', () => {
 
     (Comment.queryByParentAndType as jest.Mock).mockResolvedValue(mockComments);
 
-    await call(getCommentsHandler)
+    const res = await call(getCommentsHandler)
       .withRequest({
         body: {
           parent: 'parent123',
           lastKey: 'lastKey123',
         },
       })
-      .withResponse(res)
       .send();
 
     expect(Comment.queryByParentAndType).toHaveBeenCalledWith('parent123', 'lastKey123');
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({
       success: 'true',
       comments: mockComments.items,
       lastKey: mockComments.lastKey,
@@ -224,25 +213,14 @@ describe('Get Comments', () => {
           lastKey: 'lastKey123',
         },
       })
-      .withResponse(res)
       .send();
 
     expect(Comment.queryByParentAndType).toHaveBeenCalledWith('parent123', 'lastKey123');
     expect(util.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), mockError, '/404');
-    expect(res.status).not.toHaveBeenCalledWith(200);
   });
 });
 
 describe('Edit Comment', () => {
-  let res: Partial<Response>;
-
-  beforeEach(() => {
-    res = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn(),
-    };
-  });
-
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -250,7 +228,7 @@ describe('Edit Comment', () => {
   it('should return 404 if the comment does not exist', async () => {
     (Comment.getById as jest.Mock).mockResolvedValue(null);
 
-    await call(editCommentHandler)
+    const res = await call(editCommentHandler)
       .withRequest({
         body: {
           comment: {
@@ -260,12 +238,11 @@ describe('Edit Comment', () => {
           },
         },
       })
-      .withResponse(res)
       .send();
 
     expect(Comment.getById).toHaveBeenCalledWith('123');
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(404);
+    expect(res.body).toEqual({
       success: 'false',
       message: 'Comment not found.',
     });
@@ -277,7 +254,7 @@ describe('Edit Comment', () => {
       owner: createUser({ id: 'commenter' }),
     });
 
-    await call(editCommentHandler)
+    const res = await call(editCommentHandler)
       .as(createUser({ id: 'editor', username: 'editor' }))
       .withRequest({
         body: {
@@ -288,12 +265,11 @@ describe('Edit Comment', () => {
           },
         },
       })
-      .withResponse(res)
       .send();
 
     expect(Comment.getById).toHaveBeenCalledWith('123');
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(404);
+    expect(res.body).toEqual({
       success: 'false',
       message: 'Comment not found.',
     });
@@ -310,16 +286,15 @@ describe('Edit Comment', () => {
     (Comment.getById as jest.Mock).mockResolvedValue(comment);
     (Comment.put as jest.Mock).mockResolvedValue(undefined);
 
-    await call(editCommentHandler)
+    const res = await call(editCommentHandler)
       .as(commenter)
       .withRequest({
         body: { comment: { ...comment, remove: true } },
       })
-      .withResponse(res)
       .send();
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({ success: 'true' });
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({ success: 'true' });
     expect(Comment.put).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'comment-to-delete',
@@ -338,7 +313,7 @@ describe('Edit Comment', () => {
     });
     (Comment.put as jest.Mock).mockResolvedValue(undefined);
 
-    await call(editCommentHandler)
+    const res = await call(editCommentHandler)
       .as(commenter)
       .withRequest({
         body: {
@@ -349,7 +324,6 @@ describe('Edit Comment', () => {
           },
         },
       })
-      .withResponse(res)
       .send();
 
     expect(Comment.getById).toHaveBeenCalledWith('123');
@@ -360,20 +334,13 @@ describe('Edit Comment', () => {
         owner: commenter,
       }),
     );
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({ success: 'true' });
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({ success: 'true' });
   });
 });
 
 describe('Add Comment', () => {
-  let res: Partial<Response>;
-
   beforeEach(() => {
-    res = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn(),
-    };
-
     (Comment.put as jest.Mock).mockResolvedValue('comment-id');
     (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
 
@@ -391,7 +358,7 @@ describe('Add Comment', () => {
   it('should return 400 for an invalid comment type', async () => {
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(false);
 
-    await call(addCommentHandler)
+    const res = await call(addCommentHandler)
       .as(createUser())
       .withRequest({
         body: {
@@ -400,11 +367,10 @@ describe('Add Comment', () => {
           type: 'invalid',
         },
       })
-      .withResponse(res)
       .send();
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(400);
+    expect(res.body).toEqual({
       success: 'false',
       message: 'Invalid comment parent type.',
     });
@@ -416,7 +382,7 @@ describe('Add Comment', () => {
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
     (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
 
-    await call(addCommentHandler)
+    const res = await call(addCommentHandler)
       .as(commenter)
       .withRequest({
         body: {
@@ -425,7 +391,6 @@ describe('Add Comment', () => {
           type: 'comment',
         },
       })
-      .withResponse(res)
       .send();
 
     expect(Comment.put).toHaveBeenCalledWith(
@@ -437,8 +402,8 @@ describe('Add Comment', () => {
       }),
     );
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({
       success: 'true',
       comment: expect.objectContaining({
         owner: commenter,
@@ -463,7 +428,6 @@ describe('Add Comment', () => {
           type: 'comment',
         },
       })
-      .withResponse(res)
       .send();
 
     expect(routeUtil.addNotification).toHaveBeenCalledWith(

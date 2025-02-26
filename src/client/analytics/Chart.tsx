@@ -24,7 +24,9 @@ import CubeContext from '../contexts/CubeContext';
 import { calculateAsfans } from '../drafting/createdraft';
 import useQueryParam from '../hooks/useQueryParam';
 
+// eslint-disable-next-line no-console -- Debugging
 console.log('ChartJS', ChartJS);
+// eslint-disable-next-line no-console -- Debugging
 console.log('BarElement', BarElement);
 
 // Register the necessary Chart.js components
@@ -108,6 +110,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
     try {
       return calculateAsfans(cube, cards, parseInt(draftFormat, 10));
     } catch (e) {
+      // eslint-disable-next-line no-console -- Debugging
       console.error('Invalid Draft Format', draftFormat, cube.formats[parseInt(draftFormat, 10)], e);
       return {};
     }

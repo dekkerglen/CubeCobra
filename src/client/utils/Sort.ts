@@ -213,6 +213,7 @@ export const ORDERED_SORTS: string[] = [
   'Pick Count',
   'Collector number',
 ];
+export type OrderedSortsType = (typeof ORDERED_SORTS)[number];
 
 /**
  * Pad the collector number with zeros in order for string sorting to work numerically like.

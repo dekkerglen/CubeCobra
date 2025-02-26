@@ -10,7 +10,7 @@ import carddb, {
   getAllMostReasonable,
   getIdsFromName,
   getMostReasonable,
-  getReasonableCardByOracle,
+  getReasonableCardByOracleWithPrintingPreference,
 } from '../../util/carddb';
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../util/util');
@@ -805,6 +805,8 @@ router.post('/adds', async (req, res) => {
   let slice;
   let { length } = adds;
 
+  const cube = await Cube.getById(cubeID);
+
   if (filterText && filterText.length > 0) {
     const { err, filter } = makeFilter(`${filterText}`);
 
@@ -815,8 +817,6 @@ router.post('/adds', async (req, res) => {
         hasMoreAdds: false,
       });
     }
-
-    const cube = await Cube.getById(cubeID);
 
     const eligible = getAllMostReasonable(filter, cube.defaultPrinting);
     length = eligible.length;
@@ -830,7 +830,7 @@ router.post('/adds', async (req, res) => {
 
   return res.status(200).send({
     adds: slice.map((item) => {
-      const card = getReasonableCardByOracle(item.oracle);
+      const card = getReasonableCardByOracleWithPrintingPreference(item.oracle, cube.defaultPrinting);
       return {
         details: card,
         cardID: card.scryfall_id,
@@ -848,6 +848,7 @@ router.post('/cuts', async (req, res) => {
   const { cuts } = recommend(cards.mainboard.map((card) => card.details.oracle_id));
 
   let slice = cuts;
+  const cube = await Cube.getById(cubeID);
 
   if (filterText && filterText.length > 0) {
     const { err, filter } = makeFilter(`${filterText}`);
@@ -859,8 +860,6 @@ router.post('/cuts', async (req, res) => {
       });
     }
 
-    const cube = await Cube.getById(cubeID);
-
     const eligible = getAllMostReasonable(filter, cube.defaultPrinting);
 
     const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
@@ -870,7 +869,7 @@ router.post('/cuts', async (req, res) => {
 
   return res.status(200).send({
     cuts: slice.map((item) => {
-      const card = getReasonableCardByOracle(item.oracle);
+      const card = getReasonableCardByOracleWithPrintingPreference(item.oracle, cube.defaultPrinting);
       return {
         details: card,
         cardID: card.scryfall_id,

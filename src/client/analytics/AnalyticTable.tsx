@@ -22,7 +22,7 @@ const sortWithTotal: (pool: Card[], sort: string) => SortWithTotalResult = (pool
     (cards as Card[]).reduce((acc, card) => acc + card.asfan!, 0),
   ]);
 
-const AnalyticTable: React.FC = ({}) => {
+const AnalyticTable: React.FC = () => {
   const { cube, changedCards } = useContext(CubeContext);
   const cards = changedCards.mainboard;
   const [column, setColumn] = useQueryParam('column', 'Color Identity');
@@ -38,6 +38,7 @@ const AnalyticTable: React.FC = ({}) => {
     try {
       return calculateAsfans(cube, cards, parseInt(draftFormat, 10));
     } catch (e) {
+      // eslint-disable-next-line no-console -- Debugging
       console.error('Invalid Draft Format', draftFormat, cube.formats[parseInt(draftFormat)], e);
       return {};
     }

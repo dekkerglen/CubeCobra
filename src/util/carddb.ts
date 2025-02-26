@@ -111,13 +111,21 @@ export function getMostReasonable(
   printing: PrintingPreference = PrintingPreference.RECENT,
   filter?: FilterFunction,
 ): CardDetails | null {
-  let ids = getIdsFromName(cardName);
+  const ids = getIdsFromName(cardName);
   if (ids === undefined || ids.length === 0) {
     // Try getting it by ID in case this is an ID.
 
     return getMostReasonableById(cardName, printing);
   }
 
+  return getMostReasonableByPrintingPreference(ids, printing, filter);
+}
+
+export function getMostReasonableByPrintingPreference(
+  ids: string[],
+  printingPreference: PrintingPreference = PrintingPreference.RECENT,
+  filter?: FilterFunction,
+): CardDetails | null {
   if (filter) {
     ids = ids
       .map((id) => detailsToCard(cardFromId(id)))
@@ -147,7 +155,7 @@ export function getMostReasonable(
   ids = cards.map((card) => card.details.scryfall_id);
 
   // Ids have been sorted from oldest to newest. So reverse if we want the newest printing.
-  if (printing === PrintingPreference.RECENT) {
+  if (printingPreference === PrintingPreference.RECENT) {
     ids = [...ids];
     ids.reverse();
   }
@@ -183,6 +191,14 @@ export function getReasonableCardByOracle(oracleId: string): CardDetails {
   return getFirstReasonable(ids);
 }
 
+export function getReasonableCardByOracleWithPrintingPreference(
+  oracleId: string,
+  printingPreference: PrintingPreference,
+): CardDetails {
+  const ids = catalog.oracleToId[oracleId];
+  return getMostReasonableByPrintingPreference(ids, printingPreference)!;
+}
+
 export function isOracleBasic(oracleId: string): boolean {
   return cardFromId(catalog.oracleToId[oracleId][0]).type.includes('Basic');
 }
@@ -191,7 +207,20 @@ const indexToReasonable = (index: number): CardDetails => {
   return getFirstReasonable(catalog.oracleToId[catalog.indexToOracle[index]]);
 };
 
-export function getRelatedCards(oracleId: string): Record<string, Record<string, CardDetails[]>> {
+const indexToReasonableWithPrintingPreference = (
+  index: number,
+  printingPreference: PrintingPreference,
+): CardDetails => {
+  const ids = catalog.oracleToId[catalog.indexToOracle[index]];
+  //Use ! to tell Typescript we expect to always get a card here, because we are going through
+  //the catalog that CubeCobra built. Thus expect consistency
+  return getMostReasonableByPrintingPreference(ids, printingPreference)!;
+};
+
+export function getRelatedCards(
+  oracleId: string,
+  printingPreference: PrintingPreference,
+): Record<string, Record<string, CardDetails[]>> {
   const related = catalog.metadatadict[oracleId];
 
   if (!related) {
@@ -217,37 +246,45 @@ export function getRelatedCards(oracleId: string): Record<string, Record<string,
     };
   }
 
+  const mapper = (oracleIndex: number) => {
+    return indexToReasonableWithPrintingPreference(oracleIndex, printingPreference);
+  };
+
   return {
     cubedWith: {
-      top: related.cubedWith.top.map(indexToReasonable),
-      creatures: related.cubedWith.creatures.map(indexToReasonable),
-      spells: related.cubedWith.spells.map(indexToReasonable),
-      other: related.cubedWith.other.map(indexToReasonable),
+      top: related.cubedWith.top.map(mapper),
+      creatures: related.cubedWith.creatures.map(mapper),
+      spells: related.cubedWith.spells.map(mapper),
+      other: related.cubedWith.other.map(mapper),
     },
     draftedWith: {
-      top: related.draftedWith.top.map(indexToReasonable),
-      creatures: related.draftedWith.creatures.map(indexToReasonable),
-      spells: related.draftedWith.spells.map(indexToReasonable),
-      other: related.draftedWith.other.map(indexToReasonable),
+      top: related.draftedWith.top.map(mapper),
+      creatures: related.draftedWith.creatures.map(mapper),
+      spells: related.draftedWith.spells.map(mapper),
+      other: related.draftedWith.other.map(mapper),
     },
     synergistic: {
-      top: related.synergistic.top.map(indexToReasonable),
-      creatures: related.synergistic.creatures.map(indexToReasonable),
-      spells: related.synergistic.spells.map(indexToReasonable),
-      other: related.synergistic.other.map(indexToReasonable),
+      top: related.synergistic.top.map(mapper),
+      creatures: related.synergistic.creatures.map(mapper),
+      spells: related.synergistic.spells.map(mapper),
+      other: related.synergistic.other.map(mapper),
     },
   };
 }
 
 // if the oracle id is not in the training data, we will use the similar card in the metadata dict
-export function getOracleForMl(oracleId: string): string {
+export function getOracleForMl(oracleId: string, printingPreference: PrintingPreference | null): string {
   const related = catalog.metadatadict[oracleId];
 
   if (!related || related.mostSimilar === undefined) {
     return oracleId;
   }
 
-  return indexToReasonable(related.mostSimilar).oracle_id;
+  if (printingPreference) {
+    return indexToReasonableWithPrintingPreference(related.mostSimilar, printingPreference).oracle_id;
+  } else {
+    return indexToReasonable(related.mostSimilar).oracle_id;
+  }
 }
 
 export function getAllMostReasonable(

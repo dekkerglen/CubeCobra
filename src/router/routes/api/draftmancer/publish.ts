@@ -1,4 +1,3 @@
-import { NextFunction, Request, Response } from 'express-serve-static-core';
 import Joi from 'joi';
 
 import { cardCmc, cardType, detailsToCard } from '../../../../client/utils/cardutil';
@@ -8,6 +7,7 @@ import DraftType, { DraftmancerLog, DraftmancerPick } from '../../../../datatype
 import type DraftSeatType from '../../../../datatypes/DraftSeat';
 import Cube from '../../../../dynamo/models/cube';
 import Draft from '../../../../dynamo/models/draft';
+import { NextFunction, Request, Response } from '../../../../types/express';
 import { cardFromId, getReasonableCardByOracle } from '../../../../util/carddb';
 import { deckbuild } from '../../../../util/draftbots';
 import { setupPicks } from '../../../../util/draftutil';
@@ -260,7 +260,6 @@ export const handler = async (req: Request, res: Response) => {
       draftId,
     });
   } catch (error) {
-    // @ts-expect-error TODO: define request type with logger
     req.logger?.error('Error publishing draft', error);
     return res.status(500).json({ error: 'Error publishing draft' });
   }

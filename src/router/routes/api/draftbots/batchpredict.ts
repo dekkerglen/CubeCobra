@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response } from 'express-serve-static-core';
 import Joi from 'joi';
 
+import { NextFunction, Request, Response } from '../../../../types/express';
 import { draft } from '../../../../util/ml';
 
 interface PredictBody {
