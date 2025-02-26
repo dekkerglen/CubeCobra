@@ -7,7 +7,6 @@ import ManaPoolBulkButton from 'components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from 'components/purchase/TCGPlayerBulkButton';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 
-import User from '../../../datatypes/User';
 import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
@@ -55,11 +54,11 @@ const PrivateCubeIcon: React.FC<PrivateCubeIconProps> = ({ visibility }) => {
 interface CubeOverviewCardProps {
   priceOwned: number;
   pricePurchase: number;
-  followers: User[];
+  followersCount: number;
   followed: boolean;
 }
 
-const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwned, pricePurchase, followers }) => {
+const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwned, pricePurchase, followersCount }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const { cube } = useContext(CubeContext);
   const user = useContext(UserContext);
@@ -126,8 +125,8 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                   <Text semibold md>
                     {getCubeDescription(cube)}
                   </Text>
-                  <FollowersModalLink href="#" modalprops={{ followers }}>
-                    {(cube.following || []).length} {(cube.following || []).length === 1 ? 'follower' : 'followers'}
+                  <FollowersModalLink href="#" modalprops={{ id: cube.id, type: 'cube' }}>
+                    {followersCount} {followersCount === 1 ? 'follower' : 'followers'}
                   </FollowersModalLink>
                 </Flexbox>
                 <Flexbox direction="row" justify="between">

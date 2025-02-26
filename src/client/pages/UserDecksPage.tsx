@@ -15,7 +15,7 @@ import UserLayout from 'layouts/UserLayout';
 
 interface UserDecksPageProps {
   owner: User;
-  followers: User[];
+  followersCount: number;
   following: boolean;
   decks: Draft[];
   loginCallback?: string;
@@ -25,7 +25,7 @@ interface UserDecksPageProps {
 const PAGE_SIZE = 20;
 
 const UserDecksPage: React.FC<UserDecksPageProps> = ({
-  followers,
+  followersCount,
   following,
   decks,
   owner,
@@ -64,7 +64,7 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
 
       setLoading(false);
     }
-  }, [owner.id, currentLastKey, items, page]);
+  }, [csrfFetch, currentLastKey, items, page]);
 
   const pager = (
     <Pagination
@@ -72,6 +72,7 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
+        // eslint-disable-next-line no-console -- Debugging
         console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();
@@ -85,7 +86,7 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
+      <UserLayout user={owner} followersCount={followersCount} following={following} activeLink="decks">
         <DynamicFlash />
 
         <Card className="my-3">

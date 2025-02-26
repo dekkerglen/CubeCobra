@@ -16,7 +16,6 @@ import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import BlogPostType from 'datatypes/BlogPost';
 import Cube, { CubeCards } from 'datatypes/Cube';
-import User from 'datatypes/User';
 import useAlerts from 'hooks/UseAlerts';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -33,7 +32,7 @@ interface CubeOverviewProps {
   cube: Cube;
   cards: CubeCards;
   followed: boolean;
-  followers: User[];
+  followersCount: number;
   loginCallback: () => void;
 }
 
@@ -44,7 +43,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
   pricePurchase,
   cube,
   followed,
-  followers,
+  followersCount,
 }) => {
   const user = useContext(UserContext);
   const { alerts, addAlert } = useAlerts();
@@ -89,7 +88,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
           <CubeOverviewCard
             priceOwned={priceOwned}
             pricePurchase={pricePurchase}
-            followers={followers}
+            followersCount={followersCount}
             followed={followed}
           />
           {post && <BlogPost key={post.id} post={post} />}

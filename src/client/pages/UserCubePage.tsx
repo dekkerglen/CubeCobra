@@ -17,17 +17,23 @@ import UserLayout from 'layouts/UserLayout';
 
 interface UserCubePageProps {
   owner: User;
-  followers: User[];
+  followersCount: number;
   following: boolean;
   cubes: Cube[];
   loginCallback: string;
 }
 
-const UserCubePage: React.FC<UserCubePageProps> = ({ owner, followers, following, cubes, loginCallback = '/' }) => {
+const UserCubePage: React.FC<UserCubePageProps> = ({
+  owner,
+  followersCount,
+  following,
+  cubes,
+  loginCallback = '/',
+}) => {
   const user = useContext(UserContext);
   return (
     <MainLayout loginCallback={loginCallback}>
-      <UserLayout user={owner} followers={followers} following={following} activeLink="view">
+      <UserLayout user={owner} followersCount={followersCount} following={following} activeLink="view">
         <DynamicFlash />
         <Flexbox direction="col" className="my-3" gap="2">
           <Card>
