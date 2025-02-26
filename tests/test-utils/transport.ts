@@ -1,5 +1,5 @@
 import User from '../../src/datatypes/User';
-import { Request, Response } from '../../src/types/express';
+import { NextFunction, Request, Response } from '../../src/types/express';
 import { createUser } from './data';
 
 export const createMockRequest = (partialRequest?: Partial<Request>): Request => {
@@ -52,14 +52,15 @@ export const createMockResponse = (): MockResponse => {
 };
 
 type Handler = (req: Request, res: Response) => Promise<any | void>;
+type MiddlewareHandler = (req: Request, res: Response, next: NextFunction) => void;
 
 class CallBuilder {
-  private readonly handler: Handler;
+  private readonly handler: Handler | MiddlewareHandler;
   private request: Partial<Request> = {};
   private user?: Partial<User>;
   private flash?: (type: string, message: string) => void;
 
-  constructor(handler: Handler) {
+  constructor(handler: Handler | MiddlewareHandler) {
     this.handler = handler;
   }
 
@@ -93,7 +94,7 @@ class CallBuilder {
     return this;
   }
 
-  async send(): Promise<{ status: number; body: any }> {
+  async send(): Promise<{ status: number; body: any; nextCalled: boolean }> {
     if (this.user) {
       this.request = { user: createUser(this.user), ...this.request };
     }
@@ -105,12 +106,22 @@ class CallBuilder {
     const req = createMockRequest(this.request);
     const res = createMockResponse();
 
-    await this.handler(req, res);
+    //No-op next function
+    let nextCalled = false;
+    const next = () => {
+      nextCalled = true;
+    };
 
-    return { status: res.statusCode, body: res.responseBody };
+    await this.handler(req, res, next);
+
+    return { status: res.statusCode, body: res.responseBody, nextCalled };
   }
 }
 
 export const call = (handler: (req: Request, res: Response) => Promise<any | void>): CallBuilder => {
+  return new CallBuilder(handler);
+};
+
+export const middleware = (handler: (req: Request, res: Response, next: NextFunction) => void): CallBuilder => {
   return new CallBuilder(handler);
 };

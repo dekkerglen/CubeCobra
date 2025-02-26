@@ -10,7 +10,7 @@ import { searchCards } from '../../../../util/tools';
 const validSortNames = Object.keys(SortFunctions);
 
 const TopCardsQuerySchema = Joi.object({
-  f: Joi.string().empty('').optional(),
+  f: Joi.string().allow('').required(),
   s: Joi.string()
     .valid(...validSortNames)
     .required(),
@@ -20,7 +20,7 @@ const TopCardsQuerySchema = Joi.object({
   p: Joi.number().integer().min(0).required(),
 }).unknown(true); // allow additional fields
 
-const validateQuery = (req: Request, res: Response, next: NextFunction) => {
+export const validateQuery = (req: Request, res: Response, next: NextFunction) => {
   const { error } = TopCardsQuerySchema.validate(req.query);
   if (error) {
     res.status(400).json({ error: error.details[0].message });
