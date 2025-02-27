@@ -17,7 +17,7 @@ import User from 'datatypes/User';
 
 interface UserLayoutProps {
   user: User;
-  followers: User[];
+  followersCount: number;
   following: boolean;
   activeLink: string;
   children?: React.ReactNode;
@@ -44,7 +44,7 @@ const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
 
 const UserLayout: React.FC<UserLayoutProps> = ({
   user,
-  followers,
+  followersCount,
   following,
   activeLink,
   children,
@@ -53,7 +53,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
   const activeUser = useContext(UserContext)!;
   const canEdit = activeUser && activeUser.id === user.id;
 
-  const numFollowers = followers.length;
+  const numFollowers = followersCount;
   const followersText = (
     <Text semibold sm>
       {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
@@ -74,7 +74,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
               {user.username}
             </Text>
             {numFollowers > 0 ? (
-              <FollowersModalLink href="#" modalprops={{ followers }}>
+              <FollowersModalLink href="#" modalprops={{ id: user.id, type: 'user' }}>
                 {followersText}
               </FollowersModalLink>
             ) : (

@@ -14,7 +14,7 @@ import UserLayout from 'layouts/UserLayout';
 
 interface UserBlogPageProps {
   owner: User;
-  followers: User[];
+  followersCount: number;
   following: boolean;
   posts: BlogPostType[];
   loginCallback?: string;
@@ -24,7 +24,7 @@ interface UserBlogPageProps {
 const PAGE_SIZE = 10;
 
 const UserBlogPage: React.FC<UserBlogPageProps> = ({
-  followers,
+  followersCount,
   following,
   posts,
   owner,
@@ -64,7 +64,7 @@ const UserBlogPage: React.FC<UserBlogPageProps> = ({
 
       setLoading(false);
     }
-  }, [owner.id, currentLastKey, items, page]);
+  }, [csrfFetch, owner.id, currentLastKey, items, page]);
 
   const pager = (
     <Pagination
@@ -72,6 +72,7 @@ const UserBlogPage: React.FC<UserBlogPageProps> = ({
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
+        // eslint-disable-next-line no-console -- Debugging
         console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();
@@ -85,7 +86,7 @@ const UserBlogPage: React.FC<UserBlogPageProps> = ({
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <UserLayout user={owner} followers={followers} following={following} activeLink="blog">
+      <UserLayout user={owner} followersCount={followersCount} following={following} activeLink="blog">
         <DynamicFlash />
         {items.length > 0 ? (
           <Flexbox direction="col" gap="2" className="w-full my-3">
