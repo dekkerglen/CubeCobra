@@ -17,8 +17,8 @@ export default interface User {
   about?: string;
   hideTagColors?: boolean;
   followedCubes?: string[];
-  followedUsers?: string[];
-  following?: string[];
+  followedUsers?: string[]; //Who this user is following
+  following?: string[]; //Who is following this user
   image?: Image;
   imageName?: string;
   roles?: string[];
