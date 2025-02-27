@@ -37,12 +37,12 @@ export const getFollowers = async (req: Request, res: Response) => {
       //Cleanup after we are done with the cube
       delete res.locals.cube;
     } else {
-      res.status(400).send({ error: 'Unknow follower type' });
+      res.status(400).send({ error: 'Unknown follower type' });
       return;
     }
 
     const slice = followerIds.slice(skip, skip + limit);
-    const hasMore = followerIds.length >= skip + limit;
+    const hasMore = followerIds.length > skip + limit;
 
     const followers = await User.batchGet(slice);
     res.status(200).send({ followers: followers, hasMore });
