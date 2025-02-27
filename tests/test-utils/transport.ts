@@ -27,25 +27,26 @@ interface MockResponse extends Response {
   send(payload: any): this;
 }
 
-export const createMockResponse = (): MockResponse => {
+export const createMockResponse = (locals: Record<string, any>): MockResponse => {
   const res: Partial<MockResponse> = {
     statusCode: 200,
     responseBody: undefined,
     writeEnabled: true,
-    status(code: number) {
+    status(code: number): MockResponse {
       this.statusCode = code;
       return this as MockResponse;
     },
-    json(payload: any) {
+    json(payload: any): MockResponse {
       this.responseBody = payload;
       this.writeEnabled = false;
       return this as MockResponse;
     },
-    send(payload: any) {
+    send(payload: any): MockResponse {
       this.responseBody = payload;
       this.writeEnabled = false;
       return this as MockResponse;
     },
+    locals,
   };
 
   return res as MockResponse;
@@ -57,6 +58,7 @@ type MiddlewareHandler = (req: Request, res: Response, next: NextFunction) => vo
 class CallBuilder {
   private readonly handler: Handler | MiddlewareHandler;
   private request: Partial<Request> = {};
+  private responseLocals: Record<string, any> = {};
   private user?: Partial<User>;
   private flash?: (type: string, message: string) => void;
 
@@ -66,6 +68,14 @@ class CallBuilder {
 
   withRequest(request: Partial<Request>): CallBuilder {
     this.request = request;
+    return this;
+  }
+
+  /**
+   * Useful when locals are added to a response from a middleware and you need to mock the value in the handler
+   */
+  withResponseLocals(locals: Record<string, any>): CallBuilder {
+    this.responseLocals = locals;
     return this;
   }
 
@@ -94,7 +104,7 @@ class CallBuilder {
     return this;
   }
 
-  async send(): Promise<{ status: number; body: any; nextCalled: boolean }> {
+  async send(): Promise<{ status: number; body: any; nextCalled: boolean; rawResponse: Response }> {
     if (this.user) {
       this.request = { user: createUser(this.user), ...this.request };
     }
@@ -104,7 +114,7 @@ class CallBuilder {
     }
 
     const req = createMockRequest(this.request);
-    const res = createMockResponse();
+    const res = createMockResponse(this.responseLocals);
 
     //No-op next function
     let nextCalled = false;
@@ -114,7 +124,7 @@ class CallBuilder {
 
     await this.handler(req, res, next);
 
-    return { status: res.statusCode, body: res.responseBody, nextCalled };
+    return { status: res.statusCode, body: res.responseBody, nextCalled, rawResponse: res };
   }
 }
 
