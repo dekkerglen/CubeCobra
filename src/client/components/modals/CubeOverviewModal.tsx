@@ -30,6 +30,7 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
   const [state, setState] = useState<Cube>(JSON.parse(JSON.stringify(cube)));
   const [imagename, setImagename] = useState(cube.imageName);
   const [imageDict, setImageDict] = useState<Record<string, Image>>({});
+  const [fetched, setFetched] = useState(false);
   const formRef = React.createRef<HTMLFormElement>();
 
   const formData = useMemo(
@@ -44,9 +45,12 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
       const response = await csrfFetch('/cube/api/imagedict');
       const json = await response.json();
       setImageDict(json.dict);
+      setFetched(true);
     };
-    getData();
-  }, [csrfFetch]);
+    if (isOpen && !fetched) {
+      getData();
+    }
+  }, [csrfFetch, fetched, isOpen]);
 
   const changeImage = useCallback(
     (image: string) => {

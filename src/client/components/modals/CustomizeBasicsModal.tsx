@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card } from 'components/base/Card';
-import { Col, Flexbox,Row } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Text from 'components/base/Text';
 import LoadingButton from 'components/LoadingButton';
@@ -22,14 +22,18 @@ const CustomizeBasicsModal: React.FC<CustomizeBasicsModalProps> = ({ isOpen, set
   const [basics, setBasics] = useState<string[]>(cube.basics.slice());
   const [cardName, setCardName] = useState('');
   const [imageDict, setImageDict] = useState<Record<string, { id: string }>>({});
+  const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
-    fetch('/cube/api/imagedict')
-      .then((response) => response.json())
-      .then((json) => {
-        setImageDict(json.dict);
-      });
-  }, []);
+    if (isOpen && !fetched) {
+      fetch('/cube/api/imagedict')
+        .then((response) => response.json())
+        .then((json) => {
+          setImageDict(json.dict);
+          setFetched(true);
+        });
+    }
+  }, [isOpen, fetched]);
 
   const submitCard = () => {
     if (imageDict) {

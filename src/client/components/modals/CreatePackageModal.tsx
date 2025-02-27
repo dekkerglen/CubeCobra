@@ -22,14 +22,18 @@ const CreatePackageModal: React.FC<CreatePackageModalProps> = ({ isOpen, setOpen
   const [cardName, setCardName] = useState<string>('');
   const [packageName, setPackageName] = useState<string>('');
   const [imageDict, setImageDict] = useState<{ [key: string]: { id: string } }>({});
+  const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
-    fetch('/cube/api/imagedict')
-      .then((response) => response.json())
-      .then((json) => {
-        setImageDict(json.dict);
-      });
-  }, []);
+    if (isOpen && !fetched) {
+      fetch('/cube/api/imagedict')
+        .then((response) => response.json())
+        .then((json) => {
+          setImageDict(json.dict);
+          setFetched(true);
+        });
+    }
+  }, [isOpen, fetched]);
 
   const submitCard = () => {
     if (imageDict) {
