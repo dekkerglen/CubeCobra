@@ -143,9 +143,20 @@ export const recommend = (oracles: string[]) => {
     });
   }
 
-  const adds = res.sort((a, b) => b.rating - a.rating).filter((card) => !oracles.includes(card.oracle));
-  const cuts = res.sort((a, b) => a.rating - b.rating).filter((card) => oracles.includes(card.oracle));
-
+  const oracleSet = new Set(oracles);
+  const adds: { oracle: string; rating: number }[] = [];
+  const cuts: { oracle: string; rating: number }[] = [];
+  
+  res.sort((a, b) => b.rating - a.rating).forEach(card => {
+    if (oracleSet.has(card.oracle)) {
+      cuts.push(card);
+    } else {
+      adds.push(card);
+    }
+  });
+  
+  cuts.reverse();
+  
   return {
     adds,
     cuts,
