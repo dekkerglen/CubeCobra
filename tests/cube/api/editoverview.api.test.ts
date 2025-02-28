@@ -145,7 +145,7 @@ describe('Edit overview API', () => {
     expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:foobar`);
     expect(res.status).toEqual(400);
     expect(res.body).toEqual({
-      error: expect.stringContaining('Custom URL is already taken'),
+      error: expect.stringContaining('the short id is already taken'),
     });
   });
 
@@ -185,7 +185,7 @@ describe('Edit overview API', () => {
     expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:foobar`);
     expect(res.status).toEqual(400);
     expect(res.body).toEqual({
-      error: expect.stringContaining('Custom URL is already taken'),
+      error: expect.stringContaining('the short id is already taken'),
     });
   });
 

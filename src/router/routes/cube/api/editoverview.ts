@@ -52,11 +52,11 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
       const taken = await CubeHash.getSortedByName(`shortid:${updatedCube.shortId.toLowerCase()}`);
 
       if (taken.items.length === 1 && taken.items[0].cube !== cube.id) {
-        res.status(400).json({ error: 'Custom URL is already taken' });
+        res.status(400).json({ error: 'Could not update cube, the short id is already taken.' });
         return;
       }
       if (taken.items.length > 1) {
-        res.status(400).json({ error: 'Custom URL is already taken' });
+        res.status(400).json({ error: 'Could not update cube, the short id is already taken.' });
         return;
       }
 
