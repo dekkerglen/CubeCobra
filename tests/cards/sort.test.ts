@@ -6,13 +6,13 @@ const mapToCardNames = (sorted: Card[]) => {
   return sorted.map((c) => c.details?.name);
 };
 
+const sortWithoutGrouping = (cards: Card[], sort: string) => {
+  //Must pass true for showOther because the first sort is undefined
+  return sortForDownload(cards, 'Unsorted', 'Unsorted', 'Unsorted', sort, true);
+};
+
 describe('Sorting Collector Numbers', () => {
   const SORT = 'Collector number';
-
-  const sortWithoutGrouping = (cards: Card[], sort: string) => {
-    //Must pass true for showOther because the first sort is undefined
-    return sortForDownload(cards, 'Unsorted', 'Unsorted', 'Unsorted', sort, true);
-  };
 
   /* This is not an exhaustive list of non-standard collector numbers, but various examples to illustrate
    * how collector numbers are not simple numbers.
@@ -181,6 +181,74 @@ describe('Sorting Collector Numbers', () => {
     const sorted = sortWithoutGrouping(cards, SORT);
 
     expect(mapToCardNames(sorted)).toEqual(['Card 6', 'Card 4', 'Card 5', 'Card 3', 'Card 1', 'Card 2']);
+  });
+});
+
+describe('Sorting by Word Count', () => {
+  const SORT = 'Word Count';
+
+  it('Should sort cards if `wordCount` is already populated', () => {
+    const cards = [
+      createCard({
+        details: createCardDetails({ name: 'Medium Card', oracle_text: 'A B C D E F', wordCount: 6 }),
+      }),
+      createCard({
+        details: createCardDetails({ name: 'Short Card', oracle_text: 'A B C D E', wordCount: 5 }),
+      }),
+      createCard({
+        details: createCardDetails({ name: 'Long Card', oracle_text: 'A B C D E F G', wordCount: 7 }),
+      }),
+    ];
+
+    const sorted = sortWithoutGrouping(cards, SORT);
+
+    expect(mapToCardNames(sorted)).toEqual(['Short Card', 'Medium Card', 'Long Card']);
+  });
+
+  it('Should populate `wordCount` and sort by it', () => {
+    const cards = [
+      createCard({
+        details: createCardDetails({ name: 'Medium Card', oracle_text: 'A B C D E F' }),
+      }),
+      createCard({
+        details: createCardDetails({ name: 'Short Card', oracle_text: 'A B C D E' }),
+      }),
+      createCard({
+        details: createCardDetails({ name: 'Long Card', oracle_text: 'A B C D E F G' }),
+      }),
+    ];
+
+    const sorted = sortWithoutGrouping(cards, SORT);
+
+    expect(mapToCardNames(sorted)).toEqual(['Short Card', 'Medium Card', 'Long Card']);
+    expect(sorted[0].details?.wordCount).toBe(5);
+    expect(sorted[1].details?.wordCount).toBe(6);
+    expect(sorted[2].details?.wordCount).toBe(7);
+  });
+});
+
+describe('Grouping by Word Count', () => {
+  const sort = 'Word Count';
+
+  it('Should group cards by word count', () => {
+    const cards = [
+      createCard({
+        details: createCardDetails({ name: 'Isamaru, Hound of Konda', oracle_text: '' }),
+      }),
+      createCard({
+        details: createCardDetails({
+          name: 'Lightning Bolt',
+          oracle_text: 'Lightning Bolt deals 3 damage to any target.',
+        }),
+      }),
+      createCard({
+        details: createCardDetails({ name: 'Dance of the Dead', wordCount: 107 }),
+      }),
+    ];
+
+    const labels = getLabelsRaw(cards, sort, false);
+
+    expect(labels).toEqual(['0', '5+', '100+']);
   });
 });
 

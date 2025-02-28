@@ -466,6 +466,52 @@ export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 
 export const cardReleaseDate = (card: Card): string => card.details?.released_at ?? '';
 
+const BYTE_SIZE = 8;
+const CHINESE_MAX_CODE_POINT = 205743;
+const BITMAP = [' ', '\n', '\t', '\v', '*', '/', '&', ':', ';', '.', ',', '?', '='].reduce(
+  (bitmap, char) => {
+    const charCode = char.charCodeAt(0);
+    const byteIndex = Math.floor(charCode / BYTE_SIZE);
+    const bitIndex = charCode % BYTE_SIZE;
+    bitmap[byteIndex] = bitmap[byteIndex] ^ (1 << bitIndex);
+    return bitmap;
+  },
+  new Uint8Array(CHINESE_MAX_CODE_POINT / BYTE_SIZE + 1),
+);
+
+/**
+ * Derived from "the fastest multilingual word counter" {@link https://github.com/thecodrr/alfaaz}
+ * @license MIT
+ */
+function countWords(str: string) {
+  let count = 0;
+  let shouldCount = false;
+
+  for (let i = 0; i < str.length; i++) {
+    const charCode = str.charCodeAt(i);
+    const byteIndex = (charCode / BYTE_SIZE) | 0;
+    const bitIndex = charCode % BYTE_SIZE;
+    const byteAtIndex = BITMAP[byteIndex];
+    const isMatch = ((byteAtIndex >> bitIndex) & 1) === 1;
+    if (isMatch && (shouldCount || byteAtIndex === 255)) count++;
+    shouldCount = !isMatch;
+  }
+
+  if (shouldCount) count++;
+
+  return count;
+}
+
+export const cardWordCount = (card: Card): number => {
+  if (!card.details?.oracle_text) {
+    return 0;
+  }
+  if (card.details.wordCount == undefined) {
+    card.details.wordCount = countWords(card.details.oracle_text);
+  }
+  return card.details.wordCount;
+};
+
 export const cardDevotion = (card: Card, color: string): number => {
   let cost = cardCost(card);
   if (cost && cardLayout(card) === 'adventure') cost = cost.slice(cost.findIndex((x) => x === 'split') + 1);
@@ -733,6 +779,7 @@ export default {
   cardImageFlip,
   cardTokens,
   cardDevotion,
+  cardWordCount,
   cardLayout,
   cardIsSpecialZoneType,
   cardElo,

@@ -75,6 +75,7 @@ export interface CardDetails {
   cubeCount?: number;
   pickCount?: number;
   isExtra?: boolean;
+  wordCount?: number;
 }
 
 export const allFields = [
