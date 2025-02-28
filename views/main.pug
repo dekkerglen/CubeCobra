@@ -11,6 +11,8 @@ html(lang='en' class=theme)
 					meta(name=metadatum.name, content=metadatum.content)
 				if metadatum.property
 					meta(property=metadatum.property, content=metadatum.content)
+		if noindex
+			meta(name='robots' content='noindex, noodp, noarchive, noimageindex')
 		link(rel='icon', href='/content/favicon.ico?v=1.1', type='image/x-icon')
 		title=title
 		link(rel='stylesheet' href='/css/autocomplete.css')

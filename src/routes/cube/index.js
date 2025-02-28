@@ -620,6 +620,7 @@ router.get('/overview/:id', async (req, res) => {
           cube.image.uri,
           `${baseUrl}/cube/overview/${req.params.id}`,
         ),
+        noindex: cube.visibility === Cube.VISIBILITY.PRIVATE || cube.visibility === Cube.VISIBILITY.UNLISTED || mainboard.length < 100
       },
     );
   } catch (err) {
