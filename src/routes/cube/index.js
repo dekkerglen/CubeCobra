@@ -554,7 +554,7 @@ router.get('/overview/:id', async (req, res) => {
 
     const blogs = await Blog.getByCube(cube.id, 1);
 
-    const followers = await User.batchGet(cube.following);
+    const followersCount = cube.following.length;
 
     // calculate cube prices
     const nameToCards = {};
@@ -608,7 +608,7 @@ router.get('/overview/:id', async (req, res) => {
         cards,
         post: blogs && blogs.items.length > 0 ? blogs.items[0] : null,
         followed: req.user && cube.following && cube.following.some((id) => req.user.id === id),
-        followers,
+        followersCount,
         priceOwned: !cube.PrivatePrices ? totalPriceOwned : null,
         pricePurchase: !cube.PrivatePrices ? totalPricePurchase : null,
       },

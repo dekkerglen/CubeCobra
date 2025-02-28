@@ -45,6 +45,7 @@ const Suggestions: React.FC = () => {
           skip: 0,
           limit: PAGE_SIZE,
           filterText: filterInput,
+          printingPreference: cube.defaultPrinting,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +58,7 @@ const Suggestions: React.FC = () => {
       setAddsLoading(false);
     };
     run();
-  }, [csrfFetch, cube.id, filterInput]);
+  }, [csrfFetch, cube, filterInput]);
 
   useEffect(() => {
     const run = async () => {
@@ -70,6 +71,7 @@ const Suggestions: React.FC = () => {
           skip: 0,
           limit: PAGE_SIZE,
           filterText: filterInput,
+          printingPreference: cube.defaultPrinting,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +83,7 @@ const Suggestions: React.FC = () => {
       setCutsLoading(false);
     };
     run();
-  }, [csrfFetch, cube.id, filterInput]);
+  }, [csrfFetch, cube, filterInput]);
 
   const loadMoreAdds = useCallback(async () => {
     setAddsLoading(true);
@@ -92,6 +94,7 @@ const Suggestions: React.FC = () => {
         skip: addCards.length,
         limit: PAGE_SIZE,
         filterText: filterInput,
+        printingPreference: cube.defaultPrinting,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -101,7 +104,7 @@ const Suggestions: React.FC = () => {
     const json = await res.json();
     setAddCards([...addCards, ...json.adds]);
     setAddsLoading(false);
-  }, [addCards, csrfFetch, cube.id, filterInput]);
+  }, [addCards, csrfFetch, cube, filterInput]);
 
   const cardsToUse = maybeOnly ? addsInMaybe : addCards;
   const reversedCuts = [...cutCards].reverse();

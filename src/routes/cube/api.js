@@ -793,7 +793,7 @@ router.post('/calculatebasics', async (req, res) => {
 
 router.post('/adds', async (req, res) => {
   let { skip, limit } = req.body;
-  const { cubeID, filterText } = req.body;
+  const { cubeID, filterText, printingPreference } = req.body;
 
   limit = parseInt(limit, 10);
   skip = parseInt(skip, 10);
@@ -804,8 +804,6 @@ router.post('/adds', async (req, res) => {
 
   let slice;
   let { length } = adds;
-
-  const cube = await Cube.getById(cubeID);
 
   if (filterText && filterText.length > 0) {
     const { err, filter } = makeFilter(`${filterText}`);
@@ -818,7 +816,7 @@ router.post('/adds', async (req, res) => {
       });
     }
 
-    const eligible = getAllMostReasonable(filter, cube.defaultPrinting);
+    const eligible = getAllMostReasonable(filter, printingPreference);
     length = eligible.length;
 
     const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
@@ -830,7 +828,7 @@ router.post('/adds', async (req, res) => {
 
   return res.status(200).send({
     adds: slice.map((item) => {
-      const card = getReasonableCardByOracleWithPrintingPreference(item.oracle, cube.defaultPrinting);
+      const card = getReasonableCardByOracleWithPrintingPreference(item.oracle, printingPreference);
       return {
         details: card,
         cardID: card.scryfall_id,
@@ -841,14 +839,13 @@ router.post('/adds', async (req, res) => {
 });
 
 router.post('/cuts', async (req, res) => {
-  const { cubeID, filterText } = req.body;
+  const { cubeID, filterText, printingPreference } = req.body;
 
   const cards = await Cube.getCards(cubeID);
 
   const { cuts } = recommend(cards.mainboard.map((card) => card.details.oracle_id));
 
   let slice = cuts;
-  const cube = await Cube.getById(cubeID);
 
   if (filterText && filterText.length > 0) {
     const { err, filter } = makeFilter(`${filterText}`);
@@ -860,7 +857,7 @@ router.post('/cuts', async (req, res) => {
       });
     }
 
-    const eligible = getAllMostReasonable(filter, cube.defaultPrinting);
+    const eligible = getAllMostReasonable(filter, printingPreference);
 
     const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
 
@@ -869,7 +866,7 @@ router.post('/cuts', async (req, res) => {
 
   return res.status(200).send({
     cuts: slice.map((item) => {
-      const card = getReasonableCardByOracleWithPrintingPreference(item.oracle, cube.defaultPrinting);
+      const card = getReasonableCardByOracleWithPrintingPreference(item.oracle, printingPreference);
       return {
         details: card,
         cardID: card.scryfall_id,

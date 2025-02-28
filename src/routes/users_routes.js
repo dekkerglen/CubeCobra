@@ -464,14 +464,12 @@ router.get('/view/:id', async (req, res) => {
 
     const cubes = (await Cube.getByOwner(user.id)).items.filter((cube) => isCubeListed(cube, req.user));
 
-    const followers = await User.batchGet(user.following || []);
-
     const following = req.user && user.following && user.following.some((id) => id === req.user.id);
 
     return render(req, res, 'UserCubePage', {
       owner: user,
       cubes,
-      followers,
+      followersCount: (user.following || []).length,
       following,
     });
   } catch (err) {
@@ -491,11 +489,9 @@ router.get('/decks/:userid', async (req, res) => {
       return redirect(req, res, '/404');
     }
 
-    const followers = await User.batchGet(user.following || []);
-
     return render(req, res, 'UserDecksPage', {
       owner: user,
-      followers,
+      followersCount: (user.following || []).length,
       following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
       decks: decks.items,
       lastKey: decks.lastEvaluatedKey,
@@ -546,7 +542,6 @@ router.get('/blog/:userid', async (req, res) => {
     }
 
     const posts = await Blog.getByOwner(req.params.userid, 10);
-    const followers = await User.batchGet(user.following || []);
 
     return render(
       req,
@@ -556,7 +551,7 @@ router.get('/blog/:userid', async (req, res) => {
         owner: user,
         posts: posts.items,
         lastKey: posts.lastKey,
-        followers,
+        followersCount: (user.following || []).length,
         following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
       },
       {
