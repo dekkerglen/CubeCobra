@@ -99,20 +99,16 @@ const CardModal: React.FC<CardModalProps> = ({
     }
   }, [card, versionDict]);
 
-  const updateField = useCallback(
-    (field: keyof Card, value: any) => {
-      editCard(card.index!, { ...card, [field]: value }, card.board!);
-    },
-    [card, editCard],
-  );
-
   const disabled = !canEdit || card.markedForDelete;
 
   const { showCustomImages } = useContext(DisplayContext);
 
-  const getCardFrontImage = function (card: Card) {
-    return (showCustomImages && cardImageUrl(card)) || card?.details?.image_normal;
-  };
+  const getCardFrontImage = useCallback(
+    (card: Card) => {
+      return (showCustomImages && cardImageUrl(card)) || card?.details?.image_normal;
+    },
+    [showCustomImages],
+  );
   const getCardBackImage = function (card: Card) {
     return (showCustomImages && cardImageBackUrl(card)) || card?.details?.image_flip;
   };
@@ -133,6 +129,18 @@ const CardModal: React.FC<CardModalProps> = ({
     setImageUsed(getCardBackImage(card));
   }
 
+  const updateField = useCallback(
+    (field: keyof Card, value: any) => {
+      //Handle edge case of the back image being removed while looking at the back, and there is no actual back image on the card details
+      if (field === 'imgBackUrl' && value.trim() === '' && !card?.details?.image_flip && !isFrontImage) {
+        setIsFrontImage(true);
+        setImageUsed(getCardFrontImage(card));
+      }
+      editCard(card.index!, { ...card, [field]: value }, card.board!);
+    },
+    [card, editCard, getCardFrontImage, isFrontImage],
+  );
+
   return (
     <Modal lg isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>
@@ -151,7 +159,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   fallbackSrc="/content/default_card.png"
                   alt={cardName(card)}
                 />
-                {card?.details?.image_flip && (
+                {getCardBackImage(card) && (
                   <Button
                     className="mt-1"
                     color="accent"
