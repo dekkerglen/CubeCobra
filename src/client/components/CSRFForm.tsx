@@ -24,4 +24,6 @@ const CSRFForm = forwardRef<HTMLFormElement, CSRFFormProps>(({ children, method,
   );
 });
 
+CSRFForm.displayName = 'CSRFForm';
+
 export default CSRFForm;
