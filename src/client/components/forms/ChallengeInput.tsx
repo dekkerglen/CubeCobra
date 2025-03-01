@@ -41,6 +41,9 @@ const ChallengeInput: React.FC<ChallengeInputProps> = ({ name, question, answer,
       label={`Security Question: ${question}`}
       value={answer}
       onChange={(e) => setAnswer(e.target.value)}
+      otherInputProps={{
+        required: true,
+      }}
     />
   );
 };
