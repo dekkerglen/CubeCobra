@@ -4,6 +4,7 @@ import Button from 'components/base/Button';
 import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import Tooltip from 'components/base/Tooltip';
 import BlogPost from 'components/blog/BlogPost';
 import CubeOverviewCard from 'components/cube/CubeOverviewCard';
 import DynamicFlash from 'components/DynamicFlash';
@@ -55,13 +56,19 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
           {user && cube.owner.id === user.id && (
             <Controls>
               <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
-                <CubeOverviewModalLink
-                  modalprops={{
-                    cube: cube,
-                  }}
-                >
-                  Edit Overview
-                </CubeOverviewModalLink>
+                {(cube.cardCount > 0 && (
+                  <CubeOverviewModalLink
+                    modalprops={{
+                      cube: cube,
+                    }}
+                  >
+                    Edit Overview
+                  </CubeOverviewModalLink>
+                )) || (
+                  <Tooltip text="Please add at least one card to the cube in order to edit the overview. This is a spam prevention mechanism.">
+                    Edit Overview
+                  </Tooltip>
+                )}
                 <CubeSettingsModalLink modalprops={{ addAlert, onCubeUpdate: () => {} }}>
                   Edit Settings
                 </CubeSettingsModalLink>

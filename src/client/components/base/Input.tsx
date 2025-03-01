@@ -21,6 +21,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onEnter?: () => void;
   disabled?: boolean;
+  otherInputProps?: React.InputHTMLAttributes<HTMLInputElement>;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -40,6 +41,7 @@ const Input: React.FC<InputProps> = ({
   autoCapitalize = 'sentences',
   autoCorrect = 'on',
   spellCheck = true,
+  otherInputProps = {},
 }) => {
   return (
     <div className="block w-full">
@@ -56,6 +58,7 @@ const Input: React.FC<InputProps> = ({
         )}
       </Flexbox>
       <input
+        {...otherInputProps}
         className={classNames(
           'block w-full h-full px-3 py-2 border border-border bg-bg rounded-md shadow-sm placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-focus-ring sm:text-sm transition duration-200 ease-in-out',
           {

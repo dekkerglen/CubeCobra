@@ -20,6 +20,7 @@ import {
   cardStatus,
   cardTix,
   cardType,
+  cardWordCount,
   COLOR_COMBINATIONS,
   convertFromLegacyCardColorCategory,
 } from './cardutil';
@@ -212,6 +213,7 @@ export const ORDERED_SORTS: string[] = [
   'Cube Count',
   'Pick Count',
   'Collector number',
+  'Word Count',
 ];
 export type OrderedSortsType = (typeof ORDERED_SORTS)[number];
 
@@ -279,6 +281,7 @@ export const SortFunctions: Record<string, (a: any, b: any) => number> = {
     }
     return 0;
   },
+  'Word Count': (a, b) => cardWordCount(a) - cardWordCount(b),
 };
 
 export const SortFunctionsOnDetails = (sort: string) => (a: any, b: any) =>
@@ -322,6 +325,20 @@ function priceBucketIndex(price: number): number {
 
 function getPriceBucket(price: number, prefix: string): string {
   return priceBucketLabel(priceBucketIndex(price), prefix);
+}
+
+const wordCountBuckets = [0, 1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
+
+function wordCountBucket(wordCount: number): string {
+  if (wordCount === 0) {
+    return '0';
+  }
+  for (let i = 2; i < wordCountBuckets.length; i++) {
+    if (wordCount < wordCountBuckets[i]) {
+      return `${wordCountBuckets[i - 1]}+`;
+    }
+  }
+  return '100+';
 }
 
 function getEloBucket(elo: number): string {
@@ -523,6 +540,17 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
       }
     }
     ret = res;
+  } else if (sort === 'Word Count') {
+    const labels: string[] = [];
+    for (const card of cube || []) {
+      const wordCount = cardWordCount(card);
+      const label = wordCountBucket(wordCount);
+      if (!labels.includes(label)) {
+        labels.push(label);
+        if (labels.length === wordCountBuckets.length) break;
+      }
+    }
+    ret = labels;
   }
   /* End of sort options */
 
@@ -765,6 +793,9 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
     else if (popularity <= 100) ret = ['50–100%'];
   } else if (sort === 'Elo') {
     ret = [getEloBucket(cardElo(card))];
+  } else if (sort === 'Word Count') {
+    const wordCount = cardWordCount(card);
+    ret = [wordCountBucket(wordCount)];
   }
   /* End of sort options */
 
