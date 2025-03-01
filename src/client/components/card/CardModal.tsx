@@ -131,8 +131,8 @@ const CardModal: React.FC<CardModalProps> = ({
 
   const updateField = useCallback(
     (field: keyof Card, value: any) => {
-      //Handle edge case of the back image being removed while looking at the back
-      if (field === 'imgBackUrl' && value.trim() === '' && !isFrontImage) {
+      //Handle edge case of the back image being removed while looking at the back, and there is no actual back image on the card details
+      if (field === 'imgBackUrl' && value.trim() === '' && !card?.details?.image_flip && !isFrontImage) {
         setIsFrontImage(true);
         setImageUsed(getCardFrontImage(card));
       }
