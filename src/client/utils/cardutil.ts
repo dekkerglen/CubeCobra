@@ -466,6 +466,16 @@ export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 
 export const cardReleaseDate = (card: Card): string => card.details?.released_at ?? '';
 
+export const cardWordCount = (card: Card): number => {
+  if (!card.details?.oracle_text) {
+    return 0;
+  }
+  if (card.details.wordCount === undefined) {
+    card.details.wordCount = card.details.oracle_text.split(' ').length;
+  }
+  return card.details.wordCount;
+};
+
 export const cardDevotion = (card: Card, color: string): number => {
   let cost = cardCost(card);
   if (cost && cardLayout(card) === 'adventure') cost = cost.slice(cost.findIndex((x) => x === 'split') + 1);
@@ -733,6 +743,7 @@ export default {
   cardImageFlip,
   cardTokens,
   cardDevotion,
+  cardWordCount,
   cardLayout,
   cardIsSpecialZoneType,
   cardElo,
