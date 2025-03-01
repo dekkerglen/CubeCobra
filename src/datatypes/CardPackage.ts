@@ -15,7 +15,7 @@ export type UnhydratedCardPackage = {
   cards: string[]; //List of card ids
   keywords: string[];
   voters: string[]; //List of user ids
-  votecount: number;
+  voteCount: number;
 };
 
 type CardPackage = Omit<UnhydratedCardPackage, 'id' | 'owner' | 'cards'> & {

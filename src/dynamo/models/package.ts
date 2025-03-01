@@ -16,7 +16,7 @@ const client = createClient({
     {
       name: 'ByVoteCount',
       partitionKey: 'status',
-      sortKey: 'votecount',
+      sortKey: 'voteCount',
     },
     {
       name: 'ByDate',
@@ -32,7 +32,7 @@ const client = createClient({
   attributes: {
     id: 'S',
     status: 'S',
-    votecount: 'N',
+    voteCount: 'N',
     date: 'N',
     owner: 'S',
   },
@@ -57,7 +57,7 @@ const createHydratedPackage = (
     cards: cards,
     keywords: document.keywords,
     voters: document.voters,
-    votecount: document.votecount,
+    voteCount: document.voteCount,
   } as CardPackage;
 };
 
@@ -165,7 +165,7 @@ const packages = {
       cards: cardIds,
       voters: document.voters,
       keywords: document.keywords,
-      votecount: document.voters.length,
+      voteCount: document.voters.length,
     });
     return id;
   },
