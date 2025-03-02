@@ -97,9 +97,9 @@ const Footer: React.FC = () => {
                 <li className="mb-2">
                   <FooterLink href="/contact">Contact</FooterLink>
                 </li>
-                <li className="mb-2">
+                {/* <li className="mb-2">
                   <FooterLink href="/merchandise">Merchandise</FooterLink>
-                </li>
+                </li> */}
                 <li className="mb-2">
                   <FooterLink href="/donate">Donate</FooterLink>
                 </li>

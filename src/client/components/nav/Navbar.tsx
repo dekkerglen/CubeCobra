@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
-import Tooltip from 'components/base/Tooltip';
 import { getCubeId } from 'utils/Util';
 
 import UserContext from '../../contexts/UserContext';
@@ -55,10 +54,10 @@ const navItems = [
     items: [
       { label: 'Dev Blog', href: '/dev/blog' },
       { label: 'Contact', href: '/contact' },
-      {
-        label: 'Merchandise',
-        href: '/merchandise',
-      },
+      // {
+      //   label: 'Merchandise',
+      //   href: '/merchandise',
+      // },
       { label: 'Donate', href: '/donate' },
       { label: 'Github', href: 'https://github.com/dekkerglen/CubeCobra' },
     ],
@@ -135,15 +134,13 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
       <Container xxl>
         <Flexbox direction="col">
           <Flexbox justify="between" alignItems="center" direction="row" gap="4">
-            <Tooltip text="新年快乐! Happy Year of the Snake!" position="bottom">
-              <a href="/merchandise">
-                <img
-                  className="h-10"
-                  src="/content/banner_red.png"
-                  alt="Cube Cobra: a site for Magic: the Gathering Cubing"
-                />
-              </a>
-            </Tooltip>
+            <a href="/">
+              <img
+                className="h-10"
+                src="/content/banner.png"
+                alt="Cube Cobra: a site for Magic: the Gathering Cubing"
+              />
+            </a>
             <ResponsiveDiv baseVisible lg>
               <Button color="secondary" onClick={toggle}>
                 {expanded ? <ChevronUpIcon size={32} /> : <ThreeBarsIcon size={32} />}

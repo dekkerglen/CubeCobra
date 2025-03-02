@@ -129,7 +129,7 @@ export const clientConfig = merge(config, {
     FeaturedCubesQueuePage: './src/client/pages/FeaturedCubesQueuePage.tsx',
     PackagesPage: './src/client/pages/PackagesPage.tsx',
     RecentlyUpdateCubesPage: './src/client/pages/RecentlyUpdateCubesPage.tsx',
-    MerchandisePage: './src/client/pages/MerchandisePage.tsx',
+    // MerchandisePage: './src/client/pages/MerchandisePage.tsx',
   },
   output: {
     filename: '[name].bundle.js',
@@ -207,7 +207,7 @@ export const serverConfig = merge(config, {
     'pages/FeaturedCubesQueuePage': './src/client/pages/FeaturedCubesQueuePage.tsx',
     'pages/PackagesPage': './src/client/pages/PackagesPage.tsx',
     'pages/RecentlyUpdateCubesPage': './src/client/pages/RecentlyUpdateCubesPage.tsx',
-    'pages/MerchandisePage': './src/client/pages/MerchandisePage.tsx',
+    // 'pages/MerchandisePage': './src/client/pages/MerchandisePage.tsx',
   },
   output: {
     filename: '[name].js',

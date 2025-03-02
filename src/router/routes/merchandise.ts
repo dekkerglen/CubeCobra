@@ -8,29 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2025-01-27.acacia',
 });
 
-const products = [
-  {
-    name: 'Year of the Snake Playmat',
-    description: `A commemorative Year of the Snake playmat to celebrate the Lunar Year. 24" x 14" Playmat, Black stitched edging.`,
-    price: 4000,
-    image: 'Final_cubecobra_small.png',
-    id: 'prod_Rg7XQwlS2OmWMy',
-  },
-  {
-    name: 'Year of the Snake Token',
-    description: `A commemorative token (Snake on one side, Treasure on the back) to celebrate the Year of the Snake. Tokens are standard playing card size (2.5" x 3.5"). Included image is the source art, not a token preview.`,
-    price: 100,
-    image: 'year_of_the_snake_tokens.png',
-    id: 'prod_Rg7ZFbdYo7jUkN',
-  },
-  {
-    name: 'Year of the Snake Pin',
-    description: `Commemorative 2" enamel pin to celebrate the lunar new year, ushering in the year of the snake! Glossy red on a shiny gold colored metal plating.`,
-    price: 1000,
-    image: 'sticker_red.png',
-    id: 'prod_Rg7Iknvca5vxzF',
-  },
-];
+const products: any[] = [];
 
 const handler = async (req: Request, res: Response) => {
   try {

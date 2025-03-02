@@ -3,62 +3,18 @@ import React, { useContext, useState } from 'react';
 import UserContext, { UserContextValue } from '../contexts/UserContext';
 import Advertisment from './Advertisment';
 import { Card, CardBody } from './base/Card';
-import { Col, Flexbox, Row } from './base/Layout';
+import { Flexbox } from './base/Layout';
 import Link from './base/Link';
 import ResponsiveDiv from './base/ResponsiveDiv';
 import Text from './base/Text';
 
-const BANNER_RATE: number = 3; // an alternate message appears with probability of 1/BANNER_RATE
+const BANNER_RATE: number = 10; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options: React.ReactNode[] = [
-  <Row xs={6} key={0}>
-    <Col xs={3} md={1}>
-      <a href="/merchandise">
-        <img src="/content/Final_cubecobra_small.png" alt="Year of the Snake" />
-      </a>
-    </Col>
-    <Col xs={3} md={5} className="content-center">
-      <Text lg>
-        Our 2025 Lunar New Year merchandise is now available for pre-order! Check out our Year of the Snake playmat, pin
-        and tokens <Link href="/merchandise">on our merchandise page</Link>!
-      </Text>
-    </Col>
-  </Row>,
-  <Row xs={6} key={0}>
-    <Col xs={3} md={1}>
-      <a href="/merchandise">
-        <img src="/content/year_of_the_snake_tokens.png" alt="Year of the Snake" />
-      </a>
-    </Col>
-    <Col xs={3} md={5} className="content-center">
-      <Text lg>
-        Our 2025 Lunar New Year merchandise is now available for pre-order! Check out our Year of the Snake playmat, pin
-        and tokens <Link href="/merchandise">on our merchandise page</Link>!
-      </Text>
-    </Col>
-  </Row>,
-  <Row xs={6} key={0}>
-    <Col xs={3} md={1}>
-      <a href="/merchandise">
-        <img src="/content/sticker_red.png" alt="Year of the Snake" />
-      </a>
-    </Col>
-    <Col xs={3} md={5} className="content-center">
-      <Text lg>
-        Our 2025 Lunar New Year merchandise is now available for pre-order! Check out our Year of the Snake playmat, pin
-        and tokens <Link href="/merchandise">on our merchandise page</Link>!
-      </Text>
-    </Col>
-  </Row>,
-  // <Text lg key={1}>
-  //   Want to showcase your cube? You can feature it as a reward for{' '}
-  //   <Link href="https://www.patreon.com/cubecobra">donating</Link> to Cube Cobra.{' '}
-  //   <Link href="/donate">Find out more.</Link>
-  // </Text>,
-  // <Text lg key={2}>
-  //   Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
-  //   <Link href="/donate">Find out more.</Link>
-  // </Text>,
+  <Text lg key={2}>
+    Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
+    <Link href="/donate">Find out more.</Link>
+  </Text>,
 ];
 
 interface BannerProps {
