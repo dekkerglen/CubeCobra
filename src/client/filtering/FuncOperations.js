@@ -293,3 +293,24 @@ export const setElementOperation = (op, value) => {
       throw new Error(`Unrecognized operator '${op}'`);
   }
 };
+
+export const propertyComparisonOperation = (op) => {
+  switch (op.toString()) {
+    case ':':
+    case '=':
+      return (fieldValueOne, fieldValueTwo) => fieldValueOne === fieldValueTwo;
+    case '!=':
+    case '<>':
+      return (fieldValueOne, fieldValueTwo) => fieldValueOne !== fieldValueTwo;
+    case '<':
+      return (fieldValueOne, fieldValueTwo) => fieldValueOne < fieldValueTwo;
+    case '<=':
+      return (fieldValueOne, fieldValueTwo) => fieldValueOne <= fieldValueTwo;
+    case '>':
+      return (fieldValueOne, fieldValueTwo) => fieldValueOne > fieldValueTwo;
+    case '>=':
+      return (fieldValueOne, fieldValueTwo) => fieldValueOne >= fieldValueTwo;
+    default:
+      throw new Error(`Unrecognized operator '${op}'`);
+  }
+};

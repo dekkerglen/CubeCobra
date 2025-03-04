@@ -15,6 +15,7 @@ import {
   setElementOperation,
   setCountOperation,
   devotionOperation,
+  propertyComparisonOperation,
 } from '../../filtering/FuncOperations';
 import {
   CARD_CATEGORY_DETECTORS,
@@ -112,8 +113,12 @@ const genericCondition = (propertyName, propertyAccessor, valuePred) => {
   result.fieldsUsed = [propertyName]
   return result;
 };
+const comparisonCondition = (valuePred, propertyName, propertyAccessor, otherPropertyName, otherPropertyAccessor) => {
+  const result = (card) => valuePred(propertyAccessor(card), otherPropertyAccessor(card));
+  result.fieldsUsed = [propertyName, otherPropertyName]
+  return result;
+};
 %} # %}
-
 
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
 
@@ -127,9 +132,11 @@ oracleCondition -> ("o"i | "oracle"i | "text"i) nameStringOpValue {% ([, valuePr
 
 setCondition -> ("s"i | "set"i | "e"i | "edition"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
 
-powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c)), valuePred) %}
+powerCondition -> powerWords halfIntOpValue {% ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c)), valuePred) %}
+  | powerWords anyOperator toughnessWords {% ([, op, ]) => comparisonCondition(propertyComparisonOperation(op), 'power', (c) => parseFloat(cardPower(c)), 'toughness', (c) => parseFloat(cardToughness(c))) %}
 
-toughnessCondition -> ("tou"i | "tough"i | "toughness"i) halfIntOpValue {% ([, valuePred]) => genericCondition('toughness', (c) => parseFloat(cardToughness(c)), valuePred) %}
+toughnessCondition -> toughnessWords halfIntOpValue {% ([, valuePred]) => genericCondition('toughness', (c) => parseFloat(cardToughness(c)), valuePred) %}
+  | toughnessWords anyOperator powerWords {% ([, op, ]) => comparisonCondition(propertyComparisonOperation(op), 'toughness', (c) => parseFloat(cardToughness(c)), 'power', (c) => parseFloat(cardPower(c))) %}
 
 ptSumCondition -> ("pt"i | "wildpair"i) halfIntOpValue {% ([, valuePred]) => genericCondition('pt', (c) => parseFloat(cardToughness(c)) + parseFloat(cardPower(c)), valuePred) %}
 
@@ -200,3 +207,7 @@ isValue -> (
   | "checkland"i | "dual"i | "fastland"i | "filterland"i | "gainland"i | "painland"i | "scryland"i | "shadowland"i
   | "shockland"i | "storageland"i | "creatureland"i | "manland"i | "triland"i | "tangoland"i | "battleland"i
 ) {% ([[category]]) => category.toLowerCase() %}
+
+powerWords -> ("pow"i | "power"i)
+
+toughnessWords -> ("tou"i | "tough"i | "toughness"i)
