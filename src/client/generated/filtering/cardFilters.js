@@ -23,6 +23,7 @@ import {
   setElementOperation,
   setCountOperation,
   devotionOperation,
+  propertyComparisonOperation,
 } from '../../filtering/FuncOperations';
 import {
   CARD_CATEGORY_DETECTORS,
@@ -71,6 +72,11 @@ const negated = (inner) => {
 const genericCondition = (propertyName, propertyAccessor, valuePred) => {
   const result = (card) => valuePred(propertyAccessor(card), card);
   result.fieldsUsed = [propertyName]
+  return result;
+};
+const comparisonCondition = (valuePred, propertyName, propertyAccessor, otherPropertyName, otherPropertyAccessor) => {
+  const result = (card) => valuePred(propertyAccessor(card), otherPropertyAccessor(card));
+  result.fieldsUsed = [propertyName, otherPropertyName]
   return result;
 };
 var grammar = {
@@ -1678,18 +1684,10 @@ var grammar = {
     {"name": "setCondition$subexpression$1$subexpression$4", "symbols": [/[eE]/, /[dD]/, /[iI]/, /[tT]/, /[iI]/, /[oO]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "setCondition$subexpression$1", "symbols": ["setCondition$subexpression$1$subexpression$4"]},
     {"name": "setCondition", "symbols": ["setCondition$subexpression$1", "alphaNumericOpValue"], "postprocess": ([, valuePred]) => genericCondition('set', cardSet, valuePred)},
-    {"name": "powerCondition$subexpression$1$subexpression$1", "symbols": [/[pP]/, /[oO]/, /[wW]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "powerCondition$subexpression$1", "symbols": ["powerCondition$subexpression$1$subexpression$1"]},
-    {"name": "powerCondition$subexpression$1$subexpression$2", "symbols": [/[pP]/, /[oO]/, /[wW]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "powerCondition$subexpression$1", "symbols": ["powerCondition$subexpression$1$subexpression$2"]},
-    {"name": "powerCondition", "symbols": ["powerCondition$subexpression$1", "halfIntOpValue"], "postprocess": ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c)), valuePred)},
-    {"name": "toughnessCondition$subexpression$1$subexpression$1", "symbols": [/[tT]/, /[oO]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "toughnessCondition$subexpression$1", "symbols": ["toughnessCondition$subexpression$1$subexpression$1"]},
-    {"name": "toughnessCondition$subexpression$1$subexpression$2", "symbols": [/[tT]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "toughnessCondition$subexpression$1", "symbols": ["toughnessCondition$subexpression$1$subexpression$2"]},
-    {"name": "toughnessCondition$subexpression$1$subexpression$3", "symbols": [/[tT]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/, /[nN]/, /[eE]/, /[sS]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "toughnessCondition$subexpression$1", "symbols": ["toughnessCondition$subexpression$1$subexpression$3"]},
-    {"name": "toughnessCondition", "symbols": ["toughnessCondition$subexpression$1", "halfIntOpValue"], "postprocess": ([, valuePred]) => genericCondition('toughness', (c) => parseFloat(cardToughness(c)), valuePred)},
+    {"name": "powerCondition", "symbols": ["powerWords", "halfIntOpValue"], "postprocess": ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c)), valuePred)},
+    {"name": "powerCondition", "symbols": ["powerWords", "anyOperator", "toughnessWords"], "postprocess": ([, op, ]) => comparisonCondition(propertyComparisonOperation(op), 'power', (c) => parseFloat(cardPower(c)), 'toughness', (c) => parseFloat(cardToughness(c)))},
+    {"name": "toughnessCondition", "symbols": ["toughnessWords", "halfIntOpValue"], "postprocess": ([, valuePred]) => genericCondition('toughness', (c) => parseFloat(cardToughness(c)), valuePred)},
+    {"name": "toughnessCondition", "symbols": ["toughnessWords", "anyOperator", "powerWords"], "postprocess": ([, op, ]) => comparisonCondition(propertyComparisonOperation(op), 'toughness', (c) => parseFloat(cardToughness(c)), 'power', (c) => parseFloat(cardPower(c)))},
     {"name": "ptSumCondition$subexpression$1$subexpression$1", "symbols": [/[pP]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "ptSumCondition$subexpression$1", "symbols": ["ptSumCondition$subexpression$1$subexpression$1"]},
     {"name": "ptSumCondition$subexpression$1$subexpression$2", "symbols": [/[wW]/, /[iI]/, /[lL]/, /[dD]/, /[pP]/, /[aA]/, /[iI]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
@@ -1983,7 +1981,19 @@ var grammar = {
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$50"]},
     {"name": "isValue$subexpression$1$subexpression$51", "symbols": [/[bB]/, /[aA]/, /[tT]/, /[tT]/, /[lL]/, /[eE]/, /[lL]/, /[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$51"]},
-    {"name": "isValue", "symbols": ["isValue$subexpression$1"], "postprocess": ([[category]]) => category.toLowerCase()}
+    {"name": "isValue", "symbols": ["isValue$subexpression$1"], "postprocess": ([[category]]) => category.toLowerCase()},
+    {"name": "powerWords$subexpression$1$subexpression$1", "symbols": [/[pP]/, /[oO]/, /[wW]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "powerWords$subexpression$1", "symbols": ["powerWords$subexpression$1$subexpression$1"]},
+    {"name": "powerWords$subexpression$1$subexpression$2", "symbols": [/[pP]/, /[oO]/, /[wW]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "powerWords$subexpression$1", "symbols": ["powerWords$subexpression$1$subexpression$2"]},
+    {"name": "powerWords", "symbols": ["powerWords$subexpression$1"]},
+    {"name": "toughnessWords$subexpression$1$subexpression$1", "symbols": [/[tT]/, /[oO]/, /[uU]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "toughnessWords$subexpression$1", "symbols": ["toughnessWords$subexpression$1$subexpression$1"]},
+    {"name": "toughnessWords$subexpression$1$subexpression$2", "symbols": [/[tT]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "toughnessWords$subexpression$1", "symbols": ["toughnessWords$subexpression$1$subexpression$2"]},
+    {"name": "toughnessWords$subexpression$1$subexpression$3", "symbols": [/[tT]/, /[oO]/, /[uU]/, /[gG]/, /[hH]/, /[nN]/, /[eE]/, /[sS]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "toughnessWords$subexpression$1", "symbols": ["toughnessWords$subexpression$1$subexpression$3"]},
+    {"name": "toughnessWords", "symbols": ["toughnessWords$subexpression$1"]}
 ]
   , ParserStart: "start"
 }
