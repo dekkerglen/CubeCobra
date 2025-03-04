@@ -319,12 +319,12 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 You can use <code>tou:</code> or <code>toughness:</code> to search for cards with certain toughness.
               </p>
               <p>
-                You can use <code>loy:</code> or
-                <code>loyalty:</code> to search for cards with certain starting loyalty.
+                You can use <code>loy:</code> or <code>loyalty:</code> to search for cards with certain starting
+                loyalty.
               </p>
               <p>
                 Operators supported: <code>:</code>, <code>=</code>, <code>{'<'}</code>, <code>{'>'}</code>,{' '}
-                <code>{'<='}</code>, <code>{'>='}</code>.
+                <code>{'<='}</code>, <code>{'>='}</code>, <code>!=</code>, <code>{'<>'}</code>.
               </p>
               <p>
                 <Text semibold>Examples:</Text>
@@ -338,6 +338,18 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                   {
                     query: <code>{'pow<5 tou<5'}</code>,
                     description: 'cards with both less than 5 power, and less than 5 toughness.',
+                  },
+                  {
+                    query: <code>{'pow<5 tou<5'}</code>,
+                    description: 'cards with both less than 5 power, and less than 5 toughness.',
+                  },
+                  {
+                    query: <code>{'pow>toughness'}</code>,
+                    description: 'cards with power greater than toughness.',
+                  },
+                  {
+                    query: <code>{'tou!=power'}</code>,
+                    description: 'cards with toughness not equal to power.',
                   },
                   {
                     query: <code>loy:3 or loy:4</code>,
