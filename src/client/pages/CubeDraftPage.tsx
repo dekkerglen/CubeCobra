@@ -379,14 +379,17 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       setDraftStatus((prev) => ({ ...prev, loading: false }));
     },
     [
-      draft.InitialState,
+      draftStatus.predictError,
+      draftStatus.loading,
+      draftStatus.predictionsLoading,
+      state,
+      setState,
+      getLocationReferences,
+      currentPredictions,
       draft.cards,
       draft.seats.length,
+      draft.InitialState,
       endDraft,
-      getLocationReferences,
-      setState,
-      state,
-      currentPredictions,
       getPredictions,
     ],
   );
