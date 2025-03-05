@@ -152,6 +152,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         window.location.href = `/draft/deckbuilder/${draft.id}`;
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('endDraft error caught:', err);
       setDraftStatus((prev) => ({ ...prev, loading: false }));
     }
@@ -175,6 +176,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         setRatings(processPredictions(json, request.packCards));
         return json;
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching predictions:', error, 'inputs', request.state);
         setDraftStatus((prev) => ({ ...prev, predictError: true }));
         return null;
@@ -206,11 +208,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   const makePick = useCallback(
     async (index: number, location: location, row: number, col: number) => {
       if (draftStatus.predictError || draftStatus.loading || draftStatus.predictionsLoading) {
-        console.log('Pick blocked:', {
-          predictError: draftStatus.predictError,
-          loading: draftStatus.loading,
-          predictionsLoading: draftStatus.predictionsLoading,
-        });
         return;
       }
 
