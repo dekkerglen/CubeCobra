@@ -234,13 +234,13 @@ const content = {
   put: async (document: Article | Episode | Podcast | Video, type: ContentType) => {
     document.id = document.id || uuidv4();
 
+    document.type = type;
     const { content, body, ownerId } = normalizeContentForWriting(document);
 
     await putBody(content.id, body);
 
     return client.put({
       ...content,
-      type,
       owner: ownerId,
     });
   },
