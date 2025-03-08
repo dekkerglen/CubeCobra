@@ -3,7 +3,7 @@ import Cube from '../../../../dynamo/models/cube';
 import CubeHash from '../../../../dynamo/models/cubeHash';
 import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
 import { Request, Response } from '../../../../types/express';
-import { isCubeViewable } from '../../../../util/cubefn';
+import { getCubeId, isCubeViewable } from '../../../../util/cubefn';
 import util from '../../../../util/util';
 
 export const editOverviewHandler = async (req: Request, res: Response) => {
@@ -125,7 +125,10 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
 
     await Cube.update(cube);
-    res.status(200).json({ success: 'Cube updated successfully' });
+
+    const redirect = `/cube/overview/${getCubeId(cube)}`;
+
+    res.status(200).json({ success: 'Cube updated successfully', redirect });
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);
