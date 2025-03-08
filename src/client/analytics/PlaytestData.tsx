@@ -62,7 +62,7 @@ const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
         .filter(([oracle]) => cardDict[oracle])
         .map(([oracle, { elo, mainboards, sideboards, picks, passes }]) => ({
           card: {
-            exportValue: oracle,
+            exportValue: cardName(cardDict[oracle]),
             ...cardDict[oracle],
           },
           elo: Math.round(elo || DefaultElo),
