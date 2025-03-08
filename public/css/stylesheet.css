@@ -786,6 +786,10 @@ video {
   top: 100%;
 }
 
+.bottom-\[5\%\] {
+  bottom: 5%;
+}
+
 .z-10 {
   z-index: 10;
 }
@@ -1150,6 +1154,10 @@ video {
 
 .w-96 {
   width: 24rem;
+}
+
+.w-\[140px\] {
+  width: 140px;
 }
 
 .w-full {
@@ -2234,6 +2242,10 @@ video {
 
 .italic {
   font-style: italic;
+}
+
+.tracking-tight {
+  letter-spacing: -0.025em;
 }
 
 .text-bg {
