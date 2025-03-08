@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import { encodeName, mainboardRate, pickRate } from 'utils/cardutil';
+import { cardName, cardNameLower, cardOracleId, encodeName, mainboardRate, pickRate } from 'utils/cardutil';
 import { fromEntries } from 'utils/Util';
 
 import Card, { DefaultElo } from '../../datatypes/Card';
@@ -29,7 +29,7 @@ const AutocardItem = withAutocard('div');
 const renderCardLink = (card: Card) => (
   <AutocardItem className="p-0" key={card.index} card={card}>
     <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
-      {card.details?.name}
+      {cardName(card)}
     </a>
   </AutocardItem>
 );
@@ -39,7 +39,7 @@ const renderPercent = (val: number) => {
 };
 
 const compareCardNames = (a: Card, b: Card): number => {
-  return (a?.details?.name_lower || '').localeCompare(b.details?.name_lower || '');
+  return cardNameLower(a).localeCompare(cardNameLower(b));
 };
 
 const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
@@ -47,12 +47,7 @@ const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
   const cards = changedCards.mainboard;
 
   const cardDict = useMemo(
-    () =>
-      fromEntries(
-        cards
-          .filter((card) => card.details && card.details.oracle_id)
-          .map((card) => [card.details?.oracle_id || '', card]),
-      ),
+    () => fromEntries(cards.filter((card) => cardOracleId(card)).map((card) => [cardOracleId(card), card])),
     [cards],
   );
 
