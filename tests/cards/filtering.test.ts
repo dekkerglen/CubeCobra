@@ -196,3 +196,82 @@ describe.each(formatFilters)('Format filter (%s)', (filterName) => {
     expect(makeFilter(`${filterName}:"Oathbreaker"`).err).toBeTruthy();
   });
 });
+
+const powerToughnessFilters = [
+  ['pow', 'power'],
+  ['power', 'power'],
+  ['tou', 'toughness'],
+  ['tough', 'toughness'],
+  ['toughness', 'toughness'],
+  ['pt', 'pt'],
+  ['wildpair', 'pt'],
+];
+
+describe.each(powerToughnessFilters)('Power/Toughness filter (%s)', (filterName, fieldUsed) => {
+  const assertFilter = (result: FilterResult) => {
+    expect(result.err).toBeFalsy();
+    expect(result.filter).toBeInstanceOf(Function);
+    expect(result.filter?.fieldsUsed).toEqual([fieldUsed]);
+  };
+
+  it(`${filterName} filtering`, async () => {
+    assertFilter(makeFilter(`${filterName}=3`));
+    assertFilter(makeFilter(`${filterName}:6`));
+    assertFilter(makeFilter(`${filterName}<>2`));
+    assertFilter(makeFilter(`${filterName}!=1`));
+    assertFilter(makeFilter(`${filterName}>0`));
+    assertFilter(makeFilter(`${filterName}<10`));
+    assertFilter(makeFilter(`${filterName}>=3`));
+    assertFilter(makeFilter(`${filterName}<=4`));
+  });
+
+  it(`${filterName} half decimal filters`, async () => {
+    assertFilter(makeFilter(`${filterName}>0.5`));
+    assertFilter(makeFilter(`${filterName}<2.5`));
+    assertFilter(makeFilter(`${filterName}=.5`));
+    assertFilter(makeFilter(`${filterName}!=.5`));
+  });
+
+  it(`${filterName} any other decimal fails`, async () => {
+    expect(makeFilter(`${filterName}>0.6`).err).toBeTruthy();
+    expect(makeFilter(`${filterName}!=1.2`).err).toBeTruthy();
+  });
+});
+
+const powerToughnessComparisonFilters = [
+  ['pow', 'tou'],
+  ['pow', 'tough'],
+  ['pow', 'toughness'],
+  ['power', 'tou'],
+  ['power', 'tough'],
+  ['power', 'toughness'],
+  ['tou', 'pow'],
+  ['tough', 'pow'],
+  ['toughness', 'pow'],
+  ['tou', 'power'],
+  ['tough', 'power'],
+  ['toughness', 'power'],
+];
+
+describe.each(powerToughnessComparisonFilters)(
+  'Power/Toughness comparison filter (%s)',
+  (filterName, comparisonName) => {
+    const assertFilter = (result: FilterResult) => {
+      expect(result.err).toBeFalsy();
+      expect(result.filter).toBeInstanceOf(Function);
+      //Sort as we don't care order
+      expect(result.filter?.fieldsUsed.sort()).toEqual(['power', 'toughness'].sort());
+    };
+
+    it(`${filterName} filtering`, async () => {
+      assertFilter(makeFilter(`${filterName}=${comparisonName}`));
+      assertFilter(makeFilter(`${filterName}:${comparisonName}`));
+      assertFilter(makeFilter(`${filterName}<>${comparisonName}`));
+      assertFilter(makeFilter(`${filterName}!=${comparisonName}`));
+      assertFilter(makeFilter(`${filterName}>${comparisonName}`));
+      assertFilter(makeFilter(`${filterName}<${comparisonName}`));
+      assertFilter(makeFilter(`${filterName}>=${comparisonName}`));
+      assertFilter(makeFilter(`${filterName}<=${comparisonName}`));
+    });
+  },
+);
