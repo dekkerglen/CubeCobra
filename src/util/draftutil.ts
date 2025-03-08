@@ -1,4 +1,4 @@
-import { cardCmc, cardType, cmcColumn } from '../client/utils/cardutil';
+import { cardCmc, cardType } from '../client/utils/cardutil';
 import Card from '../datatypes/Card';
 import Draft, { DraftStep } from '../datatypes/Draft';
 
@@ -257,14 +257,22 @@ export const getDefaultPosition = (card: Card, picks: any[][][]): [number, numbe
   return [row, col, colIndex];
 };
 
-export const getCardDefaultRowColumn = (card: Card): { row: number; col: number } => {
-  const isCreature = cardType(card).toLowerCase().includes('creature');
-  //Some cards, like Assault//Battery, have a CMC that is a decimal (and then there are un-cards). cmcColumn normalizes between 0 and 8
-  const cmc = cmcColumn(card);
+export const getCardDefaultRowColumn = (card: any) => {
+  if (!card) {
+    // Return default values if card is undefined
+    return { row: 0, col: 0 };
+  }
 
-  const row = isCreature ? 0 : 1;
-  const col = Math.max(0, Math.min(7, cmc));
+  // Existing logic
+  const type = cardType(card);
+  const cmc = card.cmc ?? card.details?.cmc ?? 0;
 
+  let row = 0;
+  if (!type.toLowerCase().includes('creature')) {
+    row = 1;
+  }
+
+  const col = Math.min(7, Math.max(0, Math.floor(cmc)));
   return { row, col };
 };
 

@@ -26,7 +26,6 @@ interface PackProps {
 const Pack: React.FC<PackProps> = ({
   pack = [],
   loading = false,
-  loadingPredictions = false,
   title = 'Pack',
   disabled = false,
   ratings,
@@ -50,10 +49,6 @@ const Pack: React.FC<PackProps> = ({
         {error ? (
           <Button onClick={onRetry} color="danger" disabled={retryInProgress}>
             {retryInProgress ? 'Retrying...' : 'Bot picks failed. Try again?'}
-          </Button>
-        ) : loadingPredictions ? (
-          <Button color="secondary" disabled>
-            Making Bot Picks...
           </Button>
         ) : (
           ratings &&
