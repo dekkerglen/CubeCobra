@@ -297,6 +297,8 @@ app.use((err, req, res) => {
     error: err.message,
     requestId: req.uuid,
     title: 'Oops! Something went wrong.',
+  }, {
+    noindex: true,
   });
 });
 

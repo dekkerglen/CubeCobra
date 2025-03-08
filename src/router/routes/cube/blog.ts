@@ -145,7 +145,7 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
       }
     }
 
-    return render(req, res, 'BlogPostPage', { post });
+    return render(req, res, 'BlogPostPage', { post }, { noindex: true });
   } catch (err) {
     return handleRouteError(req, res, err, '/404');
   }
