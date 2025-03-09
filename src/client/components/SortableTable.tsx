@@ -45,7 +45,8 @@ export const compareStrings = (a: any, b: any): number => a?.toString?.()?.local
 export const SortableTable: React.FC<SortableTableProps> = ({ data, defaultSortConfig, sortFns, columnProps }) => {
   const { items, requestSort, sortConfig } = useSortableData(data, defaultSortConfig, sortFns);
 
-  const exportData = data.map((row) =>
+  //Export CSV data uses same sort as the table shown
+  const exportData = items.map((row) =>
     fromEntries(
       Object.entries(row).map(([key, value]) => {
         if (value.exportValue) {

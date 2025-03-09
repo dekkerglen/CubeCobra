@@ -75,11 +75,11 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
       }),
     });
 
+    const body = await response.json();
     if (response.ok) {
       //Reload page to ensure state is updated
-      window.location.reload();
+      window.location.replace(body.redirect);
     } else {
-      const body = await response.json();
       setAlerts([{ color: 'danger', message: body.error }]);
     }
   }, [csrfFetch, state]);
