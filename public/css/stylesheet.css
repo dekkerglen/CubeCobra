@@ -758,6 +758,10 @@ video {
   bottom: 0.5rem;
 }
 
+.bottom-\[5\%\] {
+  bottom: 5%;
+}
+
 .bottom-full {
   bottom: 100%;
 }
@@ -784,10 +788,6 @@ video {
 
 .top-full {
   top: 100%;
-}
-
-.bottom-\[5\%\] {
-  bottom: 5%;
 }
 
 .z-10 {
@@ -1154,10 +1154,6 @@ video {
 
 .w-96 {
   width: 24rem;
-}
-
-.w-\[140px\] {
-  width: 140px;
 }
 
 .w-full {

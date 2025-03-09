@@ -271,7 +271,13 @@ describe('Get Blog Post', () => {
 
     await call(getBlogPostHandler).withParams({ id: blog.id }).send();
 
-    expect(util.render).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'BlogPostPage', { post: blog });
+    expect(util.render).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      'BlogPostPage',
+      { post: blog },
+      { noindex: true },
+    );
   });
 
   it('should handle errors gracefully', async () => {
