@@ -285,6 +285,8 @@ app.use((req, res) =>
   render(req, res, 'ErrorPage', {
     requestId: req.uuid,
     title: '404: Page not found',
+  }, {
+    noindex: true,
   }),
 );
 
