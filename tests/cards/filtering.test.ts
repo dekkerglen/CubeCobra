@@ -1,4 +1,6 @@
 import { FilterResult, makeFilter } from '../../src/client/filtering/FilterCards';
+import Card from '../../src/datatypes/Card';
+import { createCard, createCardDetails } from '../test-utils/data';
 
 describe('Name filter syntax', () => {
   const assertValidNameFilter = (result: FilterResult) => {
@@ -137,9 +139,18 @@ describe('Tag filter syntax', () => {
     expect(result.filter?.fieldsUsed).toEqual(['tags']);
   };
 
+  const assertInvalidTagFilter = (result: FilterResult) => {
+    expect(result.err).toBeTruthy();
+  };
+
   it('Tag contents filter operations', async () => {
+    //Partial matching
     assertValidTagFilter(makeFilter('tag:fetch'));
     assertValidTagFilter(makeFilter('tags:fetch'));
+
+    //Exact matching
+    assertValidTagFilter(makeFilter('tag:"fetch"'));
+    assertValidTagFilter(makeFilter("tags:'fetch'"));
   });
 
   it('Tag count filter operations', async () => {
@@ -151,6 +162,107 @@ describe('Tag filter syntax', () => {
     assertValidTagFilter(makeFilter('tag>=0'));
     assertValidTagFilter(makeFilter('tag<2'));
     assertValidTagFilter(makeFilter('tag<=1'));
+  });
+
+  it('Tag contents invalid filters', async () => {
+    //At this time Tag= either needs to be a single/double quoted string, or be a number.
+    //To allow this form would require very tricky nearley grammar since numbers are also strings (eg both branches would match)
+    assertInvalidTagFilter(makeFilter('tag=fetch'));
+    assertInvalidTagFilter(makeFilter('tags=foo'));
+    assertInvalidTagFilter(makeFilter('tag="fetch"'));
+    assertInvalidTagFilter(makeFilter('tags="foo"'));
+    assertInvalidTagFilter(makeFilter("tag='fetch'"));
+    assertInvalidTagFilter(makeFilter("tags='foo'"));
+  });
+
+  const getDeckWithTags = (): Card[] => {
+    const deck: Card[] = [];
+
+    deck.push(
+      createCard({
+        cardID: '00001234',
+        tags: [],
+        details: createCardDetails({
+          name_lower: 'badlands',
+        }),
+      }),
+    );
+    deck.push(
+      createCard({
+        cardID: '00001235',
+        tags: ['Fetch lands', 'Tarkir'].map((v) => v.toLowerCase()),
+        details: createCardDetails({
+          name_lower: 'windswept heath',
+        }),
+      }),
+    );
+    deck.push(
+      createCard({
+        cardID: '00001345',
+        tags: ['Combo', 'Counters'],
+        details: createCardDetails({
+          name_lower: 'hardened scales',
+        }),
+      }),
+    );
+    deck.push(
+      createCard({
+        cardID: '00001522',
+        tags: ['Fetchable', 'Grixis'],
+        details: createCardDetails({
+          name_lower: 'xanders lounge',
+        }),
+      }),
+    );
+    deck.push(
+      createCard({
+        cardID: '00001577',
+        tags: ['Unreliable', 'Fetchable'],
+        details: createCardDetails({
+          name_lower: 'fabled passage',
+        }),
+      }),
+    );
+    deck.push(
+      createCard({
+        cardID: '00001611',
+        tags: ['Landfall', 'Bad fetch'],
+        details: createCardDetails({
+          name_lower: 'bad river',
+        }),
+      }),
+    );
+
+    return deck;
+  };
+
+  const assertFilteredDeck = (filterText: string, expectedCardIds: string[]) => {
+    const deck = getDeckWithTags();
+    const { filter } = makeFilter(filterText);
+
+    expect(filter).not.toBeNull();
+    if (filter !== null) {
+      const filteredCards = deck.filter(filter);
+
+      //Sort as not caring about ordering in this
+      expect(filteredCards.map((c) => c.cardID).sort()).toEqual(expectedCardIds.sort());
+    }
+  };
+
+  it('Tag string partial match', async () => {
+    assertFilteredDeck('tags:fetch', ['00001235', '00001522', '00001577', '00001611']);
+    assertFilteredDeck('tag:insane', []);
+    assertFilteredDeck('tags:Grix', ['00001522']);
+  });
+
+  it('Tag string partial match mulitple words, means tag match AND name filter', async () => {
+    assertFilteredDeck('tags:fetch river', ['00001611']);
+  });
+
+  it('Tag string exact match', async () => {
+    assertFilteredDeck('tags:"Fetchable"', ['00001522', '00001577']);
+    assertFilteredDeck('tag:"Fetch lands"', ['00001235']);
+    assertFilteredDeck('tags:"Artifacts"', []);
   });
 });
 
