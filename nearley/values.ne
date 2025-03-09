@@ -146,8 +146,11 @@ colorCombinationValue ->
 
 @builtin "string.ne"
 
-stringSetElementOpValue -> ":" stringValue {% ([op, value]) => setElementOperation(op, value) %}
-  | ("=" | "!=" | "<>" | "<" | "<=" | ">" | ">=") integerValue {% ([[op], value]) => setCountOperation(op, value) %}
+# For string matching (with colon) if the string is quoted then exact match, otherwise partial
+stringSetElementOpValue -> ("=" | "!=" | "<>" | "<" | "<=" | ">" | ">=") integerValue {% ([[op], value]) => setCountOperation(op, value) %}
+  | ":" noQuoteStringValue {% ([, value]) => setElementOperation(':', value.toLowerCase()) %}
+  | ":" dqstring  {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
+  | ":" sqstring  {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
 
 stringOpValue -> equalityOperator stringValue {% ([op, value]) => stringOperation(op, value) %}
 

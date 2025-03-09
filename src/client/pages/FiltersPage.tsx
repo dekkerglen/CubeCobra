@@ -458,7 +458,22 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 rows={[
                   {
                     query: <code>tag:Signed</code>,
-                    description: 'All cards in a cube who have a tag which contains Signed, case insensitive.',
+                    description:
+                      'All cards in a cube who have a tag which contains Signed, case insensitive. eg Matches tags "Signed", "Unsigned", "Signed by", or "Redesigned"',
+                  },
+                  {
+                    query: <code>tag:Signed Blood</code>,
+                    description:
+                      'This is a combination filter of tag and name, matching all cards who have a tag containing Signed, and whose name contains Blood',
+                  },
+                  {
+                    query: <code>tag:"Signed"</code>,
+                    description: 'All cards in a cube who have a tag that exactly matches Signed, case insensitive.',
+                  },
+                  {
+                    query: <code>tag:'Counter Synergy'</code>,
+                    description:
+                      'All cards in a cube who have a tag that exactly matches "Counter Synergy", case insensitive.',
                   },
                   {
                     query: <code>tags=0</code>,
