@@ -1331,7 +1331,6 @@ var grammar = {
             return d.join("");
         }
         },
-    {"name": "stringSetElementOpValue", "symbols": [{"literal":":"}, "stringValue"], "postprocess": ([op, value]) => setElementOperation(op, value)},
     {"name": "stringSetElementOpValue$subexpression$1", "symbols": [{"literal":"="}]},
     {"name": "stringSetElementOpValue$subexpression$1$string$1", "symbols": [{"literal":"!"}, {"literal":"="}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "stringSetElementOpValue$subexpression$1", "symbols": ["stringSetElementOpValue$subexpression$1$string$1"]},
@@ -1344,6 +1343,9 @@ var grammar = {
     {"name": "stringSetElementOpValue$subexpression$1$string$4", "symbols": [{"literal":">"}, {"literal":"="}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "stringSetElementOpValue$subexpression$1", "symbols": ["stringSetElementOpValue$subexpression$1$string$4"]},
     {"name": "stringSetElementOpValue", "symbols": ["stringSetElementOpValue$subexpression$1", "integerValue"], "postprocess": ([[op], value]) => setCountOperation(op, value)},
+    {"name": "stringSetElementOpValue", "symbols": [{"literal":":"}, "noQuoteStringValue"], "postprocess": ([, value]) => setElementOperation(':', value.toLowerCase())},
+    {"name": "stringSetElementOpValue", "symbols": [{"literal":":"}, "dqstring"], "postprocess": ([, value]) => setElementOperation('=', value.toLowerCase())},
+    {"name": "stringSetElementOpValue", "symbols": [{"literal":":"}, "sqstring"], "postprocess": ([, value]) => setElementOperation('=', value.toLowerCase())},
     {"name": "stringOpValue", "symbols": ["equalityOperator", "stringValue"], "postprocess": ([op, value]) => stringOperation(op, value)},
     {"name": "stringContainOpValue", "symbols": ["equalityOperator", "stringValue"], "postprocess": ([op, value]) => stringContainOperation(op, value)},
     {"name": "stringExactOpValue", "symbols": ["equalityOperator", "stringValue"], "postprocess": ([op, value]) => equalityOperation(op, value)},
