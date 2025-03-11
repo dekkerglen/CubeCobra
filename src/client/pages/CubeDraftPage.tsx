@@ -547,7 +547,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       if (target.type === locations.pack) {
         return;
       }
-      //Dragged a card from the pack to the deck or sideboard (the latter is off)
+      //Dragged a card from the pack to the deck or sideboard
       if (source.type === locations.pack) {
         if (target.type === locations.deck || target.type === locations.sideboard) {
           dragCardPick(source, target);

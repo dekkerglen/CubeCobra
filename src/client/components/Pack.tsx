@@ -51,13 +51,13 @@ const Pack: React.FC<PackProps> = ({
             {retryInProgress ? 'Retrying...' : 'Bot picks failed. Try again?'}
           </Button>
         ) : (
-          ratings &&
-          ratings.length > 0 &&
-          !showRatings && (
-            <Button onClick={() => setShowRatings(true)} color="primary">
-              Show CubeCobra Bot Ratings
-            </Button>
-          )
+          <Button
+            className={ratings && ratings.length > 0 && !showRatings ? '' : 'invisible'}
+            onClick={() => setShowRatings(true)}
+            color="primary"
+          >
+            Show CubeCobra Bot Ratings
+          </Button>
         )}
       </CardHeader>
       <CardBody>
