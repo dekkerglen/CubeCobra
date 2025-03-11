@@ -1092,6 +1092,10 @@ video {
   height: 1.5rem;
 }
 
+.h-\[calc\(100vh-2rem\)\] {
+  height: calc(100vh - 2rem);
+}
+
 .h-full {
   height: 100%;
 }
@@ -1202,6 +1206,10 @@ video {
 
 .max-w-screen-xl {
   max-width: 1280px;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
 }
 
 .flex-shrink {
