@@ -332,9 +332,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       if (nextStep.action === 'endpack') {
         // we open the next pack or end the draft
         if (draft.InitialState && state.pack === draft.InitialState[0].length) {
+          setDraftStatus((prev) => ({ ...prev, loading: false }));
           newState.seats[0].picks = picks;
           setState(newState);
-          setDraftStatus((prev) => ({ ...prev, loading: false }));
 
           // Now attempt to end the draft
           await endDraft();
