@@ -72,9 +72,14 @@ interface ModalHeaderProps {
   setOpen: (open: boolean) => void;
 }
 
-export const ModalHeader: React.FC<ModalHeaderProps> = ({ children, className, setOpen }) => {
+export const ModalHeader: React.FC<ModalHeaderProps> = ({ children, className = '', setOpen }) => {
   return (
-    <div className={`bg-bg-accent-accent font-semibold text-xl p-2 flex ${className}`}>
+    <div
+      className={classNames({
+        'bg-bg-accent-accent font-semibold text-xl p-2 flex': true,
+        [className]: !!className,
+      })}
+    >
       {children}
       <button type="button" className="ml-auto" onClick={() => setOpen(false)}>
         <XIcon size={24} />
