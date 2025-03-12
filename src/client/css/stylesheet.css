@@ -342,3 +342,7 @@ img.mana-symbol-sm {
 .markdown .text-center img.max-w-full {
 	display: inline-block;
 }
+
+.max-h-1\/2 {
+  max-height: 50vh;
+}

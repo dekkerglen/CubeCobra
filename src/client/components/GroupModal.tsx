@@ -204,7 +204,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
         <Row>
           <Col xs={6}>
             <Flexbox direction="col" gap="2">
-              <div className="overflow-y-auto">
+              <div className="overflow-y-auto max-h-1/2">
                 <ListGroup>
                   {cards.map((card, index) => (
                     <AutocardListItem

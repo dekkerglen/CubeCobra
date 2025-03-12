@@ -2769,6 +2769,10 @@ img.mana-symbol-sm {
   display: inline-block;
 }
 
+.max-h-1\/2 {
+  max-height: 50vh;
+}
+
 @media (min-width: 640px) {
   .sm\:container {
     width: 100%;
