@@ -100,8 +100,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   const [sideboard, setSideboard] = useLocalStorage(`sideboard-${draft.id}`, setupPicks(1, 8));
   const [ratings, setRatings] = useState<number[]>([]);
   const [currentPredictions, setCurrentPredictions] = useState<PredictResponse | null>(null);
-
-  // Add state to track the pending pick made during predictionsLoading
+  const [picksInOrder, setPicksInOrder] = useLocalStorage<number[]>(`picks-${draft.id}`, []); // Add state to track the pending pick made during predictionsLoading
   const [pendingPick, setPendingPick] = useState<number | null>(null);
 
   // Draft Status
@@ -210,17 +209,14 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   }, [state, draft.cards, getPredictions, draftStatus.retryInProgress, setDraftStatus]);
 
   const makePick = useCallback(
-    async (index: number, location: location) => {
+    async (index: number) => {
       setDraftStatus((prev) => ({ ...prev, loading: true }));
       setRatings([]); // Clear ratings
       const newState = { ...state };
       const currentStep = newState.stepQueue[0];
-      // User picks are combination of mainboard and sideboard.
-      const picks = location === locations.deck ? [...mainboard.flat(2), ...sideboard.flat(2)] : [];
-
       if (currentStep.action.includes('pick')) {
         // Most recent pick is already in this data at this point
-        newState.seats[0].picks = picks;
+        newState.seats[0].picks = picksInOrder;
       }
 
       // if amount is more than 1
@@ -333,7 +329,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         // we open the next pack or end the draft
         if (draft.InitialState && state.pack === draft.InitialState[0].length) {
           setDraftStatus((prev) => ({ ...prev, loading: false }));
-          newState.seats[0].picks = picks;
+          newState.seats[0].picks = picksInOrder;
           setState(newState);
 
           // Now attempt to end the draft
@@ -383,8 +379,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       draft.InitialState,
       endDraft,
       getPredictions,
-      mainboard,
-      sideboard,
+      picksInOrder,
     ],
   );
 
@@ -400,6 +395,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
 
       const cardIndex = state.seats[0].pack[source.index];
       if (cardIndex === undefined || !draft.cards[cardIndex]) return;
+
+      setPicksInOrder((prev) => [cardIndex, ...prev]);
 
       // Update the board immediately
       if (draftStatus.predictionsLoading) {
@@ -420,7 +417,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         });
 
         // Make the actual pick after the board update
-        makePick(source.index, target.type);
+        makePick(source.index);
       }
     },
     [
@@ -432,6 +429,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       setMainboard,
       setSideboard,
       state.seats,
+      setPicksInOrder,
     ],
   );
 
@@ -471,6 +469,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         return;
       }
 
+      setPicksInOrder((prev) => [cardIndex, ...prev]);
+
       const { row, col } = getCardDefaultRowColumn(card);
 
       if (draftStatus.predictionsLoading) {
@@ -487,10 +487,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
           return newBoard;
         });
 
-        makePick(packIndex, locations.deck);
+        makePick(packIndex);
       }
     },
-    [state.seats, draft.cards, makePick, draftStatus.predictionsLoading, setMainboard, setPendingPick],
+    [state.seats, draft.cards, makePick, draftStatus.predictionsLoading, setMainboard, setPendingPick, setPicksInOrder],
   );
 
   /*
@@ -581,7 +581,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         return;
       }
 
-      makePick(packIndex, locations.deck);
+      makePick(packIndex);
     }
   }, [draftStatus.predictionsLoading, pendingPick, makePick, state.seats, draft.cards, setPendingPick]);
 
