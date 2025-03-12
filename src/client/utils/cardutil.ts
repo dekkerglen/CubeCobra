@@ -197,7 +197,10 @@ export const cardCmc = (card: Card): number => {
 
 export const cardId = (card: Card): string => card.cardID ?? card.details?.scryfall_id;
 
-export const cardType = (card: Partial<Card>): string => card.type_line ?? card.details?.type ?? '';
+export const cardType = (card: Partial<Card>): string => {
+  if (!card) return ''; // Defensive check for undefined card
+  return card.type_line ?? card.details?.type ?? '';
+};
 
 export const cardRarity = (card: Card): string => card.rarity ?? card.details?.rarity ?? '';
 
