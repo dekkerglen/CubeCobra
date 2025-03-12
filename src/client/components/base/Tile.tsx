@@ -12,10 +12,8 @@ interface TileProps {
 
 const Tile: React.FC<TileProps> = ({ className, children, href }) => {
   return (
-    <div
-      onClick={() => {
-        window.location.href = href;
-      }}
+    <a
+      href={href}
       className={classNames(
         'block bg-bg-accent shadow overflow-hidden border border-border',
         'hover:bg-bg-active cursor-pointer hover:border-border-active',
@@ -23,7 +21,7 @@ const Tile: React.FC<TileProps> = ({ className, children, href }) => {
       )}
     >
       <AspectRatioBox ratio={1}>{children}</AspectRatioBox>
-    </div>
+    </a>
   );
 };
 
