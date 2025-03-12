@@ -26,7 +26,6 @@ interface PackProps {
 const Pack: React.FC<PackProps> = ({
   pack = [],
   loading = false,
-  loadingPredictions = false,
   title = 'Pack',
   disabled = false,
   ratings,
@@ -51,18 +50,14 @@ const Pack: React.FC<PackProps> = ({
           <Button onClick={onRetry} color="danger" disabled={retryInProgress}>
             {retryInProgress ? 'Retrying...' : 'Bot picks failed. Try again?'}
           </Button>
-        ) : loadingPredictions ? (
-          <Button color="secondary" disabled>
-            Making Bot Picks...
-          </Button>
         ) : (
-          ratings &&
-          ratings.length > 0 &&
-          !showRatings && (
-            <Button onClick={() => setShowRatings(true)} color="primary">
-              Show CubeCobra Bot Ratings
-            </Button>
-          )
+          <Button
+            className={ratings && ratings.length > 0 && !showRatings ? '' : 'invisible'}
+            onClick={() => setShowRatings(true)}
+            color="primary"
+          >
+            Show CubeCobra Bot Ratings
+          </Button>
         )}
       </CardHeader>
       <CardBody>
