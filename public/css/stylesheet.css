@@ -3399,6 +3399,14 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(9, minmax(0, 1fr));
   }
 
+  .md\:flex-nowrap {
+    flex-wrap: nowrap;
+  }
+
+  .md\:justify-start {
+    justify-content: flex-start;
+  }
+
   .md\:px-4 {
     padding-left: 1rem;
     padding-right: 1rem;
