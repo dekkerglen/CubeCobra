@@ -39,6 +39,7 @@ interface DraftStatus {
   predictionsLoading: boolean;
   predictError: boolean;
   retryInProgress: boolean;
+  draftCompleted: boolean;
 }
 
 interface BatchPredictRequest {
@@ -100,17 +101,17 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   const [sideboard, setSideboard] = useLocalStorage(`sideboard-${draft.id}`, setupPicks(1, 8));
   const [ratings, setRatings] = useState<number[]>([]);
   const [currentPredictions, setCurrentPredictions] = useState<PredictResponse | null>(null);
-
-  // Add state to track the pending pick made during predictionsLoading
-  const [pendingPick, setPendingPick] = useState<number | null>(null);
+  const [userPicksInOrder, setUserPicksInOrder] = useLocalStorage<number[]>(`picks-${draft.id}`, []); // Tracks the pick sequencing, managed separately from the mainboard/sideboard state
+  const [pendingPick, setPendingPick] = useState<number | null>(null); // Add state to track the pending pick made during predictionsLoading
 
   // Draft Status
   // These are used to track the status of the draft itself, including loading, errors, etc.
   const [draftStatus, setDraftStatus] = useState<DraftStatus>({
-    loading: false,
-    predictionsLoading: false,
-    predictError: false,
-    retryInProgress: false,
+    loading: false, // We're not showing a pack because we're waiting for something
+    predictionsLoading: false, // We're waiting for the bots to make a pick
+    predictError: false, // Bot predict call failed
+    retryInProgress: false, // User's sttempting to handle that failure
+    draftCompleted: false, // We've made the final pick and are ready to endDraft
   });
 
   const [dragStartTime, setDragStartTime] = useState<number | null>(null);
@@ -135,7 +136,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
 
   const endDraft = useCallback(async () => {
     setDraftStatus((prev) => ({ ...prev, loading: true }));
-
     try {
       const response = await csrfFetch(`/draft/finish/${draft.id}`, {
         method: 'POST',
@@ -143,7 +143,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          state,
+          // guarantee that we're submitting with userPicksInOrder
+          state: { ...state, seats: [{ ...state.seats[0], picks: userPicksInOrder }, ...state.seats.slice(1)] },
           mainboard,
           sideboard,
         }),
@@ -158,9 +159,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('endDraft error caught:', err);
-      setDraftStatus((prev) => ({ ...prev, loading: false }));
+      setDraftStatus((prev) => ({ ...prev, loading: false, draftCompleted: false }));
     }
-  }, [csrfFetch, draft.id, mainboard, sideboard, state, setDraftStatus]);
+  }, [csrfFetch, draft.id, mainboard, userPicksInOrder, sideboard, state, setDraftStatus]);
 
   const getPredictions = useCallback(
     async (request: { state: any; packCards: { index: number; oracle_id: string }[] }) => {
@@ -210,17 +211,14 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   }, [state, draft.cards, getPredictions, draftStatus.retryInProgress, setDraftStatus]);
 
   const makePick = useCallback(
-    async (index: number, location: location) => {
+    async (index: number) => {
       setDraftStatus((prev) => ({ ...prev, loading: true }));
       setRatings([]); // Clear ratings
       const newState = { ...state };
       const currentStep = newState.stepQueue[0];
-      // User picks are combination of mainboard and sideboard.
-      const picks = location === locations.deck ? [...mainboard.flat(2), ...sideboard.flat(2)] : [];
-
       if (currentStep.action.includes('pick')) {
         // Most recent pick is already in this data at this point
-        newState.seats[0].picks = picks;
+        newState.seats[0].picks = userPicksInOrder;
       }
 
       // if amount is more than 1
@@ -332,12 +330,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       if (nextStep.action === 'endpack') {
         // we open the next pack or end the draft
         if (draft.InitialState && state.pack === draft.InitialState[0].length) {
-          setDraftStatus((prev) => ({ ...prev, loading: false }));
-          newState.seats[0].picks = picks;
+          newState.seats[0].picks = userPicksInOrder;
           setState(newState);
-
-          // Now attempt to end the draft
-          await endDraft();
+          setDraftStatus((prev) => ({ ...prev, loading: false, draftCompleted: true }));
           return;
         }
 
@@ -381,10 +376,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       draft.cards,
       draft.seats.length,
       draft.InitialState,
-      endDraft,
       getPredictions,
-      mainboard,
-      sideboard,
+      userPicksInOrder,
     ],
   );
 
@@ -412,6 +405,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
           return newBoard;
         });
       } else {
+        setUserPicksInOrder((prev) => [cardIndex, ...prev]);
         const setter = target.type === locations.deck ? setMainboard : setSideboard;
         setter((prev) => {
           const newBoard = prev.map((r) => r.map((c) => [...c]));
@@ -420,7 +414,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         });
 
         // Make the actual pick after the board update
-        makePick(source.index, target.type);
+        makePick(source.index);
       }
     },
     [
@@ -432,6 +426,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       setMainboard,
       setSideboard,
       state.seats,
+      setUserPicksInOrder,
     ],
   );
 
@@ -482,15 +477,24 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         setPendingPick(packIndex);
       } else {
         setMainboard((prev) => {
+          setUserPicksInOrder((prev) => [cardIndex, ...prev]);
           const newBoard = prev.map((r) => r.map((c) => [...c]));
           newBoard[row][col].push(cardIndex);
           return newBoard;
         });
 
-        makePick(packIndex, locations.deck);
+        makePick(packIndex);
       }
     },
-    [state.seats, draft.cards, makePick, draftStatus.predictionsLoading, setMainboard, setPendingPick],
+    [
+      state.seats,
+      draft.cards,
+      makePick,
+      draftStatus.predictionsLoading,
+      setMainboard,
+      setPendingPick,
+      setUserPicksInOrder,
+    ],
   );
 
   /*
@@ -524,6 +528,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       const { active, over } = event;
       //If drag and drop ends without a collision, eg outside the drag/drop area, do nothing
       if (!over) return;
+      // Can't make changes while drafting is over until deckbuilding to avoid weird timing issues
+      if (draftStatus.draftCompleted) return;
 
       const source = active.data.current as DraftLocation;
       const target = over.data.current as DraftLocation;
@@ -557,7 +563,14 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       //Otherwise the drag had nothing to do with the pack
       moveCardBetweenDeckStacks(source, target);
     },
-    [applyCardClickOnDeckStack, dragStartTime, moveCardBetweenDeckStacks, selectCardByIndex, dragCardPick],
+    [
+      applyCardClickOnDeckStack,
+      dragStartTime,
+      moveCardBetweenDeckStacks,
+      selectCardByIndex,
+      dragCardPick,
+      draftStatus.draftCompleted,
+    ],
   );
 
   // Converts pendingPicks into real picks when we're ready
@@ -566,13 +579,13 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       const packIndex = pendingPick;
       // Clear pendingPick immediately to prevent race conditions
       setPendingPick(null);
-
       // Some checks to verify that the pending pick is still valid
       if (packIndex < 0 || packIndex >= state.seats[0].pack.length) {
         return;
       }
 
       const cardIndex = state.seats[0].pack[packIndex];
+      setUserPicksInOrder((prev) => [cardIndex, ...prev]);
       if (cardIndex === undefined) {
         return;
       }
@@ -581,9 +594,24 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         return;
       }
 
-      makePick(packIndex, locations.deck);
+      makePick(packIndex);
     }
-  }, [draftStatus.predictionsLoading, pendingPick, makePick, state.seats, draft.cards, setPendingPick]);
+  }, [
+    draftStatus.predictionsLoading,
+    pendingPick,
+    makePick,
+    state.seats,
+    draft.cards,
+    setPendingPick,
+    setUserPicksInOrder,
+  ]);
+
+  // Add a useEffect to handle ending the draft
+  useEffect(() => {
+    if (draftStatus.draftCompleted) {
+      endDraft();
+    }
+  }, [draftStatus.draftCompleted, endDraft]);
 
   // this is the auto-pick logic
   useEffect(() => {
