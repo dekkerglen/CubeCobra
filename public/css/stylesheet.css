@@ -3198,6 +3198,10 @@ img.mana-symbol-sm {
     display: block;
   }
 
+  .sm\:flex {
+    display: flex;
+  }
+
   .sm\:hidden {
     display: none;
   }
@@ -3269,6 +3273,14 @@ img.mana-symbol-sm {
 
   .sm\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
+
+  .sm\:flex-row {
+    flex-direction: row;
+  }
+
+  .sm\:gap-2 {
+    gap: 0.5rem;
   }
 
   .sm\:text-sm {

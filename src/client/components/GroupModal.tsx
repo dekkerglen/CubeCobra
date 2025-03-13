@@ -328,15 +328,13 @@ const GroupModal: React.FC<GroupModalProps> = ({
           </Col>
         </Row>
       </ModalBody>
-      <ModalFooter>
+      <ModalFooter className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-2">
         <Button block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
           Apply all
         </Button>
-        &nbsp;
         <Button block color="danger" onClick={removeAll}>
           Remove all
         </Button>
-        &nbsp;
         <Button
           color="accent"
           block
@@ -347,7 +345,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
         >
           All to Maybeboard
         </Button>
-        &nbsp;
         <Button
           color="accent"
           block
@@ -358,13 +355,11 @@ const GroupModal: React.FC<GroupModalProps> = ({
         >
           All to Mainboard
         </Button>
-        &nbsp;
         {anyCardRemoved && (
           <>
             <Button block color="primary" onClick={revertRemoval}>
               Revert removal
             </Button>
-            &nbsp;
           </>
         )}
         {anyCardChanged && (
@@ -372,7 +367,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
             <Button block color="primary" onClick={bulkRevertEditAll}>
               Revert edits
             </Button>
-            &nbsp;
           </>
         )}
       </ModalFooter>
