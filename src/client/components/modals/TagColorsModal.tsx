@@ -139,9 +139,9 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
   );
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen} md>
+    <Modal isOpen={isOpen} setOpen={setOpen} md scrollable>
       <ModalHeader setOpen={setOpen}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
-      <ModalBody>
+      <ModalBody scrollable>
         {showTagColors ? (
           <LoadingButton
             block
