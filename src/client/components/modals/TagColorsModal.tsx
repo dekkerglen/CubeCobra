@@ -79,6 +79,7 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
       if (response.ok) {
         setTagColors(colors);
       } else {
+        // eslint-disable-next-line no-console -- Debugging
         console.error('Request failed.');
       }
       setLoading(false);
