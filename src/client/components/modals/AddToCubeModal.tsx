@@ -95,9 +95,6 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
                 Analytics
               </Button>
             )}
-            <Button block color="secondary" onClick={() => setOpen(false)}>
-              Close
-            </Button>
           </Flexbox>
         </ModalFooter>
       </Modal>
@@ -135,9 +132,6 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
             value={selectedBoard}
             setValue={(val) => setSelectedBoard(val)}
           />
-          <LoadingButton block loading={loading} color="primary" onClick={add}>
-            Add
-          </LoadingButton>
         </Flexbox>
       </ModalBody>
       <ModalFooter>
@@ -147,9 +141,9 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
               Analytics
             </Button>
           )}
-          <Button block color="secondary" onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <LoadingButton block loading={loading} color="primary" onClick={add}>
+            Add
+          </LoadingButton>
         </Flexbox>
       </ModalFooter>
     </Modal>
