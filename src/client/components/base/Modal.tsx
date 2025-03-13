@@ -70,12 +70,10 @@ export const Modal: React.FC<ModalProps> = ({
                     className={classNames(
                       'relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col',
                       {
-                        /* To be scrollable the modal must have a fixed height, and here we make it the whole viewport (minus some margin basically)
-                         * 100vh is 100% of view port height (vh). Subtract 2rem gives about the same gap from bottom as from top of modal
+                        /* To be scrollable the modal must have a maximum height, and here we make it the whole viewport (minus some margin basically)
+                         * 95% of the view port height (vh units) works well for both desktop and mobile
                          */
-                        'overflow-hidden h-[calc(100vh-2rem)]': scrollable,
-                        //If not scrollable, the contents of the modal define its height
-                        'max-h-modal': !scrollable,
+                        'overflow-hidden max-h-95/100': scrollable,
                       },
                     )}
                   >

@@ -1092,10 +1092,6 @@ video {
   height: 1.5rem;
 }
 
-.h-\[calc\(100vh-2rem\)\] {
-  height: calc(100vh - 2rem);
-}
-
 .h-full {
   height: 100%;
 }
@@ -2771,6 +2767,10 @@ img.mana-symbol-sm {
 
 .max-h-1\/2 {
   max-height: 50vh;
+}
+
+.max-h-95\/100 {
+  max-height: 95vh;
 }
 
 @media (min-width: 640px) {
