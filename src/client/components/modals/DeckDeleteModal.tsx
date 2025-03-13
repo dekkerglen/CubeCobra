@@ -22,6 +22,7 @@ const DeckDeleteModal: React.FC<DeckDeleteModalProps> = ({ deck, cubeID, nextURL
     });
 
     if (!response.ok) {
+      // eslint-disable-next-line no-console -- Debugging
       console.error(response);
     } else if (nextURL) {
       window.location.href = nextURL;
