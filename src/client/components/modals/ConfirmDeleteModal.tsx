@@ -28,10 +28,24 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, setOpen
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" className="w-full justify-end" gap="2">
-          <LoadingButton block color="danger" onClick={submitDelete}>
+          <LoadingButton
+            block
+            color="danger"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              submitDelete();
+            }}
+          >
             Delete
           </LoadingButton>
-          <Button block color="secondary" onClick={() => setOpen(false)}>
+          <Button
+            block
+            color="secondary"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              setOpen(false);
+            }}
+          >
             Close
           </Button>
         </Flexbox>
