@@ -60,13 +60,13 @@ const FollowersModal: React.FC<FollowersModalProps> = ({ type, id, isOpen, setOp
   }, [csrfFetch, type, id, followers]);
 
   return (
-    <Modal lg isOpen={isOpen} setOpen={setOpen}>
+    <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
       <ModalHeader setOpen={setOpen}>
         <Text semibold lg>
           Followers
         </Text>
       </ModalHeader>
-      <ModalBody>
+      <ModalBody scrollable>
         <Row className="justify-content-center">
           {followers.map((follower) => (
             <Col key={follower.id} xs={6} sm={4} lg={3}>

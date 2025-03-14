@@ -1204,6 +1204,10 @@ video {
   max-width: 1280px;
 }
 
+.flex-1 {
+  flex: 1 1 0%;
+}
+
 .flex-shrink {
   flex-shrink: 1;
 }
@@ -2761,6 +2765,14 @@ img.mana-symbol-sm {
   display: inline-block;
 }
 
+.max-h-1\/2 {
+  max-height: 50vh;
+}
+
+.max-h-95\/100 {
+  max-height: 95vh;
+}
+
 @media (min-width: 640px) {
   .sm\:container {
     width: 100%;
@@ -3186,6 +3198,10 @@ img.mana-symbol-sm {
     display: block;
   }
 
+  .sm\:flex {
+    display: flex;
+  }
+
   .sm\:hidden {
     display: none;
   }
@@ -3257,6 +3273,14 @@ img.mana-symbol-sm {
 
   .sm\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
+
+  .sm\:flex-row {
+    flex-direction: row;
+  }
+
+  .sm\:gap-2 {
+    gap: 0.5rem;
   }
 
   .sm\:text-sm {
@@ -3385,6 +3409,14 @@ img.mana-symbol-sm {
 
   .md\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
+
+  .md\:flex-nowrap {
+    flex-wrap: nowrap;
+  }
+
+  .md\:justify-start {
+    justify-content: flex-start;
   }
 
   .md\:px-4 {

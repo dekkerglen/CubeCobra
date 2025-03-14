@@ -14,9 +14,22 @@ interface ModalProps {
   lg?: boolean;
   xl?: boolean;
   xxl?: boolean;
+  //If you set scrollable on the modal also set it on the ModalBody
+  scrollable?: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, xs, sm, md, lg, xl, xxl }) => {
+export const Modal: React.FC<ModalProps> = ({
+  children,
+  isOpen,
+  setOpen,
+  xs,
+  sm,
+  md,
+  lg,
+  xl,
+  xxl,
+  scrollable = false,
+}) => {
   return (
     <Transition show={isOpen}>
       <Dialog as="div" className="relative z-30" onClose={() => setOpen(false)}>
@@ -53,7 +66,17 @@ export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, xs, sm,
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
                 <div className="p-4 pb-20">
-                  <DialogPanel className="relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col max-h-modal">
+                  <DialogPanel
+                    className={classNames(
+                      'relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col',
+                      {
+                        /* To be scrollable the modal must have a maximum height, and here we make it the whole viewport (minus some margin basically)
+                         * 95% of the view port height (vh units) works well for both desktop and mobile
+                         */
+                        'overflow-hidden max-h-95/100': scrollable,
+                      },
+                    )}
+                  >
                     {children}
                   </DialogPanel>
                 </div>
@@ -72,9 +95,14 @@ interface ModalHeaderProps {
   setOpen: (open: boolean) => void;
 }
 
-export const ModalHeader: React.FC<ModalHeaderProps> = ({ children, className, setOpen }) => {
+export const ModalHeader: React.FC<ModalHeaderProps> = ({ children, className = '', setOpen }) => {
   return (
-    <div className={`bg-bg-accent-accent font-semibold text-xl p-2 flex ${className}`}>
+    <div
+      className={classNames({
+        'bg-bg-accent-accent font-semibold text-xl p-2 flex': true,
+        [className]: !!className,
+      })}
+    >
       {children}
       <button type="button" className="ml-auto" onClick={() => setOpen(false)}>
         <XIcon size={24} />
@@ -96,14 +124,24 @@ interface ModalBodyProps {
   children: React.ReactNode;
   className?: string;
   fixed?: boolean;
+  //If you set scrollable on the modal also set it on the Modal
+  scrollable?: boolean;
 }
 
-export const ModalBody: React.FC<ModalBodyProps> = ({ children, className = '', fixed = false }) => {
+export const ModalBody: React.FC<ModalBodyProps> = ({
+  children,
+  className = '',
+  fixed = false,
+  scrollable = false,
+}) => {
   return (
     <div
       className={classNames({
         'p-3': true,
-        'grow border-y border-border': !fixed,
+        'border-y border-border': !fixed,
+        //Sets the body to overflow so it can scroll, with flex so it grows
+        'flex-1 overflow-y-auto': scrollable,
+        grow: !scrollable,
         [className]: !!className,
       })}
     >

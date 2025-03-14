@@ -26,9 +26,9 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
   const cubeId = cube ? cube.id : null;
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen} lg>
+    <Modal isOpen={isOpen} setOpen={setOpen} lg scrollable>
       <ModalHeader setOpen={setOpen}>Advanced Filters</ModalHeader>
-      <ModalBody>
+      <ModalBody scrollable>
         <Flexbox direction="col" gap="2">
           <Input
             name="name"

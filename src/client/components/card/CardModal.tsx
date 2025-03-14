@@ -39,7 +39,7 @@ import Badge from '../base/Badge';
 import Button from '../base/Button';
 import Input from '../base/Input';
 import { Col, Flexbox, Row } from '../base/Layout';
-import { Modal, ModalBody, ModalHeader } from '../base/Modal';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Select from '../base/Select';
 import Spinner from '../base/Spinner';
 import Tag from '../base/Tag';
@@ -142,12 +142,22 @@ const CardModal: React.FC<CardModalProps> = ({
   );
 
   return (
-    <Modal lg isOpen={isOpen} setOpen={setOpen}>
+    <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
       <ModalHeader setOpen={setOpen}>
-        {cardName(card)} {card.markedForDelete && <Badge color="danger">Marked for Removal</Badge>}
-        {card.editIndex !== undefined && <Badge color="warning">*Pending Edit*</Badge>}
+        {cardName(card)}
+        &nbsp;
+        {card.markedForDelete && (
+          <>
+            <Badge color="danger">Marked for Removal</Badge>&nbsp;
+          </>
+        )}
+        {card.editIndex !== undefined && (
+          <>
+            <Badge color="warning">*Pending Edit*</Badge>&nbsp;
+          </>
+        )}
       </ModalHeader>
-      <ModalBody>
+      <ModalBody scrollable>
         {versions ? (
           <Row>
             <Col xs={12} sm={6}>
@@ -376,64 +386,6 @@ const CardModal: React.FC<CardModalProps> = ({
                     ))}
                   </Flexbox>
                 )}
-                {canEdit && (
-                  <>
-                    {card.markedForDelete ? (
-                      <Button color="primary" block onClick={() => revertRemove(card.removeIndex!, card.board!)}>
-                        Revert Removal
-                      </Button>
-                    ) : (
-                      <>
-                        <Button
-                          color="danger"
-                          block
-                          onClick={() => {
-                            removeCard(card.index!, card.board!);
-                            setOpen(false);
-                          }}
-                        >
-                          Remove from cube
-                        </Button>
-                        {card.board === 'mainboard' ? (
-                          <Button
-                            color="accent"
-                            block
-                            onClick={() => {
-                              moveCard(card.index!, card.board!, 'maybeboard');
-                              setOpen(false);
-                            }}
-                          >
-                            Move to Maybeboard
-                          </Button>
-                        ) : (
-                          <Button
-                            color="accent"
-                            block
-                            onClick={() => {
-                              moveCard(card.index!, card.board!, 'mainboard');
-                              setOpen(false);
-                            }}
-                          >
-                            Move to Mainboard
-                          </Button>
-                        )}
-                      </>
-                    )}
-                    {card.editIndex !== undefined && (
-                      <Button
-                        color="primary"
-                        block
-                        onClick={() => {
-                          if (card.editIndex !== undefined && card.board !== undefined) {
-                            revertEdit(card.editIndex, card.board);
-                          }
-                        }}
-                      >
-                        Revert Edit
-                      </Button>
-                    )}
-                  </>
-                )}
               </Flexbox>
             </Col>
           </Row>
@@ -441,6 +393,89 @@ const CardModal: React.FC<CardModalProps> = ({
           <Spinner lg />
         )}
       </ModalBody>
+      <ModalFooter>
+        {canEdit && (
+          <>
+            {card.markedForDelete ? (
+              <>
+                <Button
+                  color="primary"
+                  block
+                  className="items-center text-sm"
+                  onClick={() => revertRemove(card.removeIndex!, card.board!)}
+                >
+                  Revert Removal
+                </Button>
+                &nbsp;
+              </>
+            ) : (
+              <>
+                <Button
+                  color="danger"
+                  block
+                  className="items-center text-sm"
+                  onClick={() => {
+                    removeCard(card.index!, card.board!);
+                    setOpen(false);
+                  }}
+                >
+                  Remove
+                </Button>
+                &nbsp;
+                {card.board === 'mainboard' ? (
+                  <>
+                    <Button
+                      color="accent"
+                      block
+                      className="items-center text-sm"
+                      onClick={() => {
+                        moveCard(card.index!, card.board!, 'maybeboard');
+                        setOpen(false);
+                      }}
+                    >
+                      To Maybeboard
+                    </Button>
+                    &nbsp;
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      color="accent"
+                      block
+                      className="items-center text-sm"
+                      onClick={() => {
+                        moveCard(card.index!, card.board!, 'mainboard');
+                        setOpen(false);
+                      }}
+                    >
+                      To Mainboard
+                    </Button>
+                    &nbsp;
+                  </>
+                )}
+              </>
+            )}
+            {card.editIndex !== undefined && (
+              <>
+                <Button
+                  color="primary"
+                  block
+                  className="items-center text-sm"
+                  onClick={() => {
+                    if (card.editIndex !== undefined && card.board !== undefined) {
+                      revertEdit(card.editIndex, card.board);
+                    }
+                  }}
+                >
+                  Revert Edit
+                </Button>
+                &nbsp;
+              </>
+            )}
+            &nbsp;
+          </>
+        )}
+      </ModalFooter>
     </Modal>
   );
 };
