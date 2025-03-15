@@ -14,6 +14,7 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetState
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
       // If error also return initialValue
+      // eslint-disable-next-line no-console -- Debugging
       console.error(error);
       return initialValue;
     }
@@ -32,6 +33,7 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, Dispatch<SetState
       }
     } catch (error) {
       // A more advanced implementation would handle the error case
+      // eslint-disable-next-line no-console -- Debugging
       console.error(error);
     }
   };

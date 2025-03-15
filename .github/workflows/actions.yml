@@ -15,6 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # To use with eslint script
+          fetch-depth: 0
 
       - name: Cache node_modules
         id: cache-node-modules
@@ -41,11 +44,10 @@ jobs:
       - name: Run eslint on changed files
         # Always run both eslint and prettier
         if: always()
-        uses: tj-actions/eslint-changed-files@v25
+        uses: ./.github/actions/eslint
         with:
           config_path: 'eslint.config.mjs'
-          extra_args: '--max-warnings=0 --no-warn-ignored'
-          reporter: github-pr-review
+          eslint_flags: '--max-warnings=0 --no-warn-ignored'
 
       - name: Run Prettier on changed files
         # Always run both eslint and prettier

@@ -32,6 +32,7 @@ const downloadFromS3 = async () => {
     }
 
     fs.writeFileSync(file.Key, res.Body);
+    // eslint-disable-next-line no-console -- Debugging
     console.log(`Downloaded ${file.Key}`);
   }
 };
