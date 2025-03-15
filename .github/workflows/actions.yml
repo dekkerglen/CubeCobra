@@ -16,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # To use with eslint script
           fetch-depth: 0
 
       - name: Cache node_modules
