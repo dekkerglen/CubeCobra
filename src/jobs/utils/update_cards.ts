@@ -99,9 +99,13 @@ export function convertName(card: ScryfallCard, preflipped: boolean) {
     str = str.substring(0, str.indexOf('/')); // first name
   }
 
+  //Trim the card name here before potentially adding art series suffix.
+  //Important the first or second name was extracted
+  str = str.trim();
+
   if (card.layout === 'art_series') {
     str = `${str} ${ART_SERIES_CARD_SUFFIX}`;
   }
 
-  return str.trim();
+  return str;
 }
