@@ -9,7 +9,7 @@ import Alert from '../base/Alert';
 import Button from '../base/Button';
 import CardList from '../base/CardList';
 import { Flexbox } from '../base/Layout';
-import { Modal, ModalBody, ModalFooter,ModalHeader } from '../base/Modal';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Select from '../base/Select';
 import LoadingButton from '../LoadingButton';
 
@@ -59,7 +59,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
       setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
     }
     setLoadingSubmit(false);
-  }, [selectedCube, cards, packid, board, alerts, setOpen]);
+  }, [csrfFetch, selectedCube, cards, packid, board, alerts, setOpen]);
 
   if (!cubes || cubes.length === 0) {
     return (

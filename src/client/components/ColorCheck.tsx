@@ -110,7 +110,14 @@ export const ColorChecksAddon: React.FC<ColorChecksAddonProps> = ({
   return (
     <div className="block w-full">
       {label && <label className="block text-sm font-medium text-text">{label}</label>}
-      <Flexbox direction="row" gap="1">
+      <Flexbox
+        direction="row"
+        gap="1"
+        wrap={'wrap'}
+        alignItems={'center'}
+        //flex-wrap / center for mobile which results in the colors showing in 2 rows, no wrapping / start for larger
+        className="justify-center md:justify-start flex-wrap md:flex-nowrap"
+      >
         {colors.map(([color, short]) => (
           <ColorCheckButton
             key={short}

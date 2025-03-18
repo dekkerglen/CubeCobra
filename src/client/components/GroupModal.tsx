@@ -14,7 +14,7 @@ import Input from './base/Input';
 import { Col, Flexbox, Row } from './base/Layout';
 import Link from './base/Link';
 import { ListGroup } from './base/ListGroup';
-import { Modal, ModalBody, ModalHeader } from './base/Modal';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from './base/Modal';
 import RadioButtonGroup from './base/RadioButtonGroup';
 import Select from './base/Select';
 import Text from './base/Text';
@@ -198,13 +198,13 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const totalPriceTix = cards.length ? cards.reduce((total, card) => total + (cardTix(card) ?? 0), 0) : 0;
 
   return (
-    <Modal lg isOpen={isOpen} setOpen={setOpen}>
+    <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
       <ModalHeader setOpen={setOpen}>Edit Selected ({cards.length} cards)</ModalHeader>
-      <ModalBody>
+      <ModalBody scrollable>
         <Row>
           <Col xs={6}>
             <Flexbox direction="col" gap="2">
-              <div className="overflow-y-auto">
+              <div className="overflow-y-auto max-h-1/2 border border-border-secondary rounded-md">
                 <ListGroup>
                   {cards.map((card, index) => (
                     <AutocardListItem
@@ -324,46 +324,52 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 tagColors={tagColors}
                 suggestions={allTags}
               />
-              <Button block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
-                Apply to all
-              </Button>
-              <Button block color="danger" onClick={removeAll}>
-                Remove all from cube
-              </Button>
-              <Button
-                color="accent"
-                block
-                onClick={() => {
-                  bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
-                  setOpen(false);
-                }}
-              >
-                Move all to Maybeboard
-              </Button>
-              <Button
-                color="accent"
-                block
-                onClick={() => {
-                  bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
-                  setOpen(false);
-                }}
-              >
-                Move all to Mainboard
-              </Button>
-              {anyCardRemoved && (
-                <Button block color="primary" onClick={revertRemoval}>
-                  Revert removal of removed cards
-                </Button>
-              )}
-              {anyCardChanged && (
-                <Button block color="primary" onClick={bulkRevertEditAll}>
-                  Revert changes of edited cards
-                </Button>
-              )}
             </Flexbox>
           </Col>
         </Row>
       </ModalBody>
+      <ModalFooter className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-2">
+        <Button block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
+          Apply all
+        </Button>
+        <Button block color="danger" onClick={removeAll}>
+          Remove all
+        </Button>
+        <Button
+          color="accent"
+          block
+          onClick={() => {
+            bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
+            setOpen(false);
+          }}
+        >
+          All to Maybeboard
+        </Button>
+        <Button
+          color="accent"
+          block
+          onClick={() => {
+            bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
+            setOpen(false);
+          }}
+        >
+          All to Mainboard
+        </Button>
+        {anyCardRemoved && (
+          <>
+            <Button block color="primary" onClick={revertRemoval}>
+              Revert removal
+            </Button>
+          </>
+        )}
+        {anyCardChanged && (
+          <>
+            <Button block color="primary" onClick={bulkRevertEditAll}>
+              Revert edits
+            </Button>
+          </>
+        )}
+      </ModalFooter>
     </Modal>
   );
 };

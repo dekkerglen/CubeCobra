@@ -85,13 +85,13 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
   }, [csrfFetch, state]);
 
   return (
-    <Modal lg isOpen={isOpen} setOpen={setOpen}>
+    <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
       <ModalHeader setOpen={setOpen}>
         <Text semibold lg>
           Edit Overview
         </Text>
       </ModalHeader>
-      <ModalBody>
+      <ModalBody scrollable>
         <Flexbox direction="col" gap="2">
           <Input
             label="Cube Name"

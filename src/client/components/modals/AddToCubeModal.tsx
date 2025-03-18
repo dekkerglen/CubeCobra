@@ -75,9 +75,9 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
 
   if (!cubes || cubes.length === 0) {
     return (
-      <Modal isOpen={isOpen} setOpen={setOpen} sm>
+      <Modal isOpen={isOpen} setOpen={setOpen} sm scrollable>
         <ModalHeader setOpen={setOpen}>{card.name}</ModalHeader>
-        <ModalBody className="centered">
+        <ModalBody className="centered" scrollable>
           <Flexbox direction="col" alignItems="center" gap="2">
             <ImageFallback
               className="w-full mb-3"
@@ -95,9 +95,6 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
                 Analytics
               </Button>
             )}
-            <Button block color="secondary" onClick={() => setOpen(false)}>
-              Close
-            </Button>
           </Flexbox>
         </ModalFooter>
       </Modal>
@@ -105,9 +102,9 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen} sm>
+    <Modal isOpen={isOpen} setOpen={setOpen} sm scrollable>
       <ModalHeader setOpen={setOpen}>{`Add ${card.name} to Cube`}</ModalHeader>
-      <ModalBody>
+      <ModalBody scrollable>
         <Flexbox direction="col" alignItems="center" gap="2">
           {alerts.map(({ color, message }) => (
             <Alert key={message} color={color} className="mt-2">
@@ -135,9 +132,6 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
             value={selectedBoard}
             setValue={(val) => setSelectedBoard(val)}
           />
-          <LoadingButton block loading={loading} color="primary" onClick={add}>
-            Add
-          </LoadingButton>
         </Flexbox>
       </ModalBody>
       <ModalFooter>
@@ -147,9 +141,9 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
               Analytics
             </Button>
           )}
-          <Button block color="secondary" onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <LoadingButton block loading={loading} color="primary" onClick={add}>
+            Add
+          </LoadingButton>
         </Flexbox>
       </ModalFooter>
     </Modal>

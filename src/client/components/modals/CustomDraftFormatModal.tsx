@@ -36,13 +36,13 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
   }, [format, formatIndex]);
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen} lg>
+    <Modal isOpen={isOpen} setOpen={setOpen} lg scrollable>
       <ModalHeader setOpen={setOpen}>
         <Text lg semibold>
           Create Custom Draft Format
         </Text>
       </ModalHeader>
-      <ModalBody>
+      <ModalBody scrollable>
         <CSRFForm method="POST" action={`/cube/format/add/${cube.id}`} formData={formdata} ref={formRef}>
           <Flexbox direction="col" gap="2">
             <Input
