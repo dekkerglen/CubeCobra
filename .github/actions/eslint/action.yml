@@ -1,0 +1,26 @@
+name: 'Run ESlint on changed files'
+description: 'Run ESlint on changed files'
+author: 'KaelenProctor'
+inputs:
+  config_path:
+    description: 'CONFIG_PATH'
+    required: true
+  eslint_flags:
+    description: 'ESLINT_FLAGS'
+    required: true
+  print_changed_files:
+    description: 'PRINT_CHANGED_FILES'
+    default: false
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - run: .github/actions/eslint/script.sh
+      shell: bash
+      env:
+        INPUT_CONFIG_PATH: ${{ inputs.config_path }}
+        INPUT_ESLINT_FLAGS: ${{ inputs.eslint_flags }}
+        INPUT_PRINT_CHANGED_FILES: ${{ inputs.print_changed_files }}
+        # Exact sha of the merged PR branch, coming from the pull_request event
+        INPUT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        INPUT_BRANCH_SHA: ${{ github.sha }}
