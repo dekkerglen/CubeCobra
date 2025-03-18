@@ -1,6 +1,6 @@
 import { cardCmc, cardType, cmcColumn } from '../client/utils/cardutil';
 import Card from '../datatypes/Card';
-import Draft, { DraftStep } from '../datatypes/Draft';
+import Draft, { DraftFormat, DraftStep } from '../datatypes/Draft';
 
 interface Step {
   action: string;
@@ -313,4 +313,29 @@ export const setupPicks: (rows: number, cols: number) => any[][][] = (rows: numb
     res.push(row);
   }
   return res;
+};
+
+export const normalizeDraftFormatSteps = (format: DraftFormat): DraftFormat => {
+  for (let packNum = 0; packNum < format.packs.length; packNum++) {
+    const steps = format.packs[packNum].steps;
+
+    //Nothing to do for null steps. Null represents default steps
+    if (steps === null) {
+      continue;
+    }
+
+    format.packs[packNum].steps = normalizeDraftSteps(steps);
+  }
+
+  return format;
+};
+
+export const normalizeDraftSteps = (steps: DraftStep[]): DraftStep[] => {
+  const stepsLength = steps.length;
+  const lastStep = steps[stepsLength - 1];
+  if (lastStep.action === 'pass') {
+    steps.pop();
+  }
+
+  return steps;
 };
