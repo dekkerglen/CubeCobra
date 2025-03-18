@@ -6,17 +6,19 @@ const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat =>
     title: 'Custom Draft',
     packs: [
       {
-        slots: ['*'],
+        slots: ['*', '*'],
         steps: [
           { action: 'pick', amount: 1 },
           { action: 'pass', amount: null },
+          { action: 'pick', amount: 1 },
         ],
       },
       {
-        slots: ['*'],
+        slots: ['*', '*'],
         steps: [
           { action: 'pick', amount: 1 },
           { action: 'pass', amount: null },
+          { action: 'pick', amount: 1 },
         ],
       },
     ],
@@ -190,12 +192,29 @@ describe('getErrorsInFormat', () => {
           steps: [
             { action: 'pick', amount: 1 },
             { action: 'pass', amount: null },
+            { action: 'pick', amount: 1 },
           ],
         },
       ],
     });
     const result = getErrorsInFormat(format);
-    expect(result).toContain('Pack 1 has 3 slots but has steps to pick or trash 1 cards.');
+    expect(result).toContain('Pack 1 has 3 slots but has steps to pick or trash 2 cards.');
+  });
+
+  it('returns error when pack steps end in pass', () => {
+    const format = createMockDraftFormat({
+      packs: [
+        {
+          slots: ['*'],
+          steps: [
+            { action: 'pick', amount: 1 },
+            { action: 'pass', amount: null },
+          ],
+        },
+      ],
+    });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('Pack 1 cannot end with a pass action.');
   });
 
   it('handles multiple errors', () => {

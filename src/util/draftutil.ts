@@ -362,6 +362,12 @@ export const getErrorsInFormat = (format: DraftFormat) => {
       continue;
     }
 
+    const stepsLength = pack.steps.length;
+    const lastStep = pack.steps[stepsLength - 1];
+    if (lastStep.action === 'pass') {
+      errors.push(`Pack ${i + 1} cannot end with a pass action.`);
+    }
+
     for (const step of pack.steps) {
       if (step === null) {
         continue;
