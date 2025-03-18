@@ -76,7 +76,15 @@ const getInitialState = (draft: Draft): State => {
     const seat = draft.InitialState[0];
 
     for (const pack of seat) {
-      stepQueue.push(...pack.steps, { action: 'endpack', amount: null });
+      const stepsLength = pack.steps.length;
+      if (stepsLength === 0) {
+        continue;
+      }
+
+      //Backwards compatability, add endpack step to the end of the pack if the backend hasn't already
+      if (pack.steps[stepsLength - 1]?.action !== 'endpack') {
+        stepQueue.push(...pack.steps, { action: 'endpack', amount: null });
+      }
     }
   }
 
