@@ -82,15 +82,20 @@ export const flattenSteps = (steps: Step[], pack: number): FlattenedStep[] => {
   return res;
 };
 
-export const defaultStepsForLength = (length: number): Step[] =>
-  new Array(length)
+export const defaultStepsForLength = (length: number): Step[] => {
+  const steps: DraftStep[] = new Array(length)
     .fill([
       { action: 'pick', amount: 1 },
       { action: 'pass', amount: 1 },
     ])
-    .flat()
-    .slice(0, length * 2 - 1) // Remove the final pass.
-    .map((action) => ({ ...action }));
+    .flat();
+
+  return normalizeDraftSteps(steps).map((step) => ({
+    action: step.action,
+    //We know not null here
+    amount: step.amount!,
+  }));
+};
 
 export const getStepList = (initialState: any[]): FlattenedStep[] =>
   initialState[0]
@@ -310,6 +315,10 @@ export const normalizeDraftFormatSteps = (format: DraftFormat): DraftFormat => {
 
 export const normalizeDraftSteps = (steps: DraftStep[]): DraftStep[] => {
   const stepsLength = steps.length;
+  if (stepsLength === 0) {
+    return [];
+  }
+
   const lastStep = steps[stepsLength - 1];
   if (lastStep.action === 'pass') {
     steps.pop();
@@ -379,11 +388,9 @@ export const DEFAULT_STEPS: DraftStep[] = [
 export const DEFAULT_PACK: Pack = Object.freeze({ slots: [''], steps: DEFAULT_STEPS });
 
 export const buildDefaultSteps: (cards: number) => DraftStep[] = (cards) => {
-  // the length should be cards*2-1, because the last step is always a pass
   const steps: DraftStep[] = new Array(cards).fill(DEFAULT_STEPS).flat();
-  //use normalize
-  steps.pop();
-  return steps;
+  // the length should be cards*2-1, because the last pass is removed
+  return normalizeDraftSteps(steps);
 };
 
 export const createDefaultDraftFormat = (packsPerPlayer: number, cardsPerPack: number): DraftFormat => {

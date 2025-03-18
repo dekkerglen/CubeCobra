@@ -2,6 +2,7 @@ import { DraftAction, DraftFormat, DraftStep } from '../../../src/datatypes/Draf
 import {
   buildDefaultSteps,
   createDefaultDraftFormat,
+  defaultStepsForLength,
   getErrorsInFormat,
   normalizeDraftFormatSteps,
   normalizeDraftSteps,
@@ -37,6 +38,14 @@ const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat =>
 };
 
 describe('normalizeDraftSteps', () => {
+  it('Handles empty steps', () => {
+    const steps: DraftStep[] = [];
+
+    const normalizedSteps = normalizeDraftSteps(steps);
+    expect(normalizedSteps.length).toEqual(0);
+    expect(normalizedSteps).toEqual([]);
+  });
+
   it('Removes the last step if it is pass, as that is invalid', () => {
     const steps: DraftStep[] = [
       { action: 'pick', amount: 1 },
@@ -307,5 +316,27 @@ describe('createDefaultDraftFormat', () => {
     expect(format.packs).toHaveLength(1);
     expect(format.packs[0].slots).toHaveLength(1);
     expect(format.packs[0].steps).toHaveLength(1);
+  });
+});
+
+describe('defaultStepsForLength', () => {
+  it('Creates valid steps', () => {
+    const steps = defaultStepsForLength(5);
+    expect(steps).toEqual([
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: 1 },
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: 1 },
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: 1 },
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: 1 },
+      { action: 'pick', amount: 1 },
+    ]);
+  });
+
+  it('Handles zero steps', () => {
+    const steps = defaultStepsForLength(0);
+    expect(steps).toEqual([]);
   });
 });
