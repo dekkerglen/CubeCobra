@@ -1,5 +1,5 @@
 import { DraftAction, DraftFormat, DraftStep } from '../../../src/datatypes/Draft';
-import { normalizeDraftFormatSteps, normalizeDraftSteps } from '../../../src/util/draftutil';
+import { getErrorsInFormat, normalizeDraftFormatSteps, normalizeDraftSteps } from '../../../src/util/draftutil';
 
 const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat => {
   return {
@@ -123,5 +123,96 @@ describe('normalizeDraftFormatSteps', () => {
       { action: 'pick', amount: 2 },
     ]);
     expect(normalizedFormat.packs[2].steps).toEqual([{ action: 'pick', amount: 1 }]);
+  });
+});
+
+describe('getErrorsInFormat', () => {
+  it('returns null when format is valid', () => {
+    const format = createMockDraftFormat();
+    const result = getErrorsInFormat(format);
+    expect(result).toBeNull();
+  });
+
+  it('returns error when format is undefined', () => {
+    const result = getErrorsInFormat(undefined as unknown as DraftFormat);
+    expect(result).toContain('Internal error in the format.');
+  });
+
+  it('returns error when packs is undefined', () => {
+    const format = createMockDraftFormat();
+    delete (format as any).packs;
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('Internal error in the format.');
+  });
+
+  it('returns error when title is empty', () => {
+    const format = createMockDraftFormat({ title: '   ' });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('title must not be empty.');
+  });
+
+  it('returns error when format has no packs', () => {
+    const format = createMockDraftFormat({ packs: [] });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('Format must have at least 1 pack.');
+  });
+
+  it('returns error when defaultSeats is not a number', () => {
+    const format = createMockDraftFormat({ defaultSeats: 'invalid' as any });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('Default seat count must be a number.');
+  });
+
+  it.each([1, 17])('returns error when defaultSeats is out of range: %i', (seats) => {
+    const format = createMockDraftFormat({ defaultSeats: seats });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('Default seat count must be between 2 and 16.');
+  });
+
+  it('accepts format when pack has null steps', () => {
+    const format = createMockDraftFormat({
+      packs: [
+        {
+          slots: ['*'],
+          steps: null,
+        },
+      ],
+    });
+    const result = getErrorsInFormat(format);
+    expect(result).toBeNull();
+  });
+
+  it('returns error when pack steps count does not match slots count', () => {
+    const format = createMockDraftFormat({
+      packs: [
+        {
+          slots: ['*', '*', '*'],
+          steps: [
+            { action: 'pick', amount: 1 },
+            { action: 'pass', amount: null },
+          ],
+        },
+      ],
+    });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('Pack 1 has 3 slots but has steps to pick or trash 1 cards.');
+  });
+
+  it('handles multiple errors', () => {
+    const format = createMockDraftFormat({
+      title: '',
+      defaultSeats: 1,
+      packs: [
+        {
+          slots: ['*', '*'],
+          steps: [{ action: 'pick', amount: 1 }],
+        },
+      ],
+    });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('title must not be empty.');
+    expect(result).toContain('Default seat count must be between 2 and 16.');
+    expect(result).toContain('Pack 1 has 2 slots but has steps to pick or trash 1 cards.');
+    expect(result?.length).toBe(3);
   });
 });
