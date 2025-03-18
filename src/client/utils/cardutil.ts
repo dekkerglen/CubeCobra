@@ -17,6 +17,8 @@ import CategoryOverrides from '../res/CategoryOverrides.json';
 import LandCategories from '../res/LandCategories.json';
 import { arraysEqual } from './Util';
 
+export const ART_SERIES_CARD_SUFFIX = 'Art Card';
+
 export const COLOR_COMBINATIONS: string[][] = [
   [],
   ['W'],
@@ -701,6 +703,7 @@ export function getCardTagColorClass(tagColors: TagColor[], card: Card): string 
 }
 
 export default {
+  ART_SERIES_CARD_SUFFIX,
   cardTags,
   cardFinish,
   cardStatus,
