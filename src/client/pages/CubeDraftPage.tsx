@@ -737,4 +737,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   );
 };
 
+CubeDraftPage.displayName = 'CubeDraftPage';
+
 export default RenderToRoot(CubeDraftPage);

@@ -48,4 +48,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
   );
 };
 
+MainLayout.displayName = 'MainLayout';
+
 export default MainLayout;
