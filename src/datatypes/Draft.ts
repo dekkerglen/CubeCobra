@@ -35,56 +35,10 @@ export const DEFAULT_PACK: Pack = Object.freeze({ slots: [''], steps: DEFAULT_ST
 
 export const buildDefaultSteps: (cards: number) => DraftStep[] = (cards) => {
   // the length should be cards*2-1, because the last step is always a pass
-  const steps = new Array(cards).fill(DEFAULT_STEPS).flat();
+  const steps: DraftStep[] = new Array(cards).fill(DEFAULT_STEPS).flat();
+  //use normalize
   steps.pop();
   return steps;
-};
-
-export const getErrorsInFormat = (format: DraftFormat) => {
-  const errors = [];
-  if (!format?.packs) return ['Internal error in the format.'];
-  if (!format.title.trim()) errors.push('title must not be empty.');
-  if (format.packs.length === 0) errors.push('Format must have at least 1 pack.');
-
-  if (format.defaultSeats !== undefined) {
-    if (!Number.isFinite(format.defaultSeats)) errors.push('Default seat count must be a number.');
-    if (format.defaultSeats < 2 || format.defaultSeats > 16)
-      errors.push('Default seat count must be between 2 and 16.');
-  }
-
-  for (let i = 0; i < format.packs.length; i++) {
-    const pack = format.packs[i];
-
-    let amount = 0;
-
-    if (!pack.steps) {
-      // this is ok, it just means the pack is a default pack
-      continue;
-    }
-
-    for (const step of pack.steps) {
-      if (step === null) {
-        continue;
-      }
-
-      const { action, amount: stepAmount } = step;
-
-      if (action === 'pass') {
-        continue;
-      }
-
-      if (stepAmount !== null) {
-        amount += stepAmount;
-      } else {
-        amount += 1;
-      }
-    }
-
-    if (amount !== pack.slots.length) {
-      errors.push(`Pack ${i + 1} has ${pack.slots.length} slots but has steps to pick or trash ${amount} cards.`);
-    }
-  }
-  return errors.length === 0 ? null : errors;
 };
 
 export const createDefaultDraftFormat = (packsPerPlayer: number, cardsPerPack: number): DraftFormat => {
