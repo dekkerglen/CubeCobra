@@ -2,8 +2,9 @@ import seedrandom from 'seedrandom';
 
 import Card from '../../datatypes/Card';
 import Cube from '../../datatypes/Cube';
-import Draft, { buildDefaultSteps, createDefaultDraftFormat, DraftFormat, DraftState } from '../../datatypes/Draft';
+import Draft, { DraftFormat, DraftState } from '../../datatypes/Draft';
 import User from '../../datatypes/User';
+import { buildDefaultSteps, createDefaultDraftFormat } from '../../util/draftutil';
 import { arraysEqual, fromEntries } from '../utils/Util';
 import { compileFilter, Filter } from './draftFilter';
 

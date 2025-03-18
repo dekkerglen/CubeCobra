@@ -1,5 +1,11 @@
 import { DraftAction, DraftFormat, DraftStep } from '../../../src/datatypes/Draft';
-import { getErrorsInFormat, normalizeDraftFormatSteps, normalizeDraftSteps } from '../../../src/util/draftutil';
+import {
+  buildDefaultSteps,
+  createDefaultDraftFormat,
+  getErrorsInFormat,
+  normalizeDraftFormatSteps,
+  normalizeDraftSteps,
+} from '../../../src/util/draftutil';
 
 const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat => {
   return {
@@ -233,5 +239,73 @@ describe('getErrorsInFormat', () => {
     expect(result).toContain('Default seat count must be between 2 and 16.');
     expect(result).toContain('Pack 1 has 2 slots but has steps to pick or trash 1 cards.');
     expect(result?.length).toBe(3);
+  });
+});
+
+describe('buildDefaultSteps', () => {
+  it('creates correct number of steps for single card', () => {
+    const steps = buildDefaultSteps(1);
+    expect(steps).toHaveLength(1);
+    expect(steps[0]).toEqual({ action: 'pick', amount: 1 });
+  });
+
+  it('creates correct steps for multiple cards', () => {
+    const steps = buildDefaultSteps(3);
+    expect(steps).toHaveLength(5);
+    expect(steps).toEqual([
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: null },
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: null },
+      { action: 'pick', amount: 1 },
+    ]);
+  });
+
+  it('removes final pass step', () => {
+    const steps = buildDefaultSteps(2);
+    expect(steps).toHaveLength(3);
+    expect(steps[steps.length - 1].action).toBe('pick');
+  });
+});
+
+describe('createDefaultDraftFormat', () => {
+  it('creates format with correct number of packs', () => {
+    const format = createDefaultDraftFormat(3, 15);
+    expect(format.packs).toHaveLength(3);
+  });
+
+  it('creates format with correct number of slots per pack', () => {
+    const format = createDefaultDraftFormat(3, 15);
+    format.packs.forEach((pack) => {
+      expect(pack.slots).toHaveLength(15);
+      expect(pack.slots.every((slot) => slot === '*')).toBeTruthy();
+    });
+  });
+
+  it('creates format with correct steps in each pack', () => {
+    const format = createDefaultDraftFormat(3, 15);
+    format.packs.forEach((pack) => {
+      //Tell Typescript we expect pack.steps to never be null in our default format
+      expect(pack.steps!).toHaveLength(29); // 15 picks + 14 passes (no final pass)
+      expect(pack.steps![pack.steps!.length - 1].action).toBe('pick');
+    });
+  });
+
+  it('creates format with default values', () => {
+    const format = createDefaultDraftFormat(3, 15);
+    expect(format).toEqual({
+      title: 'Standard Draft',
+      packs: expect.any(Array),
+      multiples: false,
+      markdown: '',
+      defaultSeats: 8,
+    });
+  });
+
+  it('handles small pack size', () => {
+    const format = createDefaultDraftFormat(1, 1);
+    expect(format.packs).toHaveLength(1);
+    expect(format.packs[0].slots).toHaveLength(1);
+    expect(format.packs[0].steps).toHaveLength(1);
   });
 });
