@@ -4,7 +4,7 @@ import Card from '../../datatypes/Card';
 import Cube from '../../datatypes/Cube';
 import Draft, { DraftFormat, DraftState } from '../../datatypes/Draft';
 import User from '../../datatypes/User';
-import { buildDefaultSteps, createDefaultDraftFormat, normalizeDraftFormatSteps } from '../../util/draftutil';
+import { buildDefaultSteps, createDefaultDraftFormat } from '../../util/draftutil';
 import { arraysEqual, fromEntries } from '../utils/Util';
 import { compileFilter, Filter } from './draftFilter';
 
@@ -293,7 +293,7 @@ export const createDraft = (
   nextCardFn = createNextCardFn(cubeCards, format.multiples, rng);
 
   //TODO: Add the endpack steps here instead of in frontend
-  const result: CreatePacksResult = createPacks(normalizeDraftFormatSteps(format), seats, nextCardFn);
+  const result: CreatePacksResult = createPacks(format, seats, nextCardFn);
 
   if (!result.ok) {
     throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);

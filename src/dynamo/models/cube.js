@@ -9,6 +9,7 @@ const { getHashRowsForMetadata } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
 const User = require('./user');
 import { cardFromId, getPlaceholderCard } from '../../util/carddb';
+const { normalizeDraftFormatSteps } = require('../../util/draftutil');
 const cloudwatch = require('../../util/cloudwatch');
 
 const DEFAULT_BASICS = [
@@ -165,6 +166,12 @@ const hydrate = async (cube) => {
   cube.owner = await User.getById(cube.owner);
   cube.image = getImageData(cube.imageName);
 
+  const draftFormats = cube?.formats || [];
+  //Correct bad custom draft formats on load, so any page using them are using good versions
+  for (let format of draftFormats) {
+    format = normalizeDraftFormatSteps(format);
+  }
+
   return cube;
 };
 
@@ -174,6 +181,13 @@ const batchHydrate = async (cubes) => {
   return cubes.map((cube) => {
     cube.owner = owners.find((owner) => owner.id === cube.owner);
     cube.image = getImageData(cube.imageName);
+
+    const draftFormats = cube?.formats || [];
+    //Correct bad custom draft formats on load, so any page using them are using good versions
+    for (let format of draftFormats) {
+      format = normalizeDraftFormatSteps(format);
+    }
+
     return cube;
   });
 };
