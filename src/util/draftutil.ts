@@ -103,28 +103,6 @@ export const getStepList = (initialState: any[]): FlattenedStep[] =>
     ])
     .flat();
 
-export const nextStep = (draft: Draft, cardsPicked: number): string | null => {
-  if (!draft.InitialState) {
-    return null;
-  }
-
-  const steps = getStepList(draft.InitialState);
-
-  let picks = 0;
-
-  for (const step of steps) {
-    if (picks >= cardsPicked) {
-      return step.action;
-    }
-
-    if (step.action !== 'pass' && step.action !== 'endpack') {
-      picks += 1;
-    }
-  }
-
-  return null;
-};
-
 export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: number): DrafterState => {
   if (!draft.InitialState) {
     return {
