@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 
-import { buildDefaultSteps, DEFAULT_STEPS, DraftAction, Pack } from '../../datatypes/Draft';
+import { DraftAction, Pack } from '../../datatypes/Draft';
+import { buildDefaultSteps, DEFAULT_STEPS } from '../../util/draftutil';
 import useToggle from '../hooks/UseToggle';
 import Button from './base/Button';
 import { Card, CardFooter, CardHeader } from './base/Card';
@@ -173,7 +174,10 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
               <Button
                 className="me-2"
                 color="accent"
-                onClick={() => setPack({ ...pack, steps: [...steps, ...DEFAULT_STEPS] })}
+                /* The default steps are pick then pass. The default for a pack is N of those pairs, minus the last pick.
+                 * So most commonly for a new step we want to add a pass then pick, thus reverse.
+                 */
+                onClick={() => setPack({ ...pack, steps: [...steps, ...DEFAULT_STEPS.reverse()] })}
               >
                 Add Step
               </Button>

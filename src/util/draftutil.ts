@@ -1,6 +1,7 @@
 import { cardCmc, cardType, cmcColumn } from '../client/utils/cardutil';
 import Card from '../datatypes/Card';
-import Draft, { DraftStep } from '../datatypes/Draft';
+import Draft, { DraftFormat, DraftStep, Pack } from '../datatypes/Draft';
+import type { State } from '../router/routes/draft/finish.ts';
 
 interface Step {
   action: string;
@@ -82,15 +83,20 @@ export const flattenSteps = (steps: Step[], pack: number): FlattenedStep[] => {
   return res;
 };
 
-export const defaultStepsForLength = (length: number): Step[] =>
-  new Array(length)
+export const defaultStepsForLength = (length: number): Step[] => {
+  const steps: DraftStep[] = new Array(length)
     .fill([
       { action: 'pick', amount: 1 },
       { action: 'pass', amount: 1 },
     ])
-    .flat()
-    .slice(0, length * 2 - 1) // Remove the final pass.
-    .map((action) => ({ ...action }));
+    .flat();
+
+  return normalizeDraftSteps(steps).map((step) => ({
+    action: step.action,
+    //We know not null here
+    amount: step.amount!,
+  }));
+};
 
 export const getStepList = (initialState: any[]): FlattenedStep[] =>
   initialState[0]
@@ -102,28 +108,6 @@ export const getStepList = (initialState: any[]): FlattenedStep[] =>
       },
     ])
     .flat();
-
-export const nextStep = (draft: Draft, cardsPicked: number): string | null => {
-  if (!draft.InitialState) {
-    return null;
-  }
-
-  const steps = getStepList(draft.InitialState);
-
-  let picks = 0;
-
-  for (const step of steps) {
-    if (picks >= cardsPicked) {
-      return step.action;
-    }
-
-    if (step.action !== 'pass' && step.action !== 'endpack') {
-      picks += 1;
-    }
-  }
-
-  return null;
-};
 
 export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: number): DrafterState => {
   if (!draft.InitialState) {
@@ -313,4 +297,147 @@ export const setupPicks: (rows: number, cols: number) => any[][][] = (rows: numb
     res.push(row);
   }
   return res;
+};
+
+export const normalizeDraftFormatSteps = (format: DraftFormat): DraftFormat => {
+  for (let packNum = 0; packNum < format.packs.length; packNum++) {
+    const steps = format.packs[packNum].steps;
+
+    //Nothing to do for null steps. Null represents default steps
+    if (steps === null) {
+      continue;
+    }
+
+    format.packs[packNum].steps = normalizeDraftSteps(steps);
+  }
+
+  return format;
+};
+
+export const normalizeDraftSteps = (steps: DraftStep[]): DraftStep[] => {
+  const stepsLength = steps.length;
+  if (stepsLength === 0) {
+    return [];
+  }
+
+  const lastStep = steps[stepsLength - 1];
+  if (lastStep.action === 'pass') {
+    steps.pop();
+  }
+
+  return steps;
+};
+
+export const getErrorsInFormat = (format: DraftFormat) => {
+  const errors = [];
+  if (!format?.packs) return ['Internal error in the format.'];
+  if (!format.title.trim()) errors.push('title must not be empty.');
+  if (format.packs.length === 0) errors.push('Format must have at least 1 pack.');
+
+  if (format.defaultSeats !== undefined) {
+    if (!Number.isFinite(format.defaultSeats)) errors.push('Default seat count must be a number.');
+    if (format.defaultSeats < 2 || format.defaultSeats > 16)
+      errors.push('Default seat count must be between 2 and 16.');
+  }
+
+  for (let i = 0; i < format.packs.length; i++) {
+    const pack = format.packs[i];
+
+    let amount = 0;
+
+    if (!pack.steps) {
+      // this is ok, it just means the pack is a default pack
+      continue;
+    }
+
+    const stepsLength = pack.steps.length;
+    const lastStep = pack.steps[stepsLength - 1];
+    if (lastStep?.action === 'pass') {
+      errors.push(`Pack ${i + 1} cannot end with a pass action.`);
+    }
+
+    for (const step of pack.steps) {
+      if (step === null) {
+        continue;
+      }
+
+      const { action, amount: stepAmount } = step;
+
+      if (action === 'pass') {
+        continue;
+      }
+
+      if (stepAmount !== null) {
+        amount += stepAmount;
+      } else {
+        amount += 1;
+      }
+    }
+
+    if (amount !== pack.slots.length) {
+      errors.push(`Pack ${i + 1} has ${pack.slots.length} slots but has steps to pick or trash ${amount} cards.`);
+    }
+  }
+  return errors.length === 0 ? null : errors;
+};
+
+export const DEFAULT_STEPS: DraftStep[] = [
+  { action: 'pick', amount: 1 },
+  { action: 'pass', amount: null },
+];
+
+export const DEFAULT_PACK: Pack = Object.freeze({ slots: [''], steps: DEFAULT_STEPS });
+
+export const buildDefaultSteps: (cards: number) => DraftStep[] = (cards) => {
+  const steps: DraftStep[] = new Array(cards).fill(DEFAULT_STEPS).flat();
+  // the length should be cards*2-1, because the last pass is removed
+  return normalizeDraftSteps(steps);
+};
+
+export const createDefaultDraftFormat = (packsPerPlayer: number, cardsPerPack: number): DraftFormat => {
+  return {
+    title: `Standard Draft`,
+    packs: Array.from({ length: packsPerPlayer }, () => ({
+      slots: Array.from({ length: cardsPerPack }, () => '*'),
+      steps: buildDefaultSteps(cardsPerPack),
+    })),
+    multiples: false,
+    markdown: '',
+    defaultSeats: 8,
+  };
+};
+
+export const getInitialState = (draft: Draft): State => {
+  const stepQueue: DraftStep[] = [];
+
+  if (draft.InitialState) {
+    // only look at the first seat
+    const seat = draft.InitialState[0];
+
+    for (const pack of seat) {
+      const stepsLength = pack.steps.length;
+      if (stepsLength === 0) {
+        continue;
+      }
+
+      stepQueue.push(...pack.steps);
+
+      //Backwards compatability, add endpack step to the end of the pack if the backend hasn't already
+      if (pack.steps[stepsLength - 1]?.action !== 'endpack') {
+        stepQueue.push({ action: 'endpack', amount: null });
+      }
+    }
+  }
+
+  // if there are no picks made, return the initial state
+  return {
+    seats: draft.seats.map((_, index) => ({
+      picks: [],
+      trashed: [],
+      pack: draft.InitialState ? draft.InitialState[index][0].cards : [],
+    })),
+    stepQueue,
+    pack: 1,
+    pick: 1,
+  };
 };
