@@ -71,7 +71,7 @@ export const Modal: React.FC<ModalProps> = ({
                       'relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col',
                       {
                         /* To be scrollable the modal must have a maximum height, and here we make it the whole viewport (minus some margin basically)
-                         * 95% of the view port height (vh units) works well for both desktop and mobile
+                         * 95% of the dynamic view port height (dvh units) works well for both desktop and mobile
                          */
                         'overflow-hidden max-h-95/100': scrollable,
                       },

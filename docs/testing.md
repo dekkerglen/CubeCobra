@@ -4,7 +4,8 @@
 
 When it comes to manually testing Frontend components, the key areas of focus are:
 
-1. Test in both Desktop and Mobile browsers (browser dev tools helps a lot here). Doubly important when the UI contains any responsive aspects
+1. Test in both Desktop and Mobile browsers (browser dev tools helps a lot here). Doubly important when the UI contains any responsive aspects.
+   1. **NOTE:** When doing anything with view port height, using actual mobile devices is better since dev tools emulation doesn't do things like notches, address bars, or OS buttons.
 2. Test in multiple modern browsers (both desktop and mobile)
 3. Compare and contrast (with screenshots/videos) the before and after UI differences to include in the PR
 
