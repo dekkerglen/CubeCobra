@@ -252,6 +252,52 @@ describe('getErrorsInFormat', () => {
     expect(result).toContain('Pack 1 has 2 slots but has steps to pick or trash 1 cards.');
     expect(result?.length).toBe(3);
   });
+
+  it('handles null for amount in a non-pass step', () => {
+    const format = createMockDraftFormat({
+      title: 'Foobar',
+      defaultSeats: 4,
+      packs: [
+        {
+          slots: ['*', '*'],
+          steps: [
+            { action: 'pick', amount: 2 },
+            { action: 'pass', amount: null },
+            { action: 'pick', amount: null },
+          ],
+        },
+      ],
+    });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('Pack 1 has 2 slots but has steps to pick or trash 3 cards.');
+    expect(result?.length).toBe(1);
+  });
+
+  it('handles null steps', () => {
+    const format = createMockDraftFormat({
+      title: 'Foobar',
+      defaultSeats: 4,
+      packs: [
+        {
+          slots: ['*', '*', '*'],
+          steps: [
+            { action: 'pick', amount: 1 },
+            { action: 'pass', amount: null },
+            { action: 'pick', amount: 1 },
+          ],
+        },
+        {
+          slots: ['*', '*'],
+          //@ts-expect-error -- Steps can be an array or null, the array shouldn't contain null. But this cases gets to full coverage
+          steps: [null, null, null],
+        },
+      ],
+    });
+    const result = getErrorsInFormat(format);
+    expect(result).toContain('Pack 1 has 3 slots but has steps to pick or trash 2 cards.');
+    expect(result).toContain('Pack 2 has 2 slots but has steps to pick or trash 0 cards.');
+    expect(result?.length).toBe(2);
+  });
 });
 
 describe('buildDefaultSteps', () => {

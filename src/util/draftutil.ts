@@ -352,7 +352,7 @@ export const getErrorsInFormat = (format: DraftFormat) => {
 
     const stepsLength = pack.steps.length;
     const lastStep = pack.steps[stepsLength - 1];
-    if (lastStep.action === 'pass') {
+    if (lastStep?.action === 'pass') {
       errors.push(`Pack ${i + 1} cannot end with a pass action.`);
     }
 
