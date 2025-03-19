@@ -2770,7 +2770,7 @@ img.mana-symbol-sm {
 }
 
 .max-h-95\/100 {
-  max-height: 95vh;
+  max-height: 95dvh;
 }
 
 @media (min-width: 640px) {
