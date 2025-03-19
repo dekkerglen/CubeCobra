@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DndContext } from '@dnd-kit/core';
-import type { State } from 'src/router/routes/draft/finish.ts';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
@@ -11,7 +10,7 @@ import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import Cube from 'datatypes/Cube';
-import Draft, { DraftStep } from 'datatypes/Draft';
+import Draft from 'datatypes/Draft';
 import DraftLocation, { addCard, location, removeCard } from 'drafting/DraftLocation';
 import { locations } from 'drafting/DraftLocation';
 import useLocalStorage from 'hooks/useLocalStorage';
@@ -19,7 +18,7 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { makeSubtitle } from 'utils/cardutil';
 
-import { getCardDefaultRowColumn, setupPicks } from '../../util/draftutil';
+import { getCardDefaultRowColumn, getInitialState, setupPicks } from '../../util/draftutil';
 
 interface CubeDraftPageProps {
   cube: Cube;
@@ -66,39 +65,6 @@ const processPredictions = (json: PredictResponse, packCards: any[]) => {
   const predictionsMap = new Map(json.prediction[0].map((p) => [p.oracle, p.rating]));
   // Then add ratings to packCards while maintaining pack order
   return packCards.map((card) => predictionsMap.get(card.oracle_id) || 0);
-};
-
-const getInitialState = (draft: Draft): State => {
-  const stepQueue: DraftStep[] = [];
-
-  if (draft.InitialState) {
-    // only look at the first seat
-    const seat = draft.InitialState[0];
-
-    for (const pack of seat) {
-      const stepsLength = pack.steps.length;
-      if (stepsLength === 0) {
-        continue;
-      }
-
-      //Backwards compatability, add endpack step to the end of the pack if the backend hasn't already
-      if (pack.steps[stepsLength - 1]?.action !== 'endpack') {
-        stepQueue.push(...pack.steps, { action: 'endpack', amount: null });
-      }
-    }
-  }
-
-  // if there are no picks made, return the initial state
-  return {
-    seats: draft.seats.map((_, index) => ({
-      picks: [],
-      trashed: [],
-      pack: draft.InitialState ? draft.InitialState[index][0].cards : [],
-    })),
-    stepQueue,
-    pack: 1,
-    pick: 1,
-  };
 };
 
 const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallback }) => {

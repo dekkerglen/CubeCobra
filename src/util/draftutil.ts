@@ -1,6 +1,7 @@
 import { cardCmc, cardType, cmcColumn } from '../client/utils/cardutil';
 import Card from '../datatypes/Card';
 import Draft, { DraftFormat, DraftStep, Pack } from '../datatypes/Draft';
+import type { State } from '../router/routes/draft/finish.ts';
 
 interface Step {
   action: string;
@@ -403,5 +404,40 @@ export const createDefaultDraftFormat = (packsPerPlayer: number, cardsPerPack: n
     multiples: false,
     markdown: '',
     defaultSeats: 8,
+  };
+};
+
+export const getInitialState = (draft: Draft): State => {
+  const stepQueue: DraftStep[] = [];
+
+  if (draft.InitialState) {
+    // only look at the first seat
+    const seat = draft.InitialState[0];
+
+    for (const pack of seat) {
+      const stepsLength = pack.steps.length;
+      if (stepsLength === 0) {
+        continue;
+      }
+
+      stepQueue.push(...pack.steps);
+
+      //Backwards compatability, add endpack step to the end of the pack if the backend hasn't already
+      if (pack.steps[stepsLength - 1]?.action !== 'endpack') {
+        stepQueue.push({ action: 'endpack', amount: null });
+      }
+    }
+  }
+
+  // if there are no picks made, return the initial state
+  return {
+    seats: draft.seats.map((_, index) => ({
+      picks: [],
+      trashed: [],
+      pack: draft.InitialState ? draft.InitialState[index][0].cards : [],
+    })),
+    stepQueue,
+    pack: 1,
+    pick: 1,
   };
 };

@@ -1,12 +1,15 @@
-import { DraftAction, DraftFormat, DraftStep } from '../../../src/datatypes/Draft';
+import Card from '../../../src/datatypes/Card';
+import Draft, { DraftAction, DraftFormat, DraftStep } from '../../../src/datatypes/Draft';
 import {
   buildDefaultSteps,
   createDefaultDraftFormat,
   defaultStepsForLength,
   getErrorsInFormat,
+  getInitialState,
   normalizeDraftFormatSteps,
   normalizeDraftSteps,
 } from '../../../src/util/draftutil';
+import { createCard } from '../../test-utils/data';
 
 const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat => {
   return {
@@ -338,5 +341,241 @@ describe('defaultStepsForLength', () => {
   it('Handles zero steps', () => {
     const steps = defaultStepsForLength(0);
     expect(steps).toEqual([]);
+  });
+});
+
+const createMockDraft = (numCards: number, overrides?: Partial<Draft>): Draft => {
+  const cards: Card[] = [];
+  for (let i = 0; i < numCards; i++) {
+    cards.push(
+      createCard({
+        cardID: `card${i}`,
+      }),
+    );
+  }
+
+  return {
+    seats: [
+      { mainboard: [], sideboard: [], pickorder: [], trashorder: [] },
+      { mainboard: [], sideboard: [], pickorder: [], trashorder: [] },
+    ],
+    cards: cards,
+    InitialState: [
+      //seat 1
+      [{ cards: [1, 2], steps: [{ action: 'pick', amount: 1 }] }],
+      //seat 2
+      [{ cards: [3, 4], steps: [{ action: 'pick', amount: 1 }] }],
+    ],
+    cube: 'abcdefg',
+    basics: [],
+    id: 'abd-def',
+    type: 'd',
+    cubeOwner: 'iou-def',
+    date: new Date(),
+    name: '',
+    complete: false,
+    ...overrides,
+  };
+};
+
+describe('getInitialState', () => {
+  it('handles draft with no InitialState', () => {
+    const draft = createMockDraft(4, {
+      InitialState: undefined,
+    });
+
+    const state = getInitialState(draft);
+    expect(state).toEqual({
+      seats: [
+        { picks: [], trashed: [], pack: [] },
+        { picks: [], trashed: [], pack: [] },
+      ],
+      stepQueue: [],
+      pack: 1,
+      pick: 1,
+    });
+  });
+
+  it('initializes state with pack contents', () => {
+    const draft = createMockDraft(4, {
+      InitialState: [
+        //seat 1
+        [{ cards: [1, 2], steps: [{ action: 'pick', amount: 1 }] }],
+        //seat 2
+        [{ cards: [3, 4], steps: [{ action: 'pick', amount: 1 }] }],
+      ],
+    });
+
+    const state = getInitialState(draft);
+    expect(state).toEqual({
+      seats: [
+        { picks: [], trashed: [], pack: [1, 2] },
+        { picks: [], trashed: [], pack: [3, 4] },
+      ],
+      stepQueue: [
+        { action: 'pick', amount: 1 },
+        { action: 'endpack', amount: null },
+      ],
+      pack: 1,
+      pick: 1,
+    });
+  });
+
+  it('handles empty steps array', () => {
+    const draft = createMockDraft(4, {
+      InitialState: [
+        //seat 1
+        [{ cards: [], steps: [] }],
+        //seat 2
+        [{ cards: [3, 4], steps: [{ action: 'pick', amount: 1 }] }],
+      ],
+    });
+
+    const state = getInitialState(draft);
+    expect(state).toEqual({
+      seats: [
+        { picks: [], trashed: [], pack: [] },
+        { picks: [], trashed: [], pack: [3, 4] },
+      ],
+      stepQueue: [],
+      pack: 1,
+      pick: 1,
+    });
+  });
+
+  it('adds endpack step if missing', () => {
+    const draft = createMockDraft(4, {
+      InitialState: [
+        //seat 1
+        [{ cards: [1, 2], steps: [{ action: 'pick', amount: 1 }] }],
+        //seat 2
+        [{ cards: [3, 4], steps: [{ action: 'pick', amount: 1 }] }],
+      ],
+    });
+
+    const state = getInitialState(draft);
+    expect(state.stepQueue).toEqual([
+      { action: 'pick', amount: 1 },
+      { action: 'endpack', amount: null },
+    ]);
+    expect(state.seats).toEqual([
+      {
+        picks: [],
+        trashed: [],
+        pack: [1, 2],
+      },
+      {
+        picks: [],
+        trashed: [],
+        pack: [3, 4],
+      },
+    ]);
+  });
+
+  it('adds endpack step if missing, multiple packs', () => {
+    const draft = createMockDraft(4, {
+      InitialState: [
+        //seat 1
+        [
+          {
+            cards: [1, 2],
+            steps: [
+              { action: 'pick', amount: 1 },
+              { action: 'pass', amount: null },
+              { action: 'pick', amount: 1 },
+            ],
+          },
+          {
+            cards: [5, 6],
+            steps: [
+              { action: 'pick', amount: 1 },
+              { action: 'pass', amount: null },
+              { action: 'pick', amount: 1 },
+            ],
+          },
+        ],
+        //seat 2
+        [{ cards: [3, 4], steps: [{ action: 'pick', amount: 1 }] }],
+        [{ cards: [7, 8], steps: [{ action: 'pick', amount: 1 }] }],
+      ],
+    });
+
+    const state = getInitialState(draft);
+    expect(state.stepQueue).toEqual([
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: null },
+      { action: 'pick', amount: 1 },
+      { action: 'endpack', amount: null },
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: null },
+      { action: 'pick', amount: 1 },
+      { action: 'endpack', amount: null },
+    ]);
+    expect(state.seats).toEqual([
+      {
+        picks: [],
+        trashed: [],
+        pack: [1, 2],
+      },
+      {
+        picks: [],
+        trashed: [],
+        pack: [3, 4],
+      },
+    ]);
+  });
+
+  it('preserves existing endpack step', () => {
+    const draft = createMockDraft(4, {
+      InitialState: [
+        //seat 1
+        [
+          {
+            cards: [1, 2],
+            steps: [
+              { action: 'pick', amount: 1 },
+              { action: 'pass', amount: null },
+              { action: 'pick', amount: 1 },
+            ],
+          },
+          {
+            cards: [5, 6],
+            steps: [
+              { action: 'pick', amount: 1 },
+              { action: 'pass', amount: null },
+              { action: 'pick', amount: 2 },
+              { action: 'endpack', amount: null },
+            ],
+          },
+        ],
+        //seat 2
+        [{ cards: [3, 4], steps: [{ action: 'pick', amount: 1 }] }],
+        [{ cards: [7, 8], steps: [{ action: 'pick', amount: 1 }] }],
+      ],
+    });
+
+    const state = getInitialState(draft);
+    expect(state.stepQueue).toEqual([
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: null },
+      { action: 'pick', amount: 1 },
+      { action: 'endpack', amount: null },
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: null },
+      { action: 'pick', amount: 2 },
+      { action: 'endpack', amount: null },
+    ]);
+    expect(state.seats).toEqual([
+      {
+        picks: [],
+        trashed: [],
+        pack: [1, 2],
+      },
+      {
+        picks: [],
+        trashed: [],
+        pack: [3, 4],
+      },
+    ]);
   });
 });
