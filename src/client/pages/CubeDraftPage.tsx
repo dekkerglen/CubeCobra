@@ -73,6 +73,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   const [state, setState] = useLocalStorage(`draftstate-${draft.id}`, getInitialState(draft));
   const [mainboard, setMainboard] = useLocalStorage(`mainboard-${draft.id}`, setupPicks(2, 8));
   const [sideboard, setSideboard] = useLocalStorage(`sideboard-${draft.id}`, setupPicks(1, 8));
+  const [trashboard, setTrashboard] = useLocalStorage<number[]>(`trashboard-${draft.id}`, []);
   const [ratings, setRatings] = useState<number[]>([]);
   const [currentPredictions, setCurrentPredictions] = useState<PredictResponse | null>(null);
   const [userPicksInOrder, setUserPicksInOrder] = useLocalStorage<number[]>(`picks-${draft.id}`, []); // Tracks the pick sequencing, managed separately from the mainboard/sideboard state
@@ -118,7 +119,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         },
         body: JSON.stringify({
           // guarantee that we're submitting with userPicksInOrder
-          state: { ...state, seats: [{ ...state.seats[0], picks: userPicksInOrder }, ...state.seats.slice(1)] },
+          state: {
+            ...state,
+            seats: [{ ...state.seats[0], picks: userPicksInOrder, trashed: trashboard }, ...state.seats.slice(1)],
+          },
           mainboard,
           sideboard,
         }),
@@ -135,7 +139,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       console.error('endDraft error caught:', err);
       setDraftStatus((prev) => ({ ...prev, loading: false, draftCompleted: false }));
     }
-  }, [csrfFetch, draft.id, mainboard, userPicksInOrder, sideboard, state, setDraftStatus]);
+  }, [csrfFetch, draft.id, mainboard, userPicksInOrder, sideboard, state, setDraftStatus, trashboard]);
 
   const getPredictions = useCallback(
     async (request: { state: any; packCards: { index: number; oracle_id: string }[] }) => {
@@ -305,6 +309,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
         // we open the next pack or end the draft
         if (draft.InitialState && state.pack === draft.InitialState[0].length) {
           newState.seats[0].picks = userPicksInOrder;
+          newState.seats[0].trashed = trashboard;
           setState(newState);
           setDraftStatus((prev) => ({ ...prev, loading: false, draftCompleted: true }));
           return;
@@ -352,6 +357,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       draft.InitialState,
       getPredictions,
       userPicksInOrder,
+      trashboard,
     ],
   );
 
@@ -359,7 +365,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   const sideboardCards = sideboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])));
 
   // Function to handle initial drag, sets in the right place and sets it as pending if necessary
-  const dragCardPick = useCallback(
+  const dragPickCard = useCallback(
     (source: DraftLocation, target: DraftLocation) => {
       if (pendingPick !== null) return;
 
@@ -404,7 +410,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
     ],
   );
 
-  const moveCardBetweenDeckStacks = useCallback(
+  const dragCardBetweenDeckStacks = useCallback(
     (source: DraftLocation, target: DraftLocation) => {
       const { board: sourceBoard, setter: sourceSetter } = getLocationReferences(source.type);
 
@@ -424,7 +430,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   );
 
   // Clicking on a card in the pack adds it to mainboard and sets it as pending pick if necessary
-  const selectCardByIndex = useCallback(
+  const clickPickCard = useCallback(
     (packIndex: number) => {
       if (packIndex < 0 || packIndex >= state.seats[0].pack.length) {
         return;
@@ -476,7 +482,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
    * on a click we only have the source. We determine the target location based on the source card's cmc/type (getCardDefaultRowColumn)
    * though if moving to the sideboard only the CMC matters to determine the column.
    */
-  const applyCardClickOnDeckStack = useCallback(
+  const clickDeckStack = useCallback(
     (source: DraftLocation) => {
       //Determine the card which was clicked in the board, so we can calculate its standard row/col destination
       const { board: sourceBoard } = getLocationReferences(source.type);
@@ -492,9 +498,25 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       //The card should be added to the end of the stack of cards at the grid position (row/col). Be extra careful
       //with the boards (using .? operator) even though they are pre-populated via setupPicks() at the top
       const targetIndex = targetBoard?.[targetRow]?.[col]?.[source.index] || 0;
-      moveCardBetweenDeckStacks(source, new DraftLocation(targetLocation, targetRow, col, targetIndex));
+      dragCardBetweenDeckStacks(source, new DraftLocation(targetLocation, targetRow, col, targetIndex));
     },
-    [draft.cards, getLocationReferences, moveCardBetweenDeckStacks],
+    [draft.cards, getLocationReferences, dragCardBetweenDeckStacks],
+  );
+
+  const clickTrashPick = useCallback(
+    (packIndex: number) => {
+      const cardIndex = state.seats[0].pack[packIndex];
+      if (cardIndex === undefined || !draft.cards[cardIndex]) return;
+
+      if (draftStatus.predictionsLoading) {
+        setTrashboard((prev) => [cardIndex, ...prev]);
+        setPendingPick(cardIndex);
+      } else {
+        setTrashboard((prev) => [cardIndex, ...prev]);
+        makePick(cardIndex);
+      }
+    },
+    [state.seats, draft.cards, draftStatus.predictionsLoading, setTrashboard, makePick],
   );
 
   const onMoveCard = useCallback(
@@ -508,17 +530,23 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       const source = active.data.current as DraftLocation;
       const target = over.data.current as DraftLocation;
 
+      // Trash picks just don't go to the mainboard or sideboard
+      if (state.stepQueue[0]?.action === 'trash' && source.type === locations.pack) {
+        clickTrashPick(source.index);
+        return;
+      }
+
       if (source.equals(target) && source.type === locations.pack) {
         // player dropped card back in the same location
         const dragTime = Date.now() - (dragStartTime ?? 0);
         if (dragTime < 200) {
-          // Click on card
-          return selectCardByIndex(source.index);
+          // If the drag was quick, treat it as a click
+          return clickPickCard(source.index);
         }
         return;
       } else if (source.equals(target) && (source.type === locations.deck || source.type === locations.sideboard)) {
         //Clicking a card within the deck or sideboard should move it from one to the other
-        applyCardClickOnDeckStack(source);
+        clickDeckStack(source);
         return;
       } else if (source.equals(target)) {
         return;
@@ -530,20 +558,22 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       //Dragged a card from the pack to the deck or sideboard
       if (source.type === locations.pack) {
         if (target.type === locations.deck || target.type === locations.sideboard) {
-          dragCardPick(source, target);
+          dragPickCard(source, target);
           return;
         }
       }
       //Otherwise the drag had nothing to do with the pack
-      moveCardBetweenDeckStacks(source, target);
+      dragCardBetweenDeckStacks(source, target);
     },
     [
-      applyCardClickOnDeckStack,
+      clickDeckStack,
       dragStartTime,
-      moveCardBetweenDeckStacks,
-      selectCardByIndex,
-      dragCardPick,
+      dragCardBetweenDeckStacks,
+      clickPickCard,
+      dragPickCard,
       draftStatus.draftCompleted,
+      state.stepQueue,
+      clickTrashPick,
     ],
   );
 
@@ -596,12 +626,27 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       !draftStatus.loading
     ) {
       setDraftStatus((prev) => ({ ...prev, loading: true }));
+      if (pendingPick !== null) return;
       setTimeout(() => {
-        //Automatically select a card from the pack, by picking a random index position within the available card pack
-        selectCardByIndex(Math.floor(Math.random() * state.seats[0].pack.length));
+        if (state.stepQueue[0]?.action === 'trashrandom') {
+          // Emulate a trash click pick on a card from the pack, by picking a random index position within the available card pack
+          clickTrashPick(Math.floor(Math.random() * state.seats[0].pack.length));
+        } else {
+          // Emulate clicking on a random card
+          clickPickCard(Math.floor(Math.random() * state.seats[0].pack.length));
+        }
       }, 1000);
     }
-  }, [selectCardByIndex, draftStatus.loading, state.stepQueue, state.seats]);
+  }, [
+    draftStatus.loading,
+    state.stepQueue,
+    state.seats,
+    draftStatus.predictionsLoading,
+    makePick,
+    pendingPick,
+    clickPickCard,
+    clickTrashPick,
+  ]);
 
   // P1P1 ratings fetch necessary, the rest come via makePick
   // InitialRatings could eventually come along with the initial state, would require some refactoring
@@ -629,8 +674,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       if (state.stepQueue.length <= 1) {
         return 'Finishing up draft...';
       }
-
-      return 'Waiting for next pack...';
+      if (nextStep.action !== 'pickrandom' && nextStep.action !== 'trashrandom') return 'Waiting for next pack...';
     }
 
     switch (nextStep.action) {
