@@ -189,7 +189,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   }, [state, draft.cards, getPredictions, draftStatus.retryInProgress, setDraftStatus]);
 
   const makePick = useCallback(
-    async (index: number) => {
+    async (packIndex: number) => {
       setDraftStatus((prev) => ({ ...prev, loading: true }));
       setRatings([]); // Clear ratings
       const newState = { ...state };
@@ -241,11 +241,11 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
 
           // make all the picks
           if (currentStep.action === 'pick') {
-            newState.seats[0].picks.unshift(state.seats[0].pack[index]);
+            newState.seats[0].picks.unshift(state.seats[0].pack[packIndex]);
           } else if (currentStep.action === 'trash') {
-            newState.seats[0].trashed.unshift(state.seats[0].pack[index]);
+            newState.seats[0].trashed.unshift(state.seats[0].pack[packIndex]);
           }
-          newState.seats[0].pack.splice(index, 1);
+          newState.seats[0].pack.splice(packIndex, 1);
 
           for (let i = 1; i < state.seats.length; i++) {
             const pick = picks[i - 1];
@@ -261,14 +261,14 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
       } else if (currentStep.action === 'pickrandom' || currentStep.action === 'trashrandom') {
         // make random selection
         if (currentStep.action === 'pickrandom') {
-          newState.seats[0].picks.unshift(state.seats[0].pack[index]);
+          newState.seats[0].picks.unshift(state.seats[0].pack[packIndex]);
           for (let i = 1; i < state.seats.length; i++) {
             const randomIndex = Math.floor(Math.random() * state.seats[i].pack.length);
             newState.seats[i].picks.unshift(state.seats[i].pack[randomIndex]);
             newState.seats[i].pack.splice(randomIndex, 1);
           }
         } else if (currentStep.action === 'trashrandom') {
-          newState.seats[0].trashed.unshift(state.seats[0].pack[index]);
+          newState.seats[0].trashed.unshift(state.seats[0].pack[packIndex]);
 
           for (let i = 1; i < state.seats.length; i++) {
             const randomIndex = Math.floor(Math.random() * state.seats[i].pack.length);
@@ -276,7 +276,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
             newState.seats[i].pack.splice(randomIndex, 1);
           }
         }
-        newState.seats[0].pack.splice(index, 1);
+        newState.seats[0].pack.splice(packIndex, 1);
       }
 
       // get the next step
@@ -510,10 +510,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
 
       if (draftStatus.predictionsLoading) {
         setTrashboard((prev) => [cardIndex, ...prev]);
-        setPendingPick(cardIndex);
+        setPendingPick(packIndex);
       } else {
         setTrashboard((prev) => [cardIndex, ...prev]);
-        makePick(cardIndex);
+        makePick(packIndex);
       }
     },
     [state.seats, draft.cards, draftStatus.predictionsLoading, setTrashboard, makePick],
