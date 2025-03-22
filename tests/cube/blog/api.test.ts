@@ -328,7 +328,7 @@ describe('Delete a Blog Post', () => {
     await call(deleteBlogHandler).withFlash(flashMock).withParams({ id: 'blog-id' }).send();
 
     expect(flashMock).toHaveBeenCalledWith('danger', 'Please login to delete a blog post.');
-    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/blog-id');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/blogpost/blog-id');
   });
 
   it(`should return a 404 if blog post doesn't exists`, async () => {

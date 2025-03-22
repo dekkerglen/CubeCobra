@@ -177,7 +177,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
     if (!user) {
       req.flash('danger', 'Please login to delete a blog post.');
 
-      return redirect(req, res, `/cube/blog/${encodeURIComponent(id)}`);
+      return redirect(req, res, `/cube/blog/blogpost/${encodeURIComponent(id)}`);
     }
 
     const blog = await Blog.getById(id);
