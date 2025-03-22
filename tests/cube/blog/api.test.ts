@@ -225,6 +225,26 @@ describe('Edit Blog Post', () => {
     expect(flashMock).toHaveBeenCalledWith('success', 'Blog update successful');
     expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
   });
+
+  it('should redirect to dashboard when updating a blog post for non-existent cube', async () => {
+    const user = createUser();
+    const blog = createBlogPost({ owner: user, title: 'My blog title' });
+
+    (Blog.getUnhydrated as jest.Mock).mockResolvedValue({ ...blog, owner: user.id });
+    (Blog.put as jest.Mock).mockResolvedValue(undefined);
+    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+
+    await call(createBlogHandler)
+      .as(user)
+      .withFlash(flashMock)
+      .withParams({ id: 'non-existent-cube' })
+      .withBody({ title: blog.title, id: blog.id, markdown: 'Updated content' })
+      .send();
+
+    expect(Blog.put).toHaveBeenCalled();
+    expect(flashMock).toHaveBeenCalledWith('success', 'Blog update successful');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/dashboard');
+  });
 });
 
 describe('Get Blog Post', () => {
@@ -343,6 +363,21 @@ describe('Delete a Blog Post', () => {
 
     expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
     expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
+  });
+
+  it('should redirect to dashboard when deleting a blog post for non-existent cube', async () => {
+    const owner = createUser({ id: 'blogger' });
+    const blog = createBlogPost({ owner, cube: 'non-existent-cube' });
+
+    (Blog.getById as jest.Mock).mockResolvedValue(blog);
+    (Blog.delete as jest.Mock).mockResolvedValue(undefined);
+    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+
+    await call(deleteBlogHandler).withFlash(flashMock).as(owner).withParams({ id: blog.id }).send();
+
+    expect(Blog.delete).toHaveBeenCalledWith(blog.id);
+    expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/dashboard');
   });
 });
 
