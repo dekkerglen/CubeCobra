@@ -22,7 +22,8 @@ const getRedirectUrl = async (cubeId: string): Promise<string> => {
 
 const getRedirectUrlForCube = async (cube: CubeType): Promise<string> => {
   if (cube) {
-    return `/cube/blog/${encodeURIComponent(cube.id)}`;
+    const id = cube.shortId || cube.id;
+    return `/cube/blog/${encodeURIComponent(id)}`;
   } else {
     return '/dashboard';
   }

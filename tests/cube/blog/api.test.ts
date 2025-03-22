@@ -57,18 +57,21 @@ describe('Create Blog Post', () => {
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
     await call(createBlogHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).withBody({ title: 'Hi' }).send();
 
-    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
     expect(flashMock).toHaveBeenCalledWith('danger', 'Blog title length must be between 5 and 100 characters.');
   });
 
   it('should fail if the blog title is too long', async () => {
+    const cube = createCube({ id: 'cube-id' });
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+
     await call(createBlogHandler)
       .withFlash(flashMock)
       .withParams({ id: 'cube-id' })
       .withBody({ title: 'Very long blog title'.repeat(50) })
       .send();
 
-    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
     expect(flashMock).toHaveBeenCalledWith('danger', 'Blog title length must be between 5 and 100 characters.');
   });
 
@@ -104,7 +107,7 @@ describe('Create Blog Post', () => {
       'danger',
       'Cannot post a blog for an empty cube. Please add cards to the cube first.',
     );
-    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.id}`);
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
   });
 
   it('should fail if the user is not the cube owner', async () => {
@@ -121,7 +124,7 @@ describe('Create Blog Post', () => {
       .send();
 
     expect(flashMock).toHaveBeenCalledWith('danger', 'Unable to post this blog post: Unauthorized.');
-    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.id}`);
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
   });
 
   it('should should create a blog post', async () => {
@@ -164,6 +167,30 @@ describe('Create Blog Post', () => {
     );
 
     expect(flashMock).toHaveBeenCalledWith('success', 'Blog post successful');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
+  });
+
+  it('should redirect using cube id if short id isnt set', async () => {
+    const owner = createUser({ following: ['user-1', 'user-2'] });
+    const cube = createCube({ owner, shortId: undefined });
+
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (Blog.put as jest.Mock).mockResolvedValueOnce('blog-id');
+    (Feed.batchPut as jest.Mock).mockResolvedValue(undefined);
+
+    await call(createBlogHandler)
+      .as(owner)
+      .withFlash(flashMock)
+      .withBody({ title: 'My blog title', markdown: 'My blog content' })
+      .withParams({ id: cube.id })
+      .send();
+
+    expect(Blog.put).toHaveBeenCalled();
+
+    expect(Feed.batchPut).toHaveBeenCalled();
+
+    expect(flashMock).toHaveBeenCalledWith('success', 'Blog post successful');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.id}`);
   });
 
   it('should handle errors gracefully', async () => {
@@ -229,7 +256,7 @@ describe('Edit Blog Post', () => {
     );
 
     expect(flashMock).toHaveBeenCalledWith('success', 'Blog update successful');
-    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
   });
 
   it('should redirect to dashboard when updating a blog post for non-existent cube', async () => {
@@ -370,7 +397,7 @@ describe('Delete a Blog Post', () => {
     await call(deleteBlogHandler).withFlash(flashMock).as(owner).withParams({ id: blog.id }).send();
 
     expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
-    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
+    expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
   });
 
   //Blog posts can outlive the cube they belong to
