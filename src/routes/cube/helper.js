@@ -26,7 +26,7 @@ async function updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelog,
         canEdit: true,
         cubeID: req.params.id,
         missing,
-        added: added.map((add) => add.scryfall_id),
+        added: added.map((add) => add.cardID || add.scryfall_id),
       });
     }
 
@@ -122,7 +122,8 @@ async function bulkUpload(req, res, list, cube) {
       mainboard.push(...newCards);
       maybeboard.push(...newMaybe);
 
-      added.concat(newCards, newMaybe);
+      //Replaced concat with push b/c concat returns new array, and added is const so can't reassign
+      added.push(...newCards, ...newMaybe);
     } else {
       // upload is in TXT format
       for (const itemUntrimmed of lines) {
