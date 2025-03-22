@@ -11,7 +11,6 @@ import carddb, {
   getMostReasonable,
   getMostReasonableById,
   getOracleForMl,
-  getReasonableCardByOracle,
   getRelatedCards,
 } from '../util/carddb';
 const cardutil = require('../client/utils/cardutil');
@@ -336,35 +335,5 @@ router.get('/searchcards', async (req, res) =>
     },
   ),
 );
-
-router.post('/mtgconnect', async (req, res) => {
-  const { oracles } = req.body;
-
-  const cards = oracles.map((oracle) => getReasonableCardByOracle(oracle));
-
-  const result = [];
-
-  for (const card of cards) {
-    const related = getRelatedCards(card.oracle_id);
-    const synergistic = related.synergistic.top.map((oracle) => getReasonableCardByOracle(oracle));
-
-    result.push({
-      name: card.name,
-      image_normal: card.image_normal,
-      oracle: card.oracle_id,
-      popularity: card.cubeCount,
-      synergistic: synergistic.slice(0, 5).map((c) => ({
-        name: c.name,
-        image_normal: c.image_normal,
-        oracle: c.oracle_id,
-      })),
-    });
-  }
-
-  return res.status(200).send({
-    success: 'true',
-    cards: result,
-  });
-});
 
 module.exports = router;
