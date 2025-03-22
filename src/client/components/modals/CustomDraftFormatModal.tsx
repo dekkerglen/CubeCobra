@@ -1,6 +1,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import { createDefaultDraftFormat, DEFAULT_PACK, DraftFormat, getErrorsInFormat } from '../../../datatypes/Draft';
+import { DraftFormat } from '../../../datatypes/Draft';
+import { createDefaultDraftFormat, DEFAULT_PACK, getErrorsInFormat } from '../../../util/draftutil';
 import CubeContext from '../../contexts/CubeContext';
 import Alert from '../base/Alert';
 import Button from '../base/Button';

@@ -21,6 +21,6 @@ runs:
         INPUT_CONFIG_PATH: ${{ inputs.config_path }}
         INPUT_ESLINT_FLAGS: ${{ inputs.eslint_flags }}
         INPUT_PRINT_CHANGED_FILES: ${{ inputs.print_changed_files }}
-        # Exact sha of the merged PR branch, coming from the pull_request event
-        INPUT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        # Pull request base SHA, or the SHA of the branch before push
+        INPUT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         INPUT_BRANCH_SHA: ${{ github.sha }}
