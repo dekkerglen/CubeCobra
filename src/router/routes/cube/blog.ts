@@ -15,15 +15,29 @@ import CubeType from '../../../datatypes/Cube';
 import { FeedTypes } from '../../../datatypes/Feed';
 import UserType from '../../../datatypes/User';
 
-const getRedirectUrl = async (cubeId: string): Promise<string> => {
+const getRedirectUrl = async (req: Request, cubeId: string): Promise<string> => {
   const cube = await Cube.getById(cubeId);
-  return await getRedirectUrlForCube(cube);
+  return await getRedirectUrlForCube(req, cube);
 };
 
-const getRedirectUrlForCube = async (cube: CubeType): Promise<string> => {
-  if (cube) {
-    const id = cube.shortId || cube.id;
-    return `/cube/blog/${encodeURIComponent(id)}`;
+const getRedirectUrlForCube = async (req: Request, cube: CubeType): Promise<string> => {
+  const referrer = util.getSafeReferrer(req);
+  //If not a valid referrer on this website, either send to the cube or the dashboard
+  if (referrer === null) {
+    if (cube) {
+      return `/cube/blog/${encodeURIComponent(cube.id)}`;
+    } else {
+      return '/dashboard';
+    }
+  }
+
+  //Use the referrer to know where to return the user, based on the places blog posts can be seen
+  if (referrer.includes('/user/blog/')) {
+    return referrer;
+  } else if (referrer.includes('/cube/blog/blogpost/')) {
+    return referrer;
+  } else if (referrer.includes('/cube/blog/') && cube) {
+    return referrer;
   } else {
     return '/dashboard';
   }
@@ -34,7 +48,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     const cubeId = req.params.id;
     //Generally going to assume the cube exists here. Definitely required for a new blog, not so for an edit
     const cube = await Cube.getById(cubeId);
-    const redirectUrl = await getRedirectUrlForCube(cube);
+    const redirectUrl = await getRedirectUrlForCube(req, cube);
 
     if (req.body.title.length < 5 || req.body.title.length > 100) {
       req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
@@ -194,7 +208,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
     }
 
     await Blog.delete(id);
-    const redirectUrl = await getRedirectUrl(blog.cube);
+    const redirectUrl = await getRedirectUrl(req, blog.cube);
 
     req.flash('success', 'Post Removed');
     return redirect(req, res, redirectUrl);
