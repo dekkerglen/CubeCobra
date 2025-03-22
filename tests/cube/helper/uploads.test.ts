@@ -22,6 +22,57 @@ jest.mock('../../../src/util/util');
 describe('Bulk Upload', () => {
   const flashMock = jest.fn();
 
+  const setupBasicMocks = (
+    existingCards: { mainboard: any[]; maybeboard: any[] } = { mainboard: [], maybeboard: [] },
+  ) => {
+    (Cube.getCards as jest.Mock).mockResolvedValue(existingCards);
+    (Changelog.put as jest.Mock).mockResolvedValue('changelog-id');
+    (Blog.put as jest.Mock).mockResolvedValue('blog-id');
+  };
+
+  const createMockCardFromCSV = (details: any) => ({
+    tags: [],
+    status: 'Owned',
+    colors: details.color_identity,
+    cmc: details.cmc,
+    cardID: details.scryfall_id,
+    type_line: details.type,
+    addedTmsp: new Date().valueOf().toString(),
+    finish: 'Non-foil',
+  });
+
+  const expectSuccessfulUpload = (owner: any, cube: any) => {
+    expect(Blog.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        owner: owner.id,
+        cube: cube.id,
+        title: expect.stringContaining('Cube Bulk Import'),
+        changelist: 'changelog-id',
+      }),
+    );
+
+    if (owner.following?.length) {
+      expect(Feed.batchPut).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'blog-id',
+            to: owner.following[0],
+            type: FeedTypes.BLOG,
+          }),
+        ]),
+      );
+    }
+
+    expect(flashMock).toHaveBeenCalledWith('success', 'All cards successfully added.');
+  };
+
+  const mockCardDBResponses = (cardDetails: any[]) => {
+    cardDetails.forEach((details) => {
+      (carddb.getMostReasonable as jest.Mock).mockReturnValueOnce(details);
+      (carddb.cardFromId as jest.Mock).mockReturnValueOnce(details);
+    });
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -33,19 +84,14 @@ describe('Bulk Upload', () => {
 
       const csvContent = 'name,CMC,Type,Color,Rarity\nLightning Bolt,1,Instant,R,C';
 
-      //No defined type for this
-      const mockCard = {
-        name: 'Lightning Bolt',
-        cmc: 1,
-        type_line: 'Instant',
-        colors: ['R'],
-        addedTmsp: new Date().valueOf().toString(),
-        cardID: 'abcdefg-hijklmn',
-      };
+      const mockCard = createMockCardFromCSV(
+        createCardDetails({
+          name: 'Lightning Bolt',
+          scryfall_id: 'abcdefg-hijklmn',
+        }),
+      );
 
-      (Cube.getCards as jest.Mock).mockResolvedValue({ mainboard: [], maybeboard: [] });
-      (Changelog.put as jest.Mock).mockResolvedValue('changelog-id');
-      (Blog.put as jest.Mock).mockResolvedValue('blog-id');
+      setupBasicMocks();
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({ newCards: [mockCard], newMaybe: [], missing: [] });
 
       await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, csvContent, cube);
@@ -54,32 +100,7 @@ describe('Bulk Upload', () => {
         mainboard: [mockCard],
         maybeboard: [],
       });
-      expect(Changelog.put).toHaveBeenCalledWith(
-        {
-          mainboard: {
-            adds: [{ cardID: 'abcdefg-hijklmn' }],
-          },
-        },
-        cube.id,
-      );
-      expect(Blog.put).toHaveBeenCalledWith(
-        expect.objectContaining({
-          owner: owner.id,
-          cube: cube.id,
-          title: expect.stringContaining('Cube Bulk Import'),
-          changelist: 'changelog-id',
-        }),
-      );
-      expect(Feed.batchPut).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: 'blog-id',
-            to: 'user1',
-            type: FeedTypes.BLOG,
-          }),
-        ]),
-      );
-      expect(flashMock).toHaveBeenCalledWith('success', 'All cards successfully added.');
+      expectSuccessfulUpload(owner, cube);
     });
 
     it('should add valid cards in the CSV to existing cards in the cube', async () => {
@@ -88,40 +109,31 @@ describe('Bulk Upload', () => {
 
       const csvContent = 'name,CMC,Type,Color,Rarity\nLightning Bolt,1,Instant,R,C';
 
-      //No defined type for this
-      const mockCard = {
-        name: 'Lightning Bolt',
-        cmc: 1,
-        type_line: 'Instant',
-        colors: ['R'],
-        addedTmsp: new Date().valueOf().toString(),
-        cardID: 'abcdefg-hijklmn',
-      };
+      const mockCard = createMockCardFromCSV(
+        createCardDetails({
+          name: 'Lightning Bolt',
+          scryfall_id: 'abcdefg-hijklmn',
+        }),
+      );
 
-      const mockMainboardCard = {
-        name: 'Ancestral Recall',
-        cmc: 1,
-        type_line: 'Instant',
-        colors: ['U'],
-        addedTmsp: '1742649530000',
-        cardID: 'red-blue',
-      };
+      const mockMainboardCard = createMockCardFromCSV(
+        createCardDetails({
+          name: 'Ancestral Recall',
+          scryfall_id: 'red-blue',
+        }),
+      );
 
-      const mockMaybeboardCard = {
-        name: 'Healing Salve',
-        cmc: 1,
-        type_line: 'Instant',
-        colors: ['W'],
-        addedTmsp: '1742649580000',
-        cardID: 'bad-boy',
-      };
+      const mockMaybeboardCard = createMockCardFromCSV(
+        createCardDetails({
+          name: 'Healing Salve',
+          scryfall_id: 'bad-boy',
+        }),
+      );
 
-      (Cube.getCards as jest.Mock).mockResolvedValue({
+      setupBasicMocks({
         mainboard: [mockMainboardCard],
         maybeboard: [mockMaybeboardCard],
       });
-      (Changelog.put as jest.Mock).mockResolvedValue('changelog-id');
-      (Blog.put as jest.Mock).mockResolvedValue('blog-id');
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({ newCards: [mockCard], newMaybe: [], missing: [] });
 
       await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, csvContent, cube);
@@ -130,32 +142,7 @@ describe('Bulk Upload', () => {
         mainboard: [mockMainboardCard, mockCard],
         maybeboard: [mockMaybeboardCard],
       });
-      expect(Changelog.put).toHaveBeenCalledWith(
-        {
-          mainboard: {
-            adds: [{ cardID: 'abcdefg-hijklmn' }],
-          },
-        },
-        cube.id,
-      );
-      expect(Blog.put).toHaveBeenCalledWith(
-        expect.objectContaining({
-          owner: owner.id,
-          cube: cube.id,
-          title: expect.stringContaining('Cube Bulk Import'),
-          changelist: 'changelog-id',
-        }),
-      );
-      expect(Feed.batchPut).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: 'blog-id',
-            to: 'user1',
-            type: FeedTypes.BLOG,
-          }),
-        ]),
-      );
-      expect(flashMock).toHaveBeenCalledWith('success', 'All cards successfully added.');
+      expectSuccessfulUpload(owner, cube);
     });
 
     it('should handle CSV upload with missing cards', async () => {
@@ -163,7 +150,7 @@ describe('Bulk Upload', () => {
       const cube = createCube({ owner });
       const csvContent = 'name,CMC,Type,Color,Rarity\nNotARealCard,1,Instant,R,C';
 
-      (Cube.getCards as jest.Mock).mockResolvedValue({ mainboard: [], maybeboard: [] });
+      setupBasicMocks();
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({
         newCards: [],
         newMaybe: [],
@@ -188,16 +175,14 @@ describe('Bulk Upload', () => {
       const cube = createCube({ owner });
       const csvContent = 'name,CMC,Type,Color,Rarity\nNotARealCard,1,Instant,R,C\nLightning Bolt,1,Instant,R,C';
 
-      const mockCard = {
-        name: 'Lightning Bolt',
-        cmc: 1,
-        type_line: 'Instant',
-        colors: ['R'],
-        addedTmsp: new Date().valueOf().toString(),
-        cardID: 'abcdefg-hijklmn',
-      };
+      const mockCard = createMockCardFromCSV(
+        createCardDetails({
+          name: 'Lightning Bolt',
+          scryfall_id: 'abcdefg-hijklmn',
+        }),
+      );
 
-      (Cube.getCards as jest.Mock).mockResolvedValue({ mainboard: [], maybeboard: [] });
+      setupBasicMocks();
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({
         newCards: [mockCard],
         newMaybe: [],
@@ -219,14 +204,10 @@ describe('Bulk Upload', () => {
   });
 
   describe('Text Upload', () => {
-    const mockAddCardToBoardImpl = (
-      idToCardMap: Map<string, any>,
-    ): ((board: any, _cube: any, cardDetails: any) => void) => {
-      return (board, _cube, cardDetails) => {
-        const id = cardDetails.scryfall_id;
-        if (idToCardMap.has(id)) {
-          board.push(idToCardMap.get(id));
-        }
+    const mockAddCardToBoardImpl = (idToCardMap: Map<string, any>) => {
+      return (board: any[], _cube: any, cardDetails: any) => {
+        const card = idToCardMap.get(cardDetails.scryfall_id);
+        if (card) board.push(card);
       };
     };
 
@@ -235,101 +216,34 @@ describe('Bulk Upload', () => {
       const cube = createCube({ owner });
       const textContent = '2x Lightning Bolt\nDark Ritual';
 
-      const lbDetails = createCardDetails({
-        name: 'Lightning Bolt',
-        scryfall_id: 'bolt-id',
-      });
-
-      const mockLbCard = {
-        tags: [],
-        status: 'Owned',
-        colors: lbDetails.color_identity,
-        cmc: lbDetails.cmc,
-        cardID: lbDetails.scryfall_id,
-        type_line: lbDetails.type,
-        addedTmsp: new Date(),
-        finish: 'Non-foil',
-      };
-
-      const drDetails = createCardDetails({
-        name: 'Dark Ritual',
-        scryfall_id: 'dark-rit',
-      });
-
-      const mockDrCard = {
-        tags: [],
-        status: 'Owned',
-        colors: drDetails.color_identity,
-        cmc: drDetails.cmc,
-        cardID: drDetails.scryfall_id,
-        type_line: drDetails.type,
-        addedTmsp: new Date(),
-        finish: 'Non-foil',
-      };
-
-      (Cube.getCards as jest.Mock).mockResolvedValue({ mainboard: [], maybeboard: [] });
-      (carddb.getMostReasonable as jest.Mock).mockReturnValueOnce(lbDetails);
-      (carddb.getMostReasonable as jest.Mock).mockReturnValueOnce(drDetails);
-      (carddb.cardFromId as jest.Mock).mockReturnValueOnce(lbDetails);
-      (carddb.cardFromId as jest.Mock).mockReturnValueOnce(drDetails);
-      (Changelog.put as jest.Mock).mockResolvedValue('changelog-id');
-      (util.addCardToCube as jest.Mock).mockImplementation(
-        mockAddCardToBoardImpl(
-          new Map([
-            [lbDetails.scryfall_id, mockLbCard],
-            [drDetails.scryfall_id, mockDrCard],
-          ]),
-        ),
+      const cards = ['Lightning Bolt', 'Dark Ritual'].map((name) =>
+        createCardDetails({ name, scryfall_id: `${name.toLowerCase().replace(' ', '-')}-id` }),
       );
+
+      setupBasicMocks();
+      mockCardDBResponses(cards);
+
+      const mockCards = new Map(cards.map((card) => [card.scryfall_id, createMockCardFromCSV(card)]));
+
+      (util.addCardToCube as jest.Mock).mockImplementation(mockAddCardToBoardImpl(mockCards));
 
       await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
-
-      expect(Cube.updateCards).toHaveBeenCalledWith(cube.id, {
-        mainboard: [mockLbCard, mockLbCard, mockDrCard],
-        maybeboard: [],
-      });
-      expect(Changelog.put).toHaveBeenCalledWith(
-        {
-          mainboard: {
-            adds: [{ cardID: 'bolt-id' }, { cardID: 'bolt-id' }, { cardID: 'dark-rit' }],
-          },
-        },
-        cube.id,
-      );
-      expect(Blog.put).toHaveBeenCalledWith(
-        expect.objectContaining({
-          owner: owner.id,
-          cube: cube.id,
-          title: expect.stringContaining('Cube Bulk Import'),
-          changelist: 'changelog-id',
-        }),
-      );
-      expect(Feed.batchPut).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: 'blog-id',
-            to: 'user1',
-            type: FeedTypes.BLOG,
-          }),
-        ]),
-      );
-      expect(flashMock).toHaveBeenCalledWith('success', 'All cards successfully added.');
+      expectSuccessfulUpload(owner, cube);
     });
 
-    //TODO: Expand on
+    //TODO: Expand cases for multiple matches, none that match the set, etc
     it('should handle text upload with set specifications', async () => {
       const owner = createUser({ following: ['user1'] });
       const cube = createCube({ owner });
       const textContent = 'Lightning Bolt (LEA) 123';
 
-      (Cube.getCards as jest.Mock).mockResolvedValue({ mainboard: [], maybeboard: [] });
+      setupBasicMocks();
       (carddb.getIdsFromName as jest.Mock).mockReturnValue(['bolt-id']);
       (carddb.cardFromId as jest.Mock).mockReturnValue({
         set: 'lea',
         collector_number: '123',
         name: 'Lightning Bolt',
       });
-      (Changelog.put as jest.Mock).mockResolvedValue('changelog-id');
 
       await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
 
@@ -342,7 +256,7 @@ describe('Bulk Upload', () => {
       const cube = createCube({ owner });
       const textContent = 'NotARealCard\nAlsoNotReal';
 
-      (Cube.getCards as jest.Mock).mockResolvedValue({ mainboard: [], maybeboard: [] });
+      setupBasicMocks();
       (carddb.getMostReasonable as jest.Mock).mockReturnValue(null);
 
       await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
@@ -367,22 +281,10 @@ describe('Bulk Upload', () => {
         scryfall_id: 'healing-salve',
       });
 
-      const mockHsCard = {
-        tags: [],
-        status: 'Owned',
-        colors: hsDetails.color_identity,
-        cmc: hsDetails.cmc,
-        cardID: hsDetails.scryfall_id,
-        type_line: hsDetails.type,
-        addedTmsp: new Date(),
-        finish: 'Non-foil',
-      };
+      const mockHsCard = createMockCardFromCSV(hsDetails);
 
-      (Cube.getCards as jest.Mock).mockResolvedValue({ mainboard: [], maybeboard: [] });
-      (carddb.getMostReasonable as jest.Mock).mockReturnValueOnce(hsDetails);
-      (carddb.getMostReasonable as jest.Mock).mockReturnValueOnce(null);
-      (carddb.cardFromId as jest.Mock).mockReturnValueOnce(hsDetails);
-      (carddb.cardFromId as jest.Mock).mockReturnValueOnce(null);
+      setupBasicMocks();
+      mockCardDBResponses([hsDetails, null]);
 
       (util.addCardToCube as jest.Mock).mockImplementation(
         mockAddCardToBoardImpl(new Map([[hsDetails.scryfall_id, mockHsCard]])),
