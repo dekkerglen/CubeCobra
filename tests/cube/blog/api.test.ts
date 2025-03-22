@@ -53,6 +53,8 @@ describe('Create Blog Post', () => {
   });
 
   it('should fail if the blog title is too short', async () => {
+    const cube = createCube({ id: 'cube-id' });
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
     await call(createBlogHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).withBody({ title: 'Hi' }).send();
 
     expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
@@ -188,6 +190,8 @@ describe('Edit Blog Post', () => {
   });
 
   it('should 404 when trying to edit a missing blog post', async () => {
+    const cube = createCube({ id: 'cube-id' });
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
     (Blog.getUnhydrated as jest.Mock).mockResolvedValue(undefined);
 
     await call(createBlogHandler)
@@ -201,6 +205,8 @@ describe('Edit Blog Post', () => {
   });
 
   it('should update a blog post', async () => {
+    const cube = createCube({ id: 'cube-id' });
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
     const user = createUser();
     const blog = createBlogPost({ owner: user, title: 'My blog title' });
 
@@ -353,6 +359,8 @@ describe('Delete a Blog Post', () => {
   });
 
   it('should delete a blog and return to the cube', async () => {
+    const cube = createCube({ id: 'cube-id' });
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
     const owner = createUser({ id: 'blogger' });
     const blog = createBlogPost({ owner, cube: 'cube-id' });
 
@@ -365,6 +373,7 @@ describe('Delete a Blog Post', () => {
     expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/cube-id');
   });
 
+  //Blog posts can outlive the cube they belong to
   it('should redirect to dashboard when deleting a blog post for non-existent cube', async () => {
     const owner = createUser({ id: 'blogger' });
     const blog = createBlogPost({ owner, cube: 'non-existent-cube' });
