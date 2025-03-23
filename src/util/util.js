@@ -327,7 +327,7 @@ const getSafeReferrer = (req /* Request */) => {
   }
 
   //Because of us setting the base in the parsing, we can ensure the host isn't another site.
-  //Is OK with www. version of the site
+  //We are also OK with www. version of the site. Host contains both domain and port, if the port isn't standard/aligns with protocol
   if (!(url.host === process.env.DOMAIN || url.host === `www.${process.env.DOMAIN}`)) {
     return null;
   }
