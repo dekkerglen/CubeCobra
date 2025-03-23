@@ -15,31 +15,41 @@ import CubeType from '../../../datatypes/Cube';
 import { FeedTypes } from '../../../datatypes/Feed';
 import UserType from '../../../datatypes/User';
 
-const getRedirectUrl = async (req: Request, cubeId: string): Promise<string> => {
+const getRedirectUrl = async (req: Request, cubeId: string, isDelete: boolean = false): Promise<string> => {
   const cube = await Cube.getById(cubeId);
-  return await getRedirectUrlForCube(req, cube);
+  return await getRedirectUrlForCube(req, cube, isDelete);
 };
 
-const getRedirectUrlForCube = async (req: Request, cube: CubeType): Promise<string> => {
+const getRedirectUrlForCube = async (req: Request, cube: CubeType, isDelete: boolean = false): Promise<string> => {
   const referrer = util.getSafeReferrer(req);
-  //If not a valid referrer on this website, either send to the cube or the dashboard
+
+  //Prefer short ID in the URL if the cube has it
+  const cubeOrFallbackUrl = cube ? `/cube/blog/${encodeURIComponent(cube.shortId || cube.id)}` : '/dashboard';
+  //If not a valid referrer on this website, either send to the cube (if it exists) or the dashboard
   if (referrer === null) {
-    if (cube) {
-      return `/cube/blog/${encodeURIComponent(cube.id)}`;
+    return cubeOrFallbackUrl;
+  }
+
+  const isUserBlog = referrer.includes('/user/blog/');
+  const isBlogPost = referrer.includes('/cube/blog/blogpost/');
+
+  //When the blog is deleted we can't redirect to itself even if that is where user was
+  if (isDelete) {
+    if (isUserBlog) {
+      return referrer;
     } else {
-      return '/dashboard';
+      return cubeOrFallbackUrl;
     }
   }
 
   //Use the referrer to know where to return the user, based on the places blog posts can be seen
-  if (referrer.includes('/user/blog/')) {
+  if (isUserBlog) {
     return referrer;
-  } else if (referrer.includes('/cube/blog/blogpost/')) {
+  } else if (isBlogPost) {
     return referrer;
-  } else if (referrer.includes('/cube/blog/') && cube) {
-    return referrer;
+    //Ugly to check both here, but if the blogpost was deleted from itself the referrer still contains /cube/blog/ (and more)
   } else {
-    return '/dashboard';
+    return cubeOrFallbackUrl;
   }
 };
 
@@ -189,6 +199,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { user } = req;
 
+    //The ensureAuth middleware means this should never occur
     if (!user) {
       req.flash('danger', 'Please login to delete a blog post.');
 
@@ -208,7 +219,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
     }
 
     await Blog.delete(id);
-    const redirectUrl = await getRedirectUrl(req, blog.cube);
+    const redirectUrl = await getRedirectUrl(req, blog.cube, true);
 
     req.flash('success', 'Post Removed');
     return redirect(req, res, redirectUrl);

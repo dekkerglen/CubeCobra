@@ -474,6 +474,37 @@ describe('Delete a Blog Post', () => {
     expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
   });
 
+  it('should delete a blog and return to the cube, even if doing so from the post itself', async () => {
+    const cube = createCube({ id: 'cube-id' });
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    const owner = createUser({ id: 'blogger' });
+    const blog = createBlogPost({ owner, cube: 'cube-id' });
+    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
+
+    (Blog.getById as jest.Mock).mockResolvedValue(blog);
+    (Blog.delete as jest.Mock).mockResolvedValue(undefined);
+
+    await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
+
+    expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
+    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
+  });
+
+  it('should delete a blog and go to the dashboard, if now both the cube and blog are gone', async () => {
+    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+    const owner = createUser({ id: 'blogger' });
+    const blog = createBlogPost({ owner, cube: 'cube-id' });
+    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
+
+    (Blog.getById as jest.Mock).mockResolvedValue(blog);
+    (Blog.delete as jest.Mock).mockResolvedValue(undefined);
+
+    await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
+
+    expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
+    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/dashboard`);
+  });
+
   //Blog posts can outlive the cube they belong to
   it('should redirect to dashboard when deleting a blog post for non-existent cube', async () => {
     const owner = createUser({ id: 'blogger' });
