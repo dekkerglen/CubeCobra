@@ -28,7 +28,13 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['json', 'text'],
-  collectCoverageFrom: ['src/**/*.{ts,tsx}', 'src/client/filtering/*.js', '!src/**/*.d.ts', '!src/**/index.{js,ts}'],
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    'src/dynamo/models/*.js',
+    'src/client/filtering/*.js',
+    '!src/**/*.d.ts',
+    '!src/**/index.{js,ts}',
+  ],
 
   projects: [
     {
