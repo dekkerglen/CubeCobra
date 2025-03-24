@@ -1,20 +1,5 @@
 jest.mock('../../src/util/imageutil');
 
-const getMockClient = () => ({
-  createTable: jest.fn(),
-  get: jest.fn(),
-  scan: jest.fn(),
-  put: jest.fn(),
-  query: jest.fn(),
-  delete: jest.fn(),
-  batchGet: jest.fn(),
-  batchPut: jest.fn(),
-  batchDelete: jest.fn(),
-});
-
-const mockClient = getMockClient();
-const mockCreateClient = jest.fn(() => mockClient);
-
 // Move the test for client creation into a separate describe block that runs first
 describe('User Model Initialization', () => {
   it('user table created with proper configuration', async () => {
@@ -22,7 +7,7 @@ describe('User Model Initialization', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('../../src/dynamo/models/user');
 
-    expect(mockCreateClient).toHaveBeenCalledWith(
+    expect(mockDynamoCreateClient).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'USERS',
         partitionKey: 'id',
@@ -45,9 +30,6 @@ describe('User Model Initialization', () => {
     );
   });
 });
-
-// Mock needs to be before User import, in order for the mocked createClient to be set
-jest.mock('../../src/dynamo/util', () => mockCreateClient);
 
 import { DefaultPrintingPreference, PrintingPreference } from '../../src/datatypes/Card';
 import UserType, { DefaultGridTightnessPreference, GridTightnessPreference } from '../../src/datatypes/User';
@@ -106,13 +88,13 @@ describe('User Model', () => {
 
   describe('getByUsername', () => {
     it('returns null when no user found', async () => {
-      (mockClient.query as jest.Mock).mockResolvedValueOnce({ Items: [] });
+      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({ Items: [] });
       const result = await User.getByUsername('nonexistent');
       expect(result).toBeNull();
     });
 
     it('returns hydrated user without sensitive data', async () => {
-      (mockClient.query as jest.Mock).mockResolvedValueOnce({
+      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
         Items: [{ ...mockFullUser }],
       });
 
@@ -124,7 +106,7 @@ describe('User Model', () => {
       expect(result.defaultPrinting).toBe(DefaultPrintingPreference);
       expect(result.gridTightness).toBe(DefaultGridTightnessPreference);
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(mockDynamoClient.query).toHaveBeenCalledWith(
         expect.objectContaining({
           IndexName: 'ByUsername',
           ExpressionAttributeValues: {
@@ -147,7 +129,7 @@ describe('User Model', () => {
 
       (imageutil.getImageData as jest.Mock).mockReturnValue(image);
 
-      (mockClient.query as jest.Mock).mockResolvedValueOnce({
+      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
         Items: [user],
       });
 
@@ -161,13 +143,13 @@ describe('User Model', () => {
 
   describe('getByEmail', () => {
     it('returns null when no user found', async () => {
-      (mockClient.query as jest.Mock).mockResolvedValueOnce({ Items: [] });
+      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({ Items: [] });
       const result = await User.getByEmail('nonexistent@example.com');
       expect(result).toBeNull();
     });
 
     it('returns hydrated user with sensitive data', async () => {
-      (mockClient.query as jest.Mock).mockResolvedValueOnce({
+      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
         Items: [{ ...mockFullUser }],
       });
 
@@ -178,7 +160,7 @@ describe('User Model', () => {
       expect(result.image).toEqual(mockImage);
       expect(result.defaultPrinting).toBe(DefaultPrintingPreference);
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(mockDynamoClient.query).toHaveBeenCalledWith(
         expect.objectContaining({
           IndexName: 'ByEmail',
           ExpressionAttributeValues: {
@@ -194,38 +176,38 @@ describe('User Model', () => {
 
   describe('getByIdWithSensitiveData', () => {
     it('returns undefined when no user found', async () => {
-      (mockClient.get as jest.Mock).mockResolvedValueOnce({ Item: undefined });
+      (mockDynamoClient.get as jest.Mock).mockResolvedValueOnce({ Item: undefined });
 
       const result = await User.getByIdWithSensitiveData('abcdefg');
       expect(result).toBeUndefined();
-      expect(mockClient.get as jest.Mock).toHaveBeenCalledWith('abcdefg');
+      expect(mockDynamoClient.get as jest.Mock).toHaveBeenCalledWith('abcdefg');
     });
 
     it('returns raw user', async () => {
-      (mockClient.get as jest.Mock).mockResolvedValueOnce({ Item: mockFullUser });
+      (mockDynamoClient.get as jest.Mock).mockResolvedValueOnce({ Item: mockFullUser });
 
       const result = await User.getByIdWithSensitiveData('abcdefg');
 
       expect(result).toEqual(mockFullUser);
-      expect(mockClient.get as jest.Mock).toHaveBeenCalledWith('abcdefg');
+      expect(mockDynamoClient.get as jest.Mock).toHaveBeenCalledWith('abcdefg');
     });
   });
 
   describe('getById', () => {
     it('returns undefined when no user found', async () => {
-      mockClient.get.mockResolvedValueOnce({ Item: undefined });
+      mockDynamoClient.get.mockResolvedValueOnce({ Item: undefined });
 
       const result = await User.getById('nonexistent-id');
       expect(result).toBeUndefined();
-      expect(mockClient.get).toHaveBeenCalledWith('nonexistent-id');
+      expect(mockDynamoClient.get).toHaveBeenCalledWith('nonexistent-id');
     });
 
     it('returns hydrated user without sensitive data', async () => {
-      mockClient.get.mockResolvedValueOnce({ Item: { ...mockFullUser } });
+      mockDynamoClient.get.mockResolvedValueOnce({ Item: { ...mockFullUser } });
 
       const result = await User.getById(mockFullUser.id);
 
-      expect(mockClient.get).toHaveBeenCalledWith(mockFullUser.id);
+      expect(mockDynamoClient.get).toHaveBeenCalledWith(mockFullUser.id);
       expect(result.passwordHash).toBeUndefined();
       expect(result.email).toBeUndefined();
       expect(result.image).toEqual(mockImage);
@@ -236,20 +218,20 @@ describe('User Model', () => {
 
   describe('getByIdOrUsername', () => {
     it('returns null if neither are found', async () => {
-      mockClient.get.mockResolvedValue({ Item: undefined });
-      mockClient.query.mockResolvedValueOnce({ Items: [] });
+      mockDynamoClient.get.mockResolvedValue({ Item: undefined });
+      mockDynamoClient.query.mockResolvedValueOnce({ Items: [] });
 
       const result = await User.getByIdOrUsername('nonexistent-id');
       expect(result).toBeNull();
-      expect(mockClient.get).toHaveBeenCalledWith('nonexistent-id');
+      expect(mockDynamoClient.get).toHaveBeenCalledWith('nonexistent-id');
     });
 
     it('returns hydrated user if found by id', async () => {
-      mockClient.get.mockResolvedValueOnce({ Item: { ...mockFullUser } });
+      mockDynamoClient.get.mockResolvedValueOnce({ Item: { ...mockFullUser } });
 
       const result = await User.getByIdOrUsername(mockFullUser.id);
 
-      expect(mockClient.get).toHaveBeenCalledWith(mockFullUser.id);
+      expect(mockDynamoClient.get).toHaveBeenCalledWith(mockFullUser.id);
       expect(result.passwordHash).toBeUndefined();
       expect(result.email).toBeUndefined();
       expect(result.image).toEqual(mockImage);
@@ -258,12 +240,12 @@ describe('User Model', () => {
     });
 
     it('returns hydrated user if found by username and not id', async () => {
-      mockClient.get.mockResolvedValueOnce({ Item: undefined });
-      mockClient.query.mockResolvedValueOnce({ Items: [mockUser] });
+      mockDynamoClient.get.mockResolvedValueOnce({ Item: undefined });
+      mockDynamoClient.query.mockResolvedValueOnce({ Items: [mockUser] });
 
       const result = await User.getByIdOrUsername('Nonexistent-ID');
 
-      expect(mockClient.get).toHaveBeenCalledWith('Nonexistent-ID');
+      expect(mockDynamoClient.get).toHaveBeenCalledWith('Nonexistent-ID');
 
       expect(result.passwordHash).toBeUndefined();
       expect(result.email).toBeUndefined();
@@ -271,7 +253,7 @@ describe('User Model', () => {
       expect(result.defaultPrinting).toBe(DefaultPrintingPreference);
       expect(result.gridTightness).toBe(DefaultGridTightnessPreference);
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(mockDynamoClient.query).toHaveBeenCalledWith(
         expect.objectContaining({
           IndexName: 'ByUsername',
           ExpressionAttributeValues: {
@@ -287,7 +269,7 @@ describe('User Model', () => {
 
   describe('batchGet', () => {
     it('returns empty array when no ids provided', async () => {
-      mockClient.batchGet.mockResolvedValueOnce([]);
+      mockDynamoClient.batchGet.mockResolvedValueOnce([]);
 
       const result = await User.batchGet([]);
       expect(result).toEqual([]);
@@ -298,7 +280,7 @@ describe('User Model', () => {
         { ...mockFullUser, id: 'user1' },
         { ...mockFullUser, id: 'user2' },
       ];
-      mockClient.batchGet.mockResolvedValueOnce(users);
+      mockDynamoClient.batchGet.mockResolvedValueOnce(users);
 
       const result = await User.batchGet(['user1', 'user2']);
 
@@ -316,7 +298,7 @@ describe('User Model', () => {
   describe('deleteById', () => {
     it('deletes user by id', async () => {
       await User.deleteById(mockFullUser.id);
-      expect(mockClient.delete).toHaveBeenCalledWith({ id: mockFullUser.id });
+      expect(mockDynamoClient.delete).toHaveBeenCalledWith({ id: mockFullUser.id });
     });
   });
 
@@ -324,7 +306,7 @@ describe('User Model', () => {
     it('saves with username lower', async () => {
       await User.put(mockUser);
 
-      expect(mockClient.put).toHaveBeenCalledWith(
+      expect(mockDynamoClient.put).toHaveBeenCalledWith(
         expect.objectContaining({
           username: mockUser.username,
           usernameLower: mockUser.username.toLowerCase(),
@@ -335,12 +317,12 @@ describe('User Model', () => {
     it('image details are not saved', async () => {
       await User.put(mockUser);
 
-      expect(mockClient.put).toHaveBeenCalledWith(
+      expect(mockDynamoClient.put).toHaveBeenCalledWith(
         expect.not.objectContaining({
           image: undefined,
         }),
       );
-      expect(mockClient.put).toHaveBeenCalledWith(
+      expect(mockDynamoClient.put).toHaveBeenCalledWith(
         expect.objectContaining({
           imageName: mockImage.imageName,
         }),
@@ -356,14 +338,14 @@ describe('User Model', () => {
     });
 
     it('throws error when user not found', async () => {
-      mockClient.get.mockResolvedValueOnce({ Item: null });
+      mockDynamoClient.get.mockResolvedValueOnce({ Item: null });
 
       await expect(User.update({ id: 'non-existent' })).rejects.toThrow('Invalid document: No existing document found');
-      expect(mockClient.get).toHaveBeenCalledWith('non-existent');
+      expect(mockDynamoClient.get).toHaveBeenCalledWith('non-existent');
     });
 
     it('updates only specified fields', async () => {
-      mockClient.get.mockResolvedValueOnce({ Item: mockUser });
+      mockDynamoClient.get.mockResolvedValueOnce({ Item: mockUser });
 
       const updates = {
         id: mockUser.id,
@@ -373,8 +355,8 @@ describe('User Model', () => {
 
       await User.update(updates);
 
-      expect(mockClient.get).toHaveBeenCalledWith(mockUser.id);
-      expect(mockClient.put).toHaveBeenCalledWith(
+      expect(mockDynamoClient.get).toHaveBeenCalledWith(mockUser.id);
+      expect(mockDynamoClient.put).toHaveBeenCalledWith(
         expect.objectContaining({
           ...mockUser,
           about: 'New about text',
@@ -384,7 +366,7 @@ describe('User Model', () => {
     });
 
     it('image details are not saved', async () => {
-      mockClient.get.mockResolvedValueOnce({ Item: mockUser });
+      mockDynamoClient.get.mockResolvedValueOnce({ Item: mockUser });
 
       const updates = {
         id: mockUser.id,
@@ -394,12 +376,12 @@ describe('User Model', () => {
 
       await User.update(updates);
 
-      expect(mockClient.put).toHaveBeenCalledWith(
+      expect(mockDynamoClient.put).toHaveBeenCalledWith(
         expect.not.objectContaining({
           image: undefined,
         }),
       );
-      expect(mockClient.put).toHaveBeenCalledWith(
+      expect(mockDynamoClient.put).toHaveBeenCalledWith(
         expect.objectContaining({
           imageName: mockImage.imageName,
         }),
@@ -409,7 +391,7 @@ describe('User Model', () => {
 
   describe('batchPut', () => {
     it('no existing users found', async () => {
-      mockClient.batchGet.mockResolvedValueOnce([]);
+      mockDynamoClient.batchGet.mockResolvedValueOnce([]);
       await User.batchPut([
         {
           id: 'user1',
@@ -419,11 +401,11 @@ describe('User Model', () => {
         },
       ]);
 
-      expect(mockClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
+      expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
     });
 
     it('when input documents are missing id field', async () => {
-      mockClient.batchGet.mockResolvedValueOnce([]);
+      mockDynamoClient.batchGet.mockResolvedValueOnce([]);
       await User.batchPut([
         {
           foo: 'user1',
@@ -433,7 +415,7 @@ describe('User Model', () => {
         },
       ]);
 
-      expect(mockClient.batchGet).toHaveBeenCalledWith([undefined, undefined]);
+      expect(mockDynamoClient.batchGet).toHaveBeenCalledWith([undefined, undefined]);
     });
 
     it('updates fields correctly', async () => {
@@ -445,7 +427,7 @@ describe('User Model', () => {
       user2.id = 'user2';
       user2.about = 'I am a bad boy';
 
-      mockClient.batchGet.mockResolvedValueOnce([user2, user1]);
+      mockDynamoClient.batchGet.mockResolvedValueOnce([user2, user1]);
       await User.batchPut([
         {
           id: 'user1',
@@ -457,12 +439,12 @@ describe('User Model', () => {
         },
       ]);
 
-      expect(mockClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
+      expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
 
       const sortById = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
 
-      //We don't care the order of the items in the batchPut call. expect(mockClient.batchPut).toHaveBeenCalledWith cares
-      const batchPutArray = mockClient.batchPut.mock.calls[0][0];
+      //We don't care the order of the items in the batchPut call. expect(mockDynamoClient.batchPut).toHaveBeenCalledWith cares
+      const batchPutArray = mockDynamoClient.batchPut.mock.calls[0][0];
       expect(batchPutArray.sort(sortById)).toEqual(
         [
           {
@@ -491,7 +473,7 @@ describe('User Model', () => {
       user1.imageName = mockImage.imageName;
       user1.image = undefined;
 
-      mockClient.batchGet.mockResolvedValueOnce([user2, user1]);
+      mockDynamoClient.batchGet.mockResolvedValueOnce([user2, user1]);
       await User.batchPut([
         {
           id: 'user1',
@@ -507,12 +489,12 @@ describe('User Model', () => {
         },
       ]);
 
-      expect(mockClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
+      expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
 
       const sortById = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
 
-      //We don't care the order of the items in the batchPut call. expect(mockClient.batchPut).toHaveBeenCalledWith cares
-      const batchPutArray = mockClient.batchPut.mock.calls[0][0];
+      //We don't care the order of the items in the batchPut call. expect(mockDynamoClient.batchPut).toHaveBeenCalledWith cares
+      const batchPutArray = mockDynamoClient.batchPut.mock.calls[0][0];
       expect(batchPutArray.sort(sortById)).toEqual(
         [
           {
@@ -544,7 +526,7 @@ describe('User Model', () => {
 
       await User.batchAdd([user1, user2]);
 
-      expect(mockClient.batchPut).toHaveBeenCalledWith([user1, user2]);
+      expect(mockDynamoClient.batchPut).toHaveBeenCalledWith([user1, user2]);
     });
 
     it('does not strip image details', async () => {
@@ -562,17 +544,17 @@ describe('User Model', () => {
 
       await User.batchAdd([user1, user2]);
 
-      expect(mockClient.batchPut).toHaveBeenCalledWith([user1, user2]);
+      expect(mockDynamoClient.batchPut).toHaveBeenCalledWith([user1, user2]);
     });
   });
 
   describe('batchGet', () => {
     it('returns empty array when no users found', async () => {
-      mockClient.batchGet.mockResolvedValueOnce([]);
+      mockDynamoClient.batchGet.mockResolvedValueOnce([]);
 
       const result = await User.batchGet(['aaaaa', 'bbbbb']);
       expect(result).toEqual([]);
-      expect(mockClient.batchGet).toHaveBeenCalledWith(['aaaaa', 'bbbbb']);
+      expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['aaaaa', 'bbbbb']);
     });
 
     it('returns hydrated users without sensitive data', async () => {
@@ -586,13 +568,13 @@ describe('User Model', () => {
       user2.gridTightness = GridTightnessPreference.TIGHT;
       user2.imageName = mockImage.imageName;
 
-      mockClient.batchGet.mockResolvedValueOnce([user1, user2]);
+      mockDynamoClient.batchGet.mockResolvedValueOnce([user1, user2]);
       (imageutil.getImageData as jest.Mock).mockReturnValueOnce(mockImageTwo);
       (imageutil.getImageData as jest.Mock).mockReturnValueOnce(mockImage);
 
       const result = await User.batchGet(['aaaaa', 'bbbbb']);
 
-      expect(mockClient.batchGet).toHaveBeenCalledWith(['aaaaa', 'bbbbb']);
+      expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['aaaaa', 'bbbbb']);
 
       const resultOne = result[0];
       expect(resultOne.passwordHash).toBeUndefined();
@@ -614,7 +596,7 @@ describe('User Model', () => {
     it('calls client to crate table', async () => {
       await User.createTable();
 
-      expect(mockClient.createTable).toHaveBeenCalled();
+      expect(mockDynamoClient.createTable).toHaveBeenCalled();
     });
   });
 
