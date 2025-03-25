@@ -60,6 +60,7 @@ describe('User Model', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.resetAllMocks();
 
     (imageutil.getImageData as jest.Mock).mockReturnValue(mockImage);
 
@@ -593,7 +594,7 @@ describe('User Model', () => {
   });
 
   describe('createTable', () => {
-    it('calls client to crate table', async () => {
+    it('calls client to create table', async () => {
       await User.createTable();
 
       expect(mockDynamoClient.createTable).toHaveBeenCalled();
