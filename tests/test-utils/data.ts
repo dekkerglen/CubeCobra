@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BASIC_LAND_MANA_MAPPING } from '../../src/client/utils/cardutil';
 import BlogPost from '../../src/datatypes/BlogPost';
-import Card, { BasicLand, CardDetails } from '../../src/datatypes/Card';
+import Card, { BasicLand, CardDetails, Changes } from '../../src/datatypes/Card';
 import Cube, { CubeImage } from '../../src/datatypes/Cube';
 import Draft, { DraftStep } from '../../src/datatypes/Draft';
 import DraftSeat from '../../src/datatypes/DraftSeat';
@@ -235,4 +235,11 @@ export const createCompletedSoloDraft = (overrides?: Partial<Draft>): Draft => {
     complete: false,
     ...overrides,
   } as Draft;
+};
+
+export const createChangelog = (overrides?: Partial<Changes>): Changes => {
+  return {
+    version: 1,
+    ...overrides,
+  } as Changes;
 };
