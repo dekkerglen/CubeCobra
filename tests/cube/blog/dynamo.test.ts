@@ -3,6 +3,7 @@ import Blog from '../../../src/dynamo/models/blog';
 import * as carddb from '../../../src/util/carddb';
 import { createBlogPost, createCard, createChangelog, createCube, createUser } from '../../test-utils/data';
 
+// Mock dependencies
 jest.mock('../../../src/dynamo/models/cube');
 jest.mock('../../../src/dynamo/models/changelog');
 jest.mock('../../../src/dynamo/models/user');
@@ -12,11 +13,35 @@ import Changelog from '../../../src/dynamo/models/changelog';
 import Cube from '../../../src/dynamo/models/cube';
 import User from '../../../src/dynamo/models/user';
 
-const createUnhydratedBlogPost = (overrides?: Partial<UnhydratedBlogPost>): UnhydratedBlogPost => {
-  return {
+// Test helpers
+const createUnhydratedBlogPost = (overrides?: Partial<UnhydratedBlogPost>): UnhydratedBlogPost =>
+  ({
     id: 'blog-post-99999',
     ...overrides,
-  } as UnhydratedBlogPost;
+  }) as UnhydratedBlogPost;
+
+const setupQueryResult = (response: any) => {
+  (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce(response);
+};
+
+const verifyQueryCall = (params: any) => {
+  expect(mockDynamoClient.query).toHaveBeenCalledWith(expect.objectContaining(params));
+};
+
+const setupHydrationMocks = (user: any, cube: any, changelog: any) => {
+  (User.getById as jest.Mock).mockResolvedValueOnce(user);
+  (Cube.getById as jest.Mock).mockResolvedValueOnce(cube);
+  (Changelog.getById as jest.Mock).mockResolvedValueOnce(changelog);
+};
+
+const verifyHydrationCalls = (blog: any) => {
+  expect(User.getById).toHaveBeenCalledWith(blog.owner);
+  if (blog.cube !== 'DEVBLOG') {
+    expect(Cube.getById).toHaveBeenCalledWith(blog.cube);
+  }
+  if (blog.changelist) {
+    expect(Changelog.getById).toHaveBeenCalledWith(blog.cube, blog.changelist);
+  }
 };
 
 // First test createClient configuration
@@ -51,12 +76,14 @@ describe('Blog Model Initialization', () => {
   });
 });
 
+// Test data setup
 describe('Blog Model', () => {
   const mockUser = createUser({ id: 'user-123' });
-
   const mockCube = createCube({ id: 'cube-123', name: 'My Cube', owner: mockUser });
-
-  // const mockChangelog = undefined;
+  const mockChangelog = createChangelog({
+    mainboard: { adds: [createCard()] },
+    maybeboard: undefined,
+  });
 
   const mockStoredBlog = createUnhydratedBlogPost({
     id: 'blog-123',
@@ -66,13 +93,6 @@ describe('Blog Model', () => {
     date: new Date('2024-03-24').valueOf(),
     cube: 'cube-123',
     changelist: 'changelog-id-5235',
-  });
-
-  const mockChangelog = createChangelog({
-    mainboard: {
-      adds: [createCard()],
-    },
-    maybeboard: undefined,
   });
 
   let mockBlog: BlogPost;
@@ -112,16 +132,12 @@ describe('Blog Model', () => {
 
     it('returns hydrated blog with all related objects', async () => {
       (mockDynamoClient.get as jest.Mock).mockResolvedValueOnce({ Item: mockStoredBlog });
-
-      (User.getById as jest.Mock).mockResolvedValueOnce(mockUser);
-      (Cube.getById as jest.Mock).mockResolvedValueOnce(mockCube);
-      (Changelog.getById as jest.Mock).mockResolvedValueOnce(mockChangelog);
+      setupHydrationMocks(mockUser, mockCube, mockChangelog);
 
       const result = await Blog.getById(mockBlog.id);
+
       expect(result).toEqual(mockBlog);
-      expect(User.getById).toHaveBeenCalledWith(mockStoredBlog.owner);
-      expect(Cube.getById).toHaveBeenCalledWith(mockStoredBlog.cube);
-      expect(Changelog.getById).toHaveBeenCalledWith(mockStoredBlog.cube, mockStoredBlog.changelist);
+      verifyHydrationCalls(mockStoredBlog);
     });
 
     it('returns hydrated blog without changelog', async () => {
@@ -222,61 +238,51 @@ describe('Blog Model', () => {
 
   describe('getByCube', () => {
     it('returns empty array when no blogs found', async () => {
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({ Items: [], LastEvaluatedKey: null });
+      setupQueryResult({ Items: [], LastEvaluatedKey: null });
 
       const result = await Blog.getByCube(mockCube.id, 5);
-      expect(result).toEqual({ items: [], lastKey: null });
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          IndexName: 'ByCube',
-          ExpressionAttributeValues: {
-            ':cube': mockCube.id,
-          },
-          ExpressionAttributeNames: {
-            '#p1': 'cube',
-          },
-        }),
-      );
+      expect(result).toEqual({ items: [], lastKey: null });
+      verifyQueryCall({
+        IndexName: 'ByCube',
+        ExpressionAttributeValues: { ':cube': mockCube.id },
+        ExpressionAttributeNames: { '#p1': 'cube' },
+      });
     });
 
     it('returns empty array Items are falsey', async () => {
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({ Items: undefined, LastEvaluatedKey: null });
+      setupQueryResult({ Items: undefined, LastEvaluatedKey: null });
 
       const result = await Blog.getByCube(mockCube.id, 5);
       expect(result).toEqual({ items: [], lastKey: null });
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          IndexName: 'ByCube',
-          ExpressionAttributeValues: {
-            ':cube': mockCube.id,
-          },
-          ExpressionAttributeNames: {
-            '#p1': 'cube',
-          },
-        }),
-      );
+      verifyQueryCall({
+        IndexName: 'ByCube',
+        ExpressionAttributeValues: {
+          ':cube': mockCube.id,
+        },
+        ExpressionAttributeNames: {
+          '#p1': 'cube',
+        },
+      });
     });
 
     it('default limit if the input is falsey', async () => {
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({ Items: undefined, LastEvaluatedKey: null });
+      setupQueryResult({ Items: undefined, LastEvaluatedKey: null });
 
       const result = await Blog.getByCube(mockCube.id, 0);
       expect(result).toEqual({ items: [], lastKey: null });
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          IndexName: 'ByCube',
-          ExpressionAttributeValues: {
-            ':cube': mockCube.id,
-          },
-          ExpressionAttributeNames: {
-            '#p1': 'cube',
-          },
-          Limit: 36,
-        }),
-      );
+      verifyQueryCall({
+        IndexName: 'ByCube',
+        ExpressionAttributeValues: {
+          ':cube': mockCube.id,
+        },
+        ExpressionAttributeNames: {
+          '#p1': 'cube',
+        },
+        Limit: 36,
+      });
     });
 
     it('returns hydrated blogs of the cube', async () => {
@@ -289,7 +295,7 @@ describe('Blog Model', () => {
       const changelog1 = { ...mockChangelog, id: 'changelist-1234' };
       const changelog2 = { ...mockChangelog, id: 'changelist-5678' };
 
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
+      setupQueryResult({
         Items: [blog1, blog2],
         LastEvaluatedKey: { S: 'foobar' },
       });
@@ -319,18 +325,16 @@ describe('Blog Model', () => {
         { id: changelog2.id, cube: mockCube.id },
       ]);
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          IndexName: 'ByCube',
-          ExpressionAttributeValues: {
-            ':cube': mockCube.id,
-          },
-          ExpressionAttributeNames: {
-            '#p1': 'cube',
-          },
-          Limit: 5,
-        }),
-      );
+      verifyQueryCall({
+        IndexName: 'ByCube',
+        ExpressionAttributeValues: {
+          ':cube': mockCube.id,
+        },
+        ExpressionAttributeNames: {
+          '#p1': 'cube',
+        },
+        Limit: 5,
+      });
     });
 
     it('returns hydrated blogs of the cube, with missing related objects', async () => {
@@ -341,7 +345,7 @@ describe('Blog Model', () => {
 
       const changelog1 = { ...mockChangelog, id: 'changelist-1234' };
 
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
+      setupQueryResult({
         Items: [blog1, blog2],
         LastEvaluatedKey: null,
       });
@@ -371,72 +375,64 @@ describe('Blog Model', () => {
         { id: 'changelist-7457457', cube: mockCube.id },
       ]);
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          Limit: 77,
-        }),
-      );
+      verifyQueryCall({
+        Limit: 77,
+      });
     });
   });
 
   //getByCube and getByOwner share hydration logic so we don't need both to have full sets of conditional tests
   describe('getByOwner', () => {
     it('returns empty array when no blogs found', async () => {
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({ Items: [], LastEvaluatedKey: null });
+      setupQueryResult({ Items: [], LastEvaluatedKey: null });
 
       const result = await Blog.getByOwner(mockUser.id, 5);
       expect(result).toEqual({ items: [], lastKey: null });
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          IndexName: 'ByOwner',
-          ExpressionAttributeValues: {
-            ':owner': mockUser.id,
-          },
-          ExpressionAttributeNames: {
-            '#p1': 'owner',
-          },
-        }),
-      );
+      verifyQueryCall({
+        IndexName: 'ByOwner',
+        ExpressionAttributeValues: {
+          ':owner': mockUser.id,
+        },
+        ExpressionAttributeNames: {
+          '#p1': 'owner',
+        },
+      });
     });
 
     it('returns empty array when items are falsey', async () => {
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({ Items: false, LastEvaluatedKey: null });
+      setupQueryResult({ Items: false, LastEvaluatedKey: null });
 
       const result = await Blog.getByOwner(mockUser.id, 5);
       expect(result).toEqual({ items: [], lastKey: null });
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          IndexName: 'ByOwner',
-          ExpressionAttributeValues: {
-            ':owner': mockUser.id,
-          },
-          ExpressionAttributeNames: {
-            '#p1': 'owner',
-          },
-        }),
-      );
+      verifyQueryCall({
+        IndexName: 'ByOwner',
+        ExpressionAttributeValues: {
+          ':owner': mockUser.id,
+        },
+        ExpressionAttributeNames: {
+          '#p1': 'owner',
+        },
+      });
     });
 
     it('default limit if input is falsey', async () => {
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({ Items: [], LastEvaluatedKey: null });
+      setupQueryResult({ Items: [], LastEvaluatedKey: null });
 
       const result = await Blog.getByOwner(mockUser.id, 0);
       expect(result).toEqual({ items: [], lastKey: null });
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          IndexName: 'ByOwner',
-          ExpressionAttributeValues: {
-            ':owner': mockUser.id,
-          },
-          ExpressionAttributeNames: {
-            '#p1': 'owner',
-          },
-          Limit: 36,
-        }),
-      );
+      verifyQueryCall({
+        IndexName: 'ByOwner',
+        ExpressionAttributeValues: {
+          ':owner': mockUser.id,
+        },
+        ExpressionAttributeNames: {
+          '#p1': 'owner',
+        },
+        Limit: 36,
+      });
     });
 
     it('returns all blogs for owner', async () => {
@@ -448,7 +444,7 @@ describe('Blog Model', () => {
       const cube1 = { ...mockCube, id: 'cube-1234' };
       const cube2 = { ...mockCube, id: 'cube-5678' };
 
-      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
+      setupQueryResult({
         Items: [blog1, blog2],
         LastEvaluatedKey: { S: 'foobar' },
       });
@@ -475,18 +471,16 @@ describe('Blog Model', () => {
       expect(Cube.batchGet).toHaveBeenCalledWith([cube1.id, cube2.id]);
       expect(Changelog.batchGet).toHaveBeenCalledWith([]);
 
-      expect(mockDynamoClient.query).toHaveBeenCalledWith(
-        expect.objectContaining({
-          IndexName: 'ByOwner',
-          ExpressionAttributeValues: {
-            ':owner': user1.id,
-          },
-          ExpressionAttributeNames: {
-            '#p1': 'owner',
-          },
-          ExclusiveStartKey: { S: 'keyABC' },
-        }),
-      );
+      verifyQueryCall({
+        IndexName: 'ByOwner',
+        ExpressionAttributeValues: {
+          ':owner': user1.id,
+        },
+        ExpressionAttributeNames: {
+          '#p1': 'owner',
+        },
+        ExclusiveStartKey: { S: 'keyABC' },
+      });
     });
   });
 
