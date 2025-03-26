@@ -1,4 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
+//Ensure we use the real uuid rather than any mocked version if it is relevant to a test
+const uuid = jest.requireActual('uuid');
+const uuidv4 = uuid.v4;
 
 import { BASIC_LAND_MANA_MAPPING } from '../../src/client/utils/cardutil';
 import BlogPost from '../../src/datatypes/BlogPost';
