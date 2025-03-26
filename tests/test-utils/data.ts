@@ -2,7 +2,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BASIC_LAND_MANA_MAPPING } from '../../src/client/utils/cardutil';
 import BlogPost from '../../src/datatypes/BlogPost';
-import Card, { BasicLand, CardDetails, Changes } from '../../src/datatypes/Card';
+import Card, {
+  BasicLand,
+  BoardChanges,
+  CardDetails,
+  Changes,
+  CubeCardEdit,
+  CubeCardRemove,
+  CubeCardSwap,
+} from '../../src/datatypes/Card';
 import Cube, { CubeImage } from '../../src/datatypes/Cube';
 import Draft, { DraftStep } from '../../src/datatypes/Draft';
 import DraftSeat from '../../src/datatypes/DraftSeat';
@@ -18,14 +26,25 @@ export const generateRandomString = (alphabet: string, minLength: number, maxLen
   return Array.from({ length }, () => alphabet.charAt(Math.floor(Math.random() * alphabet.length))).join('');
 };
 
+export const generateRandomNumber = (minLength: number, maxLength?: number): number => {
+  return Number.parseInt(generateRandomString(NUMBERS, minLength, maxLength));
+};
+
 /**
  * Create a Card for testing by providing sane defaults but allow for overriding
  *
  * @param overrides
  */
 export const createCard = (overrides?: Partial<Card>): Card => ({
+  index: generateRandomNumber(1, 3),
   cardID: uuidv4(),
   details: createCardDetails(),
+  ...overrides,
+});
+
+export const createCardWithoutDetails = (overrides?: Partial<Omit<Card, 'details'>>): Card => ({
+  index: generateRandomNumber(1, 3),
+  cardID: uuidv4(),
   ...overrides,
 });
 
@@ -237,9 +256,45 @@ export const createCompletedSoloDraft = (overrides?: Partial<Draft>): Draft => {
   } as Draft;
 };
 
-export const createChangelog = (overrides?: Partial<Changes>): Changes => {
+export const createChangelog = (mainboard?: BoardChanges, maybeboard?: BoardChanges, version: number = 1): Changes => {
+  const changes: Changes = {};
+
+  //All fields can be missing (though logically at least one should be set)
+  if (version) {
+    changes.version = version;
+  }
+  if (mainboard) {
+    changes.mainboard = mainboard;
+  }
+  if (maybeboard) {
+    changes.maybeboard = maybeboard;
+  }
+
+  return changes;
+};
+
+export const createChangelogCardAdd = (overrides?: Partial<Card>): Card => {
+  return { ...createCardWithoutDetails(), ...overrides } as Card;
+};
+
+export const createChangelogCardRemove = (overrides?: Partial<CubeCardRemove>): CubeCardRemove => {
+  return { index: generateRandomNumber(1, 3), oldCard: createCardWithoutDetails(), ...overrides } as CubeCardRemove;
+};
+
+export const createChangelogCardEdit = (overrides?: Partial<CubeCardEdit>): CubeCardEdit => {
   return {
-    version: 1,
+    index: generateRandomNumber(1, 3),
+    oldCard: createCardWithoutDetails(),
+    newCard: createCardWithoutDetails(),
     ...overrides,
-  } as Changes;
+  } as CubeCardEdit;
+};
+
+export const createChangelogCardSwap = (overrides?: Partial<CubeCardSwap>): CubeCardSwap => {
+  return {
+    index: generateRandomNumber(1, 3),
+    oldCard: createCardWithoutDetails(),
+    card: createCardWithoutDetails(),
+    ...overrides,
+  } as CubeCardSwap;
 };
