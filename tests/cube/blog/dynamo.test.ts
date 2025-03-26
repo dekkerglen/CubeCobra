@@ -1,7 +1,16 @@
 import BlogPost, { UnhydratedBlogPost } from '../../../src/datatypes/BlogPost';
 import Blog from '../../../src/dynamo/models/blog';
 import * as carddb from '../../../src/util/carddb';
-import { createBlogPost, createCard, createChangelog, createCube, createUser } from '../../test-utils/data';
+import {
+  createBlogPost,
+  createChangelog,
+  createChangelogCardAdd,
+  createChangelogCardEdit,
+  createChangelogCardRemove,
+  createChangelogCardSwap,
+  createCube,
+  createUser,
+} from '../../test-utils/data';
 
 // Mock dependencies
 jest.mock('../../../src/dynamo/models/cube');
@@ -80,10 +89,7 @@ describe('Blog Model Initialization', () => {
 describe('Blog Model', () => {
   const mockUser = createUser({ id: 'user-123' });
   const mockCube = createCube({ id: 'cube-123', name: 'My Cube', owner: mockUser });
-  const mockChangelog = createChangelog({
-    mainboard: { adds: [createCard()] },
-    maybeboard: undefined,
-  });
+  const mockChangelog = createChangelog({ adds: [createChangelogCardAdd()] }, undefined);
 
   const mockStoredBlog = createUnhydratedBlogPost({
     id: 'blog-123',
@@ -631,8 +637,8 @@ describe('Blog Model', () => {
   });
 
   describe('changelogToText', () => {
-    const cardAdd1 = createCard({ cardID: '1' });
-    const cardAdd2 = createCard({ cardID: '2' });
+    const cardAdd1 = createChangelogCardAdd({ cardID: '1' });
+    const cardAdd2 = createChangelogCardAdd({ cardID: '2' });
 
     beforeEach(() => {
       (carddb.cardFromId as jest.Mock).mockImplementation((id) => ({
@@ -645,8 +651,8 @@ describe('Blog Model', () => {
         mainboard: {
           adds: [cardAdd1, cardAdd2],
           removes: [
-            { index: 55, oldCard: { cardID: '3' } },
-            { index: 98, oldCard: { cardID: '4' } },
+            createChangelogCardRemove({ index: 55, oldCard: { cardID: '3' } }),
+            createChangelogCardRemove({ index: 98, oldCard: { cardID: '4' } }),
           ],
         },
       };
@@ -661,12 +667,16 @@ describe('Blog Model', () => {
       const changelog = {
         mainboard: {
           swaps: [
-            { index: 55, oldCard: { cardID: '1' }, card: { cardID: '2' } },
-            { index: 98, oldCard: { cardID: '3' }, card: { cardID: '4' } },
+            createChangelogCardSwap({ index: 55, oldCard: { cardID: '1' }, card: { cardID: '2' } }),
+            createChangelogCardSwap({ index: 98, oldCard: { cardID: '3' }, card: { cardID: '4' } }),
           ],
           edits: [
-            { index: 23, oldCard: { cardID: '5' }, newCard: { cardID: '5', tags: ['Foobar'] } },
-            { index: 44, oldCard: { cardID: '6' }, newCard: { cardID: '88' } },
+            createChangelogCardEdit({
+              index: 23,
+              oldCard: { cardID: '5' },
+              newCard: { cardID: '5', tags: ['Foobar'] },
+            }),
+            createChangelogCardEdit({ index: 44, oldCard: { cardID: '6' }, newCard: { cardID: '88' } }),
           ],
         },
       };
@@ -683,7 +693,7 @@ describe('Blog Model', () => {
           adds: [cardAdd1],
         },
         sideboard: {
-          removes: [{ index: 22, oldCard: { cardID: '2' } }],
+          removes: [createChangelogCardRemove({ index: 22, oldCard: { cardID: '2' } })],
         },
       };
 
