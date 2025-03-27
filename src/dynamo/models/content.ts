@@ -262,7 +262,7 @@ const content = {
         await putBody(document.id, body);
       }),
     );
-    client.batchPut(docs);
+    client.batchPut(docs.map((doc) => doc.document));
   },
   batchDelete: async (keys: DocumentClient.Key[]): Promise<void> => {
     return client.batchDelete(keys);

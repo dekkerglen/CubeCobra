@@ -467,16 +467,7 @@ describe('Content Model', () => {
       expect(putObject).toHaveBeenCalledWith(TEST_BUCKET, 'content/video-123.json', 'video body');
       expect(putObject).toHaveBeenCalledWith(TEST_BUCKET, 'content/podcast-456.json', 'podcast body');
 
-      expect(mockDynamoClient.batchPut).toHaveBeenCalledWith([
-        {
-          document: expectedVideoDocument,
-          body: 'video body',
-        },
-        {
-          document: expectedPodcastDocument,
-          body: 'podcast body',
-        },
-      ]);
+      expect(mockDynamoClient.batchPut).toHaveBeenCalledWith([expectedVideoDocument, expectedPodcastDocument]);
     });
   });
 
