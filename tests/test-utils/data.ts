@@ -3,6 +3,7 @@ const uuid = jest.requireActual('uuid');
 const uuidv4 = uuid.v4;
 
 import { BASIC_LAND_MANA_MAPPING } from '../../src/client/utils/cardutil';
+import Article from '../../src/datatypes/Article';
 import BlogPost from '../../src/datatypes/BlogPost';
 import Card, {
   BasicLand,
@@ -13,10 +14,15 @@ import Card, {
   CubeCardRemove,
   CubeCardSwap,
 } from '../../src/datatypes/Card';
+import Content, { ContentStatus, ContentType } from '../../src/datatypes/Content';
 import Cube, { CubeImage } from '../../src/datatypes/Cube';
 import Draft, { DraftStep } from '../../src/datatypes/Draft';
 import DraftSeat from '../../src/datatypes/DraftSeat';
+import Episode from '../../src/datatypes/Episode';
+import Image from '../../src/datatypes/Image';
+import Podcast from '../../src/datatypes/Podcast';
 import User from '../../src/datatypes/User';
+import Video from '../../src/datatypes/Video';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const NUMBERS = '0123456789';
@@ -299,4 +305,71 @@ export const createChangelogCardSwap = (overrides?: Partial<CubeCardSwap>): Cube
     card: createCardWithoutDetails(),
     ...overrides,
   } as CubeCardSwap;
+};
+
+export const createCardImage = (overrides?: Partial<Image>): Image => {
+  return {
+    uri: `/content/images/${uuidv4()}.png`,
+    artist: `${generateRandomString(LETTERS, 3, 10)} ${generateRandomString(LETTERS, 5, 15)}`,
+    id: uuidv4(),
+    imageName: `${generateRandomString(LETTERS, 5, 10)} ${generateRandomString(LETTERS, 5, 15)}`,
+    ...overrides,
+  } as Image;
+};
+
+const createContent = (type: ContentType, overrides?: Partial<Content>): Content => {
+  const status = overrides?.status || ContentStatus.PUBLISHED;
+  const user = overrides?.owner || createUser();
+  const userId = user.id;
+
+  return {
+    id: uuidv4(),
+    type,
+    typeStatusComp: `${type}:${status}`,
+    typeOwnerComp: `${type}:${userId}`,
+    status: status,
+    date: new Date('2024-03-24').valueOf(),
+    body: generateRandomString(LETTERS, 10, 20),
+    owner: user,
+    short: generateRandomString(LETTERS, 5, 10),
+    username: 'user-1',
+    ...overrides,
+  } as Content;
+};
+
+export const createArticle = (overrides?: Partial<Article>): Article => {
+  return createContent(ContentType.ARTICLE, {
+    imageName: 'Stock Up',
+    image: createCardImage({ imageName: 'Stock Up' }),
+    ...overrides,
+  }) as Article;
+};
+
+export const createEpisode = (overrides?: Partial<Episode>): Episode => {
+  return createContent(ContentType.EPISODE, {
+    podcastName: 'This is a podcast',
+    image: 'https://example.com/podcast.png',
+    podcast: 'https://example.com/podcast.rss',
+    podcastGuid: uuidv4(),
+    ...overrides,
+  }) as Episode;
+};
+
+export const createPodcast = (overrides?: Partial<Podcast>): Podcast => {
+  return createContent(ContentType.PODCAST, {
+    image: 'https://example.com/podcast.png',
+    title: 'This is a podcast',
+    url: 'https://example.com/podcast.rss',
+    description: 'The best cubers around',
+    ...overrides,
+  }) as Podcast;
+};
+
+export const createVideo = (overrides?: Partial<Video>): Video => {
+  return createContent(ContentType.VIDEO, {
+    imageName: 'Stock Up',
+    image: createCardImage({ imageName: 'Stock Up' }),
+    url: 'https://youtube.example.com/video/abcdefg',
+    ...overrides,
+  }) as Video;
 };
