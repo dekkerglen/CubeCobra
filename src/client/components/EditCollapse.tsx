@@ -45,6 +45,7 @@ export const getCard = async (
       if (setAlerts) {
         setAlerts((alerts: UncontrolledAlertProps[]) => [...alerts, { color: 'danger', message }]);
       } else {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(message);
       }
       return null;
@@ -56,6 +57,7 @@ export const getCard = async (
       if (setAlerts) {
         setAlerts((alerts: UncontrolledAlertProps[]) => [...alerts, { color: 'danger', message }]);
       } else {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(message);
       }
       return null;
@@ -120,6 +122,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           addRef.current.focus();
         }
       } catch (e) {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(e);
       }
     },
@@ -177,6 +180,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           focus.current.focus();
         }
       } catch (e) {
+        // eslint-disable-next-line no-console -- Debugging
         console.error(e);
       }
     },
