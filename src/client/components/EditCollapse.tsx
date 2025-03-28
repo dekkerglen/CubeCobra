@@ -1,5 +1,7 @@
 import React, { Dispatch, SetStateAction, useCallback, useContext, useRef, useState } from 'react';
 
+import { QuestionIcon } from '@primer/octicons-react';
+
 import { BoardType } from '../../datatypes/Card';
 import { CardDetails } from '../../datatypes/Card';
 import { CSRFContext } from '../contexts/CSRFContext';
@@ -14,6 +16,7 @@ import Collapse from './base/Collapse';
 import Input from './base/Input';
 import { Col, Flexbox, Row } from './base/Layout';
 import Select from './base/Select';
+import Tooltip from './base/Tooltip';
 import Changelist from './Changelist';
 import LoadingButton from './LoadingButton';
 import TextEntry from './TextEntry';
@@ -283,6 +286,9 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           />
           <Checkbox label="Use Maybeboard" checked={showMaybeboard} setChecked={toggleShowMaybeboard} />
           <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
+          <Tooltip text="The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.">
+            <QuestionIcon size={16} />
+          </Tooltip>
         </Flexbox>
         <Collapse
           isOpen={
