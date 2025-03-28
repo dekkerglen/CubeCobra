@@ -29,4 +29,8 @@ export default interface User {
   notifications?: Notification[];
   defaultPrinting?: PrintingPreference;
   gridTightness?: GridTightnessPreference;
+  /* If true the "create blog post" action will be enabled when editing a cube.
+   * Cube's local storage setting takes precedence
+   */
+  autoBlog?: boolean;
 }
