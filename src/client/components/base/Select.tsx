@@ -78,6 +78,7 @@ const Select: React.FC<SelectProps> = ({
         onChange={handleChange}
         id={id}
         value={value}
+        disabled={disabled}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
