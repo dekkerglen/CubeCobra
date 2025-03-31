@@ -33,11 +33,7 @@ const client = createClient({
   ],
 });
 
-const stripSensitiveData = (user: UserWithSensitiveInformation | undefined): UnhydratedUser | undefined => {
-  if (!user) {
-    return user;
-  }
-
+const stripSensitiveData = (user: UserWithSensitiveInformation): UnhydratedUser => {
   const sanitized = { ...user };
   //@ts-expect-error -- Typescript says property must be optional to delete, but we are switching types so not relevant
   delete sanitized.passwordHash;
@@ -47,14 +43,10 @@ const stripSensitiveData = (user: UserWithSensitiveInformation | undefined): Unh
   return sanitized;
 };
 
-const batchStripSensitiveData = (users: UserWithSensitiveInformation[]): (UnhydratedUser | undefined)[] =>
+const batchStripSensitiveData = (users: UserWithSensitiveInformation[]): UnhydratedUser[] =>
   users.map(stripSensitiveData);
 
-const hydrate = (user: UnhydratedUser | undefined): User | undefined => {
-  if (!user) {
-    return user;
-  }
-
+const hydrate = (user: UnhydratedUser): User => {
   const hydrated = { ...user } as User;
   hydrated.image = getImageData(hydrated.imageName || 'Ambush Viper');
 
@@ -72,12 +64,12 @@ const hydrate = (user: UnhydratedUser | undefined): User | undefined => {
   return hydrated;
 };
 
-const batchHydrate = (users: (UnhydratedUser | undefined)[]): (User | undefined)[] => users.map(hydrate);
+const batchHydrate = (users: UnhydratedUser[]): User[] => users.map(hydrate);
 
 const getByUsername = async (
   username: string,
   lastKey?: Record<string, NativeAttributeValue>,
-): Promise<User | undefined | null> => {
+): Promise<User | null> => {
   const result = await client.query({
     IndexName: 'ByUsername',
     KeyConditionExpression: `#p1 = :uname`,
@@ -98,15 +90,20 @@ const getByUsername = async (
 };
 
 const user = {
-  getById: async (id: string): Promise<User | undefined> =>
-    hydrate(stripSensitiveData((await client.get(id)).Item as UserWithSensitiveInformation)),
+  getById: async (id: string): Promise<User | undefined> => {
+    const result = await client.get(id);
+    if (!result.Item) {
+      return undefined;
+    }
+    return hydrate(stripSensitiveData(result.Item as UserWithSensitiveInformation));
+  },
 
   getByIdWithSensitiveData: async (id: string): Promise<UserWithSensitiveInformation | undefined> =>
     (await client.get(id)).Item as UserWithSensitiveInformation,
 
   getByUsername,
 
-  getByIdOrUsername: async (idOrUsername: string): Promise<User | undefined | null> => {
+  getByIdOrUsername: async (idOrUsername: string): Promise<User | null> => {
     const result = await client.get(idOrUsername);
 
     if (result.Item) {
@@ -116,10 +113,7 @@ const user = {
     return getByUsername(idOrUsername);
   },
 
-  getByEmail: async (
-    email: string,
-    lastKey?: Record<string, NativeAttributeValue>,
-  ): Promise<User | undefined | null> => {
+  getByEmail: async (email: string, lastKey?: Record<string, NativeAttributeValue>): Promise<User | null> => {
     const result = await client.query({
       IndexName: 'ByEmail',
       KeyConditionExpression: `#p1 = :email`,
@@ -195,7 +189,7 @@ const user = {
 
   deleteById: async (id: string): Promise<void> => client.delete({ id }),
 
-  batchGet: async (ids: string[]): Promise<(User | undefined)[]> =>
+  batchGet: async (ids: string[]): Promise<User[]> =>
     batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
 
   createTable: async () => client.createTable(),
