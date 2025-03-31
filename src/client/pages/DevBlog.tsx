@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import { UserRoles } from '../../datatypes/User';
 import Banner from 'components/Banner';
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
@@ -121,7 +122,9 @@ const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey }) => {
         <Text semibold lg>
           Developer Blog
         </Text>
-        {user && user.roles && user.roles.includes('Admin') && <DevBlogEntry items={items} setItems={setItems} />}
+        {user && user.roles && user.roles.includes(UserRoles.ADMIN) && (
+          <DevBlogEntry items={items} setItems={setItems} />
+        )}
         {items.map((post) => (
           <BlogPost key={post.id} post={post} />
         ))}

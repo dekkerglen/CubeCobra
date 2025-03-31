@@ -1,4 +1,5 @@
 const shuffleSeed = require('shuffle-seed');
+const { UserRoles } = require('../datatypes/User');
 const Notification = require('../dynamo/models/notification');
 
 const Filter = require('bad-words');
@@ -370,7 +371,7 @@ module.exports = {
   hasProfanity,
   fromEntries,
   isAdmin(user) {
-    return user && user.roles && user.roles.includes('Admin');
+    return user && user.roles && user.roles.includes(UserRoles.ADMIN);
   },
   addNotification,
   wrapAsyncApi,
