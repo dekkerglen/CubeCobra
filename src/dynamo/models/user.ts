@@ -1,91 +1,83 @@
-const { DefaultPrintingPreference } = require('../../datatypes/Card');
-const { DefaultGridTightnessPreference } = require('../../datatypes/User');
-const { getImageData } = require('../../util/imageutil');
-const createClient = require('../util');
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 
-const FIELDS = {
-  ID: 'id',
-  USERNAME: 'username',
-  USERNAME_LOWER: 'usernameLower',
-  PASSWORD_HASH: 'passwordHash',
-  EMAIL: 'email',
-  ABOUT: 'about',
-  HIDE_TAG_COLORS: 'hideTagColors',
-  FOLLOWED_CUBES: 'followedCubes',
-  FOLLOWED_USERS: 'followedUsers',
-  USERS_FOLLOWING: 'following',
-  IMAGE_NAME: 'imageName',
-  ROLES: 'roles',
-  THEME: 'theme',
-  HIDE_FEATURED: 'hideFeatured',
-  PATRON_ID: 'patron',
-  DATE_CREATED: 'dateCreated',
-};
+import { DefaultPrintingPreference } from '../../datatypes/Card';
+import User, {
+  DefaultGridTightnessPreference,
+  UnhydratedUser,
+  UserWithSensitiveInformation,
+} from '../../datatypes/User';
+import { getImageData } from '../../util/imageutil';
+import createClient from '../util';
 
-const ROLES = {
-  ADMIN: 'Admin',
-  CONTENT_CREATOR: 'ContentCreator',
-  PATRON: 'Patron',
-};
+const idAttr: keyof UnhydratedUser = 'id';
+const usernameLowerAttr: keyof UnhydratedUser = 'usernameLower';
+const emailAttr: keyof UnhydratedUser = 'email';
 
 const client = createClient({
   name: 'USERS',
-  partitionKey: FIELDS.ID,
+  partitionKey: idAttr,
   attributes: {
-    [FIELDS.ID]: 'S',
-    [FIELDS.USERNAME_LOWER]: 'S',
-    [FIELDS.EMAIL]: 'S',
+    [idAttr]: 'S',
+    [usernameLowerAttr]: 'S',
+    [emailAttr]: 'S',
   },
   indexes: [
     {
-      partitionKey: FIELDS.USERNAME_LOWER,
+      partitionKey: usernameLowerAttr,
       name: 'ByUsername',
     },
     {
-      partitionKey: FIELDS.EMAIL,
+      partitionKey: emailAttr,
       name: 'ByEmail',
     },
   ],
-  FIELDS,
 });
 
-const stripSensitiveData = (user) => {
+const stripSensitiveData = (user: UserWithSensitiveInformation | undefined): UnhydratedUser | undefined => {
   if (!user) {
     return user;
   }
 
-  delete user[FIELDS.PASSWORD_HASH];
-  delete user[FIELDS.EMAIL];
+  const sanitized = { ...user };
+  //@ts-expect-error -- Typescript says property must be optional to delete, but we are switching types so not relevant
+  delete sanitized.passwordHash;
+  //@ts-expect-error --  Ditto
+  delete sanitized.email;
 
-  return user;
+  return sanitized;
 };
 
-const batchStripSensitiveData = (users) => users.map(stripSensitiveData);
+const batchStripSensitiveData = (users: UserWithSensitiveInformation[]): (UnhydratedUser | undefined)[] =>
+  users.map(stripSensitiveData);
 
-const hydrate = (user) => {
+const hydrate = (user: UnhydratedUser | undefined): User | undefined => {
   if (!user) {
     return user;
   }
 
-  user.image = getImageData(user.imageName || 'Ambush Viper');
-  //Just nice to set the value instead of having undefined around
-  if (!user.defaultPrinting) {
-    user.defaultPrinting = DefaultPrintingPreference;
-  }
-  //Ensure a value is always set
-  if (!user.gridTightness) {
-    user.gridTightness = DefaultGridTightnessPreference;
+  const hydrated = { ...user } as User;
+  hydrated.image = getImageData(hydrated.imageName || 'Ambush Viper');
+
+  if (!hydrated.defaultPrinting) {
+    hydrated.defaultPrinting = DefaultPrintingPreference;
   }
   if (typeof user.autoBlog === 'undefined') {
     user.autoBlog = false;
   }
 
-  return user;
+  if (!hydrated.gridTightness) {
+    hydrated.gridTightness = DefaultGridTightnessPreference;
+  }
+
+  return hydrated;
 };
 
-const batchHydrate = (users) => users.map(hydrate);
+const batchHydrate = (users: (UnhydratedUser | undefined)[]): (User | undefined)[] => users.map(hydrate);
 
-const getByUsername = async (username, lastKey) => {
+const getByUsername = async (
+  username: string,
+  lastKey?: Record<string, NativeAttributeValue>,
+): Promise<User | undefined | null> => {
   const result = await client.query({
     IndexName: 'ByUsername',
     KeyConditionExpression: `#p1 = :uname`,
@@ -93,32 +85,41 @@ const getByUsername = async (username, lastKey) => {
       ':uname': username.toLowerCase(),
     },
     ExpressionAttributeNames: {
-      '#p1': FIELDS.USERNAME_LOWER,
+      '#p1': usernameLowerAttr,
     },
     ExclusiveStartKey: lastKey,
   });
 
-  if (result.Items.length > 0) {
-    return hydrate(stripSensitiveData(result.Items[0]));
+  if (result.Items && result.Items.length > 0) {
+    return hydrate(stripSensitiveData(result.Items[0] as UserWithSensitiveInformation));
   }
 
   return null;
 };
 
-module.exports = {
-  getById: async (id) => hydrate(stripSensitiveData((await client.get(id)).Item)),
-  getByIdWithSensitiveData: async (id) => (await client.get(id)).Item,
+const user = {
+  getById: async (id: string): Promise<User | undefined> =>
+    hydrate(stripSensitiveData((await client.get(id)).Item as UserWithSensitiveInformation)),
+
+  getByIdWithSensitiveData: async (id: string): Promise<UserWithSensitiveInformation | undefined> =>
+    (await client.get(id)).Item as UserWithSensitiveInformation,
+
   getByUsername,
-  getByIdOrUsername: async (idOrUsername) => {
+
+  getByIdOrUsername: async (idOrUsername: string): Promise<User | undefined | null> => {
     const result = await client.get(idOrUsername);
 
     if (result.Item) {
-      return hydrate(stripSensitiveData(result.Item));
+      return hydrate(stripSensitiveData(result.Item as UserWithSensitiveInformation));
     }
 
     return getByUsername(idOrUsername);
   },
-  getByEmail: async (email, lastKey) => {
+
+  getByEmail: async (
+    email: string,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<User | undefined | null> => {
     const result = await client.query({
       IndexName: 'ByEmail',
       KeyConditionExpression: `#p1 = :email`,
@@ -126,30 +127,31 @@ module.exports = {
         ':email': email.toLowerCase(),
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.EMAIL,
+        '#p1': emailAttr,
       },
       ExclusiveStartKey: lastKey,
     });
 
-    if (result.Items.length > 0) {
-      return hydrate(result.Items[0]);
+    if (result.Items && result.Items.length > 0) {
+      return hydrate(result.Items[0] as UnhydratedUser);
     }
 
     return null;
   },
-  update: async (document) => {
-    if (!document[FIELDS.ID]) {
+
+  update: async (document: User): Promise<string | NativeAttributeValue> => {
+    if (!document.id) {
       throw new Error('Invalid document: No partition key provided');
     }
 
-    const existing = await client.get(document[FIELDS.ID]);
+    const existing = await client.get(document.id);
 
     if (!existing.Item) {
       throw new Error('Invalid document: No existing document found');
     }
 
     for (const [key, value] of Object.entries(document)) {
-      if (key !== FIELDS.ID) {
+      if (key !== idAttr) {
         existing.Item[key] = value;
       }
     }
@@ -158,21 +160,27 @@ module.exports = {
 
     return client.put(existing.Item);
   },
-  put: async (document) => {
+
+  put: async (document: User): Promise<string | NativeAttributeValue> => {
     delete document.image;
     return client.put({
-      [FIELDS.USERNAME_LOWER]: document[FIELDS.USERNAME].toLowerCase(),
+      usernameLower: document.username.toLowerCase(),
       ...document,
     });
   },
-  batchPut: async (documents) => {
-    const existing = await client.batchGet(documents.map((doc) => doc[FIELDS.ID]));
+
+  batchPut: async (documents: User[]): Promise<void> => {
+    const existing = await client.batchGet(documents.map((doc) => doc.id));
 
     for (const item of existing) {
-      const document = documents.find((doc) => doc[FIELDS.ID] === item[FIELDS.ID]);
+      const document = documents.find((doc) => doc.id === item.id);
+
+      if (!document) {
+        continue;
+      }
 
       for (const [key, value] of Object.entries(document)) {
-        if (key !== FIELDS.ID) {
+        if (key !== idAttr) {
           item[key] = value;
         }
       }
@@ -180,28 +188,18 @@ module.exports = {
 
     return client.batchPut(existing);
   },
-  batchAdd: async (documents) => {
+
+  batchAdd: async (documents: User[]): Promise<void> => {
     return client.batchPut(documents);
   },
-  deleteById: async (id) => client.delete({ id }),
-  batchGet: async (ids) => batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
+
+  deleteById: async (id: string): Promise<void> => client.delete({ id }),
+
+  batchGet: async (ids: string[]): Promise<(User | undefined)[]> =>
+    batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
+
   createTable: async () => client.createTable(),
-  convertUser: (user) => ({
-    [FIELDS.ID]: `${user._id}`,
-    [FIELDS.USERNAME]: user.username,
-    [FIELDS.USERNAME_LOWER]: user.username_lower,
-    [FIELDS.PASSWORD_HASH]: user.password,
-    [FIELDS.EMAIL]: user.email.toLowerCase(),
-    [FIELDS.ABOUT]: user.about,
-    [FIELDS.HIDE_TAG_COLORS]: user.hide_tag_colors,
-    [FIELDS.FOLLOWED_CUBES]: user.followed_cubes.map((id) => `${id}`),
-    [FIELDS.FOLLOWED_USERS]: user.followed_users.map((id) => `${id}`),
-    [FIELDS.USERS_FOLLOWING]: user.users_following.map((id) => `${id}`),
-    [FIELDS.IMAGE_NAME]: user.image_name,
-    [FIELDS.ROLES]: user.roles,
-    [FIELDS.THEME]: user.theme,
-    [FIELDS.HIDE_FEATURED]: user.hide_featured,
-  }),
-  ROLES,
-  FIELDS,
 };
+
+module.exports = user;
+export default user;
