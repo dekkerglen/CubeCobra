@@ -401,6 +401,8 @@ describe('User Model', () => {
   });
 
   describe('batchPut', () => {
+    const sortById = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
+
     it('no existing users found', async () => {
       mockDynamoClient.batchGet.mockResolvedValueOnce([]);
       await User.batchPut([
@@ -454,8 +456,6 @@ describe('User Model', () => {
 
       expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
 
-      const sortById = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
-
       //We don't care the order of the items in the batchPut call. expect(mockDynamoClient.batchPut).toHaveBeenCalledWith cares
       const batchPutArray = mockDynamoClient.batchPut.mock.calls[0][0];
       expect(batchPutArray.sort(sortById)).toEqual(
@@ -464,6 +464,37 @@ describe('User Model', () => {
             ...user1,
             about: 'This is me',
           },
+          {
+            ...user2,
+            about: 'Not me',
+          },
+        ].sort(sortById),
+      );
+    });
+
+    it('a user to update isnt found', async () => {
+      const user2: UserType = { ...mockUser };
+      user2.id = 'user2';
+      user2.about = 'I am a bad boy';
+
+      mockDynamoClient.batchGet.mockResolvedValueOnce([user2]);
+      await User.batchPut([
+        createUser({
+          id: 'user1',
+          about: 'This is me',
+        }),
+        createUser({
+          id: 'user2',
+          about: 'Not me',
+        }),
+      ]);
+
+      expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
+
+      //We don't care the order of the items in the batchPut call. expect(mockDynamoClient.batchPut).toHaveBeenCalledWith cares
+      const batchPutArray = mockDynamoClient.batchPut.mock.calls[0][0];
+      expect(batchPutArray.sort(sortById)).toEqual(
+        [
           {
             ...user2,
             about: 'Not me',
@@ -503,8 +534,6 @@ describe('User Model', () => {
       ]);
 
       expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
-
-      const sortById = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
 
       //We don't care the order of the items in the batchPut call. expect(mockDynamoClient.batchPut).toHaveBeenCalledWith cares
       const batchPutArray = mockDynamoClient.batchPut.mock.calls[0][0];
