@@ -9,7 +9,7 @@ import Draft from '../../dynamo/models/draft';
 import Notice from '../../dynamo/models/notice';
 import Package from '../../dynamo/models/package';
 import Record from '../../dynamo/models/record';
-import * as DynamoUser from '../../dynamo/models/user';
+import DynamoUser from '../../dynamo/models/user';
 import { csrfProtection, ensureAuth } from '../../routes/middleware';
 import { Request, Response } from '../../types/express';
 import { getImageData } from '../../util/imageutil';
