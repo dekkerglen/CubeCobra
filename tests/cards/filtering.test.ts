@@ -387,3 +387,100 @@ describe.each(powerToughnessComparisonFilters)(
     });
   },
 );
+
+const assertColorIdentityFilter = (result: FilterResult) => {
+  expect(result.err).toBeFalsy();
+  expect(result.filter).toBeInstanceOf(Function);
+  expect(result.filter?.fieldsUsed).toEqual(['color_identity']);
+};
+
+const colorIdentityFilters = [['ci'], ['id'], ['color_identity'], ['identity'], ['coloridentity']];
+
+describe.each(colorIdentityFilters)('Color identity filter words (%s) (case insensitive)', (filterName) => {
+  it(`${filterName} filtering is case insensitive`, async () => {
+    assertColorIdentityFilter(makeFilter(`${filterName}=3`));
+    assertColorIdentityFilter(makeFilter(`${filterName.toUpperCase()}=1`));
+  });
+});
+
+describe('Color identity filtering (case insensitive)', () => {
+  it(`Filtering with colorless aliases`, async () => {
+    assertColorIdentityFilter(makeFilter(`ci=b`));
+    assertColorIdentityFilter(makeFilter(`id=brown`));
+    assertColorIdentityFilter(makeFilter(`identity!=COLORLESS`));
+  });
+
+  it(`Filtering by color names`, async () => {
+    //Operators don't matter to this test
+    assertColorIdentityFilter(makeFilter(`color_identity:white`));
+    assertColorIdentityFilter(makeFilter(`color_identity<>bluE`));
+    assertColorIdentityFilter(makeFilter(`color_identity<black`));
+    assertColorIdentityFilter(makeFilter(`color_identity>green`));
+    assertColorIdentityFilter(makeFilter(`color_identity>=red`));
+  });
+
+  it(`Filtering by guild names`, async () => {
+    //Operators don't matter to this test
+    assertColorIdentityFilter(makeFilter(`ID:azorius`));
+    assertColorIdentityFilter(makeFilter(`ID<>iZZet`));
+    assertColorIdentityFilter(makeFilter(`ID:dimir`));
+    assertColorIdentityFilter(makeFilter(`ID!=RAKDOS`));
+    assertColorIdentityFilter(makeFilter(`ID:grUUL`));
+    assertColorIdentityFilter(makeFilter(`ID:Orzhov`));
+    assertColorIdentityFilter(makeFilter(`ID:selesnya`));
+    assertColorIdentityFilter(makeFilter(`ID:sIMIc`));
+    assertColorIdentityFilter(makeFilter(`ID:BORos`));
+    assertColorIdentityFilter(makeFilter(`ID:golGARI`));
+
+    //"typo" cases
+    assertColorIdentityFilter(makeFilter(`ID:azorious`));
+    assertColorIdentityFilter(makeFilter(`ID:grul`));
+    assertColorIdentityFilter(makeFilter(`ID:izet`));
+  });
+
+  it(`Filtering by shard/wedge names`, async () => {
+    //Operators don't matter to this test
+    assertColorIdentityFilter(makeFilter(`ID:BANT`));
+    assertColorIdentityFilter(makeFilter(`ID<>ESPer`));
+    assertColorIdentityFilter(makeFilter(`ID:naya`));
+    assertColorIdentityFilter(makeFilter(`ID!=jund`));
+    assertColorIdentityFilter(makeFilter(`ID:GRIXis`));
+    assertColorIdentityFilter(makeFilter(`ID:sultai`));
+    assertColorIdentityFilter(makeFilter(`ID:marDU`));
+    assertColorIdentityFilter(makeFilter(`ID:ABZan`));
+    assertColorIdentityFilter(makeFilter(`ID:jesKai`));
+    assertColorIdentityFilter(makeFilter(`ID:temur`));
+  });
+
+  it(`Filtering by 5 color aliases`, async () => {
+    //Operators don't matter to this test
+    assertColorIdentityFilter(makeFilter(`coloridentity:RAINBOW`));
+    assertColorIdentityFilter(makeFilter(`coloridentity<>fiveCOLOR`));
+  });
+
+  it(`Filtering by color letter combinations`, async () => {
+    //Operators don't matter to this test
+    assertColorIdentityFilter(makeFilter(`COLOR_IDentity:ubr`));
+    assertColorIdentityFilter(makeFilter(`COLOR_IDentity<>rg`));
+    assertColorIdentityFilter(makeFilter(`COLOR_IDentity>g`));
+    assertColorIdentityFilter(makeFilter(`COLOR_IDentity<rgb`));
+    assertColorIdentityFilter(makeFilter(`COLOR_IDentity<=ub`));
+  });
+
+  it(`Filtering by color count`, async () => {
+    //Operators don't matter to this test
+    assertColorIdentityFilter(makeFilter(`ci=3`));
+    assertColorIdentityFilter(makeFilter(`ci!=4`));
+    assertColorIdentityFilter(makeFilter(`ci>1`));
+    assertColorIdentityFilter(makeFilter(`ci<5`));
+    assertColorIdentityFilter(makeFilter(`ci=3`));
+  });
+
+  it(`Filtering is multicolor or not`, async () => {
+    //Operators don't matter to this test
+    assertColorIdentityFilter(makeFilter(`ci=m`));
+    assertColorIdentityFilter(makeFilter(`ci!=m`));
+    assertColorIdentityFilter(makeFilter(`ci:M`));
+    assertColorIdentityFilter(makeFilter(`ci<>M`));
+  });
+});
