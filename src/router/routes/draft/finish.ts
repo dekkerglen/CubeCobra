@@ -52,7 +52,7 @@ const FinishDraftBodySchema = Joi.object({
     .required(),
 }).unknown(true); // allow additional fields
 
-const validateBody = (req: Request, res: Response, next: NextFunction) => {
+export const validateBody = (req: Request, res: Response, next: NextFunction) => {
   const { error } = FinishDraftBodySchema.validate(req.body);
   if (error) {
     res.status(400).json({ error: error.details[0].message });
@@ -61,7 +61,7 @@ const validateBody = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
-const handler = async (req: Request, res: Response) => {
+export const handler = async (req: Request, res: Response) => {
   try {
     const body = req.body as FinishDraftBody;
 
