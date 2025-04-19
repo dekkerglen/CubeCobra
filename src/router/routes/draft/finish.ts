@@ -3,11 +3,13 @@ import Joi from 'joi';
 import { setupPicks } from '../../..//util/draftutil';
 import { cardOracleId } from '../../../client/utils/cardutil';
 import DraftType, { DraftStep } from '../../../datatypes/Draft';
+import Cube from '../../../dynamo/models/cube';
 import Draft from '../../../dynamo/models/draft';
 import { csrfProtection } from '../../../routes/middleware';
 import { NextFunction, Request, Response } from '../../../types/express';
 import { deckbuild } from '../../../util/draftbots';
 import { getCardDefaultRowColumn } from '../../../util/draftutil';
+import { addNotification } from '../../../util/util';
 
 export interface Seat {
   picks: number[];
@@ -81,7 +83,8 @@ export const handler = async (req: Request, res: Response) => {
       });
     }
 
-    if (typeof draft.owner !== 'string' && draft.owner?.id !== req.user.id) {
+    const draftOwnerId = typeof draft.owner !== 'string' ? draft.owner?.id : draft.owner;
+    if (draftOwnerId !== req.user.id) {
       return res.status(401).send({
         success: false,
         message: 'You do not own this draft',
@@ -150,6 +153,8 @@ export const handler = async (req: Request, res: Response) => {
 
     await Draft.put(draft);
 
+    await sendDraftNotification(draft, draftOwnerId);
+
     return res.status(200).send({
       success: true,
     });
@@ -157,6 +162,29 @@ export const handler = async (req: Request, res: Response) => {
     // eslint-disable-next-line no-console
     console.error('Error finishing draft', err);
     return res.status(500).json({ error: 'Error finishing draft' });
+  }
+};
+
+const sendDraftNotification = async (draft: DraftType, draftOwnerId: string) => {
+  const cubeOwnerId = typeof draft.cubeOwner !== 'string' ? draft.cubeOwner.id : draft.cubeOwner;
+  if (cubeOwnerId === draftOwnerId) {
+    return;
+  }
+
+  const cube = await Cube.getById(draft.cube);
+  if (cube.disableAlerts) {
+    return;
+  }
+
+  const draftOwner = draft.owner;
+  //Type guard should be unnecessary in real life
+  if (typeof draftOwner !== 'string') {
+    await addNotification(
+      cubeOwnerId,
+      draftOwnerId,
+      `/cube/deck/${draft.id}`,
+      `${draftOwner?.username} drafted your cube: ${cube.name}`,
+    );
   }
 };
 

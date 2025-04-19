@@ -3,13 +3,23 @@ import { cardIsLand } from '../../../src/client/utils/cardutil';
 import Card, { CardDetails } from '../../../src/datatypes/Card';
 import DraftType from '../../../src/datatypes/Draft';
 import User from '../../../src/datatypes/User';
+import Cube from '../../../src/dynamo/models/cube';
 import Draft from '../../../src/dynamo/models/draft';
 import { handler as finishDraftHandler, validateBody } from '../../../src/router/routes/draft/finish';
 import * as draftbots from '../../../src/util/draftbots';
 import * as draftutil from '../../../src/util/draftutil';
-import { createCompletedSoloDraft as createDraft, createUser } from '../../test-utils/data';
+import * as util from '../../../src/util/util';
+import { createCompletedSoloDraft as createDraft, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call, middleware } from '../../test-utils/transport';
+
+jest.mock('../../../src/dynamo/models/cube', () => ({
+  getById: jest.fn(),
+}));
+
+jest.mock('../../../src/util/util', () => ({
+  addNotification: jest.fn(),
+}));
 
 jest.mock('../../../src/dynamo/models/draft', () => ({
   getById: jest.fn(),
@@ -208,9 +218,8 @@ describe('Finish Draft', () => {
   };
 
   const owner = createUser();
-  const draft = createDraft({
-    owner,
-  });
+  //Mock is the cube owner drafting themselves
+  const draft = createDraft();
 
   const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
@@ -221,6 +230,9 @@ describe('Finish Draft', () => {
     (draftutil.getCardDefaultRowColumn as jest.Mock).mockImplementation((card: Card) =>
       cardIsLand(card) ? { row: 1, col: 0 } : { row: 0, col: 1 },
     );
+
+    draft.owner = owner;
+    draft.cubeOwner = owner;
   });
 
   afterEach(() => {
@@ -325,7 +337,88 @@ describe('Finish Draft', () => {
     });
   });
 
-  it('should successfully finish a draft', async () => {
+  it('should successfully finish a draft, by someone that isnt the cube owner', async () => {
+    const cubeOwner = createUser({ id: 'cube-owner-id' });
+    const draftOwner = createUser({ id: 'draft-owner-id' });
+    draft.cubeOwner = cubeOwner;
+    draft.owner = draftOwner;
+    const cube = createCube({
+      owner: cubeOwner,
+      disableAlerts: false,
+    });
+
+    (draftbots.deckbuild as jest.Mock).mockReturnValue({
+      mainboard: [
+        draft.cards[9].details?.oracle_id,
+        draft.cards[8].details?.oracle_id,
+        draft.cards[10].details?.oracle_id,
+      ],
+      sideboard: [],
+    });
+
+    setupSuccessReturns(draft);
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+
+    const expectedMainboard = draftutil.setupPicks(2, 8);
+    expectedMainboard[0][1].push(9, 8, 10);
+
+    await verifySuccessfulDraft(draftOwner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
+
+    expect(draftbots.deckbuild).toHaveBeenCalledWith(
+      getCardDetails(draft.cards, [8, 9, 10]),
+      getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
+    );
+
+    // Verify notification was sent
+    expect(util.addNotification).toHaveBeenCalledWith(
+      cubeOwner.id,
+      draftOwner.id,
+      `/cube/deck/${draft.id}`,
+      `${draftOwner.username} drafted your cube: ${cube.name}`,
+    );
+  });
+
+  it('no notifications if the cube has them disabled', async () => {
+    const cubeOwner = createUser({ id: 'cube-owner-id' });
+    const draftOwner = createUser({ id: 'draft-owner-id' });
+    draft.cubeOwner = cubeOwner;
+    draft.owner = draftOwner;
+    const cube = createCube({
+      owner: cubeOwner,
+      disableAlerts: true,
+    });
+
+    (draftbots.deckbuild as jest.Mock).mockReturnValue({
+      mainboard: [
+        draft.cards[9].details?.oracle_id,
+        draft.cards[8].details?.oracle_id,
+        draft.cards[10].details?.oracle_id,
+      ],
+      sideboard: [],
+    });
+
+    setupSuccessReturns(draft);
+    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+
+    const expectedMainboard = draftutil.setupPicks(2, 8);
+    expectedMainboard[0][1].push(9, 8, 10);
+
+    await verifySuccessfulDraft(draftOwner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
+
+    expect(draftbots.deckbuild).toHaveBeenCalledWith(
+      getCardDetails(draft.cards, [8, 9, 10]),
+      getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
+    );
+
+    // Verify notification was sent
+    expect(util.addNotification).not.toHaveBeenCalled();
+  });
+
+  it('should successfully finish a draft, by the owner of the cube', async () => {
+    const cubeOwner = createUser({ id: 'cube-owner-id' });
+    draft.cubeOwner = cubeOwner;
+    draft.owner = cubeOwner;
+
     (draftbots.deckbuild as jest.Mock).mockReturnValue({
       mainboard: [
         draft.cards[9].details?.oracle_id,
@@ -340,12 +433,15 @@ describe('Finish Draft', () => {
     const expectedMainboard = draftutil.setupPicks(2, 8);
     expectedMainboard[0][1].push(9, 8, 10);
 
-    await verifySuccessfulDraft(owner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
+    await verifySuccessfulDraft(draft.owner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
 
     expect(draftbots.deckbuild).toHaveBeenCalledWith(
       getCardDetails(draft.cards, [8, 9, 10]),
       getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
     );
+
+    expect(Cube.getById).not.toHaveBeenCalled();
+    expect(util.addNotification).not.toHaveBeenCalled();
   });
 
   it('should successfully finish a draft with bot decks complete with basics', async () => {
