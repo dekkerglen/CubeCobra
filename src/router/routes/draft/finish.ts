@@ -3,6 +3,7 @@ import Joi from 'joi';
 import { setupPicks } from '../../..//util/draftutil';
 import { cardOracleId } from '../../../client/utils/cardutil';
 import DraftType, { DraftStep } from '../../../datatypes/Draft';
+import User from '../../../datatypes/User';
 import Cube from '../../../dynamo/models/cube';
 import Draft from '../../../dynamo/models/draft';
 import { csrfProtection } from '../../../routes/middleware';
@@ -151,9 +152,17 @@ export const handler = async (req: Request, res: Response) => {
       draft.seats[i].sideboard = formattedSideboard;
     }
 
+    //Draft.put changes the draft object, replacing objects with ids, so store these to use after
+    const cubeOwner = draft.cubeOwner;
+    const cubeId = draft.cube;
+    const draftOwner = draft.owner;
+
     await Draft.put(draft);
 
-    await sendDraftNotification(draft, draftOwnerId);
+    //Annoying guard since the values will be objects
+    if (typeof cubeOwner !== 'string' && typeof draftOwner !== 'string') {
+      await sendDraftNotification(draft.id, cubeOwner, draftOwner!, cubeId);
+    }
 
     return res.status(200).send({
       success: true,
@@ -165,24 +174,25 @@ export const handler = async (req: Request, res: Response) => {
   }
 };
 
-const sendDraftNotification = async (draft: DraftType, draftOwnerId: string) => {
-  const cubeOwnerId = typeof draft.cubeOwner !== 'string' ? draft.cubeOwner.id : draft.cubeOwner;
+const sendDraftNotification = async (draftId: string, cubeOwner: User, draftOwner: User, cubeId: string) => {
+  const cubeOwnerId = cubeOwner.id;
+  const draftOwnerId = draftOwner.id;
   if (cubeOwnerId === draftOwnerId) {
     return;
   }
 
-  const cube = await Cube.getById(draft.cube);
+  const cube = await Cube.getById(cubeId);
   if (cube.disableAlerts) {
     return;
   }
 
-  const draftOwner = draft.owner;
   //Type guard should be unnecessary in real life
   if (typeof draftOwner !== 'string') {
+    //Takes User objects
     await addNotification(
-      cubeOwnerId,
-      draftOwnerId,
-      `/cube/deck/${draft.id}`,
+      cubeOwner,
+      draftOwner,
+      `/cube/deck/${draftId}`,
       `${draftOwner?.username} drafted your cube: ${cube.name}`,
     );
   }

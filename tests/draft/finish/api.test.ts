@@ -371,8 +371,8 @@ describe('Finish Draft', () => {
 
     // Verify notification was sent
     expect(util.addNotification).toHaveBeenCalledWith(
-      cubeOwner.id,
-      draftOwner.id,
+      cubeOwner,
+      draftOwner,
       `/cube/deck/${draft.id}`,
       `${draftOwner.username} drafted your cube: ${cube.name}`,
     );
