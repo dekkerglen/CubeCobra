@@ -1,8 +1,14 @@
 import Card, { CardDetails } from '../../src/datatypes/Card';
-import { Decklist } from '../../src/datatypes/Draftmancer';
+import { Decklist, Pick } from '../../src/datatypes/Draftmancer';
 import { getReasonableCardByOracle } from '../../src/util/carddb';
 import { deckbuild } from '../../src/util/draftbots';
-import { buildBotDeck, formatMainboard, formatSideboard, upsertCardAndGetIndex } from '../../src/util/draftmancerUtil';
+import {
+  buildBotDeck,
+  formatMainboard,
+  formatSideboard,
+  getPicksFromPlayer,
+  upsertCardAndGetIndex,
+} from '../../src/util/draftmancerUtil';
 import { getCardDefaultRowColumn } from '../../src/util/draftutil';
 import { createCardDetails } from '../test-utils/data';
 
@@ -121,6 +127,40 @@ describe('formatMainboard', () => {
 
     expect(result[0][7]).toContain(0);
   });
+
+  it('handles zero CMC cards', () => {
+    const cards: CardDetails[] = [];
+    const decklist: Decklist = {
+      main: ['zero-cmc-id'],
+      side: [],
+      lands: { W: 0, U: 0, B: 0, R: 0, G: 0 },
+    };
+
+    const zeroCMCCard = createCardDetails({
+      oracle_id: 'zero-cmc-id',
+      type: 'Artifact',
+      cmc: 0,
+    });
+
+    (getReasonableCardByOracle as jest.Mock).mockReturnValue(zeroCMCCard);
+
+    const result = formatMainboard(decklist, cards);
+
+    expect(result[1][0]).toContain(0);
+  });
+
+  it('handles empty mainboard', () => {
+    const cards: CardDetails[] = [];
+    const decklist: Decklist = {
+      main: [],
+      side: [],
+      lands: { W: 0, U: 0, B: 0, R: 0, G: 0 },
+    };
+
+    const result = formatMainboard(decklist, cards);
+
+    expect(result).toEqual(Array(2).fill(Array(8).fill([])));
+  });
 });
 
 describe('formatSideboard', () => {
@@ -225,5 +265,146 @@ describe('buildBotDeck', () => {
     expect(result.mainboard.flat(2)).toHaveLength(0);
     // Original card should be in sideboard
     expect(result.sideboard[0][2]).toContain(0);
+  });
+
+  it('handles basic lands from pool', () => {
+    const pickorder = [0];
+    const basics = [1];
+    const cards = [
+      createCardDetails({ oracle_id: 'card-1', type: 'Creature', cmc: 2 }),
+      createCardDetails({ oracle_id: 'basic-1', type: 'Basic Land', cmc: 0 }),
+    ];
+
+    (deckbuild as jest.Mock).mockReturnValue({
+      mainboard: ['basic-1'],
+    });
+
+    const result = buildBotDeck(pickorder, basics, cards);
+
+    expect(result.mainboard[1][0]).toContain(1); // Basic land should be in row 1, col 0
+    expect(result.sideboard[0][2]).toContain(0); // Non-basic should be in sideboard
+  });
+
+  it('handles cards not found in pool or basics', () => {
+    const pickorder = [0];
+    const basics = [1];
+    const cards = [
+      createCardDetails({ oracle_id: 'card-1', type: 'Creature', cmc: 2 }),
+      createCardDetails({ oracle_id: 'basic-1', type: 'Basic Land', cmc: 0 }),
+    ];
+
+    (deckbuild as jest.Mock).mockReturnValue({
+      mainboard: ['missing-card', 'card-1'],
+    });
+
+    const result = buildBotDeck(pickorder, basics, cards);
+
+    expect(result.mainboard[0][2]).toContain(0); // Found card should be in mainboard
+    expect(result.mainboard.flat(2).length).toBe(1); // Only one card total in mainboard
+  });
+
+  it('puts basics in correct position when in mainboard', () => {
+    const pickorder = [0];
+    const basics = [1];
+    const cards = [
+      createCardDetails({ oracle_id: 'card-1', type: 'Creature', cmc: 2 }),
+      createCardDetails({ oracle_id: 'basic-1', type: 'Basic Land', cmc: 0 }),
+    ];
+
+    (getCardDefaultRowColumn as jest.Mock).mockImplementation((card) => ({
+      row: card.type_line?.toLowerCase().includes('basic') ? 1 : 0,
+      col: card.type_line?.toLowerCase().includes('basic') ? 0 : card.cmc,
+    }));
+
+    (deckbuild as jest.Mock).mockReturnValue({
+      mainboard: ['basic-1', 'card-1'],
+    });
+
+    const result = buildBotDeck(pickorder, basics, cards);
+
+    expect(result.mainboard[1][0]).toContain(1); // Basic land in row 1, col 0
+    expect(result.mainboard[0][2]).toContain(0); // Creature in row 0, col 2
+  });
+});
+
+describe('getPicksFromPlayer', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('processes picks and creates draftmancer picks array', () => {
+    const cardDetails: CardDetails[] = [];
+    const picks = [
+      {
+        booster: ['oracle-1', 'oracle-2', 'oracle-3'],
+        picks: [1], // Picking second card (index 1)
+        burn: [],
+      },
+      {
+        booster: ['oracle-4', 'oracle-5'],
+        picks: [0], // Picking first card (index 0)
+        burn: [],
+      },
+    ];
+
+    // Mock cards being added
+    (getReasonableCardByOracle as jest.Mock)
+      .mockReturnValueOnce(createCardDetails({ oracle_id: 'oracle-1' }))
+      .mockReturnValueOnce(createCardDetails({ oracle_id: 'oracle-2' }))
+      .mockReturnValueOnce(createCardDetails({ oracle_id: 'oracle-3' }))
+      .mockReturnValueOnce(createCardDetails({ oracle_id: 'oracle-4' }))
+      .mockReturnValueOnce(createCardDetails({ oracle_id: 'oracle-5' }));
+
+    const result = getPicksFromPlayer(picks, cardDetails);
+
+    expect(result.draftmancerPicks).toEqual([
+      {
+        booster: [0, 1, 2],
+        pick: 1,
+      },
+      {
+        booster: [3, 4],
+        pick: 3,
+      },
+    ]);
+    expect(result.pickorder).toEqual([1, 3]);
+    expect(result.trashorder).toEqual([]);
+  });
+
+  it('handles empty picks array', () => {
+    const cardDetails: CardDetails[] = [];
+    const picks: Pick[] = [];
+
+    const result = getPicksFromPlayer(picks, cardDetails);
+
+    expect(result.draftmancerPicks).toEqual([]);
+    expect(result.pickorder).toEqual([]);
+    expect(result.trashorder).toEqual([]);
+  });
+
+  it('ignores burn cards', () => {
+    const cardDetails: CardDetails[] = [];
+    const picks = [
+      {
+        booster: ['oracle-1', 'oracle-2'],
+        picks: [0],
+        burn: [1], // Burning second card
+      },
+    ];
+
+    (getReasonableCardByOracle as jest.Mock)
+      .mockReturnValueOnce(createCardDetails({ oracle_id: 'oracle-1' }))
+      .mockReturnValueOnce(createCardDetails({ oracle_id: 'oracle-2' }));
+
+    const result = getPicksFromPlayer(picks, cardDetails);
+
+    expect(result.draftmancerPicks).toEqual([
+      {
+        booster: [0, 1],
+        pick: 0,
+      },
+    ]);
+    expect(result.pickorder).toEqual([0]);
+    expect(result.trashorder).toEqual([]);
   });
 });

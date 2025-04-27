@@ -1,6 +1,7 @@
 import { detailsToCard } from '../client/utils/cardutil';
 import { CardDetails } from '../datatypes/Card';
-import { Decklist } from '../datatypes/Draftmancer';
+import { DraftmancerPick } from '../datatypes/Draft';
+import { Decklist, Pick } from '../datatypes/Draftmancer';
 import { getReasonableCardByOracle } from './carddb';
 import { deckbuild } from './draftbots';
 import { getCardDefaultRowColumn, setupPicks } from './draftutil';
@@ -15,6 +16,41 @@ export const upsertCardAndGetIndex = (cards: CardDetails[], oracleId: string): n
   }
 
   return index;
+};
+
+export const getPicksFromPlayer = (
+  picks: Pick[],
+  cardDetails: CardDetails[],
+): {
+  draftmancerPicks: DraftmancerPick[];
+  pickorder: number[];
+  trashorder: number[];
+} => {
+  const draftmancerPicks: DraftmancerPick[] = [];
+  const pickorder: number[] = [];
+  const trashorder: number[] = [];
+
+  for (const pick of picks) {
+    // we are going to ignore burned cards
+    for (const index of pick.picks) {
+      //As cards are matched from the Draftmancer data via Oracle ID, build up the card set in cards
+      const pack: number[] = pick.booster.map((oracleId) => upsertCardAndGetIndex(cardDetails, oracleId));
+
+      const pickIndex = pack[index];
+
+      pickorder.push(pickIndex);
+      draftmancerPicks.push({
+        booster: pack,
+        pick: pickIndex,
+      });
+    }
+  }
+
+  return {
+    draftmancerPicks,
+    pickorder,
+    trashorder,
+  };
 };
 
 export const formatMainboard = (decklist: Decklist, cardDetails: CardDetails[]) => {
