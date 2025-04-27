@@ -1,49 +1,22 @@
 import Joi from 'joi';
 
-import { cardCmc, cardType, detailsToCard } from '../../../../client/utils/cardutil';
+import { detailsToCard } from '../../../../client/utils/cardutil';
 import { CardDetails } from '../../../../datatypes/Card';
 import type CubeType from '../../../../datatypes/Cube';
 import DraftType, { DraftmancerLog, DraftmancerPick } from '../../../../datatypes/Draft';
+import { PublishDraftBody } from '../../../../datatypes/Draftmancer';
 import type DraftSeatType from '../../../../datatypes/DraftSeat';
 import Cube from '../../../../dynamo/models/cube';
 import Draft from '../../../../dynamo/models/draft';
 import { NextFunction, Request, Response } from '../../../../types/express';
-import { cardFromId, getReasonableCardByOracle } from '../../../../util/carddb';
-import { deckbuild } from '../../../../util/draftbots';
+import { cardFromId } from '../../../../util/carddb';
+import {
+  buildBotDeck,
+  formatMainboard,
+  formatSideboard,
+  upsertCardAndGetIndex,
+} from '../../../../util/draftmancerUtil';
 import { setupPicks } from '../../../../util/draftutil';
-
-interface Pick {
-  booster: string[]; // oracle id
-  picks: number[]; // Indices into booster
-  burn: number[];
-}
-
-interface Decklist {
-  main: string[]; // oracle id
-  side: string[]; // oracle id
-  lands: {
-    W: number;
-    U: number;
-    B: number;
-    R: number;
-    G: number;
-  };
-}
-
-interface Player {
-  userName: string;
-  isBot: boolean;
-  picks: Pick[];
-  decklist: Decklist;
-}
-
-export interface PublishDraftBody {
-  cubeID: string;
-  sessionID: string;
-  timestamp: number;
-  players: Player[];
-  apiKey: string;
-}
 
 const OracleIDSchema = Joi.string().uuid();
 
@@ -90,18 +63,6 @@ const validatePublishDraftBody = (req: Request, res: Response, next: NextFunctio
   next();
 };
 
-const upsertCardAndGetIndex = (cards: CardDetails[], oracleId: string): number => {
-  const card = getReasonableCardByOracle(oracleId);
-  const index = cards.findIndex((c) => c.oracle_id === oracleId);
-
-  if (index === -1) {
-    cards.push(card);
-    return cards.length - 1;
-  }
-
-  return index;
-};
-
 export const handler = async (req: Request, res: Response) => {
   const publishDraftBody = req.body as PublishDraftBody;
 
@@ -144,81 +105,14 @@ export const handler = async (req: Request, res: Response) => {
         }
       }
 
-      for (const oracleId of player.decklist.main) {
-        const index = upsertCardAndGetIndex(cards, oracleId);
-        const card = cards[index];
-
-        const isCreature = card.type.toLowerCase().includes('creature');
-        const cmc = card.cmc;
-
-        const row = isCreature ? 0 : 1;
-        const col = Math.max(0, Math.min(7, Math.floor(cmc)));
-
-        mainboard[row][col].push(index);
-      }
-
-      for (const oracleId of player.decklist.side) {
-        const index = upsertCardAndGetIndex(cards, oracleId);
-        const card = cards[index];
-
-        const cmc = card.cmc;
-
-        const col = Math.max(0, Math.min(7, Math.floor(cmc)));
-
-        sideboard[0][col].push(index);
-      }
-
       // we need to build the bot decks
       if (player.isBot) {
-        const mainboardBuilt = deckbuild(
-          pickorder.map((index) => cards[index]),
-          basics.map((index) => cards[index]),
-        ).mainboard;
-
-        const pool = pickorder.slice();
-
-        const newMainboard = [];
-
-        for (const oracle of mainboardBuilt) {
-          const poolIndex = pool.findIndex((cardindex) => cards[cardindex].oracle_id === oracle);
-          if (poolIndex === -1) {
-            // try basics
-            const basicsIndex = basics.findIndex((cardindex) => cards[cardindex].oracle_id === oracle);
-            if (basicsIndex !== -1) {
-              newMainboard.push(basics[basicsIndex]);
-            }
-          } else {
-            newMainboard.push(pool[poolIndex]);
-            pool.splice(poolIndex, 1);
-          }
-        }
-
-        // format mainboard
-        const formattedMainboard = setupPicks(2, 8);
-        const formattedSideboard = setupPicks(1, 8);
-
-        for (const index of newMainboard) {
-          const card = cards[index];
-          const row =
-            cardType(detailsToCard(card)).includes('Creature') || cardType(detailsToCard(card)).includes('Basic')
-              ? 0
-              : 1;
-          const column = Math.max(0, Math.min(cardCmc(detailsToCard(card)), 7));
-
-          formattedMainboard[row][column].push(index);
-        }
-
-        for (const index of pool) {
-          if (!basics.includes(index)) {
-            const card = cards[index];
-            const column = Math.max(0, Math.min(cardCmc(detailsToCard(card)), 7));
-
-            formattedSideboard[0][column].push(index);
-          }
-        }
-
-        mainboard = formattedMainboard;
-        sideboard = formattedSideboard;
+        const result = buildBotDeck(pickorder, basics, cards);
+        mainboard = result.mainboard;
+        sideboard = result.sideboard;
+      } else {
+        mainboard = formatMainboard(player.decklist, cards);
+        sideboard = formatSideboard(player.decklist, cards);
       }
 
       const seat: DraftSeatType = {
