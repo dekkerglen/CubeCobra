@@ -11,15 +11,59 @@ import util from '../../../util/util';
 
 const { handleRouteError, redirect } = require('../../../util/render');
 
+import CubeType from '../../../datatypes/Cube';
 import { FeedTypes } from '../../../datatypes/Feed';
 import UserType from '../../../datatypes/User';
 
+const getRedirectUrl = async (req: Request, cubeId: string, isDelete: boolean = false): Promise<string> => {
+  const cube = await Cube.getById(cubeId);
+  return await getRedirectUrlForCube(req, cube, isDelete);
+};
+
+const getRedirectUrlForCube = async (req: Request, cube: CubeType, isDelete: boolean = false): Promise<string> => {
+  const referrer = util.getSafeReferrer(req);
+
+  //Prefer short ID in the URL if the cube has it
+  const cubeOrFallbackUrl = cube ? `/cube/blog/${encodeURIComponent(cube.shortId || cube.id)}` : '/dashboard';
+  //If not a valid referrer on this website, either send to the cube (if it exists) or the dashboard
+  if (referrer === null) {
+    return cubeOrFallbackUrl;
+  }
+
+  const isUserBlog = referrer.includes('/user/blog/');
+  const isBlogPost = referrer.includes('/cube/blog/blogpost/');
+
+  //When the blog is deleted we can't redirect to itself even if that is where user was
+  if (isDelete) {
+    if (isUserBlog) {
+      return referrer;
+    } else {
+      return cubeOrFallbackUrl;
+    }
+  }
+
+  //Use the referrer to know where to return the user, based on the places blog posts can be seen
+  if (isUserBlog) {
+    return referrer;
+  } else if (isBlogPost) {
+    return referrer;
+    //Ugly to check both here, but if the blogpost was deleted from itself the referrer still contains /cube/blog/ (and more)
+  } else {
+    return cubeOrFallbackUrl;
+  }
+};
+
 export const createBlogHandler = async (req: Request, res: Response) => {
   try {
+    const cubeId = req.params.id;
+    //Generally going to assume the cube exists here. Definitely required for a new blog, not so for an edit
+    const cube = await Cube.getById(cubeId);
+    const redirectUrl = await getRedirectUrlForCube(req, cube);
+
     if (req.body.title.length < 5 || req.body.title.length > 100) {
       req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
 
-      return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+      return redirect(req, res, redirectUrl);
     }
 
     const { user } = req;
@@ -27,7 +71,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     if (!user) {
       req.flash('danger', 'Please Login to publish a blog post.');
 
-      return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+      return redirect(req, res, redirectUrl);
     }
 
     if (req.body.id && req.body.id.length > 0) {
@@ -42,7 +86,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       if (blog.owner !== user.id) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');
 
-        return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+        return redirect(req, res, redirectUrl);
       }
 
       blog.body = req.body.markdown.substring(0, 10000);
@@ -52,10 +96,8 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
       req.flash('success', 'Blog update successful');
 
-      return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+      return redirect(req, res, redirectUrl);
     }
-
-    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, user)) {
       req.flash('danger', 'Cube not found');
@@ -68,12 +110,12 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     if (cube.cardCount === 0) {
       req.flash('danger', 'Cannot post a blog for an empty cube. Please add cards to the cube first.');
 
-      return redirect(req, res, '/cube/blog/' + cube.id);
+      return redirect(req, res, redirectUrl);
     }
 
     if (cube.owner.id !== user.id) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
-      return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+      return redirect(req, res, redirectUrl);
     }
 
     const id: string = await Blog.put({
@@ -120,8 +162,9 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
     req.flash('success', 'Blog post successful');
 
-    return redirect(req, res, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+    return redirect(req, res, redirectUrl);
   } catch (err) {
+    //Not worried about cube not existing if we get a server error
     return handleRouteError(req, res, err, `/cube/blog/${encodeURIComponent(req.params.id)}`);
   }
 };
@@ -156,10 +199,11 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { user } = req;
 
+    //The ensureAuth middleware means this should never occur
     if (!user) {
       req.flash('danger', 'Please login to delete a blog post.');
 
-      return redirect(req, res, `/cube/blog/${encodeURIComponent(id)}`);
+      return redirect(req, res, `/cube/blog/blogpost/${encodeURIComponent(id)}`);
     }
 
     const blog = await Blog.getById(id);
@@ -175,9 +219,10 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
     }
 
     await Blog.delete(id);
+    const redirectUrl = await getRedirectUrl(req, blog.cube, true);
 
     req.flash('success', 'Post Removed');
-    return redirect(req, res, `/cube/blog/${encodeURIComponent(blog.cube)}`);
+    return redirect(req, res, redirectUrl);
   } catch (err) {
     return handleRouteError(req, res, err, '/404');
   }

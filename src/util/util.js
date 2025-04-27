@@ -309,6 +309,33 @@ function getBaseUrl() {
   return (process.env?.HTTP_ONLY === 'true' ? 'http://' : 'https://') + process.env.DOMAIN;
 }
 
+/*
+ * Returns the root relative path, based on the referrer header. Since referrer header can be manipulated,
+ * we only return a non-null value if it is not to another domain
+ */
+const getSafeReferrer = (req /* Request */) => {
+  const referrer = req.header('Referrer') || null;
+
+  if (referrer === null) {
+    return null;
+  }
+
+  //Use our domain as the base in case the referrer is relative somehow
+  const url = URL.parse(referrer, getBaseUrl());
+  if (!url) {
+    return null;
+  }
+
+  //Because of us setting the base in the parsing, we can ensure the host isn't another site.
+  //We are also OK with www. version of the site. Host contains both domain and port, if the port isn't standard/aligns with protocol
+  if (!(url.host === process.env.DOMAIN || url.host === `www.${process.env.DOMAIN}`)) {
+    return null;
+  }
+
+  //Only if its a valid URL and isn't to some other website, then return the pathname (so no query string etc)
+  return url.pathname;
+};
+
 module.exports = {
   shuffle(array, seed) {
     if (!seed) {
@@ -351,4 +378,5 @@ module.exports = {
   mapNonNull,
   validateEmail,
   getBaseUrl,
+  getSafeReferrer,
 };
