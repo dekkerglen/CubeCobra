@@ -113,6 +113,7 @@ export const setOperation = (op, value) => {
     case '=':
       return (fieldValue) => arraysAreEqualSets(value, fieldValue);
     case '!=':
+    case '<>':
       return (fieldValue) => !arraysAreEqualSets(value, fieldValue);
     case '<':
       return (fieldValue) => arrayIsSubset(fieldValue, value) && !arraysAreEqualSets(value, fieldValue);
