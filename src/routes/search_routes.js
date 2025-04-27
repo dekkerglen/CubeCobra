@@ -7,7 +7,6 @@ const CubeHash = require('../dynamo/models/cubeHash');
 const { PrintingPreference } = require('../datatypes/Card');
 
 const { render } = require('../util/render');
-const { ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../util/cubefn');
 
 const router = express.Router();
@@ -362,7 +361,7 @@ router.get('/search', async (req, res) => {
   });
 });
 
-router.post('/getmoresearchitems', ensureAuth, async (req, res) => {
+router.post('/getmoresearchitems', async (req, res) => {
   const { lastKey, query, order, ascending } = req.body;
 
   const result = await searchCubes(query, order, lastKey, ascending, req.user);
