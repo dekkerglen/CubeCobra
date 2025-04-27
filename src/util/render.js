@@ -55,6 +55,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         notifications: notifications.items,
         defaultPrinting: req.user.defaultPrinting,
         gridTightness: req.user.gridTightness,
+        autoBlog: req.user.autoBlog,
       };
     }
 
