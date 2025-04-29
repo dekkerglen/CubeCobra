@@ -8,6 +8,7 @@ import { PublishDraftBody } from '../../../../datatypes/Draftmancer';
 import type DraftSeatType from '../../../../datatypes/DraftSeat';
 import Cube from '../../../../dynamo/models/cube';
 import Draft from '../../../../dynamo/models/draft';
+import Notification from '../../../../dynamo/models/notification';
 import { NextFunction, Request, Response } from '../../../../types/express';
 import { cardFromId } from '../../../../util/carddb';
 import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from '../../../../util/draftmancerUtil';
@@ -78,6 +79,7 @@ export const handler = async (req: Request, res: Response) => {
       players: [],
     };
 
+    let drafterName: string = '';
     for (const player of publishDraftBody.players) {
       let mainboard: number[][][] = setupPicks(2, 8);
       let sideboard: number[][][] = setupPicks(1, 8);
@@ -92,6 +94,10 @@ export const handler = async (req: Request, res: Response) => {
       } else {
         mainboard = formatMainboard(player.decklist, cards);
         sideboard = formatSideboard(player.decklist, cards);
+
+        if (!drafterName) {
+          drafterName = player.userName;
+        }
       }
 
       const seat: DraftSeatType = {
@@ -129,6 +135,8 @@ export const handler = async (req: Request, res: Response) => {
 
     const draftId = await Draft.put(draft);
 
+    await sendDraftNotification(draftId, drafterName, cube);
+
     return res.status(200).send({
       draftId,
     });
@@ -136,6 +144,24 @@ export const handler = async (req: Request, res: Response) => {
     req.logger?.error('Error publishing draft', error);
     return res.status(500).json({ error: 'Error publishing draft' });
   }
+};
+
+const sendDraftNotification = async (draftId: string, drafterName: string, cube: CubeType) => {
+  if (cube.disableAlerts || !drafterName) {
+    return;
+  }
+
+  const cubeOwner = cube.owner;
+
+  //Cannot use helper as the from is not a real user
+  await Notification.put({
+    date: new Date().valueOf(),
+    to: cubeOwner.id,
+    from: '',
+    fromUsername: drafterName,
+    url: `/cube/deck/${draftId}`,
+    body: `${drafterName} drafted your cube: ${cube.name}`,
+  });
 };
 
 export const routes = [

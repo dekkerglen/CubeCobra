@@ -8,6 +8,7 @@ import { Player, PublishDraftBody } from '../../src/datatypes/Draftmancer';
 import type DraftSeatType from '../../src/datatypes/DraftSeat';
 import Cube from '../../src/dynamo/models/cube';
 import Draft from '../../src/dynamo/models/draft';
+import Notification from '../../src/dynamo/models/notification';
 import { handler, routes, validatePublishDraftBody } from '../../src/router/routes/api/draftmancer/publish';
 import { RequestHandler } from '../../src/types/express';
 import { cardFromId } from '../../src/util/carddb';
@@ -25,6 +26,10 @@ jest.mock('../../src/dynamo/models/cube', () => ({
 }));
 
 jest.mock('../../src/dynamo/models/draft', () => ({
+  put: jest.fn(),
+}));
+
+jest.mock('../../src/dynamo/models/notification', () => ({
   put: jest.fn(),
 }));
 
@@ -337,10 +342,24 @@ describe('Publish', () => {
     expect(putCall.DraftmancerLog.players[1]).toEqual(playerTwoDraftSeat.draftmancerPicks);
 
     verifyDraftCreation(cube);
+
+    // Verify notification was sent
+    expect(Notification.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        date: expect.any(Number),
+        to: cube.owner.id,
+        from: '',
+        fromUsername: 'human1',
+        url: '/cube/deck/test-draft-id',
+        body: `human1 drafted your cube: ${cube.name}`,
+      }),
+    );
   });
 
   it('should handle bot players correctly', async () => {
     const { cube } = setupTestDependencies();
+    const cubeWithDisabledAlerts = { ...cube, disableAlerts: true };
+    (Cube.getById as jest.Mock).mockResolvedValue(cubeWithDisabledAlerts);
 
     // Player 1 setup
     const playerOneDraftSeat = createDraftSeatPicks(6, [
@@ -395,6 +414,132 @@ describe('Publish', () => {
     expect(putCall.DraftmancerLog.players[1]).toEqual(playerTwoDraftSeat.draftmancerPicks);
 
     verifyDraftCreation(cube);
+
+    expect(Notification.put).not.toHaveBeenCalled();
+  });
+
+  it('should draft notification users the first human players name', async () => {
+    const { cube } = setupTestDependencies();
+
+    // Player 1 (bot) setup
+    const playerOneDraftSeat = createDraftSeatPicks(
+      6,
+      [
+        { column: 0, row: 6, cardIds: [17] },
+        { column: 0, row: 7, cardIds: [22] },
+        { column: 1, row: 0, cardIds: [23] },
+        { column: 1, row: 5, cardIds: [25] },
+      ],
+      [
+        { column: 0, row: 0, cardIds: [6] },
+        { column: 0, row: 3, cardIds: [17] },
+      ],
+    );
+
+    (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerOneDraftSeat);
+    (buildBotDeck as jest.Mock).mockReturnValueOnce({
+      mainboard: playerOneDraftSeat.mainboard,
+      sideboard: playerOneDraftSeat.sideboard,
+    });
+
+    // Player 2 (human) setup
+    const playerTwoDraftSeat = createDraftSeatPicks(16, [
+      { column: 0, row: 1, cardIds: [9, 8] },
+      { column: 0, row: 2, cardIds: [11] },
+    ]);
+
+    (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat);
+    (formatMainboard as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat.mainboard);
+    (formatSideboard as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat.sideboard);
+
+    const response = await call(handler)
+      .withBody(
+        createRequest({
+          cubeID: cube.id,
+          players: [
+            createPlayerData('1', { userName: 'bot1', isBot: true }),
+            createPlayerData('2', { userName: 'human1', isBot: false }),
+          ],
+        }),
+      )
+      .send();
+
+    expect(response.status).toBe(200);
+
+    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat);
+    validateHumanDraftSeat(putCall.seats[1], playerTwoDraftSeat);
+
+    expect(putCall.DraftmancerLog.players[0]).toEqual(playerOneDraftSeat.draftmancerPicks);
+    expect(putCall.DraftmancerLog.players[1]).toEqual(playerTwoDraftSeat.draftmancerPicks);
+
+    verifyDraftCreation(cube);
+
+    // Verify notification was sent with human player name
+    expect(Notification.put).toHaveBeenCalledWith(
+      expect.objectContaining({
+        date: expect.any(Number),
+        to: cube.owner.id,
+        from: '',
+        fromUsername: 'human1',
+        url: '/cube/deck/test-draft-id',
+        body: `human1 drafted your cube: ${cube.name}`,
+      }),
+    );
+  });
+
+  it('should not send notification when all players are bots', async () => {
+    const { cube } = setupTestDependencies();
+
+    // Player 1 (bot) setup
+    const playerOneDraftSeat = createDraftSeatPicks(6, [
+      { column: 0, row: 6, cardIds: [17] },
+      { column: 0, row: 7, cardIds: [22] },
+    ]);
+
+    (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerOneDraftSeat);
+    (buildBotDeck as jest.Mock).mockReturnValueOnce({
+      mainboard: playerOneDraftSeat.mainboard,
+      sideboard: playerOneDraftSeat.sideboard,
+    });
+
+    // Player 2 (also bot) setup
+    const playerTwoDraftSeat = createDraftSeatPicks(16, [
+      { column: 1, row: 0, cardIds: [23] },
+      { column: 1, row: 5, cardIds: [25] },
+    ]);
+
+    (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat);
+    (buildBotDeck as jest.Mock).mockReturnValueOnce({
+      mainboard: playerTwoDraftSeat.mainboard,
+      sideboard: playerTwoDraftSeat.sideboard,
+    });
+
+    const response = await call(handler)
+      .withBody(
+        createRequest({
+          cubeID: cube.id,
+          players: [
+            createPlayerData('1', { userName: 'bot1', isBot: true }),
+            createPlayerData('2', { userName: 'bot2', isBot: true }),
+          ],
+        }),
+      )
+      .send();
+
+    expect(response.status).toBe(200);
+
+    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat);
+    validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat);
+
+    expect(putCall.DraftmancerLog.players[0]).toEqual(playerOneDraftSeat.draftmancerPicks);
+    expect(putCall.DraftmancerLog.players[1]).toEqual(playerTwoDraftSeat.draftmancerPicks);
+
+    verifyDraftCreation(cube);
+
+    // Verify no notification was sent since all players were bots
+    expect(Notification.put).not.toHaveBeenCalled();
   });
 
   it('should handle database errors gracefully', async () => {
