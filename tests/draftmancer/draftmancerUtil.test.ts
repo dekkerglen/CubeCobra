@@ -407,4 +407,63 @@ describe('getPicksFromPlayer', () => {
     expect(result.pickorder).toEqual([0]);
     expect(result.trashorder).toEqual([]);
   });
+
+  it('handles duplicate oracle IDs across multiple calls', () => {
+    const cardDetails: CardDetails[] = [];
+    const picks = [
+      {
+        booster: ['oracle-1', 'oracle-2'],
+        picks: [0],
+        burn: [],
+      },
+    ];
+
+    // First call setup
+    const mockCard1 = createCardDetails({ oracle_id: 'oracle-1' });
+    const mockCard2 = createCardDetails({ oracle_id: 'oracle-2' });
+    const mockCard3 = createCardDetails({ oracle_id: 'oracle-3' });
+
+    (getReasonableCardByOracle as jest.Mock)
+      .mockReturnValueOnce(mockCard1)
+      .mockReturnValueOnce(mockCard2)
+      .mockReturnValueOnce(mockCard1)
+      .mockReturnValueOnce(mockCard3);
+
+    // First call
+    const result1 = getPicksFromPlayer(picks, cardDetails);
+    // Verify the results
+    expect(result1.draftmancerPicks).toEqual([
+      {
+        booster: [0, 1],
+        pick: 0,
+      },
+    ]);
+
+    const picks2 = [
+      {
+        booster: ['oracle-1', 'oracle-3'],
+        picks: [0],
+        burn: [],
+      },
+    ];
+
+    // Second call with same oracle IDs
+    const result2 = getPicksFromPlayer(picks2, cardDetails);
+
+    // Same oracle id from both calls is the same index in cardDetails
+    expect(result2.draftmancerPicks).toEqual([
+      {
+        booster: [0, 2],
+        pick: 0,
+      },
+    ]);
+
+    // Verify cardDetails array doesn't have duplicates
+    expect(cardDetails).toHaveLength(3);
+    expect(cardDetails[0]).toBe(mockCard1);
+    expect(cardDetails[1]).toBe(mockCard2);
+    expect(cardDetails[2]).toBe(mockCard3);
+
+    expect(getReasonableCardByOracle).toHaveBeenCalledTimes(4);
+  });
 });
