@@ -348,7 +348,6 @@ describe('Publish', () => {
       expect.objectContaining({
         date: expect.any(Number),
         to: cube.owner.id,
-        from: '',
         fromUsername: 'human1',
         url: '/cube/deck/test-draft-id',
         body: `human1 drafted your cube: ${cube.name}`,
@@ -480,7 +479,6 @@ describe('Publish', () => {
       expect.objectContaining({
         date: expect.any(Number),
         to: cube.owner.id,
-        from: '',
         fromUsername: 'human1',
         url: '/cube/deck/test-draft-id',
         body: `human1 drafted your cube: ${cube.name}`,

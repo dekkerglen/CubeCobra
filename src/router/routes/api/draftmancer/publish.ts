@@ -157,7 +157,6 @@ const sendDraftNotification = async (draftId: string, drafterName: string, cube:
   await Notification.put({
     date: new Date().valueOf(),
     to: cubeOwner.id,
-    from: '',
     fromUsername: drafterName,
     url: `/cube/deck/${draftId}`,
     body: `${drafterName} drafted your cube: ${cube.name}`,
