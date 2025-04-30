@@ -26,7 +26,7 @@ const client = createClient({
   ],
 });
 
-module.exports = {
+const notification = {
   getById: async (id: string): Promise<Notification> => (await client.get(id)).Item as Notification,
   getByToAndStatus: async (
     to: string,
@@ -103,3 +103,7 @@ module.exports = {
     ),
   createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
 };
+
+module.exports = notification;
+
+export default notification;

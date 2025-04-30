@@ -26,6 +26,7 @@ export type DraftState = {
   steps: DraftStep[];
 }[][];
 
+//TODO: Move to Draftmancer types
 export interface DraftmancerPick {
   booster: number[];
   pick: number;
