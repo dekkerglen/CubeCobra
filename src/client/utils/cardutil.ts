@@ -476,7 +476,7 @@ export const cardWordCount = (card: Card): number => {
     return 0;
   }
   if (card.details.wordCount === undefined) {
-    card.details.wordCount = card.details.oracle_text.split(' ').length;
+    card.details.wordCount = card.details.oracle_text.split('/\s/').length;
   }
   return card.details.wordCount;
 };
