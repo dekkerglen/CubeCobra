@@ -358,6 +358,7 @@ router.post(
         dateCreated: new Date().valueOf(),
         defaultPrinting: DefaultPrintingPreference,
         gridTightness: DefaultGridTightnessPreference,
+        autoBlog: false,
       };
 
       const salt = await bcrypt.genSalt(10);
@@ -745,9 +746,10 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
     }
 
     user.theme = req.body.theme;
-    user.hideFeatured = req.body.hideFeatured === 'on';
+    user.hideFeatured = req.body.hideFeatured === 'true';
     user.defaultPrinting = req.body.defaultPrinting;
     user.gridTightness = req.body.gridTightness;
+    user.autoBlog = req.body.autoBlog === 'true';
 
     await User.update(user);
 

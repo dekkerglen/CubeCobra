@@ -41,7 +41,12 @@ const CubeSearchController: React.FC<CubeSearchControllerProps> = ({
       </Text>
       <Row xs={12}>
         <Col xs={12} sm={3}>
-          <Input placeholder="Search cubes..." value={queryText} onChange={(event) => setQuery(event.target.value)} />
+          <Input
+            placeholder="Search cubes..."
+            value={queryText}
+            onEnter={() => go(queryText, searchOrder, searchAscending)}
+            onChange={(event) => setQuery(event.target.value)}
+          />
         </Col>
         <Col xs={6} sm={3}>
           <Select

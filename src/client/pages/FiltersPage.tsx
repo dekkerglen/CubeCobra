@@ -122,11 +122,12 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
             <Accordion title="Color and Color Identity">
               <p>
                 You can find cards that are a certain color by using <code>c:</code> or <code>color:</code>, and cards
-                with a certain color identity by using <code>ci:</code>, <code>id:</code> or <code>identity:</code>.
+                with a certain color identity by using <code>ci:</code>, <code>id:</code>, or <code>identity:</code> or{' '}
+                <code>coloridentity:</code>.
               </p>
               <p>
-                Operators supported: <code>:</code>, <code>=</code>, <code>{'<'}</code>, <code>'{'>'}</code>,{' '}
-                <code>{'<='}</code>, <code>{'>='}</code>.
+                Operators supported: <code>:</code>, <code>=</code>, <code>{'<'}</code>, <code>{'>'}</code>,{' '}
+                <code>{'<='}</code>, <code>{'>='}</code>, <code>{'<>'}</code>, <code>{'!='}</code>.
               </p>
               <p>
                 In addition to <code>w</code>, <code>u</code>, <code>b</code>, <code>r</code>, <code>g</code> and{' '}
@@ -166,6 +167,18 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                   {
                     query: <code>{'ci>1'}</code>,
                     description: 'cards with more than 1 color in their identity.',
+                  },
+                  {
+                    query: <code>{'ci<=3'}</code>,
+                    description: 'cards with 3 or fewer colors in their identity.',
+                  },
+                  {
+                    query: <code>{'ci:m'}</code>,
+                    description: 'cards with more than 1 color in their identity.',
+                  },
+                  {
+                    query: <code>{'ci!=m'}</code>,
+                    description: 'cards with 1 or less colors in their identity.',
                   },
                 ]}
               />

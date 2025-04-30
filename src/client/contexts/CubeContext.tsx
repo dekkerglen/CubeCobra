@@ -240,7 +240,10 @@ export function CubeContextProvider({
   const [sortTertiary, setSortTertiary] = useQueryParam('s3', defaultSorts[2]);
   const [sortQuaternary, setSortQuaternary] = useQueryParam('s4', defaultSorts[3]);
   const [filterResult, setFilterResult] = useState({});
-  const [useBlog, setUseBlog] = useLocalStorage<boolean>(`${cube.id}-useBlog`, true);
+  const [useBlog, setUseBlog] = useLocalStorage<boolean>(
+    `${cube.id}-useBlog`,
+    typeof user?.autoBlog !== 'undefined' ? user.autoBlog : false,
+  );
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();

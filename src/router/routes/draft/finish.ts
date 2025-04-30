@@ -3,11 +3,14 @@ import Joi from 'joi';
 import { setupPicks } from '../../..//util/draftutil';
 import { cardOracleId } from '../../../client/utils/cardutil';
 import DraftType, { DraftStep } from '../../../datatypes/Draft';
+import User from '../../../datatypes/User';
+import Cube from '../../../dynamo/models/cube';
 import Draft from '../../../dynamo/models/draft';
 import { csrfProtection } from '../../../routes/middleware';
 import { NextFunction, Request, Response } from '../../../types/express';
 import { deckbuild } from '../../../util/draftbots';
 import { getCardDefaultRowColumn } from '../../../util/draftutil';
+import { addNotification } from '../../../util/util';
 
 export interface Seat {
   picks: number[];
@@ -52,7 +55,7 @@ const FinishDraftBodySchema = Joi.object({
     .required(),
 }).unknown(true); // allow additional fields
 
-const validateBody = (req: Request, res: Response, next: NextFunction) => {
+export const validateBody = (req: Request, res: Response, next: NextFunction) => {
   const { error } = FinishDraftBodySchema.validate(req.body);
   if (error) {
     res.status(400).json({ error: error.details[0].message });
@@ -61,7 +64,7 @@ const validateBody = (req: Request, res: Response, next: NextFunction) => {
   next();
 };
 
-const handler = async (req: Request, res: Response) => {
+export const handler = async (req: Request, res: Response) => {
   try {
     const body = req.body as FinishDraftBody;
 
@@ -81,7 +84,8 @@ const handler = async (req: Request, res: Response) => {
       });
     }
 
-    if (typeof draft.owner !== 'string' && draft.owner?.id !== req.user.id) {
+    const draftOwnerId = typeof draft.owner !== 'string' ? draft.owner?.id : draft.owner;
+    if (draftOwnerId !== req.user.id) {
       return res.status(401).send({
         success: false,
         message: 'You do not own this draft',
@@ -148,7 +152,17 @@ const handler = async (req: Request, res: Response) => {
       draft.seats[i].sideboard = formattedSideboard;
     }
 
+    //Draft.put changes the draft object, replacing objects with ids, so store these to use after
+    const cubeOwner = draft.cubeOwner;
+    const cubeId = draft.cube;
+    const draftOwner = draft.owner;
+
     await Draft.put(draft);
+
+    //Annoying guard since the values will be objects
+    if (typeof cubeOwner !== 'string' && typeof draftOwner !== 'string') {
+      await sendDraftNotification(draft.id, cubeOwner, draftOwner!, cubeId);
+    }
 
     return res.status(200).send({
       success: true,
@@ -157,6 +171,30 @@ const handler = async (req: Request, res: Response) => {
     // eslint-disable-next-line no-console
     console.error('Error finishing draft', err);
     return res.status(500).json({ error: 'Error finishing draft' });
+  }
+};
+
+const sendDraftNotification = async (draftId: string, cubeOwner: User, draftOwner: User, cubeId: string) => {
+  const cubeOwnerId = cubeOwner.id;
+  const draftOwnerId = draftOwner.id;
+  if (cubeOwnerId === draftOwnerId) {
+    return;
+  }
+
+  const cube = await Cube.getById(cubeId);
+  if (cube.disableAlerts) {
+    return;
+  }
+
+  //Type guard should be unnecessary in real life
+  if (typeof draftOwner !== 'string') {
+    //Takes User objects
+    await addNotification(
+      cubeOwner,
+      draftOwner,
+      `/cube/deck/${draftId}`,
+      `${draftOwner?.username} drafted your cube: ${cube.name}`,
+    );
   }
 };
 

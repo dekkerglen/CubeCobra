@@ -76,6 +76,9 @@ const hydrate = (user) => {
   if (!user.gridTightness) {
     user.gridTightness = DefaultGridTightnessPreference;
   }
+  if (typeof user.autoBlog === 'undefined') {
+    user.autoBlog = false;
+  }
 
   return user;
 };

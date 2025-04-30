@@ -14,11 +14,18 @@ const UserThemeForm: React.FC = () => {
   const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'default');
   const [defaultPrinting, setDefaultPrinting] = useState(user?.defaultPrinting || DefaultPrintingPreference);
   const [gridTightness, setGridTightness] = useState(user?.gridTightness || DefaultGridTightnessPreference);
+  const [autoBlog, setAutoblog] = useState(typeof user?.autoBlog !== 'undefined' ? user.autoBlog : false);
   const [hideFeaturedCubes, setHideFeaturedCubes] = useState(user?.hideFeatured || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
-    () => ({ theme: selectedTheme, hideFeatured: `${hideFeaturedCubes}`, defaultPrinting, gridTightness }),
-    [selectedTheme, hideFeaturedCubes, defaultPrinting, gridTightness],
+    () => ({
+      theme: selectedTheme,
+      hideFeatured: `${hideFeaturedCubes}`,
+      defaultPrinting,
+      gridTightness,
+      autoBlog: `${autoBlog}`,
+    }),
+    [selectedTheme, hideFeaturedCubes, defaultPrinting, gridTightness, autoBlog],
   );
 
   return (
@@ -53,6 +60,11 @@ const UserThemeForm: React.FC = () => {
           ]}
         />
         <Checkbox label="Hide featured cubes" checked={hideFeaturedCubes} setChecked={setHideFeaturedCubes} />
+        <Checkbox
+          label="Check 'Create Blog posts' for cube change by default"
+          checked={autoBlog}
+          setChecked={setAutoblog}
+        />
         <Button block color="accent" onClick={() => formRef.current?.submit()}>
           Update
         </Button>

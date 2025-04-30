@@ -2,7 +2,7 @@ const baseConfig = {
   preset: 'ts-jest',
 
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
     '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.config.js' }],
   },
   moduleNameMapper: {
@@ -28,7 +28,13 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['json', 'text'],
-  collectCoverageFrom: ['src/**/*.{ts,tsx}', 'src/client/filtering/*.js', '!src/**/*.d.ts', '!src/**/index.{js,ts}'],
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    'src/dynamo/models/*.js',
+    'src/client/filtering/*.js',
+    '!src/**/*.d.ts',
+    '!src/**/index.{js,ts}',
+  ],
 
   projects: [
     {
@@ -36,14 +42,14 @@ module.exports = {
       displayName: 'component-tests',
       testEnvironment: 'jsdom',
       testMatch: ['**/tests/**/*.test.tsx'], // Component tests
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     },
     {
       ...baseConfig,
       displayName: 'other-tests',
       testEnvironment: 'node',
       testMatch: ['**/tests/**/*.test.ts'], // Non-component tests
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     },
   ],
 };
