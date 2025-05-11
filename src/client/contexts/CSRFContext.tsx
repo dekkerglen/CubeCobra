@@ -1,8 +1,10 @@
 import React, { createContext, useCallback } from 'react';
 
+type ExtendedRequestInit = RequestInit & { timeout?: number };
+
 interface CSRFContext {
   csrfToken: string;
-  csrfFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+  csrfFetch: (input: RequestInfo, init?: ExtendedRequestInit) => Promise<Response>;
   callApi: (route: RequestInfo, body: any) => Promise<Response>;
 }
 
@@ -21,10 +23,7 @@ interface CSRFContextProviderProps {
   csrfToken: string;
 }
 
-async function fetchWithTimeout(
-  resource: RequestInfo,
-  options: RequestInit & { timeout?: number } = {},
-): Promise<Response> {
+async function fetchWithTimeout(resource: RequestInfo, options: ExtendedRequestInit = {}): Promise<Response> {
   const { timeout = 10000 } = options;
 
   const controller = new AbortController();
@@ -39,7 +38,7 @@ async function fetchWithTimeout(
 
 export const CSRFContextProvider: React.FC<CSRFContextProviderProps> = ({ children, csrfToken }) => {
   const csrfFetch = useCallback(
-    async (resource: RequestInfo, init?: RequestInit) => {
+    async (resource: RequestInfo, init?: ExtendedRequestInit) => {
       if (init) {
         init.credentials = init.credentials || 'same-origin';
       }
