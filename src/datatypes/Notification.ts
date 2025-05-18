@@ -6,7 +6,7 @@ export enum NotificationStatus {
 export type NewNotification = {
   date: number;
   to: string;
-  from: string;
+  from?: string;
   url?: string;
   body: string;
   fromUsername?: string;
