@@ -126,6 +126,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
           mainboard,
           sideboard,
         }),
+        timeout: 60 * 1000, //Match server-side timeout
       });
 
       // Force error if status is not 2xx range
