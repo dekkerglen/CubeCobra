@@ -192,6 +192,20 @@ export const createDraftSeat = (isBot: boolean, overrides?: Partial<DraftSeat>):
   } as DraftSeat;
 };
 
+export const createBasicsSet = (): Card[] => {
+  return [
+    createCardFromDetails({ type: 'Land', name: 'Island' }),
+    createCardFromDetails({ type: 'Land', name: 'Forest' }),
+    createCardFromDetails({ type: 'Land', name: 'Plains' }),
+    createCardFromDetails({ type: 'Land', name: 'Mountain' }),
+    createCardFromDetails({ type: 'Land', name: 'Swamp' }),
+  ];
+};
+
+export const createBasicsIds = (): string[] => {
+  return createBasicsSet().map((c) => c.cardID);
+};
+
 /**
  * Two seats, 3 packs, 30 cards total (5 cards per pack)
  */
@@ -199,13 +213,7 @@ export const createCompletedSoloDraft = (overrides?: Partial<Draft>): Draft => {
   // Create 30 unique cards
   const cards = Array.from({ length: 30 }, () => createCard());
   //Add 5 basics
-  const basics = [
-    createCardFromDetails({ type: 'Land', name: 'Island' }),
-    createCardFromDetails({ type: 'Land', name: 'Forest' }),
-    createCardFromDetails({ type: 'Land', name: 'Plains' }),
-    createCardFromDetails({ type: 'Land', name: 'Mountain' }),
-    createCardFromDetails({ type: 'Land', name: 'Swamp' }),
-  ];
+  const basics = createBasicsSet();
 
   const standardPickSteps: DraftStep[] = [];
   for (let i = 0; i < 5; i++) {
