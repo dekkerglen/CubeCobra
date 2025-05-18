@@ -20,6 +20,94 @@ export interface CardMetadata {
   mostSimilar: OracleIdIndex;
 }
 
+export interface ComboTree {
+  $?: string[];
+  c?: Record<number, ComboTree>;
+}
+
+export interface ComboProduce {
+  feature: {
+    id: number;
+    name: string;
+    status: string;
+    uncountable: boolean;
+  };
+  quantity: number;
+}
+export interface Combo {
+  id: string;
+  of: {
+    id: number;
+  }[];
+  uses: {
+    card: {
+      id: number;
+      name: string;
+      spoiler: boolean;
+      oracleId: string;
+      typeLine: string;
+    };
+    quantity: number;
+    zoneLocations: string[];
+    exileCardState: string;
+    mustBeCommander: boolean;
+    libraryCardState: string;
+    graveyardCardState: string;
+    battlefieldCardState: string;
+  }[];
+  notes: string;
+  prices: {
+    tcgplayer: string;
+    cardmarket: string;
+    cardkingdom: string;
+  };
+  status: string;
+  spoiler: boolean;
+  identity: string;
+  includes: {
+    id: number;
+  }[];
+  produces: ComboProduce[];
+  requires: {
+    quantity: number;
+    template: {
+      id: number;
+      name: string;
+      scryfallApi: string;
+      scryfallQuery: string;
+    };
+    zoneLocations: string[];
+    exileCardState: string;
+    mustBeCommander: boolean;
+    libraryCardState: string;
+    graveyardCardState: string;
+    battlefieldCardState: string;
+  }[];
+  legalities: {
+    brawl: boolean;
+    predh: boolean;
+    legacy: boolean;
+    modern: boolean;
+    pauper: boolean;
+    pioneer: boolean;
+    vintage: boolean;
+    standard: boolean;
+    commander: boolean;
+    premodern: boolean;
+    oathbreaker: boolean;
+    pauperCommander: boolean;
+    pauperCommanderMain: boolean;
+  };
+  popularity: number;
+  bracketTag: string;
+  description: string;
+  manaNeeded: string;
+  variantCount: number;
+  manaValueNeeded: number;
+  easyPrerequisites: string;
+  notablePrerequisites: string;
+}
+
 export interface Catalog {
   cardtree: Record<string, any>;
   imagedict: Record<string, any>;
@@ -33,6 +121,9 @@ export interface Catalog {
   indexToOracle: string[];
   metadatadict: Record<string, CardMetadata>;
   printedCardList: any[];
+  comboTree: ComboTree;
+  comboDict: Record<string, Combo>;
+  oracleToIndex: Record<string, number>;
 }
 
 const catalog: Catalog = {
@@ -40,12 +131,15 @@ const catalog: Catalog = {
   imagedict: {},
   cardimages: {},
   cardnames: [],
+  comboTree: {},
+  comboDict: {},
   full_names: [],
   nameToId: {},
   oracleToId: {},
   english: {},
   _carddict: {},
   indexToOracle: [],
+  oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
 };
@@ -62,6 +156,8 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'english.json': 'english',
   'indexToOracle.json': 'indexToOracle',
   'metadatadict.json': 'metadatadict',
+  'comboTree.json': 'comboTree',
+  'comboDict.json': 'comboDict',
 };
 
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {
@@ -99,6 +195,9 @@ export async function initializeCardDb() {
   await loadAllFiles();
 
   catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !card.digital && !card.isToken);
+  catalog.oracleToIndex = Object.fromEntries(
+    catalog.indexToOracle.map((oracleId: string, index: number) => [oracleId, index]),
+  );
 
   // eslint-disable-next-line no-console
   console.info('Finished loading carddb.');

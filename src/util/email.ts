@@ -2,41 +2,24 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import aws from 'aws-sdk';
 import Email from 'email-templates';
 import { createTransport } from 'nodemailer';
-import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import path from 'path';
 
 import utils from './util';
 
-const getTransportOptions = (): SMTPTransport.Options | undefined => {
-  //With SMTP host/port we assume local development mailing
-  if (process.env.EMAIL_CONFIG_USERNAME && process.env.EMAIL_CONFIG_PASSWORD) {
-    return {
-      name: 'CubeCobra.com',
-      secure: true,
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL_CONFIG_USERNAME,
-        pass: process.env.EMAIL_CONFIG_PASSWORD,
-      },
-    };
-  } else if (process.env.EMAIL_CONFIG_SMTP_HOST && process.env.EMAIL_CONFIG_SMTP_PORT) {
-    return {
-      name: 'CubeCobra.com',
-      secure: false,
-      host: process.env.EMAIL_CONFIG_SMTP_HOST,
-      port: Number(process.env.EMAIL_CONFIG_SMTP_PORT),
-    };
-  } else {
-    return undefined;
-  }
-};
+aws.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
 
-const getTransport = () => {
-  const options = getTransportOptions();
-  return options ? createTransport(options) : undefined;
-};
+const transporter = createTransport({
+  SES: new aws.SES({
+    apiVersion: '2010-12-01',
+    region: 'us-east-2',
+  }),
+});
 
 export const sendEmail = async (
   to: string,
@@ -44,13 +27,6 @@ export const sendEmail = async (
   templateName: string,
   templateLocals: Record<string, any> = {},
 ): Promise<any> => {
-  const transport = getTransport();
-  if (!transport) {
-    // eslint-disable-next-line no-console -- Warn so clear why an email isn't being sent
-    console.warn('No email transport is configured, skipping sending');
-    return undefined;
-  }
-
   const message = new Email({
     message: {
       from: process.env.EMAIL_CONFIG_FROM || 'Cube Cobra Team <support@cubecobra.com>',
@@ -64,16 +40,24 @@ export const sendEmail = async (
         images: true,
       },
     },
-    transport: getTransport(),
+    transport: transporter,
   });
 
-  return await message.send({
-    template: templateName,
-    locals: {
-      ...templateLocals,
-      //Ensure the common ones cannot be overridden by adding second
-      baseUrl: utils.getBaseUrl(),
-    },
-  });
+  if (process.env.NODE_ENV === 'production') {
+    await message.send({
+      template: templateName,
+      locals: {
+        ...templateLocals,
+        //Ensure the common ones cannot be overridden by adding second
+        baseUrl: utils.getBaseUrl(),
+      },
+    });
+  } else {
+    // In development, just log the email to the console
+    // eslint-disable-next-line no-console
+    console.log(message);
+  }
+
+  return;
 };
 export default sendEmail;

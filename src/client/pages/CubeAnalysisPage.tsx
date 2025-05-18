@@ -23,6 +23,7 @@ import AnalyticTable from '../analytics/AnalyticTable';
 import Asfans from '../analytics/Asfans';
 import Averages from '../analytics/Averages';
 import ChartComponent from '../analytics/Chart';
+import Combos from '../analytics/Combos';
 import Playtest from '../analytics/PlaytestData';
 import Suggestions from '../analytics/Suggestions';
 import Tokens from '../analytics/Tokens';
@@ -181,6 +182,10 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
     {
       name: 'Tokens',
       component: () => <Tokens tokenMap={tokenMap} />,
+    },
+    {
+      name: 'Combos',
+      component: () => <Combos />,
     },
   ];
 
