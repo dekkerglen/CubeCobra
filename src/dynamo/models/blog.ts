@@ -77,11 +77,7 @@ const hydrate = async (document?: UnhydratedBlogPost): Promise<BlogPost | undefi
   return createHydratedBlog(document, owner, cubeName, changelog);
 };
 
-const batchHydrate = async (documents?: UnhydratedBlogPost[]): Promise<BlogPost[] | undefined> => {
-  if (!documents) {
-    return undefined;
-  }
-
+const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]> => {
   const keys = documents
     .filter((document) => document.changelist)
     .map((document) => ({ cube: document.cube, id: document.changelist }));
@@ -131,7 +127,7 @@ const blog = {
     cube: string,
     limit: number,
     lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: BlogPost[]; lastKey?: DocumentClient.Key }> => {
+  ): Promise<{ items: BlogPost[]; lastKey?: DocumentClient.Key }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const cubeAttr: keyof UnhydratedBlogPost = 'cube';
 
@@ -149,7 +145,7 @@ const blog = {
       Limit: limit || 36,
     });
     return {
-      items: await batchHydrate(result.Items as UnhydratedBlogPost[]),
+      items: result.Items ? await batchHydrate(result.Items as UnhydratedBlogPost[]) : [],
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -157,7 +153,7 @@ const blog = {
     owner: string,
     limit: number,
     lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: BlogPost[]; lastKey?: DocumentClient.Key }> => {
+  ): Promise<{ items: BlogPost[]; lastKey?: DocumentClient.Key }> => {
     const ownerAttr: keyof UnhydratedBlogPost = 'owner';
 
     const result = await client.query({
@@ -174,7 +170,7 @@ const blog = {
       Limit: limit || 36,
     });
     return {
-      items: await batchHydrate(result.Items as UnhydratedBlogPost[]),
+      items: result.Items ? await batchHydrate(result.Items as UnhydratedBlogPost[]) : [],
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -190,7 +186,7 @@ const blog = {
   batchPut: async (documents: UnhydratedBlogPost[]): Promise<void> => {
     await client.batchPut(documents.map((document) => fillRequiredDetails(document)));
   },
-  batchGet: async (ids: string[]): Promise<BlogPost[] | undefined> => batchHydrate(await client.batchGet(ids)),
+  batchGet: async (ids: string[]): Promise<BlogPost[]> => batchHydrate(await client.batchGet(ids)),
   createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
   changelogToText: (changelog: Changes): string => {
     let result = '';
