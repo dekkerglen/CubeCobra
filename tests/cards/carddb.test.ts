@@ -7,12 +7,15 @@ const mockCardCatalog: Catalog = {
   imagedict: {},
   cardimages: {},
   cardnames: [],
+  comboTree: {},
+  comboDict: {},
   full_names: [],
   nameToId: {},
   oracleToId: {},
   english: {},
   _carddict: {},
   indexToOracle: [],
+  oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
 };
