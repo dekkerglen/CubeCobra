@@ -35,7 +35,19 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
 
   const cards = useMemo(() => {
     const oracles = combo.uses.map((use) => use.card.oracleId);
-    return cube.cards.mainboard.filter((card) => oracles.includes(cardOracleId(card)));
+    //Match the first copy of the oracle id in the cube list
+    const matchedOracles = new Set();
+    return cube.cards.mainboard.filter((card) => {
+      const oracleId = cardOracleId(card);
+      if (matchedOracles.has(oracleId)) {
+        return false;
+      }
+      const matched = oracles.includes(oracleId);
+      if (matched) {
+        matchedOracles.add(oracleId);
+      }
+      return matched;
+    });
   }, [combo, cube]);
 
   return (
@@ -141,8 +153,9 @@ const Combos: React.FC = () => {
           headers: {
             'Content-Type': 'application/json',
           },
+          //Only send unique cards to get combos
           body: JSON.stringify({
-            oracles: cards.map((card) => cardOracleId(card)),
+            oracles: [...new Set(cards.map((card) => cardOracleId(card)))],
           }),
         });
         if (!response.ok) {
