@@ -32,5 +32,5 @@ module.exports = {
   },
   put: async (document: UnhydratedPatron): Promise<DocumentClient.PutItemInputAttributeMap> => client.put(document),
   createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
-  deleteById: async (id: DocumentClient.Key): Promise<void> => client.delete({ id }),
+  deleteById: async (id: string): Promise<void> => client.delete({ owner: id }),
 };

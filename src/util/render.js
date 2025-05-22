@@ -36,6 +36,14 @@ const getBundlesForPage = (page) => {
   }
 };
 
+const sha256 = async (data) => {
+  const buffer = new TextEncoder().encode(data);
+  const hash = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hash));
+  const hashHex = hashArray.map((b) => ('00' + b.toString(16)).slice(-2)).join('');
+  return hashHex;
+};
+
 const render = (req, res, page, reactProps = {}, options = {}) => {
   getCubes(req, async (cubes) => {
     if (req.user) {
@@ -56,6 +64,8 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         defaultPrinting: req.user.defaultPrinting,
         gridTightness: req.user.gridTightness,
         autoBlog: req.user.autoBlog,
+        consentToHashedEmail: req.user.consentToHashedEmail,
+        email_token: req.user.consentToHashedEmail ? await sha256(req.user.email) : '',
       };
     }
 

@@ -92,7 +92,7 @@ export const Modal: React.FC<ModalProps> = ({
 interface ModalHeaderProps {
   children: ReactNode;
   className?: string;
-  setOpen: (open: boolean) => void;
+  setOpen?: (open: boolean) => void;
 }
 
 export const ModalHeader: React.FC<ModalHeaderProps> = ({ children, className = '', setOpen }) => {
@@ -104,9 +104,11 @@ export const ModalHeader: React.FC<ModalHeaderProps> = ({ children, className = 
       })}
     >
       {children}
-      <button type="button" className="ml-auto" onClick={() => setOpen(false)}>
-        <XIcon size={24} />
-      </button>
+      {setOpen && (
+        <button type="button" className="ml-auto" onClick={() => setOpen(false)}>
+          <XIcon size={24} />
+        </button>
+      )}
     </div>
   );
 };

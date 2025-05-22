@@ -33,4 +33,5 @@ export default interface User {
    * Cube's local storage setting takes precedence
    */
   autoBlog?: boolean;
+  consentToHashedEmail?: boolean;
 }
