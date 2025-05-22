@@ -232,7 +232,7 @@ export const cardImageUrl = (card: Card): string =>
 
 export const cardImageBackUrl = (card: Card): string => card.imgBackUrl ?? card.details?.image_flip ?? '';
 
-export const cardNotes = (card: Card): string | null => card.notes ?? null;
+export const cardNotes = (card: Card): string => card.notes ?? '';
 
 /*
  * Helper to convert the old color category types into current Type. Existing cards may have their colorCategory
