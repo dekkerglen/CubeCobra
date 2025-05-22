@@ -149,6 +149,7 @@ const Combos: React.FC = () => {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
+
         setComboData(data.combos);
       } finally {
         setLoading(false);

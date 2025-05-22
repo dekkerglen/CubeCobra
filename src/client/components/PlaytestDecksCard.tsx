@@ -48,7 +48,7 @@ const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks, decksLastK
       setPage(page + 1);
       setLoading(false);
     }
-  }, [page]);
+  }, [csrfFetch, cubeId, items, lastKey, page]);
 
   const pager = (
     <Pagination
@@ -56,7 +56,6 @@ const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks, decksLastK
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
-        console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMore();
         } else {

@@ -9,10 +9,11 @@ import type DraftSeatType from '../../../../datatypes/DraftSeat';
 import Cube from '../../../../dynamo/models/cube';
 import Draft from '../../../../dynamo/models/draft';
 import Notification from '../../../../dynamo/models/notification';
-import { NextFunction, Request, Response } from '../../../../types/express';
+import { Request, Response } from '../../../../types/express';
 import { cardFromId } from '../../../../util/carddb';
 import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from '../../../../util/draftmancerUtil';
 import { setupPicks } from '../../../../util/draftutil';
+import { bodyValidation } from '../../../middleware/bodyValidation';
 
 const OracleIDSchema = Joi.string().uuid();
 
@@ -50,14 +51,6 @@ const PublishDraftBodySchema = Joi.object({
     .required(),
   apiKey: Joi.string().required(),
 });
-
-export const validatePublishDraftBody = (req: Request, res: Response, next: NextFunction) => {
-  const { error } = PublishDraftBodySchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.details[0].message });
-  }
-  next();
-};
 
 export const handler = async (req: Request, res: Response) => {
   const publishDraftBody = req.body as PublishDraftBody;
@@ -167,6 +160,6 @@ export const routes = [
   {
     path: '/',
     method: 'post',
-    handler: [validatePublishDraftBody, handler],
+    handler: [bodyValidation(PublishDraftBodySchema), handler],
   },
 ];

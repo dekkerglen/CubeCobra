@@ -1,3 +1,6 @@
 {
-    "ignore": ["*.json",  "README", "public/js/*.js", "*.tsx", "*.ts", "src/client", "src/server", "src/app.js", "src/server.js", "src/client.js", "src/client", "src/server", "src/private", "src/temp", "src/dist/pages", "src/__tests__"]
+  "watch": ["src"],
+  "ext": "ts,js,json",
+  "ignore": ["src/client"],
+  "exec": "ts-node ./src/app.js"
 }

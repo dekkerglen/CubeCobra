@@ -6,7 +6,22 @@ import fs from 'fs';
 import https from 'https';
 import path from 'path';
 
-import catalog, { Combo, ComboTree, initializeCardDb } from '../util/cardCatalog';
+import { Combo, ComboTree } from '../util/cardCatalog';
+
+const loadMetadata = async () => {
+  if (fs.existsSync('./temp') && fs.existsSync('./temp/metadatadict.json')) {
+    const indexToOracle = JSON.parse(fs.readFileSync('./temp/indexToOracle.json', 'utf8'));
+
+    return {
+      indexToOracle,
+    };
+  }
+
+  console.log("Couldn't find metadatadict.json");
+  return {
+    indexToOracle: [],
+  };
+};
 
 const fetchWithRetries = async (url: string, retries = 3, delay = 1000): Promise<any> => {
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -81,10 +96,11 @@ const fetchAllPages = async (initialUrl: string): Promise<Record<string, Combo>>
 
 (async () => {
   console.log('Initializing card database...');
-  await initializeCardDb();
+
+  const { indexToOracle } = await loadMetadata();
 
   const oracleToIndex: Record<string, number> = {};
-  catalog.indexToOracle.forEach((oracleId: string, index: number) => {
+  indexToOracle.forEach((oracleId: string, index: number) => {
     oracleToIndex[oracleId] = index;
   });
 

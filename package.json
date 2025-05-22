@@ -14,7 +14,7 @@
     "lint": "npx prettier --check $(npm run --silent list-files); npx eslint --max-warnings 0 $(npm run --silent list-files)",
     "list-files": "bash -c 'shopt -s nullglob\n echo {jobs,scripts,src}/{**/*,*}.{js,jsx,ts,tsx} force_update.js webpack.*.mjs eslint.config.mjs babel.config.mjs'",
     "bash": "bash",
-    "nodemon": "nodemon --exec ts-node --ignore src/client --ignore public --ignore private --ignore temp --ignore dist/pages --ignore __tests__ src/app.js",
+    "nodemon": "npx nodemon",
     "webpack": "NODE_OPTIONS=--max_old_space-size=18192 webpack --mode production --config webpack.prod.mjs",
     "webpack-dev-server": "NODE_OPTIONS=--max_old_space-size=18192 npx webpack serve --config webpack.dev.mjs",
     "nearley": "sh nearley/helper.sh",
