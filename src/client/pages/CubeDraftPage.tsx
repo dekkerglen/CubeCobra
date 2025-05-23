@@ -13,6 +13,7 @@ import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
 import DraftLocation, { addCard, location, removeCard } from 'drafting/DraftLocation';
 import { locations } from 'drafting/DraftLocation';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useLocalStorage from 'hooks/useLocalStorage';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -79,6 +80,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
   const [userPicksInOrder, setUserPicksInOrder] = useLocalStorage<number[]>(`picks-${draft.id}`, []); // Tracks the pick sequencing, managed separately from the mainboard/sideboard state
   const [pendingPick, setPendingPick] = useState<number | null>(null); // Add state to track the pending pick made during predictionsLoading
 
+  const { alerts, addAlert } = useAlerts();
+
   // Draft Status
   // These are used to track the status of the draft itself, including loading, errors, etc.
   const [draftStatus, setDraftStatus] = useState<DraftStatus>({
@@ -138,9 +141,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('endDraft error caught:', err);
+      addAlert('danger', 'Error finishing draft, please reach out to the Discord');
       setDraftStatus((prev) => ({ ...prev, loading: false, draftCompleted: false }));
     }
-  }, [csrfFetch, draft.id, mainboard, userPicksInOrder, sideboard, state, setDraftStatus, trashboard]);
+  }, [csrfFetch, draft.id, mainboard, userPicksInOrder, sideboard, state, setDraftStatus, trashboard, addAlert]);
 
   const getPredictions = useCallback(
     async (request: { state: any; packCards: { index: number; oracle_id: string }[] }) => {
@@ -725,6 +729,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
     <MainLayout loginCallback={loginCallback}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
+          <Alerts alerts={alerts} />
           <DndContext onDragEnd={onMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
             <div className="relative">
               {/* Only show the pack if there are actually cards to show */}
