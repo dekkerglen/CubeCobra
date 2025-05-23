@@ -48,6 +48,7 @@ interface BatchPredictRequest {
 }
 
 const fetchBatchPredict = async (inputs: BatchPredictRequest[]): Promise<PredictResponse> => {
+  //Unlike csrfFetch which has a default client time, a fetch like this doesn't.
   const response = await fetch('/api/draftbots/batchpredict', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
