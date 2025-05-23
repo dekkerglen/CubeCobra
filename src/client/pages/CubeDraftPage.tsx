@@ -85,7 +85,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
     loading: false, // We're not showing a pack because we're waiting for something
     predictionsLoading: false, // We're waiting for the bots to make a pick
     predictError: false, // Bot predict call failed
-    retryInProgress: false, // User's sttempting to handle that failure
+    retryInProgress: false, // User's attempting to handle that failure
     draftCompleted: false, // We've made the final pick and are ready to endDraft
   });
 
@@ -237,7 +237,16 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
             }
 
             const oracle = seat.reduce((prev, current) => (prev.rating > current.rating ? prev : current)).oracle;
-            return pack.findIndex((oracleId) => oracleId === oracle);
+            const oracleIndex = pack.findIndex((oracleId) => oracleId === oracle);
+            //For some reason could not map the predicted oracle id to a card in the pack, fallback to random assignment
+            if (oracleIndex === -1) {
+              // eslint-disable-next-line no-console
+              console.log(`Best oracle id from predictions is ${oracle}, pack contains ${pack}`);
+              // pick at random
+              return Math.floor(Math.random() * pack.length);
+            }
+
+            return oracleIndex;
           });
 
           // make all the picks
@@ -580,29 +589,41 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
 
   // Converts pendingPicks into real picks when we're ready
   useEffect(() => {
-    if (!draftStatus.predictionsLoading && pendingPick !== null) {
-      const packIndex = pendingPick;
-      // Clear pendingPick immediately to prevent race conditions
-      setPendingPick(null);
-      // Some checks to verify that the pending pick is still valid
-      if (packIndex < 0 || packIndex >= state.seats[0].pack.length) {
-        return;
-      }
-
-      const cardIndex = state.seats[0].pack[packIndex];
-      setUserPicksInOrder((prev) => [cardIndex, ...prev]);
-      if (cardIndex === undefined) {
-        return;
-      }
-
-      if (!draft.cards[cardIndex]) {
-        return;
-      }
-
-      makePick(packIndex);
+    //Nothing to do if no pendingPick
+    if (pendingPick === null) {
+      return;
     }
+
+    //Do not act on the pendingPick if predictions are ongoing or in a bad state
+    if (draftStatus.predictionsLoading || draftStatus.predictError || draftStatus.retryInProgress) {
+      // eslint-disable-next-line no-console
+      console.log('Pending pick but draft state is bad, skip');
+      return;
+    }
+
+    const packIndex = pendingPick;
+    // Clear pendingPick immediately to prevent race conditions
+    setPendingPick(null);
+    // Some checks to verify that the pending pick is still valid
+    if (packIndex < 0 || packIndex >= state.seats[0].pack.length) {
+      return;
+    }
+
+    const cardIndex = state.seats[0].pack[packIndex];
+    setUserPicksInOrder((prev) => [cardIndex, ...prev]);
+    if (cardIndex === undefined) {
+      return;
+    }
+
+    if (!draft.cards[cardIndex]) {
+      return;
+    }
+
+    makePick(packIndex);
   }, [
     draftStatus.predictionsLoading,
+    draftStatus.predictError,
+    draftStatus.retryInProgress,
     pendingPick,
     makePick,
     state.seats,
