@@ -1,14 +1,15 @@
-import React, { Dispatch, SetStateAction, useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
 
+import { getCard } from 'utils/cards/getCard';
+
 import { BoardType } from '../../datatypes/Card';
-import { CardDetails } from '../../datatypes/Card';
 import { CSRFContext } from '../contexts/CSRFContext';
 import CubeContext from '../contexts/CubeContext';
 import DisplayContext, { DisplayContextValue } from '../contexts/DisplayContext';
 import useLocalStorage from '../hooks/useLocalStorage';
-import Alert, { UncontrolledAlertProps } from './base/Alert';
+import Alert from './base/Alert';
 import AutocompleteInput from './base/AutocompleteInput';
 import Button from './base/Button';
 import Checkbox from './base/Checkbox';
@@ -20,55 +21,6 @@ import Tooltip from './base/Tooltip';
 import Changelist from './Changelist';
 import LoadingButton from './LoadingButton';
 import TextEntry from './TextEntry';
-
-interface GetCardResponse {
-  success: 'true' | 'false';
-  card: CardDetails;
-}
-
-export const getCard = async (
-  csrfFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
-  defaultPrinting: string,
-  name: string,
-  setAlerts?: Dispatch<SetStateAction<UncontrolledAlertProps[]>>,
-): Promise<CardDetails | null> => {
-  if (name && name.length > 0) {
-    const response = await csrfFetch(`/cube/api/getcardforcube`, {
-      method: 'POST',
-      body: JSON.stringify({
-        name,
-        defaultPrinting,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!response.ok) {
-      const message = `Couldn't get card: ${response.status}.`;
-      if (setAlerts) {
-        setAlerts((alerts: UncontrolledAlertProps[]) => [...alerts, { color: 'danger', message }]);
-      } else {
-        // eslint-disable-next-line no-console -- Debugging
-        console.error(message);
-      }
-      return null;
-    }
-
-    const json: GetCardResponse = await response.json();
-    if (json.success !== 'true' || !json.card) {
-      const message = `Couldn't find card [${name}].`;
-      if (setAlerts) {
-        setAlerts((alerts: UncontrolledAlertProps[]) => [...alerts, { color: 'danger', message }]);
-      } else {
-        // eslint-disable-next-line no-console -- Debugging
-        console.error(message);
-      }
-      return null;
-    }
-    return json.card;
-  }
-  return null;
-};
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 

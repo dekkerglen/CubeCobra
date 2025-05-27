@@ -22,6 +22,8 @@ export const registerRoutes = (directory: string, base: string) => {
         router.get(`${base}/${trimmed}${route.path}`, route.handler);
       } else if (route.method === 'post') {
         router.post(`${base}/${trimmed}${route.path}`, route.handler);
+      } else if (route.method === 'delete') {
+        router.delete(`${base}/${trimmed}${route.path}`, route.handler);
       }
     }
   }

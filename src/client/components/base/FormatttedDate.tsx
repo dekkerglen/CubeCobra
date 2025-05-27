@@ -6,6 +6,7 @@ const FormatttedDate: React.FC<{ date: number }> = ({ date }) => {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+    timeZone: 'UTC',
   };
   const formattedDate = dateObj.toLocaleDateString('en-US', options);
 

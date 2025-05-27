@@ -6,6 +6,7 @@ import Spinner from './base/Spinner';
 interface LoadingButtonProps extends Omit<ButtonProps, 'onClick'> {
   loading?: boolean | null;
   onClick: (e: React.MouseEvent) => void | Promise<void>;
+  disabled?: boolean;
 }
 
 const LoadingButton: React.FC<LoadingButtonProps> = ({ onClick, loading = null, children, ...props }) => {
@@ -25,7 +26,7 @@ const LoadingButton: React.FC<LoadingButtonProps> = ({ onClick, loading = null, 
   const renderOnClick = loadingControlled ? onClick : handleClick;
 
   return (
-    <Button {...props} onClick={(e) => renderOnClick(e)} disabled={renderLoading}>
+    <Button {...props} onClick={(e) => renderOnClick(e)} disabled={renderLoading || props.disabled}>
       <div className={`centered`}>{renderLoading ? <Spinner className="position-absolute" /> : children}</div>
     </Button>
   );

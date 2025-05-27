@@ -131,7 +131,10 @@ export const clientConfig = merge(config, {
     RecentlyUpdateCubesPage: './src/client/pages/RecentlyUpdateCubesPage.tsx',
     // MerchandisePage: './src/client/pages/MerchandisePage.tsx',
     CubeRecordsPage: './src/client/pages/CubeRecordsPage.tsx',
-    CreateRecordPage: './src/client/pages/CreateRecordPage.tsx',
+    CreateNewRecordPage: './src/client/pages/CreateNewRecordPage.tsx',
+    RecordPage: './src/client/pages/RecordPage.tsx',
+    RecordUploadDeckPage: './src/client/pages/RecordUploadDeckPage.tsx',
+    ImportRecordPage: './src/client/pages/ImportRecordPage.tsx',
   },
   output: {
     filename: '[name].bundle.js',
@@ -211,7 +214,10 @@ export const serverConfig = merge(config, {
     'pages/RecentlyUpdateCubesPage': './src/client/pages/RecentlyUpdateCubesPage.tsx',
     // 'pages/MerchandisePage': './src/client/pages/MerchandisePage.tsx',
     'pages/CubeRecordsPage': './src/client/pages/CubeRecordsPage.tsx',
-    'pages/CreateRecordPage': './src/client/pages/CreateRecordPage.tsx',
+    'pages/CreateNewRecordPage': './src/client/pages/CreateNewRecordPage.tsx',
+    'pages/RecordPage': './src/client/pages/RecordPage.tsx',
+    'pages/RecordUploadDeckPage': './src/client/pages/RecordUploadDeckPage.tsx',
+    'pages/ImportRecordPage': './src/client/pages/ImportRecordPage.tsx',
   },
   output: {
     filename: '[name].js',

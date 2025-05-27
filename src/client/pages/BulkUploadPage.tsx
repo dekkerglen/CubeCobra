@@ -6,7 +6,6 @@ import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import Changelist from 'components/Changelist';
 import DynamicFlash from 'components/DynamicFlash';
-import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
@@ -17,6 +16,7 @@ import useLocalStorage from 'hooks/useLocalStorage';
 import useMount from 'hooks/UseMount';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import { getCard } from 'utils/cards/getCard';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated - Automatic Post';
 
@@ -71,6 +71,7 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added })
 
         addInput.current?.focus();
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(e);
       }
     },

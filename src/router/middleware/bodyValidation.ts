@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from '../../types/express';
 import { redirect } from '../../util/render';
 
 export const bodyValidation =
-  (schema: Joi.ObjectSchema<any>, redirectUrlFn?: (req: Request) => string, path?: string) =>
+  (schema: Joi.Schema<any>, redirectUrlFn?: (req: Request) => string, path?: string) =>
   (req: Request, res: Response, next: NextFunction) => {
     const { error } = path ? schema.validate(JSON.parse(req.body[path])) : schema.validate(req.body);
 

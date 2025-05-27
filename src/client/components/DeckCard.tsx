@@ -53,9 +53,10 @@ interface DeckCardProps {
   view?: string;
   draft: Deck;
   seatIndex: string;
+  hideComments?: boolean;
 }
 
-const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIndex }) => {
+const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIndex, hideComments = false }) => {
   const stackedDeck = seat.mainboard.slice();
   const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
@@ -167,9 +168,11 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
       <CardBody>
         <Markdown markdown={seat.description} />
       </CardBody>
-      <div className="border-top">
-        <CommentsSection parentType="deck" parent={draft.id} collapse={false} />
-      </div>
+      {!hideComments && (
+        <div className="border-top">
+          <CommentsSection parentType="deck" parent={draft.id} collapse={false} />
+        </div>
+      )}
     </Card>
   );
 };

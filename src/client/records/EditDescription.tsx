@@ -22,7 +22,15 @@ const EditDescription: React.FC<EditDescriptionProps> = ({ value, setValue }) =>
         placeholder="Enter a name for the record"
         className="w-full"
       />
-      <label className="block text-sm font-medium text-text">Description</label>
+      <Input
+        label="Date"
+        type="date"
+        value={value.date ? new Date(value.date).toISOString().split('T')[0] : ''}
+        onChange={(e) => setValue({ ...value, date: e.target.value ? new Date(e.target.value).valueOf() : undefined })}
+        placeholder="Select a date for the record"
+        className="w-full"
+      />
+      <label className="block text-sm font-medium text-text">{`Description (optional)`}</label>
       <TextEntry value={value.description || ''} setValue={(e) => setValue({ ...value, description: e })} />
     </Flexbox>
   );

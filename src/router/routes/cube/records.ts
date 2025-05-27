@@ -1,5 +1,6 @@
 import Cube from '../../../dynamo/models/cube';
 import Record from '../../../dynamo/models/record';
+import recordAnalytic from '../../../dynamo/models/recordAnalytic';
 import { csrfProtection } from '../../../routes/middleware';
 import { Request, Response } from '../../../types/express';
 import { abbreviate, isCubeViewable } from '../../../util/cubefn';
@@ -17,6 +18,8 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
     }
 
     const result = await Record.getByCube(cube.id, 20);
+    const analytics = await recordAnalytic.getByCube(cube.id);
+    const cards = await Cube.getCards(cube.id);
 
     const baseUrl = util.getBaseUrl();
     return render(
@@ -25,8 +28,10 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
       'CubeRecordsPage',
       {
         cube,
+        cards,
         records: result.items,
         lastKey: result.lastKey,
+        analyticsData: analytics,
       },
       {
         title: `${abbreviate(cube.name)} - Records`,

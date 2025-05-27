@@ -6,12 +6,11 @@ import User from 'datatypes/User';
 import DraftRecord from '../../../../datatypes/Record';
 import Cube from '../../../../dynamo/models/cube';
 import Record from '../../../../dynamo/models/record';
-import { csrfProtection } from '../../../../routes/middleware';
+import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
 import { Request, Response } from '../../../../types/express';
 import { abbreviate, isCubeEditable, isCubeViewable } from '../../../../util/cubefn';
 import generateMeta from '../../../../util/meta';
 import { handleRouteError, redirect, render } from '../../../../util/render';
-import util from '../../../../util/util';
 import { bodyValidation } from '../../../middleware/bodyValidation';
 
 export const createRecordPageHandler = async (req: Request, res: Response) => {
@@ -23,21 +22,21 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
+    if (!isCubeEditable(cube, req.user)) {
+      req.flash('danger', 'You do not have permission to create a record for this cube');
+      return redirect(req, res, '/404');
+    }
+
     return render(
       req,
       res,
-      'CreateRecordPage',
+      'CreateNewRecordPage',
       {
         cube,
       },
       {
         title: `${abbreviate(cube.name)} - Create Record`,
-        metadata: generateMeta(
-          `Cube Cobra Create Record: ${cube.name}`,
-          cube.description,
-          cube.image.uri,
-          `${util.getBaseUrl()}/cube/records/${req.params.id}/create`,
-        ),
+        metadata: generateMeta(`Cube Cobra Create Record: ${cube.name}`, cube.description, cube.image.uri),
       },
     );
   } catch (err) {
@@ -47,10 +46,9 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
 
 // Define the JOI schema for the record object
 const recordSchema = Joi.object({
-  date: Joi.date().optional(), // Ensure the date is valid and optional
+  date: Joi.number().optional(), // Ensure the date is valid and optional
   name: Joi.string().min(1).max(255).required(), // Name must be a string with a reasonable length
   description: Joi.string().max(1000).optional(), // Description is optional but can be long
-  state: Joi.string().valid('playing', 'complete').required(),
   players: Joi.array()
     .items(
       Joi.object({
@@ -58,6 +56,7 @@ const recordSchema = Joi.object({
         name: Joi.string().min(1).max(255).required(), // Player name is required
       }),
     )
+    .max(16)
     .optional(), // At least one player is optional
   matches: Joi.array()
     .items(
@@ -68,7 +67,7 @@ const recordSchema = Joi.object({
       }),
     )
     .optional(), // Matches array is optional
-  trophy: Joi.string().optional(), // Trophy is optional
+  trophy: Joi.array().items(Joi.string()).optional(), // Trophy is optional
 }).unknown(false); // do not allow additional properties
 
 export const createRecordHandler = async (req: Request, res: Response) => {
@@ -98,26 +97,24 @@ export const createRecordHandler = async (req: Request, res: Response) => {
 
     const newRecord: DraftRecord = {
       cube: cube.id,
-      date: new Date().valueOf(),
+      date: record.date || new Date().valueOf(),
       name: record.name || 'New Record',
-      state: record.state || 'playing',
       description: record.description || '',
       players: record.players || [],
       matches: record.matches || [],
-      trophy: record.trophy || '',
-      cards: [],
+      trophy: record.trophy || [],
       id: uuidv4(),
     };
 
-    const createdRecord = await Record.put(newRecord);
+    const createdRecordId = await Record.put(newRecord);
 
-    if (!createdRecord) {
+    if (!createdRecordId) {
       req.flash('danger', 'Error creating record');
       return redirect(req, res, `/cube/records/${req.params.id}`);
     }
 
     req.flash('success', 'Record created successfully');
-    return redirect(req, res, `/cube/records/${req.params.id}`);
+    return redirect(req, res, `/cube/record/${createdRecordId}`);
   } catch (err) {
     return handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
@@ -127,14 +124,15 @@ export const routes = [
   {
     method: 'get',
     path: '/:id',
-    handler: [csrfProtection, createRecordPageHandler],
+    handler: [csrfProtection, ensureAuth, createRecordPageHandler],
   },
   {
     method: 'post',
     path: '/:id',
     handler: [
       csrfProtection,
-      bodyValidation(recordSchema, (req) => `/cube/records/${req.params.id}`, 'record'),
+      ensureAuth,
+      bodyValidation(recordSchema, (req) => `/cube/records/create/${req.params.id}`, 'record'),
       createRecordHandler,
     ],
   },

@@ -3,7 +3,7 @@ import React, { forwardRef, ReactNode, useContext } from 'react';
 import { CSRFContext } from '../contexts/CSRFContext';
 
 interface CSRFFormProps {
-  children: ReactNode;
+  children?: ReactNode;
   method: 'GET' | 'POST';
   action: string;
   formData: Record<string, string>;
@@ -19,7 +19,7 @@ const CSRFForm = forwardRef<HTMLFormElement, CSRFFormProps>(({ children, method,
       {Object.entries(formData || {}).map(([key, value]) => (
         <input key={key} type="hidden" name={key} value={value} />
       ))}
-      {children}
+      {children || null}
     </form>
   );
 });

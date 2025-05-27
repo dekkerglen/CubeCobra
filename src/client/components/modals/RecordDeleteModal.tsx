@@ -3,16 +3,16 @@ import React, { useContext } from 'react';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 
-export interface BlogDeleteModalProps {
+export interface RecordDeleteModalProps {
   isOpen: boolean;
   setOpen: () => void;
-  postID: string;
+  recordId: string;
 }
 
-const BlogDeleteModal: React.FC<BlogDeleteModalProps> = ({ isOpen, setOpen, postID }) => {
+const RecordDeleteModal: React.FC<RecordDeleteModalProps> = ({ isOpen, setOpen, recordId }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const confirm = async () => {
-    const response = await csrfFetch(`/cube/blog/remove/${postID}`, {
+    const response = await csrfFetch(`/cube/records/remove/${recordId}`, {
       method: 'DELETE',
       headers: {},
     });
@@ -30,9 +30,9 @@ const BlogDeleteModal: React.FC<BlogDeleteModalProps> = ({ isOpen, setOpen, post
       setOpen={setOpen}
       submitDelete={confirm}
       isOpen={isOpen}
-      text="Are you sure you wish to delete this post? This action cannot be undone."
+      text="Are you sure you wish to delete this record? This action cannot be undone."
     />
   );
 };
 
-export default BlogDeleteModal;
+export default RecordDeleteModal;
