@@ -4,9 +4,11 @@ import User from '../../datatypes/User';
 import Blog from '../../dynamo/models/blog';
 import Comment from '../../dynamo/models/comment';
 import Content from '../../dynamo/models/content';
+import Cube from '../../dynamo/models/cube';
 import Draft from '../../dynamo/models/draft';
 import Notice from '../../dynamo/models/notice';
 import Package from '../../dynamo/models/package';
+import Record from '../../dynamo/models/record';
 import * as DynamoUser from '../../dynamo/models/user';
 import { csrfProtection, ensureAuth } from '../../routes/middleware';
 import { Request, Response } from '../../types/express';
@@ -185,6 +187,14 @@ export const getReplyContext: Record<NotifiableCommentType, (id: string) => Prom
   package: async (id: string) => {
     const pack = await Package.getById(id);
     return pack?.owner;
+  },
+  record: async (id: string) => {
+    const record = await Record.getById(id);
+    if (!record) {
+      return undefined;
+    }
+    const cube = await Cube.getById(record.cube);
+    return cube?.owner;
   },
 };
 

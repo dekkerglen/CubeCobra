@@ -27,6 +27,7 @@ const allCommentTypes = [
   'video',
   'episode',
   'package',
+  'record',
 ] as const;
 
 export type CommentType = (typeof allCommentTypes)[number];

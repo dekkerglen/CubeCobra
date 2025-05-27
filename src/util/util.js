@@ -350,6 +350,7 @@ module.exports = {
     });
     return res;
   },
+  addWordToTree,
   binaryInsert,
   newCard,
   addCardToCube: addCardToBoard,

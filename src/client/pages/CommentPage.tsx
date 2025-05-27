@@ -20,6 +20,7 @@ const translateType: { [key: string]: string } = {
   video: 'Video',
   episode: 'Podcast Episode',
   package: 'Card Package',
+  record: 'Record',
 };
 
 const translateLink: { [key: string]: (id: string) => string } = {
@@ -32,6 +33,7 @@ const translateLink: { [key: string]: (id: string) => string } = {
   podcast: (id: string) => `/content/podcast/${id}`,
   episode: (id: string) => `/content/episode/${id}`,
   package: (id: string) => `/packages/${id}`,
+  record: (id: string) => `/cube/record/${id}`,
 };
 
 interface CommentPageProps {

@@ -54,6 +54,10 @@ const tabs = [
     href: '/cube/history',
   },
   {
+    label: 'Records',
+    href: '/cube/records',
+  },
+  {
     label: 'Playtest',
     href: '/cube/playtest',
   },

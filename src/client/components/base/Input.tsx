@@ -15,7 +15,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   value?: string;
   id?: string;
   placeholder?: string;
-  type?: 'text' | 'password' | 'email' | 'hidden' | 'number' | 'file';
+  type?: 'text' | 'password' | 'email' | 'hidden' | 'number' | 'file' | 'date';
   innerRef?: React.Ref<HTMLInputElement>;
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;

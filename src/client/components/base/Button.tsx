@@ -2,6 +2,46 @@ import React from 'react';
 
 import classNames from 'classnames';
 
+import Spinner from './Spinner';
+
+interface ButtonLinkProps {
+  children: React.ReactNode;
+  className?: string;
+  href?: string;
+  target?: string;
+  rel?: string;
+}
+
+const ButtonLink: React.FC<ButtonLinkProps> = ({
+  children,
+  className = '',
+  href = '#',
+  target = '_self',
+  rel = 'noopener noreferrer',
+}) => {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (loading) {
+      e.preventDefault(); // Prevent navigation if already loading
+      return;
+    }
+
+    setLoading(true); // Set loading state to true to prevent further clicks
+    window.location.href = href; // Navigate to the link
+  };
+
+  return (
+    <a
+      className={classNames(className, 'hover:cursor-pointer', { 'opacity-50 cursor-not-allowed': loading })}
+      target={target}
+      rel={rel}
+      onClick={handleClick}
+    >
+      {loading ? <Spinner className="position-absolute" /> : children}
+    </a>
+  );
+};
 export interface ButtonProps {
   children: React.ReactNode;
   color?: 'primary' | 'danger' | 'accent' | 'secondary';
@@ -61,9 +101,9 @@ const Button: React.FC<ButtonProps> = ({
 
   if (type === 'link') {
     return (
-      <a className={`${classes}`} href={href} target={target} rel={rel}>
+      <ButtonLink className={classes} href={href} target={target} rel={rel}>
         {children}
-      </a>
+      </ButtonLink>
     );
   }
 

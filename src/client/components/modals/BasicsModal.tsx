@@ -57,9 +57,10 @@ const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, d
 
       setCounts(newCounts);
     } else {
+      // eslint-disable-next-line no-console
       console.error(json);
     }
-  }, [deck, basics, cards]);
+  }, [csrfFetch, deck, basics, cards]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>

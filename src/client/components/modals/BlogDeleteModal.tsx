@@ -18,6 +18,7 @@ const BlogDeleteModal: React.FC<BlogDeleteModalProps> = ({ isOpen, setOpen, post
     });
 
     if (!response.ok) {
+      // eslint-disable-next-line no-console
       console.error(response);
     } else {
       window.location.href = '';

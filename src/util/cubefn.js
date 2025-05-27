@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 const _ = require('lodash')
 const sharp = require('sharp');
 const Cube = require('../dynamo/models/cube');
-const { cardColors, convertFromLegacyCardColorCategory } = require('../client/utils/cardutil');
+const { convertFromLegacyCardColorCategory } = require('../client/utils/cardutil');
 const { cardFromId, allVersions, reasonableId } = require('../util/carddb');
 
 const util = require('./util');
@@ -372,6 +372,18 @@ function isCubeViewable(cube, user) {
   return user && (cube.owner.id === user.id || util.isAdmin(user));
 }
 
+function isCubeEditable(cube, user) {
+  if (!cube) {
+    return false;
+  }
+
+  if (user && (cube.owner.id === user.id || util.isAdmin(user))) {
+    return true;
+  }
+
+  return false;
+}
+
 function isCubeListed(cube, user) {
   if (!cube) {
     return false;
@@ -449,6 +461,7 @@ const methods = {
   isCubeViewable,
   isCubeListed,
   getCubeTypes,
+  isCubeEditable
 };
 
 module.exports = methods;

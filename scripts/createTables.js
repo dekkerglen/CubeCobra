@@ -17,6 +17,7 @@ const patron = require('../src/dynamo/models/patron');
 const passwordReset = require('../src/dynamo/models/passwordReset');
 const featuredQueue = require('../src/dynamo/models/featuredQueue');
 const feed = require('../src/dynamo/models/feed');
+const record = require('../src/dynamo/models/record');
 
 const tables = [
   content,
@@ -35,6 +36,7 @@ const tables = [
   passwordReset,
   featuredQueue,
   feed,
+  record,
 ];
 
 (async () => {
