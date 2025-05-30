@@ -31,9 +31,7 @@ const DonatePage: React.FC<DonatePageProps> = ({ loginCallback = '/' }) => (
           </Text>
           <p>
             You can donate to Cube Cobra by becoming a patron on Patreon. Our patrons receive a range of exclusive
-            features in return for their generous support. We also accept one-time donations through PayPal, and we are
-            a TCGPlayer affiliate; buying cards using the provided link means part of your purchase goes towards Cube
-            Cobra. Lastly, you can support us by buying our merchandise from Inked Gaming.
+            features in return for their generous support. We also accept one-time donations through PayPal.
           </p>
           <Text lg semibold>
             Patreon Rewards
@@ -76,30 +74,6 @@ const DonatePage: React.FC<DonatePageProps> = ({ loginCallback = '/' }) => (
             <Col xs={12} sm={8} className="mb-1">
               <Link href="https://www.paypal.me/cubecobra" target="_blank" rel="noopener noreferrer">
                 https://www.paypal.me/cubecobra
-              </Link>
-            </Col>
-            <Col xs={12} sm={4}>
-              <Text semibold>TCGPlayer Affiliate</Text>
-            </Col>
-            <Col xs={12} sm={8} className="mb-1">
-              <Link
-                href="https://www.tcgplayer.com/&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                https://www.tcgplayer.com/
-              </Link>
-            </Col>
-            <Col xs={12} sm={4} className="mb-1">
-              <Text semibold>Inked Gaming (merch store)</Text>
-            </Col>
-            <Col xs={12} sm={8}>
-              <Link
-                href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                https://www.inkedgaming.com/collections/artists-gwen-dekker
               </Link>
             </Col>
           </Row>

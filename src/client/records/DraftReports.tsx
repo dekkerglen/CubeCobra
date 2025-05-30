@@ -14,6 +14,7 @@ import RecordDeleteModal from 'components/modals/RecordDeleteModal';
 import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
+import UserContext from 'contexts/UserContext';
 import Record from 'datatypes/Record';
 
 const RecordDeleteModalButton = withModal(Button, RecordDeleteModal);
@@ -31,9 +32,12 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [page, setPage] = React.useState(0);
   const { cube } = useContext(CubeContext);
+  const user = useContext(UserContext);
 
   const pageCount = Math.ceil(items.length / PAGE_SIZE);
   const hasMore = !!lastKeyState;
+
+  const isOwner = user && cube && user.id === cube.owner.id;
 
   const fetchMore = useCallback(async () => {
     if (loading || !lastKeyState) return;
@@ -108,7 +112,7 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
                   })}
                 </Flexbox>
               ),
-              '': (
+              '': isOwner && (
                 <RecordDeleteModalButton modalprops={{ recordId: record.id }} color="secondary">
                   <XIcon size={16} className="mx-1" />
                 </RecordDeleteModalButton>

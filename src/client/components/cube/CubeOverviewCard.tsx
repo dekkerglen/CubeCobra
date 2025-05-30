@@ -4,7 +4,6 @@ import { EyeClosedIcon, LinkExternalIcon } from '@primer/octicons-react';
 
 import CardKingdomBulkButton from 'components/purchase/CardKingdomBulkButton';
 import ManaPoolBulkButton from 'components/purchase/ManaPoolBulkButton';
-import TCGPlayerBulkButton from 'components/purchase/TCGPlayerBulkButton';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 
 import BaseUrlContext from '../../contexts/BaseUrlContext';
@@ -163,14 +162,14 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                     <Flexbox direction="row" gap="2">
                       {Number.isFinite(priceOwned) && (
                         <TextBadge name="Owned">
-                          <Tooltip text="TCGPlayer Market Price as owned (cards marked as any type of ownership, or Ordered)">
+                          <Tooltip text="Market Price as owned (cards marked as any type of ownership, or Ordered)">
                             ${Math.round(priceOwned).toLocaleString()}
                           </Tooltip>
                         </TextBadge>
                       )}
                       {Number.isFinite(pricePurchase) && (
                         <TextBadge name="Buy">
-                          <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
+                          <Tooltip text="Market Price for cheapest version of each card">
                             ${Math.round(pricePurchase).toLocaleString()}
                           </Tooltip>
                         </TextBadge>
@@ -179,7 +178,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                     <Text md semibold>
                       Purchase
                     </Text>
-                    <TCGPlayerBulkButton cards={cube.cards.mainboard} />
+                    {/* <TCGPlayerBulkButton cards={cube.cards.mainboard} /> */}
                     <ManaPoolBulkButton cards={cube.cards.mainboard} />
                     <CardKingdomBulkButton cards={cube.cards.mainboard} />
                   </>

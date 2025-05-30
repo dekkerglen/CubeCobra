@@ -1,9 +1,36 @@
+import Cube from '../../../../dynamo/models/cube';
 import Record from '../../../../dynamo/models/record';
 import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
 import { Request, Response } from '../../../../types/express';
+import { isCubeEditable } from '../../../../util/cubefn';
 
 export const deleteRecordHandler = async (req: Request, res: Response) => {
   const recordId = req.params.id;
+
+  const record = await Record.getById(recordId);
+  if (!record) {
+    return res.status(404).json({
+      error: 'Record not found',
+    });
+  }
+
+  const cube = await Cube.getById(record.cube);
+  const user = req.user;
+
+  if (!user) {
+    req.flash('danger', 'You must be logged in to remove a record');
+    return res.status(401).json({
+      error: 'Unauthorized',
+    });
+  }
+
+  if (!isCubeEditable(cube, user)) {
+    req.flash('danger', 'You do not have permission to remove a record for this cube');
+
+    return res.status(403).json({
+      error: 'Forbidden',
+    });
+  }
 
   try {
     await Record.delete(recordId);

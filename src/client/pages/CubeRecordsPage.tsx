@@ -64,6 +64,7 @@ const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({
           <Controls>
             <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
               <Link href={`/cube/records/create/${cube.id}`}>Create new Record</Link>
+              <Link href={`/cube/records/create/fromDraft/${cube.id}`}>Create Record from existing Draft</Link>
             </Flexbox>
           </Controls>
         )}

@@ -7,7 +7,6 @@ import AddToCubeModal from 'components/modals/AddToCubeModal';
 import CardKingdomButton from 'components/purchase/CardKingdomButton';
 import CardMarketButton from 'components/purchase/CardMarketButton';
 import ManaPoolButton from 'components/purchase/ManaPoolButton';
-import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
 import withModal from 'components/WithModal';
 import {
   cardCmc,
@@ -190,17 +189,17 @@ const CardModal: React.FC<CardModalProps> = ({
                 <Flexbox direction="row" gap="2" wrap="wrap">
                   {card.details?.prices && Number.isFinite(cardPrice(card)) && (
                     <TextBadge name="Price" className="mt-2 me-2">
-                      <Tooltip text="TCGPlayer Market Price">${cardPrice(card)?.toFixed(2)}</Tooltip>
+                      <Tooltip text="Market Price">${cardPrice(card)?.toFixed(2)}</Tooltip>
                     </TextBadge>
                   )}
                   {card.details?.prices && Number.isFinite(cardFoilPrice(card)) && (
                     <TextBadge name="Foil" className="mt-2 me-2">
-                      <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card)?.toFixed(2)}</Tooltip>
+                      <Tooltip text="Market Price">${cardFoilPrice(card)?.toFixed(2)}</Tooltip>
                     </TextBadge>
                   )}
                   {card.details?.prices && Number.isFinite(cardEtchedPrice(card)) && (
                     <TextBadge name="Etched" className="mt-2 me-2">
-                      <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card)?.toFixed(2)}</Tooltip>
+                      <Tooltip text="Market Price">${cardEtchedPrice(card)?.toFixed(2)}</Tooltip>
                     </TextBadge>
                   )}
                   {card.details?.prices && Number.isFinite(cardPriceEur(card)) && (
@@ -242,7 +241,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     <Text md semibold>
                       Purchase
                     </Text>
-                    <TCGPlayerButton card={card.details} />
+                    {/* <TCGPlayerButton card={card.details} /> */}
                     <CardKingdomButton card={card.details} />
                     <ManaPoolButton card={card.details} />
                     <CardMarketButton card={card.details} />

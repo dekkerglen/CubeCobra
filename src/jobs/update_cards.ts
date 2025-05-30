@@ -726,8 +726,8 @@ const loadMetadatadict = async () => {
 };
 
 const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
-  // do a get on https://api.cardkingdom.com/api/pricelist
-  const res = await fetch('https://api.cardkingdom.com/api/pricelist', {
+  // do a get on https://api.cardkingdom.com/api/v2/pricelist
+  const res = await fetch('https://api.cardkingdom.com/api/v2/pricelist', {
     method: 'GET',
     headers: {
       accept: 'application/json',
@@ -743,7 +743,7 @@ const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
   // eslint-disable-next-line no-console
   console.log(`Loaded ${json.data.length} cards from Mana Pool`);
 
-  return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_retail)]));
+  return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
 
 const loadManaPoolPrices = async (): Promise<Record<string, number>> => {

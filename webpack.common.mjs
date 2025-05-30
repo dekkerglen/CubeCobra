@@ -135,6 +135,7 @@ export const clientConfig = merge(config, {
     RecordPage: './src/client/pages/RecordPage.tsx',
     RecordUploadDeckPage: './src/client/pages/RecordUploadDeckPage.tsx',
     ImportRecordPage: './src/client/pages/ImportRecordPage.tsx',
+    CreateRecordFromDraftPage: './src/client/pages/CreateRecordFromDraftPage.tsx',
   },
   output: {
     filename: '[name].bundle.js',
@@ -218,6 +219,7 @@ export const serverConfig = merge(config, {
     'pages/RecordPage': './src/client/pages/RecordPage.tsx',
     'pages/RecordUploadDeckPage': './src/client/pages/RecordUploadDeckPage.tsx',
     'pages/ImportRecordPage': './src/client/pages/ImportRecordPage.tsx',
+    'pages/CreateRecordFromDraftPage': './src/client/pages/CreateRecordFromDraftPage.tsx',
   },
   output: {
     filename: '[name].js',

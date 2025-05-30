@@ -458,7 +458,11 @@ const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards, loginCallbac
                   setRecord(newRecord);
                 }}
               />
-              <Button onClick={() => setStep(5)} color="primary" disabled={!record.name}>
+              <Button
+                onClick={() => setStep(5)}
+                color="primary"
+                disabled={!record.players || record.players.length === 0}
+              >
                 Next Step
               </Button>
             </Flexbox>

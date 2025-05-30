@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { getCardKingdomLink, getTCGLink, nameToDashedUrlComponent } from 'utils/Affiliate';
+import { getCardKingdomLink, nameToDashedUrlComponent } from 'utils/Affiliate';
 import { detailsToCard } from 'utils/cardutil';
 
 import { CardDetails } from '../../../datatypes/Card';
@@ -96,11 +96,11 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
               View on Scryfall
             </Button>
           </Col>
-          <Col xs={12} md={6}>
+          {/* <Col xs={12} md={6}>
             <Button type="link" outline color="accent" block href={getTCGLink(detailsToCard(card))} target="_blank">
               View on TCGPlayer
             </Button>
-          </Col>
+          </Col> */}
           <Col xs={12} md={6}>
             <Button
               type="link"

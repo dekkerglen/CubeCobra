@@ -77,17 +77,17 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card }) => {
       </AddModal>
       <CardIdBadge id={card.scryfall_id} />
       {card.prices && Number.isFinite(cardNormalPrice(detailsToCard(card))) && (
-        <TextBadge name="TCGPlayer Market Price" className="mt-1">
+        <TextBadge name="Market Price" className="mt-1">
           ${formatPrice(cardNormalPrice(detailsToCard(card)))}
         </TextBadge>
       )}
       {card.prices && Number.isFinite(cardFoilPrice(detailsToCard(card))) && (
-        <TextBadge name="Foil TCGPlayer Market Price" className="mt-1">
+        <TextBadge name="Foil Market Price" className="mt-1">
           ${formatPrice(cardFoilPrice(detailsToCard(card)))}
         </TextBadge>
       )}
       {card.prices && Number.isFinite(cardEtchedPrice(detailsToCard(card))) && (
-        <TextBadge name="Etched (TCGPlayer Market Price)" className="mt-1">
+        <TextBadge name="Etched (Market Price)" className="mt-1">
           ${formatPrice(cardEtchedPrice(detailsToCard(card)))}
         </TextBadge>
       )}

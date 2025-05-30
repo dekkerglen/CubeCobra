@@ -24,7 +24,7 @@ const PublishDraftBodySchema = Joi.object({
   players: Joi.array()
     .items(
       Joi.object({
-        userName: Joi.string().required(),
+        userName: Joi.string().optional(),
         isBot: Joi.boolean().required(),
         picks: Joi.array()
           .items(
@@ -89,14 +89,14 @@ export const handler = async (req: Request, res: Response) => {
         sideboard = formatSideboard(player.decklist, cards);
 
         if (!drafterName) {
-          drafterName = player.userName;
+          drafterName = player.userName || 'Unknown Drafter';
         }
       }
 
       const seat: DraftSeatType = {
         description: player.isBot
           ? `This deck was drafted by a bot on Draftmancer`
-          : `This deck was drafted on Draftmancer by ${player.userName}`,
+          : `This deck was drafted on Draftmancer by ${player.userName || 'Unknown Drafter'}`,
         mainboard,
         sideboard,
         pickorder,

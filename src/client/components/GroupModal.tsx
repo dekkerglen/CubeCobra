@@ -23,7 +23,6 @@ import AutocardListItem from './card/AutocardListItem';
 import { ColorChecksAddon } from './ColorCheck';
 import CardKingdomBulkButton from './purchase/CardKingdomBulkButton';
 import ManaPoolBulkButton from './purchase/ManaPoolBulkButton';
-import TCGPlayerBulkButton from './purchase/TCGPlayerBulkButton';
 import TagInput from './TagInput';
 import TextBadge from './TextBadge';
 
@@ -225,21 +224,17 @@ const GroupModal: React.FC<GroupModalProps> = ({
               <Flexbox direction="row" gap="2" wrap="wrap">
                 {Number.isFinite(totalPriceUsd) && (
                   <TextBadge name="Price USD" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
+                    <Tooltip text="Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceUsdFoil) && (
                   <TextBadge name="Foil USD" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Foil Price">
-                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
-                    </Tooltip>
+                    <Tooltip text="Market Foil Price">${Math.round(totalPriceUsdFoil).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceUsdEtched) && (
                   <TextBadge name="Etched USD" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Foil Price">
-                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
-                    </Tooltip>
+                    <Tooltip text="Market Foil Price">${Math.round(totalPriceUsdFoil).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceEur) && (
@@ -256,7 +251,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
               <Text md semibold>
                 Purchase
               </Text>
-              <TCGPlayerBulkButton cards={cards} />
+              {/* <TCGPlayerBulkButton cards={cards} /> */}
               <ManaPoolBulkButton cards={cards} />
               <CardKingdomBulkButton cards={cards} />
             </Flexbox>

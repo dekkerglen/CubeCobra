@@ -59,8 +59,10 @@ const RecordStandings: React.FC<RecordStandingsProps> = ({ record }) => {
         } else {
           // Draw
           if (p1) {
-            p1.wins += 0.5;
-            p1.losses += 0.5;
+            p1.draws += 1;
+          }
+          if (p2) {
+            p2.draws += 1;
           }
         }
       }

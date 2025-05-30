@@ -71,8 +71,10 @@ const getStandings = (record: RecordType): any => {
       } else {
         // Draw
         if (p1) {
-          p1.matchWins += 0.5;
-          p1.matchLosses += 0.5;
+          p1.matchDraws += 1;
+        }
+        if (p2) {
+          p2.matchDraws += 1;
         }
       }
     }

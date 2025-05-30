@@ -21,4 +21,5 @@ const cubeAnalytic = {
   },
 };
 
+module.exports = cubeAnalytic;
 export default cubeAnalytic;

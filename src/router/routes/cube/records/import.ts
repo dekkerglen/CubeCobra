@@ -42,7 +42,7 @@ export const importRecordPageHandler = async (req: Request, res: Response) => {
 const recordSchema = Joi.object({
   date: Joi.number().optional(), // Ensure the date is valid and optional
   name: Joi.string().min(1).max(255).required(), // Name must be a string with a reasonable length
-  description: Joi.string().max(1000).optional(), // Description is optional but can be long
+  description: Joi.string().min(0).max(1000).optional(), // Description is optional but can be long
   cube: Joi.string().optional(), // Cube ID is optional
   draft: Joi.string().optional(), // Draft ID is optional
   id: Joi.string().optional(), // Record ID is optional, will be generated if not provided

@@ -1,15 +1,15 @@
 import React, { useContext, useMemo } from 'react';
 
+import CardKingdomBulkButton from 'components/purchase/CardKingdomBulkButton';
+import ManaPoolBulkButton from 'components/purchase/ManaPoolBulkButton';
 import { getTCGLink } from 'utils/Affiliate';
 
 import CardType from '../../datatypes/Card';
 import { Card, CardBody } from '../components/base/Card';
-import { Flexbox } from '../components/base/Layout';
-import { Col, Row } from '../components/base/Layout';
+import { Col, Flexbox, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Text from '../components/base/Text';
 import Markdown from '../components/Markdown';
-import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
 import CubeContext from '../contexts/CubeContext';
 
 const compareCards = (x: CardType, y: CardType) => x.details?.name.localeCompare(y.details?.name || '') || 0;
@@ -79,7 +79,9 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
         Tokens
       </Text>
       <Text>All the tokens and emblems your cube uses and what cards require each of them.</Text>
-      <TCGPlayerBulkButton cards={data.map(({ card }) => card)} />
+      {/* <TCGPlayerBulkButton cards={data.map(({ card }) => card)} /> */}
+      <ManaPoolBulkButton cards={data.map(({ card }) => card)} />
+      <CardKingdomBulkButton cards={data.map(({ card }) => card)} />
       <Row>
         {data.map(({ card, cardDescription }, index) => (
           <Col key={index} xs={6} md={4} lg={3} xxl={2}>

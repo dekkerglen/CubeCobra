@@ -16,7 +16,7 @@ import { fromEntries } from 'utils/Util';
 const AutocardItem = withAutocard('div');
 const renderCardLink = (card: Card) => (
   <AutocardItem className="p-0" key={card.index} card={card}>
-    <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
+    <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer" className="text-nowrap">
       {cardName(card)}
     </a>
   </AutocardItem>
