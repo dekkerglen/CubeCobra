@@ -9,7 +9,8 @@ import type DraftSeatType from '../../src/datatypes/DraftSeat';
 import Cube from '../../src/dynamo/models/cube';
 import Draft from '../../src/dynamo/models/draft';
 import Notification from '../../src/dynamo/models/notification';
-import { handler, routes, validatePublishDraftBody } from '../../src/router/routes/api/draftmancer/publish';
+import { bodyValidation } from '../../src/router/middleware/bodyValidation';
+import { handler, PublishDraftBodySchema, routes } from '../../src/router/routes/api/draftmancer/publish';
 import { RequestHandler } from '../../src/types/express';
 import { cardFromId } from '../../src/util/carddb';
 import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from '../../src/util/draftmancerUtil';
@@ -575,6 +576,8 @@ describe('Publish', () => {
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 describe('validatePublishDraftBody', () => {
+  const validatePublishDraftBody = bodyValidation(PublishDraftBodySchema);
+
   const assertPassingValidation = async (body: any) => {
     const res = await middleware(validatePublishDraftBody).withBody(body).send();
     expect(res.nextCalled).toBeTruthy();
