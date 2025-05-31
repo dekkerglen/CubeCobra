@@ -28,7 +28,7 @@ const ButtonLink: React.FC<ButtonLinkProps> = ({
     }
 
     setLoading(true); // Set loading state to true to prevent further clicks
-    window.location.href = href; // Navigate to the link
+    //Allow default anchor behaviour to take effect
   };
 
   return (
@@ -36,6 +36,7 @@ const ButtonLink: React.FC<ButtonLinkProps> = ({
       className={classNames(className, 'hover:cursor-pointer', { 'opacity-50 cursor-not-allowed': loading })}
       target={target}
       rel={rel}
+      href={href}
       onClick={handleClick}
     >
       {loading ? <Spinner className="position-absolute" /> : children}
