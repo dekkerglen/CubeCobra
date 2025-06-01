@@ -16,7 +16,7 @@ import Image from 'datatypes/Image';
 const UserProfile: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
-  const [markdown, setMarkdown] = useState('');
+  const [markdown, setMarkdown] = useState(user?.about || '');
   const [username, setUsername] = useState(user?.username);
   const [email, setEmail] = useState(user?.email);
   const formRef = React.useRef<HTMLFormElement>(null);
