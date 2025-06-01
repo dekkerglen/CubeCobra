@@ -36,17 +36,18 @@ const UserProfile: React.FC = () => {
       setImageDict(json.dict);
     };
     getData();
-  }, []);
+  }, [csrfFetch]);
 
   const changeImage = useCallback(
     (img: string) => {
       setImagename(img);
+      // eslint-disable-next-line no-console -- Debugging
       console.log(imageDict[img.toLowerCase()]);
       if (imageDict[img.toLowerCase()]) {
         setImage(imageDict[img.toLowerCase()]);
       }
     },
-    [imageDict, user?.image],
+    [imageDict],
   );
 
   const formData = useMemo(
