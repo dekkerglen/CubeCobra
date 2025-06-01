@@ -17,7 +17,7 @@ import { bodyValidation } from '../../../middleware/bodyValidation';
 
 const OracleIDSchema = Joi.string().uuid();
 
-const PublishDraftBodySchema = Joi.object({
+export const PublishDraftBodySchema = Joi.object({
   cubeID: Joi.string().required(),
   sessionID: Joi.string().required(),
   timestamp: Joi.number().required(),
