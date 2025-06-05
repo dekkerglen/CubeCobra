@@ -104,7 +104,13 @@ class CallBuilder {
     return this;
   }
 
-  async send(): Promise<{ status: number; body: any; nextCalled: boolean; rawResponse: Response }> {
+  async send(): Promise<{
+    status: number;
+    body: any;
+    nextCalled: boolean;
+    rawResponse: MockResponse;
+    rawRequest: Request;
+  }> {
     if (this.user) {
       this.request = { user: createUser(this.user), ...this.request };
     }
@@ -124,7 +130,7 @@ class CallBuilder {
 
     await this.handler(req, res, next);
 
-    return { status: res.statusCode, body: res.responseBody, nextCalled, rawResponse: res };
+    return { status: res.statusCode, body: res.responseBody, nextCalled, rawResponse: res, rawRequest: req };
   }
 }
 
