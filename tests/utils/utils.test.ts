@@ -1,5 +1,6 @@
-import { normalizeName } from '../../src/client/utils/cardutil';
+import { cardCmc, normalizeName } from '../../src/client/utils/cardutil';
 import util from '../../src/util/util';
+import { createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
 
 // ...existing code...
 
@@ -387,5 +388,66 @@ describe('turnToTree', () => {
 
     const result = util.turnToTree(normalizedNames);
     expect(result).toEqual(expectedTree);
+  });
+});
+
+describe('cardCmc', () => {
+  it('returns cmc from card details', () => {
+    const card = createCardFromDetails({
+      cmc: 3,
+    });
+    expect(cardCmc(card)).toBe(3);
+  });
+
+  it('returns cmc from card override', () => {
+    const card = createCard({
+      cmc: 11,
+    });
+    expect(cardCmc(card)).toBe(11);
+  });
+
+  it('returns 0 if no details exist', () => {
+    const card = createCard({
+      details: undefined,
+    });
+    expect(cardCmc(card)).toBe(0);
+  });
+
+  it('handles string decimal cmc values', () => {
+    const card = createCard({
+      cmc: '3.5',
+    });
+    expect(cardCmc(card)).toBe(3.5);
+  });
+
+  it('handles string number cmc values', () => {
+    const card = createCard({
+      cmc: '15',
+    });
+    expect(cardCmc(card)).toBe(15);
+  });
+
+  it('handles string zero cmc values', () => {
+    const card = createCard({
+      cmc: '0',
+    });
+    expect(cardCmc(card)).toBe(0);
+  });
+
+  it('handles 0 cmc', () => {
+    const card = createCard({
+      cmc: 0,
+    });
+    expect(cardCmc(card)).toBe(0);
+  });
+
+  it('defaults to details cmc if card cmc is not parseable', () => {
+    const card = createCard({
+      details: createCardDetails({
+        cmc: 4,
+      }),
+    });
+    card.cmc = 'not a number' as any;
+    expect(cardCmc(card)).toBe(4);
   });
 });
