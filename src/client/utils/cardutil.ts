@@ -185,11 +185,17 @@ export const CardDetails = (card: Card): CardDetailsType =>
   };
 
 export const cardCmc = (card: Card): number => {
-  if (card.cmc) {
+  //cmc could be zero so we must check if it is set more specifically
+  if (card.cmc !== undefined && card.cmc !== null) {
     // if it's a string
     if (typeof card.cmc === 'string') {
       // if it includes a dot, parse as float, otherwise parse as int
-      return card.cmc.includes('.') ? parseFloat(card.cmc) : parseInt(card.cmc);
+      const parsed = card.cmc.includes('.') ? parseFloat(card.cmc) : parseInt(card.cmc);
+      // if parsed is NaN, fall back to details.cmc
+      if (Number.isNaN(parsed)) {
+        return card.details?.cmc ?? 0;
+      }
+      return parsed;
     }
     return card.cmc;
   }
