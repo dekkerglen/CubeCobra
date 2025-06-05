@@ -514,7 +514,7 @@ describe('Finish Draft', () => {
     expect(res.body).toEqual({
       error: 'Error finishing draft',
     });
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Error finishing draft', error);
+    expect(res.rawRequest.logger.error).toHaveBeenCalledWith('Error finishing draft', error);
   });
 });
 
