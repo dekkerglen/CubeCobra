@@ -16,7 +16,7 @@ interface MarkdownProps {
   loginCallback?: string;
 }
 
-const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
+const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback = '/' }) => (
   <MainLayout loginCallback={loginCallback}>
     <Banner />
     <DynamicFlash />
@@ -827,10 +827,6 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
 
 MarkdownPage.propTypes = {
   loginCallback: PropTypes.string,
-};
-
-MarkdownPage.defaultProps = {
-  loginCallback: '/',
 };
 
 export default RenderToRoot(MarkdownPage);
