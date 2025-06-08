@@ -184,6 +184,28 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback }) => (
             </Col>
           </Row>
           <br />
+          <p>For DFCs, you can show the back side on the page using an additional /.</p>
+          <Row>
+            <Col xs={12} sm={6}>
+              <Card>
+                <CardHeader>Source</CardHeader>
+                <CardBody>
+                  <p>
+                    <code>[[!//Delver of Secrets]]</code>
+                  </p>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card>
+                <CardHeader>Result</CardHeader>
+                <CardBody>
+                  <Markdown markdown="[[!//Delver of Secrets]]" />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+          <br />
           <p>
             If you want to display card images alongside each other in a row, you'll need to wrap those card images with
             double angle brackets. This feature is not available for blog posts. Take the following example:

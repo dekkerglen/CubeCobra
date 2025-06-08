@@ -149,11 +149,19 @@ interface RenderCardImageProps {
   id: string;
   dfc?: boolean;
   inParagraph?: boolean;
+  showBackImage?: boolean;
 }
 const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
   const idURL = encodeURIComponent(node.id);
   const details: Partial<CardDetails> = { image_normal: `/tool/cardimage/${idURL}` };
-  if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
+  if (node.dfc) {
+    details.image_flip = `/tool/cardimageflip/${idURL}`;
+    if (node.showBackImage) {
+      //Swap the front and back images for the display, which affects the inline image and the autocard hover
+      [details.image_normal, details.image_flip] = [details.image_flip, details.image_normal];
+    }
+  }
+
   const tag = node.inParagraph ? 'span' : 'div';
   return (
     <div className="w-1/2 lg:w-1/4 p-2 markdown-card-image">

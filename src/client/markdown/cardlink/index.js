@@ -17,6 +17,12 @@ function oncard(node, index, parent) {
     node.dfc = true;
   }
 
+  if (node.value[0] === '/') {
+    // A second slash means we want to show the back side on the page
+    node.value = node.value.substring(1);
+    node.showBackImage = true;
+  }
+
   if (node.value[0] === '!' && node.type !== 'cardimage') {
     // Check for exclamation point again in case we began with "/!"
     node.value = node.value.substring(1);
@@ -42,7 +48,13 @@ function oncard(node, index, parent) {
   }
 
   node.data.hName = node.type;
-  node.data.hProperties = { name: node.name, id: node.id, dfc: node.dfc, inParagraph: node.inParagraph };
+  node.data.hProperties = {
+    name: node.name,
+    id: node.id,
+    dfc: node.dfc,
+    inParagraph: node.inParagraph,
+    showBackImage: node.showBackImage,
+  };
 }
 
 function cardlinks() {
