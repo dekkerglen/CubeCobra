@@ -234,8 +234,15 @@ router.get('/remove/:id', ensureRole('Admin'), async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
+  const pack = await Package.getById(req.params.id);
+
+  if (!pack) {
+    req.flash('danger', `Package not found`);
+    return redirect(req, res, '/packages');
+  }
+
   return render(req, res, 'PackagePage', {
-    pack: await Package.getById(req.params.id),
+    pack,
   });
 });
 
