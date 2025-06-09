@@ -319,7 +319,103 @@ describe('Grouping by Price USD', () => {
     expect(labels).toEqual(['$50 - $74.99']);
   });
 
+  it('Foil fallback has precedence over etched', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd_foil: 123.11,
+          usd_etched: 66.6,
+        },
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['>= $100']);
+  });
+
   it('No USD price available for grouping', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          eur: 23.11,
+        },
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['No Price Available']);
+  });
+});
+
+describe('Grouping by Price USD Foil', () => {
+  const SORT = 'Price USD Foil';
+
+  it('Has USD foil price for grouping', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd_foil: 4.23,
+        },
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['$4 - $4.99']);
+  });
+
+  it('Has USD price for grouping, with regular fallback', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd: 23.11,
+        },
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['$20 - $24.99']);
+  });
+
+  it('Has USD foil price for grouping, with etched fallback', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd_etched: 66.6,
+        },
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['$50 - $74.99']);
+  });
+
+  it('Etched fallback has precedence over usd', async () => {
+    const card = createCard({
+      details: createCardDetails({
+        name: 'Card 1',
+        prices: {
+          usd_etched: 99.2,
+          usd: 33.1,
+        },
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+
+    expect(labels).toEqual(['$75 - $99.99']);
+  });
+
+  it('No USD foil price available for grouping', async () => {
     const card = createCard({
       details: createCardDetails({
         name: 'Card 1',
