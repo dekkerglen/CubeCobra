@@ -168,8 +168,7 @@ export const handler = async (req: Request, res: Response) => {
       success: true,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('Error finishing draft', err);
+    req.logger.error('Error finishing draft', err);
     return res.status(500).json({ error: 'Error finishing draft' });
   }
 };
