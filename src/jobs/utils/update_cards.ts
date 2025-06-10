@@ -88,6 +88,31 @@ export interface ScryfallCard {
   }[];
 }
 
+//See https://scryfall.com/docs/api/sets/all and https://scryfall.com/docs/api/sets
+export interface ScryfallSet {
+  object: 'set';
+  id: string;
+  code: string;
+  name: string;
+  set_type: string;
+  uri: string;
+  scryfall_uri: string;
+  search_uri: string;
+  released_at?: string; //YYYY-MM-DD format
+  card_count: number;
+  parent_set_code?: string;
+  digital: boolean;
+  nonfoil_only: boolean;
+  foil_only: boolean;
+  icon_svg_uri: string;
+  mtgo_code?: string;
+  arena_code?: string;
+  tcgplayer_id?: number;
+  block_code?: string;
+  block?: string;
+  printed_size?: number;
+}
+
 export function convertName(card: ScryfallCard, preflipped: boolean) {
   let str = card.name;
 
