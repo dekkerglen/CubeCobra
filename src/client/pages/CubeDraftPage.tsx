@@ -600,9 +600,14 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
     }
 
     //Do not act on the pendingPick if predictions are ongoing or in a bad state
-    if (draftStatus.predictionsLoading || draftStatus.predictError || draftStatus.retryInProgress) {
+    if (draftStatus.predictError || draftStatus.retryInProgress) {
       // eslint-disable-next-line no-console
       console.log('Pending pick but draft state is bad, skip');
+      return;
+    }
+
+    //If we have to wait for predictions, that's OK too
+    if (draftStatus.predictionsLoading) {
       return;
     }
 
