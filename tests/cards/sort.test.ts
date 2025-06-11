@@ -1,6 +1,6 @@
-import { cardGetLabels, getLabelsRaw, sortForDownload } from '../../src/client/utils/Sort';
+import { cardGetLabels, getLabelsRaw, sortForDownload, sortGroupsOrdered } from '../../src/client/utils/Sort';
 import Card from '../../src/datatypes/Card';
-import { createCard, createCardDetails } from '../test-utils/data';
+import { createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
 
 const mapToCardNames = (sorted: Card[]) => {
   return sorted.map((c) => c.details?.name);
@@ -746,5 +746,147 @@ describe('Grouping by type', () => {
     const labels = cardGetLabels(card, SORT, true);
 
     expect(labels).toEqual(['Land']);
+  });
+});
+
+describe('Grouping by Set (Release Date)', () => {
+  const SORT = 'Set (Release Date)';
+
+  const assertGroupOrdering = (groups: [string, Card[]][], expectedSetOrder: string[]) => {
+    const setNames = groups.map((g) => g[0]);
+    expect(setNames).toEqual(expectedSetOrder);
+  };
+
+  const assertCardOrdering = (groups: [string, Card[]][], expectedCardsOrder: string[]) => {
+    const cards = groups.map((g) => g[1]);
+    expect(cards.flatMap((g) => g.map((c) => c.details?.name))).toEqual(expectedCardsOrder);
+  };
+
+  //setIndex defines the release date ordering
+  it('Cards grouped by the set release date', async () => {
+    const cards = [
+      createCardFromDetails({
+        name: 'Card 1',
+        set: 'LEA',
+        setIndex: 0,
+      }),
+      createCardFromDetails({
+        name: 'Card 2',
+        set: 'LEB',
+        setIndex: 1,
+      }),
+      createCardFromDetails({
+        name: 'Card 3',
+        set: 'TDM',
+        setIndex: 999,
+      }),
+      createCardFromDetails({
+        name: 'Card 4',
+        set: 'M15',
+        setIndex: 60,
+      }),
+      createCardFromDetails({
+        name: 'Card 5',
+        set: 'TDM',
+        setIndex: 999,
+      }),
+      createCardFromDetails({
+        name: 'Card 6',
+        set: 'ARB',
+        setIndex: 53,
+      }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, ['LEA', 'LEB', 'ARB', 'M15', 'TDM']);
+    assertCardOrdering(groups, ['Card 1', 'Card 2', 'Card 6', 'Card 4', 'Card 3', 'Card 5']);
+  });
+
+  it('Negative indices are fine', async () => {
+    const cards = [
+      createCardFromDetails({
+        name: 'Card 2',
+        set: 'BLB',
+        setIndex: 800,
+      }),
+      createCardFromDetails({
+        name: 'Card 3',
+        set: 'RNA',
+        setIndex: 700,
+      }),
+      createCardFromDetails({
+        name: 'Card 4',
+        set: 'MSK',
+        setIndex: 60,
+      }),
+      createCardFromDetails({
+        name: 'Card 5',
+        set: 'MRD',
+        setIndex: 999,
+      }),
+      createCardFromDetails({
+        name: 'Card infinity',
+        set: 'RGPHD',
+        setIndex: -1,
+      }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, ['RGPHD', 'MSK', 'RNA', 'BLB', 'MRD']);
+    assertCardOrdering(groups, ['Card infinity', 'Card 4', 'Card 3', 'Card 2', 'Card 5']);
+  });
+});
+
+//The ordering here is by set code alphanumeric
+describe('Grouping by Set', () => {
+  const SORT = 'Set';
+
+  const assertGroupOrdering = (groups: [string, Card[]][], expectedSetOrder: string[]) => {
+    const setNames = groups.map((g) => g[0]);
+    expect(setNames).toEqual(expectedSetOrder);
+  };
+
+  const assertCardOrdering = (groups: [string, Card[]][], expectedCardsOrder: string[]) => {
+    const cards = groups.map((g) => g[1]);
+    expect(cards.flatMap((g) => g.map((c) => c.details?.name))).toEqual(expectedCardsOrder);
+  };
+
+  it('Cards grouped by the set code', async () => {
+    const cards = [
+      createCardFromDetails({
+        name: 'Card 1',
+        set: 'LEA',
+        setIndex: 0,
+      }),
+      createCardFromDetails({
+        name: 'Card 2',
+        set: 'LEB',
+        setIndex: 1,
+      }),
+      createCardFromDetails({
+        name: 'Card 3',
+        set: 'TDM',
+        setIndex: 999,
+      }),
+      createCardFromDetails({
+        name: 'Card 4',
+        set: 'M15',
+        setIndex: 60,
+      }),
+      createCardFromDetails({
+        name: 'Card 5',
+        set: 'TDM',
+        setIndex: 999,
+      }),
+      createCardFromDetails({
+        name: 'Card 6',
+        set: 'ARB',
+        setIndex: 53,
+      }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, ['ARB', 'LEA', 'LEB', 'M15', 'TDM']);
+    assertCardOrdering(groups, ['Card 6', 'Card 1', 'Card 2', 'Card 4', 'Card 3', 'Card 5']);
   });
 });

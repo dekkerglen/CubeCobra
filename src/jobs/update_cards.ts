@@ -22,7 +22,7 @@ import * as cardutil from '../client/utils/cardutil';
 import { CardMetadata, fileToAttribute } from '../util/cardCatalog';
 import { reasonableCard } from '../util/carddb';
 import * as util from '../util/util';
-import { convertName, ScryfallCard } from './utils/update_cards';
+import { convertName, ScryfallCard, ScryfallSet } from './utils/update_cards';
 
 interface Catalog {
   dict: Record<string, CardDetails>;
@@ -36,6 +36,14 @@ interface Catalog {
   metadatadict: Record<string, CardMetadata>;
   indexToOracleId: string[];
 }
+
+interface SetRelease {
+  code: string;
+  released_at: Date;
+}
+
+const sets: SetRelease[] = [];
+let orderedSetCodes: string[] = [];
 
 const catalog: Catalog = {
   dict: {},
@@ -96,6 +104,10 @@ async function downloadDefaultCards() {
     downloadFile(defaultUrl, './private/cards.json'),
     downloadFile(allUrl, './private/all-cards.json'),
   ]);
+}
+
+async function downloadSets() {
+  await downloadFile('https://api.scryfall.com/sets', './private/sets.json');
 }
 
 function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
@@ -400,6 +412,7 @@ function convertCard(
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
   newcard.set_name = card.set_name;
+  newcard.setIndex = orderedSetCodes.indexOf(newcard.set);
   newcard.finishes = card.finishes;
   newcard.collector_number = card.collector_number;
   newcard.released_at = card.released_at;
@@ -598,11 +611,47 @@ async function saveAllCards(
 
   catalog.indexToOracleId = indexToOracle;
   catalog.metadatadict = metadatadict;
-
-  // eslint-disable-next-line no-console
-  console.info('Saving cardbase files...');
-  await writeCatalog('./private');
 }
+
+async function saveSet(set: ScryfallSet) {
+  //According to the API this could be undefined or null, but didn't find any instances
+  if (!set.released_at) {
+    // eslint-disable-next-line no-console
+    console.log(`Set ${set.code} has no release at date`);
+  }
+
+  sets.push({
+    code: set.code,
+    //Set Pacific time offset based on Scryfalls API. Even though JS dates suck at timezones
+    released_at: new Date(`${set.released_at!}T00:00:00-08:00`),
+  });
+}
+
+async function processSets() {
+  // eslint-disable-next-line no-console
+  console.info('Processing sets...');
+  await new Promise((resolve) =>
+    fs
+      .createReadStream('./private/sets.json')
+      .pipe(JSONStream.parse('data.*'))
+      .pipe(
+        // @ts-expect-error idk why but this works
+        es.mapSync((item) => saveSet(item)),
+      )
+      .on('close', resolve),
+  );
+
+  await sortSets();
+}
+
+const sortSets = async () => {
+  //Sort by ascending date
+  sets.sort((a, b) => {
+    return a.released_at.getTime() - b.released_at.getTime();
+  });
+
+  orderedSetCodes = sets.map((set) => set.code);
+};
 
 const downloadFromScryfall = async (
   metadatadict: Record<string, CardMetadata>,
@@ -610,6 +659,19 @@ const downloadFromScryfall = async (
   ckPrices: Record<string, number>,
   mpPrices: Record<string, number>,
 ) => {
+  try {
+    await downloadSets();
+    await processSets();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Downloading set data failed:');
+    // eslint-disable-next-line no-console
+    console.error(error);
+    // eslint-disable-next-line no-console
+    console.error('Sets were not updated');
+    return;
+  }
+
   // eslint-disable-next-line no-console
   console.info('Downloading files from scryfall...');
   try {
@@ -629,6 +691,19 @@ const downloadFromScryfall = async (
   console.info('Creating objects...');
   try {
     await saveAllCards(metadatadict, indexToOracle, ckPrices, mpPrices);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Updating cardbase objects failed:');
+    // eslint-disable-next-line no-console
+    console.error(error);
+    // eslint-disable-next-line no-console
+    console.error('Cardbase update may not have fully completed');
+  }
+
+  try {
+    // eslint-disable-next-line no-console
+    console.info('Saving catalog...');
+    await writeCatalog('./private');
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Updating cardbase objects failed:');

@@ -20,6 +20,7 @@ export interface CardDetails {
   oracle_id: string;
   name: string;
   set: string;
+  setIndex: number; //Index of the set code when all sets are sorted by release date. eg. Alpha = 0, M10 = 12. -1 means unknown
   collector_number: string;
   released_at: string;
   promo: boolean;

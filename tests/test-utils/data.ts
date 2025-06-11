@@ -73,6 +73,7 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
   scryfall_id: uuidv4(),
   oracle_id: uuidv4(),
   set: generateRandomString(ALPHANUMERIC, 3).toLowerCase(),
+  setIndex: 0,
   collector_number: '123',
   released_at: '',
   promo: false,
