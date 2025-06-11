@@ -151,6 +151,7 @@ export const CardDetails = (card: Card): CardDetailsType =>
     oracle_id: '',
     name: 'Invalid Card',
     set: '',
+    setIndex: -1,
     collector_number: '',
     released_at: '',
     promo: false,
@@ -363,6 +364,8 @@ export const cardIsFullArt = (card: Card): boolean => card.details?.full_art ?? 
 export const cardCost = (card: Card): string[] => card.details?.parsed_cost ?? [];
 
 export const cardSet = (card: Card): string => card.details?.set ?? '';
+
+export const cardSetIndex = (card: Card): number => card.details?.setIndex ?? -1;
 
 export const cardSetName = (card: Card): string => card.details?.set_name ?? '';
 
