@@ -93,8 +93,9 @@ const recordSchema = Joi.object({
         name: Joi.string().min(1).max(255).required(), // Player name is required
       }),
     )
+    .min(0)
     .max(16)
-    .optional(), // At least one player is optional
+    .optional(),
   matches: Joi.array()
     .items(
       Joi.object({

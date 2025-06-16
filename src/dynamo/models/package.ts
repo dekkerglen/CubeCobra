@@ -1,6 +1,8 @@
 import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
 import { v4 as uuidv4 } from 'uuid';
 
+import { normalizeName } from 'utils/cardutil';
+
 import { CardDetails } from '../../datatypes/Card';
 import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '../../datatypes/CardPackage';
 import UserType from '../../datatypes/User';
@@ -105,7 +107,10 @@ const applyKeywordFilter = (query: QueryInput, keywords: string): QueryInput => 
     return query;
   }
 
-  const words = keywords?.toLowerCase()?.split(' ') || [];
+  const words = (keywords?.toLowerCase()?.split(' ') || []).map(normalizeName).map(
+    // remove any non-alphanumeric characters
+    (word) => word.replace(/[^a-z0-9]/g, ''),
+  );
 
   // all words must exist in the keywords
   query.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');

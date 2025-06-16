@@ -92,6 +92,10 @@ export function getNameForComparison(name: string): string {
 }
 
 export function getIdsFromName(name: string): string[] {
+  if (!name) {
+    return [];
+  }
+
   // this is a fully-spcecified card name
   if (name.includes('[') && name.includes(']')) {
     name = name.toLowerCase();
