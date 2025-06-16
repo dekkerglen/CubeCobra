@@ -16,7 +16,7 @@ import Image from 'datatypes/Image';
 const UserProfile: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
-  const [markdown, setMarkdown] = useState('');
+  const [markdown, setMarkdown] = useState(user?.about || '');
   const [username, setUsername] = useState(user?.username);
   const [email, setEmail] = useState(user?.email);
   const formRef = React.useRef<HTMLFormElement>(null);
@@ -36,17 +36,18 @@ const UserProfile: React.FC = () => {
       setImageDict(json.dict);
     };
     getData();
-  }, []);
+  }, [csrfFetch]);
 
   const changeImage = useCallback(
     (img: string) => {
       setImagename(img);
+      // eslint-disable-next-line no-console -- Debugging
       console.log(imageDict[img.toLowerCase()]);
       if (imageDict[img.toLowerCase()]) {
         setImage(imageDict[img.toLowerCase()]);
       }
     },
-    [imageDict, user?.image],
+    [imageDict],
   );
 
   const formData = useMemo(

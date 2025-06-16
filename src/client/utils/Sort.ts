@@ -17,6 +17,7 @@ import {
   cardRarity,
   cardReleaseDate,
   cardSet,
+  cardSetIndex,
   cardStatus,
   cardTix,
   cardType,
@@ -188,6 +189,7 @@ export const SORTS: string[] = [
   'MTGO TIX',
   'Rarity',
   'Set',
+  'Set (Release Date)',
   'Shards / Wedges',
   'Status',
   'Subtype',
@@ -423,6 +425,25 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
       }
     }
     ret = sets.sort();
+  } else if (sort === 'Set (Release Date)') {
+    //Use a map to prevent duplicates when we want both set and setIndex later.
+    //Sets treat each object as unique even if the contents are the same
+    const sets = new Map<string, { set: string; setIndex: number }>();
+    for (const card of cube || []) {
+      const set = cardSet(card).toUpperCase();
+      const setIndex = cardSetIndex(card);
+      //Encode set and set index into string for uniqueness
+      const key = `${set}-${setIndex}`;
+      if (!sets.has(key)) {
+        sets.set(key, {
+          set,
+          setIndex,
+        });
+      }
+    }
+
+    //Sort based on setIndex and then return the set codes in that order
+    ret = [...sets.values()].sort((a, b) => a.setIndex - b.setIndex).map((a) => a.set);
   } else if (sort === 'Artist') {
     const artists: string[] = [];
     for (const card of cube || []) {
@@ -657,7 +678,7 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
     }
   } else if (sort === 'Color Count') {
     ret = [cardColorIdentity(card).length.toFixed(0)];
-  } else if (sort === 'Set') {
+  } else if (sort === 'Set' || sort === 'Set (Release Date)') {
     ret = [cardSet(card).toUpperCase()];
   } else if (sort === 'Rarity') {
     const rarity = cardRarity(card);
@@ -748,7 +769,7 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
       ret = ['No Price Available'];
     }
   } else if (sort === 'Price USD Foil') {
-    const price = card.details?.prices.usd_foil;
+    const price = card.details?.prices.usd_foil ?? card.details?.prices.usd_etched ?? card.details?.prices.usd;
     if (price) {
       ret = [getPriceBucket(price, '$')];
     } else {

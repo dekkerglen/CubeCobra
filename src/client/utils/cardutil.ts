@@ -151,6 +151,7 @@ export const CardDetails = (card: Card): CardDetailsType =>
     oracle_id: '',
     name: 'Invalid Card',
     set: '',
+    setIndex: -1,
     collector_number: '',
     released_at: '',
     promo: false,
@@ -185,11 +186,17 @@ export const CardDetails = (card: Card): CardDetailsType =>
   };
 
 export const cardCmc = (card: Card): number => {
-  if (card.cmc) {
+  //cmc could be zero so we must check if it is set more specifically
+  if (card.cmc !== undefined && card.cmc !== null) {
     // if it's a string
     if (typeof card.cmc === 'string') {
       // if it includes a dot, parse as float, otherwise parse as int
-      return card.cmc.includes('.') ? parseFloat(card.cmc) : parseInt(card.cmc);
+      const parsed = card.cmc.includes('.') ? parseFloat(card.cmc) : parseInt(card.cmc);
+      // if parsed is NaN, fall back to details.cmc
+      if (Number.isNaN(parsed)) {
+        return card.details?.cmc ?? 0;
+      }
+      return parsed;
     }
     return card.cmc;
   }
@@ -357,6 +364,8 @@ export const cardIsFullArt = (card: Card): boolean => card.details?.full_art ?? 
 export const cardCost = (card: Card): string[] => card.details?.parsed_cost ?? [];
 
 export const cardSet = (card: Card): string => card.details?.set ?? '';
+
+export const cardSetIndex = (card: Card): number => card.details?.setIndex ?? -1;
 
 export const cardSetName = (card: Card): string => card.details?.set_name ?? '';
 

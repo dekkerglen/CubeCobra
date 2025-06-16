@@ -56,10 +56,10 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ analyticsData }) =>
         },
         decks: decks,
         matchCount: matchWins + matchLosses + matchDraws,
-        winRate: matchWins / (matchWins + matchLosses + matchDraws),
-        drawRate: matchDraws / (matchWins + matchLosses + matchDraws),
+        winRate: matchWins / (matchWins + matchLosses + matchDraws) || 0,
+        drawRate: matchDraws / (matchWins + matchLosses + matchDraws) || 0,
         gameCount: gameWins + gameLosses,
-        gameWinRate: gameWins / (gameWins + gameLosses + gameDraws),
+        gameWinRate: gameWins / (gameWins + gameLosses + gameDraws) || 0,
         trophyCount: trophies,
         trophyRate: trophies / decks,
       }));

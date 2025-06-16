@@ -15,7 +15,11 @@ interface AssignTrophiesModalProps {
 
 const AssignTrophiesModal: React.FC<AssignTrophiesModalProps> = ({ isOpen, setOpen, record }) => {
   const formRef = createRef<HTMLFormElement>();
-  const [trophyState, setTrophyState] = useState<Record['trophy']>(record.trophy || []);
+
+  //Player renames can cause divergence from trophy winner names, remove any trophy winners that aren't in the player list
+  const playerNames = new Set(record.players.map((p) => p.name));
+  const filteredTrophyNames = record.trophy.filter((name) => playerNames.has(name));
+  const [trophyState, setTrophyState] = useState<Record['trophy']>(filteredTrophyNames || []);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} xl>

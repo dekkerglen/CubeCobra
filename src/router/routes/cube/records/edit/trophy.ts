@@ -26,7 +26,7 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const trophy = JSON.parse(req.body.trophy);
+    const trophy: string[] = JSON.parse(req.body.trophy);
     if (!Array.isArray(trophy) || trophy.length === 0) {
       req.flash('danger', 'Trophy must be a non-empty array');
       return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
@@ -34,15 +34,20 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
 
     // Ensure trophy is an array of valid user names from the list of players
     const validPlayers = ['Unknown Player', ...record.players.map((p) => p.name)];
+    let updatedTrophies = trophy;
     for (const player of trophy) {
-      if (typeof player !== 'string' || !validPlayers.includes(player)) {
+      if (typeof player !== 'string') {
         req.flash('danger', `Invalid player name in trophy: ${player}`);
         return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
+      }
+      //The trophy names may contain old player names which we will strip, rather than aborting the action
+      if (!validPlayers.includes(player)) {
+        updatedTrophies = updatedTrophies.filter((name) => name !== player);
       }
     }
 
     // Update the record with the new trophy
-    record.trophy = trophy;
+    record.trophy = updatedTrophies;
 
     await Record.put(record);
 

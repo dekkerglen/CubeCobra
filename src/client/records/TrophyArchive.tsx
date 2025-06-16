@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
+import { QuestionIcon } from '@primer/octicons-react';
+
 import { CardBody } from 'components/base/Card';
 import FormatttedDate from 'components/base/FormatttedDate';
 import { Flexbox } from 'components/base/Layout';
@@ -7,6 +9,7 @@ import Link from 'components/base/Link';
 import Pagination from 'components/base/Pagination';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
+import Tooltip from 'components/base/Tooltip';
 import { CSRFContext } from 'contexts/CSRFContext';
 import Record from 'datatypes/Record';
 
@@ -56,7 +59,12 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
 
     for (const item of itemPage) {
       for (const trophy of item.trophy) {
-        const player = item.players.find((p) => p.name === trophy) || { name: trophy, userId: '' };
+        let player = item.players.find((p) => p.name === trophy) || { name: trophy, userId: '' };
+
+        const playerIndex = item.players.findIndex((p) => p.name === trophy);
+        if (playerIndex === -1) {
+          player = { name: trophy, userId: '' };
+        }
 
         result.push({
           Player: player.userId ? (
@@ -74,9 +82,18 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
             </Link>
           ),
           '': item.draft ? (
-            <Link href={`/cube/deck/${item.draft}?seat=${item.players.indexOf(player)}`}>
-              <Text sm>View Deck</Text>
-            </Link>
+            playerIndex !== -1 ? (
+              <Link href={`/cube/deck/${item.draft}?seat=${item.players.indexOf(player)}`}>
+                <Text sm>View Deck</Text>
+              </Link>
+            ) : (
+              <>
+                <Text sm>Unable to find trophy winners deck</Text>&nbsp;
+                <Tooltip text="Please ensure the Player names are aligned with the Trophy winner names.">
+                  <QuestionIcon size={16} />
+                </Tooltip>
+              </>
+            )
           ) : (
             <Text sm>No draft available</Text>
           ),

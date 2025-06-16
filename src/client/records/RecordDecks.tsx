@@ -72,7 +72,7 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
               value: `${index}`,
               label: player.name,
             }))
-            .filter((option) => draft.seats[parseInt(option.value, 10)].mainboard?.flat(3).length > 0)}
+            .filter((option) => draft.seats[parseInt(option.value, 10)]?.mainboard?.flat(3).length > 0)}
         />
         <DeckCard
           seat={draft.seats[selectedUserIndex]}
