@@ -14,6 +14,7 @@ export function getPlaceholderCard(scryfall_id: string): CardDetails {
     isToken: false,
     finishes: [],
     set: '',
+    setIndex: -1,
     collector_number: '',
     promo: false,
     reprint: false,
