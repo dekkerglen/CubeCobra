@@ -57,13 +57,18 @@ const recordSchema = Joi.object({
     .optional(), // At least one player is optional
   matches: Joi.array()
     .items(
+      //This object represents a round
       Joi.object({
-        player1: Joi.string().required(), // Player 1's name or ID
-        player2: Joi.string().required(), // Player 2's name or ID
-        result: Joi.string().valid('win', 'loss', 'draw').required(), // Match result
+        matches: Joi.array().items(
+          Joi.object({
+            p1: Joi.string().required(), // Player 1 ID
+            p2: Joi.string().required(), // Player 2 ID
+            results: Joi.array().items(Joi.number().required()).length(3).required(), // Results for each player
+          }),
+        ),
       }),
     )
-    .optional(), // Matches array is optional
+    .optional(), // Matches information is optional
   trophy: Joi.array().items(Joi.string()).optional(), // Trophy is optional
 }).unknown(false); // do not allow additional properties
 
