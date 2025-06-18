@@ -58,9 +58,9 @@ const recordSchema = Joi.object({
   matches: Joi.array()
     .items(
       Joi.object({
-        player1: Joi.string().required(), // Player 1's name or ID
-        player2: Joi.string().required(), // Player 2's name or ID
-        result: Joi.string().valid('win', 'loss', 'draw').required(), // Match result
+        p1: Joi.string().required(), // Player 1 ID
+        p2: Joi.string().required(), // Player 2 ID
+        results: Joi.array().items(Joi.number().required()).length(3).required(), // Results for each player
       }),
     )
     .optional(), // Matches array is optional
