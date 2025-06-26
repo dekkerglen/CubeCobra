@@ -52,4 +52,10 @@ describe('convertName', () => {
     const result = convertName(card, true);
     expect(result).toEqual(`Island ${ART_SERIES_CARD_SUFFIX}`);
   });
+
+  it('Card with single slash is a regular name', async () => {
+    const card = createScryfallCard('Summon: Choco/Mog', 'normal');
+    const result = convertName(card, false);
+    expect(result).toEqual(`Summon: Choco/Mog`);
+  });
 });
