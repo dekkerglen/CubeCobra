@@ -816,7 +816,7 @@ const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
   const json = await res.json();
 
   // eslint-disable-next-line no-console
-  console.log(`Loaded ${json.data.length} cards from Mana Pool`);
+  console.log(`Loaded ${json.data.length} cards from Card Kingdom`);
 
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
