@@ -73,12 +73,12 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
     Power: convertToCharacteristic('Power', (card) => cardPower(card)),
     Toughness: convertToCharacteristic('Toughness', (card) => cardToughness(card)),
     elo: convertToCharacteristic('elo', (card) => cardElo(card)),
-    Price: convertToCharacteristic('Price', (card) => cardPrice(card)),
-    'Price USD': convertToCharacteristic('Price USD', (card) => cardNormalPrice(card)),
-    'Price USD Foil': convertToCharacteristic('Price USD Foil', (card) => cardFoilPrice(card)),
-    'Price USD Etched': convertToCharacteristic('Price USD Etched', (card) => cardEtchedPrice(card)),
-    'Price EUR': convertToCharacteristic('Price EUR', (card) => cardPriceEur(card)),
-    'MTGO TIX': convertToCharacteristic('MTGO TIX', (card) => cardTix(card)),
+    Price: convertToCharacteristic('Price', (card) => cardPrice(card) ?? 0),
+    'Price USD': convertToCharacteristic('Price USD', (card) => cardNormalPrice(card) ?? 0),
+    'Price USD Foil': convertToCharacteristic('Price USD Foil', (card) => cardFoilPrice(card) ?? 0),
+    'Price USD Etched': convertToCharacteristic('Price USD Etched', (card) => cardEtchedPrice(card) ?? 0),
+    'Price EUR': convertToCharacteristic('Price EUR', (card) => cardPriceEur(card) ?? 0),
+    'MTGO TIX': convertToCharacteristic('MTGO TIX', (card) => cardTix(card) ?? 0),
     'Cube elo': {
       get: getCubeElo,
       labels: (list: any[]) =>
