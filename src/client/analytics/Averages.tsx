@@ -72,10 +72,10 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
               return true;
             })
             .map((card): [number, number] => {
-              return [
-                asfans[card.cardID] || 1,
-                parseFloat(characteristics[characteristic || DEFAULT_CHARACTERISTIC].get(card).toString()),
-              ];
+              //Even though characteristic.get should only return string or number, in some cases our functions are returning undefined
+              const charValue = characteristics[characteristic || DEFAULT_CHARACTERISTIC].get(card);
+              const value = charValue === undefined ? 0 : parseFloat(charValue.toString());
+              return [asfans[card.cardID] || 1, value];
             })
             .filter(([weight, x]) => {
               return weight && weight > 0 && (x || x === 0);
