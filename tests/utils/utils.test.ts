@@ -1,4 +1,4 @@
-import { cardCmc, normalizeName } from '../../src/client/utils/cardutil';
+import { cardBannedIn, cardCmc, cardLegalIn, cardRestrictedIn, normalizeName } from '../../src/client/utils/cardutil';
 import util from '../../src/util/util';
 import { createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
 
@@ -449,5 +449,98 @@ describe('cardCmc', () => {
     });
     card.cmc = 'not a number' as any;
     expect(cardCmc(card)).toBe(4);
+  });
+});
+
+describe('cardLegalIn', () => {
+  it('returns formats where card is legal', () => {
+    const card = createCardFromDetails({
+      legalities: {
+        standard: 'legal',
+        modern: 'legal',
+        legacy: 'banned',
+        vintage: 'restricted',
+      },
+    });
+    expect(cardLegalIn(card)).toEqual(['standard', 'modern']);
+  });
+
+  it('returns empty array if no formats are legal', () => {
+    const card = createCardFromDetails({
+      legalities: {
+        standard: 'banned',
+        modern: 'banned',
+      },
+    });
+    expect(cardLegalIn(card)).toEqual([]);
+  });
+
+  it('returns empty array if legalities is empty', () => {
+    const card = createCardFromDetails({
+      legalities: {},
+    });
+    expect(cardLegalIn(card)).toEqual([]);
+  });
+});
+
+describe('cardBannedIn', () => {
+  it('returns formats where card is banned', () => {
+    const card = createCardFromDetails({
+      legalities: {
+        standard: 'legal',
+        modern: 'banned',
+        legacy: 'banned',
+        vintage: 'restricted',
+      },
+    });
+    expect(cardBannedIn(card)).toEqual(['modern', 'legacy']);
+  });
+
+  it('returns empty array if no formats are banned', () => {
+    const card = createCardFromDetails({
+      legalities: {
+        standard: 'legal',
+        modern: 'legal',
+      },
+    });
+    expect(cardBannedIn(card)).toEqual([]);
+  });
+
+  it('returns empty array if legalities is empty', () => {
+    const card = createCardFromDetails({
+      legalities: {},
+    });
+    expect(cardBannedIn(card)).toEqual([]);
+  });
+});
+
+describe('cardRestrictedIn', () => {
+  it('returns formats where card is restricted', () => {
+    const card = createCardFromDetails({
+      legalities: {
+        standard: 'legal',
+        modern: 'banned',
+        legacy: 'legal',
+        vintage: 'restricted',
+      },
+    });
+    expect(cardRestrictedIn(card)).toEqual(['vintage']);
+  });
+
+  it('returns empty array if no formats are restricted', () => {
+    const card = createCardFromDetails({
+      legalities: {
+        standard: 'legal',
+        modern: 'banned',
+      },
+    });
+    expect(cardRestrictedIn(card)).toEqual([]);
+  });
+
+  it('returns empty array if legalities is empty', () => {
+    const card = createCardFromDetails({
+      legalities: {},
+    });
+    expect(cardRestrictedIn(card)).toEqual([]);
   });
 });
