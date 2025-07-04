@@ -118,6 +118,23 @@ const comparisonCondition = (valuePred, propertyName, propertyAccessor, otherPro
   result.fieldsUsed = [propertyName, otherPropertyName]
   return result;
 };
+const legalitySuperCondition = (op, legality) => {
+  const propertyName = 'legality';
+  const propertyAccessor = cardLegalIn;
+
+  if (legality === 'vintage') {
+    const result = (card) => {
+      const legal = cardLegalIn(card).includes('Vintage');
+      const restricted = cardRestrictedIn(card).includes('Vintage');
+      //Total set of legal cards in vintage are cards that are legal or restricted
+      return legal || restricted;
+    }
+    result.fieldsUsed = [propertyName];
+    return result;
+  } else {
+    return genericCondition(propertyName, propertyAccessor, setElementOperation(op, legality));
+  }
+};
 %} # %}
 
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
@@ -144,7 +161,7 @@ tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) =>
 
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
 
-legalityCondition -> ("leg"i | "legal"i | "legality"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardLegalIn, valuePred) %}
+legalityCondition -> ("leg"i | "legal"i | "legality"i) equalityOperator legalityValue {% ([, op, legality]) => legalitySuperCondition(op, legality) %}
 
 bannedCondition -> ("ban"i | "banned"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardBannedIn, valuePred) %}
 
