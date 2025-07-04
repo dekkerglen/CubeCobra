@@ -24,6 +24,9 @@ import {
   setCountOperation,
   devotionOperation,
   propertyComparisonOperation,
+  genericCondition,
+  comparisonCondition,
+  legalitySuperCondition,
 } from '../../filtering/FuncOperations';
 import {
   CARD_CATEGORY_DETECTORS,
@@ -65,18 +68,6 @@ import {
 const negated = (inner) => {
   const result = (card) => !inner(card);
   result.fieldsUsed = inner.fieldsUsed;
-  return result;
-};
-
-
-const genericCondition = (propertyName, propertyAccessor, valuePred) => {
-  const result = (card) => valuePred(propertyAccessor(card), card);
-  result.fieldsUsed = [propertyName]
-  return result;
-};
-const comparisonCondition = (valuePred, propertyName, propertyAccessor, otherPropertyName, otherPropertyAccessor) => {
-  const result = (card) => valuePred(propertyAccessor(card), otherPropertyAccessor(card));
-  result.fieldsUsed = [propertyName, otherPropertyName]
   return result;
 };
 var grammar = {
@@ -1711,7 +1702,7 @@ var grammar = {
     {"name": "legalityCondition$subexpression$1", "symbols": ["legalityCondition$subexpression$1$subexpression$2"]},
     {"name": "legalityCondition$subexpression$1$subexpression$3", "symbols": [/[lL]/, /[eE]/, /[gG]/, /[aA]/, /[lL]/, /[iI]/, /[tT]/, /[yY]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "legalityCondition$subexpression$1", "symbols": ["legalityCondition$subexpression$1$subexpression$3"]},
-    {"name": "legalityCondition", "symbols": ["legalityCondition$subexpression$1", "legalityOpValue"], "postprocess": ([, valuePred]) => genericCondition('legality', cardLegalIn, valuePred)},
+    {"name": "legalityCondition", "symbols": ["legalityCondition$subexpression$1", "equalityOperator", "legalityValue"], "postprocess": ([, op, legality]) => legalitySuperCondition(op, legality)},
     {"name": "bannedCondition$subexpression$1$subexpression$1", "symbols": [/[bB]/, /[aA]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "bannedCondition$subexpression$1", "symbols": ["bannedCondition$subexpression$1$subexpression$1"]},
     {"name": "bannedCondition$subexpression$1$subexpression$2", "symbols": [/[bB]/, /[aA]/, /[nN]/, /[nN]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
