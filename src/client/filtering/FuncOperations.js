@@ -1,4 +1,4 @@
-import { cardDevotion } from '../utils/cardutil';
+import { cardDevotion, cardLegalIn, cardRestrictedIn } from '../utils/cardutil';
 import { arrayIsSubset, arraysAreEqualSets } from '../utils/Util';
 
 export const defaultOperation = (op, value) => {
@@ -313,5 +313,50 @@ export const propertyComparisonOperation = (op) => {
       return (fieldValueOne, fieldValueTwo) => fieldValueOne >= fieldValueTwo;
     default:
       throw new Error(`Unrecognized operator '${op}'`);
+  }
+};
+
+export const genericCondition = (propertyName, propertyAccessor, valuePred) => {
+  const result = (card) => valuePred(propertyAccessor(card), card);
+  result.fieldsUsed = [propertyName];
+  return result;
+};
+
+export const comparisonCondition = (
+  valuePred,
+  propertyName,
+  propertyAccessor,
+  otherPropertyName,
+  otherPropertyAccessor,
+) => {
+  const result = (card) => valuePred(propertyAccessor(card), otherPropertyAccessor(card));
+  result.fieldsUsed = [propertyName, otherPropertyName];
+  return result;
+};
+
+export const legalitySuperCondition = (op, legality) => {
+  const propertyName = 'legality';
+  const propertyAccessor = cardLegalIn;
+
+  if (legality.toLowerCase() === 'vintage') {
+    const result = (card) => {
+      const legal = cardLegalIn(card)
+        .map((s) => s.toLowerCase())
+        .includes('vintage');
+      const restricted = cardRestrictedIn(card)
+        .map((s) => s.toLowerCase())
+        .includes('vintage');
+      //Total set of legal cards in vintage are cards that are legal or restricted
+      return legal || restricted;
+    };
+    result.fieldsUsed = [propertyName];
+    if (op === '!=' || op === '<>') {
+      const negated = (card) => !result(card);
+      negated.fieldsUsed = result.fieldsUsed;
+      return negated;
+    }
+    return result;
+  } else {
+    return genericCondition(propertyName, propertyAccessor, setElementOperation(op, legality));
   }
 };

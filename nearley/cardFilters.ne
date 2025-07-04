@@ -16,6 +16,9 @@ import {
   setCountOperation,
   devotionOperation,
   propertyComparisonOperation,
+  genericCondition,
+  comparisonCondition,
+  legalitySuperCondition,
 } from '../../filtering/FuncOperations';
 import {
   CARD_CATEGORY_DETECTORS,
@@ -106,36 +109,6 @@ condition -> (
   | collectorNumberCondition
   | notesCondition
 ) {% ([[condition]]) => condition %}
-
-@{%
-const genericCondition = (propertyName, propertyAccessor, valuePred) => {
-  const result = (card) => valuePred(propertyAccessor(card), card);
-  result.fieldsUsed = [propertyName]
-  return result;
-};
-const comparisonCondition = (valuePred, propertyName, propertyAccessor, otherPropertyName, otherPropertyAccessor) => {
-  const result = (card) => valuePred(propertyAccessor(card), otherPropertyAccessor(card));
-  result.fieldsUsed = [propertyName, otherPropertyName]
-  return result;
-};
-const legalitySuperCondition = (op, legality) => {
-  const propertyName = 'legality';
-  const propertyAccessor = cardLegalIn;
-
-  if (legality === 'vintage') {
-    const result = (card) => {
-      const legal = cardLegalIn(card).includes('Vintage');
-      const restricted = cardRestrictedIn(card).includes('Vintage');
-      //Total set of legal cards in vintage are cards that are legal or restricted
-      return legal || restricted;
-    }
-    result.fieldsUsed = [propertyName];
-    return result;
-  } else {
-    return genericCondition(propertyName, propertyAccessor, setElementOperation(op, legality));
-  }
-};
-%} # %}
 
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
 
