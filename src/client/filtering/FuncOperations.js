@@ -336,27 +336,14 @@ export const comparisonCondition = (
 
 export const legalitySuperCondition = (op, legality) => {
   const propertyName = 'legality';
-  const propertyAccessor = cardLegalIn;
+  const target = legality.toLowerCase();
 
-  if (legality.toLowerCase() === 'vintage') {
-    const result = (card) => {
-      const legal = cardLegalIn(card)
-        .map((s) => s.toLowerCase())
-        .includes('vintage');
-      const restricted = cardRestrictedIn(card)
-        .map((s) => s.toLowerCase())
-        .includes('vintage');
-      //Total set of legal cards in vintage are cards that are legal or restricted
-      return legal || restricted;
-    };
-    result.fieldsUsed = [propertyName];
-    if (op === '!=' || op === '<>') {
-      const negated = (card) => !result(card);
-      negated.fieldsUsed = result.fieldsUsed;
-      return negated;
-    }
-    return result;
+  if (target === 'vintage') {
+    // Combine legal and restricted, lowercase all, then use setElementOperation
+    const propertyAccessor = (card) => [...cardLegalIn(card), ...cardRestrictedIn(card)].map((s) => s.toLowerCase());
+
+    return genericCondition(propertyName, propertyAccessor, setElementOperation(op, target));
   } else {
-    return genericCondition(propertyName, propertyAccessor, setElementOperation(op, legality));
+    return genericCondition(propertyName, cardLegalIn, setElementOperation(op, target));
   }
 };

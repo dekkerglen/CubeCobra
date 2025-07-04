@@ -168,6 +168,18 @@ describe('legalitySuperCondition', () => {
     expect(cond(card)).toBe(false);
   });
 
+  it('vintage condition is case insensitive even though format names are capitalized', () => {
+    const card = createCardFromDetails({ legalities: { vintage: 'legal' } });
+    const cond = legalitySuperCondition(':', 'vintage');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('condition is case insensitive even though format names are capitalized', () => {
+    const card = createCardFromDetails({ legalities: { modern: 'legal' } });
+    const cond = legalitySuperCondition(':', 'Modern');
+    expect(cond(card)).toBe(true);
+  });
+
   it('returns true for other formats if legal', () => {
     const card = createCardFromDetails({ legalities: { Modern: 'legal' } });
     const cond = legalitySuperCondition(':', 'modern');
