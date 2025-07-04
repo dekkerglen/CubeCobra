@@ -1,4 +1,9 @@
-import { propertyComparisonOperation, setElementOperation } from '../../src/client/filtering/FuncOperations';
+import {
+  legalitySuperCondition,
+  propertyComparisonOperation,
+  setElementOperation,
+} from '../../src/client/filtering/FuncOperations';
+import { createCardFromDetails } from '../test-utils/data';
 
 describe('setElementOperation', () => {
   it('Invalid operator', async () => {
@@ -135,5 +140,93 @@ describe('propertyComparisonOperation', () => {
   it('Greater than or equal operator NOT matching', () => {
     const filterer = propertyComparisonOperation('>=');
     expect(filterer(4, 5)).toBeFalsy();
+  });
+});
+
+describe('legalitySuperCondition', () => {
+  it('returns true if card is legal in vintage', () => {
+    const card = createCardFromDetails({ legalities: { Vintage: 'legal' } });
+    const cond = legalitySuperCondition(':', 'vintage');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('returns true if card is restricted in vintage', () => {
+    const card = createCardFromDetails({ legalities: { Vintage: 'restricted' } });
+    const cond = legalitySuperCondition(':', 'vintage');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('returns false if card is banned in vintage', () => {
+    const card = createCardFromDetails({ legalities: { Vintage: 'banned' } });
+    const cond = legalitySuperCondition(':', 'vintage');
+    expect(cond(card)).toBe(false);
+  });
+
+  it('returns false if card has no vintage legality', () => {
+    const card = createCardFromDetails({ legalities: { Legacy: 'legal' } });
+    const cond = legalitySuperCondition(':', 'vintage');
+    expect(cond(card)).toBe(false);
+  });
+
+  it('vintage condition is case insensitive even though format names are capitalized', () => {
+    const card = createCardFromDetails({ legalities: { vintage: 'legal' } });
+    const cond = legalitySuperCondition(':', 'vintage');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('condition is case insensitive even though format names are capitalized', () => {
+    const card = createCardFromDetails({ legalities: { modern: 'legal' } });
+    const cond = legalitySuperCondition(':', 'Modern');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('returns true for other formats if legal', () => {
+    const card = createCardFromDetails({ legalities: { Modern: 'legal' } });
+    const cond = legalitySuperCondition(':', 'modern');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('returns false for other formats if not legal', () => {
+    const card = createCardFromDetails({ legalities: { Modern: 'banned' } });
+    const cond = legalitySuperCondition(':', 'modern');
+    expect(cond(card)).toBe(false);
+  });
+
+  it('returns false for vintage with != if card is legal or restricted', () => {
+    const cardLegal = createCardFromDetails({ legalities: { Vintage: 'legal' } });
+    const cardRestricted = createCardFromDetails({ legalities: { Vintage: 'restricted' } });
+    const cond = legalitySuperCondition('!=', 'vintage');
+    expect(cond(cardLegal)).toBe(false);
+    expect(cond(cardRestricted)).toBe(false);
+  });
+
+  it('returns true for vintage with != if card is banned', () => {
+    const card = createCardFromDetails({ legalities: { Vintage: 'banned' } });
+    const cond = legalitySuperCondition('!=', 'vintage');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('returns true for vintage with != if card has no vintage legality', () => {
+    const card = createCardFromDetails({ legalities: { Legacy: 'legal' } });
+    const cond = legalitySuperCondition('!=', 'vintage');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('returns false for modern with != if card is legal', () => {
+    const card = createCardFromDetails({ legalities: { Modern: 'legal' } });
+    const cond = legalitySuperCondition('!=', 'modern');
+    expect(cond(card)).toBe(false);
+  });
+
+  it('returns true for modern with != if card is banned', () => {
+    const card = createCardFromDetails({ legalities: { Modern: 'banned' } });
+    const cond = legalitySuperCondition('!=', 'modern');
+    expect(cond(card)).toBe(true);
+  });
+
+  it('returns true for modern with != if card has no modern legality', () => {
+    const card = createCardFromDetails({ legalities: { Legacy: 'legal' } });
+    const cond = legalitySuperCondition('!=', 'modern');
+    expect(cond(card)).toBe(true);
   });
 });

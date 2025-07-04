@@ -1,4 +1,4 @@
-import { cardDevotion } from '../utils/cardutil';
+import { cardDevotion, cardLegalIn, cardRestrictedIn } from '../utils/cardutil';
 import { arrayIsSubset, arraysAreEqualSets } from '../utils/Util';
 
 export const defaultOperation = (op, value) => {
@@ -313,5 +313,37 @@ export const propertyComparisonOperation = (op) => {
       return (fieldValueOne, fieldValueTwo) => fieldValueOne >= fieldValueTwo;
     default:
       throw new Error(`Unrecognized operator '${op}'`);
+  }
+};
+
+export const genericCondition = (propertyName, propertyAccessor, valuePred) => {
+  const result = (card) => valuePred(propertyAccessor(card), card);
+  result.fieldsUsed = [propertyName];
+  return result;
+};
+
+export const comparisonCondition = (
+  valuePred,
+  propertyName,
+  propertyAccessor,
+  otherPropertyName,
+  otherPropertyAccessor,
+) => {
+  const result = (card) => valuePred(propertyAccessor(card), otherPropertyAccessor(card));
+  result.fieldsUsed = [propertyName, otherPropertyName];
+  return result;
+};
+
+export const legalitySuperCondition = (op, legality) => {
+  const propertyName = 'legality';
+  const target = legality.toLowerCase();
+
+  if (target === 'vintage') {
+    // Combine legal and restricted, lowercase all, then use setElementOperation
+    const propertyAccessor = (card) => [...cardLegalIn(card), ...cardRestrictedIn(card)].map((s) => s.toLowerCase());
+
+    return genericCondition(propertyName, propertyAccessor, setElementOperation(op, target));
+  } else {
+    return genericCondition(propertyName, cardLegalIn, setElementOperation(op, target));
   }
 };

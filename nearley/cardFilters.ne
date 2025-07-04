@@ -16,6 +16,9 @@ import {
   setCountOperation,
   devotionOperation,
   propertyComparisonOperation,
+  genericCondition,
+  comparisonCondition,
+  legalitySuperCondition,
 } from '../../filtering/FuncOperations';
 import {
   CARD_CATEGORY_DETECTORS,
@@ -107,19 +110,6 @@ condition -> (
   | notesCondition
 ) {% ([[condition]]) => condition %}
 
-@{%
-const genericCondition = (propertyName, propertyAccessor, valuePred) => {
-  const result = (card) => valuePred(propertyAccessor(card), card);
-  result.fieldsUsed = [propertyName]
-  return result;
-};
-const comparisonCondition = (valuePred, propertyName, propertyAccessor, otherPropertyName, otherPropertyAccessor) => {
-  const result = (card) => valuePred(propertyAccessor(card), otherPropertyAccessor(card));
-  result.fieldsUsed = [propertyName, otherPropertyName]
-  return result;
-};
-%} # %}
-
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
 
 colorCondition -> ("c"i | "color"i | "colors"i) colorCombinationOpValue {% ([, valuePred]) => genericCondition('colors', cardColors, valuePred) %}
@@ -144,7 +134,7 @@ tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) =>
 
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
 
-legalityCondition -> ("leg"i | "legal"i | "legality"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardLegalIn, valuePred) %}
+legalityCondition -> ("leg"i | "legal"i | "legality"i) equalityOperator legalityValue {% ([, op, legality]) => legalitySuperCondition(op, legality) %}
 
 bannedCondition -> ("ban"i | "banned"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardBannedIn, valuePred) %}
 
