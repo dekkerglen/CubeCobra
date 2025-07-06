@@ -278,24 +278,34 @@ export function CubeContextProvider({
     setVersionDictLoading(false);
   }, [csrfFetch, cube.cards, loadVersionDict, versionDictLoaded, versionDictLoading]);
 
+  // The versionDictProxy is a Proxy around the versionDict state.
+  // Its purpose is to lazily load the version dictionary from the server
+  // only when it is first accessed by a consumer (such as ListView or CardModal).
+  // This avoids fetching all card versions unless they are actually needed.
+
   const versionDictProxy = useMemo(() => {
+    // maybeFetch ensures that the fetch is only triggered once (the fetchStartedRef),
+    // and only if the version dictionary is not already loaded or loading.
+    const maybeFetch = () => {
+      if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
+        fetchVersionDict();
+      }
+    };
+    // The Proxy intercepts property access and other object operations.
     return new Proxy(versionDict, {
+      // The get trap is called whenever a property is accessed, e.g. versionDictProxy[someKey].
       get(target, prop, receiver) {
-        if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
-          fetchVersionDict();
-        }
+        maybeFetch();
         return Reflect.get(target, prop, receiver);
       },
+      // The ownKeys trap is called for operations like Object.keys(versionDictProxy).
       ownKeys(target) {
-        if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
-          fetchVersionDict();
-        }
+        maybeFetch();
         return Reflect.ownKeys(target);
       },
+      // The getOwnPropertyDescriptor trap is called for operations like Object.getOwnPropertyDescriptor.
       getOwnPropertyDescriptor(target, prop) {
-        if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
-          fetchVersionDict();
-        }
+        maybeFetch();
         return Reflect.getOwnPropertyDescriptor(target, prop);
       },
     });
