@@ -6,8 +6,8 @@ import React, {
   SetStateAction,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -227,6 +227,79 @@ export function CubeContextProvider({
     [cube.defaultSorts],
   );
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
+  const [versionDictLoaded, setVersionDictLoaded] = useState(false);
+  const [versionDictLoading, setVersionDictLoading] = useState(false);
+  const fetchStartedRef = useRef(false);
+
+  const fetchVersionDict = useCallback(async () => {
+    if (versionDictLoaded || versionDictLoading || !loadVersionDict || fetchStartedRef.current) {
+      return;
+    }
+    fetchStartedRef.current = true;
+    setVersionDictLoading(true);
+
+    const ids: string[] = [];
+    for (const [board, list] of Object.entries(cube.cards)) {
+      if (board !== 'id') {
+        for (const card of list) {
+          if (!card.cardID) {
+            console.error(`Card ${card.details?.name} has no cardID`);
+          } else {
+            ids.push(card.cardID);
+          }
+        }
+      }
+    }
+
+    const response = await csrfFetch(`/cube/api/getversions`, {
+      method: 'POST',
+      body: JSON.stringify(ids),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      const message = `Couldn't get versions: ${response.status}.`;
+      console.error(message);
+      setVersionDictLoading(false);
+      return;
+    }
+
+    const json = await response.json();
+    if (json.success !== 'true') {
+      const message = `Couldn't get versions: ${json.message}.`;
+      console.error(message);
+      setVersionDictLoading(false);
+      return;
+    }
+
+    setVersionDict(json.dict);
+    setVersionDictLoaded(true);
+    setVersionDictLoading(false);
+  }, [csrfFetch, cube.cards, loadVersionDict, versionDictLoaded, versionDictLoading]);
+
+  const versionDictProxy = useMemo(() => {
+    return new Proxy(versionDict, {
+      get(target, prop, receiver) {
+        if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
+          fetchVersionDict();
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+      ownKeys(target) {
+        if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
+          fetchVersionDict();
+        }
+        return Reflect.ownKeys(target);
+      },
+      getOwnPropertyDescriptor(target, prop) {
+        if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
+          fetchVersionDict();
+        }
+        return Reflect.getOwnPropertyDescriptor(target, prop);
+      },
+    });
+  }, [versionDict, fetchVersionDict, loadVersionDict, versionDictLoaded, versionDictLoading]);
 
   const [modalSelection, setModalSelection] = useState<
     { index: number; board: BoardType } | { index: number; board: BoardType }[]
@@ -315,50 +388,6 @@ export function CubeContextProvider({
     },
     [csrfFetch, setShowTagColors],
   );
-
-  useEffect(() => {
-    const getData = async () => {
-      if (!loadVersionDict) {
-        return;
-      }
-
-      const ids = [];
-      for (const [board, list] of Object.entries(cube.cards)) {
-        if (board !== 'id') {
-          for (const card of list) {
-            if (!card.cardID) {
-              console.error(`Card ${card.details?.name} has no cardID`);
-            } else {
-              ids.push(card.cardID);
-            }
-          }
-        }
-      }
-
-      const response = await csrfFetch(`/cube/api/getversions`, {
-        method: 'POST',
-        body: JSON.stringify(ids),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        const message = `Couldn't get versions: ${response.status}.`;
-        console.error(message);
-        return;
-      }
-
-      const json = await response.json();
-      if (json.success !== 'true') {
-        const message = `Couldn't get versions: ${json.message}.`;
-        console.error(message);
-        return;
-      }
-
-      setVersionDict(json.dict);
-    };
-    getData();
-  }, [csrfFetch, cube.cards, loadVersionDict]);
 
   const addCard = useCallback(
     (card: Card, board: BoardType) => {
@@ -646,9 +675,9 @@ export function CubeContextProvider({
               editIndex: i,
             };
 
-            if (versionDict[normalizeName(cardName(card))] && edit.newCard.cardID !== card.cardID) {
+            if (versionDictProxy[normalizeName(cardName(card))] && edit.newCard.cardID !== card.cardID) {
               card = changed[board][edit.index];
-              const newDetails = versionDict[normalizeName(cardName(card))].find(
+              const newDetails = versionDictProxy[normalizeName(cardName(card))].find(
                 (v) => v.scryfall_id === edit.newCard.cardID,
               );
               if (card.details !== undefined && newDetails !== undefined) {
@@ -692,7 +721,7 @@ export function CubeContextProvider({
     }
 
     return [result, changed];
-  }, [cube.cards, useChangedCards, cardFilter, filterInput, changes, versionDict]);
+  }, [cube.cards, useChangedCards, cardFilter, filterInput, changes, versionDictProxy]);
 
   const commitChanges = useCallback(
     async (title: string, blog: string) => {
@@ -975,7 +1004,7 @@ export function CubeContextProvider({
       revertRemove,
       revertSwap,
       revertEdit,
-      versionDict,
+      versionDict: versionDictProxy,
       commitChanges,
       setModalSelection,
       setModalOpen,
@@ -1024,7 +1053,7 @@ export function CubeContextProvider({
       revertRemove,
       revertSwap,
       revertEdit,
-      versionDict,
+      versionDictProxy,
       commitChanges,
       setModalSelection,
       setModalOpen,
@@ -1070,7 +1099,7 @@ export function CubeContextProvider({
               isOpen={modalOpen}
               setOpen={setModalOpen}
               canEdit={canEdit}
-              versionDict={versionDict}
+              versionDict={versionDictProxy}
               editCard={editCard}
               revertEdit={revertEdit}
               revertRemove={revertRemove}
