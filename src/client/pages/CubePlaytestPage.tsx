@@ -30,7 +30,6 @@ interface CubePlaytestPageProps {
   decksLastKey: any;
   previousPacks?: any[];
   previousPacksLastKey?: any;
-  loginCallback?: string;
 }
 
 const UploadDecklistModalLink = withModal(Link, UploadDecklistModal);
@@ -42,7 +41,6 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
   decksLastKey,
   previousPacks = [],
   previousPacksLastKey,
-  loginCallback = '/',
 }) => {
   const user = useContext(UserContext);
   const defaultFormat = cube.defaultFormat ?? -1;
@@ -65,7 +63,7 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} activeLink="playtest" hasControls={!!user && cube.owner.id === user.id}>
         <Flexbox direction="col" gap="2" className="mb-2">
           {user && cube.owner.id === user.id && (

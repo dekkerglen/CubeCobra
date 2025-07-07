@@ -31,10 +31,9 @@ const SampleHandModalLink = withModal(Link, SampleHandModal);
 interface CubeDeckPageProps {
   cube: Cube;
   draft: Draft;
-  loginCallback: string;
 }
 
-const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback }) => {
+const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
   const user = useContext(UserContext);
   const [seatIndex, setSeatIndex] = useQueryParam('seat', '0');
   const [view, setView] = useQueryParam('view', 'draft');
@@ -59,7 +58,7 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest" hasControls>
           <Controls>

@@ -237,10 +237,9 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
 
 interface ImportRecordPageProps {
   cards: CardDetails[];
-  loginCallback?: string;
 }
 
-const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards, loginCallback = '/' }) => {
+const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards }) => {
   const user: User | null = useContext(UserContext);
   const [isYourCube, setIsYourCube] = React.useState(true);
   const [existingRecord, setExistingRecord] = React.useState<boolean>(false);
@@ -251,7 +250,7 @@ const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards, loginCallbac
   const [cardState, setCardState] = useState<CardDetails[]>(cards);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DynamicFlash />
       <Card className="my-2">
         <CardHeader>

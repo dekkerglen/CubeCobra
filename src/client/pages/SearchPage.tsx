@@ -16,7 +16,6 @@ import MainLayout from 'layouts/MainLayout';
 
 interface SearchPageProps {
   cubes: Cube[];
-  loginCallback?: string;
   lastKey?: string;
   parsedQuery?: string[];
   query?: string;
@@ -24,7 +23,7 @@ interface SearchPageProps {
 
 const PAGE_SIZE = 36;
 
-const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey, parsedQuery, query }) => {
+const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, query }) => {
   const [items, setItems] = useState<Cube[]>(cubes);
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
@@ -127,7 +126,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey, 
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeSearchController
         query={currentQuery}
         order={currentOrder}

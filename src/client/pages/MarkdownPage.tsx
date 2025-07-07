@@ -12,12 +12,8 @@ import Markdown from 'components/Markdown';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
-interface MarkdownProps {
-  loginCallback?: string;
-}
-
-const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const MarkdownPage: React.FC = () => (
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <Card className="my-3 mx-4">
@@ -824,9 +820,5 @@ const MarkdownPage: React.FC<MarkdownProps> = ({ loginCallback = '/' }) => (
     </Card>
   </MainLayout>
 );
-
-MarkdownPage.propTypes = {
-  loginCallback: PropTypes.string,
-};
 
 export default RenderToRoot(MarkdownPage);

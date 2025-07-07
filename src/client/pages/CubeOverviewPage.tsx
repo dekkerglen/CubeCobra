@@ -34,7 +34,6 @@ interface CubeOverviewProps {
   cards: CubeCards;
   followed: boolean;
   followersCount: number;
-  loginCallback: () => void;
 }
 
 const CubeOverview: React.FC<CubeOverviewProps> = ({

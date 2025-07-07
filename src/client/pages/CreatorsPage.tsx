@@ -19,17 +19,16 @@ interface ContentItems {
 }
 
 interface CreatorsPageProps {
-  loginCallback?: string;
   articles: ContentItems;
   videos: ContentItems;
   podcasts: ContentItems;
 }
 
-const CreatorsPage: React.FC<CreatorsPageProps> = ({ loginCallback = '/', articles, videos, podcasts }) => {
+const CreatorsPage: React.FC<CreatorsPageProps> = ({ articles, videos, podcasts }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Controls>
         <Flexbox direction="col" gap="2" className="mx-2">
           <Banner />

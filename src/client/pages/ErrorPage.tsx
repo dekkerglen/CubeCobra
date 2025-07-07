@@ -12,14 +12,13 @@ interface ErrorPageProps {
   requestId?: string;
   error?: string;
   details?: Record<string, unknown>;
-  loginCallback?: string;
 }
 
-const ErrorPage: React.FC<ErrorPageProps> = ({ title, error, requestId, loginCallback = '/', details }) => {
+const ErrorPage: React.FC<ErrorPageProps> = ({ title, error, requestId, details }) => {
   console.log(details);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DynamicFlash />
       <Card className="my-2">
         <CardHeader>

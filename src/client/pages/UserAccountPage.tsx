@@ -18,7 +18,6 @@ import MainLayout from 'layouts/MainLayout';
 
 interface UserAccountPageProps {
   defaultNav: string;
-  loginCallback?: string;
   patreonClientId: string;
   patreonRedirectUri: string;
   patron?: Patron;
@@ -29,7 +28,6 @@ interface UserAccountPageProps {
 }
 
 const UserAccountPage: React.FC<UserAccountPageProps> = ({
-  loginCallback,
   patreonClientId,
   patreonRedirectUri,
   patron,
@@ -38,7 +36,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({
   const [activeTab, setActiveTab] = useQueryParam('tab', '0');
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-3">

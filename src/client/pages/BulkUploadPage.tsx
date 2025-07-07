@@ -155,7 +155,6 @@ interface BulkUploadPageProps {
     maybeboard: CardType[];
   };
   added: string[];
-  loginCallback?: string;
   blogpost: {
     title: string;
     html: string;
@@ -163,8 +162,8 @@ interface BulkUploadPageProps {
   missing: string[];
 }
 
-const BulkUploadPage: React.FC<BulkUploadPageProps> = ({ cube, cards, added, loginCallback, missing }) => (
-  <MainLayout loginCallback={loginCallback}>
+const BulkUploadPage: React.FC<BulkUploadPageProps> = ({ cube, cards, added, missing }) => (
+  <MainLayout>
     <DynamicFlash />
     <CubeLayout cube={cube} cards={cards} activeLink="list" useChangedCards>
       <BulkUploadPageRaw added={added} missing={missing} />

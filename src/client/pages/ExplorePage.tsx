@@ -14,12 +14,11 @@ interface ExplorePageProps {
   featured: Cube[];
   drafted: Cube[];
   popular: Cube[];
-  loginCallback?: string;
 }
 
-const ExplorePage: React.FC<ExplorePageProps> = ({ recents, featured, drafted, popular, loginCallback = '/' }) => {
+const ExplorePage: React.FC<ExplorePageProps> = ({ recents, featured, drafted, popular }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeSearchNavBar />
       <DynamicFlash />
       <Row>

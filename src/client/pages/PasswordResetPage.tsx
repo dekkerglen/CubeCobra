@@ -9,12 +9,11 @@ import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
 interface PasswordResetPageProps {
-  loginCallback?: string;
   code: string;
 }
 
-const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ loginCallback = '/', code }) => (
-  <MainLayout loginCallback={loginCallback}>
+const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ code }) => (
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <Card className="my-3">

@@ -38,14 +38,13 @@ const translateLink: { [key: string]: (id: string) => string } = {
 
 interface CommentPageProps {
   comment: CommentType;
-  loginCallback?: string;
 }
 
-const CommentPage: React.FC<CommentPageProps> = ({ comment, loginCallback = '/' }) => {
+const CommentPage: React.FC<CommentPageProps> = ({ comment }) => {
   const [content, setContent] = useState<CommentType>(comment);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-3">

@@ -19,7 +19,6 @@ interface CubeComparePageProps {
   cards: Card[];
   cube: Cube;
   cubeB: Cube;
-  loginCallback?: string;
   onlyA: string[];
   onlyB: string[];
   both: string[];
@@ -53,14 +52,13 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
   cards,
   cube,
   cubeB,
-  loginCallback = '/',
   onlyA,
   onlyB,
   both,
 }) => {
   return (
     <FilterContextProvider>
-      <MainLayout loginCallback={loginCallback}>
+      <MainLayout>
         <DisplayContextProvider cubeID={cube.id}>
           <ChangesContextProvider cube={cube}>
             <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>

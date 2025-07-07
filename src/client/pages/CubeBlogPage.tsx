@@ -19,20 +19,19 @@ interface CubeBlogPageProps {
   cube: Cube;
   lastKey: any;
   posts: PostType[];
-  loginCallback?: string;
 }
 
 const CreateBlogModalLink = withModal(Link, CreateBlogModal);
 
 const PAGE_SIZE = 20;
 
-const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, loginCallback = '/' }) => {
+const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts }) => {
   const [items, setItems] = useState(posts);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const user = useContext(UserContext);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} activeLink="blog" hasControls={!!user && cube.owner.id === user.id}>
         <Controls>
           <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">

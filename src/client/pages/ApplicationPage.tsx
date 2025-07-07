@@ -11,11 +11,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
-interface AdminDashboardPageProps {
-  loginCallback?: string;
-}
-
-const ApplicationPage: React.FC<AdminDashboardPageProps> = ({ loginCallback = '/' }) => {
+const ApplicationPage: React.FC = () => {
   const [info, setInfo] = React.useState<string>('');
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
@@ -26,7 +22,7 @@ const ApplicationPage: React.FC<AdminDashboardPageProps> = ({ loginCallback = '/
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DynamicFlash />
       <Container md>
         <Card className="my-3 mx-4">

@@ -10,17 +10,15 @@ import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
 interface AdminDashboardPageProps {
-  loginCallback?: string;
   noticeCount: number;
   contentInReview: number;
 }
 
 const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
-  loginCallback = '/',
   noticeCount,
   contentInReview,
 }) => (
-  <MainLayout loginCallback={loginCallback}>
+  <MainLayout>
     <DynamicFlash />
     <Container sm>
       <Card className="my-3 mx-4">

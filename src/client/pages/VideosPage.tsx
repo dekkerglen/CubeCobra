@@ -10,17 +10,16 @@ import Video from 'datatypes/Video';
 import MainLayout from 'layouts/MainLayout';
 
 interface VideosPageProps {
-  loginCallback?: string;
   videos: Video[];
   lastKey?: string;
 }
 
-const VideosPage: React.FC<VideosPageProps> = ({ loginCallback = '/', videos, lastKey }) => {
+const VideosPage: React.FC<VideosPageProps> = ({ videos, lastKey }) => {
   const [items, setItems] = useState(videos);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Flexbox direction="col" gap="2" className="my-2">
         <Banner />
         <DynamicFlash />

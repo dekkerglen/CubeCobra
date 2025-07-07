@@ -21,10 +21,9 @@ import MainLayout from '../layouts/MainLayout';
 interface CubeDeckbuilderPageProps {
   cube: Cube;
   initialDeck: Draft;
-  loginCallback: string;
 }
 
-const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initialDeck, loginCallback }) => {
+const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initialDeck }) => {
   const [mainboard, setMainboard] = useState<number[][][]>(initialDeck.seats[0].mainboard);
   const [sideboard, setSideboard] = useState<number[][][]>(initialDeck.seats[0].sideboard);
   const [dragStartTime, setDragStartTime] = useState<number | null>(null);
@@ -112,7 +111,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest" hasControls>
           <DeckbuilderNavbar

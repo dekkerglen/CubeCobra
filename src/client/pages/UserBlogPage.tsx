@@ -17,7 +17,6 @@ interface UserBlogPageProps {
   followersCount: number;
   following: boolean;
   posts: BlogPostType[];
-  loginCallback?: string;
   lastKey?: string;
 }
 
@@ -28,7 +27,6 @@ const UserBlogPage: React.FC<UserBlogPageProps> = ({
   following,
   posts,
   owner,
-  loginCallback = '/',
   lastKey,
 }) => {
   const [items, setItems] = useState(posts);
@@ -85,7 +83,7 @@ const UserBlogPage: React.FC<UserBlogPageProps> = ({
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <UserLayout user={owner} followersCount={followersCount} following={following} activeLink="blog">
         <DynamicFlash />
         {items.length > 0 ? (

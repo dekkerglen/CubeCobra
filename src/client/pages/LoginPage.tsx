@@ -13,7 +13,7 @@ import MainLayout from 'layouts/MainLayout';
 const LoginPage: React.FC = () => {
   const formRef = React.useRef<HTMLFormElement>(null);
   return (
-    <MainLayout loginCallback={'/'}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-3">

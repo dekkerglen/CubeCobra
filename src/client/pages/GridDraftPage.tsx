@@ -68,10 +68,9 @@ interface GridDraftPageProps {
   cube: Cube;
   initialDraft: Draft;
   seatNumber?: number;
-  loginCallback?: string;
 }
 
-const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatNumber, loginCallback }) => {
+const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatNumber }) => {
   const { cards } = initialDraft;
   const { csrfFetch } = useContext(CSRFContext);
   const draftType = initialDraft.seats[1].bot ? 'bot' : '2playerlocal';
@@ -126,7 +125,7 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
   }, [draftType, botDrafterState, mutations, botIndex]);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <DynamicFlash />

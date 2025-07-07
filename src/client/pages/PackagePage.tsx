@@ -10,11 +10,10 @@ import CardPackageType from '../../datatypes/CardPackage';
 
 interface PackagePageProps {
   pack: CardPackageType;
-  loginCallback?: string;
 }
 
-const PackagePage: React.FC<PackagePageProps> = ({ pack, loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const PackagePage: React.FC<PackagePageProps> = ({ pack }) => (
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <CardPackage cardPackage={pack} />

@@ -11,11 +11,10 @@ import MainLayout from 'layouts/MainLayout';
 interface RegisterPageProps {
   email?: string;
   username?: string;
-  loginCallback?: string;
 }
 
-const RegisterPage: React.FC<RegisterPageProps> = ({ email = '', username = '', loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const RegisterPage: React.FC<RegisterPageProps> = ({ email = '', username = '' }) => (
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <Card className="my-3">
