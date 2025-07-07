@@ -8,6 +8,7 @@ const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 import sendEmail from '../util/email';
 const { handleRouteError, render, redirect } = require('../util/render');
+const { getSafeReferrer } = require('../util/util');
 
 // Bring in models
 const User = require('../dynamo/models/user');
@@ -433,11 +434,7 @@ router.post('/login', async (req, res) => {
   }
 
   req.body.username = user.username;
-  // TODO: fix confirmation and check it here.
-  let redirectRoute = '/';
-  if (req.body.loginCallback) {
-    redirectRoute = req.body.loginCallback;
-  }
+  let redirectRoute = getSafeReferrer(req) || '/';
   passport.authenticate('local', {
     successRedirect: redirectRoute,
     failureRedirect: '/user/login',
