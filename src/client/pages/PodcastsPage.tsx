@@ -54,7 +54,7 @@ const PodcastsPage: React.FC<PodcastsPageProps> = ({ episodes, podcasts, lastKey
       }
     }
     setLoading(false);
-  }, [items, currentLastKey, page]);
+  }, [csrfFetch, currentLastKey, items, page]);
 
   const pager = (
     <Pagination
@@ -62,6 +62,7 @@ const PodcastsPage: React.FC<PodcastsPageProps> = ({ episodes, podcasts, lastKey
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
+        // eslint-disable-next-line no-console
         console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();

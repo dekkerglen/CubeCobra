@@ -55,12 +55,14 @@ const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
         setTitle('');
         setBody('');
       } else {
+        // eslint-disable-next-line no-console
         console.error(json);
       }
     } else {
+      // eslint-disable-next-line no-console
       console.error(response);
     }
-  }, [title, body, setItems, items]);
+  }, [csrfFetch, title, body, setItems, items]);
 
   return (
     <Card className="my-3">
@@ -109,7 +111,7 @@ const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey }) => {
       }
     }
     setLoading(false);
-  }, [items, setItems, currentLastKey]);
+  }, [csrfFetch, currentLastKey, items]);
 
   return (
     <MainLayout>

@@ -80,7 +80,6 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
   const drafterStates = useMemo(() => {
     return [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx }));
   }, [gridDraft]);
-  console.log(drafterStates);
   const { turn, numPacks, packNum, pickNum } = drafterStates[seatNum];
   const { cardsInPack } = drafterStates[turn ? 0 : 1];
   const doneDrafting = packNum >= numPacks;
@@ -113,7 +112,7 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
         submitDeckForm.current?.submit?.();
       }
     })();
-  }, [doneDrafting, gridDraft]);
+  }, [csrfFetch, doneDrafting, gridDraft]);
 
   useEffect(() => {
     if (botDrafterState.turn && draftType === 'bot') {

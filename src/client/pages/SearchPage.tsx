@@ -71,7 +71,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
       }
     }
     setLoading(false);
-  }, [currentAscending, currentLastKey, currentOrder, currentQuery, items, page]);
+  }, [csrfFetch, currentAscending, currentLastKey, currentOrder, currentQuery, items, page]);
 
   const go = useCallback(
     async (query: string, order: string, ascending: string) => {
@@ -106,7 +106,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
       }
       setLoading(false);
     },
-    [setCurrentAscending, setCurrentOrder, setCurrentQuery, setCurrentLastKey],
+    [setCurrentQuery, setCurrentOrder, setCurrentAscending, csrfFetch],
   );
 
   const pager = (

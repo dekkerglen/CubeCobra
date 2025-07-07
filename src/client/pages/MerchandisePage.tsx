@@ -15,15 +15,6 @@ import MainLayout from 'layouts/MainLayout';
 
 const ConfirmActionButton = withModal(Button, ConfirmActionModal);
 
-interface InfoPageProps {
-  title: string;
-  content: {
-    label: string;
-    text: string;
-    table?: [string, string][];
-  }[];
-}
-
 const products = [
   {
     name: 'Year of the Snake Playmat',
