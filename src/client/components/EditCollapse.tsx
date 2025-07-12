@@ -224,6 +224,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
                 color="accent"
                 disabled={removeValue.length === 0}
                 onClick={(e) => handleRemoveReplace(e, removeValue)}
+                className="shrink-0"
               >
                 Remove/Replace
               </Button>
