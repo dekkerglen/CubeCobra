@@ -39,7 +39,7 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
   const { alerts, addAlert, dismissAlerts } = useAlerts();
   const cards = changedCards.mainboard;
 
-  const { data, exportTokens: exportTokens } = useMemo((): {
+  const { data, exportTokens } = useMemo((): {
     data: {
       card: CardType;
       cardDescription: string;
