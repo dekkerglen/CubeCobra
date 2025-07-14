@@ -51,7 +51,10 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
     for (const row of mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          cardNames.push(cards[cardIndex].details?.name);
+          const cardName = cards[cardIndex].details?.name;
+          if (cardName) {
+            cardNames.push(cardName);
+          }
         }
       }
     }
