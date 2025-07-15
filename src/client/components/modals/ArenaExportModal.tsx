@@ -25,11 +25,66 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
   const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
   const { cardFilter } = useContext(FilterContext)!;
 
-  const AFTERMATH_ORACLE_TEXT = 'Aftermath (Cast this spell only from your graveyard. Then exile it.)'.toLowerCase();
-
   //Generate the export text for the current cube cards, tracking all the cards, filters and sorts to ensure it only
   //generates when things change
   useEffect(() => {
+    const AFTERMATH_ORACLE_TEXT = 'Aftermath (Cast this spell only from your graveyard. Then exile it.)'.toLowerCase();
+
+    /*
+     * Based text format on information in https://magicarena.fandom.com/wiki/Deck_Import. Could not find a more definitive resource.
+     * Known issues:
+     * 1) Cards ending in ! (eg Fear, Fire, Foes!) are unable to import to Arena (even exporting from Arena then back in fails). See https://feedback.wizards.com/forums/918667-mtg-arena-bugs-product-suggestions/suggestions/46881610-can-t-import-deck-with-fear-fire-foes
+     * 2) Meld back sides will fail to find in Arena. Don't see any information from Scryfall to distinguish from the meld front sides
+     */
+    const generateArenaExport = () => {
+      let cards = cube.cards.mainboard;
+      if (isFilterUsed) {
+        cards = cards.filter(cardFilter.filter);
+      }
+
+      let sortedCards = cards;
+      if (isSortUsed) {
+        //Use ?? in case the sorts are null. Undefined results in the defaults within sortForDownload being used
+        sortedCards = sortForDownload(
+          cards,
+          sortPrimary ?? undefined,
+          sortSecondary ?? undefined,
+          sortTertiary ?? undefined,
+          sortQuaternary ?? undefined,
+          cube.showUnsorted,
+        );
+      }
+
+      let exportText = '';
+      for (const card of sortedCards) {
+        if (typeof card.details === 'undefined') {
+          continue;
+        }
+        /*
+         * While card set and collector number can be imported to Arena, if the set is not available on Arena (or if in a different set code than paper),
+         * it causes a failure to import for the card name. Thus we omit the information even if it can be used.
+         * Similar to the majority of the exports, treat each card in the cube as indepenent instead of counting by name to group.
+         */
+        exportText += `1 ${getCardNameForArena(card.details)}\n`;
+      }
+
+      setText(exportText);
+    };
+
+    function getCardNameForArena(cardDetails: CardDetails) {
+      let name = cardDetails.name;
+      const oracleText = cardDetails.oracle_text;
+
+      /*
+       * Arena import (bug?) requires aftermath cards to be separated by three slashes not two. Normal split cards (and/or rooms) with 2 slashes are fine.
+       * Best logic found so far is to check the oracle text has the full Aftermath keyword/reminder text.
+       */
+      if (oracleText.toLowerCase().includes(AFTERMATH_ORACLE_TEXT)) {
+        name = name.replace(new RegExp('//', 'g'), '///');
+      }
+      return name;
+    }
+
     generateArenaExport();
   }, [
     cube.cards.mainboard,
@@ -40,62 +95,8 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
     sortSecondary,
     sortTertiary,
     sortQuaternary,
+    cube.showUnsorted,
   ]);
-
-  /*
-   * Based text format on information in https://magicarena.fandom.com/wiki/Deck_Import. Could not find a more definitive resource.
-   * Known issues:
-   * 1) Cards ending in ! (eg Fear, Fire, Foes!) are unable to import to Arena (even exporting from Arena then back in fails). See https://feedback.wizards.com/forums/918667-mtg-arena-bugs-product-suggestions/suggestions/46881610-can-t-import-deck-with-fear-fire-foes
-   * 2) Meld back sides will fail to find in Arena. Don't see any information from Scryfall to distinguish from the meld front sides
-   */
-  async function generateArenaExport() {
-    let cards = cube.cards.mainboard;
-    if (isFilterUsed) {
-      cards = cards.filter(cardFilter.filter);
-    }
-
-    let sortedCards = cards;
-    if (isSortUsed) {
-      //Use ?? in case the sorts are null. Undefined results in the defaults within sortForDownload being used
-      sortedCards = sortForDownload(
-        cards,
-        sortPrimary ?? undefined,
-        sortSecondary ?? undefined,
-        sortTertiary ?? undefined,
-        sortQuaternary ?? undefined,
-        cube.showUnsorted,
-      );
-    }
-
-    let exportText = '';
-    for (const card of sortedCards) {
-      if (card.details == undefined) {
-        continue;
-      }
-      /*
-       * While card set and collector number can be imported to Arena, if the set is not available on Arena (or if in a different set code than paper),
-       * it causes a failure to import for the card name. Thus we omit the information even if it can be used.
-       * Similar to the majority of the exports, treat each card in the cube as indepenent instead of counting by name to group.
-       */
-      exportText += `1 ${getCardNameForArena(card.details)}\n`;
-    }
-
-    setText(exportText);
-  }
-
-  function getCardNameForArena(cardDetails: CardDetails) {
-    let name = cardDetails.name;
-    const oracleText = cardDetails.oracle_text;
-
-    /*
-     * Arena import (bug?) requires aftermath cards to be separated by three slashes not two. Normal split cards (and/or rooms) with 2 slashes are fine.
-     * Best logic found so far is to check the oracle text has the full Aftermath keyword/reminder text.
-     */
-    if (oracleText.toLowerCase().includes(AFTERMATH_ORACLE_TEXT)) {
-      name = name.replace(new RegExp('//', 'g'), '///');
-    }
-    return name;
-  }
 
   async function copyToClipboard() {
     //Dismiss any remaining alerts before adding the new one, so multiple don't stack up
@@ -116,7 +117,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
     <Modal isOpen={isOpen} setOpen={onClose} md>
       <ModalHeader setOpen={onClose}>Arena Export</ModalHeader>
       <ModalBody>
-        <Text>Copy the textbox or use the Copy to clipboard button.</Text>
+        <Text>Copy the textbox or use the Copy to clipboard button.</Text>&nbsp;
         <Text>Note: Arena can only import 250 cards into a deck.</Text>
         <Alerts alerts={alerts} />
         <TextArea rows={10} placeholder="Copy Cube" value={text} disabled />
