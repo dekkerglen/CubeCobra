@@ -223,20 +223,27 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const [visible, setVisible] = useState(false);
   const { hideCard } = useContext(AutocardContext);
 
+  // Lazy load the tree only when the user starts typing (value is non-empty)
   useEffect(() => {
+    if (!value) return; // Don't fetch until user types something
+    let cancelled = false;
     const wrapper = async () => {
       try {
         if (!treeCache[treeUrl]) {
           treeCache[treeUrl] = fetchTree(treeUrl, treePath);
         }
-        setTree((await treeCache[treeUrl]) ?? {});
+        const result = await treeCache[treeUrl];
+        if (!cancelled) setTree(result ?? {});
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error('Error getting autocomplete tree.', e);
       }
     };
     wrapper();
-  }, [treePath, treeUrl]);
+    return () => {
+      cancelled = true;
+    };
+  }, [treePath, treeUrl, value]);
 
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
