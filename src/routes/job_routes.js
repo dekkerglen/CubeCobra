@@ -18,14 +18,14 @@ router.post('/featuredcubes/rotate', async (req, res) => {
   const { token } = req.body;
 
   if (token !== process.env.JOBS_TOKEN) {
-    return res.statusCode(401).send('Invalid token.');
+    return res.status(401).send('Invalid token.');
   }
 
   const response = await FeaturedQueue.querySortedByDate(null, 4);
   const rotate = await fq.rotateFeatured(response.items);
 
   if (rotate.success === 'false') {
-    return res.statusCode(500).send('featured cube rotation failed: ' + rotate.messages.join('\n'));
+    return res.status(500).send('featured cube rotation failed: ' + rotate.messages.join('\n'));
   }
 
   const olds = await User.batchGet(rotate.removed.map((f) => f.ownerID));
