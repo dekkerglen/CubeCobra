@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import {
-  cardCmc,
   cardColorIdentity,
   cardFullName,
   cardIndex,
@@ -87,6 +86,8 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
   const { versionDict, editCard, tagColors, allTags, canEdit } = useContext(CubeContext);
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
   const [pageSize, setPageSize] = useState(50);
+  //Default value is undefined so the field only shows red border when wrong, neutral otherwise
+  const [isCmcValid, setCmcValid] = useState<{ [key: string]: boolean | undefined }>({});
 
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
@@ -130,6 +131,30 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
       editCard(cardIndex(card), { ...card, [field]: value }, card.board || 'mainboard');
     },
     [editCard],
+  );
+
+  const doCmcValidity = useCallback((card: CardType, input: HTMLInputElement) => {
+    if (input.validity.patternMismatch) {
+      input.setCustomValidity('Cmc must be a non-negative number (integer or decimal).');
+    } else if (input.validity.valueMissing) {
+      input.setCustomValidity('Cmc must be set.');
+    } else {
+      input.setCustomValidity('');
+    }
+    const isValid = input.reportValidity() ? undefined : false;
+    setCmcValid((prevCmcValid) => ({
+      ...prevCmcValid,
+      [cardIndex(card)]: isValid,
+    }));
+  }, []);
+
+  const onCmcChange = useCallback(
+    (card: CardType, e: React.ChangeEvent<HTMLInputElement>) => {
+      const input = e.target;
+      updateField(card, 'cmc', input.value);
+      doCmcValidity(card, input);
+    },
+    [updateField, doCmcValidity],
   );
 
   const headers = ['Name', 'Version', 'Type', 'Status', 'Finish', 'CMC', 'Color Identity', 'Tags'];
@@ -188,8 +213,14 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
       <Input
         type="text"
         name="cmc"
-        value={`${cardCmc(card)}`}
-        onChange={(event) => updateField(card, 'cmc', event.target.value)}
+        value={`${card.cmc ?? card.details?.cmc ?? ''}`}
+        onChange={(e) => onCmcChange(card, e)}
+        valid={isCmcValid[cardIndex(card)]}
+        placeholder={`${card.details?.cmc ?? ''}`}
+        otherInputProps={{
+          required: true,
+          pattern: '[0-9.]+',
+        }}
         style={{ maxWidth: '3rem' }}
       />
     ),
