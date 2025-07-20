@@ -143,9 +143,9 @@ const CardModal: React.FC<CardModalProps> = ({
 
   const doCmcValidity = useCallback((input: HTMLInputElement) => {
     if (input.validity.patternMismatch) {
-      input.setCustomValidity('Cmc must be a non-negative number (integer or decimal).');
+      input.setCustomValidity('Mana Value must be a non-negative number (integer or decimal).');
     } else if (input.validity.valueMissing) {
-      input.setCustomValidity('Cmc must be set.');
+      input.setCustomValidity('Mana Value must be set.');
     } else {
       input.setCustomValidity('');
     }
