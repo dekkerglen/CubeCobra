@@ -89,6 +89,8 @@ const CardModal: React.FC<CardModalProps> = ({
   allTags,
 }) => {
   const [versions, setVersions] = useState<Record<string, CardDetails> | null>(null);
+  //Default value is undefined so the field only shows red border when wrong, neutral otherwise
+  const [isCmcValid, setCmcValid] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     if (!versionDict[normalizeName(cardName(card))]) {
@@ -118,6 +120,7 @@ const CardModal: React.FC<CardModalProps> = ({
   //When the card id changes, then update the image used. If we just checked card, it would be different
   //if any field in the modal is edited, which would lead the image to reset to the front face.
   if (prevCardID !== card.cardID) {
+    setCmcValid(undefined);
     setIsFrontImage(true);
     setPrevCardID(card.cardID);
     setImageUsed(getCardFrontImage(card));
@@ -139,6 +142,39 @@ const CardModal: React.FC<CardModalProps> = ({
     },
     [card, editCard, getCardFrontImage, isFrontImage],
   );
+
+  const doCmcValidity = useCallback((input: HTMLInputElement) => {
+    if (input.validity.patternMismatch) {
+      input.setCustomValidity('Cmc must be a non-negative number (integer or decimal).');
+    } else if (input.validity.valueMissing) {
+      input.setCustomValidity('Cmc must be set.');
+    } else {
+      input.setCustomValidity('');
+    }
+    setCmcValid(input.reportValidity() ? undefined : false);
+  }, []);
+
+  const onCmcChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const input = e.target;
+      updateField('cmc', input.value);
+      doCmcValidity(input);
+    },
+    [updateField, doCmcValidity],
+  );
+
+  const revertAction = useCallback(() => {
+    if (card.editIndex !== undefined && card.board !== undefined) {
+      revertEdit(card.editIndex, card.board);
+
+      const cmcInput: HTMLInputElement | null = document.querySelector('#cardModalCmc');
+      //Assume that the loaded state of the card has a valid CMC
+      if (cmcInput) {
+        setCmcValid(undefined);
+        cmcInput.setCustomValidity('');
+      }
+    }
+  }, [revertEdit, card]);
 
   return (
     <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
@@ -285,11 +321,23 @@ const CardModal: React.FC<CardModalProps> = ({
                 />
                 <Input
                   label="Mana Value"
+                  //Number overrides pattern to allow negatives or "e", also adds steppers. So stick with text.
                   type="text"
                   name="cmc"
+                  id="cardModalCmc"
+                  /*
+                   * Don't use cardCmc to skip the fallback logic when the custom cmc isn't numeric.
+                   * That causes the user input to be visually replaced causing confusion, such as when trying to delete a number.
+                   */
                   value={`${card.cmc ?? card.details?.cmc ?? ''}`}
-                  onChange={(event) => updateField('cmc', event.target.value)}
+                  onChange={onCmcChange}
                   disabled={disabled}
+                  valid={isCmcValid}
+                  placeholder={`${card.details?.cmc ?? ''}`}
+                  otherInputProps={{
+                    required: true,
+                    pattern: '[0-9.]+',
+                  }}
                 />
                 <Input
                   label="Type"
@@ -298,6 +346,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   value={cardType(card)}
                   onChange={(event) => updateField('type_line', event.target.value)}
                   disabled={disabled}
+                  required
                 />
                 <Select
                   label="Rarity"
@@ -455,16 +504,7 @@ const CardModal: React.FC<CardModalProps> = ({
           )}
           {card.editIndex !== undefined && (
             <>
-              <Button
-                color="primary"
-                block
-                className="items-center text-sm"
-                onClick={() => {
-                  if (card.editIndex !== undefined && card.board !== undefined) {
-                    revertEdit(card.editIndex, card.board);
-                  }
-                }}
-              >
+              <Button color="primary" block className="items-center text-sm" onClick={revertAction}>
                 Revert Edit
               </Button>
               &nbsp;
