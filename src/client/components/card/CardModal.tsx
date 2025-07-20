@@ -10,7 +10,6 @@ import ManaPoolButton from 'components/purchase/ManaPoolButton';
 import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
 import withModal from 'components/WithModal';
 import {
-  cardCmc,
   cardColorCategory,
   cardColorIdentity,
   cardElo,
@@ -288,7 +287,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   label="Mana Value"
                   type="text"
                   name="cmc"
-                  value={`${cardCmc(card)}`}
+                  value={`${card.cmc ?? card.details?.cmc ?? ''}`}
                   onChange={(event) => updateField('cmc', event.target.value)}
                   disabled={disabled}
                 />
