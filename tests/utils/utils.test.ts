@@ -450,6 +450,16 @@ describe('cardCmc', () => {
     card.cmc = 'not a number' as any;
     expect(cardCmc(card)).toBe(4);
   });
+
+  it('defaults to details cmc if card cmc is empty', () => {
+    const card = createCard({
+      details: createCardDetails({
+        cmc: 4,
+      }),
+    });
+    card.cmc = '' as any;
+    expect(cardCmc(card)).toBe(4);
+  });
 });
 
 describe('cardLegalIn', () => {
