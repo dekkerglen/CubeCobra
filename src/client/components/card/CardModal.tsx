@@ -24,6 +24,7 @@ import {
   cardTags,
   cardTix,
   cardType,
+  isCardCmcValid,
   normalizeName,
 } from 'utils/cardutil';
 import { getLabels } from 'utils/Sort';
@@ -89,8 +90,6 @@ const CardModal: React.FC<CardModalProps> = ({
   allTags,
 }) => {
   const [versions, setVersions] = useState<Record<string, CardDetails> | null>(null);
-  //Default value is undefined so the field only shows red border when wrong, neutral otherwise
-  const [isCmcValid, setCmcValid] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     if (!versionDict[normalizeName(cardName(card))]) {
@@ -120,7 +119,6 @@ const CardModal: React.FC<CardModalProps> = ({
   //When the card id changes, then update the image used. If we just checked card, it would be different
   //if any field in the modal is edited, which would lead the image to reset to the front face.
   if (prevCardID !== card.cardID) {
-    setCmcValid(undefined);
     setIsFrontImage(true);
     setPrevCardID(card.cardID);
     setImageUsed(getCardFrontImage(card));
@@ -151,7 +149,7 @@ const CardModal: React.FC<CardModalProps> = ({
     } else {
       input.setCustomValidity('');
     }
-    setCmcValid(input.reportValidity() ? undefined : false);
+    input.reportValidity();
   }, []);
 
   const onCmcChange = useCallback(
@@ -166,13 +164,6 @@ const CardModal: React.FC<CardModalProps> = ({
   const revertAction = useCallback(() => {
     if (card.editIndex !== undefined && card.board !== undefined) {
       revertEdit(card.editIndex, card.board);
-
-      const cmcInput: HTMLInputElement | null = document.querySelector('#cardModalCmc');
-      //Assume that the loaded state of the card has a valid CMC
-      if (cmcInput) {
-        setCmcValid(undefined);
-        cmcInput.setCustomValidity('');
-      }
     }
   }, [revertEdit, card]);
 
@@ -332,7 +323,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   value={`${card.cmc ?? card.details?.cmc ?? ''}`}
                   onChange={onCmcChange}
                   disabled={disabled}
-                  valid={isCmcValid}
+                  valid={isCardCmcValid(card.cmc ?? card.details?.cmc).valid ? undefined : false}
                   placeholder={`${card.details?.cmc ?? ''}`}
                   otherInputProps={{
                     required: true,

@@ -7,6 +7,7 @@ import {
   cardName,
   cardTags,
   cardType,
+  isCardCmcValid,
   normalizeName,
 } from 'utils/cardutil';
 import { getLabels, sortForDownload } from 'utils/Sort';
@@ -86,8 +87,6 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
   const { versionDict, editCard, tagColors, allTags, canEdit } = useContext(CubeContext);
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
   const [pageSize, setPageSize] = useState(50);
-  //Default value is undefined so the field only shows red border when wrong, neutral otherwise
-  const [isCmcValid, setCmcValid] = useState<{ [key: string]: boolean | undefined }>({});
 
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
@@ -133,7 +132,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
     [editCard],
   );
 
-  const doCmcValidity = useCallback((card: CardType, input: HTMLInputElement) => {
+  const doCmcValidity = useCallback((input: HTMLInputElement) => {
     if (input.validity.patternMismatch) {
       input.setCustomValidity('Cmc must be a non-negative number (integer or decimal).');
     } else if (input.validity.valueMissing) {
@@ -141,18 +140,14 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
     } else {
       input.setCustomValidity('');
     }
-    const isValid = input.reportValidity() ? undefined : false;
-    setCmcValid((prevCmcValid) => ({
-      ...prevCmcValid,
-      [cardIndex(card)]: isValid,
-    }));
+    input.reportValidity();
   }, []);
 
   const onCmcChange = useCallback(
     (card: CardType, e: React.ChangeEvent<HTMLInputElement>) => {
       const input = e.target;
       updateField(card, 'cmc', input.value);
-      doCmcValidity(card, input);
+      doCmcValidity(input);
     },
     [updateField, doCmcValidity],
   );
@@ -215,7 +210,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         name="cmc"
         value={`${card.cmc ?? card.details?.cmc ?? ''}`}
         onChange={(e) => onCmcChange(card, e)}
-        valid={isCmcValid[cardIndex(card)]}
+        valid={isCardCmcValid(card.cmc ?? card.details?.cmc).valid ? undefined : false}
         placeholder={`${card.details?.cmc ?? ''}`}
         otherInputProps={{
           required: true,
