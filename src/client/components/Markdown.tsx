@@ -6,6 +6,7 @@ import { slug } from 'github-slugger';
 import ReactMarkdown, { MarkdownProps } from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
+import reactToText from 'react-to-text';
 
 import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
 import { isInternalURL, isSamePageURL } from 'utils/Util';
@@ -24,25 +25,9 @@ import withModal, { WithModalProps } from './WithModal';
  * That plugin, and its friend rehype-autolink-headings only interact with literal h# elements, but we have configured
  * ReactMarkdown with custom components (renderers) for those which generate Text components (they are not h# elements)
  */
-function generateHeadingId(headingText: ReactNode): string {
-  /*
-   * An object means an Iterable<ReactNode>. We only want to use any string parts of it to make the slug
-   */
-  if (typeof headingText === 'object') {
-    const strings: string[] = [];
-    for (const [, value] of Object.entries(headingText!)) {
-      if (typeof value === 'string') {
-        strings.push(value.trim());
-      }
-    }
-    return slug(strings.join('-'), false);
-
-    //A plain string would be just text content
-  } else if (typeof headingText === 'string') {
-    //Simplfied, slug replaces spaces with dashes and strips non-alphanumeric content
-    return slug(String(headingText), false);
-  }
-  return '';
+function generateHeadingId(node: ReactNode): string {
+  //Since headings can contain non-text stuff like LateX, use reactToText to get any textual parts of the heading
+  return slug(reactToText(node).trim(), false) ?? '';
 }
 
 type AutocardLinkProps = WithAutocardProps & LinkProps;
