@@ -603,7 +603,7 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
               </p>
               <p>
                 You can use <code>finish:</code> to filter by cards with the given finish. Available options are
-                &quot;Non-foil&quot; and &quot;Foil&quot;.
+                &quot;Non-foil&quot;, &quot;Foil&quot;, &quot;Etched&quot;, and &quot;Alt-foil&quot;.
               </p>
               <p>
                 You can use <code>status:</code> to filter by cards with the given status. Available options are&nbsp;

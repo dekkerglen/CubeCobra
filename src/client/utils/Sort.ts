@@ -409,7 +409,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
   } else if (sort === 'Status') {
     ret = CARD_STATUSES.slice();
   } else if (sort === 'Finish') {
-    ret = ['Non-foil', 'Foil', 'Etched'];
+    ret = ['Non-foil', 'Foil', 'Etched', 'Alt-foil'];
   } else if (sort === 'Guilds') {
     ret = GUILDS;
   } else if (sort === 'Shards / Wedges') {

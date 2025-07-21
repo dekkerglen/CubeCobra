@@ -159,6 +159,8 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
                   { value: '', label: 'Any' },
                   { value: 'Foil', label: 'Foil' },
                   { value: 'Non-foil', label: 'Non-foil' },
+                  { value: 'Etched', label: 'Etched' },
+                  { value: 'Alt-foil', label: 'Alt-foil' },
                 ]}
               />
             </Col>

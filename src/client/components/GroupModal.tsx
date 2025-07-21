@@ -280,6 +280,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
                   { value: '', label: 'None' },
                   { value: 'Non-foil', label: 'Non-foil' },
                   { value: 'Foil', label: 'Foil' },
+                  { value: 'Etched', label: 'Etched' },
+                  { value: 'Alt-foil', label: 'Alt-foil' },
                 ]}
                 value={finish}
                 setValue={setFinish}
