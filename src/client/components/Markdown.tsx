@@ -26,10 +26,19 @@ import withModal, { WithModalProps } from './WithModal';
  */
 function generateHeadingId(headingText: ReactNode): string {
   /*
-   * Extra defensive since ReactNode can be many things, not just text. For example we support a heading containing LaTex which would
-   * be converted to HTML elements by rehypeKatex
+   * An object means an Iterable<ReactNode>. We only want to use any string parts of it to make the slug
    */
-  if (typeof headingText === 'string') {
+  if (typeof headingText === 'object') {
+    const strings: string[] = [];
+    for (const [, value] of Object.entries(headingText!)) {
+      if (typeof value === 'string') {
+        strings.push(value.trim());
+      }
+    }
+    return slug(strings.join('-'), false);
+
+    //A plain string would be just text content
+  } else if (typeof headingText === 'string') {
     //Simplfied, slug replaces spaces with dashes and strips non-alphanumeric content
     return slug(String(headingText), false);
   }
