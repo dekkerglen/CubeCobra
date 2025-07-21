@@ -10,7 +10,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
-import { CARD_STATUSES } from '../../datatypes/Card';
+import { CARD_STATUSES, FINISHES } from '../../datatypes/Card';
 
 interface FiltersPageProps {
   loginCallback: string;
@@ -602,8 +602,14 @@ const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
                 <Text semibold>Filters for individual cubes:</Text>
               </p>
               <p>
-                You can use <code>finish:</code> to filter by cards with the given finish. Available options are
-                &quot;Non-foil&quot;, &quot;Foil&quot;, &quot;Etched&quot;, and &quot;Alt-foil&quot;.
+                You can use <code>finish:</code> to filter by cards with the given finish. Available options are&nbps;
+                {
+                  /* Replace the last comma with ", and" for nice English */
+                  FINISHES.map((finish) => `"${finish}"`)
+                    .join(', ')
+                    .replace(/,(?!.*,)/gim, ', and')
+                }
+                .
               </p>
               <p>
                 You can use <code>status:</code> to filter by cards with the given status. Available options are&nbsp;

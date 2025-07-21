@@ -276,13 +276,12 @@ const GroupModal: React.FC<GroupModalProps> = ({
               />
               <Select
                 label="Set finish of all"
-                options={[
-                  { value: '', label: 'None' },
-                  { value: 'Non-foil', label: 'Non-foil' },
-                  { value: 'Foil', label: 'Foil' },
-                  { value: 'Etched', label: 'Etched' },
-                  { value: 'Alt-foil', label: 'Alt-foil' },
-                ]}
+                options={[{ value: '', label: 'Any' }].concat(
+                  getLabels(null, 'Finish', false).map((status: string) => ({
+                    value: status,
+                    label: status,
+                  })),
+                )}
                 value={finish}
                 setValue={setFinish}
               />

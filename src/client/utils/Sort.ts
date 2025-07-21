@@ -1,4 +1,4 @@
-import Card, { CARD_STATUSES, COLOR_CATEGORIES } from '../../datatypes/Card';
+import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES } from '../../datatypes/Card';
 import {
   cardAddedTime,
   cardArtist,
@@ -409,7 +409,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
   } else if (sort === 'Status') {
     ret = CARD_STATUSES.slice();
   } else if (sort === 'Finish') {
-    ret = ['Non-foil', 'Foil', 'Etched', 'Alt-foil'];
+    ret = FINISHES.slice();
   } else if (sort === 'Guilds') {
     ret = GUILDS;
   } else if (sort === 'Shards / Wedges') {
