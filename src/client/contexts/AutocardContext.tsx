@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { cardFinish, cardTags } from 'utils/cardutil';
+import { cardTags, isCardFoil } from 'utils/cardutil';
 
 import Card from '../../datatypes/Card';
 import { TagColor } from '../../datatypes/Cube';
@@ -126,7 +126,7 @@ export const AutocardContextProvider: React.FC<{ children: JSX.Element }> = ({ c
     (card: Card, inModal: boolean, showCustomImages: boolean, tagColors: TagColor[]) => {
       if (!stopAutocard) {
         setHidden(false);
-        setFoilOverlay(cardFinish(card) === 'Foil');
+        setFoilOverlay(isCardFoil(card));
         setFront(((showCustomImages && card.imgUrl) || card.details?.image_normal) ?? null);
         setBack(((showCustomImages && card.imgBackUrl) || card.details?.image_flip) ?? null);
         setTags(
