@@ -1,4 +1,13 @@
-import { cardBannedIn, cardCmc, cardLegalIn, cardRestrictedIn, normalizeName } from '../../src/client/utils/cardutil';
+import {
+  cardBannedIn,
+  cardCmc,
+  cardFinish,
+  cardLegalIn,
+  cardRestrictedIn,
+  isCardFoil,
+  isFoilFinish,
+  normalizeName,
+} from '../../src/client/utils/cardutil';
 import util from '../../src/util/util';
 import { createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
 
@@ -542,5 +551,54 @@ describe('cardRestrictedIn', () => {
       legalities: {},
     });
     expect(cardRestrictedIn(card)).toEqual([]);
+  });
+});
+
+describe('Foiling', () => {
+  it('Foils', () => {
+    const card = createCard({
+      finish: 'Foil',
+    });
+    expect(cardFinish(card)).toEqual('Foil');
+    expect(isCardFoil(card)).toBeTruthy();
+  });
+
+  it('Non-foil', () => {
+    const card = createCard({
+      finish: 'Non-foil',
+    });
+    expect(cardFinish(card)).toEqual('Non-foil');
+    expect(isCardFoil(card)).toBeFalsy();
+  });
+
+  it('Etched', () => {
+    const card = createCard({
+      finish: 'Etched',
+    });
+    expect(cardFinish(card)).toEqual('Etched');
+    expect(isCardFoil(card)).toBeTruthy();
+  });
+
+  it('Alt-foil', () => {
+    const card = createCard({
+      finish: 'Alt-foil',
+    });
+    expect(cardFinish(card)).toEqual('Alt-foil');
+    expect(isCardFoil(card)).toBeTruthy();
+  });
+
+  it('Any finish is allowed', () => {
+    const card = createCard({
+      finish: 'Galaxy hyper mega foil',
+    });
+    expect(cardFinish(card)).toEqual('Galaxy hyper mega foil');
+    expect(isCardFoil(card)).toBeTruthy();
+  });
+
+  it('isFoilFinish', () => {
+    expect(isFoilFinish('Non-foil')).toBeFalsy();
+    expect(isFoilFinish('Foil')).toBeTruthy();
+    expect(isFoilFinish('Etched')).toBeTruthy();
+    expect(isFoilFinish('Alt-foil')).toBeTruthy();
   });
 });
