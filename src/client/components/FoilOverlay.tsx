@@ -1,6 +1,7 @@
 import React, { ComponentProps, ElementType } from 'react';
 
 import Card from '../../datatypes/Card';
+import { isFoilFinish } from '../utils/cardutil';
 
 export interface FoilOverlayProps {
   wrapperTag?: ElementType;
@@ -25,7 +26,7 @@ const FoilOverlay = <T extends ElementType>(Tag: T) => {
     const Result = (
       <WrapperTag className="relative">
         <Tag ref={innerRef} {...(props as any)} />
-        {finish === 'Foil' && (
+        {isFoilFinish(finish) && (
           <img
             src="/content/foilOverlay.png"
             className="absolute inset-0 w-full h-full foilOverlay card-border"

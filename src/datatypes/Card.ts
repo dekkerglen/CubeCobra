@@ -15,6 +15,9 @@ export type ColorCategory = (typeof COLOR_CATEGORIES)[number];
 
 export const DefaultElo = 1200;
 
+export const FINISHES = ['Non-foil', 'Foil', 'Etched', 'Alt-foil'] as const;
+export type Finish = (typeof FINISHES)[number];
+
 export interface CardDetails {
   scryfall_id: string;
   oracle_id: string;
@@ -49,7 +52,7 @@ export interface CardDetails {
   power?: string;
   toughness?: string;
   parsed_cost: string[];
-  finishes: string[];
+  finishes: (Finish | string)[]; // string for backwards compatability
   promo_types?: string[];
   border_color: 'black' | 'white' | 'silver' | 'gold';
   language: string;
@@ -187,7 +190,7 @@ export default interface Card {
   colors?: Exclude<ManaSymbol, 'C'>[];
   colorCategory?: ColorCategory;
   tags?: string[];
-  finish?: string;
+  finish?: Finish | string; //string for backwards compatability in case data ever got weird
   status?: string;
   cmc?: string | number;
   type_line?: string;
