@@ -231,6 +231,33 @@ export function CubeContextProvider({
   const [versionDictLoading, setVersionDictLoading] = useState(false);
   const fetchStartedRef = useRef(false);
 
+  const fetchCardVersions = useCallback(
+    async (ids: string[]) => {
+      const response = await csrfFetch(`/cube/api/getversions`, {
+        method: 'POST',
+        body: JSON.stringify(ids),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        const message = `Couldn't get versions: ${response.status}.`;
+        console.error(message);
+        return;
+      }
+
+      const json = await response.json();
+      if (json.success !== 'true') {
+        const message = `Couldn't get versions: ${json.message}.`;
+        console.error(message);
+        return;
+      }
+
+      return json.dict;
+    },
+    [csrfFetch],
+  );
+
   const fetchVersionDict = useCallback(async () => {
     if (versionDictLoaded || versionDictLoading || !loadVersionDict || fetchStartedRef.current) {
       return;
@@ -250,33 +277,13 @@ export function CubeContextProvider({
         }
       }
     }
-
-    const response = await csrfFetch(`/cube/api/getversions`, {
-      method: 'POST',
-      body: JSON.stringify(ids),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!response.ok) {
-      const message = `Couldn't get versions: ${response.status}.`;
-      console.error(message);
+    const dict = await fetchCardVersions(ids);
+    if (dict) {
+      setVersionDict(dict);
+      setVersionDictLoaded(true);
       setVersionDictLoading(false);
-      return;
     }
-
-    const json = await response.json();
-    if (json.success !== 'true') {
-      const message = `Couldn't get versions: ${json.message}.`;
-      console.error(message);
-      setVersionDictLoading(false);
-      return;
-    }
-
-    setVersionDict(json.dict);
-    setVersionDictLoaded(true);
-    setVersionDictLoading(false);
-  }, [csrfFetch, cube.cards, loadVersionDict, versionDictLoaded, versionDictLoading]);
+  }, [cube.cards, fetchCardVersions, loadVersionDict, versionDictLoaded, versionDictLoading]);
 
   // The versionDictProxy is a Proxy around the versionDict state.
   // Its purpose is to lazily load the version dictionary from the server
@@ -760,6 +767,7 @@ export function CubeContextProvider({
         } else {
           const newCards = deepCopy(unfilteredChangedCards);
 
+          const newCardsToFetchVersions = [];
           for (const board of boardTypes) {
             // swaps
             if (changes[board]?.swaps) {
@@ -789,6 +797,7 @@ export function CubeContextProvider({
                 if (newDetails !== null) {
                   newCards[board][newCards[board].length - 1].details = newDetails;
                 }
+                newCardsToFetchVersions.push(add.cardID);
               }
             }
 
@@ -807,6 +816,15 @@ export function CubeContextProvider({
             }
           }
 
+          //Fetch the versions of cards added so add them to the dictionary
+          //Previously a useEffect would fetch all versions each time the card list changed
+          const dict = await fetchCardVersions(newCardsToFetchVersions);
+          if (dict) {
+            Object.entries(dict).forEach(([key, value]: [string, CardVersion[]]) => {
+              versionDict[key] = value;
+            });
+          }
+
           setModalSelection([]);
           clearChanges();
           setCube({
@@ -822,7 +840,18 @@ export function CubeContextProvider({
       setModalSelection([]);
       setLoading(false);
     },
-    [csrfFetch, changes, cube, useBlog, unfilteredChangedCards, clearChanges, setVersion, version],
+    [
+      csrfFetch,
+      changes,
+      cube,
+      useBlog,
+      unfilteredChangedCards,
+      fetchCardVersions,
+      clearChanges,
+      setVersion,
+      version,
+      versionDict,
+    ],
   );
 
   const bulkEditCard = useCallback(
