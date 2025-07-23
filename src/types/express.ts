@@ -7,6 +7,7 @@ export interface Request extends express.Request {
   logger: {
     error: (...args: any[]) => void;
   };
+  csrfToken: () => string;
 }
 
 export interface Response extends express.Response {}
