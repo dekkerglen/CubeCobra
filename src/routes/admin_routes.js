@@ -5,7 +5,7 @@ const express = require('express');
 import sendEmail from '../util/email';
 const { ensureRole, csrfProtection } = require('./middleware');
 
-const User, { UserRoles } = require('../dynamo/models/user');
+const User = require('../dynamo/models/user');
 const Notice = require('../dynamo/models/notice');
 const Comment = require('../dynamo/models/comment');
 const Blog = require('../dynamo/models/blog');
@@ -19,6 +19,7 @@ const fq = require('../util/featuredQueue');
 
 import { ContentStatus } from '../datatypes/Content';
 import { NoticeStatus } from '../datatypes/Notice';
+import { UserRoles } from '../datatypes/User';
 
 const ensureAdmin = ensureRole(UserRoles.ADMIN);
 
