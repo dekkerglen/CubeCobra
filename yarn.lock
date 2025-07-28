@@ -5376,7 +5376,7 @@ aws-sdk-js-codemod@^3.0.1:
   dependencies:
     jscodeshift "17.3.0"
 
-aws-sdk@^2.100.0, aws-sdk@^2.1478.0:
+aws-sdk@^2.100.0:
   version "2.1691.0"
   resolved "https://registry.npmjs.org/aws-sdk/-/aws-sdk-2.1691.0.tgz"
   integrity sha512-/F2YC+DlsY3UBM2Bdnh5RLHOPNibS/+IcjUuhP8XuctyrN+MlL+fWDAiela32LTDk7hMy4rx8MTgvbJ+0blO5g==

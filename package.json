@@ -99,7 +99,6 @@
     "@tensorflow/tfjs-node": "^4.22.0",
     "archiver": "^7.0.1",
     "assert": "^2.0.0",
-    "aws-sdk": "^2.1478.0",
     "aws-sdk-js-codemod": "^3.0.1",
     "bad-words": "^3.0.4",
     "bcryptjs": "^2.4.3",
