@@ -1,23 +1,15 @@
 require('dotenv').config();
 const fs = require('fs');
 
-const AWS = require('aws-sdk');
+import { s3 } from '../dynamo/s3client';
 
 const downloadFromS3 = async () => {
-  const s3 = new AWS.S3({
-    endpoint: process.env.AWS_ENDPOINT || undefined,
-    s3ForcePathStyle: !!process.env.AWS_ENDPOINT,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION || 'us-east-2',
-  });
-
   // list all from s3 under s3://cubecobra/model
-  const listResult = await s3.listObjectsV2({ Bucket: process.env.DATA_BUCKET, Prefix: 'model/' }).promise();
+  const listResult = await s3.listObjectsV2({ Bucket: process.env.DATA_BUCKET, Prefix: 'model/' });
 
   // for each file, download it to the local model directory
   for (const file of listResult.Contents) {
-    const res = await s3.getObject({ Bucket: process.env.DATA_BUCKET, Key: file.Key }).promise();
+    const res = await s3.getObject({ Bucket: process.env.DATA_BUCKET, Key: file.Key });
 
     // make sure folders exist
     const folders = file.Key.split('/');

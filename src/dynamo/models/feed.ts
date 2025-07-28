@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 
 import BlogPost from '../../datatypes/BlogPost';
 import { Feed, FeedTypes, UnhydratedFeed } from '../../datatypes/Feed';
@@ -27,8 +28,8 @@ const feed = {
   batchPut: async (documents: UnhydratedFeed[]): Promise<void> => client.batchPut(documents),
   getByTo: async (
     user: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Feed[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Feed[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const toAttr: keyof UnhydratedFeed = 'to';
 
@@ -94,7 +95,7 @@ const feed = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };
 
 module.exports = feed;

@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Changes } from '../../datatypes/Card';
@@ -123,8 +124,8 @@ const Changelog = {
   getByCube: async (
     cubeId: string,
     limit: number,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: CubeChangeLog[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: CubeChangeLog[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const cubeAttr: keyof ChangelogType = 'cube';
 
     const result = await client.query({
@@ -163,11 +164,11 @@ const Changelog = {
     } as ChangelogType);
     return id;
   },
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   scan: async (
     limit: number,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items: ChangelogType[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items: ChangelogType[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
       Limit: limit || 36,
@@ -178,7 +179,7 @@ const Changelog = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  batchGet: async (keys: DocumentClient.Key[]): Promise<Changes[]> => {
+  batchGet: async (keys: Record<string, NativeAttributeValue>[]): Promise<Changes[]> => {
     const result = await Promise.all(
       keys.map(async (key) => {
         const data = await getObject(getBucketName(), `changelog/${key.cube}/${key.id}.json`);

@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import { NewNotice, Notice, NoticeStatus, UnhydratedNotice } from '../../datatypes/Notice';
@@ -71,8 +72,8 @@ const notice = {
   getById: async (id: string): Promise<Notice> => hydrate((await client.get(id)).Item as UnhydratedNotice),
   getByStatus: async (
     to: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Notice[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Notice[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const statusAttr: keyof UnhydratedNotice = 'status';
 
@@ -116,7 +117,7 @@ const notice = {
     } as UnhydratedNotice);
   },
   batchPut: async (documents: UnhydratedNotice[]): Promise<void> => client.batchPut(documents),
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };
 
 module.exports = notice;

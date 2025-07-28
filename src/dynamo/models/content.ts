@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 const User = require('./user');
@@ -148,8 +149,8 @@ const content = {
     hydrate(await addBody((await client.get(id)).Item as UnhydratedContent)),
   getByStatus: async (
     status: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Content[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Content[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const statusAttr: keyof UnhydratedContent = 'status';
 
@@ -173,8 +174,8 @@ const content = {
   getByTypeAndStatus: async (
     type: ContentType,
     status: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Content[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Content[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const typeStatusCompAttr: keyof UnhydratedContent = 'typeStatusComp';
 
     const result = await client.query({
@@ -197,8 +198,8 @@ const content = {
   getByTypeAndOwner: async (
     type: ContentType,
     owner: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Content[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Content[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const typeOwnerCompAttr: keyof UnhydratedContent = 'typeOwnerComp';
 
     const result = await client.query({
@@ -218,7 +219,7 @@ const content = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  update: async (document: Article | Episode | Podcast | Video): Promise<DocumentClient.PutItemOutput> => {
+  update: async (document: Article | Episode | Podcast | Video): Promise<PutCommandOutput> => {
     if (!document.id) {
       throw new Error('Invalid document: No partition key provided');
     }
@@ -264,10 +265,12 @@ const content = {
     );
     client.batchPut(docs.map((doc) => doc.document));
   },
-  batchDelete: async (keys: DocumentClient.Key[]): Promise<void> => {
+  batchDelete: async (keys: Record<string, NativeAttributeValue>[]): Promise<void> => {
     return client.batchDelete(keys);
   },
-  scan: async (lastKey: DocumentClient.Key): Promise<{ items?: UnhydratedContent[]; lastKey?: DocumentClient.Key }> => {
+  scan: async (
+    lastKey: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: UnhydratedContent[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
     });
@@ -276,7 +279,7 @@ const content = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };
 
 module.exports = content;

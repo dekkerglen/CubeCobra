@@ -1,25 +1,16 @@
 require('dotenv').config();
 const fs = require('fs');
-const AWS = require('aws-sdk');
+
+import { s3 } from '../dynamo/s3client';
 const { fileToAttribute, loadAllFiles } = require('./cardCatalog');
 
 const downloadFromS3 = async (basePath = 'private') => {
-  const s3 = new AWS.S3({
-    endpoint: process.env.AWS_ENDPOINT || undefined,
-    s3ForcePathStyle: !!process.env.AWS_ENDPOINT,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION || 'us-east-2',
-  });
-
   await Promise.all(
     Object.keys(fileToAttribute).map(async (file) => {
-      const res = await s3
-        .getObject({
-          Bucket: process.env.DATA_BUCKET,
-          Key: `cards/${file}`,
-        })
-        .promise();
+      const res = await s3.getObject({
+        Bucket: process.env.DATA_BUCKET,
+        Key: `cards/${file}`,
+      });
       await fs.writeFileSync(`${basePath}/${file}`, res.Body);
     }),
   );

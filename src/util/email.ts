@@ -2,22 +2,18 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import aws from 'aws-sdk';
+import { SES } from '@aws-sdk/client-ses';
+import { fromEnv } from '@aws-sdk/credential-providers';
 import Email from 'email-templates';
 import { createTransport } from 'nodemailer';
 import path from 'path';
 
 import utils from './util';
 
-aws.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
-
 const transporter = createTransport({
-  SES: new aws.SES({
-    apiVersion: '2010-12-01',
-    region: 'us-east-2',
+  SES: new SES({
+    credentials: fromEnv(),
+    region: process.env.AWS_REGION || 'us-east-2',
   }),
 });
 

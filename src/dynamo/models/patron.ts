@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 
 import { UnhydratedPatron } from '../../datatypes/Patron';
 import createClient from '../util';
@@ -30,7 +31,7 @@ module.exports = {
     });
     return result.Items ? (result.Items[0] as UnhydratedPatron) : undefined;
   },
-  put: async (document: UnhydratedPatron): Promise<DocumentClient.PutItemInputAttributeMap> => client.put(document),
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  put: async (document: UnhydratedPatron): Promise<PutCommandOutput> => client.put(document),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   deleteById: async (id: string): Promise<void> => client.delete({ owner: id }),
 };

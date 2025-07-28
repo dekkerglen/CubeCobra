@@ -1,7 +1,8 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
-import Record from '../../datatypes/Record';
+import RecordType from '../../datatypes/Record';
 import createClient from '../util';
 
 const client = createClient({
@@ -21,7 +22,7 @@ const client = createClient({
   ],
 });
 
-const fillRequiredDetails = (document: Record): Record => {
+const fillRequiredDetails = (document: RecordType): RecordType => {
   return {
     id: document.id || uuidv4(),
     cube: document.cube,
@@ -36,14 +37,14 @@ const fillRequiredDetails = (document: Record): Record => {
 };
 
 const record = {
-  getById: async (id: string): Promise<Record | undefined> => (await client.get(id)).Item as Record,
+  getById: async (id: string): Promise<RecordType | undefined> => (await client.get(id)).Item as RecordType,
   getByCube: async (
     cube: string,
     limit: number,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Record[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: RecordType[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
-    const cubeAttr: keyof Record = 'cube';
+    const cubeAttr: keyof RecordType = 'cube';
 
     const result = await client.query({
       IndexName: 'ByCube',
@@ -59,11 +60,11 @@ const record = {
       Limit: limit || 36,
     });
     return {
-      items: result.Items as Record[],
+      items: result.Items as RecordType[],
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document: Record): Promise<string> => {
+  put: async (document: RecordType): Promise<string> => {
     const filled = fillRequiredDetails(document);
     client.put(filled);
 
@@ -72,7 +73,7 @@ const record = {
   delete: async (id: string): Promise<void> => {
     await client.delete({ id });
   },
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };
 
 module.exports = record;
