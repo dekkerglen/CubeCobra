@@ -27,9 +27,20 @@ const ensureRole = (role) => async (req, res, next) => {
 };
 
 const csrfProtection = [
-  csurf(),
+  csurf({
+    saltLength: 16,
+    secretLength: 24,
+  }),
+  function (err, req, res, next) {
+    if (err.code !== 'EBADCSRFTOKEN') {
+      return next(err);
+    }
+
+    // handle CSRF token errors here
+    res.status(403).send('Unauthorized');
+  },
   (req, res, next) => {
-    const {nickname} = req.body;
+    const { nickname } = req.body;
 
     if (nickname !== undefined && nickname !== 'Your Nickname') {
       // probably a malicious request
@@ -73,14 +84,14 @@ const answers = [
   'forest', // 'What is the name of the basic land that produces green mana?'
 ];
 
-async function recaptcha (req, res, next) {
+async function recaptcha(req, res, next) {
   const { captcha, question, answer } = req.body;
-  
+
   if (!question || !answer) {
     req.flash('danger', 'Please answer the security question');
     return redirect(req, res, '/');
   }
-  
+
   const index = questions.indexOf(question);
 
   if (index === -1 || answers[index].toLowerCase() !== answer.toLowerCase()) {
@@ -110,7 +121,6 @@ async function recaptcha (req, res, next) {
 
   next();
 }
-
 
 function flashValidationErrors(req, res, next) {
   const errors = validationResult(req).formatWith(({ msg }) => msg);
