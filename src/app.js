@@ -282,12 +282,18 @@ app.use('', require('./routes/search_routes'));
 app.use('', require('./routes/root'));
 
 app.use((req, res) =>
-  render(req, res, 'ErrorPage', {
-    requestId: req.uuid,
-    title: '404: Page not found',
-  }, {
-    noindex: true,
-  }),
+  render(
+    req,
+    res,
+    'ErrorPage',
+    {
+      requestId: req.uuid,
+      title: '404: Page not found',
+    },
+    {
+      noindex: true,
+    },
+  ),
 );
 
 app.use((err, req, res) => {
@@ -295,13 +301,19 @@ app.use((err, req, res) => {
   if (!res.statusCode) {
     res.status(500);
   }
-  return render(req, res, 'ErrorPage', {
-    error: err.message,
-    requestId: req.uuid,
-    title: 'Oops! Something went wrong.',
-  }, {
-    noindex: true,
-  });
+  return render(
+    req,
+    res,
+    'ErrorPage',
+    {
+      error: err.message,
+      requestId: req.uuid,
+      title: 'Oops! Something went wrong.',
+    },
+    {
+      noindex: true,
+    },
+  );
 });
 
 // scryfall updates this data at 9, so this will minimize staleness
