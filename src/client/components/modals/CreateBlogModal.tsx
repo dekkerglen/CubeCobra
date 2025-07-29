@@ -35,7 +35,7 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, setOpen, post
       mentions: findUserLinks(markdown).join(';'),
       id: post ? post.id : '',
     };
-  }, [post, markdown]);
+  }, [post, title, markdown]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>
