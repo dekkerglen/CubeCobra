@@ -185,20 +185,29 @@ export const CardDetails = (card: Card): CardDetailsType =>
     promo_types: [],
   };
 
-export const cardCmc = (card: Card): number => {
-  //cmc could be zero so we must check if it is set more specifically
-  if (card.cmc !== undefined && card.cmc !== null) {
-    // if it's a string
-    if (typeof card.cmc === 'string') {
-      // if it includes a dot, parse as float, otherwise parse as int
-      const parsed = card.cmc.includes('.') ? parseFloat(card.cmc) : parseInt(card.cmc);
-      // if parsed is NaN, fall back to details.cmc
-      if (Number.isNaN(parsed)) {
-        return card.details?.cmc ?? 0;
-      }
-      return parsed;
+export const isCardCmcValid = (cmc: string | number | undefined): { valid: boolean; value: number | undefined } => {
+  if (cmc === undefined || cmc === null || cmc === '') {
+    return { valid: false, value: undefined };
+  }
+
+  // if it's a string
+  if (typeof cmc === 'string') {
+    // if it includes a dot, parse as float, otherwise parse as int
+    const parsed = cmc.includes('.') ? parseFloat(cmc) : parseInt(cmc);
+    // if parsed is NaN, fall back to details.cmc
+    if (Number.isNaN(parsed)) {
+      return { valid: false, value: undefined };
     }
-    return card.cmc;
+    return { valid: true, value: parsed };
+  } else {
+    return { valid: true, value: cmc };
+  }
+};
+
+export const cardCmc = (card: Card): number => {
+  const isCmcValid = isCardCmcValid(card.cmc);
+  if (isCmcValid.valid) {
+    return isCmcValid.value!;
   }
 
   return card.details?.cmc ?? 0;
