@@ -1,6 +1,6 @@
 {
   "name": "cubecobra",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "",
   "private": true,
   "main": "app.js",
@@ -30,7 +30,7 @@
     "update-metadata-dict": "NODE_OPTIONS=--max_old_space-size=18192 ts-node src/jobs/update_metadata_dict.ts",
     "update-cards": "NODE_OPTIONS=--max_old_space-size=18192 ts-node src/jobs/update_cards.ts",
     "update-combos": "NODE_OPTIONS=--max_old_space-size=18192 ts-node src/jobs/update_combos.ts",
-    "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-combos && npm run update-cards",
+    "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-combos && npm run update-cards && npm run update-combos && npm run update-cards",
     "update-hashes": "ts-node src/jobs/repair_hashes.js",
     "upload-exports": "aws s3 sync temp/export s3://cubecobra",
     "exports": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_cubes.ts && NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_decks.ts && NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_simple_card_dict.ts && npm run upload-exports",
