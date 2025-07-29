@@ -121,6 +121,9 @@ export const cardTags = (card: Card): string[] => card.tags || [];
 
 export const cardFinish = (card: Card): string => card.finish ?? 'Non-foil';
 
+export const isFoilFinish = (finish: string): boolean => finish !== 'Non-foil';
+export const isCardFoil = (card: Card): boolean => isFoilFinish(cardFinish(card));
+
 export const cardStatus = (card: Card): any => card.status;
 
 export const cardColorIdentity = (card: Card): string[] => {
@@ -345,6 +348,7 @@ export const cardPrice = (card: Card): number | undefined => {
   let prices: (number | undefined)[];
   switch (cardFinish(card)) {
     case 'Foil':
+    case 'Alt-foil':
       prices = [cardFoilPrice(card), cardNormalPrice(card), cardEtchedPrice(card)];
       break;
     case 'Non-foil':
@@ -598,6 +602,8 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
     card && cardFinish(card) ? cardFinish(card) === 'Non-foil' : details.finishes.includes('nonfoil'),
   etched: (details, card) =>
     card && cardFinish(card) ? cardFinish(card) === 'Etched' : details.finishes.includes('etched'),
+  altfoil: (details, card) =>
+    card && cardFinish(card) ? cardFinish(card) === 'Alt-foil' : details.finishes.includes('alt-foil'),
   fullart: (details) => details.full_art,
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),
