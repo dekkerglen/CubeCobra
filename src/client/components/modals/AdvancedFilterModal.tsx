@@ -155,11 +155,12 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
                 label="Finish"
                 value={values.finish}
                 setValue={(v: string) => updateValue(v, 'finish')}
-                options={[
-                  { value: '', label: 'Any' },
-                  { value: 'Foil', label: 'Foil' },
-                  { value: 'Non-foil', label: 'Non-foil' },
-                ]}
+                options={[{ value: '', label: 'Any' }].concat(
+                  getLabels(null, 'Finish', false).map((status: string) => ({
+                    value: status,
+                    label: status,
+                  })),
+                )}
               />
             </Col>
           </Row>

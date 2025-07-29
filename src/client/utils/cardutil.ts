@@ -121,6 +121,9 @@ export const cardTags = (card: Card): string[] => card.tags || [];
 
 export const cardFinish = (card: Card): string => card.finish ?? 'Non-foil';
 
+export const isFoilFinish = (finish: string): boolean => finish !== 'Non-foil';
+export const isCardFoil = (card: Card): boolean => isFoilFinish(cardFinish(card));
+
 export const cardStatus = (card: Card): any => card.status;
 
 export const cardColorIdentity = (card: Card): string[] => {
@@ -185,20 +188,29 @@ export const CardDetails = (card: Card): CardDetailsType =>
     promo_types: [],
   };
 
-export const cardCmc = (card: Card): number => {
-  //cmc could be zero so we must check if it is set more specifically
-  if (card.cmc !== undefined && card.cmc !== null) {
-    // if it's a string
-    if (typeof card.cmc === 'string') {
-      // if it includes a dot, parse as float, otherwise parse as int
-      const parsed = card.cmc.includes('.') ? parseFloat(card.cmc) : parseInt(card.cmc);
-      // if parsed is NaN, fall back to details.cmc
-      if (Number.isNaN(parsed)) {
-        return card.details?.cmc ?? 0;
-      }
-      return parsed;
+export const isCardCmcValid = (cmc: string | number | undefined): { valid: boolean; value: number | undefined } => {
+  if (cmc === undefined || cmc === null || cmc === '') {
+    return { valid: false, value: undefined };
+  }
+
+  // if it's a string
+  if (typeof cmc === 'string') {
+    // if it includes a dot, parse as float, otherwise parse as int
+    const parsed = cmc.includes('.') ? parseFloat(cmc) : parseInt(cmc);
+    // if parsed is NaN, fall back to details.cmc
+    if (Number.isNaN(parsed)) {
+      return { valid: false, value: undefined };
     }
-    return card.cmc;
+    return { valid: true, value: parsed };
+  } else {
+    return { valid: true, value: cmc };
+  }
+};
+
+export const cardCmc = (card: Card): number => {
+  const isCmcValid = isCardCmcValid(card.cmc);
+  if (isCmcValid.valid) {
+    return isCmcValid.value!;
   }
 
   return card.details?.cmc ?? 0;
@@ -336,6 +348,7 @@ export const cardPrice = (card: Card): number | undefined => {
   let prices: (number | undefined)[];
   switch (cardFinish(card)) {
     case 'Foil':
+    case 'Alt-foil':
       prices = [cardFoilPrice(card), cardNormalPrice(card), cardEtchedPrice(card)];
       break;
     case 'Non-foil':
@@ -589,6 +602,8 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
     card && cardFinish(card) ? cardFinish(card) === 'Non-foil' : details.finishes.includes('nonfoil'),
   etched: (details, card) =>
     card && cardFinish(card) ? cardFinish(card) === 'Etched' : details.finishes.includes('etched'),
+  altfoil: (details, card) =>
+    card && cardFinish(card) ? cardFinish(card) === 'Alt-foil' : details.finishes.includes('alt-foil'),
   fullart: (details) => details.full_art,
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),

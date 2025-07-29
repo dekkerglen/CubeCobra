@@ -10,7 +10,6 @@ import ManaPoolButton from 'components/purchase/ManaPoolButton';
 import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
 import withModal from 'components/WithModal';
 import {
-  cardCmc,
   cardColorCategory,
   cardColorIdentity,
   cardElo,
@@ -25,6 +24,7 @@ import {
   cardTags,
   cardTix,
   cardType,
+  isCardCmcValid,
   normalizeName,
 } from 'utils/cardutil';
 import { getLabels } from 'utils/Sort';
@@ -140,6 +140,32 @@ const CardModal: React.FC<CardModalProps> = ({
     },
     [card, editCard, getCardFrontImage, isFrontImage],
   );
+
+  const doCmcValidity = useCallback((input: HTMLInputElement) => {
+    if (input.validity.patternMismatch) {
+      input.setCustomValidity('Mana Value must be a non-negative number (integer or decimal).');
+    } else if (input.validity.valueMissing) {
+      input.setCustomValidity('Mana Value must be set.');
+    } else {
+      input.setCustomValidity('');
+    }
+    input.reportValidity();
+  }, []);
+
+  const onCmcChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const input = e.target;
+      updateField('cmc', input.value);
+      doCmcValidity(input);
+    },
+    [updateField, doCmcValidity],
+  );
+
+  const revertAction = useCallback(() => {
+    if (card.editIndex !== undefined && card.board !== undefined) {
+      revertEdit(card.editIndex, card.board);
+    }
+  }, [revertEdit, card]);
 
   return (
     <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
@@ -286,11 +312,23 @@ const CardModal: React.FC<CardModalProps> = ({
                 />
                 <Input
                   label="Mana Value"
+                  //Number overrides pattern to allow negatives or "e", also adds steppers. So stick with text.
                   type="text"
                   name="cmc"
-                  value={`${cardCmc(card)}`}
-                  onChange={(event) => updateField('cmc', event.target.value)}
+                  id="cardModalCmc"
+                  /*
+                   * Don't use cardCmc to skip the fallback logic when the custom cmc isn't numeric.
+                   * That causes the user input to be visually replaced causing confusion, such as when trying to delete a number.
+                   */
+                  value={`${card.cmc ?? card.details?.cmc ?? ''}`}
+                  onChange={onCmcChange}
                   disabled={disabled}
+                  valid={isCardCmcValid(card.cmc ?? card.details?.cmc).valid ? undefined : false}
+                  placeholder={`${card.details?.cmc ?? ''}`}
+                  otherInputProps={{
+                    required: true,
+                    pattern: '[0-9.]+',
+                  }}
                 />
                 <Input
                   label="Type"
@@ -299,6 +337,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   value={cardType(card)}
                   onChange={(event) => updateField('type_line', event.target.value)}
                   disabled={disabled}
+                  required
                 />
                 <Select
                   label="Rarity"
@@ -456,16 +495,7 @@ const CardModal: React.FC<CardModalProps> = ({
           )}
           {card.editIndex !== undefined && (
             <>
-              <Button
-                color="primary"
-                block
-                className="items-center text-sm"
-                onClick={() => {
-                  if (card.editIndex !== undefined && card.board !== undefined) {
-                    revertEdit(card.editIndex, card.board);
-                  }
-                }}
-              >
+              <Button color="primary" block className="items-center text-sm" onClick={revertAction}>
                 Revert Edit
               </Button>
               &nbsp;
