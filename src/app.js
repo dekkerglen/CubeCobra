@@ -12,7 +12,6 @@ const compression = require('compression');
 const uuid = require('uuid');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
-const DynamoDBStore = require('dynamodb-store');
 const cloudwatch = require('./util/cloudwatch');
 const { updateCardbase } = require('./util/updatecards');
 const cardCatalog = require('./util/cardCatalog');
@@ -21,6 +20,7 @@ const flash = require('connect-flash');
 const responseTime = require('response-time');
 
 import router from './router/router';
+import DynamoDBStore from './util/dynamo-session-store';
 import { sanitizeHttpBody } from './util/logging';
 
 // global listeners for promise rejections

@@ -220,6 +220,7 @@
     "@types/email-templates": "^10.0.4",
     "@types/eslint__js": "^8.42.3",
     "@types/event-stream": "^4.0.5",
+    "@types/express-session": "^1.18.2",
     "@types/jest": "^29.5.14",
     "@types/nearley": "^2.11.5",
     "@types/nodemailer": "^6.4.17",
