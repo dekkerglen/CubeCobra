@@ -19,6 +19,8 @@ const { render } = require('./util/render');
 const flash = require('connect-flash');
 const responseTime = require('response-time');
 
+import dynamoService from './dynamo/client';
+import documentClient from './dynamo/documentClient';
 import router from './router/router';
 import DynamoDBStore from './util/dynamo-session-store';
 import { sanitizeHttpBody } from './util/logging';
@@ -125,12 +127,8 @@ app.use(
         readCapacityUnits: 10,
         writeCapacityUnits: 10,
       },
-      dynamoConfig: {
-        endpoint: process.env.AWS_ENDPOINT || undefined,
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        region: process.env.AWS_REGION || 'us-east-2',
-      },
+      dynamoService,
+      documentClient,
       keepExpired: false,
       touchInterval: 30000,
       ttl: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year

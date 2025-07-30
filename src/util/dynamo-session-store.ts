@@ -69,7 +69,8 @@ export interface Options {
   touchInterval: number;
   ttl: number;
   keepExpired: boolean;
-  dynamoConfig?: Record<string, any>;
+  dynamoService: DynamoDB;
+  documentClient: DynamoDBDocument;
 }
 
 interface MySessionData extends SessionData {
@@ -102,13 +103,16 @@ export default class DynamoDBStore extends Store {
 
     this.setOptionsAsInstanceAttributes(options);
 
-    const dynamoConfig = options?.dynamoConfig || {};
+    if (!options?.dynamoService) {
+      throw new Error('dynamoService required');
+    }
+    if (!options?.documentClient) {
+      throw new Error('dynamoService required');
+    }
 
     // dynamodb client configuration
-    this.dynamoService = new DynamoDB({
-      ...dynamoConfig,
-    });
-    this.documentClient = DynamoDBDocument.from(this.dynamoService);
+    this.dynamoService = options?.dynamoService;
+    this.documentClient = options?.documentClient;
 
     // creates the table if necessary
     this.createTableIfDontExists(callback || DEFAULT_CALLBACK);
