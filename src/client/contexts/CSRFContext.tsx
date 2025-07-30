@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useEffect, useState } from 'react';
+import React, { createContext, useCallback } from 'react';
 
 type ExtendedRequestInit = RequestInit & { timeout?: number };
 
@@ -36,28 +36,7 @@ async function fetchWithTimeout(resource: RequestInfo, options: ExtendedRequestI
   return response;
 }
 
-export const CSRFContextProvider: React.FC<CSRFContextProviderProps> = ({ children }) => {
-  const [csrfToken, setCsrfToken] = useState<string>('');
-
-  useEffect(() => {
-    const run = async () => {
-      const response = await fetch(`/user/csrf`, {
-        credentials: 'same-origin',
-        mode: 'same-origin',
-      });
-
-      if (!response.ok) {
-        return null;
-      }
-      const json = await response.json();
-      if (json.success !== 'true') {
-        return null;
-      }
-      setCsrfToken(json.token);
-    };
-    run();
-  }, []);
-
+export const CSRFContextProvider: React.FC<CSRFContextProviderProps> = ({ children, csrfToken }) => {
   const csrfFetch = useCallback(
     async (resource: RequestInfo, init?: ExtendedRequestInit) => {
       if (init) {
