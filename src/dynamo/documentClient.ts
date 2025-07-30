@@ -16,6 +16,7 @@ const documentClient = DynamoDBDocument.from(
   {
     marshallOptions: {
       removeUndefinedValues: true,
+      convertClassInstanceToMap: true,
     },
   },
 );
