@@ -145,6 +145,7 @@ const createClient = (config: ClientConfig): ClientInterface => {
         return await documentClient.scan({
           TableName: tableName(config.name),
           ...params,
+          ExclusiveStartKey: params.ExclusiveStartKey || undefined,
         });
       } catch (error: any) {
         throw new Error(`Error scanning table ${config.name}: ${error.message}`);
@@ -168,7 +169,13 @@ const createClient = (config: ClientConfig): ClientInterface => {
     },
     query: async (params: Omit<QueryCommandInput, 'TableName'>): Promise<QueryCommandOutput> => {
       try {
-        return await documentClient.query({ TableName: tableName(config.name), Limit: params.Limit || 36, ...params });
+        return await documentClient.query({
+          TableName: tableName(config.name),
+          Limit: params.Limit || 36,
+          ...params,
+          //With V3 does not like null
+          ExclusiveStartKey: params.ExclusiveStartKey || undefined,
+        });
       } catch (error: any) {
         throw new Error(`Error querying table ${config.name}: ${error.message}. Query: ${JSON.stringify(params)}`);
       }
