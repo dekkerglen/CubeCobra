@@ -1,4 +1,4 @@
-import React, { useCallback, useContext,useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import { CSRFContext } from '../contexts/CSRFContext';
 import { Card, CardBody, CardHeader } from './base/Card';
@@ -64,6 +64,7 @@ const IndefinitePaginatedList = <T,>({
 
     if (response.ok) {
       const json = await response.json();
+      // eslint-disable-next-line no-console
       console.log(json);
       if (json.success === 'true') {
         const newItems = [...items, ...json.items];
@@ -79,7 +80,7 @@ const IndefinitePaginatedList = <T,>({
       }
     }
     setLoading(false);
-  }, [lastKey, items, page]);
+  }, [csrfFetch, fetchMoreRoute, lastKey, items, setItems, pageSize, setLastKey, page]);
 
   const pager = (
     <Pagination
