@@ -23,11 +23,6 @@ const islandArtCard = createScryfallCard('Island // Island', 'art_series', [
 ]);
 
 describe('convertName', () => {
-  const ajani = createScryfallCard('Ajani, Nacatl Pariah // Ajani, Nacatl Avenger', 'transform', [
-    createCardFace('Ajani, Nacatl Pariah'),
-    createCardFace('Ajani, Nacatl Avenger'),
-  ]);
-
   it('Plain card name', async () => {
     const card = createScryfallCard('Hypnotic Siren', 'normal');
     const result = convertName(card, false);
@@ -41,12 +36,20 @@ describe('convertName', () => {
   });
 
   it('Backside of transforming card', async () => {
-    const result = convertName(ajani, false);
+    const card = createScryfallCard('Ajani, Nacatl Pariah // Ajani, Nacatl Avenger', 'transform', [
+      createCardFace('Ajani, Nacatl Pariah'),
+      createCardFace('Ajani, Nacatl Avenger'),
+    ]);
+
+    const result = convertName(card, false);
     expect(result).toEqual('Ajani, Nacatl Pariah');
   });
 
   it('Backside of transforming card', async () => {
-    const result = convertName(ajani, true);
+    const card = createScryfallCard('Ajani, Nacatl Pariah // Ajani, Nacatl Avenger', 'transform', [
+      createCardFace('Ajani, Nacatl Avenger'),
+    ]);
+    const result = convertName(card, true);
     expect(result).toEqual('Ajani, Nacatl Avenger');
   });
 

@@ -143,7 +143,8 @@ export function convertName(card: ScryfallCard, preflipped: boolean) {
   const faceNameSeperator = '//';
   const faces = card?.card_faces || [];
 
-  if (preflipped && faces.length > 1) {
+  //In src/jobs/update_cards.ts preflipped cards have their faces reduced to just the backside face
+  if (preflipped) {
     str = str.substring(str.indexOf(faceNameSeperator) + faceNameSeperator.length + 1); // second name
   } else if (card.name.includes(faceNameSeperator) && card.layout !== 'split' && faces.length > 1) {
     // NOTE: we want split cards to include both names
