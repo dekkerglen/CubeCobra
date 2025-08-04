@@ -1,5 +1,29 @@
 import { ART_SERIES_CARD_SUFFIX } from '../../client/utils/cardutil';
 
+export interface ScryfallCardFace {
+  artist?: string;
+  artist_id?: string;
+  cmc?: number;
+  colors?: string[];
+  flavor_text?: string;
+  illustration_id?: string;
+  image_uris?: {
+    small: string;
+    normal: string;
+    art_crop: string;
+  };
+  layout?: string;
+  loyalty?: string;
+  mana_cost: string;
+  name: string;
+  object: 'card_face';
+  oracle_id?: string;
+  oracle_text?: string;
+  power?: string;
+  toughness?: string;
+  type_line?: string;
+}
+
 export interface ScryfallCard {
   id: string;
   name: string;
@@ -26,7 +50,7 @@ export interface ScryfallCard {
     normal: string;
     art_crop: string;
   };
-  card_faces?: ScryfallCard[];
+  card_faces?: ScryfallCardFace[];
   loyalty?: string;
   power?: string;
   toughness?: string;
@@ -86,6 +110,7 @@ export interface ScryfallCard {
     type_line: string;
     uri: string;
   }[];
+  object: 'card';
 }
 
 //See https://scryfall.com/docs/api/sets/all and https://scryfall.com/docs/api/sets
