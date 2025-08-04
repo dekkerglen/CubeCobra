@@ -1,7 +1,15 @@
 require('dotenv').config();
 const fs = require('fs');
 
-import { s3 } from '../dynamo/s3client';
+const { S3 } = require('@aws-sdk/client-s3');
+const { fromNodeProviderChain } = require('@aws-sdk/credential-providers');
+
+const s3 = new S3({
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+  forcePathStyle: !!process.env.AWS_ENDPOINT,
+  credentials: fromNodeProviderChain(),
+  region: process.env.AWS_REGION,
+});
 
 const downloadFromS3 = async () => {
   // list all from s3 under s3://cubecobra/model
@@ -23,7 +31,7 @@ const downloadFromS3 = async () => {
       }
     }
 
-    fs.writeFileSync(file.Key, res.Body);
+    fs.writeFileSync(file.Key, await res.Body.transformToString());
     // eslint-disable-next-line no-console -- Debugging
     console.log(`Downloaded ${file.Key}`);
   }
