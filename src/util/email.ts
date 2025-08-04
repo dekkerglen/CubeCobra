@@ -42,7 +42,7 @@ export const sendEmail = async (
     transport: transporter,
   });
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || process.env.LOCALSTACK_SES === 'true') {
     await message.send({
       template: templateName,
       locals: {

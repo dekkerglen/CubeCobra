@@ -137,44 +137,53 @@ You can run a local instance of Cube Cobra against real AWS resources rather tha
 
 Here is a table on how to fill out the env vars:
 
-| Variable Name          | Description                                                                                  | Required? |
-| ---------------------- | -------------------------------------------------------------------------------------------- | --------- |
-| AWS_ACCESS_KEY_ID      | The AWS access key for your account.                                                         | Yes       |
-| AWS_ENDPOINT           | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.        |           |
-| AWS_LOG_GROUP          | The name of the AWS CloudWatch log group to use.                                             | Yes       |
-| AWS_LOG_STREAM         | The name of the AWS CloudWatch log stream to use.                                            |           |
-| AWS_REGION             | The AWS region to use (default: us-east-2).                                                  | Yes       |
-| AWS_SECRET_ACCESS_KEY  | The AWS secret access key for your account.                                                  | Yes       |
-| CUBECOBRA_VERSION      | The version of Cube Cobra.                                                                   |           |
-| DATA_BUCKET            | The name of the AWS S3 bucket to use. You will need to create this bucket in your account.   | Yes       |
-| DOMAIN                 | The domain name of the server. Used for external redirects such as emails.                   | Yes       |
-| DOWNTIME_ACTIVE        | Whether or not the site is in downtime mode.                                                 |           |
-| DYNAMO_PREFIX          | The prefix to use for DynamoDB tables. You can leave this as the default value               | Yes       |
-| EMAIL_CONFIG_PASSWORD  | The password for the email account to use for sending emails via Gmail.                      |           |
-| EMAIL_CONFIG_USERNAME  | The username for the email account to use for sending emails via Gmail.                      |           |
-| EMAIL_CONFIG_FROM      | If set, used as the email from in form of "Description <email address>"                      |           |
-| EMAIL_CONFIG_SMTP_HOST | The host (domain) for the local SMTP server. Must be set alongside EMAIL_CONFIG_SMTP_PORT    |           |
-| EMAIL_CONFIG_SMTP_PORT | The port for the local SMTP server. Overrides EMAIL_CONFIG_PASSWORD/EMAIL_CONFIG_USERNAME    |           |
-| ENV                    | The environment to run Cube Cobra in.                                                        | Yes       |
-| NITROPAY_ENABLED       | Whether or not to enable NitroPay, our ad provider.                                          |           |
-| NODE_ENV               | The environment to run Cube Cobra in.                                                        | Yes       |
-| PATREON_CLIENT_ID      | The client ID for the Patreon OAuth app.                                                     |           |
-| PATREON_CLIENT_SECRET  | The client secret for the Patreon OAuth app.                                                 |           |
-| PATREON_HOOK_SECRET    | The secret for the Patreon webhook.                                                          |           |
-| PATREON_REDIRECT       | The redirect URL for the Patreon OAuth app.                                                  |           |
-| PORT                   | The port to run Cube Cobra on.                                                               | Yes       |
-| REDIS_HOST             | The URL of the Redis server.                                                                 | Yes       |
-| REDIS_SETUP            | Whether or not to setup the Redis server - this is needed for Redis but not for elasticache. |           |
-| SECRET                 | A secret phrase for encryption. You can leave the default value.                             | Yes       |
-| SESSION_SECRET         | A secret phrase for session encryption. You can leave the default value.                     | Yes       |
-| SESSION                | The name of the session cookie. You can leave the default value.                             | Yes       |
-| TCG_PLAYER_PRIVATE_KEY | The private key for the TCGPlayer API.                                                       |           |
-| TCG_PLAYER_PUBLIC_KEY  | The public key for the TCGPlayer API.                                                        |           |
-| CAPTCHA_SITE_KEY       | The reCAPTCHA site key                                                                       | Yes       |
-| CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                     | Yes       |
-| DRAFTMANCER_API_KEY    | The Draftmancer API key                                                                      | Yes       |
-| HTTP_ONLY              | Default is unset. If set to exactly "true", generate http:// instead of https:// links       | No        |
-| STRIPE_SECRET_KEY      | Stripe secret key. Must have a value                                                         | Yes       |
+| Variable Name          | Description                                                                                                  | Required? |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ | --------- |
+| AWS_ACCESS_KEY_ID      | The AWS access key for your account.                                                                         | Yes       |
+| AWS_ENDPOINT           | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.                        |           |
+| AWS_LOG_GROUP          | The name of the AWS CloudWatch log group to use.                                                             | Yes       |
+| AWS_LOG_STREAM         | The name of the AWS CloudWatch log stream to use.                                                            |           |
+| AWS_REGION             | The AWS region to use (default: us-east-2).                                                                  | Yes       |
+| AWS_SECRET_ACCESS_KEY  | The AWS secret access key for your account.                                                                  | Yes       |
+| CUBECOBRA_VERSION      | The version of Cube Cobra.                                                                                   |           |
+| DATA_BUCKET            | The name of the AWS S3 bucket to use. You will need to create this bucket in your account.                   | Yes       |
+| DOMAIN                 | The domain name of the server. Used for external redirects such as emails.                                   | Yes       |
+| DOWNTIME_ACTIVE        | Whether or not the site is in downtime mode.                                                                 |           |
+| DYNAMO_PREFIX          | The prefix to use for DynamoDB tables. You can leave this as the default value                               | Yes       |
+| EMAIL_CONFIG_PASSWORD  | The password for the email account to use for sending emails via Gmail.                                      |           |
+| EMAIL_CONFIG_USERNAME  | The username for the email account to use for sending emails via Gmail.                                      |           |
+| EMAIL_CONFIG_FROM      | If set, used as the email from in form of "Description <email address>"                                      |           |
+| EMAIL_CONFIG_SMTP_HOST | The host (domain) for the local SMTP server. Must be set alongside EMAIL_CONFIG_SMTP_PORT                    |           |
+| EMAIL_CONFIG_SMTP_PORT | The port for the local SMTP server. Overrides EMAIL_CONFIG_PASSWORD/EMAIL_CONFIG_USERNAME                    |           |
+| LOCALSTACK_SES         | Set to "true" to still send emails via SES outside production. Assumes you have localstack running to catch. | Yes       |
+| ENV                    | The environment to run Cube Cobra in.                                                                        | Yes       |
+| NITROPAY_ENABLED       | Whether or not to enable NitroPay, our ad provider.                                                          |           |
+| NODE_ENV               | The environment to run Cube Cobra in.                                                                        | Yes       |
+| PATREON_CLIENT_ID      | The client ID for the Patreon OAuth app.                                                                     |           |
+| PATREON_CLIENT_SECRET  | The client secret for the Patreon OAuth app.                                                                 |           |
+| PATREON_HOOK_SECRET    | The secret for the Patreon webhook.                                                                          |           |
+| PATREON_REDIRECT       | The redirect URL for the Patreon OAuth app.                                                                  |           |
+| PORT                   | The port to run Cube Cobra on.                                                                               | Yes       |
+| SECRET                 | A secret phrase for encryption. You can leave the default value.                                             | Yes       |
+| SESSION_SECRET         | A secret phrase for session encryption. You can leave the default value.                                     | Yes       |
+| SESSION                | The name of the session cookie. You can leave the default value.                                             | Yes       |
+| TCG_PLAYER_PRIVATE_KEY | The private key for the TCGPlayer API.                                                                       |           |
+| TCG_PLAYER_PUBLIC_KEY  | The public key for the TCGPlayer API.                                                                        |           |
+| CAPTCHA_SITE_KEY       | The reCAPTCHA site key                                                                                       | Yes       |
+| CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                                     | Yes       |
+| DRAFTMANCER_API_KEY    | The Draftmancer API key                                                                                      | Yes       |
+| HTTP_ONLY              | Default is unset. If set to exactly "true", generate http:// instead of https:// links                       | No        |
+| STRIPE_SECRET_KEY      | Stripe secret key. Must have a value                                                                         | Yes       |
+
+### Localstack emails
+
+Per https://docs.localstack.cloud/aws/services/ses/#retrieve-sent-emails can fetch emails from localstack with:
+
+```
+curl --silent localhost.localstack.cloud:4566/_aws/ses?email=<email> | jq .
+```
+
+Where `<email>` is the email address in your EMAIL_CONFIG_FROM environment variable, or `support@cubecobra.com` if you aren't overridding.
 
 ### Updating Card Definitions and Analytics
 
