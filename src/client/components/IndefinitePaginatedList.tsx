@@ -71,9 +71,8 @@ const IndefinitePaginatedList = <T,>({
         setItems(newItems);
 
         const numItemsShowOnLastPage = items.length % pageSize;
-        const newItemsShowOnLastPage = newItems.length % pageSize;
-
-        if (numItemsShowOnLastPage === 0 && newItemsShowOnLastPage > 0) {
+        //If current page is full and we just fetched more items, then move to next page
+        if (numItemsShowOnLastPage === 0 && json.items.length > 0) {
           setPage(page + 1);
         }
         setLastKey(json.lastKey);
