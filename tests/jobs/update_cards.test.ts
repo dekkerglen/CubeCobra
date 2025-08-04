@@ -71,4 +71,10 @@ describe('convertName', () => {
     const result = convertName(card, false);
     expect(result).toEqual(`Summon: Choco/Mog`);
   });
+
+  it('Card with double slash that does not have multiple faces', async () => {
+    const card = createScryfallCard('SP//dr, Piloted by Peni', 'normal');
+    const result = convertName(card, false);
+    expect(result).toEqual(`SP//dr, Piloted by Peni`);
+  });
 });
