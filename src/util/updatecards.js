@@ -2,7 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 
 import { s3 } from '../dynamo/s3client';
-const { fileToAttribute, loadAllFiles } = require('./cardCatalog');
+import { fileToAttribute, loadAllFiles } from './cardCatalog';
 
 const downloadFromS3 = async (basePath = 'private') => {
   await Promise.all(
@@ -11,7 +11,7 @@ const downloadFromS3 = async (basePath = 'private') => {
         Bucket: process.env.DATA_BUCKET,
         Key: `cards/${file}`,
       });
-      await fs.writeFileSync(`${basePath}/${file}`, res.Body);
+      await fs.writeFileSync(`${basePath}/${file}`, await res.Body.transformToString());
     }),
   );
 };

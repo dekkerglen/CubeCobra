@@ -1,5 +1,5 @@
 const { updateCardbase } = require('./src/util/updatecards');
-const { downloadFromS3 } = require('./jobs/download_model');
+const { downloadFromS3 } = require('./src/util/downloadModel');
 
 (async () => {
   await updateCardbase();
