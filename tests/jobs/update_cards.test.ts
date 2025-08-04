@@ -69,6 +69,15 @@ describe('convertName', () => {
     expect(result).toEqual(`Island ${ART_SERIES_CARD_SUFFIX}`);
   });
 
+  it('Art series Room card, with double names', async () => {
+    const card = createScryfallCard('Mirror Room // Fractured Realm // Mirror Room // Fractured Realm', 'art_series', [
+      createCardFace('Mirror Room // Fractured Realm'),
+      createCardFace('Mirror Room // Fractured Realm'),
+    ]);
+    const result = convertName(card, true);
+    expect(result).toEqual(`Mirror Room // Fractured Realm ${ART_SERIES_CARD_SUFFIX}`);
+  });
+
   it('Card with single slash is a regular name', async () => {
     const card = createScryfallCard('Summon: Choco/Mog', 'normal');
     const result = convertName(card, false);

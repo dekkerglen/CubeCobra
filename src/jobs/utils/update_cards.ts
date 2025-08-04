@@ -140,16 +140,15 @@ export interface ScryfallSet {
 
 export function convertName(card: ScryfallCard, preflipped: boolean) {
   let str = card.name;
-  const faceNameSeperator = '//';
   const faces = card?.card_faces || [];
 
   //In src/jobs/update_cards.ts preflipped cards have their faces reduced to just the backside face
   if (preflipped) {
-    str = str.substring(str.indexOf(faceNameSeperator) + faceNameSeperator.length + 1); // second name
-  } else if (card.name.includes(faceNameSeperator) && card.layout !== 'split' && faces.length > 1) {
+    str = faces[0].name;
+  } else if (card.layout !== 'split' && faces.length > 1) {
     // NOTE: we want split cards to include both names
     // but other double face to use the first name
-    str = str.substring(0, str.indexOf(faceNameSeperator)); // first name
+    str = faces[0].name;
   }
 
   //Trim the card name here before potentially adding art series suffix.
