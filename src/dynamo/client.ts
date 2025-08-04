@@ -3,11 +3,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { fromEnv } from '@aws-sdk/credential-providers';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 
 const client = new DynamoDB({
   endpoint: process.env.AWS_ENDPOINT || undefined,
-  credentials: fromEnv(),
+  credentials: fromNodeProviderChain(),
   region: process.env.AWS_REGION,
 });
 

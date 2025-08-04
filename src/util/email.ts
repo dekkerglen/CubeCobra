@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { SES } from '@aws-sdk/client-ses';
-import { fromEnv } from '@aws-sdk/credential-providers';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import Email from 'email-templates';
 import { createTransport } from 'nodemailer';
 import path from 'path';
@@ -12,7 +12,7 @@ import utils from './util';
 
 const transporter = createTransport({
   SES: new SES({
-    credentials: fromEnv(),
+    credentials: fromNodeProviderChain(),
     region: process.env.AWS_REGION || 'us-east-2',
   }),
 });

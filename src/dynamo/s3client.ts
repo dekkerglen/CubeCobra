@@ -3,12 +3,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { S3 } from '@aws-sdk/client-s3';
-import { fromEnv } from '@aws-sdk/credential-providers';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 
 export const s3 = new S3({
   endpoint: process.env.AWS_ENDPOINT || undefined,
   forcePathStyle: !!process.env.AWS_ENDPOINT,
-  credentials: fromEnv(),
+  credentials: fromNodeProviderChain(),
   region: process.env.AWS_REGION,
 });
 
