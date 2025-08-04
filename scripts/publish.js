@@ -1,11 +1,18 @@
 const fs = require('fs');
 
+const { S3 } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
+const { fromNodeProviderChain } = require('@aws-sdk/credential-providers');
 
 const archiver = require('archiver');
 require('dotenv').config();
 
-import { s3 } from '../src/dynamo/s3client';
+const s3 = new S3({
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+  forcePathStyle: !!process.env.AWS_ENDPOINT,
+  credentials: fromNodeProviderChain(),
+  region: process.env.AWS_REGION,
+});
 
 // get version from package.json
 const VERSION = require('../package.json').version;
