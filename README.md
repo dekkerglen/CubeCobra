@@ -177,13 +177,23 @@ Here is a table on how to fill out the env vars:
 
 ### Localstack emails
 
-Per https://docs.localstack.cloud/aws/services/ses/#retrieve-sent-emails can fetch emails from localstack with:
+Reference: https://docs.localstack.cloud/aws/services/ses/#retrieve-sent-emails
+
+If you have set `LOCALSTACK_SES="true"` in your .env file then you also need to verify that email for SES to work. Run:
+
+```
+awslocal ses verify-email-identity --email <email>
+```
+
+Where `<email>` is the email address in your EMAIL_CONFIG_FROM environment variable, or `support@cubecobra.com` if you aren't overridding.
+
+Then can fetch them from localstack with:
 
 ```
 curl --silent localhost.localstack.cloud:4566/_aws/ses?email=<email> | jq .
 ```
 
-Where `<email>` is the email address in your EMAIL_CONFIG_FROM environment variable, or `support@cubecobra.com` if you aren't overridding.
+Sadly it's not obvious how to take the RawData HTML to see in the browser.
 
 ### Updating Card Definitions and Analytics
 
