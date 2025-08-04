@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { SES } from '@aws-sdk/client-ses';
+import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import Email from 'email-templates';
 import { createTransport } from 'nodemailer';
@@ -10,11 +10,14 @@ import path from 'path';
 
 import utils from './util';
 
+const ses = new SESClient({
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+  credentials: fromNodeProviderChain(),
+  region: process.env.AWS_REGION || 'us-east-2',
+});
+
 const transporter = createTransport({
-  SES: new SES({
-    credentials: fromNodeProviderChain(),
-    region: process.env.AWS_REGION || 'us-east-2',
-  }),
+  SES: { ses, aws: { SendRawEmailCommand } },
 });
 
 export const sendEmail = async (
