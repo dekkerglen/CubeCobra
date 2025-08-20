@@ -17,14 +17,8 @@ const updatePodcast = async (podcast) => {
   const feedEpisodes = await getFeedEpisodes(podcast.url);
 
   let items = [];
-  const existingEpisodes = [];
-  let lastKey = null;
 
-  do {
-    const result = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED, lastKey);
-    lastKey = result.lastKey;
-    existingEpisodes.push(...result.items);
-  } while (lastKey);
+  const existingEpisodes = await Content.getPodcastEpisodes(podcast.id, ContentStatus.PUBLISHED);
 
   const existingGuids = existingEpisodes.map((episode) => episode.podcastGuid);
 
