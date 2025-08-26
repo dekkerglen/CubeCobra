@@ -1,5 +1,29 @@
 import { ART_SERIES_CARD_SUFFIX } from '../../client/utils/cardutil';
 
+export interface ScryfallCardFace {
+  artist?: string;
+  artist_id?: string;
+  cmc?: number;
+  colors?: string[];
+  flavor_text?: string;
+  illustration_id?: string;
+  image_uris?: {
+    small: string;
+    normal: string;
+    art_crop: string;
+  };
+  layout?: string;
+  loyalty?: string;
+  mana_cost: string;
+  name: string;
+  object: 'card_face';
+  oracle_id?: string;
+  oracle_text?: string;
+  power?: string;
+  toughness?: string;
+  type_line?: string;
+}
+
 export interface ScryfallCard {
   id: string;
   name: string;
@@ -26,7 +50,7 @@ export interface ScryfallCard {
     normal: string;
     art_crop: string;
   };
-  card_faces?: ScryfallCard[];
+  card_faces?: ScryfallCardFace[];
   loyalty?: string;
   power?: string;
   toughness?: string;
@@ -86,6 +110,7 @@ export interface ScryfallCard {
     type_line: string;
     uri: string;
   }[];
+  object: 'card';
 }
 
 //See https://scryfall.com/docs/api/sets/all and https://scryfall.com/docs/api/sets
@@ -115,14 +140,15 @@ export interface ScryfallSet {
 
 export function convertName(card: ScryfallCard, preflipped: boolean) {
   let str = card.name;
-  const faceNameSeperator = '//';
+  const faces = card?.card_faces || [];
 
+  //In src/jobs/update_cards.ts preflipped cards have their faces reduced to just the backside face
   if (preflipped) {
-    str = str.substring(str.indexOf(faceNameSeperator) + faceNameSeperator.length + 1); // second name
-  } else if (card.name.includes(faceNameSeperator) && card.layout !== 'split') {
+    str = faces[0].name;
+  } else if (card.layout !== 'split' && faces.length > 1) {
     // NOTE: we want split cards to include both names
     // but other double face to use the first name
-    str = str.substring(0, str.indexOf(faceNameSeperator)); // first name
+    str = faces[0].name;
   }
 
   //Trim the card name here before potentially adding art series suffix.

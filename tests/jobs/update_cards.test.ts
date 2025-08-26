@@ -1,13 +1,26 @@
 import { ART_SERIES_CARD_SUFFIX } from '../../src/client/utils/cardutil';
-import { convertName, ScryfallCard } from '../../src/jobs/utils/update_cards';
+import { convertName, ScryfallCard, ScryfallCardFace } from '../../src/jobs/utils/update_cards';
+
+const createCardFace = (name: string): ScryfallCardFace => {
+  return {
+    object: 'card_face',
+    name,
+  } as ScryfallCardFace;
+};
 
 //TODO: Expand as more tests are added
-const createScryfallCard = (name: string, layout: string): ScryfallCard => {
+const createScryfallCard = (name: string, layout: string, cardFaces?: Partial<ScryfallCardFace>[]): ScryfallCard => {
   return {
     name,
     layout,
+    card_faces: cardFaces || [],
   } as ScryfallCard;
 };
+//Art cards use the same name on both sides
+const islandArtCard = createScryfallCard('Island // Island', 'art_series', [
+  createCardFace('Island'),
+  createCardFace('Island'),
+]);
 
 describe('convertName', () => {
   it('Plain card name', async () => {
@@ -23,39 +36,57 @@ describe('convertName', () => {
   });
 
   it('Backside of transforming card', async () => {
-    const card = createScryfallCard('Ajani, Nacatl Pariah // Ajani, Nacatl Avenger', 'transform');
+    const card = createScryfallCard('Ajani, Nacatl Pariah // Ajani, Nacatl Avenger', 'transform', [
+      createCardFace('Ajani, Nacatl Pariah'),
+      createCardFace('Ajani, Nacatl Avenger'),
+    ]);
+
     const result = convertName(card, false);
     expect(result).toEqual('Ajani, Nacatl Pariah');
   });
 
   it('Backside of transforming card', async () => {
-    const card = createScryfallCard('Ajani, Nacatl Pariah // Ajani, Nacatl Avenger', 'transform');
+    const card = createScryfallCard('Ajani, Nacatl Pariah // Ajani, Nacatl Avenger', 'transform', [
+      createCardFace('Ajani, Nacatl Avenger'),
+    ]);
     const result = convertName(card, true);
     expect(result).toEqual('Ajani, Nacatl Avenger');
   });
 
   it('Split card is always full name', async () => {
-    const card = createScryfallCard('Alive // Well', 'split');
+    const card = createScryfallCard('Alive // Well', 'split', [createCardFace('Alive'), createCardFace('Well')]);
     const result = convertName(card, false);
     expect(result).toEqual('Alive // Well');
   });
 
   it('Frontside of art series card', async () => {
-    //Art cards use the same name on both sides
-    const card = createScryfallCard('Island // Island', 'art_series');
-    const result = convertName(card, false);
+    const result = convertName(islandArtCard, false);
     expect(result).toEqual(`Island ${ART_SERIES_CARD_SUFFIX}`);
   });
 
   it('Backside of art series card', async () => {
-    const card = createScryfallCard('Island // Island', 'art_series');
-    const result = convertName(card, true);
+    const result = convertName(islandArtCard, true);
     expect(result).toEqual(`Island ${ART_SERIES_CARD_SUFFIX}`);
+  });
+
+  it('Art series Room card, with double names', async () => {
+    const card = createScryfallCard('Mirror Room // Fractured Realm // Mirror Room // Fractured Realm', 'art_series', [
+      createCardFace('Mirror Room // Fractured Realm'),
+      createCardFace('Mirror Room // Fractured Realm'),
+    ]);
+    const result = convertName(card, true);
+    expect(result).toEqual(`Mirror Room // Fractured Realm ${ART_SERIES_CARD_SUFFIX}`);
   });
 
   it('Card with single slash is a regular name', async () => {
     const card = createScryfallCard('Summon: Choco/Mog', 'normal');
     const result = convertName(card, false);
     expect(result).toEqual(`Summon: Choco/Mog`);
+  });
+
+  it('Card with double slash that does not have multiple faces', async () => {
+    const card = createScryfallCard('SP//dr, Piloted by Peni', 'normal');
+    const result = convertName(card, false);
+    expect(result).toEqual(`SP//dr, Piloted by Peni`);
   });
 });

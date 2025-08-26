@@ -23,7 +23,7 @@ import { s3 } from '../dynamo/s3client';
 import { CardMetadata, fileToAttribute } from '../util/cardCatalog';
 import { reasonableCard } from '../util/carddb';
 import * as util from '../util/util';
-import { convertName, ScryfallCard, ScryfallSet } from './utils/update_cards';
+import { convertName, ScryfallCard, ScryfallCardFace, ScryfallSet } from './utils/update_cards';
 
 interface Catalog {
   dict: Record<string, CardDetails>;
@@ -222,7 +222,7 @@ function getTokens(card: ScryfallCard) {
   return getScryfallTokensForCard(card).concat(getExtraTokensForDungeons(card));
 }
 
-function convertCmc(card: ScryfallCard, preflipped: boolean, faceAttributeSource: ScryfallCard) {
+function convertCmc(card: ScryfallCard, preflipped: boolean, faceAttributeSource: ScryfallCardFace) {
   if (preflipped) {
     if (faceAttributeSource.cmc) {
       return faceAttributeSource.cmc;
@@ -314,7 +314,7 @@ function convertColors(card: ScryfallCard, preflipped?: boolean) {
     }
 
     // TODO: handle cards with more than 2 faces
-    return Array.from(card.card_faces[1].colors);
+    return Array.from(card.card_faces[1].colors!);
   }
 
   if (!card.card_faces) {
@@ -341,7 +341,7 @@ function convertColors(card: ScryfallCard, preflipped?: boolean) {
   return [];
 }
 
-function convertType(card: ScryfallCard, preflipped: boolean, faceAttributeSource: ScryfallCard) {
+function convertType(card: ScryfallCard, preflipped: boolean, faceAttributeSource: ScryfallCardFace) {
   let type = faceAttributeSource.type_line;
   if (!type) {
     type = card.type_line;
@@ -371,14 +371,17 @@ function convertId(card: ScryfallCard, preflipped: boolean) {
   return card.id;
 }
 
-function getFaceAttributeSource(card: ScryfallCard, preflipped: boolean) {
+function getFaceAttributeSource(card: ScryfallCard, preflipped: boolean): ScryfallCardFace {
   let faceAttributeSource;
   if (preflipped && card.card_faces) {
     faceAttributeSource = card.card_faces[1];
   } else if (card.card_faces) {
     [faceAttributeSource] = card.card_faces;
   } else {
-    faceAttributeSource = card;
+    faceAttributeSource = {
+      ...card,
+      object: 'card_face',
+    } as ScryfallCardFace;
   }
   return faceAttributeSource;
 }
