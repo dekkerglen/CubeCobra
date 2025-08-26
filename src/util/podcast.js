@@ -11,34 +11,27 @@ const removeSpan = (text) =>
     allowedTags: sanitizeHtml.defaults.allowedTags.filter((tag) => tag !== 'span'),
   });
 
-const updatePodcast = async (podcast) => {
+export const updatePodcast = async (podcast) => {
   const feedData = await getFeedData(podcast.url);
-
   const feedEpisodes = await getFeedEpisodes(podcast.url);
-
-  let items = [];
-  const existingEpisodes = [];
-  let lastKey = null;
-
-  do {
-    const result = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED, lastKey);
-    lastKey = result.lastKey;
-    existingEpisodes.push(...result.items);
-  } while (lastKey);
-
+  const existingEpisodes = await Content.getPodcastEpisodes(podcast.id, ContentStatus.PUBLISHED);
   const existingGuids = existingEpisodes.map((episode) => episode.podcastGuid);
 
-  // if image is different
+  // Find episodes that need image updates
+  const episodesToUpdate = existingEpisodes.filter((episode) => episode.image !== feedData.image);
+
+  if (episodesToUpdate.length > 0) {
+    await Content.batchPut(
+      episodesToUpdate.map((episode) => ({
+        ...episode,
+        image: feedData.image,
+      })),
+    );
+  }
+
+  // Update podcast image if different
   if (podcast.image !== feedData.image) {
-    // we need to fix this and all episodes
     podcast.image = feedData.image;
-
-    items = existingEpisodes.map((episode) => ({
-      ...episode,
-      image: feedData.image,
-    }));
-
-    await Content.batchPut(items);
     await Content.update(podcast);
   }
 

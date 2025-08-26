@@ -528,4 +528,84 @@ describe('Content Model', () => {
       expect(mockDynamoClient.createTable).toHaveBeenCalled();
     });
   });
+
+  describe('getPodcastEpisodes', () => {
+    it('returns empty array when no episodes found', async () => {
+      setupQueryResult({ Items: [], LastEvaluatedKey: undefined });
+
+      const result = await Content.getPodcastEpisodes('podcast-123', 'published');
+
+      expect(result).toEqual([]);
+      verifyQueryCall({
+        IndexName: 'ByTypeStatusComp',
+        KeyConditionExpression: '#p1 = :stcomp',
+        ExpressionAttributeValues: { ':stcomp': `${ContentType.EPISODE}:published` },
+        ScanIndexForward: false,
+      });
+    });
+
+    it('returns all episodes across multiple pages', async () => {
+      const mockEpisodeOne = createEpisode({
+        id: 'episode-1',
+        podcast: 'podcast-123',
+        //@ts-expect-error -- Type mismatch between unhydrated and re-hyrdated content
+        owner: 'user-1',
+      });
+      const mockEpisodeTwo = createEpisode({
+        id: 'episode-2',
+        podcast: 'podcast-123',
+        //@ts-expect-error -- Type mismatch between unhydrated and re-hyrdated content
+        owner: 'user-1',
+      });
+      const mockEpisodeOtherPodcast = createEpisode({
+        id: 'episode-3',
+        podcast: 'different-podcast',
+        //@ts-expect-error -- Type mismatch between unhydrated and re-hyrdated content
+        owner: 'user-1',
+      });
+
+      // First page has 2 episodes, one for target podcast and one for different podcast
+      setupQueryResult({
+        Items: [mockEpisodeOne, mockEpisodeOtherPodcast],
+        LastEvaluatedKey: { S: 'last-key-1' },
+      });
+
+      // Second page has 1 episode for target podcast
+      (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
+        Items: [mockEpisodeTwo],
+        LastEvaluatedKey: null,
+      });
+
+      (User.batchGet as jest.Mock).mockResolvedValueOnce([mockUser]);
+      (User.batchGet as jest.Mock).mockResolvedValueOnce([mockUser]);
+
+      const result = await Content.getPodcastEpisodes('podcast-123', 'published');
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        ...mockEpisodeOne,
+        owner: mockUser,
+      });
+      expect(result[1]).toEqual({
+        ...mockEpisodeTwo,
+        owner: mockUser,
+      });
+
+      // Verify query was called twice
+      expect(mockDynamoClient.query).toHaveBeenCalledTimes(2);
+      verifyQueryCall({
+        IndexName: 'ByTypeStatusComp',
+        KeyConditionExpression: '#p1 = :stcomp',
+        ExpressionAttributeValues: { ':stcomp': `${ContentType.EPISODE}:published` },
+        ScanIndexForward: false,
+      });
+      verifyQueryCall({
+        IndexName: 'ByTypeStatusComp',
+        KeyConditionExpression: '#p1 = :stcomp',
+        ExpressionAttributeValues: { ':stcomp': `${ContentType.EPISODE}:published` },
+        ScanIndexForward: false,
+        ExclusiveStartKey: { S: 'last-key-1' },
+      });
+    });
+  });
 });

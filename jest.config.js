@@ -29,7 +29,7 @@ module.exports = {
   coverageDirectory: 'coverage',
   coverageReporters: ['json', 'text'],
   collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
+    'src/**/*.{js,ts,tsx}',
     'src/dynamo/models/*.js',
     'src/client/filtering/*.js',
     '!src/**/*.d.ts',

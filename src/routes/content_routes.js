@@ -116,6 +116,7 @@ router.post('/getmorevideos', async (req, res) => {
 });
 
 router.get('/podcasts', async (req, res) => {
+  //Get episodes across all podcasts
   const content = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED);
   const podcasts = await Content.getByTypeAndStatus(ContentType.PODCAST, ContentStatus.PUBLISHED);
 
@@ -128,6 +129,7 @@ router.get('/podcasts', async (req, res) => {
 
 router.post('/getmorepodcasts', async (req, res) => {
   const { lastKey } = req.body;
+  //Get episodes across all podcasts
   const content = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED, lastKey);
 
   return res.status(200).send({
@@ -193,13 +195,8 @@ router.get('/podcast/:id', async (req, res) => {
     req.flash('danger', 'Podcast not found');
     return redirect(req, res, '/content/browse');
   }
-  let result = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED);
-  let episodes = result.items.filter((item) => item.podcast === podcast.id);
 
-  while (result.lastKey) {
-    result = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED, result.lastKey);
-    episodes = [...episodes, ...result.items.filter((item) => item.podcast === podcast.id)];
-  }
+  const episodes = await Content.getPodcastEpisodes(podcast.id, ContentStatus.PUBLISHED);
 
   const baseUrl = util.getBaseUrl();
   return render(

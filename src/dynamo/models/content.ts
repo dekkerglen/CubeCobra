@@ -195,6 +195,20 @@ const content = {
       lastKey: result.LastEvaluatedKey,
     };
   },
+  getPodcastEpisodes: async (id: string, status: string): Promise<Episode[]> => {
+    const episodes: Episode[] = [];
+    let lastKey = undefined;
+
+    do {
+      const result = await content.getByTypeAndStatus(ContentType.EPISODE, status, lastKey);
+      lastKey = result.lastKey;
+
+      const filteredEpisodes = ((result.items as Episode[]) || []).filter((item) => item.podcast === id);
+      episodes.push(...filteredEpisodes);
+    } while (lastKey);
+
+    return episodes;
+  },
   getByTypeAndOwner: async (
     type: ContentType,
     owner: string,
