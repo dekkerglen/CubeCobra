@@ -1,4 +1,4 @@
-import React, { useCallback, useContext,useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import { CSRFContext } from '../contexts/CSRFContext';
 import { Card, CardBody, CardHeader } from './base/Card';
@@ -64,22 +64,22 @@ const IndefinitePaginatedList = <T,>({
 
     if (response.ok) {
       const json = await response.json();
+      // eslint-disable-next-line no-console
       console.log(json);
       if (json.success === 'true') {
         const newItems = [...items, ...json.items];
         setItems(newItems);
 
         const numItemsShowOnLastPage = items.length % pageSize;
-        const newItemsShowOnLastPage = newItems.length % pageSize;
-
-        if (numItemsShowOnLastPage === 0 && newItemsShowOnLastPage > 0) {
+        //If current page is full and we just fetched more items, then move to next page
+        if (numItemsShowOnLastPage === 0 && json.items.length > 0) {
           setPage(page + 1);
         }
         setLastKey(json.lastKey);
       }
     }
     setLoading(false);
-  }, [lastKey, items, page]);
+  }, [csrfFetch, fetchMoreRoute, lastKey, items, setItems, pageSize, setLastKey, page]);
 
   const pager = (
     <Pagination
