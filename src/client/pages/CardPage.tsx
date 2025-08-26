@@ -82,7 +82,7 @@ const CardPage: React.FC<CardPageProps> = ({
           </Row>
         </Col>
       </Row>
-      <Correlations draftedWith={draftedWith} cubedWith={cubedWith} synergistic={synergistic} />
+      <Correlations draftedWith={draftedWith} cubedWith={cubedWith} synergistic={synergistic} oracleId={card.oracle_id} />
     </MainLayout>
   );
 };
