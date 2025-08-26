@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import Comment, { UnhydratedComment } from '../../datatypes/Comment';
@@ -102,8 +103,8 @@ const comment = {
     hydrate((await client.get(id)).Item as UnhydratedComment),
   queryByParentAndType: async (
     parent: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Comment[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Comment[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const parentAttr: keyof UnhydratedComment = 'parent';
 
@@ -128,8 +129,8 @@ const comment = {
   },
   queryByOwner: async (
     owner: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Comment[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Comment[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const ownerAttr: keyof UnhydratedComment = 'owner';
 
     const result = await client.query({
@@ -150,7 +151,7 @@ const comment = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document: UnhydratedComment | Comment): Promise<DocumentClient.PutItemOutput> => {
+  put: async (document: UnhydratedComment | Comment): Promise<PutCommandOutput> => {
     const id = document.id || uuidv4();
 
     let ownerId: string | undefined;
@@ -170,10 +171,10 @@ const comment = {
       type: document.type,
     } as UnhydratedComment);
   },
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   scan: async (
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: UnhydratedComment[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: UnhydratedComment[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
     });

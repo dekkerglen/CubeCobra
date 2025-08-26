@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 
 import { Period, UnhydratedCardHistory } from '../../datatypes/History';
 import createClient from '../util';
@@ -20,8 +21,8 @@ const cardhistory = {
     oracle: string,
     type: Period,
     limit: number,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: UnhydratedCardHistory[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: UnhydratedCardHistory[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const result = await client.query({
       KeyConditionExpression: `${partitionKey} = :oracle`,
       ExpressionAttributeValues: {
@@ -37,13 +38,13 @@ const cardhistory = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (document: UnhydratedCardHistory): Promise<DocumentClient.PutItemOutput> => {
+  put: async (document: UnhydratedCardHistory): Promise<PutCommandOutput> => {
     return client.put(document);
   },
   batchPut: async (documents: UnhydratedCardHistory[]): Promise<void> => {
     await client.batchPut(documents);
   },
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };
 
 module.exports = cardhistory;

@@ -2,23 +2,22 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import aws from 'aws-sdk';
+import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import Email from 'email-templates';
 import { createTransport } from 'nodemailer';
 import path from 'path';
 
 import utils from './util';
 
-aws.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const ses = new SESClient({
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+  credentials: fromNodeProviderChain(),
+  region: process.env.AWS_REGION || 'us-east-2',
 });
 
 const transporter = createTransport({
-  SES: new aws.SES({
-    apiVersion: '2010-12-01',
-    region: 'us-east-2',
-  }),
+  SES: { ses, aws: { SendRawEmailCommand } },
 });
 
 export const sendEmail = async (
@@ -43,7 +42,7 @@ export const sendEmail = async (
     transport: transporter,
   });
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || process.env.LOCALSTACK_SES === 'true') {
     await message.send({
       template: templateName,
       locals: {

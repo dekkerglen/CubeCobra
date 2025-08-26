@@ -1,22 +1,17 @@
-// Load Environment Variables
-import dotenv from 'dotenv';
-dotenv.config();
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
-// Load the AWS SDK for Node.js
-import AWS from 'aws-sdk';
+import Client from './client';
 
-// Set the region
-AWS.config.update({
-  s3ForcePathStyle: !!process.env.AWS_ENDPOINT,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
-const documentClient = new AWS.DynamoDB.DocumentClient({
-  apiVersion: '2012-08-10',
-  endpoint: process.env.AWS_ENDPOINT || undefined,
-});
+const documentClient = DynamoDBDocument.from(
+  Client,
+  //Equivalent to V2
+  {
+    marshallOptions: {
+      removeUndefinedValues: true,
+      convertClassInstanceToMap: true,
+    },
+  },
+);
 
 export default documentClient;
 module.exports = documentClient;

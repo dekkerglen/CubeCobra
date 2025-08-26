@@ -2,54 +2,42 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import AWS from 'aws-sdk';
+import { S3 } from '@aws-sdk/client-s3';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 
-// Load the AWS SDK for Node.js
-
-// Set the region
-AWS.config.update({
-  s3ForcePathStyle: !!process.env.AWS_ENDPOINT,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
-const s3 = new AWS.S3({
+export const s3 = new S3({
   endpoint: process.env.AWS_ENDPOINT || undefined,
+  forcePathStyle: !!process.env.AWS_ENDPOINT,
+  credentials: fromNodeProviderChain(),
+  region: process.env.AWS_REGION,
 });
 
 export const getObject = async (bucket: string, key: string): Promise<any> => {
   try {
-    const res = await s3
-      .getObject({
-        Bucket: bucket,
-        Key: key,
-      })
-      .promise();
+    const res = await s3.getObject({
+      Bucket: bucket,
+      Key: key,
+    });
 
-    return JSON.parse(res!.Body!.toString());
+    return JSON.parse(await res!.Body!.transformToString());
   } catch {
     return null;
   }
 };
 
 export const putObject = async (bucket: string, key: string, value: any): Promise<void> => {
-  await s3
-    .putObject({
-      Bucket: bucket,
-      Key: key,
-      Body: JSON.stringify(value),
-    })
-    .promise();
+  await s3.putObject({
+    Bucket: bucket,
+    Key: key,
+    Body: JSON.stringify(value),
+  });
 };
 
 export const deleteObject = async (bucket: string, key: string): Promise<void> => {
-  await s3
-    .deleteObject({
-      Bucket: bucket,
-      Key: key,
-    })
-    .promise();
+  await s3.deleteObject({
+    Bucket: bucket,
+    Key: key,
+  });
 };
 
 export const getBucketName = (): string => {
@@ -61,6 +49,7 @@ export const getBucketName = (): string => {
 };
 
 module.exports = {
+  s3,
   getObject,
   putObject,
   deleteObject,

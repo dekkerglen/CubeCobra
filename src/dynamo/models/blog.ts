@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import BlogPost, { UnhydratedBlogPost } from '../../datatypes/BlogPost';
@@ -126,8 +127,8 @@ const blog = {
   getByCube: async (
     cube: string,
     limit: number,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items: BlogPost[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items: BlogPost[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const cubeAttr: keyof UnhydratedBlogPost = 'cube';
 
@@ -152,8 +153,8 @@ const blog = {
   getByOwner: async (
     owner: string,
     limit: number,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items: BlogPost[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items: BlogPost[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const ownerAttr: keyof UnhydratedBlogPost = 'owner';
 
     const result = await client.query({
@@ -187,7 +188,7 @@ const blog = {
     await client.batchPut(documents.map((document) => fillRequiredDetails(document)));
   },
   batchGet: async (ids: string[]): Promise<BlogPost[]> => batchHydrate(await client.batchGet(ids)),
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   changelogToText: (changelog: Changes): string => {
     let result = '';
 

@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 
 import Notification, { NewNotification, NotificationStatus } from '../../datatypes/Notification';
 import createClient from '../util';
@@ -31,8 +32,8 @@ const notification = {
   getByToAndStatus: async (
     to: string,
     status: NotificationStatus,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Notification[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Notification[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const toStatusCompAttr: keyof Notification = 'toStatusComp';
 
@@ -56,8 +57,8 @@ const notification = {
   },
   getByTo: async (
     to: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: Notification[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: Notification[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     const toAttr: keyof Notification = 'to';
 
     const result = await client.query({
@@ -77,14 +78,14 @@ const notification = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  update: async (document: Notification): Promise<DocumentClient.PutItemOutput> => {
+  update: async (document: Notification): Promise<PutCommandOutput> => {
     if (!document.id) {
       throw new Error('Invalid document: No partition key provided');
     }
     document.toStatusComp = `${document.to}:${document.status}`;
     return client.put(document);
   },
-  put: async (document: NewNotification): Promise<DocumentClient.PutItemOutput> => {
+  put: async (document: NewNotification): Promise<PutCommandOutput> => {
     const notification = {
       ...document,
       toStatusComp: `${document.to}:${NotificationStatus.UNREAD}`,
@@ -101,7 +102,7 @@ const notification = {
         toStatusComp: `${item.to}:${item.status}`,
       })),
     ),
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };
 
 module.exports = notification;

@@ -1,7 +1,8 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 
 import { FeaturedQueueItem, FeaturedQueueStatus, NewFeaturedQueueItem } from '../../datatypes/FeaturedQueue';
-import createClient, { QueryInput } from '../util';
+import createClient, { QueryInputType } from '../util';
 
 const client = createClient({
   name: 'FEATURED_QUEUE',
@@ -31,13 +32,13 @@ module.exports = {
     });
   },
   querySortedByDate: async (
-    lastKey?: DocumentClient.Key,
+    lastKey?: Record<string, NativeAttributeValue>,
     limit = 36,
-  ): Promise<{ items?: FeaturedQueueItem[]; lastKey?: DocumentClient.Key }> => {
+  ): Promise<{ items?: FeaturedQueueItem[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const statusAttr: keyof FeaturedQueueItem = 'status';
 
-    const query: QueryInput = {
+    const query: QueryInputType = {
       IndexName: 'ByDate',
       KeyConditionExpression: '#status = :status',
       ExpressionAttributeNames: {
@@ -60,13 +61,13 @@ module.exports = {
   },
   queryWithOwnerFilter: async (
     ownerID: string,
-    lastKey?: DocumentClient.Key,
-  ): Promise<{ items?: FeaturedQueueItem[]; lastKey?: DocumentClient.Key }> => {
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: FeaturedQueueItem[]; lastKey?: Record<string, NativeAttributeValue> }> => {
     //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
     const statusAttr: keyof FeaturedQueueItem = 'status';
     const ownerAttr: keyof FeaturedQueueItem = 'owner';
 
-    const query: QueryInput = {
+    const query: QueryInputType = {
       IndexName: 'ByDate',
       KeyConditionExpression: '#status = :status',
       FilterExpression: '#owner = :owner',
@@ -90,6 +91,6 @@ module.exports = {
     };
   },
   batchPut: async (documents: FeaturedQueueItem[]): Promise<void> => client.batchPut(documents),
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   delete: async (id: string): Promise<void> => client.delete({ cube: id }),
 };

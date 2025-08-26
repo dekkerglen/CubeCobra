@@ -1,15 +1,21 @@
 const fs = require('fs');
-const AWS = require('aws-sdk');
+
+const { S3 } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
+const { fromNodeProviderChain } = require('@aws-sdk/credential-providers');
+
 const archiver = require('archiver');
 require('dotenv').config();
 
+const s3 = new S3({
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+  forcePathStyle: !!process.env.AWS_ENDPOINT,
+  credentials: fromNodeProviderChain(),
+  region: process.env.AWS_REGION,
+});
+
 // get version from package.json
 const VERSION = require('../package.json').version;
-
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
 
 const bucketName = process.env.CUBECOBRA_APP_BUCKET || 'cubecobra';
 const zipFileName = `builds/${VERSION}.zip`;
@@ -29,20 +35,23 @@ output.on('close', function () {
 
   // upload the zip file to s3
   const fileStream = fs.createReadStream('target.zip');
-  fileStream.on('open', function () {
+  fileStream.on('open', async function () {
     const params = {
       Bucket: bucketName,
       Key: zipFileName,
       Body: fileStream,
     };
-    s3.upload(params, function (err, data) {
-      if (err) {
-        console.log('Error', err);
-      }
-      if (data) {
+    await new Upload({
+      client: s3,
+      params,
+    })
+      .done()
+      .then((data) => {
         console.log('Upload Success', data.Location);
-      }
-    });
+      })
+      .catch((err) => {
+        console.log('Error', err);
+      });
   });
 });
 

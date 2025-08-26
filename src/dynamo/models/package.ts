@@ -1,4 +1,5 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import { normalizeName } from 'utils/cardutil';
@@ -6,7 +7,7 @@ import { normalizeName } from 'utils/cardutil';
 import { CardDetails } from '../../datatypes/Card';
 import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '../../datatypes/CardPackage';
 import UserType from '../../datatypes/User';
-import createClient, { QueryInput } from '../util';
+import createClient, { QueryInputType } from '../util';
 
 const User = require('./user');
 const { cardFromId } = require('../../util/carddb');
@@ -102,7 +103,7 @@ const batchHydrate = async (packs: UnhydratedCardPackage[]): Promise<CardPackage
   });
 };
 
-const applyKeywordFilter = (query: QueryInput, keywords: string): QueryInput => {
+const applyKeywordFilter = (query: QueryInputType, keywords: string): QueryInputType => {
   if (!keywords) {
     return query;
   }
@@ -131,7 +132,7 @@ const applyKeywordFilter = (query: QueryInput, keywords: string): QueryInput => 
   return query;
 };
 
-type QueryResponse = { items?: CardPackage[]; lastKey?: DocumentClient.Key };
+type QueryResponse = { items?: CardPackage[]; lastKey?: Record<string, NativeAttributeValue> };
 
 const packages = {
   getById: async (id: string): Promise<CardPackage | undefined> =>
@@ -178,7 +179,7 @@ const packages = {
     status: CardPackageStatus,
     keywords: string,
     ascending: boolean,
-    lastKey?: DocumentClient.Key,
+    lastKey?: Record<string, NativeAttributeValue>,
   ): Promise<QueryResponse> => {
     const query = {
       IndexName: 'ByDate',
@@ -192,7 +193,7 @@ const packages = {
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
       Limit: 36,
-    } as QueryInput;
+    } as QueryInputType;
 
     const result = await client.query(applyKeywordFilter(query, keywords));
 
@@ -205,7 +206,7 @@ const packages = {
     status: CardPackageStatus,
     keywords: string,
     ascending: boolean,
-    lastKey?: DocumentClient.Key,
+    lastKey?: Record<string, NativeAttributeValue>,
   ): Promise<QueryResponse> => {
     const query = {
       IndexName: 'ByVoteCount',
@@ -219,7 +220,7 @@ const packages = {
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
       Limit: 36,
-    } as QueryInput;
+    } as QueryInputType;
 
     const result = await client.query(applyKeywordFilter(query, keywords));
 
@@ -228,7 +229,7 @@ const packages = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  queryByOwner: async (owner: string, lastKey?: DocumentClient.Key): Promise<QueryResponse> => {
+  queryByOwner: async (owner: string, lastKey?: Record<string, NativeAttributeValue>): Promise<QueryResponse> => {
     const query = {
       IndexName: 'ByOwner',
       KeyConditionExpression: '#owner = :owner',
@@ -240,7 +241,7 @@ const packages = {
       },
       ExclusiveStartKey: lastKey,
       Limit: 100, //Higher limit because this function is used to load all packages for a user into memory
-    } as QueryInput;
+    } as QueryInputType;
 
     const result = await client.query(query);
 
@@ -253,7 +254,7 @@ const packages = {
     owner: string,
     keywords: string,
     ascending: boolean,
-    lastKey?: DocumentClient.Key,
+    lastKey?: Record<string, NativeAttributeValue>,
   ): Promise<QueryResponse> => {
     //ByOwner secondary index is sorted by Date
     const query = {
@@ -278,8 +279,8 @@ const packages = {
     };
   },
   batchPut: async (documents: UnhydratedCardPackage[]): Promise<void> => client.batchPut(documents),
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
-  scan: async (lastKey: DocumentClient.Key): Promise<QueryResponse> => {
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
+  scan: async (lastKey: Record<string, NativeAttributeValue>): Promise<QueryResponse> => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
     });
@@ -289,7 +290,7 @@ const packages = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  batchDelete: async (keys: DocumentClient.Key[]): Promise<void> => {
+  batchDelete: async (keys: Record<string, NativeAttributeValue>[]): Promise<void> => {
     client.batchDelete(keys);
   },
   delete: async (id: string): Promise<void> => client.delete({ id }),

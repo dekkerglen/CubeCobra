@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import 'module-alias/register';
 dotenv.config();
 
-import AWS from 'aws-sdk';
+import { Upload } from '@aws-sdk/lib-storage';
 import json from 'big-json';
 import es from 'event-stream';
 import fs from 'fs';
@@ -19,6 +19,7 @@ import { CardDetails, ColorCategory, DefaultElo } from 'datatypes/Card';
 import { ManaSymbol } from 'datatypes/Mana';
 
 import * as cardutil from '../client/utils/cardutil';
+import { s3 } from '../dynamo/s3client';
 import { CardMetadata, fileToAttribute } from '../util/cardCatalog';
 import { reasonableCard } from '../util/carddb';
 import * as util from '../util/util';
@@ -717,41 +718,19 @@ const downloadFromScryfall = async (
   console.info('Finished cardbase update...');
 };
 
-const s3 = new AWS.S3({
-  endpoint: process.env.AWS_ENDPOINT || undefined,
-  s3ForcePathStyle: !!process.env.AWS_ENDPOINT,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'us-east-2',
-});
-
-const uploadStream = (key: string) => {
-  const pass = new stream.PassThrough();
-  return {
-    writeStream: pass,
-    promise: s3.upload({ Bucket: process.env.DATA_BUCKET || '', Key: key, Body: pass }).promise(),
-  };
-};
-
 const uploadLargeObjectToS3 = async (file: any, key: string) => {
-  await new Promise<void>((resolve, reject) => {
-    try {
-      const { writeStream, promise } = uploadStream(key);
-      const readStream = fs.createReadStream(file);
+  try {
+    const pass = new stream.PassThrough();
+    const readStream = fs.createReadStream(file);
+    const upload = new Upload({ client: s3, params: { Bucket: process.env.DATA_BUCKET || '', Key: key, Body: pass } });
 
-      readStream.pipe(writeStream);
+    readStream.pipe(pass);
 
-      promise
-        .then(() => {
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    } catch (error) {
-      reject(error);
-    }
-  });
+    await upload.done();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Failed to upload ${error}`);
+  }
 };
 
 const uploadCardDb = async () => {
@@ -767,13 +746,15 @@ const uploadCardDb = async () => {
 
   // eslint-disable-next-line no-console
   console.log('Uploading manifest...');
-  await s3
-    .upload({
+  await new Upload({
+    client: s3,
+
+    params: {
       Bucket: process.env.DATA_BUCKET || '',
       Key: `cards/manifest.json`,
       Body: JSON.stringify({ date_exported: new Date() }),
-    })
-    .promise();
+    },
+  }).done();
   // eslint-disable-next-line no-console
   console.log('Finished manifest');
 

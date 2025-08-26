@@ -12,7 +12,6 @@ const compression = require('compression');
 const uuid = require('uuid');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
-const DynamoDBStore = require('dynamodb-store');
 const cloudwatch = require('./util/cloudwatch');
 const { updateCardbase } = require('./util/updatecards');
 const cardCatalog = require('./util/cardCatalog');
@@ -20,7 +19,10 @@ const { render } = require('./util/render');
 const flash = require('connect-flash');
 const responseTime = require('response-time');
 
+import dynamoService from './dynamo/client';
+import documentClient from './dynamo/documentClient';
 import router from './router/router';
+import DynamoDBStore from './util/dynamo-session-store';
 import { sanitizeHttpBody } from './util/logging';
 
 // global listeners for promise rejections
@@ -125,12 +127,8 @@ app.use(
         readCapacityUnits: 10,
         writeCapacityUnits: 10,
       },
-      dynamoConfig: {
-        endpoint: process.env.AWS_ENDPOINT || undefined,
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        region: process.env.AWS_REGION || 'us-east-2',
-      },
+      dynamoService,
+      documentClient,
       keepExpired: false,
       touchInterval: 30000,
       ttl: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
@@ -282,12 +280,18 @@ app.use('', require('./routes/search_routes'));
 app.use('', require('./routes/root'));
 
 app.use((req, res) =>
-  render(req, res, 'ErrorPage', {
-    requestId: req.uuid,
-    title: '404: Page not found',
-  }, {
-    noindex: true,
-  }),
+  render(
+    req,
+    res,
+    'ErrorPage',
+    {
+      requestId: req.uuid,
+      title: '404: Page not found',
+    },
+    {
+      noindex: true,
+    },
+  ),
 );
 
 app.use((err, req, res) => {
@@ -295,13 +299,19 @@ app.use((err, req, res) => {
   if (!res.statusCode) {
     res.status(500);
   }
-  return render(req, res, 'ErrorPage', {
-    error: err.message,
-    requestId: req.uuid,
-    title: 'Oops! Something went wrong.',
-  }, {
-    noindex: true,
-  });
+  return render(
+    req,
+    res,
+    'ErrorPage',
+    {
+      error: err.message,
+      requestId: req.uuid,
+      title: 'Oops! Something went wrong.',
+    },
+    {
+      noindex: true,
+    },
+  );
 });
 
 // scryfall updates this data at 9, so this will minimize staleness

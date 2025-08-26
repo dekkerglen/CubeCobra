@@ -1,4 +1,4 @@
-import { DocumentClient } from 'aws-sdk2-types/lib/dynamodb/document_client';
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import PasswordReset, { UnhydratedPasswordReset } from '../../datatypes/PasswordReset';
@@ -26,7 +26,7 @@ const passwordReset = {
   batchPut: async (documents: PasswordReset[]): Promise<void> => {
     await client.batchPut(documents);
   },
-  createTable: async (): Promise<DocumentClient.CreateTableOutput> => client.createTable(),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };
 
 module.exports = passwordReset;
