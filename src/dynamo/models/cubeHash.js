@@ -41,11 +41,16 @@ const client = createClient({
   FIELDS,
 });
 
+const getShortIdHash = (shortId) => {
+  //Case sensitive!
+  return `shortid:${shortId}`;
+};
+
 const hashShortId = (metadata) => {
   if (!metadata.shortId || metadata.shortId.length === 0) {
     return [];
   }
-  return [`shortid:${metadata.shortId}`];
+  return [getShortIdHash(metadata.shortId)];
 };
 
 const hashFeatured = (metadata) => {
@@ -247,5 +252,6 @@ module.exports = {
       [FIELDS.CUBE_ID]: metadata.id,
     }));
   },
+  getShortIdHash,
   FIELDS,
 };

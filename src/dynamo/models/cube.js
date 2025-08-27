@@ -245,7 +245,7 @@ const exportData = {
       return hydrate(byId.Item);
     }
 
-    const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
+    const byShortId = await cubeHash.getSortedByName(cubeHash.getShortIdHash(id));
     if (byShortId.items.length > 0) {
       const cubeId = byShortId.items[0].cube;
       const query = await client.get(cubeId);
