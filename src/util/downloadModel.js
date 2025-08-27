@@ -31,9 +31,24 @@ const downloadFromS3 = async () => {
       }
     }
 
-    fs.writeFileSync(file.Key, await res.Body.transformToString());
-    // eslint-disable-next-line no-console -- Debugging
-    console.log(`Downloaded ${file.Key}`);
+    //Models are a mix of JSON and binary, can't simply call res.Body.transformToString
+    if (res.Body) {
+      // Create a writable stream to the local file
+      const fileStream = fs.createWriteStream(file.Key);
+
+      // Pipe the S3 object's Body (readable stream) to the file stream
+      await new Promise((resolve, reject) => {
+        res.Body.pipe(fileStream)
+          .on('error', (err) => reject(err))
+          .on('close', () => resolve()); // 'close' event indicates the stream has finished writing
+      });
+
+      // eslint-disable-next-line no-console -- Debugging
+      console.log(`Downloaded ${file.Key}`);
+    } else {
+      // eslint-disable-next-line no-console -- Debugging
+      console.error('S3 object body is empty.');
+    }
   }
 };
 
