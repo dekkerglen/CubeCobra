@@ -49,7 +49,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
         return;
       }
 
-      const taken = await CubeHash.getSortedByName(`shortid:${updatedCube.shortId.toLowerCase()}`);
+      const taken = await CubeHash.getSortedByName(CubeHash.getShortIdHash(updatedCube.shortId));
 
       if (taken.items.length === 1 && taken.items[0].cube !== cube.id) {
         res.status(400).json({ error: 'Could not update cube, the short id is already taken.' });

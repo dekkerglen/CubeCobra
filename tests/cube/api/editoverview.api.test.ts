@@ -126,7 +126,7 @@ describe('Edit overview API', () => {
     const otherCubeHash = {
       name: 'OtherCube',
       cube: 'abcdefgh',
-      hash: 'shortid:foobar',
+      hash: 'shortid:Foobar',
       numFollowers: 0,
       cardCount: 540,
     };
@@ -138,12 +138,13 @@ describe('Edit overview API', () => {
       items: [otherCubeHash],
       lastKey: null,
     });
+    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:Foobar');
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: newCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, newCube.name);
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(2, newCube.shortId);
-    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:foobar`);
+    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:Foobar`);
     expect(res.status).toEqual(400);
     expect(res.body).toEqual({
       error: expect.stringContaining('the short id is already taken'),
@@ -159,14 +160,14 @@ describe('Edit overview API', () => {
     const otherCubeHash = {
       name: 'OtherCube',
       cube: 'abcdefgh',
-      hash: 'shortid:foobar',
+      hash: 'shortid:Foobar',
       numFollowers: 0,
       cardCount: 540,
     };
     const otherCubeHashTwo = {
       name: 'OtherCube2',
       cube: 'aaa-bbb-ccc',
-      hash: 'shortid:foobar',
+      hash: 'shortid:Foobar',
       numFollowers: 5,
       cardCount: 340,
     };
@@ -178,12 +179,13 @@ describe('Edit overview API', () => {
       items: [otherCubeHash, otherCubeHashTwo],
       lastKey: null,
     });
+    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:Foobar');
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: newCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, newCube.name);
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(2, newCube.shortId);
-    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:foobar`);
+    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:Foobar`);
     expect(res.status).toEqual(400);
     expect(res.body).toEqual({
       error: expect.stringContaining('the short id is already taken'),
@@ -211,6 +213,7 @@ describe('Edit overview API', () => {
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
     (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({ items: [], lastKey: null });
+    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:bar');
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.shortId);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
@@ -252,7 +255,6 @@ describe('Edit overview API', () => {
     (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
-    (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({ items: [], lastKey: null });
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.id);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
@@ -326,6 +328,7 @@ describe('Edit overview API', () => {
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
     (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({ items: [], lastKey: null });
+    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:bar');
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.shortId);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
@@ -386,6 +389,7 @@ describe('Edit overview API', () => {
       items: [],
       lastKey: null,
     });
+    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:newid');
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.shortId);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
@@ -430,6 +434,7 @@ describe('Edit overview API', () => {
       items: [],
       lastKey: null,
     });
+    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:');
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.id);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
