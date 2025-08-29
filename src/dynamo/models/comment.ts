@@ -183,6 +183,9 @@ const comment = {
       lastKey: result.LastEvaluatedKey,
     };
   },
+  delete: async (key: { id: string }): Promise<void> => {
+    await client.delete(key);
+  },
 };
 
 module.exports = comment;

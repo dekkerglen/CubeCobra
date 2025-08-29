@@ -12,6 +12,7 @@ import GridDraftCard from 'components/GridDraftCard';
 import CustomDraftFormatModal from 'components/modals/CustomDraftFormatModal';
 import UploadDecklistModal from 'components/modals/UploadDecklistModal';
 import PlaytestDecksCard from 'components/PlaytestDecksCard';
+import PreviousP1P1sCard from 'components/p1p1/PreviousP1P1sCard';
 import RenderToRoot from 'components/RenderToRoot';
 import SamplePackCard from 'components/SamplePackCard';
 import SealedCard from 'components/SealedCard';
@@ -27,13 +28,22 @@ interface CubePlaytestPageProps {
   cube: Cube;
   decks: Draft[];
   decksLastKey: any;
+  previousPacks?: any[];
+  previousPacksLastKey?: any;
   loginCallback?: string;
 }
 
 const UploadDecklistModalLink = withModal(Link, UploadDecklistModal);
 const CreateCustomFormatLink = withModal(Link, CustomDraftFormatModal);
 
-const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksLastKey, loginCallback = '/' }) => {
+const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
+  cube,
+  decks,
+  decksLastKey,
+  previousPacks = [],
+  previousPacksLastKey,
+  loginCallback = '/',
+}) => {
   const user = useContext(UserContext);
   const defaultFormat = cube.defaultFormat ?? -1;
 
@@ -77,6 +87,14 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksL
             <Col xs={12} md={6} xl={6}>
               <Flexbox direction="col" gap="2">
                 <SamplePackCard />
+                {previousPacks.length > 0 && (
+                  <PreviousP1P1sCard
+                    packs={previousPacks}
+                    packsLastKey={previousPacksLastKey}
+                    cubeId={cube.id}
+                    cubeOwner={cube.owner.id}
+                  />
+                )}
                 {defaultFormat === -1 && <StandardDraftCard defaultFormat={defaultFormat} />}
                 {formatsSorted.map((format) => (
                   <CustomDraftCard
