@@ -3,14 +3,13 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { XIcon } from '@primer/octicons-react';
 import TimeAgo from 'react-timeago';
 
+import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
 import Text from '../base/Text';
 import P1P1DeleteModal from '../modals/P1P1DeleteModal';
 import withModal from '../WithModal';
-
-import UserContext from '../../contexts/UserContext';
 
 const DeleteModalButton = withModal(Button, P1P1DeleteModal);
 

@@ -1,12 +1,12 @@
 import React from 'react';
+
 import { PasteIcon } from '@primer/octicons-react';
 
+import { P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
 import Button from '../base/Button';
+import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
 import Text from '../base/Text';
-import { Flexbox } from '../base/Layout';
-
-import { P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
 
 interface P1P1HeaderProps {
   pack: { cubeId: string };

@@ -1,7 +1,7 @@
 import { useContext, useState } from 'react';
 
-import { CSRFContext } from '../contexts/CSRFContext';
 import { P1P1VoteSummary } from '../../datatypes/P1P1Pack';
+import { CSRFContext } from '../contexts/CSRFContext';
 
 interface UseP1P1VoteResult {
   voting: boolean;

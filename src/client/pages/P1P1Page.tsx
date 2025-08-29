@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import { P1P1VoteSummary } from '../../datatypes/P1P1Pack';
 import Alert from '../components/base/Alert';
 import Button from '../components/base/Button';
 import { Card, CardBody } from '../components/base/Card';
@@ -13,11 +14,8 @@ import P1P1Header from '../components/p1p1/P1P1Header';
 import P1P1PackDisplay from '../components/p1p1/P1P1PackDisplay';
 import P1P1Results from '../components/p1p1/P1P1Results';
 import RenderToRoot from '../components/RenderToRoot';
-
 import useP1P1Pack from '../hooks/useP1P1Pack';
 import MainLayout from '../layouts/MainLayout';
-
-import { P1P1VoteSummary } from '../../datatypes/P1P1Pack';
 
 interface P1P1PageProps {
   packId: string;

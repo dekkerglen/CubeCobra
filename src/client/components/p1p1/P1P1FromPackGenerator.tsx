@@ -1,12 +1,13 @@
 import React, { useContext, useState } from 'react';
 
+import CardType from 'datatypes/Card';
+
+import { CSRFContext } from '../../contexts/CSRFContext';
+import UserContext from '../../contexts/UserContext';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import Spinner from '../base/Spinner';
 import Text from '../base/Text';
-import { CSRFContext } from '../../contexts/CSRFContext';
-import UserContext from '../../contexts/UserContext';
-import CardType from 'datatypes/Card';
 
 interface P1P1FromPackGeneratorProps {
   cubeId: string;

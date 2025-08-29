@@ -1,15 +1,13 @@
 import React, { useMemo } from 'react';
 
+import P1P1Pack from '../../../datatypes/P1P1Pack';
+import { P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
+import { detailsToCard } from '../../utils/cardutil';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
 import Table from '../base/Table';
 import Text from '../base/Text';
 import withAutocard from '../WithAutocard';
-
-import { detailsToCard } from '../../utils/cardutil';
-
-import P1P1Pack from '../../../datatypes/P1P1Pack';
-import { P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
 
 interface P1P1ResultsProps {
   pack: P1P1Pack;

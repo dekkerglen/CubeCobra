@@ -1,17 +1,15 @@
 import React, { useContext, useMemo } from 'react';
 
-import Alert from '../base/Alert';
-import Spinner from '../base/Spinner';
-import Text from '../base/Text';
-import { Flexbox } from '../base/Layout';
-import CardGrid from '../card/CardGrid';
-
+import P1P1Pack from '../../../datatypes/P1P1Pack';
+import { P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
 import UserContext from '../../contexts/UserContext';
 import useP1P1Vote from '../../hooks/useP1P1Vote';
 import { detailsToCard } from '../../utils/cardutil';
-
-import P1P1Pack from '../../../datatypes/P1P1Pack';
-import { P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
+import Alert from '../base/Alert';
+import { Flexbox } from '../base/Layout';
+import Spinner from '../base/Spinner';
+import Text from '../base/Text';
+import CardGrid from '../card/CardGrid';
 
 interface P1P1PackDisplayProps {
   pack: P1P1Pack;

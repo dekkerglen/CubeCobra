@@ -1,7 +1,7 @@
-import User from '../../dynamo/models/user';
 import { UnhydratedP1P1Pack } from '../../datatypes/P1P1Pack';
-import { draft } from '../../util/ml';
+import User from '../../dynamo/models/user';
 import { cardFromId } from '../../util/carddb';
+import { draft } from '../../util/ml';
 
 /**
  * Utility functions for handling user data in P1P1 packs
@@ -54,7 +54,7 @@ export const getBotPrediction = async (oracleIds: string[]): Promise<BotResult> 
       botPickIndex: botPickIndex >= 0 ? botPickIndex : null,
       botWeights,
     };
-  } catch (err) {
+  } catch {
     // Silently fail for bot predictions to avoid breaking pack creation
     return { botPickIndex: null, botWeights: [] };
   }
@@ -76,7 +76,7 @@ export const createHydratedP1P1Pack = async (
     if (user?.username) {
       username = user.username;
     }
-  } catch (error) {
+  } catch {
     // Caller should handle logging if needed
   }
 

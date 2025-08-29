@@ -734,7 +734,7 @@ router.get('/playtest/:id', async (req, res) => {
       previousPacksLastKey = previousPacksResult.lastKey;
     } catch (error) {
       // If we can't get previous packs, just continue without them
-      console.error('Failed to fetch previous P1P1 packs:', error);
+      req.logger.error('Failed to fetch previous P1P1 packs:', error);
     }
 
     const baseUrl = util.getBaseUrl();
