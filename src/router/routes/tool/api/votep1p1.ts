@@ -22,7 +22,7 @@ export const voteP1P1Handler = async (req: Request, res: Response) => {
     const { packId, cardIndex } = req.body;
     const { user } = req;
 
-    // ensureAuth middleware guarantees user exists
+    // ensureAuth middleware guarantees user exists but we're doing this for typescript
     if (!user) {
       return res.status(401).json({ error: 'Authentication required' });
     }

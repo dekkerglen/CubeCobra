@@ -12,21 +12,16 @@ import { bodyValidation } from '../../../middleware/bodyValidation';
 const CreateP1P1FromPackSchema = Joi.object({
   cubeId: Joi.string().uuid().required().messages({
     'string.guid': 'Cube ID must be a valid UUID',
-    'any.required': 'Cube ID is required'
+    'any.required': 'Cube ID is required',
   }),
   seed: Joi.string().required().messages({
-    'any.required': 'Seed is required'
+    'any.required': 'Seed is required',
   }),
-  cardIds: Joi.array()
-    .items(Joi.string().min(1))
-    .min(1)
-    .max(30)
-    .required()
-    .messages({
-      'array.min': 'At least one card ID is required',
-      'array.max': 'Pack size too large (max 30 cards)',
-      'any.required': 'Card IDs array is required'
-    })
+  cardIds: Joi.array().items(Joi.string().min(1)).min(1).max(30).required().messages({
+    'array.min': 'At least one card ID is required',
+    'array.max': 'Pack size too large (max 30 cards)',
+    'any.required': 'Card IDs array is required',
+  }),
 });
 
 export const createP1P1FromPackHandler = async (req: Request, res: Response) => {
@@ -34,7 +29,7 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
     const { cubeId, seed, cardIds } = req.body;
     const { user } = req;
 
-    // ensureAuth middleware guarantees user exists
+    // ensureAuth middleware guarantees user exists but we're doing this for typescript
     if (!user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -71,6 +66,7 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
         seed: seed,
       },
       user.id,
+      user.username,
     );
 
     const p1p1Pack = await p1p1PackModel.put(packDataWithUser);
