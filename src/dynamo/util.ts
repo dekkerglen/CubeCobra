@@ -16,6 +16,8 @@ import {
   QueryCommandOutput,
   ScanCommandInput,
   ScanCommandOutput,
+  UpdateCommandInput,
+  UpdateCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -46,6 +48,7 @@ interface ClientInterface {
   scan: (params: Omit<ScanCommandInput, 'TableName'>) => Promise<ScanCommandOutput>;
   query: (params: QueryInputType) => Promise<QueryCommandOutput>;
   put: (Item: Record<string, NativeAttributeValue>) => Promise<string | NativeAttributeValue>;
+  update: (params: Omit<UpdateCommandInput, 'TableName'>) => Promise<UpdateCommandOutput>;
   delete: (key: Record<string, NativeAttributeValue>) => Promise<void>;
   batchGet: (ids: string[]) => Promise<any[]>;
   batchPut: (documents: Record<string, NativeAttributeValue>[]) => Promise<void>;
@@ -137,7 +140,9 @@ const createClient = (config: ClientConfig): ClientInterface => {
 
         return result;
       } catch (error: any) {
-        throw new Error(`Error getting item from table ${config.name} with id ${id}: ${error.message}`);
+        throw new Error(
+          `Error getting item from table ${config.name} with key ${JSON.stringify({[config.partitionKey]: id})}: ${error.message}`,
+        );
       }
     },
     scan: async (params: Omit<ScanCommandInput, 'TableName'>): Promise<ScanCommandOutput> => {
@@ -165,6 +170,16 @@ const createClient = (config: ClientConfig): ClientInterface => {
         return Item[config.partitionKey];
       } catch (error: any) {
         throw new Error(`Error putting item into table ${config.name}: ${error.message}`);
+      }
+    },
+    update: async (params: Omit<UpdateCommandInput, 'TableName'>): Promise<UpdateCommandOutput> => {
+      try {
+        return await documentClient.update({
+          ...params,
+          TableName: tableName(config.name),
+        });
+      } catch (error: any) {
+        throw new Error(`Error updating item in table ${config.name}: ${error.message}`);
       }
     },
     query: async (params: Omit<QueryCommandInput, 'TableName'>): Promise<QueryCommandOutput> => {

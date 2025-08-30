@@ -22,6 +22,7 @@ const { handleRouteError, render, redirect } = require('../util/render');
 
 const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
+const p1p1PackModel = require('../dynamo/models/p1p1Pack');
 
 const { searchCards } = require('../util/tools');
 
@@ -335,5 +336,39 @@ router.get('/searchcards', async (req, res) =>
     },
   ),
 );
+
+router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', async (req, res) => {
+  try {
+    const { packId } = req.params;
+    
+    // Validate pack exists
+    const pack = await p1p1PackModel.getById(packId);
+    if (!pack) {
+      req.flash('danger', 'P1P1 pack not found');
+      return redirect(req, res, '/404');
+    }
+
+    const baseUrl = util.getBaseUrl();
+    return render(
+      req,
+      res,
+      'P1P1Page',
+      {
+        packId,
+      },
+      {
+        title: 'Pick 1 Pack 1',
+        metadata: generateMeta(
+          'Pick 1 Pack 1 - Cube Cobra',
+          'Vote on your first pick from this pack!',
+          `${baseUrl}/content/banner.png`, // Default image
+          `${baseUrl}/tool/p1p1/${packId}`,
+        ),
+      },
+    );
+  } catch (err) {
+    return handleRouteError(req, res, err, '/404');
+  }
+});
 
 module.exports = router;

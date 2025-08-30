@@ -6,6 +6,7 @@ import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CardGrid from 'components/card/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
+import P1P1FromPackGenerator from 'components/p1p1/P1P1FromPackGenerator';
 import RenderToRoot from 'components/RenderToRoot';
 import CardType from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
@@ -32,6 +33,7 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, login
                   Sample Pack
                 </Text>
                 <Flexbox direction="row" gap="2">
+                  <P1P1FromPackGenerator cubeId={cube.id} seed={seed} pack={pack} />
                   <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}`}>
                     New Pack
                   </Button>
