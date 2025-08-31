@@ -1,9 +1,10 @@
 import Joi from 'joi';
 
+import Card from '../../../../datatypes/Card';
 import Cube from '../../../../dynamo/models/cube';
 import p1p1PackModel from '../../../../dynamo/models/p1p1Pack';
 import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
-import { createHydratedP1P1Pack } from '../../../../server/util/userUtil';
+import { getBotPrediction } from '../../../../server/util/userUtil';
 import { Request, Response } from '../../../../types/express';
 import { cardFromId } from '../../../../util/carddb';
 import { isCubeViewable } from '../../../../util/cubefn';
@@ -40,40 +41,87 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
       return res.status(404).json({ error: 'Cube not found' });
     }
 
-    // Validate card IDs exist in card database
-    const validCardIds: string[] = [];
+    // Get actual Card objects from the cube for the given cardIds
+    const cards: Card[] = [];
+    const oracleIds: string[] = [];
+
+    // Combine mainboard and maybeboard to search all cube cards
+    const allCubeCards = [...(cube.cards?.mainboard || []), ...(cube.cards?.maybeboard || [])];
+
+
     for (const cardId of cardIds) {
       try {
-        const details = cardFromId(cardId);
-        if (details) {
-          validCardIds.push(cardId);
+        // Find the actual Card object from the cube that matches this cardID
+        const cubeCard = allCubeCards.find((card) => card.cardID === cardId);
+
+        if (cubeCard) {
+          // Use the actual Card object from the cube (with all its properties like tags, status, finish, etc.)
+          cards.push(cubeCard);
+
+          // Collect oracle IDs for bot prediction (use existing details from cube card)
+          if (cubeCard.details?.oracle_id) {
+            oracleIds.push(cubeCard.details.oracle_id);
+          }
+        } else {
+          req.logger.error(`Card ID ${cardId} not found in cube ${cubeId}`);
+          
+          // Fallback: Create a basic card with details if not found in cube
+          // This can happen if the pack was generated with different card data than what's stored in cube
+          const details = cardFromId(cardId);
+          if (details) {
+            const fallbackCard: Card = {
+              cardID: cardId,
+              tags: [],
+              status: 'Owned',
+              finish: 'Non-foil',
+              details: {
+                ...details,
+              },
+            };
+            cards.push(fallbackCard);
+            
+            if (details.oracle_id) {
+              oracleIds.push(details.oracle_id);
+            }
+          }
         }
       } catch (error) {
         // Skip invalid card IDs, log if needed
-        req.logger.error(`Invalid card ID ${cardId}:`, error);
+        req.logger.error(`Error processing card ID ${cardId}:`, error);
       }
     }
 
-    if (validCardIds.length === 0) {
+    // Note: Cards from cube already have details (cube.getById() calls addDetails)
+    // No need to re-add details here
+
+    if (cards.length === 0) {
       return res.status(400).json({ error: 'No valid cards found' });
     }
 
-    // Create P1P1 pack record with user information, preserving card IDs
-    const packDataWithUser = await createHydratedP1P1Pack(
+    // Get bot prediction for this pack using actual bot logic
+    const botResult = await getBotPrediction(oracleIds);
+
+    // Create S3 data
+    const s3Data = {
+      botPick: botResult.botPickIndex ?? undefined,
+      botWeights: botResult.botWeights.length > 0 ? botResult.botWeights : undefined,
+      cards: cards, // Card details will be stripped automatically by putS3Data
+      createdByUsername: user.username,
+      seed,
+    };
+
+    // Create P1P1 pack
+    const pack = await p1p1PackModel.put(
       {
         cubeId: cube.id,
-        cards: validCardIds,
-        seed: seed,
+        createdBy: user.id,
       },
-      user.id,
-      user.username,
+      s3Data,
     );
-
-    const p1p1Pack = await p1p1PackModel.put(packDataWithUser);
 
     return res.status(200).json({
       success: true,
-      pack: p1p1Pack,
+      pack,
     });
   } catch (err) {
     const error = err as Error;

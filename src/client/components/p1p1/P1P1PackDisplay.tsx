@@ -1,7 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import P1P1Pack from '../../../datatypes/P1P1Pack';
-import { P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
+import { P1P1Pack, P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
 import UserContext from '../../contexts/UserContext';
 import useP1P1Vote from '../../hooks/useP1P1Vote';
 import { detailsToCard } from '../../utils/cardutil';
@@ -39,7 +38,10 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
     }
   };
 
-  const cards = pack.cards.map(detailsToCard);
+  const cards = pack.cards.map((card) => {
+    // If card has details, convert details to card format, otherwise use the card directly
+    return card.details ? detailsToCard(card.details) : card;
+  });
 
   const ratings = useMemo((): number[] | undefined => {
     if (showBotWeights && votes.botWeights && votes.botWeights.length > 0) {

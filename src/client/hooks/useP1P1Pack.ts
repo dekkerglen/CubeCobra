@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import P1P1Pack from '../../datatypes/P1P1Pack';
-import { P1P1VoteSummary } from '../../datatypes/P1P1Pack';
+import { P1P1Pack, P1P1VoteSummary } from '../../datatypes/P1P1Pack';
 
 interface UseP1P1PackResult {
   pack: P1P1Pack | null;

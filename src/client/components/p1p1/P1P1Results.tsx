@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 
-import P1P1Pack from '../../../datatypes/P1P1Pack';
-import { P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
+import { P1P1Pack, P1P1VoteSummary } from '../../../datatypes/P1P1Pack';
 import { detailsToCard } from '../../utils/cardutil';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
@@ -64,7 +63,8 @@ const P1P1Results: React.FC<P1P1ResultsProps> = ({ pack, votes }) => {
 
   const headers = ['Rank', 'Card', 'Votes', 'Percentage'];
   const rows = topResults.map((result, index) => {
-    const card = detailsToCard(pack.cards[result.cardIndex]);
+    const packCard = pack.cards[result.cardIndex];
+    const card = packCard.details ? detailsToCard(packCard.details) : packCard;
     const isUserVote = votes.userVote === result.cardIndex;
     const isBotPick = votes.botPick === result.cardIndex;
 

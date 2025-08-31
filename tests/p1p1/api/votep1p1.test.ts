@@ -1,4 +1,4 @@
-import P1P1Pack from '../../../src/datatypes/P1P1Pack';
+import { P1P1Pack } from '../../../src/datatypes/P1P1Pack';
 import p1p1PackModel from '../../../src/dynamo/models/p1p1Pack';
 import { voteP1P1Handler } from '../../../src/router/routes/tool/api/votep1p1';
 import { createUser } from '../../test-utils/data';
@@ -19,18 +19,17 @@ const createP1P1Pack = (overrides?: Partial<P1P1Pack>): P1P1Pack => ({
   cards: [
     { oracle_id: 'oracle-1', name: 'Test Card 1' } as any,
     { oracle_id: 'oracle-2', name: 'Test Card 2' } as any,
-    { oracle_id: 'oracle-3', name: 'Test Card 3' } as any
+    { oracle_id: 'oracle-3', name: 'Test Card 3' } as any,
   ],
   seed: 'test-seed',
   date: Date.now(),
   createdBy: 'test-user',
   createdByUsername: 'testuser',
-  votes: [],
+  votesByUser: {},
   botPick: 0,
   botWeights: [0.8, 0.6, 0.4],
   ...overrides,
 });
-
 
 describe('Vote P1P1 API', () => {
   const mockFlash = jest.fn();
@@ -48,7 +47,6 @@ describe('Vote P1P1 API', () => {
     });
   });
 
-
   it('should return 404 if pack is not found', async () => {
     const user = createUser();
     const packId = uuid.v4();
@@ -63,7 +61,6 @@ describe('Vote P1P1 API', () => {
       error: 'P1P1 pack not found',
     });
   });
-
 
   it('should successfully add vote and return vote summary', async () => {
     const user = createUser({ username: 'testuser' });
@@ -102,7 +99,7 @@ describe('Vote P1P1 API', () => {
       .send();
 
     expect(p1p1PackModel.getById).toHaveBeenCalledWith(pack.id);
-    expect(p1p1PackModel.addVote).toHaveBeenCalledWith(pack, user.id, 'testuser', 1);
+    expect(p1p1PackModel.addVote).toHaveBeenCalledWith(pack, user.id, 1);
     expect(p1p1PackModel.getVoteSummary).toHaveBeenCalledWith(updatedPack, user.id);
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({

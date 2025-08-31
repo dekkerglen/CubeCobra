@@ -1,4 +1,4 @@
-import P1P1Pack from '../../../src/datatypes/P1P1Pack';
+import { P1P1Pack } from '../../../src/datatypes/P1P1Pack';
 import Cube from '../../../src/dynamo/models/cube';
 import p1p1PackModel from '../../../src/dynamo/models/p1p1Pack';
 import { getP1P1Handler } from '../../../src/router/routes/tool/api/getp1p1';
@@ -24,13 +24,13 @@ const createP1P1Pack = (overrides?: Partial<P1P1Pack>): P1P1Pack => ({
   cards: [
     { oracle_id: 'oracle-1', name: 'Test Card 1' } as any,
     { oracle_id: 'oracle-2', name: 'Test Card 2' } as any,
-    { oracle_id: 'oracle-3', name: 'Test Card 3' } as any
+    { oracle_id: 'oracle-3', name: 'Test Card 3' } as any,
   ],
   seed: 'test-seed',
   date: Date.now(),
   createdBy: 'test-user',
   createdByUsername: 'testuser',
-  votes: [],
+  votesByUser: {},
   botPick: 0,
   botWeights: [0.8, 0.6, 0.4],
   ...overrides,
@@ -74,10 +74,10 @@ describe('Get P1P1 Pack API', () => {
   it('should return pack with cube info when cube is found', async () => {
     const packId = uuid.v4();
     const pack = createP1P1Pack({ id: packId });
-    const cube = createCube({ 
-      id: pack.cubeId, 
+    const cube = createCube({
+      id: pack.cubeId,
       name: 'Test Cube',
-      owner: createUser({ username: 'testowner' })
+      owner: createUser({ username: 'testowner' }),
     });
     const voteSummary = {
       totalVotes: 5,

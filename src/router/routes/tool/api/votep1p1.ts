@@ -34,7 +34,7 @@ export const voteP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Add vote (this handles updating existing votes)
-    const updatedPack = await p1p1PackModel.addVote(pack, user.id, user.username, cardIndex);
+    const updatedPack = await p1p1PackModel.addVote(pack, user.id, cardIndex);
 
     if (!updatedPack) {
       return res.status(404).json({ error: 'Failed to update pack with vote' });

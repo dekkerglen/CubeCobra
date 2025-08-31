@@ -1,5 +1,3 @@
-import { UnhydratedP1P1Pack } from '../../datatypes/P1P1Pack';
-import { cardFromId } from '../../util/carddb';
 import { draft } from '../../util/ml';
 
 /**
@@ -59,36 +57,3 @@ export const getBotPrediction = async (oracleIds: string[]): Promise<BotResult> 
   }
 };
 
-/**
- * Create a fully hydrated P1P1Pack with all computed data
- * Includes user information, bot predictions, and ratings
- */
-export const createHydratedP1P1Pack = async (
-  packData: Omit<UnhydratedP1P1Pack, 'createdBy' | 'createdByUsername' | 'botPick' | 'botWeights'>,
-  userId: string,
-  username: string,
-): Promise<UnhydratedP1P1Pack> => {
-  // Convert card IDs to oracle IDs for bot prediction
-  const oracleIds: string[] = [];
-  for (const cardId of packData.cards) {
-    try {
-      const cardDetails = cardFromId(cardId);
-      if (cardDetails?.oracle_id) {
-        oracleIds.push(cardDetails.oracle_id);
-      }
-    } catch {
-      // Skip cards that can't be converted
-    }
-  }
-
-  // Get bot prediction for this pack
-  const botResult = await getBotPrediction(oracleIds);
-
-  return {
-    ...packData,
-    createdBy: userId,
-    createdByUsername: username,
-    botPick: botResult.botPickIndex ?? undefined,
-    botWeights: botResult.botWeights.length > 0 ? botResult.botWeights : undefined,
-  };
-};

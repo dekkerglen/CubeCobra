@@ -1,11 +1,4 @@
-import { CardDetails } from './Card';
-
-export interface P1P1Vote {
-  userId: string; // Added back during hydration from map key
-  userName: string;
-  cardIndex: number;
-  date: number;
-}
+import Card from './Card';
 
 export interface P1P1VoteResult {
   cardIndex: number;
@@ -21,29 +14,33 @@ export interface P1P1VoteSummary {
   botWeights?: number[]; // Array of bot rating weights for each card (0-1 range)
 }
 
+/**
+ * P1P1 pack structure.
+ * Data is split between DynamoDB (id, createdBy, cubeId, date, votesByUser)
+ * and S3 (cards, seed, botPick, botWeights, createdByUsername) for cost optimization.
+ */
 export interface P1P1Pack {
+  // DynamoDB fields
   id: string;
+  createdBy: string;
   cubeId: string;
-  cards: CardDetails[]; // Full card details for frontend display
-  seed: string;
   date: number;
-  createdBy: string;
-  createdByUsername: string;
-  votes: P1P1Vote[]; // Embedded votes
-  botPick?: number; // Index of card CubeCobra bot picked (computed at creation)
-  botWeights?: number[]; // Array of bot rating weights for each card (computed at creation)
-}
+  votesByUser: Record<string, number>; // Map of userId to cardIndex
 
-export interface UnhydratedP1P1Pack {
-  id?: string;
-  cubeId: string;
-  cards: string[]; // Store card IDs in database to preserve specific printings
+  // S3 fields
+  botPick?: number; // Index of card CubeCobra bot picked
+  botWeights?: number[]; // Array of bot rating weights for each card
+  cards: Card[]; // Basic card data for each card in the pack
+  createdByUsername: string;
   seed: string;
-  date?: number;
-  createdBy: string;
-  createdByUsername: string;
-  botPick?: number;
-  botWeights?: number[];
 }
 
-export default P1P1Pack;
+/**
+ * DynamoDB fields only (what gets stored in the table)
+ */
+export type P1P1PackDynamoData = Pick<P1P1Pack, 'id' | 'createdBy' | 'cubeId' | 'date' | 'votesByUser'>;
+
+/**
+ * S3 fields only (what gets stored in S3)
+ */
+export type P1P1PackS3Data = Pick<P1P1Pack, 'botPick' | 'botWeights' | 'cards' | 'createdByUsername' | 'seed'>;
