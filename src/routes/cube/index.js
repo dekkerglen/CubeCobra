@@ -32,6 +32,7 @@ const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, upd
 const Notice = require('../../dynamo/models/notice');
 const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../dynamo/models/blog');
+const p1p1PackModel = require('../../dynamo/models/p1p1Pack');
 const User = require('../../dynamo/models/user');
 const Draft = require('../../dynamo/models/draft');
 const CubeAnalytic = require('../../dynamo/models/cubeAnalytic');
@@ -724,6 +725,18 @@ router.get('/playtest/:id', async (req, res) => {
 
     const decks = await Draft.getByCube(cube.id);
 
+    // Get previous P1P1 packs for this cube
+    let previousPacks = [];
+    let previousPacksLastKey = null;
+    try {
+      const previousPacksResult = await p1p1PackModel.queryByCube(cube.id, undefined, 10);
+      previousPacks = previousPacksResult.items || [];
+      previousPacksLastKey = previousPacksResult.lastKey;
+    } catch (error) {
+      // If we can't get previous packs, just continue without them
+      req.logger.error('Failed to fetch previous P1P1 packs:', error);
+    }
+
     const baseUrl = util.getBaseUrl();
     return render(
       req,
@@ -733,6 +746,8 @@ router.get('/playtest/:id', async (req, res) => {
         cube,
         decks: decks.items,
         decksLastKey: decks.lastEvaluatedKey,
+        previousPacks,
+        previousPacksLastKey,
       },
       {
         title: `${abbreviate(cube.name)} - Playtest`,
