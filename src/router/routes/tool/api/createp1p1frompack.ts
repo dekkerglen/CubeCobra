@@ -11,8 +11,7 @@ import { isCubeViewable } from '../../../../util/cubefn';
 import { bodyValidation } from '../../../middleware/bodyValidation';
 
 const CreateP1P1FromPackSchema = Joi.object({
-  cubeId: Joi.string().uuid().required().messages({
-    'string.guid': 'Cube ID must be a valid UUID',
+  cubeId: Joi.string().required().messages({
     'any.required': 'Cube ID is required',
   }),
   seed: Joi.string().required().messages({
