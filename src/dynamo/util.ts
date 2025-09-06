@@ -24,6 +24,52 @@ import documentClient from './documentClient';
 
 const tableName = (name: string): string => `${process.env.DYNAMO_PREFIX}_${name}`;
 
+// Helper function to process promises in chunks to limit concurrency
+const processInChunks = async <T>(
+  items: T[],
+  chunkSize: number,
+  processor: (item: T) => Promise<any>
+): Promise<any[]> => {
+  const results: any[] = [];
+  for (let i = 0; i < items.length; i += chunkSize) {
+    const chunk = items.slice(i, i + chunkSize);
+    const chunkResults = await Promise.all(chunk.map(processor));
+    results.push(...chunkResults);
+  }
+  return results;
+};
+
+// Helper function for retrying operations with exponential backoff
+const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> => {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Check if it's a connection error that might benefit from retry
+      if (error.message?.includes('ECONNABORTED') || 
+          error.message?.includes('ENOTFOUND') || 
+          error.message?.includes('ETIMEDOUT') || 
+          error.code === 'NetworkingError') {
+        const delay = baseDelay * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // If it's not a retryable error, throw immediately
+      throw error;
+    }
+  }
+  throw new Error('Max retries exceeded');
+};
+
 interface IndexConfig {
   name: string;
   partitionKey: string;
@@ -240,7 +286,10 @@ const createClient = (config: ClientConfig): ClientInterface => {
           batches.push(params);
         }
 
-        await Promise.all(batches.map((params) => documentClient.batchWrite(params)));
+        // Process batches with limited concurrency (5 concurrent requests max)
+        await processInChunks(batches, 5, (params) => 
+          retryOperation(() => documentClient.batchWrite(params))
+        );
       } catch (error: any) {
         throw new Error(`Error batch putting items into table ${config.name}: ${error.message}`);
       }
@@ -263,7 +312,10 @@ const createClient = (config: ClientConfig): ClientInterface => {
           };
           batches.push(params);
         }
-        await Promise.all(batches.map((params) => documentClient.batchWrite(params)));
+        // Process batches with limited concurrency (5 concurrent requests max)
+        await processInChunks(batches, 5, (params) => 
+          retryOperation(() => documentClient.batchWrite(params))
+        );
       } catch (error: any) {
         throw new Error(`Error batch deleting items from table ${config.name}: ${error.message}`);
       }
