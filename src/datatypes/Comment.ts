@@ -28,14 +28,15 @@ const allCommentTypes = [
   'episode',
   'package',
   'record',
+  'p1p1',
 ] as const;
 
 export type CommentType = (typeof allCommentTypes)[number];
-export type NotifiableCommentType = Exclude<CommentType, 'card'>;
+export type NotifiableCommentType = Exclude<CommentType, 'card' | 'p1p1'>;
 
 export const isCommentType = createTypeGuard<CommentType>(allCommentTypes);
 
-const notifiableTypes = allCommentTypes.filter((type) => type !== 'card') as NotifiableCommentType[];
+const notifiableTypes = allCommentTypes.filter((type) => type !== 'card' && type !== 'p1p1') as NotifiableCommentType[];
 
 export const isNotifiableCommentType = createTypeGuard<NotifiableCommentType>(notifiableTypes);
 

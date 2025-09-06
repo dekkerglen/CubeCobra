@@ -2,8 +2,7 @@ import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
-import { normalizeName } from 'utils/cardutil';
-
+import { normalizeName } from '../../client/utils/cardutil';
 import { CardDetails } from '../../datatypes/Card';
 import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '../../datatypes/CardPackage';
 import UserType from '../../datatypes/User';

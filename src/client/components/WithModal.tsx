@@ -6,13 +6,13 @@ export interface WithModalProps<U> {
   className?: string;
   modalprops?: Omit<U, 'setOpen' | 'isOpen' | 'toggle'>;
   altClick?: () => void;
-  //Commonly would set stopProgagation to true if the button to open the modal lives within another clickable block like a row
-  stopProgagation?: boolean;
+  //Commonly would set stopPropagation to true if the button to open the modal lives within another clickable block like a row
+  stopPropagation?: boolean;
 }
 
 const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>) => {
   const Result: React.FC<WithModalProps<U> & ComponentProps<T>> = (allProps: WithModalProps<U> & ComponentProps<T>) => {
-    const { children, className, modalprops = {}, altClick, stopProgagation } = allProps;
+    const { children, className, modalprops = {}, altClick, stopPropagation } = allProps;
     const [isOpen, setIsOpen] = useState(false);
     const toggle = useCallback(
       (event?: MouseEvent<HTMLElement>) => {
@@ -26,19 +26,22 @@ const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>)
 
     const handleClick = useCallback(
       (event: MouseEvent<HTMLElement>) => {
+        // ALWAYS stop propagation first, before any other logic
+        if (stopPropagation) {
+          event.stopPropagation();
+          event.nativeEvent.stopImmediatePropagation(); // Also stop immediate propagation
+        }
+
         // only prevent default if ctrl wasn't pressed
         if (altClick && event.ctrlKey) {
           return altClick();
         }
 
-        if (stopProgagation) {
-          event.stopPropagation();
-        }
-
         event.preventDefault();
+        
         return toggle();
       },
-      [altClick, stopProgagation, toggle],
+      [altClick, stopPropagation, toggle],
     );
 
     return (

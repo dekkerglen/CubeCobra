@@ -41,11 +41,16 @@ const client = createClient({
   FIELDS,
 });
 
+const getShortIdHash = (shortId) => {
+  //Case sensitive!
+  return `shortid:${shortId}`;
+};
+
 const hashShortId = (metadata) => {
   if (!metadata.shortId || metadata.shortId.length === 0) {
     return [];
   }
-  return [`shortid:${metadata.shortId}`];
+  return [getShortIdHash(metadata.shortId)];
 };
 
 const hashFeatured = (metadata) => {
@@ -124,7 +129,7 @@ const getHashesForCube = (metadata, cards) => {
   return [...new Set([...getHashesForCards(cards), ...getHashesForMetadata(metadata)])];
 };
 
-const getSortedByFollowers = async (hash, ascending, lastKey, limit=36) => {
+const getSortedByFollowers = async (hash, ascending, lastKey, limit = 36) => {
   const result = await client.query({
     IndexName: 'SortedByFollowers',
     KeyConditionExpression: `#p1 = :hash`,
@@ -144,7 +149,7 @@ const getSortedByFollowers = async (hash, ascending, lastKey, limit=36) => {
   };
 };
 
-const getSortedByName = async (hash, ascending, lastKey, limit=36) => {
+const getSortedByName = async (hash, ascending, lastKey, limit = 36) => {
   const result = await client.query({
     IndexName: 'SortedByName',
     KeyConditionExpression: `#p1 = :hash`,
@@ -164,7 +169,7 @@ const getSortedByName = async (hash, ascending, lastKey, limit=36) => {
   };
 };
 
-const getSortedByCardCount = async (hash, ascending, lastKey, limit=36) => {
+const getSortedByCardCount = async (hash, ascending, lastKey, limit = 36) => {
   const result = await client.query({
     IndexName: 'SortedByCardCount',
     KeyConditionExpression: `#p1 = :hash`,
@@ -185,7 +190,7 @@ const getSortedByCardCount = async (hash, ascending, lastKey, limit=36) => {
 };
 
 module.exports = {
-  query: async (hash, ascending, lastKey, order, limit=36) => {
+  query: async (hash, ascending, lastKey, order, limit = 36) => {
     switch (order) {
       case 'pop':
         return getSortedByFollowers(hash, ascending, lastKey, limit);
@@ -202,7 +207,6 @@ module.exports = {
     let lastKey = null;
 
     do {
-       
       const result = await client.query({
         KeyConditionExpression: `#p1 = :cubeId`,
         ExpressionAttributeValues: {
@@ -247,5 +251,6 @@ module.exports = {
       [FIELDS.CUBE_ID]: metadata.id,
     }));
   },
+  getShortIdHash,
   FIELDS,
 };

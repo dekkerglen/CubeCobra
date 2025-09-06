@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react';
+import React, { useContext } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
@@ -7,11 +7,11 @@ import Collapse from 'components/base/Collapse';
 import Controls from 'components/base/Controls';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
-import NavMenu from 'components/base/NavMenu';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckCard from 'components/DeckCard';
+import DraftExportMenu from 'components/draft/DraftExportMenu';
 import DynamicFlash from 'components/DynamicFlash';
 import SampleHandModal from 'components/modals/SampleHandModal';
 import RenderToRoot from 'components/RenderToRoot';
@@ -21,7 +21,6 @@ import UserContext from 'contexts/UserContext';
 import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
 import User from 'datatypes/User';
-import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useQueryParam from 'hooks/useQueryParam';
 import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
@@ -40,30 +39,6 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
   const [seatIndex, setSeatIndex] = useQueryParam('seat', '0');
   const [view, setView] = useQueryParam('view', 'draft');
   const [expanded, toggleExpanded] = useToggle(false);
-  const { alerts, addAlert, dismissAlerts } = useAlerts();
-
-  const copyToClipboard = useCallback(async () => {
-    const cards = draft.cards;
-    const mainboard = draft.seats[parseInt(seatIndex || '0')].mainboard;
-
-    //Equivalent logic to the backend
-    const cardNames = [];
-    for (const row of mainboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const cardName = cards[cardIndex].details?.name;
-          if (cardName) {
-            cardNames.push(cardName);
-          }
-        }
-      }
-    }
-
-    await navigator.clipboard.writeText(cardNames.join('\n'));
-    addAlert('success', 'Copied.');
-    //Auto dismiss after a few seconds
-    setTimeout(dismissAlerts, 3000);
-  }, [addAlert, dismissAlerts, draft, seatIndex]);
 
   const controls = (
     <>
@@ -79,35 +54,7 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
       </SampleHandModalLink>
       <Link href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}>Clone and Rebuild</Link>
       <CustomImageToggler />
-      <NavMenu label="Export">
-        <Flexbox direction="col" gap="2" className="p-3">
-          <Link href={`/cube/deck/download/txt/${draft.id}/${seatIndex}`} className="dropdown-item">
-            Card Names (.txt)
-          </Link>
-          <Link href={`#`} onClick={copyToClipboard} className="dropdown-item">
-            Card Names to Clipboard (.txt)
-          </Link>
-          <Link href={`/cube/deck/download/forge/${draft.id}/${seatIndex}`} className="dropdown-item">
-            Forge (.dck)
-          </Link>
-          <Link href={`/cube/deck/download/xmage/${draft.id}/${seatIndex}`} className="dropdown-item">
-            XMage (.dck)
-          </Link>
-          <Link href={`/cube/deck/download/mtgo/${draft.id}/${seatIndex}`} className="dropdown-item">
-            MTGO (.txt)
-          </Link>
-          <Link href={`/cube/deck/download/arena/${draft.id}/${seatIndex}`} className="dropdown-item">
-            Arena (.txt)
-          </Link>
-          <Link href={`/cube/deck/download/cockatrice/${draft.id}/${seatIndex}`} className="dropdown-item">
-            Cockatrice (.txt)
-          </Link>
-          <Link href={`/cube/deck/download/topdecked/${draft.id}/${seatIndex}`} className="dropdown-item">
-            TopDecked (.csv)
-          </Link>
-          <Alerts alerts={alerts} />
-        </Flexbox>
-      </NavMenu>
+      <DraftExportMenu draft={draft} seatIndex={seatIndex} />
     </>
   );
 

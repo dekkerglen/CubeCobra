@@ -104,12 +104,14 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
       .flat(4);
   }, [draft.cards, seat.mainboard]);
 
+  const mbCount = sorted.length;
+
   return (
     <Card>
       <CardHeader>
         <Flexbox direction="col" alignItems="start" gap="1">
           <Text semibold lg>
-            {seat.name}
+            {seat.name} ({mbCount})
           </Text>
           {!seat.bot && (
             <Text md semibold>
@@ -140,7 +142,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
             <>
               <CardBody className="border-bottom">
                 <Text semibold lg>
-                  Sideboard
+                  Sideboard ({sbCount})
                 </Text>
               </CardBody>
               <DeckStacksStatic piles={stackedSideboard} cards={draft.cards} />
@@ -151,14 +153,14 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
       {view === 'visual' && (
         <CardBody>
           <Text semibold lg>
-            Mainboard
+            Mainboard ({mbCount})
           </Text>
           <CardGrid cards={sorted} xs={8} />
           {seat.sideboard.flat(2).length > 0 && (
             <>
               <hr className="my-4" />
               <Text semibold lg>
-                Sideboard
+                Sideboard ({sbCount})
               </Text>
               <CardGrid cards={seat.sideboard.flat(2).map((cardIndex) => draft.cards[cardIndex])} xs={8} />
             </>

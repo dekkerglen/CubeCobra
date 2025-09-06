@@ -56,7 +56,7 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
             color="secondary"
             outline
             modalprops={{ deck, cubeID: deck.cube, nextURL }}
-            stopProgagation={true}
+            stopPropagation={true}
           >
             <XIcon size={16} className="mx-1" />
           </DeleteModalButton>
