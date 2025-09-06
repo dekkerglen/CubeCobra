@@ -30,7 +30,7 @@ const tableName = (name: string): string => `${process.env.DYNAMO_PREFIX}_${name
 const processInChunks = async <T>(
   items: T[],
   chunkSize: number,
-  processor: (item: T) => Promise<any>
+  processor: (item: T) => Promise<any>,
 ): Promise<any[]> => {
   const results: any[] = [];
   for (let i = 0; i < items.length; i += chunkSize) {
@@ -45,7 +45,7 @@ const processInChunks = async <T>(
 const retryOperation = async <T>(
   operation: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
 ): Promise<T> => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -54,17 +54,19 @@ const retryOperation = async <T>(
       if (attempt === maxRetries) {
         throw error;
       }
-      
+
       // Check if it's a connection error that might benefit from retry
-      if (error.message?.includes('ECONNABORTED') || 
-          error.message?.includes('ENOTFOUND') || 
-          error.message?.includes('ETIMEDOUT') || 
-          error.code === 'NetworkingError') {
+      if (
+        error.message?.includes('ECONNABORTED') ||
+        error.message?.includes('ENOTFOUND') ||
+        error.message?.includes('ETIMEDOUT') ||
+        error.code === 'NetworkingError'
+      ) {
         const delay = baseDelay * Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
-      
+
       // If it's not a retryable error, throw immediately
       throw error;
     }
@@ -187,7 +189,7 @@ const createClient = (config: ClientConfig): ClientInterface => {
         return result;
       } catch (error: any) {
         throw new Error(
-          `Error getting item from table ${config.name} with key ${JSON.stringify({[config.partitionKey]: id})}: ${error.message}`,
+          `Error getting item from table ${config.name} with key ${JSON.stringify({ [config.partitionKey]: id })}: ${error.message}`,
         );
       }
     },
@@ -302,9 +304,7 @@ const createClient = (config: ClientConfig): ClientInterface => {
         }
 
         // Process batches with limited concurrency (5 concurrent requests max)
-        await processInChunks(batches, 5, (params) => 
-          retryOperation(() => documentClient.batchWrite(params))
-        );
+        await processInChunks(batches, 5, (params) => retryOperation(() => documentClient.batchWrite(params)));
       } catch (error: any) {
         throw new Error(`Error batch putting items into table ${config.name}: ${error.message}`);
       }
@@ -328,9 +328,7 @@ const createClient = (config: ClientConfig): ClientInterface => {
           batches.push(params);
         }
         // Process batches with limited concurrency (5 concurrent requests max)
-        await processInChunks(batches, 5, (params) => 
-          retryOperation(() => documentClient.batchWrite(params))
-        );
+        await processInChunks(batches, 5, (params) => retryOperation(() => documentClient.batchWrite(params)));
       } catch (error: any) {
         throw new Error(`Error batch deleting items from table ${config.name}: ${error.message}`);
       }
