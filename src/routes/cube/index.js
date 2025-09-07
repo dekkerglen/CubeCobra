@@ -930,6 +930,48 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
   }
 });
 
+router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', async (req, res) => {
+  try {
+    const { packId } = req.params;
+    
+    // Validate pack exists
+    const pack = await p1p1PackModel.getById(packId);
+    if (!pack) {
+      req.flash('danger', 'P1P1 pack not found');
+      return redirect(req, res, '/404');
+    }
+
+    // Get cube data
+    const cube = await Cube.getById(pack.cubeId);
+    if (!cube) {
+      req.flash('danger', 'Associated cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    const baseUrl = util.getBaseUrl();
+    return render(
+      req,
+      res,
+      'P1P1Page',
+      {
+        packId,
+        cube,
+      },
+      {
+        title: 'Pick 1 Pack 1',
+        metadata: generateMeta(
+          'Pick 1 Pack 1 - Cube Cobra',
+          'Vote on your first pick from this pack!',
+          `${baseUrl}/content/banner.png`, // Default image
+          `${baseUrl}/cube/p1p1/${packId}`,
+        ),
+      },
+    );
+  } catch (err) {
+    return handleRouteError(req, res, err, '/404');
+  }
+});
+
 router.get('/p1p1packimage/:packId', async (req, res) => {
   try {
     const { packId } = req.params;

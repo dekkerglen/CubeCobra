@@ -51,7 +51,7 @@ const P1P1FromPackGenerator: React.FC<P1P1FromPackGeneratorProps> = ({ cubeId, s
       const data = await response.json();
 
       // Redirect to the P1P1 page
-      window.location.href = `/tool/p1p1/${data.pack.id}`;
+      window.location.href = `/cube/p1p1/${data.pack.id}`;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
