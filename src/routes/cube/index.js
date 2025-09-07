@@ -948,6 +948,10 @@ router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
       return redirect(req, res, '/404');
     }
 
+    // Calculate pack image dimensions
+    const width = Math.floor(Math.sqrt((5 / 3) * pack.cards.length));
+    const height = Math.ceil(pack.cards.length / width);
+
     const baseUrl = util.getBaseUrl();
     return render(
       req,
@@ -962,8 +966,10 @@ router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
         metadata: generateMeta(
           'Pick 1 Pack 1 - Cube Cobra',
           'Vote on your first pick from this pack!',
-          `${baseUrl}/content/banner.png`, // Default image
+          `${baseUrl}/cube/p1p1packimage/${packId}.png`,
           `${baseUrl}/cube/p1p1/${packId}`,
+          CARD_WIDTH * width,
+          CARD_HEIGHT * height,
         ),
       },
     );
@@ -974,6 +980,7 @@ router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
 
 router.get('/p1p1packimage/:packId', async (req, res) => {
   try {
+    req.params.packId = req.params.packId.replace('.png', '');
     const { packId } = req.params;
     const p1p1PackModel = require('../../dynamo/models/p1p1Pack');
     const Cube = require('../../dynamo/models/cube');
