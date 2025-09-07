@@ -1,6 +1,5 @@
 import Joi from 'joi';
 
-import Cube from '../../../../dynamo/models/cube';
 import p1p1PackModel from '../../../../dynamo/models/p1p1Pack';
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -30,22 +29,12 @@ export const getP1P1Handler = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'P1P1 pack not found' });
     }
 
-    // Get cube metadata - this is required data
-    const cube = await Cube.getById(pack.cubeId);
-    if (!cube) {
-      return res.status(404).json({ error: 'Associated cube not found' });
-    }
-
     // Get vote summary (includes user's vote if logged in)
     const voteSummary = p1p1PackModel.getVoteSummary(pack, user?.id);
 
     return res.status(200).json({
       success: true,
       pack,
-      cube: {
-        name: cube.name || 'Unknown Cube',
-        owner: cube.owner?.username || null,
-      },
       votes: voteSummary,
     });
   } catch (err) {

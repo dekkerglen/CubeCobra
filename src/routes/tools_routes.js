@@ -348,6 +348,13 @@ router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
       return redirect(req, res, '/404');
     }
 
+    // Get cube data
+    const cube = await Cube.getById(pack.cubeId);
+    if (!cube) {
+      req.flash('danger', 'Associated cube not found');
+      return redirect(req, res, '/404');
+    }
+
     const baseUrl = util.getBaseUrl();
     return render(
       req,
@@ -355,6 +362,7 @@ router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
       'P1P1Page',
       {
         packId,
+        cube,
       },
       {
         title: 'Pick 1 Pack 1',

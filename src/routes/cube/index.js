@@ -41,6 +41,27 @@ const Changelog = require('../../dynamo/models/changelog');
 const router = express.Router();
 router.use(csrfProtection);
 
+// Shared function for generating pack images
+const generatePackImage = async (cards) => {
+  if (cards.some((card) => !card.imgUrl && !card.details.image_normal)) {
+    throw new Error('One or more cards in this pack are missing images.');
+  }
+  
+  // Try to make it roughly 5 times as wide as it is tall in cards.
+  const width = Math.floor(Math.sqrt((5 / 3) * cards.length));
+  const height = Math.ceil(cards.length / width);
+  
+  const srcArray = cards.map((card, index) => ({
+    src: card.imgUrl || card.details.image_normal,
+    x: CARD_WIDTH * (index % width),
+    y: CARD_HEIGHT * Math.floor(index / width),
+    height: CARD_HEIGHT,
+    width: CARD_WIDTH,
+  }));
+  
+  return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
+};
+
 router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));
@@ -896,24 +917,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
       const pack = await generatePack(cube, cards, req.params.seed);
-
-      if (pack.pack.some((card) => !card.imgUrl && !card.details.image_normal)) {
-        throw new Error('One or more cards in this pack are missing images.');
-      }
-
-      // Try to make it roughly 5 times as wide as it is tall in cards.
-      const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
-      const height = Math.ceil(pack.pack.length / width);
-
-      const srcArray = pack.pack.map((card, index) => ({
-        src: card.imgUrl || card.details.image_normal,
-        x: CARD_WIDTH * (index % width),
-        y: CARD_HEIGHT * Math.floor(index / width),
-        height: CARD_HEIGHT,
-        width: CARD_WIDTH,
-      }));
-
-      return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
+      return generatePackImage(pack.pack);
     });
 
     res.writeHead(200, {
@@ -923,6 +927,39 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
   } catch (err) {
     req.flash('danger', err.message);
     return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+  }
+});
+
+router.get('/p1p1packimage/:packId', async (req, res) => {
+  try {
+    const { packId } = req.params;
+    const p1p1PackModel = require('../../dynamo/models/p1p1Pack');
+    const Cube = require('../../dynamo/models/cube');
+
+    // Get the pack
+    const pack = await p1p1PackModel.getById(packId);
+    if (!pack) {
+      req.flash('danger', 'P1P1 pack not found');
+      return redirect(req, res, '/404');
+    }
+
+    // Get cube to check permissions
+    const cube = await Cube.getById(pack.cubeId);
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    const imageBuffer = await cachePromise(`/p1p1pack/${packId}`, async () => {
+      return generatePackImage(pack.cards);
+    });
+    res.writeHead(200, {
+      'Content-Type': 'image/webp',
+    });
+    return res.end(imageBuffer);
+  } catch (err) {
+    req.flash('danger', err.message || 'Error generating pack image');
+    return redirect(req, res, '/404');
   }
 });
 
