@@ -41,16 +41,64 @@ const Changelog = require('../../dynamo/models/changelog');
 const router = express.Router();
 router.use(csrfProtection);
 
-// Shared function for generating pack images
+// Shared function for generating pack images for samplepack and p1p1pack images
+// Overarching logic here - we want the most visually appealing layout for the pack
+// For non-prime numbers that's a balanced rectangle (ideally a square)
+// For prime numbers, we use whatever the next non-prime's results would be
+// Only use factors in the range 2-7 to avoid things like 2x11 for 22
+const generatePackLayout = (count) => {
+  const isPrime = (n) => {
+    if (n < 2) return false;
+    for (let i = 2; i <= Math.sqrt(n); i++) {
+      if (n % i === 0) return false;
+    }
+    return true;
+  };
+
+  const findOptimalFactors = (n) => {
+    // Start from the middle and work outward to find the most balanced factors
+    const sqrt = Math.sqrt(n);
+    for (let h = Math.min(7, Math.floor(sqrt)); h >= 2; h--) {
+      if (n % h !== 0) continue;
+      const w = n / h;
+      if (w >= 2 && w <= 7) {
+        return [w, h]; // w >= h since we iterate h downward from sqrt
+      }
+    }
+    return null; // no valid factors found
+  };
+
+  // Handle small edge cases
+  if (count === 1) return [1, 1];
+  if (count === 2) return [2, 1];
+  if (count === 3) return [3, 1];
+
+  // Handle large edge cases - just make a big square
+  if (count > 49) {
+    const sqrt = Math.ceil(Math.sqrt(count));
+    return [sqrt, sqrt];
+  }
+
+  let layoutTarget = count;
+  while (true) {
+    if (!isPrime(layoutTarget)) {
+      const factors = findOptimalFactors(layoutTarget);
+      if (factors !== null) {
+        return factors; // found acceptable layout
+      }
+    }
+    // Not prime but doesn't have factors in range 2-7, so we bump
+    layoutTarget += 1;
+  }
+};
+
 const generatePackImage = async (cards) => {
   if (cards.some((card) => !card.imgUrl && !card.details.image_normal)) {
     throw new Error('One or more cards in this pack are missing images.');
   }
-  
-  // Try to make it roughly 5 times as wide as it is tall in cards.
-  const width = Math.floor(Math.sqrt((5 / 3) * cards.length));
-  const height = Math.ceil(cards.length / width);
-  
+
+  const [width, height] = generatePackLayout(cards.length);
+
   const srcArray = cards.map((card, index) => ({
     src: card.imgUrl || card.details.image_normal,
     x: CARD_WIDTH * (index % width),
@@ -58,7 +106,7 @@ const generatePackImage = async (cards) => {
     height: CARD_HEIGHT,
     width: CARD_WIDTH,
   }));
-  
+
   return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
 };
 
@@ -515,7 +563,10 @@ router.get('/overview/:id', async (req, res) => {
           cube.image.uri,
           `${baseUrl}/cube/overview/${req.params.id}`,
         ),
-        noindex: cube.visibility === Cube.VISIBILITY.PRIVATE || cube.visibility === Cube.VISIBILITY.UNLISTED || mainboard.length < 100
+        noindex:
+          cube.visibility === Cube.VISIBILITY.PRIVATE ||
+          cube.visibility === Cube.VISIBILITY.UNLISTED ||
+          mainboard.length < 100,
       },
     );
   } catch (err) {
@@ -933,7 +984,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', async (req, res) => {
   try {
     const { packId } = req.params;
-    
+
     // Validate pack exists
     const pack = await p1p1PackModel.getById(packId);
     if (!pack) {
