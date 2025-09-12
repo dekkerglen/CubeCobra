@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import Cube from '../../datatypes/Cube';
 import { P1P1VoteSummary } from '../../datatypes/P1P1Pack';
 import Alert from '../components/base/Alert';
 import Button from '../components/base/Button';
@@ -15,15 +16,16 @@ import P1P1PackDisplay from '../components/p1p1/P1P1PackDisplay';
 import P1P1Results from '../components/p1p1/P1P1Results';
 import RenderToRoot from '../components/RenderToRoot';
 import useP1P1Pack from '../hooks/useP1P1Pack';
+import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 
 interface P1P1PageProps {
   packId: string;
-  loginCallback?: string;
+  cube: Cube;
 }
 
-const P1P1Page: React.FC<P1P1PageProps> = ({ packId, loginCallback = '/' }) => {
-  const { pack, votes, loading, error, refetch, cubeName, cubeOwner } = useP1P1Pack(packId);
+const P1P1Page: React.FC<P1P1PageProps> = ({ packId, cube }) => {
+  const { pack, votes, loading, error, refetch } = useP1P1Pack(packId);
   const [currentVotes, setCurrentVotes] = useState<P1P1VoteSummary | null>(null);
   const [showBotWeights, setShowBotWeights] = useState<boolean>(false);
 
@@ -45,37 +47,41 @@ const P1P1Page: React.FC<P1P1PageProps> = ({ packId, loginCallback = '/' }) => {
 
   if (loading) {
     return (
-      <MainLayout loginCallback={loginCallback}>
-        <Flexbox direction="col" gap="3" className="my-4">
-          <div className="text-center">
-            <Spinner lg />
-            <Text className="mt-3">Loading P1P1 pack...</Text>
-          </div>
-        </Flexbox>
+      <MainLayout>
+        <CubeLayout cube={cube} activeLink="playtest">
+          <Flexbox direction="col" gap="3" className="my-4">
+            <div className="text-center">
+              <Spinner lg />
+              <Text className="mt-3">Loading P1P1 pack...</Text>
+            </div>
+          </Flexbox>
+        </CubeLayout>
       </MainLayout>
     );
   }
 
   if (!loading && !pack && error) {
     return (
-      <MainLayout loginCallback={loginCallback}>
-        <Flexbox direction="col" gap="3" className="my-4">
-          <DynamicFlash />
-          <Alert color="danger">
-            <Flexbox direction="col" gap="2">
-              <Text semibold>Error Loading P1P1</Text>
-              <Text>{error || 'P1P1 pack not found'}</Text>
-              <Flexbox direction="row" gap="2">
-                <Button color="primary" onClick={refetch}>
-                  Try Again
-                </Button>
-                <Link href="/cube/explore">
-                  <Button color="secondary">Browse Cubes</Button>
-                </Link>
+      <MainLayout>
+        <CubeLayout cube={cube} activeLink="playtest">
+          <Flexbox direction="col" gap="3" className="my-4">
+            <DynamicFlash />
+            <Alert color="danger">
+              <Flexbox direction="col" gap="2">
+                <Text semibold>Error Loading P1P1</Text>
+                <Text>{error || 'P1P1 pack not found'}</Text>
+                <Flexbox direction="row" gap="2">
+                  <Button color="primary" onClick={refetch}>
+                    Try Again
+                  </Button>
+                  <Link href="/cube/explore">
+                    <Button color="secondary">Browse Cubes</Button>
+                  </Link>
+                </Flexbox>
               </Flexbox>
-            </Flexbox>
-          </Alert>
-        </Flexbox>
+            </Alert>
+          </Flexbox>
+        </CubeLayout>
       </MainLayout>
     );
   }
@@ -83,52 +89,54 @@ const P1P1Page: React.FC<P1P1PageProps> = ({ packId, loginCallback = '/' }) => {
   // Show loading if we have pack but currentVotes is still being set up
   if (!currentVotes || !pack) {
     return (
-      <MainLayout loginCallback={loginCallback}>
-        <Flexbox direction="col" gap="3" className="my-4">
-          <div className="text-center">
-            <Spinner lg />
-            <Text className="mt-3">Loading P1P1 pack...</Text>
-          </div>
-        </Flexbox>
+      <MainLayout>
+        <CubeLayout cube={cube} activeLink="playtest">
+          <Flexbox direction="col" gap="3" className="my-4">
+            <div className="text-center">
+              <Spinner lg />
+              <Text className="mt-3">Loading P1P1 pack...</Text>
+            </div>
+          </Flexbox>
+        </CubeLayout>
       </MainLayout>
     );
   }
 
   return (
-    <MainLayout loginCallback={loginCallback}>
-      <Flexbox direction="col" gap="3" className="my-4">
-        <DynamicFlash />
+    <MainLayout>
+      <CubeLayout cube={cube} activeLink="playtest">
+        <Flexbox direction="col" gap="3" className="my-4">
+          <DynamicFlash />
 
-        <Card>
-          <CardBody className="pb-2">
-            <P1P1Header
-              pack={pack}
-              votes={currentVotes}
-              showBotWeights={showBotWeights}
-              onToggleBotWeights={() => setShowBotWeights(!showBotWeights)}
-              cubeName={cubeName}
-              cubeOwner={cubeOwner}
-            />
-          </CardBody>
-
-          <div className="border-t border-border">
-            <CardBody>
-              <P1P1PackDisplay
+          <Card>
+            <CardBody className="pb-2">
+              <P1P1Header
                 pack={pack}
                 votes={currentVotes}
                 showBotWeights={showBotWeights}
-                onVoteUpdate={handleVoteUpdate}
+                onToggleBotWeights={() => setShowBotWeights(!showBotWeights)}
               />
             </CardBody>
-          </div>
 
-          {currentVotes?.userVote !== undefined && <P1P1Results pack={pack} votes={currentVotes} />}
+            <div className="border-t border-border">
+              <CardBody>
+                <P1P1PackDisplay
+                  pack={pack}
+                  votes={currentVotes}
+                  showBotWeights={showBotWeights}
+                  onVoteUpdate={handleVoteUpdate}
+                />
+              </CardBody>
+            </div>
 
-          <div className="border-t border-border">
-            <CommentsSection parentType="p1p1" parent={pack.id} collapse={false} />
-          </div>
-        </Card>
-      </Flexbox>
+            {currentVotes?.userVote !== undefined && <P1P1Results pack={pack} votes={currentVotes} />}
+
+            <div className="border-t border-border">
+              <CommentsSection parentType="p1p1" parent={pack.id} collapse={false} />
+            </div>
+          </Card>
+        </Flexbox>
+      </CubeLayout>
     </MainLayout>
   );
 };

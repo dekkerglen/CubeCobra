@@ -65,7 +65,7 @@ const P1P1Preview: React.FC<P1P1PreviewProps> = ({ pack, onDeleted, cubeOwner })
           return;
         }
         
-        window.location.href = `/tool/p1p1/${pack.id}`;
+        window.location.href = `/cube/p1p1/${pack.id}`;
       }}
     >
       <Flexbox direction="row" className="my-1" justify="between">
