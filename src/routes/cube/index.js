@@ -1013,9 +1013,9 @@ router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
         cube,
       },
       {
-        title: 'Pick 1 Pack 1',
+        title: 'Pack 1 Pick 1',
         metadata: generateMeta(
-          'Pick 1 Pack 1 - Cube Cobra',
+          'Pack 1 Pick 1 - Cube Cobra',
           'Vote on your first pick from this pack!',
           `${baseUrl}/cube/p1p1packimage/${packId}.png`,
           `${baseUrl}/cube/p1p1/${packId}`,
