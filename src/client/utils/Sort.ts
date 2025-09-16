@@ -470,7 +470,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
         }
       }
     }
-    ret = [...types];
+    ret = [...types].sort();
   } else if (sort === 'Types-Multicolor') {
     ret = CARD_TYPES.filter((type) => type !== 'Land')
       .concat(GUILDS)
