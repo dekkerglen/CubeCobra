@@ -11,6 +11,16 @@ const sortWithoutGrouping = (cards: Card[], sort: string) => {
   return sortForDownload(cards, 'Unsorted', 'Unsorted', 'Unsorted', sort, true);
 };
 
+const assertGroupOrdering = (groups: [string, Card[]][], expectedSetOrder: string[]) => {
+  const setNames = groups.map((g) => g[0]);
+  expect(setNames).toEqual(expectedSetOrder);
+};
+
+const assertCardOrdering = (groups: [string, Card[]][], expectedCardsOrder: string[]) => {
+  const cards = groups.map((g) => g[1]);
+  expect(cards.flatMap((g) => g.map((c) => c.details?.name))).toEqual(expectedCardsOrder);
+};
+
 describe('Sorting Collector Numbers', () => {
   const SORT = 'Collector number';
 
@@ -477,11 +487,13 @@ describe('Grouping by Subtype', () => {
       }),
     });
 
+    //Card labels don't have to be sorted
     const labels = cardGetLabels(card, SORT, true);
     expect(labels).toEqual(['Mouse', 'Lord']);
 
+    //Raw labels are sorted since these are used for grouping
     const rawLabels = getLabelsRaw([card], SORT, true);
-    expect(rawLabels).toEqual(['Mouse', 'Lord', ' Other ']);
+    expect(rawLabels).toEqual(['Lord', 'Mouse', ' Other ']);
   });
 
   it('Falls back to card type', async () => {
@@ -529,7 +541,7 @@ describe('Grouping by Subtype', () => {
     expect(rawLabels).toEqual(['Tiger', ' Other ']);
   });
 
-  it('Raw labels are a set of subtypes across multiple cards', async () => {
+  it('Raw labels are a SORTED set of subtypes across multiple cards', async () => {
     const cards = [
       createCard({
         type_line: 'Creature - Mouse Lord',
@@ -552,8 +564,65 @@ describe('Grouping by Subtype', () => {
     ];
 
     const rawLabels = getLabelsRaw(cards, SORT, false);
-    //Here we don't care how the subtypes are sorted in the labels. Other sorting code sorts them
-    expect(rawLabels.sort()).toEqual(['Mouse', 'Scout', 'Soldier', 'Zombie', 'Lord', 'Phyrexian'].sort());
+    expect(rawLabels.sort()).toEqual(['Lord', 'Mouse', 'Phyrexian', 'Scout', 'Soldier', 'Zombie'].sort());
+  });
+
+  it('Subtypes sort alphabetically, across multiples ', async () => {
+    const cards = [
+      createCardFromDetails({
+        name: 'Card 1',
+        type: 'Creature - Human Priest',
+      }),
+      createCardFromDetails({
+        name: 'Card 2',
+        type: 'Creature - Elf Advisor',
+      }),
+      createCardFromDetails({
+        name: 'Card 3',
+        type: 'Creature - Dwarf Noble Assassin',
+      }),
+      createCardFromDetails({
+        name: 'Card 4',
+        type: 'Creature - Insect',
+      }),
+      createCardFromDetails({
+        name: 'Card 5',
+        type: 'Creature - Golem',
+      }),
+      createCardFromDetails({
+        name: 'Card 6',
+        type: 'Creature - Dwarf Warrior',
+      }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, [
+      'Advisor',
+      'Assassin',
+      'Dwarf',
+      'Elf',
+      'Golem',
+      'Human',
+      'Insect',
+      'Noble',
+      'Priest',
+      'Warrior',
+    ]);
+
+    //A card is part of each group of subtypes
+    assertCardOrdering(groups, [
+      'Card 2',
+      'Card 3',
+      'Card 3',
+      'Card 6',
+      'Card 2',
+      'Card 5',
+      'Card 1',
+      'Card 4',
+      'Card 3',
+      'Card 1',
+      'Card 6',
+    ]);
   });
 });
 
@@ -840,16 +909,6 @@ describe('Grouping by Set (Release Date)', () => {
 //The ordering here is by set code alphanumeric
 describe('Grouping by Set', () => {
   const SORT = 'Set';
-
-  const assertGroupOrdering = (groups: [string, Card[]][], expectedSetOrder: string[]) => {
-    const setNames = groups.map((g) => g[0]);
-    expect(setNames).toEqual(expectedSetOrder);
-  };
-
-  const assertCardOrdering = (groups: [string, Card[]][], expectedCardsOrder: string[]) => {
-    const cards = groups.map((g) => g[1]);
-    expect(cards.flatMap((g) => g.map((c) => c.details?.name))).toEqual(expectedCardsOrder);
-  };
 
   it('Cards grouped by the set code', async () => {
     const cards = [
