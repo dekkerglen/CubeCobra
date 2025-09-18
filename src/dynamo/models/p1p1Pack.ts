@@ -55,9 +55,15 @@ const addDetails = (cards: Card[]): Card[] => {
   }
 
   cards.forEach((card) => {
-    card.details = {
-      ...cardFromId(card.cardID),
-    };
+    const cardDetails = cardFromId(card.cardID);
+    if (cardDetails) {
+      card.details = {
+        ...cardDetails,
+      };
+    } else {
+      // If cardDetails is null, skip adding details and let the image generation handle the error
+      console.warn(`Missing card details for cardID: ${card.cardID}`);
+    }
   });
   return cards;
 };
@@ -95,9 +101,11 @@ const getS3Data = async (packId: string): Promise<P1P1PackS3Data | null> => {
   try {
     const key = getS3Key(packId);
     const bucket = getBucketName();
-    return (await getObject(bucket, key)) as P1P1PackS3Data;
-  } catch {
+    const result = (await getObject(bucket, key)) as P1P1PackS3Data;
+    return result;
+  } catch (error) {
     // Failed to get S3 data
+    console.error('Failed to get S3 data for pack:', packId, error);
     return null;
   }
 };

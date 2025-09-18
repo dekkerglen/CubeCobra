@@ -93,6 +93,7 @@ export const clientConfig = merge(config, {
     TopCardsPage: './src/client/pages/TopCardsPage.tsx',
     CardPage: './src/client/pages/CardPage.tsx',
     P1P1Page: './src/client/pages/P1P1Page.tsx',
+    DailyP1P1HistoryPage: './src/client/pages/DailyP1P1HistoryPage.tsx',
     CommentPage: './src/client/pages/CommentPage.tsx',
     LoginPage: './src/client/pages/LoginPage.tsx',
     RegisterPage: './src/client/pages/RegisterPage.tsx',
