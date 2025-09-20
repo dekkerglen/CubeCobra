@@ -110,6 +110,7 @@ const generatePackImage = async (cards) => {
   return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
 };
 
+
 router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));
@@ -1036,14 +1037,12 @@ router.get('/p1p1packimage/:packId', async (req, res) => {
     const p1p1PackModel = require('../../dynamo/models/p1p1Pack');
     const Cube = require('../../dynamo/models/cube');
 
-    // Get the pack
     const pack = await p1p1PackModel.getById(packId);
-    if (!pack) {
+    if (!pack || !pack.cards || pack.cards.length === 0) {
       req.flash('danger', 'P1P1 pack not found');
       return redirect(req, res, '/404');
     }
 
-    // Get cube to check permissions
     const cube = await Cube.getById(pack.cubeId);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -1053,6 +1052,7 @@ router.get('/p1p1packimage/:packId', async (req, res) => {
     const imageBuffer = await cachePromise(`/p1p1pack/${packId}`, async () => {
       return generatePackImage(pack.cards);
     });
+
     res.writeHead(200, {
       'Content-Type': 'image/webp',
     });

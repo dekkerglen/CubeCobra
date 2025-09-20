@@ -60,6 +60,37 @@ tf.loadGraphModel('file://./model/draft_decoder/model.json')
     cloudwatch.error(err.message, err.stack);
   });
 
+/**
+ * Helper for waiting until all ML models to be loaded before proceeding.
+ * Useful when running something that uses the ML via a script
+ * @param timeout Maximum time to wait in milliseconds (default: 30000)
+ * @returns Promise that resolves when all models are loaded, rejects on timeout
+ */
+export const ensureModelsReady = (timeout = 30000): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const checkModels = () => {
+      return encoder && recommendDecoder && deckbuilderDecoder && draftDecoder;
+    };
+
+    // Check immediately
+    if (checkModels()) {
+      resolve();
+      return;
+    }
+
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      if (checkModels()) {
+        clearInterval(interval);
+        resolve();
+      } else if (Date.now() - startTime > timeout) {
+        clearInterval(interval);
+        reject(new Error('Timeout waiting for ML models to load'));
+      }
+    }, 500);
+  });
+};
+
 const softmax = (array: number[]) => {
   const max = Math.max(...array);
   const exps = array.map((x) => Math.exp(x - max));
@@ -146,17 +177,19 @@ export const recommend = (oracles: string[]) => {
   const oracleSet = new Set(oracles);
   const adds: { oracle: string; rating: number }[] = [];
   const cuts: { oracle: string; rating: number }[] = [];
-  
-  res.sort((a, b) => b.rating - a.rating).forEach(card => {
-    if (oracleSet.has(card.oracle)) {
-      cuts.push(card);
-    } else {
-      adds.push(card);
-    }
-  });
-  
+
+  res
+    .sort((a, b) => b.rating - a.rating)
+    .forEach((card) => {
+      if (oracleSet.has(card.oracle)) {
+        cuts.push(card);
+      } else {
+        adds.push(card);
+      }
+    });
+
   cuts.reverse();
-  
+
   return {
     adds,
     cuts,
