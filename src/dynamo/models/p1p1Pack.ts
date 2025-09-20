@@ -10,7 +10,7 @@ import {
   P1P1VoteSummary,
 } from '../../datatypes/P1P1Pack.js';
 import { cardFromId } from '../../util/carddb';
-import { deleteObject,getBucketName, getObject, putObject } from '../s3client';
+import { deleteObject, getBucketName, getObject, putObject } from '../s3client';
 import createClient from '../util';
 
 const client = createClient({
@@ -104,7 +104,7 @@ const getS3Data = async (packId: string): Promise<P1P1PackS3Data | null> => {
     const result = (await getObject(bucket, key)) as P1P1PackS3Data;
     return result;
   } catch (error) {
-    // Failed to get S3 data
+    // eslint-disable-next-line no-console
     console.error('Failed to get S3 data for pack:', packId, error);
     return null;
   }

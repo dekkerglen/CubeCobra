@@ -1,18 +1,19 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import CardGrid from 'components/card/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
-import Link from 'components/base/Link';
 import RenderToRoot from 'components/RenderToRoot';
-import { P1P1Pack } from 'datatypes/P1P1Pack';
-import { DailyP1P1 } from 'datatypes/DailyP1P1';
 import Cube from 'datatypes/Cube';
+import { DailyP1P1 } from 'datatypes/DailyP1P1';
+import { P1P1Pack } from 'datatypes/P1P1Pack';
 import MainLayout from 'layouts/MainLayout';
+
 import { detailsToCard } from '../utils/cardutil';
 
 interface DailyP1P1HistoryItem extends DailyP1P1 {
@@ -50,6 +51,7 @@ const DailyP1P1HistoryPage: React.FC<DailyP1P1HistoryPageProps> = ({
         setLastKey(data.lastKey);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading more daily P1P1 history:', error);
     } finally {
       setLoading(false);
