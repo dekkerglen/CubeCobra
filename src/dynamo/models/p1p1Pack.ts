@@ -62,6 +62,7 @@ const addDetails = (cards: Card[]): Card[] => {
       };
     } else {
       // If cardDetails is null, skip adding details and let the image generation handle the error
+      // eslint-disable-next-line no-console
       console.warn(`Missing card details for cardID: ${card.cardID}`);
     }
   });
