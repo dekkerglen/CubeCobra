@@ -1,15 +1,15 @@
+/* eslint-disable no-console */
 const { generateBalancedPack } = require('../util/cubefn');
 const { ensureModelsReady } = require('../util/ml');
 const Cube = require('../dynamo/models/cube');
 const p1p1PackModel = require('../dynamo/models/p1p1Pack');
-const dailyP1P1Model = require('../dynamo/models/dailyP1P1').default;
+const dailyP1P1Model = require('../dynamo/models/dailyP1P1');
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const User = require('../dynamo/models/user');
 const util = require('../util/util');
 
 async function rotateDailyP1P1() {
   try {
-    // eslint-disable-next-line no-console
     console.log('Starting daily P1P1 rotation...');
 
     // Necessary when calling this with rotate-daily-p1p1 script
@@ -18,7 +18,6 @@ async function rotateDailyP1P1() {
     // Get featured cubes queue
     const queueResult = await FeaturedQueue.querySortedByDate();
     if (!queueResult.items || queueResult.items.length === 0) {
-      // eslint-disable-next-line no-console
       console.log('No featured cubes in queue, skipping rotation');
       return;
     }
@@ -27,18 +26,15 @@ async function rotateDailyP1P1() {
     const randomIndex = Math.floor(Math.random() * queueResult.items.length);
     const selectedQueueItem = queueResult.items[randomIndex];
 
-    // eslint-disable-next-line no-console
     console.log('Selected cube from featured queue:', selectedQueueItem.cube);
 
     // Get the cube
     const cube = await Cube.getById(selectedQueueItem.cube);
     if (!cube) {
-      // eslint-disable-next-line no-console
       console.error('Selected cube not found:', selectedQueueItem.cube);
       return;
     }
 
-    // eslint-disable-next-line no-console
     console.log('Found cube:', cube.name);
 
     // Get cube cards
@@ -48,24 +44,20 @@ async function rotateDailyP1P1() {
     const candidateCount = 10;
     const seedPrefix = 'p1p1-of-the-day';
 
-    // eslint-disable-next-line no-console
     console.log(`Generating ${candidateCount} pack candidates...`);
 
     const result = await generateBalancedPack(cube, cards, seedPrefix, candidateCount);
 
     // Log candidate details for debugging
     result.allCandidates.forEach((candidate, i) => {
-      // eslint-disable-next-line no-console
       console.log(`Pack ${i + 1}: max bot weight = ${candidate.maxBotWeight.toFixed(3)}`);
     });
 
-    // eslint-disable-next-line no-console
     console.log(`Selected pack with lowest max bot weight: ${result.maxBotWeight.toFixed(3)}`);
 
     const packResult = result.packResult;
     const botResult = result.botResult;
 
-    // eslint-disable-next-line no-console
     console.log('Generated pack with', packResult.pack.length, 'cards');
 
     // Create S3 data for the pack
@@ -86,13 +78,11 @@ async function rotateDailyP1P1() {
       s3Data,
     );
 
-    // eslint-disable-next-line no-console
     console.log('Created P1P1 pack:', pack.id);
 
     // Set as new daily P1P1 (this will deactivate the previous one)
     const dailyP1P1 = await dailyP1P1Model.setActiveDailyP1P1(pack.id, cube.id);
 
-    // eslint-disable-next-line no-console
     console.log('Successfully rotated daily P1P1:', dailyP1P1.id);
 
     // Send notification to cube owner
@@ -100,7 +90,6 @@ async function rotateDailyP1P1() {
       const ownerId = typeof cube.owner === 'object' ? cube.owner.id : cube.owner;
 
       if (!ownerId) {
-        // eslint-disable-next-line no-console
         console.log('No cube owner ID found, skipping notification');
         return {
           success: true,
@@ -120,14 +109,11 @@ async function rotateDailyP1P1() {
           `/tool/p1p1/${pack.id}`,
           `Your cube "${cube.name}" is featured on today's Daily Pack 1 Pick 1!`,
         );
-        // eslint-disable-next-line no-console
         console.log('Notification sent to cube owner:', cubeOwner.username);
       } else {
-        // eslint-disable-next-line no-console
         console.log('Could not send notification - cube owner or admin not found');
       }
     } catch (notificationError) {
-      // eslint-disable-next-line no-console
       console.error('Error sending notification:', notificationError);
       // Don't fail the entire rotation if notification fails
     }
@@ -139,7 +125,6 @@ async function rotateDailyP1P1() {
       dailyP1P1,
     };
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Error rotating daily P1P1:', error);
     throw error;
   }
@@ -150,10 +135,8 @@ if (require.main === module) {
   (async () => {
     try {
       await rotateDailyP1P1();
-      // eslint-disable-next-line no-console
       console.log('Daily P1P1 rotation completed successfully');
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Daily P1P1 rotation failed:', error);
       process.exit(1);
     }

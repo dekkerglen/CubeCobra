@@ -25,7 +25,7 @@ const client = createClient({
 const dailyP1P1 = {
   getById: async (id: string): Promise<DailyP1P1 | null> => {
     const result = await client.get(id);
-    return result.Item as DailyP1P1 || null;
+    return (result.Item as DailyP1P1) || null;
   },
 
   getCurrentDailyP1P1: async (): Promise<DailyP1P1 | null> => {
@@ -39,7 +39,7 @@ const dailyP1P1 = {
       Limit: 1,
     });
 
-    return result.Items?.[0] as DailyP1P1 || null;
+    return (result.Items?.[0] as DailyP1P1) || null;
   },
 
   getDailyP1P1History: async (
@@ -111,4 +111,5 @@ const dailyP1P1 = {
   },
 };
 
+module.exports = dailyP1P1;
 export default dailyP1P1;

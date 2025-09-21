@@ -2,7 +2,7 @@ const express = require('express');
 
 const Cube = require('../dynamo/models/cube');
 const p1p1PackModel = require('../dynamo/models/p1p1Pack');
-const dailyP1P1Model = require('../dynamo/models/dailyP1P1').default;
+const dailyP1P1Model = require('../dynamo/models/dailyP1P1');
 
 const { render } = require('../util/render');
 const { csrfProtection } = require('./middleware');
@@ -25,21 +25,18 @@ router.get('/archive', async (req, res) => {
       // Get pack and cube data for each history item
       const historyWithData = await Promise.all(
         result.items.map(async (item) => {
-          const [pack, cube] = await Promise.all([
-            p1p1PackModel.getById(item.packId),
-            Cube.getById(item.cubeId),
-          ]);
+          const [pack, cube] = await Promise.all([p1p1PackModel.getById(item.packId), Cube.getById(item.cubeId)]);
 
           return {
             ...item,
             pack,
             cube,
           };
-        })
+        }),
       );
 
       // Filter out items where pack or cube couldn't be loaded
-      history = historyWithData.filter(item => item.pack && item.cube);
+      history = historyWithData.filter((item) => item.pack && item.cube);
       hasMore = !!result.lastKey;
     }
 

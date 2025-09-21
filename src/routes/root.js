@@ -6,7 +6,7 @@ const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 const Feed = require('../dynamo/models/feed');
 const p1p1PackModel = require('../dynamo/models/p1p1Pack');
-const dailyP1P1Model = require('../dynamo/models/dailyP1P1').default;
+const dailyP1P1Model = require('../dynamo/models/dailyP1P1');
 
 import { ContentStatus, ContentType } from '../datatypes/Content';
 
