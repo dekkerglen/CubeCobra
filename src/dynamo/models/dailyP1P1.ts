@@ -11,14 +11,12 @@ const client = createClient({
   indexes: [
     {
       name: 'ByDate',
-      partitionKey: 'isActive',
-      sortKey: 'date',
+      partitionKey: 'date',
     },
   ],
   attributes: {
     id: 'S',
     date: 'N',
-    isActive: 'S', // 'true' for active, 'false' for inactive
   },
 });
 
@@ -29,14 +27,11 @@ const dailyP1P1 = {
   },
 
   getCurrentDailyP1P1: async (): Promise<DailyP1P1 | null> => {
-    const result = await client.query({
-      IndexName: 'ByDate',
-      KeyConditionExpression: 'isActive = :isActive',
+    const result = await client.scan({
+      FilterExpression: 'isActive = :isActive',
       ExpressionAttributeValues: {
-        ':isActive': 'true',
+        ':isActive': true,
       },
-      ScanIndexForward: false, // Most recent first
-      Limit: 1,
     });
 
     return (result.Items?.[0] as DailyP1P1) || null;
@@ -49,19 +44,20 @@ const dailyP1P1 = {
     items?: DailyP1P1[];
     lastKey?: Record<string, NativeAttributeValue>;
   }> => {
-    const result = await client.query({
-      IndexName: 'ByDate',
-      KeyConditionExpression: 'isActive = :isActive',
+    const result = await client.scan({
+      FilterExpression: 'isActive = :isActive',
       ExpressionAttributeValues: {
-        ':isActive': 'false',
+        ':isActive': false,
       },
       ExclusiveStartKey: lastKey,
-      ScanIndexForward: false, // Most recent first
       Limit: limit,
     });
 
+    // Sort by date descending (most recent first)
+    const sortedItems = (result.Items as DailyP1P1[])?.sort((a, b) => b.date - a.date) || [];
+
     return {
-      items: result.Items as DailyP1P1[],
+      items: sortedItems,
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -74,10 +70,7 @@ const dailyP1P1 = {
       isActive: document.isActive,
     };
 
-    await client.put({
-      ...item,
-      isActive: item.isActive.toString(), // Convert boolean to string for DynamoDB
-    });
+    await client.put(item);
 
     return item;
   },
@@ -90,7 +83,7 @@ const dailyP1P1 = {
         Key: { id: current.id },
         UpdateExpression: 'SET isActive = :inactive',
         ExpressionAttributeValues: {
-          ':inactive': 'false',
+          ':inactive': false,
         },
       });
     }
