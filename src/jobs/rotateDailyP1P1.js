@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const { generateBalancedPack } = require('../util/cubefn');
 const { ensureModelsReady } = require('../util/ml');
+const { initializeCardDb } = require('../util/cardCatalog');
 const Cube = require('../dynamo/models/cube');
 const p1p1PackModel = require('../dynamo/models/p1p1Pack');
 const dailyP1P1Model = require('../dynamo/models/dailyP1P1');
@@ -12,7 +13,8 @@ async function rotateDailyP1P1() {
   try {
     console.log('Starting daily P1P1 rotation...');
 
-    // Necessary when calling this with rotate-daily-p1p1 script
+    // Initialize card database and ML models when calling this with rotate-daily-p1p1 script
+    await initializeCardDb();
     await ensureModelsReady();
 
     // Get featured cubes queue
