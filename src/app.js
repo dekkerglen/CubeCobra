@@ -15,7 +15,6 @@ const rateLimit = require('express-rate-limit');
 const cloudwatch = require('./util/cloudwatch');
 const { updateCardbase } = require('./util/updatecards');
 const cardCatalog = require('./util/cardCatalog');
-const rotateDailyP1P1 = require('./jobs/rotateDailyP1P1');
 const { render } = require('./util/render');
 const flash = require('connect-flash');
 const responseTime = require('response-time');
@@ -320,20 +319,6 @@ schedule.scheduleJob('0 10 * * *', async () => {
   // eslint-disable-next-line no-console
   console.info('starting midnight cardbase update...');
   await updateCardbase();
-});
-
-// rotate daily P1P1 daily at 12:01 AM
-schedule.scheduleJob('1 0 * * *', async () => {
-  // eslint-disable-next-line no-console
-  console.info('starting daily P1P1 rotation...');
-  try {
-    await rotateDailyP1P1();
-    // eslint-disable-next-line no-console
-    console.info('daily P1P1 rotation completed successfully');
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('daily P1P1 rotation failed:', error);
-  }
 });
 
 // Start server after carddb is initialized.

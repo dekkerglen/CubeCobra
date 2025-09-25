@@ -9,6 +9,7 @@ const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 const { updatePodcast } = require('../util/podcast');
+const rotateDailyP1P1 = require('../jobs/rotateDailyP1P1');
 
 import { ContentStatus, ContentType } from '../datatypes/Content';
 
@@ -77,6 +78,27 @@ router.post('/podcasts/sync', async (req, res) => {
   }
 
   return res.status(200).send('Podcasts updated.').end();
+});
+
+router.post('/dailyp1p1/rotate', async (req, res) => {
+  const { token } = req.body;
+
+  if (token !== process.env.JOBS_TOKEN) {
+    return res.status(401).send('Invalid token.');
+  }
+
+  try {
+    const result = await rotateDailyP1P1();
+    if (result.success) {
+      return res.status(200).send('Daily P1P1 rotation completed successfully.');
+    } else {
+      return res.status(500).send('Daily P1P1 rotation failed.');
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Daily P1P1 rotation error:', error);
+    return res.status(500).send(`Daily P1P1 rotation failed: ${error.message}`);
+  }
 });
 
 module.exports = router;
