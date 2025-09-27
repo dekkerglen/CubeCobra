@@ -4,7 +4,7 @@ export const handler = async () => {
   console.log('Sending requests to Cube Cobra for daily jobs.');
 
   const data = {
-    token: '7d113984-2aac-428c-ab06-ed91d6c1c726',
+    token: '',
   };
 
   const jobs = [

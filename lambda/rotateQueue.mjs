@@ -4,7 +4,7 @@ export const handler = async () => {
   console.log('Sending request to Cube Cobra to rotate queue.');
 
   const data = {
-    token: '7d113984-2aac-428c-ab06-ed91d6c1c726',
+    token: '',
   };
 
   try {

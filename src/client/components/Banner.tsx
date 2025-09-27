@@ -8,13 +8,21 @@ import Link from './base/Link';
 import ResponsiveDiv from './base/ResponsiveDiv';
 import Text from './base/Text';
 
-const BANNER_RATE: number = 10; // an alternate message appears with probability of 1/BANNER_RATE
+const BANNER_RATE: number = 5; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options: React.ReactNode[] = [
-  <Text lg key={2}>
-    Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
-    <Link href="/donate">Find out more.</Link>
-  </Text>,
+  // <Card>
+  //   <CardBody className="bg-advert overflow-hidden rounded-md">
+  //     {' '}
+  //     <Text lg key={2}>
+  //       Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
+  //       <Link href="/donate">Find out more.</Link>
+  //     </Text>
+  //   </CardBody>
+  // </Card>,
+  <a href="https://shoebox.gg/" target="_blank" rel="noreferrer" key={1}>
+    <img src="/content/shoebox.jpg" alt="Shoebox" />
+  </a>,
 ];
 
 interface BannerProps {
@@ -28,13 +36,7 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
   if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
 
   if (option < options.length) {
-    return (
-      <div className={`${className} py-2`}>
-        <Card>
-          <CardBody className="bg-advert overflow-hidden rounded-md">{options[option]}</CardBody>
-        </Card>
-      </div>
-    );
+    return <div className={`${className} py-2`}>{options[option]}</div>;
   }
 
   return (
