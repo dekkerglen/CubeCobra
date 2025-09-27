@@ -10,11 +10,10 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
     const { packId } = req.body;
     const { user } = req;
 
-
     if (!packId) {
       return res.status(400).json({ error: 'Pack ID is required' });
     }
-    
+
     // Validate UUID format
     if (!isValidUUID(packId)) {
       return res.status(400).json({ error: 'Invalid pack ID format' });
@@ -30,11 +29,15 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'P1P1 pack not found' });
     }
 
+    // Prevent deletion of packs created by CubeCobra (daily P1P1 packs)
+    if (pack.createdBy === 'CubeCobra') {
+      return res.status(403).json({ error: 'Cannot delete official daily P1P1 packs' });
+    }
+
     // Check if user has permission to delete (cube owner or pack creator)
     const cube = await Cube.getById(pack.cubeId);
     const isCubeOwner = cube && cube.owner && cube.owner.id === user.id;
     const isPackCreator = pack.createdBy === user.id;
-
 
     if (!isCubeOwner && !isPackCreator) {
       return res.status(403).json({ error: 'Permission denied' });
@@ -43,7 +46,7 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
     // Delete associated data first
     try {
       // Votes are embedded in pack and will be deleted with the pack
-      
+
       // Delete all comments for this pack
       let lastKey;
       do {

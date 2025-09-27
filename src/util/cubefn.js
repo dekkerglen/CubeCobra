@@ -3,7 +3,7 @@ const Papa = require('papaparse');
 const sanitizeHtml = require('sanitize-html');
 
 const fetch = require('node-fetch');
-const _ = require('lodash')
+const _ = require('lodash');
 const sharp = require('sharp');
 const Cube = require('../dynamo/models/cube');
 const { convertFromLegacyCardColorCategory } = require('../client/utils/cardutil');
@@ -11,6 +11,7 @@ const { cardFromId, getAllVersionIds, reasonableId } = require('../util/carddb')
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../client/drafting/createdraft');
+const { getBotPrediction } = require('../server/util/userUtil');
 
 function getCubeId(cube) {
   if (cube.shortId) return cube.shortId;
@@ -204,7 +205,7 @@ function camelizeDataRows(data) {
 
 function CSVtoCards(csvString) {
   const { data } = Papa.parse(csvString.trim(), { header: true });
-  const camelizedRows = camelizeDataRows(data)
+  const camelizedRows = camelizeDataRows(data);
   const missing = [];
   const newCards = [];
   const newMaybe = [];
@@ -305,12 +306,14 @@ async function compareCubes(cardsA, cardsB) {
 const generateSamplepackImage = async (sources = [], width, height) => {
   const images = await Promise.all(
     sources.map(async (source) => {
-      const fetchOptions = source.src.includes('imgur') ? {
-        headers: {
-          //Imgur returns a 429 error using the default node-fetch useragent, but it is happy with curl!
-          "User-Agent": "curl/8.5.0"
-        }
-      } : {};
+      const fetchOptions = source.src.includes('imgur')
+        ? {
+            headers: {
+              //Imgur returns a 429 error using the default node-fetch useragent, but it is happy with curl!
+              'User-Agent': 'curl/8.5.0',
+            },
+          }
+        : {};
 
       const res = await fetch(source.src, fetchOptions);
 
@@ -404,6 +407,62 @@ function isCubeListed(cube, user) {
   return false;
 }
 
+/**
+ * Generate multiple pack candidates and select the one with the lowest maximum bot weight
+ * @param {Object} cube - The cube object
+ * @param {Object} cards - The cards object with mainboard property
+ * @param {string} seedPrefix - Base seed prefix for pack generation
+ * @param {number} candidateCount - Number of pack candidates to generate (default: 10)
+ * @returns {Promise<Object>} The selected pack result with bot data
+ */
+async function generateBalancedPack(cube, cards, seedPrefix, candidateCount = 10) {
+  const baseTimestamp = Date.now();
+  const packCandidates = [];
+
+  for (let i = 0; i < candidateCount; i++) {
+    const seed = `${seedPrefix}-${baseTimestamp}-${i}`;
+    const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
+    const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
+    const draft = createDraft(cube, format, cards.mainboard, 1, { username: 'Anonymous' }, seed);
+    const packResult = {
+      seed,
+      pack: draft.InitialState[0][0].cards.map((cardIndex) => ({
+        ...draft.cards[cardIndex],
+        details: cardFromId(draft.cards[cardIndex].cardID),
+      })),
+    };
+
+    // Extract oracle IDs for bot prediction
+    const oracleIds = packResult.pack.map((card) => card.details?.oracle_id).filter(Boolean);
+
+    // Get bot prediction
+    const botResult = await getBotPrediction(oracleIds);
+
+    // Calculate the maximum bot weight for this pack
+    const maxBotWeight = Math.max(...(botResult.botWeights.length > 0 ? botResult.botWeights : [0]));
+
+    packCandidates.push({
+      packResult,
+      botResult,
+      maxBotWeight,
+      seed,
+    });
+  }
+
+  // Select the pack with the lowest maximum bot weight
+  const selectedCandidate = packCandidates.reduce((best, current) =>
+    current.maxBotWeight < best.maxBotWeight ? current : best,
+  );
+
+  return {
+    packResult: selectedCandidate.packResult,
+    botResult: selectedCandidate.botResult,
+    seed: selectedCandidate.seed,
+    maxBotWeight: selectedCandidate.maxBotWeight,
+    allCandidates: packCandidates,
+  };
+}
+
 const methods = {
   setCubeType,
   cardsAreEquivalent,
@@ -435,7 +494,7 @@ const methods = {
       seed = Date.now().toString();
     }
     const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
-    const format = getDraftFormat({ id: formatId, packs: 1, players: 1, }, cube);
+    const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
     const draft = createDraft(cube, format, cards.mainboard, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
@@ -445,6 +504,7 @@ const methods = {
       })),
     };
   },
+  generateBalancedPack,
   getCubeId,
   intToLegality,
   legalityToInt,
@@ -461,7 +521,7 @@ const methods = {
   isCubeViewable,
   isCubeListed,
   getCubeTypes,
-  isCubeEditable
+  isCubeEditable,
 };
 
 module.exports = methods;

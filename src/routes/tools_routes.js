@@ -341,4 +341,7 @@ router.get('/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
   return redirect(req, res, `/cube/p1p1/${req.params.packId}`);
 });
 
+// Mount P1P1 archive routes
+router.use('/p1p1', require('./dailyP1P1History'));
+
 module.exports = router;

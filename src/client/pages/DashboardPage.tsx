@@ -16,6 +16,7 @@ import CubesCard from 'components/cube/CubesCard';
 import DynamicFlash from 'components/DynamicFlash';
 import Feed from 'components/Feed';
 import CreateCubeModal from 'components/modals/CreateCubeModal';
+import DailyP1P1Card from 'components/p1p1/DailyP1P1Card';
 import RecentDraftsCard from 'components/RecentDraftsCard';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
@@ -24,6 +25,7 @@ import BlogPost from 'datatypes/BlogPost';
 import { ContentType } from 'datatypes/Content';
 import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
+import { P1P1Pack } from 'datatypes/P1P1Pack';
 import MainLayout from 'layouts/MainLayout';
 
 interface DashboardPageProps {
@@ -32,6 +34,11 @@ interface DashboardPageProps {
   content: any[];
   loginCallback?: string;
   featured?: Cube[];
+  dailyP1P1?: {
+    pack: P1P1Pack;
+    cube: Cube;
+    date?: number;
+  };
   lastKey: any;
   lastDeckKey: any;
 }
@@ -46,6 +53,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   loginCallback = '/',
   content,
   featured = [],
+  dailyP1P1,
 }) => {
   const user = useContext(UserContext);
   const cubes = user?.cubes || [];
@@ -90,28 +98,37 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               )}
             </Card>
             {featuredPosition === 'left' && (
-              <CubesCard
-                title="Featured Cubes"
-                cubes={featured}
-                lean
-                sideLink={{
-                  href: '/donate',
-                  text: 'Learn more...',
-                }}
-              />
+              <>
+                <CubesCard
+                  title="Featured Cubes"
+                  cubes={featured}
+                  lean
+                  sideLink={{
+                    href: '/donate',
+                    text: 'Learn more...',
+                  }}
+                />
+                {dailyP1P1 && (
+                  <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />
+                )}
+              </>
             )}
             <Feed items={posts} lastKey={lastKey} />
           </Flexbox>
         </Col>
         <Col xs={12} md={6} xl={5}>
           {featuredPosition === 'right' && (
-            <CubesCard
-              className="mb-4"
-              title="Featured Cubes"
-              cubes={featured}
-              lean
-              header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
-            />
+            <>
+              <CubesCard
+                title="Featured Cubes"
+                cubes={featured}
+                lean
+                header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+              />
+              {dailyP1P1 && (
+                <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />
+              )}
+            </>
           )}
           <RecentDraftsCard decks={decks} lastKey={lastDeckKey} />
           <Col className="d-none d-md-block mt-3" md={4}>
