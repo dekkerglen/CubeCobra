@@ -89,10 +89,12 @@ const dailyP1P1 = {
     }
 
     // Create new active daily P1P1
+    // Add 6 hours to the current time to account for lambda running at 2:55 UTC
+    // This makes the date appear as the current day for most users
     return await dailyP1P1.put({
       packId,
       cubeId,
-      date: Date.now(),
+      date: Date.now() + 6 * 60 * 60 * 1000,
       isActive: true,
     });
   },
