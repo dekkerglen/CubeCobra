@@ -19,6 +19,7 @@ const featuredQueue = require('../build/dynamo/models/featuredQueue');
 const feed = require('../build/dynamo/models/feed');
 const record = require('../build/dynamo/models/record');
 const p1p1Pack = require('../build/dynamo/models/p1p1Pack');
+const dailyP1P1 = require('../build/dynamo/models/dailyP1P1');
 
 const tables = [
   content,
@@ -39,6 +40,7 @@ const tables = [
   feed,
   record,
   p1p1Pack,
+  dailyP1P1,
 ];
 
 (async () => {

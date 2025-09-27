@@ -5,6 +5,8 @@ const CubeHash = require('../dynamo/models/cubeHash');
 const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 const Feed = require('../dynamo/models/feed');
+const p1p1PackModel = require('../dynamo/models/p1p1Pack');
+const dailyP1P1Model = require('../dynamo/models/dailyP1P1');
 
 import { ContentStatus, ContentType } from '../datatypes/Content';
 
@@ -52,6 +54,22 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
 
     const decks = await Draft.getByCubeOwner(req.user.id);
 
+    // Get daily P1P1
+    let dailyP1P1 = null;
+    try {
+      const dailyP1P1Record = await dailyP1P1Model.getCurrentDailyP1P1();
+      if (dailyP1P1Record) {
+        const p1p1pack = await p1p1PackModel.getById(dailyP1P1Record.packId);
+        const p1p1cube = await Cube.getById(dailyP1P1Record.cubeId);
+        if (p1p1pack && p1p1cube) {
+          dailyP1P1 = { pack: p1p1pack, cube: p1p1cube, date: dailyP1P1Record.date };
+        }
+      }
+    } catch (err) {
+      // Daily P1P1 is optional, don't fail if it can't be loaded
+      req.logger.error('Error loading daily P1P1:', err);
+    }
+
     return render(req, res, 'DashboardPage', {
       posts: posts.items.map((item) => item.document),
       lastKey: posts.lastKey,
@@ -59,6 +77,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
       lastDeckKey: decks.lastEvaluatedKey,
       content: content.items.filter((item) => item.type !== ContentType.PODCAST),
       featured,
+      dailyP1P1,
     });
   } catch (err) {
     return handleRouteError(req, res, err, '/landing');
