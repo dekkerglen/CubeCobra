@@ -81,3 +81,6 @@ If everything worked you should now have your own CubeCobra environment.
 
 You can run `npx cdk deploy --context environment=<your-environment>` to destroy all cloud resources CDK created when
 you no longer need your environment.
+
+
+`npx cdk deploy --context environment=production --context version=1.2.3` to deploy the production environment with version 1.2.3 of the CubeCobra application.

@@ -5,10 +5,9 @@ const { body } = require('express-validator');
 const { makeFilter } = require('../../client/filtering/FilterCards');
 const cardutil = require('../../client/utils/cardutil');
 import carddb, {
-  allVersions,
   cardFromId,
   getAllMostReasonable,
-  getIdsFromName,
+  getAllVersionIds,
   getMostReasonable,
   getReasonableCardByOracleWithPrintingPreference,
 } from '../../util/carddb';
@@ -341,7 +340,7 @@ router.get(
 router.get(
   '/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cardIds = allVersions(cardFromId(req.params.id));
+    const cardIds = getAllVersionIds(cardFromId(req.params.id));
 
     const cards = cardIds.map((id) => Object.assign({}, cardFromId(id)));
     return res.status(200).send({
@@ -360,7 +359,7 @@ router.post(
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => cardFromId(cardID));
-    const allIds = allDetails.map(({ name }) => getIdsFromName(name) || []);
+    const allIds = allDetails.map((cardDetails) => getAllVersionIds(cardDetails));
     const allVersions = allIds.map((versions) =>
       versions.map((id) => cardFromId(id)).sort((a, b) => -a.released_at.localeCompare(b.released_at)),
     );
@@ -368,8 +367,11 @@ router.post(
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
         cardutil.normalizeName(allDetails[index].name),
-        versions.map(({ scryfall_id, full_name: fullName, image_normal, image_flip, prices }) => ({
+        versions.map(({ name, scryfall_id, oracle_id, full_name: fullName, image_normal, image_flip, prices }) => ({
+          // These are the fields that may get changed when a user selects a different version
           scryfall_id,
+          oracle_id,
+          name,
           version: fullName.toUpperCase().substring(fullName.indexOf('[') + 1, fullName.indexOf(']')),
           image_normal,
           image_flip,

@@ -16,6 +16,7 @@ export interface ScryfallCardFace {
   loyalty?: string;
   mana_cost: string;
   name: string;
+  printed_name?: string;
   object: 'card_face';
   oracle_id?: string;
   oracle_text?: string;
@@ -27,6 +28,7 @@ export interface ScryfallCardFace {
 export interface ScryfallCard {
   id: string;
   name: string;
+  printed_name?: string;
   lang: string;
   set: string;
   collector_number: string;
@@ -139,16 +141,16 @@ export interface ScryfallSet {
 }
 
 export function convertName(card: ScryfallCard, preflipped: boolean) {
-  let str = card.name;
+  let str = card.printed_name || card.name;
   const faces = card?.card_faces || [];
 
   //In src/jobs/update_cards.ts preflipped cards have their faces reduced to just the backside face
   if (preflipped) {
-    str = faces[0].name;
+    str = faces[0].printed_name || faces[0].name;
   } else if (card.layout !== 'split' && faces.length > 1) {
     // NOTE: we want split cards to include both names
     // but other double face to use the first name
-    str = faces[0].name;
+    str = faces[0].printed_name || faces[0].name;
   }
 
   //Trim the card name here before potentially adding art series suffix.

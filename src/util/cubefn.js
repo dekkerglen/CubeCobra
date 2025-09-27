@@ -7,7 +7,7 @@ const _ = require('lodash')
 const sharp = require('sharp');
 const Cube = require('../dynamo/models/cube');
 const { convertFromLegacyCardColorCategory } = require('../client/utils/cardutil');
-const { cardFromId, allVersions, reasonableId } = require('../util/carddb');
+const { cardFromId, getAllVersionIds, reasonableId } = require('../util/carddb');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../client/drafting/createdraft');
@@ -75,7 +75,7 @@ function getCubeTypes(cards) {
     }
     if (!pauper && peasant) {
       // check rarities of all card versions
-      const versions = allVersions(cardFromId(card.cardID));
+      const versions = getAllVersionIds(cardFromId(card.cardID));
       if (versions) {
         const rarities = versions.map((id) => cardFromId(id).rarity);
         if (!rarities.includes('common') && !rarities.includes('uncommon')) {
@@ -247,7 +247,7 @@ function CSVtoCards(csvString) {
         colorCategory: validatedColorCategory || null,
       };
 
-      const potentialIds = allVersions(card);
+      const potentialIds = getAllVersionIds(card);
       if (potentialIds && potentialIds.length > 0) {
         // First, try to find the correct set.
         const matchingSetAndNumber = potentialIds.find((id) => {

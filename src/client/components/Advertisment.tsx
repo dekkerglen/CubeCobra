@@ -33,6 +33,7 @@ export interface AdvertismentProps {
   railOffsetTop?: number;
   railOffsetBottom?: number;
   railCollisionWhitelist?: string[];
+  anchorClose?: boolean;
 }
 
 const mediaTypes: MediaTypes = {
@@ -46,6 +47,7 @@ const sizeTypes: SizeTypes = {
     ['970', '250'],
     ['970', '90'],
     ['728', '90'],
+    ['300', '250'],
   ],
   side: [['160', '600']],
   mobile: [['320', '50']],
@@ -69,6 +71,7 @@ const Advertisment: React.FC<AdvertismentProps> = ({
   railOffsetTop = 200,
   railOffsetBottom = 0,
   railCollisionWhitelist = ['*'],
+  anchorClose = true,
 }) => {
   const adsEnabled = useContext(AdsContext);
 
@@ -122,6 +125,7 @@ const Advertisment: React.FC<AdvertismentProps> = ({
             wording,
             position,
           },
+          anchorClose,
         });
       } else if (format === 'floating') {
         window.nitroAds.createAd(placementId, {

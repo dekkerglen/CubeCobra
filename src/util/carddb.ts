@@ -108,7 +108,7 @@ export function getIdsFromName(name: string): string[] {
       .map((card) => card.scryfall_id);
   }
 
-  return catalog.nameToId[getNameForComparison(name)];
+  return catalog.nameToId[getNameForComparison(name)] || [];
 }
 
 export function getMostReasonable(
@@ -188,7 +188,7 @@ export function getEnglishVersion(id: string): string {
 }
 
 export function getVersionsByOracleId(oracleId: string): string[] {
-  return catalog.oracleToId[oracleId];
+  return catalog.oracleToId[oracleId] || [];
 }
 
 export function getReasonableCardByOracle(oracleId: string): CardDetails {
@@ -309,8 +309,18 @@ export function getAllMostReasonable(
   return filtered.filter((card) => card !== null) as CardDetails[];
 }
 
-export function allVersions(card: CardDetails) {
-  return getIdsFromName(card.name);
+/**
+ * Get all versions of a card, including printed and digital versions.
+ *
+ * Some cards may have multiple versions with the same oracle ID and the same name (e.g., reprints).
+ * Some cards have multiple versions with different names, but the same oracle id (through the omenpaths "OM1")
+ * Some cards have different oracle ids, but the same name (e.g. "Everythingamajig")
+ *
+ * @param card the card to get all versions for
+ * @returns an array of all version IDs for the card
+ */
+export function getAllVersionIds(card: CardDetails): string[] {
+  return [...new Set([...getVersionsByOracleId(card.oracle_id), ...getIdsFromName(card.name)])];
 }
 
 export function allCards() {
