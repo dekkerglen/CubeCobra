@@ -408,6 +408,17 @@ router.get('/login', (req, res) => {
   return render(req, res, 'LoginPage');
 });
 
+const getLoginRedirect = (req) => {
+  const redirectRoute = getSafeReferrer(req) || '/';
+
+  //Landing is the public default page, dashboard is the logged in one
+  if (redirectRoute === '/landing' || redirectRoute === '/user/login') {
+    return '/dashboard';
+  } else {
+    return redirectRoute;
+  }
+};
+
 // Login post
 router.post('/login', async (req, res) => {
   let user;
@@ -434,10 +445,8 @@ router.post('/login', async (req, res) => {
   }
 
   req.body.username = user.username;
-  const redirectRoute = getSafeReferrer(req) || '/';
   passport.authenticate('local', {
-    //Landing is the public default page, dashboard is the logged in one
-    successRedirect: redirectRoute === '/landing' ? '/dashboard' : redirectRoute,
+    successRedirect: getLoginRedirect(req),
     failureRedirect: '/user/login',
     failureFlash: { type: 'danger' },
   })(req, res, () => {
