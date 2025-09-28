@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect,useState } from 'react';
 
 import classNames from 'classnames';
 
@@ -40,7 +40,11 @@ const TextArea: React.FC<TextAreaProps> = ({
   maxLength,
   ...props
 }) => {
-  const [textLength, setTextLength] = useState(value ? value.length : 0);
+  const [textLength, setTextLength] = useState(value !== undefined ? value.length : 0);
+
+  useEffect(() => {
+    setTextLength(value !== undefined ? value.length : 0);
+  }, [value]);
 
   const handleChange = async (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTextLength(event.target.textLength);
