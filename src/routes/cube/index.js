@@ -110,7 +110,6 @@ const generatePackImage = async (cards) => {
   return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
 };
 
-
 router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));
@@ -1055,6 +1054,8 @@ router.get('/p1p1packimage/:packId', async (req, res) => {
 
     res.writeHead(200, {
       'Content-Type': 'image/webp',
+      'Cache-Control': 'public, max-age=86400, immutable',
+      ETag: `"${packId}"`,
     });
     return res.end(imageBuffer);
   } catch (err) {
