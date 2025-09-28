@@ -42,7 +42,7 @@ const chooseIdFromInput = (req) => {
     // if id is a cardname, redirect to the default version for that card
     const possibleName = cardutil.decodeName(id);
     const ids = getIdsFromName(possibleName);
-    if (ids) {
+    if (ids !== undefined && ids.length > 0) {
       id = getMostReasonable(possibleName, printingPreference).scryfall_id;
     }
   }
