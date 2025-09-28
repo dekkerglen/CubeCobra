@@ -72,6 +72,11 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       return;
     }
 
+    if (req.body.markdown && req.body.markdown.length > 10000) {
+      res.status(400).json({ error: 'Blog post markdown cannot be longer than 10,000 characters.' });
+      return;
+    }
+
     if (req.body.id && req.body.id.length > 0) {
       // update an existing blog post
       const blog = await Blog.getUnhydrated(req.body.id);
@@ -110,11 +115,6 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
     if (cube.owner.id !== user.id) {
       res.status(403).json({ error: 'Unable to post this blog post: Unauthorized.' });
-      return;
-    }
-
-    if (req.body.markdown && req.body.markdown.length > 10000) {
-      res.status(400).json({ error: 'Blog post markdown cannot be longer than 10,000 characters.' });
       return;
     }
 

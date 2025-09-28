@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import classNames from 'classnames';
 
@@ -20,6 +20,7 @@ export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextArea
   onChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   rows?: number;
   disabled?: boolean;
+  showCharacterLimit?: boolean;
 }
 
 const TextArea: React.FC<TextAreaProps> = ({
@@ -35,7 +36,20 @@ const TextArea: React.FC<TextAreaProps> = ({
   value,
   rows = 4,
   disabled = false,
+  showCharacterLimit = false,
+  maxLength,
+  ...props
 }) => {
+  const [textLength, setTextLength] = useState(value ? value.length : 0);
+
+  const handleChange = async (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextLength(event.target.textLength);
+    if (onChange) {
+      //Don't need to wait for this to finish
+      onChange(event);
+    }
+  };
+
   return (
     <div className="block w-full">
       <Flexbox justify="between" direction="row">
@@ -65,11 +79,22 @@ const TextArea: React.FC<TextAreaProps> = ({
         placeholder={placeholder}
         ref={innerRef}
         onKeyDown={disabled ? undefined : onKeyDown}
-        onChange={disabled ? undefined : onChange}
+        onChange={disabled ? undefined : handleChange}
         value={value}
         rows={rows}
         disabled={disabled}
+        maxLength={maxLength}
+        {...props}
       />
+      {showCharacterLimit && maxLength ? (
+        <div
+          className={classNames('p-2 rounded-b-md', {
+            'bg-red-100 text-red-800': textLength >= maxLength,
+          })}
+        >
+          {textLength} / {maxLength}
+        </div>
+      ) : null}
     </div>
   );
 };
