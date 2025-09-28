@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 const express = require('express');
+import { validate as uuidValidate } from 'uuid';
 
 import { Period } from '../datatypes/History';
 import carddb, {
@@ -31,6 +32,34 @@ router.use(csrfProtection);
 
 /* Minimum number of picks for data to show up in Top cards list. */
 const MIN_PICKS = 100;
+
+const chooseIdFromInput = (req) => {
+  //ID is scryfall id or a card name (eg. via Autocomplete hover)
+  const printingPreference = req?.query?.defaultPrinting || req?.user?.defaultPrinting;
+  let { id } = req.params;
+
+  if (!uuidValidate(id)) {
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(id);
+    const ids = getIdsFromName(possibleName);
+    if (ids) {
+      id = getMostReasonable(possibleName, printingPreference).scryfall_id;
+    }
+  }
+
+  // if id is a foreign id, redirect to english version
+  const english = getEnglishVersion(id);
+  if (english) {
+    id = english;
+  }
+
+  // if id is an oracle id, redirect to most reasonable scryfall
+  if (carddb.oracleToId[id]) {
+    id = getMostReasonableById(carddb.oracleToId[id][0], printingPreference).scryfall_id;
+  }
+
+  return id;
+};
 
 router.get('/api/searchcards', async (req, res) => {
   try {
@@ -97,26 +126,7 @@ router.get('/topcards', async (req, res) => {
 
 router.get('/card/:id', async (req, res) => {
   try {
-    let { id } = req.params;
-    const printingPreference = req?.user?.defaultPrinting;
-
-    // if id is a cardname, redirect to the default version for that card
-    const possibleName = cardutil.decodeName(id);
-    const ids = getIdsFromName(possibleName);
-    if (ids) {
-      id = getMostReasonable(possibleName, printingPreference).scryfall_id;
-    }
-
-    // if id is a foreign id, redirect to english version
-    const english = getEnglishVersion(id);
-    if (english) {
-      id = english;
-    }
-
-    // if id is an oracle id, redirect to most reasonable scryfall
-    if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0], printingPreference).scryfall_id;
-    }
+    const id = chooseIdFromInput(req);
 
     // if id is not a scryfall ID, error
     const card = cardFromId(id);
@@ -132,6 +142,7 @@ router.get('/card/:id', async (req, res) => {
       history.items.push({});
     }
 
+    const printingPreference = req?.user?.defaultPrinting;
     const related = getRelatedCards(card.oracle_id, printingPreference);
     const mlSubstitution = getOracleForMl(card.oracle_id, printingPreference);
 
@@ -171,25 +182,7 @@ router.get('/card/:id', async (req, res) => {
 
 router.get('/cardjson/:id', async (req, res) => {
   try {
-    let { id } = req.params;
-
-    // if id is a cardname, redirect to the default version for that card
-    const possibleName = cardutil.decodeName(id);
-    const ids = getIdsFromName(possibleName);
-    if (ids) {
-      id = getMostReasonable(possibleName, req?.user?.defaultPrinting).scryfall_id;
-    }
-
-    // if id is a foreign id, redirect to english version
-    const english = getEnglishVersion(id);
-    if (english) {
-      id = english;
-    }
-
-    // if id is an oracle id, redirect to most reasonable scryfall
-    if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0], req?.user?.defaultPrinting).scryfall_id;
-    }
+    const id = chooseIdFromInput(req);
 
     // if id is not a scryfall ID, error
     const card = cardFromId(id);
@@ -225,27 +218,7 @@ router.get('/cardjson/:id', async (req, res) => {
 
 router.get('/cardimage/:id', async (req, res) => {
   try {
-    let { id } = req.params;
-
-    const defaultPrinting = req?.query?.defaultPrinting || req?.user?.defaultPrinting;
-
-    // if id is a cardname, redirect to the default version for that card
-    const possibleName = cardutil.decodeName(id);
-    const ids = getIdsFromName(possibleName);
-    if (ids) {
-      id = getMostReasonable(possibleName, defaultPrinting).scryfall_id;
-    }
-
-    // if id is a foreign id, redirect to english version
-    const english = getEnglishVersion(id);
-    if (english) {
-      id = english;
-    }
-
-    // if id is an oracle id, redirect to most reasonable scryfall
-    if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0], defaultPrinting).scryfall_id;
-    }
+    const id = chooseIdFromInput(req);
 
     // if id is not a scryfall ID, error
     const card = cardFromId(id);
@@ -291,25 +264,7 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
 
 router.get('/cardimageflip/:id', async (req, res) => {
   try {
-    let { id } = req.params;
-
-    // if id is a cardname, redirect to the default version for that card
-    const possibleName = cardutil.decodeName(id);
-    const ids = getIdsFromName(possibleName);
-    if (ids) {
-      id = getMostReasonable(possibleName).scryfall_id;
-    }
-
-    // if id is a foreign id, redirect to english version
-    const english = getEnglishVersion(id);
-    if (english) {
-      id = english;
-    }
-
-    // if id is an oracle id, redirect to most reasonable scryfall
-    if (carddb.oracleToId[id]) {
-      id = getMostReasonableById(carddb.oracleToId[id][0], req?.user?.defaultPrinting).scryfall_id;
-    }
+    const id = chooseIdFromInput(req);
 
     // if id is not a scryfall ID, error
     const card = cardFromId(id);
