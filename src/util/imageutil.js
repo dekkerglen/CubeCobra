@@ -16,7 +16,7 @@ export function getImageData(imagename) {
   const name = cardutil.normalizeName(imagename);
   const ids = getIdsFromName(name);
 
-  if (ids) {
+  if (ids !== undefined && ids.length > 0) {
     const byName = cardFromId(ids[0]);
     if (byName.scryfall_id) {
       return {

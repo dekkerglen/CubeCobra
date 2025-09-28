@@ -17,7 +17,6 @@ interface Document {
 }
 
 interface ReviewContentPageProps {
-  loginCallback?: string;
   content: Document[];
 }
 
@@ -27,9 +26,9 @@ const typeMap = {
   p: 'podcast',
 };
 
-const ReviewContentPage: React.FC<ReviewContentPageProps> = ({ loginCallback = '/', content }) => {
+const ReviewContentPage: React.FC<ReviewContentPageProps> = ({ content }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>

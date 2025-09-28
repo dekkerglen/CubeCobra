@@ -2,7 +2,7 @@ import Blog from '../../../dynamo/models/blog';
 import Cube from '../../../dynamo/models/cube';
 import Feed from '../../../dynamo/models/feed';
 import User from '../../../dynamo/models/user';
-import { csrfProtection, ensureAuth } from '../../../routes/middleware';
+import { csrfProtection, ensureAuth, ensureAuthJson } from '../../../routes/middleware';
 import { Request, Response } from '../../../types/express';
 import { abbreviate, isCubeViewable } from '../../../util/cubefn';
 import generateMeta from '../../../util/meta';
@@ -58,35 +58,35 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     const cubeId = req.params.id;
     //Generally going to assume the cube exists here. Definitely required for a new blog, not so for an edit
     const cube = await Cube.getById(cubeId);
-    const redirectUrl = await getRedirectUrlForCube(req, cube);
 
     if (req.body.title.length < 5 || req.body.title.length > 100) {
-      req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
-
-      return redirect(req, res, redirectUrl);
+      res.status(400).json({ error: 'Blog title length must be between 5 and 100 characters.' });
+      return;
     }
 
     const { user } = req;
 
     if (!user) {
-      req.flash('danger', 'Please Login to publish a blog post.');
+      res.status(401).json({ error: 'Please Login to publish a blog post.' });
+      return;
+    }
 
-      return redirect(req, res, redirectUrl);
+    if (req.body.markdown && req.body.markdown.length > 10000) {
+      res.status(400).json({ error: 'Blog post markdown cannot be longer than 10,000 characters.' });
+      return;
     }
 
     if (req.body.id && req.body.id.length > 0) {
       // update an existing blog post
       const blog = await Blog.getUnhydrated(req.body.id);
       if (!blog) {
-        req.flash('danger', 'Blog not found.');
-
-        return redirect(req, res, '/404');
+        res.status(404).json({ error: 'Blog not found.' });
+        return;
       }
 
       if (blog.owner !== user.id) {
-        req.flash('danger', 'Unable to update this blog post: Unauthorized.');
-
-        return redirect(req, res, redirectUrl);
+        res.status(403).json({ error: 'Unable to update this blog post: Unauthorized.' });
+        return;
       }
 
       blog.body = req.body.markdown.substring(0, 10000);
@@ -94,28 +94,26 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
       await Blog.put(blog);
 
-      req.flash('success', 'Blog update successful');
-
-      return redirect(req, res, redirectUrl);
+      const redirectUrl = await getRedirectUrlForCube(req, cube);
+      res.status(200).json({ ok: 'Blog update successful, reloading...', redirect: redirectUrl });
+      return;
     }
 
     if (!isCubeViewable(cube, user)) {
-      req.flash('danger', 'Cube not found');
-
-      return redirect(req, res, '/cube/blog/404');
+      res.status(404).json({ error: 'Cube not found' });
+      return;
     }
 
     // if this cube has no cards, we deny them from making any changes
     // this is a spam prevention measure
     if (cube.cardCount === 0) {
-      req.flash('danger', 'Cannot post a blog for an empty cube. Please add cards to the cube first.');
-
-      return redirect(req, res, redirectUrl);
+      res.status(400).json({ error: 'Cannot post a blog for an empty cube. Please add cards to the cube first.' });
+      return;
     }
 
     if (cube.owner.id !== user.id) {
-      req.flash('danger', 'Unable to post this blog post: Unauthorized.');
-      return redirect(req, res, redirectUrl);
+      res.status(403).json({ error: 'Unable to post this blog post: Unauthorized.' });
+      return;
     }
 
     const id: string = await Blog.put({
@@ -160,12 +158,12 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
     await Feed.batchPut(feedItems);
 
-    req.flash('success', 'Blog post successful');
-
-    return redirect(req, res, redirectUrl);
-  } catch (err) {
-    //Not worried about cube not existing if we get a server error
-    return handleRouteError(req, res, err, `/cube/blog/${encodeURIComponent(req.params.id)}`);
+    const redirectUrl = await getRedirectUrlForCube(req, cube);
+    res.status(200).json({ ok: 'Blog post successful, reloading...', redirect: redirectUrl });
+    return;
+  } catch {
+    res.status(500).json({ error: 'Unexpected error.' });
+    return;
   }
 };
 
@@ -279,7 +277,7 @@ export const routes = [
   {
     method: 'post',
     path: '/post/:id',
-    handler: [ensureAuth, csrfProtection, createBlogHandler],
+    handler: [ensureAuthJson, csrfProtection, createBlogHandler],
   },
   {
     method: 'get',

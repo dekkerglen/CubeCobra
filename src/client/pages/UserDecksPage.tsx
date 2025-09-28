@@ -18,7 +18,6 @@ interface UserDecksPageProps {
   followersCount: number;
   following: boolean;
   decks: Draft[];
-  loginCallback?: string;
   lastKey?: any;
 }
 
@@ -29,7 +28,6 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
   following,
   decks,
   owner,
-  loginCallback = '/',
   lastKey,
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
@@ -85,7 +83,7 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <UserLayout user={owner} followersCount={followersCount} following={following} activeLink="decks">
         <DynamicFlash />
 

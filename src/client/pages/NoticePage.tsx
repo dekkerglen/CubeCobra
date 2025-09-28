@@ -28,17 +28,16 @@ interface Notice {
 }
 
 interface NoticePageProps {
-  loginCallback?: string;
   notices: Notice[];
 }
 
-const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices }) => {
+const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
   const applications = notices.filter((notice) => notice.type === NoticeType.APPLICATION);
   const commentReports = notices.filter((notice) => notice.type === NoticeType.COMMENT_REPORT);
   const cubeReports = notices.filter((notice) => notice.type === NoticeType.CUBE_REPORT);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>

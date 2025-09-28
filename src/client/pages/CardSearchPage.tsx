@@ -5,14 +5,10 @@ import RenderToRoot from 'components/RenderToRoot';
 import { FilterContextProvider } from 'contexts/FilterContext';
 import MainLayout from 'layouts/MainLayout';
 
-interface CardSearchPageProps {
-  loginCallback?: string;
-}
-
-const CardSearchPage: React.FC<CardSearchPageProps> = ({ loginCallback = '/' }) => {
+const CardSearchPage: React.FC = () => {
   return (
     <FilterContextProvider>
-      <MainLayout loginCallback={loginCallback}>
+      <MainLayout>
         <CardSearch />
       </MainLayout>
     </FilterContextProvider>

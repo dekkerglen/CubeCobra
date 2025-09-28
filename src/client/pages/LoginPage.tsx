@@ -13,7 +13,7 @@ import MainLayout from 'layouts/MainLayout';
 const LoginPage: React.FC = () => {
   const formRef = React.useRef<HTMLFormElement>(null);
   return (
-    <MainLayout loginCallback={'/'}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-3">
@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
         </CardHeader>
         <CardBody>
           <Flexbox direction="col" gap="2">
-            <LoginForm loginCallback={'/'} formRef={formRef} />
+            <LoginForm formRef={formRef} />
             <Button type="submit" color="primary" block onClick={() => formRef.current?.submit()}>
               Login
             </Button>

@@ -67,7 +67,6 @@ const navItems = [
 type NavbarProps = {
   expanded: boolean;
   toggle: () => void;
-  loginCallback?: string;
 };
 
 const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {

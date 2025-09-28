@@ -8,18 +8,17 @@ import MainLayout from 'layouts/MainLayout';
 
 interface SearchPageProps {
   items: Cube[];
-  loginCallback?: string;
   lastKey?: string;
   parsedQuery?: string[];
   query?: string;
 }
 
-const SearchPage: React.FC<SearchPageProps> = ({ items, loginCallback, lastKey }) => {
+const SearchPage: React.FC<SearchPageProps> = ({ items, lastKey }) => {
   const [feedItems, setFeedItems] = useState(items);
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <div className="my-3">
         <IndefinitePaginatedList
           items={feedItems}

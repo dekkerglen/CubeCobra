@@ -15,17 +15,16 @@ import Video from 'datatypes/Video';
 import MainLayout from 'layouts/MainLayout';
 
 interface BrowseContentPageProps {
-  loginCallback?: string;
   content: Content[];
   lastKey: any; // Define a more specific type if possible
 }
 
-const BrowseContentPage: React.FC<BrowseContentPageProps> = ({ loginCallback = '/', content, lastKey }) => {
+const BrowseContentPage: React.FC<BrowseContentPageProps> = ({ content, lastKey }) => {
   const [items, setItems] = useState<Content[]>(content);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Flexbox direction="col" gap="2" className="my-2">
         <Banner />
         <DynamicFlash />

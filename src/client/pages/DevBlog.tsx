@@ -23,7 +23,6 @@ interface DevBlogEntryProps {
 interface DevBlogProps {
   blogs: any[];
   lastKey: string | null;
-  loginCallback?: string;
 }
 
 const loader = (
@@ -56,12 +55,14 @@ const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
         setTitle('');
         setBody('');
       } else {
+        // eslint-disable-next-line no-console
         console.error(json);
       }
     } else {
+      // eslint-disable-next-line no-console
       console.error(response);
     }
-  }, [title, body, setItems, items]);
+  }, [csrfFetch, title, body, setItems, items]);
 
   return (
     <Card className="my-3">
@@ -82,7 +83,7 @@ const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
   );
 };
 
-const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey, loginCallback = '/' }) => {
+const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState(blogs);
   const [currentLastKey, setLastKey] = useState(lastKey);
@@ -110,10 +111,10 @@ const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey, loginCallback = '/' }
       }
     }
     setLoading(false);
-  }, [items, setItems, currentLastKey]);
+  }, [csrfFetch, currentLastKey, items]);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Flexbox direction="col" gap="2" className="my-2">
         <Banner />
         <DynamicFlash />

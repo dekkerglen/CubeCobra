@@ -17,12 +17,11 @@ interface SamplePackPageProps {
   seed: string;
   pack: CardType[];
   cube: Cube;
-  loginCallback?: string;
 }
 
-const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, loginCallback = '/' }) => {
+const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} activeLink="playtest">
         <Flexbox direction="col" gap="2" className="my-2">
           <DynamicFlash />

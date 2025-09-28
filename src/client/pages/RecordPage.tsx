@@ -26,10 +26,9 @@ interface RecordPageProps {
   record: Record;
   draft?: Draft;
   players: User[];
-  loginCallback?: string;
 }
 
-const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players, loginCallback = '/' }) => {
+const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players }) => {
   const [activeTab, setActiveTab] = useQueryParam('tab', '0');
   const user = useContext(UserContext);
 
@@ -53,7 +52,7 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players, l
   ];
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">

@@ -8,12 +8,9 @@ import LostPasswordForm from 'components/forms/LostPasswordForm';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
-interface LostPasswordPageProps {
-  loginCallback?: string;
-}
 
-const LostPasswordPage: React.FC<LostPasswordPageProps> = ({ loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const LostPasswordPage: React.FC = () => (
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <Card className="my-3">

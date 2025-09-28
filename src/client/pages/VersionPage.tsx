@@ -8,12 +8,11 @@ import MainLayout from 'layouts/MainLayout';
 interface VersionPageProps {
   version: string;
   host: string;
-  loginCallback?: string;
 }
 
-const VersionPage: React.FC<VersionPageProps> = ({ version, host, loginCallback = '/' }) => {
+const VersionPage: React.FC<VersionPageProps> = ({ version, host }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Card className="my-3">
         <CardHeader>
           <Text semibold lg>

@@ -3,16 +3,14 @@ import React from 'react';
 import Input from '../base/Input';
 import CSRFForm from '../CSRFForm';
 
-interface LoginModalProps {
-  loginCallback: string;
+interface LoginFormProps {
   formRef: React.RefObject<HTMLFormElement>;
 }
 
-const LoginForm: React.FC<LoginModalProps> = ({ loginCallback, formRef }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ formRef }) => {
   const [formData, setFormData] = React.useState<Record<string, string>>({
     username: '',
     password: '',
-    loginCallback: loginCallback,
   });
 
   return (

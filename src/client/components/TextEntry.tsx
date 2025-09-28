@@ -34,6 +34,7 @@ const TextEntry: React.FC<TextEntryProps> = ({ value = '', setValue, maxLength =
                     className="w-full markdown-input"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
+                    showCharacterLimit={true}
                   />
                 ),
                 onClick: () => setTab('0'),

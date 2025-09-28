@@ -4,13 +4,10 @@ import RenderToRoot from 'components/RenderToRoot';
 import TopCardsTable from 'components/TopCardsTable';
 import { FilterContextProvider } from 'contexts/FilterContext';
 import MainLayout from 'layouts/MainLayout';
-interface TopCardsPageProps {
-  loginCallback?: string;
-}
 
-const TopCardsPage: React.FC<TopCardsPageProps> = ({ loginCallback = '/' }) => (
+const TopCardsPage: React.FC = () => (
   <FilterContextProvider>
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <TopCardsTable />
     </MainLayout>
   </FilterContextProvider>

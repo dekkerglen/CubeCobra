@@ -10,14 +10,13 @@ import PodcastType from 'datatypes/Podcast';
 import MainLayout from 'layouts/MainLayout';
 
 interface PodcastPageProps {
-  loginCallback?: string;
   podcast: PodcastType;
   episodes: Episode[];
 }
 
-const PodcastPage: React.FC<PodcastPageProps> = ({ loginCallback = '/', podcast, episodes }) => {
+const PodcastPage: React.FC<PodcastPageProps> = ({ podcast, episodes }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-3">

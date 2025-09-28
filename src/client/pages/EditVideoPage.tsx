@@ -16,11 +16,10 @@ import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 
 interface EditVideoPageProps {
-  loginCallback?: string;
   video: VideoType;
 }
 
-const EditVideoPage: React.FC<EditVideoPageProps> = ({ loginCallback = '/', video }) => {
+const EditVideoPage: React.FC<EditVideoPageProps> = ({ video }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
   const [body, setBody] = useState(video.body);
   const [short, setShort] = useState(video.short);
@@ -56,7 +55,7 @@ const EditVideoPage: React.FC<EditVideoPageProps> = ({ loginCallback = '/', vide
   const hasChanges = video.body !== body || video.url !== url || video.title !== title || video.imageName !== imageName;
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Card className="my-2">
         <DynamicFlash />
         <CardBody>

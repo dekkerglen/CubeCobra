@@ -9,11 +9,10 @@ import MainLayout from 'layouts/MainLayout';
 
 interface BlogPostPageProps {
   post: BlogPostType;
-  loginCallback?: string;
 }
 
-const BlogPostPage: React.FC<BlogPostPageProps> = ({ post, loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const BlogPostPage: React.FC<BlogPostPageProps> = ({ post }) => (
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <BlogPost key={post.id} post={post} noScroll className="my-2" />

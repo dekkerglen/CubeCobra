@@ -12,15 +12,14 @@ import { ContentStatus } from 'datatypes/Content';
 import MainLayout from 'layouts/MainLayout';
 
 interface ArticlePageProps {
-  loginCallback?: string;
   article: ArticleType;
 }
 
-const ArticlePage: React.FC<ArticlePageProps> = ({ loginCallback = '/', article }) => {
+const ArticlePage: React.FC<ArticlePageProps> = ({ article }) => {
   const user = useContext(UserContext);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-2">

@@ -25,7 +25,6 @@ interface CubeRecordsPageProps {
   cards: CubeCards;
   decks: Draft[];
   decksLastKey: any;
-  loginCallback?: string;
   records: Record[];
   analyticsData?: RecordAnalytic;
   lastKey: any;
@@ -37,7 +36,6 @@ const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({
   records,
   analyticsData,
   lastKey,
-  loginCallback = '/',
 }) => {
   const user = useContext(UserContext);
   const [activeTab, setActiveTab] = useQueryParam('tab', '0');
@@ -58,7 +56,7 @@ const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({
   ];
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} cards={cards} activeLink="records" hasControls={!!user && cube.owner.id === user.id}>
         {user && cube.owner.id === user.id && (
           <Controls>

@@ -34,14 +34,12 @@ interface CardPageProps {
     other: CardDetails[];
   };
   versions: CardDetails[];
-  loginCallback: string;
 }
 
 const CardPage: React.FC<CardPageProps> = ({
   card,
   history,
   versions,
-  loginCallback,
   draftedWith,
   cubedWith,
   synergistic,
@@ -64,7 +62,7 @@ const CardPage: React.FC<CardPageProps> = ({
   });
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DynamicFlash />
       <Banner />
       <Row className="my-3">

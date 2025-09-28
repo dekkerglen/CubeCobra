@@ -48,6 +48,7 @@ const useMutatableGridDraft = (initialGridDraft: Draft) => {
   const mutations = fromEntries(
     Object.entries(MUTATIONS).map(([name, mutation]) => [
       name,
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       useCallback(
         ({ seatIndex, cardIndices }: { seatIndex: number; cardIndices: number[][] }) =>
           setGridDraft((oldGridDraft) => {
@@ -57,6 +58,7 @@ const useMutatableGridDraft = (initialGridDraft: Draft) => {
             mutation({ newGridDraft, seatIndex, cardIndices });
             return newGridDraft;
           }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [mutation, setGridDraft, cards],
       ),
     ]),
@@ -68,10 +70,9 @@ interface GridDraftPageProps {
   cube: Cube;
   initialDraft: Draft;
   seatNumber?: number;
-  loginCallback?: string;
 }
 
-const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatNumber, loginCallback }) => {
+const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatNumber }) => {
   const { cards } = initialDraft;
   const { csrfFetch } = useContext(CSRFContext);
   const draftType = initialDraft.seats[1].bot ? 'bot' : '2playerlocal';
@@ -81,7 +82,6 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
   const drafterStates = useMemo(() => {
     return [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx }));
   }, [gridDraft]);
-  console.log(drafterStates);
   const { turn, numPacks, packNum, pickNum } = drafterStates[seatNum];
   const { cardsInPack } = drafterStates[turn ? 0 : 1];
   const doneDrafting = packNum >= numPacks;
@@ -114,7 +114,7 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
         submitDeckForm.current?.submit?.();
       }
     })();
-  }, [doneDrafting, gridDraft]);
+  }, [csrfFetch, doneDrafting, gridDraft]);
 
   useEffect(() => {
     if (botDrafterState.turn && draftType === 'bot') {
@@ -126,7 +126,7 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
   }, [draftType, botDrafterState, mutations, botIndex]);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <DynamicFlash />

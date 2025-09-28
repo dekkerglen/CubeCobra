@@ -26,7 +26,6 @@ interface LandingPageProps {
   featured: Cube[];
   content: Article[];
   recentDecks: Draft[];
-  loginCallback: string;
   dailyP1P1?: {
     pack: P1P1Pack;
     cube: Cube;
@@ -34,9 +33,9 @@ interface LandingPageProps {
   };
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, content, loginCallback, dailyP1P1 }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, content, dailyP1P1 }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeSearchNavBar />
       <DynamicFlash />
       <Row className="mt-2">

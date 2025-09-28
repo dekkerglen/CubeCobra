@@ -26,12 +26,11 @@ import CardPackageData, { CardPackageStatus } from '../../datatypes/CardPackage'
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 
 interface PackagesPageProps {
-  loginCallback?: string;
   items: CardPackageData[];
   lastKey: string | null;
 }
 
-const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items, lastKey }) => {
+const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
 
@@ -103,7 +102,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Flexbox direction="col" gap="4" className="pb-4">
         <Controls className="p-2">
           <Banner />
