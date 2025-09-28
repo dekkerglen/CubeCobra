@@ -37,7 +37,7 @@ const client = createClient({
 
 const createHydratedBlog = (
   document: UnhydratedBlogPost,
-  owner: any, //TODO: User type
+  owner: UserType,
   cubeName: string,
   Changelog?: Partial<Changes>,
 ): BlogPost => {
@@ -70,12 +70,12 @@ const hydrate = async (document?: UnhydratedBlogPost): Promise<BlogPost | undefi
   }
 
   if (!document.changelist) {
-    return createHydratedBlog(document, owner, cubeName);
+    return createHydratedBlog(document, owner!, cubeName);
   }
 
   const changelog = await Changelog.getById(document.cube, document.changelist);
 
-  return createHydratedBlog(document, owner, cubeName, changelog);
+  return createHydratedBlog(document, owner!, cubeName, changelog);
 };
 
 const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]> => {
@@ -103,7 +103,7 @@ const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]
       Changelog = changelists[id];
     }
 
-    return createHydratedBlog(document, owner, cubeName, Changelog);
+    return createHydratedBlog(document, owner!, cubeName, Changelog);
   });
 };
 
