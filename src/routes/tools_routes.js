@@ -158,7 +158,8 @@ router.get('/card/:id', async (req, res) => {
         lastKey: history.lastKey,
         versions: carddb.oracleToId[card.oracle_id]
           .filter((cid) => cid !== card.scryfall_id)
-          .map((cardid) => cardFromId(cardid)),
+          .map((cardid) => cardFromId(cardid))
+          .filter((c) => !c.isExtra), //Card isExtra if its the preflipped backside
         draftedWith: related.draftedWith,
         cubedWith: related.cubedWith,
         synergistic: related.synergistic,
