@@ -15,11 +15,10 @@ interface InfoPageProps {
     text: string;
     table?: [string, string][];
   }[];
-  loginCallback?: string;
 }
 
-const InfoPage: React.FC<InfoPageProps> = ({ title, content, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
+const InfoPage: React.FC<InfoPageProps> = ({ title, content }) => (
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <Card className="my-3 mx-4">

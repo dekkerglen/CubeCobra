@@ -27,7 +27,6 @@ interface CubeListPageProps {
     mainboard: Card[];
     maybeboard: Card[];
   };
-  loginCallback?: string;
 }
 
 const boardToName: Record<BoardType, string> = {
@@ -104,8 +103,8 @@ const CubeListPageRaw: React.FC = () => {
   );
 };
 
-const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards, loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => (
+  <MainLayout>
     <DisplayContextProvider cubeID={cube.id}>
       <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict useChangedCards hasControls>
         <CubeListPageRaw />

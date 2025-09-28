@@ -20,7 +20,6 @@ interface UserCubePageProps {
   followersCount: number;
   following: boolean;
   cubes: Cube[];
-  loginCallback: string;
 }
 
 const UserCubePage: React.FC<UserCubePageProps> = ({
@@ -28,11 +27,10 @@ const UserCubePage: React.FC<UserCubePageProps> = ({
   followersCount,
   following,
   cubes,
-  loginCallback = '/',
 }) => {
   const user = useContext(UserContext);
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <UserLayout user={owner} followersCount={followersCount} following={following} activeLink="view">
         <DynamicFlash />
         <Flexbox direction="col" className="my-3" gap="2">

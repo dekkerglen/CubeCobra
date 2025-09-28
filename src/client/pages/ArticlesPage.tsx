@@ -9,17 +9,16 @@ import RenderToRoot from 'components/RenderToRoot';
 import ArticleType from 'datatypes/Article';
 import MainLayout from 'layouts/MainLayout';
 interface ArticlesPageProps {
-  loginCallback?: string;
   articles: ArticleType[];
   lastKey: any; // Define a more specific type if possible
 }
 
-const ArticlesPage: React.FC<ArticlesPageProps> = ({ loginCallback = '/', articles, lastKey }) => {
+const ArticlesPage: React.FC<ArticlesPageProps> = ({ articles, lastKey }) => {
   const [items, setItems] = useState<ArticleType[]>(articles);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Flexbox direction="col" gap="2" className="my-2">
         <Banner />
         <DynamicFlash />

@@ -32,7 +32,6 @@ interface DashboardPageProps {
   posts: BlogPost[];
   decks: Draft[];
   content: any[];
-  loginCallback?: string;
   featured?: Cube[];
   dailyP1P1?: {
     pack: P1P1Pack;
@@ -50,7 +49,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   lastKey,
   lastDeckKey,
   decks,
-  loginCallback = '/',
   content,
   featured = [],
   dailyP1P1,
@@ -65,7 +63,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   }
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Row className="my-2">

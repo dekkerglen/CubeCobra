@@ -12,12 +12,8 @@ import MainLayout from 'layouts/MainLayout';
 
 import { CARD_STATUSES, FINISHES } from '../../datatypes/Card';
 
-interface FiltersPageProps {
-  loginCallback: string;
-}
-
-const FiltersPage: React.FC<FiltersPageProps> = ({ loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
+const FiltersPage: React.FC = () => (
+  <MainLayout>
     <Flexbox direction="col" gap="2" className="my-2">
       <Banner />
       <DynamicFlash />

@@ -15,13 +15,12 @@ import Episode from 'datatypes/Episode';
 import MainLayout from 'layouts/MainLayout';
 
 interface PodcastEpisodePageProps {
-  loginCallback?: string;
   episode: Episode;
 }
 
-const PodcastEpisodePage: React.FC<PodcastEpisodePageProps> = ({ loginCallback = '/', episode }) => {
+const PodcastEpisodePage: React.FC<PodcastEpisodePageProps> = ({ episode }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>

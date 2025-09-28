@@ -9,12 +9,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
-interface ContactPageProps {
-  loginCallback?: string;
-}
-
-const ContactPage: React.FC<ContactPageProps> = ({ loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const ContactPage: React.FC = () => (
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <Card className="my-3 mx-4">

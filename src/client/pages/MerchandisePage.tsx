@@ -15,16 +15,6 @@ import MainLayout from 'layouts/MainLayout';
 
 const ConfirmActionButton = withModal(Button, ConfirmActionModal);
 
-interface InfoPageProps {
-  title: string;
-  content: {
-    label: string;
-    text: string;
-    table?: [string, string][];
-  }[];
-  loginCallback?: string;
-}
-
 const products = [
   {
     name: 'Year of the Snake Playmat',
@@ -49,7 +39,7 @@ const products = [
   },
 ];
 
-const InfoPage: React.FC<InfoPageProps> = ({ loginCallback }) => {
+const InfoPage: React.FC = () => {
   const [volume, setVolume] = React.useState<Record<string, number>>(
     Object.fromEntries(products.map((product) => [product.id, 0])),
   );
@@ -73,7 +63,7 @@ const InfoPage: React.FC<InfoPageProps> = ({ loginCallback }) => {
   };
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-3 mx-4">

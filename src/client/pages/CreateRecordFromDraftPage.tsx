@@ -26,7 +26,6 @@ import EditDescription from '../records/EditDescription';
 
 interface CreateRecordFromDraftPageProps {
   cube: Cube;
-  loginCallback?: string;
   decks: Draft[];
   decksLastKey?: any;
 }
@@ -37,7 +36,6 @@ const CreateRecordFromDraftPage: React.FC<CreateRecordFromDraftPageProps> = ({
   cube,
   decks,
   decksLastKey,
-  loginCallback = '/',
 }) => {
   const [step, setStep] = useState(0);
   const { csrfFetch } = useContext(CSRFContext);
@@ -91,7 +89,7 @@ const CreateRecordFromDraftPage: React.FC<CreateRecordFromDraftPageProps> = ({
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">

@@ -16,16 +16,14 @@ interface UserSocialPageProps {
   followedCubes: Cube[];
   followedUsers: User[];
   followers: User[];
-  loginCallback?: string;
 }
 
 const UserSocialPage: React.FC<UserSocialPageProps> = ({
   followedCubes,
   followedUsers,
   followers,
-  loginCallback = '/',
 }) => (
-  <MainLayout loginCallback={loginCallback}>
+  <MainLayout>
     <Banner />
     <DynamicFlash />
     <Row className="my-3">

@@ -15,7 +15,6 @@ import Podcast from 'datatypes/Podcast';
 import MainLayout from 'layouts/MainLayout';
 
 interface PodcastsPageProps {
-  loginCallback?: string;
   episodes: Episode[];
   podcasts: Podcast[];
   lastKey?: string;
@@ -23,7 +22,7 @@ interface PodcastsPageProps {
 
 const PAGE_SIZE = 24;
 
-const PodcastsPage: React.FC<PodcastsPageProps> = ({ loginCallback = '/', episodes, podcasts, lastKey }) => {
+const PodcastsPage: React.FC<PodcastsPageProps> = ({ episodes, podcasts, lastKey }) => {
   const [items, setItems] = useState(episodes);
   const { csrfFetch } = useContext(CSRFContext);
   const [currentLastKey, setLastKey] = useState(lastKey);
@@ -55,7 +54,7 @@ const PodcastsPage: React.FC<PodcastsPageProps> = ({ loginCallback = '/', episod
       }
     }
     setLoading(false);
-  }, [items, currentLastKey, page]);
+  }, [csrfFetch, currentLastKey, items, page]);
 
   const pager = (
     <Pagination
@@ -63,6 +62,7 @@ const PodcastsPage: React.FC<PodcastsPageProps> = ({ loginCallback = '/', episod
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
+        // eslint-disable-next-line no-console
         console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();
@@ -75,7 +75,7 @@ const PodcastsPage: React.FC<PodcastsPageProps> = ({ loginCallback = '/', episod
   );
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-3">

@@ -15,10 +15,9 @@ import Footer from 'layouts/Footer';
 
 interface MainLayoutProps {
   children: React.ReactNode;
-  loginCallback?: string;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [expanded, toggle] = useToggle(false);
   const user = useContext(UserContext);
 
@@ -42,7 +41,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
 
   return (
     <Flexbox className="min-h-screen text-text" direction="col">
-      <Navbar expanded={expanded} toggle={toggle} loginCallback={loginCallback} />
+      <Navbar expanded={expanded} toggle={toggle} />
       <div className="bg-bg flex-grow">
         <Container xxxl>
           <Flexbox className="flex-grow max-w-full" direction="row" gap="4">

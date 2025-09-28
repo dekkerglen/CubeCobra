@@ -21,16 +21,15 @@ import EditPlayerList from '../records/EditPlayerList';
 
 interface CreateNewRecordPageProps {
   cube: Cube;
-  loginCallback?: string;
 }
 
-const CreateNewRecordPage: React.FC<CreateNewRecordPageProps> = ({ cube, loginCallback = '/' }) => {
+const CreateNewRecordPage: React.FC<CreateNewRecordPageProps> = ({ cube }) => {
   const [step, setStep] = React.useState(0);
   const [record, setRecord] = React.useState<Partial<Record>>({});
   const formRef = React.createRef<HTMLFormElement>();
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">

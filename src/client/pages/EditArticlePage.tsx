@@ -16,11 +16,10 @@ import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 
 interface EditArticlePageProps {
-  loginCallback?: string;
   article: ArticleType;
 }
 
-const EditArticlePage: React.FC<EditArticlePageProps> = ({ loginCallback = '/', article }) => {
+const EditArticlePage: React.FC<EditArticlePageProps> = ({ article }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
   const [body, setBody] = useState(article.body);
   const [title, setTitle] = useState(article.title);
@@ -56,7 +55,7 @@ const EditArticlePage: React.FC<EditArticlePageProps> = ({ loginCallback = '/', 
     article.body !== body || article.title !== title || article.imageName !== imageName || article.short !== short;
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Card className="my-2">
         <CardBody>
           <Flexbox direction="row" justify="between">

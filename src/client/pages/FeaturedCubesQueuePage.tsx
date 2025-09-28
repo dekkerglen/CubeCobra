@@ -17,15 +17,14 @@ interface FeaturedCubesQueuePageProps {
   cubes: Cube[];
   daysBetweenRotations: number;
   lastRotation: number;
-  loginCallback: string;
 }
 
 const AddCubeButton = withModal(Button, AddCubeModal);
 const RotateButton = withModal(Button, ConfirmActionModal);
 
-const FeaturedCubesQueuePage: React.FC<FeaturedCubesQueuePageProps> = ({ cubes, lastRotation, loginCallback }) => {
+const FeaturedCubesQueuePage: React.FC<FeaturedCubesQueuePageProps> = ({ cubes, lastRotation }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Flexbox direction="col" gap="2" className="my-2">
         <DynamicFlash />
         <Card>

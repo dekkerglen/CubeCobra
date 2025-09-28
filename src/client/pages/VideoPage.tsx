@@ -8,12 +8,11 @@ import MainLayout from 'layouts/MainLayout';
 import VideoType from '../../datatypes/Video';
 import Video from '../components/content/Video';
 interface VideoPageProps {
-  loginCallback?: string;
   video: VideoType;
 }
 
-const VideoPage: React.FC<VideoPageProps> = ({ loginCallback = '/', video }) => (
-  <MainLayout loginCallback={loginCallback}>
+const VideoPage: React.FC<VideoPageProps> = ({ video }) => (
+  <MainLayout>
     <DynamicFlash />
     <Card className="my-3">
       <Video video={video} />

@@ -10,13 +10,12 @@ import MainLayout from 'layouts/MainLayout';
 
 interface LeaveWarningPageProps {
   url: string;
-  loginCallback?: string;
 }
 
 const back = () => (window.history.length > 1 ? window.history.back() : window.close());
 
-const LeaveWarningPage: React.FC<LeaveWarningPageProps> = ({ url, loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const LeaveWarningPage: React.FC<LeaveWarningPageProps> = ({ url }) => (
+  <MainLayout>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>

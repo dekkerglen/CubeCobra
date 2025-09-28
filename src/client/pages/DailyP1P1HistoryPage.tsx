@@ -24,13 +24,11 @@ interface DailyP1P1HistoryItem extends DailyP1P1 {
 interface DailyP1P1HistoryPageProps {
   history: DailyP1P1HistoryItem[];
   hasMore: boolean;
-  loginCallback?: string;
 }
 
 const DailyP1P1HistoryPage: React.FC<DailyP1P1HistoryPageProps> = ({
   history: initialHistory,
   hasMore: initialHasMore,
-  loginCallback = '/',
 }) => {
   const [history, setHistory] = useState(initialHistory);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -59,7 +57,7 @@ const DailyP1P1HistoryPage: React.FC<DailyP1P1HistoryPageProps> = ({
   }, [loading, hasMore, lastKey]);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>

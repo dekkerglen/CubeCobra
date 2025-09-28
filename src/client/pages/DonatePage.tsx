@@ -8,12 +8,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
-interface DonatePageProps {
-  loginCallback?: string;
-}
-
-const DonatePage: React.FC<DonatePageProps> = ({ loginCallback = '/' }) => (
-  <MainLayout loginCallback={loginCallback}>
+const DonatePage: React.FC = () => (
+  <MainLayout>
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>

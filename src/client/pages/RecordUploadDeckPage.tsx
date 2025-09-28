@@ -22,10 +22,9 @@ interface RecordUploadDeckPageProps {
   cube: Cube;
   record: Record;
   draft?: Draft;
-  loginCallback?: string;
 }
 
-const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft, loginCallback = '/' }) => {
+const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft }) => {
   const formRef = createRef<HTMLFormElement>();
   const [selectedUser, setSelectedUser] = useState<number>(0);
   const [cards, setCards] = useState<CardDetails[]>([]);
@@ -49,7 +48,7 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
   }, [selectedUser, record.players.length, draft, cards.length]);
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">

@@ -16,11 +16,10 @@ import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 
 interface EditPodcastPageProps {
-  loginCallback?: string;
   podcast: PodcastType;
 }
 
-const EditPodcastPage: React.FC<EditPodcastPageProps> = ({ loginCallback = '/', podcast }) => {
+const EditPodcastPage: React.FC<EditPodcastPageProps> = ({ podcast }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
   const [rss, setRss] = useState(podcast.url);
   const saveFormRef = React.createRef<HTMLFormElement>();
@@ -29,7 +28,7 @@ const EditPodcastPage: React.FC<EditPodcastPageProps> = ({ loginCallback = '/', 
   const hasChanges = podcast.url !== rss;
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Card className="my-2">
         <CardBody>
           <Flexbox direction="row" justify="between">

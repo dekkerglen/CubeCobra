@@ -15,12 +15,11 @@ import MainLayout from 'layouts/MainLayout';
 interface NotificationsPageProps {
   notifications: NotificationType[];
   lastKey?: string;
-  loginCallback?: string;
 }
 
 const PAGE_SIZE = 18;
 
-const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, lastKey, loginCallback }) => {
+const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, lastKey }) => {
   const [items, setItems] = useState<NotificationType[]>(notifications);
   const { csrfFetch } = useContext(CSRFContext);
   const [currentLastKey, setLastKey] = useState(lastKey);
@@ -69,7 +68,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
     />
   );
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <Banner />
       <DynamicFlash />
       <Card className="my-3">

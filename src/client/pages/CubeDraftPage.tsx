@@ -24,7 +24,6 @@ import { getCardDefaultRowColumn, getInitialState, setupPicks } from '../../util
 interface CubeDraftPageProps {
   cube: Cube;
   draft: Draft;
-  loginCallback?: string;
 }
 
 interface PredictResponse {
@@ -69,7 +68,7 @@ const processPredictions = (json: PredictResponse, packCards: any[]) => {
   return packCards.map((card) => predictionsMap.get(card.oracle_id) || 0);
 };
 
-const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallback }) => {
+const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   // Draft State
   // These reflect the current state of the draft objects, including the cards in the pack, the picks made, and the ratings for each card.
   const [state, setState] = useLocalStorage(`draftstate-${draft.id}`, getInitialState(draft));
@@ -732,7 +731,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft, loginCallbac
     pendingPick !== null;
 
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <Alerts alerts={alerts} />

@@ -223,7 +223,6 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
 interface CubeAnalysisPageWrapperProps {
   cube: Cube; // Adjust the type as needed
   cards: CubeCards;
-  loginCallback?: string;
   cubeAnalytics: any; // Adjust the type as needed
   tokenMap: { [key: string]: CardType };
 }
@@ -231,12 +230,11 @@ interface CubeAnalysisPageWrapperProps {
 const CubeAnalysisPageWrapper: React.FC<CubeAnalysisPageWrapperProps> = ({
   cube,
   cards,
-  loginCallback = '/',
   cubeAnalytics,
   tokenMap,
 }) => {
   return (
-    <MainLayout loginCallback={loginCallback}>
+    <MainLayout>
       <CubeLayout cube={cube} cards={cards} activeLink="analysis">
         <CubeAnalysisPage cubeAnalytics={cubeAnalytics} tokenMap={tokenMap} />
       </CubeLayout>

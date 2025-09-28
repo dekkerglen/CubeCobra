@@ -69,7 +69,6 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       };
     }
 
-    reactProps.loginCallback = req.baseUrl + req.path;
     reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';
     reactProps.baseUrl = utils.getBaseUrl();
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
