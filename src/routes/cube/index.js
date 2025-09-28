@@ -17,6 +17,7 @@ import { NoticeType } from '../../datatypes/Notice';
 
 const {
   generatePack,
+  generateBalancedPack,
   abbreviate,
   CSVtoCards,
   compareCubes,
@@ -901,7 +902,8 @@ router.get('/analysis/:id', async (req, res) => {
 });
 
 router.get('/samplepack/:id', (req, res) => {
-  redirect(req, res, `/cube/samplepack/${encodeURIComponent(req.params.id)}/${Date.now().toString()}`);
+  const queryString = req.query.balanced === 'true' ? '?balanced=true' : '';
+  redirect(req, res, `/cube/samplepack/${encodeURIComponent(req.params.id)}/${Date.now().toString()}${queryString}`);
 });
 
 router.get('/samplepack/:id/:seed', async (req, res) => {
@@ -914,13 +916,20 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
+    const isBalanced = req.query.balanced === 'true';
 
     let pack;
+    let maxBotWeight;
     try {
-      pack = await generatePack(cube, cards, req.params.seed);
+      if (isBalanced) {
+        const result = await generateBalancedPack(cube, cards, req.params.seed, 10, req.params.seed);
+        pack = result.packResult;
+        maxBotWeight = result.maxBotWeight;
+      } else {
+        pack = await generatePack(cube, cards, req.params.seed);
+      }
     } catch (err) {
-      // this is probably a 400, not a 500, as the user can fix it by trying again.
-      req.flash('danger', 'Failed to generate pack: ' + err.message);
+      req.flash('danger', `Failed to generate pack: ${err.message}`);
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
@@ -928,6 +937,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     const height = Math.ceil(pack.pack.length / width);
 
     const baseUrl = util.getBaseUrl();
+    const queryString = isBalanced ? '?balanced=true' : '';
     return render(
       req,
       res,
@@ -936,14 +946,16 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
         seed: pack.seed,
         pack: pack.pack,
         cube,
+        isBalanced,
+        maxBotWeight,
       },
       {
-        title: `${abbreviate(cube.name)} - Sample Pack`,
+        title: `${abbreviate(cube.name)} - ${isBalanced ? 'Balanced ' : ''}Sample Pack`,
         metadata: generateMeta(
-          'Cube Cobra Sample Pack',
-          `A sample pack from ${cube.name}`,
-          `${baseUrl}/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-          `${baseUrl}/cube/samplepack/${req.params.id}/${pack.seed}`,
+          `Cube Cobra ${isBalanced ? 'Balanced ' : ''}Sample Pack`,
+          `A ${isBalanced ? 'balanced ' : ''}sample pack from ${cube.name}`,
+          `${baseUrl}/cube/samplepackimage/${req.params.id}/${pack.seed}.png${queryString}`,
+          `${baseUrl}/cube/samplepack/${req.params.id}/${pack.seed}${queryString}`,
           CARD_WIDTH * width,
           CARD_HEIGHT * height,
         ),
@@ -965,10 +977,17 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
+    const isBalanced = req.query.balanced === 'true';
 
-    const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
-      const pack = await generatePack(cube, cards, req.params.seed);
-      return generatePackImage(pack.pack);
+    const cacheKey = `/samplepack/${req.params.id}/${req.params.seed}${isBalanced ? '?balanced=true' : ''}`;
+    const imageBuffer = await cachePromise(cacheKey, async () => {
+      if (isBalanced) {
+        const result = await generateBalancedPack(cube, cards, req.params.seed, 10, req.params.seed);
+        return generatePackImage(result.packResult.pack);
+      } else {
+        const pack = await generatePack(cube, cards, req.params.seed);
+        return generatePackImage(pack.pack);
+      }
     });
 
     res.writeHead(200, {
