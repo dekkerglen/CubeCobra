@@ -12,6 +12,15 @@ const ensureAuth = (req, res, next) => {
   return redirect(req, res, '/user/login');
 };
 
+const ensureAuthJson = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+
+  res.status(403).json({ error: 'You must be logged in.' });
+  return;
+};
+
 const ensureRole = (role) => async (req, res, next) => {
   if (!req.isAuthenticated()) {
     req.flash('danger', 'Please login to view this content');
@@ -29,7 +38,7 @@ const ensureRole = (role) => async (req, res, next) => {
 const csrfProtection = [
   csurf(),
   (req, res, next) => {
-    const {nickname} = req.body;
+    const { nickname } = req.body;
 
     if (nickname !== undefined && nickname !== 'Your Nickname') {
       // probably a malicious request
@@ -73,14 +82,14 @@ const answers = [
   'forest', // 'What is the name of the basic land that produces green mana?'
 ];
 
-async function recaptcha (req, res, next) {
+async function recaptcha(req, res, next) {
   const { captcha, question, answer } = req.body;
-  
+
   if (!question || !answer) {
     req.flash('danger', 'Please answer the security question');
     return redirect(req, res, '/');
   }
-  
+
   const index = questions.indexOf(question);
 
   if (index === -1 || answers[index].toLowerCase() !== answer.toLowerCase()) {
@@ -111,7 +120,6 @@ async function recaptcha (req, res, next) {
   next();
 }
 
-
 function flashValidationErrors(req, res, next) {
   const errors = validationResult(req).formatWith(({ msg }) => msg);
   req.validated = errors.isEmpty();
@@ -140,6 +148,7 @@ function jsonValidationErrors(req, res, next) {
 
 module.exports = {
   ensureAuth,
+  ensureAuthJson,
   ensureRole,
   csrfProtection,
   flashValidationErrors,
