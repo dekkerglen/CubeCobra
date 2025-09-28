@@ -58,9 +58,9 @@ const CreatorsPage: React.FC<CreatorsPageProps> = ({ articles, videos, podcasts 
       <TabContent
         activeTab={parseInt(tab || '0', 10)}
         contents={[
-          <CreatorArticles articles={articles.items} lastKey={articles.lastKey} />,
-          <CreatorPodcasts podcasts={podcasts.items} lastKey={podcasts.lastKey} />,
-          <CreatorVideos videos={videos.items} lastKey={videos.lastKey} />,
+          <CreatorArticles articles={articles.items} lastKey={articles.lastKey} key="articles" />,
+          <CreatorPodcasts podcasts={podcasts.items} lastKey={podcasts.lastKey} key="podcasts" />,
+          <CreatorVideos videos={videos.items} lastKey={videos.lastKey} key="videos" />,
         ]}
         className="mt-2"
       />

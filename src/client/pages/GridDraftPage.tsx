@@ -48,6 +48,7 @@ const useMutatableGridDraft = (initialGridDraft: Draft) => {
   const mutations = fromEntries(
     Object.entries(MUTATIONS).map(([name, mutation]) => [
       name,
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       useCallback(
         ({ seatIndex, cardIndices }: { seatIndex: number; cardIndices: number[][] }) =>
           setGridDraft((oldGridDraft) => {
@@ -57,6 +58,7 @@ const useMutatableGridDraft = (initialGridDraft: Draft) => {
             mutation({ newGridDraft, seatIndex, cardIndices });
             return newGridDraft;
           }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [mutation, setGridDraft, cards],
       ),
     ]),
