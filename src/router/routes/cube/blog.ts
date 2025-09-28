@@ -58,7 +58,6 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     const cubeId = req.params.id;
     //Generally going to assume the cube exists here. Definitely required for a new blog, not so for an edit
     const cube = await Cube.getById(cubeId);
-    const redirectUrl = await getRedirectUrlForCube(req, cube);
 
     if (req.body.title.length < 5 || req.body.title.length > 100) {
       res.status(400).json({ error: 'Blog title length must be between 5 and 100 characters.' });
@@ -95,13 +94,12 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
       await Blog.put(blog);
 
+      const redirectUrl = await getRedirectUrlForCube(req, cube);
       res.status(200).json({ ok: 'Blog update successful, reloading...', redirect: redirectUrl });
       return;
     }
 
     if (!isCubeViewable(cube, user)) {
-      req.flash('danger', 'Cube not found');
-
       res.status(404).json({ error: 'Cube not found' });
       return;
     }
@@ -160,6 +158,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
     await Feed.batchPut(feedItems);
 
+    const redirectUrl = await getRedirectUrlForCube(req, cube);
     res.status(200).json({ ok: 'Blog post successful, reloading...', redirect: redirectUrl });
     return;
   } catch {

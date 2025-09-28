@@ -52,8 +52,6 @@ jest.mock('../../../src/dynamo/models/feed', () => ({
 }));
 
 describe('Create Blog Post', () => {
-  const flashMock = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -61,85 +59,83 @@ describe('Create Blog Post', () => {
   it('should fail if the blog title is too short', async () => {
     const cube = createCube({ id: 'cube-id' });
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
-    await call(createBlogHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).withBody({ title: 'Hi' }).send();
+    const res = await call(createBlogHandler).withParams({ id: 'cube-id' }).withBody({ title: 'Hi' }).send();
 
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
-    expect(flashMock).toHaveBeenCalledWith('danger', 'Blog title length must be between 5 and 100 characters.');
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({
+      error: 'Blog title length must be between 5 and 100 characters.',
+    });
   });
 
   it('should fail if the blog title is too long', async () => {
     const cube = createCube({ id: 'cube-id' });
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
-    await call(createBlogHandler)
-      .withFlash(flashMock)
+    const res = await call(createBlogHandler)
       .withParams({ id: 'cube-id' })
       .withBody({ title: 'Very long blog title'.repeat(50) })
       .send();
 
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
-    expect(flashMock).toHaveBeenCalledWith('danger', 'Blog title length must be between 5 and 100 characters.');
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({
+      error: 'Blog title length must be between 5 and 100 characters.',
+    });
   });
 
   it(`should fail if the cube isn't visible to the user`, async () => {
     const cube = createCube({ visibility: Cube.VISIBILITY.PRIVATE });
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(createUser({ id: 'random' }))
-      .withFlash(flashMock)
       .withBody({ title: 'My blog title' })
       .withParams({ id: 'cube-id' })
       .send();
 
-    expect(flashMock).toHaveBeenCalledWith('danger', 'Cube not found');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/blog/404');
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({
+      error: 'Cube not found',
+    });
   });
 
   it('should fail if the cube is empty', async () => {
     const owner = createUser({ id: 'cube-owner' });
     const cube = createCube({ owner, cardCount: 0 });
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(owner)
-      .withFlash(flashMock)
       .withBody({ title: 'My blog title' })
       .withParams({ id: 'cube-id' })
       .send();
 
-    expect(flashMock).toHaveBeenCalledWith(
-      'danger',
-      'Cannot post a blog for an empty cube. Please add cards to the cube first.',
-    );
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({
+      error: 'Cannot post a blog for an empty cube. Please add cards to the cube first.',
+    });
   });
 
   it('should fail if the user is not the cube owner', async () => {
     const owner = createUser({ id: 'cube-owner' });
     const cube = createCube({ owner, cardCount: 100 });
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(createUser({ id: 'random-user' }))
-      .withFlash(flashMock)
       .withBody({ title: 'My blog title' })
       .withParams({ id: cube.id })
       .send();
 
-    expect(flashMock).toHaveBeenCalledWith('danger', 'Unable to post this blog post: Unauthorized.');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({
+      error: 'Unable to post this blog post: Unauthorized.',
+    });
   });
 
-  it('should should create a blog post', async () => {
+  it('should create a blog post', async () => {
     const owner = createUser({ following: ['user-1', 'user-2'] });
     const cube = createCube({ owner });
 
@@ -148,9 +144,8 @@ describe('Create Blog Post', () => {
     (Feed.batchPut as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(owner)
-      .withFlash(flashMock)
       .withBody({ title: 'My blog title', markdown: 'My blog content' })
       .withParams({ id: cube.id })
       .send();
@@ -179,8 +174,11 @@ describe('Create Blog Post', () => {
       ]),
     );
 
-    expect(flashMock).toHaveBeenCalledWith('success', 'Blog post successful');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      ok: 'Blog post successful, reloading...',
+      redirect: `/cube/blog/${cube.shortId}`,
+    });
   });
 
   it('should redirect using cube id if short id isnt set', async () => {
@@ -192,9 +190,8 @@ describe('Create Blog Post', () => {
     (Feed.batchPut as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.id}`);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(owner)
-      .withFlash(flashMock)
       .withBody({ title: 'My blog title', markdown: 'My blog content' })
       .withParams({ id: cube.id })
       .send();
@@ -203,35 +200,32 @@ describe('Create Blog Post', () => {
 
     expect(Feed.batchPut).toHaveBeenCalled();
 
-    expect(flashMock).toHaveBeenCalledWith('success', 'Blog post successful');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.id}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      ok: 'Blog post successful, reloading...',
+      redirect: `/cube/blog/${cube.id}`,
+    });
   });
 
   it('should handle errors gracefully', async () => {
     const owner = createUser();
     const error = new Error('something went wrong');
     (Cube.getById as jest.Mock).mockRejectedValue(error);
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/12345`);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(owner)
-      .withFlash(flashMock)
       .withBody({ title: 'My blog title', markdown: 'My blog content' })
       .withParams({ id: '12345' })
       .send();
 
-    expect(render.handleRouteError).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      error,
-      '/cube/blog/12345',
-    );
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({
+      error: 'Unexpected error.',
+    });
   });
 });
 
 describe('Edit Blog Post', () => {
-  const flashMock = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -240,31 +234,29 @@ describe('Edit Blog Post', () => {
     const cube = createCube({ id: 'cube-id' });
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
     (Blog.getUnhydrated as jest.Mock).mockResolvedValue(undefined);
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.id}`);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(createUser())
-      .withFlash(flashMock)
       .withBody({ title: 'My blog title', id: 'not-real' })
       .send();
 
-    expect(flashMock).toHaveBeenCalledWith('danger', 'Blog not found.');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({
+      error: 'Blog not found.',
+    });
   });
 
-  it('should update a blog post, from the cube blog page', async () => {
+  it('should update a blog post', async () => {
     const cube = createCube({ id: 'cube-id' });
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
     const user = createUser();
     const blog = createBlogPost({ owner: user, title: 'My blog title' });
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
     (Blog.getUnhydrated as jest.Mock).mockResolvedValue({ ...blog, owner: user.id });
     (Blog.put as jest.Mock).mockResolvedValue(undefined);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(user)
-      .withFlash(flashMock)
       .withParams({ id: 'cube-id' })
       .withBody({ title: blog.title, id: blog.id, markdown: 'My updated blog post' })
       .send();
@@ -277,8 +269,11 @@ describe('Edit Blog Post', () => {
       }),
     );
 
-    expect(flashMock).toHaveBeenCalledWith('success', 'Blog update successful');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      ok: 'Blog update successful, reloading...',
+      redirect: `/cube/blog/${cube.shortId}`,
+    });
   });
 
   it('should redirect to dashboard when updating a blog post for non-existent cube', async () => {
@@ -291,16 +286,19 @@ describe('Edit Blog Post', () => {
     //This would happen if the cube was deleted in one tab and then edit occurred in another
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/888-666-444`);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(user)
-      .withFlash(flashMock)
       .withParams({ id: 'non-existent-cube' })
       .withBody({ title: blog.title, id: blog.id, markdown: 'Updated content' })
       .send();
 
     expect(Blog.put).toHaveBeenCalled();
-    expect(flashMock).toHaveBeenCalledWith('success', 'Blog update successful');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/dashboard');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      ok: 'Blog update successful, reloading...',
+      redirect: '/dashboard',
+    });
   });
 
   it('should redirect to blogpost if edited from there', async () => {
@@ -312,20 +310,18 @@ describe('Edit Blog Post', () => {
     (Cube.getById as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(user)
-      .withFlash(flashMock)
       .withParams({ id: 'non-existent-cube' })
       .withBody({ title: blog.title, id: blog.id, markdown: 'Updated content' })
       .send();
 
     expect(Blog.put).toHaveBeenCalled();
-    expect(flashMock).toHaveBeenCalledWith('success', 'Blog update successful');
-    expect(render.redirect).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      `/cube/blog/blogpost/${blog.id}`,
-    );
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      ok: 'Blog update successful, reloading...',
+      redirect: `/cube/blog/blogpost/${blog.id}`,
+    });
   });
 
   it('should redirect to blog page of the users profile if edited from there', async () => {
@@ -337,16 +333,18 @@ describe('Edit Blog Post', () => {
     (Cube.getById as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/user/blog/${user.id}`);
 
-    await call(createBlogHandler)
+    const res = await call(createBlogHandler)
       .as(user)
-      .withFlash(flashMock)
       .withParams({ id: 'non-existent-cube' })
       .withBody({ title: blog.title, id: blog.id, markdown: 'Updated content' })
       .send();
 
     expect(Blog.put).toHaveBeenCalled();
-    expect(flashMock).toHaveBeenCalledWith('success', 'Blog update successful');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/user/blog/${user.id}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      ok: 'Blog update successful, reloading...',
+      redirect: `/user/blog/${user.id}`,
+    });
   });
 });
 
