@@ -21,6 +21,18 @@ const ButtonLink: React.FC<ButtonLinkProps> = ({
 }) => {
   const [loading, setLoading] = React.useState(false);
 
+  React.useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        // Page was restored from bfcache (back/forward cache)
+        setLoading(false);
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (loading) {
       e.preventDefault(); // Prevent navigation if already loading
