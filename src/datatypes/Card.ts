@@ -199,4 +199,5 @@ export default interface Card {
   notes?: string;
   details?: CardDetails;
   asfan?: number;
+  custom_name?: string;
 }

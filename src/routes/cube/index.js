@@ -92,6 +92,13 @@ const generatePackLayout = (count) => {
   }
 };
 
+const absoluteUrl = (url) => {
+  if (!url.startsWith('/')) {
+    return url;
+  }
+  return `${process.env.DOMAIN}/${url}`;
+};
+
 const generatePackImage = async (cards) => {
   if (cards.some((card) => !card.imgUrl && !card.details.image_normal)) {
     throw new Error('One or more cards in this pack are missing images.');
@@ -100,7 +107,7 @@ const generatePackImage = async (cards) => {
   const [width, height] = generatePackLayout(cards.length);
 
   const srcArray = cards.map((card, index) => ({
-    src: card.imgUrl || card.details.image_normal,
+    src: absoluteUrl(card.imgUrl || card.details.image_normal),
     x: CARD_WIDTH * (index % width),
     y: CARD_HEIGHT * Math.floor(index / width),
     height: CARD_HEIGHT,

@@ -11,6 +11,7 @@ import Spinner from './base/Spinner';
 import Text from './base/Text';
 import withCardModal from './modals/WithCardModal';
 import withAutocard from './WithAutocard';
+import { cardName } from 'utils/cardutil';
 
 interface RemoveButtonProps {
   onClick: MouseEventHandler;
@@ -52,7 +53,11 @@ const Add = ({ card, revert }: { card: CardData; revert: () => void }) => {
       <span className="mx-1" style={{ color: 'green' }}>
         <PlusCircleIcon />
       </span>
-      {!loading && details ? <TextAutocard card={{ details, ...card }}>{details.name}</TextAutocard> : <Spinner sm />}
+      {!loading && details ? (
+        <TextAutocard card={{ details, ...card }}>{cardName({ details, ...card })}</TextAutocard>
+      ) : (
+        <Spinner sm />
+      )}
     </Flexbox>
   );
 };
@@ -72,7 +77,7 @@ const Remove = ({ card, revert }: { card: CardData; revert: () => void }) => (
         card,
       }}
     >
-      {card.details?.name}
+      {cardName(card)}
     </CardModalLink>
   </Flexbox>
 );
@@ -92,7 +97,7 @@ const Edit = ({ card, revert }: { card: CardData; revert: () => void }) => (
         card,
       }}
     >
-      {card.details?.name}
+      {cardName(card)}
     </CardModalLink>
   </Flexbox>
 );
@@ -130,13 +135,17 @@ const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; re
         <ArrowSwitchIcon />
       </span>
       {!loading && oldCardDetails ? (
-        <TextAutocard card={{ ...oldCard, details: oldCardDetails }}>{oldCardDetails.name}</TextAutocard>
+        <TextAutocard card={{ ...oldCard, details: oldCardDetails }}>
+          {cardName({ details: oldCardDetails, ...oldCard })}
+        </TextAutocard>
       ) : (
         <Spinner sm />
       )}
       <ArrowRightIcon className="mx-1" />
       {!loading && newCardDetails ? (
-        <TextAutocard card={{ ...card, details: newCardDetails }}>{newCardDetails.name}</TextAutocard>
+        <TextAutocard card={{ ...card, details: newCardDetails }}>
+          {cardName({ details: newCardDetails, ...card })}
+        </TextAutocard>
       ) : (
         <Spinner sm />
       )}

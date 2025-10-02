@@ -4,7 +4,7 @@ import cx from 'classnames';
 import emojiRegex from 'emoji-regex';
 
 import DisplayContext from 'contexts/DisplayContext';
-import { getCardTagColorClass } from 'utils/cardutil';
+import { cardName, getCardTagColorClass } from 'utils/cardutil';
 
 import Card from '../../../datatypes/Card';
 import TagColorContext from '../../contexts/TagColorContext';
@@ -21,7 +21,7 @@ export interface AutocardListItemProps {
   last?: boolean;
   first?: boolean;
   className?: string;
-  isSelected?: boolean;  // Add this prop
+  isSelected?: boolean; // Add this prop
 }
 
 const AutocardDiv = withAutocard(ListGroupItem);
@@ -40,14 +40,13 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   last,
   first,
   className,
-  isSelected = false,  // Add default value
+  isSelected = false, // Add default value
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
   const { showInlineTagEmojis } = useContext(DisplayContext);
-  const [cardName, cardId] = useMemo(
-    () =>
-      card && card.details ? [card.details.name, card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK],
+  const [name, cardId] = useMemo(
+    () => (card && card.details ? [cardName(card), card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
     [card],
   );
 
@@ -90,11 +89,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   return (
     <AutocardDiv
-      className={cx(
-        `flex justify-between bg-card-${colorClassname}`,
-        { 'font-bold': isSelected },
-        className
-      )}
+      className={cx(`flex justify-between bg-card-${colorClassname}`, { 'font-bold': isSelected }, className)}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
       inModal={inModal}
@@ -104,10 +99,10 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     >
       {children ? (
         <span>
-          {children} <span>{cardName}</span>
+          {children} <span>{name}</span>
         </span>
       ) : (
-        <span>{cardName}</span>
+        <span>{name}</span>
       )}
       {showInlineTagEmojis ? <span className="text-right">{emojiTags.join('')}</span> : ''}
     </AutocardDiv>

@@ -8,6 +8,7 @@ import Card, { BoardChanges, Changes } from 'datatypes/Card';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
 import Text from '../base/Text';
+import { cardName } from 'utils/cardutil';
 
 export interface AddProps {
   card: Card;
@@ -26,7 +27,7 @@ const Add: React.FC<AddProps> = ({ card }) => {
         <PlusCircleIcon />
       </span>
       <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
-        {card.details?.name}
+        {cardName(card)}
       </TextAutocard>
     </li>
   );
@@ -42,7 +43,7 @@ const Remove: React.FC<RemoveProps> = ({ oldCard }) => (
       <NoEntryIcon />
     </span>
     <TextAutocard href={`/tool/card/${oldCard.cardID}`} card={oldCard}>
-      {oldCard.details?.name}
+      {cardName(oldCard)}
     </TextAutocard>
   </li>
 );
@@ -57,7 +58,7 @@ const Edit: React.FC<EditProps> = ({ card }) => (
       <ToolsIcon />
     </span>
     <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
-      {card.details?.name}
+      {cardName(card)}
     </TextAutocard>
   </li>
 );
@@ -74,11 +75,11 @@ const Swap: React.FC<SwapProps> = ({ oldCard, card }) => {
         <ArrowSwitchIcon />
       </span>
       <TextAutocard href={`/tool/card/${oldCard.cardID}`} card={oldCard}>
-        {oldCard.details?.name}
+        {cardName(oldCard)}
       </TextAutocard>
       <ArrowRightIcon className="mx-1" />
       <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
-        {card.details?.name}
+        {cardName(card)}
       </TextAutocard>
     </li>
   );

@@ -392,7 +392,12 @@ export const cardIsToken = (card: Card): boolean => card.details?.isToken ?? fal
 
 export const cardBorderColor = (card: Card): string => card.details?.border_color ?? 'black';
 
-export const cardName = (card: Card): string => card.details?.name ?? '';
+export const cardName = (card: Card): string => {
+  if (card.cardID === 'custom-card') {
+    return (card.custom_name || card.details?.name) ?? '';
+  }
+  return card.details?.name ?? '';
+};
 
 export const cardNameLower = (card: Card): string => card.details?.name_lower ?? '';
 

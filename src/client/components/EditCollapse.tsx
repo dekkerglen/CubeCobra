@@ -21,6 +21,7 @@ import Tooltip from './base/Tooltip';
 import Changelist from './Changelist';
 import LoadingButton from './LoadingButton';
 import TextEntry from './TextEntry';
+import { cardName } from 'utils/cardutil';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
@@ -96,7 +97,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           if (
             !card.markedForDelete &&
             card.index !== undefined &&
-            card.details?.name.toLowerCase() === match.toLowerCase()
+            cardName(card).toLowerCase() === match.toLowerCase()
           ) {
             removeIndex = card.index;
           }

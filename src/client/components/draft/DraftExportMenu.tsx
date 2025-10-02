@@ -5,6 +5,7 @@ import Link from 'components/base/Link';
 import NavMenu from 'components/base/NavMenu';
 import Draft from 'datatypes/Draft';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
+import { cardName } from 'utils/cardutil';
 
 interface DraftExportMenuProps {
   draft: Draft;
@@ -23,9 +24,9 @@ const DraftExportMenu: React.FC<DraftExportMenuProps> = ({ draft, seatIndex }) =
     for (const row of mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const cardName = cards[cardIndex].details?.name;
-          if (cardName) {
-            cardNames.push(cardName);
+          const name = cardName(cards[cardIndex]);
+          if (name) {
+            cardNames.push(name);
           }
         }
       }

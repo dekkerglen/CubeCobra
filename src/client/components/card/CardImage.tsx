@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import { cardImageUrl } from 'utils/cardutil';
+import { cardImageUrl, cardName } from 'utils/cardutil';
 
 import Card from '../../../datatypes/Card';
 import { CardDetails } from '../../../datatypes/Card';
@@ -52,7 +52,7 @@ const CardImage: React.FC<CardImageProps> = ({
         card={current}
         src={imageSrc}
         fallbackSrc="/content/default_card.png"
-        alt={current.details?.name}
+        alt={cardName(current)}
         width={width ?? '100%'}
         height={height ?? 'auto'}
         className={className}
@@ -65,7 +65,7 @@ const CardImage: React.FC<CardImageProps> = ({
     <ImageFallback
       src={imageSrc}
       fallbackSrc="/content/default_card.png"
-      alt={card?.details?.name}
+      alt={cardName(current)}
       width={width ?? '100%'}
       height={height ?? 'auto'}
       className={className}

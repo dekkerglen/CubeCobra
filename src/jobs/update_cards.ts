@@ -388,7 +388,7 @@ function getFaceAttributeSource(card: ScryfallCard, preflipped: boolean): Scryfa
 
 function convertCard(
   card: ScryfallCard,
-  metadata: CardMetadata,
+  metadata: CardMetadata | undefined,
   ckPrice: number | undefined,
   mpPrice: number | undefined,
   preflipped: boolean,
@@ -577,7 +577,101 @@ async function writeCatalog(basePath = 'private') {
   console.info('All JSON files saved.');
 }
 
-function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata, ckPrice: number, mpPrice: number) {
+function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number, mpPrice: number) {
+  if (card.layout === 'transform') {
+    addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
+  }
+  addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, false), false);
+}
+
+// Static cards to be added to the import pipeline
+// These cards will be processed alongside cards downloaded from Scryfall
+const STATIC_CARDS: ScryfallCard[] = [
+  {
+    id: 'custom-card',
+    oracle_id: 'custom-card',
+    name: 'Custom Card',
+    printed_name: undefined,
+    lang: 'en',
+    set: '',
+    set_name: '',
+    collector_number: '',
+    released_at: '',
+    reprint: false,
+    border_color: 'black',
+    promo: false,
+    promo_types: [],
+    digital: false,
+    finishes: [],
+    prices: {
+      usd: null,
+      usd_foil: null,
+      usd_etched: null,
+      eur: null,
+      tix: null
+    },
+    image_uris: {
+      small: '',
+      normal: '/content/custom_card.png',
+      art_crop: '/content/custom_card_art_crop.png'
+    },
+    card_faces: undefined,
+    loyalty: undefined,
+    power: undefined,
+    toughness: undefined,
+    type_line: '',
+    oracle_text: '',
+    mana_cost: '',
+    cmc: 0,
+    colors: [],
+    color_identity: [],
+    keywords: [],
+    produced_mana: [],
+    legalities: {
+      standard: 'not_legal',
+      historic: 'not_legal',
+      pioneer: 'not_legal',
+      modern: 'not_legal',
+      legacy: 'not_legal',
+      pauper: 'not_legal',
+      vintage: 'not_legal',
+      penny: 'not_legal',
+      commander: 'not_legal',
+      brawl: 'not_legal'
+    },
+    layout: 'normal',
+    rarity: 'common',
+    artist: '',
+    scryfall_uri: '',
+    mtgo_id: 0,
+    textless: false,
+    tcgplayer_id: '',
+    full_art: false,
+    flavor_text: '',
+    frame_effects: [],
+    frame: '',
+    card_back_id: '',
+    artist_id: '',
+    illustration_id: '',
+    content_warning: false,
+    variation: false,
+    preview: {
+      source: '',
+      source_uri: '',
+      previewed_at: ''
+    },
+    related_uris: {
+      gatherer: '',
+      tcgplayer_decks: '',
+      edhrec: '',
+      mtgtop8: ''
+    },
+    all_parts: [],
+    object: 'card'
+  }
+];
+
+function saveStaticCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number | undefined, mpPrice: number | undefined) {
   if (card.layout === 'transform') {
     addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
   }
@@ -590,6 +684,19 @@ async function saveAllCards(
   ckPrices: Record<string, number>,
   mpPrices: Record<string, number>,
 ) {
+  // eslint-disable-next-line no-console
+  console.info('Processing static cards...');
+  for (const staticCard of STATIC_CARDS) {
+    saveStaticCard(
+      staticCard,
+      metadatadict[staticCard.oracle_id],
+      ckPrices[staticCard.id],
+      mpPrices[staticCard.id]
+    );
+  }
+  // eslint-disable-next-line no-console
+  console.info(`Processed ${STATIC_CARDS.length} static cards.`);
+
   // eslint-disable-next-line no-console
   console.info('Processing cards...');
   await new Promise((resolve) =>

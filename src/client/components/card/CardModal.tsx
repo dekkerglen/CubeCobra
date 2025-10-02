@@ -16,6 +16,7 @@ import {
   cardEtchedPrice,
   cardFinish,
   cardFoilPrice,
+  cardId,
   cardName,
   cardPrice,
   cardPriceEur,
@@ -278,18 +279,30 @@ const CardModal: React.FC<CardModalProps> = ({
             </Col>
             <Col xs={12} sm={6}>
               <Flexbox direction="col" gap="2">
-                <Select
-                  label="Version"
-                  value={card.cardID}
-                  setValue={(v) => updateField('cardID', v)}
-                  options={Object.entries(versions!).map(([key, value]) => {
-                    return {
-                      value: key,
-                      label: value.version,
-                    };
-                  })}
-                  disabled={disabled}
-                />
+                {cardId(card) === 'custom-card' ? (
+                  <Input
+                    label="Name"
+                    type="text"
+                    name="custom_name"
+                    value={card.custom_name || ''}
+                    onChange={(event) => updateField('custom_name', event.target.value)}
+                    disabled={disabled}
+                    required
+                  />
+                ) : (
+                  <Select
+                    label="Version"
+                    value={card.cardID}
+                    setValue={(v) => updateField('cardID', v)}
+                    options={Object.entries(versions!).map(([key, value]) => {
+                      return {
+                        value: key,
+                        label: value.version,
+                      };
+                    })}
+                    disabled={disabled}
+                  />
+                )}
                 <Select
                   label="Status"
                   value={cardStatus(card)}
