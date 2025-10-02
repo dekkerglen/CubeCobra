@@ -321,8 +321,10 @@ const getSafeReferrer = (req /* Request */) => {
   }
 
   //Use our domain as the base in case the referrer is relative somehow
-  const url = URL.parse(referrer, getBaseUrl());
-  if (!url) {
+  let url;
+  try {
+    url = new URL(referrer, getBaseUrl());
+  } catch {
     return null;
   }
 
