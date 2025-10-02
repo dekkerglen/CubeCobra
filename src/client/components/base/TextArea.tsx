@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 
@@ -38,7 +38,6 @@ const TextArea: React.FC<TextAreaProps> = ({
   disabled = false,
   showCharacterLimit = false,
   maxLength,
-  ...props
 }) => {
   const [textLength, setTextLength] = useState(value !== undefined ? value.length : 0);
 
@@ -88,7 +87,6 @@ const TextArea: React.FC<TextAreaProps> = ({
         rows={rows}
         disabled={disabled}
         maxLength={maxLength}
-        {...props}
       />
       {showCharacterLimit && maxLength ? (
         <div
