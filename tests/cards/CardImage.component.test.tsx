@@ -5,9 +5,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import DisplayContext from 'contexts/DisplayContext';
-import { cardImageUrl } from '../../src/client/utils/cardutil';
 
 import CardImage from '../../src/client/components/card/CardImage';
+import { cardImageUrl } from '../../src/client/utils/cardutil';
 import { defaultDisplayContext } from '../test-utils/context';
 import { createCard, createCardDetails } from '../test-utils/data';
 
