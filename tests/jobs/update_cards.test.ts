@@ -89,4 +89,62 @@ describe('convertName', () => {
     const result = convertName(card, false);
     expect(result).toEqual(`SP//dr, Piloted by Peni`);
   });
+
+  it('Non-english printed names arent used', async () => {
+    const card = createScryfallCard('Silvan Library', 'normal');
+    card.printed_name = 'Biblioteca silvana';
+    card.lang = 'es';
+    const result = convertName(card, false);
+    expect(result).toEqual(`Silvan Library`);
+  });
+
+  it('Non-english printed names arent used, multiple faces', async () => {
+    const face = createCardFace('Aclazotz, Deepest Betrayal');
+    face.printed_name = '最深の裏切り、アクロゾズ';
+
+    const face2 = createCardFace('Temple of the Dead');
+    face2.printed_name = '死者の神殿';
+
+    const card = createScryfallCard('Aclazotz, Deepest Betrayal // Temple of the Dead', 'transform', [face, face2]);
+    card.lang = 'jp';
+    const result = convertName(card, false);
+    expect(result).toEqual(`Aclazotz, Deepest Betrayal`);
+
+    //Backsides are only passed the back face
+    const backCard = createScryfallCard('Aclazotz, Deepest Betrayal // Temple of the Dead', 'transform', [face2]);
+    card.lang = 'jp';
+
+    const backResult = convertName(backCard, true);
+    expect(backResult).toEqual(`Temple of the Dead`);
+  });
+
+  it('Phyrexian language isnt real', async () => {
+    const card = createScryfallCard('Phyrexian Arena', 'normal');
+    card.printed_name = '|fyrs,CebDZFst.';
+    card.lang = 'ph';
+    const result = convertName(card, false);
+    expect(result).toEqual(`Phyrexian Arena`);
+  });
+
+  it('Neither is Quenya (Elvish)', async () => {
+    const card = createScryfallCard('Sol ring', 'normal');
+    card.printed_name = ' ';
+    card.lang = 'qya';
+    const result = convertName(card, false);
+    expect(result).toEqual(`Sol ring`);
+  });
+
+  it('Phyrexian language isnt real, card face edition', async () => {
+    const face = createCardFace('Mental mistep');
+    face.printed_name = '|Vgu$e&yl,tFRErt.';
+
+    const face2 = createCardFace('Mental mistep2');
+    face2.printed_name = '|Vgu$e&yl,tFRErt2.';
+
+    const card = createScryfallCard('Phyrexian Arena', 'normal', [face, face2]);
+    card.printed_name = '|fyrs,CebDZFst.';
+    card.lang = 'ph';
+    const result = convertName(card, false);
+    expect(result).toEqual(`Mental mistep`);
+  });
 });

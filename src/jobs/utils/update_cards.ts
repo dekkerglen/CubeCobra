@@ -140,17 +140,22 @@ export interface ScryfallSet {
   printed_size?: number;
 }
 
+const ALLOWED_PRINTED_LANGUAGES = ['en'];
+
 export function convertName(card: ScryfallCard, preflipped: boolean) {
-  let str = card.printed_name || card.name;
+  const isAllowedPrintedLanguage = ALLOWED_PRINTED_LANGUAGES.includes(card.lang);
+
+  const nameField = isAllowedPrintedLanguage ? 'printed_name' : 'name';
+  let str = card[nameField] || card.name;
   const faces = card?.card_faces || [];
 
   //In src/jobs/update_cards.ts preflipped cards have their faces reduced to just the backside face
   if (preflipped) {
-    str = faces[0].printed_name || faces[0].name;
+    str = faces[0][nameField] || faces[0].name;
   } else if (card.layout !== 'split' && faces.length > 1) {
     // NOTE: we want split cards to include both names
     // but other double face to use the first name
-    str = faces[0].printed_name || faces[0].name;
+    str = faces[0][nameField] || faces[0].name;
   }
 
   //Trim the card name here before potentially adding art series suffix.
