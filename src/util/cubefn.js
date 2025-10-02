@@ -424,7 +424,7 @@ async function generateBalancedPack(cube, cards, seedPrefix, candidateCount = 10
     const seed = `${seedPrefix}-${baseSeed}-${i}`;
     const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
-    const draft = createDraft(cube, format, cards.mainboard, 1, { username: 'Anonymous' }, seed);
+    const draft = createDraft(cube, format, [...cards.mainboard], 1, { username: 'Anonymous' }, seed);
     const packResult = {
       seed: seedPrefix,
       pack: draft.InitialState[0][0].cards.map((cardIndex) => ({
