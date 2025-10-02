@@ -415,17 +415,18 @@ function isCubeListed(cube, user) {
  * @param {number} candidateCount - Number of pack candidates to generate (default: 10)
  * @returns {Promise<Object>} The selected pack result with bot data
  */
-async function generateBalancedPack(cube, cards, seedPrefix, candidateCount = 10) {
-  const baseTimestamp = Date.now();
+async function generateBalancedPack(cube, cards, seedPrefix, candidateCount = 10, deterministicSeed = null) {
+  // Use deterministicSeed if provided (for routes), otherwise use Date.now() (for daily P1P1)
+  const baseSeed = deterministicSeed || Date.now();
   const packCandidates = [];
 
   for (let i = 0; i < candidateCount; i++) {
-    const seed = `${seedPrefix}-${baseTimestamp}-${i}`;
+    const seed = `${seedPrefix}-${baseSeed}-${i}`;
     const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
     const draft = createDraft(cube, format, cards.mainboard, 1, { username: 'Anonymous' }, seed);
     const packResult = {
-      seed,
+      seed: seedPrefix,
       pack: draft.InitialState[0][0].cards.map((cardIndex) => ({
         ...draft.cards[cardIndex],
         details: cardFromId(draft.cards[cardIndex].cardID),
@@ -445,7 +446,7 @@ async function generateBalancedPack(cube, cards, seedPrefix, candidateCount = 10
       packResult,
       botResult,
       maxBotWeight,
-      seed,
+      seed: seedPrefix, // Use original seedPrefix for consistency
     });
   }
 

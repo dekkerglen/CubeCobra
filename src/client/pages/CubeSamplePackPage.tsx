@@ -17,9 +17,17 @@ interface SamplePackPageProps {
   seed: string;
   pack: CardType[];
   cube: Cube;
+  isBalanced?: boolean;
+  maxBotWeight?: number;
 }
 
-const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube }) => {
+const SamplePackPage: React.FC<SamplePackPageProps> = ({
+  seed,
+  pack,
+  cube,
+  isBalanced = false,
+  maxBotWeight,
+}) => {
   return (
     <MainLayout>
       <CubeLayout cube={cube} activeLink="playtest">
@@ -28,15 +36,32 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube }) => 
           <Card>
             <CardHeader>
               <Flexbox direction="row" justify="between" alignItems="center">
-                <Text semibold lg>
-                  Sample Pack
-                </Text>
+                <Flexbox direction="col" gap="1">
+                  <Text semibold lg>
+                    {isBalanced ? 'Balanced Sample Pack' : 'Sample Pack'}
+                  </Text>
+                  {isBalanced && maxBotWeight !== undefined && (
+                    <Text sm className="text-gray-600">
+                      These packs are generated with a goal of minimizing the highest bot weight in the pack. They
+                      should produce interesting picks!
+                      <br />
+                      Max pick weight: {(maxBotWeight * 100).toFixed(0)}%
+                    </Text>
+                  )}
+                </Flexbox>
                 <Flexbox direction="row" gap="2">
                   <P1P1FromPackGenerator cubeId={cube.id} seed={seed} pack={pack} />
                   <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}`}>
                     New Pack
                   </Button>
-                  <Button type="link" color="accent" href={`/cube/samplepackimage/${cube.id}/${seed}`}>
+                  <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}?balanced=true`}>
+                    Balanced Pack
+                  </Button>
+                  <Button
+                    type="link"
+                    color="accent"
+                    href={`/cube/samplepackimage/${cube.id}/${seed}${isBalanced ? '?balanced=true' : ''}`}
+                  >
                     Get image
                   </Button>
                 </Flexbox>
