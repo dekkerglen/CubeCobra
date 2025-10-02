@@ -96,7 +96,7 @@ const absoluteUrl = (url) => {
   if (!url.startsWith('/')) {
     return url;
   }
-  return `${process.env.DOMAIN}/${url}`;
+  return `http://${process.env.DOMAIN}${url}`;
 };
 
 const generatePackImage = async (cards) => {
