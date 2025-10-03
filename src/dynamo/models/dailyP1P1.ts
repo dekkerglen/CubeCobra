@@ -45,10 +45,6 @@ const dailyP1P1 = {
     lastKey?: Record<string, NativeAttributeValue>;
   }> => {
     const result = await client.scan({
-      FilterExpression: 'isActive = :isActive',
-      ExpressionAttributeValues: {
-        ':isActive': false,
-      },
       ExclusiveStartKey: lastKey,
       Limit: limit,
     });
