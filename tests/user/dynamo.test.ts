@@ -170,18 +170,14 @@ describe('User Model', () => {
       expect(result).toBeNull();
     });
 
-    it('returns hydrated user with sensitive data', async () => {
+    it('returns hydrated user without sensitive data', async () => {
       (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
         Items: [{ ...mockFullUser }],
       });
 
       const result = await User.getByEmail('TEST@example.com');
 
-      assertValidUser(result, {
-        email: mockFullUser.email,
-        //@ts-expect-error -- Ignoring for simplicity of test helpers
-        passwordHash: mockPasswordHash,
-      });
+      assertValidUser(result);
 
       expect(mockDynamoClient.query).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -204,12 +204,14 @@ router.post(
       }
       const recoveryEmail = req.body.email.toLowerCase();
 
-      const user = await User.getByEmail(recoveryEmail);
+      const userByEmail = await User.getByEmail(recoveryEmail);
 
-      if (!user) {
+      if (!userByEmail) {
         req.flash('danger', 'No user with that email found.');
         return render(req, res, 'LostPasswordPage');
       }
+
+      const user = await User.getByIdWithSensitiveData(userByEmail.id);
 
       const passwordReset = {
         owner: user.id,
@@ -258,12 +260,14 @@ router.post(
         req.flash('danger', 'Incorrect email and recovery code combination.');
         return render(req, res, 'PasswordResetPage', { code: req.body.code });
       }
-      const user = await User.getByEmail(recoveryEmail);
+      const userByEmail = await User.getByEmail(recoveryEmail);
 
-      if (!user) {
+      if (!userByEmail) {
         req.flash('danger', 'No user with that email found! Are you sure you created an account?');
         return render(req, res, 'PasswordResetPage', { code: req.body.code });
       }
+
+      const user = await User.getByIdWithSensitiveData(userByEmail.id);
 
       if (req.body.password2 !== req.body.password) {
         req.flash('danger', "New passwords don't match");

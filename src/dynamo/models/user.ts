@@ -127,7 +127,7 @@ const user = {
     });
 
     if (result.Items && result.Items.length > 0) {
-      return hydrate(result.Items[0] as UnhydratedUser);
+      return hydrate(stripSensitiveData(result.Items[0] as UserWithSensitiveInformation));
     }
 
     return null;
