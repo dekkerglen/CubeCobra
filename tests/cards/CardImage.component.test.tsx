@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import DisplayContext from 'contexts/DisplayContext';
-import { cardImageUrl } from 'utils/cardutil';
+import { cardImageUrl, cardName } from 'utils/cardutil';
 
 import CardImage from '../../src/client/components/card/CardImage';
 import { defaultDisplayContext } from '../test-utils/context';
@@ -13,11 +13,13 @@ import { createCard, createCardDetails } from '../test-utils/data';
 
 jest.mock('utils/cardutil', () => ({
   cardImageUrl: jest.fn(),
+  cardName: jest.fn(),
 }));
 
 describe('CardImage Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (cardName as jest.Mock).mockReturnValue('My Card');
   });
 
   it('renders without crashing', () => {
