@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 
+import { UserRoles } from '../../datatypes/User';
 import UserContext, { UserContextValue } from '../contexts/UserContext';
 import Advertisment from './Advertisment';
 import { Card, CardBody } from './base/Card';
@@ -33,7 +34,7 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
   const user: UserContextValue | null = useContext(UserContext);
   const [option] = useState<number>(Math.floor(Math.random() * options.length * BANNER_RATE));
 
-  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
+  if (user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON)) return <></>;
 
   if (option < options.length) {
     return <div className={`${className} py-2`}>{options[option]}</div>;

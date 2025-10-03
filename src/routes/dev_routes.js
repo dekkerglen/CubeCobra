@@ -7,6 +7,7 @@ const Blog = require('../dynamo/models/blog');
 const Feed = require('../dynamo/models/feed');
 
 import { FeedTypes } from '../datatypes/Feed';
+import { UserRoles } from '../datatypes/User';
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ router.post('/getmoreblogs', async (req, res) => {
   });
 });
 
-router.post('/blogpost', ensureRole('Admin'), async (req, res) => {
+router.post('/blogpost', ensureRole(UserRoles.ADMIN), async (req, res) => {
   try {
     const blogpost = {
       body: req.body.body,

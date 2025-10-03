@@ -7,6 +7,7 @@ import ManaPoolBulkButton from 'components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from 'components/purchase/TCGPlayerBulkButton';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 
+import { UserRoles } from '../../../datatypes/User';
 import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
@@ -184,7 +185,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                     <CardKingdomBulkButton cards={cube.cards.mainboard} />
                   </>
                 )}
-                {user && user.roles && user.roles.includes('Admin') && (
+                {user && user.roles && user.roles.includes(UserRoles.ADMIN) && (
                   <Button
                     color="accent"
                     type="link"

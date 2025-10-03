@@ -58,6 +58,29 @@ describe('User Model', () => {
   //User as hydrated and without sensitive fields
   let mockUser: UserType;
 
+  const assertValidUser = (
+    result: UserType | undefined | null,
+    assertionOverrides: Partial<Record<keyof UserType, any>> = {},
+  ) => {
+    expect(result).not.toBeUndefined();
+    expect(result).not.toBeNull();
+    if (!result) return; // TypeScript guard
+
+    const assertions = {
+      passwordHash: undefined,
+      email: undefined,
+      image: mockImage,
+      defaultPrinting: DefaultPrintingPreference,
+      gridTightness: DefaultGridTightnessPreference,
+      ...assertionOverrides,
+    };
+
+    for (const [property, value] of Object.entries(assertions)) {
+      const prop = property as keyof UserType;
+      expect(result[prop]).toEqual(value);
+    }
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetAllMocks();
@@ -101,11 +124,7 @@ describe('User Model', () => {
 
       const result = await User.getByUsername('TestUser');
 
-      expect(result.passwordHash).toBeUndefined();
-      expect(result.email).toBeUndefined();
-      expect(result.image).toEqual(mockImage);
-      expect(result.defaultPrinting).toBe(DefaultPrintingPreference);
-      expect(result.gridTightness).toBe(DefaultGridTightnessPreference);
+      assertValidUser(result);
 
       expect(mockDynamoClient.query).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -136,9 +155,11 @@ describe('User Model', () => {
 
       const result = await User.getByUsername('TestUser');
 
-      expect(result.image).toEqual(image);
-      expect(result.defaultPrinting).toBe(PrintingPreference.RECENT);
-      expect(result.gridTightness).toBe(GridTightnessPreference.TIGHT);
+      assertValidUser(result, {
+        image,
+        defaultPrinting: PrintingPreference.RECENT,
+        gridTightness: GridTightnessPreference.TIGHT,
+      });
     });
   });
 
@@ -149,17 +170,14 @@ describe('User Model', () => {
       expect(result).toBeNull();
     });
 
-    it('returns hydrated user with sensitive data', async () => {
+    it('returns hydrated user without sensitive data', async () => {
       (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce({
         Items: [{ ...mockFullUser }],
       });
 
       const result = await User.getByEmail('TEST@example.com');
 
-      expect(result.email).toEqual(mockFullUser.email);
-      expect(result.passwordHash).toEqual(mockPasswordHash);
-      expect(result.image).toEqual(mockImage);
-      expect(result.defaultPrinting).toBe(DefaultPrintingPreference);
+      assertValidUser(result);
 
       expect(mockDynamoClient.query).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -209,11 +227,7 @@ describe('User Model', () => {
       const result = await User.getById(mockFullUser.id);
 
       expect(mockDynamoClient.get).toHaveBeenCalledWith(mockFullUser.id);
-      expect(result.passwordHash).toBeUndefined();
-      expect(result.email).toBeUndefined();
-      expect(result.image).toEqual(mockImage);
-      expect(result.defaultPrinting).toBe(DefaultPrintingPreference);
-      expect(result.gridTightness).toBe(DefaultGridTightnessPreference);
+      assertValidUser(result);
     });
   });
 
@@ -233,11 +247,8 @@ describe('User Model', () => {
       const result = await User.getByIdOrUsername(mockFullUser.id);
 
       expect(mockDynamoClient.get).toHaveBeenCalledWith(mockFullUser.id);
-      expect(result.passwordHash).toBeUndefined();
-      expect(result.email).toBeUndefined();
-      expect(result.image).toEqual(mockImage);
-      expect(result.defaultPrinting).toBe(DefaultPrintingPreference);
-      expect(result.gridTightness).toBe(DefaultGridTightnessPreference);
+
+      assertValidUser(result);
     });
 
     it('returns hydrated user if found by username and not id', async () => {
@@ -248,11 +259,7 @@ describe('User Model', () => {
 
       expect(mockDynamoClient.get).toHaveBeenCalledWith('Nonexistent-ID');
 
-      expect(result.passwordHash).toBeUndefined();
-      expect(result.email).toBeUndefined();
-      expect(result.image).toEqual(mockImage);
-      expect(result.defaultPrinting).toBe(DefaultPrintingPreference);
-      expect(result.gridTightness).toBe(DefaultGridTightnessPreference);
+      assertValidUser(result);
 
       expect(mockDynamoClient.query).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -286,12 +293,8 @@ describe('User Model', () => {
       const result = await User.batchGet(['user1', 'user2']);
 
       expect(result).toHaveLength(2);
-      result.forEach((user: UserType) => {
-        //@ts-expect-error -- Password hash is in dynamo but not the User type, since it is sensitive
-        expect(user.passwordHash).toBeUndefined();
-        expect(user.email).toBeUndefined();
-        expect(user.image).toEqual(mockImage);
-        expect(user.defaultPrinting).toBe(DefaultPrintingPreference);
+      result.forEach((user: UserType | undefined) => {
+        assertValidUser(user);
       });
     });
   });
@@ -333,6 +336,7 @@ describe('User Model', () => {
 
   describe('update', () => {
     it('throws error when input is missing id', async () => {
+      //@ts-expect-error -- Invalid user being passed in
       await expect(User.update({ foobar: 'non-existent' })).rejects.toThrow(
         'Invalid document: No partition key provided',
       );
@@ -341,18 +345,20 @@ describe('User Model', () => {
     it('throws error when user not found', async () => {
       mockDynamoClient.get.mockResolvedValueOnce({ Item: null });
 
-      await expect(User.update({ id: 'non-existent' })).rejects.toThrow('Invalid document: No existing document found');
+      await expect(User.update(createUser({ id: 'non-existent' }))).rejects.toThrow(
+        'Invalid document: No existing document found',
+      );
       expect(mockDynamoClient.get).toHaveBeenCalledWith('non-existent');
     });
 
     it('updates only specified fields', async () => {
       mockDynamoClient.get.mockResolvedValueOnce({ Item: mockUser });
 
-      const updates = {
+      const updates = createUser({
         id: mockUser.id,
         about: 'New about text',
         theme: 'dark',
-      };
+      });
 
       await User.update(updates);
 
@@ -369,11 +375,11 @@ describe('User Model', () => {
     it('image details are not saved', async () => {
       mockDynamoClient.get.mockResolvedValueOnce({ Item: mockUser });
 
-      const updates = {
+      const updates = createUser({
         id: mockUser.id,
         about: 'New about text',
         hideFeatured: true,
-      };
+      });
 
       await User.update(updates);
 
@@ -391,15 +397,17 @@ describe('User Model', () => {
   });
 
   describe('batchPut', () => {
+    const sortById = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
+
     it('no existing users found', async () => {
       mockDynamoClient.batchGet.mockResolvedValueOnce([]);
       await User.batchPut([
-        {
+        createUser({
           id: 'user1',
-        },
-        {
+        }),
+        createUser({
           id: 'user2',
-        },
+        }),
       ]);
 
       expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
@@ -409,9 +417,11 @@ describe('User Model', () => {
       mockDynamoClient.batchGet.mockResolvedValueOnce([]);
       await User.batchPut([
         {
+          //@ts-expect-error -- Invalid user being passed in
           foo: 'user1',
         },
         {
+          //@ts-expect-error -- Invalid user being passed in
           foo: 'user2',
         },
       ]);
@@ -430,19 +440,17 @@ describe('User Model', () => {
 
       mockDynamoClient.batchGet.mockResolvedValueOnce([user2, user1]);
       await User.batchPut([
-        {
+        createUser({
           id: 'user1',
           about: 'This is me',
-        },
-        {
+        }),
+        createUser({
           id: 'user2',
           about: 'Not me',
-        },
+        }),
       ]);
 
       expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
-
-      const sortById = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
 
       //We don't care the order of the items in the batchPut call. expect(mockDynamoClient.batchPut).toHaveBeenCalledWith cares
       const batchPutArray = mockDynamoClient.batchPut.mock.calls[0][0];
@@ -452,6 +460,37 @@ describe('User Model', () => {
             ...user1,
             about: 'This is me',
           },
+          {
+            ...user2,
+            about: 'Not me',
+          },
+        ].sort(sortById),
+      );
+    });
+
+    it('a user to update isnt found', async () => {
+      const user2: UserType = { ...mockUser };
+      user2.id = 'user2';
+      user2.about = 'I am a bad boy';
+
+      mockDynamoClient.batchGet.mockResolvedValueOnce([user2]);
+      await User.batchPut([
+        createUser({
+          id: 'user1',
+          about: 'This is me',
+        }),
+        createUser({
+          id: 'user2',
+          about: 'Not me',
+        }),
+      ]);
+
+      expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
+
+      //We don't care the order of the items in the batchPut call. expect(mockDynamoClient.batchPut).toHaveBeenCalledWith cares
+      const batchPutArray = mockDynamoClient.batchPut.mock.calls[0][0];
+      expect(batchPutArray.sort(sortById)).toEqual(
+        [
           {
             ...user2,
             about: 'Not me',
@@ -476,23 +515,21 @@ describe('User Model', () => {
 
       mockDynamoClient.batchGet.mockResolvedValueOnce([user2, user1]);
       await User.batchPut([
-        {
+        createUser({
           id: 'user1',
           about: 'This is me',
           imageName: mockImageTwo.imageName,
           image: mockImageTwo,
-        },
-        {
+        }),
+        createUser({
           id: 'user2',
           about: 'Not me',
           imageName: mockImage.imageName,
           image: mockImage,
-        },
+        }),
       ]);
 
       expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['user1', 'user2']);
-
-      const sortById = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
 
       //We don't care the order of the items in the batchPut call. expect(mockDynamoClient.batchPut).toHaveBeenCalledWith cares
       const batchPutArray = mockDynamoClient.batchPut.mock.calls[0][0];
@@ -577,19 +614,17 @@ describe('User Model', () => {
 
       expect(mockDynamoClient.batchGet).toHaveBeenCalledWith(['aaaaa', 'bbbbb']);
 
-      const resultOne = result[0];
-      expect(resultOne.passwordHash).toBeUndefined();
-      expect(resultOne.email).toBeUndefined();
-      expect(resultOne.image).toEqual(mockImageTwo);
-      expect(resultOne.defaultPrinting).toBe(PrintingPreference.RECENT);
-      expect(resultOne.gridTightness).toBe(DefaultGridTightnessPreference);
+      assertValidUser(result[0], {
+        image: mockImageTwo,
+        defaultPrinting: PrintingPreference.RECENT,
+        gridTightness: DefaultGridTightnessPreference,
+      });
 
-      const resultTwo = result[1];
-      expect(resultTwo.passwordHash).toBeUndefined();
-      expect(resultTwo.email).toBeUndefined();
-      expect(resultTwo.image).toEqual(mockImage);
-      expect(resultTwo.defaultPrinting).toBe(DefaultPrintingPreference);
-      expect(resultTwo.gridTightness).toBe(GridTightnessPreference.TIGHT);
+      assertValidUser(result[1], {
+        image: mockImage,
+        defaultPrinting: DefaultPrintingPreference,
+        gridTightness: GridTightnessPreference.TIGHT,
+      });
     });
   });
 
@@ -598,40 +633,6 @@ describe('User Model', () => {
       await User.createTable();
 
       expect(mockDynamoClient.createTable).toHaveBeenCalled();
-    });
-  });
-
-  describe('convertUser', () => {
-    it('converts legacy user format', () => {
-      const legacyUser = {
-        _id: 'user-id',
-        username: 'Legacy',
-        username_lower: 'legacy',
-        email: 'LEGACY@EXAMPLE.COM',
-        password: 'old-hash',
-        hide_tag_colors: true,
-        followed_cubes: ['cube1'],
-        followed_users: ['user1'],
-        users_following: ['user2'],
-        image_name: 'avatar.jpg',
-        roles: ['Admin'],
-      };
-
-      const result = User.convertUser(legacyUser);
-
-      expect(result).toEqual({
-        id: 'user-id',
-        username: 'Legacy',
-        usernameLower: 'legacy',
-        email: 'legacy@example.com',
-        passwordHash: 'old-hash',
-        hideTagColors: true,
-        followedCubes: ['cube1'],
-        followedUsers: ['user1'],
-        following: ['user2'],
-        imageName: 'avatar.jpg',
-        roles: ['Admin'],
-      });
     });
   });
 });

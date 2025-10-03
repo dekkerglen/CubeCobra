@@ -13,6 +13,8 @@ import UserContext from 'contexts/UserContext';
 import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
 
+import { UserRoles } from '../../datatypes/User';
+
 interface MainLayoutProps {
   children: React.ReactNode;
 }
@@ -28,7 +30,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // if it hasn't been set, we will ask for consent
     if (!Object.prototype.hasOwnProperty.call(user, 'consentToHashedEmail')) {
       // only ask for consent if the user has ads enabled
-      return !(Array.isArray(user.roles) && user.roles.includes('Patron'));
+      return !(Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON));
     } else if (user.consentToHashedEmail === true) {
       // @ts-expect-error: 'nitroAds' may not exist on the 'window' object in some environments
       if (window.nitroAds && window.nitroAds.addUserToken) {

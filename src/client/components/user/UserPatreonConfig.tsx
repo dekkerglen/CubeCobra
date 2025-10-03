@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 
 import Patron, { PatronLevels } from '../../../datatypes/Patron';
+import { UserRoles } from '../../../datatypes/User';
 import { canBeFeatured } from '../../../util/featuredQueueUtil';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
@@ -27,7 +28,7 @@ const UserPatreonConfig: React.FC<UserPatreonConfigProps> = ({ patron, featured 
 
   return (
     <Flexbox direction="col" gap="2">
-      {user?.roles?.includes('Patron') ? (
+      {user?.roles?.includes(UserRoles.PATRON) ? (
         <p>
           Your account is linked at the <b>{PatronLevels[patron.level]}</b> level.
         </p>

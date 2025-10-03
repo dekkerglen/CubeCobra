@@ -7,8 +7,8 @@ import { CardDetails } from '../../datatypes/Card';
 import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '../../datatypes/CardPackage';
 import UserType from '../../datatypes/User';
 import createClient, { QueryInputType } from '../util';
+import User from './user';
 
-const User = require('./user');
 const { cardFromId } = require('../../util/carddb');
 
 const client = createClient({
@@ -79,7 +79,7 @@ const hydrate = async (pack?: UnhydratedCardPackage): Promise<CardPackage | unde
     }
   });
 
-  return createHydratedPackage(pack, owner, cards);
+  return createHydratedPackage(pack, owner!, cards);
 };
 
 const batchHydrate = async (packs: UnhydratedCardPackage[]): Promise<CardPackage[]> => {

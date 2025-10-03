@@ -15,6 +15,8 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 
+import { UserRoles } from '../../datatypes/User';
+
 interface DevBlogEntryProps {
   items: any[];
   setItems: (items: any[]) => void;
@@ -55,11 +57,11 @@ const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
         setTitle('');
         setBody('');
       } else {
-        // eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console -- Debugging
         console.error(json);
       }
     } else {
-      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console -- Debugging
       console.error(response);
     }
   }, [csrfFetch, title, body, setItems, items]);
@@ -111,7 +113,7 @@ const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey }) => {
       }
     }
     setLoading(false);
-  }, [csrfFetch, currentLastKey, items]);
+  }, [csrfFetch, items, setItems, currentLastKey]);
 
   return (
     <MainLayout>
@@ -121,7 +123,9 @@ const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey }) => {
         <Text semibold lg>
           Developer Blog
         </Text>
-        {user && user.roles && user.roles.includes('Admin') && <DevBlogEntry items={items} setItems={setItems} />}
+        {user && user.roles && user.roles.includes(UserRoles.ADMIN) && (
+          <DevBlogEntry items={items} setItems={setItems} />
+        )}
         {items.map((post) => (
           <BlogPost key={post.id} post={post} />
         ))}

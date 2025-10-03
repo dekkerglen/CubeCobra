@@ -9,24 +9,27 @@ export enum GridTightnessPreference {
 }
 export const DefaultGridTightnessPreference = GridTightnessPreference.LOOSE;
 
-export default interface User {
+export enum UserRoles {
+  ADMIN = 'Admin',
+  CONTENT_CREATOR = 'ContentCreator',
+  PATRON = 'Patron',
+}
+export interface UnhydratedUser {
   id: string;
   username: string;
   usernameLower?: string;
-  cubes?: Cube[];
+  cubes?: string[];
   about?: string;
   hideTagColors?: boolean;
   followedCubes?: string[];
   followedUsers?: string[]; //Who this user is following
   following?: string[]; //Who is following this user
-  image?: Image;
   imageName?: string;
-  roles?: string[];
+  roles?: UserRoles[];
   theme?: string;
   email?: string;
   hideFeatured?: boolean;
   patron?: string;
-  notifications?: Notification[];
   defaultPrinting?: PrintingPreference;
   gridTightness?: GridTightnessPreference;
   /* If true the "create blog post" action will be enabled when editing a cube.
@@ -34,4 +37,15 @@ export default interface User {
    */
   autoBlog?: boolean;
   consentToHashedEmail?: boolean;
+}
+
+export interface UserWithSensitiveInformation extends UnhydratedUser {
+  passwordHash: string;
+  email: string;
+}
+
+export default interface User extends Omit<UnhydratedUser, 'cubes'> {
+  cubes?: Cube[];
+  image?: Image;
+  notifications?: Notification[];
 }

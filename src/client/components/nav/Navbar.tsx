@@ -4,6 +4,7 @@ import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
 import { getCubeId } from 'utils/Util';
 
+import { UserRoles } from '../../../datatypes/User';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import { CardFooter } from '../base/Card';
@@ -106,8 +107,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
           <NavMenu label={user.username} navBar>
             <Flexbox direction="col" gap="2" className="p-3">
               <NavLink href={`/user/view/${user.id}`}>Your Profile</NavLink>
-              {user.roles && user.roles.includes('Admin') && <NavLink href="/admin/dashboard">Admin Page</NavLink>}
-              {user.roles && user.roles.includes('ContentCreator') && (
+              {user.roles && user.roles.includes(UserRoles.ADMIN) && <NavLink href="/admin/dashboard">Admin Page</NavLink>}
+              {user.roles && user.roles.includes(UserRoles.CONTENT_CREATOR) && (
                 <NavLink href="/content/creators">Content Creator Dashboard</NavLink>
               )}
               <CreateCubeButton>Create A New Cube</CreateCubeButton>

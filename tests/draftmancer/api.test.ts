@@ -18,6 +18,9 @@ import * as draftutil from '../../src/util/draftutil';
 import { createBasicsIds, createCard, createCardDetails, createCube } from '../test-utils/data';
 import { call, middleware } from '../test-utils/transport';
 
+//Suppress errors for better test output
+jest.spyOn(console, 'error').mockImplementation(() => {});
+
 jest.mock('../../src/util/draftbots', () => ({
   deckbuild: jest.fn(),
 }));

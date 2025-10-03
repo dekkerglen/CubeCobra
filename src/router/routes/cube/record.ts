@@ -29,7 +29,7 @@ export const handler = async (req: Request, res: Response) => {
 
     let players: UserType[] = [];
 
-    const playerIds = record.players.map((player) => player.userId).filter((id) => id);
+    const playerIds = record.players.map((player) => player.userId).filter((id) => id !== undefined);
     if (playerIds.length > 0) {
       const result = await User.batchGet(playerIds);
 

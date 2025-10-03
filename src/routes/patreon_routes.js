@@ -7,6 +7,7 @@ const express = require('express');
 const { ensureAuth } = require('./middleware');
 
 import { PatronLevels, PatronStatuses } from '../datatypes/Patron';
+import { UserRoles } from '../datatypes/User';
 const Patron = require('../dynamo/models/patron');
 const User = require('../dynamo/models/user');
 const { handleRouteError, redirect } = require('../util/render');
@@ -31,7 +32,7 @@ router.get('/unlink', ensureAuth, async (req, res) => {
     await Patron.deleteById(req.user.id);
 
     const user = await User.getById(req.user.id);
-    user.roles = user.roles.filter((role) => role !== 'Patron');
+    user.roles = user.roles.filter((role) => role !== UserRoles.PATRON);
     user.Patron = undefined;
     await User.update(user);
 
@@ -97,12 +98,12 @@ router.post('/hook', async (req, res) => {
       }
 
       document.status = PatronStatuses.ACTIVE;
-      if (!user.roles.includes('Patron')) {
-        user.roles.push('Patron');
+      if (!user.roles.includes(UserRoles.PATRON)) {
+        user.roles.push(UserRoles.PATRON);
       }
     } else if (action === 'pledges:delete') {
       document.status = PatronStatuses.INACTIVE;
-      user.roles = user.roles.filter((role) => role !== 'Patron');
+      user.roles = user.roles.filter((role) => role !== UserRoles.PATRON);
     } else {
       req.logger.error(`Recieved an unsupported patreon hook action: "${action}"`);
       return res.status(500).send({
@@ -205,8 +206,8 @@ router.get('/redirect', ensureAuth, async (req, res) => {
       await Patron.put(newPatron);
 
       const user = await User.getById(req.user.id);
-      if (!user.roles.includes('Patron')) {
-        user.roles.push('Patron');
+      if (!user.roles.includes(UserRoles.PATRON)) {
+        user.roles.push(UserRoles.PATRON);
       }
       await User.update(user);
 

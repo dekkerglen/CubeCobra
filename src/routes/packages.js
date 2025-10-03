@@ -5,6 +5,7 @@ const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const { cardFromId } = require('../util/carddb');
 
 import { CardPackageStatus } from '../datatypes/CardPackage';
+import { UserRoles } from '../datatypes/User';
 import Package from '../dynamo/models/package';
 const User = require('../dynamo/models/user');
 
@@ -203,7 +204,7 @@ router.get('/downvote/:id', ensureAuth, async (req, res) => {
   });
 });
 
-router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
+router.get('/approve/:id', ensureRole(UserRoles.ADMIN), async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
   pack.status = CardPackageStatus.APPROVED;
@@ -214,7 +215,7 @@ router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
   });
 });
 
-router.get('/unapprove/:id', ensureRole('Admin'), async (req, res) => {
+router.get('/unapprove/:id', ensureRole(UserRoles.ADMIN), async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
   pack.status = CardPackageStatus.SUBMITTED;
@@ -225,7 +226,7 @@ router.get('/unapprove/:id', ensureRole('Admin'), async (req, res) => {
   });
 });
 
-router.get('/remove/:id', ensureRole('Admin'), async (req, res) => {
+router.get('/remove/:id', ensureRole(UserRoles.ADMIN), async (req, res) => {
   await Package.delete(req.params.id);
 
   return res.status(200).send({

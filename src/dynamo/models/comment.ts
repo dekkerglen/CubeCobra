@@ -69,15 +69,16 @@ const hydrate = async (item?: UnhydratedComment): Promise<Comment | undefined> =
     return createHydratedCommentWithoutOwner(item);
   }
 
-  const owner: User = await UserModel.getById(item.owner);
-  return createHydratedComment(item, owner, getImageData(owner.imageName));
+  const owner = await UserModel.getById(item.owner);
+  return createHydratedComment(item, owner!, getImageData(owner!.imageName));
 };
 
 const batchHydrate = async (items?: UnhydratedComment[]): Promise<Comment[] | undefined> => {
   if (!items) {
     return [];
   }
-  const owners = await UserModel.batchGet(items.filter((item) => item.owner).map((item) => item.owner));
+  const ownerIds = items.filter((item) => item.owner !== undefined).map((item) => item.owner) as string[];
+  const owners = await UserModel.batchGet(ownerIds);
 
   return items.map((item) => {
     if (!item.owner || item.owner === 'null') {

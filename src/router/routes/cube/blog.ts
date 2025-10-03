@@ -131,7 +131,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     // mentions are only added for new posts and ignored on edits
     if (userMentions.length > 0) {
       for (const mention of userMentions) {
-        const mentioned: UserType = await User.getByUsername(mention);
+        const mentioned = await User.getByUsername(mention);
 
         if (mentioned) {
           mentionedUsers.push(mentioned);

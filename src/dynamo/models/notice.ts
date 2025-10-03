@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { NewNotice, Notice, NoticeStatus, UnhydratedNotice } from '../../datatypes/Notice';
 import UserType from '../../datatypes/User';
 import createClient from '../util';
-const User = require('./user');
+import User from './user';
 
 const client = createClient({
   name: 'NOTICES',
@@ -37,12 +37,12 @@ const hydrate = async (notice: UnhydratedNotice): Promise<Notice> => {
     return notice;
   }
 
-  const user = await User.getById(notice.user);
-  return createHydratedNotice(notice, user);
+  const user = await User.getById(notice.user!);
+  return createHydratedNotice(notice, user!);
 };
 
 const batchHydrate = async (notices: UnhydratedNotice[]): Promise<Notice[]> => {
-  const users: UserType[] = await User.batchGet(notices.map((notice) => notice.user));
+  const users: UserType[] = await User.batchGet(notices.map((notice) => notice.user!));
 
   return notices
     .map((notice) => {
