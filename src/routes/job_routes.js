@@ -5,7 +5,6 @@ const express = require('express');
 
 const User = require('../dynamo/models/user');
 const Content = require('../dynamo/models/content');
-const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const util = require('../util/util');
 const fq = require('../util/featuredQueue');
 const { updatePodcast } = require('../util/podcast');
@@ -22,8 +21,7 @@ router.post('/featuredcubes/rotate', async (req, res) => {
     return res.status(401).send('Invalid token.');
   }
 
-  const response = await FeaturedQueue.querySortedByDate(null, 4);
-  const rotate = await fq.rotateFeatured(response.items);
+  const rotate = await fq.rotateFeatured();
 
   if (rotate.success === 'false') {
     return res.status(500).send('featured cube rotation failed: ' + rotate.messages.join('\n'));

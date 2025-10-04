@@ -102,8 +102,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   cubes={featured}
                   lean
                   sideLink={{
-                    href: '/donate',
-                    text: 'Learn more...',
+                    href: '/queue',
+                    text: 'View Queue',
                   }}
                 />
                 {dailyP1P1 && (
@@ -122,7 +122,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   title="Featured Cubes"
                   cubes={featured}
                   lean
-                  header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+                  sideLink={{
+                    href: '/queue',
+                    text: 'View Queue',
+                  }}
                 />
                 {dailyP1P1 && (
                   <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />

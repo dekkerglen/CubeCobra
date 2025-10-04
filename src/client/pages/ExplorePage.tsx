@@ -23,7 +23,13 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ recents, featured, drafted, p
       <DynamicFlash />
       <Row>
         <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Featured Cubes" className="mt-4" cubes={featured} lean />
+          <CubesCard
+            title="Featured Cubes"
+            className="mt-4"
+            cubes={featured}
+            lean
+            sideLink={{ href: '/queue', text: 'View Queue' }}
+          />
         </Col>
         <Col lg={6} md={6} sm={12} xs={12}>
           <CubesCard

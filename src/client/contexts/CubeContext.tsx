@@ -36,6 +36,7 @@ export interface CubeWithCards extends Cube {
     mainboard: Card[];
     maybeboard: Card[];
   };
+  isInFeaturedQueue?: boolean;
 }
 
 export interface CardVersion {

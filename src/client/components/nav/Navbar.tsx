@@ -39,6 +39,7 @@ const navItems = [
     items: [
       { label: 'Explore cubes', href: '/explore' },
       { label: 'Search cubes', href: '/search' },
+      { label: 'Featured queue', href: '/queue' },
     ],
   },
   {

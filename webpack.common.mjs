@@ -129,6 +129,7 @@ export const clientConfig = merge(config, {
     LeaveWarningPage: './src/client/pages/LeaveWarningPage.tsx',
     PackagePage: './src/client/pages/PackagePage.tsx',
     FeaturedCubesQueuePage: './src/client/pages/FeaturedCubesQueuePage.tsx',
+    FeaturedQueuePage: './src/client/pages/FeaturedQueuePage.tsx',
     PackagesPage: './src/client/pages/PackagesPage.tsx',
     RecentlyUpdateCubesPage: './src/client/pages/RecentlyUpdateCubesPage.tsx',
     // MerchandisePage: './src/client/pages/MerchandisePage.tsx',

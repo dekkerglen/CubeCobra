@@ -1,77 +1,103 @@
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
 const Patron = require('../dynamo/models/patron');
-import { canBeFeatured } from './featuredQueueUtil';
+const { canBeFeatured } = require('./featuredQueueUtil');
 
-async function rotateFeatured(queue) {
-  if (queue.length < 4) {
+async function rotateFeatured() {
+  // Step 1: Fetch entire queue
+  const cubes = [];
+  let lastKey = null;
+
+  do {
+    const result = await FeaturedQueue.querySortedByDate(lastKey);
+    cubes.push(...result.items);
+    lastKey = result.lastKey;
+  } while (lastKey);
+
+  if (cubes.length < 4) {
     return {
       success: 'false',
-      messages: [`Not enough cubes in queue to rotate (need 4, have ${queue.length})`],
+      messages: [`Not enough cubes in queue to rotate (need 4, have ${cubes.length})`],
       removed: [],
       added: [],
     };
   }
 
-  const lastRotation = queue[0].featuredOn;
+  // Step 2: Check patron status for all cubes and remove ineligible ones
+  const uniqueOwners = [...new Set(cubes.map(c => c.owner))];
+  const patronData = await Promise.all(uniqueOwners.map(ownerId => Patron.getById(ownerId)));
+  const patronMap = {};
+  uniqueOwners.forEach((ownerId, index) => {
+    patronMap[ownerId] = patronData[index];
+  });
 
-  // if last rotation was less than 6 days ago, do not rotate
-  if (lastRotation && Date.now().valueOf() - lastRotation < 6 * 24 * 60 * 60 * 1000) {
-    return {
-      success: 'false',
-      messages: [`Last rotation was within 6 days`],
-      removed: [],
-      added: [],
-    };
-  }
+  const removedCubes = [];
+  const cleanupOperations = [];
 
-  const [old1, old2, new1, new2] = queue.slice(0, 4);
-
-  // re-queue cubes only if owners are still eligible
-  const owner1 = await Patron.getById(old1.owner);
-  const owner2 = await Patron.getById(old2.owner);
-
-  for (const [owner, featuredItem] of [
-    [owner1, old1],
-    [owner2, old2],
-  ]) {
-    if (canBeFeatured(owner)) {
-      featuredItem.date = Date.now().valueOf();
-      await FeaturedQueue.put(featuredItem);
-    } else {
-      await FeaturedQueue.delete(featuredItem.cube);
+  for (const cube of cubes) {
+    const patron = patronMap[cube.owner];
+    if (!canBeFeatured(patron)) {
+      removedCubes.push(cube);
+      cleanupOperations.push(FeaturedQueue.delete(cube.cube));
     }
   }
 
-  for (const cube of [new1, new2]) {
-    cube.featuredOn = Date.now().valueOf();
-    await FeaturedQueue.put(cube);
+  await Promise.all(cleanupOperations);
+
+  // Filter out removed cubes
+  const cleanQueue = cubes.filter(cube => !removedCubes.includes(cube));
+
+  if (cleanQueue.length < 4) {
+    return {
+      success: 'false',
+      messages: [`Not enough cubes in queue after patron check (need 4, have ${cleanQueue.length})`],
+      removed: removedCubes,
+      added: [],
+    };
   }
 
-  const messages = [];
+  // Step 3: Rotate - move first 2 cubes to the back
+  const now = Date.now().valueOf();
 
-  const cube1 = await Cube.getById(old1.cube);
-  const cube2 = await Cube.getById(old2.cube);
-  cube1.featured = false;
-  cube2.featured = false;
-  await Cube.update(cube1);
-  await Cube.update(cube2);
+  // Take first 2 cubes (currently featured)
+  const currentlyFeatured = cleanQueue.slice(0, 2);
 
-  const cube3 = await Cube.getById(new1.cube);
-  const cube4 = await Cube.getById(new2.cube);
-  cube3.featured = true;
-  cube4.featured = true;
-  await Cube.update(cube3);
-  await Cube.update(cube4);
+  // The next 2 cubes will become featured
+  const newFeatured = cleanQueue.slice(2, 4);
 
-  return { success: 'true', messages, removed: [old1, old2], added: [new1, new2] };
+  // Move currently featured to back of queue with new date
+  const rotateOperations = currentlyFeatured.map(item => {
+    item.date = now;
+    return FeaturedQueue.put(item);
+  });
+
+  await Promise.all(rotateOperations);
+
+  return {
+    success: 'true',
+    messages: removedCubes.length > 0 ? [`Removed ${removedCubes.length} cubes due to patron status`] : [],
+    removed: removedCubes,
+    added: newFeatured
+  };
+}
+
+async function getFeaturedCubes() {
+  // The first 2 items in the queue are always the featured cubes
+  const queueResult = await FeaturedQueue.querySortedByDate(undefined, 2);
+  if (!queueResult.items || queueResult.items.length === 0) {
+    return [];
+  }
+
+  const cubeIds = queueResult.items.map(item => item.cube);
+  const cubes = await Cube.batchGet(cubeIds);
+  return cubes;
 }
 
 async function isInFeaturedQueue(cube) {
   if (!cube) {
     return false;
   }
-  return FeaturedQueue.getById(cube.id);
+  return FeaturedQueue.getByCube(cube.id);
 }
 
 async function getFeaturedQueueForUser(userid) {
@@ -93,25 +119,21 @@ async function doesUserHaveFeaturedCube(userid) {
 }
 
 async function replaceForUser(userid, cubeid) {
-  const cubes = [];
-  let lastKey = null;
+  // Use the owner-filtered query instead of fetching entire queue
+  const cubes = await getFeaturedQueueForUser(userid);
 
-  do {
-    const result = await FeaturedQueue.querySortedByDate(lastKey);
-    cubes.push(...result.items);
-    lastKey = result.lastKey;
-  } while (lastKey);
-
-  // get index of cube with matching userid
-  const index = cubes.findIndex((cube) => cube.owner === userid);
-  const item = cubes[index];
-
-  if (index < 2) {
-    throw new Error('Cannot replace cube that is currently featured');
+  if (cubes.length === 0) {
+    throw new Error('Cannot replace cube that is not in queue');
   }
 
-  if (index === -1) {
-    throw new Error('Cannot replace cube that is not in queue');
+  const item = cubes[0]; // User should only have one cube in queue
+
+  // Check if cube is currently featured (in first 2 positions)
+  const queueResult = await FeaturedQueue.querySortedByDate(undefined, 2);
+  const isFeatured = queueResult.items.some(queueItem => queueItem.cube === item.cube);
+
+  if (isFeatured) {
+    throw new Error('Cannot replace cube that is currently featured');
   }
 
   // remove cube from queue
@@ -122,7 +144,6 @@ async function replaceForUser(userid, cubeid) {
     cube: cubeid,
     date: item.date,
     owner: userid,
-    featuredOn: null,
   });
 }
 
@@ -131,7 +152,6 @@ async function addNewCubeToQueue(userid, cubeid) {
     cube: cubeid,
     date: Date.now().valueOf(),
     owner: userid,
-    featuredOn: null,
   });
 }
 
@@ -150,6 +170,7 @@ async function removeCubeFromQueue(ownerid) {
 module.exports = {
   rotateFeatured,
   canBeFeatured,
+  getFeaturedCubes,
   isInFeaturedQueue,
   doesUserHaveFeaturedCube,
   replaceForUser,
