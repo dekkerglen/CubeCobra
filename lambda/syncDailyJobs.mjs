@@ -15,27 +15,36 @@ export const handler = async () => {
   const results = [];
 
   for (const job of jobs) {
-    try {
-      console.log(`Running ${job.name}...`);
+    let success = false;
+    for (let attempt = 1; attempt <= 3 && !success; attempt++) {
+      try {
+        console.log(`Running ${job.name}... (attempt ${attempt}/3)`);
 
-      const response = await fetch(job.url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+        const response = await fetch(job.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      } else {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const responseData = await response.text();
         console.log(`${job.name} completed:`, responseData);
         results.push({ job: job.name, status: 'success', response: responseData });
+        success = true;
+      } catch (error) {
+        console.error(`Error running ${job.name} (attempt ${attempt}/3):`, error);
+
+        if (attempt === 3) {
+          results.push({ job: job.name, status: 'error', error: error.message });
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        }
       }
-    } catch (error) {
-      console.error(`Error running ${job.name}:`, error);
-      results.push({ job: job.name, status: 'error', error: error.message });
     }
   }
 
