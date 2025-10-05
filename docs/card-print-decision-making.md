@@ -25,7 +25,7 @@ The "Reasonableness" of a print is a function that filters the possible printing
 
 The reasonable filter does not have a hard and fast definition. It does it's best to filter out non-standard printings of cards using a variety of checks, but it may not match each individual's perception.
 
-The function itself is `reasonableCard` in [carddb.ts](../src/util/carddb.ts). It depends on the Update cards logic in [update_cards.ts](../src/jobs/update_cards.ts) especially for the `isExtra` field which CubeCobra adds on top of the Scryfall Card fields.
+The function itself is `reasonableCard` in [cardutil.ts](../src/client/utils/cardutil.ts). It depends on the Update cards logic in [update_cards.ts](../src/jobs/update_cards.ts) especially for the `isExtra` field which CubeCobra adds on top of the Scryfall Card fields.
 
 Here is a short summary of what a reasonable card strives to be:
 

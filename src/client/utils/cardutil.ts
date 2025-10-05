@@ -561,6 +561,21 @@ export const cardIsLand = (card: Card): boolean => {
   return cardType(card).includes('Land') || card.colorCategory === 'Lands';
 };
 
+export function reasonableCard(card: CardDetailsType): boolean {
+  return (
+    !card.isExtra &&
+    !card.promo &&
+    !card.digital &&
+    !card.isToken &&
+    card.border_color !== 'gold' &&
+    card.promo_types === undefined &&
+    card.language === 'en' &&
+    card.tcgplayer_id !== undefined &&
+    card.collector_number.indexOf('★') === -1 &&
+    card.layout !== 'art_series'
+  );
+}
+
 export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
@@ -572,14 +587,7 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   firstprint: (details) => !details.reprint,
   firstprinting: (details) => !details.reprint,
   digital: (details) => details.digital,
-  reasonable: (details) =>
-    !details.promo &&
-    !details.digital &&
-    details.border_color !== 'gold' &&
-    details.promo_types === undefined &&
-    details.language === 'en' &&
-    details.tcgplayer_id !== undefined &&
-    details.collector_number.indexOf('★') === -1,
+  reasonable: reasonableCard,
   dfc: (details) => ['transform', 'modal_dfc', 'meld', 'double_faced_token', 'double_sided'].includes(details.layout),
   mdfc: (details) => details.layout === 'modal_dfc',
   meld: (details) => details.layout === 'meld',
