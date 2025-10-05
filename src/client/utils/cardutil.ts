@@ -561,6 +561,15 @@ export const cardIsLand = (card: Card): boolean => {
   return cardType(card).includes('Land') || card.colorCategory === 'Lands';
 };
 
+const arePromoTypesReasonable = (card: CardDetailsType): boolean => {
+  return (
+    card.promo_types === undefined ||
+    //Post Omenpaths support (https://scryfall.com/blog/through-the-omenpaths-added-plus-english-printed-text-support-235) ll
+    //UB cards have this promo type
+    (Array.isArray(card.promo_types) && card.promo_types.length === 1 && card.promo_types[0] === 'universesbeyond')
+  );
+};
+
 export function reasonableCard(card: CardDetailsType): boolean {
   return (
     !card.isExtra &&
@@ -568,7 +577,7 @@ export function reasonableCard(card: CardDetailsType): boolean {
     !card.digital &&
     !card.isToken &&
     card.border_color !== 'gold' &&
-    card.promo_types === undefined &&
+    arePromoTypesReasonable(card) &&
     card.language === 'en' &&
     card.tcgplayer_id !== undefined &&
     card.collector_number.indexOf('★') === -1 &&

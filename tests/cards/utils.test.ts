@@ -306,6 +306,18 @@ describe('reasonableCard', () => {
     expect(reasonableCard(details)).toBeFalsy();
   });
 
+  it('Unless the only promo is universes beyond', async () => {
+    const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['universesbeyond'] });
+
+    expect(reasonableCard(details)).toBeTruthy();
+  });
+
+  it('More promo types on top of UB are not reasonable', async () => {
+    const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['universesbeyond', 'surgefoil'] });
+
+    expect(reasonableCard(details)).toBeFalsy();
+  });
+
   it('Non-english cards are not reasonable', async () => {
     const details = createCardDetails({ ...overridesForNormalDetails, language: 'fr' });
 
