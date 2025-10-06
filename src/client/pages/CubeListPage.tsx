@@ -20,6 +20,8 @@ import Cube from 'datatypes/Cube';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import RotisserieDraftPanel from 'components/cube/RotisserieDraftPanel';
+import { RotoDraftContextProvider } from 'contexts/RotoDraftContext';
 
 interface CubeListPageProps {
   cube: Cube;
@@ -60,9 +62,10 @@ const CubeListPageRaw: React.FC = () => {
   }
 
   return (
-    <>
+    <RotoDraftContextProvider>
       <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
       <DynamicFlash />
+      <RotisserieDraftPanel />
       {Object.entries(changedCards)
         .map(([boardname, boardcards]) => (
           <ErrorBoundary key={boardname}>
@@ -99,7 +102,7 @@ const CubeListPageRaw: React.FC = () => {
           </ErrorBoundary>
         ))
         .reverse()}
-    </>
+    </RotoDraftContextProvider>
   );
 };
 

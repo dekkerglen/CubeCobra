@@ -2411,6 +2411,10 @@ video {
   color: rgb(133 77 14 / var(--tw-text-opacity));
 }
 
+.line-through {
+  text-decoration-line: line-through;
+}
+
 .placeholder-text-secondary::placeholder {
   --tw-placeholder-opacity: 1;
   color: rgb(var(--text-secondary) / var(--tw-placeholder-opacity));

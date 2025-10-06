@@ -11,6 +11,7 @@ import TagColorContext from '../../contexts/TagColorContext';
 import UserContext from '../../contexts/UserContext';
 import { ListGroupItem } from '../base/ListGroup';
 import withAutocard from '../WithAutocard';
+import RotoDraftContext from 'contexts/RotoDraftContext';
 
 export interface AutocardListItemProps {
   card: Card;
@@ -22,6 +23,7 @@ export interface AutocardListItemProps {
   first?: boolean;
   className?: string;
   isSelected?: boolean; // Add this prop
+  showRotoInfo?: boolean;
 }
 
 const AutocardDiv = withAutocard(ListGroupItem);
@@ -41,6 +43,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   first,
   className,
   isSelected = false, // Add default value
+  showRotoInfo = false,
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
@@ -49,6 +52,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     () => (card && card.details ? [cardName(card), card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
     [card],
   );
+  const { url: rotoUrl, rotoInfo } = useContext(RotoDraftContext);
 
   const openCardToolWindow = useCallback(() => {
     window.open(`/tool/card/${cardId}`);
@@ -87,6 +91,8 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   const emojiTags = useMemo(() => (card && card.tags ? findEmojisInTags(card.tags) : []), [card]);
 
+  const rotoPickInfo = showRotoInfo && rotoUrl !== "" ? rotoInfo.picks?.[name.toLowerCase()] : undefined;
+
   return (
     <AutocardDiv
       className={cx(`flex justify-between bg-card-${colorClassname}`, { 'font-bold': isSelected }, className)}
@@ -102,7 +108,12 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
           {children} <span>{name}</span>
         </span>
       ) : (
-        <span>{name}</span>
+        <span style={rotoPickInfo && { textDecoration: "line-through", fontStyle: "italic" }}>{name}</span>
+      )}
+      {rotoPickInfo && (
+        <span className="text-right">
+          {rotoPickInfo.playerName}
+        </span>
       )}
       {showInlineTagEmojis ? <span className="text-right">{emojiTags.join('')}</span> : ''}
     </AutocardDiv>
