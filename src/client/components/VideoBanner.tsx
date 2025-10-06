@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 
+import { UserRoles } from '../../datatypes/User';
 import UserContext from '../contexts/UserContext';
 import Advertisment from './Advertisment';
 
@@ -10,7 +11,7 @@ interface MobileBannerProps {
 const VideoBanner: React.FC<MobileBannerProps> = ({ placementId }) => {
   const user = useContext(UserContext);
 
-  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
+  if (user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON)) return <></>;
   return <Advertisment placementId={placementId} size="video" media="desktop" format="floating" refreshTime={30} />;
 };
 

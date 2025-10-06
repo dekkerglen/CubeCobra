@@ -18,10 +18,14 @@ export const handler = async (req: Request, res: Response) => {
     });
   }
 
-  const userToUpdate = await User.getByIdWithSensitiveData(user.id);
+  const userToUpdate = await User.getById(user.id);
 
+  if (!userToUpdate) {
+    return res.status(404).send({
+      success: 'false',
+    });
+  }
   userToUpdate.consentToHashedEmail = preference;
-
   await User.update(userToUpdate);
 
   return res.status(200).send({

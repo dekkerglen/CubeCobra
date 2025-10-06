@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 
+import { UserRoles } from '../../datatypes/User';
 import UserContext from '../contexts/UserContext';
 import Advertisment from './Advertisment';
 
@@ -10,7 +11,7 @@ interface SideBannerProps {
 const SideBanner: React.FC<SideBannerProps> = ({ placementId }) => {
   const user = useContext(UserContext);
 
-  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return null;
+  if (user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON)) return null;
   return <Advertisment placementId={placementId} size="side" media="desktop" format="sticky-stack" />;
 };
 
