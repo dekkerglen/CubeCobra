@@ -30,12 +30,15 @@ import Select from '../base/Select';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
 import TagColorsModal from '../modals/TagColorsModal';
+import RotisserieDraftModal from 'components/modals/RotisserieDraftModal';
+import RotoDraftContext from 'contexts/RotoDraftContext';
 
 const ArenaExportModalItem = withModal(Link, ArenaExportModal);
 const PasteBulkModalItem = withModal(Link, PasteBulkModal);
 const UploadBulkModalItem = withModal(Link, UploadBulkModal);
 const UploadBulkReplaceModalItem = withModal(Link, UploadBulkReplaceModal);
 const TagColorsModalItem = withModal(Link, TagColorsModal);
+const RotoSetupLink = withModal(Link, RotisserieDraftModal);
 
 const enc = encodeURIComponent;
 interface CubeListNavbarProps {
@@ -50,6 +53,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   const [isFilterUsed, setIsFilterUsed] = useState(true);
   const { cardsPerRow, setCardsPerRow } = useContext(DisplayContext);
   const { alerts } = useAlerts();
+  const { url: rotoURL, setUrl: setRotoURL } = React.useContext(RotoDraftContext);
 
   const { canEdit, hasCustomImages, cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, setShowUnsorted } =
     useContext(CubeContext);
@@ -100,6 +104,13 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           <Link onClick={toggleShowInlineTagEmojis}>
             {showInlineTagEmojis ? 'Hide inline emoji tags' : 'Show inline emoji tags'}
           </Link>
+          {rotoURL ? (
+            <Link onClick={() => setRotoURL("")}>
+              Clear Rotisserie Draft
+            </Link>
+          ) : (
+            <RotoSetupLink>Setup Rotisserie Draft</RotoSetupLink>
+          )}
         </Flexbox>
       </NavMenu>
       <NavMenu label={canEdit ? 'Import/Export' : 'Export'}>
