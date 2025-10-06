@@ -1,5 +1,5 @@
 import { filterCardsDetails, FilterFunction } from '../client/filtering/FilterCards';
-import { detailsToCard } from '../client/utils/cardutil';
+import { detailsToCard, reasonableCard } from '../client/utils/cardutil';
 import { SortFunctions } from '../client/utils/Sort';
 import { CardDetails, PrintingPreference } from '../datatypes/Card';
 import catalog from './cardCatalog';
@@ -63,21 +63,6 @@ export function cardFromId(id: string): CardDetails {
   }
 
   return details;
-}
-
-export function reasonableCard(card: CardDetails): boolean {
-  return (
-    !card.isExtra &&
-    !card.promo &&
-    !card.digital &&
-    !card.isToken &&
-    card.border_color !== 'gold' &&
-    card.promo_types === undefined &&
-    card.language === 'en' &&
-    card.tcgplayer_id !== undefined &&
-    card.collector_number.indexOf('★') === -1 &&
-    card.layout !== 'art_series'
-  );
 }
 
 export function reasonableId(id: string): boolean {

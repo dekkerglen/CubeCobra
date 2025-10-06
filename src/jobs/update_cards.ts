@@ -21,7 +21,6 @@ import { ManaSymbol } from 'datatypes/Mana';
 import * as cardutil from '../client/utils/cardutil';
 import { s3 } from '../dynamo/s3client';
 import { CardMetadata, fileToAttribute } from '../util/cardCatalog';
-import { reasonableCard } from '../util/carddb';
 import * as util from '../util/util';
 import { convertName, ScryfallCard, ScryfallCardFace, ScryfallSet } from './utils/update_cards';
 
@@ -128,7 +127,7 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
     if (card.image_flip) {
       cardImages.image_flip = card.image_flip;
     }
-    if (reasonableCard(card)) {
+    if (cardutil.reasonableCard(card)) {
       catalog.cardimages[normalizedName] = cardImages;
     }
   }

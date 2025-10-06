@@ -6,6 +6,7 @@ import TimeAgo from 'react-timeago';
 import { cardId, detailsToCard } from 'utils/cardutil';
 
 import CardPackageData, { CardPackageStatus } from '../../../datatypes/CardPackage';
+import { UserRoles } from '../../../datatypes/User';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
@@ -76,7 +77,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
               >
                 Add To Cube
               </AddGroupToCubeModalLink>
-              {user && user.roles && user.roles.includes('Admin') && (
+              {user && user.roles && user.roles.includes(UserRoles.ADMIN) && (
                 <>
                   {cardPackage.status === CardPackageStatus.APPROVED ? (
                     <Button outline color="primary" onClick={unapprove}>

@@ -19,8 +19,9 @@ const fq = require('../util/featuredQueue');
 
 import { ContentStatus } from '../datatypes/Content';
 import { NoticeStatus } from '../datatypes/Notice';
+import { UserRoles } from '../datatypes/User';
 
-const ensureAdmin = ensureRole('Admin');
+const ensureAdmin = ensureRole(UserRoles.ADMIN);
 
 const router = express.Router();
 
@@ -155,8 +156,8 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   if (!application.user.roles) {
     application.user.roles = [];
   }
-  if (!application.user.roles.includes(User.ROLES.CONTENT_CREATOR)) {
-    application.user.roles.push(User.ROLES.CONTENT_CREATOR);
+  if (!application.user.roles.includes(UserRoles.CONTENT_CREATOR)) {
+    application.user.roles.push(UserRoles.CONTENT_CREATOR);
   }
   await User.update(application.user);
 

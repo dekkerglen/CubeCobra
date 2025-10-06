@@ -1,4 +1,5 @@
 const shuffleSeed = require('shuffle-seed');
+const { UserRoles } = require('../datatypes/User');
 const Notification = require('../dynamo/models/notification');
 
 const Filter = require('bad-words');
@@ -321,8 +322,10 @@ const getSafeReferrer = (req /* Request */) => {
   }
 
   //Use our domain as the base in case the referrer is relative somehow
-  const url = URL.parse(referrer, getBaseUrl());
-  if (!url) {
+  let url;
+  try {
+    url = new URL(referrer, getBaseUrl());
+  } catch {
     return null;
   }
 
@@ -370,7 +373,7 @@ module.exports = {
   hasProfanity,
   fromEntries,
   isAdmin(user) {
-    return user && user.roles && user.roles.includes('Admin');
+    return user && user.roles && user.roles.includes(UserRoles.ADMIN);
   },
   addNotification,
   wrapAsyncApi,

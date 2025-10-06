@@ -7,6 +7,7 @@ const Notification = require('../dynamo/models/notification');
 const utils = require('./util');
 
 const { NotificationStatus } = require('../datatypes/Notification');
+const { UserRoles } = require('../datatypes/User');
 
 const getCubes = async (req, callback) => {
   if (!req.user) {
@@ -94,7 +95,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         bundles: getBundlesForPage(page),
         metadata: options.metadata,
         title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
-        patron: req.user && (req.user.roles || []).includes('Patron'),
+        patron: req.user && (req.user.roles || []).includes(UserRoles.PATRON),
         notice: process.env.NOTICE,
         theme,
         noindex: options.noindex || false,

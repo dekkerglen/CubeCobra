@@ -5,14 +5,15 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import DisplayContext from 'contexts/DisplayContext';
-import { cardImageUrl } from 'utils/cardutil';
 
 import CardImage from '../../src/client/components/card/CardImage';
+import { cardImageUrl } from '../../src/client/utils/cardutil';
 import { defaultDisplayContext } from '../test-utils/context';
 import { createCard, createCardDetails } from '../test-utils/data';
 
-jest.mock('utils/cardutil', () => ({
+jest.mock('../../src/client/utils/cardutil', () => ({
   cardImageUrl: jest.fn(),
+  cardName: jest.fn((card) => card.details?.name ?? ''),
 }));
 
 describe('CardImage Component', () => {
@@ -41,8 +42,9 @@ describe('CardImage Component', () => {
 
   it('calls onClick when the image is clicked', () => {
     const handleClick = jest.fn();
+    const card = createCard({ details: createCardDetails({ name: 'Test Card' }) });
 
-    render(<CardImage onClick={handleClick} />);
+    render(<CardImage card={card} onClick={handleClick} />);
 
     const image = screen.getByRole('img');
 

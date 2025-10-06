@@ -115,20 +115,22 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           </Flexbox>
         </Col>
         <Col xs={12} md={6} xl={5}>
-          {featuredPosition === 'right' && (
-            <>
-              <CubesCard
-                title="Featured Cubes"
-                cubes={featured}
-                lean
-                header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
-              />
-              {dailyP1P1 && (
-                <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />
-              )}
-            </>
-          )}
-          <RecentDraftsCard decks={decks} lastKey={lastDeckKey} />
+          <Flexbox direction="col" gap="2">
+            {featuredPosition === 'right' && (
+              <>
+                <CubesCard
+                  title="Featured Cubes"
+                  cubes={featured}
+                  lean
+                  header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+                />
+                {dailyP1P1 && (
+                  <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />
+                )}
+              </>
+            )}
+            <RecentDraftsCard decks={decks} lastKey={lastDeckKey} />
+          </Flexbox>
           <Col className="d-none d-md-block mt-3" md={4}>
             <Flexbox direction="col" gap="2">
               <Flexbox direction="row" justify="between">

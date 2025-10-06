@@ -2,7 +2,7 @@ import { isCommentType, isNotifiableCommentType } from '../../src/datatypes/Comm
 import { NoticeType } from '../../src/datatypes/Notice';
 import Comment from '../../src/dynamo/models/comment';
 import Notice from '../../src/dynamo/models/notice';
-import * as DynamoUser from '../../src/dynamo/models/user';
+import DynamoUser from '../../src/dynamo/models/user';
 import {
   addCommentHandler,
   editCommentHandler,

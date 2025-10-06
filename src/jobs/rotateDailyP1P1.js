@@ -18,7 +18,7 @@ async function rotateDailyP1P1() {
     await ensureModelsReady();
 
     // Get featured cubes queue
-    const queueResult = await FeaturedQueue.querySortedByDate();
+    const queueResult = await FeaturedQueue.querySortedByDate(null, 999);
     if (!queueResult.items || queueResult.items.length === 0) {
       console.log('No featured cubes in queue, skipping rotation');
       return;
