@@ -29,6 +29,7 @@ export interface ScryfallCard {
   id: string;
   name: string;
   printed_name?: string;
+  flavor_name?: string;
   lang: string;
   set: string;
   collector_number: string;
@@ -145,17 +146,39 @@ const ALLOWED_PRINTED_LANGUAGES = ['en'];
 export function convertName(card: ScryfallCard, preflipped: boolean) {
   const isAllowedPrintedLanguage = ALLOWED_PRINTED_LANGUAGES.includes(card.lang);
 
-  const nameField = isAllowedPrintedLanguage ? 'printed_name' : 'name';
-  let str = card[nameField] || card.name;
+  // Prefer flavor_name if present, then follow the existing logic
+  let str: string;
+  if (card.flavor_name) {
+    str = card.flavor_name;
+  } else {
+    const nameField = isAllowedPrintedLanguage ? 'printed_name' : 'name';
+    str = card[nameField] || card.name;
+  }
+
   const faces = card?.card_faces || [];
 
   //In src/jobs/update_cards.ts preflipped cards have their faces reduced to just the backside face
   if (preflipped) {
-    str = faces[0][nameField] || faces[0].name;
+    // For preflipped cards, check face flavor_name first, then follow existing logic
+    const face = faces[0];
+    if (face) {
+      if (card.flavor_name) {
+        // If card has flavor_name, use it even for preflipped
+        str = card.flavor_name;
+      } else {
+        const nameField = isAllowedPrintedLanguage ? 'printed_name' : 'name';
+        str = face[nameField] || face.name;
+      }
+    }
   } else if (card.layout !== 'split' && faces.length > 1) {
     // NOTE: we want split cards to include both names
     // but other double face to use the first name
-    str = faces[0][nameField] || faces[0].name;
+    // For multi-face cards, prefer card-level flavor_name, then face name
+    if (!card.flavor_name) {
+      const face = faces[0];
+      const nameField = isAllowedPrintedLanguage ? 'printed_name' : 'name';
+      str = face[nameField] || face.name;
+    }
   }
 
   //Trim the card name here before potentially adding art series suffix.

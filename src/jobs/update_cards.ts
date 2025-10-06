@@ -608,12 +608,12 @@ const STATIC_CARDS: ScryfallCard[] = [
       usd_foil: null,
       usd_etched: null,
       eur: null,
-      tix: null
+      tix: null,
     },
     image_uris: {
       small: '',
       normal: '/content/custom_card.png',
-      art_crop: '/content/custom_card_art_crop.png'
+      art_crop: '/content/custom_card_art_crop.png',
     },
     card_faces: undefined,
     loyalty: undefined,
@@ -637,7 +637,7 @@ const STATIC_CARDS: ScryfallCard[] = [
       vintage: 'not_legal',
       penny: 'not_legal',
       commander: 'not_legal',
-      brawl: 'not_legal'
+      brawl: 'not_legal',
     },
     layout: 'normal',
     rarity: 'common',
@@ -658,20 +658,25 @@ const STATIC_CARDS: ScryfallCard[] = [
     preview: {
       source: '',
       source_uri: '',
-      previewed_at: ''
+      previewed_at: '',
     },
     related_uris: {
       gatherer: '',
       tcgplayer_decks: '',
       edhrec: '',
-      mtgtop8: ''
+      mtgtop8: '',
     },
     all_parts: [],
-    object: 'card'
-  }
+    object: 'card',
+  },
 ];
 
-function saveStaticCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number | undefined, mpPrice: number | undefined) {
+function saveStaticCard(
+  card: ScryfallCard,
+  metadata: CardMetadata | undefined,
+  ckPrice: number | undefined,
+  mpPrice: number | undefined,
+) {
   if (card.layout === 'transform') {
     addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
   }
@@ -687,12 +692,7 @@ async function saveAllCards(
   // eslint-disable-next-line no-console
   console.info('Processing static cards...');
   for (const staticCard of STATIC_CARDS) {
-    saveStaticCard(
-      staticCard,
-      metadatadict[staticCard.oracle_id],
-      ckPrices[staticCard.id],
-      mpPrices[staticCard.id]
-    );
+    saveStaticCard(staticCard, metadatadict[staticCard.oracle_id], ckPrices[staticCard.id], mpPrices[staticCard.id]);
   }
   // eslint-disable-next-line no-console
   console.info(`Processed ${STATIC_CARDS.length} static cards.`);
