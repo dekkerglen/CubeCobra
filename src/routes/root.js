@@ -25,8 +25,8 @@ router.get('/explore', async (req, res) => {
     isCubeListed(cube, req.user),
   );
 
-  const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
-  const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
+  const { getFeaturedCubes } = require('../util/featuredQueue');
+  const featured = await getFeaturedCubes();
 
   const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
   const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.cube));
@@ -42,12 +42,32 @@ router.get('/explore', async (req, res) => {
   });
 });
 
+router.get('/queue', async (req, res) => {
+  const FeaturedQueue = require('../dynamo/models/featuredQueue');
+
+  let featured = [];
+  let lastkey = null;
+
+  do {
+    const response = await FeaturedQueue.querySortedByDate(lastkey);
+    featured = featured.concat(response.items);
+    lastkey = response.lastKey;
+  } while (lastkey);
+
+  const cubes = await Cube.batchGet(featured.map((f) => f.cube));
+  const sortedCubes = featured.map((f) => cubes.find((c) => c.id === f.cube)).filter((c) => c);
+
+  return render(req, res, 'FeaturedQueuePage', {
+    cubes: sortedCubes,
+  });
+});
+
 router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
     const posts = await Feed.getByTo(req.user.id);
 
-    const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
-    const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
+    const { getFeaturedCubes } = require('../util/featuredQueue');
+    const featured = await getFeaturedCubes();
 
     const content = await Content.getByStatus(ContentStatus.PUBLISHED);
 
@@ -96,8 +116,8 @@ router.post('/getmoredecks', ensureAuth, async (req, res) => {
 });
 
 router.get('/landing', async (req, res) => {
-  const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
-  const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
+  const { getFeaturedCubes } = require('../util/featuredQueue');
+  const featured = await getFeaturedCubes();
 
   const content = await Content.getByStatus(ContentStatus.PUBLISHED);
 

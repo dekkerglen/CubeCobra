@@ -8,11 +8,7 @@ const User = require('../dynamo/models/user');
   try {
     console.log('Checking rotation of featured cubes');
 
-    const queue = await FeaturedQueue.querySortedByDate();
-
-    const { items } = queue;
-
-    const rotate = await fq.rotateFeatured(items);
+    const rotate = await fq.rotateFeatured();
     for (const message of rotate.messages) {
       console.warn(message);
     }

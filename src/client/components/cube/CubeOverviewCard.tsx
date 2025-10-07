@@ -190,9 +190,9 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                     color="accent"
                     type="link"
                     disabled={cube.visibility !== 'pu'}
-                    href={`/cube/${cube.featured ? 'unfeature/' : 'feature/'}${cube.id}`}
+                    href={`/cube/${cube.isInFeaturedQueue ? 'unfeature/' : 'feature/'}${cube.id}`}
                   >
-                    {cube.featured ? 'Remove from featured' : 'Add to featured'}
+                    {cube.isInFeaturedQueue ? 'Remove from featured queue' : 'Add to featured queue'}
                   </Button>
                 )}
                 {user &&
