@@ -455,10 +455,23 @@ router.get('/feature/:id', ensureAuth, async (req, res) => {
       return redirect(req, res, redirectUrl);
     }
 
-    cube.featured = true;
-    await Cube.update(cube);
+    const FeaturedQueue = require('../../dynamo/models/featuredQueue');
+    const { isInFeaturedQueue } = require('../../util/featuredQueue');
 
-    req.flash('success', 'Cube updated successfully.');
+    const existingQueueItem = await isInFeaturedQueue(cube);
+    if (existingQueueItem) {
+      req.flash('danger', 'Cube is already in the featured queue');
+      return redirect(req, res, redirectUrl);
+    }
+
+    await FeaturedQueue.put({
+      cube: cube.id,
+      date: Date.now().valueOf(),
+      owner: typeof cube.owner === 'object' ? cube.owner.id : cube.owner,
+      featuredOn: null,
+    });
+
+    req.flash('success', 'Cube added to featured queue successfully.');
     return redirect(req, res, redirectUrl);
   } catch (err) {
     return handleRouteError(req, res, err, redirectUrl);
@@ -481,10 +494,18 @@ router.get('/unfeature/:id', ensureAuth, async (req, res) => {
       return redirect(req, res, redirectUrl);
     }
 
-    cube.featured = false;
-    await Cube.update(cube);
+    const FeaturedQueue = require('../../dynamo/models/featuredQueue');
+    const { isInFeaturedQueue } = require('../../util/featuredQueue');
 
-    req.flash('success', 'Cube updated successfully.');
+    const existingQueueItem = await isInFeaturedQueue(cube);
+    if (!existingQueueItem) {
+      req.flash('danger', 'Cube is not in the featured queue');
+      return redirect(req, res, redirectUrl);
+    }
+
+    await FeaturedQueue.delete(cube.id);
+
+    req.flash('success', 'Cube removed from featured queue successfully.');
     return redirect(req, res, redirectUrl);
   } catch (err) {
     return handleRouteError(req, res, err, redirectUrl);
@@ -506,6 +527,9 @@ router.get('/overview/:id', async (req, res) => {
     const blogs = await Blog.getByCube(cube.id, 1);
 
     const followersCount = cube.following.length;
+
+    const { isInFeaturedQueue } = require('../../util/featuredQueue');
+    const isInQueue = await isInFeaturedQueue(cube);
 
     // calculate cube prices
     const nameToCards = {};
@@ -555,7 +579,7 @@ router.get('/overview/:id', async (req, res) => {
       res,
       'CubeOverviewPage',
       {
-        cube,
+        cube: { ...cube, isInFeaturedQueue: !!isInQueue },
         cards,
         post: blogs && blogs.items.length > 0 ? blogs.items[0] : null,
         followed: req.user && cube.following && cube.following.some((id) => req.user.id === id),

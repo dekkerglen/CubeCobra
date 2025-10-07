@@ -46,7 +46,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, conten
         )}
         <Col md={5} sm={12}>
           <Flexbox direction="col" gap="2">
-            <CubesCard title="Featured Cubes" cubes={featured} lean>
+            <CubesCard title="Featured Cubes" cubes={featured} lean sideLink={{ href: '/queue', text: 'View Queue' }}>
               <Text lg semibold>
                 <CardBody>
                   <Link href="/explore">Explore more Cubes...</Link>
