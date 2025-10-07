@@ -1,5 +1,3 @@
-import rotateDailyP1P1 from '../../src/jobs/rotateDailyP1P1';
-
 // Mock all dependencies
 jest.mock('../../src/util/cubefn', () => ({
   generateBalancedPack: jest.fn(),
@@ -21,15 +19,17 @@ jest.mock('../../src/util/util', () => ({
   addNotification: jest.fn(),
 }));
 
+import Cube from '../../src/dynamo/models/cube';
+import dailyP1P1Model from '../../src/dynamo/models/dailyP1P1';
+import p1p1PackModel from '../../src/dynamo/models/p1p1Pack';
+import User from '../../src/dynamo/models/user';
+import rotateDailyP1P1 from '../../src/jobs/rotateDailyP1P1';
+import { initializeCardDb } from '../../src/util/cardCatalog';
 import { generateBalancedPack } from '../../src/util/cubefn';
 import { ensureModelsReady } from '../../src/util/ml';
-import { initializeCardDb } from '../../src/util/cardCatalog';
-import Cube from '../../src/dynamo/models/cube';
-import p1p1PackModel from '../../src/dynamo/models/p1p1Pack';
-import dailyP1P1Model from '../../src/dynamo/models/dailyP1P1';
-import User from '../../src/dynamo/models/user';
 import { addNotification } from '../../src/util/util';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const FeaturedQueue = require('../../src/dynamo/models/featuredQueue');
 
 describe('rotateDailyP1P1', () => {
