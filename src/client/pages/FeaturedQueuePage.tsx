@@ -45,7 +45,7 @@ const FeaturedQueuePage: React.FC<FeaturedQueuePageProps> = ({ cubes }) => {
                   rel="noopener noreferrer"
                   className="text-link hover:text-link-active"
                 >
-                  Coiling Oracle patreon member
+                  Coiling Oracle Patreon member
                 </a>
                 .
               </Text>
