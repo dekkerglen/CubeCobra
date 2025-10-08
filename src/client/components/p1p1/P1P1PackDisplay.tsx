@@ -40,7 +40,16 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
 
   const cards = pack.cards.map((card) => {
     // If card has details, convert details to card format, otherwise use the card directly
-    return card.details ? detailsToCard(card.details) : card;
+    if (card.details) {
+      const baseCard = detailsToCard(card.details);
+      // Preserve custom image URLs from the original card
+      return {
+        ...baseCard,
+        imgUrl: card.imgUrl || baseCard.imgUrl,
+        imgBackUrl: card.imgBackUrl || baseCard.imgBackUrl,
+      };
+    }
+    return card;
   });
 
   const ratings = useMemo((): number[] | undefined => {
