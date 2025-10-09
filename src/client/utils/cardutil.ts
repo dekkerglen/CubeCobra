@@ -605,6 +605,8 @@ export function reasonableCard(card: CardDetailsType): boolean {
   );
 }
 
+const isUniversesBeyond = (details: CardDetailsType) => (details.promo_types || []).includes('universesbeyond');
+
 export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
@@ -669,6 +671,8 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   triland: (details) => LandCategories.TRI.includes(details.name),
   tangoland: (details) => LandCategories.TANGO.includes(details.name),
   battleland: (details) => LandCategories.TANGO.includes(details.name),
+  universesbeyond: isUniversesBeyond,
+  ub: isUniversesBeyond,
 
   // Others from Scryfall:
   //   reserved, new, old, hires,
