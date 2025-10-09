@@ -18,6 +18,23 @@ export const DefaultElo = 1200;
 export const FINISHES = ['Non-foil', 'Foil', 'Etched', 'Alt-foil'] as const;
 export type Finish = (typeof FINISHES)[number];
 
+//Supported in the UI. Sort matching the advanced filter modal
+export const SUPPORTED_FORMATS = [
+  'Standard',
+  'Pioneer',
+  'Modern',
+  'Legacy',
+  'Vintage',
+  'Brawl',
+  'Historic',
+  'Pauper',
+  'Penny',
+  'Commander',
+];
+export type LegalityFormats = (typeof SUPPORTED_FORMATS)[number];
+
+export type Legality = 'legal' | 'not_legal' | 'banned' | 'restricted';
+
 export interface CardDetails {
   scryfall_id: string;
   oracle_id: string;
@@ -36,7 +53,7 @@ export interface CardDetails {
   scryfall_uri: string;
   rarity: string;
   produced_mana?: ManaSymbol[];
-  legalities: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>; // An empty object, could be more specific if needed
+  legalities: Record<LegalityFormats, Legality>; // An empty object, could be more specific if needed
   oracle_text: string;
   image_small?: string;
   image_normal?: string;

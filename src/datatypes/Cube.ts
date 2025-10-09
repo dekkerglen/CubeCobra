@@ -19,6 +19,19 @@ export interface CubeCards {
   maybeboard: Card[];
 }
 
+export const CUBE_CATEGORIES = [
+  'Vintage',
+  'Legacy+',
+  'Legacy',
+  'Modern',
+  'Premodern',
+  'Pioneer',
+  'Historic',
+  'Standard',
+  'Set',
+];
+export type CubeCategory = (typeof CUBE_CATEGORIES)[number];
+
 interface Cube {
   id: string;
   shortId: string;
@@ -27,7 +40,7 @@ interface Cube {
   visibility: string;
   priceVisibility: string;
   featured: boolean;
-  categoryOverride?: string;
+  categoryOverride?: CubeCategory;
   categoryPrefixes: any[];
   tagColors: TagColor[];
   defaultFormat: number;

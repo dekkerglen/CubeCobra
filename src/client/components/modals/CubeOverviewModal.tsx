@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { getCubeDescription } from 'utils/Util';
 
-import Cube from '../../../datatypes/Cube';
+import Cube, { CUBE_CATEGORIES } from '../../../datatypes/Cube';
 import Image from '../../../datatypes/Image';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import Alert from '../base/Alert';
@@ -109,15 +109,7 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
                 setSelected={(value) => setState({ ...state, categoryOverride: value })}
                 options={[
                   { value: '', label: 'None' },
-                  { value: 'Vintage', label: 'Vintage' },
-                  { value: 'Legacy+', label: 'Legacy+' },
-                  { value: 'Legacy', label: 'Legacy' },
-                  { value: 'Modern', label: 'Modern' },
-                  { value: 'Premodern', label: 'Premodern' },
-                  { value: 'Pioneer', label: 'Pioneer' },
-                  { value: 'Historic', label: 'Historic' },
-                  { value: 'Standard', label: 'Standard' },
-                  { value: 'Set', label: 'Set' },
+                  ...CUBE_CATEGORIES.map((item) => ({ value: item, label: item })),
                 ]}
               />
             </Col>

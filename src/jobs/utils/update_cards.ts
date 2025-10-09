@@ -1,4 +1,8 @@
 import { ART_SERIES_CARD_SUFFIX } from '../../client/utils/cardutil';
+import { Legality, LegalityFormats } from '../../datatypes/Card';
+
+//Add formats to pull into card details, before making them ready in the UI
+export type ScryfallLegalityFormats = LegalityFormats;
 
 export interface ScryfallCardFace {
   artist?: string;
@@ -65,18 +69,7 @@ export interface ScryfallCard {
   color_identity: string[];
   keywords: string[];
   produced_mana: string[];
-  legalities: {
-    legacy: string;
-    modern: string;
-    standard: string;
-    pioneer: string;
-    pauper: string;
-    brawl: string;
-    historic: string;
-    commander: string;
-    penny: string;
-    vintage: string;
-  };
+  legalities: Record<LegalityFormats, Legality>;
   layout: string;
   rarity: string;
   artist: string;

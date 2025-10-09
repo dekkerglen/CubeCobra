@@ -10,7 +10,7 @@ import { ColorChecksAddon } from 'components/ColorCheck';
 import NumericField from 'components/NumericField';
 import CubeContext from 'contexts/CubeContext';
 
-import { DefaultElo, FilterValues } from '../../../datatypes/Card';
+import { DefaultElo, FilterValues, SUPPORTED_FORMATS } from '../../../datatypes/Card';
 import { getLabels } from '../../utils/Sort';
 
 export interface AdvancedFilterModalProps {
@@ -269,17 +269,8 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
               value={values.legality}
               setValue={(v: string) => updateValue(v, 'legality')}
               options={[
-                { value: '', label: 'Any' },
-                { value: 'Standard', label: 'Standard' },
-                { value: 'Pioneer', label: 'Pioneer' },
-                { value: 'Modern', label: 'Modern' },
-                { value: 'Legacy', label: 'Legacy' },
-                { value: 'Vintage', label: 'Vintage' },
-                { value: 'Brawl', label: 'Brawl' },
-                { value: 'Historic', label: 'Historic' },
-                { value: 'Pauper', label: 'Pauper' },
-                { value: 'Penny', label: 'Penny' },
-                { value: 'Commander', label: 'Commander' },
+                ...[{ value: '', label: 'Any' }],
+                ...SUPPORTED_FORMATS.map((item) => ({ value: item, label: item })),
               ]}
             />
           </Flexbox>
