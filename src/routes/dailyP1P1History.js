@@ -20,6 +20,7 @@ router.get('/archive', async (req, res) => {
 
     let history = [];
     let hasMore = false;
+    let lastKey = null;
 
     if (result.items && result.items.length > 0) {
       // Get pack and cube data for each history item
@@ -38,11 +39,13 @@ router.get('/archive', async (req, res) => {
       // Filter out items where pack or cube couldn't be loaded
       history = historyWithData.filter((item) => item.pack && item.cube);
       hasMore = !!result.lastKey;
+      lastKey = result.lastKey ? JSON.stringify(result.lastKey) : null;
     }
 
     return render(req, res, 'DailyP1P1HistoryPage', {
       history,
       hasMore,
+      lastKey,
     });
   } catch (err) {
     req.logger.error('Error loading daily P1P1 archive page:', err);
