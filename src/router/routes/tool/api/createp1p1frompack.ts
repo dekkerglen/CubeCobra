@@ -17,16 +17,26 @@ const CreateP1P1FromPackSchema = Joi.object({
   seed: Joi.string().required().messages({
     'any.required': 'Seed is required',
   }),
-  cardIds: Joi.array().items(Joi.string().min(1)).min(1).max(30).required().messages({
-    'array.min': 'At least one card ID is required',
-    'array.max': 'Pack size too large (max 30 cards)',
-    'any.required': 'Card IDs array is required',
-  }),
+  cards: Joi.array()
+    .items(
+      Joi.object({
+        cardID: Joi.string().required(),
+        index: Joi.number().optional(),
+      }),
+    )
+    .min(1)
+    .max(30)
+    .required()
+    .messages({
+      'array.min': 'At least one card is required',
+      'array.max': 'Pack size too large (max 30 cards)',
+      'any.required': 'Cards array is required',
+    }),
 });
 
 export const createP1P1FromPackHandler = async (req: Request, res: Response) => {
   try {
-    const { cubeId, seed, cardIds } = req.body;
+    const { cubeId, seed, cards: packCards } = req.body;
     const { user } = req;
 
     // ensureAuth middleware guarantees user exists but we're doing this for typescript
@@ -34,27 +44,33 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Get the cube
+    // Get the cube metadata
     const cube = await Cube.getById(cubeId);
     if (!isCubeViewable(cube, user)) {
       return res.status(404).json({ error: 'Cube not found' });
     }
 
-    // Get actual Card objects from the cube for the given cardIds
+    // Get the actual cards from S3 (getById only returns metadata)
+    const cubeCards = await Cube.getCards(cubeId);
+
+    // Get actual Card objects from the cube for the given cards
     const cards: Card[] = [];
     const oracleIds: string[] = [];
 
     // Combine mainboard and maybeboard to search all cube cards
-    const allCubeCards = [...(cube.cards?.mainboard || []), ...(cube.cards?.maybeboard || [])];
+    const allCubeCards = [...(cubeCards.mainboard || []), ...(cubeCards.maybeboard || [])];
 
-
-    for (const cardId of cardIds) {
+    for (const packCard of packCards) {
       try {
-        // Find the actual Card object from the cube that matches this cardID
-        const cubeCard = allCubeCards.find((card) => card.cardID === cardId);
+        // Prefer matching by index if available (handles duplicate cardIDs with different properties)
+        // Otherwise fall back to matching by cardID (for backwards compatibility)
+        const cubeCard =
+          packCard.index !== undefined
+            ? allCubeCards.find((card) => card.index === packCard.index)
+            : allCubeCards.find((card) => card.cardID === packCard.cardID);
 
         if (cubeCard) {
-          // Use the actual Card object from the cube (with all its properties like tags, status, finish, etc.)
+          // Use the actual Card object from the cube (with all its properties like tags, status, finish, imgUrl, etc.)
           cards.push(cubeCard);
 
           // Collect oracle IDs for bot prediction (use existing details from cube card)
@@ -62,14 +78,16 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
             oracleIds.push(cubeCard.details.oracle_id);
           }
         } else {
-          req.logger.error(`Card ID ${cardId} not found in cube ${cubeId}`);
-          
+          req.logger.error(
+            `Card not found in cube ${cubeId}: cardID=${packCard.cardID}, index=${packCard.index}`,
+          );
+
           // Fallback: Create a basic card with details if not found in cube
           // This can happen if the pack was generated with different card data than what's stored in cube
-          const details = cardFromId(cardId);
+          const details = cardFromId(packCard.cardID);
           if (details) {
             const fallbackCard: Card = {
-              cardID: cardId,
+              cardID: packCard.cardID,
               tags: [],
               status: 'Owned',
               finish: 'Non-foil',
@@ -78,19 +96,19 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
               },
             };
             cards.push(fallbackCard);
-            
+
             if (details.oracle_id) {
               oracleIds.push(details.oracle_id);
             }
           }
         }
       } catch (error) {
-        // Skip invalid card IDs, log if needed
-        req.logger.error(`Error processing card ID ${cardId}:`, error);
+        // Skip invalid cards, log if needed
+        req.logger.error(`Error processing card ${packCard.cardID}:`, error);
       }
     }
 
-    // Note: Cards from cube already have details (cube.getById() calls addDetails)
+    // Note: Cards from cube already have details (Cube.getCards() calls addDetails)
     // No need to re-add details here
 
     if (cards.length === 0) {

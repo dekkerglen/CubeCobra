@@ -39,7 +39,7 @@ const P1P1FromPackGenerator: React.FC<P1P1FromPackGeneratorProps> = ({ cubeId, s
         body: JSON.stringify({
           cubeId: cubeId,
           seed: seed,
-          cardIds: pack.map((card) => card.cardID),
+          cards: pack.map((card) => ({ cardID: card.cardID, index: card.index })),
         }),
       });
 
