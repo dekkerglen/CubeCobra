@@ -1,5 +1,5 @@
 import { FilterResult, makeFilter } from '../../src/client/filtering/FilterCards';
-import Card from '../../src/datatypes/Card';
+import Card, { SUPPORTED_FORMATS } from '../../src/datatypes/Card';
 import { createCard, createCardDetails } from '../test-utils/data';
 
 describe('Name filter syntax', () => {
@@ -276,20 +276,7 @@ describe.each(formatFilters)('Format filter (%s)', (filterName) => {
     expect(result.filter?.fieldsUsed).toEqual(['legality']);
   };
 
-  const availableFormats = [
-    'Standard',
-    'Pioneer',
-    'Modern',
-    'Legacy',
-    'Vintage',
-    'Brawl',
-    'Historic',
-    'Pauper',
-    'Penny',
-    'Commander',
-  ];
-
-  it.each(availableFormats)(`${filterName} filtering (%s)`, async (formatName) => {
+  it.each(SUPPORTED_FORMATS)(`${filterName} filtering (%s)`, async (formatName) => {
     assertLegalityFilter(makeFilter(`${filterName}:${formatName}`));
     assertLegalityFilter(makeFilter(`${filterName}:"${formatName}"`));
   });

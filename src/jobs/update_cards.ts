@@ -15,14 +15,20 @@ import path from 'path';
 import { pipeline } from 'stream';
 import stream from 'stream';
 
-import { CardDetails, ColorCategory, DefaultElo } from 'datatypes/Card';
 import { ManaSymbol } from 'datatypes/Mana';
 
 import * as cardutil from '../client/utils/cardutil';
+import { CardDetails, ColorCategory, DefaultElo, Legality, SUPPORTED_FORMATS } from '../datatypes/Card';
 import { s3 } from '../dynamo/s3client';
 import { CardMetadata, fileToAttribute } from '../util/cardCatalog';
 import * as util from '../util/util';
-import { convertName, ScryfallCard, ScryfallCardFace, ScryfallSet } from './utils/update_cards';
+import {
+  convertName,
+  ScryfallCard,
+  ScryfallCardFace,
+  ScryfallLegalityFormats,
+  ScryfallSet,
+} from './utils/update_cards';
 
 interface Catalog {
   dict: Record<string, CardDetails>;
@@ -231,36 +237,13 @@ function convertCmc(card: ScryfallCard, preflipped: boolean, faceAttributeSource
   return card.cmc || 0;
 }
 
-function convertLegalities(
-  card: ScryfallCard,
-  preflipped?: boolean,
-): Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'> {
+function convertLegalities(card: ScryfallCard, preflipped?: boolean): Record<ScryfallLegalityFormats, Legality> {
   if (preflipped) {
-    return {
-      Legacy: 'not_legal',
-      Modern: 'not_legal',
-      Standard: 'not_legal',
-      Pioneer: 'not_legal',
-      Pauper: 'not_legal',
-      Brawl: 'not_legal',
-      Historic: 'not_legal',
-      Commander: 'not_legal',
-      Penny: 'not_legal',
-      Vintage: 'not_legal',
-    };
+    return { ...ALL_NOT_LEGAL };
   }
-  return {
-    Legacy: card.legalities.legacy as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Modern: card.legalities.modern as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Standard: card.legalities.standard as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Pioneer: card.legalities.pioneer as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Pauper: card.legalities.pauper as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Brawl: card.legalities.brawl as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Historic: card.legalities.historic as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Commander: card.legalities.commander as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Penny: card.legalities.penny as 'legal' | 'not_legal' | 'banned' | 'restricted',
-    Vintage: card.legalities.vintage as 'legal' | 'not_legal' | 'banned' | 'restricted',
-  };
+  return Object.fromEntries(
+    SUPPORTED_FORMATS.map((format) => [format, card.legalities[format.toLowerCase()] as Legality]),
+  );
 }
 
 function convertParsedCost(card: ScryfallCard, preflipped?: boolean) {
@@ -583,6 +566,8 @@ function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata | undefined,
   addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, false), false);
 }
 
+const ALL_NOT_LEGAL = Object.fromEntries(SUPPORTED_FORMATS.map((format) => [format, 'not_legal' as const]));
+
 // Static cards to be added to the import pipeline
 // These cards will be processed alongside cards downloaded from Scryfall
 const STATIC_CARDS: ScryfallCard[] = [
@@ -626,18 +611,7 @@ const STATIC_CARDS: ScryfallCard[] = [
     color_identity: [],
     keywords: [],
     produced_mana: [],
-    legalities: {
-      standard: 'not_legal',
-      historic: 'not_legal',
-      pioneer: 'not_legal',
-      modern: 'not_legal',
-      legacy: 'not_legal',
-      pauper: 'not_legal',
-      vintage: 'not_legal',
-      penny: 'not_legal',
-      commander: 'not_legal',
-      brawl: 'not_legal',
-    },
+    legalities: { ...ALL_NOT_LEGAL },
     layout: 'normal',
     rarity: 'common',
     artist: '',

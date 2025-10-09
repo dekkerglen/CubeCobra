@@ -1,4 +1,4 @@
-import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES } from '../../datatypes/Card';
+import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES, SUPPORTED_FORMATS } from '../../datatypes/Card';
 import {
   cardAddedTime,
   cardArtist,
@@ -483,7 +483,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
       .concat(FOUR_AND_FIVE_COLOR)
       .concat(['Land', 'Other']);
   } else if (sort === 'Legality') {
-    ret = ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pioneer', 'Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'];
+    ret = SUPPORTED_FORMATS;
   } else if (sort === 'Power') {
     const items: string[] = [];
     for (const card of cube || []) {

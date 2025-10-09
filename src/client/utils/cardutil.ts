@@ -5,6 +5,8 @@ import Card, {
   COLOR_CATEGORIES,
   ColorCategory,
   DefaultElo,
+  Legality,
+  LegalityFormats,
 } from '../../datatypes/Card';
 import {
   isGenericHybridManaSymbol,
@@ -426,9 +428,9 @@ export const cardOracleText = (card: Card): string => card.details?.oracle_text 
 
 export const cardOracleId = (card: Card): string => card.details?.oracle_id ?? '';
 
-export const cardLegalities = (card: Card): Record<string, string> => card.details?.legalities ?? {};
+export const cardLegalities = (card: Card): Record<LegalityFormats, Legality> => card.details?.legalities ?? {};
 
-const cardLegalityFilter = (card: Card, legality: string): string[] => {
+const cardLegalityFilter = (card: Card, legality: Legality): string[] => {
   const legalities = cardLegalities(card);
   return Object.keys(legalities).filter((format) => legalities[format] === legality);
 };
