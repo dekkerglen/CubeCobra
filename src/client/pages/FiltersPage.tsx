@@ -632,6 +632,10 @@ const FiltersPage: React.FC = () => (
                     query: <code>status:&quot;Premium Owned&quot;</code>,
                     description: 'All cards marked with the "Premium Owned" status.',
                   },
+                  {
+                    query: <code>is:&quot;universesbeyond&quot;</code>,
+                    description: 'All cards that are Universes Beyond. Also works with is:ub.',
+                  },
                 ]}
               />
             </Accordion>
