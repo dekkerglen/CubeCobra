@@ -18,7 +18,7 @@ import stream from 'stream';
 import { ManaSymbol } from 'datatypes/Mana';
 
 import * as cardutil from '../client/utils/cardutil';
-import { CardDetails, ColorCategory, DefaultElo, Legality, SUPPORTED_FORMATS } from '../datatypes/Card';
+import { CardDetails, ColorCategory, DefaultElo, Game, Legality, SUPPORTED_FORMATS } from '../datatypes/Card';
 import { s3 } from '../dynamo/s3client';
 import { CardMetadata, fileToAttribute } from '../util/cardCatalog';
 import * as util from '../util/util';
@@ -246,6 +246,10 @@ function convertLegalities(card: ScryfallCard, preflipped?: boolean): Record<Scr
   );
 }
 
+function convertGames(card: ScryfallCard): Game[] | undefined {
+  return card.games;
+}
+
 function convertParsedCost(card: ScryfallCard, preflipped?: boolean) {
   if (preflipped) {
     return [];
@@ -450,6 +454,7 @@ function convertCard(
   newcard.oracle_id = faceAttributeSource.oracle_id || card.oracle_id;
   newcard.cmc = convertCmc(card, preflipped, faceAttributeSource);
   newcard.legalities = convertLegalities(card, preflipped);
+  newcard.games = convertGames(card);
   newcard.parsed_cost = convertParsedCost(card, preflipped);
   newcard.colors = convertColors(card, preflipped);
   newcard.type = convertType(card, preflipped, faceAttributeSource);
