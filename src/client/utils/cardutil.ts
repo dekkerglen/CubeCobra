@@ -5,6 +5,7 @@ import Card, {
   COLOR_CATEGORIES,
   ColorCategory,
   DefaultElo,
+  Game,
   Legality,
   LegalityFormats,
 } from '../../datatypes/Card';
@@ -524,6 +525,8 @@ export const cardWordCount = (card: Card): number => {
   }
   return card.details.wordCount;
 };
+
+export const cardGames = (card: Card): Game[] => card.details?.games ?? [];
 
 export const cardDevotion = (card: Card, color: string): number => {
   let cost = cardCost(card);
