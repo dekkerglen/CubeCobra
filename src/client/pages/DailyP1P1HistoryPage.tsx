@@ -24,16 +24,18 @@ interface DailyP1P1HistoryItem extends DailyP1P1 {
 interface DailyP1P1HistoryPageProps {
   history: DailyP1P1HistoryItem[];
   hasMore: boolean;
+  lastKey?: string | null;
 }
 
 const DailyP1P1HistoryPage: React.FC<DailyP1P1HistoryPageProps> = ({
   history: initialHistory,
   hasMore: initialHasMore,
+  lastKey: initialLastKey,
 }) => {
   const [history, setHistory] = useState(initialHistory);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
-  const [lastKey, setLastKey] = useState<string | null>(null);
+  const [lastKey, setLastKey] = useState<string | null>(initialLastKey || null);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;

@@ -11,11 +11,13 @@ const client = createClient({
   indexes: [
     {
       name: 'ByDate',
-      partitionKey: 'date',
+      partitionKey: 'type',
+      sortKey: 'date',
     },
   ],
   attributes: {
     id: 'S',
+    type: 'S',
     date: 'N',
   },
 });
@@ -44,16 +46,22 @@ const dailyP1P1 = {
     items?: DailyP1P1[];
     lastKey?: Record<string, NativeAttributeValue>;
   }> => {
-    const result = await client.scan({
+    const result = await client.query({
+      IndexName: 'ByDate',
+      KeyConditionExpression: '#type = :type',
+      ExpressionAttributeNames: {
+        '#type': 'type',
+      },
+      ExpressionAttributeValues: {
+        ':type': 'HISTORY',
+      },
       ExclusiveStartKey: lastKey,
+      ScanIndexForward: false, // Most recent first
       Limit: limit,
     });
 
-    // Sort by date descending (most recent first)
-    const sortedItems = (result.Items as DailyP1P1[])?.sort((a, b) => b.date - a.date) || [];
-
     return {
-      items: sortedItems,
+      items: result.Items as DailyP1P1[],
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -63,6 +71,7 @@ const dailyP1P1 = {
     const item: DailyP1P1 = {
       ...document,
       id,
+      type: 'HISTORY',
       isActive: document.isActive,
     };
 
@@ -99,6 +108,35 @@ const dailyP1P1 = {
 
   delete: async (id: string): Promise<void> => {
     await client.delete({ id });
+  },
+
+  scan: async (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{
+    items?: DailyP1P1[];
+    lastKey?: Record<string, NativeAttributeValue>;
+  }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+
+    return {
+      items: result.Items as DailyP1P1[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+
+  update: async (item: DailyP1P1): Promise<void> => {
+    await client.update({
+      Key: { id: item.id },
+      UpdateExpression: 'SET #type = :type',
+      ExpressionAttributeNames: {
+        '#type': 'type',
+      },
+      ExpressionAttributeValues: {
+        ':type': item.type,
+      },
+    });
   },
 };
 
