@@ -13,6 +13,7 @@ import Card, {
   CubeCardEdit,
   CubeCardRemove,
   CubeCardSwap,
+  SUPPORTED_FORMATS,
 } from '../../src/datatypes/Card';
 import Content, { ContentStatus, ContentType } from '../../src/datatypes/Content';
 import Cube, { CubeImage } from '../../src/datatypes/Cube';
@@ -85,12 +86,7 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
   artist: `${generateRandomString(LETTERS, 3, 10)} ${generateRandomString(LETTERS, 5, 15)}`,
   scryfall_uri: `https://scryfall.com/${uuidv4()}`,
   rarity: 'rare',
-  legalities: {
-    modern: 'banned',
-    standard: 'not_legal',
-    vintage: 'restricted',
-    commander: 'legal',
-  },
+  legalities: Object.fromEntries(SUPPORTED_FORMATS.map((format) => [format, 'not_legal' as const])),
   oracle_text: 'oracle text goes here',
   cmc: 5,
   type: 'Instant',
@@ -112,6 +108,7 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
   },
   tokens: [],
   set_name: 'cool set',
+  games: ['paper'],
   ...overrides,
 });
 
