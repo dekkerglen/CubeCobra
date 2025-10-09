@@ -22,7 +22,7 @@ const dailyP1P1Model = require('../build/dynamo/models/dailyP1P1');
               ...item,
               type: 'HISTORY',
             });
-            totalProcessed++;
+            totalProcessed += 1;
             console.log(`Updated record ${item.id} (${totalProcessed} total)`);
           }
         }
