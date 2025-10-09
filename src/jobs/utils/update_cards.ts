@@ -2,7 +2,7 @@ import { ART_SERIES_CARD_SUFFIX } from '../../client/utils/cardutil';
 import { Legality, LegalityFormats } from '../../datatypes/Card';
 
 //Add formats to pull into card details, before making them ready in the UI
-export type ScryfallLegalityFormats = LegalityFormats;
+export type ScryfallLegalityFormats = LegalityFormats | 'Timeless' | 'Premodern';
 
 export interface ScryfallCardFace {
   artist?: string;
