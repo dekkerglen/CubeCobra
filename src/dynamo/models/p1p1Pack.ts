@@ -148,7 +148,7 @@ const p1p1Pack = {
     lastKey?: Record<string, NativeAttributeValue>,
     limit: number = 20,
   ): Promise<{
-    items?: Pick<P1P1PackDynamoData, 'id' | 'date' | 'createdBy'>[];
+    items?: (Pick<P1P1PackDynamoData, 'id' | 'date' | 'createdBy'> & { createdByUsername: string })[];
     lastKey?: Record<string, NativeAttributeValue>;
   }> => {
     const result = await client.query({
@@ -166,12 +166,21 @@ const p1p1Pack = {
       Limit: limit,
     });
 
+    // Fetch createdByUsername from S3 for each pack
+    const itemsWithUsername = await Promise.all(
+      (result.Items || []).map(async (item) => {
+        const s3Data = await getS3Data(item.id!);
+        return {
+          id: item.id!,
+          date: item.date!,
+          createdBy: item.createdBy!,
+          createdByUsername: s3Data?.createdByUsername || 'Unknown',
+        };
+      }),
+    );
+
     return {
-      items: result.Items?.map((item) => ({
-        id: item.id!,
-        date: item.date!,
-        createdBy: item.createdBy!,
-      })),
+      items: itemsWithUsername,
       lastKey: result.LastEvaluatedKey,
     };
   },
