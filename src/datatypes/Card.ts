@@ -35,6 +35,9 @@ export type LegalityFormats = (typeof SUPPORTED_FORMATS)[number];
 
 export type Legality = 'legal' | 'not_legal' | 'banned' | 'restricted';
 
+export const GAMES = ['paper', 'arena', 'mtgo'];
+export type Game = (typeof GAMES)[number];
+
 export interface CardDetails {
   scryfall_id: string;
   oracle_id: string;
@@ -97,6 +100,7 @@ export interface CardDetails {
   pickCount?: number;
   isExtra?: boolean;
   wordCount?: number;
+  games?: Game[];
 }
 
 export const allFields = [
