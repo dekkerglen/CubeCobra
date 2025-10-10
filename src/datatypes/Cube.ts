@@ -29,6 +29,7 @@ export const CUBE_CATEGORIES = [
   'Historic',
   'Standard',
   'Set',
+  'Custom',
 ];
 export type CubeCategory = (typeof CUBE_CATEGORIES)[number];
 
