@@ -225,6 +225,7 @@ function CSVtoCards(csvString) {
     notes,
     colorCategory,
     rarity,
+    custom,
   } of camelizedRows) {
     if (name) {
       const upperSet = (set || '').toUpperCase();
@@ -248,7 +249,15 @@ function CSVtoCards(csvString) {
         colorCategory: validatedColorCategory || null,
       };
 
-      const potentialIds = getAllVersionIds(card);
+      let potentialIds = [];
+      if (custom?.toLowerCase() === 'true') {
+        potentialIds = ['custom-card'];
+        card.custom_name = name;
+        card.name = 'custom-card';
+      } else {
+        potentialIds = getAllVersionIds(card);
+      }
+
       if (potentialIds && potentialIds.length > 0) {
         // First, try to find the correct set.
         const matchingSetAndNumber = potentialIds.find((id) => {
