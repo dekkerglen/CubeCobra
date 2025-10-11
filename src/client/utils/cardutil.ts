@@ -401,9 +401,22 @@ export const cardName = (card: Card): string => {
   return card.details?.name ?? '';
 };
 
-export const cardNameLower = (card: Card): string => card.details?.name_lower ?? '';
+export const cardNameLower = (card: Card): string => {
+  if (isCustomCard(card)) {
+    return (card.custom_name?.toLowerCase() || card.details?.name_lower) ?? '';
+  }
+  return card.details?.name_lower ?? '';
+};
 
-export const cardFullName = (card: Card): string => card.details?.full_name ?? '';
+export const cardFullName = (card: Card): string => {
+  if (isCustomCard(card)) {
+    const customFullName = card.custom_name
+      ? `${card.custom_name} [${cardSet(card)}-${cardCollectorNumber(card)}]`
+      : '';
+    return (customFullName || card.details?.full_name) ?? '';
+  }
+  return card.details?.full_name ?? '';
+};
 
 export const cardArtist = (card: Card): string => card.details?.artist ?? '';
 
