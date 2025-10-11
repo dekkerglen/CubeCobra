@@ -439,6 +439,7 @@ function convertCard(
   newcard.artist = card.artist;
   newcard.scryfall_uri = card.scryfall_uri;
   newcard.rarity = card.rarity;
+  newcard.reserved = card.reserved;
   if (card.produced_mana) {
     newcard.produced_mana = card.produced_mana.map((p) => p.toUpperCase() as ManaSymbol);
   } else {
@@ -634,6 +635,8 @@ const STATIC_CARDS: ScryfallCard[] = [
     illustration_id: '',
     content_warning: false,
     variation: false,
+    games: [],
+    reserved: false,
     preview: {
       source: '',
       source_uri: '',

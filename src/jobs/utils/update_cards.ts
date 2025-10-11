@@ -89,6 +89,7 @@ export interface ScryfallCard {
   content_warning: boolean;
   variation: boolean;
   games?: Game[];
+  reserved: boolean;
   preview: {
     source: string;
     source_uri: string;

@@ -81,6 +81,8 @@ export interface CardDetails {
   layout: string;
   full_art: boolean;
   error: boolean;
+  games: Game[];
+  reserved: boolean;
   prices: {
     usd?: number;
     eur?: number;
@@ -100,7 +102,6 @@ export interface CardDetails {
   pickCount?: number;
   isExtra?: boolean;
   wordCount?: number;
-  games?: Game[];
 }
 
 export const allFields = [

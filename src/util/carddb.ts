@@ -50,6 +50,7 @@ export function getPlaceholderCard(scryfall_id: string): CardDetails {
     produced_mana: [],
     keywords: [],
     games: [],
+    reserved: false,
   };
 }
 
