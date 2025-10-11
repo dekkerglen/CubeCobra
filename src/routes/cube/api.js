@@ -16,6 +16,7 @@ const util = require('../../util/util');
 const { deckbuild, calculateBasics } = require('../../util/draftbots');
 
 const { recommend } = require('../../util/ml');
+const { isValidUUID } = require('../../util/validation');
 const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../util/cubefn');
 
 // Bring in models
@@ -353,9 +354,14 @@ router.get(
 router.post(
   '/getversions',
   body([], 'body must be an array.').isArray(),
-  body('*', 'Each ID must be a valid UUID.').matches(
-    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}2?$/,
-  ),
+  body('*')
+    .custom((value) => {
+      if (!(isValidUUID(value) || value === 'custom-card')) {
+        throw new Error('body must contain uuids or custom-card');
+      }
+      return true;
+    })
+    .withMessage('Each ID must be a valid UUID or custom-card.'),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => cardFromId(cardID));
