@@ -370,11 +370,13 @@ router.post(
       versions.map((id) => cardFromId(id)).sort((a, b) => -a.released_at.localeCompare(b.released_at)),
     );
 
-    const result = util.fromEntries(
-      allVersions.map((versions, index) => [
-        cardutil.normalizeName(allDetails[index].name),
-        versions.map(({ name, scryfall_id, oracle_id, full_name: fullName, image_normal, image_flip, prices }) => ({
-          // These are the fields that may get changed when a user selects a different version
+    /* Build a map where every name from every version is a key. Necessary because now with printed name changes,
+     * all there can me multiple names across the versions of a card (when grouping by oracle id).
+     */
+    const result = {};
+    allVersions.forEach((versions) => {
+      const versionDetails = versions.map(
+        ({ name, scryfall_id, oracle_id, full_name: fullName, image_normal, image_flip, prices }) => ({
           scryfall_id,
           oracle_id,
           name,
@@ -382,9 +384,13 @@ router.post(
           image_normal,
           image_flip,
           prices,
-        })),
-      ]),
-    );
+        }),
+      );
+      versions.forEach((card) => {
+        const normalized = cardutil.normalizeName(card.name);
+        result[normalized] = versionDetails;
+      });
+    });
 
     return res.status(200).send({
       success: 'true',
