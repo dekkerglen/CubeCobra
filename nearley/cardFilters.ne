@@ -191,7 +191,7 @@ isOpValue -> ":" isValue {% ([, category]) => CARD_CATEGORY_DETECTORS[category] 
 
 isValue -> (
     "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "reprint"i | "firstprint"i | "firstprinting"i | "digital"i | "reasonable"i 
-  | "dfc"i | "mdfc"i |"tdfc"i
+  | "dfc"i | "mdfc"i | "tdfc"i
   | "meld"i | "transform"i | "split"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i
   | "vanilla"i | "modal"i | "fullart"i | "foil"i | "nonfoil"i | "etched"i | "altfoil"i
   | "bikeland"i | "cycleland"i | "bicycleland"i | "bounceland"i | "karoo"i | "canopyland"i | "canland"i | "fetchland"i
