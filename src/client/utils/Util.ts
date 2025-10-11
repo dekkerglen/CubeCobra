@@ -87,12 +87,6 @@ export function deepCopy<T>(x: T): T {
   return JSON.parse(JSON.stringify(x));
 }
 
-export function alphaCompare(a: { details: { name: string } }, b: { details: { name: string } }): number {
-  const textA = a.details.name.toUpperCase();
-  const textB = b.details.name.toUpperCase();
-  return textA.localeCompare(textB);
-}
-
 export const COLORS: [string, string][] = [
   ['White', 'W'],
   ['Blue', 'U'],
@@ -235,7 +229,6 @@ export default {
   arraysAreEqualSets,
   randomElement,
   fromEntries,
-  alphaCompare,
   COLORS,
   getCubeId,
   getCubeDescription,
