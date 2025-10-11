@@ -218,6 +218,8 @@ export const cardCmc = (card: Card): number => {
 
 export const cardId = (card: Card): string => card.cardID ?? card.details?.scryfall_id;
 
+export const isCustomCard = (card: Card): boolean => cardId(card) === 'custom-card';
+
 export const cardType = (card: Partial<Card>): string => {
   if (!card) return ''; // Defensive check for undefined card
   return card.type_line ?? card.details?.type ?? '';
@@ -393,7 +395,7 @@ export const cardIsToken = (card: Card): boolean => card.details?.isToken ?? fal
 export const cardBorderColor = (card: Card): string => card.details?.border_color ?? 'black';
 
 export const cardName = (card: Card): string => {
-  if (card.cardID === 'custom-card') {
+  if (isCustomCard(card)) {
     return (card.custom_name || card.details?.name) ?? '';
   }
   return card.details?.name ?? '';

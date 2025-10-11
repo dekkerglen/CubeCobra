@@ -15,7 +15,7 @@ const { FeedTypes } = require('../../datatypes/Feed');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom';
 
 async function updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelog, added, missing) {
   try {
@@ -223,7 +223,8 @@ function writeCard(res, card, maybe) {
     res.write(tag);
   });
   res.write(`","${cardutil.cardNotes(card)}",`);
-  res.write(`${cardutil.cardMtgoId(card)}`);
+  res.write(`${cardutil.cardMtgoId(card)},`);
+  res.write(`${cardutil.isCustomCard(card) ? 'true' : 'false'}`);
   res.write('\r\n');
 }
 
