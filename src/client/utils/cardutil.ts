@@ -189,6 +189,8 @@ export const CardDetails = (card: Card): CardDetailsType =>
     set_name: '',
     finishes: [],
     promo_types: [],
+    games: [],
+    reserved: false,
   };
 
 export const isCardCmcValid = (cmc: string | number | undefined): { valid: boolean; value: number | undefined } => {
@@ -527,6 +529,8 @@ export const cardWordCount = (card: Card): number => {
 };
 
 export const cardGames = (card: Card): Game[] => card.details?.games ?? [];
+
+export const cardIsReserved = (card: Card): boolean => card.details?.reserved ?? false;
 
 export const cardDevotion = (card: Card, color: string): number => {
   let cost = cardCost(card);

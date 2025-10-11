@@ -109,6 +109,7 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
   tokens: [],
   set_name: 'cool set',
   games: ['paper'],
+  reserved: false,
   ...overrides,
 });
 
