@@ -18,7 +18,7 @@ import stream from 'stream';
 import { ManaSymbol } from 'datatypes/Mana';
 
 import * as cardutil from '../client/utils/cardutil';
-import { CardDetails, ColorCategory, DefaultElo, Game, Legality, SUPPORTED_FORMATS } from '../datatypes/Card';
+import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '../datatypes/Card';
 import { s3 } from '../dynamo/s3client';
 import { CardMetadata, fileToAttribute } from '../util/cardCatalog';
 import * as util from '../util/util';
@@ -28,6 +28,7 @@ import {
   ScryfallCardFace,
   ScryfallLegalityFormats,
   ScryfallSet,
+  SUPPORTED_SCRYFALL_FORMATS,
 } from './utils/update_cards';
 
 interface Catalog {
@@ -242,7 +243,7 @@ function convertLegalities(card: ScryfallCard, preflipped?: boolean): Record<Scr
     return { ...ALL_NOT_LEGAL };
   }
   return Object.fromEntries(
-    SUPPORTED_FORMATS.map((format) => [format, card.legalities[format.toLowerCase()] as Legality]),
+    SUPPORTED_SCRYFALL_FORMATS.map((format) => [format, card.legalities[format.toLowerCase()] as Legality]),
   );
 }
 
@@ -571,7 +572,7 @@ function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata | undefined,
   addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, false), false);
 }
 
-const ALL_NOT_LEGAL = Object.fromEntries(SUPPORTED_FORMATS.map((format) => [format, 'not_legal' as const]));
+const ALL_NOT_LEGAL = Object.fromEntries(SUPPORTED_SCRYFALL_FORMATS.map((format) => [format, 'not_legal' as const]));
 
 // Static cards to be added to the import pipeline
 // These cards will be processed alongside cards downloaded from Scryfall
