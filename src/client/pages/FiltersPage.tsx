@@ -702,7 +702,7 @@ const FiltersPage: React.FC = () => (
                     description: 'All cards with full extended art.',
                   },
                   {
-                    query: <code>is:&quot;universesbeyond&quot;</code>,
+                    query: <code>is:universesbeyond</code>,
                     description: 'All cards that are Universes Beyond. Also works with is:ub.',
                   },
                 ]}
