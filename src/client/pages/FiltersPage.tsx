@@ -71,6 +71,9 @@ const LAND_SHORTCUTS: { primary: string; alternates?: string[] }[] = [
   {
     primary: 'battleland',
   },
+  {
+    primary: 'surveilland',
+  },
 ];
 
 const FiltersPage: React.FC = () => (

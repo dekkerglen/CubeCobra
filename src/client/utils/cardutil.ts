@@ -671,6 +671,7 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   triland: (details) => LandCategories.TRI.includes(details.name),
   tangoland: (details) => LandCategories.TANGO.includes(details.name),
   battleland: (details) => LandCategories.TANGO.includes(details.name),
+  surveilland: (details) => LandCategories.SURVIELLAND.includes(details.name),
   universesbeyond: isUniversesBeyond,
   ub: isUniversesBeyond,
 
