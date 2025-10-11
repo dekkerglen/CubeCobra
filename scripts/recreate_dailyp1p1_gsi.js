@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 const { UpdateTableCommand, DescribeTableCommand } = require('@aws-sdk/client-dynamodb');
-const client = require('../build/dynamo/client').default;
+const client = require('../build/dynamo/client');
 
 const tableName = `${process.env.DYNAMO_PREFIX}_DAILY_P1P1`;
 
