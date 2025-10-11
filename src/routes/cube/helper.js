@@ -187,8 +187,8 @@ function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = cardFromId(card.cardID).type;
   }
-  const { name, rarity, colorcategory } = cardFromId(card.cardID);
-  let { imgUrl, imgBackUrl } = card;
+  let imgUrl = cardutil.cardImageUrl(card);
+  let imgBackUrl = cardutil.cardImageBackUrl(card);
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
   } else {
@@ -203,27 +203,27 @@ function writeCard(res, card, maybe) {
   const colorColors = cardutil.cardColors(card);
   const colorCategory = cardutil.convertFromLegacyCardColorCategory(card.colorCategory);
 
-  res.write(`"${name.replaceAll(/"/g, '""')}",`);
+  res.write(`"${cardutil.cardName(card).replaceAll(/"/g, '""')}",`);
   res.write(`${cardutil.cardCmc(card)},`);
-  res.write(`"${card.type_line.replace('—', '-')}",`);
+  res.write(`"${cardutil.cardType(card).replace('—', '-')}",`);
   res.write(`${colorColors.join('')},`);
-  res.write(`"${cardFromId(card.cardID).set}",`);
-  res.write(`"${cardFromId(card.cardID).collector_number}",`);
-  res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);
-  res.write(`${colorCategory || colorcategory},`);
-  res.write(`${card.status || ''},`);
-  res.write(`${card.finish || ''},`);
+  res.write(`"${cardutil.cardSet(card)}",`);
+  res.write(`"${cardutil.cardCollectorNumber(card)}",`);
+  res.write(`${cardutil.cardRarity(card)},`);
+  res.write(`${colorCategory},`);
+  res.write(`${cardutil.cardStatus(card) || ''},`);
+  res.write(`${cardutil.cardFinish(card.finish)},`);
   res.write(`${maybe},`);
   res.write(`${imgUrl},`);
   res.write(`${imgBackUrl},"`);
-  (card.tags || []).forEach((tag, tagIndex) => {
+  cardutil.cardTags(card).forEach((tag, tagIndex) => {
     if (tagIndex !== 0) {
       res.write(';');
     }
     res.write(tag);
   });
-  res.write(`","${card.notes || ''}",`);
-  res.write(`${cardFromId(card.cardID).mtgo_id || ''}`);
+  res.write(`","${cardutil.cardNotes(card)}",`);
+  res.write(`${cardutil.cardMtgoId(card)}`);
   res.write('\r\n');
 }
 
