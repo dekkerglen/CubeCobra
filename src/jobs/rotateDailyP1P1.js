@@ -20,9 +20,10 @@ async function rotateDailyP1P1() {
     // Idempotency check: If there's already an active daily P1P1 from today, don't create another
     const currentDailyP1P1 = await dailyP1P1Model.getCurrentDailyP1P1();
     if (currentDailyP1P1) {
-      // Check if it was created within the last 23 hours (accounting for the 6-hour offset in setActiveDailyP1P1)
-      const twentyThreeHoursAgo = Date.now() - 23 * 60 * 60 * 1000;
-      if (currentDailyP1P1.date > twentyThreeHoursAgo) {
+      // Check if it was created within the last 23 hours
+      // Note: stored date has +6 hour offset, so we check against (now - 17 hours) to effectively check creation time > (now - 23 hours)
+      const seventeenHoursAgo = Date.now() - 17 * 60 * 60 * 1000;
+      if (currentDailyP1P1.date > seventeenHoursAgo) {
         console.log('Daily P1P1 already exists for today, skipping rotation');
         return {
           success: true,
