@@ -273,11 +273,11 @@ const FiltersPage: React.FC = () => (
                   },
                   {
                     query: <code>is:spell</code>,
-                    description: 'cards that spells.',
+                    description: 'cards that are spells.',
                   },
                   {
                     query: <code>is:permanent</code>,
-                    description: 'cards that permanents.',
+                    description: 'cards that are permanents.',
                   },
                 ]}
               />
@@ -490,7 +490,7 @@ const FiltersPage: React.FC = () => (
                   },
                   {
                     query: <code>is:firstprint</code>,
-                    description: 'All cards illustrated by artists with "reb" in their name.',
+                    description: 'All first printings of cards.',
                   },
                 ]}
               />
