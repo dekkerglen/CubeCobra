@@ -16,6 +16,7 @@ const util = require('../../util/util');
 const { deckbuild, calculateBasics } = require('../../util/draftbots');
 
 const { recommend } = require('../../util/ml');
+const { isValidUUID } = require('../../util/validation');
 const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../util/cubefn');
 
 // Bring in models
@@ -353,9 +354,14 @@ router.get(
 router.post(
   '/getversions',
   body([], 'body must be an array.').isArray(),
-  body('*', 'Each ID must be a valid UUID.').matches(
-    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}2?$/,
-  ),
+  body('*')
+    .custom((value) => {
+      if (!(isValidUUID(value) || value === 'custom-card')) {
+        throw new Error('body must contain uuids or custom-card');
+      }
+      return true;
+    })
+    .withMessage('Each ID must be a valid UUID or custom-card.'),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => cardFromId(cardID));
@@ -364,11 +370,13 @@ router.post(
       versions.map((id) => cardFromId(id)).sort((a, b) => -a.released_at.localeCompare(b.released_at)),
     );
 
-    const result = util.fromEntries(
-      allVersions.map((versions, index) => [
-        cardutil.normalizeName(allDetails[index].name),
-        versions.map(({ name, scryfall_id, oracle_id, full_name: fullName, image_normal, image_flip, prices }) => ({
-          // These are the fields that may get changed when a user selects a different version
+    /* Build a map where every name from every version is a key. Necessary because now with printed name changes,
+     * there can be multiple names across the versions of a card (when grouping by oracle id).
+     */
+    const result = {};
+    allVersions.forEach((versions) => {
+      const versionDetails = versions.map(
+        ({ name, scryfall_id, oracle_id, full_name: fullName, image_normal, image_flip, prices }) => ({
           scryfall_id,
           oracle_id,
           name,
@@ -376,9 +384,13 @@ router.post(
           image_normal,
           image_flip,
           prices,
-        })),
-      ]),
-    );
+        }),
+      );
+      versions.forEach((card) => {
+        const normalized = cardutil.normalizeName(card.name);
+        result[normalized] = versionDetails;
+      });
+    });
 
     return res.status(200).send({
       success: 'true',
