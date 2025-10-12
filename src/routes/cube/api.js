@@ -371,7 +371,7 @@ router.post(
     );
 
     /* Build a map where every name from every version is a key. Necessary because now with printed name changes,
-     * all there can me multiple names across the versions of a card (when grouping by oracle id).
+     * there can be multiple names across the versions of a card (when grouping by oracle id).
      */
     const result = {};
     allVersions.forEach((versions) => {
