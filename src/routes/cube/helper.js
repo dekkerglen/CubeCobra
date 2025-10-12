@@ -212,7 +212,7 @@ function writeCard(res, card, maybe) {
   res.write(`${cardutil.cardRarity(card)},`);
   res.write(`${colorCategory},`);
   res.write(`${cardutil.cardStatus(card) || ''},`);
-  res.write(`${cardutil.cardFinish(card.finish)},`);
+  res.write(`${cardutil.cardFinish(card)},`);
   res.write(`${maybe},`);
   res.write(`${imgUrl},`);
   res.write(`${imgBackUrl},"`);
