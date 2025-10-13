@@ -61,7 +61,8 @@ import {
   cardDevotion,
   cardLegalIn,
   cardBannedIn,
-  cardRestrictedIn
+  cardRestrictedIn,
+  cardGames,
 } from '../../utils/cardutil';
 
 
@@ -1980,6 +1981,12 @@ var grammar = {
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$51"]},
     {"name": "isValue$subexpression$1$subexpression$52", "symbols": [/[bB]/, /[aA]/, /[tT]/, /[tT]/, /[lL]/, /[eE]/, /[lL]/, /[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$52"]},
+    {"name": "isValue$subexpression$1$subexpression$53", "symbols": [/[sS]/, /[uU]/, /[rR]/, /[vV]/, /[eE]/, /[iI]/, /[lL]/, /[lL]/, /[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$53"]},
+    {"name": "isValue$subexpression$1$subexpression$54", "symbols": [/[uU]/, /[nN]/, /[iI]/, /[vV]/, /[eE]/, /[rR]/, /[sS]/, /[eE]/, /[sS]/, /[bB]/, /[eE]/, /[yY]/, /[oO]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$54"]},
+    {"name": "isValue$subexpression$1$subexpression$55", "symbols": [/[uU]/, /[bB]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$55"]},
     {"name": "isValue", "symbols": ["isValue$subexpression$1"], "postprocess": ([[category]]) => category.toLowerCase()},
     {"name": "powerWords$subexpression$1$subexpression$1", "symbols": [/[pP]/, /[oO]/, /[wW]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "powerWords$subexpression$1", "symbols": ["powerWords$subexpression$1$subexpression$1"]},

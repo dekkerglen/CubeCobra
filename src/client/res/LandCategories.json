@@ -187,5 +187,18 @@
     "Sandsteppe Citadel",
     "Savage Lands",
     "Seaside Citadel"
+  ],
+
+  "SURVEILLAND": [
+   "Commercial District",
+    "Elegant Parlor",
+    "Hedge Maze",
+    "Lush Portico",
+    "Meticulous Archive",
+    "Raucous Theater",
+    "Shadowy Backstreet",
+    "Thundering Falls",
+    "Undercity Sewers",
+    "Underground Mortuary"
   ]
 }

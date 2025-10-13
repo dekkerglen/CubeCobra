@@ -5,6 +5,9 @@ import Card, {
   COLOR_CATEGORIES,
   ColorCategory,
   DefaultElo,
+  Game,
+  Legality,
+  LegalityFormats,
 } from '../../datatypes/Card';
 import {
   isGenericHybridManaSymbol,
@@ -186,6 +189,8 @@ export const CardDetails = (card: Card): CardDetailsType =>
     set_name: '',
     finishes: [],
     promo_types: [],
+    games: [],
+    reserved: false,
   };
 
 export const isCardCmcValid = (cmc: string | number | undefined): { valid: boolean; value: number | undefined } => {
@@ -426,9 +431,9 @@ export const cardOracleText = (card: Card): string => card.details?.oracle_text 
 
 export const cardOracleId = (card: Card): string => card.details?.oracle_id ?? '';
 
-export const cardLegalities = (card: Card): Record<string, string> => card.details?.legalities ?? {};
+export const cardLegalities = (card: Card): Record<LegalityFormats, Legality> => card.details?.legalities ?? {};
 
-const cardLegalityFilter = (card: Card, legality: string): string[] => {
+const cardLegalityFilter = (card: Card, legality: Legality): string[] => {
   const legalities = cardLegalities(card);
   return Object.keys(legalities).filter((format) => legalities[format] === legality);
 };
@@ -523,6 +528,10 @@ export const cardWordCount = (card: Card): number => {
   return card.details.wordCount;
 };
 
+export const cardGames = (card: Card): Game[] => card.details?.games ?? [];
+
+export const cardIsReserved = (card: Card): boolean => card.details?.reserved ?? false;
+
 export const cardDevotion = (card: Card, color: string): number => {
   let cost = cardCost(card);
   if (cost && cardLayout(card) === 'adventure') cost = cost.slice(cost.findIndex((x) => x === 'split') + 1);
@@ -600,6 +609,8 @@ export function reasonableCard(card: CardDetailsType): boolean {
   );
 }
 
+const isUniversesBeyond = (details: CardDetailsType) => (details.promo_types || []).includes('universesbeyond');
+
 export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
@@ -664,6 +675,9 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   triland: (details) => LandCategories.TRI.includes(details.name),
   tangoland: (details) => LandCategories.TANGO.includes(details.name),
   battleland: (details) => LandCategories.TANGO.includes(details.name),
+  surveilland: (details) => LandCategories.SURVEILLAND.includes(details.name),
+  universesbeyond: isUniversesBeyond,
+  ub: isUniversesBeyond,
 
   // Others from Scryfall:
   //   reserved, new, old, hires,
