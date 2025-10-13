@@ -353,7 +353,7 @@ router.get(
 
 router.post(
   '/getversions',
-  body([], 'body must be an array.').isArray(),
+  body('', 'body must be an array.').isArray(),
   body('*')
     .custom((value) => {
       if (!(isValidUUID(value) || value === 'custom-card')) {
