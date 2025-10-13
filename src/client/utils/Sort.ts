@@ -1,4 +1,4 @@
-import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES } from '../../datatypes/Card';
+import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES, SUPPORTED_FORMATS } from '../../datatypes/Card';
 import {
   cardAddedTime,
   cardArtist,
@@ -10,6 +10,7 @@ import {
   cardDevotion,
   cardElo,
   cardFinish,
+  cardName,
   cardPickCount,
   cardPopularity,
   cardPrice,
@@ -25,7 +26,7 @@ import {
   COLOR_COMBINATIONS,
   convertFromLegacyCardColorCategory,
 } from './cardutil';
-import { alphaCompare, arrayIsSubset, fromEntries } from './Util';
+import { arrayIsSubset, fromEntries } from './Util';
 
 const COLOR_MAP: Record<string, string> = {
   W: 'White',
@@ -257,7 +258,11 @@ const normalizeCollectorNumberForSorting = (card: Card): string => {
 };
 
 export const SortFunctions: Record<string, (a: any, b: any) => number> = {
-  Alphabetical: alphaCompare,
+  Alphabetical: (a: Card, b: Card): number => {
+    const textA = cardName(a).toUpperCase();
+    const textB = cardName(b).toUpperCase();
+    return textA.localeCompare(textB);
+  },
   'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
   Price: (a, b) => (cardPrice(a) ?? 0) - (cardPrice(b) ?? 0),
   Elo: (a, b) => cardElo(a) - cardElo(b),
@@ -478,7 +483,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
       .concat(FOUR_AND_FIVE_COLOR)
       .concat(['Land', 'Other']);
   } else if (sort === 'Legality') {
-    ret = ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pioneer', 'Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'];
+    ret = SUPPORTED_FORMATS;
   } else if (sort === 'Power') {
     const items: string[] = [];
     for (const card of cube || []) {

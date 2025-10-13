@@ -1,6 +1,7 @@
 const express = require('express');
 
 const sortutil = require('../../client/utils/Sort');
+const { cardCollectorNumber, cardName, cardSet } = require('../../client/utils/cardutil');
 const filterutil = require('../../client/filtering/FilterCards');
 const { cardFromId } = require('../../util/carddb');
 
@@ -56,7 +57,7 @@ router.get('/cubecobra/:id', async (req, res) => {
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of mainboard) {
-      res.write(`${card.details.full_name}\r\n`);
+      res.write(`${cardName(card)}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -128,7 +129,7 @@ router.get('/forge/:id', async (req, res) => {
     res.write(`name=${cube.name}\r\n`);
     res.write('[Main]\r\n');
     for (const card of mainboard) {
-      res.write(`1 ${card.details.name}|${card.details.set.toUpperCase()}\r\n`);
+      res.write(`1 ${cardName(card)}|${cardSet(card).toUpperCase()}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -185,7 +186,7 @@ router.get('/xmage/:id', async (req, res) => {
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of mainboard) {
-      res.write(`1 [${card.details.set.toUpperCase()}:${card.details.collector_number}] ${card.details.name}\r\n`);
+      res.write(`1 [${cardSet(card).toUpperCase()}:${cardCollectorNumber(card)}] ${cardName(card)}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -218,7 +219,7 @@ router.get('/plaintext/:id', async (req, res) => {
 
         res.write(`# ${boardname}\r\n`);
         for (const card of sorted) {
-          res.write(`${card.details.name}\r\n`);
+          res.write(`${cardName(card)}\r\n`);
         }
         res.write(`\r\n`);
       }

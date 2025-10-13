@@ -16,7 +16,6 @@ import {
   cardEtchedPrice,
   cardFinish,
   cardFoilPrice,
-  cardId,
   cardName,
   cardPrice,
   cardPriceEur,
@@ -26,6 +25,7 @@ import {
   cardTix,
   cardType,
   isCardCmcValid,
+  isCustomCard,
   normalizeName,
 } from 'utils/cardutil';
 import { getLabels } from 'utils/Sort';
@@ -279,7 +279,7 @@ const CardModal: React.FC<CardModalProps> = ({
             </Col>
             <Col xs={12} sm={6}>
               <Flexbox direction="col" gap="2">
-                {cardId(card) === 'custom-card' ? (
+                {isCustomCard(card) ? (
                   <Input
                     label="Name"
                     type="text"

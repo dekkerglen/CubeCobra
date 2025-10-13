@@ -234,9 +234,10 @@ export function CubeContextProvider({
 
   const fetchCardVersions = useCallback(
     async (ids: string[]) => {
+      //With custom cards and have lots of duplicate ids, so use a set to reduce bandwidth
       const response = await csrfFetch(`/cube/api/getversions`, {
         method: 'POST',
-        body: JSON.stringify(ids),
+        body: JSON.stringify([...new Set(ids)]),
         headers: {
           'Content-Type': 'application/json',
         },

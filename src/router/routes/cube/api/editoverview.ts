@@ -1,4 +1,4 @@
-import CubeType from '../../../../datatypes/Cube';
+import CubeType, { CUBE_CATEGORIES } from '../../../../datatypes/Cube';
 import Cube from '../../../../dynamo/models/cube';
 import CubeHash from '../../../../dynamo/models/cubeHash';
 import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
@@ -73,18 +73,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
 
     // cube category override
     if (updatedCube.categoryOverride !== null) {
-      const categories = [
-        '',
-        'Vintage',
-        'Legacy+',
-        'Legacy',
-        'Modern',
-        'Premodern',
-        'Pioneer',
-        'Historic',
-        'Standard',
-        'Set',
-      ];
+      const categories = ['', ...CUBE_CATEGORIES];
 
       if (updatedCube.categoryOverride && !categories.includes(updatedCube.categoryOverride)) {
         res.status(400).json({ error: 'Not a valid category override.' });

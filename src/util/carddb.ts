@@ -1,7 +1,7 @@
 import { filterCardsDetails, FilterFunction } from '../client/filtering/FilterCards';
 import { detailsToCard, reasonableCard } from '../client/utils/cardutil';
 import { SortFunctions } from '../client/utils/Sort';
-import { CardDetails, PrintingPreference } from '../datatypes/Card';
+import { CardDetails, PrintingPreference, SUPPORTED_FORMATS } from '../datatypes/Card';
 import catalog from './cardCatalog';
 
 // eslint-disable-next-line camelcase
@@ -25,7 +25,7 @@ export function getPlaceholderCard(scryfall_id: string): CardDetails {
     artist: '',
     scryfall_uri: '',
     rarity: '',
-    legalities: {},
+    legalities: Object.fromEntries(SUPPORTED_FORMATS.map((format) => [format, 'not_legal' as const])),
     oracle_text: '',
     image_normal: 'https://img.scryfall.com/errors/missing.jpg',
     cmc: 0,
@@ -49,6 +49,8 @@ export function getPlaceholderCard(scryfall_id: string): CardDetails {
     set_name: '',
     produced_mana: [],
     keywords: [],
+    games: [],
+    reserved: false,
   };
 }
 

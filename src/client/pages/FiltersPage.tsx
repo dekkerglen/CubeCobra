@@ -12,6 +12,70 @@ import MainLayout from 'layouts/MainLayout';
 
 import { CARD_STATUSES, FINISHES } from '../../datatypes/Card';
 
+const LAND_SHORTCUTS: { primary: string; alternates?: string[] }[] = [
+  {
+    primary: 'bikeland',
+    alternates: ['cycleland', 'bicycleland'],
+  },
+  {
+    primary: 'bounceland',
+    alternates: ['karoo'],
+  },
+  {
+    primary: 'canopyland',
+    alternates: ['canland'],
+  },
+  {
+    primary: 'fetchland',
+  },
+  {
+    primary: 'checkland',
+  },
+  {
+    primary: 'dual',
+  },
+  {
+    primary: 'fastland',
+  },
+  {
+    primary: 'filterland',
+  },
+  {
+    primary: 'gainland',
+  },
+  {
+    primary: 'painland',
+  },
+  {
+    primary: 'scryland',
+  },
+  {
+    primary: 'shadowland',
+  },
+  {
+    primary: 'shockland',
+  },
+  {
+    primary: 'storageland',
+  },
+  {
+    primary: 'creatureland',
+    alternates: ['manland'],
+  },
+  {
+    primary: 'triland',
+  },
+  {
+    primary: 'tangoland',
+  },
+  {
+    primary: 'battleland',
+  },
+  {
+    primary: 'surveilland',
+  },
+];
+
 const FiltersPage: React.FC = () => (
   <MainLayout>
     <Flexbox direction="col" gap="2" className="my-2">
@@ -207,6 +271,14 @@ const FiltersPage: React.FC = () => (
                     query: <code>t:sha</code>,
                     description: 'cards that are shamans, or shapeshifters, spellshapers.',
                   },
+                  {
+                    query: <code>is:spell</code>,
+                    description: 'cards that are spells.',
+                  },
+                  {
+                    query: <code>is:permanent</code>,
+                    description: 'cards that are permanents.',
+                  },
                 ]}
               />
             </Accordion>
@@ -292,6 +364,10 @@ const FiltersPage: React.FC = () => (
                   {
                     query: <code>is:phyrexian</code>,
                     description: 'cards with one or more Phyrexian mana symbols.',
+                  },
+                  {
+                    query: <code>is:twobrid</code>,
+                    description: 'cards with one or more "two generic or a color" symbols.',
                   },
                 ]}
               />
@@ -398,7 +474,8 @@ const FiltersPage: React.FC = () => (
             <Accordion title="Artist">
               <p>
                 You can use <code>a:</code>, <code>art:</code>, or <code>artist:</code> to search for cards illustrated
-                by a specific artist.
+                by a specific artist. Also <code>is:reprint</code>, <code>is:firstprint</code>, , <code>is:promo</code>,
+                and <code>is:digital</code>
               </p>
               <Text semibold>Examples:</Text>
               <Table
@@ -410,6 +487,10 @@ const FiltersPage: React.FC = () => (
                   {
                     query: <code>a:reb</code>,
                     description: 'All cards illustrated by artists with "reb" in their name.',
+                  },
+                  {
+                    query: <code>is:firstprint</code>,
+                    description: 'All first printings of cards.',
                   },
                 ]}
               />
@@ -551,6 +632,10 @@ const FiltersPage: React.FC = () => (
                     description:
                       'All cards that are restricted in Vintage (the only format with restrictions currently).',
                   },
+                  {
+                    query: <code>is:commander</code>,
+                    description: 'All cards that can be your commander.',
+                  },
                 ]}
               />
             </Accordion>
@@ -586,14 +671,12 @@ const FiltersPage: React.FC = () => (
                 ]}
               />
               <p>
-                Additionally, you can use <code>is:dfc</code>, <code>is:mdfc</code>, <code>is:meld</code>,{' '}
-                <code>is:transform</code>.
+                Additionally, you can use <code>is:dfc</code>, <code>is:mdfc</code>, <code>is:tdfc</code>,{' '}
+                <code>is:meld</code>, <code>is:transform</code>, <code>is:leveler</code>, <code>is:split</code>,{' '}
+                <code>is:flip</code>.
               </p>
             </Accordion>
-            <Accordion title="Miscellaneous">
-              <p>
-                You can use <code>elo:</code> to filter cards by their elo rating.
-              </p>
+            <Accordion title="Border, Frame, Foil & Resolution">
               <p>
                 <Text semibold>Filters for individual cubes:</Text>
               </p>
@@ -606,6 +689,41 @@ const FiltersPage: React.FC = () => (
                     .replace(/,(?!.*,)/gim, ', and')
                 }
                 .
+              </p>
+              <Text semibold>Examples:</Text>
+              <Table
+                rows={[
+                  {
+                    query: <code>finish:non-foil</code>,
+                    description: 'All cards with the non-foil finish selected.',
+                  },
+                  {
+                    query: <code>is:fullart</code>,
+                    description: 'All cards with full extended art.',
+                  },
+                  {
+                    query: <code>is:universesbeyond</code>,
+                    description: 'All cards that are Universes Beyond. Also works with is:ub.',
+                  },
+                ]}
+              />
+            </Accordion>
+            <Accordion title="Shortcuts and Nicknames">
+              <Text semibold>Land groups:</Text>
+              <Table
+                headers={['Primary', 'Alternatives']}
+                rows={LAND_SHORTCUTS.map(({ primary, alternates }) => ({
+                  Primary: <code>is:{primary}</code>,
+                  Alternatives: alternates ? alternates.map((a) => `is:${a}`).join(' or ') : '',
+                }))}
+              />
+            </Accordion>
+            <Accordion title="Miscellaneous">
+              <p>
+                You can use <code>elo:</code> to filter cards by their elo rating.
+              </p>
+              <p>
+                <Text semibold>Filters for individual cubes:</Text>
               </p>
               <p>
                 You can use <code>status:</code> to filter by cards with the given status. Available options are&nbsp;
@@ -625,12 +743,20 @@ const FiltersPage: React.FC = () => (
                     description: 'All cards with an elo rating above 1500.',
                   },
                   {
-                    query: <code>finish:non-foil</code>,
-                    description: 'All cards with the non-foil finish selected.',
-                  },
-                  {
                     query: <code>status:&quot;Premium Owned&quot;</code>,
                     description: 'All cards marked with the "Premium Owned" status.',
+                  },
+                  {
+                    query: <code>is:historic</code>,
+                    description: 'All cards that are historic.',
+                  },
+                  {
+                    query: <code>is:vanilla</code>,
+                    description: 'All cards with no oracle text.',
+                  },
+                  {
+                    query: <code>is:modal</code>,
+                    description: 'All cards with modal options.',
                   },
                 ]}
               />

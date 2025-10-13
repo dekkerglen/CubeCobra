@@ -1,4 +1,4 @@
-import { cardManaSymbols, reasonableCard } from '../../src/client/utils/cardutil';
+import { cardGames, cardManaSymbols, reasonableCard } from '../../src/client/utils/cardutil';
 import {
   getCardCountByColor,
   getCurveByColors,
@@ -340,5 +340,19 @@ describe('reasonableCard', () => {
     const details = createCardDetails({ ...overridesForNormalDetails, layout: 'art_series' });
 
     expect(reasonableCard(details)).toBeFalsy();
+  });
+});
+
+describe('cardGames', () => {
+  it('Default is empty', async () => {
+    const card = createCardFromDetails({ games: undefined });
+
+    expect(cardGames(card)).toEqual([]);
+  });
+
+  it('Returns the games the card exists in', async () => {
+    const card = createCardFromDetails({ games: ['paper', 'arena'] });
+
+    expect(cardGames(card)).toEqual(['paper', 'arena']);
   });
 });

@@ -5,6 +5,9 @@ import Card, {
   COLOR_CATEGORIES,
   ColorCategory,
   DefaultElo,
+  Game,
+  Legality,
+  LegalityFormats,
 } from '../../datatypes/Card';
 import {
   isGenericHybridManaSymbol,
@@ -186,6 +189,8 @@ export const CardDetails = (card: Card): CardDetailsType =>
     set_name: '',
     finishes: [],
     promo_types: [],
+    games: [],
+    reserved: false,
   };
 
 export const isCardCmcValid = (cmc: string | number | undefined): { valid: boolean; value: number | undefined } => {
@@ -217,6 +222,8 @@ export const cardCmc = (card: Card): number => {
 };
 
 export const cardId = (card: Card): string => card.cardID ?? card.details?.scryfall_id;
+
+export const isCustomCard = (card: Card): boolean => cardId(card) === 'custom-card';
 
 export const cardType = (card: Partial<Card>): string => {
   if (!card) return ''; // Defensive check for undefined card
@@ -393,15 +400,28 @@ export const cardIsToken = (card: Card): boolean => card.details?.isToken ?? fal
 export const cardBorderColor = (card: Card): string => card.details?.border_color ?? 'black';
 
 export const cardName = (card: Card): string => {
-  if (card.cardID === 'custom-card') {
+  if (isCustomCard(card)) {
     return (card.custom_name || card.details?.name) ?? '';
   }
   return card.details?.name ?? '';
 };
 
-export const cardNameLower = (card: Card): string => card.details?.name_lower ?? '';
+export const cardNameLower = (card: Card): string => {
+  if (isCustomCard(card)) {
+    return (card.custom_name?.toLowerCase() || card.details?.name_lower) ?? '';
+  }
+  return card.details?.name_lower ?? '';
+};
 
-export const cardFullName = (card: Card): string => card.details?.full_name ?? '';
+export const cardFullName = (card: Card): string => {
+  if (isCustomCard(card)) {
+    const customFullName = card.custom_name
+      ? `${card.custom_name} [${cardSet(card)}-${cardCollectorNumber(card)}]`
+      : '';
+    return (customFullName || card.details?.full_name) ?? '';
+  }
+  return card.details?.full_name ?? '';
+};
 
 export const cardArtist = (card: Card): string => card.details?.artist ?? '';
 
@@ -411,9 +431,9 @@ export const cardOracleText = (card: Card): string => card.details?.oracle_text 
 
 export const cardOracleId = (card: Card): string => card.details?.oracle_id ?? '';
 
-export const cardLegalities = (card: Card): Record<string, string> => card.details?.legalities ?? {};
+export const cardLegalities = (card: Card): Record<LegalityFormats, Legality> => card.details?.legalities ?? {};
 
-const cardLegalityFilter = (card: Card, legality: string): string[] => {
+const cardLegalityFilter = (card: Card, legality: Legality): string[] => {
   const legalities = cardLegalities(card);
   return Object.keys(legalities).filter((format) => legalities[format] === legality);
 };
@@ -508,6 +528,10 @@ export const cardWordCount = (card: Card): number => {
   return card.details.wordCount;
 };
 
+export const cardGames = (card: Card): Game[] => card.details?.games ?? [];
+
+export const cardIsReserved = (card: Card): boolean => card.details?.reserved ?? false;
+
 export const cardDevotion = (card: Card, color: string): number => {
   let cost = cardCost(card);
   if (cost && cardLayout(card) === 'adventure') cost = cost.slice(cost.findIndex((x) => x === 'split') + 1);
@@ -585,6 +609,8 @@ export function reasonableCard(card: CardDetailsType): boolean {
   );
 }
 
+const isUniversesBeyond = (details: CardDetailsType) => (details.promo_types || []).includes('universesbeyond');
+
 export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
@@ -649,6 +675,9 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   triland: (details) => LandCategories.TRI.includes(details.name),
   tangoland: (details) => LandCategories.TANGO.includes(details.name),
   battleland: (details) => LandCategories.TANGO.includes(details.name),
+  surveilland: (details) => LandCategories.SURVEILLAND.includes(details.name),
+  universesbeyond: isUniversesBeyond,
+  ub: isUniversesBeyond,
 
   // Others from Scryfall:
   //   reserved, new, old, hires,

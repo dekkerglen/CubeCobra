@@ -1,4 +1,9 @@
 import { ART_SERIES_CARD_SUFFIX } from '../../client/utils/cardutil';
+import { Game, Legality, LegalityFormats, SUPPORTED_FORMATS } from '../../datatypes/Card';
+
+//Add formats to pull into card details, before making them ready in the UI
+export const SUPPORTED_SCRYFALL_FORMATS = [...SUPPORTED_FORMATS, 'Timeless', 'Premodern'];
+export type ScryfallLegalityFormats = (typeof SUPPORTED_SCRYFALL_FORMATS)[number];
 
 export interface ScryfallCardFace {
   artist?: string;
@@ -65,18 +70,7 @@ export interface ScryfallCard {
   color_identity: string[];
   keywords: string[];
   produced_mana: string[];
-  legalities: {
-    legacy: string;
-    modern: string;
-    standard: string;
-    pioneer: string;
-    pauper: string;
-    brawl: string;
-    historic: string;
-    commander: string;
-    penny: string;
-    vintage: string;
-  };
+  legalities: Record<LegalityFormats, Legality>;
   layout: string;
   rarity: string;
   artist: string;
@@ -94,6 +88,8 @@ export interface ScryfallCard {
   illustration_id: string;
   content_warning: boolean;
   variation: boolean;
+  games?: Game[];
+  reserved: boolean;
   preview: {
     source: string;
     source_uri: string;
