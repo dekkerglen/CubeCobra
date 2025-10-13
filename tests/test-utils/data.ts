@@ -116,7 +116,7 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
 });
 
 export const createCustomCardDetails = (overrides?: Partial<CardDetails>): CardDetails => {
-  //See custom-card in update_carts.ts
+  //See custom-card in update_cards.ts
   const customSettings = {
     scryfall_id: 'custom-card',
     oracle_id: 'custom-card',
