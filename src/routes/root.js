@@ -13,6 +13,8 @@ const { handleRouteError, render, redirect } = require('../util/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../util/cubefn');
 
+const { GIT_COMMIT } = require('../util/git');
+
 const router = express.Router();
 
 router.use(csrfProtection);
@@ -138,6 +140,7 @@ router.get('/version', async (req, res) => {
   return render(req, res, 'VersionPage', {
     version: process.env.CUBECOBRA_VERSION,
     host: process.env.DOMAIN,
+    gitCommit: GIT_COMMIT,
   });
 });
 
