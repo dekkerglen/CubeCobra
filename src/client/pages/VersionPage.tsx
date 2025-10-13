@@ -8,9 +8,10 @@ import MainLayout from 'layouts/MainLayout';
 interface VersionPageProps {
   version: string;
   host: string;
+  gitCommit?: string;
 }
 
-const VersionPage: React.FC<VersionPageProps> = ({ version, host }) => {
+const VersionPage: React.FC<VersionPageProps> = ({ version, host, gitCommit }) => {
   return (
     <MainLayout>
       <Card className="my-3">
@@ -32,6 +33,14 @@ const VersionPage: React.FC<VersionPageProps> = ({ version, host }) => {
               <p>{host}</p>
             </dd>
           </dl>
+          {gitCommit ? (
+            <dl className="grid grid-cols-3 gap-4">
+              <dt>Git commit</dt>
+              <dd>
+                <p>{gitCommit}</p>
+              </dd>
+            </dl>
+          ) : null}
         </CardBody>
       </Card>
     </MainLayout>
