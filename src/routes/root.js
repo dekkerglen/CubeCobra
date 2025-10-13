@@ -138,6 +138,7 @@ router.get('/version', async (req, res) => {
   return render(req, res, 'VersionPage', {
     version: process.env.CUBECOBRA_VERSION,
     host: process.env.DOMAIN,
+    gitCommit: process.env.GIT_COMMIT,
   });
 });
 
