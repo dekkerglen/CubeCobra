@@ -13,7 +13,7 @@ const { handleRouteError, render, redirect } = require('../util/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../util/cubefn');
 
-import { GIT_COMMIT } from '../util/git';
+const { GIT_COMMIT } = require('../util/git');
 
 const router = express.Router();
 
