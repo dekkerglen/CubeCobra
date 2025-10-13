@@ -4,12 +4,12 @@ This directory contains the CubeCobra CDK code that manages our infrastructure i
 
 ## Useful commands
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+- `npm run build` compile typescript to js
+- `npm run watch` watch for changes and compile
+- `npm run test` perform the jest unit tests
+- `npx cdk deploy` deploy this stack to your default AWS account/region
+- `npx cdk diff` compare deployed stack with current state
+- `npx cdk synth` emits the synthesized CloudFormation template
 
 ## Bootstrapping
 
@@ -17,11 +17,11 @@ There are resources needed before CDK can be automated. By deploying once per en
 these resources will be created. For each new environment, run:
 
 ```bash
-npx cdk diff --context environment=<environment> --context bootstrap=true
+npx cdk diff --context environment=<environment> --context bootstrap=true --gitCommit $(git rev-parse HEAD)
 
 # then
 
-npx cdk deploy --context environment=<environment> --context bootstrap=true
+npx cdk deploy --context environment=<environment> --context bootstrap=true --gitCommit $(git rev-parse HEAD)
 ```
 
 This should create all the required resources to then deploy the main stack.
@@ -31,9 +31,9 @@ This should create all the required resources to then deploy the main stack.
 The following environment variables must be set:
 
 | Name                     |
-|--------------------------|
-| `EMAIL_CONFIG_USERNAME`             |
-| `EMAIL_CONFIG_PASSWORD`             |
+| ------------------------ |
+| `EMAIL_CONFIG_USERNAME`  |
+| `EMAIL_CONFIG_PASSWORD`  |
 | `JOBS_TOKEN`             |
 | `PATREON_CLIENT_ID`      |
 | `PATREON_CLIENT_SECRET`  |
@@ -52,10 +52,10 @@ You'll also need the app version which must match an app bundle on S3 (_v1.2.3_)
 
 ```bash
 # First check the changes that will be applied by doing a diff with the live environment
-npx cdk diff --context environment=<environment> --context version=<version>
+npx cdk diff --context environment=<environment> --context version=<version> --gitCommit $(git rev-parse HEAD)
 
 # then deploy
-npx cdk deploy --context environment=<environment> --context version=<version>
+npx cdk deploy --context environment=<environment> --context version=<version> --gitCommit $(git rev-parse HEAD)
 ```
 
 ## Deploying your own environment
@@ -74,13 +74,12 @@ Do not commit any changes you make to the CDK code that is specific to your envi
 5. Deploy the environment with CDK:
    `npx cdk deploy --context environment=<your-environment> --context version=<version>`
 
-* `<your-environment`> is the key you added in [`config.ts`](./config.ts).
-* `<version>` is taken from [`package.json`](./../package.json)
+- `<your-environment`> is the key you added in [`config.ts`](./config.ts).
+- `<version>` is taken from [`package.json`](./../package.json)
 
 If everything worked you should now have your own CubeCobra environment.
 
 You can run `npx cdk deploy --context environment=<your-environment>` to destroy all cloud resources CDK created when
 you no longer need your environment.
 
-
-`npx cdk deploy --context environment=production --context version=1.2.3` to deploy the production environment with version 1.2.3 of the CubeCobra application.
+`npx cdk deploy --context environment=production --context version=1.2.3 --gitCommit $(git rev-parse HEAD)` to deploy the production environment with version 1.2.3 of the CubeCobra application.

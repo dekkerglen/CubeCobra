@@ -32,6 +32,11 @@ if (bootstrap && bootstrap === 'true') {
     throw new Error('Invalid or missing version. Version should be "v1.2.3"');
   }
 
+  const gitCommit = app.node.tryGetContext('gitCommit');
+  if (!gitCommit || gitCommit === '') {
+    throw new Error('Invalid or missing gitCommit. Should be passed using --gitCommit $(git rev-parse HEAD)');
+  }
+
   console.log(`Deploying CubeCobra stack to '${environment}'`);
 
   new CubeCobraStack(
@@ -68,6 +73,7 @@ if (bootstrap && bootstrap === 'true') {
       draftmancerApiKey: process.env.DRAFTMANCER_API_KEY || '',
       stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
       stripePublicKey: process.env.STRIPE_PUBLIC_KEY || '',
+      gitCommit,
     },
     {
       env: { account: config.account, region: config.region },
