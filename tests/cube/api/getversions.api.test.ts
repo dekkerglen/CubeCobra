@@ -5,12 +5,6 @@ import { cardFromId, getAllVersionIds } from '../../../src/util/carddb';
 import { createCardDetails, createCustomCardDetails } from '../../test-utils/data';
 
 jest.mock('../../../src/util/carddb');
-// jest.mock('../../../src/client/utils/cardutil', () => ({
-//   normalizeName: (name: string): string => {
-//     return name.toLowerCase();
-//   },
-// }));
-
 // Import the router using CommonJS require (since src/routes/cube/api.js uses module.exports)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const cubeApiRouter = require('../../../src/routes/cube/api');
