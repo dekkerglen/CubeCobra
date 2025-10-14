@@ -640,6 +640,14 @@ const FiltersPage: React.FC = () => (
                     query: <code>is:reserved</code>,
                     description: 'All cards that are on the reserved list.',
                   },
+                  {
+                    query: <code>game:paper</code>,
+                    description: 'All cards that are available in paper.',
+                  },
+                  {
+                    query: <code>game!=arena</code>,
+                    description: 'All cards that are not available on arena.',
+                  },
                 ]}
               />
             </Accordion>
