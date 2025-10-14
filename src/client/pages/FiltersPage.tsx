@@ -636,6 +636,10 @@ const FiltersPage: React.FC = () => (
                     query: <code>is:commander</code>,
                     description: 'All cards that can be your commander.',
                   },
+                  {
+                    query: <code>is:reserved</code>,
+                    description: 'All cards that are on the reserved list.',
+                  },
                 ]}
               />
             </Accordion>

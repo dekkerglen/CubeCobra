@@ -1995,6 +1995,8 @@ var grammar = {
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$54"]},
     {"name": "isValue$subexpression$1$subexpression$55", "symbols": [/[uU]/, /[bB]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$55"]},
+    {"name": "isValue$subexpression$1$subexpression$56", "symbols": [/[rR]/, /[eE]/, /[sS]/, /[eE]/, /[rR]/, /[vV]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$56"]},
     {"name": "isValue", "symbols": ["isValue$subexpression$1"], "postprocess": ([[category]]) => category.toLowerCase()},
     {"name": "powerWords$subexpression$1$subexpression$1", "symbols": [/[pP]/, /[oO]/, /[wW]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "powerWords$subexpression$1", "symbols": ["powerWords$subexpression$1$subexpression$1"]},
