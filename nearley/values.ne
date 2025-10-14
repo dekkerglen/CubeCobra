@@ -46,8 +46,8 @@ finishValue -> ("Foil"i | "Non-Foil"i | "Etched"i | "Alt-foil"i) {% ([[finish]])
 
 legalityOpValue -> equalityOperator legalityValue {% ([op, value]) => setElementOperation(op, value) %}
 
-legalityValue -> ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i | "Brawl"i | "Historic"i | "Pauper"i | "Penny"i | "Commander"i) {% ([[legality]]) => legality.toLowerCase() %}
-  | "\"" ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i | "Brawl"i | "Historic"i | "Pauper"i | "Penny"i | "Commander"i) "\"" {% ([, [legality]]) => legality.toLowerCase() %}
+legalityValue -> ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i | "Brawl"i | "Historic"i | "Pauper"i | "Penny"i | "Commander"i | "Timeless"i | "Premodern"i) {% ([[legality]]) => legality.toLowerCase() %}
+  | "\"" ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i | "Brawl"i | "Historic"i | "Pauper"i | "Penny"i | "Commander"i | "Timeless"i | "Premodern"i) "\"" {% ([, [legality]]) => legality.toLowerCase() %}
 
 statusOpValue -> equalityOperator statusValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
