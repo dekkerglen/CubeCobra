@@ -30,6 +30,8 @@ export const SUPPORTED_FORMATS = [
   'Pauper',
   'Penny',
   'Commander',
+  'Timeless',
+  'Premodern',
 ];
 export type LegalityFormats = (typeof SUPPORTED_FORMATS)[number];
 
