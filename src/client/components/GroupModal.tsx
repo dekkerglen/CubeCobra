@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
 
-import Card, { BoardType, CardStatus } from 'datatypes/Card';
+import Card, { BoardType, CardStatus, ColorCategory } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/cardutil';
@@ -66,6 +66,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const [finish, setFinish] = useState('');
   const [cmc, setCmc] = useState('');
   const [typeLine, setTypeLine] = useState('');
+  const [colorCategory, setColorCategory] = useState<ColorCategory | ''>('');
   const [color, setColor] = useState<('W' | 'U' | 'B' | 'R' | 'G')[]>([]);
   const [addTags, setAddTags] = useState(true);
   const [tags, setTags] = useState<{ id: string; text: string }[]>([]);
@@ -152,6 +153,12 @@ const GroupModal: React.FC<GroupModalProps> = ({
       });
     }
 
+    if (colorCategory !== '') {
+      updates.forEach((card: Card) => {
+        card.colorCategory = colorCategory;
+      });
+    }
+
     if (color.length > 0) {
       updates.forEach((card: Card) => {
         if ((color as string[]).includes('C')) {
@@ -177,7 +184,20 @@ const GroupModal: React.FC<GroupModalProps> = ({
     bulkEditCard(updates);
     setModalSelection([]);
     setOpen(false);
-  }, [addTags, bulkEditCard, cards, cmc, color, finish, setModalSelection, status, tags, setOpen, typeLine]);
+  }, [
+    addTags,
+    bulkEditCard,
+    cards,
+    cmc,
+    color,
+    finish,
+    colorCategory,
+    setModalSelection,
+    status,
+    tags,
+    setOpen,
+    typeLine,
+  ]);
 
   const anyCardChanged = useMemo(() => {
     return cards.some((card) => card.editIndex !== undefined);
@@ -188,8 +208,16 @@ const GroupModal: React.FC<GroupModalProps> = ({
   }, [cards]);
 
   const fieldsChanged = useMemo(() => {
-    return status !== '' || finish !== '' || cmc !== '' || typeLine !== '' || color.length > 0 || tags.length > 0;
-  }, [status, finish, cmc, typeLine, color, tags]);
+    return (
+      status !== '' ||
+      finish !== '' ||
+      cmc !== '' ||
+      typeLine !== '' ||
+      color.length > 0 ||
+      tags.length > 0 ||
+      colorCategory !== ''
+    );
+  }, [status, finish, cmc, typeLine, color, tags, colorCategory]);
 
   const totalPriceUsd = cards.length ? cards.reduce((total, card) => total + (cardPrice(card) ?? 0), 0) : 0;
   const totalPriceUsdFoil = cards.length ? cards.reduce((total, card) => total + (cardFoilPrice(card) ?? 0), 0) : 0;
@@ -303,6 +331,22 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
                 only colorless will cause the selected cards' color identity to be set to colorless.
               </Text>
+              <Select
+                label="Color Category"
+                value={colorCategory}
+                setValue={(value: string) => setColorCategory(value as ColorCategory | '')}
+                options={[
+                  {
+                    value: '',
+                    label: '',
+                  },
+                  ...getLabels(null, 'Color Category', false).map((category) => ({
+                    value: category,
+                    label: category,
+                  })),
+                ]}
+              />
+              <Text>Selecting nothing will cause the selected cards' color category to remain unchanged.</Text>
               <Text semibold md>
                 Edit tags
               </Text>
