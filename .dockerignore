@@ -1,0 +1,17 @@
+node_modules/
+dist
+build
+
+.git
+.gitignore
+
+public
+lambda
+docs
+emails
+
+docker
+docker-compose.yml
+Dockerfile
+
+views
