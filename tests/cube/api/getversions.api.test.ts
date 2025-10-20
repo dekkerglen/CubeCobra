@@ -301,4 +301,130 @@ describe('POST /cube/api/getversions', () => {
       },
     });
   });
+
+  it('should accept the backside id and include both back and front sides with the same multiple versions', async () => {
+    const oracleId = '9f1b2c3d-4e5f-6789-abcd-0123456789ab';
+    const frontV1Id = '6b1b3f9e-2c9e-4c5a-a9f2-1d6a7e8b9c0d';
+    const backV1Id = `${frontV1Id}2`;
+    const frontV2Id = '3f9a1b2c-4d5e-6f70-819a-b2c3d4e5f6a7';
+    const backV2Id = `${frontV2Id}2`;
+
+    const frontV1 = createCardDetails({
+      name: 'Delver of Secrets',
+      scryfall_id: frontV1Id,
+      oracle_id: oracleId,
+      full_name: 'Delver of Secrets [M11-1]',
+      image_normal: 'front-image-1',
+      image_flip: 'back-image-1',
+      prices: { usd: 0.25 },
+      released_at: '2011-01-01',
+      isExtra: false,
+    });
+
+    const backV1 = createCardDetails({
+      name: 'Insectile Aberration',
+      scryfall_id: backV1Id,
+      oracle_id: oracleId,
+      full_name: 'Insectile Aberration [M11-1]',
+      image_normal: 'back-image-1',
+      image_flip: undefined,
+      prices: { usd: 0.25 },
+      released_at: '2011-01-01',
+      isExtra: true,
+    });
+
+    const frontV2 = createCardDetails({
+      name: 'Delver of Secrets',
+      scryfall_id: frontV2Id,
+      oracle_id: oracleId,
+      full_name: 'Delver of Secrets [M18-1]',
+      image_normal: 'front-image-2',
+      image_flip: 'back-image-2',
+      prices: { usd: 1.5 },
+      released_at: '2018-01-01',
+      isExtra: false,
+    });
+
+    const backV2 = createCardDetails({
+      name: 'Insectile Aberration',
+      scryfall_id: backV2Id,
+      oracle_id: oracleId,
+      full_name: 'Insectile Aberration [M18-1]',
+      image_normal: 'back-image-2',
+      image_flip: undefined,
+      prices: { usd: 1.5 },
+      released_at: '2018-01-01',
+      isExtra: true,
+    });
+
+    // First call: fetching details for the input (back face)
+    // Subsequent calls: fetching each version id returned by getAllVersionIds
+    (cardFromId as jest.Mock)
+      .mockReturnValueOnce(backV2) // initial call for provided back id
+      .mockReturnValueOnce(frontV2)
+      .mockReturnValueOnce(backV2)
+      .mockReturnValueOnce(frontV1)
+      .mockReturnValueOnce(backV1);
+
+    // Both back and front versions are returned
+    (getAllVersionIds as jest.Mock).mockReturnValueOnce([
+      frontV2.scryfall_id,
+      backV2.scryfall_id,
+      frontV1.scryfall_id,
+      backV1.scryfall_id,
+    ]);
+
+    const res = await request(app).post('/cube/api/getversions').send([backV2.scryfall_id]);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      success: 'true',
+      dict: {
+        'delver of secrets': [
+          {
+            name: frontV2.name,
+            scryfall_id: frontV2.scryfall_id,
+            oracle_id: frontV2.oracle_id,
+            version: 'M18-1',
+            image_normal: frontV2.image_normal,
+            image_flip: frontV2.image_flip,
+            prices: frontV2.prices,
+          },
+          {
+            name: frontV1.name,
+            scryfall_id: frontV1.scryfall_id,
+            oracle_id: frontV1.oracle_id,
+            version: 'M11-1',
+            image_normal: frontV1.image_normal,
+            image_flip: frontV1.image_flip,
+            prices: frontV1.prices,
+          },
+        ],
+        'insectile aberration': [
+          {
+            name: backV2.name,
+            scryfall_id: backV2.scryfall_id,
+            oracle_id: backV2.oracle_id,
+            version: 'M18-1',
+            image_normal: backV2.image_normal,
+            image_flip: backV2.image_flip,
+            prices: backV2.prices,
+          },
+          {
+            name: backV1.name,
+            scryfall_id: backV1.scryfall_id,
+            oracle_id: backV1.oracle_id,
+            version: 'M11-1',
+            image_normal: backV1.image_normal,
+            image_flip: backV1.image_flip,
+            prices: backV1.prices,
+          },
+        ],
+      },
+    });
+
+    // Verify the calls
+    expect(cardFromId).toHaveBeenNthCalledWith(1, backV2.scryfall_id);
+    expect(getAllVersionIds).toHaveBeenCalledWith(backV2);
+  });
 });
