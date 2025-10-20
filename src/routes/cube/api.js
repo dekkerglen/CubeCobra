@@ -393,6 +393,7 @@ router.post(
         // Fixes duplicate versions listed in both the front and backsides
         result[normalized] = versionDetails
           .filter((c) => c.isExtra === card.isExtra)
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           .map(({ isExtra, ...rest }) => rest); // remove isExtra from the response objects
       });
     });
