@@ -376,7 +376,7 @@ router.post(
     const result = {};
     allVersions.forEach((versions) => {
       const versionDetails = versions.map(
-        ({ name, scryfall_id, oracle_id, full_name: fullName, image_normal, image_flip, prices }) => ({
+        ({ name, scryfall_id, oracle_id, full_name: fullName, image_normal, image_flip, prices, isExtra }) => ({
           scryfall_id,
           oracle_id,
           name,
@@ -384,11 +384,16 @@ router.post(
           image_normal,
           image_flip,
           prices,
+          isExtra,
         }),
       );
       versions.forEach((card) => {
         const normalized = cardutil.normalizeName(card.name);
-        result[normalized] = versionDetails;
+        // Filter based on isExtra which is true if this is the backside of a card.
+        // Fixes duplicate versions listed in both the front and backsides
+        result[normalized] = versionDetails
+          .filter((c) => c.isExtra === card.isExtra)
+          .map(({ isExtra, ...rest }) => rest); // remove isExtra from the response objects
       });
     });
 
