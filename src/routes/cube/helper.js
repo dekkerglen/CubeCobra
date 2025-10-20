@@ -187,8 +187,9 @@ function writeCard(res, card, maybe) {
   if (!card.type_line) {
     card.type_line = cardFromId(card.cardID).type;
   }
-  let imgUrl = cardutil.cardImageUrl(card);
-  let imgBackUrl = cardutil.cardImageBackUrl(card);
+  //Explicitly not using cardutil functions here so that we get override images or nothing.
+  //Using cardutil would default to the Scryfall image URLs
+  let { imgUrl, imgBackUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
   } else {
