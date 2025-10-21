@@ -2,7 +2,7 @@ import { ART_SERIES_CARD_SUFFIX } from '../../client/utils/cardutil';
 import { Game, Legality, LegalityFormats, SUPPORTED_FORMATS } from '../../datatypes/Card';
 
 //Add formats to pull into card details, before making them ready in the UI
-export const SUPPORTED_SCRYFALL_FORMATS = [...SUPPORTED_FORMATS, 'Timeless', 'Premodern'];
+export const SUPPORTED_SCRYFALL_FORMATS = [...SUPPORTED_FORMATS];
 export type ScryfallLegalityFormats = (typeof SUPPORTED_SCRYFALL_FORMATS)[number];
 
 export interface ScryfallCardFace {

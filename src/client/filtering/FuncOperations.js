@@ -126,6 +126,19 @@ export const setOperation = (op, value) => {
   }
 };
 
+export const setContainsOperation = (op, value) => {
+  switch (op.toString()) {
+    case ':':
+    case '=':
+      return (fieldValue) => fieldValue.indexOf(value) !== -1;
+    case '!=':
+    case '<>':
+      return (fieldValue) => fieldValue.indexOf(value) === -1;
+    default:
+      throw new Error(`Unrecognized operator ${op}`);
+  }
+};
+
 export const rarityOperation = (op, value) => {
   const rarityMap = { c: 0, u: 1, r: 2, m: 3, s: 4 };
   const mappedRarity = rarityMap[value.charAt(0).toLowerCase()];

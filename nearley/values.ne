@@ -11,6 +11,7 @@
 # const setElementOperation = (value) => ...
 # const fetchedOperation = (op, value) => ...
 # const propertyComparisonOperation = (op) => ...
+# const setContainsOperation = (op, value) => ...
 
 positiveHalfIntOpValue -> anyOperator positiveHalfIntValue {% ([op, value]) => defaultOperation(op, value) %}
 
@@ -46,8 +47,8 @@ finishValue -> ("Foil"i | "Non-Foil"i | "Etched"i | "Alt-foil"i) {% ([[finish]])
 
 legalityOpValue -> equalityOperator legalityValue {% ([op, value]) => setElementOperation(op, value) %}
 
-legalityValue -> ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i | "Brawl"i | "Historic"i | "Pauper"i | "Penny"i | "Commander"i) {% ([[legality]]) => legality.toLowerCase() %}
-  | "\"" ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i | "Brawl"i | "Historic"i | "Pauper"i | "Penny"i | "Commander"i) "\"" {% ([, [legality]]) => legality.toLowerCase() %}
+legalityValue -> ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i | "Brawl"i | "Historic"i | "Pauper"i | "Penny"i | "Commander"i | "Timeless"i | "Premodern"i) {% ([[legality]]) => legality.toLowerCase() %}
+  | "\"" ("Standard"i | "Pioneer"i | "Modern"i | "Legacy"i | "Vintage"i | "Brawl"i | "Historic"i | "Pauper"i | "Penny"i | "Commander"i | "Timeless"i | "Premodern"i) "\"" {% ([, [legality]]) => legality.toLowerCase() %}
 
 statusOpValue -> equalityOperator statusValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
@@ -62,6 +63,10 @@ rarityValue -> ("s"i | "special"i | "m"i | "mythic"i | "r"i | "rare"i | "u"i | "
 alphaNumericValue -> [a-zA-Z0-9]:+ {% ([letters]) => letters.join('').toLowerCase() %}
 
 alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => equalityOperation(op, value) %}
+
+gameOpValue -> equalityOperator gameValue {% ([op, value]) => setContainsOperation(op, value) %}
+
+gameValue -> ("Paper"i | "Arena"i | "Mtgo"i) {% ([[game]]) => game.toLowerCase() %}
 
 @{%
 const normalizeCombination = (combination) => combination.join('').toLowerCase().replace('c', '').split('');
