@@ -590,4 +590,47 @@ router.post('/getcreatorcontent', ensureContentCreator, async (req, res) => {
   });
 });
 
+router.post('/delete/:id', ensureContentCreator, async (req, res) => {
+  try {
+    const content = await Content.getById(req.params.id);
+
+    if (!content) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Content not found',
+      });
+    }
+
+    // Verify the user owns the content
+    if (req.user.id !== content.owner.id) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized: Only content owners can delete their content.',
+      });
+    }
+
+    // Only allow deletion of unpublished content
+    if (content.status === ContentStatus.PUBLISHED) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Published content cannot be deleted.',
+      });
+    }
+
+    // Delete the content
+    await Content.batchDelete([{ id: content.id }]);
+
+    return res.status(200).send({
+      success: 'true',
+      message: 'Content deleted successfully',
+    });
+  } catch (err) {
+    req.logger.error(err.message, err.stack);
+    return res.status(500).send({
+      success: 'false',
+      message: 'An error occurred while deleting the content',
+    });
+  }
+});
+
 module.exports = router;

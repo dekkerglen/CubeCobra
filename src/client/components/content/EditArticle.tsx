@@ -110,6 +110,7 @@ const EditArticle: React.FC<EditArticleProps> = ({
         className="w-full article-area"
         value={body}
         onChange={(event) => setBody(event.target.value)}
+        rows={25}
       />
     </Flexbox>
   );
