@@ -678,6 +678,7 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   surveilland: (details) => LandCategories.SURVEILLAND.includes(details.name),
   universesbeyond: isUniversesBeyond,
   ub: isUniversesBeyond,
+  reserved: (details) => details.reserved,
 
   // Others from Scryfall:
   //   reserved, new, old, hires,

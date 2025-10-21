@@ -4,9 +4,13 @@ import Button from 'components/base/Button';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import VideoPreview from 'components/content/VideoPreview';
+import ContentDeleteModal from 'components/modals/ContentDeleteModal';
+import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
-import { ContentType } from 'datatypes/Content';
+import { ContentStatus, ContentType } from 'datatypes/Content';
 import Video from 'datatypes/Video';
+
+const DeleteModalButton = withModal(Button, ContentDeleteModal);
 
 interface CreatorVideosProps {
   videos: Video[];
@@ -43,6 +47,13 @@ const CreatorVideos: React.FC<CreatorVideosProps> = ({ videos, lastKey }) => {
     }
   }, [csrfFetch, currentLastKey, items]);
 
+  const handleDelete = useCallback(
+    (id: string) => {
+      setItems(items.filter((item) => item.id !== id));
+    },
+    [items],
+  );
+
   const loader = (
     <div className="centered py-3 my-4">
       <Spinner className="position-absolute" />
@@ -59,7 +70,19 @@ const CreatorVideos: React.FC<CreatorVideosProps> = ({ videos, lastKey }) => {
       <Row className="mx-0">
         {items.map((video) => (
           <Col key={video.id} xs={6} sm={4} md={3} lg={2}>
-            <VideoPreview video={video} />
+            <Flexbox direction="col" gap="1">
+              <VideoPreview video={video} />
+              {video.status !== ContentStatus.PUBLISHED && (
+                <DeleteModalButton
+                  color="danger"
+                  outline
+                  block
+                  modalprops={{ content: video, onDelete: handleDelete }}
+                >
+                  Delete
+                </DeleteModalButton>
+              )}
+            </Flexbox>
           </Col>
         ))}
       </Row>

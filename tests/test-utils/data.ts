@@ -13,6 +13,8 @@ import Card, {
   CubeCardEdit,
   CubeCardRemove,
   CubeCardSwap,
+  Legality,
+  LegalityFormats,
   SUPPORTED_FORMATS,
 } from '../../src/datatypes/Card';
 import Content, { ContentStatus, ContentType } from '../../src/datatypes/Content';
@@ -165,7 +167,7 @@ export const createCustomCardDetails = (overrides?: Partial<CardDetails>): CardD
       penny: 'not_legal',
       commander: 'not_legal',
       brawl: 'not_legal',
-    } as Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>,
+    } as Record<LegalityFormats, Legality>,
     layout: 'normal',
     rarity: 'common',
     artist: '',

@@ -55,12 +55,12 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
         <hr />
         <Row>
           <Col xs={6}>
-            {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage'].map((key) => (
+            {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage', 'Premodern'].map((key) => (
               <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
             ))}
           </Col>
           <Col xs={6}>
-            {['Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'].map((key) => (
+            {['Brawl', 'Historic', 'Timeless', 'Pauper', 'Penny', 'Commander'].map((key) => (
               <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
             ))}
           </Col>

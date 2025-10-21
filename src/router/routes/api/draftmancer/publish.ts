@@ -15,6 +15,7 @@ import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } fr
 import { setupPicks } from '../../../../util/draftutil';
 import { bodyValidation } from '../../../middleware/bodyValidation';
 
+//Don't expect DraftMancer to handle custom cards
 const OracleIDSchema = Joi.string().uuid();
 
 export const PublishDraftBodySchema = Joi.object({

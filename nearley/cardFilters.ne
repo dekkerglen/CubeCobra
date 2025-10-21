@@ -19,6 +19,7 @@ import {
   genericCondition,
   comparisonCondition,
   legalitySuperCondition,
+  setContainsOperation,
 } from '../../filtering/FuncOperations';
 import {
   CARD_CATEGORY_DETECTORS,
@@ -109,6 +110,7 @@ condition -> (
   | layoutCondition
   | collectorNumberCondition
   | notesCondition
+  | gameCondition
 ) {% ([[condition]]) => condition %}
 
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
@@ -183,6 +185,8 @@ collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valueP
 
 notesCondition -> "notes"i stringOpValue {% ([, valuePred]) => genericCondition('notes', cardNotes, valuePred) %}
 
+gameCondition -> "game"i gameOpValue {% ([, valuePred]) => genericCondition('game', cardGames, valuePred) %}
+
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 
 notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred)) %}
@@ -198,6 +202,7 @@ isValue -> (
   | "checkland"i | "dual"i | "fastland"i | "filterland"i | "gainland"i | "painland"i | "scryland"i | "shadowland"i
   | "shockland"i | "storageland"i | "creatureland"i | "manland"i | "triland"i | "tangoland"i | "battleland"i | "surveilland"i
   | "universesbeyond"i | "ub"i
+  | "reserved"i
 ) {% ([[category]]) => category.toLowerCase() %}
 
 powerWords -> ("pow"i | "power"i)
