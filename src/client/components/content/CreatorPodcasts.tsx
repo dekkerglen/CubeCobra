@@ -4,9 +4,13 @@ import Button from 'components/base/Button';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import PodcastPreview from 'components/content/PodcastPreview';
+import ContentDeleteModal from 'components/modals/ContentDeleteModal';
+import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
-import { ContentType } from 'datatypes/Content';
+import { ContentStatus, ContentType } from 'datatypes/Content';
 import Podcast from 'datatypes/Podcast';
+
+const DeleteModalButton = withModal(Button, ContentDeleteModal);
 
 interface CreatorPodcastsProps {
   podcasts: Podcast[];
@@ -43,6 +47,13 @@ const CreatorPodcasts: React.FC<CreatorPodcastsProps> = ({ podcasts, lastKey }) 
     }
   }, [csrfFetch, currentLastKey, items]);
 
+  const handleDelete = useCallback(
+    (id: string) => {
+      setItems(items.filter((item) => item.id !== id));
+    },
+    [items],
+  );
+
   const loader = (
     <div className="centered py-3 my-4">
       <Spinner className="position-absolute" />
@@ -59,7 +70,19 @@ const CreatorPodcasts: React.FC<CreatorPodcastsProps> = ({ podcasts, lastKey }) 
       <Row className="mx-0">
         {items.map((podcast) => (
           <Col key={podcast.id} xs={6} sm={4} md={3} lg={2}>
-            <PodcastPreview podcast={podcast} />
+            <Flexbox direction="col" gap="1">
+              <PodcastPreview podcast={podcast} />
+              {podcast.status !== ContentStatus.PUBLISHED && (
+                <DeleteModalButton
+                  color="danger"
+                  outline
+                  block
+                  modalprops={{ content: podcast, onDelete: handleDelete }}
+                >
+                  Delete
+                </DeleteModalButton>
+              )}
+            </Flexbox>
           </Col>
         ))}
       </Row>

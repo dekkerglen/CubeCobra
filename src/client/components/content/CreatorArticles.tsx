@@ -4,9 +4,13 @@ import Button from 'components/base/Button';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import ArticlePreview from 'components/content/ArticlePreview';
+import ContentDeleteModal from 'components/modals/ContentDeleteModal';
+import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
 import Article from 'datatypes/Article';
-import { ContentType } from 'datatypes/Content';
+import { ContentStatus, ContentType } from 'datatypes/Content';
+
+const DeleteModalButton = withModal(Button, ContentDeleteModal);
 
 interface CreatorArticlesProps {
   articles: Article[];
@@ -43,6 +47,13 @@ const CreatorArticles: React.FC<CreatorArticlesProps> = ({ articles, lastKey }) 
     }
   }, [csrfFetch, currentLastKey, items]);
 
+  const handleDelete = useCallback(
+    (id: string) => {
+      setItems(items.filter((item) => item.id !== id));
+    },
+    [items],
+  );
+
   const loader = (
     <div className="centered py-3 my-4">
       <Spinner className="position-absolute" />
@@ -59,7 +70,19 @@ const CreatorArticles: React.FC<CreatorArticlesProps> = ({ articles, lastKey }) 
       <Row>
         {items.map((article) => (
           <Col key={article.id} xs={6} sm={4} md={3} lg={2}>
-            <ArticlePreview article={article} showStatus />
+            <Flexbox direction="col" gap="1">
+              <ArticlePreview article={article} showStatus />
+              {article.status !== ContentStatus.PUBLISHED && (
+                <DeleteModalButton
+                  color="danger"
+                  outline
+                  block
+                  modalprops={{ content: article, onDelete: handleDelete }}
+                >
+                  Delete
+                </DeleteModalButton>
+              )}
+            </Flexbox>
           </Col>
         ))}
       </Row>
