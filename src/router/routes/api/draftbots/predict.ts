@@ -9,10 +9,11 @@ interface PredictBody {
 }
 
 const OracleIDSchema = Joi.string().uuid();
+const CustomCard = Joi.string().valid('custom-card');
 
 const PredictBodySchema = Joi.object({
-  pack: Joi.array().items(OracleIDSchema).required(),
-  picks: Joi.array().items(OracleIDSchema).required(),
+  pack: Joi.array().items(OracleIDSchema, CustomCard).required(),
+  picks: Joi.array().items(OracleIDSchema, CustomCard).required(),
 });
 
 const validatePredictBody = (req: Request, res: Response, next: NextFunction) => {
