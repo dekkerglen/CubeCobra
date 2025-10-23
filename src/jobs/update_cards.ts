@@ -343,7 +343,7 @@ function convertType(card: ScryfallCard, preflipped: boolean, faceAttributeSourc
     type = 'Artifact Contraption';
   }
 
-  if (!type) {
+  if (!type && card.id !== 'custom-card') {
     // eslint-disable-next-line no-console
     console.error(`Error converting type: (isExtra:${preflipped}) ${card.name} (id: ${card.id})`);
     return '';
