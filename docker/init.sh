@@ -7,4 +7,3 @@ npm run setup:local:files
 npm run setup:local:db
 npm run update-combos
 npm run update-cards
-npm run cards

@@ -73,7 +73,7 @@ using [Windows Subsystem for Linux 2 (WSL2)](https://learn.microsoft.com/en-us/w
 For the first setup, you will need to run:
 
 ```sh
-docker compose -f docker-compose.yml -f ./docker/init.yml up
+docker compose -f docker-compose.yml -f ./docker/init.yml up --abort-on-container-exit
 ```
 
 Note: This can take tens of minutes to complete.
