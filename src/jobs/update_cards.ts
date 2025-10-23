@@ -866,7 +866,7 @@ const loadMetadatadict = async () => {
   }
 
   // eslint-disable-next-line no-console
-  console.log("Couldn't find metadatadict.json");
+  console.log("Couldn't find metadatadict.json (that is OK)");
   return {
     metadatadict: {},
     indexToOracle: [],
