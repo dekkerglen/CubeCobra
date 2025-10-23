@@ -34,8 +34,6 @@ interface CubeCobraStackParams {
   patreonRedirect: string;
   sessionToken: string;
   sessionSecret: string;
-  tcgPlayerPublicKey: string;
-  tcgPlayerPrivateKey: string;
   fleetSize: number;
   jobs?: Map<string, ScheduledJobProps>;
   captchaSiteKey: string;
@@ -127,8 +125,6 @@ function createEnvironmentVariables(
     PORT: '8080',
     SESSION: params.sessionToken,
     SESSION_SECRET: params.sessionSecret,
-    TCG_PLAYER_PRIVATE_KEY: params.tcgPlayerPrivateKey,
-    TCG_PLAYER_PUBLIC_KEY: params.tcgPlayerPublicKey,
     USE_S3: 'true',
     CAPTCHA_SITE_KEY: params.captchaSiteKey,
     CAPTCHA_SECRET_KEY: params.captchaSecretKey,

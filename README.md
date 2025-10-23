@@ -220,11 +220,8 @@ Here is a table on how to fill out the env vars:
 | PATREON_HOOK_SECRET    | The secret for the Patreon webhook.                                                                          |           |
 | PATREON_REDIRECT       | The redirect URL for the Patreon OAuth app.                                                                  |           |
 | PORT                   | The port to run Cube Cobra on.                                                                               | Yes       |
-| SECRET                 | A secret phrase for encryption. You can leave the default value.                                             | Yes       |
 | SESSION_SECRET         | A secret phrase for session encryption. You can leave the default value.                                     | Yes       |
 | SESSION                | The name of the session cookie. You can leave the default value.                                             | Yes       |
-| TCG_PLAYER_PRIVATE_KEY | The private key for the TCGPlayer API.                                                                       |           |
-| TCG_PLAYER_PUBLIC_KEY  | The public key for the TCGPlayer API.                                                                        |           |
 | CAPTCHA_SITE_KEY       | The reCAPTCHA site key                                                                                       | Yes       |
 | CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                                     | Yes       |
 | DRAFTMANCER_API_KEY    | The Draftmancer API key                                                                                      | Yes       |

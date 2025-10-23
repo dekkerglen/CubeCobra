@@ -38,8 +38,6 @@ The following environment variables must be set:
 | `PATREON_HOOK_SECRET`    |
 | `SESSION_TOKEN`          |
 | `SESSION_SECRET`         |
-| `TCG_PLAYER_PUBLIC_KEY`  |
-| `TCG_PLAYER_PRIVATE_KEY` |
 | `CAPTCHA_SITE_KEY`       |
 | `CAPTCHA_SECRET_KEY`     |
 | `DRAFTMANCER_API_KEY`    |

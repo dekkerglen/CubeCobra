@@ -58,8 +58,6 @@ if (bootstrap && bootstrap === 'true') {
       patreonRedirect: config.patreonRedirectUri,
       sessionToken: process.env.SESSION_TOKEN || '',
       sessionSecret: process.env.SESSION_SECRET || '',
-      tcgPlayerPublicKey: process.env.TCG_PLAYER_PUBLIC_KEY || '',
-      tcgPlayerPrivateKey: process.env.TCG_PLAYER_PRIVATE_KEY || '',
       fleetSize: config.fleetSize,
       captchaSiteKey: process.env.CAPTCHA_SITE_KEY || '',
       captchaSecretKey: process.env.CAPTCHA_SECRET_KEY || '',
