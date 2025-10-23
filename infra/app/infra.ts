@@ -40,8 +40,6 @@ if (bootstrap && bootstrap === 'true') {
     {
       accessKey: process.env.AWS_ACCESS_KEY_ID || '',
       secretKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-      emailUser: process.env.EMAIL_CONFIG_USERNAME || '',
-      emailPass: process.env.EMAIL_CONFIG_PASSWORD || '',
       domain: config.domain,
       environmentName: environment,
       version: version,

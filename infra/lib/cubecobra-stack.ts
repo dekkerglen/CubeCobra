@@ -25,8 +25,6 @@ interface CubeCobraStackParams {
   appBucket: string;
   downTimeActive: boolean;
   dynamoPrefix: string;
-  emailUser: string;
-  emailPass: string;
   env: Environment;
   jobsToken: string;
   nitroPayEnabled: boolean;
@@ -118,8 +116,6 @@ function createEnvironmentVariables(
     DOMAIN: params.domain,
     DOWNTIME_ACTIVE: params.downTimeActive ? 'true' : 'false',
     DYNAMO_PREFIX: params.dynamoPrefix,
-    EMAIL_CONFIG_PASSWORD: params.emailPass,
-    EMAIL_CONFIG_USERNAME: params.emailUser,
     ENV: params.env,
     NODE_ENV: params.env,
     JOBS_TOKEN: params.jobsToken,
