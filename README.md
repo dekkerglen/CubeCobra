@@ -63,6 +63,12 @@ Docker Desktop: https://docs.docker.com/desktop/
 
 With Windows + WSL2, also: https://docs.docker.com/desktop/features/wsl/
 
+### jq (Optional)
+
+jq (https://jqlang.org/) is a very useful tool when dealing with JSON data, of which CubeCobra's card catalogs are all stored in.
+
+Download and install from https://jqlang.org/download/
+
 ## Running CubeCobra in Docker
 
 Running CubeCobra within docker is the simplest and faster way to get everything up and running. For Windows users we highly recommend running docker
