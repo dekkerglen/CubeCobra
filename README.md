@@ -118,7 +118,12 @@ You can now open up a browser and connect to the app through: http://localhost:8
 
 Nodemon will restart the application anytime there is a change to a source file (server files).
 
+### Register an account
+
 After accessing the application locally you will need to create a new user account using the "Register" link on the nav bar.
+
+After doing so, run `bash scripts/extract-registration-email.sh` to print the registeration URL you would have been emailed. Copy it and/or
+open via your terminal to complete registration, then you can login using the username and password you registered with.
 
 ## Running CubeCobra via node
 
@@ -192,7 +197,7 @@ You can now open up a browser and connect to the app through: http://localhost:8
 
 Nodemon will restart the application anytime there is a change to a source file.
 
-After accessing the application locally you will need to create a new user account using the "Register" link on the nav bar.
+Now complete the [registration process](#register-an-account) to create an account.
 
 ## Additional configurations and information
 
@@ -204,35 +209,35 @@ You can run a local instance of Cube Cobra against real AWS resources rather tha
 
 Here is a table on how to fill out the env vars:
 
-| Variable Name          | Description                                                                                                  | Required? |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------ | --------- |
-| AWS_ACCESS_KEY_ID      | The AWS access key for your account.                                                                         | Yes       |
-| AWS_ENDPOINT           | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.                        |           |
-| AWS_LOG_GROUP          | The name of the AWS CloudWatch log group to use.                                                             | Yes       |
-| AWS_LOG_STREAM         | The name of the AWS CloudWatch log stream to use.                                                            |           |
-| AWS_REGION             | The AWS region to use (default: us-east-2).                                                                  | Yes       |
-| AWS_SECRET_ACCESS_KEY  | The AWS secret access key for your account.                                                                  | Yes       |
-| CUBECOBRA_VERSION      | The version of Cube Cobra.                                                                                   |           |
-| DATA_BUCKET            | The name of the AWS S3 bucket to use. You will need to create this bucket in your account.                   | Yes       |
-| DOMAIN                 | The domain name of the server. Used for external redirects such as emails.                                   | Yes       |
-| DOWNTIME_ACTIVE        | Whether or not the site is in downtime mode.                                                                 |           |
-| DYNAMO_PREFIX          | The prefix to use for DynamoDB tables. You can leave this as the default value                               | Yes       |
-| LOCALSTACK_SES         | Set to "true" to still send emails via SES outside production. Assumes you have localstack running to catch. | Yes       |
-| ENV                    | The environment to run Cube Cobra in.                                                                        | Yes       |
-| NITROPAY_ENABLED       | Whether or not to enable NitroPay, our ad provider.                                                          |           |
-| NODE_ENV               | The environment to run Cube Cobra in.                                                                        | Yes       |
-| PATREON_CLIENT_ID      | The client ID for the Patreon OAuth app.                                                                     |           |
-| PATREON_CLIENT_SECRET  | The client secret for the Patreon OAuth app.                                                                 |           |
-| PATREON_HOOK_SECRET    | The secret for the Patreon webhook.                                                                          |           |
-| PATREON_REDIRECT       | The redirect URL for the Patreon OAuth app.                                                                  |           |
-| PORT                   | The port to run Cube Cobra on.                                                                               | Yes       |
-| SESSION_SECRET         | A secret phrase for session encryption. You can leave the default value.                                     | Yes       |
-| SESSION                | The name of the session cookie. You can leave the default value.                                             | Yes       |
-| CAPTCHA_SITE_KEY       | The reCAPTCHA site key                                                                                       | Yes       |
-| CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                                     | Yes       |
-| DRAFTMANCER_API_KEY    | The Draftmancer API key                                                                                      | Yes       |
-| HTTP_ONLY              | Default is unset. If set to exactly "true", generate http:// instead of https:// links                       | No        |
-| STRIPE_SECRET_KEY      | Stripe secret key. Must have a value                                                                         | Yes       |
+| Variable Name         | Description                                                                                                  | Required? |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ | --------- |
+| AWS_ACCESS_KEY_ID     | The AWS access key for your account.                                                                         | Yes       |
+| AWS_ENDPOINT          | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.                        |           |
+| AWS_LOG_GROUP         | The name of the AWS CloudWatch log group to use.                                                             | Yes       |
+| AWS_LOG_STREAM        | The name of the AWS CloudWatch log stream to use.                                                            |           |
+| AWS_REGION            | The AWS region to use (default: us-east-2).                                                                  | Yes       |
+| AWS_SECRET_ACCESS_KEY | The AWS secret access key for your account.                                                                  | Yes       |
+| CUBECOBRA_VERSION     | The version of Cube Cobra.                                                                                   |           |
+| DATA_BUCKET           | The name of the AWS S3 bucket to use. You will need to create this bucket in your account.                   | Yes       |
+| DOMAIN                | The domain name of the server. Used for external redirects such as emails.                                   | Yes       |
+| DOWNTIME_ACTIVE       | Whether or not the site is in downtime mode.                                                                 |           |
+| DYNAMO_PREFIX         | The prefix to use for DynamoDB tables. You can leave this as the default value                               | Yes       |
+| LOCALSTACK_SES        | Set to "true" to still send emails via SES outside production. Assumes you have localstack running to catch. | Yes       |
+| ENV                   | The environment to run Cube Cobra in.                                                                        | Yes       |
+| NITROPAY_ENABLED      | Whether or not to enable NitroPay, our ad provider.                                                          |           |
+| NODE_ENV              | The environment to run Cube Cobra in.                                                                        | Yes       |
+| PATREON_CLIENT_ID     | The client ID for the Patreon OAuth app.                                                                     |           |
+| PATREON_CLIENT_SECRET | The client secret for the Patreon OAuth app.                                                                 |           |
+| PATREON_HOOK_SECRET   | The secret for the Patreon webhook.                                                                          |           |
+| PATREON_REDIRECT      | The redirect URL for the Patreon OAuth app.                                                                  |           |
+| PORT                  | The port to run Cube Cobra on.                                                                               | Yes       |
+| SESSION_SECRET        | A secret phrase for session encryption. You can leave the default value.                                     | Yes       |
+| SESSION               | The name of the session cookie. You can leave the default value.                                             | Yes       |
+| CAPTCHA_SITE_KEY      | The reCAPTCHA site key                                                                                       | Yes       |
+| CAPTCHA_SECRET_KEY    | The reCAPTCHA secret key                                                                                     | Yes       |
+| DRAFTMANCER_API_KEY   | The Draftmancer API key                                                                                      | Yes       |
+| HTTP_ONLY             | Default is unset. If set to exactly "true", generate http:// instead of https:// links                       | No        |
+| STRIPE_SECRET_KEY     | Stripe secret key. Must have a value                                                                         | Yes       |
 
 ### Using Localstack emails
 
