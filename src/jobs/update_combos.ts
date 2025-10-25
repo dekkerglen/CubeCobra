@@ -17,7 +17,7 @@ const loadMetadata = async () => {
     };
   }
 
-  console.log("Couldn't find metadatadict.json");
+  console.log("Couldn't find metadatadict.json (that is OK)");
   return {
     indexToOracle: [],
   };

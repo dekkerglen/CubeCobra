@@ -28,7 +28,7 @@ export const sendEmail = async (
 ): Promise<any> => {
   const message = new Email({
     message: {
-      from: process.env.EMAIL_CONFIG_FROM || 'Cube Cobra Team <support@cubecobra.com>',
+      from: 'Cube Cobra Team <support@cubecobra.com>',
       to,
       subject,
     },

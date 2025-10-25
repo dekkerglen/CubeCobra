@@ -171,6 +171,8 @@ async function writeFile(filepath: string, data: any) {
       stringifyStream.on('end', () => {
         fs.closeSync(fd);
         resolve();
+        // eslint-disable-next-line no-console
+        console.log(`Finished writing ${filepath}`);
       });
     } catch (err) {
       reject(err);
@@ -343,7 +345,7 @@ function convertType(card: ScryfallCard, preflipped: boolean, faceAttributeSourc
     type = 'Artifact Contraption';
   }
 
-  if (!type) {
+  if (!type && card.id !== 'custom-card') {
     // eslint-disable-next-line no-console
     console.error(`Error converting type: (isExtra:${preflipped}) ${card.name} (id: ${card.id})`);
     return '';
@@ -866,7 +868,7 @@ const loadMetadatadict = async () => {
   }
 
   // eslint-disable-next-line no-console
-  console.log("Couldn't find metadatadict.json");
+  console.log("Couldn't find metadatadict.json (that is OK)");
   return {
     metadatadict: {},
     indexToOracle: [],

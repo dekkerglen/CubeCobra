@@ -40,8 +40,6 @@ if (bootstrap && bootstrap === 'true') {
     {
       accessKey: process.env.AWS_ACCESS_KEY_ID || '',
       secretKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-      emailUser: process.env.EMAIL_CONFIG_USERNAME || '',
-      emailPass: process.env.EMAIL_CONFIG_PASSWORD || '',
       domain: config.domain,
       environmentName: environment,
       version: version,
@@ -60,8 +58,6 @@ if (bootstrap && bootstrap === 'true') {
       patreonRedirect: config.patreonRedirectUri,
       sessionToken: process.env.SESSION_TOKEN || '',
       sessionSecret: process.env.SESSION_SECRET || '',
-      tcgPlayerPublicKey: process.env.TCG_PLAYER_PUBLIC_KEY || '',
-      tcgPlayerPrivateKey: process.env.TCG_PLAYER_PRIVATE_KEY || '',
       fleetSize: config.fleetSize,
       captchaSiteKey: process.env.CAPTCHA_SITE_KEY || '',
       captchaSecretKey: process.env.CAPTCHA_SECRET_KEY || '',

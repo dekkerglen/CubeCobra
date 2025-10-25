@@ -1,0 +1,6 @@
+services:
+  node:
+    command: ./docker/init.sh
+    environment:
+      # Set dev so npm install will install dev dependencies
+      - NODE_ENV=dev

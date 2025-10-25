@@ -25,8 +25,6 @@ interface CubeCobraStackParams {
   appBucket: string;
   downTimeActive: boolean;
   dynamoPrefix: string;
-  emailUser: string;
-  emailPass: string;
   env: Environment;
   jobsToken: string;
   nitroPayEnabled: boolean;
@@ -36,8 +34,6 @@ interface CubeCobraStackParams {
   patreonRedirect: string;
   sessionToken: string;
   sessionSecret: string;
-  tcgPlayerPublicKey: string;
-  tcgPlayerPrivateKey: string;
   fleetSize: number;
   jobs?: Map<string, ScheduledJobProps>;
   captchaSiteKey: string;
@@ -118,8 +114,6 @@ function createEnvironmentVariables(
     DOMAIN: params.domain,
     DOWNTIME_ACTIVE: params.downTimeActive ? 'true' : 'false',
     DYNAMO_PREFIX: params.dynamoPrefix,
-    EMAIL_CONFIG_PASSWORD: params.emailPass,
-    EMAIL_CONFIG_USERNAME: params.emailUser,
     ENV: params.env,
     NODE_ENV: params.env,
     JOBS_TOKEN: params.jobsToken,
@@ -131,8 +125,6 @@ function createEnvironmentVariables(
     PORT: '8080',
     SESSION: params.sessionToken,
     SESSION_SECRET: params.sessionSecret,
-    TCG_PLAYER_PRIVATE_KEY: params.tcgPlayerPrivateKey,
-    TCG_PLAYER_PUBLIC_KEY: params.tcgPlayerPublicKey,
     USE_S3: 'true',
     CAPTCHA_SITE_KEY: params.captchaSiteKey,
     CAPTCHA_SECRET_KEY: params.captchaSecretKey,
