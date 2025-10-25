@@ -57,10 +57,6 @@ To combat spam CubeCobra uses Google reCAPTCHA (V2) in actions such as creating 
 
 Docker Desktop: https://docs.docker.com/desktop/
 
-- Windows: Download and install the binary from localstack
-- Mac: `brew install localstack/tap/localstack-cli`
-- Linux: Use the `curl` command from localstack
-
 With Windows + WSL2, also: https://docs.docker.com/desktop/features/wsl/
 
 ### jq (Optional)
@@ -138,6 +134,10 @@ NodeJS: https://nodejs.org/en/download/
 ### Localstack
 
 [Localstack][https://www.localstack.cloud/] provides a local emulation of AWS Services required to run CubeCobra including S3, DynamoDB, Simple Email Service, and Cloudwatch.
+
+- Windows: Download and install the binary from localstack
+- Mac: `brew install localstack/tap/localstack-cli`
+- Linux: Use the `curl` command from localstack
 
 You may follow the installation guidelines from the localstack site. The recommended setup involves running localstack in a docker container, which requires [Docker Desktop](#installing-docker) as well.
 
