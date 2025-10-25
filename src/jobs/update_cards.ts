@@ -4,7 +4,6 @@ import 'module-alias/register';
 dotenv.config();
 
 import { Upload } from '@aws-sdk/lib-storage';
-import json from 'big-json';
 import es from 'event-stream';
 import fs, { createWriteStream } from 'fs';
 import JSONStream from 'JSONStream';
@@ -95,6 +94,8 @@ async function getFileWithCache(url: string, filePath: string, cacheDir?: string
     if (fs.existsSync(cachePath)) {
       // eslint-disable-next-line no-console
       console.log(`Reading from cache: ${cachePath}`);
+      // Save to original location
+      fs.copyFileSync(cachePath, filePath);
       return fs.createReadStream(cachePath);
     }
   }
@@ -179,21 +180,21 @@ async function writeFile(filepath: string, data: any) {
   return new Promise<void>((resolve, reject) => {
     try {
       const writeStart = Date.now();
+      // Create write stream
+      const writeStream = fs.createWriteStream(filepath);
 
-      // data is too big to stringify, so we write it to a file using big-json
-      const stringifyStream = json.createStringifyStream({
-        body: data,
-      });
+      // Create a readable stream
+      const readable = stream.Readable.from([data]);
 
-      // create empty file
-      const fd = fs.openSync(filepath, 'w');
+      // Create JSON stringifier so it doesn't wrap in [] or {} unnecessarily
+      const stringifier = JSONStream.stringify('', ',', '') as stream.Transform;
 
-      stringifyStream.on('data', (strChunk: any) => {
-        fs.writeSync(fd, strChunk);
-      });
-
-      stringifyStream.on('end', () => {
-        fs.closeSync(fd);
+      // Use pipeline to handle streams
+      pipeline(readable, stringifier, writeStream, (err: NodeJS.ErrnoException | null) => {
+        if (err) {
+          reject(err);
+          return;
+        }
         const writeDuration = (Date.now() - writeStart) / 1000;
         // eslint-disable-next-line no-console
         console.log(`Finished writing ${filepath}. Duration: ${writeDuration.toFixed(2)}s`);
