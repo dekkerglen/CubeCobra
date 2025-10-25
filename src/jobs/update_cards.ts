@@ -171,6 +171,8 @@ async function writeFile(filepath: string, data: any) {
       stringifyStream.on('end', () => {
         fs.closeSync(fd);
         resolve();
+        // eslint-disable-next-line no-console
+        console.log(`Finished writing ${filepath}`);
       });
     } catch (err) {
       reject(err);
