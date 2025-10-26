@@ -178,6 +178,8 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
 async function writeFile(filepath: string, data: any) {
   return new Promise<void>((resolve, reject) => {
     try {
+      const writeStart = Date.now();
+
       // data is too big to stringify, so we write it to a file using big-json
       const stringifyStream = json.createStringifyStream({
         body: data,
@@ -192,9 +194,10 @@ async function writeFile(filepath: string, data: any) {
 
       stringifyStream.on('end', () => {
         fs.closeSync(fd);
-        resolve();
+        const writeDuration = (Date.now() - writeStart) / 1000;
         // eslint-disable-next-line no-console
-        console.log(`Finished writing ${filepath}`);
+        console.log(`Finished writing ${filepath}. Duration: ${writeDuration.toFixed(2)}s`);
+        resolve();
       });
     } catch (err) {
       reject(err);

@@ -151,7 +151,10 @@ const fetchAllPages = async (
     if (!fs.existsSync(folder)) {
       fs.mkdirSync(folder, { recursive: true });
     }
+    const dictWriteStart = Date.now();
     fs.writeFileSync(dataByIdPath, JSON.stringify(dataById));
+    const dictWriteDuration = (Date.now() - dictWriteStart) / 1000;
+    console.log(`Saved comboDict.json. Duration: ${dictWriteDuration.toFixed(2)}s`);
 
     console.log('Retrieved combo data from cache or API');
 
@@ -162,7 +165,7 @@ const fetchAllPages = async (
 
     for (const id in dataById) {
       processed += 1;
-      if (processed % 100 === 0) {
+      if (processed % 1000 === 0) {
         console.log(`Processed ${processed} of ${total}`);
       }
       const variant = dataById[id];
@@ -185,7 +188,10 @@ const fetchAllPages = async (
     }
 
     console.log('Saving comboTree.json...');
+    const treeWriteStart = Date.now();
     fs.writeFileSync(comboTreePath, JSON.stringify(comboTree));
+    const treeWriteDuration = (Date.now() - treeWriteStart) / 1000;
+    console.log(`Saved comboTree.json. Duration: ${treeWriteDuration.toFixed(2)}s`);
 
     console.log('All combo data saved successfully');
   } catch (error) {
