@@ -163,6 +163,7 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {
   return new Promise<void>((resolve, reject) => {
     try {
+      const fileStart = Date.now();
       const readStream = fs.createReadStream(filename);
       const parseStream = json.createParseStream();
 
@@ -173,8 +174,9 @@ async function loadJSONFile(filename: string, attribute: keyof Catalog) {
       readStream.pipe(parseStream);
 
       readStream.on('end', () => {
+        const fileDuration = ((Date.now() - fileStart) / 1000).toFixed(2);
         // eslint-disable-next-line no-console
-        console.info(`Loaded ${filename} into ${attribute}`);
+        console.info(`Loaded ${filename} into ${attribute} in ${fileDuration}s`);
         resolve();
       });
     } catch (e) {
