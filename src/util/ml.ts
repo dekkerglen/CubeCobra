@@ -234,6 +234,10 @@ export const build = (oracles: string[]) => {
 };
 
 export const draft = (pack: string[], pool: string[]) => {
+  if (!encoder || !draftDecoder) {
+    return [];
+  }
+
   const array = tf.tidy(() => {
     const vector = [encodeIndeces(pool.map((oracle) => oracleToIndex[oracle]))];
     const tensor = tf.tensor(vector);
