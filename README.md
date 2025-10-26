@@ -70,6 +70,8 @@ Download and install from https://jqlang.org/download/
 Running CubeCobra within docker is the simplest and faster way to get everything up and running. For Windows users we highly recommend running docker
 using [Windows Subsystem for Linux 2 (WSL2)](https://learn.microsoft.com/en-us/windows/wsl/install) with Ubuntu (22.04 or above).
 
+**Note**: A minimum of 16GB of memory should be allocated to Docker (whether in Docker Desktop or WSL2 settings).
+
 ### Initial Setup
 
 For the first setup, you will need to run:
