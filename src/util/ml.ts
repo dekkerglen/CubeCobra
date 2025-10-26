@@ -1,3 +1,6 @@
+/* eslint-disable no-console */
+require('dotenv').config();
+
 import { getAllOracleIds, isOracleBasic } from './carddb';
 
 const tf = require('@tensorflow/tfjs-node');
@@ -20,44 +23,48 @@ let recommendDecoder: Model;
 let deckbuilderDecoder: Model;
 let draftDecoder: Model;
 
+const errorHandler = (modelName: string, err: { message: any; stack: any }) => {
+  if (process.env?.NODE_ENV === 'development') {
+    console.warn(`${modelName} not found, bot stuff will not work as expected`);
+  } else {
+    cloudwatch.error(err.message, err.stack);
+  }
+};
+
 tf.loadGraphModel('file://./model/encoder/model.json')
   .then((model: Model) => {
     encoder = model;
-    // eslint-disable-next-line no-console
     console.info('encoder loaded');
   })
   .catch((err: { message: any; stack: any }) => {
-    cloudwatch.error(err.message, err.stack);
+    errorHandler('encoder', err);
   });
 
 tf.loadGraphModel('file://./model/cube_decoder/model.json')
   .then((model: Model) => {
     recommendDecoder = model;
-    // eslint-disable-next-line no-console
     console.info('recommend_decoder loaded');
   })
   .catch((err: { message: any; stack: any }) => {
-    cloudwatch.error(err.message, err.stack);
+    errorHandler('recommend_decoder', err);
   });
 
 tf.loadGraphModel('file://./model/deck_build_decoder/model.json')
   .then((model: Model) => {
     deckbuilderDecoder = model;
-    // eslint-disable-next-line no-console
     console.info('deck_build_decoder loaded');
   })
   .catch((err: { message: any; stack: any }) => {
-    cloudwatch.error(err.message, err.stack);
+    errorHandler('deck_build_decoder', err);
   });
 
 tf.loadGraphModel('file://./model/draft_decoder/model.json')
   .then((model: Model) => {
     draftDecoder = model;
-    // eslint-disable-next-line no-console
     console.info('draft_decoder loaded');
   })
   .catch((err: { message: any; stack: any }) => {
-    cloudwatch.error(err.message, err.stack);
+    errorHandler('draft_decoder', err);
   });
 
 /**
