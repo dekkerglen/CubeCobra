@@ -6,12 +6,10 @@ dotenv.config();
 import { Upload } from '@aws-sdk/lib-storage';
 import json from 'big-json';
 import es from 'event-stream';
-import fs from 'fs';
-import { createWriteStream } from 'fs';
+import fs, { createWriteStream } from 'fs';
 import JSONStream from 'JSONStream';
 import fetch from 'node-fetch';
-import { join } from 'path';
-import path from 'path';
+import path, { join } from 'path';
 import { pipeline } from 'stream';
 import stream from 'stream';
 
@@ -88,7 +86,30 @@ async function downloadFile(url: string, filePath: string) {
   });
 }
 
-async function downloadDefaultCards() {
+// Helper to stream file from cache or download and cache it
+async function getFileWithCache(url: string, filePath: string, cacheDir?: string): Promise<fs.ReadStream> {
+  let cachePath: string | undefined = undefined;
+  if (cacheDir) {
+    const fileName = path.basename(filePath);
+    cachePath = path.join(cacheDir, fileName);
+    if (fs.existsSync(cachePath)) {
+      // eslint-disable-next-line no-console
+      console.log(`Reading from cache: ${cachePath}`);
+      return fs.createReadStream(cachePath);
+    }
+  }
+  // Download and cache
+  await downloadFile(url, filePath);
+  if (cacheDir) {
+    // Copy to cache
+    const fileName = path.basename(filePath);
+    cachePath = path.join(cacheDir, fileName);
+    fs.copyFileSync(filePath, cachePath);
+  }
+  return fs.createReadStream(filePath);
+}
+
+async function downloadDefaultCards(cacheDir?: string) {
   let defaultUrl;
   let allUrl;
 
@@ -107,14 +128,15 @@ async function downloadDefaultCards() {
   if (!defaultUrl) throw new Error('URL for Default cards not found in /bulk-data response');
   if (!allUrl) throw new Error('URL for All cards not found in /bulk-data response');
 
-  return Promise.all([
-    downloadFile(defaultUrl, './private/cards.json'),
-    downloadFile(allUrl, './private/all-cards.json'),
+  // Use getFileWithCache to download or stream from cache
+  await Promise.all([
+    getFileWithCache(defaultUrl, './private/cards.json', cacheDir),
+    getFileWithCache(allUrl, './private/all-cards.json', cacheDir),
   ]);
 }
 
-async function downloadSets() {
-  await downloadFile('https://api.scryfall.com/sets', './private/sets.json');
+async function downloadSets(cacheDir?: string) {
+  await getFileWithCache('https://api.scryfall.com/sets', './private/sets.json', cacheDir);
 }
 
 function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
@@ -164,7 +186,7 @@ async function writeFile(filepath: string, data: any) {
       // create empty file
       const fd = fs.openSync(filepath, 'w');
 
-      stringifyStream.on('data', (strChunk) => {
+      stringifyStream.on('data', (strChunk: any) => {
         fs.writeSync(fd, strChunk);
       });
 
@@ -552,6 +574,8 @@ async function writeCatalog(basePath = 'private') {
     fs.mkdirSync(basePath);
   }
 
+  const start = Date.now();
+
   await writeFile(path.join(basePath, 'names.json'), catalog.names);
   await writeFile(path.join(basePath, 'cardtree.json'), util.turnToTree(catalog.names));
   await writeFile(path.join(basePath, 'carddict.json'), catalog.dict);
@@ -564,8 +588,9 @@ async function writeCatalog(basePath = 'private') {
   await writeFile(path.join(basePath, 'metadatadict.json'), catalog.metadatadict);
   await writeFile(path.join(basePath, 'indexToOracle.json'), catalog.indexToOracleId);
 
+  const duration = (Date.now() - start) / 1000;
   // eslint-disable-next-line no-console
-  console.info('All JSON files saved.');
+  console.info(`All JSON files saved. Duration: ${duration.toFixed(2)}s`);
 }
 
 function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number, mpPrice: number) {
@@ -753,9 +778,10 @@ const downloadFromScryfall = async (
   indexToOracle: string[],
   ckPrices: Record<string, number>,
   mpPrices: Record<string, number>,
+  cacheDir?: string,
 ) => {
   try {
-    await downloadSets();
+    await downloadSets(cacheDir);
     await processSets();
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -768,10 +794,9 @@ const downloadFromScryfall = async (
   }
 
   // eslint-disable-next-line no-console
-  console.info('Downloading files from scryfall...');
+  console.info('Downloading files from scryfall or cache...');
   try {
-    // the module.exports line is necessary to correctly mock this function in unit tests
-    await downloadDefaultCards();
+    await downloadDefaultCards(cacheDir);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Downloading card data failed:');
@@ -876,52 +901,71 @@ const loadMetadatadict = async () => {
 };
 
 const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
-  // do a get on https://api.cardkingdom.com/api/v2/pricelist
-  const res = await fetch('https://api.cardkingdom.com/api/v2/pricelist', {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Download of card kingdom prices failed with code ${res.status}`);
+  // Use cache if available
+  const url = 'https://api.cardkingdom.com/api/v2/pricelist';
+  const filePath = './private/cardkingdom-prices.json';
+  let stream;
+  if (cacheDir) {
+    stream = await getFileWithCache(url, filePath, cacheDir);
+  } else {
+    await downloadFile(url, filePath);
+    stream = fs.createReadStream(filePath);
   }
-
-  const json = await res.json();
-
+  const chunks: Buffer[] = [];
+  await new Promise((resolve, reject) => {
+    stream.on('data', (chunk) => {
+      if (typeof chunk === 'string') {
+        chunks.push(Buffer.from(chunk));
+      } else {
+        chunks.push(chunk);
+      }
+    });
+    stream.on('end', resolve);
+    stream.on('error', reject);
+  });
+  const json = JSON.parse(Buffer.concat(chunks).toString('utf8'));
   // eslint-disable-next-line no-console
   console.log(`Loaded ${json.data.length} cards from Card Kingdom`);
-
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
 
 const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
-  const res = await fetch('https://manapool.com/api/v1/prices/singles', {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Download of mana pool prices failed with code ${res.status}`);
+  const url = 'https://manapool.com/api/v1/prices/singles';
+  const filePath = './private/manapool-prices.json';
+  let stream;
+  if (cacheDir) {
+    stream = await getFileWithCache(url, filePath, cacheDir);
+  } else {
+    await downloadFile(url, filePath);
+    stream = fs.createReadStream(filePath);
   }
-
-  const json = await res.json();
-
+  const chunks: Buffer[] = [];
+  await new Promise((resolve, reject) => {
+    stream.on('data', (chunk) => {
+      if (typeof chunk === 'string') {
+        chunks.push(Buffer.from(chunk));
+      } else {
+        chunks.push(chunk);
+      }
+    });
+    stream.on('end', resolve);
+    stream.on('error', reject);
+  });
+  const json = JSON.parse(Buffer.concat(chunks).toString('utf8'));
   // eslint-disable-next-line no-console
   console.log(`Loaded ${json.data.length} cards from Mana Pool`);
-
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
+
+// Parse CLI args for cache dir (plain JS, no minimist)
+const cacheDir = process.env?.CACHE_DIR ?? '';
 
 (async () => {
   try {
     const { metadatadict, indexToOracle } = await loadMetadatadict();
     const manaPoolPrices = await loadManaPoolPrices();
     const cardKingdomPrices = await loadCardKingdomPrices();
-    await downloadFromScryfall(metadatadict, indexToOracle, cardKingdomPrices, manaPoolPrices);
+    await downloadFromScryfall(metadatadict, indexToOracle, cardKingdomPrices, manaPoolPrices, cacheDir);
     await uploadCardDb();
 
     // eslint-disable-next-line no-console

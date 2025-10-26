@@ -8,6 +8,8 @@ import path from 'path';
 
 import { Combo, ComboTree } from '../util/cardCatalog';
 
+const cacheDir = process.env?.CACHE_DIR ?? '';
+
 const loadMetadata = async () => {
   if (fs.existsSync('./temp') && fs.existsSync('./temp/metadatadict.json')) {
     const indexToOracle = JSON.parse(fs.readFileSync('./temp/indexToOracle.json', 'utf8'));
@@ -73,7 +75,22 @@ const fetchWithRetries = async (url: string, retries = 3, delay = 1000): Promise
   }
 };
 
-const fetchAllPages = async (initialUrl: string): Promise<Record<string, Combo>> => {
+const fetchAllPages = async (
+  initialUrl: string,
+  filePath: string,
+  cacheDir?: string,
+): Promise<Record<string, Combo>> => {
+  // Check if data exists in cache first
+  if (cacheDir) {
+    const fileName = path.basename(filePath);
+    const cachePath = path.join(cacheDir, fileName);
+    if (fs.existsSync(cachePath)) {
+      console.log(`Reading combos from cache: ${cachePath}`);
+      return JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+    }
+  }
+
+  // If not in cache, download and process pages
   let url = initialUrl;
   const dataById: Record<string, any> = {};
 
@@ -89,6 +106,16 @@ const fetchAllPages = async (initialUrl: string): Promise<Record<string, Combo>>
       dataById[id] = variant;
     }
     url = data.next; // Get the next URL from the response
+  }
+
+  // Save to cache if enabled
+  if (cacheDir) {
+    const fileName = path.basename(filePath);
+    const cachePath = path.join(cacheDir, fileName);
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
+    fs.writeFileSync(cachePath, JSON.stringify(dataById));
   }
 
   return dataById;
@@ -117,10 +144,16 @@ const fetchAllPages = async (initialUrl: string): Promise<Record<string, Combo>>
     }
 
     // Fetch all paginated data
-    const dataById = await fetchAllPages(initialUrl);
+    const dataById = await fetchAllPages(initialUrl, dataByIdPath, cacheDir);
 
-    console.log('Saving comboDict.json...');
+    // Save to original location
+    const folder = path.dirname(dataByIdPath);
+    if (!fs.existsSync(folder)) {
+      fs.mkdirSync(folder, { recursive: true });
+    }
     fs.writeFileSync(dataByIdPath, JSON.stringify(dataById));
+
+    console.log('Retrieved combo data from cache or API');
 
     console.log('Building combo tree...');
     const comboTree: ComboTree = {};
