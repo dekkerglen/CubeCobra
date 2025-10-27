@@ -24,15 +24,18 @@ VSCode (with the ESLint and Prettier extension) is the recommended environment. 
 
 The awslocal CLI used by this project (https://github.com/localstack/awscli-local) is required for initial setup of the localstack resources used by Cube Cobra.
 
-First install Python (suggest Python 3) and pip for your operating system. Sample instructions for a linux environment are:
+First install Python 3.3+ and pip3 for your operating system. Sample instructions for a linux environment are:
 
-- Ensure Virtual environment package is installed: `sudo apt-get install python3-venv`
-- Create a virtual environment in your home directory: `python3 -m venv ~/venv`
-- Add the virtual environment to your path: `export PATH=~/venv/bin:$PATH`
-- Also add to your startup profile script (eg. bash profile) the activation of the virtual environment: `source ~/venv/bin/activate`
-- Install awslocal: `pip3 install "awscli-local[ver1]"`
-- Validate install: `awslocal --version`
-  - Will pass and print some "aws-cli" version (likely 1.X) for the system
+1. Ensure Virtual environment package is installed: `sudo apt-get install python3-venv`
+2. Switch to the directory you cloned CubeCobra in (eg this directory!)
+3. Create a virtual environment in your home directory: `python3 -m venv ./pyenv`
+4. Activate the virtual environment: `source ./pyenv/bin/activate`
+5. Install awslocal: `pip3 install "awscli-local[ver1]"`
+6. Validate install: `awslocal --version`
+   1. Will pass and print some "aws-cli" version (likely 1.X) for the system
+7. You can now deactivte the virtual environment by running: `deactivate`
+8. Optional: Add the `$(pwd)/pyenv/bin` folder to your path so you can execute `awslocal` easily
+   1. If you don't, then to use awslocal from this directory you will run `./pyenv/bin/awslocal ...`
 
 ### reCAPTCHA account
 
@@ -43,9 +46,9 @@ To combat spam CubeCobra uses Google reCAPTCHA (V2) in actions such as creating 
 3. Set "reCAPTCHA type" to V2, with "I'm not a robot" tickbox enabled
 4. Enter "localhost" as the domain
 5. If you have setup your local CubeCobra to be accessible under a non-localhost domain (see [Running CubeCobra](#running-cubecobra)) then include that domain as well
-6. Close the "Google Cloud Platform" section, as GCP is not required
-7. Save. See screenshot as an example of the desired settings:
+6. See screenshot as an example of the desired settings:
    ![Creating a reCAPTCHA site](./docs/readme/reCAPTCHA-create.png)
+7. Submit
 8. The generated "Site key" and "Secret key" values will be shown (You can always get these again from the reCAPTCHA settings if necessary
 9. Run `cp .env_EXAMPLE .env` to create a .env file with values for running the application locally already set
 10. Edit the .env file
@@ -80,11 +83,28 @@ For the first setup, you will need to run:
 docker compose -f docker-compose.yml -f ./docker/init.yml up --abort-on-container-exit
 ```
 
-Note: This can take tens of minutes to complete.
+Note: This can take tens of minutes to complete. When it finishes successfully you should see in the last docker logs output similar to the following (order of lines, and container name, may be different):
+
+```
+cubecobralocalstack  | 2025-10-27T21:47:56.503  INFO --- [et.reactor-0] localstack.request.aws     : AWS s3.UploadPart => 200
+cubecobralocalstack  | 2025-10-27T21:47:58.803  INFO --- [et.reactor-1] localstack.request.aws     : AWS s3.CompleteMultipartUpload => 200
+cubecobracube        | Finished comboDict.json
+cubecobracube        | Uploading manifest...
+cubecobralocalstack  | 2025-10-27T21:47:58.811  INFO --- [et.reactor-2] localstack.request.aws     : AWS s3.PutObject => 200
+cubecobracube        | Finished manifest
+cubecobracube        | done
+cubecobracube        | Complete
+cubecobralocalstack  | 2025-10-27T21:47:59.912  INFO --- [ead-7 (_run)] localstack_persist.state   : Persisting state of service s3...
+cubecobracube exited with code 0
+Aborting on container exit...
+[+] Stopping 2/2
+ ✔ Container cubecobracube        Stopped                                                                          0.0s
+ ✔ Container cubecobralocalstack  Stopped
+```
 
 This will:
 
-- setup localstack w/ s3 bucket and email verified
+- setup localstack w/ s3 bucket and SES email verified
 - install dependencies
 - build the application code to run setup scripts
 - run setup scripts to:
@@ -101,6 +121,15 @@ Then you can start the program like so:
 
 ```sh
 docker compose up
+```
+
+When the server is ready you should see in the last docker logs output similar to the following (order of lines, and container name, may be different):
+
+```
+cubecobracube        | Loaded private/carddict.json into _carddict
+cubecobracube        | Loaded private/comboDict.json into comboDict
+cubecobracube        | Finished loading carddb.
+cubecobracube        | Server started on port 5000, listening on 127.0.0.1...
 ```
 
 This script will:
@@ -248,7 +277,7 @@ Reference: https://docs.localstack.cloud/aws/services/ses/#retrieve-sent-emails
 If you have set `LOCALSTACK_SES="true"` (true by default) in your .env file and you are NOT using the [docker](#running-cubecobra-in-docker) setp, then you also need to manually verify that email for SES to work. Run:
 
 ```
-awslocal ses verify-email-identity --email 'support@cubecobra.com'
+./pyenv/bin/awslocal ses verify-email-identity --email 'support@cubecobra.com'
 ```
 
 Once verified, you can fetch them from localstack with:
