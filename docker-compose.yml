@@ -1,6 +1,6 @@
 services:
   node:
-    container_name: ${COMPOSE_PROJECT_NAME}cube
+    container_name: cube
     image: node:20.18.0
     volumes:
       - ./:/home/node/app
@@ -30,7 +30,7 @@ services:
     # Localstack community does not persist anything out of the box, that is available in localstack-pro.
     # This variant (https://hub.docker.com/r/gresau/localstack-persist) causes the state to be persisted on actions and reloaded when the container starts
     image: gresau/localstack-persist:3.8
-    container_name: ${COMPOSE_PROJECT_NAME}localstack
+    container_name: localstack
     volumes:
       - localstack:/persisted-data
       # Provide initialization script run once localstack is ready. Creates the s3 bucket

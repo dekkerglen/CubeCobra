@@ -567,4 +567,4 @@ src/client/generated/filtering/cardFilters.js
 src/util/git.ts
 
 # Python env for awslocal install
-pyenv
+venv

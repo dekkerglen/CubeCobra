@@ -20,23 +20,6 @@ Prettier Extension for VSCode: https://marketplace.visualstudio.com/items?itemNa
 
 VSCode (with the ESLint and Prettier extension) is the recommended environment. When using this setup, make sure that your selected workspace is the root folder that you have cloned, this will ensure that the ESLint plugin can work with our linting rules. Prettier will automatically apply standard formatting to your code. Using these plugins will make adhering to the linting and code formatting rules significantly easier.
 
-### AWSLocal CLI (for Localstack)
-
-The awslocal CLI used by this project (https://github.com/localstack/awscli-local) is required for initial setup of the localstack resources used by Cube Cobra.
-
-First install Python 3.3+ and pip3 for your operating system. Sample instructions for a linux environment are:
-
-1. Ensure Virtual environment package is installed: `sudo apt-get install python3-venv`
-2. Switch to the directory you cloned CubeCobra in (eg this directory!)
-3. Create a virtual environment in your home directory: `python3 -m venv ./pyenv`
-4. Activate the virtual environment: `source ./pyenv/bin/activate`
-5. Install awslocal: `pip3 install "awscli-local[ver1]"`
-6. Validate install: `awslocal --version`
-   1. Will pass and print some "aws-cli" version (likely 1.X) for the system
-7. You can now deactivte the virtual environment by running: `deactivate`
-8. Optional: Add the `$(pwd)/pyenv/bin` folder to your path so you can execute `awslocal` easily
-   1. If you don't, then to use awslocal from this directory you will run `./pyenv/bin/awslocal ...`
-
 ### reCAPTCHA account
 
 To combat spam CubeCobra uses Google reCAPTCHA (V2) in actions such as creating cubes. Thus in order to use the site locally you must have a reCAPTCHA account, which thankfully are free (no credit card needed) with 10,000 assertions a month. To setup the account follow these steps:
@@ -152,6 +135,18 @@ After accessing the application locally you will need to create a new user accou
 After doing so, run `bash scripts/extract-registration-email.sh` to print the registeration URL you would have been emailed. Copy it and/or
 open via your terminal to complete registration, then you can login using the username and password you registered with.
 
+### Running commands in docker containers
+
+Assuming you have started docker per [Running CubeCobra](#running-cubecobra), then you can and should run commands such as npm scripts within docker using docker exec.
+
+Examples of common commands:
+
+- Install package - `docker exec -it cube npm install`
+- Run npm build - `docker exec -it cube npm run build`
+- Run update cards script - `docker exec -it cube npm run update-cards`
+- Check the top-level contents of the localstack s3 bucket - `docker exec -it localstack awslocal s3 ls s3://local`
+- Query the users table of the localstack dynamo table - `docker exec -it localstack awslocal dynamodb execute-statement --statement 'SELECT * FROM LOCAL_USERS'`
+
 ## Running CubeCobra via node
 
 You will need to install NodeJS and Localstack, and the complete the initial setup steps. You can find the necessary resources here:
@@ -175,6 +170,23 @@ You may follow the installation guidelines from the localstack site. The recomme
 Once localstack is installed, you can start the server in the background with the CLI: `localstack start --detached`. You can see the status with `localstack status`.
 
 _Note_: Localstack community edition (eg. without a pro account) does not persist anything to disk once the container is stopped.
+
+### AWSLocal CLI (for Localstack)
+
+The awslocal CLI used by this project (https://github.com/localstack/awscli-local) is required for initial setup of the localstack resources used by Cube Cobra.
+
+First install Python 3.3+ and pip3 for your operating system. Sample instructions for a linux environment are:
+
+1. Ensure Virtual environment package is installed: `sudo apt-get install python3-venv`
+2. Switch to the directory you cloned CubeCobra in (eg this directory!)
+3. Create a virtual environment here: `python3 -m venv ./venv`
+4. Activate the virtual environment: `source ./venv/bin/activate`
+5. Install awslocal: `pip3 install "awscli-local[ver1]"`
+6. Validate install: `awslocal --version`
+   1. Will pass and print some "aws-cli" version (likely 1.X) for the system
+7. You can now deactivate the virtual environment by running: `deactivate`
+8. Optional: Add the `$(pwd)/venv/bin` folder to your path so you can execute `awslocal` easily
+   1. If you don't, then to use awslocal from this directory you will run `./venv/bin/awslocal ...`
 
 ### Initial Setup
 
@@ -274,10 +286,10 @@ Here is a table on how to fill out the env vars:
 
 Reference: https://docs.localstack.cloud/aws/services/ses/#retrieve-sent-emails
 
-If you have set `LOCALSTACK_SES="true"` (true by default) in your .env file and you are NOT using the [docker](#running-cubecobra-in-docker) setp, then you also need to manually verify that email for SES to work. Run:
+If you have set `LOCALSTACK_SES="true"` (true by default) in your .env file and you are NOT using the [docker](#running-cubecobra-in-docker) setup, then you also need to manually verify that email for SES to work. Run:
 
 ```
-./pyenv/bin/awslocal ses verify-email-identity --email 'support@cubecobra.com'
+./venv/bin/awslocal ses verify-email-identity --email 'support@cubecobra.com'
 ```
 
 Once verified, you can fetch them from localstack with:
