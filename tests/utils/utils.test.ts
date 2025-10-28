@@ -6,6 +6,7 @@ import {
   cardRestrictedIn,
   isCardFoil,
   isFoilFinish,
+  cardWordCount,
   normalizeName,
 } from '../../src/client/utils/cardutil';
 import util from '../../src/util/util';
@@ -610,5 +611,15 @@ describe('Foiling', () => {
     expect(isFoilFinish('Foil')).toBeTruthy();
     expect(isFoilFinish('Etched')).toBeTruthy();
     expect(isFoilFinish('Alt-foil')).toBeTruthy();
+  });
+});
+
+describe('cardWordCount', () => {
+  it('Treats spaces and newlines as word separators', () => {
+    const card_with_multiline_text = createCardFromDetails({
+      oracle_text: 'A B\nC'
+    });
+
+    expect(cardWordCount(card_with_multiline_text)).toBe(3);
   });
 });
