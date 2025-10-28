@@ -216,7 +216,7 @@ export const ORDERED_SORTS: string[] = [
   'Cube Count',
   'Pick Count',
   'Collector number',
-  'Word Count',
+  'Approximate Word Count',
 ];
 export type OrderedSortsType = (typeof ORDERED_SORTS)[number];
 
@@ -288,7 +288,7 @@ export const SortFunctions: Record<string, (a: any, b: any) => number> = {
     }
     return 0;
   },
-  'Word Count': (a, b) => cardWordCount(a) - cardWordCount(b),
+  'Approximate Word Count': (a, b) => cardWordCount(a) - cardWordCount(b),
 };
 
 export const SortFunctionsOnDetails = (sort: string) => (a: any, b: any) =>
@@ -566,7 +566,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
       }
     }
     ret = res;
-  } else if (sort === 'Word Count') {
+  } else if (sort === 'Approximate Word Count') {
     const labels: string[] = [];
     for (const card of cube || []) {
       const wordCount = cardWordCount(card);
@@ -819,7 +819,7 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
     else if (popularity <= 100) ret = ['50–100%'];
   } else if (sort === 'Elo') {
     ret = [getEloBucket(cardElo(card))];
-  } else if (sort === 'Word Count') {
+  } else if (sort === 'Approximate Word Count') {
     const wordCount = cardWordCount(card);
     ret = [wordCountBucket(wordCount)];
   }
