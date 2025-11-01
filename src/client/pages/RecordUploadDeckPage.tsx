@@ -27,7 +27,8 @@ interface RecordUploadDeckPageProps {
 const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft }) => {
   const formRef = createRef<HTMLFormElement>();
   const [selectedUser, setSelectedUser] = useState<number>(0);
-  const [cards, setCards] = useState<CardDetails[]>([]);
+  const [mainboardCards, setMainboardCards] = useState<CardDetails[]>([]);
+  const [sideboardCards, setSideboardCards] = useState<CardDetails[]>([]);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
 
   const { submitDisabled, disabledExplanation } = useMemo(() => {
@@ -40,12 +41,12 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
       return { submitDisabled: true, disabledExplanation: 'Selected player already has a deck in the draft' };
     }
 
-    if (cards.length === 0) {
-      return { submitDisabled: true, disabledExplanation: 'No cards added to deck' };
+    if (mainboardCards.length === 0) {
+      return { submitDisabled: true, disabledExplanation: 'No cards added to mainboard' };
     }
 
     return { submitDisabled: false, disabledExplanation: '' };
-  }, [selectedUser, record.players.length, draft, cards.length]);
+  }, [selectedUser, record.players.length, draft, mainboardCards.length]);
 
   return (
     <MainLayout>
@@ -63,8 +64,10 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
                 selectedUser={selectedUser}
                 setSelectedUser={setSelectedUser}
                 record={record}
-                cards={cards}
-                setCards={setCards}
+                mainboardCards={mainboardCards}
+                setMainboardCards={setMainboardCards}
+                sideboardCards={sideboardCards}
+                setSideboardCards={setSideboardCards}
                 setAlerts={setAlerts}
                 cubeId={cube.id}
               />
@@ -83,7 +86,8 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
                 action={`/cube/records/uploaddeck/${record.id}`}
                 formData={{
                   userIndex: `${selectedUser}`,
-                  cards: JSON.stringify(cards.map(detailsToCard).map(cardOracleId)),
+                  mainboard: JSON.stringify(mainboardCards.map(detailsToCard).map(cardOracleId)),
+                  sideboard: JSON.stringify(sideboardCards.map(detailsToCard).map(cardOracleId)),
                 }}
                 ref={formRef}
               >

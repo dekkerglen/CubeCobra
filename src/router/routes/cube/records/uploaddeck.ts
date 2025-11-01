@@ -12,6 +12,7 @@ import Record from '../../../../dynamo/models/record';
 import { bodyValidation } from '../../../../router/middleware/bodyValidation';
 import { addBasics, createPool } from '../../../../routes/cube/helper';
 import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
+import { setupPicks } from '../../../../util/draftutil';
 import { Request, Response } from '../../../../types/express';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from '../../../../util/carddb';
 import { isCubeEditable, isCubeViewable } from '../../../../util/cubefn';
@@ -48,16 +49,18 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
   }
 };
 
-const cardsSchema = Joi.array().items(Joi.string().required()).min(1).max(200).required();
+const mainboardSchema = Joi.array().items(Joi.string()).min(1).max(200).required();
+const sideboardSchema = Joi.array().items(Joi.string()).max(200).default([]);
 
-export const associateNewDraft = async (cube: CubeType, record: RecordType, userIndex: number, oracles: string[]) => {
+export const associateNewDraft = async (cube: CubeType, record: RecordType, userIndex: number, mainboardOracles: string[], sideboardOracles: string[] = []) => {
   const cubeCards = await Cube.getCards(cube.id);
   const { mainboard } = cubeCards;
 
   const deck: number[][][] = createPool();
+  const sideboard: number[][][] = setupPicks(1, 8);
   const cards: CardType[] = [];
 
-  for (const oracle of oracles) {
+  const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
     let selected = null;
     const potentialIds = getVersionsByOracleId(oracle);
     const inCube = mainboard.find((c: CardType) => cardOracleId(c) === oracle);
@@ -83,12 +86,20 @@ export const associateNewDraft = async (cube: CubeType, record: RecordType, user
       const isCreature = selected.details.type.toLowerCase().includes('creature');
       const cmc = selected.details.cmc;
 
-      const row = isCreature ? 0 : 1;
+      const row = isSideboard ? 0 : (isCreature ? 0 : 1);
       const col = Math.max(0, Math.min(7, Math.floor(cmc)));
 
-      deck[row][col].push(cards.length);
+      targetPool[row][col].push(cards.length);
       cards.push(selected);
     }
+  };
+
+  for (const oracle of mainboardOracles) {
+    processCard(oracle, deck, false);
+  }
+
+  for (const oracle of sideboardOracles) {
+    processCard(oracle, sideboard, true);
   }
 
   const newDraft = {
@@ -102,13 +113,14 @@ export const associateNewDraft = async (cube: CubeType, record: RecordType, user
       owner: player.userId,
       title: `${player.name}`,
       mainboard: createPool() as number[][][],
-      sideboard: createPool() as number[][][],
+      sideboard: setupPicks(1, 8) as number[][][],
     })),
     complete: true,
     basics: cube.basics,
   };
 
   newDraft.seats[userIndex - 1].mainboard = deck;
+  newDraft.seats[userIndex - 1].sideboard = sideboard;
 
   addBasics(newDraft, cube.basics);
 
@@ -125,15 +137,17 @@ export const associateWithExistingDraft = async (
   cube: CubeType,
   draft: DraftType,
   userIndex: number,
-  oracles: string[],
+  mainboardOracles: string[],
+  sideboardOracles: string[] = [],
 ) => {
   const cubeCards = await Cube.getCards(cube.id);
   const { mainboard } = cubeCards;
 
   const deck: number[][][] = createPool();
+  const sideboard: number[][][] = setupPicks(1, 8);
   const cards: CardType[] = draft.cards;
 
-  for (const oracle of oracles) {
+  const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
     let selected = null;
     const potentialIds = getVersionsByOracleId(oracle);
     const inCube = mainboard.find((c: CardType) => cardOracleId(c) === oracle);
@@ -159,15 +173,24 @@ export const associateWithExistingDraft = async (
       const isCreature = selected.details.type.toLowerCase().includes('creature');
       const cmc = selected.details.cmc;
 
-      const row = isCreature ? 0 : 1;
+      const row = isSideboard ? 0 : (isCreature ? 0 : 1);
       const col = Math.max(0, Math.min(7, Math.floor(cmc)));
 
-      deck[row][col].push(cards.length);
+      targetPool[row][col].push(cards.length);
       cards.push(selected);
     }
+  };
+
+  for (const oracle of mainboardOracles) {
+    processCard(oracle, deck, false);
+  }
+
+  for (const oracle of sideboardOracles) {
+    processCard(oracle, sideboard, true);
   }
 
   draft.seats[userIndex - 1].mainboard = deck;
+  draft.seats[userIndex - 1].sideboard = sideboard;
 
   await Draft.put(draft);
 };
@@ -192,11 +215,12 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
     }
 
     const userIndex = parseInt(req.body.userIndex, 10);
-    const cards = JSON.parse(req.body.cards);
+    const mainboard = JSON.parse(req.body.mainboard);
+    const sideboard = req.body.sideboard ? JSON.parse(req.body.sideboard) : [];
 
     if (!record.draft) {
       // If the record does not have a draft, create one
-      await associateNewDraft(cube, record, userIndex, cards);
+      await associateNewDraft(cube, record, userIndex, mainboard, sideboard);
 
       req.flash('success', 'Deck uploaded successfully. A new draft has been created and associated with this record');
       return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
@@ -206,7 +230,7 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
 
     if (!draft) {
       // underlying draft object may have been deleted, we need to create a new one
-      await associateNewDraft(cube, record, userIndex, cards);
+      await associateNewDraft(cube, record, userIndex, mainboard, sideboard);
 
       req.flash(
         'success',
@@ -221,7 +245,7 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/records/uploaddeck/${record.id}`);
     }
 
-    await associateWithExistingDraft(cube, draft, userIndex, cards);
+    await associateWithExistingDraft(cube, draft, userIndex, mainboard, sideboard);
 
     req.flash('success', 'Deck uploaded successfully. Draft associated with this record has been updated.');
     return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
@@ -242,7 +266,8 @@ export const routes = [
     handler: [
       csrfProtection,
       ensureAuth,
-      bodyValidation(cardsSchema, (req) => `/cube/records/uploaddeck/${req.params.id}`, 'cards'),
+      bodyValidation(mainboardSchema, (req) => `/cube/records/uploaddeck/${req.params.id}`, 'mainboard'),
+      bodyValidation(sideboardSchema, (req) => `/cube/records/uploaddeck/${req.params.id}`, 'sideboard'),
       uploadDeckHandler,
     ],
   },
