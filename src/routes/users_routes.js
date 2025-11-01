@@ -124,7 +124,7 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
 
     req.flash(
       'success',
-      'Thank you for the report! Our moderators will review the report can decide whether to take action.',
+      'Thank you for the report! Our moderators will review the report and decide whether to take action.',
     );
 
     return redirect(req, res, `/user/view/${req.params.id}`);
