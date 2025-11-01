@@ -5,7 +5,7 @@ import Text from 'components/base/Text';
 import AutocardListItem from 'components/card/AutocardListItem';
 import withCardModal from 'components/modals/WithCardModal';
 import CubeContext from 'contexts/CubeContext';
-import RotoDraftContext from 'contexts/RotoDraftContext';
+import RotoDraftContext, { getBaseCardName } from 'contexts/RotoDraftContext';
 import Card from 'datatypes/Card';
 import usePollGoogleSheet from 'hooks/usePollGoogleSheet';
 import React from 'react';
@@ -23,7 +23,7 @@ const RotisserieDraftPanel = () => {
   Object.keys(rotoInfo.picksByPlayer).forEach((player) => {
     const picks = rotoInfo.picksByPlayer[player];
     const cardPicks = picks.map((pick) => {
-      const cardForPick = unfilteredChangedCards.mainboard.find((card) => card.name?.toLowerCase() == pick.cardName.toLowerCase());
+      const cardForPick = unfilteredChangedCards.mainboard.find((card) => card.name ? card.name.toLowerCase() == getBaseCardName(pick.cardName) : undefined);
       return cardForPick;
     })
 
@@ -40,7 +40,7 @@ const RotisserieDraftPanel = () => {
           {Object.values(rotoInfo.players).map((player) => {
             const cardsForPlayer = cardsByPlayer[player.index];
             return (
-              <ListGroup>
+              <ListGroup key={player.name}>
                 <ListGroupItem heading>{player.name}</ListGroupItem>
                 {cardsForPlayer.map((card, index) => {
                   if (!card) return null;

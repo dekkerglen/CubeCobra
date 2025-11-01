@@ -52,7 +52,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     () => (card && card.details ? [cardName(card), card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
     [card],
   );
-  const { url: rotoUrl, rotoInfo } = useContext(RotoDraftContext);
+  const { url: rotoUrl, getPickByName, rotoInfo } = useContext(RotoDraftContext);
 
   const openCardToolWindow = useCallback(() => {
     window.open(`/tool/card/${cardId}`);
@@ -91,7 +91,9 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   const emojiTags = useMemo(() => (card && card.tags ? findEmojisInTags(card.tags) : []), [card]);
 
-  const rotoPickInfo = showRotoInfo && rotoUrl !== "" ? rotoInfo.picks?.[name.toLowerCase()] : undefined;
+  const rotoPickInfo = React.useMemo(() => {
+    return showRotoInfo && rotoUrl !== "" ? getPickByName(name) : undefined;
+  }, [name, rotoInfo]);
 
   return (
     <AutocardDiv
