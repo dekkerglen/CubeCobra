@@ -40,7 +40,7 @@ const getPicksForPlayer = ({
 
     const cardName = parsedCSV[rowIndex][column];
 
-    if (cardName === "" || typeof cardName !== "string" || !cardName) {
+    if (!cardName || typeof cardName !== "string") {
       return;
     }
 
