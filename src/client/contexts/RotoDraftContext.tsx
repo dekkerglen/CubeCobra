@@ -1,11 +1,11 @@
-import useQueryParam from "hooks/useQueryParam";
-import React, { Dispatch, ReactNode, SetStateAction } from "react";
-import { RotoPick, RotoPlayer } from "src/util/rotodraft";
+import useQueryParam from 'hooks/useQueryParam';
+import React, { Dispatch, ReactNode, SetStateAction } from 'react';
+import { RotoPick, RotoPlayer } from 'src/util/rotodraft';
 
 interface RotoInfo {
   picks: Record<string, RotoPick>;
   players: Record<string, RotoPlayer>;
-  picksByPlayer: Record<string, RotoPick[]>
+  picksByPlayer: Record<string, RotoPick[]>;
 }
 
 interface RotoDraftContextType {
@@ -21,23 +21,22 @@ const defaultFn = () => {
 };
 
 const RotoDraftContext = React.createContext<RotoDraftContextType>({
-  url: "",
+  url: '',
   setUrl: defaultFn,
   rotoInfo: { picks: {}, players: {}, picksByPlayer: {} },
   setRotoInfo: defaultFn,
   getPickByName: (_: string) => undefined,
-})
+});
 
 export const getBaseCardName = (cardName: string) => {
   return cardName.replace(/ \d+$/, '').toLowerCase();
-}
+};
 
 const displayedCounts: Record<string, number> = {};
 
 export const RotoDraftContextProvider = ({ children }: { children: ReactNode }) => {
-  const [url, setUrl] = useQueryParam("rotoURL", "");
+  const [url, setUrl] = useQueryParam('rotoURL', '');
   const [rotoInfo, setRotoInfo] = React.useState<RotoInfo>({ picks: {}, players: {}, picksByPlayer: {} });
-  
 
   const getPickByName = (cardName: string) => {
     const baseCardName = getBaseCardName(cardName);
@@ -46,7 +45,7 @@ export const RotoDraftContextProvider = ({ children }: { children: ReactNode }) 
       // duplicate!
 
       const numDuplicatePicks = Object.keys(rotoInfo.picks).filter((pickName) => {
-        return getBaseCardName(pickName) === baseCardName
+        return getBaseCardName(pickName) === baseCardName;
       }).length;
 
       // all picks of the duplicate card are already displayed, don't display any more
@@ -60,7 +59,7 @@ export const RotoDraftContextProvider = ({ children }: { children: ReactNode }) 
     return displayedCounts[baseCardName] > 1
       ? rotoInfo.picks[`${cardName.toLowerCase()} ${displayedCounts[baseCardName]}`]
       : rotoInfo.picks[cardName.toLowerCase()];
-  }
+  };
 
   const value = {
     url,
@@ -70,11 +69,7 @@ export const RotoDraftContextProvider = ({ children }: { children: ReactNode }) 
     getPickByName,
   };
 
-  return (
-    <RotoDraftContext.Provider value={value}>
-      {children}
-    </RotoDraftContext.Provider>
-  )
-}
+  return <RotoDraftContext.Provider value={value}>{children}</RotoDraftContext.Provider>;
+};
 
 export default RotoDraftContext;
