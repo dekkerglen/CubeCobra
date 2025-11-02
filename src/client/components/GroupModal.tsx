@@ -315,7 +315,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
               />
               <Input label="Mana Value" type="text" name="cmc" value={cmc} onChange={(e) => setCmc(e.target.value)} />
               <Input
-                label="Type Line"
+                label="Type Line (use - or — to separate types and subtypes)"
                 type="text"
                 name="type_line"
                 value={typeLine}
