@@ -86,7 +86,7 @@ export const parseRotoCSV = (csv: string) => {
 
     const draftingRight = draftDirection === "right";
     const leftmostPickIndex = LEFT_ARROW_COLUMN_INDEX + 1;
-    const rightmostPickIndex = LEFT_ARROW_COLUMN_INDEX + numPlayers
+    const rightmostPickIndex = LEFT_ARROW_COLUMN_INDEX + numPlayers;
     const startIndex = draftingRight ? leftmostPickIndex : rightmostPickIndex;
     const endIndex = draftingRight ? rightmostPickIndex : leftmostPickIndex;
     let blankInRow = false;
