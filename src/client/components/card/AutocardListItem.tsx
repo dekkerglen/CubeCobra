@@ -93,7 +93,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   const rotoPickInfo = React.useMemo(() => {
     return showRotoInfo && rotoUrl !== "" ? getPickByName(name) : undefined;
-  }, [name, rotoInfo]);
+  }, [name, rotoInfo, showRotoInfo, rotoUrl, getPickByName]);
 
   return (
     <AutocardDiv
