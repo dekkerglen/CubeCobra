@@ -58,6 +58,7 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
               card,
             }}
             showRotoInfo
+            cardCopyIndex={card.index!}
           />
         )),
       )}

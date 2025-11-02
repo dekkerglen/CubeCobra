@@ -1,6 +1,6 @@
-import React from "react";
-import { parseRotoCSV } from "../../util/rotodraft";
-import RotoDraftContext from "contexts/RotoDraftContext";
+import React from 'react';
+import { parseRotoCSV } from '../../util/rotodraft';
+import RotoDraftContext from 'contexts/RotoDraftContext';
 
 const usePollGoogleSheet = () => {
   const { url, setRotoInfo } = React.useContext(RotoDraftContext);
@@ -16,15 +16,15 @@ const usePollGoogleSheet = () => {
         const text = await resp.text();
 
         const { picks, players, picksByPlayer } = parseRotoCSV(text);
-        console.log('fetched and setting rotoinfo');
+        console.log('fetched and setting rotoinfo', picks);
         setRotoInfo({ picks, players, picksByPlayer });
       } catch (error) {
         console.error('Error fetching Google Sheet:', error);
       }
-    }
+    };
 
-    if (url === "") {
-      console.log('blank URL, exiting')
+    if (url === '') {
+      console.log('blank URL, exiting');
       return;
     }
 
@@ -34,13 +34,13 @@ const usePollGoogleSheet = () => {
     // Set up polling every 60 seconds
     const intervalId = setInterval(() => {
       fetchUrl();
-    }, 6000);
+    }, 60000);
 
     // Cleanup function to clear the interval when URL changes or component unmounts
     return () => {
       clearInterval(intervalId);
     };
   }, [url, setRotoInfo]);
-}
+};
 
 export default usePollGoogleSheet;

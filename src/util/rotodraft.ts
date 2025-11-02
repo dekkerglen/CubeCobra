@@ -9,6 +9,9 @@ export interface RotoPick {
   cardName: string;
   playerName: string;
   playerIndex: number;
+  cardCopyIndex: number; // Index for this copy of the card (1-based)
+  overallPickNumber: number; // Overall pick number in the draft
+  playerPickNumber: number; // Pick number for this specific player
 }
 
 const NAME_ROW_INDEX = 2;
@@ -26,12 +29,16 @@ const getPicksForPlayer = ({
   parsedCSV,
   playerName,
   row,
+  cardCopyTracker,
+  playerPicksByIndex,
 }: {
   column: number;
   doublePicks: boolean;
   parsedCSV: string[][];
   playerName: string;
   row: number;
+  cardCopyTracker: Record<string, number>;
+  playerPicksByIndex: RotoPick[];
 }) => {
   const pickRows = doublePicks ? [row, row + 1] : [row];
 
@@ -44,10 +51,25 @@ const getPicksForPlayer = ({
       return undefined;
     }
 
+    const trimmedCardName = cardName.trim();
+    const baseCardName = trimmedCardName.replace(/ \d+$/, '').toLowerCase();
+
+    // Increment the copy index for this base card name
+    if (!cardCopyTracker[baseCardName]) {
+      cardCopyTracker[baseCardName] = 1;
+    } else {
+      cardCopyTracker[baseCardName]++;
+    }
+
+    const playerPickNumber = playerPicksByIndex.length + 1;
+
     return {
-      cardName: cardName.trim(),
+      cardName: trimmedCardName,
       playerIndex: column,
       playerName,
+      cardCopyIndex: cardCopyTracker[baseCardName],
+      overallPickNumber: 0, // Will be set later
+      playerPickNumber,
     } as RotoPick;
   });
 
@@ -66,6 +88,10 @@ export const parseRotoCSV = (csv: string) => {
   const picks: Record<string, RotoPick> = {};
   const picksByPlayer: Record<string, RotoPick[]> = {};
 
+  // Track card copy indexes globally
+  const cardCopyTracker: Record<string, number> = {};
+  let overallPickNumber = 1;
+
   // Initialize the players from the row with player names
   for (let i = FIRST_NAME_COLUMN_INDEX; i < nameRow.length; i++) {
     const playerName = nameRow[i].replace(/[^a-zA-Z0-9 ]/g, '').trim();
@@ -73,6 +99,7 @@ export const parseRotoCSV = (csv: string) => {
     if (!playerName) break;
 
     players[i] = { name: playerName, index: i };
+    picksByPlayer[i] = [];
   }
 
   const numPlayers = Object.keys(players).length;
@@ -103,15 +130,20 @@ export const parseRotoCSV = (csv: string) => {
         parsedCSV,
         playerName: players[n].name,
         row: i,
+        cardCopyTracker,
+        playerPicksByIndex: picksByPlayer[n],
       }).filter((pick) => pick !== undefined);
 
-      playerPicks.forEach((playerPick) => (picks[playerPick.cardName.toLowerCase()] = playerPick));
+      playerPicks.forEach((playerPick) => {
+        // Set the overall pick number
+        playerPick.overallPickNumber = overallPickNumber++;
 
-      if (!Array.isArray(picksByPlayer[n])) {
-        picksByPlayer[n] = playerPicks;
-      } else {
-        picksByPlayer[n] = picksByPlayer[n].concat(playerPicks);
-      }
+        // Create a unique key for each card pick that includes the copy index
+        const pickKey = `${playerPick.cardName.toLowerCase()}_${playerPick.cardCopyIndex}`;
+        picks[pickKey] = playerPick;
+      });
+
+      picksByPlayer[n] = picksByPlayer[n].concat(playerPicks);
     }
 
     // We found a blank pick in the row, this might be the last row

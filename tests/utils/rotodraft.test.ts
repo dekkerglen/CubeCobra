@@ -1,4 +1,4 @@
-import { parseRotoCSV } from "../../src/util/rotodraft";
+import { parseRotoCSV } from '../../src/util/rotodraft';
 
 const MOCK_ROTO = `,,Rotisserie Draft,,Next Pick: ,Ian M,,,,,,,,,,,,,,,,,,
 ,,,, ,,,,,,,,,,,,,,,,,,,
@@ -53,11 +53,12 @@ describe('parseRotoCSV', () => {
   it('works', () => {
     const { picks } = parseRotoCSV(MOCK_ROTO);
 
-    expect(picks["Survival of the Fittest"]).toMatchObject({
-      cardName: "Survival of the Fittest",
+    expect(picks['survival of the fittest_1']).toMatchObject({
+      cardName: 'Survival of the Fittest',
       overallPickNumber: 1,
       playerPickNumber: 1,
-      playerIndex: 2
+      playerIndex: 2,
+      cardCopyIndex: 1,
     });
-  })
-})
+  });
+});

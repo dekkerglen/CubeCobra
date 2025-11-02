@@ -22,8 +22,9 @@ export interface AutocardListItemProps {
   last?: boolean;
   first?: boolean;
   className?: string;
-  isSelected?: boolean; // Add this prop
+  isSelected?: boolean;
   showRotoInfo?: boolean;
+  cardCopyIndex?: number; // Index for this copy of the card (1-based)
 }
 
 const AutocardDiv = withAutocard(ListGroupItem);
@@ -42,8 +43,9 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   last,
   first,
   className,
-  isSelected = false, // Add default value
+  isSelected = false,
   showRotoInfo = false,
+  cardCopyIndex = 1,
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
@@ -52,7 +54,8 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     () => (card && card.details ? [cardName(card), card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
     [card],
   );
-  const { url: rotoUrl, getPickByName, rotoInfo } = useContext(RotoDraftContext);
+  const { url: rotoUrl, getPickByNameAndIndex, rotoInfo } = useContext(RotoDraftContext);
+  console.log(name);
 
   const openCardToolWindow = useCallback(() => {
     window.open(`/tool/card/${cardId}`);
@@ -92,8 +95,10 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   const emojiTags = useMemo(() => (card && card.tags ? findEmojisInTags(card.tags) : []), [card]);
 
   const rotoPickInfo = React.useMemo(() => {
-    return showRotoInfo && rotoUrl !== "" ? getPickByName(name) : undefined;
-  }, [name, rotoInfo, showRotoInfo, rotoUrl, getPickByName]);
+    return showRotoInfo && rotoUrl !== '' ? getPickByNameAndIndex(name, cardCopyIndex) : undefined;
+  }, [name, rotoInfo, showRotoInfo, rotoUrl, getPickByNameAndIndex, cardCopyIndex]);
+
+  console.log(rotoPickInfo);
 
   return (
     <AutocardDiv
@@ -110,13 +115,9 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
           {children} <span>{name}</span>
         </span>
       ) : (
-        <span style={rotoPickInfo && { textDecoration: "line-through", fontStyle: "italic" }}>{name}</span>
+        <span style={rotoPickInfo && { textDecoration: 'line-through', fontStyle: 'italic' }}>{name}</span>
       )}
-      {rotoPickInfo && (
-        <span className="text-right">
-          {rotoPickInfo.playerName}
-        </span>
-      )}
+      {rotoPickInfo && <span className="text-right">{rotoPickInfo.playerName}</span>}
       {showInlineTagEmojis ? <span className="text-right">{emojiTags.join('')}</span> : ''}
     </AutocardDiv>
   );
