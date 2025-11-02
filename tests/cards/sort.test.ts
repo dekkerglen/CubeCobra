@@ -1,6 +1,6 @@
 import { cardGetLabels, getLabelsRaw, sortForDownload, sortGroupsOrdered } from '../../src/client/utils/Sort';
 import Card from '../../src/datatypes/Card';
-import { createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
+import { createCard, createCardDetails, createCardFromDetails, createCustomCard } from '../test-utils/data';
 
 const mapToCardNames = (sorted: Card[]) => {
   return sorted.map((c) => c.details?.name);
@@ -526,6 +526,34 @@ describe('Grouping by Subtype', () => {
     expect(rawLabels).toEqual([' Other ']);
   });
 
+  it('Handles custom cards', async () => {
+    const card = createCustomCard('Darth Vader', {
+      type_line: 'Sith - Tatooine Lord ',
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual(['Tatooine', 'Lord']);
+
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual(['Lord', 'Tatooine', ' Other ']);
+  });
+
+  it('Handles "Time Lord" as a type that is two words long', async () => {
+    //https://scryfall.com/card/who/8/missy
+    const card = createCard({
+      type_line: undefined,
+      details: createCardDetails({
+        type: 'Creature - Time Lord Rogue',
+      }),
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual(['Time Lord', 'Rogue']);
+
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual(['Rogue', 'Time Lord', ' Other ']);
+  });
+
   it.each(allowedTypeSeparators)(`Handles separator character (%s)`, async (separator) => {
     const card = createCard({
       type_line: `Creature ${separator} Tiger`,
@@ -708,6 +736,24 @@ describe('Grouping by Supertype', () => {
     expect(labels).toEqual([' Other ']);
   });
 
+  it('Custom cards do not have custom supertypes', async () => {
+    const card = createCustomCard('Darth Vader', {
+      type_line: 'Immortal Sith - Tatooine Lord ',
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual([' Other ']);
+  });
+
+  it('Custom cards can have MTG supertypes', async () => {
+    const card = createCustomCard('Darth Vader', {
+      type_line: 'Legendary Sith - Tatooine Lord ',
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual(['Legendary']);
+  });
+
   it.each(allowedTypeSeparators)(`Handles separator character (%s)`, async (separator) => {
     const card = createCard({
       type_line: `Basic ${separator} Forest`,
@@ -802,6 +848,18 @@ describe('Grouping by type', () => {
     const labels = cardGetLabels(card, SORT, true);
 
     expect(labels).toEqual([' Other ']);
+  });
+
+  it('Handles custom cards', async () => {
+    const card = createCustomCard('Darth Vader', {
+      type_line: 'Sith Lord - Human Cyborg',
+    });
+
+    const labels = cardGetLabels(card, SORT, true);
+    expect(labels).toEqual(['Sith', 'Lord']);
+
+    const rawLabels = getLabelsRaw([card], SORT, true);
+    expect(rawLabels).toEqual(['Lord', 'Sith', ' Other ']);
   });
 
   it.each(allowedTypeSeparators)(`Handles separator character (%s)`, async (separator) => {
