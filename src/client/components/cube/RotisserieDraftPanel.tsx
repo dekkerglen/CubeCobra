@@ -23,7 +23,7 @@ const RotisserieDraftPanel = () => {
   Object.keys(rotoInfo.picksByPlayer).forEach((player) => {
     const picks = rotoInfo.picksByPlayer[player];
     const cardPicks = picks.map((pick) => {
-      const cardForPick = unfilteredChangedCards.mainboard.find((card) => card.name ? card.name.toLowerCase() == getBaseCardName(pick.cardName) : undefined);
+      const cardForPick = unfilteredChangedCards.mainboard.find((card) => card.name ? card.name.toLowerCase() === getBaseCardName(pick.cardName) : undefined);
       return cardForPick;
     })
 
