@@ -128,7 +128,6 @@ export const parseRotoCSV = (csv: string) => {
     }
   }
 
-  console.log({ parsedCSV, players, picks });
 
   return {
     players,
