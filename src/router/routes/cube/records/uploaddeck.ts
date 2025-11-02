@@ -12,10 +12,10 @@ import Record from '../../../../dynamo/models/record';
 import { bodyValidation } from '../../../../router/middleware/bodyValidation';
 import { addBasics, createPool } from '../../../../routes/cube/helper';
 import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
-import { setupPicks } from '../../../../util/draftutil';
 import { Request, Response } from '../../../../types/express';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from '../../../../util/carddb';
 import { isCubeEditable, isCubeViewable } from '../../../../util/cubefn';
+import { setupPicks } from '../../../../util/draftutil';
 import { handleRouteError, redirect, render } from '../../../../util/render';
 
 export const uploadDeckPageHandler = async (req: Request, res: Response) => {
