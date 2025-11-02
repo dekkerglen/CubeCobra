@@ -8,46 +8,9 @@ If you are interested in contributing towards Cube Cobra, please read the [Contr
 
 # Setup
 
+## Common
+
 ### Install Prerequisites
-
-You will need to install NodeJS, Redis, and an IDE of your preference (I recommend VSCode). You can find the necessary resources here:
-
-### NodeJS
-
-Node 20
-
-NodeJS: https://nodejs.org/en/download/
-
-### Localstack
-
-[Localstack][localstack] provides a local emulation of AWS Services required to run CubeCobra including S3, DynamoDB and Cloudwatch.
-
-You may follow the installation guidelines from the localstack site. The recommended setup involves running localstack in a docker container, which requires [Docker Desktop][docker] as well.
-
-- Windows: Download and install the binary from localstack
-- Mac: `brew install localstack/tap/localstack-cli`
-- Linux: Use the `curl` command from localstack
-
-[localstack]: https://docs.localstack.cloud/getting-started/installation/
-[docker]: https://docs.docker.com/desktop/install/mac-install/
-
-Once localstack is installed, you can start the server in the background with the CLI: `localstack start --detached`. You can see the status with `localstack status`.
-
-_Note_: Localstack community edition (eg. without a pro account) does not persist anything to disk once the container is stopped.
-
-#### AWSLocal CLI (for Localstack)
-
-The awslocal CLI used by this project (https://github.com/localstack/awscli-local) is required for initial setup of the localstack resources used by Cube Cobra.
-
-First install Python (suggest Python 3) and pip for your operating system. Sample instructions for a linux environment are:
-
-- Ensure Virtual environment package is installed: `sudo apt-get install python3-venv`
-- Create a virtual environment in your home directory: `python3 -m venv ~/venv`
-- Add the virtual environment to your path: `export PATH=~/venv/bin:$PATH`
-- Also add to your startup profile script (eg. bash profile) the activation of the virtual environment: `source ~/venv/bin/activate`
-- Install awslocal: `pip3 install "awscli-local[ver1]"`
-- Validate install: `awslocal --version`
-  - Will pass and print some "aws-cli" version (likely 1.X) for the system
 
 ### Code Editor (IDE)
 
@@ -57,6 +20,174 @@ Prettier Extension for VSCode: https://marketplace.visualstudio.com/items?itemNa
 
 VSCode (with the ESLint and Prettier extension) is the recommended environment. When using this setup, make sure that your selected workspace is the root folder that you have cloned, this will ensure that the ESLint plugin can work with our linting rules. Prettier will automatically apply standard formatting to your code. Using these plugins will make adhering to the linting and code formatting rules significantly easier.
 
+### reCAPTCHA account
+
+To combat spam CubeCobra uses Google reCAPTCHA (V2) in actions such as creating cubes. Thus in order to use the site locally you must have a reCAPTCHA account, which thankfully are free (no credit card needed) with 10,000 assertions a month. To setup the account follow these steps:
+
+1. Go to https://www.google.com/recaptcha/admin/create
+2. Enter any label you wish (suggest CubeCobraLocalDev)
+3. Set "reCAPTCHA type" to V2, with "I'm not a robot" tickbox enabled
+4. Enter "localhost" as the domain
+5. If you have setup your local CubeCobra to be accessible under a non-localhost domain (see [Running CubeCobra](#running-cubecobra)) then include that domain as well
+6. See screenshot as an example of the desired settings:
+   ![Creating a reCAPTCHA site](./docs/readme/reCAPTCHA-create.png)
+7. Submit
+8. The generated "Site key" and "Secret key" values will be shown (You can always get these again from the reCAPTCHA settings if necessary
+9. Run `cp .env_EXAMPLE .env` to create a .env file with values for running the application locally already set
+10. Edit the .env file
+11. Paste the value of the "Site key" as the value of the CAPTCHA_SITE_KEY environment variable
+12. Paste the value of the "Secret key" as the value of the CAPTCHA_SECRET_KEY environment variable
+13. Save the .env file changes
+
+### Installing docker
+
+Docker Desktop: https://docs.docker.com/desktop/
+
+With Windows + WSL2, also: https://docs.docker.com/desktop/features/wsl/
+
+### jq (Optional)
+
+jq (https://jqlang.org/) is a very useful tool when dealing with JSON data, of which CubeCobra's card catalogs are all stored in.
+
+Download and install from https://jqlang.org/download/
+
+## Running CubeCobra in Docker
+
+Running CubeCobra within docker is the simplest and faster way to get everything up and running. For Windows users we highly recommend running docker
+using [Windows Subsystem for Linux 2 (WSL2)](https://learn.microsoft.com/en-us/windows/wsl/install) with Ubuntu (22.04 or above).
+
+**Note**: A minimum of 16GB of memory should be allocated to Docker (whether in Docker Desktop or WSL2 settings).
+
+### Initial Setup
+
+For the first setup, you will need to run:
+
+```sh
+docker compose -f docker-compose.yml -f ./docker/init.yml up --abort-on-container-exit
+```
+
+Note: This can take tens of minutes to complete. When it finishes successfully you should see in the last docker logs output similar to the following (order of lines, and container name, may be different):
+
+```
+cubecobralocalstack  | 2025-10-27T21:47:56.503  INFO --- [et.reactor-0] localstack.request.aws     : AWS s3.UploadPart => 200
+cubecobralocalstack  | 2025-10-27T21:47:58.803  INFO --- [et.reactor-1] localstack.request.aws     : AWS s3.CompleteMultipartUpload => 200
+cubecobracube        | Finished comboDict.json
+cubecobracube        | Uploading manifest...
+cubecobralocalstack  | 2025-10-27T21:47:58.811  INFO --- [et.reactor-2] localstack.request.aws     : AWS s3.PutObject => 200
+cubecobracube        | Finished manifest
+cubecobracube        | done
+cubecobracube        | Complete
+cubecobralocalstack  | 2025-10-27T21:47:59.912  INFO --- [ead-7 (_run)] localstack_persist.state   : Persisting state of service s3...
+cubecobracube exited with code 0
+Aborting on container exit...
+[+] Stopping 2/2
+ ✔ Container cubecobracube        Stopped                                                                          0.0s
+ ✔ Container cubecobralocalstack  Stopped
+```
+
+This will:
+
+- setup localstack w/ s3 bucket and SES email verified
+- install dependencies
+- build the application code to run setup scripts
+- run setup scripts to:
+  - setup local files for application persistence
+  - setup localstack dynamodb tables (ex. Users, Cubes, Cards, etc.)
+  - download bulk card data from scryfall, persist to files and load it to localstack s3
+
+Once the setup is complete the containers will exit gracefully. The various card databases will be both within the private/ folder but also uploaded
+to the localstack instance in docker.
+
+### Running CubeCobra
+
+Then you can start the program like so:
+
+```sh
+docker compose up
+```
+
+When the server is ready you should see in the last docker logs output similar to the following (order of lines, and container name, may be different):
+
+```
+cubecobracube        | Loaded private/carddict.json into _carddict
+cubecobracube        | Loaded private/comboDict.json into comboDict
+cubecobracube        | Finished loading carddb.
+cubecobracube        | Server started on port 5000, listening on 127.0.0.1...
+```
+
+This script will:
+
+- ensure nearley parsers for card filters have compiled
+- compile & watch scss (bootstrap) styles
+- compile & watch server javascript w/ nodemon
+- run & watch webpack dev server
+
+You can now open up a browser and connect to the app through: http://localhost:8080.
+
+(Despite the fact that node says it is running on port 5000 in the logs, you should use port 8080 to connect because that is what webpack dev server is listening on.)
+
+Nodemon will restart the application anytime there is a change to a source file (server files).
+
+### Register an account
+
+After accessing the application locally you will need to create a new user account using the "Register" link on the nav bar.
+
+After doing so, run `bash scripts/extract-registration-email.sh` to print the registeration URL you would have been emailed. Copy it and/or
+open via your terminal to complete registration, then you can login using the username and password you registered with.
+
+### Running commands in docker containers
+
+Assuming you have started docker per [Running CubeCobra](#running-cubecobra), then you can and should run commands such as npm scripts within docker using docker exec.
+
+Examples of common commands:
+
+- Install package - `docker exec -it cube npm install`
+- Run npm build - `docker exec -it cube npm run build`
+- Run update cards script - `docker exec -it cube npm run update-cards`
+- Check the top-level contents of the localstack s3 bucket - `docker exec -it localstack awslocal s3 ls s3://local`
+- Query the users table of the localstack dynamo table - `docker exec -it localstack awslocal dynamodb execute-statement --statement 'SELECT * FROM LOCAL_USERS'`
+
+## Running CubeCobra via node
+
+You will need to install NodeJS and Localstack, and the complete the initial setup steps. You can find the necessary resources here:
+
+### NodeJS
+
+Node 20
+
+NodeJS: https://nodejs.org/en/download/
+
+### Localstack
+
+[Localstack](https://www.localstack.cloud/) provides a local emulation of AWS Services required to run CubeCobra including S3, DynamoDB, Simple Email Service, and Cloudwatch.
+
+- Windows: Download and install the binary from localstack
+- Mac: `brew install localstack/tap/localstack-cli`
+- Linux: Use the `curl` command from localstack
+
+You may follow the installation guidelines from the localstack site. The recommended setup involves running localstack in a docker container, which requires [Docker Desktop](#installing-docker) as well.
+
+Once localstack is installed, you can start the server in the background with the CLI: `localstack start --detached`. You can see the status with `localstack status`.
+
+_Note_: Localstack community edition (eg. without a pro account) does not persist anything to disk once the container is stopped.
+
+### AWSLocal CLI (for Localstack)
+
+The awslocal CLI used by this project (https://github.com/localstack/awscli-local) is required for initial setup of the localstack resources used by Cube Cobra.
+
+First install Python 3.3+ and pip3 for your operating system. Sample instructions for a linux environment are:
+
+1. Ensure Virtual environment package is installed: `sudo apt-get install python3-venv`
+2. Switch to the directory you cloned CubeCobra in (eg this directory!)
+3. Create a virtual environment here: `python3 -m venv ./venv`
+4. Activate the virtual environment: `source ./venv/bin/activate`
+5. Install awslocal: `pip3 install "awscli-local[ver1]"`
+6. Validate install: `awslocal --version`
+   1. Will pass and print some "aws-cli" version (likely 1.X) for the system
+7. You can now deactivate the virtual environment by running: `deactivate`
+8. Optional: Add the `$(pwd)/venv/bin` folder to your path so you can execute `awslocal` easily
+   1. If you don't, then to use awslocal from this directory you will run `./venv/bin/awslocal ...`
+
 ### Initial Setup
 
 For the first setup, you will need to run:
@@ -65,6 +196,8 @@ For the first setup, you will need to run:
 npm install && npm run build
 npm run setup:local
 ```
+
+Note: This can take tens of minutes to complete.
 
 This will:
 
@@ -84,26 +217,6 @@ You will need to make sure you have `bash` installed somewhere and run the follo
 ```sh
 npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
 ```
-
-### reCAPTCHA account
-
-To combat spam CubeCobra uses Google reCAPTCHA (V2) in actions such as creating cubes. Thus in order to use the site locally
-you must have a reCAPTCHA account, which thankfully are free (no credit card needed) with 10,000 assertions a month. To setup the
-account follow these steps:
-
-1. Go to https://www.google.com/recaptcha/admin/create
-2. Enter any label you wish (suggest CubeCobraLocalDev)
-3. Set "reCAPTCHA type" to V2, with "I'm not a robot" tickbox enabled
-4. Enter "localhost" as the domain
-5. If you have setup your local CubeCobra to be accessible under a non-localhost domain (see [Running CubeCobra](#running-cubecobra)) then include that domain as well
-6. Close the "Google Cloud Platform" section, as GCP is not required
-7. Save. See screenshot as an example of the desired settings:
-   ![Creating a reCAPTCHA site](./docs/readme/reCAPTCHA-create.png)
-8. The generated "Site key" and "Secret key" values will be shown (You can always get these again from the reCAPTCHA settings if necessary). Use them to update your local .env file accordingly:
-9. Edit your .env file (which was created created during [Initial Setup](#initial-setup))
-10. Paste the value of the "Site key" as the value of the CAPTCHA_SITE_KEY environment variable
-11. Paste the value of the "Secret key" as the value of the CAPTCHA_SECRET_KEY environment variable
-12. Save the .env file changes
 
 ### Running CubeCobra
 
@@ -127,7 +240,9 @@ You can now open up a browser and connect to the app through: http://localhost:8
 
 Nodemon will restart the application anytime there is a change to a source file.
 
-After accessing the application locally you will need to create a new user account using the "Resister" link on the nav bar.
+Now complete the [registration process](#register-an-account) to create an account.
+
+## Additional configurations and information
 
 ### Environment Variables & Connecting to AWS
 
@@ -137,60 +252,50 @@ You can run a local instance of Cube Cobra against real AWS resources rather tha
 
 Here is a table on how to fill out the env vars:
 
-| Variable Name          | Description                                                                                                  | Required? |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------ | --------- |
-| AWS_ACCESS_KEY_ID      | The AWS access key for your account.                                                                         | Yes       |
-| AWS_ENDPOINT           | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.                        |           |
-| AWS_LOG_GROUP          | The name of the AWS CloudWatch log group to use.                                                             | Yes       |
-| AWS_LOG_STREAM         | The name of the AWS CloudWatch log stream to use.                                                            |           |
-| AWS_REGION             | The AWS region to use (default: us-east-2).                                                                  | Yes       |
-| AWS_SECRET_ACCESS_KEY  | The AWS secret access key for your account.                                                                  | Yes       |
-| CUBECOBRA_VERSION      | The version of Cube Cobra.                                                                                   |           |
-| DATA_BUCKET            | The name of the AWS S3 bucket to use. You will need to create this bucket in your account.                   | Yes       |
-| DOMAIN                 | The domain name of the server. Used for external redirects such as emails.                                   | Yes       |
-| DOWNTIME_ACTIVE        | Whether or not the site is in downtime mode.                                                                 |           |
-| DYNAMO_PREFIX          | The prefix to use for DynamoDB tables. You can leave this as the default value                               | Yes       |
-| EMAIL_CONFIG_PASSWORD  | The password for the email account to use for sending emails via Gmail.                                      |           |
-| EMAIL_CONFIG_USERNAME  | The username for the email account to use for sending emails via Gmail.                                      |           |
-| EMAIL_CONFIG_FROM      | If set, used as the email from in form of "Description <email address>"                                      |           |
-| EMAIL_CONFIG_SMTP_HOST | The host (domain) for the local SMTP server. Must be set alongside EMAIL_CONFIG_SMTP_PORT                    |           |
-| EMAIL_CONFIG_SMTP_PORT | The port for the local SMTP server. Overrides EMAIL_CONFIG_PASSWORD/EMAIL_CONFIG_USERNAME                    |           |
-| LOCALSTACK_SES         | Set to "true" to still send emails via SES outside production. Assumes you have localstack running to catch. | Yes       |
-| ENV                    | The environment to run Cube Cobra in.                                                                        | Yes       |
-| NITROPAY_ENABLED       | Whether or not to enable NitroPay, our ad provider.                                                          |           |
-| NODE_ENV               | The environment to run Cube Cobra in.                                                                        | Yes       |
-| PATREON_CLIENT_ID      | The client ID for the Patreon OAuth app.                                                                     |           |
-| PATREON_CLIENT_SECRET  | The client secret for the Patreon OAuth app.                                                                 |           |
-| PATREON_HOOK_SECRET    | The secret for the Patreon webhook.                                                                          |           |
-| PATREON_REDIRECT       | The redirect URL for the Patreon OAuth app.                                                                  |           |
-| PORT                   | The port to run Cube Cobra on.                                                                               | Yes       |
-| SECRET                 | A secret phrase for encryption. You can leave the default value.                                             | Yes       |
-| SESSION_SECRET         | A secret phrase for session encryption. You can leave the default value.                                     | Yes       |
-| SESSION                | The name of the session cookie. You can leave the default value.                                             | Yes       |
-| TCG_PLAYER_PRIVATE_KEY | The private key for the TCGPlayer API.                                                                       |           |
-| TCG_PLAYER_PUBLIC_KEY  | The public key for the TCGPlayer API.                                                                        |           |
-| CAPTCHA_SITE_KEY       | The reCAPTCHA site key                                                                                       | Yes       |
-| CAPTCHA_SECRET_KEY     | The reCAPTCHA secret key                                                                                     | Yes       |
-| DRAFTMANCER_API_KEY    | The Draftmancer API key                                                                                      | Yes       |
-| HTTP_ONLY              | Default is unset. If set to exactly "true", generate http:// instead of https:// links                       | No        |
-| STRIPE_SECRET_KEY      | Stripe secret key. Must have a value                                                                         | Yes       |
+| Variable Name         | Description                                                                                                  | Required? |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ | --------- |
+| AWS_ACCESS_KEY_ID     | The AWS access key for your account.                                                                         | Yes       |
+| AWS_ENDPOINT          | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.                        |           |
+| AWS_LOG_GROUP         | The name of the AWS CloudWatch log group to use.                                                             | Yes       |
+| AWS_LOG_STREAM        | The name of the AWS CloudWatch log stream to use.                                                            |           |
+| AWS_REGION            | The AWS region to use (default: us-east-2).                                                                  | Yes       |
+| AWS_SECRET_ACCESS_KEY | The AWS secret access key for your account.                                                                  | Yes       |
+| CUBECOBRA_VERSION     | The version of Cube Cobra.                                                                                   |           |
+| DATA_BUCKET           | The name of the AWS S3 bucket to use. You will need to create this bucket in your account.                   | Yes       |
+| DOMAIN                | The domain name of the server. Used for external redirects such as emails.                                   | Yes       |
+| DOWNTIME_ACTIVE       | Whether or not the site is in downtime mode.                                                                 |           |
+| DYNAMO_PREFIX         | The prefix to use for DynamoDB tables. You can leave this as the default value                               | Yes       |
+| LOCALSTACK_SES        | Set to "true" to still send emails via SES outside production. Assumes you have localstack running to catch. | Yes       |
+| ENV                   | The environment to run Cube Cobra in.                                                                        | Yes       |
+| NITROPAY_ENABLED      | Whether or not to enable NitroPay, our ad provider.                                                          |           |
+| NODE_ENV              | The environment to run Cube Cobra in.                                                                        | Yes       |
+| PATREON_CLIENT_ID     | The client ID for the Patreon OAuth app.                                                                     |           |
+| PATREON_CLIENT_SECRET | The client secret for the Patreon OAuth app.                                                                 |           |
+| PATREON_HOOK_SECRET   | The secret for the Patreon webhook.                                                                          |           |
+| PATREON_REDIRECT      | The redirect URL for the Patreon OAuth app.                                                                  |           |
+| PORT                  | The port to run Cube Cobra on.                                                                               | Yes       |
+| SESSION_SECRET        | A secret phrase for session encryption. You can leave the default value.                                     | Yes       |
+| SESSION               | The name of the session cookie. You can leave the default value.                                             | Yes       |
+| CAPTCHA_SITE_KEY      | The reCAPTCHA site key                                                                                       | Yes       |
+| CAPTCHA_SECRET_KEY    | The reCAPTCHA secret key                                                                                     | Yes       |
+| DRAFTMANCER_API_KEY   | The Draftmancer API key                                                                                      | Yes       |
+| HTTP_ONLY             | Default is unset. If set to exactly "true", generate http:// instead of https:// links                       | No        |
+| STRIPE_SECRET_KEY     | Stripe secret key. Must have a value                                                                         | Yes       |
 
-### Localstack emails
+### Using Localstack emails
 
 Reference: https://docs.localstack.cloud/aws/services/ses/#retrieve-sent-emails
 
-If you have set `LOCALSTACK_SES="true"` in your .env file then you also need to verify that email for SES to work. Run:
+If you have set `LOCALSTACK_SES="true"` (true by default) in your .env file and you are NOT using the [docker](#running-cubecobra-in-docker) setup, then you also need to manually verify that email for SES to work. Run:
 
 ```
-awslocal ses verify-email-identity --email <email>
+./venv/bin/awslocal ses verify-email-identity --email 'support@cubecobra.com'
 ```
 
-Where `<email>` is the email address in your EMAIL_CONFIG_FROM environment variable, or `support@cubecobra.com` if you aren't overridding.
-
-Then can fetch them from localstack with:
+Once verified, you can fetch them from localstack with:
 
 ```
-curl --silent localhost.localstack.cloud:4566/_aws/ses?email=<email> | jq .
+curl --silent 'localhost.localstack.cloud:4566/_aws/ses?email=support@cubecobra.com' | jq .
 ```
 
 Sadly it's not obvious how to take the RawData HTML to see in the browser.
@@ -211,6 +316,10 @@ This will, in sequence:
 - update cube history
 - update metadata dictionary
 - update cards
+
+### Using bot predictions in drafts
+
+The models CubeCobra uses can only be downloaded from Production with the support of the maintainers. Connect with the contributors on Discord.
 
 # Concepts
 
@@ -247,7 +356,7 @@ Card filters are defined that can be used by the frontend and backend. [Nearley]
 
 ### Typescript
 
-[TypeScript 5.5][typescript] is gradually being rolled out to replace usage of vanilla JS components with PropTypes.
+[TypeScript 5.8][typescript] is gradually being rolled out to replace usage of vanilla JS components with PropTypes.
 
 [typescript]: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html
 

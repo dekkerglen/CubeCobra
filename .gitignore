@@ -565,3 +565,6 @@ push-docker.ps1
 target.zip
 src/client/generated/filtering/cardFilters.js
 src/util/git.ts
+
+# Python env for awslocal install
+venv
