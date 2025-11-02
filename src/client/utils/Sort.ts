@@ -389,6 +389,60 @@ const filterOutSupertypes = (typesAndSuperTypes: string[]): string[] => {
   return typesAndSuperTypes.filter((t) => !SUPER_TYPES.includes(t));
 };
 
+const getAllTypesOfCards = (cube: Card[] | null): string[] => {
+  const types = new Set<string>();
+  for (const card of cube || []) {
+    const { typesAndSuperTypes } = splitCardTypes(card);
+    for (const type of filterOutSupertypes(typesAndSuperTypes)) {
+      types.add(type.trim());
+    }
+  }
+  return [...types].sort();
+};
+
+const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
+  const splitMtgVersusOtherTypes = (types: string[]) => {
+    return types.reduce(
+      (accumulator, currentValue) => {
+        if (CARD_TYPES.includes(currentValue)) {
+          accumulator[0].push(currentValue);
+        } else {
+          accumulator[1].push(currentValue);
+        }
+        return accumulator;
+      },
+      [[], []] as string[][], // Initial value: an array containing two empty arrays
+    );
+  };
+
+  const types = getAllTypesOfCards(cube).filter((type) => type !== 'Land');
+  const [mtgTypes, otherTypes] = splitMtgVersusOtherTypes(types);
+
+  //Keep the old order of MTG types. Custom types will be placed
+  mtgTypes.sort((a, b) => {
+    const indexA = CARD_TYPES.indexOf(a);
+    const indexB = CARD_TYPES.indexOf(b);
+
+    // If an element's id is not found in sortingOrderArray,
+    // it will be placed at the end (or handled as desired).
+    // For simplicity, this example assumes all IDs are present.
+    return indexA - indexB;
+  });
+  //Sort alphabetically
+  otherTypes.sort();
+
+  /* Keep the existing sort of MTG types from Creatures -> Battle.
+   * Then add the various colour options, Land, custom types, and finally Other
+   */
+  return mtgTypes
+    .concat(GUILDS)
+    .concat(SHARDS_AND_WEDGES)
+    .concat(FOUR_AND_FIVE_COLOR)
+    .concat(['Land'])
+    .concat(otherTypes)
+    .concat(['Other']);
+};
+
 export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): string[] {
   let ret: string[] = [];
 
@@ -423,14 +477,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
   } else if (sort === 'Color') {
     ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort === 'Type') {
-    const types = new Set<string>();
-    for (const card of cube || []) {
-      const { typesAndSuperTypes } = splitCardTypes(card);
-      for (const type of filterOutSupertypes(typesAndSuperTypes)) {
-        types.add(type.trim());
-      }
-    }
-    ret = [...types].sort();
+    ret = getAllTypesOfCards(cube);
   } else if (sort === 'Supertype') {
     //Will not handle custom supertypes because not possible to distinguish from types
     ret = SUPER_TYPES;
@@ -517,11 +564,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
     }
     ret = [...types].sort();
   } else if (sort === 'Types-Multicolor') {
-    ret = CARD_TYPES.filter((type) => type !== 'Land')
-      .concat(GUILDS)
-      .concat(SHARDS_AND_WEDGES)
-      .concat(FOUR_AND_FIVE_COLOR)
-      .concat(['Land', 'Other']);
+    ret = getTypesMulticolorLabels(cube);
   } else if (sort === 'Legality') {
     ret = SUPPORTED_FORMATS;
   } else if (sort === 'Power') {
@@ -724,32 +767,11 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
     ret = subtypes;
   } else if (sort === 'Types-Multicolor') {
     if (cardColorIdentity(card).length <= 1) {
-      const split = cardType(card).split('—');
-      const types = split[0].trim().split(' ');
-      const type = types[types.length - 1];
-      // check last type
-      if (
-        ![
-          'Creature',
-          'Planeswalker',
-          'Instant',
-          'Sorcery',
-          'Artifact',
-          'Enchantment',
-          'Conspiracy',
-          'Contraption',
-          'Phenomenon',
-          'Plane',
-          'Scheme',
-          'Vanguard',
-          'Land',
-          'Battle',
-        ].includes(type)
-      ) {
-        ret = ['Other'];
-      } else {
-        ret = [type];
-      }
+      const { typesAndSuperTypes } = splitCardTypes(card);
+      //Grouping by the last type. Eg for Walking Ballista (Artifact Creature) is is grouped under Creature
+      const type = typesAndSuperTypes.length > 0 ? typesAndSuperTypes[typesAndSuperTypes.length - 1] : '';
+      //Because of custom cards don't check against valid MTG types
+      ret = [type];
     } else if (cardColorIdentity(card).length === 5) {
       ret = ['Five Color'];
     } else if (cardColorIdentity(card).length === 4) {

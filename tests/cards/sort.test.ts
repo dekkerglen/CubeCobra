@@ -1,3 +1,4 @@
+import { cardName } from '../../src/client/utils/cardutil';
 import { cardGetLabels, getLabelsRaw, sortForDownload, sortGroupsOrdered } from '../../src/client/utils/Sort';
 import Card from '../../src/datatypes/Card';
 import { createCard, createCardDetails, createCardFromDetails, createCustomCard } from '../test-utils/data';
@@ -18,7 +19,7 @@ const assertGroupOrdering = (groups: [string, Card[]][], expectedSetOrder: strin
 
 const assertCardOrdering = (groups: [string, Card[]][], expectedCardsOrder: string[]) => {
   const cards = groups.map((g) => g[1]);
-  expect(cards.flatMap((g) => g.map((c) => c.details?.name))).toEqual(expectedCardsOrder);
+  expect(cards.flatMap((g) => g.map((c) => cardName(c)))).toEqual(expectedCardsOrder);
 };
 
 describe('Sorting Collector Numbers', () => {
@@ -992,5 +993,90 @@ describe('Grouping by Set', () => {
     const groups = sortGroupsOrdered(cards, SORT, true);
     assertGroupOrdering(groups, ['ARB', 'LEA', 'LEB', 'M15', 'TDM']);
     assertCardOrdering(groups, ['Card 6', 'Card 1', 'Card 2', 'Card 4', 'Card 3', 'Card 5']);
+  });
+});
+
+describe('Grouping by Types-Multicolor', () => {
+  const SORT = 'Types-Multicolor';
+
+  it('Cards of one or less colours are grouped by type, then by multi-colour groupings', async () => {
+    const cards = [
+      createCardFromDetails({
+        name: 'Card 1',
+        type: 'Instant - Arcane',
+        color_identity: ['B'],
+      }),
+      createCardFromDetails({
+        name: 'Card 2',
+        type: 'Creature - Human Wizard',
+        color_identity: ['W'],
+      }),
+      createCardFromDetails({
+        name: 'Card 3',
+        type: 'Creature - Orc Archer',
+        color_identity: ['R', 'G'],
+      }),
+      createCardFromDetails({
+        name: 'Card 4',
+        type: 'Battle - Siege',
+        color_identity: ['U', 'B', 'R'],
+      }),
+      createCardFromDetails({
+        name: 'Card 5',
+        type: 'Artifact - Construct',
+        color_identity: [],
+      }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, ['Creature', 'Instant', 'Artifact', 'Gruul', 'Grixis']);
+    assertCardOrdering(groups, ['Card 2', 'Card 1', 'Card 5', 'Card 3', 'Card 4']);
+  });
+
+  it('Cards with multiple types and one or less colours, are grouped based on the last type', async () => {
+    const cards = [
+      createCardFromDetails({
+        name: 'Card 1',
+        type: 'Basic Land - Mountain',
+        color_identity: [],
+      }),
+      createCardFromDetails({
+        name: 'Card 2',
+        type: 'Land Creature — Forest Dryad',
+        color_identity: ['G'],
+      }),
+      createCardFromDetails({
+        name: 'Card 3',
+        type: 'Artifact Creature',
+        color_identity: ['B'],
+      }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, ['Creature', 'Land']);
+    //Order within groups is not really important here, sortDeep with multiple sorts is where that really matters
+    assertCardOrdering(groups, ['Card 2', 'Card 3', 'Card 1']);
+  });
+
+  it('Custom card types are grouped just before other', async () => {
+    const cards = [
+      createCustomCard('Card 1', {
+        type_line: 'Familiar - Dohicky',
+        colors: ['B'],
+      }),
+      createCardFromDetails({
+        name: 'Card 2',
+        type: 'Creature - Human Wizard',
+        color_identity: ['W'],
+      }),
+      createCustomCard('Card 3', {
+        type_line: 'Hieress - Human',
+        colors: ['U', 'B'],
+      }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, ['Creature', 'Dimir', 'Familiar']);
+    assertCardOrdering(groups, ['Card 2', 'Card 3', 'Card 1']);
   });
 });
