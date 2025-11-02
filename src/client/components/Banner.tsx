@@ -9,21 +9,18 @@ import Link from './base/Link';
 import ResponsiveDiv from './base/ResponsiveDiv';
 import Text from './base/Text';
 
-const BANNER_RATE: number = 5; // an alternate message appears with probability of 1/BANNER_RATE
+const BANNER_RATE: number = 10; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options: React.ReactNode[] = [
-  // <Card>
-  //   <CardBody className="bg-advert overflow-hidden rounded-md">
-  //     {' '}
-  //     <Text lg key={2}>
-  //       Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
-  //       <Link href="/donate">Find out more.</Link>
-  //     </Text>
-  //   </CardBody>
-  // </Card>,
-  <a href="https://shoebox.gg/" target="_blank" rel="noreferrer" key={1}>
-    <img src="/content/shoebox.jpg" alt="Shoebox" />
-  </a>,
+  <Card>
+    <CardBody className="bg-advert overflow-hidden rounded-md">
+      {' '}
+      <Text lg key={2}>
+        Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
+        <Link href="/donate">Find out more.</Link>
+      </Text>
+    </CardBody>
+  </Card>,
 ];
 
 interface BannerProps {
