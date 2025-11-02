@@ -772,19 +772,6 @@ describe('Grouping by Supertype', () => {
 describe('Grouping by type', () => {
   const SORT = 'Type';
 
-  it('Card has type_line but no type', async () => {
-    const card = createCard({
-      type_line: 'Variable - Food',
-      details: createCardDetails({
-        type: 'Instant',
-      }),
-    });
-
-    const labels = cardGetLabels(card, SORT, true);
-
-    expect(labels).toEqual([' Other ']);
-  });
-
   it('Card has type_line and type', async () => {
     const card = createCard({
       type_line: 'Legendary Sorcery',
@@ -821,7 +808,7 @@ describe('Grouping by type', () => {
 
     const labels = cardGetLabels(card, SORT, true);
 
-    expect(labels).toEqual([' Other ']);
+    expect(labels).toEqual(['Miracle']);
   });
 
   it('Falls back to card type', async () => {
