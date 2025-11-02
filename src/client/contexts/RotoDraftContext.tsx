@@ -49,7 +49,7 @@ export const RotoDraftContextProvider = ({ children }: { children: ReactNode }) 
       }).length;
 
       // all picks of the duplicate card are already displayed, don't display any more
-      if (displayedCounts[baseCardName] >= numDuplicatePicks) return;
+      if (displayedCounts[baseCardName] >= numDuplicatePicks) return undefined;
 
       displayedCounts[baseCardName] += 1;
     } else {

@@ -9,6 +9,7 @@ import RotoDraftContext, { getBaseCardName } from 'contexts/RotoDraftContext';
 import Card from 'datatypes/Card';
 import usePollGoogleSheet from 'hooks/usePollGoogleSheet';
 import React from 'react';
+import { cardName } from 'utils/cardutil';
 
 const CardModalLink = withCardModal(AutocardListItem);
 
@@ -17,15 +18,19 @@ const RotisserieDraftPanel = () => {
   usePollGoogleSheet();
   const { url, rotoInfo } = React.useContext(RotoDraftContext);
 
-  if (url === "" || Object.keys(rotoInfo.picksByPlayer).length === 0 || Object.keys(rotoInfo.players).length === 0) return;
+  if (url === '' || Object.keys(rotoInfo.picksByPlayer).length === 0 || Object.keys(rotoInfo.players).length === 0) {
+    return null;
+  }
 
   const cardsByPlayer: Record<string, (Card | undefined)[]> = {};
   Object.keys(rotoInfo.picksByPlayer).forEach((player) => {
     const picks = rotoInfo.picksByPlayer[player];
     const cardPicks = picks.map((pick) => {
-      const cardForPick = unfilteredChangedCards.mainboard.find((card) => card.name ? card.name.toLowerCase() === getBaseCardName(pick.cardName) : undefined);
+      const cardForPick = unfilteredChangedCards.mainboard.find(
+        (card) => cardName(card).toLowerCase() === getBaseCardName(pick.cardName),
+      );
       return cardForPick;
-    })
+    });
 
     cardsByPlayer[player] = cardPicks;
   });
@@ -45,28 +50,30 @@ const RotisserieDraftPanel = () => {
                 {cardsForPlayer.map((card, index) => {
                   if (!card) return null;
 
-                  return <CardModalLink
-                    key={card.cardID}
-                    card={card}
-                    altClick={() => {
-                      window.open(`/tool/card/${card.cardID}`);
-                    }}
-                    last={index === cardsForPlayer.length - 1}
-                    className={classNames({
-                      'border-border-secondary border-t': index === 0,
-                    })}
-                    modalprops={{
-                      card,
-                    }}
-                  />
+                  return (
+                    <CardModalLink
+                      key={card.cardID}
+                      card={card}
+                      altClick={() => {
+                        window.open(`/tool/card/${card.cardID}`);
+                      }}
+                      last={index === cardsForPlayer.length - 1}
+                      className={classNames({
+                        'border-border-secondary border-t': index === 0,
+                      })}
+                      modalprops={{
+                        card,
+                      }}
+                    />
+                  );
                 })}
               </ListGroup>
-            )
+            );
           })}
         </Flexbox>
       )}
     </Flexbox>
-  )
-}
+  );
+};
 
 export default RotisserieDraftPanel;

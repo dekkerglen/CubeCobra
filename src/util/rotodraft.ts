@@ -1,14 +1,14 @@
 const Papa = require('papaparse');
 
 export interface RotoPlayer {
-  name: string,
-  index: number
+  name: string;
+  index: number;
 }
 
 export interface RotoPick {
-  cardName: string,
-  playerName: string,
-  playerIndex: number,
+  cardName: string;
+  playerName: string;
+  playerIndex: number;
 }
 
 const NAME_ROW_INDEX = 2;
@@ -27,21 +27,21 @@ const getPicksForPlayer = ({
   playerName,
   row,
 }: {
-  column: number,
-  doublePicks: boolean,
-  parsedCSV: string[][],
-  playerName: string,
-  row: number,
+  column: number;
+  doublePicks: boolean;
+  parsedCSV: string[][];
+  playerName: string;
+  row: number;
 }) => {
   const pickRows = doublePicks ? [row, row + 1] : [row];
 
   const picks = pickRows.map((rowIndex) => {
-    if (rowIndex + 1 >= parsedCSV.length) return;
+    if (rowIndex + 1 >= parsedCSV.length) return undefined;
 
     const cardName = parsedCSV[rowIndex][column];
 
-    if (!cardName || typeof cardName !== "string") {
-      return;
+    if (!cardName || typeof cardName !== 'string') {
+      return undefined;
     }
 
     return {
@@ -52,11 +52,11 @@ const getPicksForPlayer = ({
   });
 
   return picks;
-}
+};
 
 /**
  * Parses a Roto Draft CSV from a Google Sheet with a well known format.
- * @param csv 
+ * @param csv
  */
 export const parseRotoCSV = (csv: string) => {
   const { data: parsedCSV } = Papa.parse(csv.trim()) as { data: string[][] };
@@ -68,23 +68,27 @@ export const parseRotoCSV = (csv: string) => {
 
   // Initialize the players from the row with player names
   for (let i = FIRST_NAME_COLUMN_INDEX; i < nameRow.length; i++) {
-    const playerName = nameRow[i].replace(/[^a-zA-Z0-9 ]/g, "").trim();
+    const playerName = nameRow[i].replace(/[^a-zA-Z0-9 ]/g, '').trim();
 
     if (!playerName) break;
 
-    players[i] = {  name: playerName, index: i };
+    players[i] = { name: playerName, index: i };
   }
 
   const numPlayers = Object.keys(players).length;
   const DOUBLE_PICKS_AFTER = parseInt(parsedCSV[DOUBLE_PICKS_AFTER_ROW]?.[DOUBLE_PICKS_AFTER_COLUMN]);
-  let draftDirection: "left" | "right" = "right";
+  let draftDirection: 'left' | 'right' = 'right';
 
   // Traverse each row of picks, adding them to our picks object
-  for (let i = FIRST_PICK_ROW_INDEX; i < parsedCSV.length; i + 1 - FIRST_PICK_ROW_INDEX > DOUBLE_PICKS_AFTER ? i = i + 2 : i++) {
+  for (
+    let i = FIRST_PICK_ROW_INDEX;
+    i < parsedCSV.length;
+    i + 1 - FIRST_PICK_ROW_INDEX > DOUBLE_PICKS_AFTER ? (i = i + 2) : i++
+  ) {
     const doublePicks = i + 1 - FIRST_PICK_ROW_INDEX > DOUBLE_PICKS_AFTER;
     const pickRow = parsedCSV[i];
 
-    const draftingRight = draftDirection === "right";
+    const draftingRight = draftDirection === 'right';
     const leftmostPickIndex = LEFT_ARROW_COLUMN_INDEX + 1;
     const rightmostPickIndex = LEFT_ARROW_COLUMN_INDEX + numPlayers;
     const startIndex = draftingRight ? leftmostPickIndex : rightmostPickIndex;
@@ -101,7 +105,7 @@ export const parseRotoCSV = (csv: string) => {
         row: i,
       }).filter((pick) => pick !== undefined);
 
-      playerPicks.forEach((playerPick) => picks[playerPick.cardName.toLowerCase()] = playerPick);
+      playerPicks.forEach((playerPick) => (picks[playerPick.cardName.toLowerCase()] = playerPick));
 
       if (!Array.isArray(picksByPlayer[n])) {
         picksByPlayer[n] = playerPicks;
@@ -117,21 +121,20 @@ export const parseRotoCSV = (csv: string) => {
       const startPickNextRow = nextRow[startIndex];
 
       // If the start of the next row is empty then we can assume the whole row is empty
-      if (startPickNextRow === "") break;
-    };
+      if (startPickNextRow === '') break;
+    }
 
     // Swap the direction if there's an arrow at the end to snake the draft
-    if (draftingRight && pickRow[RIGHT_ARROW_COLUMN_INDEX] == "↩") {
-      draftDirection = "left";
-    } else if (!draftingRight && pickRow[LEFT_ARROW_COLUMN_INDEX] == "↪") {
-      draftDirection = "right";
+    if (draftingRight && pickRow[RIGHT_ARROW_COLUMN_INDEX] == '↩') {
+      draftDirection = 'left';
+    } else if (!draftingRight && pickRow[LEFT_ARROW_COLUMN_INDEX] == '↪') {
+      draftDirection = 'right';
     }
   }
-
 
   return {
     players,
     picks,
     picksByPlayer,
   };
-}
+};
