@@ -70,7 +70,7 @@ export const parseRotoCSV = (csv: string) => {
   for (let i = FIRST_NAME_COLUMN_INDEX; i < nameRow.length; i++) {
     const playerName = nameRow[i].replace(/[^a-zA-Z0-9 ]/g, "").trim();
 
-    if (playerName === "" || !playerName) break;
+    if (!playerName) break;
 
     players[i] = {  name: playerName, index: i };
   }
