@@ -195,7 +195,7 @@ describe('Sorting Collector Numbers', () => {
 });
 
 describe('Sorting by Word Count', () => {
-  const SORT = 'Word Count';
+  const SORT = 'Approximate Word Count';
 
   it('Should sort cards if `wordCount` is already populated', () => {
     const cards = [
@@ -238,7 +238,7 @@ describe('Sorting by Word Count', () => {
 });
 
 describe('Grouping by Word Count', () => {
-  const sort = 'Word Count';
+  const sort = 'Approximate Word Count';
 
   it('Should group cards by word count', () => {
     const cards = [
