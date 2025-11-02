@@ -7,12 +7,20 @@ const usePollGoogleSheet = () => {
 
   React.useEffect(() => {
     const fetchUrl = async () => {
-      const resp = await fetch(url);
-      const text = await resp.text();
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) {
+          console.error(`Failed to fetch: ${resp.status} ${resp.statusText}`);
+          return;
+        }
+        const text = await resp.text();
 
-      const { picks, players, picksByPlayer } = parseRotoCSV(text);
-      console.log('fetched and setting rotoinfo');
-      setRotoInfo({ picks, players, picksByPlayer });
+        const { picks, players, picksByPlayer } = parseRotoCSV(text);
+        console.log('fetched and setting rotoinfo');
+        setRotoInfo({ picks, players, picksByPlayer });
+      } catch (error) {
+        console.error('Error fetching Google Sheet:', error);
+      }
     }
 
     if (url === "") {
