@@ -40,7 +40,7 @@ const getPicksForPlayer = ({
 
     const cardName = parsedCSV[rowIndex][column];
 
-    if (cardName === "" || typeof cardName !== "string" || !cardName) {
+    if (!cardName || typeof cardName !== "string") {
       return;
     }
 
@@ -70,7 +70,7 @@ export const parseRotoCSV = (csv: string) => {
   for (let i = FIRST_NAME_COLUMN_INDEX; i < nameRow.length; i++) {
     const playerName = nameRow[i].replace(/[^a-zA-Z0-9 ]/g, "").trim();
 
-    if (playerName === "" || !playerName) break;
+    if (!playerName) break;
 
     players[i] = {  name: playerName, index: i };
   }
@@ -86,7 +86,7 @@ export const parseRotoCSV = (csv: string) => {
 
     const draftingRight = draftDirection === "right";
     const leftmostPickIndex = LEFT_ARROW_COLUMN_INDEX + 1;
-    const rightmostPickIndex = LEFT_ARROW_COLUMN_INDEX + numPlayers
+    const rightmostPickIndex = LEFT_ARROW_COLUMN_INDEX + numPlayers;
     const startIndex = draftingRight ? leftmostPickIndex : rightmostPickIndex;
     const endIndex = draftingRight ? rightmostPickIndex : leftmostPickIndex;
     let blankInRow = false;
@@ -104,7 +104,7 @@ export const parseRotoCSV = (csv: string) => {
       playerPicks.forEach((playerPick) => picks[playerPick.cardName.toLowerCase()] = playerPick);
 
       if (!Array.isArray(picksByPlayer[n])) {
-        picksByPlayer[n] = playerPicks
+        picksByPlayer[n] = playerPicks;
       } else {
         picksByPlayer[n] = picksByPlayer[n].concat(playerPicks);
       }
@@ -128,11 +128,10 @@ export const parseRotoCSV = (csv: string) => {
     }
   }
 
-  console.log({ parsedCSV, players, picks });
 
   return {
     players,
     picks,
     picksByPlayer,
-  }
+  };
 }
