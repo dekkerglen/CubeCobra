@@ -91,7 +91,7 @@ This will:
 - install dependencies
 - build the application code to run setup scripts
 - run setup scripts to:
-  - setup local files for application perisistence
+  - setup local files for application persistence
   - setup localstack dynamodb tables (ex. Users, Cubes, Cards, etc.)
   - download bulk card data from scryfall, persist to files and load it to localstack s3
 
@@ -117,7 +117,7 @@ cubecobracube        | Server started on port 5000, listening on 127.0.0.1...
 
 This script will:
 
-- ensure nearly parsers for card filters have compiled
+- ensure nearley parsers for card filters have compiled
 - compile & watch scss (bootstrap) styles
 - compile & watch server javascript w/ nodemon
 - run & watch webpack dev server
@@ -159,7 +159,7 @@ NodeJS: https://nodejs.org/en/download/
 
 ### Localstack
 
-[Localstack][https://www.localstack.cloud/] provides a local emulation of AWS Services required to run CubeCobra including S3, DynamoDB, Simple Email Service, and Cloudwatch.
+[Localstack](https://www.localstack.cloud/) provides a local emulation of AWS Services required to run CubeCobra including S3, DynamoDB, Simple Email Service, and Cloudwatch.
 
 - Windows: Download and install the binary from localstack
 - Mac: `brew install localstack/tap/localstack-cli`
