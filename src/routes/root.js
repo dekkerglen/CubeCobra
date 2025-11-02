@@ -31,10 +31,12 @@ router.get('/explore', async (req, res) => {
   const featured = await getFeaturedCubes();
 
   const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
-  const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.cube));
+  const popular = (await Cube.batchGet(popularHashes.items.map((hash) => hash.cube)))
+    .filter((cube) => cube.visibility !== "pr");
 
   const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
-  const recentlyDrafted = await Cube.batchGet(recentDecks.items.map((deck) => deck.cube));
+  const recentlyDrafted = (await Cube.batchGet(recentDecks.items.map((deck) => deck.cube)))
+    .filter((cube) => cube.visibility !== "pr");
 
   return render(req, res, 'ExplorePage', {
     recents: recents.sort((a, b) => b.date - a.date).slice(0, 12),
