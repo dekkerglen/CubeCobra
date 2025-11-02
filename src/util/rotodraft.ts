@@ -133,5 +133,5 @@ export const parseRotoCSV = (csv: string) => {
     players,
     picks,
     picksByPlayer,
-  }
+  };
 }
