@@ -423,9 +423,6 @@ const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
     const indexA = CARD_TYPES.indexOf(a);
     const indexB = CARD_TYPES.indexOf(b);
 
-    // If an element's id is not found in sortingOrderArray,
-    // it will be placed at the end (or handled as desired).
-    // For simplicity, this example assumes all IDs are present.
     return indexA - indexB;
   });
   //Sort alphabetically
@@ -731,7 +728,6 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
     //Overriding the types for contraptions and planes
     if (typesAndSuperTypes.includes('Contraption')) {
       ret = ['Contraption'];
-      //TODO: Shouldn't be this imo
     } else if (typesAndSuperTypes.includes('Plane')) {
       ret = ['Plane'];
     } else {
