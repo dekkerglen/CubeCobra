@@ -104,7 +104,7 @@ export const parseRotoCSV = (csv: string) => {
       playerPicks.forEach((playerPick) => picks[playerPick.cardName.toLowerCase()] = playerPick);
 
       if (!Array.isArray(picksByPlayer[n])) {
-        picksByPlayer[n] = playerPicks
+        picksByPlayer[n] = playerPicks;
       } else {
         picksByPlayer[n] = picksByPlayer[n].concat(playerPicks);
       }
