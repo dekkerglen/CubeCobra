@@ -712,6 +712,7 @@ async function saveAllCards(
 
   // eslint-disable-next-line no-console
   console.info('Processing cards...');
+  const processingCardsStart = Date.now();
   await new Promise((resolve) =>
     fs
       .createReadStream('./private/cards.json')
@@ -722,15 +723,28 @@ async function saveAllCards(
       )
       .on('close', resolve),
   );
+  const processingCardsDuration = (Date.now() - processingCardsStart) / 1000;
+  const cardCount = Object.keys(catalog.dict).length;
+  // eslint-disable-next-line no-console
+  console.log(
+    `Finished processing ${cardCount} cards. Duration: ${processingCardsDuration.toFixed(2)}s, RPS: ${(cardCount / processingCardsDuration).toFixed(2)}`,
+  );
 
   // eslint-disable-next-line no-console
   console.info('Creating language mappings...');
+  const languageMappingsStart = Date.now();
   await new Promise((resolve) =>
     fs
       .createReadStream('./private/all-cards.json')
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(addLanguageMapping))
       .on('close', resolve),
+  );
+  const languageMappingCount = Object.keys(catalog.english).length;
+  const languageMappingsDuration = (Date.now() - languageMappingsStart) / 1000;
+  // eslint-disable-next-line no-console
+  console.log(
+    `Finished proccessing ${languageMappingCount} language mappings. Duration: ${languageMappingsDuration.toFixed(2)}s, RPS: ${(languageMappingCount / languageMappingsDuration).toFixed(2)}`,
   );
 
   catalog.indexToOracleId = indexToOracle;
