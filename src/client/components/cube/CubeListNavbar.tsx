@@ -9,6 +9,7 @@ import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
 import ArenaExportModal from 'components/modals/ArenaExportModal';
 import PasteBulkModal from 'components/modals/PasteBulkModal';
+import RotisserieDraftModal from 'components/modals/RotisserieDraftModal';
 import UploadBulkModal from 'components/modals/UploadBulkModal';
 import UploadBulkReplaceModal from 'components/modals/UploadBulkReplaceModal';
 import SortCollapse from 'components/SortCollapse';
@@ -16,6 +17,7 @@ import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
+import RotoDraftContext from 'contexts/RotoDraftContext';
 import UserContext from 'contexts/UserContext';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
@@ -36,6 +38,7 @@ const PasteBulkModalItem = withModal(Link, PasteBulkModal);
 const UploadBulkModalItem = withModal(Link, UploadBulkModal);
 const UploadBulkReplaceModalItem = withModal(Link, UploadBulkReplaceModal);
 const TagColorsModalItem = withModal(Link, TagColorsModal);
+const RotoSetupLink = withModal(Link, RotisserieDraftModal);
 
 const enc = encodeURIComponent;
 interface CubeListNavbarProps {
@@ -50,6 +53,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   const [isFilterUsed, setIsFilterUsed] = useState(true);
   const { cardsPerRow, setCardsPerRow } = useContext(DisplayContext);
   const { alerts } = useAlerts();
+  const { url: rotoURL, setUrl: setRotoURL } = React.useContext(RotoDraftContext);
 
   const { canEdit, hasCustomImages, cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, setShowUnsorted } =
     useContext(CubeContext);
@@ -100,6 +104,13 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           <Link onClick={toggleShowInlineTagEmojis}>
             {showInlineTagEmojis ? 'Hide inline emoji tags' : 'Show inline emoji tags'}
           </Link>
+          {rotoURL ? (
+            <Link onClick={() => setRotoURL("")}>
+              Clear Rotisserie Draft
+            </Link>
+          ) : (
+            <RotoSetupLink>Setup Rotisserie Draft</RotoSetupLink>
+          )}
         </Flexbox>
       </NavMenu>
       <NavMenu label={canEdit ? 'Import/Export' : 'Export'}>

@@ -5,6 +5,7 @@ import Text from 'components/base/Text';
 import CubeListNavbar from 'components/cube/CubeListNavbar';
 import CurveView from 'components/cube/CurveView';
 import ListView from 'components/cube/ListView';
+import RotisserieDraftPanel from 'components/cube/RotisserieDraftPanel';
 import TableView from 'components/cube/TableView';
 import VersionMismatch from 'components/cube/VersionMismatch';
 import VisualSpoiler from 'components/cube/VisualSpoiler';
@@ -15,6 +16,7 @@ import ChangesContext from 'contexts/ChangesContext';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
+import { RotoDraftContextProvider } from 'contexts/RotoDraftContext';
 import Card, { BoardType } from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
 import useQueryParam from 'hooks/useQueryParam';
@@ -60,9 +62,10 @@ const CubeListPageRaw: React.FC = () => {
   }
 
   return (
-    <>
+    <RotoDraftContextProvider>
       <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
       <DynamicFlash />
+      <RotisserieDraftPanel />
       {Object.entries(changedCards)
         .map(([boardname, boardcards]) => (
           <ErrorBoundary key={boardname}>
@@ -99,7 +102,7 @@ const CubeListPageRaw: React.FC = () => {
           </ErrorBoundary>
         ))
         .reverse()}
-    </>
+    </RotoDraftContextProvider>
   );
 };
 

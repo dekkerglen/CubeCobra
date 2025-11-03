@@ -57,6 +57,8 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
             modalprops={{
               card,
             }}
+            showRotoInfo
+            cardCopyIndex={card.index!}
           />
         )),
       )}
