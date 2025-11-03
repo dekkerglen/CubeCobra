@@ -124,7 +124,7 @@ router.get('/report/:id', ensureAuth, async (req, res) => {
 
     req.flash(
       'success',
-      'Thank you for the report! Our moderators will review the report can decide whether to take action.',
+      'Thank you for the report! Our moderators will review the report and decide whether to take action.',
     );
 
     return redirect(req, res, `/user/view/${req.params.id}`);
@@ -774,7 +774,8 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
 
 router.get('/social', ensureAuth, async (req, res) => {
   try {
-    const followedCubes = await Cube.batchGet(req.user.followedCubes || []);
+    let followedCubes = (await Cube.batchGet(req.user.followedCubes || []))
+      .filter((cube) => cube.visibility !== "pr");
     const followers = await User.batchGet(req.user.following || []);
     const followedUsers = await User.batchGet(req.user.followedUsers || []);
 
