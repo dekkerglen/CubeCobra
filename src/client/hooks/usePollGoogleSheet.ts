@@ -1,6 +1,8 @@
 import React from 'react';
-import { parseRotoCSV } from '../../util/rotodraft';
+
 import RotoDraftContext from 'contexts/RotoDraftContext';
+
+import { parseRotoCSV } from '../../util/rotodraft';
 
 const usePollGoogleSheet = () => {
   const { url, setRotoInfo } = React.useContext(RotoDraftContext);
@@ -10,21 +12,21 @@ const usePollGoogleSheet = () => {
       try {
         const resp = await fetch(url);
         if (!resp.ok) {
+          // eslint-disable-next-line no-console
           console.error(`Failed to fetch: ${resp.status} ${resp.statusText}`);
           return;
         }
         const text = await resp.text();
 
         const { picks, players, picksByPlayer } = parseRotoCSV(text);
-        console.log('fetched and setting rotoinfo', picks);
         setRotoInfo({ picks, players, picksByPlayer });
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching Google Sheet:', error);
       }
     };
 
     if (url === '') {
-      console.log('blank URL, exiting');
       return;
     }
 

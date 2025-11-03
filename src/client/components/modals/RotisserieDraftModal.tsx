@@ -1,9 +1,10 @@
 import React from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from "components/base/Modal";
+
 import Button from 'components/base/Button';
-import Link from 'components/base/Link';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from "components/base/Modal";
 import RotoDraftContext from 'contexts/RotoDraftContext';
 
 type Props = {
