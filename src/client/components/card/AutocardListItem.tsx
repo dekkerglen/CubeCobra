@@ -4,6 +4,7 @@ import cx from 'classnames';
 import emojiRegex from 'emoji-regex';
 
 import DisplayContext from 'contexts/DisplayContext';
+import RotoDraftContext from 'contexts/RotoDraftContext';
 import { cardName, getCardTagColorClass } from 'utils/cardutil';
 
 import Card from '../../../datatypes/Card';
@@ -11,7 +12,6 @@ import TagColorContext from '../../contexts/TagColorContext';
 import UserContext from '../../contexts/UserContext';
 import { ListGroupItem } from '../base/ListGroup';
 import withAutocard from '../WithAutocard';
-import RotoDraftContext from 'contexts/RotoDraftContext';
 
 export interface AutocardListItemProps {
   card: Card;
@@ -54,8 +54,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     () => (card && card.details ? [cardName(card), card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
     [card],
   );
-  const { url: rotoUrl, getPickByNameAndIndex, rotoInfo } = useContext(RotoDraftContext);
-  console.log(name);
+  const { url: rotoUrl, getPickByNameAndIndex } = useContext(RotoDraftContext);
 
   const openCardToolWindow = useCallback(() => {
     window.open(`/tool/card/${cardId}`);
@@ -96,9 +95,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   const rotoPickInfo = React.useMemo(() => {
     return showRotoInfo && rotoUrl !== '' ? getPickByNameAndIndex(name, cardCopyIndex) : undefined;
-  }, [name, rotoInfo, showRotoInfo, rotoUrl, getPickByNameAndIndex, cardCopyIndex]);
-
-  console.log(rotoPickInfo);
+  }, [name, showRotoInfo, rotoUrl, getPickByNameAndIndex, cardCopyIndex]);
 
   return (
     <AutocardDiv

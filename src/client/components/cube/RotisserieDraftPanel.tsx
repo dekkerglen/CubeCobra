@@ -1,4 +1,7 @@
+import React from 'react';
+
 import classNames from 'classnames';
+
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Collapse from 'components/base/Collapse';
@@ -11,7 +14,6 @@ import CubeContext from 'contexts/CubeContext';
 import RotoDraftContext, { getBaseCardName } from 'contexts/RotoDraftContext';
 import CardType from 'datatypes/Card';
 import usePollGoogleSheet from 'hooks/usePollGoogleSheet';
-import React from 'react';
 import { cardName } from 'utils/cardutil';
 
 const CardModalLink = withCardModal(AutocardListItem);

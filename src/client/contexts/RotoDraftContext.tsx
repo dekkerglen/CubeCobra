@@ -1,6 +1,8 @@
-import useQueryParam from 'hooks/useQueryParam';
 import React, { Dispatch, ReactNode, SetStateAction } from 'react';
+
 import { RotoPick, RotoPlayer } from 'src/util/rotodraft';
+
+import useQueryParam from 'hooks/useQueryParam';
 
 interface RotoInfo {
   picks: Record<string, RotoPick>;
@@ -28,8 +30,8 @@ const RotoDraftContext = React.createContext<RotoDraftContextType>({
   setUrl: defaultFn,
   rotoInfo: { picks: {}, players: {}, picksByPlayer: {} },
   setRotoInfo: defaultFn,
-  getPickByNameAndIndex: (_: string, __: number) => undefined,
-  assignCardIndexes: (_: any[]) => {},
+  getPickByNameAndIndex: () => undefined,
+  assignCardIndexes: () => {},
 });
 
 export const getBaseCardName = (cardName: string) => {

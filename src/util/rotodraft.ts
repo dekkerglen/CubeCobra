@@ -58,7 +58,7 @@ const getPicksForPlayer = ({
     if (!cardCopyTracker[baseCardName]) {
       cardCopyTracker[baseCardName] = 1;
     } else {
-      cardCopyTracker[baseCardName]++;
+      cardCopyTracker[baseCardName] += 1;
     }
 
     const playerPickNumber = playerPicksByIndex.length + 1;
@@ -110,7 +110,7 @@ export const parseRotoCSV = (csv: string) => {
   for (
     let i = FIRST_PICK_ROW_INDEX;
     i < parsedCSV.length;
-    i + 1 - FIRST_PICK_ROW_INDEX > DOUBLE_PICKS_AFTER ? (i = i + 2) : i++
+    i + 1 - FIRST_PICK_ROW_INDEX > DOUBLE_PICKS_AFTER ? (i = i + 2) : (i += 1)
   ) {
     const doublePicks = i + 1 - FIRST_PICK_ROW_INDEX > DOUBLE_PICKS_AFTER;
     const pickRow = parsedCSV[i];
@@ -120,10 +120,10 @@ export const parseRotoCSV = (csv: string) => {
     const rightmostPickIndex = LEFT_ARROW_COLUMN_INDEX + numPlayers;
     const startIndex = draftingRight ? leftmostPickIndex : rightmostPickIndex;
     const endIndex = draftingRight ? rightmostPickIndex : leftmostPickIndex;
-    let blankInRow = false;
+    const blankInRow = false;
 
     // Go through each pick for this row in the correct drafting direction
-    for (let n = startIndex; draftingRight ? n <= endIndex : n >= endIndex; draftingRight ? n++ : n--) {
+    for (let n = startIndex; draftingRight ? n <= endIndex : n >= endIndex; draftingRight ? (n += 1) : (n -= 1)) {
       const playerPicks = getPicksForPlayer({
         column: n,
         doublePicks,
@@ -136,7 +136,8 @@ export const parseRotoCSV = (csv: string) => {
 
       playerPicks.forEach((playerPick) => {
         // Set the overall pick number
-        playerPick.overallPickNumber = overallPickNumber++;
+        playerPick.overallPickNumber = overallPickNumber;
+        overallPickNumber += 1;
 
         // Create a unique key for each card pick that includes the copy index
         const pickKey = `${playerPick.cardName.toLowerCase()}_${playerPick.cardCopyIndex}`;
@@ -157,9 +158,9 @@ export const parseRotoCSV = (csv: string) => {
     }
 
     // Swap the direction if there's an arrow at the end to snake the draft
-    if (draftingRight && pickRow[RIGHT_ARROW_COLUMN_INDEX] == '↩') {
+    if (draftingRight && pickRow[RIGHT_ARROW_COLUMN_INDEX] === '↩') {
       draftDirection = 'left';
-    } else if (!draftingRight && pickRow[LEFT_ARROW_COLUMN_INDEX] == '↪') {
+    } else if (!draftingRight && pickRow[LEFT_ARROW_COLUMN_INDEX] === '↪') {
       draftDirection = 'right';
     }
   }
