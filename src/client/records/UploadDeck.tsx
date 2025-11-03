@@ -19,8 +19,10 @@ interface UploadDeckProps {
   selectedUser: number;
   setSelectedUser: (userId: number) => void;
   record: Record;
-  cards: CardDetails[];
-  setCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
+  mainboardCards: CardDetails[];
+  setMainboardCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
+  sideboardCards: CardDetails[];
+  setSideboardCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
   setAlerts: React.Dispatch<React.SetStateAction<UncontrolledAlertProps[]>>;
   cubeId: string;
 }
@@ -29,12 +31,15 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
   selectedUser,
   setSelectedUser,
   record,
-  cards,
-  setCards,
+  mainboardCards,
+  setMainboardCards,
+  sideboardCards,
+  setSideboardCards,
   setAlerts,
   cubeId,
 }) => {
   const [allowCardsOutsideOfCube, setAllowCardsOutsideOfCube] = useState<boolean>(false);
+  const [addToSideboard, setAddToSideboard] = useState<boolean>(false);
   const { csrfFetch } = useContext(CSRFContext);
   const removeRef = useRef<HTMLInputElement>(null);
   const { hideCard } = useContext(AutocardContext);
@@ -49,7 +54,11 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
         if (!card) {
           return;
         }
-        setCards((prevCards) => [...prevCards, card]);
+        if (addToSideboard) {
+          setSideboardCards((prevCards) => [...prevCards, card]);
+        } else {
+          setMainboardCards((prevCards) => [...prevCards, card]);
+        }
         setCardNameValue('');
 
         if (removeRef.current) {
@@ -60,7 +69,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
         console.error(e);
       }
     },
-    [csrfFetch, setAlerts, setCards],
+    [csrfFetch, setAlerts, setMainboardCards, setSideboardCards, addToSideboard],
   );
 
   return (
@@ -80,11 +89,18 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           })),
         ]}
       />
-      <Checkbox
-        label="Use Cards Outside of Cube"
-        checked={allowCardsOutsideOfCube}
-        setChecked={(value) => setAllowCardsOutsideOfCube(value)}
-      />
+      <Flexbox direction="row" justify="start" gap="2">
+        <Checkbox
+          label="Use Cards Outside of Cube"
+          checked={allowCardsOutsideOfCube}
+          setChecked={(value) => setAllowCardsOutsideOfCube(value)}
+        />
+        <Checkbox
+          label="Add to Sideboard"
+          checked={addToSideboard}
+          setChecked={(value) => setAddToSideboard(value)}
+        />
+      </Flexbox>
       <Flexbox direction="row" justify="start" gap="2">
         <AutocompleteInput
           cubeId={cubeId}
@@ -96,7 +112,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           value={cardNameValue}
           setValue={setCardNameValue}
           onSubmit={(e, val) => handleAdd(e, val!)}
-          placeholder="Card to Add"
+          placeholder={addToSideboard ? 'Card to Add to Sideboard' : 'Card to Add to Mainboard'}
           autoComplete="off"
           data-lpignore
           className="square-right"
@@ -105,18 +121,41 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           <span className="text-nowrap">Add Card</span>
         </Button>
       </Flexbox>
-      {cards.length > 0 && (
+      {mainboardCards.length > 0 && (
         <>
+          <Text sm semibold>
+            Mainboard ({mainboardCards.length} card{mainboardCards.length > 1 ? 's' : ''})
+          </Text>
           <Text sm>
-            {cards.length} card{cards.length > 1 ? 's' : ''} added to deck. Click on a card to remove it.
+            Click on a card to remove it.
           </Text>
           <CardGrid
-            cards={cards.map(detailsToCard)}
+            cards={mainboardCards.map(detailsToCard)}
             xs={4}
             md={8}
             xl={10}
             onClick={(_, index) => {
-              setCards((prevCards) => prevCards.filter((_, i) => i !== index));
+              setMainboardCards((prevCards) => prevCards.filter((_, i) => i !== index));
+              hideCard();
+            }}
+          />
+        </>
+      )}
+      {sideboardCards.length > 0 && (
+        <>
+          <Text sm semibold className="mt-2">
+            Sideboard ({sideboardCards.length} card{sideboardCards.length > 1 ? 's' : ''})
+          </Text>
+          <Text sm>
+            Click on a card to remove it.
+          </Text>
+          <CardGrid
+            cards={sideboardCards.map(detailsToCard)}
+            xs={4}
+            md={8}
+            xl={10}
+            onClick={(_, index) => {
+              setSideboardCards((prevCards) => prevCards.filter((_, i) => i !== index));
               hideCard();
             }}
           />

@@ -72,7 +72,8 @@ const recordSchema = Joi.object({
   trophy: Joi.array().items(Joi.string()).optional(), // Trophy is optional
 }).unknown(false); // do not allow additional properties
 
-const cardsSchema = Joi.array().items(Joi.string().required()).min(1).max(200).required();
+const mainboardSchema = Joi.array().items(Joi.string()).min(1).max(200).required();
+const sideboardSchema = Joi.array().items(Joi.string()).max(200).default([]);
 
 export const importRecordHandler = async (req: Request, res: Response) => {
   try {
@@ -135,11 +136,12 @@ export const importRecordHandler = async (req: Request, res: Response) => {
     }
 
     const userIndex = parseInt(req.body.userIndex, 10);
-    const cards = JSON.parse(req.body.cards);
+    const mainboard = JSON.parse(req.body.mainboard);
+    const sideboard = req.body.sideboard ? JSON.parse(req.body.sideboard) : [];
 
     if (!record.draft) {
       // If the record does not have a draft, create one
-      await associateNewDraft(cube, record, userIndex, cards);
+      await associateNewDraft(cube, record, userIndex, mainboard, sideboard);
 
       req.flash('success', 'Deck uploaded successfully. A new draft has been created and associated with this record');
       return redirect(req, res, `/cube/record/${recordId}?tab=1`);
@@ -149,7 +151,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
 
     if (!draft) {
       // underlying draft object may have been deleted, we need to create a new one
-      await associateNewDraft(cube, record, userIndex, cards);
+      await associateNewDraft(cube, record, userIndex, mainboard, sideboard);
 
       req.flash(
         'success',
@@ -164,7 +166,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/records/uploaddeck/${record.id}`);
     }
 
-    await associateWithExistingDraft(cube, draft, userIndex, cards);
+    await associateWithExistingDraft(cube, draft, userIndex, mainboard, sideboard);
 
     req.flash('success', 'Deck uploaded successfully. Draft associated with this record has been updated.');
     return redirect(req, res, `/cube/record/${recordId}?tab=1`);
@@ -186,7 +188,8 @@ export const routes = [
       csrfProtection,
       ensureAuth,
       bodyValidation(recordSchema, () => '/404', 'record'),
-      bodyValidation(cardsSchema, () => '/404', 'cards'),
+      bodyValidation(mainboardSchema, () => '/404', 'mainboard'),
+      bodyValidation(sideboardSchema, () => '/404', 'sideboard'),
       importRecordHandler,
     ],
   },

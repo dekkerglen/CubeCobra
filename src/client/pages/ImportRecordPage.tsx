@@ -36,12 +36,14 @@ interface UploadDeckStepProps {
   record: Record;
   draft?: Draft;
   cubeId: string;
-  cards: CardDetails[];
-  setCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
+  mainboardCards: CardDetails[];
+  setMainboardCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
+  sideboardCards: CardDetails[];
+  setSideboardCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
   newRecord: boolean;
 }
 
-const UploadDeckStep: React.FC<UploadDeckStepProps> = ({ record, draft, cubeId, cards, setCards, newRecord }) => {
+const UploadDeckStep: React.FC<UploadDeckStepProps> = ({ record, draft, cubeId, mainboardCards, setMainboardCards, sideboardCards, setSideboardCards, newRecord }) => {
   const formRef = createRef<HTMLFormElement>();
   const [selectedUser, setSelectedUser] = useState<number>(0);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
@@ -56,12 +58,12 @@ const UploadDeckStep: React.FC<UploadDeckStepProps> = ({ record, draft, cubeId, 
       return { submitDisabled: true, disabledExplanation: 'Selected player already has a deck in the draft' };
     }
 
-    if (cards.length === 0) {
-      return { submitDisabled: true, disabledExplanation: 'No cards added to deck' };
+    if (mainboardCards.length === 0) {
+      return { submitDisabled: true, disabledExplanation: 'No cards added to mainboard' };
     }
 
     return { submitDisabled: false, disabledExplanation: '' };
-  }, [selectedUser, record.players.length, draft, cards.length]);
+  }, [selectedUser, record.players.length, draft, mainboardCards.length]);
 
   return (
     <>
@@ -70,8 +72,10 @@ const UploadDeckStep: React.FC<UploadDeckStepProps> = ({ record, draft, cubeId, 
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         record={record}
-        cards={cards}
-        setCards={setCards}
+        mainboardCards={mainboardCards}
+        setMainboardCards={setMainboardCards}
+        sideboardCards={sideboardCards}
+        setSideboardCards={setSideboardCards}
         setAlerts={setAlerts}
       />
       {alerts.map(({ color, message }, index) => (
@@ -90,7 +94,8 @@ const UploadDeckStep: React.FC<UploadDeckStepProps> = ({ record, draft, cubeId, 
         formData={{
           userIndex: `${selectedUser}`,
           newRecord: newRecord ? 'true' : 'false',
-          cards: JSON.stringify(cards.map(detailsToCard).map(cardOracleId)),
+          mainboard: JSON.stringify(mainboardCards.map(detailsToCard).map(cardOracleId)),
+          sideboard: JSON.stringify(sideboardCards.map(detailsToCard).map(cardOracleId)),
           record: JSON.stringify(record),
         }}
         ref={formRef}
@@ -247,7 +252,8 @@ const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards }) => {
   const [record, setRecord] = React.useState<Partial<Record>>({});
   const cubes: { id: string; name: string }[] = user?.cubes ?? [];
   const [selectedCube, setSelectedCube] = useState<string>('');
-  const [cardState, setCardState] = useState<CardDetails[]>(cards);
+  const [mainboardCards, setMainboardCards] = useState<CardDetails[]>(cards);
+  const [sideboardCards, setSideboardCards] = useState<CardDetails[]>([]);
 
   return (
     <MainLayout>
@@ -414,8 +420,10 @@ const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards }) => {
               <UploadDeckStep
                 record={record as Record}
                 cubeId={selectedCube}
-                cards={cardState}
-                setCards={setCardState}
+                mainboardCards={mainboardCards}
+                setMainboardCards={setMainboardCards}
+                sideboardCards={sideboardCards}
+                setSideboardCards={setSideboardCards}
                 newRecord={false}
               />
             </Flexbox>
@@ -480,8 +488,10 @@ const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards }) => {
               <UploadDeckStep
                 record={record as Record}
                 cubeId={selectedCube}
-                cards={cardState}
-                setCards={setCardState}
+                mainboardCards={mainboardCards}
+                setMainboardCards={setMainboardCards}
+                sideboardCards={sideboardCards}
+                setSideboardCards={setSideboardCards}
                 newRecord={true}
               />
             </Flexbox>

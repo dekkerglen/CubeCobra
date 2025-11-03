@@ -60,8 +60,10 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
   const stackedDeck = seat.mainboard.slice();
   const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
-  for (const col of stackedSideboard[0]) {
-    sbCount += col.length;
+  for (const row of stackedSideboard) {
+    for (const col of row) {
+      sbCount += col.length;
+    }
   }
   if (sbCount <= 0) {
     stackedSideboard.splice(0, stackedSideboard.length);
