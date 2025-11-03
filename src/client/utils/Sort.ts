@@ -87,6 +87,8 @@ const CARD_TYPES: string[] = [
   'Battle',
 ];
 
+const SUPER_TYPES: string[] = ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
+
 const SINGLE_COLOR: string[] = ['White', 'Blue', 'Black', 'Red', 'Green'];
 const GUILDS: string[] = [
   'Azorius',
@@ -353,6 +355,91 @@ function getEloBucket(elo: number): string {
   return `${bucketFloor}-${bucketFloor + 49}`;
 }
 
+//Types - To handle custom card types, we will assume anything before a dash it a type and after is a sub-type.
+//Basically we will not handle custom supertypes since there is no way for us to distinguish a custom supertype from a type
+//Reference: https://mtg.fandom.com/wiki/Type_line
+const splitCardTypes = (card: Card): { typesAndSuperTypes: string[]; subtypes: string[] } => {
+  const split = cardType(card).split(/[-–—]/);
+  //If don't have left and right sides of a card type, add the right side for simplicity
+  if (split.length < 2) {
+    split.push('');
+  }
+
+  const typesAndSuperTypes = split[0]
+    .trim()
+    .split(' ')
+    .map((x) => x.trim())
+    .filter((x) => x);
+  //Also handle "Time Lord" as the one example of a sub-type that isn't a singular word
+  const subtypes = split[1]
+    .trim()
+    .replace('Time Lord', 'Time-Lord')
+    .split(' ')
+    .map((x) => x.trim())
+    .map((x) => (x === 'Time-Lord' ? 'Time Lord' : x))
+    .filter((x) => x);
+
+  return {
+    typesAndSuperTypes,
+    subtypes,
+  };
+};
+
+const filterOutSupertypes = (typesAndSuperTypes: string[]): string[] => {
+  return typesAndSuperTypes.filter((t) => !SUPER_TYPES.includes(t));
+};
+
+const getAllTypesOfCards = (cube: Card[] | null): string[] => {
+  const types = new Set<string>();
+  for (const card of cube || []) {
+    const { typesAndSuperTypes } = splitCardTypes(card);
+    for (const type of filterOutSupertypes(typesAndSuperTypes)) {
+      types.add(type.trim());
+    }
+  }
+  return [...types].sort();
+};
+
+const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
+  const splitMtgVersusOtherTypes = (types: string[]) => {
+    return types.reduce(
+      (accumulator, currentValue) => {
+        if (CARD_TYPES.includes(currentValue)) {
+          accumulator[0].push(currentValue);
+        } else {
+          accumulator[1].push(currentValue);
+        }
+        return accumulator;
+      },
+      [[], []] as string[][], // Initial value: an array containing two empty arrays
+    );
+  };
+
+  const types = getAllTypesOfCards(cube).filter((type) => type !== 'Land');
+  const [mtgTypes, otherTypes] = splitMtgVersusOtherTypes(types);
+
+  //Keep the old order of MTG types. Custom types will be placed
+  mtgTypes.sort((a, b) => {
+    const indexA = CARD_TYPES.indexOf(a);
+    const indexB = CARD_TYPES.indexOf(b);
+
+    return indexA - indexB;
+  });
+  //Sort alphabetically
+  otherTypes.sort();
+
+  /* Keep the existing sort of MTG types from Creatures -> Battle.
+   * Then add the various colour options, Land, custom types, and finally Other
+   */
+  return mtgTypes
+    .concat(GUILDS)
+    .concat(SHARDS_AND_WEDGES)
+    .concat(FOUR_AND_FIVE_COLOR)
+    .concat(['Land'])
+    .concat(otherTypes)
+    .concat(['Other']);
+};
+
 export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): string[] {
   let ret: string[] = [];
 
@@ -387,9 +474,10 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
   } else if (sort === 'Color') {
     ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort === 'Type') {
-    ret = CARD_TYPES.concat(['Other']);
+    ret = getAllTypesOfCards(cube);
   } else if (sort === 'Supertype') {
-    ret = ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
+    //Will not handle custom supertypes because not possible to distinguish from types
+    ret = SUPER_TYPES;
   } else if (sort === 'Tags') {
     const tags: string[] = [];
     for (const card of cube || []) {
@@ -466,22 +554,14 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
   } else if (sort === 'Subtype') {
     const types = new Set<string>();
     for (const card of cube || []) {
-      const split = cardType(card).split(/[-–—]/);
-      if (split.length > 1) {
-        const subtypes = split[1].trim().split(' ');
-        const nonemptySubtypes = subtypes.filter((x) => x.trim());
-        for (const subtype of nonemptySubtypes) {
-          types.add(subtype.trim());
-        }
+      const { subtypes } = splitCardTypes(card);
+      for (const subtype of subtypes) {
+        types.add(subtype.trim());
       }
     }
     ret = [...types].sort();
   } else if (sort === 'Types-Multicolor') {
-    ret = CARD_TYPES.filter((type) => type !== 'Land')
-      .concat(GUILDS)
-      .concat(SHARDS_AND_WEDGES)
-      .concat(FOUR_AND_FIVE_COLOR)
-      .concat(['Land', 'Other']);
+    ret = getTypesMulticolorLabels(cube);
   } else if (sort === 'Legality') {
     ret = SUPPORTED_FORMATS;
   } else if (sort === 'Power') {
@@ -639,29 +719,19 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
   } else if (sort === 'Mana Value Full') {
     // Round to half-integer.
     ret = [(Math.round(cardCmc(card) * 2) / 2).toString()];
-  } else if (sort === 'Supertype' || sort === 'Type') {
-    const split = cardType(card).split(/[-–—]/);
-    let types: string[];
-    if (split.length > 1) {
-      types = split[0]
-        .trim()
-        .split(' ')
-        .map((x) => x.trim())
-        .filter((x) => x);
-    } else {
-      types = cardType(card)
-        .trim()
-        .split(' ')
-        .map((x) => x.trim())
-        .filter((x) => x);
-    }
-    if (types.includes('Contraption')) {
+  } else if (sort === 'Supertype') {
+    const { typesAndSuperTypes } = splitCardTypes(card);
+    const labels = getLabelsRaw(null, sort, showOther);
+    ret = typesAndSuperTypes.filter((t) => labels.includes(t));
+  } else if (sort === 'Type') {
+    const { typesAndSuperTypes } = splitCardTypes(card);
+    //Overriding the types for contraptions and planes
+    if (typesAndSuperTypes.includes('Contraption')) {
       ret = ['Contraption'];
-    } else if (types.includes('Plane')) {
+    } else if (typesAndSuperTypes.includes('Plane')) {
       ret = ['Plane'];
     } else {
-      const labels = getLabelsRaw(null, sort, showOther);
-      ret = types.filter((t) => labels.includes(t));
+      ret = filterOutSupertypes(typesAndSuperTypes);
     }
   } else if (sort === 'Tags') {
     ret = card.tags || [];
@@ -689,39 +759,15 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
     const rarity = cardRarity(card);
     ret = [rarity[0].toUpperCase() + rarity.slice(1)];
   } else if (sort === 'Subtype') {
-    const split = cardType(card).split(/[-–—]/);
-    if (split.length > 1) {
-      const subtypes = split[1].trim().split(' ');
-      ret = subtypes.map((subtype) => subtype.trim()).filter((x) => x);
-    }
+    const { subtypes } = splitCardTypes(card);
+    ret = subtypes;
   } else if (sort === 'Types-Multicolor') {
     if (cardColorIdentity(card).length <= 1) {
-      const split = cardType(card).split('—');
-      const types = split[0].trim().split(' ');
-      const type = types[types.length - 1];
-      // check last type
-      if (
-        ![
-          'Creature',
-          'Planeswalker',
-          'Instant',
-          'Sorcery',
-          'Artifact',
-          'Enchantment',
-          'Conspiracy',
-          'Contraption',
-          'Phenomenon',
-          'Plane',
-          'Scheme',
-          'Vanguard',
-          'Land',
-          'Battle',
-        ].includes(type)
-      ) {
-        ret = ['Other'];
-      } else {
-        ret = [type];
-      }
+      const { typesAndSuperTypes } = splitCardTypes(card);
+      //Grouping by the last type. Eg for Walking Ballista (Artifact Creature) is is grouped under Creature
+      const type = typesAndSuperTypes.length > 0 ? typesAndSuperTypes[typesAndSuperTypes.length - 1] : '';
+      //Because of custom cards don't check against valid MTG types
+      ret = [type];
     } else if (cardColorIdentity(card).length === 5) {
       ret = ['Five Color'];
     } else if (cardColorIdentity(card).length === 4) {

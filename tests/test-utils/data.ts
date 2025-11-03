@@ -115,6 +115,14 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
   ...overrides,
 });
 
+export const createCustomCard = (customName: string, overrides?: Partial<Card>): Card => ({
+  index: generateRandomNumber(1, 3),
+  cardID: 'custom-card',
+  custom_name: customName,
+  details: createCustomCardDetails(),
+  ...overrides,
+});
+
 export const createCustomCardDetails = (overrides?: Partial<CardDetails>): CardDetails => {
   //See custom-card in update_cards.ts
   const customSettings = {

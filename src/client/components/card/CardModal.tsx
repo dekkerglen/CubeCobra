@@ -344,7 +344,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   }}
                 />
                 <Input
-                  label="Type"
+                  label={isCustomCard(card) ? 'Type (use - or — to separate types and subtypes)' : 'Type'}
                   type="text"
                   name="type_line"
                   value={cardType(card)}
