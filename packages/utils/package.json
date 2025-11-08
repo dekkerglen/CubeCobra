@@ -1,0 +1,12 @@
+{
+  "name": "@cubecobra/utils",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "nearley": "sh nearley/helper.sh"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

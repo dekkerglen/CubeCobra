@@ -1,0 +1,11 @@
+{
+  "name": "@cubecobra/jobs",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc"
+  },
+  "dependencies": {
+    "elo-rating": "^1.0.1"
+  }
+}

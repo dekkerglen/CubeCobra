@@ -1,5 +1,0 @@
-public/bower_components
-src/client/generated
-
-# Tailwind generated CSS
-public/css/stylesheet.css
