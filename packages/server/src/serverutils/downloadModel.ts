@@ -17,6 +17,8 @@ export const downloadModelsFromS3 = async (basePath: string = ''): Promise<void>
   // list all from s3 under s3://cubecobra/model
   const listResult = await s3.listObjectsV2({ Bucket: process.env.DATA_BUCKET!, Prefix: 'model/' });
 
+  console.log('Downloading model files from S3...');
+
   // Check if Contents exists and has items
   if (!listResult.Contents || listResult.Contents.length === 0) {
     console.log('No model files found in S3');
@@ -33,21 +35,18 @@ export const downloadModelsFromS3 = async (basePath: string = ''): Promise<void>
     const res = await s3.getObject({ Bucket: process.env.DATA_BUCKET!, Key: file.Key });
 
     // make sure folders exist
-    const folders = basePath.split('/').concat(file.Key.split('/'));
-    folders.pop();
+    const localFilePath = path.join(basePath, file.Key);
+    const localDir = path.dirname(localFilePath);
 
-    let folderPath = '';
-    for (const folder of folders) {
-      folderPath += `${folder}/`;
-      if (!fs.existsSync(folderPath)) {
-        fs.mkdirSync(folderPath);
-      }
+    // Create directory recursively if it doesn't exist
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
     }
 
     //Models are a mix of JSON and binary, can't simply call res.Body.transformToString
     if (res.Body) {
       // Create a writable stream to the local file
-      const fileStream = fs.createWriteStream(path.join(basePath, file.Key));
+      const fileStream = fs.createWriteStream(localFilePath);
 
       // Convert Body to Readable stream and pipe to file
       await new Promise<void>((resolve, reject) => {

@@ -7,13 +7,13 @@ import DraftType, { DraftmancerLog } from '@utils/datatypes/Draft';
 import { PublishDraftBody } from '@utils/datatypes/Draftmancer';
 import type DraftSeatType from '@utils/datatypes/DraftSeat';
 import { setupPicks } from '@utils/draftutil';
-import Cube from '../../../../dynamo/models/cube';
-import Draft from '../../../../dynamo/models/draft';
-import Notification from '../../../../dynamo/models/notification';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import Notification from 'dynamo/models/notification';
 import { Request, Response } from '../../../../types/express';
-import { cardFromId } from '../../../../util/carddb';
-import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from '../../../../util/draftmancerUtil';
-import { bodyValidation } from '../../../middleware/bodyValidation';
+import { cardFromId } from 'serverutils/carddb';
+import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import { bodyValidation } from 'routes/middleware';
 
 //Don't expect DraftMancer to handle custom cards
 const OracleIDSchema = Joi.string().uuid();

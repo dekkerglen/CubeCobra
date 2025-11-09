@@ -1,8 +1,8 @@
 const express = require('express');
-const util = require('../../util/util');
-const Cube = require('../../dynamo/models/cube');
-const { isCubeViewable } = require('../../util/cubefn');
-const Changelog = require('../../dynamo/models/changelog');
+const util = require('../../serverutils/util');
+const Cube = require('dynamo/models/cube');
+const { isCubeViewable } = require('../../serverutils/cubefn');
+const Changelog = require('dynamo/models/changelog');
 
 const router = express.Router();
 

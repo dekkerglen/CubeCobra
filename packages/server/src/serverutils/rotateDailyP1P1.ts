@@ -1,20 +1,47 @@
 /* eslint-disable no-console */
-const { generateBalancedPack } = require('../../server/src/util/cubefn');
-const { ensureModelsReady } = require('../../server/src/util/ml');
-const { initializeCardDb } = require('../../server/src/util/cardCatalog');
-const Cube = require('../../server/src/dynamo/models/cube');
-const p1p1PackModel = require('../../server/src/dynamo/models/p1p1Pack');
-const dailyP1P1Model = require('../../server/src/dynamo/models/dailyP1P1');
-const FeaturedQueue = require('../../server/src/dynamo/models/featuredQueue');
-const User = require('../../server/src/dynamo/models/user');
-const util = require('../../server/src/util/util');
+import path from 'path';
+import { generateBalancedPack } from './cubefn';
+import { ensureModelsReady } from './ml';
+import { initializeCardDb } from './cardCatalog';
+import Cube from 'dynamo/models/cube';
+import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import dailyP1P1Model from 'dynamo/models/dailyP1P1';
+const FeaturedQueue = require('dynamo/models/featuredQueue');
+import User from 'dynamo/models/user';
+import * as util from './util';
 
-async function rotateDailyP1P1() {
+interface RotationResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  pack?: any;
+  cube?: any;
+  dailyP1P1?: any;
+}
+
+interface PackCandidate {
+  maxBotWeight: number;
+}
+
+interface GeneratePackResult {
+  allCandidates: PackCandidate[];
+  maxBotWeight: number;
+  packResult: {
+    pack: any[];
+  };
+  botResult: {
+    botPickIndex?: number;
+    botWeights: number[];
+  };
+  seed: string;
+}
+
+async function rotateDailyP1P1(): Promise<RotationResult> {
   try {
     console.log('Starting daily P1P1 rotation...');
 
     // Initialize card database and ML models when calling this with rotate-daily-p1p1 script
-    
+
     const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
     await initializeCardDb(privateDir);
     await ensureModelsReady();
@@ -66,10 +93,10 @@ async function rotateDailyP1P1() {
 
     console.log(`Generating ${candidateCount} pack candidates...`);
 
-    const result = await generateBalancedPack(cube, cards, seedPrefix, candidateCount);
+    const result = (await generateBalancedPack(cube, cards, seedPrefix, candidateCount)) as GeneratePackResult;
 
     // Log candidate details for debugging
-    result.allCandidates.forEach((candidate, i) => {
+    result.allCandidates.forEach((candidate: PackCandidate, i: number) => {
       console.log(`Pack ${i + 1}: max bot weight = ${candidate.maxBotWeight.toFixed(3)}`);
     });
 
@@ -146,22 +173,9 @@ async function rotateDailyP1P1() {
     };
   } catch (error) {
     console.error('Error rotating daily P1P1:', error);
-    return { success: false, error: error.message };
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: errorMessage };
   }
 }
 
-// Execute the function when run directly as a script
-if (require.main === module) {
-  (async () => {
-    try {
-      await rotateDailyP1P1();
-      console.log('Daily P1P1 rotation completed successfully');
-    } catch (error) {
-      console.error('Daily P1P1 rotation failed:', error);
-      process.exit(1);
-    }
-    process.exit(0);
-  })();
-}
-
-module.exports = rotateDailyP1P1;
+export default rotateDailyP1P1;

@@ -1,13 +1,13 @@
 const express = require('express');
 
-const { getMostReasonable, getReasonableCardByOracle, cardFromId } = require('../util/carddb');
-const Cube = require('../dynamo/models/cube');
-const CubeHash = require('../dynamo/models/cubeHash');
+const { getMostReasonable, getReasonableCardByOracle, cardFromId } = require('../serverutils/carddb');
+const Cube = require('dynamo/models/cube');
+const CubeHash = require('dynamo/models/cubeHash');
 
 const { PrintingPreference } = require('@utils/datatypes/Card');
 
-const { render } = require('../util/render');
-const { isCubeListed } = require('../util/cubefn');
+const { render } = require('../serverutils/render');
+const { isCubeListed } = require('../serverutils/cubefn');
 
 const router = express.Router();
 

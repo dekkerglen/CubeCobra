@@ -5,12 +5,12 @@ import DraftType from '@utils/datatypes/Draft';
 import { State } from '@utils/datatypes/DraftState';
 import User from '@utils/datatypes/User';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
-import Cube from '../../../dynamo/models/cube';
-import Draft from '../../../dynamo/models/draft';
-import { csrfProtection } from '../../../routes/middleware';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import { csrfProtection } from 'routes/middleware';
 import { NextFunction, Request, Response } from '../../../types/express';
-import { deckbuild } from '../../../util/draftbots';
-import { addNotification } from '../../../util/util';
+import { deckbuild } from 'serverutils/draftbots';
+import { addNotification } from 'serverutils/util';
 
 interface FinishDraftBody {
   state: State;

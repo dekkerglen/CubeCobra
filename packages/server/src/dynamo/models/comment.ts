@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import Comment, { UnhydratedComment } from '@utils/datatypes/Comment';
 import { CubeImage } from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
-import { getImageData } from '../../util/imageutil';
-import createClient from '../util';
+import { getImageData } from 'serverutils/imageutil';
+import createClient from 'dynamo/util';
 import UserModel from './user';
 
 const client = createClient({

@@ -1,4 +1,4 @@
-import { draft } from '../../util/ml';
+import { draft } from 'serverutils/ml';
 
 /**
  * Utility functions for handling user data in P1P1 packs

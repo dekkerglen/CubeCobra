@@ -3,7 +3,7 @@ import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import RecordType from '@utils/datatypes/Record';
-import createClient from '../util';
+import createClient from 'dynamo/util';
 
 const client = createClient({
   name: 'RECORD',

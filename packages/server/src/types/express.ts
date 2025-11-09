@@ -17,18 +17,24 @@ declare global {
         error: (...args: any[]) => void;
       };
       flash(type: string, message: string): void;
+      validated?: boolean;
+      isAuthenticated(): boolean;
+      csrfToken(): string;
     }
   }
 }
 
 // Export types for use in other files
-export interface Request extends express.Request {
+export interface Request extends Omit<express.Request, 'isAuthenticated'> {
   user?: Express.User;
   uuid: string;
   logger: {
     error: (...args: any[]) => void;
   };
   flash(type: string, message: string): void;
+  validated?: boolean;
+  isAuthenticated(): boolean;
+  csrfToken(): string;
 }
 
 export interface Response extends express.Response {}

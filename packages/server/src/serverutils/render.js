@@ -2,8 +2,8 @@
 require('dotenv').config();
 
 const serialize = require('serialize-javascript');
-const Cube = require('../dynamo/models/cube');
-const Notification = require('../dynamo/models/notification');
+const Cube = require('dynamo/models/cube');
+const Notification = require('dynamo/models/notification');
 const utils = require('./util');
 
 const { NotificationStatus } = require('@utils/datatypes/Notification');

@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-import p1p1PackModel from '../../../../dynamo/models/p1p1Pack';
+import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import { NextFunction, Request, Response } from '../../../../types/express';
 
 const ParamsSchema = Joi.object({

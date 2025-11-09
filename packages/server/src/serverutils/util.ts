@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from '../types/express';
 
 const shuffleSeed = require('shuffle-seed');
 const { UserRoles } = require('@utils/datatypes/User');
-const Notification = require('../dynamo/models/notification');
+const Notification = require('dynamo/models/notification');
 
 // Simple profanity filter replacement to avoid ES module issues
 class SimpleProfanityFilter {

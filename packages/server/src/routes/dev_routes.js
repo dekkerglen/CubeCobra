@@ -1,10 +1,10 @@
 const express = require('express');
 
 const { csrfProtection, ensureRole } = require('./middleware');
-const { render } = require('../util/render');
+const { render } = require('../serverutils/render');
 
-const Blog = require('../dynamo/models/blog');
-const Feed = require('../dynamo/models/feed');
+const Blog = require('dynamo/models/blog');
+const Feed = require('dynamo/models/feed');
 
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { UserRoles } from '@utils/datatypes/User';

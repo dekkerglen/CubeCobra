@@ -14,18 +14,18 @@ import schedule from 'node-schedule';
 import rateLimit from 'express-rate-limit';
 import responseTime from 'response-time';
 
-const cloudwatch = require('./util/cloudwatch');
-const { updateCardbase } = require('./util/updatecards');
-const cardCatalog = require('./util/cardCatalog');
-const { render } = require('./util/render');
+const cloudwatch = require('./serverutils/cloudwatch');
+const { updateCardbase } = require('./serverutils/updatecards');
+const cardCatalog = require('./serverutils/cardCatalog');
+const { render } = require('./serverutils/render');
 const connectFlash = require('connect-flash');
-import { initializeMl } from './util/ml';
+import { initializeMl } from './serverutils/ml';
 
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
 import router from './router/router';
-import DynamoDBStore from './util/dynamo-session-store';
-import { sanitizeHttpBody } from './util/logging';
+import DynamoDBStore from './serverutils/dynamo-session-store';
+import { sanitizeHttpBody } from './serverutils/logging';
 import './types/express'; // Import the express type extensions
 import { CustomError } from './types/express';
 import { UserRoles } from '@utils/datatypes/User';
@@ -338,7 +338,7 @@ schedule.scheduleJob('0 10 * * *', async () => {
 });
 
 // Start server after carddb and ML models are initialized.
-Promise.all([cardCatalog.initializeCardDb(), initializeMl(path.join(__dirname, '../../..'))]).then(async () => {
+Promise.all([cardCatalog.initializeCardDb(), initializeMl()]).then(async () => {
   const port = process.env.PORT || 5000;
   const host = process.env.LISTEN_ON || '127.0.0.1';
   http.createServer(app).listen(Number(port), host);

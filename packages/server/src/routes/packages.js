@@ -1,13 +1,13 @@
 const express = require('express');
 
-const { render, redirect } = require('../util/render');
+const { render, redirect } = require('../serverutils/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
-const { cardFromId } = require('../util/carddb');
+const { cardFromId } = require('../serverutils/carddb');
 
 import { CardPackageStatus } from '@utils/datatypes/CardPackage';
 import { UserRoles } from '@utils/datatypes/User';
-import Package from '../dynamo/models/package';
-const User = require('../dynamo/models/user');
+import Package from 'dynamo/models/package';
+const User = require('dynamo/models/user');
 
 const router = express.Router();
 

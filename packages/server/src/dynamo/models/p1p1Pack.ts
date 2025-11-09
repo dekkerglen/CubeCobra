@@ -9,9 +9,9 @@ import {
   P1P1VoteResult,
   P1P1VoteSummary,
 } from '@utils/datatypes/P1P1Pack.js';
-import { cardFromId } from '../../util/carddb';
+import { cardFromId } from 'serverutils/carddb';
 import { deleteObject, getBucketName, getObject, putObject } from '../s3client';
-import createClient from '../util';
+import createClient from 'dynamo/util';
 
 const client = createClient({
   name: 'P1P1_PACKS',

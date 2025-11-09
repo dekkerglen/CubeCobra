@@ -2,7 +2,7 @@ import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 
 import { UnhydratedPatron } from '@utils/datatypes/Patron';
-import createClient from '../util';
+import createClient from 'dynamo/util';
 
 const client = createClient({
   name: 'PATRON',

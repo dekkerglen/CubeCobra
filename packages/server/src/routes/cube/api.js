@@ -10,23 +10,23 @@ import carddb, {
   getAllVersionIds,
   getMostReasonable,
   getReasonableCardByOracleWithPrintingPreference,
-} from '../../util/carddb';
+} from '../../serverutils/carddb';
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
-const util = require('../../util/util');
-const { deckbuild, calculateBasics } = require('../../util/draftbots');
+const util = require('../../serverutils/util');
+const { deckbuild, calculateBasics } = require('../../serverutils/draftbots');
 
-const { recommend } = require('../../util/ml');
-const { isValidUUID } = require('../../util/validation');
-const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../util/cubefn');
+const { recommend } = require('../../serverutils/ml');
+const { isValidUUID } = require('../../serverutils/validation');
+const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../serverutils/cubefn');
 
 // Bring in models
-const Cube = require('../../dynamo/models/cube');
-const Draft = require('../../dynamo/models/draft');
-import Package from '../../dynamo/models/package';
-const Blog = require('../../dynamo/models/blog');
-const Changelog = require('../../dynamo/models/changelog');
-const Feed = require('../../dynamo/models/feed');
-const User = require('../../dynamo/models/user');
+const Cube = require('dynamo/models/cube');
+const Draft = require('dynamo/models/draft');
+import Package from 'dynamo/models/package';
+const Blog = require('dynamo/models/blog');
+const Changelog = require('dynamo/models/changelog');
+const Feed = require('dynamo/models/feed');
+const User = require('dynamo/models/user');
 
 import { FeedTypes } from '@utils/datatypes/Feed';
 

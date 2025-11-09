@@ -1,14 +1,12 @@
-const { getIdsFromName, getMostReasonable, cardFromId } = require('../../util/carddb');
-const { handleRouteError, render, redirect } = require('../../util/render');
-const util = require('../../util/util');
+const { getIdsFromName, getMostReasonable, cardFromId } = require('../../serverutils/carddb');
+const { handleRouteError, render, redirect } = require('../../serverutils/render');
+const util = require('../../serverutils/util');
 const cardutil = require('@utils/cardutil');
-const { CSVtoCards } = require('../../util/cubefn');
-
-// Bring in models
-const Cube = require('../../dynamo/models/cube');
-const Blog = require('../../dynamo/models/blog');
-const Feed = require('../../dynamo/models/feed');
-const Changelog = require('../../dynamo/models/changelog');
+const { CSVtoCards } = require('../../serverutils/cubefn');
+const Cube = require('dynamo/models/cube');
+const Blog = require('dynamo/models/blog');
+const Feed = require('dynamo/models/feed');
+const Changelog = require('dynamo/models/changelog');
 
 const { FeedTypes } = require('@utils/datatypes/Feed');
 

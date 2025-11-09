@@ -3,14 +3,14 @@ const express = require('express');
 const sortutil = require('@utils/sorting/Sort');
 const { cardCollectorNumber, cardName, cardSet } = require('@utils/cardutil');
 const filterutil = require('@utils/filtering/FilterCards');
-const { cardFromId } = require('../../util/carddb');
+const { cardFromId } = require('../../serverutils/carddb');
 
-const { isCubeViewable } = require('../../util/cubefn');
+const { isCubeViewable } = require('../../serverutils/cubefn');
 const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper');
-const { handleRouteError, redirect } = require('../../util/render');
+const { handleRouteError, redirect } = require('../../serverutils/render');
 
 // Bring in models
-const Cube = require('../../dynamo/models/cube');
+const Cube = require('dynamo/models/cube');
 
 const router = express.Router();
 

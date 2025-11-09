@@ -2,16 +2,17 @@ const express = require('express');
 const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
-
 const { CARD_STATUSES, DefaultPrintingPreference, PrintingPreference } = require('@utils/datatypes/Card');
-
 const cardutil = require('@utils/cardutil');
 const miscutil = require('@utils/Util');
-const { getIdsFromName, cardFromId } = require('../../util/carddb');
-const { handleRouteError, render, redirect } = require('../../util/render');
+const { getIdsFromName, cardFromId } = require('../../serverutils/carddb');
+const { handleRouteError, render, redirect } = require('../../serverutils/render');
 const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');
-const util = require('../../util/util');
-const generateMeta = require('../../util/meta');
+const util = require('../../serverutils/util');
+const generateMeta = require('../../serverutils/meta');
+const FeaturedQueue = require('dynamo/models/featuredQueue');
+const { isInFeaturedQueue } = require('../../serverutils/featuredQueue');
+
 
 import { NoticeType } from '@utils/datatypes/Notice';
 
@@ -25,19 +26,19 @@ const {
   cachePromise,
   isCubeViewable,
   isCubeListed,
-} = require('../../util/cubefn');
+} = require('../../serverutils/cubefn');
 
 const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, updateCubeAndBlog } = require('./helper');
 
 // Bring in models
-const Notice = require('../../dynamo/models/notice');
-const Cube = require('../../dynamo/models/cube');
-const Blog = require('../../dynamo/models/blog');
-const p1p1PackModel = require('../../dynamo/models/p1p1Pack');
-const User = require('../../dynamo/models/user');
-const Draft = require('../../dynamo/models/draft');
-const CubeAnalytic = require('../../dynamo/models/cubeAnalytic');
-const Changelog = require('../../dynamo/models/changelog');
+const Notice = require('dynamo/models/notice');
+const Cube = require('dynamo/models/cube');
+const Blog = require('dynamo/models/blog');
+const p1p1PackModel = require('dynamo/models/p1p1Pack');
+const User = require('dynamo/models/user');
+const Draft = require('dynamo/models/draft');
+const CubeAnalytic = require('dynamo/models/cubeAnalytic');
+const Changelog = require('dynamo/models/changelog');
 
 const router = express.Router();
 router.use(csrfProtection);
@@ -455,9 +456,6 @@ router.get('/feature/:id', ensureAuth, async (req, res) => {
       return redirect(req, res, redirectUrl);
     }
 
-    const FeaturedQueue = require('../../dynamo/models/featuredQueue');
-    const { isInFeaturedQueue } = require('../../util/featuredQueue');
-
     const existingQueueItem = await isInFeaturedQueue(cube);
     if (existingQueueItem) {
       req.flash('danger', 'Cube is already in the featured queue');
@@ -494,9 +492,6 @@ router.get('/unfeature/:id', ensureAuth, async (req, res) => {
       return redirect(req, res, redirectUrl);
     }
 
-    const FeaturedQueue = require('../../dynamo/models/featuredQueue');
-    const { isInFeaturedQueue } = require('../../util/featuredQueue');
-
     const existingQueueItem = await isInFeaturedQueue(cube);
     if (!existingQueueItem) {
       req.flash('danger', 'Cube is not in the featured queue');
@@ -528,7 +523,6 @@ router.get('/overview/:id', async (req, res) => {
 
     const followersCount = cube.following.length;
 
-    const { isInFeaturedQueue } = require('../../util/featuredQueue');
     const isInQueue = await isInFeaturedQueue(cube);
 
     // calculate cube prices
@@ -1083,8 +1077,6 @@ router.get('/p1p1packimage/:packId', async (req, res) => {
   try {
     req.params.packId = req.params.packId.replace('.png', '');
     const { packId } = req.params;
-    const p1p1PackModel = require('../../dynamo/models/p1p1Pack');
-    const Cube = require('../../dynamo/models/cube');
 
     const pack = await p1p1PackModel.getById(packId);
     if (!pack || !pack.cards || pack.cards.length === 0) {

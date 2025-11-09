@@ -6,8 +6,8 @@ import User, {
   UnhydratedUser,
   UserWithSensitiveInformation,
 } from '@utils/datatypes/User';
-import { getImageData } from '../../util/imageutil';
-import createClient from '../util';
+import { getImageData } from 'serverutils/imageutil';
+import createClient from 'dynamo/util';
 
 const idAttr: keyof UnhydratedUser = 'id';
 const usernameLowerAttr: keyof UnhydratedUser = 'usernameLower';

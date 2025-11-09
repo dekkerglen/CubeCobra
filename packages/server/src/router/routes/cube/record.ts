@@ -1,16 +1,16 @@
 import DraftType from '@utils/datatypes/Draft';
 import UserType from '@utils/datatypes/User';
 
-import Cube from '../../../dynamo/models/cube';
-import Draft from '../../../dynamo/models/draft';
-import Record from '../../../dynamo/models/record';
-import User from '../../../dynamo/models/user';
-import { csrfProtection } from '../../../routes/middleware';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import Record from 'dynamo/models/record';
+import User from 'dynamo/models/user';
+import { csrfProtection } from 'routes/middleware';
 import { Request, Response } from '../../../types/express';
-import { abbreviate, isCubeViewable } from '../../../util/cubefn';
-import generateMeta from '../../../util/meta';
-import { handleRouteError, redirect, render } from '../../../util/render';
-import util from '../../../util/util';
+import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
+import generateMeta from 'serverutils/meta';
+import { handleRouteError, redirect, render } from 'serverutils/render';
+import util from 'serverutils/util';
 
 export const handler = async (req: Request, res: Response) => {
   try {

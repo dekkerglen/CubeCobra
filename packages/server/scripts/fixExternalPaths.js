@@ -3,6 +3,9 @@ const path = require('path');
 
 const replacements = {
   '../../../../utils': '../../utils',
+  '../../../dynamo': '../dynamo',
+  '../../../serverutils': '../serverutils',
+  '../../../routes': '../routes'
 };
 
 function replaceInFile(file) {

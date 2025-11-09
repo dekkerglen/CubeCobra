@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const TerserPlugin = require('terser-webpack-plugin');
 
 // Get a list of all files in the /src/pages/ directory
 const pagesDirectory = path.resolve(__dirname, 'src/pages');
@@ -73,6 +74,30 @@ module.exports = {
       '@utils': path.resolve(__dirname, '../utils/src'),
     },
     modules: [path.resolve(__dirname, 'src'), path.resolve(__dirname, '../utils/src'), 'node_modules'],
+  },
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        parallel: true,
+      }),
+    ],
+    sideEffects: true,
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        commons: {
+          name: 'commons',
+          chunks: 'initial',
+          minChunks: 2,
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      },
+    },
   },
   mode: 'development',
 };

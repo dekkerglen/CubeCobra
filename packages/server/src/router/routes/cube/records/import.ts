@@ -4,15 +4,15 @@ import { v4 as uuidv4 } from 'uuid';
 import User from '@utils/datatypes/User';
 
 import DraftRecord from '@utils/datatypes/Record';
-import Cube from '../../../../dynamo/models/cube';
-import Draft from '../../../../dynamo/models/draft';
-import Record from '../../../../dynamo/models/record';
-import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import Record from 'dynamo/models/record';
+import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { Request, Response } from '../../../../types/express';
-import { getReasonableCardByOracle } from '../../../../util/carddb';
-import { isCubeEditable, isCubeViewable } from '../../../../util/cubefn';
-import { handleRouteError, redirect, render } from '../../../../util/render';
-import { bodyValidation } from '../../../middleware/bodyValidation';
+import { getReasonableCardByOracle } from 'serverutils/carddb';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { handleRouteError, redirect, render } from 'serverutils/render';
+import { bodyValidation } from 'routes/middleware';
 import { associateNewDraft, associateWithExistingDraft } from './uploaddeck';
 
 export const importRecordPageHandler = async (req: Request, res: Response) => {

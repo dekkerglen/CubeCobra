@@ -1,12 +1,17 @@
 //Split this into its own file to prevent cyclic dependencies
 
-const cardutil = require('@utils/cardutil');
+import * as cardutil from '@utils/cardutil';
 import carddb, { cardFromId, getIdsFromName } from './carddb';
+import Image from '@utils/datatypes/Image';
 
 // uri
 // artist
 // id
-export function getImageData(imagename) {
+export function getImageData(imagename: string | undefined): Image {
+  if (!imagename) {
+    return carddb.imagedict['doubling cube [10e-321]'];
+  }
+
   const exact = carddb.imagedict[imagename.toLowerCase()];
 
   if (exact) {
@@ -16,9 +21,9 @@ export function getImageData(imagename) {
   const name = cardutil.normalizeName(imagename);
   const ids = getIdsFromName(name);
 
-  if (ids !== undefined && ids.length > 0) {
+  if (ids !== undefined && ids.length > 0 && ids[0]) {
     const byName = cardFromId(ids[0]);
-    if (byName.scryfall_id) {
+    if (byName?.scryfall_id && byName.art_crop && byName.artist) {
       return {
         uri: byName.art_crop,
         artist: byName.artist,
@@ -30,7 +35,3 @@ export function getImageData(imagename) {
 
   return carddb.imagedict['doubling cube [10e-321]'];
 }
-
-module.exports = {
-  getImageData,
-};

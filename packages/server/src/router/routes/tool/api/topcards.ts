@@ -3,9 +3,9 @@ import Joi from 'joi';
 import { makeFilter } from '@utils/filtering/FilterCards';
 import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
 import { OrderedSortsType, SortFunctions } from '@utils/sorting/Sort';
-import { csrfProtection } from '../../../../routes/middleware';
+import { csrfProtection } from 'routes/middleware';
 import { NextFunction, Request, Response } from '../../../../types/express';
-import { searchCards } from '../../../../util/tools';
+import { searchCards } from 'serverutils/tools';
 
 const validSortNames = Object.keys(SortFunctions);
 

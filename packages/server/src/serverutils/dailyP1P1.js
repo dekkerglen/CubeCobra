@@ -1,6 +1,6 @@
-const Cube = require('../dynamo/models/cube');
-const p1p1PackModel = require('../dynamo/models/p1p1Pack');
-const dailyP1P1Model = require('../dynamo/models/dailyP1P1');
+const Cube = require('dynamo/models/cube');
+const p1p1PackModel = require('dynamo/models/p1p1Pack');
+const dailyP1P1Model = require('dynamo/models/dailyP1P1');
 
 /**
  * Fetches the current daily P1P1 data including pack and cube information

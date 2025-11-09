@@ -1,6 +1,6 @@
 const createClient = require('../util');
 
-const { cardFromId } = require('../../util/carddb');
+const { cardFromId } = require('../../serverutils/carddb');
 
 const FIELDS = {
   HASH: 'hash',

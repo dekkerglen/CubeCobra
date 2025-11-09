@@ -1,21 +1,21 @@
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@utils/datatypes/Comment';
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
-import Blog from '../../dynamo/models/blog';
-import Comment from '../../dynamo/models/comment';
-import Content from '../../dynamo/models/content';
-import Cube from '../../dynamo/models/cube';
-import Draft from '../../dynamo/models/draft';
-import Notice from '../../dynamo/models/notice';
-import Package from '../../dynamo/models/package';
-import Record from '../../dynamo/models/record';
-import DynamoUser from '../../dynamo/models/user';
-import { csrfProtection, ensureAuth } from '../../routes/middleware';
+import Blog from 'dynamo/models/blog';
+import Comment from 'dynamo/models/comment';
+import Content from 'dynamo/models/content';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import Notice from 'dynamo/models/notice';
+import Package from 'dynamo/models/package';
+import Record from 'dynamo/models/record';
+import DynamoUser from 'dynamo/models/user';
+import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { Request, Response } from '../../types/express';
-import { getImageData } from '../../util/imageutil';
-import util from '../../util/util';
+import { getImageData } from 'serverutils/imageutil';
+import util from 'serverutils/util';
 
-const { handleRouteError, redirect, render } = require('../../util/render');
+const { handleRouteError, redirect, render } = require('serverutils/render');
 
 export const getHandler = async (req: Request, res: Response) => {
   try {

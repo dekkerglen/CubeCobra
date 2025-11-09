@@ -1,6 +1,6 @@
 const express = require('express');
 const { csrfProtection } = require('../middleware');
-const Changelog = require('../../dynamo/models/changelog');
+const Changelog = require('dynamo/models/changelog');
 
 const router = express.Router();
 

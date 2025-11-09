@@ -7,16 +7,16 @@ import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
 
 import { setupPicks } from '@utils/draftutil';
-import Cube from '../../../../dynamo/models/cube';
-import Draft from '../../../../dynamo/models/draft';
-import Record from '../../../../dynamo/models/record';
-import { bodyValidation } from '../../../../router/middleware/bodyValidation';
-import { addBasics, createPool } from '../../../../routes/cube/helper';
-import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import Record from 'dynamo/models/record';
+import { bodyValidation } from 'routes/middleware';
+import { addBasics, createPool } from 'routes/cube/helper';
+import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { Request, Response } from '../../../../types/express';
-import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from '../../../../util/carddb';
-import { isCubeEditable, isCubeViewable } from '../../../../util/cubefn';
-import { handleRouteError, redirect, render } from '../../../../util/render';
+import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { handleRouteError, redirect, render } from 'serverutils/render';
 
 export const uploadDeckPageHandler = async (req: Request, res: Response) => {
   try {

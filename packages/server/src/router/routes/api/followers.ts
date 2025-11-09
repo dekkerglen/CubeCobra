@@ -1,8 +1,8 @@
-import Cube from '../../../dynamo/models/cube';
-import User from '../../../dynamo/models/user';
-import { csrfProtection } from '../../../routes/middleware';
+import Cube from 'dynamo/models/cube';
+import User from 'dynamo/models/user';
+import { csrfProtection } from 'routes/middleware';
 import { NextFunction, Request, Response } from '../../../types/express';
-import { isCubeViewable } from '../../../util/cubefn';
+import { isCubeViewable } from 'serverutils/cubefn';
 
 export const ensureCubeVisible = async (req: Request, res: Response, next: NextFunction) => {
   const { id, type } = req.params;

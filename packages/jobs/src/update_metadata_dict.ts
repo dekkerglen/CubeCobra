@@ -41,7 +41,7 @@ interface CubeHistory {
   await initializeCardDb(privateDir);
 
   console.log('Initializing ML models');
-  const rootDir = path.join(__dirname, '..', '..', '..');
+  const rootDir = path.join(__dirname, '..', '..', 'server');
   await initializeMl(rootDir);
 
   // load most recent cube history

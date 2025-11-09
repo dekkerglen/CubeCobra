@@ -8,9 +8,9 @@ const { ensureAuth } = require('./middleware');
 
 import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
 import { UserRoles } from '@utils/datatypes/User';
-const Patron = require('../dynamo/models/patron');
-const User = require('../dynamo/models/user');
-const { handleRouteError, redirect } = require('../util/render');
+const Patron = require('dynamo/models/patron');
+const User = require('dynamo/models/user');
+const { handleRouteError, redirect } = require('../serverutils/render');
 
 const patreonAPI = patreon.patreon;
 const patreonOAuth = patreon.oauth;

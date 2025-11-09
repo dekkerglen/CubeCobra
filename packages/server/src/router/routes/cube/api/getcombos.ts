@@ -1,6 +1,6 @@
-import { csrfProtection } from '../../../../routes/middleware';
+import { csrfProtection } from 'routes/middleware';
 import { Request, Response } from '../../../../types/express';
-import catalog from '../../../../util/cardCatalog';
+import catalog from 'serverutils/cardCatalog';
 
 export const getCombos = async (req: Request, res: Response) => {
   try {

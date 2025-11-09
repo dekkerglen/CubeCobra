@@ -5,15 +5,15 @@ import DraftType from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
 
 import DraftRecord from '@utils/datatypes/Record';
-import Cube from '../../../../dynamo/models/cube';
-import Draft from '../../../../dynamo/models/draft';
-import Record from '../../../../dynamo/models/record';
-import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import Record from 'dynamo/models/record';
+import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { Request, Response } from '../../../../types/express';
-import { abbreviate, isCubeEditable, isCubeViewable } from '../../../../util/cubefn';
-import generateMeta from '../../../../util/meta';
-import { handleRouteError, redirect, render } from '../../../../util/render';
-import { bodyValidation } from '../../../middleware/bodyValidation';
+import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import generateMeta from 'serverutils/meta';
+import { handleRouteError, redirect, render } from 'serverutils/render';
+import { bodyValidation } from 'routes/middleware';
 
 export const createRecordPageHandler = async (req: Request, res: Response) => {
   try {

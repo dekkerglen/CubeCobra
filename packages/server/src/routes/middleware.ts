@@ -1,9 +1,12 @@
-const csurf = require('csurf');
-const { validationResult } = require('express-validator');
-const User = require('../dynamo/models/user');
-const { redirect } = require('../util/render');
+import csurf from 'csurf';
+import { validationResult } from 'express-validator';
+import User from 'dynamo/models/user';
+import { UserRoles } from '@utils/datatypes/User';
+import Joi from 'joi';
+import { NextFunction, Request, Response } from '../types/express';
+import { redirect } from 'serverutils/render';
 
-const ensureAuth = (req, res, next) => {
+export const ensureAuth = (req: Request, res: Response, next: NextFunction): void => {
   if (req.isAuthenticated()) {
     return next();
   }
@@ -12,7 +15,7 @@ const ensureAuth = (req, res, next) => {
   return redirect(req, res, '/user/login');
 };
 
-const ensureAuthJson = (req, res, next) => {
+export const ensureAuthJson = (req: Request, res: Response, next: NextFunction): void => {
   if (req.isAuthenticated()) {
     return next();
   }
@@ -21,23 +24,25 @@ const ensureAuthJson = (req, res, next) => {
   return;
 };
 
-const ensureRole = (role) => async (req, res, next) => {
-  if (!req.isAuthenticated()) {
-    req.flash('danger', 'Please login to view this content');
-    return redirect(req, res, '/user/login');
-  }
+export const ensureRole =
+  (role: UserRoles) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    if (!req.isAuthenticated()) {
+      req.flash('danger', 'Please login to view this content');
+      return redirect(req, res, '/user/login');
+    }
 
-  const user = await User.getById(req.user.id);
+    const user = await User.getById(req.user!.id);
 
-  if (user.roles && user.roles.includes(role)) {
-    return next();
-  }
-  return redirect(req, res, '/404');
-};
+    if (user && user.roles && user.roles.includes(role)) {
+      return next();
+    }
+    return redirect(req, res, '/404');
+  };
 
-const csrfProtection = [
+export const csrfProtection = [
   csurf(),
-  (req, res, next) => {
+  (req: Request, res: Response, next: NextFunction): void => {
     const { nickname } = req.body;
 
     if (nickname !== undefined && nickname !== 'Your Nickname') {
@@ -82,7 +87,7 @@ const answers = [
   'forest', // 'What is the name of the basic land that produces green mana?'
 ];
 
-async function recaptcha(req, res, next) {
+export async function recaptcha(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { captcha, question, answer } = req.body;
 
   if (!question || !answer) {
@@ -92,7 +97,7 @@ async function recaptcha(req, res, next) {
 
   const index = questions.indexOf(question);
 
-  if (index === -1 || answers[index].toLowerCase() !== answer.toLowerCase()) {
+  if (index === -1 || !answer || !answers[index] || answers[index].toLowerCase() !== answer.toLowerCase()) {
     req.flash('danger', 'Incorrect answer to security question');
     return redirect(req, res, '/');
   }
@@ -120,7 +125,7 @@ async function recaptcha(req, res, next) {
   next();
 }
 
-function flashValidationErrors(req, res, next) {
+export function flashValidationErrors(req: Request, _res: Response, next: NextFunction): void {
   const errors = validationResult(req).formatWith(({ msg }) => msg);
   req.validated = errors.isEmpty();
 
@@ -131,7 +136,7 @@ function flashValidationErrors(req, res, next) {
   next();
 }
 
-function jsonValidationErrors(req, res, next) {
+export function jsonValidationErrors(req: Request, res: Response, next: NextFunction): void {
   const errors = validationResult(req).formatWith(({ msg }) => msg);
   if (!errors.isEmpty()) {
     res.status(400).send({
@@ -146,12 +151,21 @@ function jsonValidationErrors(req, res, next) {
   next();
 }
 
-module.exports = {
-  ensureAuth,
-  ensureAuthJson,
-  ensureRole,
-  csrfProtection,
-  flashValidationErrors,
-  jsonValidationErrors,
-  recaptcha,
-};
+export const bodyValidation =
+  (schema: Joi.Schema<any>, redirectUrlFn?: (req: Request) => string, path?: string) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    const { error } = path ? schema.validate(JSON.parse(req.body[path])) : schema.validate(req.body);
+
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error('Validation error:', error);
+
+      if (redirectUrlFn) {
+        req.flash('danger', error.details[0]?.message || 'Validation error');
+        return redirect(req, res, redirectUrlFn(req));
+      }
+
+      return res.status(400).json({ error: error.details[0]?.message || 'Validation error' });
+    }
+    next();
+  };

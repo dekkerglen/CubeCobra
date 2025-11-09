@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { NewNotice, Notice, NoticeStatus, UnhydratedNotice } from '@utils/datatypes/Notice';
 import UserType from '@utils/datatypes/User';
-import createClient from '../util';
+import createClient from 'dynamo/util';
 import User from './user';
 
 const client = createClient({

@@ -1,12 +1,12 @@
 import Joi from 'joi';
 
-import Cube from '../../../../../dynamo/models/cube';
-import Record from '../../../../../dynamo/models/record';
-import { csrfProtection, ensureAuth } from '../../../../../routes/middleware';
+import Cube from 'dynamo/models/cube';
+import Record from 'dynamo/models/record';
+import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { Request, Response } from '../../../../../types/express';
-import { isCubeEditable, isCubeViewable } from '../../../../../util/cubefn';
-import { redirect } from '../../../../../util/render';
-import { bodyValidation } from '../../../../middleware/bodyValidation';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { redirect } from 'serverutils/render';
+import { bodyValidation } from 'routes/middleware';
 
 const recordSchema = Joi.array()
   .items(

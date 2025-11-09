@@ -1,6 +1,6 @@
 require('module-alias/register');
-const { updateCardbase } = require('./dist/server/src/util/updatecards');
-const { downloadFromS3 } = require('./dist/server/src/util/downloadModel');
+const { updateCardbase } = require('./dist/server/src/serverutils/updatecards');
+const { downloadModelsFromS3 } = require('./dist/server/src/serverutils/downloadModel');
 const forever = require('forever-monitor');
 
 const child = new forever.Monitor('dist/server/src/index.js', {
@@ -25,7 +25,7 @@ child.on('exit:code', (code) => {
 updateCardbase()
   .then(() => {
     // download ml initial model
-    downloadFromS3()
+    downloadModelsFromS3()
       .then(() => {
         child.start();
       })

@@ -1,21 +1,17 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { cardFromId, getIdsFromName, getMostReasonable } = require('../../util/carddb');
-const { handleRouteError, render, redirect } = require('../../util/render');
-const util = require('../../util/util');
-const generateMeta = require('../../util/meta');
+const { cardFromId, getIdsFromName, getMostReasonable } = require('../../serverutils/carddb');
+const { handleRouteError, render, redirect } = require('../../serverutils/render');
+const util = require('../../serverutils/util');
+const generateMeta = require('../../serverutils/meta');
 const cardutil = require('@utils/cardutil');
 const { ensureAuth } = require('../middleware');
 const { addBasics } = require('./helper');
-
-const { abbreviate, isCubeViewable } = require('../../util/cubefn');
-
+const { abbreviate, isCubeViewable } = require('../../serverutils/cubefn');
 const { exportToMtgo, createPool } = require('./helper');
-
-// Bring in models
-const Cube = require('../../dynamo/models/cube');
-const User = require('../../dynamo/models/user');
-const Draft = require('../../dynamo/models/draft');
+const Cube = require('dynamo/models/cube');
+const User = require('dynamo/models/user');
+const Draft = require('dynamo/models/draft');
 
 const router = express.Router();
 

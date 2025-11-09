@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const uuid = require('uuid');
 const createClient = require('../util');
-const { cardFromId } = require('../../util/carddb');
+const { cardFromId } = require('../../serverutils/carddb');
 const { getObject, putObject } = require('../s3client');
 const User = require('./user');
 const Cube = require('./cube');

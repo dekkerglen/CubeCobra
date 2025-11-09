@@ -3,12 +3,12 @@ require('dotenv').config();
 
 const express = require('express');
 
-const User = require('../dynamo/models/user');
-const Content = require('../dynamo/models/content');
-const util = require('../util/util');
-const fq = require('../util/featuredQueue');
-const { updatePodcast } = require('../util/podcast');
-const rotateDailyP1P1 = require('../../../jobs/src/rotateDailyP1P1');
+const User = require('dynamo/models/user');
+const Content = require('dynamo/models/content');
+const util = require('../serverutils/util');
+const fq = require('../serverutils/featuredQueue');
+const { updatePodcast } = require('../serverutils/podcast');
+const rotateDailyP1P1 = require('../serverutils/rotateDailyP1P1');
 
 import { ContentStatus, ContentType } from '@utils/datatypes/Content';
 

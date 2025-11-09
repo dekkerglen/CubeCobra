@@ -3,7 +3,7 @@ import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import { DailyP1P1, NewDailyP1P1 } from '@utils/datatypes/DailyP1P1';
-import createClient from '../util';
+import createClient from 'dynamo/util';
 
 const client = createClient({
   name: 'DAILY_P1P1',

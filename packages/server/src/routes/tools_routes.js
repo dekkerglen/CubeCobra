@@ -13,18 +13,18 @@ import carddb, {
   getMostReasonableById,
   getOracleForMl,
   getRelatedCards,
-} from '../util/carddb';
+} from '../serverutils/carddb';
 const cardutil = require('@utils/cardutil');
 const { makeFilter } = require('@utils/filtering/FilterCards');
-const generateMeta = require('../util/meta');
-const util = require('../util/util');
+const generateMeta = require('../serverutils/meta');
+const util = require('../serverutils/util');
 const { csrfProtection } = require('./middleware');
-const { handleRouteError, render, redirect } = require('../util/render');
+const { handleRouteError, render, redirect } = require('../serverutils/render');
 
-const CardHistory = require('../dynamo/models/cardhistory');
-const Cube = require('../dynamo/models/cube');
+const CardHistory = require('dynamo/models/cardhistory');
+const Cube = require('dynamo/models/cube');
 
-const { searchCards } = require('../util/tools');
+const { searchCards } = require('../serverutils/tools');
 
 const router = express.Router();
 

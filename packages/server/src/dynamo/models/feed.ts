@@ -3,7 +3,7 @@ import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 
 import BlogPost from '@utils/datatypes/BlogPost';
 import { Feed, FeedTypes, UnhydratedFeed } from '@utils/datatypes/Feed';
-import createClient from '../util';
+import createClient from 'dynamo/util';
 import Blog from './blog';
 
 const client = createClient({

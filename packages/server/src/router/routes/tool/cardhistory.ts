@@ -1,5 +1,5 @@
-import CardHistory from '../../../dynamo/models/cardhistory';
-import { csrfProtection } from '../../../routes/middleware';
+import CardHistory from 'dynamo/models/cardhistory';
+import { csrfProtection } from 'routes/middleware';
 import { Request, Response } from '../../../types/express';
 import { createTypeGuard } from '@utils/typeGuards';
 

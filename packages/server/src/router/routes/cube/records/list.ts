@@ -1,5 +1,5 @@
-import Record from '../../../../dynamo/models/record';
-import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
+import Record from 'dynamo/models/record';
+import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { Request, Response } from '../../../../types/express';
 
 export const getRecordsHandler = async (req: Request, res: Response) => {

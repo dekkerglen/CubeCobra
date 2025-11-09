@@ -1,8 +1,8 @@
-import Cube from '../../../../dynamo/models/cube';
-import Record from '../../../../dynamo/models/record';
-import { csrfProtection, ensureAuth } from '../../../../routes/middleware';
+import Cube from 'dynamo/models/cube';
+import Record from 'dynamo/models/record';
+import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { Request, Response } from '../../../../types/express';
-import { isCubeEditable } from '../../../../util/cubefn';
+import { isCubeEditable } from 'serverutils/cubefn';
 
 export const deleteRecordHandler = async (req: Request, res: Response) => {
   const recordId = req.params.id;

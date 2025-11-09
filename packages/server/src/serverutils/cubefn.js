@@ -4,9 +4,9 @@ const sanitizeHtml = require('sanitize-html');
 
 const _ = require('lodash');
 const sharp = require('sharp');
-const Cube = require('../dynamo/models/cube');
+const Cube = require('dynamo/models/cube');
 const { convertFromLegacyCardColorCategory } = require('@utils/cardutil');
-const { cardFromId, getAllVersionIds, reasonableId } = require('../util/carddb');
+const { cardFromId, getAllVersionIds, reasonableId } = require('./carddb');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('@utils/drafting/createdraft');

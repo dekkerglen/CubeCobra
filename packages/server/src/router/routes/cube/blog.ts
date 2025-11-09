@@ -1,15 +1,15 @@
-import Blog from '../../../dynamo/models/blog';
-import Cube from '../../../dynamo/models/cube';
-import Feed from '../../../dynamo/models/feed';
-import User from '../../../dynamo/models/user';
-import { csrfProtection, ensureAuth, ensureAuthJson } from '../../../routes/middleware';
+import Blog from 'dynamo/models/blog';
+import Cube from 'dynamo/models/cube';
+import Feed from 'dynamo/models/feed';
+import User from 'dynamo/models/user';
+import { csrfProtection, ensureAuth, ensureAuthJson } from 'routes/middleware';
 import { Request, Response } from '../../../types/express';
-import { abbreviate, isCubeViewable } from '../../../util/cubefn';
-import generateMeta from '../../../util/meta';
-import { render } from '../../../util/render';
-import util from '../../../util/util';
+import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
+import generateMeta from 'serverutils/meta';
+import { render } from 'serverutils/render';
+import util from 'serverutils/util';
 
-const { handleRouteError, redirect } = require('../../../util/render');
+const { handleRouteError, redirect } = require('serverutils/render');
 
 import CubeType from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';

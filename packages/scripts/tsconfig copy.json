@@ -25,5 +25,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "exclude": ["node_modules", "src/client"],
-  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src", "../utils/src", "../server/src/util/rotateDailyP1P1.ts"]
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src"]
 }

@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
-import { draft } from '../../../../util/ml';
+import { draft } from 'serverutils/ml';
 
 interface PredictBody {
   pack: string[]; // oracle id

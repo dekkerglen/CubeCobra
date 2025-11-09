@@ -1,11 +1,11 @@
-import generateMeta from '../..//util/meta';
-import Cube from '../../dynamo/models/cube';
-import Draft from '../../dynamo/models/draft';
-import { csrfProtection } from '../../routes/middleware';
+import generateMeta from 'serverutils/meta';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import { csrfProtection } from 'routes/middleware';
 import { Request, Response } from '../../types/express';
-import { abbreviate, isCubeViewable } from '../../util/cubefn';
-import util from '../../util/util';
-const { handleRouteError, redirect, render } = require('../../util/render');
+import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
+import util from 'serverutils/util';
+const { handleRouteError, redirect, render } = require('serverutils/render');
 
 const handler = async (req: Request, res: Response) => {
   try {

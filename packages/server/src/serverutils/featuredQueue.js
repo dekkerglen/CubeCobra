@@ -1,6 +1,6 @@
-const FeaturedQueue = require('../dynamo/models/featuredQueue');
-const Cube = require('../dynamo/models/cube');
-const Patron = require('../dynamo/models/patron');
+const FeaturedQueue = require('dynamo/models/featuredQueue');
+const Cube = require('dynamo/models/cube');
+const Patron = require('dynamo/models/patron');
 const { canBeFeatured } = require('@utils/featuredQueueUtil');
 
 async function rotateFeatured() {

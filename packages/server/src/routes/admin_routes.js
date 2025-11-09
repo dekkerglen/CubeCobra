@@ -2,20 +2,20 @@
 require('dotenv').config();
 
 const express = require('express');
-import sendEmail from '../util/email';
+import sendEmail from '../serverutils/email';
 const { ensureRole, csrfProtection } = require('./middleware');
 
-const User = require('../dynamo/models/user');
-const Notice = require('../dynamo/models/notice');
-const Comment = require('../dynamo/models/comment');
-const Blog = require('../dynamo/models/blog');
-const Draft = require('../dynamo/models/draft');
-const Content = require('../dynamo/models/content');
-const FeaturedQueue = require('../dynamo/models/featuredQueue');
-const Cube = require('../dynamo/models/cube');
-const { render, redirect } = require('../util/render');
-const util = require('../util/util');
-const fq = require('../util/featuredQueue');
+const User = require('dynamo/models/user');
+const Notice = require('dynamo/models/notice');
+const Comment = require('dynamo/models/comment');
+const Blog = require('dynamo/models/blog');
+const Draft = require('dynamo/models/draft');
+const Content = require('dynamo/models/content');
+const FeaturedQueue = require('dynamo/models/featuredQueue');
+const Cube = require('dynamo/models/cube');
+const { render, redirect } = require('../serverutils/render');
+const util = require('../serverutils/util');
+const fq = require('../serverutils/featuredQueue');
 
 import { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeStatus } from '@utils/datatypes/Notice';

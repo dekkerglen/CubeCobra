@@ -3,13 +3,13 @@ require('dotenv').config();
 
 const express = require('express');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
-const { render, redirect } = require('../util/render');
-const { getFeedData } = require('../util/rss');
-const { updatePodcast } = require('../util/podcast');
-const util = require('../util/util');
-const generateMeta = require('../util/meta');
-const Notice = require('../dynamo/models/notice');
-const Content = require('../dynamo/models/content');
+const { render, redirect } = require('../serverutils/render');
+const { getFeedData } = require('../serverutils/rss');
+const { updatePodcast } = require('../serverutils/podcast');
+const util = require('../serverutils/util');
+const generateMeta = require('../serverutils/meta');
+const Notice = require('dynamo/models/notice');
+const Content = require('dynamo/models/content');
 
 const ensureContentCreator = ensureRole('ContentCreator');
 
@@ -159,7 +159,7 @@ router.get('/article/:id', async (req, res) => {
     return redirect(req, res, '/content/browse');
   }
 
-  if (article.status !== ContentStatus.PUBLISHED) {
+  if (article.status !== ContentStatus.PUBLISHED && !req.user.roles.includes('Admin')) {
     if (!req.user || req.user.id !== article.owner.id) {
       req.flash('danger', 'Article not found');
       return redirect(req, res, '/content/browse');

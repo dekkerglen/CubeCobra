@@ -2,7 +2,7 @@ const { convert } = require('html-to-text');
 const sanitizeHtml = require('sanitize-html');
 const { getFeedEpisodes, getFeedData } = require('./rss');
 
-const Content = require('../dynamo/models/content');
+const Content = require('dynamo/models/content');
 
 import { ContentStatus, ContentType } from '@utils/datatypes/Content';
 

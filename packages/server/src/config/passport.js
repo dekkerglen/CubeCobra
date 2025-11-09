@@ -1,6 +1,6 @@
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
-const User = require('../dynamo/models/user');
+const User = require('dynamo/models/user');
 
 module.exports = (passport) => {
   // Local Strategy

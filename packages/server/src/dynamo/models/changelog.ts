@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Changes } from '@utils/datatypes/Card';
 import ChangelogType, { CubeChangeLog } from '@utils/datatypes/ChangeLog';
-import { cardFromId } from '../../util/carddb';
+import { cardFromId } from 'serverutils/carddb';
 import { getBucketName, getObject, putObject } from '../s3client';
-import createClient from '../util';
+import createClient from 'dynamo/util';
 
 const CARD_LIMIT = 10000;
 

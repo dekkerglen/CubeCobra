@@ -1,5 +1,5 @@
-import User from '../../../dynamo/models/user';
-import { csrfProtection, ensureAuth } from '../../../routes/middleware';
+import User from 'dynamo/models/user';
+import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { Request, Response } from '../../../types/express';
 
 export const handler = async (req: Request, res: Response) => {

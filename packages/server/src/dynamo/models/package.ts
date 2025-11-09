@@ -6,10 +6,10 @@ import { normalizeName } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
 import UserType from '@utils/datatypes/User';
-import createClient, { QueryInputType } from '../util';
+import createClient, { QueryInputType } from 'dynamo/util';
 import User from './user';
 
-const { cardFromId } = require('../../util/carddb');
+const { cardFromId } = require('serverutils/carddb');
 
 const client = createClient({
   name: 'PACKAGE',

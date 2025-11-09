@@ -1,19 +1,16 @@
 const express = require('express');
-
-const Cube = require('../dynamo/models/cube');
-const CubeHash = require('../dynamo/models/cubeHash');
-const Draft = require('../dynamo/models/draft');
-const Content = require('../dynamo/models/content');
-const Feed = require('../dynamo/models/feed');
-const { getDailyP1P1 } = require('../util/dailyP1P1');
-
+const Cube = require('dynamo/models/cube');
+const CubeHash = require('dynamo/models/cubeHash');
+const Draft = require('dynamo/models/draft');
+const Content = require('dynamo/models/content');
+const Feed = require('dynamo/models/feed');
+const { getFeaturedCubes } = require('../serverutils/featuredQueue');
+const { getDailyP1P1 } = require('../serverutils/dailyP1P1');
 import { ContentStatus, ContentType } from '@utils/datatypes/Content';
-
-const { handleRouteError, render, redirect } = require('../util/render');
+const { handleRouteError, render, redirect } = require('../serverutils/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
-const { isCubeListed } = require('../util/cubefn');
-
-const { GIT_COMMIT } = require('../util/git');
+const { isCubeListed } = require('../serverutils/cubefn');
+const { GIT_COMMIT } = require('../serverutils/git');
 
 const router = express.Router();
 
@@ -27,7 +24,6 @@ router.get('/explore', async (req, res) => {
     isCubeListed(cube, req.user),
   );
 
-  const { getFeaturedCubes } = require('../util/featuredQueue');
   const featured = await getFeaturedCubes();
 
   const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
@@ -49,7 +45,7 @@ router.get('/explore', async (req, res) => {
 });
 
 router.get('/queue', async (req, res) => {
-  const FeaturedQueue = require('../dynamo/models/featuredQueue');
+  const FeaturedQueue = require('dynamo/models/featuredQueue');
 
   let featured = [];
   let lastkey = null;
@@ -72,7 +68,6 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
     const posts = await Feed.getByTo(req.user.id);
 
-    const { getFeaturedCubes } = require('../util/featuredQueue');
     const featured = await getFeaturedCubes();
 
     const content = await Content.getByStatus(ContentStatus.PUBLISHED);
@@ -122,7 +117,6 @@ router.post('/getmoredecks', ensureAuth, async (req, res) => {
 });
 
 router.get('/landing', async (req, res) => {
-  const { getFeaturedCubes } = require('../util/featuredQueue');
   const featured = await getFeaturedCubes();
 
   const content = await Content.getByStatus(ContentStatus.PUBLISHED);

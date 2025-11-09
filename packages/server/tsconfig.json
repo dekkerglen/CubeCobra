@@ -7,7 +7,10 @@
     "jsx": "react",
     "baseUrl": "./",
     "paths": {
-      "@utils/*": ["../utils/src/*"]
+      "@utils/*": ["../utils/src/*"],
+      "serverutils/*": ["src/serverutils/*"],
+      "routes/*": ["src/routes/*"],
+      "dynamo/*": ["src/dynamo/*"]
     },
     "module": "commonjs",
     "moduleResolution": "node",

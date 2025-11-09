@@ -1,10 +1,10 @@
 const express = require('express');
 
-const Cube = require('../dynamo/models/cube');
-const p1p1PackModel = require('../dynamo/models/p1p1Pack');
-const dailyP1P1Model = require('../dynamo/models/dailyP1P1');
+const Cube = require('dynamo/models/cube');
+const p1p1PackModel = require('dynamo/models/p1p1Pack');
+const dailyP1P1Model = require('dynamo/models/dailyP1P1');
 
-const { render } = require('../util/render');
+const { render } = require('../serverutils/render');
 const { csrfProtection } = require('./middleware');
 
 const router = express.Router();

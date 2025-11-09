@@ -3,23 +3,23 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const { body } = require('express-validator');
-const { isCubeListed } = require('../util/cubefn');
-const util = require('../util/util');
-const fq = require('../util/featuredQueue');
-import sendEmail from '../util/email';
-const { handleRouteError, render, redirect } = require('../util/render');
-const { getSafeReferrer } = require('../util/util');
+const { isCubeListed } = require('../serverutils/cubefn');
+const util = require('../serverutils/util');
+const fq = require('../serverutils/featuredQueue');
+import sendEmail from '../serverutils/email';
+const { handleRouteError, render, redirect } = require('../serverutils/render');
+const { getSafeReferrer } = require('../serverutils/util');
 
 // Bring in models
-const User = require('../dynamo/models/user');
-const PasswordReset = require('../dynamo/models/passwordReset');
-const Cube = require('../dynamo/models/cube');
-const Blog = require('../dynamo/models/blog');
-const Patron = require('../dynamo/models/patron');
-const FeaturedQueue = require('../dynamo/models/featuredQueue');
-const Notification = require('../dynamo/models/notification');
-const Draft = require('../dynamo/models/draft');
-const Notice = require('../dynamo/models/notice');
+const User = require('dynamo/models/user');
+const PasswordReset = require('dynamo/models/passwordReset');
+const Cube = require('dynamo/models/cube');
+const Blog = require('dynamo/models/blog');
+const Patron = require('dynamo/models/patron');
+const FeaturedQueue = require('dynamo/models/featuredQueue');
+const Notification = require('dynamo/models/notification');
+const Draft = require('dynamo/models/draft');
+const Notice = require('dynamo/models/notice');
 const uuid = require('uuid');
 
 import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';

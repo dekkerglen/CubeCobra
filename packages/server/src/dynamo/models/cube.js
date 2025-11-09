@@ -2,15 +2,15 @@
 require('dotenv').config();
 
 const _ = require('lodash');
-const { getImageData } = require('../../util/imageutil');
+const { getImageData } = require('../../serverutils/imageutil');
 const createClient = require('../util');
 const { getObject, putObject, deleteObject } = require('../s3client');
 const { getHashRowsForMetadata } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
 const User = require('./user');
-import { cardFromId, getPlaceholderCard } from '../../util/carddb';
+import { cardFromId, getPlaceholderCard } from '../../serverutils/carddb';
 const { normalizeDraftFormatSteps } = require('@utils/draftutil');
-const cloudwatch = require('../../util/cloudwatch');
+const cloudwatch = require('../../serverutils/cloudwatch');
 
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
