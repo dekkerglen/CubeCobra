@@ -108,7 +108,9 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
           <NavMenu label={user.username} navBar>
             <Flexbox direction="col" gap="2" className="p-3">
               <NavLink href={`/user/view/${user.id}`}>Your Profile</NavLink>
-              {user.roles && user.roles.includes(UserRoles.ADMIN) && <NavLink href="/admin/dashboard">Admin Page</NavLink>}
+              {user.roles && user.roles.includes(UserRoles.ADMIN) && (
+                <NavLink href="/admin/dashboard">Admin Page</NavLink>
+              )}
               {user.roles && user.roles.includes(UserRoles.CONTENT_CREATOR) && (
                 <NavLink href="/content/creators">Content Creator Dashboard</NavLink>
               )}

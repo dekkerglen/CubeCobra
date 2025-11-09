@@ -1,0 +1,22 @@
+{
+  "name": "@cubecobra/scripts",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "download-data-files": "NODE_OPTIONS=--max-old-space-size=8192 ts-node -r tsconfig-paths/register --project tsconfig.json src/download-data-files.ts",
+    "update-hashes": "ts-node -r tsconfig-paths/register --project tsconfig.json src/jobs/repair_hashes.js",
+    "export-cubes": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_cubes.ts",
+    "export-decks": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_decks.ts",
+    "export-simple-card-dict": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_simple_card_dict.ts",
+    "write-git-info": "ts-node write-git-info.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  }
+}

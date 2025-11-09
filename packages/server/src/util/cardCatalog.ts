@@ -63,16 +63,16 @@ async function loadJSONFile(filename: string, attribute: keyof Catalog) {
   });
 }
 
-export async function loadAllFiles() {
+export async function loadAllFiles(basePath: string = 'private') {
   await Promise.all(
-    Object.entries(fileToAttribute).map(([filename, attribute]) => loadJSONFile(`private/${filename}`, attribute)),
+    Object.entries(fileToAttribute).map(([filename, attribute]) => loadJSONFile(`${basePath}/${filename}`, attribute)),
   );
 }
 
-export async function initializeCardDb() {
+export async function initializeCardDb(basePath: string = 'private') {
   // eslint-disable-next-line no-console
   console.info('Loading carddb...');
-  await loadAllFiles();
+  await loadAllFiles(basePath);
 
   catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !card.digital && !card.isToken);
   catalog.oracleToIndex = Object.fromEntries(

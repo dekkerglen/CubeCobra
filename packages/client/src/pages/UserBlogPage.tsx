@@ -22,13 +22,7 @@ interface UserBlogPageProps {
 
 const PAGE_SIZE = 10;
 
-const UserBlogPage: React.FC<UserBlogPageProps> = ({
-  followersCount,
-  following,
-  posts,
-  owner,
-  lastKey,
-}) => {
+const UserBlogPage: React.FC<UserBlogPageProps> = ({ followersCount, following, posts, owner, lastKey }) => {
   const [items, setItems] = useState(posts);
   const { csrfFetch } = useContext(CSRFContext);
   const [currentLastKey, setLastKey] = useState(lastKey);

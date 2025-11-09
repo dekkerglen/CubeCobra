@@ -4,7 +4,7 @@ services:
     image: node:20.18.0
     volumes:
       - ./:/home/node/app
-    user: "node"
+    user: 'node'
     working_dir: /home/node/app
     environment:
       - NODE_ENV=development
@@ -18,9 +18,9 @@ services:
       # Node
       - 5001:5000
     expose:
-      - "8080"
-      - "5001"
-    command: "npm run devstart"
+      - '8080'
+      - '5001'
+    command: 'npm run devstart'
     init: true
     networks:
       - cubecobra

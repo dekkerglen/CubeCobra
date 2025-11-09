@@ -11,7 +11,6 @@ jest.mock('../../../src/dynamo/models/p1p1Pack', () => ({
   getVoteSummary: jest.fn(),
 }));
 
-
 const createP1P1Pack = (overrides?: Partial<P1P1Pack>): P1P1Pack => ({
   id: uuid.v4(),
   cubeId: uuid.v4(),
@@ -72,7 +71,6 @@ describe('Get P1P1 Pack API', () => {
       votes: voteSummary,
     });
   });
-
 
   it('should handle pack fetch error gracefully', async () => {
     const packId = uuid.v4();

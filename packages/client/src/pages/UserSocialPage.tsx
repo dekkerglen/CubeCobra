@@ -18,11 +18,7 @@ interface UserSocialPageProps {
   followers: User[];
 }
 
-const UserSocialPage: React.FC<UserSocialPageProps> = ({
-  followedCubes,
-  followedUsers,
-  followers,
-}) => (
+const UserSocialPage: React.FC<UserSocialPageProps> = ({ followedCubes, followedUsers, followers }) => (
   <MainLayout>
     <Banner />
     <DynamicFlash />

@@ -105,9 +105,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             {showInlineTagEmojis ? 'Hide inline emoji tags' : 'Show inline emoji tags'}
           </Link>
           {rotoURL ? (
-            <Link onClick={() => setRotoURL("")}>
-              Clear Rotisserie Draft
-            </Link>
+            <Link onClick={() => setRotoURL('')}>Clear Rotisserie Draft</Link>
           ) : (
             <RotoSetupLink>Setup Rotisserie Draft</RotoSetupLink>
           )}
@@ -253,7 +251,9 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               //Undefined what text to show if there is no mainboard
               mainboard && maybeboard
                 ? `Showing ${mainboard[0]} / ${mainboard[1]} cards in Mainboard, ${maybeboard[0]} / ${maybeboard[1]} cards in Maybeboard.`
-                : (mainboard ? `Showing ${mainboard[0]} / ${mainboard[1]} cards in Mainboard.` : 'No cards to filter.')
+                : mainboard
+                  ? `Showing ${mainboard[0]} / ${mainboard[1]} cards in Mainboard.`
+                  : 'No cards to filter.'
             }
           />
           <CompareCollapse isOpen={openCollapse === 'compare'} />

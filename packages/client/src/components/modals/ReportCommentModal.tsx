@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import Button from 'components/base/Button';
-import { Modal, ModalBody, ModalFooter,ModalHeader } from 'components/base/Modal';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Select from 'components/base/Select';
 import CSRFForm from 'components/CSRFForm';
 import Comment from '@utils/datatypes/Comment';

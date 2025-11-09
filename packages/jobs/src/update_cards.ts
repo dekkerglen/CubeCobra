@@ -1,11 +1,12 @@
 import dotenv from 'dotenv';
 
 import 'module-alias/register';
-dotenv.config();
+dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
 import { Upload } from '@aws-sdk/lib-storage';
 import es from 'event-stream';
 import fs, { createWriteStream } from 'fs';
+// @ts-ignore - JSONStream doesn't have proper types
 import JSONStream from 'JSONStream';
 import fetch from 'node-fetch';
 import path, { join } from 'path';
@@ -18,7 +19,7 @@ import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '@utils/d
 import { CardMetadata } from '@utils/datatypes/CardCatalog';
 import { s3 } from '@server/dynamo/s3client';
 import { fileToAttribute } from '@server/util/cardCatalog';
-import * as util from '@server/util/util';
+import util from '@server/util/util';
 import {
   convertName,
   ScryfallCard,
@@ -140,13 +141,13 @@ async function downloadDefaultCards(cacheDir?: string) {
 
   // Use getFileWithCache to download or stream from cache
   await Promise.all([
-    getFileWithCache(defaultUrl, './private/cards.json', cacheDir),
-    getFileWithCache(allUrl, './private/all-cards.json', cacheDir),
+    getFileWithCache(defaultUrl, '../server/private/cards.json', cacheDir),
+    getFileWithCache(allUrl, '../server/private/all-cards.json', cacheDir),
   ]);
 }
 
 async function downloadSets(cacheDir?: string) {
-  await getFileWithCache('https://api.scryfall.com/sets', './private/sets.json', cacheDir);
+  await getFileWithCache('https://api.scryfall.com/sets', '../server/private/sets.json', cacheDir);
 }
 
 function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
@@ -180,7 +181,7 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
   if (!catalog.oracleToId[card.oracle_id]) {
     catalog.oracleToId[card.oracle_id] = [];
   }
-  catalog.oracleToId[card.oracle_id].push(card.scryfall_id);
+  catalog.oracleToId[card.oracle_id]!.push(card.scryfall_id);
   util.binaryInsert(normalizedName, catalog.names);
   util.binaryInsert(normalizedFullName, catalog.full_names);
 }
@@ -296,28 +297,49 @@ function convertParsedCost(card: ScryfallCard, preflipped?: boolean) {
   }
 
   let parsedCost: string[] = [];
-  if (!card.card_faces || card.layout === 'flip') {
+
+  // Debug logging
+  // console.log(`Processing card: ${card.name}, layout: ${card.layout}, mana_cost: ${card.mana_cost}, has_card_faces: ${!!card.card_faces}, type_line: ${card.type_line}`);
+
+  // Handle cards without mana cost (lands, tokens, etc.)
+  if (!card.mana_cost && (!card.card_faces || !card.card_faces[0]?.mana_cost)) {
+    return []; // Return empty array for cards without mana cost
+  }
+
+  // First check if the card has a mana_cost at the card level
+  if (card.mana_cost && (!card.card_faces || card.layout === 'flip')) {
     parsedCost = card.mana_cost
       .substr(1, card.mana_cost.length - 2)
       .toLowerCase()
       .split('}{')
       .reverse();
-  } else if (card.layout === 'split' || card.layout === 'adventure') {
+  } else if (card.mana_cost && (card.layout === 'split' || card.layout === 'adventure')) {
     parsedCost = card.mana_cost
       .substr(1, card.mana_cost.length - 2)
       .replace(' // ', '{split}')
       .toLowerCase()
       .split('}{')
       .reverse();
-  } else if (Array.isArray(card.card_faces) && card.card_faces[0].colors) {
+  } else if (Array.isArray(card.card_faces) && card.card_faces[0]?.mana_cost) {
+    // For double-faced cards, use the first face's mana cost
     parsedCost = card.card_faces[0].mana_cost
       .substr(1, card.card_faces[0].mana_cost.length - 2)
       .toLowerCase()
       .split('}{')
       .reverse();
+  } else if (card.mana_cost) {
+    // Fallback to card-level mana cost for other layouts
+    parsedCost = card.mana_cost
+      .substr(1, card.mana_cost.length - 2)
+      .toLowerCase()
+      .split('}{')
+      .reverse();
   } else {
+    // Only log error if there's truly no mana cost anywhere and it's not a land/token
     // eslint-disable-next-line no-console
-    console.error(`Error converting parsed colors: (isExtra:${preflipped}) ${card.name}`);
+    console.error(
+      `Error converting parsed cost: (isExtra:${preflipped}) ${card.name} - layout: ${card.layout}, mana_cost: ${card.mana_cost}, type_line: ${card.type_line}`,
+    );
   }
 
   if (parsedCost) {
@@ -340,7 +362,9 @@ function convertColors(card: ScryfallCard, preflipped?: boolean) {
     }
 
     // TODO: handle cards with more than 2 faces
-    return Array.from(card.card_faces[1].colors!);
+    if (card.card_faces[1]?.colors) {
+      return Array.from(card.card_faces[1].colors);
+    }
   }
 
   if (!card.card_faces) {
@@ -358,7 +382,7 @@ function convertColors(card: ScryfallCard, preflipped?: boolean) {
   }
 
   // otherwise use the colors from the first face
-  if (card.card_faces[0].colors) {
+  if (card.card_faces[0]?.colors) {
     return Array.from(card.card_faces[0].colors);
   }
 
@@ -398,11 +422,11 @@ function convertId(card: ScryfallCard, preflipped: boolean) {
 }
 
 function getFaceAttributeSource(card: ScryfallCard, preflipped: boolean): ScryfallCardFace {
-  let faceAttributeSource;
-  if (preflipped && card.card_faces) {
+  let faceAttributeSource: ScryfallCardFace;
+  if (preflipped && card.card_faces && card.card_faces[1]) {
     faceAttributeSource = card.card_faces[1];
-  } else if (card.card_faces) {
-    [faceAttributeSource] = card.card_faces;
+  } else if (card.card_faces && card.card_faces[0]) {
+    faceAttributeSource = card.card_faces[0];
   } else {
     faceAttributeSource = {
       ...card,
@@ -526,7 +550,7 @@ function convertCard(
     newcard.image_normal = card.image_uris.normal;
     newcard.art_crop = card.image_uris.art_crop;
   }
-  if (card.card_faces && card.card_faces.length >= 2 && card.card_faces[1].image_uris) {
+  if (card.card_faces && card.card_faces.length >= 2 && card.card_faces[1]?.image_uris) {
     newcard.image_flip = card.card_faces[1].image_uris.normal;
   }
   if (newcard.type.toLowerCase().includes('land')) {
@@ -544,8 +568,8 @@ function convertCard(
       ['g', 'Green'],
     ]);
 
-    const colorFromIdentity = newcard.color_identity[0].toLowerCase();
-    if (legacyColorCategoryToCurrentMap.get(colorFromIdentity) !== undefined) {
+    const colorFromIdentity = newcard.color_identity[0]?.toLowerCase();
+    if (colorFromIdentity && legacyColorCategoryToCurrentMap.get(colorFromIdentity) !== undefined) {
       newcard.colorcategory = legacyColorCategoryToCurrentMap.get(colorFromIdentity) as ColorCategory;
     } else {
       newcard.colorcategory = colorFromIdentity as ColorCategory;
@@ -568,23 +592,26 @@ function addLanguageMapping(card: ScryfallCard) {
   const sameOracle = catalog.oracleToId[card.oracle_id] || [];
   for (const otherId of sameOracle) {
     const otherCard = catalog.dict[otherId];
-    if (card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
+    if (otherCard && card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
       catalog.english[card.id] = otherId;
       return;
     }
   }
 
   const name = cardutil.normalizeName(convertName(card, false));
-  for (const otherId of catalog.nameToId[name]) {
-    const otherCard = catalog.dict[otherId];
-    if (card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
-      catalog.english[card.id] = otherId;
-      return;
+  const nameToIdArray = catalog.nameToId[name];
+  if (nameToIdArray) {
+    for (const otherId of nameToIdArray) {
+      const otherCard = catalog.dict[otherId];
+      if (otherCard && card.set === otherCard.set && card.collector_number === otherCard.collector_number) {
+        catalog.english[card.id] = otherId;
+        return;
+      }
     }
   }
 }
 
-async function writeCatalog(basePath = 'private') {
+async function writeCatalog(basePath = '../server/private') {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
@@ -726,7 +753,7 @@ async function saveAllCards(
   const processingCardsStart = Date.now();
   await new Promise((resolve) =>
     fs
-      .createReadStream('./private/cards.json')
+      .createReadStream('../server/private/cards.json')
       .pipe(JSONStream.parse('*'))
       .pipe(
         // @ts-expect-error idk why but this works
@@ -746,7 +773,7 @@ async function saveAllCards(
   const languageMappingsStart = Date.now();
   await new Promise((resolve) =>
     fs
-      .createReadStream('./private/all-cards.json')
+      .createReadStream('../server/private/all-cards.json')
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(addLanguageMapping))
       .on('close', resolve),
@@ -781,7 +808,7 @@ async function processSets() {
   console.info('Processing sets...');
   await new Promise((resolve) =>
     fs
-      .createReadStream('./private/sets.json')
+      .createReadStream('../server/private/sets.json')
       .pipe(JSONStream.parse('data.*'))
       .pipe(
         // @ts-expect-error idk why but this works
@@ -852,7 +879,7 @@ const downloadFromScryfall = async (
   try {
     // eslint-disable-next-line no-console
     console.info('Saving catalog...');
-    await writeCatalog('./private');
+    await writeCatalog('../server/private');
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Updating cardbase objects failed:');
@@ -886,7 +913,7 @@ const uploadCardDb = async () => {
     // eslint-disable-next-line no-console
     console.log(`Uploading ${file}...`);
 
-    await uploadLargeObjectToS3(`private/${file}`, `cards/${file}`);
+    await uploadLargeObjectToS3(`../server/private/${file}`, `cards/${file}`);
 
     // eslint-disable-next-line no-console
     console.log(`Finished ${file}`);
@@ -932,7 +959,7 @@ const loadMetadatadict = async () => {
 const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
   // Use cache if available
   const url = 'https://api.cardkingdom.com/api/v2/pricelist';
-  const filePath = './private/cardkingdom-prices.json';
+  const filePath = '../server/private/cardkingdom-prices.json';
   let stream;
   if (cacheDir) {
     stream = await getFileWithCache(url, filePath, cacheDir);
@@ -960,7 +987,7 @@ const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
 
 const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
   const url = 'https://manapool.com/api/v1/prices/singles';
-  const filePath = './private/manapool-prices.json';
+  const filePath = '../server/private/manapool-prices.json';
   let stream;
   if (cacheDir) {
     stream = await getFileWithCache(url, filePath, cacheDir);

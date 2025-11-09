@@ -23,14 +23,10 @@ const Draft = require('../src/dynamo/models/draft');
         console.log(`Checking ${key} with ${cubes.length} cubes`);
 
         // If the user has at least one cube and all of their cubes are empty, they are potentially malicious
-        if (cubes.length >= 1 && cubes.every(cube => cube.cardCount === 0)) {
-
+        if (cubes.length >= 1 && cubes.every((cube) => cube.cardCount === 0)) {
           // If the user has more than 5 cubes, they are potentially malicious
           if (cubes.length > 5) {
-            potentiallyMaliciousOwners.push([
-              key,
-              ...cubes.map(cube => cube.name),
-            ]);
+            potentiallyMaliciousOwners.push([key, ...cubes.map((cube) => cube.name)]);
             callback();
             return;
           }
@@ -38,13 +34,9 @@ const Draft = require('../src/dynamo/models/draft');
           // othewise, check if they have drafts
 
           Draft.getByOwner(key, null, 10).then((drafts) => {
-
-            // if the user has drafts, they are probably not malicious  
+            // if the user has drafts, they are probably not malicious
             if (drafts.items.length === 0) {
-              potentiallyMaliciousOwners.push([
-                key,
-                ...cubes.map(cube => cube.name),
-              ]);
+              potentiallyMaliciousOwners.push([key, ...cubes.map((cube) => cube.name)]);
             }
 
             callback();
@@ -59,7 +51,10 @@ const Draft = require('../src/dynamo/models/draft');
   pipeline.on('end', () => {
     console.log(`Found ${potentiallyMaliciousOwners.length} potentially malicious owners`);
     // write a csv
-    fs.writeFileSync('potentially_malicious_users.csv', potentiallyMaliciousOwners.map((strings) => strings.join(',')).join('\n'));
+    fs.writeFileSync(
+      'potentially_malicious_users.csv',
+      potentiallyMaliciousOwners.map((strings) => strings.join(',')).join('\n'),
+    );
     process.exit();
   });
 

@@ -38,7 +38,7 @@ const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>)
         }
 
         event.preventDefault();
-        
+
         return toggle();
       },
       [altClick, stopPropagation, toggle],

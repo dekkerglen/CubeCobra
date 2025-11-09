@@ -4,7 +4,8 @@ const { initializeCardDb } = require('../src/util/cardCatalog');
 
 (async () => {
   try {
-    await initializeCardDb();
+    const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+    await initializeCardDb(privateDir);
     console.log('Cleaning cube followers');
 
     // scan cubes

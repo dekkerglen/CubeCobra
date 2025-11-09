@@ -3,7 +3,7 @@
 import dotenv from 'dotenv';
 
 import 'module-alias/register';
-dotenv.config();
+dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
 import fs from 'fs';
 
@@ -16,6 +16,7 @@ import ChangeLog from '@server/dynamo/models/changelog';
 import { initializeCardDb } from '@server/util/cardCatalog';
 import { cardFromId } from '@server/util/carddb';
 import { getCubeTypes } from '@server/util/cubefn';
+import path from 'path';
 
 type CubeDict = Record<string, string[]>;
 
@@ -101,7 +102,8 @@ const mapTotalsToCardHistory = (
 };
 
 (async () => {
-  await initializeCardDb();
+  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+  await initializeCardDb(privateDir);
 
   if (!fs.existsSync('./temp')) {
     fs.mkdirSync('./temp');

@@ -19,7 +19,7 @@ import { formatDate } from 'utils/Date';
 import History, { CubeType } from '@utils/datatypes/History';
 import { CSRFContext } from '../contexts/CSRFContext';
 import useQueryParam from '../hooks/useQueryParam';
-import { Col, Flexbox,Row } from './base/Layout';
+import { Col, Flexbox, Row } from './base/Layout';
 import Select from './base/Select';
 import Spinner from './base/Spinner';
 

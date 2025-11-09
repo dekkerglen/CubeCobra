@@ -70,10 +70,18 @@ const Text: React.FC<TextProps> = ({
   }
 
   if (area) {
-    return <p {...optionalProps} className={`${classes} h-full`}>{children}</p>;
+    return (
+      <p {...optionalProps} className={`${classes} h-full`}>
+        {children}
+      </p>
+    );
   }
 
-  return <span {...optionalProps} className={`${classes}`}>{children}</span>;
+  return (
+    <span {...optionalProps} className={`${classes}`}>
+      {children}
+    </span>
+  );
 };
 
 export default Text;

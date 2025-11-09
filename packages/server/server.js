@@ -21,17 +21,20 @@ child.on('exit:code', (code) => {
   console.error(`Forever detected script exited with code ${code}`);
 });
 
-
 // download initial card definitions
-updateCardbase().then(() => {
-  // download ml initial model
-  downloadFromS3().then(() => {
-    child.start();
-  }).catch((err) => {
+updateCardbase()
+  .then(() => {
+    // download ml initial model
+    downloadFromS3()
+      .then(() => {
+        child.start();
+      })
+      .catch((err) => {
+        console.error(err);
+        process.exit(1);
+      });
+  })
+  .catch((err) => {
     console.error(err);
     process.exit(1);
   });
-}).catch((err) => {
-  console.error(err);
-  process.exit(1);
-});

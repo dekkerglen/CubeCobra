@@ -14,10 +14,7 @@ interface AdminDashboardPageProps {
   contentInReview: number;
 }
 
-const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
-  noticeCount,
-  contentInReview,
-}) => (
+const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ noticeCount, contentInReview }) => (
   <MainLayout>
     <DynamicFlash />
     <Container sm>

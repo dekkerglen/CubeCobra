@@ -21,13 +21,7 @@ interface SamplePackPageProps {
   maxBotWeight?: number;
 }
 
-const SamplePackPage: React.FC<SamplePackPageProps> = ({
-  seed,
-  pack,
-  cube,
-  isBalanced = false,
-  maxBotWeight,
-}) => {
+const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBalanced = false, maxBotWeight }) => {
   return (
     <MainLayout>
       <CubeLayout cube={cube} activeLink="playtest">

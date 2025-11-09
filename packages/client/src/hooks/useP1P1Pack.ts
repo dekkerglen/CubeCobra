@@ -24,14 +24,14 @@ const useP1P1Pack = (packId: string | null): UseP1P1PackResult => {
 
     try {
       const response = await fetch(`/tool/api/getp1p1/${packId}`);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch P1P1 pack');
       }
 
       const data = await response.json();
-      
+
       setPack(data.pack);
       setVotes(data.votes);
     } catch (err) {
@@ -46,7 +46,7 @@ const useP1P1Pack = (packId: string | null): UseP1P1PackResult => {
 
   useEffect(() => {
     fetchPack();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [packId]);
 
   return {

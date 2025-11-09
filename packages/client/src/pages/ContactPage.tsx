@@ -2,7 +2,7 @@ import React from 'react';
 
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Col, Flexbox,Row } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';

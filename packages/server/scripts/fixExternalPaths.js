@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const replacements = {
-  "../../../../utils": "../../utils"
+  '../../../../utils': '../../utils',
 };
 
 function replaceInFile(file) {

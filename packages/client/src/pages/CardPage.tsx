@@ -36,14 +36,7 @@ interface CardPageProps {
   versions: CardDetails[];
 }
 
-const CardPage: React.FC<CardPageProps> = ({
-  card,
-  history,
-  versions,
-  draftedWith,
-  cubedWith,
-  synergistic,
-}) => {
+const CardPage: React.FC<CardPageProps> = ({ card, history, versions, draftedWith, cubedWith, synergistic }) => {
   const sortedVersions = versions.sort((a, b) => {
     const date1 = new Date(a.released_at);
     const date2 = new Date(b.released_at);
@@ -80,7 +73,12 @@ const CardPage: React.FC<CardPageProps> = ({
           </Row>
         </Col>
       </Row>
-      <Correlations draftedWith={draftedWith} cubedWith={cubedWith} synergistic={synergistic} oracleId={card.oracle_id} />
+      <Correlations
+        draftedWith={draftedWith}
+        cubedWith={cubedWith}
+        synergistic={synergistic}
+        oracleId={card.oracle_id}
+      />
     </MainLayout>
   );
 };

@@ -32,11 +32,7 @@ interface CreateRecordFromDraftPageProps {
 
 const PAGE_SIZE = 20;
 
-const CreateRecordFromDraftPage: React.FC<CreateRecordFromDraftPageProps> = ({
-  cube,
-  decks,
-  decksLastKey,
-}) => {
+const CreateRecordFromDraftPage: React.FC<CreateRecordFromDraftPageProps> = ({ cube, decks, decksLastKey }) => {
   const [step, setStep] = useState(0);
   const { csrfFetch } = useContext(CSRFContext);
   const [record, setRecord] = useState<Partial<Record>>({});

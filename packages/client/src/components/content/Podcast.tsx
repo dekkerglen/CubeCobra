@@ -1,7 +1,7 @@
 import React from 'react';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
-import { CardBody,CardHeader } from 'components/base/Card';
+import { CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';

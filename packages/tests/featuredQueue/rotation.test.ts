@@ -13,8 +13,7 @@ describe('Featured Queue Rotation', () => {
   });
 
   const mockQueueData = (items: any[]) => {
-    (FeaturedQueue.querySortedByDate as jest.Mock)
-      .mockResolvedValueOnce({ items, lastKey: null });
+    (FeaturedQueue.querySortedByDate as jest.Mock).mockResolvedValueOnce({ items, lastKey: null });
   };
 
   const createPatron = (status: string, level: number) => ({
@@ -29,10 +28,7 @@ describe('Featured Queue Rotation', () => {
   });
 
   it('should not rotate if queue has less than 4 cubes', async () => {
-    const queue = [
-      createCube('cube1', 'user1', Date.now() - 2000),
-      createCube('cube2', 'user2', Date.now() - 1000),
-    ];
+    const queue = [createCube('cube1', 'user1', Date.now() - 2000), createCube('cube2', 'user2', Date.now() - 1000)];
 
     mockQueueData(queue);
 
@@ -63,7 +59,7 @@ describe('Featured Queue Rotation', () => {
     const result = await rotateFeatured();
 
     expect(result.success).toBe('true');
-    expect(result.removed).toEqual([]);  // No cubes removed due to patron status
+    expect(result.removed).toEqual([]); // No cubes removed due to patron status
     expect(result.added).toHaveLength(2);
     expect(result.added[0].cube).toBe('cube3');
     expect(result.added[1].cube).toBe('cube4');
@@ -73,13 +69,13 @@ describe('Featured Queue Rotation', () => {
       expect.objectContaining({
         cube: 'cube1',
         date: expect.any(Number),
-      })
+      }),
     );
     expect(FeaturedQueue.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube2',
         date: expect.any(Number),
-      })
+      }),
     );
   });
 
@@ -170,14 +166,14 @@ describe('Featured Queue Rotation', () => {
       expect.objectContaining({
         cube: 'cube2',
         date: expect.any(Number),
-      })
+      }),
     );
     // Verify cube3 (second cube after removal) was also moved to back
     expect(FeaturedQueue.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube3',
         date: expect.any(Number),
-      })
+      }),
     );
   });
 
@@ -221,7 +217,7 @@ describe('Featured Queue Rotation', () => {
       createCube('cube2', 'bob', Date.now() - 9000),
       createCube('cube3', 'charlie', Date.now() - 8000),
       createCube('cube4', 'diana', Date.now() - 7000),
-      createCube('cube5', 'alice', Date.now() - 6000),  // Same user as cube1
+      createCube('cube5', 'alice', Date.now() - 6000), // Same user as cube1
       createCube('cube6', 'eve', Date.now() - 5000),
       createCube('cube7', 'frank', Date.now() - 4000),
       createCube('cube8', 'grace', Date.now() - 3000),
@@ -260,19 +256,19 @@ describe('Featured Queue Rotation', () => {
 
     // Verify rotation happened with remaining eligible cubes
     expect(result.added).toHaveLength(2);
-    expect(result.added[0].cube).toBe('cube4');  // diana
-    expect(result.added[1].cube).toBe('cube5');  // alice (second cube)
+    expect(result.added[0].cube).toBe('cube4'); // diana
+    expect(result.added[1].cube).toBe('cube5'); // alice (second cube)
 
     // Verify old featured cubes (first 2) were moved to back
     expect(FeaturedQueue.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube1',
-      })
+      }),
     );
     expect(FeaturedQueue.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube2',
-      })
+      }),
     );
   });
 
@@ -308,15 +304,9 @@ describe('Featured Queue Rotation', () => {
 
   it('should correctly handle pagination when fetching queue', async () => {
     // Simulate paginated results
-    const page1 = [
-      createCube('cube1', 'user1', Date.now() - 4000),
-      createCube('cube2', 'user2', Date.now() - 3000),
-    ];
+    const page1 = [createCube('cube1', 'user1', Date.now() - 4000), createCube('cube2', 'user2', Date.now() - 3000)];
 
-    const page2 = [
-      createCube('cube3', 'user3', Date.now() - 2000),
-      createCube('cube4', 'user4', Date.now() - 1000),
-    ];
+    const page2 = [createCube('cube3', 'user3', Date.now() - 2000), createCube('cube4', 'user4', Date.now() - 1000)];
 
     (FeaturedQueue.querySortedByDate as jest.Mock)
       .mockResolvedValueOnce({ items: page1, lastKey: 'key1' })

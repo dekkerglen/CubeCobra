@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 import fs from 'fs';
 
 import 'module-alias/register';
@@ -9,6 +9,7 @@ import type DraftType from '@utils/datatypes/Draft';
 import Draft from '@server/dynamo/models/draft';
 import { initializeCardDb } from '@server/util/cardCatalog';
 import { getDrafterState } from '@utils/draftutil';
+import path from 'path';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {
   const card = draftCards[cardIndex];
@@ -113,7 +114,8 @@ const processPicks = (
 };
 
 (async () => {
-  await initializeCardDb();
+  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+  await initializeCardDb(privateDir);
 
   const indexToOracleMap = JSON.parse(fs.readFileSync('./temp/export/indexToOracleMap.json', 'utf8'));
   const oracleToIndex = Object.fromEntries(

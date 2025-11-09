@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ArrowLeftIcon, ArrowRightIcon, MoveToEndIcon,MoveToStartIcon } from '@primer/octicons-react';
+import { ArrowLeftIcon, ArrowRightIcon, MoveToEndIcon, MoveToStartIcon } from '@primer/octicons-react';
 
 import Button from './Button';
 import { Flexbox } from './Layout';

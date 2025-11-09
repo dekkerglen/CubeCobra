@@ -15,7 +15,7 @@ function exitSymbol(token) {
   const data = this.resume();
   const node = this.stack[this.stack.length - 1];
   this.exit(token);
-  
+
   node.value = data;
   node.data.hProperties = { value: data };
 }

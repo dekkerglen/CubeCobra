@@ -30,19 +30,19 @@ This should create all the required resources to then deploy the main stack.
 
 The following environment variables must be set:
 
-| Name                     |
-| ------------------------ |
-| `JOBS_TOKEN`             |
-| `PATREON_CLIENT_ID`      |
-| `PATREON_CLIENT_SECRET`  |
-| `PATREON_HOOK_SECRET`    |
-| `SESSION_TOKEN`          |
-| `SESSION_SECRET`         |
-| `CAPTCHA_SITE_KEY`       |
-| `CAPTCHA_SECRET_KEY`     |
-| `DRAFTMANCER_API_KEY`    |
-| `STRIPE_SECRET_KEY`      |
-| `STRIPE_PUBLIC_KEY`      |
+| Name                    |
+| ----------------------- |
+| `JOBS_TOKEN`            |
+| `PATREON_CLIENT_ID`     |
+| `PATREON_CLIENT_SECRET` |
+| `PATREON_HOOK_SECRET`   |
+| `SESSION_TOKEN`         |
+| `SESSION_SECRET`        |
+| `CAPTCHA_SITE_KEY`      |
+| `CAPTCHA_SECRET_KEY`    |
+| `DRAFTMANCER_API_KEY`   |
+| `STRIPE_SECRET_KEY`     |
+| `STRIPE_PUBLIC_KEY`     |
 
 You'll also need the app version which must match an app bundle on S3 (_v1.2.3_).
 

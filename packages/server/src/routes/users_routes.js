@@ -774,8 +774,7 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
 
 router.get('/social', ensureAuth, async (req, res) => {
   try {
-    let followedCubes = (await Cube.batchGet(req.user.followedCubes || []))
-      .filter((cube) => cube.visibility !== "pr");
+    let followedCubes = (await Cube.batchGet(req.user.followedCubes || [])).filter((cube) => cube.visibility !== 'pr');
     const followers = await User.batchGet(req.user.following || []);
     const followedUsers = await User.batchGet(req.user.followedUsers || []);
 

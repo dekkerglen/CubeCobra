@@ -1,17 +1,13 @@
 {
   "compilerOptions": {
-    "typeRoots": [
-      "node_modules/@types",
-      "src/types",
-      "node_modules/@testing-library"
-    ],
+    "typeRoots": ["node_modules/@types", "src/types", "node_modules/@testing-library"],
     "outDir": "dist",
     "esModuleInterop": true,
     "target": "ES2020",
     "jsx": "react",
     "baseUrl": "./",
     "paths": {
-      "@utils/*": ["../utils/src/*"],
+      "@utils/*": ["../utils/src/*"]
     },
     "module": "commonjs",
     "moduleResolution": "node",

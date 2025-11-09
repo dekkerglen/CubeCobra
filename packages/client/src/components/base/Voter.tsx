@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { StarFillIcon,StarIcon } from '@primer/octicons-react';
+import { StarFillIcon, StarIcon } from '@primer/octicons-react';
 
 import Spinner from './Spinner';
 

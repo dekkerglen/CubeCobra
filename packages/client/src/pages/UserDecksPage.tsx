@@ -23,13 +23,7 @@ interface UserDecksPageProps {
 
 const PAGE_SIZE = 20;
 
-const UserDecksPage: React.FC<UserDecksPageProps> = ({
-  followersCount,
-  following,
-  decks,
-  owner,
-  lastKey,
-}) => {
+const UserDecksPage: React.FC<UserDecksPageProps> = ({ followersCount, following, decks, owner, lastKey }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState<Draft[]>(decks);
   const [currentLastKey, setLastKey] = useState(lastKey);

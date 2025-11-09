@@ -256,28 +256,27 @@ const searchWithTagQueries = async (tagQueries, cardQueries, keywordQueries, ord
       return true;
     });
 
+  if (cardQueries.length === 0) {
+    return {
+      cubes: cubes,
+      lastKey: result.lastKey,
+    };
+  }
 
-    if (cardQueries.length === 0) {
-      return {
-        cubes: cubes,
-        lastKey: result.lastKey,
-      };
+  const cubeCards = await Promise.all(cubes.map((cube) => Cube.getCards(cube.id)));
+
+  const cubeWithCardFilter = cubes.filter((cube, index) => {
+    const cards = cubeCards[index];
+    const oracleIds = cards.mainboard.map((card) => cardFromId(card.cardID).oracle_id);
+
+    for (const query of cardQueries) {
+      if (!oracleIds.some((o) => o === query.value)) {
+        return false;
+      }
     }
 
-    const cubeCards = await Promise.all(cubes.map((cube) => Cube.getCards(cube.id)));
-
-    const cubeWithCardFilter = cubes.filter((cube, index) => {
-      const cards = cubeCards[index];
-      const oracleIds = cards.mainboard.map((card) => cardFromId(card.cardID).oracle_id);
-
-      for (const query of cardQueries) {
-        if (!oracleIds.some((o) => o === query.value)) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
+    return true;
+  });
 
   return {
     cubes: cubeWithCardFilter,

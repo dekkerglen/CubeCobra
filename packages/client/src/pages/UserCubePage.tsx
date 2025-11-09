@@ -22,12 +22,7 @@ interface UserCubePageProps {
   cubes: Cube[];
 }
 
-const UserCubePage: React.FC<UserCubePageProps> = ({
-  owner,
-  followersCount,
-  following,
-  cubes,
-}) => {
+const UserCubePage: React.FC<UserCubePageProps> = ({ owner, followersCount, following, cubes }) => {
   const user = useContext(UserContext);
   return (
     <MainLayout>

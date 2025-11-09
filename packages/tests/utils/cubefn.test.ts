@@ -40,16 +40,28 @@ const setupMocks = (mockFormat: any, mockDraft: any) => {
 // Helper function to create normalized bot weights that sum to 1
 const createNormalizedWeights = (weights: number[]): number[] => {
   const sum = weights.reduce((acc, w) => acc + w, 0);
-  return weights.map(w => w / sum);
+  return weights.map((w) => w / sum);
 };
 
 // Helper to create realistic 15-card weight distribution
 const createRealistic15CardWeights = (): number[] => {
   // Simulate a typical pack: 1 rare (high weight), 3 uncommons (medium), 11 commons (low)
   const rawWeights = [
-    0.9,  // rare
-    0.6, 0.5, 0.7,  // uncommons
-    0.1, 0.1, 0.2, 0.1, 0.1, 0.3, 0.1, 0.2, 0.1, 0.1, 0.2  // commons
+    0.9, // rare
+    0.6,
+    0.5,
+    0.7, // uncommons
+    0.1,
+    0.1,
+    0.2,
+    0.1,
+    0.1,
+    0.3,
+    0.1,
+    0.2,
+    0.1,
+    0.1,
+    0.2, // commons
   ];
   return createNormalizedWeights(rawWeights);
 };
@@ -164,18 +176,24 @@ describe('generateBalancedPack', () => {
       const candidates = [
         {
           // Pack 1: Bomb rare dominates (max = 0.3913043478)
-          botWeights: createNormalizedWeights([0.9, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]),
-          botPickIndex: 0
+          botWeights: createNormalizedWeights([
+            0.9, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+          ]),
+          botPickIndex: 0,
         },
         {
           // Pack 2: More balanced distribution (max = 0.1142857143, should be selected)
-          botWeights: createNormalizedWeights([0.4, 0.4, 0.3, 0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1]),
-          botPickIndex: 0
+          botWeights: createNormalizedWeights([
+            0.4, 0.4, 0.3, 0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1,
+          ]),
+          botPickIndex: 0,
         },
         {
           // Pack 3: Two strong cards (max = 0.2592592593)
-          botWeights: createNormalizedWeights([0.7, 0.7, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]),
-          botPickIndex: 0
+          botWeights: createNormalizedWeights([
+            0.7, 0.7, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+          ]),
+          botPickIndex: 0,
         },
       ];
 
@@ -198,7 +216,7 @@ describe('generateBalancedPack', () => {
       expect(result.allCandidates[2].maxBotWeight).toBeCloseTo(0.2592592593, 10); // Pack 3
 
       // Verify pack 2 was selected (lowest max weight)
-      const maxWeights = result.allCandidates.map(c => c.maxBotWeight);
+      const maxWeights = result.allCandidates.map((c) => c.maxBotWeight);
       expect(result.maxBotWeight).toBe(Math.min(...maxWeights));
     });
 
@@ -271,9 +289,7 @@ describe('generateBalancedPack', () => {
 
   describe('bot prediction integration', () => {
     it('should extract oracle IDs correctly', async () => {
-      const mockDetails = Array.from({ length: 15 }, (_, i) =>
-        createCardDetails({ oracle_id: `oracle${i + 1}` })
-      );
+      const mockDetails = Array.from({ length: 15 }, (_, i) => createCardDetails({ oracle_id: `oracle${i + 1}` }));
 
       mockCardFromId.mockImplementation((cardID) => {
         const index = mockDraft.cards.findIndex((c) => c.cardID === cardID);
@@ -289,8 +305,21 @@ describe('generateBalancedPack', () => {
       await generateBalancedPack(mockCube, mockCards, 'test-seed', 1);
 
       expect(mockGetBotPrediction).toHaveBeenCalledWith([
-        'oracle1', 'oracle2', 'oracle3', 'oracle4', 'oracle5', 'oracle6', 'oracle7', 'oracle8',
-        'oracle9', 'oracle10', 'oracle11', 'oracle12', 'oracle13', 'oracle14', 'oracle15'
+        'oracle1',
+        'oracle2',
+        'oracle3',
+        'oracle4',
+        'oracle5',
+        'oracle6',
+        'oracle7',
+        'oracle8',
+        'oracle9',
+        'oracle10',
+        'oracle11',
+        'oracle12',
+        'oracle13',
+        'oracle14',
+        'oracle15',
       ]);
     });
 
@@ -313,12 +342,21 @@ describe('generateBalancedPack', () => {
 
       // Should exclude card2, card5, and card10 (no oracle_id)
       expect(mockGetBotPrediction).toHaveBeenCalledWith([
-        'oracle_card1', 'oracle_card3', 'oracle_card4', 'oracle_card6', 'oracle_card7', 'oracle_card8',
-        'oracle_card9', 'oracle_card11', 'oracle_card12', 'oracle_card13', 'oracle_card14', 'oracle_card15'
+        'oracle_card1',
+        'oracle_card3',
+        'oracle_card4',
+        'oracle_card6',
+        'oracle_card7',
+        'oracle_card8',
+        'oracle_card9',
+        'oracle_card11',
+        'oracle_card12',
+        'oracle_card13',
+        'oracle_card14',
+        'oracle_card15',
       ]);
     });
   });
-
 });
 
 describe('generatePack', () => {
@@ -420,7 +458,7 @@ describe('generatePack', () => {
     it('should include card details in pack result', async () => {
       const mockDetails = createCardDetails({
         oracle_id: 'test-oracle-id',
-        name: 'Test Card'
+        name: 'Test Card',
       });
 
       mockCardFromId.mockReturnValue(mockDetails);

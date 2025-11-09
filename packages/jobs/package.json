@@ -2,10 +2,21 @@
   "name": "@cubecobra/jobs",
   "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "update-draft-history": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_draft_history.ts",
+    "update-cube-history": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cube_history.ts",
+    "update-metadata-dict": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_metadata_dict.ts",
+    "update-cards": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cards.ts",
+    "update-combos": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_combos.ts",
+    "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-combos && npm run update-cards && npm run update-combos && npm run update-cards",
     "build": "npx tsc"
   },
   "dependencies": {
     "elo-rating": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.4.5"
   }
 }

@@ -2,7 +2,7 @@ import React from 'react';
 
 import classNames from 'classnames';
 
-import { Col,Row } from '../base/Layout';
+import { Col, Row } from '../base/Layout';
 import Text from '../base/Text';
 
 interface LegalityBadgeProps {

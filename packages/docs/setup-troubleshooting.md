@@ -35,6 +35,7 @@ This is a known issue with TensorFlow.js on Windows related to missing DLL files
 3. Copy `tensorflow.dll` to the `node_modules\@tensorflow\tfjs-node\lib\napi-v6\` directory (or the appropriate napi version directory that matches your Node.js version)
 
 **Example paths:**
+
 - From: `D:\Repos\CubeCobra\node_modules\@tensorflow\tfjs-node\deps\lib\tensorflow.dll`
 - To: `D:\Repos\CubeCobra\node_modules\@tensorflow\tfjs-node\lib\napi-v6\tensorflow.dll`
 
@@ -50,6 +51,7 @@ If the above solution doesn't work, try these alternatives:
 1. **Check Node.js version compatibility**: Ensure you're using a Node.js version that's compatible with the TensorFlow.js version in the project.
 
 2. **Reinstall node modules**: Sometimes a clean reinstall can resolve native module issues:
+
    ```bash
    rm -rf node_modules package-lock.json
    npm install
@@ -63,12 +65,14 @@ If the above solution doesn't work, try these alternatives:
 
 **Problem:**
 Errors related to ES modules vs CommonJS compatibility, such as:
+
 ```
 ReferenceError: exports is not defined
 ```
 
 **Solution:**
 This typically indicates a mismatch between ES modules and CommonJS. Check:
+
 1. The `package.json` for `"type": "module"` declarations
 2. Import statements use the correct syntax for the module type
 3. TypeScript configuration in `tsconfig.json` matches the expected module system
@@ -76,6 +80,7 @@ This typically indicates a mismatch between ES modules and CommonJS. Check:
 ### Build Errors
 
 For TypeScript compilation errors, ensure:
+
 1. All dependencies have proper type definitions
 2. TypeScript configuration is properly set up
 3. Path mappings in `tsconfig.json` are correct
@@ -83,6 +88,7 @@ For TypeScript compilation errors, ensure:
 ## Getting Help
 
 If you encounter issues not covered in this guide:
+
 1. Check the existing GitHub issues for similar problems
 2. Create a new issue with detailed error messages and system information
 3. Include your operating system, Node.js version, and npm version

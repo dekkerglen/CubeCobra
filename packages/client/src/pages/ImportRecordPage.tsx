@@ -43,7 +43,16 @@ interface UploadDeckStepProps {
   newRecord: boolean;
 }
 
-const UploadDeckStep: React.FC<UploadDeckStepProps> = ({ record, draft, cubeId, mainboardCards, setMainboardCards, sideboardCards, setSideboardCards, newRecord }) => {
+const UploadDeckStep: React.FC<UploadDeckStepProps> = ({
+  record,
+  draft,
+  cubeId,
+  mainboardCards,
+  setMainboardCards,
+  sideboardCards,
+  setSideboardCards,
+  newRecord,
+}) => {
   const formRef = createRef<HTMLFormElement>();
   const [selectedUser, setSelectedUser] = useState<number>(0);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);

@@ -29,13 +29,7 @@ const Video: React.FC<VideoProps> = ({ video }) => {
       </CardHeader>
       <CardBody>
         <div className="player-wrapper">
-          <ReactPlayer 
-            className="react-player" 
-            src={video.url} 
-            width="100%" 
-            height="100%" 
-            controls={true}
-          />
+          <ReactPlayer className="react-player" src={video.url} width="100%" height="100%" controls={true} />
         </div>
       </CardBody>
       <CardBody>

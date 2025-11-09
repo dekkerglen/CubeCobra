@@ -48,14 +48,7 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cub
   );
 };
 
-const CubeComparePage: React.FC<CubeComparePageProps> = ({
-  cards,
-  cube,
-  cubeB,
-  onlyA,
-  onlyB,
-  both,
-}) => {
+const CubeComparePage: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both }) => {
   return (
     <FilterContextProvider>
       <MainLayout>

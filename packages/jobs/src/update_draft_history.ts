@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 
 import 'module-alias/register';
-dotenv.config();
+dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
 import EloRating from 'elo-rating';
 import fs from 'fs';
@@ -14,6 +14,7 @@ import CubeAnalytic from '@server/dynamo/models/cubeAnalytic';
 import Draft from '@server/dynamo/models/draft';
 import { initializeCardDb } from '@server/util/cardCatalog';
 import { getDrafterState } from '@utils/draftutil';
+import path from 'path/win32';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {
@@ -111,7 +112,8 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
     fs.mkdirSync('./temp/drafts_by_day');
   }
 
-  await initializeCardDb();
+  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+  await initializeCardDb(privateDir);
 
   const logsByDay: any = {};
   const keys: string[] = [];

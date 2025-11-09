@@ -8,8 +8,8 @@ All tests reside under the `tests` folder at the root of the repository. Tests s
 as possible. Each feature consists of folder with an appropriate name containing one or more test files. All
 tests must have the `*.test.ts` or `*.test.tsx` suffix. We also use the following naming conventions:
 
-* `*.component.test.tsx` for React components tests
-* `api.test.ts` for API/handler tests
+- `*.component.test.tsx` for React components tests
+- `api.test.ts` for API/handler tests
 
 This is important because Jest is configured to set up the test environment based on these suffixes.
 

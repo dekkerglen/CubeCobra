@@ -106,9 +106,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     text: 'View Queue',
                   }}
                 />
-                {dailyP1P1 && (
-                  <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />
-                )}
+                {dailyP1P1 && <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />}
               </>
             )}
             <Feed items={posts} lastKey={lastKey} />
@@ -127,9 +125,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     text: 'View Queue',
                   }}
                 />
-                {dailyP1P1 && (
-                  <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />
-                )}
+                {dailyP1P1 && <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />}
               </>
             )}
             <RecentDraftsCard decks={decks} lastKey={lastDeckKey} />

@@ -39,7 +39,8 @@ const getMigrations = async () => {
 };
 
 (async () => {
-  await initializeCardDb();
+  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+  await initializeCardDb(privateDir);
 
   const migrations = await getMigrations();
 
@@ -105,7 +106,7 @@ const getMigrations = async () => {
         return;
       }
 
-  // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
       console.log(`Updating cube ${cube.id}`);
 
       // update cube

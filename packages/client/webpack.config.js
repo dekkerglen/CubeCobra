@@ -1,8 +1,8 @@
-const path = require("path");
-const fs = require("fs");
+const path = require('path');
+const fs = require('fs');
 
 // Get a list of all files in the /src/pages/ directory
-const pagesDirectory = path.resolve(__dirname, "src/pages");
+const pagesDirectory = path.resolve(__dirname, 'src/pages');
 const pageFiles = fs.readdirSync(pagesDirectory);
 
 // Create an entry object where each property is a page file (without the file extension)
@@ -15,20 +15,20 @@ const entry = pageFiles.reduce((entries, pageFile) => {
 module.exports = {
   entry,
   output: {
-    filename: "js/[name].bundle.js",
-    path: path.resolve(__dirname, "dist"),
-    publicPath: "/", // Important for source maps to work correctly
+    filename: 'js/[name].bundle.js',
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: '/', // Important for source maps to work correctly
   },
-  devtool: "eval-source-map", // Better source maps for development debugging
+  devtool: 'eval-source-map', // Better source maps for development debugging
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         exclude: [/node_modules/, /\.stories\.tsx?$/, /\.\.\/server/, /packages\/server/],
         use: {
-          loader: "ts-loader",
+          loader: 'ts-loader',
           options: {
-            configFile: path.resolve(__dirname, "tsconfig.json"),
+            configFile: path.resolve(__dirname, 'tsconfig.json'),
             compilerOptions: {
               sourceMap: true, // Ensure TypeScript emits source maps
             },
@@ -37,7 +37,7 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: ["style-loader", "css-loader", "postcss-loader"],
+        use: ['style-loader', 'css-loader', 'postcss-loader'],
       },
       {
         test: /\.(png|jpe?g|gif|svg|webp)$/i,
@@ -55,28 +55,24 @@ module.exports = {
   },
   devServer: {
     static: {
-      directory: path.join(__dirname, "dist"),
+      directory: path.join(__dirname, 'dist'),
     },
     proxy: [
       {
-        context: "/",
-        target: "http://localhost:5000",
+        context: '/',
+        target: 'http://localhost:5000',
         secure: false,
-        logLevel: "info",
+        logLevel: 'info',
       },
     ],
     liveReload: true,
   },
   resolve: {
-    extensions: [".ts", ".tsx", ".js", ".jsx"],
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
-      "@utils": path.resolve(__dirname, "../utils/src"),
+      '@utils': path.resolve(__dirname, '../utils/src'),
     },
-    modules: [
-      path.resolve(__dirname, "src"),
-      path.resolve(__dirname, "../utils/src"),
-      "node_modules"
-    ],
+    modules: [path.resolve(__dirname, 'src'), path.resolve(__dirname, '../utils/src'), 'node_modules'],
   },
-  mode: "development",
+  mode: 'development',
 };

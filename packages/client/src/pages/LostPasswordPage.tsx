@@ -8,7 +8,6 @@ import LostPasswordForm from 'components/forms/LostPasswordForm';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
-
 const LostPasswordPage: React.FC = () => (
   <MainLayout>
     <Banner />

@@ -27,12 +27,7 @@ interface UserAccountPageProps {
   };
 }
 
-const UserAccountPage: React.FC<UserAccountPageProps> = ({
-  patreonClientId,
-  patreonRedirectUri,
-  patron,
-  featured,
-}) => {
+const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patreonRedirectUri, patron, featured }) => {
   const [activeTab, setActiveTab] = useQueryParam('tab', '0');
 
   return (

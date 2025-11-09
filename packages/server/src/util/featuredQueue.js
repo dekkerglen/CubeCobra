@@ -24,8 +24,8 @@ async function rotateFeatured() {
   }
 
   // Step 2: Check patron status for all cubes and remove ineligible ones
-  const uniqueOwners = [...new Set(cubes.map(c => c.owner))];
-  const patronData = await Promise.all(uniqueOwners.map(ownerId => Patron.getById(ownerId)));
+  const uniqueOwners = [...new Set(cubes.map((c) => c.owner))];
+  const patronData = await Promise.all(uniqueOwners.map((ownerId) => Patron.getById(ownerId)));
   const patronMap = {};
   uniqueOwners.forEach((ownerId, index) => {
     patronMap[ownerId] = patronData[index];
@@ -45,7 +45,7 @@ async function rotateFeatured() {
   await Promise.all(cleanupOperations);
 
   // Filter out removed cubes
-  const cleanQueue = cubes.filter(cube => !removedCubes.includes(cube));
+  const cleanQueue = cubes.filter((cube) => !removedCubes.includes(cube));
 
   if (cleanQueue.length < 4) {
     return {
@@ -66,7 +66,7 @@ async function rotateFeatured() {
   const newFeatured = cleanQueue.slice(2, 4);
 
   // Move currently featured to back of queue with new date
-  const rotateOperations = currentlyFeatured.map(item => {
+  const rotateOperations = currentlyFeatured.map((item) => {
     item.date = now;
     return FeaturedQueue.put(item);
   });
@@ -77,7 +77,7 @@ async function rotateFeatured() {
     success: 'true',
     messages: removedCubes.length > 0 ? [`Removed ${removedCubes.length} cubes due to patron status`] : [],
     removed: removedCubes,
-    added: newFeatured
+    added: newFeatured,
   };
 }
 
@@ -88,7 +88,7 @@ async function getFeaturedCubes() {
     return [];
   }
 
-  const cubeIds = queueResult.items.map(item => item.cube);
+  const cubeIds = queueResult.items.map((item) => item.cube);
   const cubes = await Cube.batchGet(cubeIds);
   return cubes;
 }
@@ -130,7 +130,7 @@ async function replaceForUser(userid, cubeid) {
 
   // Check if cube is currently featured (in first 2 positions)
   const queueResult = await FeaturedQueue.querySortedByDate(undefined, 2);
-  const isFeatured = queueResult.items.some(queueItem => queueItem.cube === item.cube);
+  const isFeatured = queueResult.items.some((queueItem) => queueItem.cube === item.cube);
 
   if (isFeatured) {
     throw new Error('Cannot replace cube that is currently featured');

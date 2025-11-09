@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
-dotenv.config();
+dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
 import 'module-alias/register';
 
@@ -10,6 +10,7 @@ import { cardOracleId } from '@utils/cardutil';
 import type CubeType from '@utils/datatypes/Cube';
 import { initializeCardDb } from '@server/util/cardCatalog';
 import { getAllOracleIds } from '@server/util/carddb';
+import path from 'path/win32';
 
 const Cube = require('../dynamo/models/cube');
 
@@ -38,7 +39,8 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
 };
 
 (async () => {
-  await initializeCardDb();
+  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+  await initializeCardDb(privateDir);
 
   const allOracles = getAllOracleIds();
   const oracleToIndex = Object.fromEntries(allOracles.map((oracle, index) => [oracle, index]));

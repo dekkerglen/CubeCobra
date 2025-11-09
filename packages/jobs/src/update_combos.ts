@@ -1,10 +1,12 @@
-require('module-alias/register');
+import 'module-alias/register';
 /* eslint-disable no-console */
-require('dotenv').config();
-
+import dotenv from 'dotenv';
 import fs from 'fs';
 import https from 'https';
 import path from 'path';
+
+// Configure dotenv with explicit path to jobs package .env
+dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
 
@@ -133,7 +135,7 @@ const fetchAllPages = async (
 
   console.log('Downloading all combos data');
   const initialUrl = 'https://backend.commanderspellbook.com/variants?format=json';
-  const privateDir = path.resolve(__dirname, '..', '..', 'private');
+  const privateDir = '../server/private/';
   const dataByIdPath = path.join(privateDir, 'comboDict.json');
   const comboTreePath = path.join(privateDir, 'comboTree.json');
 

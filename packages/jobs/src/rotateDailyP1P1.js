@@ -14,7 +14,9 @@ async function rotateDailyP1P1() {
     console.log('Starting daily P1P1 rotation...');
 
     // Initialize card database and ML models when calling this with rotate-daily-p1p1 script
-    await initializeCardDb();
+    
+    const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+    await initializeCardDb(privateDir);
     await ensureModelsReady();
 
     // Idempotency check: If there's already an active daily P1P1 from today, don't create another

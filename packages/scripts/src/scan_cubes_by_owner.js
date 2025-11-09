@@ -5,7 +5,6 @@ const Cube = require('../src/dynamo/models/cube');
 const fs = require('fs');
 
 (async () => {
-
   let cubesByOwner = {};
   let lastKey = null;
 

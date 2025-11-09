@@ -95,11 +95,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           checked={allowCardsOutsideOfCube}
           setChecked={(value) => setAllowCardsOutsideOfCube(value)}
         />
-        <Checkbox
-          label="Add to Sideboard"
-          checked={addToSideboard}
-          setChecked={(value) => setAddToSideboard(value)}
-        />
+        <Checkbox label="Add to Sideboard" checked={addToSideboard} setChecked={(value) => setAddToSideboard(value)} />
       </Flexbox>
       <Flexbox direction="row" justify="start" gap="2">
         <AutocompleteInput
@@ -126,9 +122,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           <Text sm semibold>
             Mainboard ({mainboardCards.length} card{mainboardCards.length > 1 ? 's' : ''})
           </Text>
-          <Text sm>
-            Click on a card to remove it.
-          </Text>
+          <Text sm>Click on a card to remove it.</Text>
           <CardGrid
             cards={mainboardCards.map(detailsToCard)}
             xs={4}
@@ -146,9 +140,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           <Text sm semibold className="mt-2">
             Sideboard ({sideboardCards.length} card{sideboardCards.length > 1 ? 's' : ''})
           </Text>
-          <Text sm>
-            Click on a card to remove it.
-          </Text>
+          <Text sm>Click on a card to remove it.</Text>
           <CardGrid
             cards={sideboardCards.map(detailsToCard)}
             xs={4}

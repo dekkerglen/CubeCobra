@@ -30,13 +30,7 @@ interface CubeRecordsPageProps {
   lastKey: any;
 }
 
-const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({
-  cube,
-  cards,
-  records,
-  analyticsData,
-  lastKey,
-}) => {
+const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({ cube, cards, records, analyticsData, lastKey }) => {
   const user = useContext(UserContext);
   const [activeTab, setActiveTab] = useQueryParam('tab', '0');
 

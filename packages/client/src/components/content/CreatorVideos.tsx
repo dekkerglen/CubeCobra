@@ -73,12 +73,7 @@ const CreatorVideos: React.FC<CreatorVideosProps> = ({ videos, lastKey }) => {
             <Flexbox direction="col" gap="1">
               <VideoPreview video={video} />
               {video.status !== ContentStatus.PUBLISHED && (
-                <DeleteModalButton
-                  color="danger"
-                  outline
-                  block
-                  modalprops={{ content: video, onDelete: handleDelete }}
-                >
+                <DeleteModalButton color="danger" outline block modalprops={{ content: video, onDelete: handleDelete }}>
                   Delete
                 </DeleteModalButton>
               )}

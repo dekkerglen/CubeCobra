@@ -1,11 +1,16 @@
+require('module-alias/register');
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
+
 const _ = require('lodash');
 const Cube = require('@server/dynamo/models/cube');
 const CubeHash = require('@server/dynamo/models/cubeHash');
 const { initializeCardDb } = require('../../util/cardCatalog');
+const path = require('path');
 
 (async () => {
   try {
-    await initializeCardDb();
+    const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+    await initializeCardDb(privateDir);
     // eslint-disable-next-line no-console
     console.log('Repairing hashes');
 

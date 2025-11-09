@@ -13,18 +13,18 @@ const waitForTableActive = async (maxWaitTime = 600000) => {
     const response = await client.send(describeCommand);
 
     const tableStatus = response.Table.TableStatus;
-    const gsiStatuses = response.Table.GlobalSecondaryIndexes?.map(gsi => ({
-      name: gsi.IndexName,
-      status: gsi.IndexStatus,
-    })) || [];
+    const gsiStatuses =
+      response.Table.GlobalSecondaryIndexes?.map((gsi) => ({
+        name: gsi.IndexName,
+        status: gsi.IndexStatus,
+      })) || [];
 
     console.log(`Table status: ${tableStatus}`);
     if (gsiStatuses.length > 0) {
       console.log('GSI statuses:', gsiStatuses);
     }
 
-    const allActive = tableStatus === 'ACTIVE' &&
-      gsiStatuses.every(gsi => gsi.status === 'ACTIVE');
+    const allActive = tableStatus === 'ACTIVE' && gsiStatuses.every((gsi) => gsi.status === 'ACTIVE');
 
     if (allActive) {
       console.log('Table and all GSIs are ACTIVE');
@@ -32,7 +32,7 @@ const waitForTableActive = async (maxWaitTime = 600000) => {
     }
 
     console.log('Waiting for table to be active...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 
   throw new Error('Timeout waiting for table to be active');
@@ -47,7 +47,7 @@ const waitForTableActive = async (maxWaitTime = 600000) => {
     const describeResponse = await client.send(describeCommand);
 
     const existingGSIs = describeResponse.Table.GlobalSecondaryIndexes || [];
-    const byDateGSI = existingGSIs.find(gsi => gsi.IndexName === 'ByDate');
+    const byDateGSI = existingGSIs.find((gsi) => gsi.IndexName === 'ByDate');
 
     if (byDateGSI) {
       console.log('ByDate GSI already exists. Skipping creation.');

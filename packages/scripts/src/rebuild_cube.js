@@ -13,7 +13,8 @@ const numNull = (arr) => {
 };
 
 (async () => {
-  await initializeCardDb();
+  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+  await initializeCardDb(privateDir);
 
   const changelogs = [];
 
