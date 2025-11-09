@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { cardId, detailsToCard } from '@utils/cardutil';
 
 import { CardDetails } from '@utils/datatypes/Card';
-import { Combo } from '@utils/datatypes/cardCatalog';
+import { Combo } from '@utils/datatypes/CardCatalog';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import useQueryParam from '../../hooks/useQueryParam';
 import { Card, CardBody } from '../base/Card';
