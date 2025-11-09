@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
 import dotenv from 'dotenv';
+import path from 'path';
 
 import 'module-alias/register';
-dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
+// Configure dotenv with explicit path to jobs package .env
+dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 import EloRating from 'elo-rating';
 import fs from 'fs';
@@ -14,7 +16,6 @@ import CubeAnalytic from '@server/dynamo/models/cubeAnalytic';
 import Draft from '@server/dynamo/models/draft';
 import { initializeCardDb } from '@server/util/cardCatalog';
 import { getDrafterState } from '@utils/draftutil';
-import path from 'path/win32';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {
@@ -23,6 +24,7 @@ process.on('unhandledRejection', (reason, p) => {
 
 const ELO_SPEED = 0.1;
 const CUBE_ELO_SPEED = 2;
+const privateDir = '../server/private/';
 
 const adjustElo = (winnerElo: number, loserElo: number, speed: number): [number, number] => {
   const { playerRating, opponentRating } = EloRating.calculate(winnerElo, loserElo, true);
@@ -112,7 +114,6 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
     fs.mkdirSync('./temp/drafts_by_day');
   }
 
-  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
   await initializeCardDb(privateDir);
 
   const logsByDay: any = {};

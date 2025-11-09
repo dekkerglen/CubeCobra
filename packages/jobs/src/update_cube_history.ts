@@ -1,24 +1,26 @@
 /* eslint-disable no-console */
 // Load Environment Variables
 import dotenv from 'dotenv';
+import path from 'path';
 
 import 'module-alias/register';
-dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
+// Configure dotenv with explicit path to jobs package .env
+dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 import fs from 'fs';
 
 import { DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 
-import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
 import CardHistory from '@server/dynamo/models/cardhistory';
 import ChangeLog from '@server/dynamo/models/changelog';
 import { initializeCardDb } from '@server/util/cardCatalog';
 import { cardFromId } from '@server/util/carddb';
 import { getCubeTypes } from '@server/util/cubefn';
-import path from 'path';
-
+import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
 type CubeDict = Record<string, string[]>;
+
+const privateDir = '../server/private/';
 
 interface CubeHistory {
   cubes: Record<string, number[]>;
@@ -102,7 +104,6 @@ const mapTotalsToCardHistory = (
 };
 
 (async () => {
-  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
   await initializeCardDb(privateDir);
 
   if (!fs.existsSync('./temp')) {

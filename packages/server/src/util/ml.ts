@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 import { getAllOracleIds, isOracleBasic } from './carddb';
+import path from 'path';
 
 const tf = require('@tensorflow/tfjs-node');
 const fs = require('fs');
@@ -9,10 +10,9 @@ const cloudwatch = require('./cloudwatch');
 
 const { getOracleForMl, getReasonableCardByOracle } = require('./carddb');
 
-const indexToOracle = JSON.parse(fs.readFileSync('./model/indexToOracleMap.json'));
-const oracleToIndex = Object.fromEntries(Object.entries(indexToOracle).map(([key, value]) => [value, key]));
-
-const numOracles = Object.keys(oracleToIndex).length;
+let indexToOracle: Record<number, string> = {};
+let oracleToIndex: Record<string, number> = {};
+let numOracles = 0;
 
 interface Model {
   predict: (arg0: any) => { (): any; new (): any; dataSync: { (): any; new (): any } };
@@ -31,41 +31,61 @@ const errorHandler = (modelName: string, err: { message: any; stack: any }) => {
   }
 };
 
-tf.loadGraphModel('file://./model/encoder/model.json')
-  .then((model: Model) => {
-    encoder = model;
-    console.info('encoder loaded');
-  })
-  .catch((err: { message: any; stack: any }) => {
-    errorHandler('encoder', err);
-  });
+export async function initializeMl(rootDir: string = '.') {
+  console.info('Loading ML models...');
 
-tf.loadGraphModel('file://./model/cube_decoder/model.json')
-  .then((model: Model) => {
-    recommendDecoder = model;
-    console.info('recommend_decoder loaded');
-  })
-  .catch((err: { message: any; stack: any }) => {
-    errorHandler('recommend_decoder', err);
-  });
+  // Load the oracle mapping
+  const oracleMapPath = path.join(rootDir, 'model', 'indexToOracleMap.json');
+  indexToOracle = JSON.parse(fs.readFileSync(oracleMapPath, 'utf8'));
+  oracleToIndex = Object.fromEntries(Object.entries(indexToOracle).map(([key, value]) => [value, parseInt(key, 10)]));
+  numOracles = Object.keys(oracleToIndex).length;
 
-tf.loadGraphModel('file://./model/deck_build_decoder/model.json')
-  .then((model: Model) => {
-    deckbuilderDecoder = model;
-    console.info('deck_build_decoder loaded');
-  })
-  .catch((err: { message: any; stack: any }) => {
-    errorHandler('deck_build_decoder', err);
-  });
+  // Load models
+  const modelPromises = [
+    tf
+      .loadGraphModel(`file://${path.join(rootDir, 'model', 'encoder', 'model.json')}`)
+      .then((model: Model) => {
+        encoder = model;
+        console.info('encoder loaded');
+      })
+      .catch((err: { message: any; stack: any }) => {
+        errorHandler('encoder', err);
+      }),
 
-tf.loadGraphModel('file://./model/draft_decoder/model.json')
-  .then((model: Model) => {
-    draftDecoder = model;
-    console.info('draft_decoder loaded');
-  })
-  .catch((err: { message: any; stack: any }) => {
-    errorHandler('draft_decoder', err);
-  });
+    tf
+      .loadGraphModel(`file://${path.join(rootDir, 'model', 'cube_decoder', 'model.json')}`)
+      .then((model: Model) => {
+        recommendDecoder = model;
+        console.info('recommend_decoder loaded');
+      })
+      .catch((err: { message: any; stack: any }) => {
+        errorHandler('recommend_decoder', err);
+      }),
+
+    tf
+      .loadGraphModel(`file://${path.join(rootDir, 'model', 'deck_build_decoder', 'model.json')}`)
+      .then((model: Model) => {
+        deckbuilderDecoder = model;
+        console.info('deck_build_decoder loaded');
+      })
+      .catch((err: { message: any; stack: any }) => {
+        errorHandler('deck_build_decoder', err);
+      }),
+
+    tf
+      .loadGraphModel(`file://${path.join(rootDir, 'model', 'draft_decoder', 'model.json')}`)
+      .then((model: Model) => {
+        draftDecoder = model;
+        console.info('draft_decoder loaded');
+      })
+      .catch((err: { message: any; stack: any }) => {
+        errorHandler('draft_decoder', err);
+      }),
+  ];
+
+  await Promise.allSettled(modelPromises);
+  console.info('Finished loading ML models.');
+}
 
 /**
  * Helper for waiting until all ML models to be loaded before proceeding.
@@ -122,7 +142,11 @@ export const encode = (oracles: string[]) => {
     return [];
   }
 
-  const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
+  const vector = [
+    encodeIndeces(
+      oracles.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
+    ),
+  ];
 
   return tf.tidy(() => {
     const tensor = tf.tensor(vector);
@@ -157,7 +181,13 @@ export const recommend = (oracles: string[]) => {
   }
   const allOracles = getAllOracleIds();
 
-  const vector = [encodeIndeces(oracles.map((oracle) => oracleIdToMlIndex(oracle)))];
+  const vector = [
+    encodeIndeces(
+      oracles
+        .map((oracle) => oracleIdToMlIndex(oracle))
+        .filter((index): index is number => index !== null && index !== undefined),
+    ),
+  ];
 
   const array = tf.tidy(() => {
     const tensor = tf.tensor(vector);
@@ -171,7 +201,7 @@ export const recommend = (oracles: string[]) => {
   for (const oracle of allOracles) {
     const index = oracleIdToMlIndex(oracle);
 
-    if (index === null) {
+    if (index === null || index === undefined) {
       continue;
     }
 
@@ -210,7 +240,13 @@ export const build = (oracles: string[]) => {
   const allOracles = getAllOracleIds();
 
   const array = tf.tidy(() => {
-    const vector = [encodeIndeces(oracles.map((oracle) => oracleIdToMlIndex(oracle)))];
+    const vector = [
+      encodeIndeces(
+        oracles
+          .map((oracle) => oracleIdToMlIndex(oracle))
+          .filter((index): index is number => index !== null && index !== undefined),
+      ),
+    ];
     const tensor = tf.tensor(vector);
 
     const encoded = encoder.predict(tensor);
@@ -221,6 +257,10 @@ export const build = (oracles: string[]) => {
 
   for (const oracle of allOracles) {
     const index = oracleIdToMlIndex(oracle);
+
+    if (index === null || index === undefined) {
+      continue;
+    }
 
     if (oracles.includes(oracle)) {
       res.push({
@@ -239,14 +279,22 @@ export const draft = (pack: string[], pool: string[]) => {
   }
 
   const array = tf.tidy(() => {
-    const vector = [encodeIndeces(pool.map((oracle) => oracleToIndex[oracle]))];
+    const vector = [
+      encodeIndeces(
+        pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
+      ),
+    ];
     const tensor = tf.tensor(vector);
     const encoded = encoder.predict(tensor);
     return draftDecoder.predict([encoded]).dataSync();
   });
   const allOracles = getAllOracleIds();
 
-  const packVector = encodeIndeces(pack.map((oracle) => oracleIdToMlIndex(oracle)));
+  const packVector = encodeIndeces(
+    pack
+      .map((oracle) => oracleIdToMlIndex(oracle))
+      .filter((index): index is number => index !== null && index !== undefined),
+  );
   const mask = packVector.map((x) => 1e9 * (1 - x));
 
   const softmaxed = softmax(array.map((x: number, i: number) => x * packVector[i] - (mask[i] ?? 0)));
@@ -256,7 +304,7 @@ export const draft = (pack: string[], pool: string[]) => {
   for (const oracle of allOracles) {
     const index = oracleIdToMlIndex(oracle);
 
-    if (index === null) {
+    if (index === null || index === undefined) {
       continue;
     }
 

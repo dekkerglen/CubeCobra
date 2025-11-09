@@ -1,6 +1,10 @@
 require('module-alias/register');
-/* eslint-disable no-console */
-require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
+import dotenv from 'dotenv';
+import path from 'path';
+
+import 'module-alias/register';
+// Configure dotenv with explicit path to jobs package .env
+dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 const fs = require('fs');
 const { DefaultElo } = require('@utils/datatypes/Card');
@@ -8,8 +12,8 @@ import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
 import { initializeCardDb } from '@server/util/cardCatalog';
 
 import carddb, { cardFromId } from '@server/util/carddb';
-import path from 'path';
-const { encode, oracleInData } = require('../util/ml');
+const { encode, oracleInData } = require('@server/util/ml');
+import { initializeMl } from '@server/util/ml';
 const correlationLimit = 36;
 // import { HierarchicalNSW } from 'hnswlib-node';
 
@@ -35,6 +39,10 @@ interface CubeHistory {
   console.log('Loading card database');
   const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
   await initializeCardDb(privateDir);
+
+  console.log('Initializing ML models');
+  const rootDir = path.join(__dirname, '..', '..', '..');
+  await initializeMl(rootDir);
 
   // load most recent cube history
   const cubeHistoryFiles = fs.readdirSync('./temp/cubes_history').sort();

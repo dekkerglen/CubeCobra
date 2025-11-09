@@ -19,6 +19,7 @@ const { updateCardbase } = require('./util/updatecards');
 const cardCatalog = require('./util/cardCatalog');
 const { render } = require('./util/render');
 const connectFlash = require('connect-flash');
+import { initializeMl } from './util/ml';
 
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
@@ -336,8 +337,8 @@ schedule.scheduleJob('0 10 * * *', async () => {
   await updateCardbase();
 });
 
-// Start server after carddb is initialized.
-cardCatalog.initializeCardDb().then(async () => {
+// Start server after carddb and ML models are initialized.
+Promise.all([cardCatalog.initializeCardDb(), initializeMl(path.join(__dirname, '../../..'))]).then(async () => {
   const port = process.env.PORT || 5000;
   const host = process.env.LISTEN_ON || '127.0.0.1';
   http.createServer(app).listen(Number(port), host);
