@@ -6,10 +6,10 @@ import '@testing-library/jest-dom';
 
 import DisplayContext from 'contexts/DisplayContext';
 
-import CardImage from '../../src/client/components/card/CardImage';
+import CardImage from 'components/card/CardImage';
 import { cardImageUrl } from '@utils/cardutil';
-import { defaultDisplayContext } from '../test-utils/context';
-import { createCard, createCardDetails } from '../test-utils/data';
+import { defaultDisplayContext } from '../../../server/test/test-utils/context';
+import { createCard, createCardDetails } from '../../../server/test/test-utils/data';
 
 jest.mock('@utils/cardutil', () => ({
   cardImageUrl: jest.fn(),
