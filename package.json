@@ -7,6 +7,8 @@
   },
   "scripts": {
     "lint": "npx prettier --write . && npx eslint --max-warnings 0 .",
+    "test:ci": "npm run test:ci --workspace=packages/client && npm run test:ci --workspace=packages/server",
+    "ci-build": "npm run build --workspace=packages/client && npm run build --workspace=packages/server",
     "download-data-files": "npm run download-data-files --workspace=packages/scripts",
     "update-draft-history": "npm run update-draft-history --workspace=packages/jobs",
     "update-cube-history": "npm run update-cube-history --workspace=packages/jobs",
@@ -15,11 +17,7 @@
     "update-combos": "npm run update-combos --workspace=packages/jobs",
     "update-all": "npm run update-all --workspace=packages/jobs",
     "publish": "npm run build --workspace=packages/client && npm run build --workspace=packages/server && cd packages/scripts && npx ts-node -r tsconfig-paths/register --project tsconfig.json src/publish.ts",
-    "write-git-info": "npm run write-git-info --workspace=packages/scripts",
-    "test": "npx jest --coverage=false",
-    "test:watch": "npx jest --watch --coverage=false",
-    "test:coverage": "npx jest --coverage",
-    "test:ci": "npx jest --coverage --coverageReporters json-summary text"
+    "write-git-info": "npm run write-git-info --workspace=packages/scripts"
   },
   "husky": {
     "hooks": {

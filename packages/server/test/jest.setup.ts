@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import path from 'path';
 
 //Load the .env_EXAMPLE into the process environment variables for the tests

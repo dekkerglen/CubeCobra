@@ -2,9 +2,9 @@
 const uuid = jest.requireActual('uuid');
 const uuidv4 = uuid.v4;
 
-import { BASIC_LAND_MANA_MAPPING } from '../../src/client/utils/cardutil';
-import Article from '../../src/datatypes/Article';
-import BlogPost from '../../src/datatypes/BlogPost';
+import { BASIC_LAND_MANA_MAPPING } from '@utils/cardutil';
+import Article from '@utils/datatypes/Article';
+import BlogPost from '@utils/datatypes/BlogPost';
 import Card, {
   BasicLand,
   BoardChanges,
@@ -16,16 +16,16 @@ import Card, {
   Legality,
   LegalityFormats,
   SUPPORTED_FORMATS,
-} from '../../src/datatypes/Card';
-import Content, { ContentStatus, ContentType } from '../../src/datatypes/Content';
-import Cube, { CubeImage } from '../../src/datatypes/Cube';
-import Draft, { DraftStep } from '../../src/datatypes/Draft';
-import DraftSeat from '../../src/datatypes/DraftSeat';
-import Episode from '../../src/datatypes/Episode';
-import Image from '../../src/datatypes/Image';
-import Podcast from '../../src/datatypes/Podcast';
-import User from '../../src/datatypes/User';
-import Video from '../../src/datatypes/Video';
+} from '@utils/datatypes/Card';
+import Content, { ContentStatus, ContentType } from '@utils/datatypes/Content';
+import Cube, { CubeImage } from '@utils/datatypes/Cube';
+import Draft, { DraftStep } from '@utils/datatypes/Draft';
+import DraftSeat from '@utils/datatypes/DraftSeat';
+import Episode from '@utils/datatypes/Episode';
+import Image from '@utils/datatypes/Image';
+import Podcast from '@utils/datatypes/Podcast';
+import User from '@utils/datatypes/User';
+import Video from '@utils/datatypes/Video';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const NUMBERS = '0123456789';

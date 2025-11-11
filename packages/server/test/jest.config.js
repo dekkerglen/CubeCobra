@@ -1,11 +1,26 @@
-const baseConfig = {
+module.exports = {
   preset: 'ts-jest',
-
+  testEnvironment: 'node',
+  rootDir: '../',
+  
+  // Transform configuration
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
-    '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './babel.config.js' }],
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: 'tsconfig.test.json',
+      isolatedModules: true
+    }],
+    '^.+\\.(js|jsx)$': ['babel-jest', {
+      presets: [
+        '@babel/preset-env',
+        '@babel/preset-react',
+        '@babel/preset-typescript'
+      ]
+    }]
   },
+  
+  // Module name mapping for path aliases
   moduleNameMapper: {
+    '^@utils/(.*)$': '<rootDir>/../utils/src/$1',
     '^analytics/(.*)$': '<rootDir>/src/client/analytics/$1',
     '^components/(.*)$': '<rootDir>/src/client/components/$1',
     '^contexts/(.*)$': '<rootDir>/src/client/contexts/$1',
@@ -21,10 +36,24 @@ const baseConfig = {
     '^utils/(.*)$': '<rootDir>/src/client/utils/$1',
     '^src/(.*)$': '<rootDir>/src/$1',
   },
-  testPathIgnorePatterns: ['/node_modules/', '/build/'],
-};
-
-module.exports = {
+  
+  // Transform ignore patterns
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))'
+  ],
+  
+  // Test file patterns
+  testMatch: [
+    '**/*.test.ts'
+  ],
+  
+  // Module file extensions
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  
+  // Setup files
+  setupFilesAfterEnv: [],
+  
+  // Coverage configuration
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['json', 'text'],
@@ -34,22 +63,5 @@ module.exports = {
     'src/client/filtering/*.js',
     '!src/**/*.d.ts',
     '!src/**/index.{js,ts}',
-  ],
-
-  projects: [
-    {
-      ...baseConfig,
-      displayName: 'component-tests',
-      testEnvironment: 'jsdom',
-      testMatch: ['**/tests/**/*.test.tsx'], // Component tests
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-    },
-    {
-      ...baseConfig,
-      displayName: 'other-tests',
-      testEnvironment: 'node',
-      testMatch: ['**/tests/**/*.test.ts'], // Non-component tests
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-    },
   ],
 };

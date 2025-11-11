@@ -12,7 +12,11 @@
     "start": "node server.js",
     "dev": "nodemon -r tsconfig-paths/register src/index.ts",
     "publish": "npm run build && node publish.js",
-    "clean": "rm -rf dist/ node_modules/ private/ ./src/client"
+    "clean": "rm -rf dist/ node_modules/ private/ ./src/client",
+    "test": "npx jest --coverage=false",
+    "test:watch": "npx jest --watch --coverage=false",
+    "test:coverage": "npx jest --coverage",
+    "test:ci": "npx jest --coverage --coverageReporters json-summary text"
   },
   "keywords": [],
   "author": "",
@@ -75,6 +79,9 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@babel/plugin-transform-nullish-coalescing-operator": "^7.27.1",
+    "@babel/plugin-transform-optional-chaining": "^7.28.5",
+    "@babel/plugin-transform-runtime": "^7.28.5",
     "@rollup/plugin-commonjs": "^25.0.8",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",

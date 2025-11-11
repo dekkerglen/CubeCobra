@@ -1,6 +1,6 @@
 /* eslint-disable no-prototype-builtins */
 
-import { Catalog } from '../../src/util/cardCatalog';
+import { Catalog } from '../../../utils/src/datatypes/CardCatalog';
 
 const mockCardCatalog: Catalog = {
   cardtree: {},
@@ -20,16 +20,16 @@ const mockCardCatalog: Catalog = {
   printedCardList: [], // for card filters
 };
 
-jest.mock('../../src/util/cardCatalog', () => {
+jest.mock('../../src/serverutils/cardCatalog', () => {
   return {
     __esModule: true,
     default: mockCardCatalog,
   };
 });
 
-import { FilterFunction } from '../../src/client/filtering/FilterCards';
-import Card, { CardDetails, PrintingPreference } from '../../src/datatypes/Card';
-import { getMostReasonable } from '../../src/util/carddb';
+import { FilterFunction } from '../../../utils/src/filtering/FilterCards';
+import Card, { CardDetails, PrintingPreference } from '../../../utils/src/datatypes/Card';
+import { getMostReasonable } from '../../src/serverutils/carddb';
 import { createCard, createCardDetails } from '../test-utils/data';
 
 const overridesForNormalDetails: Partial<CardDetails> = {

@@ -6,9 +6,9 @@ import {
   getManaPoolLink,
   getTCGLink,
   tcgplayerAffiliate,
-} from 'utils/Affiliate';
+} from '../../src/utils/Affiliate';
 
-import { createCard, createCardDetails } from '../test-utils/data';
+import { createCard, createCardDetails } from '../../../server/test/test-utils/data';
 
 describe('TCGPlayer', () => {
   it('should generate a valid link for a card with a TCGPlayer ID', () => {

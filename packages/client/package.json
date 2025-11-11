@@ -51,7 +51,11 @@
     "tailwind": "npx postcss ./src/css/stylesheet.css -o ../server/public/css/stylesheet.css --watch",
     "tailwind:build": "npx postcss ./src/css/stylesheet.css -o ../server/public/css/stylesheet.css",
     "start": "npm run tailwind & webpack serve",
-    "build": "npm run tailwind:build && webpack"
+    "build": "npm run tailwind:build && webpack",
+    "test": "npx jest --coverage=false",
+    "test:watch": "npx jest --watch --coverage=false",
+    "test:coverage": "npx jest --coverage",
+    "test:ci": "npx jest --coverage --coverageReporters json-summary text"
   },
   "eslintConfig": {
     "extends": [
@@ -75,8 +79,9 @@
     "@babel/core": "^7.24.5",
     "@babel/preset-env": "^7.24.5",
     "@babel/preset-react": "^7.24.1",
+    "@babel/preset-typescript": "^7.28.5",
     "@storybook/react": "^8.1.3",
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.14",
     "@types/nearley": "^2.11.5",
     "@types/papaparse": "^5.5.0",
     "@types/react-csv": "^1.1.10",
@@ -94,6 +99,7 @@
     "postcss-cli": "^11.0.1",
     "postcss-loader": "^8.1.1",
     "style-loader": "^4.0.0",
+    "ts-jest": "^29.4.5",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
     "webpack": "^5.91.0",
@@ -106,7 +112,9 @@
   },
   "babel": {
     "presets": [
-      "react-app"
+      "@babel/preset-env",
+      "@babel/preset-react",
+      "@babel/preset-typescript"
     ]
   }
 }
