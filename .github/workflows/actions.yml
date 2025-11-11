@@ -24,8 +24,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            - ~/.npm
-            - node_modules
+            ~/.npm
+            node_modules
+            packages/client/node_modules
+            packages/server/node_modules
+            packages/utils/node_modules
+            packages/scripts/node_modules
+            packages/jobs/node_modules
+            packages/cdk/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
@@ -37,9 +43,18 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Setup
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      - name: Install dependencies
         run: npm ci
+
+      - name: Install client dependencies
+        run: |
+          cd packages/client
+          npm ci
+
+      - name: Install server dependencies
+        run: |
+          cd packages/server
+          npm ci
 
       - name: Run eslint on changed files
         # Always run both eslint and prettier
