@@ -1,14 +1,14 @@
 import Cube from '../src/dynamo/models/cube';
 import User from '../src/dynamo/models/user';
 import { ensureCubeVisible, getFollowers } from '../src/router/routes/api/followers';
-import CubeFn from '../src/util/cubefn';
+import CubeFn from 'serverutils/cubefn';
 import { createCube, createUser } from './test-utils/data';
 import { expectRegisteredRoutes } from './test-utils/route';
 import { call, middleware } from './test-utils/transport';
 
 jest.mock('../src/dynamo/models/user');
 jest.mock('../src/dynamo/models/cube');
-jest.mock('../src/util/cubefn');
+jest.mock('serverutils/cubefn');
 
 describe('Followers API', () => {
   afterEach(() => {

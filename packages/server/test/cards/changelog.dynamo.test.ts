@@ -1,10 +1,10 @@
 import { v4 as UUID } from 'uuid';
 
-import Card, { Changes } from '../../src/datatypes/Card';
-import ChangelogType from '../../src/datatypes/ChangeLog';
+import Card, { Changes } from '@utils/datatypes/Card';
+import ChangelogType from '@utils/datatypes/ChangeLog';
 import Changelog from '../../src/dynamo/models/changelog';
 import { getBucketName, getObject, putObject } from '../../src/dynamo/s3client';
-import { cardFromId } from '../../src/util/carddb';
+import { cardFromId } from 'serverutils/carddb';
 import {
   createCard,
   createCardDetails,
@@ -19,7 +19,7 @@ import {
 
 //Mocking uuid has side-effect of making the data generators from test-utils/data use the mock too
 jest.mock('uuid');
-jest.mock('../../src/util/carddb');
+jest.mock('serverutils/carddb');
 jest.mock('../../src/dynamo/s3client');
 jest.mock('../../src/dynamo/util');
 

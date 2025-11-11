@@ -1,4 +1,4 @@
-import { sanitizeHttpBody } from '../../src/util/logging';
+import { sanitizeHttpBody } from 'serverutils/logging';
 
 describe('sanitizeHttpBody', () => {
   it('should be fine with undefined or empty body', () => {

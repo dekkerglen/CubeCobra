@@ -9,7 +9,7 @@ import {
   cardWordCount,
   normalizeName,
 } from '@utils/cardutil';
-import util from '../../src/util/util';
+import util from 'serverutils/util';
 import { createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
 
 // ...existing code...

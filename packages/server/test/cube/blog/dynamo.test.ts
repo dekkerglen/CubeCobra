@@ -1,6 +1,6 @@
-import BlogPost, { UnhydratedBlogPost } from '../../../src/datatypes/BlogPost';
+import BlogPost, { UnhydratedBlogPost } from '@utils/datatypes/BlogPost';
 import Blog from '../../../src/dynamo/models/blog';
-import * as carddb from '../../../src/util/carddb';
+import * as carddb from 'serverutils/carddb';
 import {
   createBlogPost,
   createChangelog,
@@ -16,7 +16,7 @@ import {
 jest.mock('../../../src/dynamo/models/cube');
 jest.mock('../../../src/dynamo/models/changelog');
 jest.mock('../../../src/dynamo/models/user');
-jest.mock('../../../src/util/carddb');
+jest.mock('serverutils/carddb');
 
 import Changelog from '../../../src/dynamo/models/changelog';
 import Cube from '../../../src/dynamo/models/cube';

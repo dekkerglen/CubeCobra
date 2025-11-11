@@ -1,23 +1,23 @@
-import { FeedTypes } from '../../../src/datatypes/Feed';
+import { FeedTypes } from '@utils/datatypes/Feed';
 import Blog from '../../../src/dynamo/models/blog';
 import Changelog from '../../../src/dynamo/models/changelog';
 import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
 import { bulkUpload } from '../../../src/routes/cube/helper';
-import * as carddb from '../../../src/util/carddb';
-import * as cubefn from '../../../src/util/cubefn';
-import * as render from '../../../src/util/render';
-import * as util from '../../../src/util/util';
+import * as carddb from 'serverutils/carddb';
+import * as cubefn from 'serverutils/cubefn';
+import * as render from 'serverutils/render';
+import * as util from 'serverutils/util';
 import { createCardDetails, createCube, createUser } from '../../test-utils/data';
 
 jest.mock('../../../src/dynamo/models/cube');
 jest.mock('../../../src/dynamo/models/blog');
 jest.mock('../../../src/dynamo/models/changelog');
 jest.mock('../../../src/dynamo/models/feed');
-jest.mock('../../../src/util/carddb');
-jest.mock('../../../src/util/cubefn');
-jest.mock('../../../src/util/render');
-jest.mock('../../../src/util/util');
+jest.mock('serverutils/carddb');
+jest.mock('serverutils/cubefn');
+jest.mock('serverutils/render');
+jest.mock('serverutils/util');
 
 describe('Bulk Upload', () => {
   const flashMock = jest.fn();

@@ -7,11 +7,11 @@ import '@testing-library/jest-dom';
 import DisplayContext from 'contexts/DisplayContext';
 
 import CardImage from '../../src/client/components/card/CardImage';
-import { cardImageUrl } from '../../src/client/utils/cardutil';
+import { cardImageUrl } from '@utils/cardutil';
 import { defaultDisplayContext } from '../test-utils/context';
 import { createCard, createCardDetails } from '../test-utils/data';
 
-jest.mock('../../src/client/utils/cardutil', () => ({
+jest.mock('@utils/cardutil', () => ({
   cardImageUrl: jest.fn(),
   cardName: jest.fn((card) => card.details?.name ?? ''),
 }));

@@ -1,4 +1,4 @@
-import { cardFullName, cardName, cardNameLower } from '../../src/client/utils/cardutil';
+import { cardFullName, cardName, cardNameLower } from '@utils/cardutil';
 import { createCard, createCardDetails } from '../test-utils/data';
 
 describe('cardName', () => {

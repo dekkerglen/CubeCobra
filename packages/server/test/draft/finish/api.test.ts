@@ -1,14 +1,14 @@
-import { cardOracleId } from '../../../src/client/utils/cardutil';
-import { cardIsLand } from '../../../src/client/utils/cardutil';
-import Card, { CardDetails } from '../../../src/datatypes/Card';
-import DraftType from '../../../src/datatypes/Draft';
-import User from '../../../src/datatypes/User';
+import { cardOracleId } from '@utils/cardutil';
+import { cardIsLand } from '@utils/cardutil';
+import Card, { CardDetails } from '@utils/datatypes/Card';
+import DraftType from '@utils/datatypes/Draft';
+import User from '@utils/datatypes/User';
 import Cube from '../../../src/dynamo/models/cube';
 import Draft from '../../../src/dynamo/models/draft';
 import { handler as finishDraftHandler, validateBody } from '../../../src/router/routes/draft/finish';
-import * as draftbots from '../../../src/util/draftbots';
-import * as draftutil from '../../../src/util/draftutil';
-import * as util from '../../../src/util/util';
+import * as draftbots from 'serverutils/draftbots';
+import * as draftutil from '@utils/draftutil';
+import * as util from 'serverutils/util';
 import { createCompletedSoloDraft as createDraft, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call, middleware } from '../../test-utils/transport';
@@ -17,7 +17,7 @@ jest.mock('../../../src/dynamo/models/cube', () => ({
   getById: jest.fn(),
 }));
 
-jest.mock('../../../src/util/util', () => ({
+jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
 }));
 
@@ -26,19 +26,19 @@ jest.mock('../../../src/dynamo/models/draft', () => ({
   put: jest.fn(),
 }));
 
-jest.mock('../../../src/util/draftbots', () => ({
+jest.mock('serverutils/draftbots', () => ({
   deckbuild: jest.fn(),
 }));
 
-jest.mock('../../../src/client/utils/cardutil', () => ({
+jest.mock('@utils/cardutil', () => ({
   //Because we want to use cardIsLand in the test
-  ...jest.requireActual('../../../src/client/utils/cardutil'),
+  ...jest.requireActual('@utils/cardutil'),
   cardOracleId: jest.fn(),
 }));
 
 //Not bothering to mock setupPicks
-jest.mock('../../../src/util/draftutil', () => ({
-  ...jest.requireActual('../../../src/util/draftutil'),
+jest.mock('@utils/draftutil', () => ({
+  ...jest.requireActual('@utils/draftutil'),
   getCardDefaultRowColumn: jest.fn(),
 }));
 

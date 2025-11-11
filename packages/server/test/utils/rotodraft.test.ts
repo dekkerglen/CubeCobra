@@ -1,4 +1,4 @@
-import { parseRotoCSV } from '../../src/util/rotodraft';
+import { parseRotoCSV } from '@client/utils/rotodraft';
 
 const MOCK_ROTO = `,,Rotisserie Draft,,Next Pick: ,Ian M,,,,,,,,,,,,,,,,,,
 ,,,, ,,,,,,,,,,,,,,,,,,,

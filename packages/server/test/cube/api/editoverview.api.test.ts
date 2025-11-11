@@ -1,16 +1,16 @@
-// import * as filterCards from '../../../src/client/filtering/FilterCards';
+// import * as filterCards from '../@utils/filtering/FilterCards';
 import Cube from '../../../src/dynamo/models/cube';
 import CubeHash from '../../../src/dynamo/models/cubeHash';
 import { editOverviewHandler } from '../../../src/router/routes/cube/api/editoverview';
-import CubeFn from '../../../src/util/cubefn';
-import Util from '../../../src/util/util';
+import CubeFn from 'serverutils/cubefn';
+import Util from 'serverutils/util';
 import { createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call } from '../../test-utils/transport';
 
 jest.mock('../../../src/dynamo/models/cube');
-jest.mock('../../../src/util/cubefn');
-jest.mock('../../../src/util/util');
+jest.mock('serverutils/cubefn');
+jest.mock('serverutils/util');
 jest.mock('../../../src/dynamo/models/cubeHash');
 
 describe('Edit overview API', () => {

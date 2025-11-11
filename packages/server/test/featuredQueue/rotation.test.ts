@@ -1,7 +1,7 @@
-const { rotateFeatured } = require('../../src/util/featuredQueue');
+const { rotateFeatured } = require('serverutils/featuredQueue');
 const FeaturedQueue = require('../../src/dynamo/models/featuredQueue');
 const Patron = require('../../src/dynamo/models/patron');
-import { PatronStatuses, PatronLevels } from '../../src/datatypes/Patron';
+import { PatronStatuses, PatronLevels } from '@utils/datatypes/Patron';
 
 // Mock dependencies
 jest.mock('../../src/dynamo/models/featuredQueue');

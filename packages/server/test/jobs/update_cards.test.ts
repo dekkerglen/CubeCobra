@@ -1,5 +1,5 @@
-import { ART_SERIES_CARD_SUFFIX } from '../../src/client/utils/cardutil';
-import { convertName, ScryfallCard, ScryfallCardFace } from '../../src/jobs/utils/update_cards';
+import { ART_SERIES_CARD_SUFFIX } from '@utils/cardutil';
+import { convertName, ScryfallCard, ScryfallCardFace } from '@jobs/utils/update_cards';
 
 const createCardFace = (name: string): ScryfallCardFace => {
   return {

@@ -1,5 +1,5 @@
-import { FilterResult, makeFilter } from '../../src/client/filtering/FilterCards';
-import Card, { SUPPORTED_FORMATS } from '../../src/datatypes/Card';
+import { FilterResult, makeFilter } from '@utils/filtering/FilterCards';
+import Card, { SUPPORTED_FORMATS } from '@utils/datatypes/Card';
 import { createCard, createCardDetails } from '../test-utils/data';
 
 describe('Name filter syntax', () => {

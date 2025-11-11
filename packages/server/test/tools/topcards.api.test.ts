@@ -1,6 +1,6 @@
-import * as filterCards from '../../src/client/filtering/FilterCards';
+import * as filterCards from '@utils/filtering/FilterCards';
 import { getTopCardsPage, validateQuery } from '../../src/router/routes/tool/api/topcards';
-import * as tools from '../../src/util/tools';
+import * as tools from 'serverutils/tools';
 import { createCard } from '../test-utils/data';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call, middleware } from '../test-utils/transport';

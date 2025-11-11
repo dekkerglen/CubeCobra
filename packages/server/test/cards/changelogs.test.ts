@@ -1,5 +1,5 @@
-import { Changes } from '../../src/datatypes/Card';
-import { applyReversedChanges, mergeChanges, revertChanges } from '../../src/util/changelog';
+import { Changes } from '@utils/datatypes/Card';
+import { applyReversedChanges, mergeChanges, revertChanges } from 'serverutils/changelog';
 import { createCard } from '../test-utils/data';
 
 describe('mergeChanges', () => {
