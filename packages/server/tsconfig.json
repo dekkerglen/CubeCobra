@@ -8,6 +8,8 @@
     "jsx": "react",
     "baseUrl": "./",
     "paths": {
+      "@client/*": ["../client/src/*"],
+      "@jobs/*": ["../jobs/src/*"],
       "@utils/*": ["../utils/src/*"],
       "serverutils/*": ["src/serverutils/*"],
       "routes/*": ["src/routes/*"],
