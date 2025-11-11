@@ -47,5 +47,3 @@ globalThis.mockDynamoCreateClient = mockCreateClient;
 
 // Mock dynamo util module globally
 jest.mock('src/dynamo/util', () => mockCreateClient);
-
-//import '@testing-library/jest-dom';
