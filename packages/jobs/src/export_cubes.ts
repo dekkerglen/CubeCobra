@@ -8,8 +8,8 @@ import Card from '@utils/datatypes/Card';
 import { cardOracleId } from '@utils/cardutil';
 
 import type CubeType from '@utils/datatypes/Cube';
-import { initializeCardDb } from '@server/util/cardCatalog';
-import { getAllOracleIds } from '@server/util/carddb';
+import { initializeCardDb } from '@server/serverutils/cardCatalog';
+import { getAllOracleIds } from '@server/serverutils/carddb';
 import path from 'path/win32';
 
 const Cube = require('../dynamo/models/cube');

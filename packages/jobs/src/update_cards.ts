@@ -16,10 +16,10 @@ import { ManaSymbol } from '@utils/datatypes/Mana';
 
 import * as cardutil from '@utils/cardutil';
 import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '@utils/datatypes/Card';
-import { CardMetadata } from '@utils/datatypes/CardCatalog';
+import { CardMetadata } from '@utils/datatypes/cardCatalog';
 import { s3 } from '@server/dynamo/s3client';
-import { fileToAttribute } from '@server/util/cardCatalog';
-import util from '@server/util/util';
+import { fileToAttribute } from '@server/serverutils/cardCatalog';
+import util from '@server/serverutils/util';
 import {
   convertName,
   ScryfallCard,

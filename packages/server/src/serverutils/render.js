@@ -29,12 +29,7 @@ const redirect = (req, res, to) => {
 };
 
 const getBundlesForPage = (page) => {
-  //Webpack-dev-server doesn't do splitting, so only need to include the page bundle which gets compiled on the fly
-  if (process.env?.NODE_ENV !== 'development') {
-    return [`/js/vendors.bundle.js`, `/js/commons.bundle.js`, `/js/${page}.bundle.js`];
-  } else {
-    return [`/js/${page}.bundle.js`];
-  }
+  return [`/js/vendors.bundle.js`, `/js/commons.bundle.js`, `/js/${page}.bundle.js`];
 };
 
 const sha256 = async (data) => {

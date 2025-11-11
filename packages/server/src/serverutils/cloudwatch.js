@@ -22,7 +22,7 @@ let errorLogs = [];
 
 const id = uuid.v4();
 
-const cloudwatchEnabled = process.env.ENV === 'production';
+const cloudwatchEnabled = process.env.NODE_ENV === 'production';
 
 if (cloudwatchEnabled) {
   // create log streams

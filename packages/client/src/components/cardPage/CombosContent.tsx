@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { cardId, detailsToCard } from '@utils/cardutil';
 
-import { Combo } from '@utils/datatypes/CardCatalog';
+import { Combo } from '@utils/datatypes/cardCatalog';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import { Card, CardBody } from '../base/Card';
 import { Flexbox } from '../base/Layout';

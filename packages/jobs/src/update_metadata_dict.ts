@@ -8,12 +8,12 @@ dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') })
 
 const fs = require('fs');
 const { DefaultElo } = require('@utils/datatypes/Card');
-import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
-import { initializeCardDb } from '@server/util/cardCatalog';
+import { CardMetadata, Related } from '@utils/datatypes/cardCatalog';
+import { initializeCardDb } from '@server/serverutils/cardCatalog';
 
-import carddb, { cardFromId } from '@server/util/carddb';
-const { encode, oracleInData } = require('@server/util/ml');
-import { initializeMl } from '@server/util/ml';
+import carddb, { cardFromId } from '@server/serverutils/carddb';
+const { encode, oracleInData } = require('@server/serverutils/ml');
+import { initializeMl } from '@server/serverutils/ml';
 const correlationLimit = 36;
 // import { HierarchicalNSW } from 'hnswlib-node';
 

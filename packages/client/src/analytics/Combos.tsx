@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import { Combo } from '@utils/datatypes/CardCatalog';
+import { Combo } from '@utils/datatypes/cardCatalog';
 
 import { Card, CardBody } from 'components/base/Card';
 import Select from 'components/base/Select';

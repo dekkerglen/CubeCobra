@@ -14,7 +14,7 @@ import type { CardAnalytic } from '@utils/datatypes/CubeAnalytic';
 import type DraftType from '@utils/datatypes/Draft';
 import CubeAnalytic from '@server/dynamo/models/cubeAnalytic';
 import Draft from '@server/dynamo/models/draft';
-import { initializeCardDb } from '@server/util/cardCatalog';
+import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { getDrafterState } from '@utils/draftutil';
 
 // global listeners for promise rejections

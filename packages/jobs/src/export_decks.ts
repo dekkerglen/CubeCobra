@@ -7,7 +7,7 @@ import 'module-alias/register';
 
 import type DraftType from '@utils/datatypes/Draft';
 import Draft from '@server/dynamo/models/draft';
-import { initializeCardDb } from '@server/util/cardCatalog';
+import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { getDrafterState } from '@utils/draftutil';
 import path from 'path';
 

@@ -40,6 +40,9 @@ export const sendEmail = async (
       },
     },
     transport: transporter,
+    views: {
+      root: path.join(__dirname, '..', 'emails'),
+    },
   });
 
   if (process.env.NODE_ENV === 'production' || process.env.LOCALSTACK_SES === 'true') {

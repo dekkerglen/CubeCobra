@@ -8,7 +8,7 @@ import path from 'path';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
+import { Combo, ComboTree } from '@utils/datatypes/cardCatalog';
 
 const cacheDir = process.env?.CACHE_DIR ?? '';
 

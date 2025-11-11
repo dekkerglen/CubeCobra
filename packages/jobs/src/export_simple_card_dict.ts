@@ -4,8 +4,8 @@ import fs from 'fs';
 
 import 'module-alias/register';
 
-import { initializeCardDb } from '@server/util/cardCatalog';
-import { getAllOracleIds, getMostReasonableById, getVersionsByOracleId } from '@server/util/carddb';
+import { initializeCardDb } from '@server/serverutils/cardCatalog';
+import { getAllOracleIds, getMostReasonableById, getVersionsByOracleId } from '@server/serverutils/carddb';
 import path from 'path';
 
 (async () => {

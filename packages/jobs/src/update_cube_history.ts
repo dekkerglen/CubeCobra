@@ -14,9 +14,9 @@ import type ChangeLogType from '@utils/datatypes/ChangeLog';
 
 import CardHistory from '@server/dynamo/models/cardhistory';
 import ChangeLog from '@server/dynamo/models/changelog';
-import { initializeCardDb } from '@server/util/cardCatalog';
-import { cardFromId } from '@server/util/carddb';
-import { getCubeTypes } from '@server/util/cubefn';
+import { initializeCardDb } from '@server/serverutils/cardCatalog';
+import { cardFromId } from '@server/serverutils/carddb';
+import { getCubeTypes } from '@server/serverutils/cubefn';
 import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
 type CubeDict = Record<string, string[]>;
 

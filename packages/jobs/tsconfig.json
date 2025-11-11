@@ -8,7 +8,10 @@
     "baseUrl": "./",
     "paths": {
       "@utils/*": ["../utils/src/*"],
-      "@server/*": ["../server/src/*"]
+      "@server/*": ["../server/src/*"],
+      "serverutils/*": ["../server/src/serverutils/*"],
+      "routes/*": ["../server/src/routes/*"],
+      "dynamo/*": ["../server/src/dynamo/*"]
     },
     "module": "commonjs",
     "moduleResolution": "node",
