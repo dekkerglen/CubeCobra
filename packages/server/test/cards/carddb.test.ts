@@ -20,7 +20,7 @@ const mockCardCatalog: Catalog = {
   printedCardList: [], // for card filters
 };
 
-jest.mock('@utils/datatypes/CardCatalog', () => {
+jest.mock('serverutils/cardCatalog', () => {
   return {
     __esModule: true,
     default: mockCardCatalog,
