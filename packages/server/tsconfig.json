@@ -27,6 +27,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "exclude": ["node_modules", "src/client"],
+  "exclude": ["node_modules"],
   "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src", "../utils/src"]
 }
