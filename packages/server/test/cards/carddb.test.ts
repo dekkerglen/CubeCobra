@@ -27,9 +27,10 @@ jest.mock('serverutils/cardCatalog', () => {
   };
 });
 
-import { FilterFunction } from '@utils/filtering/FilterCards';
 import Card, { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
+import { FilterFunction } from '@utils/filtering/FilterCards';
 import { getMostReasonable } from 'serverutils/carddb';
+
 import { createCard, createCardDetails } from '../test-utils/data';
 
 const overridesForNormalDetails: Partial<CardDetails> = {
