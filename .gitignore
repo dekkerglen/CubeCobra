@@ -27,6 +27,7 @@ jobs/export/
 
 # testing
 /coverage
+/packages/**/coverage/*
 **/test-results
 
 # production
