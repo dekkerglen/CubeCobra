@@ -13,7 +13,6 @@ const generateMeta = require('../../serverutils/meta');
 const FeaturedQueue = require('dynamo/models/featuredQueue');
 const { isInFeaturedQueue } = require('../../serverutils/featuredQueue');
 
-
 import { NoticeType } from '@utils/datatypes/Notice';
 
 const {
