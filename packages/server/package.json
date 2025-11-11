@@ -13,10 +13,10 @@
     "dev": "nodemon -r tsconfig-paths/register src/index.ts",
     "publish": "npm run build && node publish.js",
     "clean": "rm -rf dist/ node_modules/ private/ ./src/client",
-    "test": "npx jest --config test/jest.config.ts --coverage=false",
-    "test:watch": "npx jest --config test/jest.config.ts --watch --coverage=false",
-    "test:coverage": "npx jest --config test/jest.config.ts --coverage",
-    "test:ci": "npx jest --config test/jest.config.ts --coverage --coverageReporters json-summary text"
+    "test": "npx jest --coverage=false",
+    "test:watch": "npx jest --watch --coverage=false",
+    "test:coverage": "npx jest --coverage",
+    "test:ci": "npx jest --coverage --coverageReporters json-summary text"
   },
   "keywords": [],
   "author": "",

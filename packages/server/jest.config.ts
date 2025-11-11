@@ -1,11 +1,10 @@
 import { pathsToModuleNameMapper } from 'ts-jest';
-import { compilerOptions } from '../tsconfig.json';
+import { compilerOptions } from './tsconfig.json';
 import type { Config } from 'jest';
 
 const jestConfig: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  rootDir: '../',
   roots: ['<rootDir>'],
 
   // Transform configuration
@@ -13,7 +12,7 @@ const jestConfig: Config = {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
-        tsconfig: 'tsconfig.test.json',
+        tsconfig: 'tsconfig.json',
         isolatedModules: true,
       },
     ],
@@ -39,7 +38,7 @@ const jestConfig: Config = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 
   // Coverage configuration
   collectCoverage: true,

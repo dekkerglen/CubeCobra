@@ -30,5 +30,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "exclude": ["node_modules"],
-  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src", "../utils/src", "test/**/*.js", "test/**/*.ts"]
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src", "../utils/src", "test/**/*.js", "test/**/*.ts", "jest.setup.ts", "jest.config.ts"]
 }
