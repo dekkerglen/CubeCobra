@@ -205,8 +205,8 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
 
       result.initialState[seat]?.push({ steps: [], cards: [] });
       for (let cardNum = 0; cardNum < currentPack.slots.length; cardNum++) {
-        const slotValue = currentPack.slots[cardNum];
-        if (!slotValue) {
+        const slotValue = currentPack.slots[cardNum] || '';
+        if (slotValue === undefined) {
           continue;
         }
         const slotFilter = slotValue.split(',');
