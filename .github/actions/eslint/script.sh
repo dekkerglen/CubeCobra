@@ -28,8 +28,8 @@ then
     echo "ESLint output":
     echo "#####################"
 
-    # Path to ESLint executable aligned with prettier script
+    # Use npm exec to run eslint with proper module resolution
     # Don't quote ESLINT flags or FILES, as need to be treated as separate arguments
-    npx eslint -c "${INPUT_CONFIG_PATH}" $INPUT_ESLINT_FLAGS ${FILES[@]}
+    npm exec -- eslint -c "${INPUT_CONFIG_PATH}" $INPUT_ESLINT_FLAGS ${FILES[@]}
 fi
 
