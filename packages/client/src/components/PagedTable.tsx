@@ -21,7 +21,7 @@ const PagedTable: React.FC<PagedTableProps> = ({ pageSize, rows, headers, sideCo
 
   return (
     <Flexbox direction="col" className="w-full" gap="2">
-      {sideControl != null ? (
+      {sideControl !== null ? (
         <Flexbox direction="row" justify="between" alignItems="end" className={`w-full ${paginateClassname}`}>
           {sideControl}
           {validPages.length > 1 && (

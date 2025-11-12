@@ -58,7 +58,7 @@ const verifyHydrationCalls = (blog: any) => {
 describe('Blog Model Initialization', () => {
   it('blog table created with proper configuration', async () => {
     // Import to trigger createClient
-     
+
     require('../../../src/dynamo/models/blog');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith({

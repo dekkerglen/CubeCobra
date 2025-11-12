@@ -58,7 +58,7 @@ const TopCardsTable = () => {
 
   useEffect(() => {
     fetchData();
-  }, [page, direction, sort, filterInput]);
+  }, [page, direction, sort, filterInput, fetchData]);
 
   const updatePage = (index: number) => {
     setLoading(true);

@@ -1,8 +1,7 @@
- 
 const { rotateFeatured } = require('serverutils/featuredQueue');
- 
+
 const FeaturedQueue = require('../../src/dynamo/models/featuredQueue');
- 
+
 const Patron = require('../../src/dynamo/models/patron');
 import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
 

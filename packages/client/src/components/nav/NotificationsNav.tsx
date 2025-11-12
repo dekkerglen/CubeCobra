@@ -14,11 +14,11 @@ import UserContext from 'contexts/UserContext';
 const NotificationsNav: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
+  const [items, setItems] = useState<Notification[]>(user?.notifications || []);
 
   if (!user) {
     return null;
   }
-  const [items, setItems] = useState<Notification[]>(user.notifications || []);
 
   const clear = async () => {
     await csrfFetch('/user/clearnotifications', {

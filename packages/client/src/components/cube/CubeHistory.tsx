@@ -57,7 +57,7 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
       }
     }
     setLoading(false);
-  }, [currentLastKey, items, page]);
+  }, [currentLastKey, items, page, csrfFetch]);
 
   const pager = (
     <Pagination

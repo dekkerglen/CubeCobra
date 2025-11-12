@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import Card from '@utils/datatypes/Card';
 import { arrayShuffle } from '@utils/Util';
@@ -19,7 +19,7 @@ const SampleHandModal: React.FC<SampleHandModalProps> = ({ deck, isOpen, setOpen
   const [hand, setHand] = useState<Card[]>([]);
   const [pool, setPool] = useState<Card[]>([]);
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     const newPool: Card[] = [...deck];
 
     arrayShuffle(newPool);
@@ -27,7 +27,7 @@ const SampleHandModal: React.FC<SampleHandModalProps> = ({ deck, isOpen, setOpen
 
     setHand(newHand);
     setPool(newPool);
-  };
+  }, [deck]);
 
   const draw = () => {
     if (pool.length > 0) {
@@ -45,7 +45,7 @@ const SampleHandModal: React.FC<SampleHandModalProps> = ({ deck, isOpen, setOpen
 
   useEffect(() => {
     refresh();
-  }, [deck]);
+  }, [deck, refresh]);
 
   return (
     <Modal xl isOpen={isOpen} setOpen={setOpen}>

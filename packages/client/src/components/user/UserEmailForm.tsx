@@ -5,7 +5,7 @@ import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import CSRFForm from '../CSRFForm';
 
-const UserEmailForm: React.FC = ({}) => {
+const UserEmailForm: React.FC = () => {
   const [newEmail, setNewEmail] = useState('');
   const [password, setPassword] = useState('');
   const formRef = React.useRef<HTMLFormElement>(null);

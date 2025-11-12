@@ -34,7 +34,6 @@ const verifyQueryCall = (params: any) => {
 
 describe('Comment Model Initialization', () => {
   it('creates comment table with proper configuration', async () => {
-     
     require('../../src/dynamo/models/comment');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith({

@@ -62,7 +62,7 @@ const useComments = (
       const val: { comment: Comment } = await response.json();
       setComments([val.comment, ...comments]);
     },
-    [comments, parent, type],
+    [comments, parent, type, csrfFetch],
   );
 
   const editComment = useCallback(
@@ -101,7 +101,7 @@ const useComments = (
 
       setComments(clone);
     },
-    [comments],
+    [comments, csrfFetch],
   );
 
   useEffect(() => {
@@ -122,7 +122,7 @@ const useComments = (
     };
 
     getData();
-  }, [parent]);
+  }, [parent, csrfFetch]);
 
   const getMore = useCallback(async () => {
     setLoading(true);
@@ -148,7 +148,7 @@ const useComments = (
         setLoading(false);
       }
     }
-  }, [parent, lastKey, comments]);
+  }, [parent, lastKey, comments, csrfFetch]);
 
   return [comments, addComment, loading, editComment, lastKey, getMore];
 };

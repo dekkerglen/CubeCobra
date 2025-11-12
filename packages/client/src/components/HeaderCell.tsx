@@ -13,7 +13,7 @@ interface HeaderCellProps {
   [key: string]: any; // To allow any additional props
 }
 
-const HeaderCell: React.FC<HeaderCellProps> = ({ label, fieldName, sortConfig, requestSort, tooltip, ...props }) => {
+const HeaderCell: React.FC<HeaderCellProps> = ({ label, fieldName, sortConfig, requestSort, ...props }) => {
   const active = sortConfig && sortConfig.key === fieldName;
   const direction = active ? sortConfig.direction : 'nosort';
   const icon = `/content/${direction}.png`;

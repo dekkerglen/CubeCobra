@@ -30,7 +30,6 @@ import dailyP1P1Model from '../../src/dynamo/models/dailyP1P1';
 import p1p1PackModel from '../../src/dynamo/models/p1p1Pack';
 import User from '../../src/dynamo/models/user';
 
- 
 const FeaturedQueue = require('../../src/dynamo/models/featuredQueue');
 
 describe('rotateDailyP1P1', () => {

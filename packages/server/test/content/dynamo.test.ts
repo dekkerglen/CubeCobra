@@ -56,7 +56,6 @@ const getExpectedDocumentSaved = (content: HydratedContentType, overrides?: Part
 
 describe('Content Model Initialization', () => {
   it('creates content table with proper configuration', () => {
-     
     require('../../src/dynamo/models/content');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith({

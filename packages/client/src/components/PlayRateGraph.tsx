@@ -111,7 +111,7 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
       },
       data: plot,
     };
-  }, [history, cubeType]);
+  }, [history, type]);
 
   const updateZoomAndPeriod = useCallback(
     async (newZoom: string, newPeriod: string) => {
@@ -136,7 +136,7 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
       setHistory(json.data);
       setLoading(false);
     },
-    [cardId, setZoom, setPeriod],
+    [cardId, setZoom, setPeriod, csrfFetch],
   );
 
   return (

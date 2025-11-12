@@ -6,7 +6,7 @@ import { createCardDetails, createCustomCardDetails } from '../../test-utils/dat
 
 jest.mock('serverutils/carddb');
 // Import the router using CommonJS require (since src/routes/cube/api.js uses module.exports)
- 
+
 const cubeApiRouter = require('../../../src/routes/cube/api');
 
 describe('POST /cube/api/getversions', () => {

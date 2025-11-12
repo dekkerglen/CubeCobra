@@ -49,7 +49,7 @@ const RecentDraftsCard: React.FC<CubesCardProps> = ({ decks, lastKey }) => {
       }
     }
     setLoading(false);
-  }, [currentLastKey, items, page]);
+  }, [currentLastKey, items, page, csrfFetch]);
 
   const pager = (
     <Pagination

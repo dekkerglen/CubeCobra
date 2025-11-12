@@ -13,10 +13,10 @@ import Text from './base/Text';
 const BANNER_RATE: number = 10; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options: React.ReactNode[] = [
-  <Card>
+  <Card key="banner-0">
     <CardBody className="bg-advert overflow-hidden rounded-md">
       {' '}
-      <Text lg key={2}>
+      <Text lg>
         Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
         <Link href="/donate">Find out more.</Link>
       </Text>
