@@ -17,6 +17,7 @@ runs:
   steps:
     - run: .github/actions/eslint/script.sh
       shell: bash
+      working-directory: ${{ github.workspace }}
       env:
         INPUT_CONFIG_PATH: ${{ inputs.config_path }}
         INPUT_ESLINT_FLAGS: ${{ inputs.eslint_flags }}

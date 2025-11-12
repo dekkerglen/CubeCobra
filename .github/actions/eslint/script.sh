@@ -27,6 +27,10 @@ then
     # Pass them through ESLint
     echo "ESLint output":
     echo "#####################"
+    echo "Current directory: $(pwd)"
+    echo "Config path: ${INPUT_CONFIG_PATH}"
+    echo "node_modules exists: $(test -d node_modules && echo 'yes' || echo 'no')"
+    echo ""
 
     # Use npm exec to run eslint with proper module resolution
     # Don't quote ESLINT flags or FILES, as need to be treated as separate arguments
