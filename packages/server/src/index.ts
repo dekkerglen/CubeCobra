@@ -305,7 +305,7 @@ app.use((req: express.Request, res: express.Response) =>
   ),
 );
 
-app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: any, req: express.Request, res: express.Response) => {
   // Safely handle logging - fallback if logger middleware hasn't run yet
   if (req.logger && req.logger.error) {
     req.logger.error(err.message, err.stack);

@@ -4,7 +4,7 @@ jest.mock('serverutils/imageutil');
 describe('User Model Initialization', () => {
   it('user table created with proper configuration', async () => {
     // Now import the User module which will trigger createClient
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     require('../../src/dynamo/models/user');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith(

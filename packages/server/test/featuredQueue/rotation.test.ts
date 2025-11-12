@@ -1,8 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const { rotateFeatured } = require('serverutils/featuredQueue');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const FeaturedQueue = require('../../src/dynamo/models/featuredQueue');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const Patron = require('../../src/dynamo/models/patron');
 import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
 

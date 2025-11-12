@@ -34,7 +34,7 @@ const verifyQueryCall = (params: any) => {
 
 describe('Comment Model Initialization', () => {
   it('creates comment table with proper configuration', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     require('../../src/dynamo/models/comment');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith({

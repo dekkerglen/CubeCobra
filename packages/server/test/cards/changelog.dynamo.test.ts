@@ -63,7 +63,7 @@ const createHydratedChangelog = (initialChanges: Changes, hydratedCard: Card): C
 
 describe('Changelog Model Initialization', () => {
   it('creates changelog table with proper configuration', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     require('../../src/dynamo/models/changelog');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith({

@@ -39,7 +39,7 @@ const verifyQueryCall = (params: any) => {
 describe('CardHistory Model Initialization', () => {
   it('cardhistory table created with proper configuration', async () => {
     // Import to trigger createClient
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     require('../../src/dynamo/models/cardhistory');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith({
