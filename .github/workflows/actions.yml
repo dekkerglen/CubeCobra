@@ -46,6 +46,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Verify ESLint installation
+        run: |
+          echo "Checking ESLint installation..."
+          npm list eslint @eslint/compat
+          echo "Node modules structure:"
+          ls -la node_modules/@eslint || echo "@eslint directory not found"
+
       - name: Install client dependencies
         run: |
           cd packages/client

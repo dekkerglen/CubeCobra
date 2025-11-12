@@ -3059,14 +3059,14 @@
   resolved "https://registry.npmjs.org/@csstools/css-tokenizer/-/css-tokenizer-3.0.4.tgz"
   integrity sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==
 
-"@cubecobra/cdk@file:/home/kp/projects/cubecobra/packages/cdk":
+"@cubecobra/cdk@file:D:\\Repos\\CubeCobra\\packages\\cdk":
   version "0.1.0"
   resolved "file:packages/cdk"
   dependencies:
     aws-cdk-lib "2.189.1"
     constructs "^10.0.0"
 
-"@cubecobra/client@file:/home/kp/projects/cubecobra/packages/client":
+"@cubecobra/client@file:D:\\Repos\\CubeCobra\\packages\\client":
   version "1.0.0"
   resolved "file:packages/client"
   dependencies:
@@ -3116,13 +3116,13 @@
     unified "^11.0.5"
     uuid "^9.0.1"
 
-"@cubecobra/jobs@file:/home/kp/projects/cubecobra/packages/jobs":
+"@cubecobra/jobs@file:D:\\Repos\\CubeCobra\\packages\\jobs":
   version "1.0.0"
   resolved "file:packages/jobs"
   dependencies:
     elo-rating "^1.0.1"
 
-"@cubecobra/scripts@file:/home/kp/projects/cubecobra/packages/scripts":
+"@cubecobra/scripts@file:D:\\Repos\\CubeCobra\\packages\\scripts":
   version "1.0.0"
   resolved "file:packages/scripts"
   dependencies:
@@ -3132,7 +3132,7 @@
     archiver "^7.0.1"
     dotenv "^17.2.3"
 
-"@cubecobra/server@file:/home/kp/projects/cubecobra/packages/server":
+"@cubecobra/server@file:D:\\Repos\\CubeCobra\\packages\\server":
   version "1.0.0"
   resolved "file:packages/server"
   dependencies:
@@ -3193,7 +3193,7 @@
     ts-node "^10.9.2"
     uuid "^9.0.1"
 
-"@cubecobra/utils@file:/home/kp/projects/cubecobra/packages/utils":
+"@cubecobra/utils@file:D:\\Repos\\CubeCobra\\packages\\utils":
   version "1.0.0"
   resolved "file:packages/utils"
 
@@ -3255,10 +3255,10 @@
   dependencies:
     tslib "^2.4.0"
 
-"@esbuild/linux-x64@0.25.12":
+"@esbuild/win32-x64@0.25.12":
   version "0.25.12"
-  resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.12.tgz"
-  integrity sha512-uqZMTLr/zR/ed4jIGnwSLkaHmPjOjJvnm6TVVitAa08SLS9Z0VM8wIRx7gWbJB5/J54YuIMInDquWyYvQLZkgw==
+  resolved "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.12.tgz"
+  integrity sha512-alJC0uCZpTFrSL0CCDjcgleBXPnCrEAhTBILpeAp7M/OFgoqtAetfBzX0xM00MUsVVPpVjlPuMbREqnZCXaTnA==
 
 "@eslint-community/eslint-utils@^4.2.0", "@eslint-community/eslint-utils@^4.7.0":
   version "4.9.0"
@@ -3474,29 +3474,10 @@
   resolved "https://registry.npmjs.org/@img/colour/-/colour-1.0.0.tgz"
   integrity sha512-A5P/LfWGFSl6nsckYtjw9da+19jB8hkJ6ACTGcDfEJ0aE+l2n2El7dsVM7UVHZQ9s2lmYMWlrS21YLy2IR1LUw==
 
-"@img/sharp-libvips-linux-x64@1.2.4":
-  version "1.2.4"
-  resolved "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.2.4.tgz"
-  integrity sha512-tJxiiLsmHc9Ax1bz3oaOYBURTXGIRDODBqhveVHonrHJ9/+k89qbLl0bcJns+e4t4rvaNBxaEZsFtSfAdquPrw==
-
-"@img/sharp-libvips-linuxmusl-x64@1.2.4":
-  version "1.2.4"
-  resolved "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-x64/-/sharp-libvips-linuxmusl-x64-1.2.4.tgz"
-  integrity sha512-+LpyBk7L44ZIXwz/VYfglaX/okxezESc6UxDSoyo2Ks6Jxc4Y7sGjpgU9s4PMgqgjj1gZCylTieNamqA1MF7Dg==
-
-"@img/sharp-linux-x64@0.34.5":
+"@img/sharp-win32-x64@0.34.5":
   version "0.34.5"
-  resolved "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.34.5.tgz"
-  integrity sha512-MEzd8HPKxVxVenwAa+JRPwEC7QFjoPWuS5NZnBt6B3pu7EG2Ge0id1oLHZpPJdn3OQK+BQDiw9zStiHBTJQQQQ==
-  optionalDependencies:
-    "@img/sharp-libvips-linux-x64" "1.2.4"
-
-"@img/sharp-linuxmusl-x64@0.34.5":
-  version "0.34.5"
-  resolved "https://registry.npmjs.org/@img/sharp-linuxmusl-x64/-/sharp-linuxmusl-x64-0.34.5.tgz"
-  integrity sha512-Jg8wNT1MUzIvhBFxViqrEhWDGzqymo3sV7z7ZsaWbZNDLXRJZoRGrjulp60YYtV4wfY8VIKcWidjojlLcWrd8Q==
-  optionalDependencies:
-    "@img/sharp-libvips-linuxmusl-x64" "1.2.4"
+  resolved "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.34.5.tgz"
+  integrity sha512-+29YMsqY2/9eFEiW93eqWnuLcWcufowXewwSNIT6UwZdUUCrM3oFjMWH/Z6/TMmb4hlFenmfAVbpWeup2jryCw==
 
 "@inquirer/external-editor@^1.0.0":
   version "1.0.2"
@@ -4285,15 +4266,10 @@
     tslib "^2.3.0"
     yargs-parser "21.1.1"
 
-"@nx/nx-linux-x64-gnu@20.8.2":
+"@nx/nx-win32-x64-msvc@20.8.2":
   version "20.8.2"
-  resolved "https://registry.npmjs.org/@nx/nx-linux-x64-gnu/-/nx-linux-x64-gnu-20.8.2.tgz"
-  integrity sha512-nR0ev+wxu+nQYRd7bhqggOxK7UfkV6h+Ko1mumUFyrM5GvPpz/ELhjJFSnMcOkOMcvH0b6G5uTBJvN1XWCkbmg==
-
-"@nx/nx-linux-x64-musl@20.8.2":
-  version "20.8.2"
-  resolved "https://registry.npmjs.org/@nx/nx-linux-x64-musl/-/nx-linux-x64-musl-20.8.2.tgz"
-  integrity sha512-ost41l5yc2aq2Gc9bMMpaPi/jkXqbXEMEPHrxWKuKmaek3K2zbVDQzvBBNcQKxf/mlCsrqN4QO0mKYSRRqag5A==
+  resolved "https://registry.npmjs.org/@nx/nx-win32-x64-msvc/-/nx-win32-x64-msvc-20.8.2.tgz"
+  integrity sha512-iIsY+tVqes/NOqTbJmggL9Juie/iaDYlWgXA9IUv88FE9thqWKhVj4/tCcPjsOwzD+1SVna3YISEEFsx5UV4ew==
 
 "@octokit/auth-token@^4.0.0":
   version "4.0.0"
@@ -4532,15 +4508,15 @@
     estree-walker "^2.0.2"
     picomatch "^4.0.2"
 
-"@rollup/rollup-linux-x64-gnu@4.53.0":
+"@rollup/rollup-win32-x64-gnu@4.53.0":
   version "4.53.0"
-  resolved "https://registry.npmjs.org/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.53.0.tgz"
-  integrity sha512-iYEYzYpfaSCkunVD0LOYrD9OMc357be7+rBuCxW1qvsjCGl+95iWnYAFfyEoxAm6koasNN3tFxFYze5MKl5S3A==
+  resolved "https://registry.npmjs.org/@rollup/rollup-win32-x64-gnu/-/rollup-win32-x64-gnu-4.53.0.tgz"
+  integrity sha512-1OrYs0p/deXEFLUW1gvyjIabmsJKY3I/9fCUA1K6demaNc4iEhXDW6RnyPv/BWqb7NRmQ9+i+SKoi1HgJxWcwg==
 
-"@rollup/rollup-linux-x64-musl@4.53.0":
+"@rollup/rollup-win32-x64-msvc@4.53.0":
   version "4.53.0"
-  resolved "https://registry.npmjs.org/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.53.0.tgz"
-  integrity sha512-FoRekOqhRUKbJMsB5LvhQchDeFeNlS6UGUwi0p3860sxE4zE+lp07FnkuR+yQH0rSn6iLXsnr44jnorgl8mGlQ==
+  resolved "https://registry.npmjs.org/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.53.0.tgz"
+  integrity sha512-xtSei8paPcLy3GzeeOjoRrllJn6EN8PB+/bXnhZ4R0AaviJsRwtKxFZRVnfFXNZTTp0nLeDo+BcEuIfdZS14/A==
 
 "@rtsao/scc@^1.1.0":
   version "1.1.0"
@@ -10872,7 +10848,7 @@ eslint-visitor-keys@^4.2.1:
   resolved "https://registry.npmjs.org/eslint-visitor-keys/-/eslint-visitor-keys-4.2.1.tgz"
   integrity sha512-Uhdk5sfqcee/9H/rCOJikYz67o0a2Tw2hGRPOG2Y1R2dg7brRe1uG0yaNQDHu+TO/uQPF/5eCapvYSmHUjt7JQ==
 
-"eslint@^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8 || ^9", "eslint@^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9.7", "eslint@^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0", "eslint@^6.0.0 || ^7.0.0 || >=8.0.0", "eslint@^8.40 || 9", "eslint@^8.57.0 || ^9.0.0", eslint@>=5.0.0:
+"eslint@^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8 || ^9", "eslint@^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9.7", "eslint@^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0", "eslint@^6.0.0 || ^7.0.0 || >=8.0.0", "eslint@^8.40 || 9", "eslint@^8.57.0 || ^9.0.0", eslint@^9.11.1, eslint@>=5.0.0:
   version "9.11.1"
   dependencies:
     "@eslint-community/eslint-utils" "^4.2.0"
