@@ -8,7 +8,15 @@ then
 fi
 
 # Get files changed between base and head refs of the PR
-FILES=$(git diff --name-only --diff-filter=ACMR "$INPUT_BASE_SHA"..."$INPUT_BRANCH_SHA")
+ALL_FILES=$(git diff --name-only --diff-filter=ACMR "$INPUT_BASE_SHA"..."$INPUT_BRANCH_SHA")
+
+# Filter to only include lintable files (js, jsx, ts, tsx, mjs, cjs)
+FILES=()
+while IFS= read -r file; do
+    if [[ "$file" =~ \.(js|jsx|ts|tsx|mjs|cjs)$ ]] && [[ -f "$file" ]]; then
+        FILES+=("$file")
+    fi
+done <<< "$ALL_FILES"
 
 if [ "${INPUT_PRINT_CHANGED_FILES}" == "true" ]
 then
