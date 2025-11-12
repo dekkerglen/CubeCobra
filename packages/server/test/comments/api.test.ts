@@ -1,5 +1,5 @@
-import { isCommentType, isNotifiableCommentType } from '../../src/datatypes/Comment';
-import { NoticeType } from '../../src/datatypes/Notice';
+import { isCommentType, isNotifiableCommentType } from '@utils/datatypes/Comment';
+import { NoticeType } from '@utils/datatypes/Notice';
 import Comment from '../../src/dynamo/models/comment';
 import Notice from '../../src/dynamo/models/notice';
 import DynamoUser from '../../src/dynamo/models/user';
@@ -10,8 +10,8 @@ import {
   getHandler,
   reportHandler,
 } from '../../src/router/routes/comment';
-import * as util from '../../src/util/render';
-import * as routeUtil from '../../src/util/util';
+import * as util from 'serverutils/render';
+import * as routeUtil from 'serverutils/util';
 import { createUser } from '../test-utils/data';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';
@@ -27,8 +27,8 @@ jest.mock('../../src/dynamo/models/user', () => ({
   getByUsername: jest.fn(),
 }));
 
-jest.mock('../../src/datatypes/Comment', () => ({
-  ...jest.requireActual('../../src/datatypes/Comment'),
+jest.mock('@utils/datatypes/Comment', () => ({
+  ...jest.requireActual('@utils/datatypes/Comment'),
   isCommentType: jest.fn() as unknown as (value: unknown) => value is ReturnType<typeof isCommentType>,
   isNotifiableCommentType: jest.fn() as unknown as (
     value: unknown,
@@ -46,13 +46,13 @@ jest.mock('../../src/dynamo/models/notice', () => {
   };
 });
 
-jest.mock('../../src/util/render', () => ({
+jest.mock('serverutils/render', () => ({
   handleRouteError: jest.fn(),
   redirect: jest.fn(),
   render: jest.fn(),
 }));
 
-jest.mock('../../src/util/util', () => ({
+jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
 }));
 

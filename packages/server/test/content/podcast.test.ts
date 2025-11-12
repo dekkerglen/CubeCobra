@@ -1,7 +1,7 @@
-import { ContentStatus, ContentType } from '../../src/datatypes/Content';
+import { ContentStatus, ContentType } from '@utils/datatypes/Content';
 import Content from '../../src/dynamo/models/content';
-import { updatePodcast } from '../../src/util/podcast';
-import { getFeedData, getFeedEpisodes } from '../../src/util/rss';
+import { updatePodcast } from 'serverutils/podcast';
+import { getFeedData, getFeedEpisodes } from 'serverutils/rss';
 import { createEpisode, createPodcast, createUser } from '../test-utils/data';
 
 const mockSanitize = jest.fn((text) => text);
@@ -19,7 +19,7 @@ jest.mock('sanitize-html', () => {
   return module;
 });
 
-jest.mock('../../src/util/rss');
+jest.mock('serverutils/rss');
 jest.mock('../../src/dynamo/models/content');
 
 describe('Podcast Utils', () => {

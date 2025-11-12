@@ -1,4 +1,4 @@
-jest.mock('../../src/util/imageutil');
+jest.mock('serverutils/imageutil');
 
 // Move the test for client creation into a separate describe block that runs first
 describe('User Model Initialization', () => {
@@ -31,10 +31,10 @@ describe('User Model Initialization', () => {
   });
 });
 
-import { DefaultPrintingPreference, PrintingPreference } from '../../src/datatypes/Card';
-import UserType, { DefaultGridTightnessPreference, GridTightnessPreference } from '../../src/datatypes/User';
+import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
+import UserType, { DefaultGridTightnessPreference, GridTightnessPreference } from '@utils/datatypes/User';
 import User from '../../src/dynamo/models/user';
-import * as imageutil from '../../src/util/imageutil';
+import * as imageutil from 'serverutils/imageutil';
 import { createUser } from '../test-utils/data';
 
 describe('User Model', () => {

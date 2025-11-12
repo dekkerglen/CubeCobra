@@ -1,29 +1,29 @@
-import Card, { CardDetails } from '../../src/datatypes/Card';
-import { Decklist, Pick } from '../../src/datatypes/Draftmancer';
-import { getReasonableCardByOracle } from '../../src/util/carddb';
-import { deckbuild } from '../../src/util/draftbots';
+import Card, { CardDetails } from '@utils/datatypes/Card';
+import { Decklist, Pick } from '@utils/datatypes/Draftmancer';
+import { getReasonableCardByOracle } from 'serverutils/carddb';
+import { deckbuild } from 'serverutils/draftbots';
 import {
   buildBotDeck,
   formatMainboard,
   formatSideboard,
   getPicksFromPlayer,
   upsertCardAndGetIndex,
-} from '../../src/util/draftmancerUtil';
-import { getCardDefaultRowColumn } from '../../src/util/draftutil';
+} from 'serverutils/draftmancerUtil';
+import { getCardDefaultRowColumn } from '@utils/draftutil';
 import { createCardDetails } from '../test-utils/data';
 
-jest.mock('../../src/util/carddb', () => ({
+jest.mock('serverutils/carddb', () => ({
   getReasonableCardByOracle: jest.fn(),
 }));
 
-jest.mock('../../src/util/draftbots', () => ({
+jest.mock('serverutils/draftbots', () => ({
   deckbuild: jest.fn(),
 }));
 
 //Not mocking cardutil.detailsToCard or draftutil.setupPicks as they are simple
 
-jest.mock('../../src/util/draftutil', () => ({
-  ...jest.requireActual('../../src/util/draftutil'),
+jest.mock('@utils/draftutil', () => ({
+  ...jest.requireActual('@utils/draftutil'),
   getCardDefaultRowColumn: jest.fn(),
 }));
 

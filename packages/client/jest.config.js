@@ -1,19 +1,18 @@
 module.exports = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
-  
+  testEnvironment: 'jsdom',
+
   // Transform configuration
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
-    '^.+\\.(js|jsx)$': ['babel-jest', {
-      presets: [
-        '@babel/preset-env',
-        '@babel/preset-react',
-        '@babel/preset-typescript'
-      ]
-    }]
+    '^.+\\.(js|jsx)$': [
+      'babel-jest',
+      {
+        presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
+      },
+    ],
   },
-  
+
   // Module name mapping for path aliases
   moduleNameMapper: {
     '^@utils/(.*)$': '<rootDir>/../utils/src/$1',
@@ -30,38 +29,30 @@ module.exports = {
     '^../../src/client/serverutils/cardutil$': '<rootDir>/../utils/src/cardutil',
     '^../../src/datatypes/(.*)$': '<rootDir>/../utils/src/datatypes/$1',
     // Handle test relative imports
-    '^\\.\\.\\./server/test/test-utils/(.*)$': '<rootDir>/../server/test/test-utils/$1'
+    '^\\.\\.\\./server/test/test-utils/(.*)$': '<rootDir>/../server/test/test-utils/$1',
   },
-  
+
   // Transform ignore patterns - transform everything including node_modules for our packages
-  transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$))'
-  ],
-  
+  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))'],
+
   // Test file patterns
-  testMatch: [
-    '<rootDir>/test/**/*.test.(ts|tsx|js|jsx)'
-  ],
-  
+  testMatch: ['<rootDir>/test/**/*.test.(ts|tsx|js|jsx)'],
+
   // Module file extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  
+
   // Setup files
   setupFilesAfterEnv: [],
-  
+
   // Collect coverage from
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx,js,jsx}',
-    '!src/**/*.d.ts',
-    '!src/**/index.{js,ts,tsx}'
-  ],
-  
+  collectCoverageFrom: ['src/**/*.{ts,tsx,js,jsx}', '!src/**/*.d.ts', '!src/**/index.{js,ts,tsx}'],
+
   // Coverage directory
   coverageDirectory: 'coverage',
-  
+
   // Coverage reporters
   coverageReporters: ['json', 'text'],
-  
+
   // Resolve extensions
-  resolver: undefined
+  resolver: undefined,
 };

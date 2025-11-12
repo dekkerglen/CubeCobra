@@ -1,27 +1,27 @@
 import express, { Application } from 'express';
 import request from 'supertest';
 
-import Card from '../../src/datatypes/Card';
-import CubeType from '../../src/datatypes/Cube';
-import { DraftmancerPick } from '../../src/datatypes/Draft';
-import { Player, PublishDraftBody } from '../../src/datatypes/Draftmancer';
-import type DraftSeatType from '../../src/datatypes/DraftSeat';
+import Card from '@utils/datatypes/Card';
+import CubeType from '@utils/datatypes/Cube';
+import { DraftmancerPick } from '@utils/datatypes/Draft';
+import { Player, PublishDraftBody } from '@utils/datatypes/Draftmancer';
+import type DraftSeatType from '@utils/datatypes/DraftSeat';
 import Cube from '../../src/dynamo/models/cube';
 import Draft from '../../src/dynamo/models/draft';
 import Notification from '../../src/dynamo/models/notification';
-import { bodyValidation } from '../../src/router/middleware/bodyValidation';
+import { bodyValidation } from '../../src/routes/middleware';
 import { handler, PublishDraftBodySchema, routes } from '../../src/router/routes/api/draftmancer/publish';
 import { RequestHandler } from '../../src/types/express';
-import { cardFromId } from '../../src/util/carddb';
-import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from '../../src/util/draftmancerUtil';
-import * as draftutil from '../../src/util/draftutil';
+import { cardFromId } from 'serverutils/carddb';
+import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import * as draftutil from '@utils/draftutil';
 import { createBasicsIds, createCard, createCardDetails, createCube } from '../test-utils/data';
 import { call, middleware } from '../test-utils/transport';
 
 //Suppress errors for better test output
 jest.spyOn(console, 'error').mockImplementation(() => {});
 
-jest.mock('../../src/util/draftbots', () => ({
+jest.mock('serverutils/draftbots', () => ({
   deckbuild: jest.fn(),
 }));
 
@@ -37,7 +37,7 @@ jest.mock('../../src/dynamo/models/notification', () => ({
   put: jest.fn(),
 }));
 
-jest.mock('../../src/util/carddb', () => ({
+jest.mock('serverutils/carddb', () => ({
   cardFromId: jest.fn(),
 }));
 
@@ -45,7 +45,7 @@ jest.mock('../../src/dynamo/models/draft', () => ({
   put: jest.fn(),
 }));
 
-jest.mock('../../src/util/draftmancerUtil', () => ({
+jest.mock('serverutils/draftmancerUtil', () => ({
   buildBotDeck: jest.fn(),
   formatMainboard: jest.fn(),
   formatSideboard: jest.fn(),

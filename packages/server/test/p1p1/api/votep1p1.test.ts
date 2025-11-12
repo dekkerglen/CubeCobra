@@ -1,4 +1,4 @@
-import { P1P1Pack } from '../../../src/datatypes/P1P1Pack';
+import { P1P1Pack } from '../@utils/datatypes/P1P1Pack';
 import p1p1PackModel from '../../../src/dynamo/models/p1p1Pack';
 import { voteP1P1Handler } from '../../../src/router/routes/tool/api/votep1p1';
 import { createUser } from '../../test-utils/data';

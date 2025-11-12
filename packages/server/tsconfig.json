@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
     "types": ["jest", "node"],
-    "typeRoots": ["node_modules/@types", "src/types", "node_modules/@testing-library"],
+    "typeRoots": ["node_modules/@types", "../../node_modules/@types", "src/types"],
     "outDir": "dist",
     "esModuleInterop": true,
     "target": "ES2020",
     "jsx": "react",
     "baseUrl": "./",
     "paths": {
+      "@client/*": ["../client/src/*"],
+      "@jobs/*": ["../jobs/src/*"],
       "@utils/*": ["../utils/src/*"],
       "serverutils/*": ["src/serverutils/*"],
       "routes/*": ["src/routes/*"],
@@ -27,6 +29,16 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "exclude": ["node_modules", "src/client"],
-  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src", "../utils/src"]
+  "exclude": ["node_modules"],
+  "include": [
+    "src/**/*.js",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src",
+    "../utils/src",
+    "test/**/*.js",
+    "test/**/*.ts",
+    "jest.setup.ts",
+    "jest.config.ts"
+  ]
 }

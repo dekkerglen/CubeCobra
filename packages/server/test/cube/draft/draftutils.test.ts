@@ -1,5 +1,5 @@
-import Card from '../../../src/datatypes/Card';
-import Draft, { DraftAction, DraftFormat, DraftStep } from '../../../src/datatypes/Draft';
+import Card from '@utils/datatypes/Card';
+import Draft, { DraftAction, DraftFormat, DraftStep } from '@utils/datatypes/Draft';
 import {
   buildDefaultSteps,
   createDefaultDraftFormat,
@@ -8,7 +8,7 @@ import {
   getInitialState,
   normalizeDraftFormatSteps,
   normalizeDraftSteps,
-} from '../../../src/util/draftutil';
+} from '@utils/draftutil';
 import { createCard } from '../../test-utils/data';
 
 const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat => {

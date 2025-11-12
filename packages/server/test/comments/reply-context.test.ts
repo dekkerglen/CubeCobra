@@ -1,4 +1,4 @@
-import User from '../../src/datatypes/User';
+import User from '@utils/datatypes/User';
 import Blog from '../../src/dynamo/models/blog';
 import Comment from '../../src/dynamo/models/comment';
 import Content from '../../src/dynamo/models/content';

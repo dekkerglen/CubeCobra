@@ -1,12 +1,12 @@
-import { cardGames, cardManaSymbols, reasonableCard } from '../../src/client/utils/cardutil';
+import { cardGames, cardManaSymbols, reasonableCard } from '@utils/cardutil';
 import {
   getCardCountByColor,
   getCurveByColors,
   getFetchableColors,
   getManaSymbolCount,
   getSourcesDistribution,
-} from '../../src/client/utils/deckutil';
-import Card, { CardDetails } from '../../src/datatypes/Card';
+} from '@client/utils/deckutil';
+import Card, { CardDetails } from '@utils/datatypes/Card';
 import { createBasicLand, createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
 
 describe('getManaSymbolCount', () => {

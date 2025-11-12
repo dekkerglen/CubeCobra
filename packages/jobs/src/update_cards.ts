@@ -16,7 +16,7 @@ import { ManaSymbol } from '@utils/datatypes/Mana';
 
 import * as cardutil from '@utils/cardutil';
 import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '@utils/datatypes/Card';
-import { CardMetadata } from '@utils/datatypes/cardCatalog';
+import { CardMetadata } from '@utils/datatypes/CardCatalog';
 import { s3 } from '@server/dynamo/s3client';
 import { fileToAttribute } from '@server/serverutils/cardCatalog';
 import util from '@server/serverutils/util';

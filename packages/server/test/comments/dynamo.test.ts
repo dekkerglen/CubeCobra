@@ -1,16 +1,16 @@
 import { v4 as UUID } from 'uuid';
 
-import CommentType, { UnhydratedComment } from '../../src/datatypes/Comment';
-import { CubeImage } from '../../src/datatypes/Cube';
+import CommentType, { UnhydratedComment } from '@utils/datatypes/Comment';
+import { CubeImage } from '@utils/datatypes/Cube';
 import Comment from '../../src/dynamo/models/comment';
 import UserModel from '../../src/dynamo/models/user';
-import { getImageData } from '../../src/util/imageutil';
+import { getImageData } from 'serverutils/imageutil';
 import { createUser } from '../test-utils/data';
 
 // Mock dependencies
 jest.mock('../../src/dynamo/util');
 jest.mock('../../src/dynamo/models/user');
-jest.mock('../../src/util/imageutil');
+jest.mock('serverutils/imageutil');
 jest.mock('uuid');
 
 // Test helpers

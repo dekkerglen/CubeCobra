@@ -1,11 +1,11 @@
 // Mock all dependencies
-jest.mock('../../src/util/cubefn', () => ({
+jest.mock('serverutils/cubefn', () => ({
   generateBalancedPack: jest.fn(),
 }));
-jest.mock('../../src/util/ml', () => ({
+jest.mock('serverutils/ml', () => ({
   ensureModelsReady: jest.fn(),
 }));
-jest.mock('../../src/util/cardCatalog', () => ({
+jest.mock('serverutils/cardCatalog', () => ({
   initializeCardDb: jest.fn(),
 }));
 jest.mock('../../src/dynamo/models/cube');
@@ -15,7 +15,7 @@ jest.mock('../../src/dynamo/models/featuredQueue', () => ({
   querySortedByDate: jest.fn(),
 }));
 jest.mock('../../src/dynamo/models/user');
-jest.mock('../../src/util/util', () => ({
+jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
 }));
 
@@ -23,11 +23,11 @@ import Cube from '../../src/dynamo/models/cube';
 import dailyP1P1Model from '../../src/dynamo/models/dailyP1P1';
 import p1p1PackModel from '../../src/dynamo/models/p1p1Pack';
 import User from '../../src/dynamo/models/user';
-import rotateDailyP1P1 from '../../src/jobs/rotateDailyP1P1';
-import { initializeCardDb } from '../../src/util/cardCatalog';
-import { generateBalancedPack } from '../../src/util/cubefn';
-import { ensureModelsReady } from '../../src/util/ml';
-import { addNotification } from '../../src/util/util';
+import rotateDailyP1P1 from 'serverutils/rotateDailyP1P1';
+import { initializeCardDb } from 'serverutils/cardCatalog';
+import { generateBalancedPack } from 'serverutils/cubefn';
+import { ensureModelsReady } from 'serverutils/ml';
+import { addNotification } from 'serverutils/util';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const FeaturedQueue = require('../../src/dynamo/models/featuredQueue');

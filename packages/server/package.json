@@ -75,6 +75,7 @@
     "sharp": "^0.34.5",
     "shuffle-seed": "^1.1.6",
     "stripe": "^18.4.0",
+    "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
     "uuid": "^9.0.1"
   },

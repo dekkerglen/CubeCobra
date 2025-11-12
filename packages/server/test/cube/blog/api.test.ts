@@ -1,4 +1,4 @@
-import { FeedTypes } from '../../../src/datatypes/Feed';
+import { FeedTypes } from '@utils/datatypes/Feed';
 import Blog from '../../../src/dynamo/models/blog';
 import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
@@ -9,27 +9,23 @@ import {
   getBlogPostsForCubeHandler,
   getMoreBlogPostsForCubeHandler,
 } from '../../../src/router/routes/cube/blog';
-import * as render from '../../../src/util/render';
-import * as util from '../../../src/util/util';
+import * as render from 'serverutils/render';
+import * as util from 'serverutils/util';
 import { createBlogPost, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call } from '../../test-utils/transport';
 
-jest.mock('../../../src/util/util', () => ({
-  ...jest.requireActual('../../../src/util/util'),
+jest.mock('serverutils/util', () => ({
+  ...jest.requireActual('serverutils/util'),
   addNotification: jest.fn(),
+  getSafeReferrer: jest.fn(),
 }));
 
-jest.mock('../../../src/util/render', () => ({
-  ...jest.requireActual('../../../src/util/render'),
+jest.mock('serverutils/render', () => ({
+  ...jest.requireActual('serverutils/render'),
   handleRouteError: jest.fn(),
   redirect: jest.fn(),
   render: jest.fn(),
-}));
-
-jest.mock('../../../src/util/util', () => ({
-  ...jest.requireActual('../../../src/util/util'),
-  getSafeReferrer: jest.fn(),
 }));
 
 jest.mock('../../../src/dynamo/models/cube', () => ({

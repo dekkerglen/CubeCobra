@@ -1,10 +1,10 @@
 import { v4 as UUID } from 'uuid';
 
-import HydratedContentType, { ContentStatus, ContentType, UnhydratedContent } from '../../src/datatypes/Content';
+import HydratedContentType, { ContentStatus, ContentType, UnhydratedContent } from '@utils/datatypes/Content';
 import Content from '../../src/dynamo/models/content';
 import User from '../../src/dynamo/models/user';
 import { getBucketName, getObject, putObject } from '../../src/dynamo/s3client';
-import { getImageData } from '../../src/util/imageutil';
+import { getImageData } from 'serverutils/imageutil';
 import {
   createArticle,
   createCardImage,
@@ -17,7 +17,7 @@ import {
 // Mock dependencies
 jest.mock('../../src/dynamo/util');
 jest.mock('../../src/dynamo/models/user');
-jest.mock('../../src/util/imageutil');
+jest.mock('serverutils/imageutil');
 jest.mock('../../src/dynamo/s3client');
 jest.mock('uuid');
 

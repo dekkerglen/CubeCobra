@@ -2,7 +2,7 @@ import {
   legalitySuperCondition,
   propertyComparisonOperation,
   setElementOperation,
-} from '../../src/client/filtering/FuncOperations';
+} from '@utils/filtering/FuncOperations';
 import { createCardFromDetails } from '../test-utils/data';
 
 describe('setElementOperation', () => {

@@ -1,4 +1,4 @@
-import { Period, UnhydratedCardHistory } from '../../src/datatypes/History';
+import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
 import CardHistory from '../../src/dynamo/models/cardhistory';
 
 // Mock dependencies
