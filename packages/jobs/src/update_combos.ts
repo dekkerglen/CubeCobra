@@ -8,7 +8,7 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { Combo, ComboTree } from '@utils/datatypes/cardCatalog';
+import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
 
 const cacheDir = process.env?.CACHE_DIR ?? '';
 

@@ -10,7 +10,7 @@ const fs = require('fs');
 const { DefaultElo } = require('@utils/datatypes/Card');
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import carddb, { cardFromId } from '@server/serverutils/carddb';
-import { CardMetadata, Related } from '@utils/datatypes/cardCatalog';
+import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
 const { encode, oracleInData } = require('@server/serverutils/ml');
 import { initializeMl } from '@server/serverutils/ml';
 const correlationLimit = 36;

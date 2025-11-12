@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { cardId, cardName, cardOracleId } from '@utils/cardutil';
-import { Combo } from '@utils/datatypes/cardCatalog';
+import { Combo } from '@utils/datatypes/CardCatalog';
 
 import { Card, CardBody } from 'components/base/Card';
 import Select from 'components/base/Select';
@@ -34,7 +34,7 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
   const { cube } = useContext(CubeContext);
 
   const cards = useMemo(() => {
-    const oracles = combo.uses.map((use) => use.card.oracleId);
+    const oracles = combo.uses.map((use: Combo['uses'][number]) => use.card.oracleId);
     //Match the first copy of the oracle id in the cube list
     const matchedOracles = new Set();
     return cube.cards.mainboard.filter((card) => {
@@ -59,7 +59,7 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
           <Text className="mt-2" semibold>
             Initial Card State
           </Text>
-          {combo.uses.map((use, index) => (
+          {combo.uses.map((use: Combo['uses'][number], index) => (
             <Flexbox key={index} direction="col">
               <Text>
                 <strong>{use.quantity > 1 ? `${use.quantity}x ` : ''}</strong>
