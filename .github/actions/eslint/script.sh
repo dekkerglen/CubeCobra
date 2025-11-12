@@ -30,6 +30,6 @@ then
 
     # Path to ESLint executable aligned with prettier script
     # Don't quote ESLINT flags or FILES, as need to be treated as separate arguments
-    "$(npm root)"/.bin/eslint -c "${INPUT_CONFIG_PATH}" $INPUT_ESLINT_FLAGS ${FILES[@]}
+    npx eslint -c "${INPUT_CONFIG_PATH}" $INPUT_ESLINT_FLAGS ${FILES[@]}
 fi
 
