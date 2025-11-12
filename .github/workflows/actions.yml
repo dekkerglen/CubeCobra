@@ -46,23 +46,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Verify ESLint installation
-        run: |
-          echo "Checking ESLint installation..."
-          npm list eslint @eslint/compat
-          echo "Node modules structure:"
-          ls -la node_modules/@eslint || echo "@eslint directory not found"
-
-      - name: Install client dependencies
-        run: |
-          cd packages/client
-          npm ci
-
-      - name: Install server dependencies
-        run: |
-          cd packages/server
-          npm ci
-
       - name: Run eslint on changed files
         # Always run both eslint and prettier
         if: always()
