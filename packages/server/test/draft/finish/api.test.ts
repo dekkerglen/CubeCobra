@@ -3,12 +3,13 @@ import { cardIsLand } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
 import DraftType from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
+import * as draftutil from '@utils/draftutil';
+import * as draftbots from 'serverutils/draftbots';
+import * as util from 'serverutils/util';
+
 import Cube from '../../../src/dynamo/models/cube';
 import Draft from '../../../src/dynamo/models/draft';
 import { handler as finishDraftHandler, validateBody } from '../../../src/router/routes/draft/finish';
-import * as draftbots from 'serverutils/draftbots';
-import * as draftutil from '@utils/draftutil';
-import * as util from 'serverutils/util';
 import { createCompletedSoloDraft as createDraft, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call, middleware } from '../../test-utils/transport';

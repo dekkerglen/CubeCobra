@@ -1,9 +1,9 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import { getCubeDescription } from '@utils/Util';
-
 import Cube, { CUBE_CATEGORIES } from '@utils/datatypes/Cube';
 import Image from '@utils/datatypes/Image';
+import { getCubeDescription } from '@utils/Util';
+
 import { CSRFContext } from '../../contexts/CSRFContext';
 import Alert from '../base/Alert';
 import AutocompleteInput from '../base/AutocompleteInput';

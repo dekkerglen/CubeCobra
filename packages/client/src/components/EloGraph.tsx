@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
+import { DefaultElo } from '@utils/datatypes/Card';
+import History from '@utils/datatypes/History';
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -16,8 +18,6 @@ import 'chartjs-adapter-date-fns';
 
 import { formatDate } from 'utils/Date';
 
-import { DefaultElo } from '@utils/datatypes/Card';
-import History from '@utils/datatypes/History';
 import { CSRFContext } from '../contexts/CSRFContext';
 import { Col, Flexbox, Row } from './base/Layout';
 import Select from './base/Select';

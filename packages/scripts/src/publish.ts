@@ -1,11 +1,10 @@
-import fs from 'fs';
-import path from 'path';
-
 import { S3 } from '@aws-sdk/client-s3';
-import { Upload } from '@aws-sdk/lib-storage';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+import { Upload } from '@aws-sdk/lib-storage';
 import archiver from 'archiver';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 

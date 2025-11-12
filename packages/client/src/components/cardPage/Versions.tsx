@@ -1,8 +1,8 @@
 import React from 'react';
 
 import { detailsToCard } from '@utils/cardutil';
-
 import { CardDetails } from '@utils/datatypes/Card';
+
 import { Card, CardBody } from '../base/Card';
 import Link from '../base/Link';
 import PagedTable from '../base/PagedTable';

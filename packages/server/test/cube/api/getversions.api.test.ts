@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
+import { cardFromId, getAllVersionIds } from 'serverutils/carddb';
 import request from 'supertest';
 
-import { cardFromId, getAllVersionIds } from 'serverutils/carddb';
 import { createCardDetails, createCustomCardDetails } from '../../test-utils/data';
 
 jest.mock('serverutils/carddb');

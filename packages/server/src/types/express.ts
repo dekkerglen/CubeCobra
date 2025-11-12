@@ -1,5 +1,5 @@
-import express from 'express';
 import type UserType from '@utils/datatypes/User';
+import express from 'express';
 
 // Extend Error interface to include status property
 export interface CustomError extends Error {
@@ -8,6 +8,7 @@ export interface CustomError extends Error {
 
 // Override the user type in the global Express namespace
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface User extends UserType {}
     interface Request {

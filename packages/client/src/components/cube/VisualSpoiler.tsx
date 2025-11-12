@@ -1,13 +1,13 @@
 import React, { useContext, useMemo } from 'react';
 
 import { cardIndex } from '@utils/cardutil';
+import { BoardType, default as CardType } from '@utils/datatypes/Card';
 import { sortForDownload } from '@utils/sorting/Sort';
 
-import { BoardType, default as CardType } from '@utils/datatypes/Card';
-import CubeContext from 'contexts/CubeContext';
-import DisplayContext from 'contexts/DisplayContext';
 import { NumCols } from 'components/base/Layout';
 import CardGrid from 'components/card/CardGrid';
+import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 interface VisualSpoilerProps {
   cards: CardType[];

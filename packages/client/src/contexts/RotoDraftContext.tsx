@@ -1,8 +1,8 @@
 import React, { Dispatch, ReactNode, SetStateAction } from 'react';
 
-import { RotoPick, RotoPlayer } from '../utils/rotodraft';
-
 import useQueryParam from 'hooks/useQueryParam';
+
+import { RotoPick, RotoPlayer } from '../utils/rotodraft';
 
 interface RotoInfo {
   picks: Record<string, RotoPick>;

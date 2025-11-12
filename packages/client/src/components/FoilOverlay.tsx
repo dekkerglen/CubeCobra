@@ -1,6 +1,7 @@
 import React, { ComponentProps, ElementType } from 'react';
 
 import Card from '@utils/datatypes/Card';
+
 import { isFoilFinish } from '../../../utils/src/cardutil';
 
 export interface FoilOverlayProps {

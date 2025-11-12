@@ -1,12 +1,12 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
-
 import { Changes } from '@utils/datatypes/Card';
 import ChangelogType, { CubeChangeLog } from '@utils/datatypes/ChangeLog';
-import { cardFromId } from 'serverutils/carddb';
-import { getBucketName, getObject, putObject } from '../s3client';
 import createClient from 'dynamo/util';
+import { cardFromId } from 'serverutils/carddb';
+import { v4 as uuidv4 } from 'uuid';
+
+import { getBucketName, getObject, putObject } from '../s3client';
 
 const CARD_LIMIT = 10000;
 

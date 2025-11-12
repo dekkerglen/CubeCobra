@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+import VideoType from '@utils/datatypes/Video';
+
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -11,7 +13,6 @@ import Video from 'components/content/Video';
 import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoType from '@utils/datatypes/Video';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 

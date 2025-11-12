@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 
-import classNames from 'classnames';
-
 import Card from '@utils/datatypes/Card';
 import { GridTightnessPreference } from '@utils/datatypes/User';
+import classNames from 'classnames';
+
 import UserContext from '../../contexts/UserContext';
 import { Col, NumCols, Row } from '../base/Layout';
 import FoilCardImage from '../FoilCardImage';

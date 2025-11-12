@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+import ArticleType from '@utils/datatypes/Article';
+
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -11,7 +13,6 @@ import EditArticle from 'components/content/EditArticle';
 import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import ArticleType from '@utils/datatypes/Article';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 

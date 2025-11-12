@@ -1,5 +1,8 @@
 import React, { useContext } from 'react';
 
+import ArticleType from '@utils/datatypes/Article';
+import { ContentStatus } from '@utils/datatypes/Content';
+
 import Banner from 'components/Banner';
 import { Card, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
@@ -7,8 +10,6 @@ import Article from 'components/content/Article';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
-import ArticleType from '@utils/datatypes/Article';
-import { ContentStatus } from '@utils/datatypes/Content';
 import MainLayout from 'layouts/MainLayout';
 
 interface ArticlePageProps {

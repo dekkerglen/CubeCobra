@@ -15,10 +15,10 @@ import {
   mainboardRate,
   pickRate,
 } from '@utils/cardutil';
-import { cardIsLabel, getLabels } from '@utils/sorting/Sort';
-
 import CardType, { DefaultElo } from '@utils/datatypes/Card';
 import Cube, { CubeCards } from '@utils/datatypes/Cube';
+import { cardIsLabel, getLabels } from '@utils/sorting/Sort';
+
 import AnalyticTable from '../analytics/AnalyticTable';
 import Asfans from '../analytics/Asfans';
 import Averages from '../analytics/Averages';

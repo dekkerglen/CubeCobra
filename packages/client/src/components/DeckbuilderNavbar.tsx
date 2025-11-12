@@ -1,13 +1,13 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
-
-import DeckBuilderStatsToggler from 'components/DeckBuilderStatsToggler';
 import { cardOracleId } from '@utils/cardutil';
-
 import Card from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
+
+import DeckBuilderStatsToggler from 'components/DeckBuilderStatsToggler';
+
 import { CSRFContext } from '../contexts/CSRFContext';
 import useToggle from '../hooks/UseToggle';
 import Button from './base/Button';
@@ -89,7 +89,6 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
           if (basicsIndex !== -1) {
             newMainboard.push(basics[basicsIndex]);
           } else {
-            // eslint-disable-next-line no-console
             console.error(`Could not find card ${oracle} in pool or basics`);
           }
         } else {
@@ -121,7 +120,6 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
       setDeck(formattedMainboard);
       setSideboard(formattedSideboard);
     } else {
-      // eslint-disable-next-line no-console
       console.error(json);
     }
   }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard]);

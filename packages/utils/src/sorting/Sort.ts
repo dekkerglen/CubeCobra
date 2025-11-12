@@ -1,4 +1,3 @@
-import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES, SUPPORTED_FORMATS } from '../datatypes/Card';
 import {
   cardAddedTime,
   cardArtist,
@@ -26,6 +25,7 @@ import {
   COLOR_COMBINATIONS,
   convertFromLegacyCardColorCategory,
 } from '../cardutil';
+import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES, SUPPORTED_FORMATS } from '../datatypes/Card';
 import { arrayIsSubset, fromEntries } from '../Util';
 
 const COLOR_MAP: Record<string, string> = {

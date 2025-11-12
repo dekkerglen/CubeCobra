@@ -1,14 +1,14 @@
 import React, { useContext } from 'react';
 
+import CardType from '@utils/datatypes/Card';
 import { getLabels, sortDeep } from '@utils/sorting/Sort';
 import { fromEntries } from '@utils/Util';
 
-import CardType from '@utils/datatypes/Card';
-import CubeContext from 'contexts/CubeContext';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import TableViewCardGroup from 'components/card/TableViewCardGroup';
+import CubeContext from 'contexts/CubeContext';
 
 const cmc2Labels = getLabels(null, 'Mana Value 2');
 

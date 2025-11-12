@@ -1,5 +1,11 @@
 import React, { createRef, useMemo, useState } from 'react';
 
+import { cardOracleId, detailsToCard } from '@utils/cardutil';
+import { CardDetails } from '@utils/datatypes/Card';
+import Cube from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
+import Record from '@utils/datatypes/Record';
+
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -8,14 +14,9 @@ import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
-import Cube from '@utils/datatypes/Cube';
-import Draft from '@utils/datatypes/Draft';
-import Record from '@utils/datatypes/Record';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import { cardOracleId, detailsToCard } from '@utils/cardutil';
 
-import { CardDetails } from '@utils/datatypes/Card';
 import UploadDeck from '../records/UploadDeck';
 
 interface RecordUploadDeckPageProps {

@@ -1,5 +1,8 @@
 import React, { useContext, useState } from 'react';
 
+import PostType from '@utils/datatypes/BlogPost';
+import Cube from '@utils/datatypes/Cube';
+
 import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
@@ -10,8 +13,6 @@ import CreateBlogModal from 'components/modals/CreateBlogModal';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
-import PostType from '@utils/datatypes/BlogPost';
-import Cube from '@utils/datatypes/Cube';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 

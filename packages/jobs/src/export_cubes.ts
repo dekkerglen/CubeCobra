@@ -2,15 +2,14 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
-import 'module-alias/register';
-
-import Card from '@utils/datatypes/Card';
-import { cardOracleId } from '@utils/cardutil';
-
-import type CubeType from '@utils/datatypes/Cube';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { getAllOracleIds } from '@server/serverutils/carddb';
+import { cardOracleId } from '@utils/cardutil';
+import Card from '@utils/datatypes/Card';
+import type CubeType from '@utils/datatypes/Cube';
 import path from 'path/win32';
+
+import 'module-alias/register';
 
 const Cube = require('../dynamo/models/cube');
 
@@ -30,9 +29,8 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
       following: cube.following,
     };
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(err);
-    // eslint-disable-next-line no-console
+
     console.log(`Error processing cube ${cube.id}`);
     return null;
   }
@@ -59,7 +57,6 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
 
     cubes.push(...processedCubes.filter((cube) => cube !== null));
 
-    // eslint-disable-next-line no-console
     console.log(`Processed ${processed} cubes`);
   } while (lastKey);
 

@@ -23,7 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/* eslint-disable no-console */
 import { CreateTableInput, DynamoDB } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument, UpdateCommandInput } from '@aws-sdk/lib-dynamodb';
 import { SessionData, Store } from 'express-session';

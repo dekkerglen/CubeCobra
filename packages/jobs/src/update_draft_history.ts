@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -6,16 +5,15 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import EloRating from 'elo-rating';
-import fs from 'fs';
-
-import { DefaultElo } from '@utils/datatypes/Card';
-import type { CardAnalytic } from '@utils/datatypes/CubeAnalytic';
-import type DraftType from '@utils/datatypes/Draft';
 import CubeAnalytic from '@server/dynamo/models/cubeAnalytic';
 import Draft from '@server/dynamo/models/draft';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
+import { DefaultElo } from '@utils/datatypes/Card';
+import type { CardAnalytic } from '@utils/datatypes/CubeAnalytic';
+import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
+import EloRating from 'elo-rating';
+import fs from 'fs';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {

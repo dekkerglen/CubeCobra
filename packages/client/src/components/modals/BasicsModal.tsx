@@ -1,5 +1,8 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import { cardName } from '@utils/cardutil';
+import CardType from '@utils/datatypes/Card';
+
 import Button from 'components/base/Button';
 import { Card } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -7,8 +10,6 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Moda
 import Select from 'components/base/Select';
 import LoadingButton from 'components/LoadingButton';
 import { CSRFContext } from 'contexts/CSRFContext';
-import CardType from '@utils/datatypes/Card';
-import { cardName } from '@utils/cardutil';
 
 const MAX_BASICS = 21;
 
@@ -58,7 +59,6 @@ const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, d
 
       setCounts(newCounts);
     } else {
-      // eslint-disable-next-line no-console
       console.error(json);
     }
   }, [csrfFetch, deck, basics, cards]);

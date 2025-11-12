@@ -1,5 +1,8 @@
 import React from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+import Patron from '@utils/datatypes/Patron';
+
 import Banner from 'components/Banner';
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
@@ -11,8 +14,6 @@ import UserPasswordForm from 'components/user/UserPasswordForm';
 import UserPatreonConfig from 'components/user/UserPatreonConfig';
 import UserProfile from 'components/user/UserProfile';
 import UserThemeForm from 'components/user/UserThemeForm';
-import Cube from '@utils/datatypes/Cube';
-import Patron from '@utils/datatypes/Patron';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 

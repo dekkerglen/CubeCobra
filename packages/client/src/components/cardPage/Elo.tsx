@@ -1,9 +1,10 @@
 import React from 'react';
 
-import { CardBody } from 'components/base/Card';
-import EloGraph from 'components/EloGraph';
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
+
+import { CardBody } from 'components/base/Card';
+import EloGraph from 'components/EloGraph';
 
 interface CardPageProps {
   card: CardDetails;

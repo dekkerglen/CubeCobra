@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 
+import ArticleType from '@utils/datatypes/Article';
+
 import Banner from 'components/Banner';
 import { Flexbox } from 'components/base/Layout';
 import ArticlePreview from 'components/content/ArticlePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
 import RenderToRoot from 'components/RenderToRoot';
-import ArticleType from '@utils/datatypes/Article';
 import MainLayout from 'layouts/MainLayout';
 interface ArticlesPageProps {
   articles: ArticleType[];

@@ -1,10 +1,10 @@
-import { v4 as UUID } from 'uuid';
-
 import CommentType, { UnhydratedComment } from '@utils/datatypes/Comment';
 import { CubeImage } from '@utils/datatypes/Cube';
+import { getImageData } from 'serverutils/imageutil';
+import { v4 as UUID } from 'uuid';
+
 import Comment from '../../src/dynamo/models/comment';
 import UserModel from '../../src/dynamo/models/user';
-import { getImageData } from 'serverutils/imageutil';
 import { createUser } from '../test-utils/data';
 
 // Mock dependencies

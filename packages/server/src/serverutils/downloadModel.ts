@@ -1,10 +1,10 @@
-import 'dotenv/config';
-import fs from 'fs';
-import { Readable } from 'stream';
-
 import { S3 } from '@aws-sdk/client-s3';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+import fs from 'fs';
 import path from 'path';
+import { Readable } from 'stream';
+
+import 'dotenv/config';
 
 const s3: S3 = new S3({
   endpoint: process.env.AWS_ENDPOINT || undefined,
@@ -57,10 +57,8 @@ export const downloadModelsFromS3 = async (basePath: string = ''): Promise<void>
           .on('close', () => resolve()); // 'close' event indicates the stream has finished writing
       });
 
-      // eslint-disable-next-line no-console -- Debugging
       console.log(`Downloaded ${file.Key}`);
     } else {
-      // eslint-disable-next-line no-console -- Debugging
       console.error('S3 object body is empty.');
     }
   }

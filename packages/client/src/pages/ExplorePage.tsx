@@ -1,12 +1,13 @@
 import React from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+
 import Button from 'components/base/Button';
 import { Col, Row } from 'components/base/Layout';
 import CubesCard from 'components/cube/CubesCard';
 import CubeSearchNavBar from 'components/cube/CubeSearchNavBar';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import Cube from '@utils/datatypes/Cube';
 import MainLayout from 'layouts/MainLayout';
 
 interface ExplorePageProps {

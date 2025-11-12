@@ -3,6 +3,7 @@ import React, { useContext } from 'react';
 import Patron, { PatronLevels } from '@utils/datatypes/Patron';
 import { UserRoles } from '@utils/datatypes/User';
 import { canBeFeatured } from '@utils/featuredQueueUtil';
+
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import { Col, Flexbox, Row } from '../base/Layout';

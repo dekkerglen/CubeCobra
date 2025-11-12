@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
+import Record from '@utils/datatypes/Record';
 
 import { CardBody } from 'components/base/Card';
 import FormatttedDate from 'components/base/FormatttedDate';
@@ -11,7 +12,6 @@ import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
 import { CSRFContext } from 'contexts/CSRFContext';
-import Record from '@utils/datatypes/Record';
 
 interface TrophyArchiveProps {
   records: Record[];

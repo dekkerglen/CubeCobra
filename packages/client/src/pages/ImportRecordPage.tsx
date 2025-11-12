@@ -1,6 +1,11 @@
 import React, { createRef, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { ArrowLeftIcon } from '@primer/octicons-react';
+import { cardOracleId, detailsToCard } from '@utils/cardutil';
+import { CardDetails } from '@utils/datatypes/Card';
+import Draft from '@utils/datatypes/Draft';
+import Record from '@utils/datatypes/Record';
+import User from '@utils/datatypes/User';
 import QRCode from 'react-qr-code';
 
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
@@ -21,12 +26,7 @@ import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
-import { CardDetails } from '@utils/datatypes/Card';
-import Draft from '@utils/datatypes/Draft';
-import Record from '@utils/datatypes/Record';
-import User from '@utils/datatypes/User';
 import MainLayout from 'layouts/MainLayout';
-import { cardOracleId, detailsToCard } from '@utils/cardutil';
 
 import EditDescription from '../records/EditDescription';
 import EditPlayerList from '../records/EditPlayerList';

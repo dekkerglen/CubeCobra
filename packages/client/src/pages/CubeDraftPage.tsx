@@ -1,6 +1,10 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DndContext } from '@dnd-kit/core';
+import { makeSubtitle } from '@utils/cardutil';
+import Cube from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
+import { getCardDefaultRowColumn, getInitialState, setupPicks } from '@utils/draftutil';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
@@ -9,17 +13,12 @@ import Pack from 'components/Pack';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
-import Cube from '@utils/datatypes/Cube';
-import Draft from '@utils/datatypes/Draft';
 import DraftLocation, { addCard, location, removeCard } from 'drafting/DraftLocation';
 import { locations } from 'drafting/DraftLocation';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useLocalStorage from 'hooks/useLocalStorage';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import { makeSubtitle } from '@utils/cardutil';
-
-import { getCardDefaultRowColumn, getInitialState, setupPicks } from '@utils/draftutil';
 
 interface CubeDraftPageProps {
   cube: Cube;
@@ -139,7 +138,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         window.location.href = `/draft/deckbuilder/${draft.id}`;
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('endDraft error caught:', err);
       addAlert('danger', 'Error finishing draft, please reach out to the Discord');
       setDraftStatus((prev) => ({ ...prev, loading: false, draftCompleted: false }));
@@ -164,7 +162,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         setRatings(processPredictions(json, request.packCards));
         return json;
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error('Error fetching predictions:', error, 'inputs', request.state);
         setDraftStatus((prev) => ({ ...prev, predictError: true }));
         return null;
@@ -244,7 +241,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
             const oracleIndex = pack.findIndex((oracleId) => oracleId === oracle);
             //For some reason could not map the predicted oracle id to a card in the pack, fallback to random assignment
             if (oracleIndex === -1) {
-              // eslint-disable-next-line no-console
               console.log(`Best oracle id from predictions is ${oracle}, pack contains ${pack}`);
               // pick at random
               return Math.floor(Math.random() * pack.length);
@@ -600,7 +596,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
 
     //Do not act on the pendingPick if predictions are ongoing or in a bad state
     if (draftStatus.predictError || draftStatus.retryInProgress) {
-      // eslint-disable-next-line no-console
       console.log('Pending pick but draft state is bad, skip');
       return;
     }

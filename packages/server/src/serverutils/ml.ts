@@ -1,8 +1,8 @@
-/* eslint-disable no-console */
 require('dotenv').config();
 
-import { getAllOracleIds, isOracleBasic } from './carddb';
 import path from 'path';
+
+import { getAllOracleIds, isOracleBasic } from './carddb';
 
 const tf = require('@tensorflow/tfjs-node');
 const fs = require('fs');

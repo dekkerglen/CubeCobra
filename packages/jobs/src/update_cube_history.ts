@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // Load Environment Variables
 import dotenv from 'dotenv';
 import path from 'path';
@@ -7,17 +6,15 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import fs from 'fs';
-
-import { DefaultElo } from '@utils/datatypes/Card';
-import type ChangeLogType from '@utils/datatypes/ChangeLog';
-
 import CardHistory from '@server/dynamo/models/cardhistory';
 import ChangeLog from '@server/dynamo/models/changelog';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
 import { getCubeTypes } from '@server/serverutils/cubefn';
+import { DefaultElo } from '@utils/datatypes/Card';
+import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
+import fs from 'fs';
 type CubeDict = Record<string, string[]>;
 
 const privateDir = '../server/private/';

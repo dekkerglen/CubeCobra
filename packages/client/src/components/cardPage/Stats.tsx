@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
-
 import {
   cardCubeCount,
   cardElo,
@@ -13,9 +12,9 @@ import {
   cardTix,
   detailsToCard,
 } from '@utils/cardutil';
-
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
+
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';

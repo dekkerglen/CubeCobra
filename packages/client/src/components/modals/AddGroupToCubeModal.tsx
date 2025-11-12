@@ -1,9 +1,9 @@
 import React, { useCallback, useContext, useState } from 'react';
 
 import { detailsToCard } from '@utils/cardutil';
-
 import { CardDetails } from '@utils/datatypes/Card';
 import CubePropType from '@utils/datatypes/Cube';
+
 import { CSRFContext } from '../../contexts/CSRFContext';
 import Alert from '../base/Alert';
 import Button from '../base/Button';

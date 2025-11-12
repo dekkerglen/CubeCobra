@@ -49,6 +49,7 @@ npm run update-combos
 ### Purpose
 
 Tracks drafting patterns to improve:
+
 - Card recommendations
 - Cube balance suggestions
 - Draft bot behavior
@@ -76,6 +77,7 @@ docker exec -it cube npm run update-draft-history
 ### Tracking Changes
 
 Monitors cube evolution over time:
+
 - **Card Additions/Removals**: Cube composition changes
 - **Power Level Shifts**: Meta evolution tracking
 - **Popular Includes**: Trending additions
@@ -96,6 +98,7 @@ docker exec -it cube npm run update-cube-history
 ### Purpose
 
 Processes card relationships and creates searchable metadata:
+
 - **Mechanics**: Keyword abilities and rules text
 - **Themes**: Tribal, combo, and synergy tags
 - **Categories**: Functional groupings
@@ -153,8 +156,9 @@ npm run update-all
 ```
 
 This runs in sequence:
+
 1. Draft history analysis
-2. Cube history analysis  
+2. Cube history analysis
 3. Metadata dictionary processing
 4. Combo analysis
 5. Card data updates
@@ -183,6 +187,7 @@ NODE_OPTIONS=--max_old_space_size=18192 npm run update-all
 ### Processing Time
 
 Full analytics can take significant time:
+
 - **Draft History**: 10-30 minutes
 - **Card Analytics**: 20-60 minutes
 - **Complete Update**: 1-3 hours
@@ -227,12 +232,14 @@ awslocal s3 ls s3://local/exports/
 ### Common Issues
 
 **Memory Errors**
+
 ```bash
 # Increase Node.js heap size
 NODE_OPTIONS=--max_old_space_size=32768 npm run update-all
 ```
 
 **Process Timeouts**
+
 ```bash
 # Run individual components
 npm run update-draft-history
@@ -241,6 +248,7 @@ npm run update-cube-history
 ```
 
 **Data Corruption**
+
 ```bash
 # Backup before processing
 cp -r temp/export temp/export.backup
@@ -252,11 +260,13 @@ jq . private/carddict.json > /dev/null
 ### Recovery Procedures
 
 **Partial Failure**
+
 - Identify which step failed from logs
 - Run remaining steps individually
 - Validate outputs before proceeding
 
 **Complete Failure**
+
 - Check system resources (memory, disk)
 - Restore from backups if available
 - Run full update-all after fixing issues

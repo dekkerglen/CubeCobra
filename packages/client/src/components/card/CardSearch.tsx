@@ -1,11 +1,9 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { cardId, detailsToCard } from '@utils/cardutil';
-import Query from 'utils/Query';
+import { CardDetails } from '@utils/datatypes/Card';
 import { ORDERED_SORTS } from '@utils/sorting/Sort';
 
-import { CardDetails } from '@utils/datatypes/Card';
-import FilterContext from 'contexts/FilterContext';
 import Banner from 'components/Banner';
 import Controls from 'components/base/Controls';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -15,9 +13,11 @@ import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
+import CardGrid from 'components/card/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
 import FilterCollapse from 'components/FilterCollapse';
-import CardGrid from 'components/card/CardGrid';
+import FilterContext from 'contexts/FilterContext';
+import Query from 'utils/Query';
 
 const CardSearch: React.FC = () => {
   const { filterInput } = useContext(FilterContext);
@@ -40,7 +40,6 @@ const CardSearch: React.FC = () => {
 
     const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
     if (!response.ok) {
-      // eslint-disable-next-line no-console -- Debugging
       console.error(response);
     }
 

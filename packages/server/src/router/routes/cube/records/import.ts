@@ -1,18 +1,17 @@
-import Joi from 'joi'; // Import Joi for validation
-import { v4 as uuidv4 } from 'uuid';
-
-import User from '@utils/datatypes/User';
-
 import DraftRecord from '@utils/datatypes/Record';
+import User from '@utils/datatypes/User';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Record from 'dynamo/models/record';
+import Joi from 'joi'; // Import Joi for validation
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../types/express';
+import { bodyValidation } from 'routes/middleware';
 import { getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { bodyValidation } from 'routes/middleware';
+import { v4 as uuidv4 } from 'uuid';
+
+import { Request, Response } from '../../../../types/express';
 import { associateNewDraft, associateWithExistingDraft } from './uploaddeck';
 
 export const importRecordPageHandler = async (req: Request, res: Response) => {

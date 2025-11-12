@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 
 import { PasteIcon } from '@primer/octicons-react';
-
 import { P1P1VoteSummary } from '@utils/datatypes/P1P1Pack';
+
 import CubeContext from '../../contexts/CubeContext';
 import useAlerts, { Alerts } from '../../hooks/UseAlerts';
 import Button from '../base/Button';

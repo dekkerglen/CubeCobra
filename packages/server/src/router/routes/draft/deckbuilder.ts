@@ -2,11 +2,12 @@ import DraftType from '@utils/datatypes/Draft';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import { csrfProtection } from 'routes/middleware';
-import { Request, Response } from '../../../types/express';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import util from 'serverutils/util';
+
+import { Request, Response } from '../../../types/express';
 
 const handler = async (req: Request, res: Response) => {
   try {

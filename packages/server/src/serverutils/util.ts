@@ -1,5 +1,6 @@
 import User from '@utils/datatypes/User';
-import { Request, Response, NextFunction } from '../types/express';
+
+import { NextFunction, Request, Response } from '../types/express';
 
 const shuffleSeed = require('shuffle-seed');
 const { UserRoles } = require('@utils/datatypes/User');
@@ -431,9 +432,9 @@ export default util;
 export { addNotification };
 
 // Ensure CommonJS consumers (require(...)) receive the util object directly
-// eslint-disable-next-line @typescript-eslint/no-var-requires, no-undef
+
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   // Assign to module.exports so `const util = require('./util')` works as before
-  // eslint-disable-next-line no-undef
+
   module.exports = util;
 }

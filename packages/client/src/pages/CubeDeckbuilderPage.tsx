@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from 'react';
 
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
-
-import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
 import { cardType, makeSubtitle } from '@utils/cardutil';
-
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
+
+import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
+
 import { Card } from '../components/base/Card';
 import DeckbuilderNavbar from '../components/DeckbuilderNavbar';
 import DeckStacks from '../components/DeckStacks';

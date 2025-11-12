@@ -1,11 +1,11 @@
-import Joi from 'joi';
-
 import { makeFilter } from '@utils/filtering/FilterCards';
-import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
 import { OrderedSortsType, SortFunctions } from '@utils/sorting/Sort';
+import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
+import Joi from 'joi';
 import { csrfProtection } from 'routes/middleware';
-import { NextFunction, Request, Response } from '../../../../types/express';
 import { searchCards } from 'serverutils/tools';
+
+import { NextFunction, Request, Response } from '../../../../types/express';
 
 const validSortNames = Object.keys(SortFunctions);
 

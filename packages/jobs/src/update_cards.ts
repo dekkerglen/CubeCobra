@@ -4,6 +4,13 @@ import 'module-alias/register';
 dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
 import { Upload } from '@aws-sdk/lib-storage';
+import { s3 } from '@server/dynamo/s3client';
+import { fileToAttribute } from '@server/serverutils/cardCatalog';
+import util from '@server/serverutils/util';
+import * as cardutil from '@utils/cardutil';
+import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '@utils/datatypes/Card';
+import { CardMetadata } from '@utils/datatypes/CardCatalog';
+import { ManaSymbol } from '@utils/datatypes/Mana';
 import es from 'event-stream';
 import fs, { createWriteStream } from 'fs';
 // @ts-ignore - JSONStream doesn't have proper types
@@ -12,14 +19,6 @@ import fetch from 'node-fetch';
 import path, { join } from 'path';
 import stream, { pipeline } from 'stream';
 
-import { ManaSymbol } from '@utils/datatypes/Mana';
-
-import * as cardutil from '@utils/cardutil';
-import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '@utils/datatypes/Card';
-import { CardMetadata } from '@utils/datatypes/CardCatalog';
-import { s3 } from '@server/dynamo/s3client';
-import { fileToAttribute } from '@server/serverutils/cardCatalog';
-import util from '@server/serverutils/util';
 import {
   convertName,
   ScryfallCard,
@@ -97,7 +96,6 @@ async function getFileWithCache(url: string, filePath: string, cacheDir?: string
     const fileName = path.basename(filePath);
     cachePath = path.join(cacheDir, fileName);
     if (fs.existsSync(cachePath)) {
-      // eslint-disable-next-line no-console
       console.log(`Reading from cache: ${cachePath}`);
       // Save to original location
       fs.copyFileSync(cachePath, filePath);
@@ -206,10 +204,10 @@ async function writeFile(filepath: string, data: any) {
           return;
         }
         const writeDuration = (Date.now() - writeStart) / 1000;
-        // eslint-disable-next-line no-console
+
         console.log(`Finished writing ${filepath}. Duration: ${writeDuration.toFixed(2)}s`);
         resolve();
-        // eslint-disable-next-line no-console
+
         console.log(`Finished writing ${filepath}`);
       });
     } catch (err) {
@@ -336,7 +334,7 @@ function convertParsedCost(card: ScryfallCard, preflipped?: boolean) {
       .reverse();
   } else {
     // Only log error if there's truly no mana cost anywhere and it's not a land/token
-    // eslint-disable-next-line no-console
+
     console.error(
       `Error converting parsed cost: (isExtra:${preflipped}) ${card.name} - layout: ${card.layout}, mana_cost: ${card.mana_cost}, type_line: ${card.type_line}`,
     );
@@ -386,7 +384,6 @@ function convertColors(card: ScryfallCard, preflipped?: boolean) {
     return Array.from(card.card_faces[0].colors);
   }
 
-  // eslint-disable-next-line no-console
   console.error(`Error converting colors: (isExtra:${preflipped}) ${card.name}`);
   return [];
 }
@@ -407,7 +404,6 @@ function convertType(card: ScryfallCard, preflipped: boolean, faceAttributeSourc
   }
 
   if (!type && card.id !== 'custom-card') {
-    // eslint-disable-next-line no-console
     console.error(`Error converting type: (isExtra:${preflipped}) ${card.name} (id: ${card.id})`);
     return '';
   }
@@ -631,7 +627,7 @@ async function writeCatalog(basePath = '../server/private') {
   await writeFile(path.join(basePath, 'indexToOracle.json'), catalog.indexToOracleId);
 
   const duration = (Date.now() - start) / 1000;
-  // eslint-disable-next-line no-console
+
   console.info(`All JSON files saved. Duration: ${duration.toFixed(2)}s`);
 }
 
@@ -740,15 +736,13 @@ async function saveAllCards(
   ckPrices: Record<string, number>,
   mpPrices: Record<string, number>,
 ) {
-  // eslint-disable-next-line no-console
   console.info('Processing static cards...');
   for (const staticCard of STATIC_CARDS) {
     saveStaticCard(staticCard, metadatadict[staticCard.oracle_id], ckPrices[staticCard.id], mpPrices[staticCard.id]);
   }
-  // eslint-disable-next-line no-console
+
   console.info(`Processed ${STATIC_CARDS.length} static cards.`);
 
-  // eslint-disable-next-line no-console
   console.info('Processing cards...');
   const processingCardsStart = Date.now();
   await new Promise((resolve) =>
@@ -763,12 +757,11 @@ async function saveAllCards(
   );
   const processingCardsDuration = (Date.now() - processingCardsStart) / 1000;
   const cardCount = Object.keys(catalog.dict).length;
-  // eslint-disable-next-line no-console
+
   console.log(
     `Finished processing ${cardCount} cards. Duration: ${processingCardsDuration.toFixed(2)}s, RPS: ${(cardCount / processingCardsDuration).toFixed(2)}`,
   );
 
-  // eslint-disable-next-line no-console
   console.info('Creating language mappings...');
   const languageMappingsStart = Date.now();
   await new Promise((resolve) =>
@@ -780,7 +773,7 @@ async function saveAllCards(
   );
   const languageMappingCount = Object.keys(catalog.english).length;
   const languageMappingsDuration = (Date.now() - languageMappingsStart) / 1000;
-  // eslint-disable-next-line no-console
+
   console.log(
     `Finished proccessing ${languageMappingCount} language mappings. Duration: ${languageMappingsDuration.toFixed(2)}s, RPS: ${(languageMappingCount / languageMappingsDuration).toFixed(2)}`,
   );
@@ -792,7 +785,6 @@ async function saveAllCards(
 async function saveSet(set: ScryfallSet) {
   //According to the API this could be undefined or null, but didn't find any instances
   if (!set.released_at) {
-    // eslint-disable-next-line no-console
     console.log(`Set ${set.code} has no release at date`);
   }
 
@@ -804,7 +796,6 @@ async function saveSet(set: ScryfallSet) {
 }
 
 async function processSets() {
-  // eslint-disable-next-line no-console
   console.info('Processing sets...');
   await new Promise((resolve) =>
     fs
@@ -840,56 +831,48 @@ const downloadFromScryfall = async (
     await downloadSets(cacheDir);
     await processSets();
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Downloading set data failed:');
-    // eslint-disable-next-line no-console
+
     console.error(error);
-    // eslint-disable-next-line no-console
+
     console.error('Sets were not updated');
     return;
   }
 
-  // eslint-disable-next-line no-console
   console.info('Downloading files from scryfall or cache...');
   try {
     await downloadDefaultCards(cacheDir);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Downloading card data failed:');
-    // eslint-disable-next-line no-console
+
     console.error(error);
-    // eslint-disable-next-line no-console
+
     console.error('Cardbase was not updated');
     return;
   }
 
-  // eslint-disable-next-line no-console
   console.info('Creating objects...');
   try {
     await saveAllCards(metadatadict, indexToOracle, ckPrices, mpPrices);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Updating cardbase objects failed:');
-    // eslint-disable-next-line no-console
+
     console.error(error);
-    // eslint-disable-next-line no-console
+
     console.error('Cardbase update may not have fully completed');
   }
 
   try {
-    // eslint-disable-next-line no-console
     console.info('Saving catalog...');
     await writeCatalog('../server/private');
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Updating cardbase objects failed:');
-    // eslint-disable-next-line no-console
+
     console.error(error);
-    // eslint-disable-next-line no-console
+
     console.error('Cardbase update may not have fully completed');
   }
 
-  // eslint-disable-next-line no-console
   console.info('Finished cardbase update...');
 };
 
@@ -903,23 +886,19 @@ const uploadLargeObjectToS3 = async (file: any, key: string) => {
 
     await upload.done();
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error(`Failed to upload ${error}`);
   }
 };
 
 const uploadCardDb = async () => {
   for (const file of Object.keys(fileToAttribute)) {
-    // eslint-disable-next-line no-console
     console.log(`Uploading ${file}...`);
 
     await uploadLargeObjectToS3(`../server/private/${file}`, `cards/${file}`);
 
-    // eslint-disable-next-line no-console
     console.log(`Finished ${file}`);
   }
 
-  // eslint-disable-next-line no-console
   console.log('Uploading manifest...');
   await new Upload({
     client: s3,
@@ -930,10 +909,9 @@ const uploadCardDb = async () => {
       Body: JSON.stringify({ date_exported: new Date() }),
     },
   }).done();
-  // eslint-disable-next-line no-console
+
   console.log('Finished manifest');
 
-  // eslint-disable-next-line no-console
   console.log('done');
 };
 
@@ -948,7 +926,6 @@ const loadMetadatadict = async () => {
     };
   }
 
-  // eslint-disable-next-line no-console
   console.log("Couldn't find metadatadict.json (that is OK)");
   return {
     metadatadict: {},
@@ -980,7 +957,7 @@ const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
     stream.on('error', reject);
   });
   const json = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-  // eslint-disable-next-line no-console
+
   console.log(`Loaded ${json.data.length} cards from Card Kingdom`);
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
@@ -1008,7 +985,7 @@ const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
     stream.on('error', reject);
   });
   const json = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-  // eslint-disable-next-line no-console
+
   console.log(`Loaded ${json.data.length} cards from Mana Pool`);
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
@@ -1024,12 +1001,10 @@ const cacheDir = process.env?.CACHE_DIR ?? '';
     await downloadFromScryfall(metadatadict, indexToOracle, cardKingdomPrices, manaPoolPrices, cacheDir);
     await uploadCardDb();
 
-    // eslint-disable-next-line no-console
     console.log('Complete');
 
     process.exit();
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error(error);
   }
 })();

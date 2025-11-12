@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import { UserRoles } from '@utils/datatypes/User';
+
 import Banner from 'components/Banner';
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
@@ -14,8 +16,6 @@ import TextEntry from 'components/TextEntry';
 import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
-
-import { UserRoles } from '@utils/datatypes/User';
 
 interface DevBlogEntryProps {
   items: any[];
@@ -57,11 +57,9 @@ const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
         setTitle('');
         setBody('');
       } else {
-        // eslint-disable-next-line no-console -- Debugging
         console.error(json);
       }
     } else {
-      // eslint-disable-next-line no-console -- Debugging
       console.error(response);
     }
   }, [csrfFetch, title, body, setItems, items]);

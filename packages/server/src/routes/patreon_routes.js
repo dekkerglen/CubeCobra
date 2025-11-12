@@ -221,7 +221,6 @@ router.get('/redirect', ensureAuth, async (req, res) => {
       return redirect(req, res, '/user/account?nav=patreon');
     })
     .catch((err) => {
-      // eslint-disable-next-line no-console -- Debugging
       console.error(err);
       req.logger.error(err.message, err.stack, JSON.stringify(err));
 

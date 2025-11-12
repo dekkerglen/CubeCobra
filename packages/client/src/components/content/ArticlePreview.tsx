@@ -1,11 +1,11 @@
 import React from 'react';
 
+import Article from '@utils/datatypes/Article';
+import { ContentStatus, ContentStatusEnglish } from '@utils/datatypes/Content';
 import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
-import Article from '@utils/datatypes/Article';
-import { ContentStatus, ContentStatusEnglish } from '@utils/datatypes/Content';
 
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';

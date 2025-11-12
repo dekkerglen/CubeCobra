@@ -1,9 +1,9 @@
-import 'module-alias/register';
-/* eslint-disable no-console */
 import dotenv from 'dotenv';
 import fs from 'fs';
 import https from 'https';
 import path from 'path';
+
+import 'module-alias/register';
 
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });

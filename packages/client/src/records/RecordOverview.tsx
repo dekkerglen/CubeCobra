@@ -1,5 +1,8 @@
 import React, { useContext } from 'react';
 
+import Record from '@utils/datatypes/Record';
+import User from '@utils/datatypes/User';
+
 import { CardBody } from 'components/base/Card';
 import FormatttedDate from 'components/base/FormatttedDate';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -11,8 +14,6 @@ import EditRecordOverviewModal from 'components/modals/EditRecordOverviewModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
-import Record from '@utils/datatypes/Record';
-import User from '@utils/datatypes/User';
 
 import RecordPlayer from './RecordPlayer';
 

@@ -1,10 +1,10 @@
-import { v4 as UUID } from 'uuid';
-
 import Card, { Changes } from '@utils/datatypes/Card';
 import ChangelogType from '@utils/datatypes/ChangeLog';
+import { cardFromId } from 'serverutils/carddb';
+import { v4 as UUID } from 'uuid';
+
 import Changelog from '../../src/dynamo/models/changelog';
 import { getBucketName, getObject, putObject } from '../../src/dynamo/s3client';
-import { cardFromId } from 'serverutils/carddb';
 import {
   createCard,
   createCardDetails,

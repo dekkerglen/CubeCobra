@@ -47,17 +47,14 @@ router.post('/featuredcubes/rotate', async (req, res) => {
 
 const tryUpdate = async (podcast) => {
   if (podcast.inactive) {
-    // eslint-disable-next-line no-console
     console.log(`Skipping inactive podcast: ${podcast.title}`);
     return;
   }
 
   try {
-    // eslint-disable-next-line no-console
     console.log(`Updating podcast: ${podcast.title}`);
     await updatePodcast(podcast);
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(`Failed to update podcast: ${podcast.title}`, { error: err });
   }
 };
@@ -93,7 +90,6 @@ router.post('/dailyp1p1/rotate', async (req, res) => {
       return res.status(500).send('Daily P1P1 rotation failed.');
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Daily P1P1 rotation error:', error);
     return res.status(500).send(`Daily P1P1 rotation failed: ${error.message}`);
   }

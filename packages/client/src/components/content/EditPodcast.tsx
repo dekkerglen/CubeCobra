@@ -1,10 +1,11 @@
 import React from 'react';
 
+import { ContentStatusEnglish } from '@utils/datatypes/Content';
+import PodcastType from '@utils/datatypes/Podcast';
+
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
-import { ContentStatusEnglish } from '@utils/datatypes/Content';
-import PodcastType from '@utils/datatypes/Podcast';
 
 import PodcastPreview from './PodcastPreview';
 interface EditPodcastProps {

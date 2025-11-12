@@ -1,12 +1,11 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
-import fs from 'fs';
-
-import 'module-alias/register';
-
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { getAllOracleIds, getMostReasonableById, getVersionsByOracleId } from '@server/serverutils/carddb';
+import fs from 'fs';
 import path from 'path';
+
+import 'module-alias/register';
 
 (async () => {
   const privateDir = path.join(__dirname, '..', '..', 'server', 'private');

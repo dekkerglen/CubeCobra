@@ -1,13 +1,13 @@
-import path from 'path';
-import fs from 'fs';
 import { config } from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 // Load environment variables from the scripts package .env file
 config({ path: path.join(__dirname, '..', '.env') });
 
 // Import the download functions from server package
-import { updateCardbase } from '@server/util/updatecards';
 import { downloadModelsFromS3 } from '@server/util/downloadModel';
+import { updateCardbase } from '@server/util/updatecards';
 
 const downloadDataFiles = async () => {
   console.log('Downloading card data files...');

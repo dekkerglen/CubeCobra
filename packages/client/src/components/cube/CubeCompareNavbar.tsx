@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import Cube from '@utils/datatypes/Cube';
 
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
@@ -8,7 +9,6 @@ import Text from 'components/base/Text';
 import FilterCollapse from 'components/FilterCollapse';
 import TagColorsModal from 'components/modals/TagColorsModal';
 import SortCollapse from 'components/SortCollapse';
-import Cube from '@utils/datatypes/Cube';
 import useToggle from 'hooks/UseToggle';
 
 import Collapse from '../base/Collapse';

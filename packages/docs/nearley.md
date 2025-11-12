@@ -13,10 +13,11 @@ Nearley is a parser toolkit that compiles grammar definitions into JavaScript pa
 ### Grammar Files
 
 The Nearley grammar files are located in:
+
 ```
 packages/utils/nearley/
 ├── cardFilters.ne    # Main card filter grammar
-├── filterBase.ne     # Base grammar components  
+├── filterBase.ne     # Base grammar components
 ├── values.ne         # Value type definitions
 └── helper.sh         # Build script
 ```
@@ -24,6 +25,7 @@ packages/utils/nearley/
 ### Generated Files
 
 The compiled parser files are generated at:
+
 ```
 packages/utils/src/generated/filtering/cardFilters.js
 packages/client/src/generated/filtering/cardFilters.js
@@ -32,6 +34,7 @@ packages/client/src/generated/filtering/cardFilters.js
 ## Grammar Structure
 
 ### Main Grammar File
+
 - **`cardFilters.ne`**: Defines the complete syntax for card filtering
 - **`filterBase.ne`**: Contains base grammar rules and operators
 - **`values.ne`**: Defines value types (strings, numbers, colors, etc.)
@@ -70,6 +73,7 @@ npm run nearley
 ```
 
 This command:
+
 1. Navigates to the utils package
 2. Runs the `helper.sh` script
 3. Compiles `.ne` files using `nearleyc`
@@ -79,6 +83,7 @@ This command:
 ### When to Regenerate
 
 You must regenerate the parser when you:
+
 - Modify any `.ne` grammar file
 - Add new filter syntax
 - Change operator precedence
@@ -88,6 +93,7 @@ You must regenerate the parser when you:
 ### Automatic Regeneration
 
 The parser is automatically regenerated during:
+
 - Initial setup (`npm run setup`)
 - Docker container builds
 - Production deployments
@@ -95,6 +101,7 @@ The parser is automatically regenerated during:
 ## Development Workflow
 
 ### 1. Modify Grammar
+
 Edit the appropriate `.ne` file in `packages/utils/nearley/`:
 
 ```nearley
@@ -104,11 +111,13 @@ rarityValue -> "common" | "uncommon" | "rare" | "mythic"
 ```
 
 ### 2. Regenerate Parser
+
 ```bash
 npm run nearley
 ```
 
 ### 3. Test Changes
+
 ```bash
 # Run filter tests
 npm test -- filtering
@@ -118,7 +127,9 @@ npm test -- cardFilters
 ```
 
 ### 4. Commit Changes
+
 Commit both the grammar changes and generated files:
+
 ```bash
 git add packages/utils/nearley/cardFilters.ne
 git add packages/utils/src/generated/filtering/cardFilters.js
@@ -129,14 +140,18 @@ git commit -m "Add rarity filter support"
 ## Testing Filters
 
 ### Unit Tests
+
 Filter parsing is tested in:
+
 ```
 packages/tests/cards/filtering.test.ts
 packages/tests/cards/filterOperations.test.ts
 ```
 
 ### Manual Testing
+
 Test filters in the application:
+
 1. Navigate to any cube page
 2. Use the card search/filter input
 3. Try your new filter syntax
@@ -147,17 +162,20 @@ Test filters in the application:
 ### Common Issues
 
 **Syntax Errors in Grammar**
+
 ```bash
 # Check grammar syntax
 nearleyc packages/utils/nearley/cardFilters.ne
 ```
 
 **Parser Not Updated**
+
 - Ensure you ran `npm run nearley` after grammar changes
 - Check that generated files have recent timestamps
 - Verify changes are reflected in both utils and client packages
 
 **Test Failures**
+
 - Update test cases to match new grammar
 - Add tests for new filter functionality
 - Check that filter functions handle new syntax correctly
@@ -165,12 +183,14 @@ nearleyc packages/utils/nearley/cardFilters.ne
 ### Grammar Debugging
 
 **Enable Debug Mode**
+
 ```javascript
 // In parser usage code
 const parser = new Parser(Grammar.fromCompiled(cardFilters), { debug: true });
 ```
 
 **Test Grammar Incrementally**
+
 ```bash
 # Test specific grammar rules
 nearley-test cardFilters.ne --input "cmc:3"
@@ -179,11 +199,13 @@ nearley-test cardFilters.ne --input "cmc:3"
 ## Performance Considerations
 
 ### Parser Size
+
 - Keep grammar rules focused and minimal
 - Avoid deeply nested rules when possible
 - Consider parse-time complexity for common queries
 
 ### Caching
+
 - Generated parsers are cached in memory
 - Complex filters may benefit from result caching
 - Consider memoization for frequently used patterns
@@ -191,19 +213,23 @@ nearley-test cardFilters.ne --input "cmc:3"
 ## Advanced Usage
 
 ### Custom Filter Functions
+
 Define custom processing in grammar files:
+
 ```nearley
-customFilter -> "special" ":" value {% 
-  function(data) { 
-    return { type: 'special', value: data[2] }; 
-  } 
+customFilter -> "special" ":" value {%
+  function(data) {
+    return { type: 'special', value: data[2] };
+  }
 %}
 ```
 
 ### Error Handling
+
 The grammar includes error recovery for common mistakes:
+
 - Missing operators
-- Unmatched parentheses  
+- Unmatched parentheses
 - Invalid value types
 
 ## Contributing

@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import CardPackageData, { CardPackageStatus } from '@utils/datatypes/CardPackage';
+
 import Banner from 'components/Banner';
 import Alert from 'components/base/Alert';
 import Button from 'components/base/Button';
@@ -20,8 +22,6 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-
-import CardPackageData, { CardPackageStatus } from '@utils/datatypes/CardPackage';
 
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 

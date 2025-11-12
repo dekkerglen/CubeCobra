@@ -1,10 +1,11 @@
 import React, { useContext, useMemo } from 'react';
 
-import { cardType } from '@utils/cardutil';
-import { sortIntoGroups, SORTS } from '@utils/sorting/Sort';
 import { weightedAverage, weightedMedian, weightedStdDev } from '@utils/analytics/Stats';
-
+import { cardType } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
+import { calculateAsfans } from '@utils/drafting/createdraft';
+import { sortIntoGroups, SORTS } from '@utils/sorting/Sort';
+
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
@@ -12,7 +13,6 @@ import Text from '../components/base/Text';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { compareStrings, SortableTable } from '../components/SortableTable';
 import CubeContext from '../contexts/CubeContext';
-import { calculateAsfans } from '@utils/drafting/createdraft';
 import useQueryParam from '../hooks/useQueryParam';
 
 interface Characteristic {
@@ -48,7 +48,6 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
     try {
       return calculateAsfans(cube, cards, parseInt(draftFormat || '-1', 10));
     } catch (e) {
-      // eslint-disable-next-line no-console -- Debugging
       console.error(
         'Invalid Draft Format',
         draftFormat,

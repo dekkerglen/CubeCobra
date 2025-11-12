@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { SortConfig } from '@utils/sorting/sortContext';
+
 import { Flexbox } from './base/Layout';
 import Text from './base/Text';
 

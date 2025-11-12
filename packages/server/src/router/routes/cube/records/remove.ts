@@ -1,8 +1,9 @@
 import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../types/express';
 import { isCubeEditable } from 'serverutils/cubefn';
+
+import { Request, Response } from '../../../../types/express';
 
 export const deleteRecordHandler = async (req: Request, res: Response) => {
   const recordId = req.params.id;

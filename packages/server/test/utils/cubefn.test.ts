@@ -1,7 +1,8 @@
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
-import { getBotPrediction } from '../../src/server/util/userUtil';
 import { cardFromId } from 'serverutils/carddb';
 import { generateBalancedPack, generatePack } from 'serverutils/cubefn';
+
+import { getBotPrediction } from '../../src/server/util/userUtil';
 import { createCardDetails, createCube } from '../test-utils/data';
 
 // Mock dependencies

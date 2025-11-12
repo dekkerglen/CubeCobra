@@ -1,9 +1,10 @@
 import React, { useContext } from 'react';
 
-import ConfirmDeleteModal from 'components/modals/ConfirmDeleteModal';
-import { CSRFContext } from 'contexts/CSRFContext';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
+
+import ConfirmDeleteModal from 'components/modals/ConfirmDeleteModal';
+import { CSRFContext } from 'contexts/CSRFContext';
 
 interface DeckDeleteModalProps {
   deck: Draft;
@@ -22,7 +23,6 @@ const DeckDeleteModal: React.FC<DeckDeleteModalProps> = ({ deck, cubeID, nextURL
     });
 
     if (!response.ok) {
-      // eslint-disable-next-line no-console -- Debugging
       console.error(response);
     } else if (nextURL) {
       window.location.href = nextURL;

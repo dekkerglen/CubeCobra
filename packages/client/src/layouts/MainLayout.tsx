@@ -1,5 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 
+import { UserRoles } from '@utils/datatypes/User';
+
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
@@ -12,8 +14,6 @@ import VideoBanner from 'components/VideoBanner';
 import UserContext from 'contexts/UserContext';
 import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
-
-import { UserRoles } from '@utils/datatypes/User';
 
 interface MainLayoutProps {
   children: React.ReactNode;

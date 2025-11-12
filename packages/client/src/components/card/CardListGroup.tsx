@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Card from '@utils/datatypes/Card';
+
 import { ListGroup, ListGroupItem } from '../base/ListGroup';
 import AutocardListItem from './AutocardListItem';
 

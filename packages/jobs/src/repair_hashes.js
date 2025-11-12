@@ -11,7 +11,7 @@ const path = require('path');
   try {
     const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
     await initializeCardDb(privateDir);
-    // eslint-disable-next-line no-console
+
     console.log('Repairing hashes');
 
     // scan cubes
@@ -49,35 +49,31 @@ const path = require('path');
 
               // put hashes to delete
               if (hashesToDelete.length > 0) {
-                // eslint-disable-next-line no-console
                 console.log(`Deleting ${hashesToDelete.length} hashes for cube ${cube.id}`);
                 await CubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: cube.id })));
               }
 
               // put hashes to put
               if (hashesToPut.length > 0) {
-                // eslint-disable-next-line no-console
                 console.log(`Putting ${hashesToPut.length} hashes for cube ${cube.id}`);
                 await CubeHash.batchPut(hashesToPut);
               }
             } catch (err) {
-              // eslint-disable-next-line no-console
               console.log(`Error processing cube ${cube.id}`);
-              // eslint-disable-next-line no-console
+
               console.error(err);
             }
           }),
         );
 
         i += 1;
-        // eslint-disable-next-line no-console
+
         console.log(`Processed batch ${i}: ${batch.length} cubes`);
       }
     } while (lastKey);
 
     process.exit();
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(err);
     process.exit(1);
   }

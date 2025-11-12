@@ -1,12 +1,13 @@
 import React from 'react';
 
+import { CardDetails } from '@utils/datatypes/Card';
+import HistoryType from '@utils/datatypes/History';
+
 import { Card } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import { TabContent, Tabs } from 'components/base/Tabs';
 import Text from 'components/base/Text';
-import { CardDetails } from '@utils/datatypes/Card';
-import HistoryType from '@utils/datatypes/History';
 import useQueryParam from 'hooks/useQueryParam';
 
 import CardBreakdownElo from './Elo';

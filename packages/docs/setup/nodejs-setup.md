@@ -73,7 +73,7 @@ npm run setup:local
 - Install dependencies
 - Create a `.env` file with values for running locally
 - Setup LocalStack with S3 bucket
-- Setup local files for application persistence  
+- Setup local files for application persistence
 - Setup LocalStack DynamoDB tables (Users, Cubes, Cards, etc.)
 
 ## First-Time Data Download
@@ -85,11 +85,13 @@ npm run download-data-files
 ```
 
 This downloads:
+
 - **Card definitions** (~100MB): Complete Magic card database from Scryfall
 - **ML model files** (~500MB): AI models for draft bots and recommendations
 - **Combo data**: Card interaction and synergy information
 
 **This step is only required once** during initial setup. The data files will be saved to:
+
 - `/packages/server/private/` - Card definitions and metadata
 - `/packages/server/model/` - ML model files for AI features
 
@@ -101,7 +103,7 @@ If you're on Windows, set bash as your script shell:
 npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
 ```
 
-*(Adjust the path to match your bash installation)*
+_(Adjust the path to match your bash installation)_
 
 ## Running CubeCobra
 
@@ -121,7 +123,7 @@ npm run start:dev
 
 Connect to the app at: **http://localhost:8080**
 
-*(Despite logs showing port 5000, use port 8080 for the webpack dev server)*
+_(Despite logs showing port 5000, use port 8080 for the webpack dev server)_
 
 Nodemon will restart the application when source files change.
 
@@ -134,6 +136,7 @@ Follow the same [registration process](./docker-setup.md#account-registration) a
 If you're not using Docker and have `LOCALSTACK_SES="true"` in your `.env` file:
 
 1. **Verify email for SES**:
+
    ```sh
    ./venv/bin/awslocal ses verify-email-identity --email 'support@cubecobra.com'
    ```

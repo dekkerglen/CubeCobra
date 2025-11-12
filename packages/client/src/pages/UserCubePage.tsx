@@ -1,5 +1,8 @@
 import React, { useContext } from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+import User from '@utils/datatypes/User';
+
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -10,8 +13,6 @@ import Markdown from 'components/Markdown';
 import MtgImage from 'components/MtgImage';
 import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
-import Cube from '@utils/datatypes/Cube';
-import User from '@utils/datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
 

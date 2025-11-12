@@ -49,13 +49,15 @@ The primary script for downloading essential data files during initial setup.
 
 **Location**: `packages/scripts/download-data-files.js`
 
-**Purpose**: 
+**Purpose**:
+
 - Downloads latest card data from S3/Scryfall
 - Downloads ML model files for draft bots
 - Places files in correct monorepo locations
 - **First-time setup only** - not for regular updates
 
 **Usage**:
+
 ```bash
 # Via npm script (recommended)
 npm run download-data-files
@@ -65,6 +67,7 @@ node --max-old-space-size=8192 packages/scripts/download-data-files.js
 ```
 
 **What it does**:
+
 1. Downloads card definitions to `/packages/server/private/`
 2. Downloads ML model files to `/packages/server/model/`
 3. Ensures directory structure exists
@@ -76,7 +79,8 @@ node --max-old-space-size=8192 packages/scripts/download-data-files.js
 
 **Location**: `packages/scripts/force_update.js`
 
-**Purpose**: 
+**Purpose**:
+
 - Legacy script for updating card definitions
 - Still used in some existing workflows
 - Calls `updateCardbase()` and `downloadFromS3()`
@@ -88,6 +92,7 @@ node --max-old-space-size=8192 packages/scripts/download-data-files.js
 **Purpose**: Core function that manages card definition downloads
 
 **Process**:
+
 1. **Download from S3**: Retrieves latest processed card files
 2. **Local Storage**: Saves files to specified directory (default: `packages/server/private/`)
 3. **Memory Loading**: Loads files into application memory via `loadAllFiles()`
@@ -165,6 +170,7 @@ npm run download-data-files
 ```
 
 This downloads:
+
 - Card definitions to `/packages/server/private/`
 - ML model files to `/packages/server/model/`
 
@@ -198,8 +204,8 @@ Card definitions are loaded into memory for performance:
 
 ```javascript
 // In server startup
-await updateCardbase();  // Download and load files
-await loadAllFiles();    // Load into memory structures
+await updateCardbase(); // Download and load files
+await loadAllFiles(); // Load into memory structures
 ```
 
 ### Memory Usage
@@ -239,16 +245,19 @@ CubeCobra enhances Scryfall data with:
 ### Regular Updates
 
 **Daily**:
+
 - Download latest card definitions
 - Update card images and metadata
 - Refresh combo relationships
 
 **Weekly**:
+
 - Full analytics recalculation
 - Data validation and cleanup
 - Performance optimization
 
 **Monthly**:
+
 - Comprehensive data export
 - Archive old versions
 - Capacity planning
@@ -256,6 +265,7 @@ CubeCobra enhances Scryfall data with:
 ### Manual Intervention
 
 **New Set Releases**:
+
 1. Wait for Scryfall to update their bulk data
 2. Run `npm run update-cards` to fetch new cards
 3. Update combo relationships for new cards
@@ -263,6 +273,7 @@ CubeCobra enhances Scryfall data with:
 5. Deploy updates to production
 
 **Emergency Updates**:
+
 - Errata or rules changes
 - Banned/unbanned cards
 - Critical bug fixes
@@ -272,6 +283,7 @@ CubeCobra enhances Scryfall data with:
 ### Common Issues
 
 **Missing Cards**:
+
 ```bash
 # Check if card exists in source data
 grep "card_name" private/carddict.json
@@ -281,12 +293,14 @@ npm run update-cards
 ```
 
 **Memory Issues**:
+
 ```bash
 # Increase Node.js memory limit
 NODE_OPTIONS=--max_old_space_size=18192 npm run cards
 ```
 
 **Outdated Data**:
+
 ```bash
 # Check last update time
 cat private/manifest.json | jq .last_updated
@@ -299,6 +313,7 @@ npm run cards
 ### File Corruption
 
 **Validation**:
+
 ```bash
 # Check JSON validity
 jq . private/carddict.json > /dev/null && echo "Valid" || echo "Invalid"
@@ -308,6 +323,7 @@ ls -lh private/*.json
 ```
 
 **Recovery**:
+
 ```bash
 # Re-download from S3
 rm private/carddict.json

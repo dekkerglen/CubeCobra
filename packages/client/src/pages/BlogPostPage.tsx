@@ -1,10 +1,11 @@
 import React from 'react';
 
+import BlogPostType from '@utils/datatypes/BlogPost';
+
 import Banner from 'components/Banner';
 import BlogPost from 'components/blog/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import BlogPostType from '@utils/datatypes/BlogPost';
 import MainLayout from 'layouts/MainLayout';
 
 interface BlogPostPageProps {

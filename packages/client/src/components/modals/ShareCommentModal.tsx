@@ -1,11 +1,11 @@
 import React, { useContext } from 'react';
 
 import { PasteIcon } from '@primer/octicons-react';
+import Comment from '@utils/datatypes/Comment';
 
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import { Modal, ModalBody, ModalHeader } from 'components/base/Modal';
-import Comment from '@utils/datatypes/Comment';
 
 import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { Flexbox } from '../base/Layout';

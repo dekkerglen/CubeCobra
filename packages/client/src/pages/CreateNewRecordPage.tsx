@@ -1,6 +1,8 @@
 import React from 'react';
 
 import { ArrowLeftIcon } from '@primer/octicons-react';
+import Cube from '@utils/datatypes/Cube';
+import Record from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -11,8 +13,6 @@ import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
-import Cube from '@utils/datatypes/Cube';
-import Record from '@utils/datatypes/Record';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 

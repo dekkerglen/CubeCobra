@@ -1,7 +1,8 @@
+import CubeFn from 'serverutils/cubefn';
+
 import Cube from '../src/dynamo/models/cube';
 import User from '../src/dynamo/models/user';
 import { ensureCubeVisible, getFollowers } from '../src/router/routes/api/followers';
-import CubeFn from 'serverutils/cubefn';
 import { createCube, createUser } from './test-utils/data';
 import { expectRegisteredRoutes } from './test-utils/route';
 import { call, middleware } from './test-utils/transport';

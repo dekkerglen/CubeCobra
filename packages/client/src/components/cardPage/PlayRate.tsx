@@ -1,12 +1,13 @@
 import React from 'react';
 
+import { CardDetails } from '@utils/datatypes/Card';
+import HistoryType from '@utils/datatypes/History';
+
 import { CardBody } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import PlayRateGraph from 'components/PlayRateGraph';
-import { CardDetails } from '@utils/datatypes/Card';
-import HistoryType from '@utils/datatypes/History';
 
 interface CardPageProps {
   card: CardDetails;

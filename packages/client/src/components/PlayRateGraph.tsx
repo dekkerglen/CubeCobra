@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
+import History, { CubeType } from '@utils/datatypes/History';
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -16,7 +17,6 @@ import 'chartjs-adapter-date-fns';
 
 import { formatDate } from 'utils/Date';
 
-import History, { CubeType } from '@utils/datatypes/History';
 import { CSRFContext } from '../contexts/CSRFContext';
 import useQueryParam from '../hooks/useQueryParam';
 import { Col, Flexbox, Row } from './base/Layout';

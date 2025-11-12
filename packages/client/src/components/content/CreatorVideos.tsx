@@ -1,5 +1,8 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import { ContentStatus, ContentType } from '@utils/datatypes/Content';
+import Video from '@utils/datatypes/Video';
+
 import Button from 'components/base/Button';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
@@ -7,8 +10,6 @@ import VideoPreview from 'components/content/VideoPreview';
 import ContentDeleteModal from 'components/modals/ContentDeleteModal';
 import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
-import { ContentStatus, ContentType } from '@utils/datatypes/Content';
-import Video from '@utils/datatypes/Video';
 
 const DeleteModalButton = withModal(Button, ContentDeleteModal);
 

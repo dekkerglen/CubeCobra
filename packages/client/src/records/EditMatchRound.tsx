@@ -1,10 +1,11 @@
 import React from 'react';
 
+import { PlayerList, Round } from '@utils/datatypes/Record';
+
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
-import { PlayerList, Round } from '@utils/datatypes/Record';
 
 interface EditMatchRoundProps {
   players: PlayerList;

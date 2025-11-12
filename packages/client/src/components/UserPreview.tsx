@@ -1,11 +1,12 @@
 import React from 'react';
 
+import User from '@utils/datatypes/User';
+
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import { Tile } from 'components/base/Tile';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
-import User from '@utils/datatypes/User';
 
 interface UserPreviewProps {
   user: User;

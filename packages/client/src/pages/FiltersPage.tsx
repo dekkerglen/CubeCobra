@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { CARD_STATUSES, FINISHES } from '@utils/datatypes/Card';
+
 import Banner from 'components/Banner';
 import Accordion from 'components/base/Accordion';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -9,8 +11,6 @@ import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-
-import { CARD_STATUSES, FINISHES } from '@utils/datatypes/Card';
 
 const LAND_SHORTCUTS: { primary: string; alternates?: string[] }[] = [
   {

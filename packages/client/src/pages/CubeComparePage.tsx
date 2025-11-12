@@ -1,9 +1,10 @@
 import React, { useContext, useState } from 'react';
 
-import Query from 'utils/Query';
-
 import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
+
+import Query from 'utils/Query';
+
 import CompareView from '../components/CompareView';
 import CubeCompareNavbar from '../components/cube/CubeCompareNavbar';
 import DynamicFlash from '../components/DynamicFlash';

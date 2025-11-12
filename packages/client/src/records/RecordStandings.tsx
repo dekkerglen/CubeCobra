@@ -1,5 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 
+import Record from '@utils/datatypes/Record';
+
 import { CardBody } from 'components/base/Card';
 import Link from 'components/base/Link';
 import Table from 'components/base/Table';
@@ -8,7 +10,6 @@ import AssignTrophiesModal from 'components/modals/AssignTrophiesModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
-import Record from '@utils/datatypes/Record';
 
 const AssignTrophiesLink = withModal(Link, AssignTrophiesModal);
 

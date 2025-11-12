@@ -1,9 +1,10 @@
 import React from 'react';
 
+import Record from '@utils/datatypes/Record';
+
 import Checkbox from 'components/base/Checkbox';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
-import Record from '@utils/datatypes/Record';
 
 interface EditTrophiesProps {
   record: Record;

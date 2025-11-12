@@ -1,8 +1,9 @@
 import React from 'react';
 
+import { Round } from '@utils/datatypes/Record';
+
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
-import { Round } from '@utils/datatypes/Record';
 
 interface EditMatchRoundResultsProps {
   round: Round;

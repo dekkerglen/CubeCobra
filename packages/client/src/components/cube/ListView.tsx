@@ -10,11 +10,10 @@ import {
   isCardCmcValid,
   normalizeName,
 } from '@utils/cardutil';
-import { getLabels, sortForDownload } from '@utils/sorting/Sort';
-
 import CardType from '@utils/datatypes/Card';
 import TagData from '@utils/datatypes/TagData';
-import CubeContext from 'contexts/CubeContext';
+import { getLabels, sortForDownload } from '@utils/sorting/Sort';
+
 import Button from 'components/base/Button';
 import { Card } from 'components/base/Card';
 import Checkbox from 'components/base/Checkbox';
@@ -23,11 +22,13 @@ import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
-import withCardModal from '../modals/WithCardModal';
-import withGroupModal from '../modals/WithGroupModal';
 import PagedTable from 'components/PagedTable';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
+import CubeContext from 'contexts/CubeContext';
+
+import withCardModal from '../modals/WithCardModal';
+import withGroupModal from '../modals/WithGroupModal';
 
 const GroupModalButton = withGroupModal(Button);
 

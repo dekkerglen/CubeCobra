@@ -2,8 +2,9 @@ import commentModel from 'dynamo/models/comment';
 import Cube from 'dynamo/models/cube';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../types/express';
 import { isValidUUID } from 'serverutils/validation';
+
+import { Request, Response } from '../../../../types/express';
 
 export const deleteP1P1Handler = async (req: Request, res: Response) => {
   try {

@@ -1,8 +1,9 @@
 import React, { createRef, useState } from 'react';
 
+import Record, { Round } from '@utils/datatypes/Record';
+
 import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
-import Record, { Round } from '@utils/datatypes/Record';
 
 import EditMatchRound from '../../records/EditMatchRound';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';

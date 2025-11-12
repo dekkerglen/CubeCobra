@@ -1,6 +1,7 @@
 import BlogPost, { UnhydratedBlogPost } from '@utils/datatypes/BlogPost';
-import Blog from '../../../src/dynamo/models/blog';
 import * as carddb from 'serverutils/carddb';
+
+import Blog from '../../../src/dynamo/models/blog';
 import {
   createBlogPost,
   createChangelog,

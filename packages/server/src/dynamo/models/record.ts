@@ -1,9 +1,8 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
-
 import RecordType from '@utils/datatypes/Record';
 import createClient from 'dynamo/util';
+import { v4 as uuidv4 } from 'uuid';
 
 const client = createClient({
   name: 'RECORD',

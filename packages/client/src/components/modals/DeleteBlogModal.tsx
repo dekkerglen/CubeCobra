@@ -1,10 +1,11 @@
 import React from 'react';
 
+import BlogPost from '@utils/datatypes/BlogPost';
+
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Text from 'components/base/Text';
-import BlogPost from '@utils/datatypes/BlogPost';
 
 interface DeleteCubeModalProps {
   isOpen: boolean;

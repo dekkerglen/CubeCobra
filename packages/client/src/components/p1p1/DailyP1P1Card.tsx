@@ -1,12 +1,13 @@
 import React from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
+
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
-import Cube from '@utils/datatypes/Cube';
-import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
 
 interface DailyP1P1CardProps {
   pack: P1P1Pack;

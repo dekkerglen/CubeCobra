@@ -1,5 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card } from 'components/base/Card';
@@ -8,7 +10,6 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Moda
 import Text from 'components/base/Text';
 import LoadingButton from 'components/LoadingButton';
 import { CSRFContext } from 'contexts/CSRFContext';
-import Cube from '@utils/datatypes/Cube';
 
 interface CustomizeBasicsModalProps {
   isOpen: boolean;

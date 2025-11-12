@@ -1,10 +1,11 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import Draft from '@utils/datatypes/Draft';
+
 import { Card, CardFooter, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
 import DeckPreview from 'components/DeckPreview';
 import { CSRFContext } from 'contexts/CSRFContext';
-import Draft from '@utils/datatypes/Draft';
 
 import { Flexbox } from './base/Layout';
 import Pagination from './base/Pagination';

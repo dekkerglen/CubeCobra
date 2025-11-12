@@ -1,3 +1,4 @@
+import { createCard, createCardDetails } from '../../../server/test/test-utils/data';
 import {
   getBulkManaPoolLink,
   getCardHoarderLink,
@@ -7,8 +8,6 @@ import {
   getTCGLink,
   tcgplayerAffiliate,
 } from '../../src/utils/Affiliate';
-
-import { createCard, createCardDetails } from '../../../server/test/test-utils/data';
 
 describe('TCGPlayer', () => {
   it('should generate a valid link for a card with a TCGPlayer ID', () => {

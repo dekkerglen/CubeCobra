@@ -1,9 +1,9 @@
 import React from 'react';
 
+import Episode from '@utils/datatypes/Episode';
 import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
-import Episode from '@utils/datatypes/Episode';
 
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';

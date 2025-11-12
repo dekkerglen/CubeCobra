@@ -1,12 +1,12 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
-
 import Comment, { UnhydratedComment } from '@utils/datatypes/Comment';
 import { CubeImage } from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
-import { getImageData } from 'serverutils/imageutil';
 import createClient from 'dynamo/util';
+import { getImageData } from 'serverutils/imageutil';
+import { v4 as uuidv4 } from 'uuid';
+
 import UserModel from './user';
 
 const client = createClient({

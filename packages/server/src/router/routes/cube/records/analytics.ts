@@ -1,16 +1,16 @@
+import { cardOracleId } from '@utils/cardutil';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
 import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
-import { cardOracleId } from '@utils/cardutil';
-
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import RecordDao from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../types/express';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
+
+import { Request, Response } from '../../../../types/express';
 
 function toBatches<T>(items: T[], batchSize: number): T[][] {
   const batches: any[][] = [];

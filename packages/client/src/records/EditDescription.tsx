@@ -1,8 +1,9 @@
 import React from 'react';
 
+import Record from '@utils/datatypes/Record';
+
 import Input from 'components/base/Input';
 import TextEntry from 'components/TextEntry';
-import Record from '@utils/datatypes/Record';
 
 import { Flexbox } from '../components/base/Layout';
 

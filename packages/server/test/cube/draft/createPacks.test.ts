@@ -1,8 +1,7 @@
-import seedrandom from 'seedrandom';
-
-import { createPacks, CreatePacksResult, DraftResult, NextCardFn } from '@utils/drafting/createdraft';
 import { DraftFormat, DraftState, Pack } from '@utils/datatypes/Draft';
+import { createPacks, CreatePacksResult, DraftResult, NextCardFn } from '@utils/drafting/createdraft';
 import { buildDefaultSteps, createDefaultDraftFormat } from '@utils/draftutil';
+import seedrandom from 'seedrandom';
 
 describe('createPacks', () => {
   beforeEach(() => {

@@ -1,5 +1,8 @@
 import React from 'react';
 
+import CardType from '@utils/datatypes/Card';
+import Cube from '@utils/datatypes/Cube';
+
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -8,8 +11,6 @@ import CardGrid from 'components/card/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
 import P1P1FromPackGenerator from 'components/p1p1/P1P1FromPackGenerator';
 import RenderToRoot from 'components/RenderToRoot';
-import CardType from '@utils/datatypes/Card';
-import Cube from '@utils/datatypes/Cube';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 

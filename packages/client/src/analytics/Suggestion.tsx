@@ -1,10 +1,10 @@
 import React from 'react';
 
 import { encodeName } from '@utils/cardutil';
-
 import Card from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
+
 import Text from '../components/base/Text';
 import AddToCubeModal from '../components/modals/AddToCubeModal';
 import withAutocard from '../components/WithAutocard';

@@ -1,8 +1,7 @@
-import json from 'big-json';
-import fs from 'fs';
-
 // import missing types from @utils/datatypes/Catalog
 import { Catalog } from '@utils/datatypes/CardCatalog';
+import json from 'big-json';
+import fs from 'fs';
 
 const catalog: Catalog = {
   cardtree: {},
@@ -53,7 +52,7 @@ async function loadJSONFile(filename: string, attribute: keyof Catalog) {
 
       readStream.on('end', () => {
         const fileDuration = ((Date.now() - fileStart) / 1000).toFixed(2);
-        // eslint-disable-next-line no-console
+
         console.info(`Loaded ${filename} into ${attribute} in ${fileDuration}s`);
         resolve();
       });
@@ -70,7 +69,6 @@ export async function loadAllFiles(basePath: string = 'private') {
 }
 
 export async function initializeCardDb(basePath: string = 'private') {
-  // eslint-disable-next-line no-console
   console.info('Loading carddb...');
   await loadAllFiles(basePath);
 
@@ -79,7 +77,6 @@ export async function initializeCardDb(basePath: string = 'private') {
     catalog.indexToOracle.map((oracleId: string, index: number) => [oracleId, index]),
   );
 
-  // eslint-disable-next-line no-console
   console.info('Finished loading carddb.');
 }
 

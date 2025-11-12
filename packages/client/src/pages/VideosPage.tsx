@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 
+import Video from '@utils/datatypes/Video';
+
 import Banner from 'components/Banner';
 import { Flexbox } from 'components/base/Layout';
 import VideoPreview from 'components/content/VideoPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
 import RenderToRoot from 'components/RenderToRoot';
-import Video from '@utils/datatypes/Video';
 import MainLayout from 'layouts/MainLayout';
 
 interface VideosPageProps {

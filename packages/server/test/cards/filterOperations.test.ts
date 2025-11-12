@@ -3,6 +3,7 @@ import {
   propertyComparisonOperation,
   setElementOperation,
 } from '@utils/filtering/FuncOperations';
+
 import { createCardFromDetails } from '../test-utils/data';
 
 describe('setElementOperation', () => {

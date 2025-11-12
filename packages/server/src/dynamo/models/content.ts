@@ -12,8 +12,9 @@ import Image from '@utils/datatypes/Image';
 import Podcast from '@utils/datatypes/Podcast';
 import UserType from '@utils/datatypes/User';
 import Video from '@utils/datatypes/Video';
-import { getBucketName, getObject, putObject } from '../s3client';
 import createClient from 'dynamo/util';
+
+import { getBucketName, getObject, putObject } from '../s3client';
 
 const createHydratedContent = (document: UnhydratedContent, image: Image, owner?: UserType): Content => {
   //Because type is a known set we don't need a default/unknown type case

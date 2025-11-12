@@ -1,13 +1,12 @@
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-
 import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import User, {
   DefaultGridTightnessPreference,
   UnhydratedUser,
   UserWithSensitiveInformation,
 } from '@utils/datatypes/User';
-import { getImageData } from 'serverutils/imageutil';
 import createClient from 'dynamo/util';
+import { getImageData } from 'serverutils/imageutil';
 
 const idAttr: keyof UnhydratedUser = 'id';
 const usernameLowerAttr: keyof UnhydratedUser = 'usernameLower';

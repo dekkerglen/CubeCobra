@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { allFields, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
+
 import CubeContext from '../contexts/CubeContext';
 import FilterContext from '../contexts/FilterContext';
 import Button from './base/Button';

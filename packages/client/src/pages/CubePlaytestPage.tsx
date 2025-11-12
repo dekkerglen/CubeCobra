@@ -1,5 +1,8 @@
 import React, { useContext, useMemo } from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
+
 import Button from 'components/base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import Controls from 'components/base/Controls';
@@ -19,8 +22,6 @@ import SealedCard from 'components/SealedCard';
 import StandardDraftCard from 'components/StandardDraftCard';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
-import Cube from '@utils/datatypes/Cube';
-import Draft from '@utils/datatypes/Draft';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 

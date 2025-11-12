@@ -1,10 +1,11 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
+import { cardName } from '@utils/cardutil';
+import { BoardType } from '@utils/datatypes/Card';
 
 import { getCard } from 'utils/cards/getCard';
 
-import { BoardType } from '@utils/datatypes/Card';
 import { CSRFContext } from '../contexts/CSRFContext';
 import CubeContext from '../contexts/CubeContext';
 import DisplayContext, { DisplayContextValue } from '../contexts/DisplayContext';
@@ -21,7 +22,6 @@ import Tooltip from './base/Tooltip';
 import Changelist from './Changelist';
 import LoadingButton from './LoadingButton';
 import TextEntry from './TextEntry';
-import { cardName } from '@utils/cardutil';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
@@ -78,7 +78,6 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           addRef.current.focus();
         }
       } catch (e) {
-        // eslint-disable-next-line no-console -- Debugging
         console.error(e);
       }
     },
@@ -136,7 +135,6 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           focus.current.focus();
         }
       } catch (e) {
-        // eslint-disable-next-line no-console -- Debugging
         console.error(e);
       }
     },

@@ -1,10 +1,9 @@
 import React, { useContext } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
-
+import { UserRoles } from '@utils/datatypes/User';
 import { getCubeId } from '@utils/Util';
 
-import { UserRoles } from '@utils/datatypes/User';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import { CardFooter } from '../base/Card';

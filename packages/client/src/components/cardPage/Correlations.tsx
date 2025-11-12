@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { cardId, detailsToCard } from '@utils/cardutil';
-
 import { CardDetails } from '@utils/datatypes/Card';
 import { Combo } from '@utils/datatypes/cardCatalog';
+
 import { CSRFContext } from '../../contexts/CSRFContext';
 import useQueryParam from '../../hooks/useQueryParam';
 import { Card, CardBody } from '../base/Card';
@@ -170,7 +170,6 @@ const CardBreakdownInfo: React.FC<CorrelationProps> = ({
         setLoadingCombos(false);
       } catch (e) {
         if (!cancelled) {
-          // eslint-disable-next-line no-console
           console.error('Error fetching combos:', e);
           setLoadedCombos([]);
           setLoadedForOracleId(oracleId ?? null);

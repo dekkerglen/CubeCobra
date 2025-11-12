@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
+import Card from '@utils/datatypes/Card';
 import classNames from 'classnames';
 
-import Card from '@utils/datatypes/Card';
 import DraftLocation from '../drafting/DraftLocation';
 import FoilCardImage from './FoilCardImage';
 

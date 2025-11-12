@@ -39,6 +39,7 @@ Our developers are happy to help get new folks started with the project - don't 
 ### 2. Set Up Development Environment
 
 Choose your preferred setup method:
+
 - **[Docker Setup](./setup/docker-setup.md)** (Recommended)
 - **[Node.js Setup](./setup/nodejs-setup.md)** (Alternative)
 
@@ -214,6 +215,7 @@ Report bugs in the **Discord development channels** with:
 **Do NOT report security vulnerabilities in public Discord channels.**
 
 Instead:
+
 - Message `@Dekkaru` privately on Discord
 - Email `support@cubecobra.com`
 - Provide details privately so we can fix before disclosure
@@ -252,6 +254,7 @@ Instead:
 ### Automated Checks
 
 All pull requests run automated checks:
+
 - **Linting**: ESLint for code quality
 - **Formatting**: Prettier for consistent style
 - **Tests**: Jest test suite
@@ -262,6 +265,7 @@ Make sure these pass before requesting review.
 ### Human Review
 
 We review code for:
+
 - **Functionality**: Does it work as intended?
 - **Testing**: Are there adequate tests?
 - **Performance**: Will it scale appropriately?
@@ -272,12 +276,14 @@ We review code for:
 ### Review Guidelines
 
 **For reviewers:**
+
 - Be constructive and helpful in feedback
 - Explain the reasoning behind suggestions
 - Link to relevant documentation or examples
 - Approve when satisfied, even if minor improvements could be made
 
 **For authors:**
+
 - Respond to feedback promptly and professionally
 - Ask questions if feedback is unclear
 - Make requested changes or explain why you disagree

@@ -1,6 +1,5 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
-
 import Notification, { NewNotification, NotificationStatus } from '@utils/datatypes/Notification';
 import createClient from 'dynamo/util';
 

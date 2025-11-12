@@ -1,15 +1,14 @@
-import Joi from 'joi';
-
 import type DraftType from '@utils/datatypes/Draft';
-
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
+import Joi from 'joi';
 import { addBasics } from 'routes/cube/helper';
 import { csrfProtection } from 'routes/middleware';
-import { NextFunction, Request, Response } from '../../../types/express';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
+
+import { NextFunction, Request, Response } from '../../../types/express';
 
 interface StartDraftBody {
   id?: string; // id of the format

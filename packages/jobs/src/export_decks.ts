@@ -1,15 +1,13 @@
-/* eslint-disable no-console */
 import dotenv from 'dotenv';
 dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
-import fs from 'fs';
-
-import 'module-alias/register';
-
-import type DraftType from '@utils/datatypes/Draft';
 import Draft from '@server/dynamo/models/draft';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
+import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
+import fs from 'fs';
 import path from 'path';
+
+import 'module-alias/register';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {
   const card = draftCards[cardIndex];

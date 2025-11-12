@@ -1,5 +1,7 @@
 import React from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox, Row } from 'components/base/Layout';
@@ -10,7 +12,6 @@ import QueueItem from 'components/featuredQueue/QueueItem';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
-import Cube from '@utils/datatypes/Cube';
 import MainLayout from 'layouts/MainLayout';
 
 interface FeaturedCubesQueuePageProps {

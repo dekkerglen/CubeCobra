@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
-
 import { DraftAction, Pack } from '@utils/datatypes/Draft';
 import { buildDefaultSteps, DEFAULT_STEPS } from '@utils/draftutil';
+
 import useToggle from '../hooks/UseToggle';
 import Button from './base/Button';
 import { Card, CardFooter, CardHeader } from './base/Card';

@@ -1,5 +1,8 @@
 import { isCommentType, isNotifiableCommentType } from '@utils/datatypes/Comment';
 import { NoticeType } from '@utils/datatypes/Notice';
+import * as util from 'serverutils/render';
+import * as routeUtil from 'serverutils/util';
+
 import Comment from '../../src/dynamo/models/comment';
 import Notice from '../../src/dynamo/models/notice';
 import DynamoUser from '../../src/dynamo/models/user';
@@ -10,8 +13,6 @@ import {
   getHandler,
   reportHandler,
 } from '../../src/router/routes/comment';
-import * as util from 'serverutils/render';
-import * as routeUtil from 'serverutils/util';
 import { createUser } from '../test-utils/data';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';

@@ -1,11 +1,11 @@
 import React, { useContext, useMemo } from 'react';
 
+import { ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
+
 import Button from '../components/base/Button';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Tooltip from '../components/base/Tooltip';
 import CubeContext from '../contexts/CubeContext';
-import { ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
-
 import Collapse from './base/Collapse';
 import Select from './base/Select';
 import Text from './base/Text';

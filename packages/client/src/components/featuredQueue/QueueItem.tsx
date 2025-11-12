@@ -1,12 +1,13 @@
 import React from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
 import { Col, Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import CubePreview from 'components/cube/CubePreview';
-import Cube from '@utils/datatypes/Cube';
 
 interface QueueItemProps {
   cube: Cube;

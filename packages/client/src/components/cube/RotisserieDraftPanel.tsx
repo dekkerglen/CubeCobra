@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { cardName } from '@utils/cardutil';
+import CardType from '@utils/datatypes/Card';
 import classNames from 'classnames';
 
 import Button from 'components/base/Button';
@@ -12,9 +14,7 @@ import AutocardListItem from 'components/card/AutocardListItem';
 import withCardModal from 'components/modals/WithCardModal';
 import CubeContext from 'contexts/CubeContext';
 import RotoDraftContext, { getBaseCardName } from 'contexts/RotoDraftContext';
-import CardType from '@utils/datatypes/Card';
 import usePollGoogleSheet from 'hooks/usePollGoogleSheet';
-import { cardName } from '@utils/cardutil';
 
 const CardModalLink = withCardModal(AutocardListItem);
 

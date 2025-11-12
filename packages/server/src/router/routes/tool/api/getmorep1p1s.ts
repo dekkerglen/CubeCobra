@@ -1,4 +1,5 @@
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
+
 import { Request, Response } from '../../../../types/express';
 
 export const getMoreP1P1sHandler = async (req: Request, res: Response) => {

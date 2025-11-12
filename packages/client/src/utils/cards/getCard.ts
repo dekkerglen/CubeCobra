@@ -1,7 +1,8 @@
 import { Dispatch, SetStateAction } from 'react';
 
-import { UncontrolledAlertProps } from 'components/base/Alert';
 import { CardDetails } from '@utils/datatypes/Card';
+
+import { UncontrolledAlertProps } from 'components/base/Alert';
 
 interface GetCardResponse {
   success: 'true' | 'false';
@@ -30,7 +31,6 @@ export const getCard = async (
       if (setAlerts) {
         setAlerts((alerts: UncontrolledAlertProps[]) => [...alerts, { color: 'danger', message }]);
       } else {
-        // eslint-disable-next-line no-console -- Debugging
         console.error(message);
       }
       return null;
@@ -42,7 +42,6 @@ export const getCard = async (
       if (setAlerts) {
         setAlerts((alerts: UncontrolledAlertProps[]) => [...alerts, { color: 'danger', message }]);
       } else {
-        // eslint-disable-next-line no-console -- Debugging
         console.error(message);
       }
       return null;

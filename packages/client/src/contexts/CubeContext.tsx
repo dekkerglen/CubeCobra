@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React, {
   createContext,
   Dispatch,
@@ -12,11 +11,11 @@ import React, {
 } from 'react';
 
 import { cardName, normalizeName } from '@utils/cardutil';
-import { deepCopy } from '@utils/Util';
-
 import Card, { BoardType, boardTypes, Changes, CubeCardChange } from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube, { TagColor } from '@utils/datatypes/Cube';
+import { deepCopy } from '@utils/Util';
+
 import { UncontrolledAlertProps } from '../components/base/Alert';
 import CardModal from '../components/card/CardModal';
 import GroupModal from '../components/GroupModal';

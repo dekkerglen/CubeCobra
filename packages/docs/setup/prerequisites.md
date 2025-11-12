@@ -7,6 +7,7 @@ Before setting up CubeCobra, you'll need to install and configure several tools 
 **VSCode** (strongly recommended): https://code.visualstudio.com/
 
 ### Recommended VSCode Extensions
+
 - **ESLint Extension**: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
 - **Prettier Extension**: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
 
@@ -47,5 +48,6 @@ Download and install from https://jqlang.org/download/
 ## Next Steps
 
 After installing prerequisites, choose your setup method:
+
 - [Docker Setup](./docker-setup.md) (Recommended)
 - [Node.js Setup](./nodejs-setup.md) (Alternative)

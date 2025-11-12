@@ -44,11 +44,13 @@ npm run download-data-files
 ```
 
 This downloads:
+
 - **Card definitions** (~100MB): Complete Magic card database from Scryfall
 - **ML model files** (~500MB): AI models for draft bots and recommendations
 - **Combo data**: Card interaction and synergy information
 
 **This step is only required once** during initial setup. The data files will be saved to:
+
 - `/packages/server/private/` - Card definitions and metadata
 - `/packages/server/model/` - ML model files for AI features
 
@@ -90,7 +92,7 @@ cubecobracube        | Server started on port 5000, listening on 127.0.0.1...
 
 You can now open a browser and connect to: **http://localhost:8080**
 
-*(Despite the logs showing port 5000, use port 8080 as that's what the webpack dev server listens on)*
+_(Despite the logs showing port 5000, use port 8080 as that's what the webpack dev server listens on)_
 
 Nodemon will restart the application when source files change.
 

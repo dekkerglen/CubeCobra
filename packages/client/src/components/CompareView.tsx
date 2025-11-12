@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 
 import { CardDetails } from '@utils/cardutil';
+import CardType from '@utils/datatypes/Card';
 import { getLabels, sortIntoGroups } from '@utils/sorting/Sort';
 
-import CardType from '@utils/datatypes/Card';
 import CubeContext from '../contexts/CubeContext';
 import { Card, CardBody } from './base/Card';
 import { Col, Flexbox, Row } from './base/Layout';

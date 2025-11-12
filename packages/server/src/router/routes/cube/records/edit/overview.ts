@@ -1,12 +1,12 @@
-import Joi from 'joi';
-
 import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
+import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../../types/express';
+import { bodyValidation } from 'routes/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
-import { bodyValidation } from 'routes/middleware';
+
+import { Request, Response } from '../../../../../types/express';
 
 // Define the JOI schema for the record object
 const recordSchema = Joi.object({

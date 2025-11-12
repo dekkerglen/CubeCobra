@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import Deck from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
+
 import useLocalStorage from '../hooks/useLocalStorage';
 import useQueryParam from '../hooks/useQueryParam';
 import Text from './base/Text';
@@ -143,7 +144,6 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
           setRatings(newRatings);
         }
       } catch (error) {
-        //eslint-disable-next-line no-console
         console.error('Error fetching predictions:', error);
       }
     };

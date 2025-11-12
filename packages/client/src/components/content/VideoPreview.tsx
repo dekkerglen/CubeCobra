@@ -1,12 +1,12 @@
 import React from 'react';
 
+import { ContentStatus } from '@utils/datatypes/Content';
+import Video from '@utils/datatypes/Video';
 import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
-import { ContentStatus } from '@utils/datatypes/Content';
-import Video from '@utils/datatypes/Video';
 
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';

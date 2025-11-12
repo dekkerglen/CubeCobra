@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 
-import { sortDeep } from '@utils/sorting/Sort';
-
 import CardType from '@utils/datatypes/Card';
 import Deck from '@utils/datatypes/Draft';
 import DeckSeat from '@utils/datatypes/DraftSeat';
+import { sortDeep } from '@utils/sorting/Sort';
+
 import { Card, CardBody, CardHeader } from './base/Card';
 import { Col, Flexbox, Row } from './base/Layout';
 import Text from './base/Text';

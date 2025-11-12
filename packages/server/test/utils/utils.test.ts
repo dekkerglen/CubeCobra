@@ -4,12 +4,13 @@ import {
   cardFinish,
   cardLegalIn,
   cardRestrictedIn,
+  cardWordCount,
   isCardFoil,
   isFoilFinish,
-  cardWordCount,
   normalizeName,
 } from '@utils/cardutil';
 import util from 'serverutils/util';
+
 import { createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
 
 // ...existing code...
@@ -616,10 +617,10 @@ describe('Foiling', () => {
 
 describe('cardWordCount', () => {
   it('Treats spaces and newlines as word separators', () => {
-    const card_with_multiline_text = createCardFromDetails({
+    const cardWithMultilineText = createCardFromDetails({
       oracle_text: 'A B\nC',
     });
 
-    expect(cardWordCount(card_with_multiline_text)).toBe(3);
+    expect(cardWordCount(cardWithMultilineText)).toBe(3);
   });
 });

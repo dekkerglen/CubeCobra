@@ -1,34 +1,35 @@
 require('module-alias/register');
 require('dotenv').config();
 
-import express from 'express';
-import path from 'path';
 import bodyParser from 'body-parser';
-import session from 'express-session';
-import passport from 'passport';
-import http from 'http';
-import fileUpload from 'express-fileupload';
 import compression from 'compression';
-import { v4 as uuid } from 'uuid';
-import schedule from 'node-schedule';
+import express from 'express';
+import fileUpload from 'express-fileupload';
 import rateLimit from 'express-rate-limit';
+import session from 'express-session';
+import http from 'http';
+import schedule from 'node-schedule';
+import passport from 'passport';
+import path from 'path';
 import responseTime from 'response-time';
+import { v4 as uuid } from 'uuid';
 
 const cloudwatch = require('./serverutils/cloudwatch');
 const { updateCardbase } = require('./serverutils/updatecards');
 const cardCatalog = require('./serverutils/cardCatalog');
 const { render } = require('./serverutils/render');
 const connectFlash = require('connect-flash');
-import { initializeMl } from './serverutils/ml';
+import { UserRoles } from '@utils/datatypes/User';
+
+import './types/express'; // Import the express type extensions
 
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
 import router from './router/router';
 import DynamoDBStore from './serverutils/dynamo-session-store';
 import { sanitizeHttpBody } from './serverutils/logging';
-import './types/express'; // Import the express type extensions
+import { initializeMl } from './serverutils/ml';
 import { CustomError } from './types/express';
-import { UserRoles } from '@utils/datatypes/User';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason: unknown) => {
@@ -50,7 +51,6 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 
   res.setHeader = (name: string, value: string | string[] | number) => {
     if (res.headersSent) {
-      // eslint-disable-next-line no-console
       console.warn(`Headers already set at path: ${req.path} with body ${JSON.stringify(req.body)}`);
     }
     return originalSetHeader.call(res, name, value);
@@ -332,7 +332,6 @@ app.use((err: any, req: express.Request, res: express.Response, _next: express.N
 
 // scryfall updates this data at 9, so this will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
-  // eslint-disable-next-line no-console
   console.info('starting midnight cardbase update...');
   await updateCardbase();
 });
@@ -342,6 +341,6 @@ Promise.all([cardCatalog.initializeCardDb(), initializeMl()]).then(async () => {
   const port = process.env.PORT || 5000;
   const host = process.env.LISTEN_ON || '127.0.0.1';
   http.createServer(app).listen(Number(port), host);
-  // eslint-disable-next-line no-console
+
   console.info(`Server started on port ${port}, listening on ${host}...`);
 });

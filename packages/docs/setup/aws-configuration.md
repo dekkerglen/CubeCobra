@@ -37,7 +37,7 @@ The application expects specific DynamoDB tables. You can either:
 #### Using Setup Scripts with AWS
 
 1. Configure your AWS credentials in `.env`
-2. Remove or comment out `AWS_ENDPOINT` 
+2. Remove or comment out `AWS_ENDPOINT`
 3. Run the setup scripts - they'll create tables in real DynamoDB
 
 ### 3. Configure CloudWatch
@@ -87,45 +87,33 @@ Create an IAM user with minimal required permissions:
 
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::your-bucket-name",
-                "arn:aws:s3:::your-bucket-name/*"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:GetItem",
-                "dynamodb:PutItem",
-                "dynamodb:UpdateItem",
-                "dynamodb:DeleteItem",
-                "dynamodb:Query",
-                "dynamodb:Scan",
-                "dynamodb:CreateTable",
-                "dynamodb:DescribeTable"
-            ],
-            "Resource": "arn:aws:dynamodb:*:*:table/LOCAL_*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-            ],
-            "Resource": "arn:aws:logs:*:*:*"
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::your-bucket-name", "arn:aws:s3:::your-bucket-name/*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:CreateTable",
+        "dynamodb:DescribeTable"
+      ],
+      "Resource": "arn:aws:dynamodb:*:*:table/LOCAL_*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+      "Resource": "arn:aws:logs:*:*:*"
+    }
+  ]
 }
 ```
 
@@ -152,12 +140,14 @@ Monitor your AWS billing dashboard and set up billing alerts.
 You can easily switch between LocalStack and real AWS by modifying your `.env` file:
 
 ### For LocalStack
+
 ```bash
 AWS_ENDPOINT=http://localhost:4566
 LOCALSTACK_SES=true
 ```
 
 ### For Real AWS
+
 ```bash
 # AWS_ENDPOINT=http://localhost:4566  # Comment out
 LOCALSTACK_SES=false

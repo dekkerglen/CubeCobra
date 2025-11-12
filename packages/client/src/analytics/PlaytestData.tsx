@@ -1,9 +1,9 @@
 import React, { useContext, useMemo } from 'react';
 
 import { cardName, cardNameLower, cardOracleId, encodeName, mainboardRate, pickRate } from '@utils/cardutil';
+import Card, { DefaultElo } from '@utils/datatypes/Card';
 import { fromEntries } from '@utils/Util';
 
-import Card, { DefaultElo } from '@utils/datatypes/Card';
 import { Flexbox } from '../components/base/Layout';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { SortableTable } from '../components/SortableTable';

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import BlogPostType from '@utils/datatypes/BlogPost';
+
 import BlogPost from './blog/BlogPost';
 import IndefinitePaginatedList from './IndefinitePaginatedList';
 

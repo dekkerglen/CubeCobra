@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import Draft from '@utils/datatypes/Draft';
+import Record from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
 import { CardBody } from 'components/base/Card';
@@ -14,8 +16,6 @@ import DeckCard from 'components/DeckCard';
 import DraftExportMenu from 'components/draft/DraftExportMenu';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
-import Draft from '@utils/datatypes/Draft';
-import Record from '@utils/datatypes/Record';
 import useToggle from 'hooks/UseToggle';
 
 interface RecordDecksProps {

@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Pagination from 'components/base/Pagination';
@@ -10,7 +12,6 @@ import CubeSearchController from 'components/cube/CubeSearchController';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import Cube from '@utils/datatypes/Cube';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 

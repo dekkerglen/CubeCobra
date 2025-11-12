@@ -20,11 +20,13 @@ LocalStack runs best in Docker containers. This is automatically handled if you'
 ### Standalone Installation
 
 #### macOS
+
 ```bash
 brew install localstack/tap/localstack-cli
 ```
 
 #### Linux
+
 ```bash
 curl -Lo localstack-cli-3.0.2-linux-amd64-onefile.tar.gz \
     https://github.com/localstack/localstack-cli/releases/download/v3.0.2/localstack-cli-3.0.2-linux-amd64-onefile.tar.gz
@@ -32,6 +34,7 @@ sudo tar xvzf localstack-cli-3.0.2-linux-*-onefile.tar.gz -C /usr/local/bin
 ```
 
 #### Windows
+
 Download the binary from the [LocalStack releases page](https://github.com/localstack/localstack-cli/releases).
 
 ## Configuration

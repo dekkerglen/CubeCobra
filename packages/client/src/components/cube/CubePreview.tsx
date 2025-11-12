@@ -1,8 +1,8 @@
 import React from 'react';
 
+import Cube from '@utils/datatypes/Cube';
 import { getCubeDescription, getCubeId } from '@utils/Util';
 
-import Cube from '@utils/datatypes/Cube';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
 import Text from '../base/Text';

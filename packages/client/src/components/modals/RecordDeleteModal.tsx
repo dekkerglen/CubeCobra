@@ -18,7 +18,6 @@ const RecordDeleteModal: React.FC<RecordDeleteModalProps> = ({ isOpen, setOpen, 
     });
 
     if (!response.ok) {
-      // eslint-disable-next-line no-console
       console.error(response);
     } else {
       window.location.href = '';

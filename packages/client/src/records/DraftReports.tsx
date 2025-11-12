@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
+import Record from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
 import { CardBody } from 'components/base/Card';
@@ -15,7 +16,6 @@ import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
-import Record from '@utils/datatypes/Record';
 
 const RecordDeleteModalButton = withModal(Button, RecordDeleteModal);
 interface DraftReportsProps {

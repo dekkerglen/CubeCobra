@@ -1,7 +1,8 @@
-import 'dotenv/config';
+import { s3 } from 'dynamo/s3client';
 import fs from 'fs';
 
-import { s3 } from 'dynamo/s3client';
+import 'dotenv/config';
+
 import { fileToAttribute, loadAllFiles } from './cardCatalog';
 
 const downloadFromS3 = async (basePath: string = 'private'): Promise<void> => {

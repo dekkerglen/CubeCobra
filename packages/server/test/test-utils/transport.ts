@@ -1,4 +1,5 @@
 import User from '@utils/datatypes/User';
+
 import { NextFunction, Request, Response } from '../../src/types/express';
 import { createUser } from './data';
 

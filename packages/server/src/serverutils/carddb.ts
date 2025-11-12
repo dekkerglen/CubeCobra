@@ -1,7 +1,7 @@
-import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
 import { detailsToCard, reasonableCard } from '@utils/cardutil';
-import { SortFunctions } from '@utils/sorting/Sort';
 import { CardDetails, PrintingPreference, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
+import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
+import { SortFunctions } from '@utils/sorting/Sort';
 import catalog from 'serverutils/cardCatalog';
 
 // eslint-disable-next-line camelcase

@@ -1,12 +1,11 @@
 import React, { useCallback, useContext, useState } from 'react';
 
 import { StarFillIcon } from '@primer/octicons-react';
-import TimeAgo from 'react-timeago';
-
 import { cardId, detailsToCard } from '@utils/cardutil';
-
 import CardPackageData, { CardPackageStatus } from '@utils/datatypes/CardPackage';
 import { UserRoles } from '@utils/datatypes/User';
+import TimeAgo from 'react-timeago';
+
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';

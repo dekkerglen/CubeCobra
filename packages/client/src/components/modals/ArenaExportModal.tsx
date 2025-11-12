@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 
+import { CardDetails } from '@utils/datatypes/Card';
 import { sortForDownload } from '@utils/sorting/Sort';
 
-import { CardDetails } from '@utils/datatypes/Card';
 import CubeContext from '../../contexts/CubeContext';
 import FilterContext from '../../contexts/FilterContext';
 import useAlerts, { Alerts } from '../../hooks/UseAlerts';

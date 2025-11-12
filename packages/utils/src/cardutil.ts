@@ -1,5 +1,3 @@
-import { TagColor } from './datatypes/Cube';
-
 import Card, {
   CardDetails as CardDetailsType,
   COLOR_CATEGORIES,
@@ -9,6 +7,7 @@ import Card, {
   Legality,
   LegalityFormats,
 } from './datatypes/Card';
+import { TagColor } from './datatypes/Cube';
 import {
   isGenericHybridManaSymbol,
   isHybridManaSymbol,

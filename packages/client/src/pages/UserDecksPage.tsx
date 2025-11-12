@@ -1,5 +1,8 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import Draft from '@utils/datatypes/Draft';
+import User from '@utils/datatypes/User';
+
 import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Pagination from 'components/base/Pagination';
@@ -8,8 +11,6 @@ import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import Draft from '@utils/datatypes/Draft';
-import User from '@utils/datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
 
@@ -64,7 +65,6 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({ followersCount, following
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
-        // eslint-disable-next-line no-console -- Debugging
         console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();

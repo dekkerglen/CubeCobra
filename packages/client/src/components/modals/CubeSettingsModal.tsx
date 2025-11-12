@@ -1,5 +1,9 @@
 import React, { useContext, useState } from 'react';
 
+import { PrintingPreference } from '@utils/datatypes/Card';
+import Cube from '@utils/datatypes/Cube';
+import { getLabels } from '@utils/sorting/Sort';
+
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
 import { Flexbox } from 'components/base/Layout';
@@ -9,10 +13,6 @@ import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
 import CubeContext from 'contexts/CubeContext';
-import { PrintingPreference } from '@utils/datatypes/Card';
-import Cube from '@utils/datatypes/Cube';
-
-import { getLabels } from '@utils/sorting/Sort';
 
 interface CubeSettingsModalProps {
   addAlert: (color: string, message: string) => void;

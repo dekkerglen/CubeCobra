@@ -2,9 +2,9 @@
 require('dotenv').config();
 
 const express = require('express');
+import { Period } from '@utils/datatypes/History';
 import { validate as uuidValidate } from 'uuid';
 
-import { Period } from '@utils/datatypes/History';
 import carddb, {
   cardFromId,
   getEnglishVersion,
@@ -175,7 +175,6 @@ router.get('/card/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    // eslint-disable-next-line no-console -- Error debugging
     console.error(err);
     return handleRouteError(req, res, err, '/404');
   }

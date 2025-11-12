@@ -1,10 +1,9 @@
 import React from 'react';
 
+import { cardId, cardName, getCardColorClass } from '@utils/cardutil';
+import CardType from '@utils/datatypes/Card';
 import classNames from 'classnames';
 
-import { cardId, cardName, getCardColorClass } from '@utils/cardutil';
-
-import CardType from '@utils/datatypes/Card';
 import withAutocard from '../WithAutocard';
 import { Flexbox } from './Layout';
 

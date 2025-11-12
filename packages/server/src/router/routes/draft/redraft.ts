@@ -1,11 +1,12 @@
 import DraftType from '@utils/datatypes/Draft';
+import { setupPicks } from '@utils/draftutil';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import { csrfProtection } from 'routes/middleware';
-import { Request, Response } from '../../../types/express';
 import { isCubeViewable } from 'serverutils/cubefn';
-import { setupPicks } from '@utils/draftutil';
 import { handleRouteError, redirect } from 'serverutils/render';
+
+import { Request, Response } from '../../../types/express';
 
 const handler = async (req: Request, res: Response) => {
   try {

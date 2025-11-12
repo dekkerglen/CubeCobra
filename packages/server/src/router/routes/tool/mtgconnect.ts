@@ -1,7 +1,7 @@
 import { PrintingPreference } from '@utils/datatypes/Card';
+import { getReasonableCardByOracle, getRelatedCards } from 'serverutils/carddb';
 
 import { Request, Response } from '../../../types/express';
-import { getReasonableCardByOracle, getRelatedCards } from 'serverutils/carddb';
 
 export const handler = async (req: Request, res: Response) => {
   const { oracles } = req.body;

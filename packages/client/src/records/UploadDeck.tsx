@@ -1,5 +1,9 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
+import { detailsToCard } from '@utils/cardutil';
+import { CardDetails } from '@utils/datatypes/Card';
+import Record from '@utils/datatypes/Record';
+
 import { UncontrolledAlertProps } from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
@@ -10,10 +14,7 @@ import Text from 'components/base/Text';
 import CardGrid from 'components/card/CardGrid';
 import AutocardContext from 'contexts/AutocardContext';
 import { CSRFContext } from 'contexts/CSRFContext';
-import { CardDetails } from '@utils/datatypes/Card';
-import Record from '@utils/datatypes/Record';
 import { getCard } from 'utils/cards/getCard';
-import { detailsToCard } from '@utils/cardutil';
 
 interface UploadDeckProps {
   selectedUser: number;
@@ -65,7 +66,6 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           removeRef.current.focus();
         }
       } catch (e) {
-        // eslint-disable-next-line no-console -- Debugging
         console.error(e);
       }
     },

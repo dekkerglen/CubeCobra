@@ -1,7 +1,7 @@
 import Joi from 'joi';
+import { draft } from 'serverutils/ml';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
-import { draft } from 'serverutils/ml';
 
 interface PredictBody {
   pack: string[]; // oracle id
@@ -35,7 +35,6 @@ const handler = async (req: Request, res: Response) => {
       prediction,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Error getting prediction', error);
     return res.status(500).json({ error: 'Error getting prediction' });
   }

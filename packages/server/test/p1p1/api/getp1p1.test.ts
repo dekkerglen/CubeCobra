@@ -1,7 +1,7 @@
-import { P1P1Pack } from '../@utils/datatypes/P1P1Pack';
 import p1p1PackModel from '../../../src/dynamo/models/p1p1Pack';
 import { getP1P1Handler } from '../../../src/router/routes/tool/api/getp1p1';
 import { call } from '../../test-utils/transport';
+import { P1P1Pack } from '../@utils/datatypes/P1P1Pack';
 
 const uuid = jest.requireActual('uuid');
 

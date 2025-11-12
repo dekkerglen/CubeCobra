@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
 
 import { PencilIcon, TrashIcon } from '@primer/octicons-react';
+import BlogPostData from '@utils/datatypes/BlogPost';
+import User from '@utils/datatypes/User';
 import TimeAgo from 'react-timeago';
 
 import Button from 'components/base/Button';
@@ -16,8 +18,6 @@ import DeleteBlogModal from 'components/modals/DeleteBlogModal';
 import Username from 'components/Username';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
-import BlogPostData from '@utils/datatypes/BlogPost';
-import User from '@utils/datatypes/User';
 export interface BlogPostProps {
   post: BlogPostData;
   noScroll?: boolean;

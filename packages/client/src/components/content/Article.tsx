@@ -1,11 +1,11 @@
 import React from 'react';
 
+import ArticleData from '@utils/datatypes/Article';
 import TimeAgo from 'react-timeago';
 
 import CommentsSection from 'components/comments/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
-import ArticleData from '@utils/datatypes/Article';
 
 import { CardBody, CardHeader } from '../base/Card';
 import { Flexbox } from '../base/Layout';

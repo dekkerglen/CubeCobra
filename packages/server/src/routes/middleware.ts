@@ -1,10 +1,11 @@
-import csurf from 'csurf';
-import { validationResult } from 'express-validator';
-import User from 'dynamo/models/user';
 import { UserRoles } from '@utils/datatypes/User';
+import csurf from 'csurf';
+import User from 'dynamo/models/user';
+import { validationResult } from 'express-validator';
 import Joi from 'joi';
-import { NextFunction, Request, Response } from '../types/express';
 import { redirect } from 'serverutils/render';
+
+import { NextFunction, Request, Response } from '../types/express';
 
 export const ensureAuth = (req: Request, res: Response, next: NextFunction): void => {
   if (req.isAuthenticated()) {
@@ -157,7 +158,6 @@ export const bodyValidation =
     const { error } = path ? schema.validate(JSON.parse(req.body[path])) : schema.validate(req.body);
 
     if (error) {
-      // eslint-disable-next-line no-console
       console.error('Validation error:', error);
 
       if (redirectUrlFn) {

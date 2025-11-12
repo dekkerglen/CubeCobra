@@ -1,12 +1,11 @@
 import React from 'react';
 
+import { SortConfig } from '@utils/sorting/sortContext';
+import { fromEntries } from '@utils/Util';
 import classNames from 'classnames';
 import { CSVLink } from 'react-csv';
 
-import { fromEntries } from '@utils/Util';
-
 import useSortableData from '../hooks/UseSortableData';
-import { SortConfig } from '@utils/sorting/sortContext';
 import HeaderCell from './HeaderCell';
 
 interface ColumnProps {

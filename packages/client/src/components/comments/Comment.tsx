@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 
+import CommentData from '@utils/datatypes/Comment';
 import classNames from 'classnames';
 import TimeAgo from 'react-timeago';
 
@@ -10,7 +11,6 @@ import ReportCommentModal from 'components/modals/ReportCommentModal';
 import ShareCommentModal from 'components/modals/ShareCommentModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
-import CommentData from '@utils/datatypes/Comment';
 import useComments, { EditRequest } from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 

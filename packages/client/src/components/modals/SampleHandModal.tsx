@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
+import Card from '@utils/datatypes/Card';
 import { arrayShuffle } from '@utils/Util';
 
-import Card from '@utils/datatypes/Card';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';

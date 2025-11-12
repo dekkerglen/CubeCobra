@@ -1,10 +1,10 @@
 import React, { useContext, useMemo } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
-import TimeAgo from 'react-timeago';
-
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
+import TimeAgo from 'react-timeago';
+
 import UserContext from '../contexts/UserContext';
 import Button from './base/Button';
 import { Flexbox } from './base/Layout';

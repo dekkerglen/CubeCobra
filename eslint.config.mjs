@@ -8,7 +8,17 @@ import tseslint from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['dist/**/*', '.git/**/*', 'node_modules/**/*'],
+    ignores: [
+      'dist/**/*',
+      '.git/**/*',
+      'node_modules/**/*',
+      'packages/server/dist/**/*',
+      'packages/server/src/client/**/*',
+      'packages/client/dist/**/*',
+      'packages/jobs/dist/**/*',
+      'packages/jobs/temp/**/*',
+      'packages/utils/src/generated/**/*',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

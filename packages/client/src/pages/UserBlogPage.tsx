@@ -1,5 +1,8 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import BlogPostType from '@utils/datatypes/BlogPost';
+import User from '@utils/datatypes/User';
+
 import { Flexbox } from 'components/base/Layout';
 import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
@@ -7,8 +10,6 @@ import BlogPost from 'components/blog/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import BlogPostType from '@utils/datatypes/BlogPost';
-import User from '@utils/datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
 
@@ -64,7 +65,6 @@ const UserBlogPage: React.FC<UserBlogPageProps> = ({ followersCount, following, 
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
-        // eslint-disable-next-line no-console -- Debugging
         console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();

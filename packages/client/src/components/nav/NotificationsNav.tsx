@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
 
 import { BellFillIcon } from '@primer/octicons-react';
+import Notification from '@utils/datatypes/Notification';
 
 import Badge from 'components/base/Badge';
 import { CardFooter, CardHeader } from 'components/base/Card';
@@ -9,7 +10,6 @@ import Link from 'components/base/Link';
 import NavMenu from 'components/base/NavMenu';
 import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
-import Notification from '@utils/datatypes/Notification';
 
 const NotificationsNav: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);

@@ -2,6 +2,7 @@ import React, { useContext, useMemo, useState } from 'react';
 
 import { DraftFormat } from '@utils/datatypes/Draft';
 import { createDefaultDraftFormat, DEFAULT_PACK, getErrorsInFormat } from '@utils/draftutil';
+
 import CubeContext from '../../contexts/CubeContext';
 import Alert from '../base/Alert';
 import Button from '../base/Button';

@@ -1,8 +1,9 @@
 import React, { useContext } from 'react';
 
+import { Content } from '@utils/datatypes/Content';
+
 import ConfirmDeleteModal from 'components/modals/ConfirmDeleteModal';
 import { CSRFContext } from 'contexts/CSRFContext';
-import { Content } from '@utils/datatypes/Content';
 
 interface ContentDeleteModalProps {
   content: Content;
@@ -25,7 +26,7 @@ const ContentDeleteModal: React.FC<ContentDeleteModalProps> = ({ content, onDele
     if (!response.ok) {
       const json = await response.json();
       alert(json.message || 'Failed to delete content');
-      // eslint-disable-next-line no-console -- Debugging
+
       console.error(response);
     } else {
       onDelete(content.id);

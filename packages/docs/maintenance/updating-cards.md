@@ -44,8 +44,9 @@ npm run update-all
 ### What `update-all` Does
 
 Runs a complete update sequence:
+
 1. `update-draft-history` - Draft analytics
-2. `update-cube-history` - Cube analytics  
+2. `update-cube-history` - Cube analytics
 3. `update-metadata-dict` - Card metadata
 4. `update-combos` - Card interactions
 5. `update-cards` - Card definitions
@@ -91,6 +92,7 @@ For local development, you can set up similar automation:
 ### Scryfall API
 
 Primary source for card data:
+
 - **Bulk Data**: https://scryfall.com/docs/api/bulk-data
 - **Card Objects**: Complete card information
 - **Regular Updates**: Scryfall updates daily
@@ -98,6 +100,7 @@ Primary source for card data:
 ### Data Processing
 
 The update process:
+
 1. **Downloads**: Bulk JSON from Scryfall
 2. **Filters**: Removes irrelevant cards
 3. **Transforms**: Converts to CubeCobra format
@@ -109,6 +112,7 @@ The update process:
 ### Common Issues
 
 **Download Failures**
+
 ```bash
 # Check network connectivity
 curl -I https://api.scryfall.com/bulk-data
@@ -118,12 +122,14 @@ df -h
 ```
 
 **Memory Issues**
+
 ```bash
 # Increase Node.js memory limit
 NODE_OPTIONS=--max_old_space_size=18192 npm run update-cards
 ```
 
 **File Corruption**
+
 ```bash
 # Validate JSON files
 jq . private/carddict.json > /dev/null && echo "Valid JSON" || echo "Invalid JSON"
@@ -136,10 +142,12 @@ npm run update-cards
 ### Docker-Specific Issues
 
 **Container Memory**
+
 - Ensure Docker has adequate memory allocated (16GB+)
 - Check container resource limits
 
 **Volume Mounting**
+
 - Verify `private/` directory is properly mounted
 - Check file permissions in container
 
@@ -203,6 +211,7 @@ For active development:
 ### Memory Usage
 
 Card updates are memory-intensive:
+
 - **Node.js**: Increase heap size with `--max_old_space-size`
 - **System**: Ensure adequate RAM available
 - **Docker**: Allocate sufficient memory to containers
@@ -210,6 +219,7 @@ Card updates are memory-intensive:
 ### Storage Space
 
 Card files are large:
+
 - **carddict.json**: ~100MB+ compressed
 - **Total**: Several hundred MB for all files
 - **Cleanup**: Remove old backups periodically

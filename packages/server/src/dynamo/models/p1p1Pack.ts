@@ -1,6 +1,4 @@
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
-
 import Card from '@utils/datatypes/Card';
 import {
   P1P1Pack,
@@ -9,9 +7,11 @@ import {
   P1P1VoteResult,
   P1P1VoteSummary,
 } from '@utils/datatypes/P1P1Pack.js';
-import { cardFromId } from 'serverutils/carddb';
-import { deleteObject, getBucketName, getObject, putObject } from '../s3client';
 import createClient from 'dynamo/util';
+import { cardFromId } from 'serverutils/carddb';
+import { v4 as uuidv4 } from 'uuid';
+
+import { deleteObject, getBucketName, getObject, putObject } from '../s3client';
 
 const client = createClient({
   name: 'P1P1_PACKS',
@@ -62,7 +62,7 @@ const addDetails = (cards: Card[]): Card[] => {
       };
     } else {
       // If cardDetails is null, skip adding details and let the image generation handle the error
-      // eslint-disable-next-line no-console
+
       console.warn(`Missing card details for cardID: ${card.cardID}`);
     }
   });
@@ -105,7 +105,6 @@ const getS3Data = async (packId: string): Promise<P1P1PackS3Data | null> => {
     const result = (await getObject(bucket, key)) as P1P1PackS3Data;
     return result;
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Failed to get S3 data for pack:', packId, error);
     return null;
   }
@@ -222,7 +221,7 @@ const p1p1Pack = {
       await deleteObject(bucket, key);
     } catch (error) {
       // Log error but don't fail the deletion - DynamoDB record is already gone
-      // eslint-disable-next-line no-console
+
       console.error(`Failed to delete S3 object for pack ${id}:`, error);
     }
   },

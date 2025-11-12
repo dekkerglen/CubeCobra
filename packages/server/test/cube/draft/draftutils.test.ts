@@ -9,6 +9,7 @@ import {
   normalizeDraftFormatSteps,
   normalizeDraftSteps,
 } from '@utils/draftutil';
+
 import { createCard } from '../../test-utils/data';
 
 const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat => {

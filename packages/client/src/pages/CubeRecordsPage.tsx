@@ -1,5 +1,10 @@
 import React, { useContext } from 'react';
 
+import Cube, { CubeCards } from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
+import Record from '@utils/datatypes/Record';
+import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
+
 import { Card } from 'components/base/Card';
 import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
@@ -8,10 +13,6 @@ import { TabbedView } from 'components/base/Tabs';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
-import Cube, { CubeCards } from '@utils/datatypes/Cube';
-import Draft from '@utils/datatypes/Draft';
-import Record from '@utils/datatypes/Record';
-import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';

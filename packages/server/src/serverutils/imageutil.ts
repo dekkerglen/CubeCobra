@@ -1,8 +1,9 @@
 //Split this into its own file to prevent cyclic dependencies
 
 import * as cardutil from '@utils/cardutil';
-import carddb, { cardFromId, getIdsFromName } from './carddb';
 import Image from '@utils/datatypes/Image';
+
+import carddb, { cardFromId, getIdsFromName } from './carddb';
 
 // uri
 // artist

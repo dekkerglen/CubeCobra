@@ -1,5 +1,8 @@
 import React, { useContext, useMemo } from 'react';
 
+import Card from '@utils/datatypes/Card';
+import { calculateAsfans } from '@utils/drafting/createdraft';
+import { sortIntoGroups, SORTS } from '@utils/sorting/Sort';
 import {
   BarElement,
   CategoryScale,
@@ -13,20 +16,15 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
-import { sortIntoGroups, SORTS } from '@utils/sorting/Sort';
-
-import Card from '@utils/datatypes/Card';
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import CubeContext from '../contexts/CubeContext';
-import { calculateAsfans } from '@utils/drafting/createdraft';
 import useQueryParam from '../hooks/useQueryParam';
 
-// eslint-disable-next-line no-console -- Debugging
 console.log('ChartJS', ChartJS);
-// eslint-disable-next-line no-console -- Debugging
+
 console.log('BarElement', BarElement);
 
 // Register the necessary Chart.js components
@@ -110,7 +108,6 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
     try {
       return calculateAsfans(cube, cards, parseInt(draftFormat, 10));
     } catch (e) {
-      // eslint-disable-next-line no-console -- Debugging
       console.error('Invalid Draft Format', draftFormat, cube.formats[parseInt(draftFormat, 10)], e);
       return {};
     }

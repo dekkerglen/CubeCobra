@@ -1,9 +1,10 @@
 import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../../types/express';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
+
+import { Request, Response } from '../../../../../types/express';
 
 export const editTrophyHandler = async (req: Request, res: Response) => {
   try {

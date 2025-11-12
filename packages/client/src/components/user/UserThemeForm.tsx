@@ -2,6 +2,7 @@ import React, { useContext, useMemo, useState } from 'react';
 
 import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 import { DefaultGridTightnessPreference, GridTightnessPreference } from '@utils/datatypes/User';
+
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import Checkbox from '../base/Checkbox';

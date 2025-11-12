@@ -1,5 +1,3 @@
-import Card from '@utils/datatypes/Card';
-import { ManaSymbol, ManaSymbols } from '@utils/datatypes/Mana';
 import {
   BASIC_LAND_MANA_MAPPING,
   cardCmc,
@@ -11,6 +9,8 @@ import {
   cardOracleText,
   cardType,
 } from '@utils/cardutil';
+import Card from '@utils/datatypes/Card';
+import { ManaSymbol, ManaSymbols } from '@utils/datatypes/Mana';
 
 type Deck = Card[];
 

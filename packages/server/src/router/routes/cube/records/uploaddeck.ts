@@ -1,22 +1,21 @@
-import Joi from 'joi';
-
 import { cardOracleId } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import CubeType from '@utils/datatypes/Cube';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
-
 import { setupPicks } from '@utils/draftutil';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Record from 'dynamo/models/record';
-import { bodyValidation } from 'routes/middleware';
+import Joi from 'joi';
 import { addBasics, createPool } from 'routes/cube/helper';
+import { bodyValidation } from 'routes/middleware';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../types/express';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+
+import { Request, Response } from '../../../../types/express';
 
 export const uploadDeckPageHandler = async (req: Request, res: Response) => {
   try {

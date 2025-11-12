@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { cardTags, isCardFoil } from '@utils/cardutil';
-
 import Card from '@utils/datatypes/Card';
 import { TagColor } from '@utils/datatypes/Cube';
+
+import { getTagColorClass } from '../../../utils/src/Util';
 import { Flexbox } from '../components/base/Layout';
 import Tag from '../components/base/Tag';
-import { getTagColorClass } from '../../../utils/src/Util';
 
 interface Tag {
   value: string;

@@ -180,13 +180,11 @@ export const treeCache: Record<string, Promise<TreeNode | null>> = {};
 const fetchTree = async (treeUrl: string, treePath: string): Promise<TreeNode | null> => {
   const response = await fetch(treeUrl);
   if (!response.ok) {
-    // eslint-disable-next-line no-console
     console.error(`Failed to fetch autocomplete tree: ${response.status}`);
     return null;
   }
   const json = await response.json();
   if (json.success !== 'true') {
-    // eslint-disable-next-line no-console
     console.error('Error getting autocomplete tree.');
     return null;
   }
@@ -235,7 +233,6 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         const result = await treeCache[treeUrl];
         if (!cancelled) setTree(result ?? {});
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.error('Error getting autocomplete tree.', e);
       }
     };

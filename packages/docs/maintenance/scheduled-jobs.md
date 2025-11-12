@@ -46,18 +46,21 @@ Jobs are scheduled using AWS CloudWatch Events or similar:
 ### Common Production Jobs
 
 **Daily Jobs**
+
 - Card data updates
 - Analytics processing
 - User activity cleanup
 - Cache warming
 
 **Weekly Jobs**
+
 - Full analytics recalculation
 - Database optimization
 - Backup verification
 - Performance analysis
 
 **Monthly Jobs**
+
 - Complete data exports
 - Archive old data
 - Security audits
@@ -86,6 +89,7 @@ schedule.scheduleJob('0 2 * * *', async () => {
 **Schedule**: Typically runs at 2 AM daily
 
 **Process**:
+
 1. Download latest files from S3
 2. Validate file integrity
 3. Replace in-memory card database
@@ -157,12 +161,14 @@ ls -la temp/job-status/
 
 **Schedule**: Daily
 
-**Command**: 
+**Command**:
+
 ```bash
 npm run rotate-queue
 ```
 
 **Function**:
+
 - Selects new featured cubes
 - Updates queue status
 - Manages featured duration
@@ -174,11 +180,13 @@ npm run rotate-queue
 **Schedule**: Daily
 
 **Command**:
+
 ```bash
 npm run rotate-daily-p1p1
 ```
 
 **Function**:
+
 - Updates daily draft options
 - Manages pack rotation
 - Tracks completion statistics
@@ -192,11 +200,13 @@ npm run rotate-daily-p1p1
 **Schedule**: Weekly
 
 **Command**:
+
 ```bash
 npm run sync-podcasts
 ```
 
 **Function**:
+
 - Fetches latest podcast episodes
 - Updates metadata
 - Manages archive cleanup
@@ -210,6 +220,7 @@ npm run sync-podcasts
 **Schedule**: Weekly/Monthly
 
 **Commands**:
+
 ```bash
 # Generate all exports
 npm run exports
@@ -221,6 +232,7 @@ npm run export-simple-card-dict
 ```
 
 **Output**:
+
 - Cube data exports
 - Deck collection exports
 - Simplified card dictionaries
@@ -230,11 +242,13 @@ npm run export-simple-card-dict
 **Purpose**: Upload exports to S3 for public access
 
 **Command**:
+
 ```bash
 npm run upload-exports
 ```
 
 **Function**:
+
 - Syncs `temp/export/` to S3
 - Manages public access permissions
 - Updates CDN cache
@@ -300,11 +314,13 @@ NODE_OPTIONS=--max_old_space_size=18192
 ### Resource Management
 
 **Memory Allocation**:
+
 - Card updates: 18GB+ heap
 - Analytics: 16GB+ heap
 - Exports: 8GB+ heap
 
 **CPU Considerations**:
+
 - Avoid running multiple intensive jobs simultaneously
 - Schedule during low-traffic periods
 - Monitor system load
@@ -314,6 +330,7 @@ NODE_OPTIONS=--max_old_space_size=18192
 ### Common Issues
 
 **Memory Exhaustion**
+
 ```bash
 # Increase Node.js memory
 NODE_OPTIONS=--max_old_space_size=32768 npm run update-all
@@ -323,6 +340,7 @@ free -h
 ```
 
 **Job Timeouts**
+
 ```bash
 # Run jobs individually
 npm run update-draft-history
@@ -331,6 +349,7 @@ npm run update-cube-history
 ```
 
 **S3 Upload Failures**
+
 ```bash
 # Check AWS credentials
 awslocal s3 ls
@@ -355,12 +374,14 @@ echo $?  # After running job
 ### Recovery Procedures
 
 **Failed Job Recovery**:
+
 1. Identify failure point from logs
 2. Clean up partial results
 3. Restart from safe checkpoint
 4. Monitor subsequent runs
 
 **Data Corruption**:
+
 1. Stop all jobs immediately
 2. Restore from latest backup
 3. Investigate root cause
@@ -371,11 +392,13 @@ echo $?  # After running job
 ### Performance Tuning
 
 **Parallel Processing**:
+
 - Run independent jobs concurrently
 - Use worker threads for CPU-intensive tasks
 - Implement queue-based processing
 
 **Resource Optimization**:
+
 - Stream large data instead of loading into memory
 - Use incremental updates where possible
 - Implement smart caching strategies
@@ -383,12 +406,14 @@ echo $?  # After running job
 ### Monitoring and Alerting
 
 **Key Metrics**:
+
 - Job completion time
 - Memory usage patterns
 - Error rates
 - Data freshness
 
 **Alerting Setup**:
+
 - Job failure notifications
 - Resource usage alerts
 - Data staleness warnings

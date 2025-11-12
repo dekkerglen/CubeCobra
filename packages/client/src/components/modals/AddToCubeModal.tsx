@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 
 import { CardDetails } from '@utils/datatypes/Card';
 import User from '@utils/datatypes/User';
+
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
 import useLocalStorage from '../../hooks/useLocalStorage';

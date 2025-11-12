@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useState } from 'react';
 
 import { GrabberIcon } from '@primer/octicons-react';
+import { PlayerList } from '@utils/datatypes/Record';
 
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import { CSRFContext } from 'contexts/CSRFContext';
-import { PlayerList } from '@utils/datatypes/Record';
 
 import Button from '../components/base/Button';
 import { Card } from '../components/base/Card';

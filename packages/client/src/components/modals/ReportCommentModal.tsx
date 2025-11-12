@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 
+import Comment from '@utils/datatypes/Comment';
+
 import Button from 'components/base/Button';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Select from 'components/base/Select';
 import CSRFForm from 'components/CSRFForm';
-import Comment from '@utils/datatypes/Comment';
 
 import { Flexbox } from '../base/Layout';
 import TextArea from '../base/TextArea';

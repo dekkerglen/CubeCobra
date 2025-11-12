@@ -34,7 +34,6 @@ if (cloudwatchEnabled) {
       }),
     )
     .catch((err) => {
-      // eslint-disable-next-line no-console
       console.error(err);
     });
 
@@ -46,7 +45,6 @@ if (cloudwatchEnabled) {
       }),
     )
     .catch((err) => {
-      // eslint-disable-next-line no-console
       console.error(err);
     });
 
@@ -54,7 +52,7 @@ if (cloudwatchEnabled) {
   setInterval(() => {
     if (infoLogs.length > 0) {
       const logEvents = infoLogs.slice(0);
-      // eslint-disable-next-line no-console
+
       console.log(`Sending ${logEvents.length} info logs to CloudWatch...`);
       infoLogs = [];
       client
@@ -66,7 +64,6 @@ if (cloudwatchEnabled) {
           }),
         )
         .catch((err) => {
-          // eslint-disable-next-line no-console
           console.error(err);
         });
     }
@@ -74,7 +71,7 @@ if (cloudwatchEnabled) {
     if (errorLogs.length > 0) {
       const logEvents = errorLogs.slice(0);
       errorLogs = [];
-      // eslint-disable-next-line no-console
+
       console.log(`Sending ${logEvents.length} error logs to CloudWatch...`);
       client
         .send(
@@ -85,7 +82,6 @@ if (cloudwatchEnabled) {
           }),
         )
         .catch((err) => {
-          // eslint-disable-next-line no-console
           console.error(err);
         });
     }
@@ -100,7 +96,6 @@ module.exports = {
         timestamp: new Date().valueOf(),
       });
     } else {
-      // eslint-disable-next-line no-console
       console.log(messages.join('\n'));
     }
   },
@@ -112,7 +107,6 @@ module.exports = {
         timestamp: new Date().valueOf(),
       });
     } else {
-      // eslint-disable-next-line no-console
       console.error(messages);
     }
   },

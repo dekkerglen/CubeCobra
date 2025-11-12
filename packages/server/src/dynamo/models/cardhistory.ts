@@ -1,6 +1,5 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
-
 import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
 import createClient from 'dynamo/util';
 

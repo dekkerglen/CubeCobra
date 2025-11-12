@@ -1,5 +1,8 @@
 import React, { ChangeEvent, useContext } from 'react';
 
+import { DefaultElo, FilterValues, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
+import { getLabels } from '@utils/sorting/Sort';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
@@ -9,9 +12,6 @@ import Select from 'components/base/Select';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import NumericField from 'components/NumericField';
 import CubeContext from 'contexts/CubeContext';
-
-import { DefaultElo, FilterValues, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
-import { getLabels } from '@utils/sorting/Sort';
 
 export interface AdvancedFilterModalProps {
   isOpen: boolean;

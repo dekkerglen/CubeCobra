@@ -1,6 +1,6 @@
+import Card from '@utils/datatypes/Card';
 import slugify from 'slugify';
 
-import Card from '@utils/datatypes/Card';
 import { cardCollectorNumber, cardName, cardSet, cardSetName } from '../../../utils/src/cardutil';
 
 export const tcgplayerAffiliate = 'https://tcgplayer.pxf.io/c/5760114/1830156/21018';

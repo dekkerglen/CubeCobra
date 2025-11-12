@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import CardType from '@utils/datatypes/Card';
+
 import DraftLocation from '../drafting/DraftLocation';
 import Button from './base/Button';
 import { Card, CardBody, CardHeader } from './base/Card';

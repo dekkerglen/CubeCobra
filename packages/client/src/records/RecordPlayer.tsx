@@ -1,9 +1,10 @@
 import React from 'react';
 
+import User from '@utils/datatypes/User';
+
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
-import User from '@utils/datatypes/User';
 
 const RecordPlayer: React.FC<{ name: string; userId?: string; user?: User }> = ({ name, userId, user }) => {
   if (userId && user) {

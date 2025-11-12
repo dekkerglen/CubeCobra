@@ -12,7 +12,6 @@ const getMigrations = async () => {
   let nextPage = `https://api.scryfall.com/migrations?page=1`;
 
   while (hasMore) {
-    // eslint-disable-next-line no-console
     console.log(`Fetching page ${page}, currently at ${migrations.length} migrations`);
     const response = await fetch(nextPage);
     const data = await response.json();
@@ -44,7 +43,6 @@ const getMigrations = async () => {
 
   const migrations = await getMigrations();
 
-  // eslint-disable-next-line no-console
   console.log(`Found ${migrations.length} migrations to apply`);
 
   const toDelete = migrations
@@ -66,12 +64,10 @@ const getMigrations = async () => {
     }
   }
 
-  // eslint-disable-next-line no-console
   console.log(`Found ${toDelete.length} cards to delete`);
-  // eslint-disable-next-line no-console
+
   console.log(`Found ${Object.keys(toUpdate).length} cards to update`);
 
-  // eslint-disable-next-line no-console
   console.log(toUpdate);
 
   const applyMigration = async (cube) => {
@@ -106,15 +102,13 @@ const getMigrations = async () => {
         return;
       }
 
-      // eslint-disable-next-line no-console
       console.log(`Updating cube ${cube.id}`);
 
       // update cube
       await Cube.updateCards(cube.id, cards);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.log(`Error processing cube ${cube.id}`);
-      // eslint-disable-next-line no-console
+
       console.error(err);
     }
   };
@@ -135,7 +129,7 @@ const getMigrations = async () => {
       await Promise.all(batch.map(applyMigration));
 
       i += 1;
-      // eslint-disable-next-line no-console
+
       console.log(`Processed batch ${i}: ${batch.length} cubes`);
     }
   } while (lastKey);

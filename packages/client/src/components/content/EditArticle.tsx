@@ -1,5 +1,8 @@
 import React from 'react';
 
+import ArticleType from '@utils/datatypes/Article';
+import { ContentStatusEnglish } from '@utils/datatypes/Content';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -8,8 +11,6 @@ import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
 import ArticlePreview from 'components/content/ArticlePreview';
-import ArticleType from '@utils/datatypes/Article';
-import { ContentStatusEnglish } from '@utils/datatypes/Content';
 interface EditArticleProps {
   article: ArticleType;
   title: string;

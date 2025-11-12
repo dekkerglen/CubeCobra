@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import Image from '@utils/datatypes/Image';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card, CardHeader } from 'components/base/Card';
@@ -11,7 +13,6 @@ import MtgImage from 'components/MtgImage';
 import TextEntry from 'components/TextEntry';
 import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
-import Image from '@utils/datatypes/Image';
 
 const UserProfile: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
@@ -41,7 +42,7 @@ const UserProfile: React.FC = () => {
   const changeImage = useCallback(
     (img: string) => {
       setImagename(img);
-      // eslint-disable-next-line no-console -- Debugging
+
       console.log(imageDict[img.toLowerCase()]);
       if (imageDict[img.toLowerCase()]) {
         setImage(imageDict[img.toLowerCase()]);

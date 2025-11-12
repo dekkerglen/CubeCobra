@@ -1,5 +1,6 @@
 import React from 'react';
 
+import VideoType from '@utils/datatypes/Video';
 import ReactPlayer from 'react-player';
 import TimeAgo from 'react-timeago';
 
@@ -8,7 +9,6 @@ import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
-import VideoType from '@utils/datatypes/Video';
 
 interface VideoProps {
   video: VideoType;

@@ -1,6 +1,6 @@
 import { cardDevotion, cardLegalIn, cardRestrictedIn } from '../cardutil';
-import { arrayIsSubset, arraysAreEqualSets } from '../Util';
 import Card, { CardDetails } from '../datatypes/Card';
+import { arrayIsSubset, arraysAreEqualSets } from '../Util';
 
 type OperatorType = string;
 type FilterFunction<T> = (value: T) => boolean;
@@ -218,7 +218,6 @@ const canCastWith = (mana: string[], cost: (string | number)[][]): boolean => {
   cost = [...cost]
     .filter((symbol) => symbol[0] === 'x' || symbol[0] === 'y' || symbol[0] === 'z')
     .map((symbol) => {
-      // eslint-disable-next-line no-console -- Debugging
       console.debug(symbol);
       if (symbol.length === 1) {
         const intValue = parseInt(symbol[0] as string, 10);
@@ -247,7 +246,7 @@ const canCastWith = (mana: string[], cost: (string | number)[][]): boolean => {
         intValue = 1;
       }
     }
-    // eslint-disable-next-line no-console -- Debugging
+
     console.debug(intValue);
     if (Number.isInteger(intValue)) {
       const remove: number[] = [];

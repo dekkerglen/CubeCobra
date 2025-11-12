@@ -1,5 +1,13 @@
 import React from 'react';
 
+import Article from '@utils/datatypes/Article';
+import { ContentType } from '@utils/datatypes/Content';
+import Cube from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
+import Episode from '@utils/datatypes/Episode';
+import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
+import Video from '@utils/datatypes/Video';
+
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
@@ -13,13 +21,6 @@ import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import DailyP1P1Card from 'components/p1p1/DailyP1P1Card';
 import RenderToRoot from 'components/RenderToRoot';
-import Article from '@utils/datatypes/Article';
-import { ContentType } from '@utils/datatypes/Content';
-import Cube from '@utils/datatypes/Cube';
-import Draft from '@utils/datatypes/Draft';
-import Episode from '@utils/datatypes/Episode';
-import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
-import Video from '@utils/datatypes/Video';
 import MainLayout from 'layouts/MainLayout';
 
 interface LandingPageProps {

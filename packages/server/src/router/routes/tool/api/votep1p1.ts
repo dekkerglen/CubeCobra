@@ -1,9 +1,9 @@
-import Joi from 'joi';
-
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../types/express';
 import { bodyValidation } from 'routes/middleware';
+
+import { Request, Response } from '../../../../types/express';
 
 export const VoteP1P1Schema = Joi.object({
   packId: Joi.string().uuid().required().messages({

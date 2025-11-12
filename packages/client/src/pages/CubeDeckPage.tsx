@@ -1,6 +1,9 @@
 import React, { useContext } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import Cube from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
+import User from '@utils/datatypes/User';
 
 import Button from 'components/base/Button';
 import Collapse from 'components/base/Collapse';
@@ -18,9 +21,6 @@ import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
-import Cube from '@utils/datatypes/Cube';
-import Draft from '@utils/datatypes/Draft';
-import User from '@utils/datatypes/User';
 import useQueryParam from 'hooks/useQueryParam';
 import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';

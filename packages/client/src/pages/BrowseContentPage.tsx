@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 
+import Article from '@utils/datatypes/Article';
+import Content, { ContentType } from '@utils/datatypes/Content';
+import Episode from '@utils/datatypes/Episode';
+import Video from '@utils/datatypes/Video';
+
 import Banner from 'components/Banner';
 import { Flexbox } from 'components/base/Layout';
 import ArticlePreview from 'components/content/ArticlePreview';
@@ -8,10 +13,6 @@ import VideoPreview from 'components/content/VideoPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
 import RenderToRoot from 'components/RenderToRoot';
-import Article from '@utils/datatypes/Article';
-import Content, { ContentType } from '@utils/datatypes/Content';
-import Episode from '@utils/datatypes/Episode';
-import Video from '@utils/datatypes/Video';
 import MainLayout from 'layouts/MainLayout';
 
 interface BrowseContentPageProps {

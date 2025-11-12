@@ -1,6 +1,7 @@
 import React, { Dispatch } from 'react';
 
 import Cube from '@utils/datatypes/Cube';
+
 import Checkbox from '../base/Checkbox';
 import { Flexbox } from '../base/Layout';
 import Select from '../base/Select';

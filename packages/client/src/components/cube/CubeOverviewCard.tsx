@@ -1,13 +1,13 @@
 import React, { useContext, useState } from 'react';
 
 import { EyeClosedIcon, LinkExternalIcon } from '@primer/octicons-react';
+import { UserRoles } from '@utils/datatypes/User';
+import { getCubeDescription, getCubeId } from '@utils/Util';
 
 import CardKingdomBulkButton from 'components/purchase/CardKingdomBulkButton';
 import ManaPoolBulkButton from 'components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from 'components/purchase/TCGPlayerBulkButton';
-import { getCubeDescription, getCubeId } from '@utils/Util';
 
-import { UserRoles } from '@utils/datatypes/User';
 import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
@@ -75,7 +75,6 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
       headers: {},
     }).then((response) => {
       if (!response.ok) {
-        // eslint-disable-next-line no-console -- Debugging
         console.error(response);
       }
     });
@@ -89,7 +88,6 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
       headers: {},
     }).then((response) => {
       if (!response.ok) {
-        // eslint-disable-next-line no-console -- Debugging
         console.error(response);
       }
     });

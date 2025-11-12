@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import PodcastType from '@utils/datatypes/Podcast';
+
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -11,7 +13,6 @@ import Podcast from 'components/content/Podcast';
 import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import PodcastType from '@utils/datatypes/Podcast';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 

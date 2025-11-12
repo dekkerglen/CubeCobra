@@ -1,6 +1,5 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-
 import { FeaturedQueueItem, FeaturedQueueStatus, NewFeaturedQueueItem } from '@utils/datatypes/FeaturedQueue';
 import createClient, { QueryInputType } from 'dynamo/util';
 

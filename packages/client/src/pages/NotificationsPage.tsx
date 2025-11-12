@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import NotificationType from '@utils/datatypes/Notification';
+
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -9,7 +11,6 @@ import DynamicFlash from 'components/DynamicFlash';
 import Notification from 'components/nav/Notification';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import NotificationType from '@utils/datatypes/Notification';
 import MainLayout from 'layouts/MainLayout';
 
 interface NotificationsPageProps {

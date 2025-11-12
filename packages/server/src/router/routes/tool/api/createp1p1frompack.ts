@@ -1,14 +1,14 @@
-import Joi from 'joi';
-
 import Card from '@utils/datatypes/Card';
 import Cube from 'dynamo/models/cube';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { getBotPrediction } from '../../../../server/util/userUtil';
-import { Request, Response } from '../../../../types/express';
+import { bodyValidation } from 'routes/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
-import { bodyValidation } from 'routes/middleware';
+
+import { getBotPrediction } from '../../../../server/util/userUtil';
+import { Request, Response } from '../../../../types/express';
 
 const CreateP1P1FromPackSchema = Joi.object({
   cubeId: Joi.string().required().messages({

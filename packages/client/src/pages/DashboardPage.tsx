@@ -1,5 +1,10 @@
 import React, { useContext } from 'react';
 
+import BlogPost from '@utils/datatypes/BlogPost';
+import { ContentType } from '@utils/datatypes/Content';
+import Cube from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
+import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
 import classNames from 'classnames';
 
 import Banner from 'components/Banner';
@@ -21,11 +26,6 @@ import RecentDraftsCard from 'components/RecentDraftsCard';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
-import BlogPost from '@utils/datatypes/BlogPost';
-import { ContentType } from '@utils/datatypes/Content';
-import Cube from '@utils/datatypes/Cube';
-import Draft from '@utils/datatypes/Draft';
-import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
 import MainLayout from 'layouts/MainLayout';
 
 interface DashboardPageProps {

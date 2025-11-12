@@ -64,7 +64,7 @@ const IndefinitePaginatedList = <T,>({
 
     if (response.ok) {
       const json = await response.json();
-      // eslint-disable-next-line no-console
+
       console.log(json);
       if (json.success === 'true') {
         const newItems = [...items, ...json.items];

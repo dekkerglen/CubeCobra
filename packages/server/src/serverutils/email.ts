@@ -56,7 +56,7 @@ export const sendEmail = async (
     });
   } else {
     // In development, just log the email to the console
-    // eslint-disable-next-line no-console
+
     console.log(message);
   }
 

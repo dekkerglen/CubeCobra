@@ -1,8 +1,7 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
-
 import PasswordReset, { UnhydratedPasswordReset } from '@utils/datatypes/PasswordReset';
 import createClient from 'dynamo/util';
+import { v4 as uuidv4 } from 'uuid';
 
 const client = createClient({
   name: 'RESETS',

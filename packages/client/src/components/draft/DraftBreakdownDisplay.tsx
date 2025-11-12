@@ -1,6 +1,7 @@
 import React from 'react';
 
 import CardType from '@utils/datatypes/Card';
+
 import { Card, CardBody } from '../base/Card';
 import { Col, Flexbox, Row } from '../base/Layout';
 import Text from '../base/Text';

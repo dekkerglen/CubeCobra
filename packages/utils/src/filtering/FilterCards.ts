@@ -1,8 +1,7 @@
-import { Grammar, Parser } from 'nearley';
-
 import Card from '@utils/datatypes/Card';
 import { AllField, CardDetails } from '@utils/datatypes/Card';
 import filterCardGrammar from '@utils/generated/filtering/cardFilters';
+import { Grammar, Parser } from 'nearley';
 
 // @ts-expect-error(TODO: figure this one out)
 const compiledGrammar: Grammar = Grammar.fromCompiled(filterCardGrammar);

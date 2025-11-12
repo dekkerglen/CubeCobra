@@ -1,5 +1,8 @@
 import React from 'react';
 
+import { ContentStatusEnglish } from '@utils/datatypes/Content';
+import VideoType from '@utils/datatypes/Video';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -7,8 +10,6 @@ import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
-import { ContentStatusEnglish } from '@utils/datatypes/Content';
-import VideoType from '@utils/datatypes/Video';
 
 import VideoPreview from './VideoPreview';
 

@@ -1,9 +1,10 @@
 import React from 'react';
 
-import { getTCGLink } from 'utils/Affiliate';
 import { detailsToCard } from '@utils/cardutil';
-
 import { CardDetails } from '@utils/datatypes/Card';
+
+import { getTCGLink } from 'utils/Affiliate';
+
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';

@@ -1,5 +1,8 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import Episode from '@utils/datatypes/Episode';
+import Podcast from '@utils/datatypes/Podcast';
+
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -10,8 +13,6 @@ import PodcastPreview from 'components/content/PodcastPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import Episode from '@utils/datatypes/Episode';
-import Podcast from '@utils/datatypes/Podcast';
 import MainLayout from 'layouts/MainLayout';
 
 interface PodcastsPageProps {
@@ -62,7 +63,6 @@ const PodcastsPage: React.FC<PodcastsPageProps> = ({ episodes, podcasts, lastKey
       active={page}
       hasMore={hasMore}
       onClick={async (newPage) => {
-        // eslint-disable-next-line no-console
         console.log(newPage, pageCount);
         if (newPage >= pageCount) {
           await fetchMoreData();

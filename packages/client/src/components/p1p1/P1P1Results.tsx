@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 
 import { P1P1Pack, P1P1VoteSummary } from '@utils/datatypes/P1P1Pack';
+
 import { detailsToCard } from '../../../../utils/src/cardutil';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';

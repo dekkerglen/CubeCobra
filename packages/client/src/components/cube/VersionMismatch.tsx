@@ -1,6 +1,8 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
+import CardData, { BoardChanges } from '@utils/datatypes/Card';
+import { CardDetails } from '@utils/datatypes/Card';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -9,8 +11,6 @@ import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import withAutocard from 'components/WithAutocard';
 import ChangesContext from 'contexts/ChangesContext';
-import CardData, { BoardChanges } from '@utils/datatypes/Card';
-import { CardDetails } from '@utils/datatypes/Card';
 
 const TextAutocard = withAutocard('span');
 

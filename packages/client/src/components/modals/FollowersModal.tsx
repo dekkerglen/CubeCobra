@@ -1,11 +1,12 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
+import User from '@utils/datatypes/User';
+
 import Button from 'components/base/Button';
 import { Col, Row } from 'components/base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Text from 'components/base/Text';
 import UserPreview from 'components/UserPreview';
-import User from '@utils/datatypes/User';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 

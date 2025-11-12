@@ -1,5 +1,7 @@
 import React, { useContext } from 'react';
 
+import RecordType from '@utils/datatypes/Record';
+
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
@@ -11,7 +13,6 @@ import EditRoundModal from 'components/modals/EditRoundModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
-import RecordType from '@utils/datatypes/Record';
 
 const AddRoundLink = withModal(Link, AddRoundModal);
 const EditRoundLink = withModal(Link, EditRoundModal);

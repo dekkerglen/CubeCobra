@@ -1,5 +1,8 @@
 import React from 'react';
 
+import { CardDetails } from '@utils/datatypes/Card';
+import HistoryType from '@utils/datatypes/History';
+
 import Banner from 'components/Banner';
 import { Col, Row } from 'components/base/Layout';
 import CardBreakdown from 'components/cardPage/CardBreakdown';
@@ -8,8 +11,6 @@ import CardPurchase from 'components/cardPage/Purchase';
 import CardVersions from 'components/cardPage/Versions';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import { CardDetails } from '@utils/datatypes/Card';
-import HistoryType from '@utils/datatypes/History';
 import MainLayout from 'layouts/MainLayout';
 
 interface CardPageProps {

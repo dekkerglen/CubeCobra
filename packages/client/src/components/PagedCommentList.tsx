@@ -1,8 +1,9 @@
 import React from 'react';
 
+import CommentType from '@utils/datatypes/Comment';
+
 import Comment from 'components/comments/Comment';
 import PagedList from 'components/PagedList';
-import CommentType from '@utils/datatypes/Comment';
 import { EditRequest } from 'hooks/UseComments';
 
 interface CommentListProps {

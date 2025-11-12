@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { NoticeType } from '@utils/datatypes/Notice';
+import User from '@utils/datatypes/User';
 import TimeAgo from 'react-timeago';
 
 import Button from 'components/base/Button';
@@ -11,10 +13,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
-import User from '@utils/datatypes/User';
 import MainLayout from 'layouts/MainLayout';
-
-import { NoticeType } from '@utils/datatypes/Notice';
 
 const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
 

@@ -1,14 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
-
-import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
-import AddToCubeModal from 'components/modals/AddToCubeModal';
-import CardKingdomButton from 'components/purchase/CardKingdomButton';
-import CardMarketButton from 'components/purchase/CardMarketButton';
-import ManaPoolButton from 'components/purchase/ManaPoolButton';
-import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
-import withModal from 'components/WithModal';
 import {
   cardColorCategory,
   cardColorIdentity,
@@ -28,14 +20,22 @@ import {
   isCustomCard,
   normalizeName,
 } from '@utils/cardutil';
-import { getLabels } from '@utils/sorting/Sort';
-import { getTagColorClass } from '@utils/Util';
-
 import Card, { BoardType } from '@utils/datatypes/Card';
 import { TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
-import DisplayContext from '../../contexts/DisplayContext';
+import { getLabels } from '@utils/sorting/Sort';
+import { getTagColorClass } from '@utils/Util';
+
+import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
+import AddToCubeModal from 'components/modals/AddToCubeModal';
+import CardKingdomButton from 'components/purchase/CardKingdomButton';
+import CardMarketButton from 'components/purchase/CardMarketButton';
+import ManaPoolButton from 'components/purchase/ManaPoolButton';
+import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
+import withModal from 'components/WithModal';
+
 import { cardImageBackUrl, cardImageUrl } from '../../../../utils/src/cardutil';
+import DisplayContext from '../../contexts/DisplayContext';
 import Badge from '../base/Badge';
 import Button from '../base/Button';
 import Input from '../base/Input';

@@ -2,9 +2,10 @@ import { detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import { DraftmancerPick } from '@utils/datatypes/Draft';
 import { Decklist, Pick } from '@utils/datatypes/Draftmancer';
+import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
+
 import { getReasonableCardByOracle } from './carddb';
 import { deckbuild } from './draftbots';
-import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 
 export const upsertCardAndGetIndex = (cards: CardDetails[], oracleId: string): number => {
   const card = getReasonableCardByOracle(oracleId);

@@ -1,13 +1,13 @@
 import React from 'react';
 
 import { fireEvent, render, screen } from '@testing-library/react';
+import { cardImageUrl } from '@utils/cardutil';
 
 import '@testing-library/jest-dom';
 
+import CardImage from 'components/card/CardImage';
 import DisplayContext from 'contexts/DisplayContext';
 
-import CardImage from 'components/card/CardImage';
-import { cardImageUrl } from '@utils/cardutil';
 import { defaultDisplayContext } from '../../../server/test/test-utils/context';
 import { createCard, createCardDetails } from '../../../server/test/test-utils/data';
 

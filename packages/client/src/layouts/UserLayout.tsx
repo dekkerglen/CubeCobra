@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 
+import User from '@utils/datatypes/User';
 import classNames from 'classnames';
 
 import Banner from 'components/Banner';
@@ -13,7 +14,6 @@ import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 import FollowersModal from 'components/modals/FollowersModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
-import User from '@utils/datatypes/User';
 
 interface UserLayoutProps {
   user: User;

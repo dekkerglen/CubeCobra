@@ -1,7 +1,8 @@
 import React, { useCallback, useContext } from 'react';
 
-import CubeContext from 'contexts/CubeContext';
 import { BoardType } from '@utils/datatypes/Card';
+
+import CubeContext from 'contexts/CubeContext';
 
 export interface WithCardModalProps {
   children?: React.ReactNode;
@@ -26,7 +27,7 @@ const withCardModal = <P,>(Tag: React.ComponentType<P>) => {
         } else {
           event.preventDefault();
           const { board, index } = props.modalprops.card;
-          // eslint-disable-next-line no-console
+
           console.log('board', board, 'index', index);
           if (board !== undefined && index !== undefined) setModalSelection({ board, index });
           setModalOpen(true);

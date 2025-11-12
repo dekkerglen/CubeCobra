@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { cardElo, detailsToCard } from '@utils/cardutil';
-import Query from '../utils/Query';
+import { CardDetails } from '@utils/datatypes/Card';
 import { ORDERED_SORTS } from '@utils/sorting/Sort';
 
-import { CardDetails } from '@utils/datatypes/Card';
 import FilterContext from '../contexts/FilterContext';
+import Query from '../utils/Query';
 import Banner from './Banner';
 import Controls from './base/Controls';
 import { Col, Flexbox, Row } from './base/Layout';

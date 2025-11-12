@@ -1,7 +1,8 @@
 import React, { useCallback, useContext } from 'react';
 
-import CubeContext from 'contexts/CubeContext';
 import Card, { BoardType } from '@utils/datatypes/Card';
+
+import CubeContext from 'contexts/CubeContext';
 
 export interface WithGroupModalProps {
   children: React.ReactNode;

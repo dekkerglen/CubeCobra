@@ -1,12 +1,13 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftutils';
 import { makeSubtitle } from '@utils/cardutil';
-import { fromEntries, toNullableInt } from '@utils/Util';
-
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import { getDefaultPosition } from '@utils/draftutil';
+import { fromEntries, toNullableInt } from '@utils/Util';
+
+import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftutils';
+
 import { Card } from '../components/base/Card';
 import CSRFForm from '../components/CSRFForm';
 import DeckStacks from '../components/DeckStacks';

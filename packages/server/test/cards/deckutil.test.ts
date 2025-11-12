@@ -1,4 +1,3 @@
-import { cardGames, cardManaSymbols, reasonableCard } from '@utils/cardutil';
 import {
   getCardCountByColor,
   getCurveByColors,
@@ -6,7 +5,9 @@ import {
   getManaSymbolCount,
   getSourcesDistribution,
 } from '@client/utils/deckutil';
+import { cardGames, cardManaSymbols, reasonableCard } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
+
 import { createBasicLand, createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
 
 describe('getManaSymbolCount', () => {

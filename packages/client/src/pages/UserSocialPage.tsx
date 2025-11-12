@@ -1,5 +1,8 @@
 import React from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+import User from '@utils/datatypes/User';
+
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
@@ -8,8 +11,6 @@ import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserPreview from 'components/UserPreview';
-import Cube from '@utils/datatypes/Cube';
-import User from '@utils/datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 
 interface UserSocialPageProps {

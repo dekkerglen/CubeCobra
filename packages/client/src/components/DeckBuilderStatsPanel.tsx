@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 
+import Card from '@utils/datatypes/Card';
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
@@ -7,7 +8,6 @@ import { Card as CardComponent, CardBody, CardHeader } from 'components/base/Car
 import Text from 'components/base/Text';
 import DisplayContext from 'contexts/DisplayContext';
 
-import Card from '@utils/datatypes/Card';
 import { getCardCountByColor, getCurveByColors, getManaSymbolCount, getSourcesDistribution } from '../utils/deckutil';
 import Tooltip from './base/Tooltip';
 

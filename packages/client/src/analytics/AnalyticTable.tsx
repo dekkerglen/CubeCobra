@@ -1,9 +1,10 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
+import Card from '@utils/datatypes/Card';
+import { calculateAsfans } from '@utils/drafting/createdraft';
 import { cardCanBeSorted, sortGroupsOrdered, SORTS } from '@utils/sorting/Sort';
 import { fromEntries } from '@utils/Util';
 
-import Card from '@utils/datatypes/Card';
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
@@ -11,7 +12,6 @@ import Text from '../components/base/Text';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { compareStrings, SortableTable, valueRenderer } from '../components/SortableTable';
 import CubeContext from '../contexts/CubeContext';
-import { calculateAsfans } from '@utils/drafting/createdraft';
 import useQueryParam from '../hooks/useQueryParam';
 
 type SortWithTotalResult = [string, number][];
@@ -38,7 +38,6 @@ const AnalyticTable: React.FC = () => {
     try {
       return calculateAsfans(cube, cards, parseInt(draftFormat, 10));
     } catch (e) {
-      // eslint-disable-next-line no-console -- Debugging
       console.error('Invalid Draft Format', draftFormat, cube.formats[parseInt(draftFormat)], e);
       return {};
     }

@@ -1,6 +1,8 @@
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { LinkIcon } from '@primer/octicons-react';
+import { CardDetails } from '@utils/datatypes/Card';
+import { isInternalURL, isSamePageURL } from '@utils/Util';
 import { slug } from 'github-slugger';
 // @ts-expect-error This library has no types.
 import ReactMarkdown, { MarkdownProps } from 'react-markdown';
@@ -9,9 +11,7 @@ import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hl
 import reactToText from 'react-to-text';
 
 import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
-import { isInternalURL, isSamePageURL } from '@utils/Util';
 
-import { CardDetails } from '@utils/datatypes/Card';
 import { Flexbox } from './base/Layout';
 import Link, { LinkProps } from './base/Link';
 import Text from './base/Text';

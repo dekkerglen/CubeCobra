@@ -1,6 +1,7 @@
 import { cardName } from '@utils/cardutil';
-import { cardGetLabels, getLabelsRaw, sortForDownload, sortGroupsOrdered } from '@utils/sorting/Sort';
 import Card from '@utils/datatypes/Card';
+import { cardGetLabels, getLabelsRaw, sortForDownload, sortGroupsOrdered } from '@utils/sorting/Sort';
+
 import { createCard, createCardDetails, createCardFromDetails, createCustomCard } from '../test-utils/data';
 
 const mapToCardNames = (sorted: Card[]) => {

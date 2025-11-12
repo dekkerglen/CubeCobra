@@ -1,5 +1,8 @@
 import React from 'react';
 
+import Episode from '@utils/datatypes/Episode';
+import PodcastType from '@utils/datatypes/Podcast';
+
 import AspectRatioBox from 'components/base/AspectRatioBox';
 import { CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -7,8 +10,6 @@ import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import Username from 'components/Username';
-import Episode from '@utils/datatypes/Episode';
-import PodcastType from '@utils/datatypes/Podcast';
 
 interface PodcastProps {
   podcast: PodcastType;

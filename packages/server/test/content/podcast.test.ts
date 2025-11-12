@@ -1,7 +1,8 @@
 import { ContentStatus, ContentType } from '@utils/datatypes/Content';
-import Content from '../../src/dynamo/models/content';
 import { updatePodcast } from 'serverutils/podcast';
 import { getFeedData, getFeedEpisodes } from 'serverutils/rss';
+
+import Content from '../../src/dynamo/models/content';
 import { createEpisode, createPodcast, createUser } from '../test-utils/data';
 
 const mockSanitize = jest.fn((text) => text);

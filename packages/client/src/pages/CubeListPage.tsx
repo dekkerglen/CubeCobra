@@ -1,5 +1,8 @@
 import React, { useContext } from 'react';
 
+import Card, { BoardType } from '@utils/datatypes/Card';
+import Cube from '@utils/datatypes/Cube';
+
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CubeListNavbar from 'components/cube/CubeListNavbar';
@@ -17,8 +20,6 @@ import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
 import { RotoDraftContextProvider } from 'contexts/RotoDraftContext';
-import Card, { BoardType } from '@utils/datatypes/Card';
-import Cube from '@utils/datatypes/Cube';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';

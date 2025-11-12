@@ -11,9 +11,10 @@ import Package from 'dynamo/models/package';
 import Record from 'dynamo/models/record';
 import DynamoUser from 'dynamo/models/user';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../types/express';
 import { getImageData } from 'serverutils/imageutil';
 import util from 'serverutils/util';
+
+import { Request, Response } from '../../types/express';
 
 const { handleRouteError, redirect, render } = require('serverutils/render');
 

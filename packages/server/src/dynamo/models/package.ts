@@ -1,12 +1,12 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
-
 import { normalizeName } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
 import UserType from '@utils/datatypes/User';
 import createClient, { QueryInputType } from 'dynamo/util';
+import { v4 as uuidv4 } from 'uuid';
+
 import User from './user';
 
 const { cardFromId } = require('serverutils/carddb');

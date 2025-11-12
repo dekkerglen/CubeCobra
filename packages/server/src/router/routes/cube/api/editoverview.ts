@@ -2,9 +2,10 @@ import CubeType, { CUBE_CATEGORIES } from '@utils/datatypes/Cube';
 import Cube from 'dynamo/models/cube';
 import CubeHash from 'dynamo/models/cubeHash';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { Request, Response } from '../../../../types/express';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
 import util from 'serverutils/util';
+
+import { Request, Response } from '../../../../types/express';
 
 export const editOverviewHandler = async (req: Request, res: Response) => {
   try {

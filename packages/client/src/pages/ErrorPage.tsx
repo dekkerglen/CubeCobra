@@ -15,7 +15,6 @@ interface ErrorPageProps {
 }
 
 const ErrorPage: React.FC<ErrorPageProps> = ({ title, error, requestId, details }) => {
-  // eslint-disable-next-line no-console
   console.log(details);
 
   return (

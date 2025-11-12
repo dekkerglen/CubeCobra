@@ -1,5 +1,6 @@
 import Card, { CardDetails } from '@utils/datatypes/Card';
 import { Decklist, Pick } from '@utils/datatypes/Draftmancer';
+import { getCardDefaultRowColumn } from '@utils/draftutil';
 import { getReasonableCardByOracle } from 'serverutils/carddb';
 import { deckbuild } from 'serverutils/draftbots';
 import {
@@ -9,7 +10,7 @@ import {
   getPicksFromPlayer,
   upsertCardAndGetIndex,
 } from 'serverutils/draftmancerUtil';
-import { getCardDefaultRowColumn } from '@utils/draftutil';
+
 import { createCardDetails } from '../test-utils/data';
 
 jest.mock('serverutils/carddb', () => ({

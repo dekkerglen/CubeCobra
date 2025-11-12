@@ -326,7 +326,6 @@ const generateSamplepackImage = async (sources = [], width, height) => {
       const res = await fetch(source.src, fetchOptions);
 
       if (!res.ok) {
-        // eslint-disable-next-line no-console
         console.log(`Failed to fetch image: ${source.src}. Response statuses: ${res.status}, ${res.statusText}`);
       }
 

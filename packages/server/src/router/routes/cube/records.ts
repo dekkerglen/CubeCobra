@@ -2,11 +2,12 @@ import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
 import { csrfProtection } from 'routes/middleware';
-import { Request, Response } from '../../../types/express';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import util from 'serverutils/util';
+
+import { Request, Response } from '../../../types/express';
 
 export const recordsPageHandler = async (req: Request, res: Response) => {
   try {

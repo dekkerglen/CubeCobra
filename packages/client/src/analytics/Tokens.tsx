@@ -1,8 +1,10 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
+import CardType from '@utils/datatypes/Card';
+
 import { getTCGLink } from 'utils/Affiliate';
 
-import CardType from '@utils/datatypes/Card';
+import { cardCollectorNumber, cardName, cardSet } from '../../../utils/src/cardutil';
 import Button from '../components/base/Button';
 import { Card, CardBody } from '../components/base/Card';
 import { Flexbox } from '../components/base/Layout';
@@ -13,7 +15,6 @@ import Markdown from '../components/Markdown';
 import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
 import CubeContext from '../contexts/CubeContext';
 import useAlerts, { Alerts } from '../hooks/UseAlerts';
-import { cardCollectorNumber, cardName, cardSet } from '../../../utils/src/cardutil';
 
 const compareCards = (x: CardType, y: CardType) => x.details?.name.localeCompare(y.details?.name || '') || 0;
 const sortCards = (cards: CardType[]) => [...cards].sort(compareCards);

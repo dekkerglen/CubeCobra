@@ -1,10 +1,9 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { GrabberIcon } from '@primer/octicons-react';
-
+import { TagColor } from '@utils/datatypes/Cube';
 import { getTagColorClass } from '@utils/Util';
 
-import { TagColor } from '@utils/datatypes/Cube';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext, { TAG_COLORS } from '../../contexts/CubeContext';
 import { Card } from '../base/Card';
@@ -79,7 +78,6 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
       if (response.ok) {
         setTagColors(colors);
       } else {
-        // eslint-disable-next-line no-console -- Debugging
         console.error('Request failed.');
       }
       setLoading(false);

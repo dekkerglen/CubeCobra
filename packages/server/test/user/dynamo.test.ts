@@ -33,8 +33,9 @@ describe('User Model Initialization', () => {
 
 import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 import UserType, { DefaultGridTightnessPreference, GridTightnessPreference } from '@utils/datatypes/User';
-import User from '../../src/dynamo/models/user';
 import * as imageutil from 'serverutils/imageutil';
+
+import User from '../../src/dynamo/models/user';
 import { createUser } from '../test-utils/data';
 
 describe('User Model', () => {

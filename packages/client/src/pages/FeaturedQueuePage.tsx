@@ -1,5 +1,7 @@
 import React from 'react';
 
+import Cube from '@utils/datatypes/Cube';
+
 import Badge from 'components/base/Badge';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -7,7 +9,6 @@ import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import Cube from '@utils/datatypes/Cube';
 import MainLayout from 'layouts/MainLayout';
 
 interface FeaturedQueuePageProps {

@@ -1,7 +1,8 @@
-import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
-import { SortDirectionsType } from '@utils/sorting/sortContext';
-import { ORDERED_SORTS, OrderedSortsType, SortFunctionsOnDetails } from '@utils/sorting/Sort';
 import { PrintingPreference } from '@utils/datatypes/Card';
+import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
+import { ORDERED_SORTS, OrderedSortsType, SortFunctionsOnDetails } from '@utils/sorting/Sort';
+import { SortDirectionsType } from '@utils/sorting/sortContext';
+
 import carddb, { getAllMostReasonable } from './carddb';
 
 /* Page size for results */

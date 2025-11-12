@@ -1,13 +1,13 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
+import { cardName, getCardTagColorClass } from '@utils/cardutil';
+import Card from '@utils/datatypes/Card';
 import cx from 'classnames';
 import emojiRegex from 'emoji-regex';
 
 import DisplayContext from 'contexts/DisplayContext';
 import RotoDraftContext from 'contexts/RotoDraftContext';
-import { cardName, getCardTagColorClass } from '@utils/cardutil';
 
-import Card from '@utils/datatypes/Card';
 import TagColorContext from '../../contexts/TagColorContext';
 import UserContext from '../../contexts/UserContext';
 import { ListGroupItem } from '../base/ListGroup';

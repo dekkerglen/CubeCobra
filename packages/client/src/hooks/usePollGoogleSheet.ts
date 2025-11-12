@@ -12,7 +12,6 @@ const usePollGoogleSheet = () => {
       try {
         const resp = await fetch(url);
         if (!resp.ok) {
-          // eslint-disable-next-line no-console
           console.error(`Failed to fetch: ${resp.status} ${resp.statusText}`);
           return;
         }
@@ -21,7 +20,6 @@ const usePollGoogleSheet = () => {
         const { picks, players, picksByPlayer } = parseRotoCSV(text);
         setRotoInfo({ picks, players, picksByPlayer });
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error('Error fetching Google Sheet:', error);
       }
     };

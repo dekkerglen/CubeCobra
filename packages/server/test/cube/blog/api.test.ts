@@ -1,4 +1,7 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
+import * as render from 'serverutils/render';
+import * as util from 'serverutils/util';
+
 import Blog from '../../../src/dynamo/models/blog';
 import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
@@ -9,8 +12,6 @@ import {
   getBlogPostsForCubeHandler,
   getMoreBlogPostsForCubeHandler,
 } from '../../../src/router/routes/cube/blog';
-import * as render from 'serverutils/render';
-import * as util from 'serverutils/util';
 import { createBlogPost, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call } from '../../test-utils/transport';

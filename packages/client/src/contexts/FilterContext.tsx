@@ -1,6 +1,7 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 
 import { defaultFilter, FilterFunction, makeFilter } from '@utils/filtering/FilterCards';
+
 import useQueryParam from '../hooks/useQueryParam';
 
 export interface FilterContextValue {

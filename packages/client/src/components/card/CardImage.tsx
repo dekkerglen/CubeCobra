@@ -1,9 +1,9 @@
 import React, { useContext, useMemo } from 'react';
 
 import { cardImageUrl, cardName } from '@utils/cardutil';
-
 import Card from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
+
 import DisplayContext from '../../contexts/DisplayContext';
 import ImageFallback from '../ImageFallback';
 import withAutocard from '../WithAutocard';

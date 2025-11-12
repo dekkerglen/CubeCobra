@@ -1,9 +1,8 @@
 import React, { useRef, useState } from 'react';
 
-import classNames from 'classnames';
-
 import TagData from '@utils/datatypes/TagData';
 import { getTagColorClass } from '@utils/Util';
+import classNames from 'classnames';
 
 import Input from './base/Input';
 import { Flexbox } from './base/Layout';

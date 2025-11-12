@@ -1,8 +1,9 @@
 import React from 'react';
 
+import Record from '@utils/datatypes/Record';
+
 import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
-import Record from '@utils/datatypes/Record';
 
 import EditPlayerList from '../../records/EditPlayerList';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';

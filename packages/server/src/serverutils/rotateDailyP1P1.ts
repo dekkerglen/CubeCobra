@@ -1,13 +1,14 @@
-/* eslint-disable no-console */
+import Cube from 'dynamo/models/cube';
+import dailyP1P1Model from 'dynamo/models/dailyP1P1';
+import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import path from 'path';
+
+import { initializeCardDb } from './cardCatalog';
 import { generateBalancedPack } from './cubefn';
 import { ensureModelsReady } from './ml';
-import { initializeCardDb } from './cardCatalog';
-import Cube from 'dynamo/models/cube';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
-import dailyP1P1Model from 'dynamo/models/dailyP1P1';
 const FeaturedQueue = require('dynamo/models/featuredQueue');
 import User from 'dynamo/models/user';
+
 import * as util from './util';
 
 interface RotationResult {

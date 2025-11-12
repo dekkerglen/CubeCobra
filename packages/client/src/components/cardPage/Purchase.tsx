@@ -1,12 +1,13 @@
 import React from 'react';
 
+import { CardDetails } from '@utils/datatypes/Card';
+
 import CardHoarderButton from 'components/purchase/CardHoarderButton';
 import CardKingdomButton from 'components/purchase/CardKingdomButton';
 import CardMarketButton from 'components/purchase/CardMarketButton';
 import ManaPoolButton from 'components/purchase/ManaPoolButton';
 import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
 
-import { CardDetails } from '@utils/datatypes/Card';
 import { Card, CardBody, CardHeader } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';

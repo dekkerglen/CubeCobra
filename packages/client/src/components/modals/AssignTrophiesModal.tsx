@@ -1,8 +1,9 @@
 import React, { createRef, useState } from 'react';
 
+import Record from '@utils/datatypes/Record';
+
 import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
-import Record from '@utils/datatypes/Record';
 
 import EditTrophies from '../../records/EditTrophies';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';

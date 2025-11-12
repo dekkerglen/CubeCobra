@@ -1,15 +1,14 @@
 import React, { useContext, useMemo } from 'react';
 
+import Card from '@utils/datatypes/Card';
+import { countGroup, sortDeep } from '@utils/sorting/Sort';
 import classNames from 'classnames';
 
-import { countGroup, sortDeep } from '@utils/sorting/Sort';
-
-import Card from '@utils/datatypes/Card';
-import CubeContext from 'contexts/CubeContext';
 import { Col, Flexbox, NumCols, Row } from 'components/base/Layout';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Text from 'components/base/Text';
 import TableViewCardGroup from 'components/card/TableViewCardGroup';
+import CubeContext from 'contexts/CubeContext';
 
 interface TableViewProps {
   cards: Card[];
