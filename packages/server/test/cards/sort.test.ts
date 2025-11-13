@@ -1,6 +1,6 @@
 import { cardName } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
-import { cardGetLabels, getLabelsRaw, sortForDownload, sortGroupsOrdered } from '@utils/sorting/Sort';
+import { CARD_TYPES, cardGetLabels, getLabelsRaw, sortForDownload, sortGroupsOrdered } from '@utils/sorting/Sort';
 
 import { createCard, createCardDetails, createCardFromDetails, createCustomCard } from '../test-utils/data';
 
@@ -1079,5 +1079,48 @@ describe('Grouping by Types-Multicolor', () => {
     const groups = sortGroupsOrdered(cards, SORT, true);
     assertGroupOrdering(groups, ['Creature', 'Dimir', 'Familiar']);
     assertCardOrdering(groups, ['Card 2', 'Card 3', 'Card 1']);
+  });
+});
+
+describe('Grouping by Types', () => {
+  const SORT = 'Type';
+
+  it('Types are sorted by MTG order', async () => {
+    //Create random order of cards using these types
+    const randomizedCardTypes = [...CARD_TYPES].sort(() => Math.random() - 0.5);
+
+    const cards = randomizedCardTypes.map((type, idx) => {
+      return createCardFromDetails({
+        name: `Card ${idx}`,
+        type,
+      });
+    });
+
+    const groups = sortGroupsOrdered(cards, SORT, false);
+    //Will be sorted by our expected MTG order (skipping other)
+    assertGroupOrdering(groups, CARD_TYPES);
+  });
+
+  it('MTG types come before custom types', async () => {
+    const cards = [
+      createCardFromDetails({
+        name: `Card 1`,
+        type: 'Instant - Arcane',
+      }),
+      createCustomCard('Card 2', {
+        type_line: 'Familiar - Dohicky',
+      }),
+      createCardFromDetails({
+        name: 'Card 3',
+        type: 'Creature - Human Wizard',
+      }),
+      createCustomCard('Card 4', {
+        type_line: 'Hieress - Human',
+      }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, false);
+    assertGroupOrdering(groups, ['Creature', 'Instant', 'Familiar', 'Hieress']);
+    assertCardOrdering(groups, ['Card 3', 'Card 1', 'Card 2', 'Card 4']);
   });
 });
