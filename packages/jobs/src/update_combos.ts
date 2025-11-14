@@ -135,7 +135,7 @@ const fetchAllPages = async (
 
   console.log('Downloading all combos data');
   const initialUrl = 'https://backend.commanderspellbook.com/variants?format=json';
-  const privateDir = '../server/private/';
+  const privateDir = path.resolve(__dirname, '..', 'server', 'private');
   const dataByIdPath = path.join(privateDir, 'comboDict.json');
   const comboTreePath = path.join(privateDir, 'comboTree.json');
 
