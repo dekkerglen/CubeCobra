@@ -5,8 +5,10 @@ echo "Installing packages"
 npm install
 # Reinstall tfjs-node to force a re-compile
 echo "Fixing tensorflow"
+cd packages/server
 rm -rf 'node_modules/@tensorflow/tfjs-node'
 npm install @tensorflow/tfjs-node --build-from-source --build-addon-from-source
+cd ../../
 echo "Building the client"
 npm run build --workspace=packages/client
 echo "Building the server"
