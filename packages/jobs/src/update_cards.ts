@@ -62,7 +62,7 @@ const catalog: Catalog = {
   indexToOracleId: [],
 };
 
-const PRIVATE_DIR = path.resolve(__dirname, '..', 'server', 'private');
+const PRIVATE_DIR = path.resolve(__dirname, '..', '..', 'server', 'private');
 
 async function downloadFile(url: string, filePath: string) {
   const folder = join(__dirname, `../${filePath.substring(0, filePath.lastIndexOf('/'))}`);
@@ -209,8 +209,6 @@ async function writeFile(filepath: string, data: any) {
 
         console.log(`Finished writing ${filepath}. Duration: ${writeDuration.toFixed(2)}s`);
         resolve();
-
-        console.log(`Finished writing ${filepath}`);
       });
     } catch (err) {
       reject(err);
@@ -866,7 +864,7 @@ const downloadFromScryfall = async (
 
   try {
     console.info('Saving catalog...');
-    await writeCatalog(`${PRIVATE_DIR}/private`);
+    await writeCatalog(PRIVATE_DIR);
   } catch (error) {
     console.error('Updating cardbase objects failed:');
 

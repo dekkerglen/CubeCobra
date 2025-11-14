@@ -5,9 +5,6 @@ services:
     image: node:22.11.0
     volumes:
       - ../../../:/home/node/app
-      # Necessary or would this be in server now?
-      - ../../../model:/home/node/app/packages/server/model
-      - ../../../private:/home/node/app/packages/server/private
     user: "node"
     working_dir: /home/node/app
     environment:
