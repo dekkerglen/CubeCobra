@@ -18,7 +18,7 @@ const client = createClient({
   ],
 });
 
-module.exports = {
+const patron = {
   getById: async (id: string): Promise<UnhydratedPatron> => (await client.get(id)).Item as UnhydratedPatron,
   getByEmail: async (email: string): Promise<UnhydratedPatron | undefined> => {
     const result = await client.query({
@@ -34,3 +34,6 @@ module.exports = {
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   deleteById: async (id: string): Promise<void> => client.delete({ owner: id }),
 };
+
+module.exports = patron;
+export default patron;
