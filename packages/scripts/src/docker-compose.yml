@@ -2,7 +2,7 @@
 services:
   node:
     container_name: cube
-    image: node:23.11.1
+    image: node:22.11.0
     volumes:
       - ../../../:/home/node/app
       # Necessary or would this be in server now?
