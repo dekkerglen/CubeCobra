@@ -71,7 +71,7 @@ Once setup is complete, the containers will exit gracefully. The card databases 
 After initial setup, start the program with:
 
 ```sh
-docker compose up
+docker compose up -f packages/scripts/src/docker-compose.yml
 ```
 
 When the server is ready, you should see logs similar to:
