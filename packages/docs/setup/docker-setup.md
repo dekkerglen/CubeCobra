@@ -10,10 +10,10 @@ Running CubeCobra within Docker is the simplest and fastest way to get everythin
 
 ## Initial Setup
 
-For the first setup, you will need to run:
+For the first setup, you will need to run the following from the root of the repository:
 
 ```sh
-docker compose -f docker-compose.yml -f ./docker/init.yml up --abort-on-container-exit
+docker compose -f packages/scripts/src/docker-compose.yml -f packages/scripts/src/docker/init.yml up --abort-on-container-exit
 ```
 
 **Note**: This can take tens of minutes to complete. When it finishes successfully you should see in the last docker logs output similar to the following (order of lines, and container name, may be different):
@@ -71,7 +71,7 @@ Once setup is complete, the containers will exit gracefully. The card databases 
 After initial setup, start the program with:
 
 ```sh
-docker compose up
+docker compose up -f packages/scripts/src/docker-compose.yml
 ```
 
 When the server is ready, you should see logs similar to:

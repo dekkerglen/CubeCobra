@@ -41,6 +41,14 @@ const getMockClient = (): MockDynamoClient => ({
 const mockClient = getMockClient();
 const mockCreateClient = jest.fn(() => mockClient);
 
+// Define to make typescript happy
+declare global {
+  // eslint-disable-next-line no-var
+  var mockDynamoClient: MockDynamoClient;
+  // eslint-disable-next-line no-var
+  var mockDynamoCreateClient: () => MockDynamoClient;
+}
+
 //Assign the mocks to global so they can be accessed in any test by the name, in order to mock/expect on them
 globalThis.mockDynamoClient = mockClient;
 globalThis.mockDynamoCreateClient = mockCreateClient;

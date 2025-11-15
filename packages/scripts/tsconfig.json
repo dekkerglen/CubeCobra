@@ -9,7 +9,9 @@
     "baseUrl": "./",
     "paths": {
       "@utils/*": ["../utils/src/*"],
-      "@server/*": ["../server/src/*"]
+      "@server/*": ["../server/src/*"],
+      "serverutils/*": ["../server/src/serverutils/*"],
+      "dynamo/*": ["../server/src/dynamo/*"]
     },
     "module": "commonjs",
     "moduleResolution": "node",

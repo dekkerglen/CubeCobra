@@ -62,6 +62,8 @@ const catalog: Catalog = {
   indexToOracleId: [],
 };
 
+const PRIVATE_DIR = path.resolve(__dirname, '..', '..', 'server', 'private');
+
 async function downloadFile(url: string, filePath: string) {
   const folder = join(__dirname, `../${filePath.substring(0, filePath.lastIndexOf('/'))}`);
   if (!fs.existsSync(folder)) {
@@ -139,13 +141,13 @@ async function downloadDefaultCards(cacheDir?: string) {
 
   // Use getFileWithCache to download or stream from cache
   await Promise.all([
-    getFileWithCache(defaultUrl, '../server/private/cards.json', cacheDir),
-    getFileWithCache(allUrl, '../server/private/all-cards.json', cacheDir),
+    getFileWithCache(defaultUrl, `${PRIVATE_DIR}/cards.json`, cacheDir),
+    getFileWithCache(allUrl, `${PRIVATE_DIR}/all-cards.json`, cacheDir),
   ]);
 }
 
 async function downloadSets(cacheDir?: string) {
-  await getFileWithCache('https://api.scryfall.com/sets', '../server/private/sets.json', cacheDir);
+  await getFileWithCache('https://api.scryfall.com/sets', `${PRIVATE_DIR}/sets.json`, cacheDir);
 }
 
 function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
@@ -207,8 +209,6 @@ async function writeFile(filepath: string, data: any) {
 
         console.log(`Finished writing ${filepath}. Duration: ${writeDuration.toFixed(2)}s`);
         resolve();
-
-        console.log(`Finished writing ${filepath}`);
       });
     } catch (err) {
       reject(err);
@@ -607,7 +607,7 @@ function addLanguageMapping(card: ScryfallCard) {
   }
 }
 
-async function writeCatalog(basePath = '../server/private') {
+async function writeCatalog(basePath = PRIVATE_DIR) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
@@ -747,7 +747,7 @@ async function saveAllCards(
   const processingCardsStart = Date.now();
   await new Promise((resolve) =>
     fs
-      .createReadStream('../server/private/cards.json')
+      .createReadStream(`${PRIVATE_DIR}/cards.json`)
       .pipe(JSONStream.parse('*'))
       .pipe(
         // @ts-expect-error idk why but this works
@@ -766,7 +766,7 @@ async function saveAllCards(
   const languageMappingsStart = Date.now();
   await new Promise((resolve) =>
     fs
-      .createReadStream('../server/private/all-cards.json')
+      .createReadStream(`${PRIVATE_DIR}/all-cards.json`)
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(addLanguageMapping))
       .on('close', resolve),
@@ -799,7 +799,7 @@ async function processSets() {
   console.info('Processing sets...');
   await new Promise((resolve) =>
     fs
-      .createReadStream('../server/private/sets.json')
+      .createReadStream(`${PRIVATE_DIR}/sets.json`)
       .pipe(JSONStream.parse('data.*'))
       .pipe(
         // @ts-expect-error idk why but this works
@@ -864,7 +864,7 @@ const downloadFromScryfall = async (
 
   try {
     console.info('Saving catalog...');
-    await writeCatalog('../server/private');
+    await writeCatalog(PRIVATE_DIR);
   } catch (error) {
     console.error('Updating cardbase objects failed:');
 
@@ -894,7 +894,7 @@ const uploadCardDb = async () => {
   for (const file of Object.keys(fileToAttribute)) {
     console.log(`Uploading ${file}...`);
 
-    await uploadLargeObjectToS3(`../server/private/${file}`, `cards/${file}`);
+    await uploadLargeObjectToS3(`${PRIVATE_DIR}/${file}`, `cards/${file}`);
 
     console.log(`Finished ${file}`);
   }
@@ -936,7 +936,7 @@ const loadMetadatadict = async () => {
 const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
   // Use cache if available
   const url = 'https://api.cardkingdom.com/api/v2/pricelist';
-  const filePath = '../server/private/cardkingdom-prices.json';
+  const filePath = `${PRIVATE_DIR}/cardkingdom-prices.json`;
   let stream;
   if (cacheDir) {
     stream = await getFileWithCache(url, filePath, cacheDir);
@@ -964,7 +964,7 @@ const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
 
 const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
   const url = 'https://manapool.com/api/v1/prices/singles';
-  const filePath = '../server/private/manapool-prices.json';
+  const filePath = `${PRIVATE_DIR}/manapool-prices.json`;
   let stream;
   if (cacheDir) {
     stream = await getFileWithCache(url, filePath, cacheDir);

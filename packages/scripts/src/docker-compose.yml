@@ -1,26 +1,29 @@
+# Paths are relative to this file
 services:
   node:
     container_name: cube
-    image: node:20.18.0
+    image: node:22.11.0
     volumes:
-      - ./:/home/node/app
-    user: 'node'
+      - ../../../:/home/node/app
+    user: "node"
     working_dir: /home/node/app
     environment:
       - NODE_ENV=development
       - AWS_ENDPOINT=http://localstack:4566
       - NODE_OPTIONS=--max-old-space-size=8192
     env_file:
-      - .env
+      - ../../server/.env
     ports:
       # Webpack / browser entry point
       - 8080:8080
       # Node
       - 5001:5000
     expose:
-      - '8080'
-      - '5001'
-    command: 'npm run devstart'
+      - "8080"
+      - "5001"
+    # Relative to root directory
+    command: ./packages/scripts/src/docker/run.sh
+    entrypoint: ["/bin/sh"]
     init: true
     networks:
       - cubecobra
@@ -44,7 +47,9 @@ services:
 
 volumes:
   localstack:
+    name: "localstack"
 
 networks:
   # Rename. by default network is prefixed by folder name
   cubecobra:
+    name: "cubecobra"
