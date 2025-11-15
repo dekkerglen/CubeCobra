@@ -5,7 +5,7 @@ services:
     image: node:22.11.0
     volumes:
       - ../../../:/home/node/app
-    user: "node"
+    user: 'node'
     working_dir: /home/node/app
     environment:
       - NODE_ENV=development
@@ -19,11 +19,11 @@ services:
       # Node
       - 5001:5000
     expose:
-      - "8080"
-      - "5001"
+      - '8080'
+      - '5001'
     # Relative to root directory
     command: ./packages/scripts/src/docker/run.sh
-    entrypoint: ["/bin/sh"]
+    entrypoint: ['/bin/sh']
     init: true
     networks:
       - cubecobra
@@ -47,9 +47,9 @@ services:
 
 volumes:
   localstack:
-    name: "localstack"
+    name: 'localstack'
 
 networks:
   # Rename. by default network is prefixed by folder name
   cubecobra:
-    name: "cubecobra"
+    name: 'cubecobra'
