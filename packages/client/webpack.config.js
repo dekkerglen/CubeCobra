@@ -16,11 +16,16 @@ const entry = pageFiles.reduce((entries, pageFile) => {
 module.exports = {
   entry,
   output: {
-    filename: 'js/[name].bundle.js',
+    filename: 'js/[name].[contenthash:8].bundle.js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '/', // Important for source maps to work correctly
+    publicPath: '/',
+    clean: true, // Clean output directory before build
   },
-  devtool: 'eval-source-map', // Better source maps for development debugging
+  devtool: process.env.NODE_ENV === 'production' ? false : 'eval-source-map',
+  externals: {
+    react: 'React',
+    'react-dom': 'ReactDOM',
+  },
   module: {
     rules: [
       {
@@ -31,7 +36,7 @@ module.exports = {
           options: {
             configFile: path.resolve(__dirname, 'tsconfig.json'),
             compilerOptions: {
-              sourceMap: true, // Ensure TypeScript emits source maps
+              sourceMap: process.env.NODE_ENV !== 'production',
             },
           },
         },
@@ -90,14 +95,16 @@ module.exports = {
           name: 'commons',
           chunks: 'initial',
           minChunks: 2,
+          filename: 'js/commons.[contenthash:8].bundle.js',
         },
         vendors: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
           chunks: 'all',
+          filename: 'js/vendors.[contenthash:8].bundle.js',
         },
       },
     },
   },
-  mode: 'development',
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
 };

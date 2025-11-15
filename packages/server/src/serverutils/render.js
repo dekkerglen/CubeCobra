@@ -9,6 +9,23 @@ const utils = require('./util');
 const { NotificationStatus } = require('@utils/datatypes/Notification');
 const { UserRoles } = require('@utils/datatypes/User');
 
+const fs = require('fs');
+const path = require('path');
+
+let bundleManifest = null;
+const loadManifest = () => {
+  if (!bundleManifest) {
+    try {
+      const manifestPath = path.join(__dirname, '../../public/manifest.json');
+      bundleManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch (err) {
+      console.error('Failed to load bundle manifest, falling back to non-hashed filenames:', err.message);
+      bundleManifest = {};
+    }
+  }
+  return bundleManifest;
+};
+
 const getCubes = async (req, callback) => {
   if (!req.user) {
     callback([]);
@@ -29,7 +46,14 @@ const redirect = (req, res, to) => {
 };
 
 const getBundlesForPage = (page) => {
-  return [`/js/vendors.bundle.js`, `/js/commons.bundle.js`, `/js/${page}.bundle.js`];
+  const manifest = loadManifest();
+  
+  // Try to get hashed filenames from manifest, fall back to non-hashed
+  const vendors = manifest['vendors'] || `/js/vendors.bundle.js`;
+  const commons = manifest['commons'] || `/js/commons.bundle.js`;
+  const pageBundleName = manifest[page] || `/js/${page}.bundle.js`;
+  
+  return [vendors, commons, pageBundleName];
 };
 
 const sha256 = async (data) => {
