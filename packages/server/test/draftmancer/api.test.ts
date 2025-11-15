@@ -179,11 +179,11 @@ const createDraftSeatPicks = (
   const sideboard = draftutil.setupPicks(1, 8);
 
   mainboardCards.forEach(({ column, row, cardIds }) => {
-    mainboard[column][row].push(...cardIds);
+    mainboard[column]![row]!.push(...cardIds);
   });
 
   sideboardCards.forEach(({ column, row, cardIds }) => {
-    sideboard[column][row].push(...cardIds);
+    sideboard[column]![row]!.push(...cardIds);
   });
 
   return {
@@ -202,7 +202,7 @@ describe('Publish', () => {
     app = express();
     app.use(express.json());
     //Need to type as our RequestHandler or Typescript gets angry
-    app.post('/api/draftmancer/publish', ...(routes[0].handler as RequestHandler[]));
+    app.post('/api/draftmancer/publish', ...(routes[0]!.handler as RequestHandler[]));
 
     process.env.DRAFTMANCER_API_KEY = 'api-key';
   });
@@ -654,8 +654,8 @@ describe('validatePublishDraftBody', () => {
         {
           userName: 'testUser',
           // missing isBot
-          picks: validBody.players[0].picks,
-          decklist: validBody.players[0].decklist,
+          picks: validBody.players[0]!.picks,
+          decklist: validBody.players[0]!.decklist,
         },
       ],
     };

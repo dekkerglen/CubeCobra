@@ -81,8 +81,8 @@ describe('formatMainboard', () => {
     const result = formatMainboard(decklist, cards);
 
     // Creature should be in row 0, column 2 (based on CMC)
-    expect(result[0][2]).toContain(0);
-    expect(result[1][2]).toHaveLength(0);
+    expect(result[0]![2]!).toContain(0);
+    expect(result[1]![2]!).toHaveLength(0);
   });
 
   it('formats non-creature cards correctly', () => {
@@ -104,8 +104,8 @@ describe('formatMainboard', () => {
     const result = formatMainboard(decklist, cards);
 
     // Non-creature should be in row 1, column 3 (based on CMC)
-    expect(result[0][3]).toHaveLength(0);
-    expect(result[1][3]).toContain(0);
+    expect(result[0]![3]!).toHaveLength(0);
+    expect(result[1]![3]!).toContain(0);
   });
 
   it('handles high CMC cards by capping column at 7', () => {
@@ -126,7 +126,7 @@ describe('formatMainboard', () => {
 
     const result = formatMainboard(decklist, cards);
 
-    expect(result[0][7]).toContain(0);
+    expect(result[0]![7]!).toContain(0);
   });
 
   it('handles zero CMC cards', () => {
@@ -147,7 +147,7 @@ describe('formatMainboard', () => {
 
     const result = formatMainboard(decklist, cards);
 
-    expect(result[1][0]).toContain(0);
+    expect(result[1]![0]!).toContain(0);
   });
 
   it('handles empty mainboard', () => {
@@ -182,7 +182,7 @@ describe('formatSideboard', () => {
 
     const result = formatSideboard(decklist, cards);
 
-    expect(result[0][2]).toContain(0);
+    expect(result[0]![2]!).toContain(0);
   });
 
   it('caps sideboard card CMC at column 7', () => {
@@ -202,7 +202,7 @@ describe('formatSideboard', () => {
 
     const result = formatSideboard(decklist, cards);
 
-    expect(result[0][7]).toContain(0);
+    expect(result[0]![7]!).toContain(0);
   });
 });
 
@@ -240,12 +240,12 @@ describe('buildBotDeck', () => {
     expect(deckbuild).toHaveBeenCalledWith([cards[0], cards[1], cards[3]], [cards[2], cards[4]]);
 
     // Verify mainboard formatting
-    expect(result.mainboard[0][2]).toContain(0); // creature in row 0
-    expect(result.mainboard[1][3]).toContain(1); // instant in row 1
-    expect(result.mainboard[1][0]).toContain(2); // basic land in row 1, col 0
+    expect(result.mainboard[0]![2]!).toContain(0); // creature in row 0
+    expect(result.mainboard[1]![3]!).toContain(1); // instant in row 1
+    expect(result.mainboard[1]![0]!).toContain(2); // basic land in row 1, col 0
 
     // Verify remaining card went to sideboard
-    expect(result.sideboard[0][4]).toContain(3); // card-3 in sideboard
+    expect(result.sideboard[0]![4]!).toContain(3); // card-3 in sideboard
   });
 
   it('handles missing cards gracefully', () => {
@@ -265,7 +265,7 @@ describe('buildBotDeck', () => {
     // Should have empty mainboard since card wasn't found
     expect(result.mainboard.flat(2)).toHaveLength(0);
     // Original card should be in sideboard
-    expect(result.sideboard[0][2]).toContain(0);
+    expect(result.sideboard[0]![2]!).toContain(0);
   });
 
   it('handles basic lands from pool', () => {
@@ -282,8 +282,8 @@ describe('buildBotDeck', () => {
 
     const result = buildBotDeck(pickorder, basics, cards);
 
-    expect(result.mainboard[1][0]).toContain(1); // Basic land should be in row 1, col 0
-    expect(result.sideboard[0][2]).toContain(0); // Non-basic should be in sideboard
+    expect(result.mainboard[1]![0]!).toContain(1); // Basic land should be in row 1, col 0
+    expect(result.sideboard[0]![2]!).toContain(0); // Non-basic should be in sideboard
   });
 
   it('handles cards not found in pool or basics', () => {
@@ -300,7 +300,7 @@ describe('buildBotDeck', () => {
 
     const result = buildBotDeck(pickorder, basics, cards);
 
-    expect(result.mainboard[0][2]).toContain(0); // Found card should be in mainboard
+    expect(result.mainboard[0]![2]!).toContain(0); // Found card should be in mainboard
     expect(result.mainboard.flat(2).length).toBe(1); // Only one card total in mainboard
   });
 
@@ -323,8 +323,8 @@ describe('buildBotDeck', () => {
 
     const result = buildBotDeck(pickorder, basics, cards);
 
-    expect(result.mainboard[1][0]).toContain(1); // Basic land in row 1, col 0
-    expect(result.mainboard[0][2]).toContain(0); // Creature in row 0, col 2
+    expect(result.mainboard[1]![0]!).toContain(1); // Basic land in row 1, col 0
+    expect(result.mainboard[0]![2]!).toContain(0); // Creature in row 0, col 2
   });
 });
 

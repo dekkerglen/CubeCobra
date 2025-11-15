@@ -200,7 +200,7 @@ describe('generateBalancedPack', () => {
 
       let callCount = 0;
       mockGetBotPrediction.mockImplementation(async () => {
-        const candidate = candidates[callCount % candidates.length];
+        const candidate = candidates[callCount % candidates.length]!;
         callCount += 1;
         return candidate;
       });
@@ -257,7 +257,7 @@ describe('generateBalancedPack', () => {
       expect(result.packResult.pack).toHaveLength(15);
 
       result.packResult.pack.forEach((card: any, index: number) => {
-        expect(card).toHaveProperty('cardID', mockDraft.cards[index].cardID);
+        expect(card).toHaveProperty('cardID', mockDraft.cards[index]!.cardID);
         expect(card).toHaveProperty('details');
         expect(card.details).toHaveProperty('oracle_id', expect.stringContaining('oracle_'));
       });
@@ -294,7 +294,7 @@ describe('generateBalancedPack', () => {
 
       mockCardFromId.mockImplementation((cardID) => {
         const index = mockDraft.cards.findIndex((c) => c.cardID === cardID);
-        return mockDetails[index];
+        return mockDetails[index]!;
       });
 
       const normalizedWeights = createRealistic15CardWeights();
@@ -411,7 +411,7 @@ describe('generatePack', () => {
       expect(result.pack).toHaveLength(15);
 
       result.pack.forEach((card: any, index: number) => {
-        expect(card).toHaveProperty('cardID', mockDraft.cards[index].cardID);
+        expect(card).toHaveProperty('cardID', mockDraft.cards[index]!.cardID);
         expect(card).toHaveProperty('details');
         expect(card.details).toHaveProperty('oracle_id', expect.stringContaining('oracle_'));
       });

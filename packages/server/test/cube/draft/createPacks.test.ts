@@ -188,7 +188,7 @@ describe('createPacks', () => {
     const initialState = result.initialState;
 
     const assertCardSlotMatchFilter = (filteredCardSet: number[], cardIndex: number) => {
-      const cardId = result.cards[cardIndex];
+      const cardId = result.cards[cardIndex]!;
       //Convert the card indices to ids just like we do in getFilteredCardGenerator
       expect(filteredCardSet.map((id) => `${id}-${id}`)).toContain(cardId.cardID);
     };
@@ -196,15 +196,15 @@ describe('createPacks', () => {
     //Assert the card packs for each set have cards matching the filters in order
     for (let seat = 0; seat < initialState.length; seat++) {
       //Pack 1
-      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['rarity:mythic'], initialState[seat][0].cards[0]);
-      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['rarity:rare'], initialState[seat][0].cards[1]);
-      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['set:inv'], initialState[seat][0].cards[2]);
+      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['rarity:mythic']!, initialState[seat]![0]!.cards[0]!);
+      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['rarity:rare']!, initialState[seat]![0]!.cards[1]!);
+      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['set:inv']!, initialState[seat]![0]!.cards[2]!);
 
       //Pack 2
-      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['tag:alpha'], initialState[seat][1].cards[0]);
-      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['tag:beta'], initialState[seat][1].cards[1]);
-      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['tag:delta'], initialState[seat][1].cards[2]);
-      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['tag:kappa'], initialState[seat][1].cards[3]);
+      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['tag:alpha']!, initialState[seat]![1]!.cards[0]!);
+      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['tag:beta']!, initialState[seat]![1]!.cards[1]!);
+      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['tag:delta']!, initialState[seat]![1]!.cards[2]!);
+      assertCardSlotMatchFilter(cubeCardIndicesByFilterClone['tag:kappa']!, initialState[seat]![1]!.cards[3]!);
     }
   });
 
@@ -288,9 +288,9 @@ const mockUniqueCardGenerator: NextCardFn = (): DraftResult => {
 const assertPackIndexSequence = (draftState: DraftState) => {
   let expectedIndex = 0; //Starts at zero
   for (let seat = 0; seat < draftState.length; seat++) {
-    for (let packNum = 0; packNum < draftState[seat].length; packNum++) {
-      for (let cardNum = 0; cardNum < draftState[seat][packNum].cards.length; cardNum++) {
-        const cardIndex = draftState[seat][packNum].cards[cardNum];
+    for (let packNum = 0; packNum < draftState[seat]!.length; packNum++) {
+      for (let cardNum = 0; cardNum < draftState[seat]![packNum]!.cards.length; cardNum++) {
+        const cardIndex = draftState[seat]![packNum]!.cards[cardNum]!;
         if (cardIndex !== expectedIndex) {
           fail(
             `For seat ${seat}, pack ${packNum}, the ${cardNum}th card is an unexpected index ${cardIndex}, should have been ${expectedIndex}`,
@@ -406,11 +406,11 @@ const getFilteredCardGenerator = (orderOfUnfilteredCardGrabbing: string[]) => {
     let cardSet: number[];
     //For unfiltered, randomly choose from the overall set of cards from any filter group that is not empty of cards
     if (cardFilterString === '') {
-      const nextUnfilteredCardGroupToPickFrom = orderOfUnfilteredCardGrabbing[0];
+      const nextUnfilteredCardGroupToPickFrom = orderOfUnfilteredCardGrabbing[0]!;
       //Remove the group from the set
       orderOfUnfilteredCardGrabbing.splice(0, 1);
 
-      cardSet = cubeCardIndicesByFilter[nextUnfilteredCardGroupToPickFrom];
+      cardSet = cubeCardIndicesByFilter[nextUnfilteredCardGroupToPickFrom]!;
       if (cardSet.length === 0) {
         return {
           card: undefined,
@@ -418,7 +418,7 @@ const getFilteredCardGenerator = (orderOfUnfilteredCardGrabbing: string[]) => {
         };
       }
     } else {
-      cardSet = cubeCardIndicesByFilter[cardFilterString];
+      cardSet = cubeCardIndicesByFilter[cardFilterString]!;
       if (cardSet.length === 0) {
         return {
           card: undefined,

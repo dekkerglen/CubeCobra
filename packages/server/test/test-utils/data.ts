@@ -268,7 +268,7 @@ export const createBasicLand = (name: BasicLand): Card => {
     details: createCardDetails({
       name: name,
       type: `Basic Land - ${name}`,
-      produced_mana: [BASIC_LAND_MANA_MAPPING[name]],
+      produced_mana: [BASIC_LAND_MANA_MAPPING[name]!],
     }),
   });
 };

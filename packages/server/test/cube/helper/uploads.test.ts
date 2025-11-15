@@ -226,7 +226,7 @@ describe('Bulk Upload', () => {
 
       const mockCards = new Map(cards.map((card) => [card.scryfall_id, createMockCardFromCSV(card)]));
 
-      (util.addCardToCube as jest.Mock).mockImplementation(mockAddCardToBoardImpl(mockCards));
+      ((util as any).addCardToCube as jest.Mock).mockImplementation(mockAddCardToBoardImpl(mockCards));
 
       await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
       expectSuccessfulUpload(owner, cube);
@@ -287,7 +287,7 @@ describe('Bulk Upload', () => {
       setupBasicMocks();
       mockCardDBResponses([hsDetails, null]);
 
-      (util.addCardToCube as jest.Mock).mockImplementation(
+      ((util as any).addCardToCube as jest.Mock).mockImplementation(
         mockAddCardToBoardImpl(new Map([[hsDetails.scryfall_id, mockHsCard]])),
       );
 

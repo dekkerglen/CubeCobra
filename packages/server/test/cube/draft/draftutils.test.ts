@@ -137,13 +137,13 @@ describe('normalizeDraftFormatSteps', () => {
     });
 
     const normalizedFormat = normalizeDraftFormatSteps(format);
-    expect(normalizedFormat.packs[0].steps).toEqual([{ action: 'pick', amount: 1 }]);
-    expect(normalizedFormat.packs[1].steps).toEqual([
+    expect(normalizedFormat.packs[0]!.steps).toEqual([{ action: 'pick', amount: 1 }]);
+    expect(normalizedFormat.packs[1]!.steps).toEqual([
       { action: 'pick', amount: 1 },
       { action: 'pass', amount: null },
       { action: 'pick', amount: 2 },
     ]);
-    expect(normalizedFormat.packs[2].steps).toEqual([{ action: 'pick', amount: 1 }]);
+    expect(normalizedFormat.packs[2]!.steps).toEqual([{ action: 'pick', amount: 1 }]);
   });
 });
 
@@ -323,7 +323,7 @@ describe('buildDefaultSteps', () => {
   it('removes final pass step', () => {
     const steps = buildDefaultSteps(2);
     expect(steps).toHaveLength(3);
-    expect(steps[steps.length - 1].action).toBe('pick');
+    expect(steps[steps.length - 1]!.action).toBe('pick');
   });
 });
 
@@ -346,7 +346,7 @@ describe('createDefaultDraftFormat', () => {
     format.packs.forEach((pack) => {
       //Tell Typescript we expect pack.steps to never be null in our default format
       expect(pack.steps!).toHaveLength(29); // 15 picks + 14 passes (no final pass)
-      expect(pack.steps![pack.steps!.length - 1].action).toBe('pick');
+      expect(pack.steps![pack.steps!.length - 1]!.action).toBe('pick');
     });
   });
 
@@ -364,8 +364,8 @@ describe('createDefaultDraftFormat', () => {
   it('handles small pack size', () => {
     const format = createDefaultDraftFormat(1, 1);
     expect(format.packs).toHaveLength(1);
-    expect(format.packs[0].slots).toHaveLength(1);
-    expect(format.packs[0].steps).toHaveLength(1);
+    expect(format.packs[0]!.slots).toHaveLength(1);
+    expect(format.packs[0]!.steps).toHaveLength(1);
   });
 });
 

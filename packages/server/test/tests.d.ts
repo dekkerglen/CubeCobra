@@ -7,4 +7,6 @@ declare global {
   var mockDynamoCreateClient: jest.Mock;
 }
 
+declare module 'supertest';
+
 export {};

@@ -1,4 +1,4 @@
-import { DisplayContextValue } from 'contexts/DisplayContext';
+import { DisplayContextValue } from '../../../client/src/contexts/DisplayContext';
 
 const defaultDisplayContext: DisplayContextValue = {
   cardsPerRow: 5,

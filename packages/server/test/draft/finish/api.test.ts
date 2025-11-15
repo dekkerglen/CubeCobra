@@ -275,14 +275,14 @@ describe('Finish Draft', () => {
         complete: true,
         seats: [
           expect.objectContaining({
-            pickorder: validBody.state.seats[0].picks,
-            trashorder: validBody.state.seats[0].trashed,
+            pickorder: validBody.state.seats[0]!.picks,
+            trashorder: validBody.state.seats[0]!.trashed,
             mainboard: validBody.mainboard,
             sideboard: validBody.sideboard,
           }),
           expect.objectContaining({
-            pickorder: validBody.state.seats[1].picks,
-            trashorder: validBody.state.seats[1].trashed,
+            pickorder: validBody.state.seats[1]!.picks,
+            trashorder: validBody.state.seats[1]!.trashed,
             mainboard: expectedMainboard,
             sideboard: expectedSideboard,
           }),
@@ -350,9 +350,9 @@ describe('Finish Draft', () => {
 
     (draftbots.deckbuild as jest.Mock).mockReturnValue({
       mainboard: [
-        draft.cards[9].details?.oracle_id,
-        draft.cards[8].details?.oracle_id,
-        draft.cards[10].details?.oracle_id,
+        draft.cards[9]!.details?.oracle_id,
+        draft.cards[8]!.details?.oracle_id,
+        draft.cards[10]!.details?.oracle_id,
       ],
       sideboard: [],
     });
@@ -361,7 +361,7 @@ describe('Finish Draft', () => {
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
 
     const expectedMainboard = draftutil.setupPicks(2, 8);
-    expectedMainboard[0][1].push(9, 8, 10);
+    expectedMainboard[0]![1]!.push(9, 8, 10);
 
     await verifySuccessfulDraft(draftOwner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
 
@@ -391,9 +391,9 @@ describe('Finish Draft', () => {
 
     (draftbots.deckbuild as jest.Mock).mockReturnValue({
       mainboard: [
-        draft.cards[9].details?.oracle_id,
-        draft.cards[8].details?.oracle_id,
-        draft.cards[10].details?.oracle_id,
+        draft.cards[9]!.details?.oracle_id,
+        draft.cards[8]!.details?.oracle_id,
+        draft.cards[10]!.details?.oracle_id,
       ],
       sideboard: [],
     });
@@ -402,7 +402,7 @@ describe('Finish Draft', () => {
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
 
     const expectedMainboard = draftutil.setupPicks(2, 8);
-    expectedMainboard[0][1].push(9, 8, 10);
+    expectedMainboard[0]![1]!.push(9, 8, 10);
 
     await verifySuccessfulDraft(draftOwner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
 
@@ -422,9 +422,9 @@ describe('Finish Draft', () => {
 
     (draftbots.deckbuild as jest.Mock).mockReturnValue({
       mainboard: [
-        draft.cards[9].details?.oracle_id,
-        draft.cards[8].details?.oracle_id,
-        draft.cards[10].details?.oracle_id,
+        draft.cards[9]!.details?.oracle_id,
+        draft.cards[8]!.details?.oracle_id,
+        draft.cards[10]!.details?.oracle_id,
       ],
       sideboard: [],
     });
@@ -432,7 +432,7 @@ describe('Finish Draft', () => {
     setupSuccessReturns(draft);
 
     const expectedMainboard = draftutil.setupPicks(2, 8);
-    expectedMainboard[0][1].push(9, 8, 10);
+    expectedMainboard[0]![1]!.push(9, 8, 10);
 
     await verifySuccessfulDraft(draft.owner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
 
@@ -450,11 +450,11 @@ describe('Finish Draft', () => {
     //Aligned with validBody but returning in different order because of ML preferences
     (draftbots.deckbuild as jest.Mock).mockReturnValueOnce({
       mainboard: [
-        draft.cards[9].details?.oracle_id,
-        draft.cards[draft.basics[3]].details?.oracle_id,
-        draft.cards[8].details?.oracle_id,
-        draft.cards[10].details?.oracle_id,
-        draft.cards[draft.basics[1]].details?.oracle_id,
+        draft.cards[9]!.details?.oracle_id,
+        draft.cards[draft.basics[3]!]!.details?.oracle_id,
+        draft.cards[8]!.details?.oracle_id,
+        draft.cards[10]!.details?.oracle_id,
+        draft.cards[draft.basics[1]!]!.details?.oracle_id,
       ],
       sideboard: [],
     });
@@ -462,13 +462,13 @@ describe('Finish Draft', () => {
     setupSuccessReturns(draft);
 
     const expectedBotMainboard: number[][][] = draftutil.setupPicks(2, 8);
-    expectedBotMainboard[0][1].push(9);
-    expectedBotMainboard[0][1].push(8);
-    expectedBotMainboard[0][1].push(10);
+    expectedBotMainboard[0]![1]!.push(9);
+    expectedBotMainboard[0]![1]!.push(8);
+    expectedBotMainboard[0]![1]!.push(10);
     //Basics are at the end of the card list and the mock draft is 30 cards plus 5 basics, thus indices.
     //The deckbuilding added the basics in order to cast the 3 cards ;)
-    expectedBotMainboard[1][0].push(30 + 3);
-    expectedBotMainboard[1][0].push(30 + 1);
+    expectedBotMainboard[1]![0]!.push(30 + 3);
+    expectedBotMainboard[1]![0]!.push(30 + 1);
 
     await verifySuccessfulDraft(owner, draft, expectedBotMainboard, draftutil.setupPicks(1, 8));
 
@@ -482,16 +482,16 @@ describe('Finish Draft', () => {
     //Only the bots have to be deck built.
     //Aligned with validBody but returning in different order because of ML preferences
     (draftbots.deckbuild as jest.Mock).mockReturnValueOnce({
-      mainboard: [draft.cards[9].details?.oracle_id, draft.cards[10].details?.oracle_id],
-      sideboard: [draft.cards[8].details?.oracle_id],
+      mainboard: [draft.cards[9]!.details?.oracle_id, draft.cards[10]!.details?.oracle_id],
+      sideboard: [draft.cards[8]!.details?.oracle_id],
     });
 
     const expectedBotMainboard: number[][][] = draftutil.setupPicks(2, 8);
-    expectedBotMainboard[0][1].push(9);
-    expectedBotMainboard[0][1].push(10);
+    expectedBotMainboard[0]![1]!.push(9);
+    expectedBotMainboard[0]![1]!.push(10);
 
     const expectedSideBoard: number[][][] = draftutil.setupPicks(1, 8);
-    expectedSideBoard[0][1].push(8);
+    expectedSideBoard[0]![1]!.push(8);
 
     await verifySuccessfulDraft(owner, draft, expectedBotMainboard, expectedSideBoard);
 

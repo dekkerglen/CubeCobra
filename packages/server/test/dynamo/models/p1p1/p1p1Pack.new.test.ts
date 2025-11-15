@@ -1,4 +1,4 @@
-import { P1P1Pack, P1P1PackDynamoData, P1P1PackS3Data } from '../../@utils/datatypes/P1P1Pack';
+import { P1P1Pack, P1P1PackDynamoData, P1P1PackS3Data } from '@utils/datatypes/P1P1Pack';
 
 const uuid = jest.requireActual('uuid');
 

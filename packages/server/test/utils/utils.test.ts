@@ -32,7 +32,7 @@ describe('getSafeReferrer', () => {
   it('returns null when no referrer header exists', () => {
     const req = {
       header: jest.fn().mockReturnValue(null),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBeNull();
@@ -42,7 +42,7 @@ describe('getSafeReferrer', () => {
   it('returns null for external domain referrer', () => {
     const req = {
       header: jest.fn().mockReturnValue('https://example.com/some/path'),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBeNull();
@@ -51,7 +51,7 @@ describe('getSafeReferrer', () => {
   it('returns pathname for valid internal referrer', () => {
     const req = {
       header: jest.fn().mockReturnValue('https://cubecobra.com/cube/view/123'),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBe('/cube/view/123');
@@ -60,7 +60,7 @@ describe('getSafeReferrer', () => {
   it('handles non-root relative urls', () => {
     const req = {
       header: jest.fn().mockReturnValue('not-a-url'),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBe('/not-a-url');
@@ -69,7 +69,7 @@ describe('getSafeReferrer', () => {
   it('allows the www subdomain of the app', () => {
     const req = {
       header: jest.fn().mockReturnValue('https://www.cubecobra.com/cube/view/123'),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBe('/cube/view/123');
@@ -78,7 +78,7 @@ describe('getSafeReferrer', () => {
   it('ignores query parameters and hash', () => {
     const req = {
       header: jest.fn().mockReturnValue('https://cubecobra.com/cube/view/123?sort=name#top'),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBe('/cube/view/123');
@@ -87,7 +87,7 @@ describe('getSafeReferrer', () => {
   it('handles relative URLs correctly', () => {
     const req = {
       header: jest.fn().mockReturnValue('/cube/view/123'),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBe('/cube/view/123');
@@ -96,7 +96,7 @@ describe('getSafeReferrer', () => {
   it('handles path manipulation urls', () => {
     const req = {
       header: jest.fn().mockReturnValue('../cube/../blog/view/123'),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBe('/blog/view/123');
@@ -105,7 +105,7 @@ describe('getSafeReferrer', () => {
   it('returns null for different subdomain and relative paths', () => {
     const req = {
       header: jest.fn().mockReturnValue('https://example.com/../blog/view/123'),
-    };
+    } as any;
 
     const result = util.getSafeReferrer(req);
     expect(result).toBeNull();
@@ -114,7 +114,7 @@ describe('getSafeReferrer', () => {
 
 describe('turnToTree', () => {
   //Fix the seed for consistency in tests
-  const SHUFFLE_SEED = '1742131471000';
+  const SHUFFLE_SEED = 1742131471000;
 
   it('Empty list is empty tree', () => {
     const result = util.turnToTree([]);
