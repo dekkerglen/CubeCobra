@@ -1,0 +1,35 @@
+{
+  "name": "@cubecobra/scripts",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "download-data-files": "NODE_OPTIONS=--max-old-space-size=8192 ts-node -r tsconfig-paths/register --project tsconfig.json src/download-data-files.ts",
+    "update-hashes": "ts-node -r tsconfig-paths/register --project tsconfig.json src/jobs/repair_hashes.js",
+    "export-cubes": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_cubes.ts",
+    "export-decks": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_decks.ts",
+    "export-simple-card-dict": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_simple_card_dict.ts",
+    "start:localstack": "./src/local/start_localstack.sh",
+    "setup:local": "npm run start:localstack && npm run setup:local:env && npm run setup:local:localstack && npm run setup:local:files && npm run setup:local:db && npm run update-combos && npm run update-cards",
+    "setup:local:localstack": "./src/local/init_localstack.sh",
+    "setup:local:env": "cp -n .env_EXAMPLE .env",
+    "setup:local:files": "node src/create_local_files.js",
+    "setup:local:db": "NODE_OPTIONS=--max-old-space-size=8192 ts-node -r tsconfig-paths/register src/createTables.ts",
+    "write-git-info": "ts-node write-git-info.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.927.0",
+    "@aws-sdk/credential-providers": "^3.927.0",
+    "@aws-sdk/lib-storage": "^3.927.0",
+    "archiver": "^7.0.1",
+    "dotenv": "^17.2.3"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "hosted-zone:account=816705121310:domainName=cubecobra.com:region=us-east-2": {
+    "Id": "/hostedzone/Z5BLGHAZY2IZ8",
+    "Name": "cubecobra.com."
+  },
+  "availability-zones:account=816705121310:region=us-east-2": ["us-east-2a", "us-east-2b", "us-east-2c"]
+}

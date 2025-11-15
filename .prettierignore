@@ -1,5 +1,9 @@
-public/bower_components
-src/client/generated
-
-# Tailwind generated CSS
-public/css/stylesheet.css
+dist/**/*
+.git/**/*
+node_modules/**/*
+packages/server/dist/**/*
+packages/server/src/client/**/*
+packages/client/dist/**/*
+packages/jobs/dist/**/*
+packages/jobs/temp/**/*
+packages/utils/src/generated/**/*

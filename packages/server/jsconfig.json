@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "es6",
+    "target": "es6",
+    "baseUrl": "./",
+    "paths": {
+      "analytics/*": ["./src/analytics/*"],
+      "components/*": ["./src/components/*"],
+      "contexts/*": ["./src/contexts/*"],
+      "filtering/*": ["./src/filtering/*"],
+      "hooks/*": ["./src/hooks/*"],
+      "layouts/*": ["./src/layouts/*"],
+      "pages/*": ["./src/pages/*"],
+      "res/*": ["./src/res/*"],
+      "utils/*": ["./src/utils/*"]
+    }
+  },
+  "include": ["src/**/*", "src/app.js", "util/*", "src/routes/*", "server.js", "../utils/src/featuredQueueUtil.ts"]
+}

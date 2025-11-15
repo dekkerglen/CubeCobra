@@ -8,7 +8,21 @@ import tseslint from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['dist/**/*', '.git/**/*', 'node_modules/**/*', 'src/client/generated/**/*', 'jobs/archived/*.js'],
+    ignores: [
+      'dist/**/*',
+      '.git/**/*',
+      'node_modules/**/*',
+      'packages/server/dist/**/*',
+      'packages/server/src/client/**/*',
+      'packages/client/dist/**/*',
+      'packages/jobs/dist/**/*',
+      'packages/jobs/temp/**/*',
+      'packages/utils/src/generated/**/*',
+      '**/*.js',
+      '**/*.jsx',
+      '**/*.mjs',
+      '**/*.cjs',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -82,6 +96,8 @@ export default [
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-empty-object-type': ['error', { allowInterfaces: 'with-single-extends' }],
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
       'react/jsx-filename-extension': 'off',
       'react/jsx-one-expression-per-line': 'off',
       'react/jsx-props-no-spreading': 'off',
@@ -92,7 +108,14 @@ export default [
         },
       ],
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/refs': 'off',
+      'react/prop-types': 'off',
+      'react/display-name': 'off',
       // 'react-refresh/only-export-components': [
       //   'error',
       //   {

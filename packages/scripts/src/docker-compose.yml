@@ -1,0 +1,55 @@
+# Paths are relative to this file
+services:
+  node:
+    container_name: cube
+    image: node:22.11.0
+    volumes:
+      - ../../../:/home/node/app
+    user: 'node'
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=development
+      - AWS_ENDPOINT=http://localstack:4566
+      - NODE_OPTIONS=--max-old-space-size=8192
+    env_file:
+      - ../../server/.env
+    ports:
+      # Webpack / browser entry point
+      - 8080:8080
+      # Node
+      - 5001:5000
+    expose:
+      - '8080'
+      - '5001'
+    # Relative to root directory
+    command: ./packages/scripts/src/docker/run.sh
+    entrypoint: ['/bin/sh']
+    init: true
+    networks:
+      - cubecobra
+    depends_on:
+      - localstack
+  localstack:
+    # Localstack community does not persist anything out of the box, that is available in localstack-pro.
+    # This variant (https://hub.docker.com/r/gresau/localstack-persist) causes the state to be persisted on actions and reloaded when the container starts
+    image: gresau/localstack-persist:3.8
+    container_name: localstack
+    volumes:
+      - localstack:/persisted-data
+      # Provide initialization script run once localstack is ready. Creates the s3 bucket
+      - ./docker/localstack-init.sh:/etc/localstack/init/ready.d/localstack-init.sh
+    networks:
+      - cubecobra
+    ports:
+      - 4566:4566
+    environment:
+      - DYNAMODB_HEAP_SIZE=1G
+
+volumes:
+  localstack:
+    name: 'localstack'
+
+networks:
+  # Rename. by default network is prefixed by folder name
+  cubecobra:
+    name: 'cubecobra'

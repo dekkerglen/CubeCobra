@@ -1,0 +1,54 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["react", "react-dom", "jest"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "declaration": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "@utils/*": ["../utils/src/*"],
+      "components/*": ["src/components/*"],
+      "utils/*": ["src/utils/*"],
+      "modals/*": ["src/components/modals/*"],
+      "contexts/*": ["src/contexts/*"],
+      "analytics/*": ["src/analytics/*"],
+      "hooks/*": ["src/hooks/*"],
+      "layouts/*": ["src/layouts/*"],
+      "drafting/*": ["src/drafting/*"],
+      "markdown/*": ["src/markdown/*"]
+    }
+  },
+  "include": [
+    "src",
+    "test",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "tsconfig.json",
+    "webpack.config.js",
+    "globals.d.ts"
+  ],
+  "exclude": [
+    "**/node_modules/*",
+    "**/dist/*",
+    "**/*.stories.ts",
+    "**/*.stories.tsx",
+    "../server/**/*",
+    "../../packages/server/**/*",
+    "../**/server/**/*"
+  ]
+}

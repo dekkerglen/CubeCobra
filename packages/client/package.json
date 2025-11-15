@@ -1,0 +1,123 @@
+{
+  "name": "@cubecobra/client",
+  "version": "1.0.0",
+  "description": "",
+  "proxy": "http://localhost:5001",
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@headlessui/react": "^2.2.9",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
+    "@primer/octicons-react": "^19.20.0",
+    "@stripe/react-stripe-js": "^3.9.2",
+    "@stripe/stripe-js": "^7.9.0",
+    "@svgr/webpack": "^5.5.0",
+    "@tailwindcss/typography": "^0.5.16",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^16.18.70",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.21",
+    "aws-sdk": "^2.1628.0",
+    "chart.js": "^4.5.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "classnames": "^2.5.1",
+    "emoji-regex": "^10.6.0",
+    "github-slugger": "^2.0.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "nearley": "^2.20.1",
+    "papaparse": "^5.5.3",
+    "react-audio-player": "^0.17.0",
+    "react-chartjs-2": "^5.3.1",
+    "react-csv": "^2.2.2",
+    "react-google-recaptcha": "^3.1.0",
+    "react-markdown": "^10.1.0",
+    "react-player": "^3.3.3",
+    "react-qr-code": "^2.0.18",
+    "react-remark": "^2.1.0",
+    "react-syntax-highlighter": "^16.1.0",
+    "react-timeago": "^8.3.0",
+    "react-to-text": "^2.0.1",
+    "rehype-katex": "^7.0.1",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "seedrandom": "^3.0.5",
+    "slugify": "^1.6.6",
+    "tailwindcss": "^3.4.3",
+    "unified": "^11.0.5",
+    "uuid": "^9.0.1"
+  },
+  "scripts": {
+    "tailwind": "npx postcss ./src/css/stylesheet.css -o ../server/public/css/stylesheet.css --watch",
+    "tailwind:build": "npx postcss ./src/css/stylesheet.css -o ../server/public/css/stylesheet.css",
+    "start": "npm run tailwind & webpack serve",
+    "build": "npm run tailwind:build && webpack",
+    "test": "npx jest --coverage=false",
+    "test:watch": "npx jest --watch --coverage=false",
+    "test:coverage": "npx jest --coverage",
+    "test:ci": "npx jest --coverage --coverageReporters json-summary text"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.5",
+    "@babel/preset-env": "^7.24.5",
+    "@babel/preset-react": "^7.24.1",
+    "@babel/preset-typescript": "^7.28.5",
+    "@storybook/react": "^8.1.3",
+    "@types/jest": "^29.5.14",
+    "@types/nearley": "^2.11.5",
+    "@types/papaparse": "^5.5.0",
+    "@types/react-csv": "^1.1.10",
+    "@types/react-google-recaptcha": "^2.1.9",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/seedrandom": "^3.0.8",
+    "@types/uuid": "^9.0.7",
+    "babel-loader": "^9.1.3",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "core-js": "^3.46.0",
+    "css-loader": "^7.1.2",
+    "file-loader": "^6.2.0",
+    "mini-css-extract-plugin": "^2.9.0",
+    "mocha": "^10.4.0",
+    "postcss-cli": "^11.0.1",
+    "postcss-loader": "^8.1.1",
+    "style-loader": "^4.0.0",
+    "ts-jest": "^29.4.5",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
+  },
+  "overrides": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react",
+      "@babel/preset-typescript"
+    ]
+  }
+}
