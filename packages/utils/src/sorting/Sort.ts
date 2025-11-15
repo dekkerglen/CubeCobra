@@ -70,7 +70,7 @@ const FOUR_COLOR_MAP: Record<string, string> = {
   WUBR: 'Non-Green',
 };
 
-const CARD_TYPES: string[] = [
+export const CARD_TYPES: string[] = [
   'Creature',
   'Planeswalker',
   'Instant',
@@ -403,7 +403,10 @@ const getAllTypesOfCards = (cube: Card[] | null): string[] => {
   return [...types].sort();
 };
 
-const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
+const sortMtgTypesThenCustom = (
+  cube: Card[] | null,
+  filterLands: boolean,
+): { mtgTypes: string[]; otherTypes: string[] } => {
   const splitMtgVersusOtherTypes = (types: string[]) => {
     return types.reduce(
       (accumulator, currentValue) => {
@@ -418,7 +421,8 @@ const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
     );
   };
 
-  const types = getAllTypesOfCards(cube).filter((type) => type !== 'Land');
+  //Types-Multicolor puts Lands after Multicolor stuff, Types doesn't
+  const types = getAllTypesOfCards(cube).filter((type) => (filterLands ? type !== 'Land' : true));
   const [mtgTypes, otherTypes] = splitMtgVersusOtherTypes(types);
 
   //Keep the old order of MTG types. Custom types will be placed
@@ -430,6 +434,15 @@ const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
   });
   //Sort alphabetically
   otherTypes?.sort();
+
+  return {
+    mtgTypes: mtgTypes || [],
+    otherTypes: otherTypes || [],
+  };
+};
+
+const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
+  const { mtgTypes, otherTypes } = sortMtgTypesThenCustom(cube, true);
 
   /* Keep the existing sort of MTG types from Creatures -> Battle.
    * Then add the various colour options, Land, custom types, and finally Other
@@ -477,7 +490,8 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
   } else if (sort === 'Color') {
     ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort === 'Type') {
-    ret = getAllTypesOfCards(cube);
+    const { mtgTypes, otherTypes } = sortMtgTypesThenCustom(cube, false);
+    ret = [...mtgTypes, ...otherTypes];
   } else if (sort === 'Supertype') {
     //Will not handle custom supertypes because not possible to distinguish from types
     ret = SUPER_TYPES;
