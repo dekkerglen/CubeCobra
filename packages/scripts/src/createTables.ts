@@ -48,9 +48,13 @@ const tables = [
     try {
       const result = await table.createTable();
       console.log(result);
-    } catch (e) {
-      console.log(`Error creating table ${table}: ${e}`);
-      console.error(e);
+    } catch (e: any) {
+      if (e.name === 'ResourceInUseException') {
+        console.log(`Skipping, table already exists`);
+      } else {
+        console.log(`Error creating table ${table}: ${e}`);
+        console.error(e);
+      }
     }
   }
   // exit
