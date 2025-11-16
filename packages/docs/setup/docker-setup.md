@@ -19,20 +19,20 @@ docker compose -f packages/scripts/src/docker-compose.yml -f packages/scripts/sr
 **Note**: This can take tens of minutes to complete. When it finishes successfully you should see in the last docker logs output similar to the following (order of lines, and container name, may be different):
 
 ```
-cubecobralocalstack  | 2025-10-27T21:47:56.503  INFO --- [et.reactor-0] localstack.request.aws     : AWS s3.UploadPart => 200
-cubecobralocalstack  | 2025-10-27T21:47:58.803  INFO --- [et.reactor-1] localstack.request.aws     : AWS s3.CompleteMultipartUpload => 200
-cubecobracube        | Finished comboDict.json
-cubecobracube        | Uploading manifest...
-cubecobralocalstack  | 2025-10-27T21:47:58.811  INFO --- [et.reactor-2] localstack.request.aws     : AWS s3.PutObject => 200
-cubecobracube        | Finished manifest
-cubecobracube        | done
-cubecobracube        | Complete
-cubecobralocalstack  | 2025-10-27T21:47:59.912  INFO --- [ead-7 (_run)] localstack_persist.state   : Persisting state of service s3...
-cubecobracube exited with code 0
+localstack  | 2025-10-27T21:47:56.503  INFO --- [et.reactor-0] localstack.request.aws     : AWS s3.UploadPart => 200
+localstack  | 2025-10-27T21:47:58.803  INFO --- [et.reactor-1] localstack.request.aws     : AWS s3.CompleteMultipartUpload => 200
+cube        | Finished comboDict.json
+cube        | Uploading manifest...
+localstack  | 2025-10-27T21:47:58.811  INFO --- [et.reactor-2] localstack.request.aws     : AWS s3.PutObject => 200
+cube        | Finished manifest
+cube        | done
+cube        | Complete
+localstack  | 2025-10-27T21:47:59.912  INFO --- [ead-7 (_run)] localstack_persist.state   : Persisting state of service s3...
+cube exited with code 0
 Aborting on container exit...
 [+] Stopping 2/2
- ✔ Container cubecobracube        Stopped                                                                          0.0s
- ✔ Container cubecobralocalstack  Stopped
+ ✔ Container cube        Stopped                                                                          0.0s
+ ✔ Container localstack  Stopped
 ```
 
 ## First-Time Data Download
@@ -71,16 +71,16 @@ Once setup is complete, the containers will exit gracefully. The card databases 
 After initial setup, start the program with:
 
 ```sh
-docker compose up -f packages/scripts/src/docker-compose.yml
+docker compose -f packages/scripts/src/docker-compose.yml up
 ```
 
 When the server is ready, you should see logs similar to:
 
 ```
-cubecobracube        | Loaded private/carddict.json into _carddict
-cubecobracube        | Loaded private/comboDict.json into comboDict
-cubecobracube        | Finished loading carddb.
-cubecobracube        | Server started on port 5000, listening on 127.0.0.1...
+cube        | Loaded private/carddict.json into _carddict
+cube        | Loaded private/comboDict.json into comboDict
+cube        | Finished loading carddb.
+cube        | Server started on port 5000, listening on 127.0.0.1...
 ```
 
 ### What Running Does
