@@ -60,16 +60,16 @@ interface TagColorsModalProps {
 
 const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
   const { csrfFetch } = useContext(CSRFContext);
+  //Continually update the tagColors in CubeContext as the modal contents change. They won't persist until the actual save
   const { tagColors, setTagColors, showTagColors, updateShowTagColors, canEdit, cube } = useContext(CubeContext);
   const [loading, setLoading] = useState(false);
-  const [modalColors, setModalColors] = useState([...tagColors]);
 
   const updateModalColors = useCallback(
     async (colors: TagColor[]) => {
       setLoading(true);
       const response = await csrfFetch(`/cube/api/savetagcolors/${cube.id}`, {
         method: 'POST',
-        body: JSON.stringify({ tag_colors: modalColors }),
+        body: JSON.stringify({ tag_colors: tagColors }),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -83,21 +83,21 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
       setLoading(false);
       setOpen(false);
     },
-    [csrfFetch, cube.id, modalColors, setOpen, setTagColors],
+    [csrfFetch, cube.id, tagColors, setOpen, setTagColors],
   );
 
   const handleChangeColor = useCallback(
     (color: string, tag: string) => {
-      const result = [...modalColors];
-      const index = modalColors.findIndex((tagColor) => tag === tagColor.tag);
+      const result = [...tagColors];
+      const index = tagColors.findIndex((tagColor) => tag === tagColor.tag);
       if (index > -1) {
         result[index] = { tag, color };
       } else {
         result.push({ tag, color });
       }
-      setModalColors(result);
+      setTagColors(result);
     },
-    [modalColors, setModalColors],
+    [tagColors, setTagColors],
   );
 
   const handleSortEnd = useCallback(
@@ -110,31 +110,31 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
       }
 
       if (active.id !== over.id) {
-        const newModalColors = [...modalColors];
+        const newModalColors = [...tagColors];
 
-        const oldIndex = modalColors.findIndex((tagColor) => tagColor.tag === active.id);
-        const newIndex = modalColors.findIndex((tagColor) => tagColor.tag === over.id);
+        const oldIndex = tagColors.findIndex((tagColor) => tagColor.tag === active.id);
+        const newIndex = tagColors.findIndex((tagColor) => tagColor.tag === over.id);
 
         const [removed] = newModalColors.splice(oldIndex, 1);
         newModalColors.splice(newIndex, 0, removed);
 
-        setModalColors(newModalColors);
+        setTagColors(newModalColors);
       }
     },
-    [modalColors, setModalColors],
+    [tagColors, setTagColors],
   );
 
   const staticRows = useMemo(
     () =>
-      modalColors.map(({ tag }) => {
-        const tagClass = `me-2 tag ${getTagColorClass(modalColors, tag)}`;
+      tagColors.map(({ tag }) => {
+        const tagClass = `me-2 tag ${getTagColorClass(tagColors, tag)}`;
         return (
           <span key={tag} className={tagClass}>
             {tag}
           </span>
         );
       }),
-    [modalColors],
+    [tagColors],
   );
 
   return (
@@ -168,9 +168,9 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
         {!canEdit ? (
           staticRows
         ) : (
-          <SortableList onDragEnd={handleSortEnd} items={modalColors.map(({ tag }) => tag)}>
-            {modalColors.map(({ tag, color }) => {
-              const tagClass = `tag ${getTagColorClass(modalColors, tag)}`;
+          <SortableList onDragEnd={handleSortEnd} items={tagColors.map(({ tag }) => tag)}>
+            {tagColors.map(({ tag, color }) => {
+              const tagClass = `tag ${getTagColorClass(tagColors, tag)}`;
               return (
                 <TagColorRow
                   key={tag}
@@ -186,7 +186,7 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
         )}
       </ModalBody>
       <ModalFooter>
-        <LoadingButton block color="primary" onClick={() => updateModalColors(modalColors)} loading={loading}>
+        <LoadingButton block color="primary" onClick={() => updateModalColors(tagColors)} loading={loading}>
           Save Changes
         </LoadingButton>
       </ModalFooter>
