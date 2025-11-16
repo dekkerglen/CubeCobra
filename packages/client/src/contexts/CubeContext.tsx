@@ -842,7 +842,8 @@ export function CubeContextProvider({
           });
           setVersion(version + 1);
           const newTags = getAllTags(newCards);
-          setTagColors(computeTagColors(cube.tagColors, newTags));
+          //Make sure to use tagColors instead of cube.tagColors so any previous edits apply
+          setTagColors(computeTagColors(tagColors, newTags));
         }
       } catch {
         setAlerts([{ color: 'danger', message: 'Operation timed out' }]);
@@ -862,6 +863,7 @@ export function CubeContextProvider({
       setVersion,
       version,
       versionDict,
+      tagColors,
     ],
   );
 
