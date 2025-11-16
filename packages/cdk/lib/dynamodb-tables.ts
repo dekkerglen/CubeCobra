@@ -19,11 +19,7 @@ export class DynamodbTables extends Construct {
 
     // If we don't create the table we'll attempt to load it so we can operate on it as needed
     if (!this.node.tryGetContext('createDynamoDBTables')) {
-      this.table = dynamodb.Table.fromTableName(
-        this,
-        toResourceName('cubecobra-table'),
-        tableName,
-      ) as Table;
+      this.table = dynamodb.Table.fromTableName(this, toResourceName('cubecobra-table'), tableName) as Table;
 
       return;
     }

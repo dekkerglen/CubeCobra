@@ -10,7 +10,7 @@ export interface UnhydratedComment extends BaseObject {
   owner?: string;
   body: string;
   date: number;
-};
+}
 
 type Comment = Omit<UnhydratedComment, 'id' | 'owner'> & {
   id: string;

@@ -2,8 +2,8 @@ import type Comment from '@utils/datatypes/Comment';
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@utils/datatypes/Comment';
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
-import Blog from 'dynamo/models/blog';
 import { commentDao } from 'dynamo/daos';
+import Blog from 'dynamo/models/blog';
 import Content from 'dynamo/models/content';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
@@ -135,7 +135,8 @@ export const addCommentHandler = async (req: Request, res: Response) => {
     type,
   };
 
-  const id = await commentDao.createComment(comment);
+  const createdComment = await commentDao.createComment(comment);
+  const id = createdComment.id;
 
   if (isNotifiableCommentType(type)) {
     const owner = await getReplyContext[type](parent);

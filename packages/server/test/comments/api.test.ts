@@ -108,7 +108,7 @@ describe('Get Comment', () => {
   it('handles errors gracefully', async () => {
     const error = new Error('Something went wrong');
     (commentDao.getById as jest.Mock).mockRejectedValue(error);
-    (util.handleRouteError as jest.Mock).mockImplementation(() => { });
+    (util.handleRouteError as jest.Mock).mockImplementation(() => {});
 
     await call(getHandler)
       .withFlash(flashMock)
@@ -349,8 +349,6 @@ describe('Add Comment', () => {
     type: 'comment',
     owner: createUser(),
     date: Date.now(),
-    // Add toString to make it work in template literals as 'comment-id'
-    toString: () => 'comment-id',
   };
 
   beforeEach(() => {
@@ -421,6 +419,9 @@ describe('Add Comment', () => {
       comment: expect.objectContaining({
         owner: commenter,
         id: 'comment-id',
+        body: 'This is a new comment',
+        parent: 'parent-id',
+        type: 'comment',
       }),
     });
   });

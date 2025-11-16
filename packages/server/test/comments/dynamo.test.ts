@@ -1,8 +1,8 @@
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import CommentType, { UnhydratedComment } from '@utils/datatypes/Comment';
 import { CubeImage } from '@utils/datatypes/Cube';
 import { getImageData } from 'serverutils/imageutil';
 import { v4 as UUID } from 'uuid';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 import { CommentDynamoDao } from '../../src/dynamo/dao/CommentDynamoDao';
 import UserModel from '../../src/dynamo/models/user';
@@ -73,7 +73,7 @@ describe('CommentDynamoDao', () => {
     });
 
     it('returns hydrated comment with owner', async () => {
-      mockSend.mockResolvedValueOnce({ Item: mockStoredComment });
+      mockSend.mockResolvedValueOnce({ Item: { item: mockStoredComment } });
       (UserModel.getById as jest.Mock).mockResolvedValueOnce(mockUser);
 
       const result = await commentDao.getById('comment-1');
@@ -90,7 +90,7 @@ describe('CommentDynamoDao', () => {
       ['null string owner', 'null'],
     ])('handles anonymous comments correctly with %s', async (_, ownerValue) => {
       const anonymousComment = createUnhydratedComment({ owner: ownerValue });
-      mockSend.mockResolvedValueOnce({ Item: anonymousComment });
+      mockSend.mockResolvedValueOnce({ Item: { item: anonymousComment } });
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
 
       const result = await commentDao.getById('comment-1');
@@ -109,7 +109,7 @@ describe('CommentDynamoDao', () => {
 
     it('handles comments with owner 404 as anonymous', async () => {
       const deletedComment = createUnhydratedComment({ owner: '404' });
-      mockSend.mockResolvedValueOnce({ Item: deletedComment });
+      mockSend.mockResolvedValueOnce({ Item: { item: deletedComment } });
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
 
       const result = await commentDao.getById('comment-1');
@@ -139,7 +139,7 @@ describe('CommentDynamoDao', () => {
     it('returns hydrated comments with pagination', async () => {
       const comments = [createUnhydratedComment({ id: 'comment-1' }), createUnhydratedComment({ id: 'comment-2' })];
       mockSend.mockResolvedValueOnce({
-        Items: comments,
+        Items: comments.map((comment) => ({ item: comment })),
         LastEvaluatedKey: { S: 'last-key-1' },
       });
       (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([mockUser]);
@@ -159,8 +159,8 @@ describe('CommentDynamoDao', () => {
     it('handles comments when no users are found', async () => {
       const comments = [createUnhydratedComment({ id: 'comment-1' }), createUnhydratedComment({ id: 'comment-2' })];
       mockSend.mockResolvedValueOnce({
-        Items: comments,
-        LastEvaluatedKey: undefined,
+        Items: comments.map((comment) => ({ item: comment })),
+        LastEvaluatedKey: { S: 'last-key-2' },
       });
       (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([]);
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
@@ -199,7 +199,7 @@ describe('CommentDynamoDao', () => {
 
     it('returns hydrated comments with owner', async () => {
       const comments = [createUnhydratedComment()];
-      mockSend.mockResolvedValueOnce({ Items: comments });
+      mockSend.mockResolvedValueOnce({ Items: comments.map((comment) => ({ item: comment })) });
       (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([mockUser]);
 
       const result = await commentDao.queryByOwner('user-1');
@@ -209,7 +209,7 @@ describe('CommentDynamoDao', () => {
 
     it('handles comments with falsey owners as anonymous', async () => {
       const comments = [createUnhydratedComment({ owner: undefined }), createUnhydratedComment({ owner: 'null' })];
-      mockSend.mockResolvedValueOnce({ Items: comments });
+      mockSend.mockResolvedValueOnce({ Items: comments.map((comment) => ({ item: comment })) });
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
 
       const result = await commentDao.queryByOwner('user-1');
@@ -222,7 +222,8 @@ describe('CommentDynamoDao', () => {
         });
         expect(item.image).toEqual(anonymousUserImage);
       });
-      expect(UserModel.batchGet).toHaveBeenCalledWith(['null']);
+      // UserModel.batchGet should not be called at all when all owners are falsey/anonymous
+      expect(UserModel.batchGet).not.toHaveBeenCalled();
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
     });
   });

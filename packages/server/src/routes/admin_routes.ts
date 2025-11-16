@@ -1,27 +1,25 @@
 // Load Environment Variables
-import 'dotenv/config';
-
-import express from 'express';
-import sendEmail from '../serverutils/email';
-import { ensureRole, csrfProtection } from './middleware';
-
-import User from 'dynamo/models/user';
-import Notice from 'dynamo/models/notice';
-import { commentDao } from 'dynamo/daos';
-import Blog from 'dynamo/models/blog';
-import Draft from 'dynamo/models/draft';
-import Content from 'dynamo/models/content';
-import FeaturedQueue from 'dynamo/models/featuredQueue';
-import Cube from 'dynamo/models/cube';
-import { render, redirect } from '../serverutils/render';
-import util from '../serverutils/util';
-import fq from '../serverutils/featuredQueue';
-
 import { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
+import { commentDao } from 'dynamo/daos';
+import Blog from 'dynamo/models/blog';
+import Content from 'dynamo/models/content';
+import Cube from 'dynamo/models/cube';
+import Draft from 'dynamo/models/draft';
+import FeaturedQueue from 'dynamo/models/featuredQueue';
+import Notice from 'dynamo/models/notice';
+import User from 'dynamo/models/user';
+import express from 'express';
 
+import 'dotenv/config';
+
+import sendEmail from '../serverutils/email';
+import fq from '../serverutils/featuredQueue';
+import { redirect, render } from '../serverutils/render';
+import util from '../serverutils/util';
 import { Request, Response } from '../types/express';
+import { csrfProtection, ensureRole } from './middleware';
 
 const ensureAdmin = ensureRole(UserRoles.ADMIN);
 
@@ -285,7 +283,7 @@ router.get('/banuser/:id', ensureAdmin, async (req: Request, res: Response) => {
     const notice = await Notice.getById(req.params.id!);
     const userToBan = notice.subject;
 
-    let aggregates = {
+    const aggregates = {
       commentsWiped: 0,
       cubesDeleted: 0,
       blogPostsDeleted: 0,
@@ -335,7 +333,7 @@ router.get('/banuser/:id', ensureAdmin, async (req: Request, res: Response) => {
       await Draft.delete(draftId);
     }
 
-    let commentResponse = await commentDao.queryByOwner(userToBan!);
+    const commentResponse = await commentDao.queryByOwner(userToBan!);
     let lastkey = commentResponse.lastKey;
     let comments = commentResponse.items || [];
 
