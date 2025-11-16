@@ -47,6 +47,7 @@ const notification = {
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
+      Limit: 99,
     });
 
     return {
@@ -71,6 +72,7 @@ const notification = {
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
+      Limit: 99,
     });
     return {
       items: result.Items as Notification[],

@@ -118,10 +118,30 @@ app.use(
 app.set('views', path.join(__dirname, '../src/views'));
 app.set('view engine', 'pug');
 
-// Set Public Folder
-app.use(express.static(path.join(__dirname, '../public')));
+// Set Public Folder with cache control
+// Hashed assets (with contenthash in filename) can be cached forever
+app.use(
+  '/js',
+  express.static(path.join(__dirname, '../public/js'), {
+    maxAge: '365d',
+    immutable: true,
+  }),
+);
 
-// Serve static files from the React frontend app
+// CSS and other assets - moderate caching
+app.use(
+  express.static(path.join(__dirname, '../public'), {
+    maxAge: '1d',
+    setHeaders: (res: express.Response, filePath: string) => {
+      // For hashed files (contains hash in filename), cache forever
+      if (/\.[a-f0-9]{8}\.(js|css)$/.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }),
+);
+
+// Serve static files from the React frontend app (legacy support)
 app.use(express.static(path.join(__dirname, 'client')));
 
 // Express session middleware

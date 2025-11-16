@@ -13,14 +13,21 @@ const entry = pageFiles.reduce((entries, pageFile) => {
   return entries;
 }, {});
 
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 module.exports = {
   entry,
   output: {
-    filename: 'js/[name].bundle.js',
+    filename: isDevelopment ? 'js/[name].bundle.js' : 'js/[name].[contenthash:8].bundle.js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '/', // Important for source maps to work correctly
+    publicPath: '/',
+    clean: true, // Clean output directory before build
   },
-  devtool: 'eval-source-map', // Better source maps for development debugging
+  devtool: process.env.NODE_ENV === 'production' ? false : 'eval-source-map',
+  externals: {
+    react: 'React',
+    'react-dom': 'ReactDOM',
+  },
   module: {
     rules: [
       {
@@ -31,7 +38,7 @@ module.exports = {
           options: {
             configFile: path.resolve(__dirname, 'tsconfig.json'),
             compilerOptions: {
-              sourceMap: true, // Ensure TypeScript emits source maps
+              sourceMap: process.env.NODE_ENV !== 'production',
             },
           },
         },
@@ -60,7 +67,14 @@ module.exports = {
     },
     proxy: [
       {
-        context: '/',
+        context: (pathname) => {
+          // Don't proxy webpack-generated JS bundles
+          if (pathname.startsWith('/js/') && pathname.endsWith('.bundle.js')) {
+            return false;
+          }
+          // Proxy everything else to the backend server
+          return true;
+        },
         target: 'http://localhost:5000',
         secure: false,
         logLevel: 'info',
@@ -90,14 +104,16 @@ module.exports = {
           name: 'commons',
           chunks: 'initial',
           minChunks: 2,
+          filename: isDevelopment ? 'js/commons.bundle.js' : 'js/commons.[contenthash:8].bundle.js',
         },
         vendors: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
           chunks: 'all',
+          filename: isDevelopment ? 'js/vendors.bundle.js' : 'js/vendors.[contenthash:8].bundle.js',
         },
       },
     },
   },
-  mode: 'development',
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
 };

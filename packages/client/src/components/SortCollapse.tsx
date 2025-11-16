@@ -19,6 +19,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
   const {
     cube,
     setShowUnsorted,
+    setCollapseDuplicateCards,
     saveSorts,
     resetSorts,
     sortPrimary,
@@ -93,6 +94,14 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
           <Button color={cube.showUnsorted ? 'danger' : 'primary'} onClick={() => setShowUnsorted(!cube.showUnsorted)}>
             <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
               {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards
+            </Tooltip>
+          </Button>
+          <Button
+            color={cube.collapseDuplicateCards ? 'danger' : 'primary'}
+            onClick={() => setCollapseDuplicateCards(!cube.collapseDuplicateCards)}
+          >
+            <Tooltip text="Collapses duplicate cards that appear in multiple categories into a single instance.">
+              {cube.collapseDuplicateCards ? 'Separate' : 'Collapse'} Duplicate Cards
             </Tooltip>
           </Button>
         </Flexbox>

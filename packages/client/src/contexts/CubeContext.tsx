@@ -13,8 +13,8 @@ import React, {
 import { cardName, normalizeName } from '@utils/cardutil';
 import Card, { BoardType, boardTypes, Changes, CubeCardChange } from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
-import Cube, { TagColor } from '@utils/datatypes/Cube';
 import { getCubeSorts } from '@utils/sorting/Sort';
+import Cube, { CubeCards, TagColor } from '@utils/datatypes/Cube';
 import { deepCopy } from '@utils/Util';
 
 import { UncontrolledAlertProps } from '../components/base/Alert';
@@ -85,6 +85,7 @@ export interface CubeContextValue {
   setAlerts: Dispatch<SetStateAction<UncontrolledAlertProps[]>>;
   loading: boolean;
   setShowUnsorted: (value: boolean) => Promise<void>;
+  setCollapseDuplicateCards: (value: boolean) => Promise<void>;
   saveSorts: () => Promise<void>;
   resetSorts: () => void;
   sortPrimary: string | null;
@@ -142,6 +143,7 @@ const CubeContext = createContext<CubeContextValue>({
   setAlerts: defaultFn,
   loading: false,
   setShowUnsorted: defaultFn,
+  setCollapseDuplicateCards: defaultFn,
   saveSorts: defaultFn,
   resetSorts: defaultFn,
   sortPrimary: null,
@@ -327,12 +329,12 @@ export function CubeContextProvider({
     typeof user?.autoBlog !== 'undefined' ? user.autoBlog : false,
   );
 
-  const allTags = useMemo(() => {
+  const getAllTags = (cubeCards: CubeCards) => {
     const tags = new Set<string>();
 
     //Use cube.cards instead of cards to get the most up-to-date tags, as "cards" is only the initial state
-    const mainboard = cube?.cards?.mainboard || [];
-    const maybeboard = cube?.cards?.maybeboard || [];
+    const mainboard = cubeCards?.mainboard || [];
+    const maybeboard = cubeCards?.maybeboard || [];
 
     for (const card of [...mainboard, ...maybeboard]) {
       for (const tag of card.tags || []) {
@@ -341,14 +343,24 @@ export function CubeContextProvider({
     }
 
     return [...tags];
+  };
+
+  const allTags = useMemo(() => {
+    return getAllTags(cube.cards);
   }, [cube.cards]);
 
-  const [tagColors, setTagColors] = useState<TagColor[]>([
-    ...(cube.tagColors || []),
-    ...allTags
-      .filter((tag) => !(cube.tagColors || []).map((tc) => tc.tag).includes(tag))
-      .map((tag) => ({ tag, color: 'no-color' })),
-  ]);
+  const computeTagColors = (tagColors: TagColor[], allTags: string[]) => {
+    const cubeTagColors = tagColors || [];
+    //Filter out tags in cube tag colors that are no longer tags on cards
+    const tagColorsWithActiveTags = cubeTagColors.filter((tc) => allTags.includes(tc.tag));
+    //If all tags on cards, is not within the cubeTagColors, then add it to the set with no color
+    const newTagsWithoutColorsYet = allTags
+      .filter((tag) => !cubeTagColors.map((tc) => tc.tag).includes(tag))
+      .map((tag) => ({ tag, color: 'no-color' }));
+    return [...tagColorsWithActiveTags, ...newTagsWithoutColorsYet];
+  };
+
+  const [tagColors, setTagColors] = useState<TagColor[]>(() => computeTagColors(cube.tagColors, allTags));
 
   /* Modifies the CubeCardChanges in place, if the index is found in its set */
   const removeCardByIndexFromChangeset = <Type extends CubeCardChange>(
@@ -824,6 +836,9 @@ export function CubeContextProvider({
             cards: newCards,
           });
           setVersion(version + 1);
+          const newTags = getAllTags(newCards);
+          //Make sure to use tagColors instead of cube.tagColors so any previous edits apply
+          setTagColors(computeTagColors(tagColors, newTags));
         }
       } catch {
         setAlerts([{ color: 'danger', message: 'Operation timed out' }]);
@@ -843,6 +858,7 @@ export function CubeContextProvider({
       setVersion,
       version,
       versionDict,
+      tagColors,
     ],
   );
 
@@ -985,6 +1001,31 @@ export function CubeContextProvider({
     [csrfFetch, cube, setCube],
   );
 
+  const setCollapseDuplicateCards = useCallback(
+    async (value: boolean) => {
+      setLoading(true);
+      setCube({
+        ...cube,
+        collapseDuplicateCards: value,
+      });
+
+      await csrfFetch(`/cube/api/savesorts/${cube.id}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          sorts: cube.defaultSorts,
+          showUnsorted: cube.showUnsorted,
+          collapseDuplicateCards: value,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setLoading(false);
+    },
+    [csrfFetch, cube, setCube],
+  );
+
   const saveSorts = useCallback(async () => {
     const currentSorts = [
       sortPrimary ?? defaultSorts[0],
@@ -1002,6 +1043,7 @@ export function CubeContextProvider({
       body: JSON.stringify({
         sorts: currentSorts,
         showUnsorted: cube.showUnsorted,
+        collapseDuplicateCards: cube.collapseDuplicateCards,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -1052,6 +1094,7 @@ export function CubeContextProvider({
       setAlerts,
       loading,
       setShowUnsorted,
+      setCollapseDuplicateCards,
       saveSorts,
       resetSorts,
       sortPrimary,
@@ -1101,6 +1144,7 @@ export function CubeContextProvider({
       setAlerts,
       loading,
       setShowUnsorted,
+      setCollapseDuplicateCards,
       saveSorts,
       resetSorts,
       sortPrimary,

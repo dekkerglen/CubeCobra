@@ -16,6 +16,7 @@ jobs/export/
 /packages/jobs/temp/
 /packages/server/model/
 /packages/server/src/client/
+**.bundle.js
 
 
 # .gitignore

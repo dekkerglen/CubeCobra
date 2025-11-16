@@ -38,6 +38,13 @@ html(lang='en' class=theme)
 			div.centered
 				p.mt-3.mx-2 Cube Cobra requires javascript to work. To use the site, please enable javascript in your browser.
 		
+		if node_env === 'production'
+			script(src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js', crossorigin)
+			script(src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js', crossorigin)
+		else
+			script(src='https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js', crossorigin)
+			script(src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js', crossorigin)
+
 		script(type='text/javascript').
 			window.reactProps = !{reactProps};
 		each src in bundles
