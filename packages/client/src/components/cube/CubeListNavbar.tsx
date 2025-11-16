@@ -70,6 +70,8 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
     setOpenCollapse,
   } = useContext(DisplayContext);
 
+  const { setCollapseDuplicateCards } = useContext(CubeContext);
+
   const handleOpenCollapse = useCallback(
     (tab: string) => {
       setOpenCollapse((openCollapseArg) => (openCollapseArg === tab ? null : tab));
@@ -100,6 +102,9 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           <Link onClick={toggleShowMaybeboard}>{showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}</Link>
           <Link onClick={() => setShowUnsorted(!cube.showUnsorted)}>
             {cube.showUnsorted ? 'Hide Unsorted cards' : 'Show Unsorted cards'}
+          </Link>
+          <Link onClick={() => setCollapseDuplicateCards(!cube.collapseDuplicateCards)}>
+            {cube.collapseDuplicateCards ? 'Separate Duplicate Cards' : 'Collapse Duplicate Cards'}
           </Link>
           <Link onClick={toggleShowInlineTagEmojis}>
             {showInlineTagEmojis ? 'Hide inline emoji tags' : 'Show inline emoji tags'}

@@ -101,7 +101,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
             onClick={() => setCollapseDuplicateCards(!cube.collapseDuplicateCards)}
           >
             <Tooltip text="Collapses duplicate cards that appear in multiple categories into a single instance.">
-              {cube.collapseDuplicateCards ? 'Show' : 'Collapse'} Duplicate Cards
+              {cube.collapseDuplicateCards ? 'Separate' : 'Collapse'} Duplicate Cards
             </Tooltip>
           </Button>
         </Flexbox>

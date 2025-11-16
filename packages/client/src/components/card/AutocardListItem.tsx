@@ -25,6 +25,7 @@ export interface AutocardListItemProps {
   isSelected?: boolean;
   showRotoInfo?: boolean;
   cardCopyIndex?: number; // Index for this copy of the card (1-based)
+  appendChildren?: boolean; // If true, children appear after the card name instead of before
 }
 
 const AutocardDiv = withAutocard(ListGroupItem);
@@ -46,6 +47,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   isSelected = false,
   showRotoInfo = false,
   cardCopyIndex = 1,
+  appendChildren = false,
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
@@ -109,7 +111,15 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     >
       {children ? (
         <span>
-          {children} <span>{name}</span>
+          {appendChildren ? (
+            <>
+              <span>{name}</span> {children}
+            </>
+          ) : (
+            <>
+              {children} <span>{name}</span>
+            </>
+          )}
         </span>
       ) : (
         <span style={rotoPickInfo && { textDecoration: 'line-through', fontStyle: 'italic' }}>{name}</span>

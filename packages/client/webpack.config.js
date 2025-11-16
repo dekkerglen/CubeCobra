@@ -13,10 +13,12 @@ const entry = pageFiles.reduce((entries, pageFile) => {
   return entries;
 }, {});
 
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 module.exports = {
   entry,
   output: {
-    filename: 'js/[name].[contenthash:8].bundle.js',
+    filename: isDevelopment ? 'js/[name].bundle.js' : 'js/[name].[contenthash:8].bundle.js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
     clean: true, // Clean output directory before build
@@ -65,7 +67,14 @@ module.exports = {
     },
     proxy: [
       {
-        context: '/',
+        context: (pathname) => {
+          // Don't proxy webpack-generated JS bundles
+          if (pathname.startsWith('/js/') && pathname.endsWith('.bundle.js')) {
+            return false;
+          }
+          // Proxy everything else to the backend server
+          return true;
+        },
         target: 'http://localhost:5000',
         secure: false,
         logLevel: 'info',
@@ -95,13 +104,13 @@ module.exports = {
           name: 'commons',
           chunks: 'initial',
           minChunks: 2,
-          filename: 'js/commons.[contenthash:8].bundle.js',
+          filename: isDevelopment ? 'js/commons.bundle.js' : 'js/commons.[contenthash:8].bundle.js',
         },
         vendors: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
           chunks: 'all',
-          filename: 'js/vendors.[contenthash:8].bundle.js',
+          filename: isDevelopment ? 'js/vendors.bundle.js' : 'js/vendors.[contenthash:8].bundle.js',
         },
       },
     },
