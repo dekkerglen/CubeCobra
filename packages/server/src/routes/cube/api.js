@@ -500,7 +500,7 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.getById(req.params.id);
-    const { sorts, showUnsorted } = req.body;
+    const { sorts, showUnsorted, collapseDuplicateCards } = req.body;
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -517,6 +517,9 @@ router.post(
 
     cube.defaultSorts = sorts || [];
     cube.showUnsorted = showUnsorted || false;
+    if (collapseDuplicateCards !== undefined) {
+      cube.collapseDuplicateCards = collapseDuplicateCards;
+    }
     await Cube.update(cube);
 
     return res.status(200).send({

@@ -3059,14 +3059,14 @@
   resolved "https://registry.npmjs.org/@csstools/css-tokenizer/-/css-tokenizer-3.0.4.tgz"
   integrity sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==
 
-"@cubecobra/cdk@file:D:\\Repos\\CubeCobra\\packages\\cdk":
+"@cubecobra/cdk@file:C:\\Users\\dekke\\OneDrive\\Documents\\GitHub\\CubeCobra\\packages\\cdk":
   version "0.1.0"
   resolved "file:packages/cdk"
   dependencies:
     aws-cdk-lib "2.189.1"
     constructs "^10.0.0"
 
-"@cubecobra/client@file:D:\\Repos\\CubeCobra\\packages\\client":
+"@cubecobra/client@file:C:\\Users\\dekke\\OneDrive\\Documents\\GitHub\\CubeCobra\\packages\\client":
   version "1.0.0"
   resolved "file:packages/client"
   dependencies:
@@ -3116,13 +3116,13 @@
     unified "^11.0.5"
     uuid "^9.0.1"
 
-"@cubecobra/jobs@file:D:\\Repos\\CubeCobra\\packages\\jobs":
+"@cubecobra/jobs@file:C:\\Users\\dekke\\OneDrive\\Documents\\GitHub\\CubeCobra\\packages\\jobs":
   version "1.0.0"
   resolved "file:packages/jobs"
   dependencies:
     elo-rating "^1.0.1"
 
-"@cubecobra/scripts@file:D:\\Repos\\CubeCobra\\packages\\scripts":
+"@cubecobra/scripts@file:C:\\Users\\dekke\\OneDrive\\Documents\\GitHub\\CubeCobra\\packages\\scripts":
   version "1.0.0"
   resolved "file:packages/scripts"
   dependencies:
@@ -3132,7 +3132,7 @@
     archiver "^7.0.1"
     dotenv "^17.2.3"
 
-"@cubecobra/server@file:D:\\Repos\\CubeCobra\\packages\\server":
+"@cubecobra/server@file:C:\\Users\\dekke\\OneDrive\\Documents\\GitHub\\CubeCobra\\packages\\server":
   version "1.0.0"
   resolved "file:packages/server"
   dependencies:
@@ -3193,7 +3193,7 @@
     ts-node "^10.9.2"
     uuid "^9.0.1"
 
-"@cubecobra/utils@file:D:\\Repos\\CubeCobra\\packages\\utils":
+"@cubecobra/utils@file:C:\\Users\\dekke\\OneDrive\\Documents\\GitHub\\CubeCobra\\packages\\utils":
   version "1.0.0"
   resolved "file:packages/utils"
 

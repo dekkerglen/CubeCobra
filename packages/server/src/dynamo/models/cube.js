@@ -41,6 +41,7 @@ const FIELDS = {
   DATE: 'date',
   DEFAULT_SORTS: 'defaultSorts',
   SHOW_UNSORTED: 'showUnsorted',
+  COLLAPSE_DUPLICATE_CARDS: 'collapseDuplicateCards',
   DRAFT_FORMATS: 'formats',
   USERS_FOLLOWING: 'following',
   DEFAULT_STATUS: 'defaultStatus',

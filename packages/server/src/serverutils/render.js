@@ -14,6 +14,11 @@ const path = require('path');
 
 let bundleManifest = null;
 const loadManifest = () => {
+  // Only load manifest in production
+  if (process.env.NODE_ENV !== 'production') {
+    return {};
+  }
+
   if (!bundleManifest) {
     try {
       const manifestPath = path.join(__dirname, '../../public/manifest.json');
@@ -47,12 +52,12 @@ const redirect = (req, res, to) => {
 
 const getBundlesForPage = (page) => {
   const manifest = loadManifest();
-  
+
   // Try to get hashed filenames from manifest, fall back to non-hashed
   const vendors = manifest['vendors'] || `/js/vendors.bundle.js`;
   const commons = manifest['commons'] || `/js/commons.bundle.js`;
   const pageBundleName = manifest[page] || `/js/${page}.bundle.js`;
-  
+
   return [vendors, commons, pageBundleName];
 };
 

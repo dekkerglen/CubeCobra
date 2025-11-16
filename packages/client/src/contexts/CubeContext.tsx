@@ -84,6 +84,7 @@ export interface CubeContextValue {
   setAlerts: Dispatch<SetStateAction<UncontrolledAlertProps[]>>;
   loading: boolean;
   setShowUnsorted: (value: boolean) => Promise<void>;
+  setCollapseDuplicateCards: (value: boolean) => Promise<void>;
   saveSorts: () => Promise<void>;
   resetSorts: () => void;
   sortPrimary: string | null;
@@ -141,6 +142,7 @@ const CubeContext = createContext<CubeContextValue>({
   setAlerts: defaultFn,
   loading: false,
   setShowUnsorted: defaultFn,
+  setCollapseDuplicateCards: defaultFn,
   saveSorts: defaultFn,
   resetSorts: defaultFn,
   sortPrimary: null,
@@ -992,6 +994,31 @@ export function CubeContextProvider({
     [csrfFetch, cube, setCube],
   );
 
+  const setCollapseDuplicateCards = useCallback(
+    async (value: boolean) => {
+      setLoading(true);
+      setCube({
+        ...cube,
+        collapseDuplicateCards: value,
+      });
+
+      await csrfFetch(`/cube/api/savesorts/${cube.id}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          sorts: cube.defaultSorts,
+          showUnsorted: cube.showUnsorted,
+          collapseDuplicateCards: value,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setLoading(false);
+    },
+    [csrfFetch, cube, setCube],
+  );
+
   const saveSorts = useCallback(async () => {
     const currentSorts = [
       sortPrimary ?? defaultSorts[0],
@@ -1009,6 +1036,7 @@ export function CubeContextProvider({
       body: JSON.stringify({
         sorts: currentSorts,
         showUnsorted: cube.showUnsorted,
+        collapseDuplicateCards: cube.collapseDuplicateCards,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -1058,6 +1086,7 @@ export function CubeContextProvider({
       setAlerts,
       loading,
       setShowUnsorted,
+      setCollapseDuplicateCards,
       saveSorts,
       resetSorts,
       sortPrimary,
@@ -1107,6 +1136,7 @@ export function CubeContextProvider({
       setAlerts,
       loading,
       setShowUnsorted,
+      setCollapseDuplicateCards,
       saveSorts,
       resetSorts,
       sortPrimary,

@@ -51,6 +51,7 @@ interface Cube {
   date: number;
   defaultSorts: string[];
   showUnsorted?: boolean;
+  collapseDuplicateCards?: boolean;
   formats: DraftFormat[];
   following: string[];
   defaultStatus: CardStatus;
