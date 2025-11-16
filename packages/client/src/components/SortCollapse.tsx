@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import { ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
+import { CUBE_DEFAULT_SORTS, ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
 
 import Button from '../components/base/Button';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -33,10 +33,10 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
 
   const sortsModified = useMemo(() => {
     return (
-      sortPrimary !== (cube.defaultSorts[0] || 'Color Category') ||
-      sortSecondary !== (cube.defaultSorts[1] || 'Types-Multicolor') ||
-      sortTertiary !== (cube.defaultSorts[2] || 'Mana Value') ||
-      sortQuaternary !== (cube.defaultSorts[3] || 'Alphabetical')
+      sortPrimary !== (cube.defaultSorts[0] || CUBE_DEFAULT_SORTS[0]) ||
+      sortSecondary !== (cube.defaultSorts[1] || CUBE_DEFAULT_SORTS[1]) ||
+      sortTertiary !== (cube.defaultSorts[2] || CUBE_DEFAULT_SORTS[2]) ||
+      sortQuaternary !== (cube.defaultSorts[3] || CUBE_DEFAULT_SORTS[3])
     );
   }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
 
@@ -47,7 +47,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
           <Col xs={12} sm={6}>
             <Select
               label="Primary Sort"
-              value={sortPrimary || 'Color Category'}
+              value={sortPrimary || CUBE_DEFAULT_SORTS[0]}
               setValue={setSortPrimary}
               options={SORTS.map((sort) => ({ value: sort, label: sort }))}
             />
@@ -55,7 +55,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
           <Col xs={12} sm={6}>
             <Select
               label="Secondary Sort"
-              value={sortSecondary || 'Types-Multicolor'}
+              value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
               setValue={setSortSecondary}
               options={SORTS.map((sort) => ({ value: sort, label: sort }))}
             />
@@ -63,7 +63,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
           <Col xs={12} sm={6}>
             <Select
               label="Tertiary Sort"
-              value={sortTertiary || 'Mana Value'}
+              value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
               setValue={setSortTertiary}
               options={SORTS.map((sort) => ({ value: sort, label: sort }))}
             />
@@ -71,7 +71,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
           <Col xs={12} sm={6}>
             <Select
               label="Quaternary Sort"
-              value={sortQuaternary || 'Alphabetical'}
+              value={sortQuaternary || CUBE_DEFAULT_SORTS[3]}
               setValue={setSortQuaternary}
               options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
             />

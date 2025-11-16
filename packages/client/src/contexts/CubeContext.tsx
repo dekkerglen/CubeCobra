@@ -14,6 +14,7 @@ import { cardName, normalizeName } from '@utils/cardutil';
 import Card, { BoardType, boardTypes, Changes, CubeCardChange } from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube, { TagColor } from '@utils/datatypes/Cube';
+import { getCubeSorts } from '@utils/sorting/Sort';
 import { deepCopy } from '@utils/Util';
 
 import { UncontrolledAlertProps } from '../components/base/Alert';
@@ -215,15 +216,7 @@ export function CubeContextProvider({
       maybeboard: cards.maybeboard,
     },
   });
-  const defaultSorts = useMemo(
-    () => [
-      cube.defaultSorts?.[0] || 'Color Category',
-      cube.defaultSorts?.[1] || 'Types-Multicolor',
-      cube.defaultSorts?.[2] || 'Mana Value',
-      cube.defaultSorts?.[3] || 'Alphabetical',
-    ],
-    [cube.defaultSorts],
-  );
+  const defaultSorts = useMemo(() => getCubeSorts(cube), [cube]);
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
   const [versionDictLoaded, setVersionDictLoaded] = useState(false);
   const [versionDictLoading, setVersionDictLoading] = useState(false);
@@ -1018,10 +1011,11 @@ export function CubeContextProvider({
   }, [sortPrimary, defaultSorts, sortSecondary, sortTertiary, sortQuaternary, cube, csrfFetch]);
 
   const resetSorts = useCallback(() => {
-    setSortPrimary(cube.defaultSorts?.[0] || 'Color Category');
-    setSortSecondary(cube.defaultSorts?.[1] || 'Types-Multicolor');
-    setSortTertiary(cube.defaultSorts?.[2] || 'Mana Value');
-    setSortQuaternary(cube.defaultSorts?.[3] || 'Alphabetical');
+    const defaultSorts = getCubeSorts(cube);
+    setSortPrimary(defaultSorts[0]);
+    setSortSecondary(defaultSorts[1]);
+    setSortTertiary(defaultSorts[2]);
+    setSortQuaternary(defaultSorts[3]);
   }, [cube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
 
   const value = useMemo(
