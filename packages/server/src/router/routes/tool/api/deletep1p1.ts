@@ -1,4 +1,4 @@
-import commentModel from 'dynamo/models/comment';
+import { commentDao } from 'dynamo/daos'
 import Cube from 'dynamo/models/cube';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import { csrfProtection, ensureAuth } from 'routes/middleware';
@@ -51,10 +51,10 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
       // Delete all comments for this pack
       let lastKey;
       do {
-        const result = await commentModel.queryByParentAndType(packId, lastKey);
+        const result = await commentDao.queryByParent(packId, lastKey);
         if (result.items && result.items.length > 0) {
           for (const comment of result.items) {
-            await commentModel.delete({ id: comment.id });
+            await commentDao.delete(comment);
           }
         }
         lastKey = result.lastKey;

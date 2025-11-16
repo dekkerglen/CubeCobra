@@ -1,8 +1,9 @@
+import type Comment from '@utils/datatypes/Comment';
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@utils/datatypes/Comment';
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
 import Blog from 'dynamo/models/blog';
-import Comment from 'dynamo/models/comment';
+import { commentDao } from 'dynamo/daos';
 import Content from 'dynamo/models/content';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
@@ -25,7 +26,7 @@ export const getHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const comment = await Comment.getById(req.params.id);
+    const comment = await commentDao.getById(req.params.id);
 
     if (!comment) {
       req.flash('danger', 'Comment not found.');
@@ -66,7 +67,7 @@ export const reportHandler = async (req: Request, res: Response) => {
 export const getCommentsHandler = async (req: Request, res: Response) => {
   try {
     const { parent, lastKey } = req.body;
-    const comments = await Comment.queryByParentAndType(parent, lastKey);
+    const comments = await commentDao.queryByParent(parent, lastKey);
 
     return res.status(200).send({
       success: 'true',
@@ -81,7 +82,7 @@ export const getCommentsHandler = async (req: Request, res: Response) => {
 export const editCommentHandler = async (req: Request, res: Response) => {
   const { id, content, remove } = req.body.comment;
 
-  const comment = await Comment.getById(id);
+  const comment = await commentDao.getById(id);
 
   if (!comment) {
     return res.status(404).send({
@@ -103,7 +104,7 @@ export const editCommentHandler = async (req: Request, res: Response) => {
     comment.owner = { id: '404', username: 'Anonymous' };
   }
 
-  await Comment.put(comment);
+  await commentDao.put(comment);
 
   return res.status(200).send({ success: 'true' });
 };
@@ -126,15 +127,15 @@ export const addCommentHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const comment = {
-    owner: user?.id,
+  const comment: Omit<Comment, 'id'> = {
+    owner: user,
     body: body.substring(0, 5000),
     date: Date.now() - 1000,
     parent: parent.substring(0, 500),
     type,
   };
 
-  const id = await Comment.put(comment);
+  const id = await commentDao.createComment(comment);
 
   if (isNotifiableCommentType(type)) {
     const owner = await getReplyContext[type](parent);
@@ -170,7 +171,7 @@ export const addCommentHandler = async (req: Request, res: Response) => {
 
 export const getReplyContext: Record<NotifiableCommentType, (id: string) => Promise<User | undefined>> = {
   comment: async (id) => {
-    const comment = await Comment.getById(id);
+    const comment = await commentDao.getById(id);
     return comment?.owner;
   },
   blog: async (id) => {

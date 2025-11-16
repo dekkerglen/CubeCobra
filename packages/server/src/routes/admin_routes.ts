@@ -1,25 +1,27 @@
 // Load Environment Variables
-require('dotenv').config();
+import 'dotenv/config';
 
-const express = require('express');
+import express from 'express';
 import sendEmail from '../serverutils/email';
-const { ensureRole, csrfProtection } = require('./middleware');
+import { ensureRole, csrfProtection } from './middleware';
 
-const User = require('dynamo/models/user');
-const Notice = require('dynamo/models/notice');
-const Comment = require('dynamo/models/comment');
-const Blog = require('dynamo/models/blog');
-const Draft = require('dynamo/models/draft');
-const Content = require('dynamo/models/content');
-const FeaturedQueue = require('dynamo/models/featuredQueue');
-const Cube = require('dynamo/models/cube');
-const { render, redirect } = require('../serverutils/render');
-const util = require('../serverutils/util');
-const fq = require('../serverutils/featuredQueue');
+import User from 'dynamo/models/user';
+import Notice from 'dynamo/models/notice';
+import { commentDao } from 'dynamo/daos';
+import Blog from 'dynamo/models/blog';
+import Draft from 'dynamo/models/draft';
+import Content from 'dynamo/models/content';
+import FeaturedQueue from 'dynamo/models/featuredQueue';
+import Cube from 'dynamo/models/cube';
+import { render, redirect } from '../serverutils/render';
+import util from '../serverutils/util';
+import fq from '../serverutils/featuredQueue';
 
 import { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
+
+import { Request, Response } from '../types/express';
 
 const ensureAdmin = ensureRole(UserRoles.ADMIN);
 
@@ -27,32 +29,32 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
-router.get('/dashboard', ensureAdmin, async (req, res) => {
+router.get('/dashboard', ensureAdmin, async (req: Request, res: Response) => {
   const noticeCount = await Notice.getByStatus(NoticeStatus.ACTIVE);
   const contentInReview = await Content.getByStatus(ContentStatus.IN_REVIEW);
 
   return render(req, res, 'AdminDashboardPage', {
-    noticeCount: noticeCount.items.length,
-    contentInReview: contentInReview.items.length,
+    noticeCount: noticeCount.items?.length || 0,
+    contentInReview: contentInReview.items?.length || 0,
   });
 });
 
-router.get('/comments', async (req, res) => {
+router.get('/comments', async (req: Request, res: Response) => {
   return redirect(req, res, '/admin/notices');
 });
 
-router.get('/reviewcontent', ensureAdmin, async (req, res) => {
+router.get('/reviewcontent', ensureAdmin, async (req: Request, res: Response) => {
   const content = await Content.getByStatus(ContentStatus.IN_REVIEW);
   return render(req, res, 'ReviewContentPage', { content: content.items });
 });
 
-router.get('/notices', ensureAdmin, async (req, res) => {
+router.get('/notices', ensureAdmin, async (req: Request, res: Response) => {
   const notices = await Notice.getByStatus(NoticeStatus.ACTIVE);
   return render(req, res, 'NoticePage', { notices: notices.items });
 });
 
-router.get('/publish/:id', ensureAdmin, async (req, res) => {
-  const document = await Content.getById(req.params.id);
+router.get('/publish/:id', ensureAdmin, async (req: Request, res: Response) => {
+  const document = await Content.getById(req.params.id!);
 
   if (document.status !== ContentStatus.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
@@ -64,7 +66,7 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
 
   await Content.update(document);
 
-  if (document.owner) {
+  if (document.owner && req.user) {
     await util.addNotification(
       document.owner,
       req.user,
@@ -75,11 +77,13 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
     //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
     const owner = await User.getByIdWithSensitiveData(document.owner.id);
 
-    const baseUrl = util.getBaseUrl();
-    await sendEmail(owner.email, 'Your content has been published', 'content_publish', {
-      title: document.title,
-      url: `${baseUrl}/content/${document.type}/${document.id}`,
-    });
+    if (owner) {
+      const baseUrl = util.getBaseUrl();
+      await sendEmail(owner.email, 'Your content has been published', 'content_publish', {
+        title: document.title,
+        url: `${baseUrl}/content/${document.type}/${document.id}`,
+      });
+    }
   }
 
   req.flash('success', `Content published: ${document.title}`);
@@ -87,8 +91,8 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
   return redirect(req, res, '/admin/reviewcontent');
 });
 
-router.get('/removereview/:id', ensureAdmin, async (req, res) => {
-  const document = await Content.getById(req.params.id);
+router.get('/removereview/:id', ensureAdmin, async (req: Request, res: Response) => {
+  const document = await Content.getById(req.params.id!);
 
   if (document.status !== ContentStatus.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
@@ -100,7 +104,7 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
 
   await Content.update(document);
 
-  if (document.owner) {
+  if (document.owner && req.user) {
     await util.addNotification(
       document.owner,
       req.user,
@@ -111,11 +115,13 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
     //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
     const owner = await User.getByIdWithSensitiveData(document.owner.id);
 
-    const baseUrl = util.getBaseUrl();
-    await sendEmail(owner.email, 'Your Content was not published', 'content_decline', {
-      title: document.title,
-      url: `${baseUrl}/content/${document.type}/${document.id}`,
-    });
+    if (owner) {
+      const baseUrl = util.getBaseUrl();
+      await sendEmail(owner.email, 'Your Content was not published', 'content_decline', {
+        title: document.title,
+        url: `${baseUrl}/content/${document.type}/${document.id}`,
+      });
+    }
   }
 
   req.flash('success', `Content declined: ${document.title}`);
@@ -123,8 +129,8 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
   return redirect(req, res, '/admin/reviewcontent');
 });
 
-router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
-  const report = await Notice.getById(req.params.id);
+router.get('/ignorereport/:id', ensureAdmin, async (req: Request, res: Response) => {
+  const report = await Notice.getById(req.params.id!);
 
   report.status = NoticeStatus.PROCESSED;
   await Notice.put(report);
@@ -133,25 +139,27 @@ router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
   return redirect(req, res, '/admin/notices');
 });
 
-router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
-  const report = await Notice.getById(req.params.id);
-  const comment = await Comment.getById(report.subject);
+router.get('/removecomment/:id', ensureAdmin, async (req: Request, res: Response) => {
+  const report = await Notice.getById(req.params.id!);
+  const comment = await commentDao.getById(report.subject!);
 
   report.status = NoticeStatus.PROCESSED;
   await Notice.put(report);
 
-  delete comment.owner;
-  comment.body = '[removed by moderator]';
-  // the -1000 is to prevent weird time display error
-  comment.date = Date.now() - 1000;
-  await Comment.put(comment);
+  if (comment) {
+    comment.owner = undefined;
+    comment.body = '[removed by moderator]';
+    // the -1000 is to prevent weird time display error
+    comment.date = Date.now() - 1000;
+    await commentDao.put(comment);
+  }
 
   req.flash('success', 'This comment has been deleted.');
   return redirect(req, res, '/admin/notices');
 });
 
-router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
-  const application = await Notice.getById(req.params.id);
+router.get('/application/approve/:id', ensureAdmin, async (req: Request, res: Response) => {
+  const application = await Notice.getById(req.params.id!);
 
   if (!application.user.roles) {
     application.user.roles = [];
@@ -167,14 +175,16 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   application.status = NoticeStatus.PROCESSED;
   Notice.put(application);
 
-  await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_approve');
+  if (applicationUser) {
+    await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_approve');
+  }
 
   req.flash('success', `Application for ${application.user.username} approved.`);
   return redirect(req, res, `/admin/notices`);
 });
 
-router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
-  const application = await Notice.getById(req.params.id);
+router.get('/application/decline/:id', ensureAdmin, async (req: Request, res: Response) => {
+  const application = await Notice.getById(req.params.id!);
 
   application.status = NoticeStatus.PROCESSED;
   Notice.put(application);
@@ -182,24 +192,28 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
   const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
 
-  await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_decline');
+  if (applicationUser) {
+    await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_decline');
+  }
 
   req.flash('danger', `Application declined.`);
   return redirect(req, res, `/admin/notices`);
 });
 
-router.get('/featuredcubes', ensureAdmin, async (req, res) => {
-  let featured = [];
-  let lastkey = null;
+router.get('/featuredcubes', ensureAdmin, async (req: Request, res: Response) => {
+  let featured: any[] = [];
+  let lastkey: Record<string, any> | null | undefined = null;
 
   do {
-    const response = await FeaturedQueue.querySortedByDate(lastkey);
+    const response = await FeaturedQueue.querySortedByDate(lastkey || undefined);
     featured = featured.concat(response.items);
     lastkey = response.lastKey;
   } while (lastkey);
 
-  const cubes = await Cube.batchGet(featured.map((f) => f.cube));
-  const sortedCubes = featured.map((f) => cubes.find((c) => c.id === f.cube)).filter((c) => c);
+  const cubes = await Cube.batchGet(featured.map((f: any) => f.cube));
+  const sortedCubes = featured
+    .map((f: any) => cubes.find((c: any) => c.id === f.cube))
+    .filter((c): c is NonNullable<typeof c> => c !== undefined && c !== null);
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes: sortedCubes,
@@ -207,11 +221,8 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
   });
 });
 
-router.get('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
-  const queue = await FeaturedQueue.querySortedByDate();
-  const { items } = queue;
-
-  const rotate = await fq.rotateFeatured(items);
+router.get('/featuredcubes/rotate', ensureAdmin, async (req: Request, res: Response) => {
+  const rotate = await fq.rotateFeatured();
   for (const message of rotate.messages) {
     req.flash('danger', message);
   }
@@ -221,24 +232,26 @@ router.get('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  const olds = await User.batchGet(rotate.removed.map((f) => f.ownerID));
-  const news = await User.batchGet(rotate.added.map((f) => f.ownerID));
+  const olds = await User.batchGet(rotate.removed.map((f: any) => f.ownerID));
+  const news = await User.batchGet(rotate.added.map((f: any) => f.ownerID));
   const notifications = [];
-  for (const old of olds) {
-    notifications.push(
-      util.addNotification(old, req.user, '/user/account?nav=patreon', 'Your cube is no longer featured.'),
-    );
-  }
-  for (const newO of news) {
-    notifications.push(
-      util.addNotification(newO, req.user, '/user/account?nav=patreon', 'Your cube has been featured!'),
-    );
+  if (req.user) {
+    for (const old of olds) {
+      notifications.push(
+        util.addNotification(old, req.user, '/user/account?nav=patreon', 'Your cube is no longer featured.'),
+      );
+    }
+    for (const newO of news) {
+      notifications.push(
+        util.addNotification(newO, req.user, '/user/account?nav=patreon', 'Your cube has been featured!'),
+      );
+    }
   }
   await Promise.all(notifications);
   return redirect(req, res, '/admin/featuredcubes');
 });
 
-router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
+router.post('/featuredcubes/queue', ensureAdmin, async (req: Request, res: Response) => {
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
     return redirect(req, res, '/admin/featuredcubes');
@@ -256,18 +269,20 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
 
   await fq.addNewCubeToQueue(cube.owner.id, cube.id);
 
-  await util.addNotification(
-    cube.owner,
-    req.user,
-    '/user/account?nav=patreon',
-    'An admin added your cube to the featured cubes queue.',
-  );
+  if (req.user) {
+    await util.addNotification(
+      cube.owner,
+      req.user,
+      '/user/account?nav=patreon',
+      'An admin added your cube to the featured cubes queue.',
+    );
+  }
   return redirect(req, res, '/admin/featuredcubes');
 });
 
-router.get('/banuser/:id', ensureAdmin, async (req, res) => {
+router.get('/banuser/:id', ensureAdmin, async (req: Request, res: Response) => {
   try {
-    const notice = await Notice.getById(req.params.id);
+    const notice = await Notice.getById(req.params.id!);
     const userToBan = notice.subject;
 
     let aggregates = {
@@ -287,14 +302,14 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
     }
 
     // delete all blog posts
-    const blogResponse = await Blog.getByOwner(userToBan);
+    const blogResponse = await Blog.getByOwner(userToBan!, 100);
 
-    let lastKey = blogResponse.LastEvaluatedKey;
+    let lastKey = blogResponse.lastKey;
     let blogIds = blogResponse.items.map((blog) => blog.id);
 
     while (lastKey) {
-      const nextResponse = await Blog.getByOwner(userToBan, 100, lastKey);
-      lastKey = nextResponse.LastEvaluatedKey;
+      const nextResponse = await Blog.getByOwner(userToBan!, 100, lastKey);
+      lastKey = nextResponse.lastKey;
       blogIds = blogIds.concat(nextResponse.items.map((blog) => blog.id));
     }
 
@@ -304,15 +319,15 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
     }
 
     // delete all drafts
-    const draftResponse = await Draft.getByOwner(userToBan);
+    const draftResponse = await Draft.getByOwner(userToBan!);
 
-    lastKey = draftResponse.LastEvaluatedKey;
-    let draftIds = draftResponse.items.map((draft) => draft.id);
+    lastKey = draftResponse.lastEvaluatedKey;
+    let draftIds = draftResponse.items.map((draft: any) => draft.id);
 
     while (lastKey) {
-      const nextResponse = await Draft.getByOwner(userToBan, 100, lastKey);
-      lastKey = nextResponse.LastEvaluatedKey;
-      draftIds = draftIds.concat(nextResponse.items.map((draft) => draft.id));
+      const nextResponse = await Draft.getByOwner(userToBan!, lastKey, 100);
+      lastKey = nextResponse.lastEvaluatedKey;
+      draftIds = draftIds.concat(nextResponse.items.map((draft: any) => draft.id));
     }
 
     aggregates.draftsDeleted += draftIds.length;
@@ -320,33 +335,35 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
       await Draft.delete(draftId);
     }
 
-    let commentResponse = await Comment.queryByOwner(userToBan);
-    let lastkey = commentResponse.LastEvaluatedKey;
-    let comments = commentResponse.items;
+    let commentResponse = await commentDao.queryByOwner(userToBan!);
+    let lastkey = commentResponse.lastKey;
+    let comments = commentResponse.items || [];
 
     while (lastkey) {
-      const nextResponse = await Comment.queryByOwner(userToBan, lastKey);
-      lastkey = nextResponse.LastEvaluatedKey;
-      comments = comments.concat(nextResponse.items);
+      const nextResponse = await commentDao.queryByOwner(userToBan!, lastkey);
+      lastkey = nextResponse.lastKey;
+      comments = comments.concat(nextResponse.items || []);
     }
 
     // delete all comments
     aggregates.commentsWiped += comments.length;
 
     for (const comment of comments) {
-      delete comment.owner;
+      comment.owner = undefined;
       comment.body = '[deleted]';
 
-      await Comment.put(comment);
+      await commentDao.put(comment);
     }
 
     // ban user
-    const user = await User.getById(userToBan);
+    const user = await User.getById(userToBan!);
 
-    user.roles = ['Banned'];
-    user.about = '[deleted]';
+    if (user) {
+      user.roles = [UserRoles.BANNED];
+      user.about = '[deleted]';
 
-    await User.put(user);
+      await User.put(user);
+    }
 
     notice.status = NoticeStatus.PROCESSED;
     await Notice.put(notice);
@@ -357,34 +374,37 @@ router.get('/banuser/:id', ensureAdmin, async (req, res) => {
     );
     return redirect(req, res, '/admin/notices');
   } catch (err) {
-    req.flash('danger', err.message);
+    const error = err as Error;
+    req.flash('danger', error.message);
     return redirect(req, res, '/admin/notices');
   }
 });
 
-router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
+router.post('/featuredcubes/unqueue', ensureAdmin, async (req: Request, res: Response) => {
   if (!req.body.cubeId) {
-    req.flash('Cube ID not sent');
+    req.flash('danger', 'Cube ID not sent');
     return redirect(req, res, '/admin/featuredcubes');
   }
 
   const queuedCube = await FeaturedQueue.getByCube(req.body.cubeId);
 
   if (!queuedCube) {
-    req.flash('Cube not found in featured queue');
+    req.flash('danger', 'Cube not found in featured queue');
     return redirect(req, res, '/admin/featuredcubes');
   }
 
   await FeaturedQueue.delete(req.body.cubeId);
 
   const user = await User.getById(queuedCube.owner);
-  await util.addNotification(
-    user,
-    req.user,
-    '/user/account?nav=patreon',
-    'An admin removed your cube from the featured cubes queue.',
-  );
+  if (user && req.user) {
+    await util.addNotification(
+      user,
+      req.user,
+      '/user/account?nav=patreon',
+      'An admin removed your cube from the featured cubes queue.',
+    );
+  }
   return redirect(req, res, '/admin/featuredcubes');
 });
 
-module.exports = router;
+export default router;
