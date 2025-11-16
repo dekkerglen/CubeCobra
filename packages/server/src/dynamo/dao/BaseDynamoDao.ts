@@ -88,13 +88,13 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
   protected abstract partitionKey(item: T): string;
 
   /**
-   * The sort key for the item. Should be overridden by subclasses if the item has an alternate sort key.
+   * The sort key for the item. Should be overridden by subclasses if the item has a dynamic sort key.
    *
    * @param item - The item to get the sort key for.
    * @returns The sort key.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected sortKey(item: T): string {
+  protected sortKey(_item: T): string {
     return this.itemType();
   }
 
@@ -105,7 +105,7 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
    * @returns The GSI keys, if any.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected GSIKeys(item: T): {
+  protected GSIKeys(_item: T): {
     GSI1PK: string | undefined;
     GSI1SK: string | undefined;
     GSI2PK: string | undefined;
@@ -386,18 +386,16 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
   }
 
   /**
-   * Gets the hashes for an item. Override this method to enable hash-based querying.
+   * Returns the hashes to store as hash rows for the item.
    * By default, returns an empty array (no hash rows).
    *
    * @param item - The item to get hashes for.
    * @returns A promise that resolves to an array of hashes.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async getHashes(item: T): Promise<string[]> {
+  protected async getHashes(_item: T): Promise<string[]> {
     return [];
-  }
-
-  /**
+  } /**
    * Writes hash rows for the item.
    *
    * @param itemPK - The partition key of the item.
