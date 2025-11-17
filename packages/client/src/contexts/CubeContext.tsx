@@ -13,8 +13,8 @@ import React, {
 import { cardName, normalizeName } from '@utils/cardutil';
 import Card, { BoardType, boardTypes, Changes, CubeCardChange } from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
-import { getCubeSorts } from '@utils/sorting/Sort';
 import Cube, { CubeCards, TagColor } from '@utils/datatypes/Cube';
+import { getCubeSorts } from '@utils/sorting/Sort';
 import { deepCopy } from '@utils/Util';
 
 import { UncontrolledAlertProps } from '../components/base/Alert';
