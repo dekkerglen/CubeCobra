@@ -29,6 +29,7 @@ const Feed = require('dynamo/models/feed');
 const User = require('dynamo/models/user');
 
 import { FeedTypes } from '@utils/datatypes/Feed';
+import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
 
 const router = express.Router();
 
@@ -281,6 +282,27 @@ router.get(
     }
 
     const cubeCards = await Cube.getCards(cube.id);
+
+    const sorts = getCubeSorts(cube);
+    const sortedMainboard = sortForDownload(
+      cubeCards.mainboard,
+      sorts[0],
+      sorts[1],
+      sorts[2],
+      sorts[3],
+      cube.showUnsorted || false,
+    );
+    cubeCards.mainboard = sortedMainboard;
+
+    const sortedMaybeboard = sortForDownload(
+      cubeCards.maybeboard,
+      sorts[0],
+      sorts[1],
+      sorts[2],
+      sorts[3],
+      cube.showUnsorted || false,
+    );
+    cubeCards.maybeboard = sortedMaybeboard;
 
     res.contentType('application/json');
     return res.status(200).send(JSON.stringify({ ...cube, cards: cubeCards }));

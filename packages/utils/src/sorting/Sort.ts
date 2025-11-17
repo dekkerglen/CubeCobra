@@ -1,3 +1,5 @@
+import Cube from '@utils/datatypes/Cube';
+
 import {
   cardAddedTime,
   cardArtist,
@@ -27,6 +29,9 @@ import {
 } from '../cardutil';
 import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES, SUPPORTED_FORMATS } from '../datatypes/Card';
 import { arrayIsSubset, fromEntries } from '../Util';
+
+//"as const" so Typescript knows will always be these 4 values
+export const CUBE_DEFAULT_SORTS = ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'] as const;
 
 const COLOR_MAP: Record<string, string> = {
   W: 'White',
@@ -1005,4 +1010,13 @@ export function sortForDownload(
 ): Card[] {
   const groups = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
   return sortedCards(groups);
+}
+
+export function getCubeSorts(cube: Cube): string[] {
+  return [
+    cube.defaultSorts?.[0] ?? CUBE_DEFAULT_SORTS[0],
+    cube.defaultSorts?.[1] ?? CUBE_DEFAULT_SORTS[1],
+    cube.defaultSorts?.[2] ?? CUBE_DEFAULT_SORTS[2],
+    cube.defaultSorts?.[3] ?? CUBE_DEFAULT_SORTS[3],
+  ];
 }

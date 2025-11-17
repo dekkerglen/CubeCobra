@@ -1,6 +1,6 @@
 {
-  "watch": ["src", "../Utils/src"],
+  "watch": ["src", "../utils"],
   "ext": "ts,js,css,pug",
-  "ignore": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "ignore": ["src/**/*.spec.ts", "src/**/*.test.ts", "test"],
   "exec": "ts-node -r tsconfig-paths/register ./src/index.ts"
 }
