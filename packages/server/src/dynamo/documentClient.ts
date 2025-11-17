@@ -9,6 +9,10 @@ const documentClient = DynamoDBDocument.from(
     marshallOptions: {
       removeUndefinedValues: true,
       convertClassInstanceToMap: true,
+      convertTopLevelContainer: true,
+    },
+    unmarshallOptions: {
+      wrapNumbers: false,
     },
   },
 );

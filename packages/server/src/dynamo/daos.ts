@@ -1,9 +1,5 @@
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-
-import client from './client';
 import { CommentDynamoDao } from './dao/CommentDynamoDao';
-
-const documentClient = DynamoDBDocumentClient.from(client);
+import documentClient from './documentClient';
 
 const tableName = process.env.DYNAMO_TABLE;
 

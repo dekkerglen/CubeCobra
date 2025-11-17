@@ -13,7 +13,8 @@
       "@utils/*": ["../utils/src/*"],
       "serverutils/*": ["src/serverutils/*"],
       "routes/*": ["src/routes/*"],
-      "dynamo/*": ["src/dynamo/*"]
+      "dynamo/*": ["src/dynamo/*"],
+      "types/*": ["src/types/*"],
     },
     "module": "commonjs",
     "moduleResolution": "node",

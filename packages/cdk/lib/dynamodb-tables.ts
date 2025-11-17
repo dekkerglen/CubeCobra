@@ -17,13 +17,6 @@ export class DynamodbTables extends Construct {
 
     const tableName = `${props.prefix}_CUBECOBRA`;
 
-    // If we don't create the table we'll attempt to load it so we can operate on it as needed
-    if (!this.node.tryGetContext('createDynamoDBTables')) {
-      this.table = dynamodb.Table.fromTableName(this, toResourceName('cubecobra-table'), tableName) as Table;
-
-      return;
-    }
-
     // Create single table with partition key (PK) and sort key (SK)
     const table = new dynamodb.Table(this, toResourceName('cubecobra-table'), {
       partitionKey: { name: 'PK', type: AttributeType.STRING },
