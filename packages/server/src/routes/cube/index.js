@@ -3,6 +3,7 @@ const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 const { CARD_STATUSES, DefaultPrintingPreference, PrintingPreference } = require('@utils/datatypes/Card');
+const { CUBE_DEFAULT_SORTS } = require('@utils/datatypes/Cube');
 const cardutil = require('@utils/cardutil');
 const miscutil = require('@utils/Util');
 const { getIdsFromName, cardFromId } = require('../../serverutils/carddb');
@@ -175,7 +176,7 @@ router.post('/add', ensureAuth, recaptcha, async (req, res) => {
       tagColors: [],
       defaultFormat: -1,
       numDecks: 0,
-      defaultSorts: [],
+      defaultSorts: CUBE_DEFAULT_SORTS,
       showUnsorted: false,
       collapseDuplicateCards: false,
       formats: [],
