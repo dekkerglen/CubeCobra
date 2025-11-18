@@ -1,13 +1,21 @@
 import User from '@utils/datatypes/User';
 
 import Blog from '../../src/dynamo/models/blog';
-import Comment from '../../src/dynamo/models/comment';
 import Content from '../../src/dynamo/models/content';
 import Draft from '../../src/dynamo/models/draft';
 import Package from '../../src/dynamo/models/package';
 import { getReplyContext } from '../../src/router/routes/comment';
 
-jest.mock('../../src/dynamo/models/comment');
+// Mock the commentDao from dynamo/daos
+jest.mock('../../src/dynamo/daos', () => ({
+  commentDao: {
+    getById: jest.fn(),
+  },
+}));
+
+// Import the mocked commentDao
+import { commentDao } from '../../src/dynamo/daos';
+
 jest.mock('../../src/dynamo/models/blog');
 jest.mock('../../src/dynamo/models/draft');
 jest.mock('../../src/dynamo/models/content');
@@ -21,11 +29,11 @@ describe('getReplyContext', () => {
   });
 
   it('should return the owner of a comment', async () => {
-    (Comment.getById as jest.Mock).mockResolvedValue({ id: '123', owner: mockUser });
+    (commentDao.getById as jest.Mock).mockResolvedValue({ id: '123', owner: mockUser });
 
     const owner = await getReplyContext.comment('123');
 
-    expect(Comment.getById).toHaveBeenCalledWith('123');
+    expect(commentDao.getById).toHaveBeenCalledWith('123');
     expect(owner).toEqual(mockUser);
   });
 
@@ -93,11 +101,11 @@ describe('getReplyContext', () => {
   });
 
   it('should return undefined if no owner exists for a comment', async () => {
-    (Comment.getById as jest.Mock).mockResolvedValue({ id: '123', owner: undefined });
+    (commentDao.getById as jest.Mock).mockResolvedValue({ id: '123', owner: undefined });
 
     const owner = await getReplyContext.comment('123');
 
-    expect(Comment.getById).toHaveBeenCalledWith('123');
+    expect(commentDao.getById).toHaveBeenCalledWith('123');
     expect(owner).toBeUndefined();
   });
 

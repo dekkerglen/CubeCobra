@@ -47,7 +47,7 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
   const displayCards = useMemo(() => {
     if (!collapseDuplicates) {
       return (sorted as [string, Card[]][])
-        .map(([sortLabel, group], groupIndex) =>
+        .map(([, group], groupIndex) =>
           group.map((card, index) => ({
             card,
             duplicates: [],
@@ -70,7 +70,7 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
 
         if (existing) {
           existing.duplicates.push(card);
-          existing.quantity++;
+          existing.quantity += 1;
         } else {
           cardsByName.set(name, {
             card,

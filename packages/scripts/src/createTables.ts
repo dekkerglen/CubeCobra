@@ -1,7 +1,6 @@
 import blog from '@server/dynamo/models/blog';
 import cardhistory from '@server/dynamo/models/cardhistory';
 import cubeChangelog from '@server/dynamo/models/changelog';
-import comment from '@server/dynamo/models/comment';
 import content from '@server/dynamo/models/content';
 import cubeMetadata from '@server/dynamo/models/cube';
 import cubeHash from '@server/dynamo/models/cubeHash';
@@ -31,7 +30,6 @@ const tables = [
   cubeChangelog,
   blog,
   cardhistory,
-  comment,
   draft,
   pack,
   patron,

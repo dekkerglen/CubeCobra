@@ -1,19 +1,20 @@
 import { createTypeGuard } from '../typeGuards';
+import { BaseObject } from './BaseObject';
 import { CubeImage } from './Cube';
 import User from './User';
 
-export type UnhydratedComment = {
+export interface UnhydratedComment extends BaseObject {
   id?: string;
   parent: string;
   type: string;
   owner?: string;
   body: string;
   date: number;
-};
+}
 
 type Comment = Omit<UnhydratedComment, 'id' | 'owner'> & {
   id: string;
-  owner: User;
+  owner?: User;
   image?: CubeImage;
 };
 
