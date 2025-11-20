@@ -1,17 +1,24 @@
-const FeaturedQueue = require('dynamo/models/featuredQueue');
-const Cube = require('dynamo/models/cube');
-const Patron = require('dynamo/models/patron');
-const { canBeFeatured } = require('@utils/featuredQueueUtil');
+import { FeaturedQueue } from 'dynamo/models/featuredQueue';
+import Cube from 'dynamo/models/cube';
+import Patron from 'dynamo/models/patron';
+import { canBeFeatured } from '@utils/featuredQueueUtil';
 
-async function rotateFeatured() {
+interface RotateResult {
+  success: string;
+  messages: string[];
+  removed: any[];
+  added: any[];
+}
+
+export async function rotateFeatured(): Promise<RotateResult> {
   // Step 1: Fetch entire queue
-  const cubes = [];
-  let lastKey = null;
+  const cubes: any[] = [];
+  let lastKey: Record<string, any> | null = null;
 
   do {
-    const result = await FeaturedQueue.querySortedByDate(lastKey);
-    cubes.push(...result.items);
-    lastKey = result.lastKey;
+    const result = await FeaturedQueue.querySortedByDate(lastKey || undefined);
+    cubes.push(...(result.items || []));
+    lastKey = result.lastKey || null;
   } while (lastKey);
 
   if (cubes.length < 4) {
@@ -26,13 +33,13 @@ async function rotateFeatured() {
   // Step 2: Check patron status for all cubes and remove ineligible ones
   const uniqueOwners = [...new Set(cubes.map((c) => c.owner))];
   const patronData = await Promise.all(uniqueOwners.map((ownerId) => Patron.getById(ownerId)));
-  const patronMap = {};
+  const patronMap: Record<string, any> = {};
   uniqueOwners.forEach((ownerId, index) => {
     patronMap[ownerId] = patronData[index];
   });
 
-  const removedCubes = [];
-  const cleanupOperations = [];
+  const removedCubes: any[] = [];
+  const cleanupOperations: Promise<any>[] = [];
 
   for (const cube of cubes) {
     const patron = patronMap[cube.owner];
@@ -81,7 +88,7 @@ async function rotateFeatured() {
   };
 }
 
-async function getFeaturedCubes() {
+export async function getFeaturedCubes() {
   // The first 2 items in the queue are always the featured cubes
   const queueResult = await FeaturedQueue.querySortedByDate(undefined, 2);
   if (!queueResult.items || queueResult.items.length === 0) {
@@ -93,32 +100,32 @@ async function getFeaturedCubes() {
   return cubes;
 }
 
-async function isInFeaturedQueue(cube) {
+export async function isInFeaturedQueue(cube: any) {
   if (!cube) {
     return false;
   }
   return FeaturedQueue.getByCube(cube.id);
 }
 
-async function getFeaturedQueueForUser(userid) {
-  const cubes = [];
-  let lastKey = null;
+export async function getFeaturedQueueForUser(userid: string) {
+  const cubes: any[] = [];
+  let lastKey: Record<string, any> | null = null;
 
   do {
-    const result = await FeaturedQueue.queryWithOwnerFilter(userid, lastKey);
-    cubes.push(...result.items);
-    lastKey = result.lastKey;
+    const result = await FeaturedQueue.queryWithOwnerFilter(userid, lastKey || undefined);
+    cubes.push(...(result.items || []));
+    lastKey = result.lastKey || null;
   } while (lastKey);
 
   return cubes;
 }
 
-async function doesUserHaveFeaturedCube(userid) {
+export async function doesUserHaveFeaturedCube(userid: string) {
   const cubes = await getFeaturedQueueForUser(userid);
   return cubes.length > 0;
 }
 
-async function replaceForUser(userid, cubeid) {
+export async function replaceForUser(userid: string, cubeid: string) {
   // Use the owner-filtered query instead of fetching entire queue
   const cubes = await getFeaturedQueueForUser(userid);
 
@@ -130,7 +137,7 @@ async function replaceForUser(userid, cubeid) {
 
   // Check if cube is currently featured (in first 2 positions)
   const queueResult = await FeaturedQueue.querySortedByDate(undefined, 2);
-  const isFeatured = queueResult.items.some((queueItem) => queueItem.cube === item.cube);
+  const isFeatured = queueResult.items?.some((queueItem) => queueItem.cube === item.cube);
 
   if (isFeatured) {
     throw new Error('Cannot replace cube that is currently featured');
@@ -144,18 +151,20 @@ async function replaceForUser(userid, cubeid) {
     cube: cubeid,
     date: item.date,
     owner: userid,
+    featuredOn: null,
   });
 }
 
-async function addNewCubeToQueue(userid, cubeid) {
+export async function addNewCubeToQueue(userid: string, cubeid: string) {
   await FeaturedQueue.put({
     cube: cubeid,
     date: Date.now().valueOf(),
     owner: userid,
+    featuredOn: null,
   });
 }
 
-async function removeCubeFromQueue(ownerid) {
+export async function removeCubeFromQueue(ownerid: string) {
   const cubes = await getFeaturedQueueForUser(ownerid);
 
   if (cubes.length === 0) {
@@ -167,13 +176,4 @@ async function removeCubeFromQueue(ownerid) {
   await FeaturedQueue.delete(cubeid);
 }
 
-module.exports = {
-  rotateFeatured,
-  canBeFeatured,
-  getFeaturedCubes,
-  isInFeaturedQueue,
-  doesUserHaveFeaturedCube,
-  replaceForUser,
-  addNewCubeToQueue,
-  removeCubeFromQueue,
-};
+export { canBeFeatured };

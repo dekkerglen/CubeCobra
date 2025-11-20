@@ -304,7 +304,19 @@ function fromEntries(entries: [string, any][]): Record<string, any> {
   return obj;
 }
 
-async function addNotification(to: User, from: User, url: string, text: string) {
+async function addNotification(to: User, from: User | null, url: string, text: string) {
+  if (!from) {
+    // system notification
+    return await Notification.put({
+      date: new Date().valueOf(),
+      to: `${to.id}`,
+      from: '5d1125b00e0713602c55d967', // Dekkaru's user ID 😏
+      fromUsername: 'Dekkaru',
+      url,
+      body: text,
+    });
+  }
+
   if (to.username === from.username) {
     return; // we don't need to give notifications to ourselves
   }

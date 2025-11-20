@@ -11,6 +11,7 @@ const { handleRouteError, render, redirect } = require('../serverutils/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../serverutils/cubefn');
 const { GIT_COMMIT } = require('../serverutils/git');
+const {FeaturedQueue} = require('dynamo/models/featuredQueue');
 
 const router = express.Router();
 
@@ -45,7 +46,6 @@ router.get('/explore', async (req, res) => {
 });
 
 router.get('/queue', async (req, res) => {
-  const FeaturedQueue = require('dynamo/models/featuredQueue');
 
   let featured = [];
   let lastkey = null;
