@@ -1,6 +1,6 @@
 {
   "name": "cubecobra",
-  "version": "1.4.9",
+  "version": "1.4.14",
   "description": "",
   "engines": {
     "node": ">=22.0.0 <23.0.0"
@@ -16,7 +16,7 @@
     "update-cards": "npm run update-cards --workspace=packages/jobs",
     "update-combos": "npm run update-combos --workspace=packages/jobs",
     "update-all": "npm run update-all --workspace=packages/jobs",
-    "publish": "npm run build --workspace=packages/client && npm run build --workspace=packages/server && cd packages/scripts && npx ts-node -r tsconfig-paths/register --project tsconfig.json src/publish.ts",
+    "publish": "npm run build --workspace=packages/client && npm run build --workspace=packages/server && npm run publish --workspace=packages/dailyJobsLambda && cd packages/scripts && npx ts-node -r tsconfig-paths/register --project tsconfig.json src/publish.ts",
     "write-git-info": "npm run write-git-info --workspace=packages/scripts"
   },
   "husky": {

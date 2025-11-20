@@ -34,10 +34,10 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
 
   const sortsModified = useMemo(() => {
     return (
-      sortPrimary !== (cube.defaultSorts[0] || CUBE_DEFAULT_SORTS[0]) ||
-      sortSecondary !== (cube.defaultSorts[1] || CUBE_DEFAULT_SORTS[1]) ||
-      sortTertiary !== (cube.defaultSorts[2] || CUBE_DEFAULT_SORTS[2]) ||
-      sortQuaternary !== (cube.defaultSorts[3] || CUBE_DEFAULT_SORTS[3])
+      sortPrimary !== ((cube.defaultSorts && cube.defaultSorts[0]) || CUBE_DEFAULT_SORTS[0]) ||
+      sortSecondary !== ((cube.defaultSorts && cube.defaultSorts[1]) || CUBE_DEFAULT_SORTS[1]) ||
+      sortTertiary !== ((cube.defaultSorts && cube.defaultSorts[2]) || CUBE_DEFAULT_SORTS[2]) ||
+      sortQuaternary !== ((cube.defaultSorts && cube.defaultSorts[3]) || CUBE_DEFAULT_SORTS[3])
     );
   }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
 

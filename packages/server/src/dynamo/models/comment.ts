@@ -70,7 +70,10 @@ const hydrate = async (item?: UnhydratedComment): Promise<Comment | undefined> =
   }
 
   const owner = await UserModel.getById(item.owner);
-  return createHydratedComment(item, owner!, getImageData(owner!.imageName));
+  if (!owner) {
+    return createHydratedCommentWithoutOwner(item);
+  }
+  return createHydratedComment(item, owner, getImageData(owner.imageName));
 };
 
 const batchHydrate = async (items?: UnhydratedComment[]): Promise<Comment[] | undefined> => {

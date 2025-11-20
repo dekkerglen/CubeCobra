@@ -6,7 +6,7 @@ import path from 'path';
 import { initializeCardDb } from './cardCatalog';
 import { generateBalancedPack } from './cubefn';
 import { ensureModelsReady } from './ml';
-const FeaturedQueue = require('dynamo/models/featuredQueue');
+import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import User from 'dynamo/models/user';
 
 import * as util from './util';
@@ -37,7 +37,7 @@ interface GeneratePackResult {
   seed: string;
 }
 
-async function rotateDailyP1P1(): Promise<RotationResult> {
+export async function rotateDailyP1P1(): Promise<RotationResult> {
   try {
     console.log('Starting daily P1P1 rotation...');
 
@@ -64,7 +64,7 @@ async function rotateDailyP1P1(): Promise<RotationResult> {
     }
 
     // Get featured cubes queue
-    const queueResult = await FeaturedQueue.querySortedByDate(null, 999);
+    const queueResult = await FeaturedQueue.querySortedByDate(undefined, 999);
     if (!queueResult.items || queueResult.items.length === 0) {
       console.log('No featured cubes in queue, skipping rotation');
       return { success: false, error: 'No featured cubes in queue' };
@@ -73,6 +73,12 @@ async function rotateDailyP1P1(): Promise<RotationResult> {
     // Select a random cube from the featured queue
     const randomIndex = Math.floor(Math.random() * queueResult.items.length);
     const selectedQueueItem = queueResult.items[randomIndex];
+
+    if (!selectedQueueItem) {
+      console.error('No cube found at selected index in featured queue:', randomIndex);
+      return { success: false, error: 'No cube found in featured queue' };
+      // This should not happen as we checked items.length > 0 above
+    }
 
     console.log('Selected cube from featured queue:', selectedQueueItem.cube);
 
@@ -178,5 +184,3 @@ async function rotateDailyP1P1(): Promise<RotationResult> {
     return { success: false, error: errorMessage };
   }
 }
-
-export default rotateDailyP1P1;

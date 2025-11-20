@@ -11,7 +11,7 @@ const { handleRouteError, render, redirect } = require('../../serverutils/render
 const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');
 const util = require('../../serverutils/util');
 const generateMeta = require('../../serverutils/meta');
-const FeaturedQueue = require('dynamo/models/featuredQueue');
+const {FeaturedQueue} = require('dynamo/models/featuredQueue');
 const { isInFeaturedQueue } = require('../../serverutils/featuredQueue');
 
 import { NoticeType } from '@utils/datatypes/Notice';

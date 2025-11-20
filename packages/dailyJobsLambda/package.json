@@ -1,0 +1,22 @@
+{
+  "name": "@cubecobra/daily-jobs-lambda",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish": "npm run build && node publish.js",
+    "build": "node esbuild.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@solutions-unified/utilities": "^1.1.15",
+    "archiver": "^7.0.1",
+    "@aws-sdk/lib-dynamodb": "^3.927.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.5"
+  }
+}
