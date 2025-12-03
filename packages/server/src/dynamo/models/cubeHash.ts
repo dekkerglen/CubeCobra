@@ -1,6 +1,35 @@
-const createClient = require('../util');
+import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
+import { CubeCards } from '@utils/datatypes/Cube';
+import createClient from 'dynamo/util';
+import { cardFromId } from 'serverutils/carddb';
 
-const { cardFromId } = require('../../serverutils/carddb');
+interface CubeMetadata {
+  id: string;
+  shortId?: string;
+  featured: boolean;
+  categoryOverride?: string;
+  categoryPrefixes?: string[];
+  tags?: string[];
+  name: string;
+  following: string[];
+  cardCount: number;
+}
+
+interface CubeHashRow {
+  hash: string;
+  cube: string;
+  numFollowers: number;
+  name: string;
+  cardCount: number;
+}
+
+interface QueryResult {
+  items: CubeHashRow[];
+  lastKey?: Record<string, NativeAttributeValue>;
+}
+
+type SortOrder = 'pop' | 'alpha' | 'cards';
 
 const FIELDS = {
   HASH: 'hash',
@@ -8,7 +37,7 @@ const FIELDS = {
   NUM_FOLLOWERS: 'numFollowers',
   NAME: 'name',
   CARD_COUNT: 'cardCount',
-};
+} as const;
 
 const client = createClient({
   name: 'CUBE_HASHES',
@@ -38,31 +67,30 @@ const client = createClient({
       name: 'SortedByCardCount',
     },
   ],
-  FIELDS,
 });
 
-const getShortIdHash = (shortId) => {
+const getShortIdHash = (shortId: string): string => {
   //Case sensitive!
   return `shortid:${shortId}`;
 };
 
-const hashShortId = (metadata) => {
+const hashShortId = (metadata: CubeMetadata): string[] => {
   if (!metadata.shortId || metadata.shortId.length === 0) {
     return [];
   }
   return [getShortIdHash(metadata.shortId)];
 };
 
-const hashFeatured = (metadata) => {
+const hashFeatured = (metadata: CubeMetadata): string[] => {
   return [`featured:${metadata.featured}`];
 };
 
-const hashCategories = (metadata) => {
+const hashCategories = (metadata: CubeMetadata): string[] => {
   if (!metadata.categoryOverride) {
     return [];
   }
 
-  const res = [];
+  const res: string[] = [];
 
   res.push(`category:${metadata.categoryOverride}`);
 
@@ -73,18 +101,18 @@ const hashCategories = (metadata) => {
   return res;
 };
 
-const hashTags = (metadata) => {
-  return (metadata.tags || []).map((tag) => `tag:${tag.toLowerCase()}`);
+const hashTags = (metadata: CubeMetadata): string[] => {
+  return (metadata.tags || []).map((tag: string) => `tag:${tag.toLowerCase()}`);
 };
 
-const hashKeywords = (metadata) => {
-  const res = [];
+const hashKeywords = (metadata: CubeMetadata): string[] => {
+  const res: string[] = [];
 
   const namewords = metadata.name
     .replace(/[^\w\s]/gi, '')
     .toLowerCase()
     .split(' ')
-    .filter((keyword) => keyword.length > 0);
+    .filter((keyword: string) => keyword.length > 0);
 
   for (let i = 0; i < namewords.length; i++) {
     for (let j = i + 1; j < namewords.length + 1; j++) {
@@ -96,8 +124,8 @@ const hashKeywords = (metadata) => {
   return res;
 };
 
-const hashOracles = (cards) => {
-  const res = [];
+const hashOracles = (cards: CubeCards): string[] => {
+  const res: string[] = [];
 
   for (const card of cards.mainboard) {
     const oracle = cardFromId(card.cardID).oracle_id;
@@ -110,7 +138,7 @@ const hashOracles = (cards) => {
   return res;
 };
 
-const getHashesForMetadata = (metadata) => {
+const getHashesForMetadata = (metadata: CubeMetadata): string[] => {
   return [
     ...new Set([
       ...hashShortId(metadata),
@@ -121,15 +149,20 @@ const getHashesForMetadata = (metadata) => {
     ]),
   ];
 };
-const getHashesForCards = (cards) => {
+const getHashesForCards = (cards: CubeCards): string[] => {
   return [...new Set([...hashOracles(cards)])];
 };
 
-const getHashesForCube = (metadata, cards) => {
+const getHashesForCube = (metadata: CubeMetadata, cards: CubeCards): string[] => {
   return [...new Set([...getHashesForCards(cards), ...getHashesForMetadata(metadata)])];
 };
 
-const getSortedByFollowers = async (hash, ascending, lastKey, limit = 36) => {
+const getSortedByFollowers = async (
+  hash: string,
+  ascending: boolean = true,
+  lastKey?: Record<string, NativeAttributeValue>,
+  limit: number = 36,
+): Promise<QueryResult> => {
   const result = await client.query({
     IndexName: 'SortedByFollowers',
     KeyConditionExpression: `#p1 = :hash`,
@@ -144,12 +177,17 @@ const getSortedByFollowers = async (hash, ascending, lastKey, limit = 36) => {
     Limit: limit,
   });
   return {
-    items: result.Items,
+    items: result.Items as CubeHashRow[],
     lastKey: result.LastEvaluatedKey,
   };
 };
 
-const getSortedByName = async (hash, ascending, lastKey, limit = 36) => {
+const getSortedByName = async (
+  hash: string,
+  ascending: boolean = true,
+  lastKey?: Record<string, NativeAttributeValue>,
+  limit: number = 36,
+): Promise<QueryResult> => {
   const result = await client.query({
     IndexName: 'SortedByName',
     KeyConditionExpression: `#p1 = :hash`,
@@ -164,12 +202,17 @@ const getSortedByName = async (hash, ascending, lastKey, limit = 36) => {
     Limit: limit,
   });
   return {
-    items: result.Items,
+    items: result.Items as CubeHashRow[],
     lastKey: result.LastEvaluatedKey,
   };
 };
 
-const getSortedByCardCount = async (hash, ascending, lastKey, limit = 36) => {
+const getSortedByCardCount = async (
+  hash: string,
+  ascending: boolean = true,
+  lastKey?: Record<string, NativeAttributeValue>,
+  limit: number = 36,
+): Promise<QueryResult> => {
   const result = await client.query({
     IndexName: 'SortedByCardCount',
     KeyConditionExpression: `#p1 = :hash`,
@@ -184,13 +227,19 @@ const getSortedByCardCount = async (hash, ascending, lastKey, limit = 36) => {
     Limit: limit,
   });
   return {
-    items: result.Items,
+    items: result.Items as CubeHashRow[],
     lastKey: result.LastEvaluatedKey,
   };
 };
 
-module.exports = {
-  query: async (hash, ascending, lastKey, order, limit = 36) => {
+const cubeHash = {
+  query: async (
+    hash: string,
+    ascending: boolean = true,
+    lastKey: Record<string, NativeAttributeValue> | undefined = undefined,
+    order: SortOrder = 'pop',
+    limit: number = 36,
+  ): Promise<QueryResult> => {
     switch (order) {
       case 'pop':
         return getSortedByFollowers(hash, ascending, lastKey, limit);
@@ -202,9 +251,9 @@ module.exports = {
         return getSortedByFollowers(hash, ascending, lastKey, limit);
     }
   },
-  getHashesByCubeId: async (cubeId) => {
-    const items = [];
-    let lastKey = null;
+  getHashesByCubeId: async (cubeId: string): Promise<CubeHashRow[]> => {
+    const items: CubeHashRow[] = [];
+    let lastKey: Record<string, NativeAttributeValue> | undefined = undefined;
 
     do {
       const result = await client.query({
@@ -217,7 +266,7 @@ module.exports = {
         },
         ExclusiveStartKey: lastKey,
       });
-      items.push(...result.Items);
+      items.push(...(result.Items as CubeHashRow[]));
       lastKey = result.LastEvaluatedKey;
     } while (lastKey);
 
@@ -226,10 +275,10 @@ module.exports = {
   getSortedByCardCount,
   getSortedByName,
   getSortedByFollowers,
-  batchPut: async (documents) => client.batchPut(documents, true),
-  batchDelete: async (keys) => client.batchDelete(keys),
-  createTable: async () => client.createTable(),
-  getHashRowsForMetadata: (metadata) => {
+  batchPut: async (documents: CubeHashRow[]): Promise<void> => client.batchPut(documents),
+  batchDelete: async (keys: Array<{ hash: string; cube: string }>): Promise<void> => client.batchDelete(keys),
+  createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
+  getHashRowsForMetadata: (metadata: CubeMetadata): CubeHashRow[] => {
     const hashes = getHashesForMetadata(metadata);
 
     return hashes.map((hash) => ({
@@ -240,7 +289,7 @@ module.exports = {
       [FIELDS.CUBE_ID]: metadata.id,
     }));
   },
-  getHashRowsForCube: (metadata, cards) => {
+  getHashRowsForCube: (metadata: CubeMetadata, cards: CubeCards): CubeHashRow[] => {
     const hashes = getHashesForCube(metadata, cards);
 
     return hashes.map((hash) => ({
@@ -254,3 +303,6 @@ module.exports = {
   getShortIdHash,
   FIELDS,
 };
+
+module.exports = cubeHash;
+export default cubeHash;

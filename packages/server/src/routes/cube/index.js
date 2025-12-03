@@ -22,11 +22,12 @@ const {
   abbreviate,
   CSVtoCards,
   compareCubes,
-  generateSamplepackImage,
   cachePromise,
   isCubeViewable,
   isCubeListed,
 } = require('../../serverutils/cubefn');
+
+const { generateSamplepackImage } = require('../../serverutils/imageUtils');
 
 const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, updateCubeAndBlog } = require('./helper');
 

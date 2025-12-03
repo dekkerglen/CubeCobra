@@ -1,11 +1,8 @@
 import Cube from 'dynamo/models/cube';
 import dailyP1P1Model from 'dynamo/models/dailyP1P1';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
-import path from 'path';
 
-import { initializeCardDb } from './cardCatalog';
-import { generateBalancedPack } from './cubefn';
-import { ensureModelsReady } from './ml';
+import { generatePack } from './cubefn';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import User from 'dynamo/models/user';
 
@@ -20,32 +17,14 @@ interface RotationResult {
   dailyP1P1?: any;
 }
 
-interface PackCandidate {
-  maxBotWeight: number;
-}
-
 interface GeneratePackResult {
-  allCandidates: PackCandidate[];
-  maxBotWeight: number;
-  packResult: {
-    pack: any[];
-  };
-  botResult: {
-    botPickIndex?: number;
-    botWeights: number[];
-  };
   seed: string;
+  pack: any[];
 }
 
 export async function rotateDailyP1P1(): Promise<RotationResult> {
   try {
     console.log('Starting daily P1P1 rotation...');
-
-    // Initialize card database and ML models when calling this with rotate-daily-p1p1 script
-
-    const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
-    await initializeCardDb(privateDir);
-    await ensureModelsReady();
 
     // Idempotency check: If there's already an active daily P1P1 from today, don't create another
     const currentDailyP1P1 = await dailyP1P1Model.getCurrentDailyP1P1();
@@ -94,31 +73,18 @@ export async function rotateDailyP1P1(): Promise<RotationResult> {
     // Get cube cards
     const cards = await Cube.getCards(cube.id);
 
-    // Generate optimal pack with configurable candidate count (default: 10)
-    const candidateCount = 10;
+    // Generate pack
     const seedPrefix = 'p1p1-of-the-day';
 
-    console.log(`Generating ${candidateCount} pack candidates...`);
+    console.log('Generating pack...');
 
-    const result = (await generateBalancedPack(cube, cards, seedPrefix, candidateCount)) as GeneratePackResult;
+    const result = (await generatePack(cube, cards, seedPrefix)) as GeneratePackResult;
 
-    // Log candidate details for debugging
-    result.allCandidates.forEach((candidate: PackCandidate, i: number) => {
-      console.log(`Pack ${i + 1}: max bot weight = ${candidate.maxBotWeight.toFixed(3)}`);
-    });
-
-    console.log(`Selected pack with lowest max bot weight: ${result.maxBotWeight.toFixed(3)}`);
-
-    const packResult = result.packResult;
-    const botResult = result.botResult;
-
-    console.log('Generated pack with', packResult.pack.length, 'cards');
+    console.log('Generated pack with', result.pack.length, 'cards');
 
     // Create S3 data for the pack
     const s3Data = {
-      botPick: botResult.botPickIndex ?? undefined,
-      botWeights: botResult.botWeights.length > 0 ? botResult.botWeights : undefined,
-      cards: packResult.pack,
+      cards: result.pack,
       createdByUsername: 'CubeCobra',
       seed: result.seed,
     };

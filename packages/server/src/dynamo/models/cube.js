@@ -3,11 +3,11 @@ require('dotenv').config();
 
 const _ = require('lodash');
 const { getImageData } = require('../../serverutils/imageutil');
-const createClient = require('../util');
+const createClient = require('../util').default || require('../util');
 const { getObject, putObject, deleteObject } = require('../s3client');
 const { getHashRowsForMetadata } = require('./cubeHash');
-const cubeHash = require('./cubeHash');
-const User = require('./user');
+const cubeHash = require('./cubeHash').default || require('./cubeHash');
+const User = require('./user').default || require('./user');
 import { cardFromId, getPlaceholderCard } from '../../serverutils/carddb';
 const { normalizeDraftFormatSteps } = require('@utils/draftutil');
 const cloudwatch = require('../../serverutils/cloudwatch');

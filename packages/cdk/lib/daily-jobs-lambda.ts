@@ -32,7 +32,7 @@ export class DailyJobsLambdaConstruct extends Construct {
     this.lambdaFunction = new lambda.Function(this, 'DailyJobsLambda', {
       functionName: `DailyJobsLambda-${props.subdomain}-${props.stage}`,
       runtime: lambda.Runtime.NODEJS_22_X,
-      code: lambda.Code.fromBucket(codeBucket, `DailyJobsLambda/${props.version}.zip`),
+      code: lambda.Code.fromBucket(codeBucket, `dailyJobsLambda/${props.version}.zip`),
       handler: 'handler.handler',
       environment: props.environmentVariables,
       timeout: cdk.Duration.minutes(15), // Jobs may take longer
@@ -45,6 +45,14 @@ export class DailyJobsLambdaConstruct extends Construct {
       new iam.PolicyStatement({
         actions: ['dynamodb:*'],
         resources: ['*'],
+      }),
+    );
+
+    // Grant the Lambda function permissions to read/write S3 (for cube cards and P1P1 packs)
+    executionRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['s3:GetObject', 's3:PutObject', 's3:ListBucket'],
+        resources: ['*'], // You may want to restrict this to specific buckets
       }),
     );
 

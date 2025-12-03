@@ -96,12 +96,18 @@ export class CubeCobraStack extends cdk.Stack {
     });
 
     // Create the daily jobs lambda
+    const lambdaEnvVars = createEnvironmentVariables(params, props);
+    // Remove Lambda reserved environment variables
+    delete lambdaEnvVars.AWS_ACCESS_KEY_ID;
+    delete lambdaEnvVars.AWS_SECRET_ACCESS_KEY;
+    delete lambdaEnvVars.AWS_REGION;
+
     new DailyJobsLambdaConstruct(this, 'DailyJobsLambda', {
       codeArtifactsBucket: params.appBucket,
       version: params.version,
       subdomain: params.domain.split('.')[0],
       stage: params.env,
-      environmentVariables: createEnvironmentVariables(params, props),
+      environmentVariables: lambdaEnvVars,
     });
   }
 }

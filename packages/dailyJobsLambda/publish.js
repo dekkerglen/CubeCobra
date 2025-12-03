@@ -12,7 +12,7 @@ const s3 = new AWS.S3({
   region: process.env.AWS_REGION
 });
 
-const bucketName = process.env.CODE_ARTIFACTS_BUCKET; // replace with your bucket name
+const bucketName = process.env.CUBECOBRA_APP_BUCKET || 'cubecobra';
 const zipFileName = `dailyJobsLambda/${VERSION}.zip`;
 
 var output = fs.createWriteStream('target.zip');
