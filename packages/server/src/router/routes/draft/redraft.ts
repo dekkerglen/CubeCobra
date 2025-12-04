@@ -4,7 +4,6 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -84,6 +83,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'get',
-    handler: [csrfProtection, handler],
+    handler: [handler],
   },
 ];

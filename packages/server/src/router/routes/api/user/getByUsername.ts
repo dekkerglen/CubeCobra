@@ -1,6 +1,5 @@
 import User from 'dynamo/models/user';
 import { redirect } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -30,6 +29,6 @@ export const routes = [
   {
     method: 'get',
     path: '/:id',
-    handler: [csrfProtection, handler],
+    handler: [handler],
   },
 ];

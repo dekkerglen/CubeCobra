@@ -1,5 +1,4 @@
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
 import Stripe from 'stripe';
 
 import { Request, Response } from '../../types/express';
@@ -95,21 +94,21 @@ export const routes = [
   {
     path: '/',
     method: 'get',
-    handler: [csrfProtection, handler],
+    handler: [handler],
   },
   {
     path: '/checkout',
     method: 'post',
-    handler: [csrfProtection, checkout],
+    handler: [checkout],
   },
   {
     path: '/success',
     method: 'get',
-    handler: [csrfProtection, success],
+    handler: [success],
   },
   {
     path: '/cancel',
     method: 'get',
-    handler: [csrfProtection, cancel],
+    handler: [cancel],
   },
 ];

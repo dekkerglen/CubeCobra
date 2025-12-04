@@ -1,5 +1,4 @@
 import Changelog from 'dynamo/models/changelog';
-import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -24,6 +23,6 @@ export const routes = [
   {
     path: '/changelog',
     method: 'post',
-    handler: [csrfProtection, changelogHandler],
+    handler: [changelogHandler],
   },
 ];

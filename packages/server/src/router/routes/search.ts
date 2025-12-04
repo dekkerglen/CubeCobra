@@ -4,7 +4,6 @@ import CubeHash from 'dynamo/models/cubeHash';
 import { cardFromId, getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeListed } from 'serverutils/cubefn';
 import { render } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 
@@ -429,11 +428,11 @@ export const routes = [
   {
     path: '',
     method: 'get',
-    handler: [csrfProtection, getHandler],
+    handler: [getHandler],
   },
   {
     path: '/getmoresearchitems',
     method: 'post',
-    handler: [csrfProtection, getmoresearchitemsHandler],
+    handler: [getmoresearchitemsHandler],
   },
 ];

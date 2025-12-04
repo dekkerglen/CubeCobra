@@ -9,7 +9,6 @@ import {
 } from 'serverutils/carddb';
 import carddb from 'serverutils/carddb';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
 import { validate as uuidValidate } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
@@ -76,6 +75,6 @@ export const routes = [
   {
     method: 'get',
     path: '/:id',
-    handler: [csrfProtection, getCardImageFlipHandler],
+    handler: [getCardImageFlipHandler],
   },
 ];

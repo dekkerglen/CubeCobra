@@ -6,7 +6,6 @@ import Joi from 'joi';
 import { addBasics } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
 
 import { NextFunction, Request, Response } from '../../../types/express';
 
@@ -125,6 +124,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'post',
-    handler: [csrfProtection, validateBody, handler],
+    handler: [validateBody, handler],
   },
 ];

@@ -1,7 +1,5 @@
 import { createTypeGuard } from '@utils/typeGuards';
 import CardHistory from 'dynamo/models/cardhistory';
-import { csrfProtection } from 'src/router/middleware';
-
 import { Request, Response } from '../../../types/express';
 
 const zoomValues = ['month', 'year'] as const;
@@ -58,6 +56,6 @@ export const routes = [
   {
     method: 'post',
     path: '/',
-    handler: [csrfProtection, getCardHistoryHandler],
+    handler: [getCardHistoryHandler],
   },
 ];

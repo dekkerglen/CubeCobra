@@ -1,5 +1,4 @@
 import { redirect } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -12,6 +11,6 @@ export const routes = [
   {
     method: 'get',
     path: '/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
-    handler: [csrfProtection, redirectP1P1Handler],
+    handler: [redirectP1P1Handler],
   },
 ];

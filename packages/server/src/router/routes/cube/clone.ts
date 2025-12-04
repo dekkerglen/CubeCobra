@@ -2,7 +2,6 @@ import Cube from 'dynamo/models/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
-import { csrfProtection } from 'src/router/middleware';
 import uuid from 'uuid';
 
 import { Request, Response } from '../../../types/express';
@@ -76,6 +75,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'get',
-    handler: [csrfProtection, cloneHandler],
+    handler: [cloneHandler],
   },
 ];

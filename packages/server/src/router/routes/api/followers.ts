@@ -1,7 +1,6 @@
 import Cube from 'dynamo/models/cube';
 import User from 'dynamo/models/user';
 import { isCubeViewable } from 'serverutils/cubefn';
-import { csrfProtection } from 'src/router/middleware';
 
 import { NextFunction, Request, Response } from '../../../types/express';
 
@@ -66,6 +65,6 @@ export const routes = [
   {
     method: 'get',
     path: '/:type/:id',
-    handler: [csrfProtection, ensureCubeVisible, getFollowers],
+    handler: [ensureCubeVisible, getFollowers],
   },
 ];

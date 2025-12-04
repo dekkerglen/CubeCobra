@@ -1,6 +1,4 @@
 import { render } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
-
 import { Request, Response } from '../../../types/express';
 
 export const getSearchCardsHandler = async (req: Request, res: Response) =>
@@ -18,6 +16,6 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, getSearchCardsHandler],
+    handler: [getSearchCardsHandler],
   },
 ];

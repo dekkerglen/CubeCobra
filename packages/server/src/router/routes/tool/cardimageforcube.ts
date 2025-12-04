@@ -1,7 +1,6 @@
 import Cube from 'dynamo/models/cube';
 import { cardFromId } from 'serverutils/carddb';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -41,6 +40,6 @@ export const routes = [
   {
     method: 'get',
     path: '/:id/:cubeid',
-    handler: [csrfProtection, getCardImageForCubeHandler],
+    handler: [getCardImageForCubeHandler],
   },
 ];

@@ -2,8 +2,6 @@ import User from 'dynamo/models/user';
 import passport from 'passport';
 import { redirect, render } from 'serverutils/render';
 import { getSafeReferrer } from 'serverutils/util';
-import { csrfProtection } from 'src/router/middleware';
-
 import { Request, Response } from '../../../types/express';
 
 const getLoginRedirect = (req: Request) => {
@@ -59,11 +57,11 @@ export const routes = [
   {
     path: '/',
     method: 'get',
-    handler: [csrfProtection, getHandler],
+    handler: [getHandler],
   },
   {
     path: '/',
     method: 'post',
-    handler: [csrfProtection, postHandler],
+    handler: [postHandler],
   },
 ];

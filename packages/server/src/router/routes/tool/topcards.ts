@@ -3,8 +3,6 @@ import { OrderedSortsType } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
 import { handleRouteError, render } from 'serverutils/render';
 import { searchCards } from 'serverutils/tools';
-import { csrfProtection } from 'src/router/middleware';
-
 import { Request, Response } from '../../../types/express';
 
 /* Minimum number of picks for data to show up in Top cards list. */
@@ -43,6 +41,6 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, getTopCardsHandler],
+    handler: [getTopCardsHandler],
   },
 ];

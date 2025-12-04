@@ -8,8 +8,6 @@ import Draft from 'dynamo/models/draft';
 import Joi from 'joi';
 import { deckbuild } from 'serverutils/draftbots';
 import { addNotification } from 'serverutils/util';
-import { csrfProtection } from 'src/router/middleware';
-
 import { NextFunction, Request, Response } from '../../../types/express';
 
 interface FinishDraftBody {
@@ -228,6 +226,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'post',
-    handler: [csrfProtection, validateBody, handler],
+    handler: [validateBody, handler],
   },
 ];

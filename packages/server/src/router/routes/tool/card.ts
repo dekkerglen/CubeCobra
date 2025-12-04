@@ -14,7 +14,6 @@ import carddb, {
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
-import { csrfProtection } from 'src/router/middleware';
 import { validate as uuidValidate } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
@@ -125,6 +124,6 @@ export const routes = [
   {
     method: 'get',
     path: '/:id',
-    handler: [csrfProtection, getCardHandler],
+    handler: [getCardHandler],
   },
 ];

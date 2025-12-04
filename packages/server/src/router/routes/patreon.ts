@@ -3,16 +3,13 @@ import { UserRoles } from '@utils/datatypes/User';
 import crypto from 'crypto';
 import Patron from 'dynamo/models/patron';
 import User from 'dynamo/models/user';
-import patreon from 'patreon';
+import { patreon, oauth } from 'patreon';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 
-const patreonAPI = patreon.patreon;
-const patreonOAuth = patreon.oauth;
-
-const patreonOAuthClient = patreonOAuth(process.env.PATREON_CLIENT_ID || '', process.env.PATREON_CLIENT_SECRET || '');
+const patreonOAuthClient = oauth(process.env.PATREON_CLIENT_ID || '', process.env.PATREON_CLIENT_SECRET || '');
 
 const isValidPatreonSignature = (signature: string, body: any): boolean => {
   const hmac = crypto.createHmac('md5', process.env.PATREON_HOOK_SECRET || '');
@@ -138,7 +135,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
   return patreonOAuthClient
     .getTokens(oauthGrantCode, process.env.PATREON_REDIRECT)
     .then((tokensResponse: any) => {
-      const patreonAPIClient = patreonAPI(tokensResponse.access_token);
+      const patreonAPIClient = patreon(tokensResponse.access_token);
       return patreonAPIClient('/current_user');
     })
     .then(async ({ rawJson }: any) => {
