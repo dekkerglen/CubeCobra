@@ -64,7 +64,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cards = await Cube.getCards(cube.id, true);
+    const cards = await Cube.getCards(cube.id);
 
     for (const [board] of Object.entries(changes)) {
       // swaps

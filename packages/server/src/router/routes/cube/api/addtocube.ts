@@ -36,7 +36,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await Cube.getCards(req.params.id, true);
+    const cubeCards = await Cube.getCards(req.params.id);
 
     let tag: string | null = null;
     if (req.body.packid) {
