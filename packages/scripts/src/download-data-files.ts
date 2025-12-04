@@ -6,8 +6,8 @@ import path from 'path';
 config({ path: path.join(__dirname, '..', '.env') });
 
 // Import the download functions from server package
-import { downloadModelsFromS3 } from '@server/util/downloadModel';
-import { updateCardbase } from '@server/util/updatecards';
+import { downloadModelsFromS3 } from '@server/serverutils/downloadModel';
+import { updateCardbase } from '@server/serverutils/updatecards';
 
 const downloadDataFiles = async () => {
   console.log('Downloading card data files...');
