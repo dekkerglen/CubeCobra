@@ -14,6 +14,14 @@ jest.mock('serverutils/ml', () => ({
   encode: jest.fn(),
 }));
 
+//Mock the patreon module to avoid issues with undefined imports in tests
+jest.mock('patreon', () => ({
+  patreon: jest.fn(() => jest.fn()),
+  oauth: jest.fn(() => ({
+    getTokens: jest.fn(),
+  })),
+}));
+
 export interface MockDynamoClient {
   createTable: jest.Mock;
   get: jest.Mock;

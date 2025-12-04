@@ -1,13 +1,11 @@
-import express, { Application } from 'express';
+import express, { Application, Router } from 'express';
 import { cardFromId, getAllVersionIds } from 'serverutils/carddb';
 import request from 'supertest';
 
+import { routes as getversionsRoutes } from '../../../src/router/routes/cube/api/getversions';
 import { createCardDetails, createCustomCardDetails } from '../../test-utils/data';
 
 jest.mock('serverutils/carddb');
-// Import the router using CommonJS require (since src/routes/cube/api.js uses module.exports)
-
-const cubeApiRouter = require('../../../src/routes/cube/api');
 
 describe('POST /cube/api/getversions', () => {
   let app: Application;
@@ -15,7 +13,14 @@ describe('POST /cube/api/getversions', () => {
   beforeAll(() => {
     app = express();
     app.use(express.json());
-    app.use('/cube/api', cubeApiRouter);
+
+    // Create a router and register the getversions routes
+    const router = Router();
+    getversionsRoutes.forEach((route) => {
+      const method = route.method as 'get' | 'post' | 'put' | 'delete';
+      router[method](route.path, ...(Array.isArray(route.handler) ? route.handler : [route.handler]));
+    });
+    app.use('/cube/api/getversions', router);
   });
 
   beforeEach(() => {

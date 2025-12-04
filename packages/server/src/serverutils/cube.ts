@@ -48,7 +48,7 @@ async function updateCubeAndBlog(
         canEdit: true,
         cubeID: req.params.id,
         missing,
-        added: added.map((add) => add.cardID),
+        added: added.map((add) => add.cardID || (add as any).scryfall_id),
       });
     }
 

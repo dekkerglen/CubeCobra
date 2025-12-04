@@ -13,7 +13,7 @@ import Cube from '../../src/dynamo/models/cube';
 import Draft from '../../src/dynamo/models/draft';
 import Notification from '../../src/dynamo/models/notification';
 import { handler, PublishDraftBodySchema, routes } from '../../src/router/routes/api/draftmancer/publish';
-import { bodyValidation } from '../../src/routes/middleware';
+import { bodyValidation } from '../../src/router/middleware';
 import { RequestHandler } from '../../src/types/express';
 import { createBasicsIds, createCard, createCardDetails, createCube } from '../test-utils/data';
 import { call, middleware } from '../test-utils/transport';
@@ -561,7 +561,8 @@ describe('Publish', () => {
 
     const response = await request(app).post('/api/draftmancer/publish').send(createRequest());
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'Cube not found' });
   });
 
   it('requires a valid api key', async () => {

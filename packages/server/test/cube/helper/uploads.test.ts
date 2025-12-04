@@ -8,7 +8,7 @@ import Blog from '../../../src/dynamo/models/blog';
 import Changelog from '../../../src/dynamo/models/changelog';
 import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
-import { bulkUpload } from '../../../src/routes/cube/helper';
+import { bulkUpload } from 'serverutils/cube';
 import { createCardDetails, createCube, createUser } from '../../test-utils/data';
 
 jest.mock('../../../src/dynamo/models/cube');
@@ -18,7 +18,13 @@ jest.mock('../../../src/dynamo/models/feed');
 jest.mock('serverutils/carddb');
 jest.mock('serverutils/cubefn');
 jest.mock('serverutils/render');
-jest.mock('serverutils/util');
+jest.mock('serverutils/util', () => ({
+  addCardToCube: jest.fn(),
+  addCardToBoard: jest.fn(),
+}));
+jest.mock('serverutils/cube', () => ({
+  ...jest.requireActual('serverutils/cube'),
+}));
 
 describe('Bulk Upload', () => {
   const flashMock = jest.fn();
@@ -226,7 +232,7 @@ describe('Bulk Upload', () => {
 
       const mockCards = new Map(cards.map((card) => [card.scryfall_id, createMockCardFromCSV(card)]));
 
-      ((util as any).addCardToCube as jest.Mock).mockImplementation(mockAddCardToBoardImpl(mockCards));
+      ((util as any).addCardToBoard as jest.Mock).mockImplementation(mockAddCardToBoardImpl(mockCards));
 
       await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
       expectSuccessfulUpload(owner, cube);
@@ -280,14 +286,20 @@ describe('Bulk Upload', () => {
       const hsDetails = createCardDetails({
         name: 'Healing Salve',
         scryfall_id: 'healing-salve',
+        error: false,
       });
 
       const mockHsCard = createMockCardFromCSV(hsDetails);
 
       setupBasicMocks();
-      mockCardDBResponses([hsDetails, null]);
 
-      ((util as any).addCardToCube as jest.Mock).mockImplementation(
+      // Mock getMostReasonable to return hsDetails for 'Healing Salve' and null for 'AlsoNotReal'
+      (carddb.getMostReasonable as jest.Mock).mockReturnValueOnce(hsDetails).mockReturnValueOnce(null);
+
+      // Mock cardFromId to always return hsDetails when called (since only healing-salve will be looked up)
+      (carddb.cardFromId as jest.Mock).mockReturnValue(hsDetails);
+
+      ((util as any).addCardToBoard as jest.Mock).mockImplementation(
         mockAddCardToBoardImpl(new Map([[hsDetails.scryfall_id, mockHsCard]])),
       );
 
