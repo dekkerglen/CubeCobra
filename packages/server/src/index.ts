@@ -1,11 +1,11 @@
-require('module-alias/register');
-require('dotenv').config();
+import 'module-alias/register';
+import dotenv from 'dotenv';
+dotenv.config();
 
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import express from 'express';
 import fileUpload from 'express-fileupload';
-import rateLimit from 'express-rate-limit';
 import session from 'express-session';
 import http from 'http';
 import schedule from 'node-schedule';
@@ -14,12 +14,14 @@ import path from 'path';
 import responseTime from 'response-time';
 import { v4 as uuid } from 'uuid';
 
-const cloudwatch = require('./serverutils/cloudwatch');
-const { updateCardbase } = require('./serverutils/updatecards');
-const cardCatalog = require('./serverutils/cardCatalog');
-const { render } = require('./serverutils/render');
-const connectFlash = require('connect-flash');
+import cloudwatch from './serverutils/cloudwatch';
+import { updateCardbase } from './serverutils/updatecards';
+import { initializeCardDb } from './serverutils/cardCatalog';
+import { render } from './serverutils/render';
+import connectFlash from 'connect-flash';
 import { UserRoles } from '@utils/datatypes/User';
+import configurePassport from './config/passport';
+import expressMessages from 'express-messages';
 
 import './types/express'; // Import the express type extensions
 
@@ -174,34 +176,16 @@ app.use(
 app.use(connectFlash());
 
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-  res.locals.messages = require('express-messages')(req, res);
+  res.locals.messages = expressMessages(req, res);
   res.locals.node_env = app.get('env');
   next();
 });
 
 // Passport config and middleware
-require('./config/passport')(passport);
+configurePassport(passport);
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-// set CORS header for cube json requests (needs to be here to be included in rate limiter response)
-const publicCORS = (_req: express.Request, res: express.Response, next: express.NextFunction) => {
-  res.set('Access-Control-Allow-Origin', '*');
-  next();
-};
-
-// apply a rate limiter to the public api endpoints
-const apiLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 100,
-  message: '429: Too Many Requests',
-});
-
-app.use('/cube/api/cubeJSON', publicCORS);
-app.use('/cube/api/cubeJSON', apiLimiter);
-app.use('/cube/api/history', publicCORS);
-app.use('/cube/api/history', apiLimiter);
 
 // per-request logging configuration
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -293,22 +277,6 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 
 app.use(router);
 
-// Route files; they manage their own CSRF protection
-app.use('/patreon', require('./routes/patreon_routes'));
-app.use('/cache', require('./routes/cache_routes'));
-app.use('/dev', require('./routes/dev_routes'));
-app.use('/cube', require('./routes/cube/index'));
-app.use('/public', require('./routes/cube/api_public'));
-app.use('/user', require('./routes/users_routes'));
-app.use('/tool', require('./routes/tools_routes'));
-app.use('/admin', require('./routes/admin_routes'));
-app.use('/content', require('./routes/content_routes'));
-app.use('/packages', require('./routes/packages'));
-app.use('/api/private', require('./routes/api/private'));
-
-app.use('', require('./routes/search_routes'));
-app.use('', require('./routes/root'));
-
 app.use((req: express.Request, res: express.Response) =>
   render(
     req,
@@ -356,7 +324,7 @@ schedule.scheduleJob('0 10 * * *', async () => {
 });
 
 // Start server after carddb and ML models are initialized.
-Promise.all([cardCatalog.initializeCardDb(), initializeMl()]).then(async () => {
+Promise.all([initializeCardDb(), initializeMl()]).then(async () => {
   const port = process.env.PORT || 5000;
   const host = process.env.LISTEN_ON || '127.0.0.1';
   http.createServer(app).listen(Number(port), host);

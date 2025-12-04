@@ -1,6 +1,6 @@
 import { createTypeGuard } from '@utils/typeGuards';
 import CardHistory from 'dynamo/models/cardhistory';
-import { csrfProtection } from 'routes/middleware';
+import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

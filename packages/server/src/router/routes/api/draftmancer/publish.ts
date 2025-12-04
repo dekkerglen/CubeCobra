@@ -9,7 +9,7 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Notification from 'dynamo/models/notification';
 import Joi from 'joi';
-import { bodyValidation } from 'routes/middleware';
+import { bodyValidation } from 'src/router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 
@@ -61,7 +61,10 @@ export const handler = async (req: Request, res: Response) => {
   }
 
   try {
-    const cube: CubeType = await Cube.getById(publishDraftBody.cubeID);
+    const cube = await Cube.getById(publishDraftBody.cubeID);
+    if (!cube) {
+      return res.status(404).json({ error: 'Cube not found' });
+    }
 
     // start with basics, we add the rest of the cards after
     const cards: CardDetails[] = [...cube.basics.map((card) => cardFromId(card))];

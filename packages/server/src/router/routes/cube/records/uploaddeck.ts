@@ -8,9 +8,9 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Record from 'dynamo/models/record';
 import Joi from 'joi';
-import { addBasics, createPool } from 'routes/cube/helper';
-import { bodyValidation } from 'routes/middleware';
-import { csrfProtection, ensureAuth } from 'routes/middleware';
+import { addBasics, createPool } from 'serverutils/cube';
+import { bodyValidation } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -116,13 +116,20 @@ export const associateNewDraft = async (
     processCard(oracle, sideboard, true);
   }
 
+  // Ensure all cards have index and type_line set
+  const cardsWithIndex = cards.map((card, index) => ({
+    ...card,
+    index: card.index ?? index,
+    type_line: card.type_line || card.details?.type || '',
+  }));
+
   const newDraft = {
     cube: cube.id,
     owner: cube.owner.id,
     cubeOwner: cube.owner.id,
     date: record.date,
     type: Draft.TYPES.UPLOAD,
-    cards: cards,
+    cards: cardsWithIndex,
     seats: record.players.map((player) => ({
       owner: player.userId,
       title: `${player.name}`,
@@ -139,9 +146,13 @@ export const associateNewDraft = async (
     targetSeat.sideboard = sideboard;
   }
 
-  addBasics(newDraft, cube.basics);
+  const draftDocument = newDraft as unknown as {
+    cards: { cardID: string; index: number; isUnlimited?: boolean; type_line: string }[];
+    basics: number[];
+  };
+  addBasics(draftDocument, cube.basics);
 
-  const id = await Draft.put(newDraft);
+  const id = await Draft.put(draftDocument as any);
 
   cube.numDecks += 1;
   await Cube.update(cube);
@@ -233,6 +244,11 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
     }
 
     const cube = await Cube.getById(record.cube);
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');

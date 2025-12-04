@@ -2,12 +2,12 @@ import Card from '@utils/datatypes/Card';
 import Cube from 'dynamo/models/cube';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import Joi from 'joi';
-import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { bodyValidation } from 'routes/middleware';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { bodyValidation } from 'src/router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 
-import { getBotPrediction } from '../../../../server/util/userUtil';
+import { getBotPrediction } from '../../../../serverutils/userUtil';
 import { Request, Response } from '../../../../types/express';
 
 const CreateP1P1FromPackSchema = Joi.object({
@@ -46,7 +46,7 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
 
     // Get the cube metadata
     const cube = await Cube.getById(cubeId);
-    if (!isCubeViewable(cube, user)) {
+    if (!cube || !isCubeViewable(cube, user)) {
       return res.status(404).json({ error: 'Cube not found' });
     }
 

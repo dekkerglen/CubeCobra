@@ -1,10 +1,7 @@
-import User from '@utils/datatypes/User';
-
+import User, { UserRoles } from '@utils/datatypes/User';
+import Notification from 'dynamo/models/notification';
+import shuffleSeed from 'shuffle-seed';
 import { NextFunction, Request, Response } from '../types/express';
-
-const shuffleSeed = require('shuffle-seed');
-const { UserRoles } = require('@utils/datatypes/User');
-const Notification = require('dynamo/models/notification');
 
 // Simple profanity filter replacement to avoid ES module issues
 class SimpleProfanityFilter {
@@ -12,14 +9,6 @@ class SimpleProfanityFilter {
 
   constructor() {
     this.badWords = new Set([
-      // Default bad words (excluding the ones we want to remove)
-      'damn',
-      'shit',
-      'fuck',
-      'bitch',
-      'ass',
-      'bastard',
-      'crap',
       // Additional words to filter
       'dhabi',
       'dubai',
@@ -110,14 +99,14 @@ filter.removeWords(...removeWords);
  * @param {string} text - The input string with Unicode substitutions.
  * @returns {string} - The transformed string with regular text.
  */
-function normalizeUnicode(text: string): string {
+export function normalizeUnicode(text: string): string {
   if (!text) return '';
 
   // Normalize the Unicode string to its canonical form
   return text.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function hasProfanity(text: string): boolean {
+export function hasProfanity(text: string): boolean {
   if (!text) return false;
 
   const variations = [
@@ -130,7 +119,7 @@ function hasProfanity(text: string): boolean {
   return variations.some((variation) => filter.isProfane(variation));
 }
 
-function validateEmail(email: string): boolean {
+export function validateEmail(email: string): boolean {
   if (email.includes('+')) {
     throw new Error(
       'CubeCobra does not support plus email addressing, please remove the "+descriptor" from your email and try again.',
@@ -203,21 +192,16 @@ function validateEmail(email: string): boolean {
   return true;
 }
 
-function generateEditToken() {
-  // Not sure if this function is actually used anywhere.
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-}
-
-function toBase36(num: number): string {
+export function toBase36(num: number): string {
   return num.toString(36);
 }
 
-function fromBase36(str: string): number {
+export function fromBase36(str: string): number {
   if (!str) return 0;
   return parseInt(str, 36);
 }
 
-function addWordToTree(obj: any, word: string): void {
+export function addWordToTree(obj: any, word: string): void {
   if (word.length <= 0) {
     return;
   }
@@ -239,7 +223,7 @@ function addWordToTree(obj: any, word: string): void {
   }
 }
 
-function binaryInsert(value: any, array: any[], startVal?: number, endVal?: number) {
+export function binaryInsert(value: any, array: any[], startVal?: number, endVal?: number) {
   const { length } = array;
   const start = typeof startVal !== 'undefined' ? startVal : 0;
   const end = typeof endVal !== 'undefined' ? endVal : length - 1; //! ! endVal could be 0 don't use || syntax
@@ -274,7 +258,7 @@ function binaryInsert(value: any, array: any[], startVal?: number, endVal?: numb
   }
 }
 
-function newCard(cardDetails: any, tags: any, defaultStatus = 'Owned') {
+export function newCard(cardDetails: any, tags: any, defaultStatus = 'Owned') {
   return {
     tags: Array.isArray(tags) ? tags : [],
     status: defaultStatus,
@@ -287,7 +271,7 @@ function newCard(cardDetails: any, tags: any, defaultStatus = 'Owned') {
   };
 }
 
-function addCardToBoard(board: any[], cube: any, cardDetails: any, tags: any) {
+export function addCardToBoard(board: any[], cube: any, cardDetails: any, tags: any) {
   if (cardDetails.error) {
     return;
   }
@@ -296,7 +280,7 @@ function addCardToBoard(board: any[], cube: any, cardDetails: any, tags: any) {
   board.push(card);
 }
 
-function fromEntries(entries: [string, any][]): Record<string, any> {
+export function fromEntries(entries: [string, any][]): Record<string, any> {
   const obj: Record<string, any> = {};
   for (const [k, v] of entries) {
     obj[k] = v;
@@ -304,7 +288,7 @@ function fromEntries(entries: [string, any][]): Record<string, any> {
   return obj;
 }
 
-async function addNotification(to: User, from: User | null, url: string, text: string) {
+export async function addNotification(to: User, from: User | null, url: string, text: string) {
   if (!from) {
     // system notification
     return await Notification.put({
@@ -321,7 +305,7 @@ async function addNotification(to: User, from: User | null, url: string, text: s
     return; // we don't need to give notifications to ourselves
   }
 
-  await Notification.put({
+  return await Notification.put({
     date: new Date().valueOf(),
     to: `${to.id}`,
     from: `${from.id}`,
@@ -331,7 +315,7 @@ async function addNotification(to: User, from: User | null, url: string, text: s
   });
 }
 
-function wrapAsyncApi(route: (req: Request, res: Response, next: NextFunction) => Promise<void> | void) {
+export function wrapAsyncApi(route: (req: Request, res: Response, next: NextFunction) => Promise<void> | void) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       return route(req, res, next);
@@ -345,22 +329,22 @@ function wrapAsyncApi(route: (req: Request, res: Response, next: NextFunction) =
   };
 }
 
-function toNonNullArray(arr: any): any[] {
+export function toNonNullArray(arr: any): any[] {
   if (!arr) return [];
   if (!Array.isArray(arr)) return typeof arr === 'object' ? Object.values(arr) : [];
   return arr;
 }
 
-function mapNonNull(arr: any, f: (item: any) => any): any[] {
+export function mapNonNull(arr: any, f: (item: any) => any): any[] {
   return toNonNullArray(arr).map(f);
 }
 
-function flatten(arr: any, n: number): any[] {
+export function flatten(arr: any, n: number): any[] {
   if (n <= 1) return toNonNullArray(arr);
   return toNonNullArray(([] as any[]).concat(...mapNonNull(arr, (a: any) => flatten(a, n - 1))));
 }
 
-function getBaseUrl() {
+export function getBaseUrl() {
   return (process.env?.HTTP_ONLY === 'true' ? 'http://' : 'https://') + process.env.DOMAIN;
 }
 
@@ -368,7 +352,7 @@ function getBaseUrl() {
  * Returns the root relative path, based on the referrer header. Since referrer header can be manipulated,
  * we only return a non-null value if it is not to another domain
  */
-const getSafeReferrer = (req: Request) => {
+export const getSafeReferrer = (req: Request) => {
   const referrer = req.header('Referrer') || null;
 
   if (referrer === null) {
@@ -393,60 +377,31 @@ const getSafeReferrer = (req: Request) => {
   return url.pathname;
 };
 
-const util = {
-  shuffle(array: any[], seed?: number) {
-    if (!seed) {
-      seed = Date.now();
-    }
-    return shuffleSeed.shuffle(array, seed);
-  },
-  turnToTree(arr: string[]) {
-    const res: Record<string, any> = {};
-    arr.forEach((item) => {
-      addWordToTree(res, item);
-    });
-    return res;
-  },
-  addWordToTree,
-  binaryInsert,
-  newCard,
-  addCardToCube: addCardToBoard,
-  arraysEqual(a: any[], b: any[]) {
-    if (a === b) return true;
-    if (a === null || b === null) return false;
-    if (a.length !== b.length) return false;
+export function shuffle(array: any[], seed?: number) {
+  if (!seed) {
+    seed = Date.now();
+  }
+  return shuffleSeed.shuffle(array, seed);
+}
+export function turnToTree(arr: string[]) {
+  const res: Record<string, any> = {};
+  arr.forEach((item) => {
+    addWordToTree(res, item);
+  });
+  return res;
+}
 
-    for (let i = 0; i < a.length; ++i) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  },
-  generateEditToken,
-  toBase36,
-  fromBase36,
-  hasProfanity,
-  fromEntries,
-  isAdmin(user: User) {
-    return user && user.roles && user.roles.includes(UserRoles.ADMIN);
-  },
-  addNotification,
-  wrapAsyncApi,
-  toNonNullArray,
-  flatten,
-  mapNonNull,
-  validateEmail,
-  getBaseUrl,
-  getSafeReferrer,
-};
+export function arraysEqual(a: any[], b: any[]) {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  if (a.length !== b.length) return false;
 
-// Provide both ES module default export and CommonJS module.exports for compatibility
-export default util;
-export { addNotification };
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
 
-// Ensure CommonJS consumers (require(...)) receive the util object directly
-
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  // Assign to module.exports so `const util = require('./util')` works as before
-
-  module.exports = util;
+export function isAdmin(user: User) {
+  return user && user.roles && user.roles.includes(UserRoles.ADMIN);
 }

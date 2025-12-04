@@ -1,4 +1,4 @@
-import { csrfProtection } from 'routes/middleware';
+import { csrfProtection } from 'src/router/middleware';
 import catalog from 'serverutils/cardCatalog';
 
 import { Request, Response } from '../../../../types/express';

@@ -1,19 +1,24 @@
 import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
-import { csrfProtection } from 'routes/middleware';
+import { csrfProtection } from 'src/router/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import util from 'serverutils/util';
+import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
 
 export const recordsPageHandler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
     const cube = await Cube.getById(req.params.id);
 
-    if (!isCubeViewable(cube, req.user)) {
+    if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
@@ -22,7 +27,7 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
     const analytics = await recordAnalytic.getByCube(cube.id);
     const cards = await Cube.getCards(cube.id);
 
-    const baseUrl = util.getBaseUrl();
+    const baseUrl = getBaseUrl();
     return render(
       req,
       res,
@@ -45,7 +50,7 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/overview/${req.params.id}`);
   }
 };
 

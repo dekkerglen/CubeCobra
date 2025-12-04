@@ -1,0 +1,42 @@
+import User from 'dynamo/models/user';
+import Draft from 'dynamo/models/draft';
+import { csrfProtection } from 'src/router/middleware';
+import { render, redirect, handleRouteError } from 'serverutils/render';
+import { Request, Response } from '../../../types/express';
+
+export const handler = async (req: Request, res: Response) => {
+  try {
+    const { userid } = req.params;
+
+    if (!userid) {
+      req.flash('danger', 'User ID required');
+      return redirect(req, res, '/404');
+    }
+
+    const user = await User.getById(userid);
+    const decks = await Draft.getByOwner(userid);
+
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/404');
+    }
+
+    return render(req, res, 'UserDecksPage', {
+      owner: user,
+      followersCount: (user.following || []).length,
+      following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
+      decks: decks.items,
+      lastKey: decks.lastEvaluatedKey,
+    });
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, '/404');
+  }
+};
+
+export const routes = [
+  {
+    path: '/:userid',
+    method: 'get',
+    handler: [csrfProtection, handler],
+  },
+];

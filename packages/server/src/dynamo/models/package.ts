@@ -5,11 +5,9 @@ import { CardDetails } from '@utils/datatypes/Card';
 import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
 import UserType from '@utils/datatypes/User';
 import createClient, { QueryInputType } from 'dynamo/util';
+import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
-
 import User from './user';
-
-const { cardFromId } = require('serverutils/carddb');
 
 const client = createClient({
   name: 'PACKAGE',

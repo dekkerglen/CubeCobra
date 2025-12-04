@@ -1,7 +1,7 @@
 import commentModel from 'dynamo/models/comment';
 import Cube from 'dynamo/models/cube';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
-import { csrfProtection, ensureAuth } from 'routes/middleware';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
 import { isValidUUID } from 'serverutils/validation';
 
 import { Request, Response } from '../../../../types/express';

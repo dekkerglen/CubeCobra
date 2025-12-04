@@ -3,8 +3,8 @@ import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Joi from 'joi';
-import { addBasics } from 'routes/cube/helper';
-import { csrfProtection } from 'routes/middleware';
+import { addBasics } from 'serverutils/cube';
+import { csrfProtection } from 'src/router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -50,7 +50,7 @@ const handler = async (req: Request, res: Response) => {
 
     const cube = await Cube.getById(cubeId);
 
-    if (!isCubeViewable(cube, req.user)) {
+    if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
@@ -84,6 +84,13 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(cubeId)}`);
     }
 
+    // Ensure all cards have their index set
+    const cardsWithIndex = populated.cards.map((card, index) => ({
+      ...card,
+      index: card.index ?? index,
+      type_line: card.type_line || card.details?.type || '',
+    }));
+
     const draft: Omit<DraftType, 'id'> = {
       complete: false,
       cube: cube.id,
@@ -93,14 +100,19 @@ const handler = async (req: Request, res: Response) => {
       owner: req.user?.id,
       seats: populated.seats,
       type: 'd',
-      cards: populated.cards,
+      cards: cardsWithIndex,
       basics: [],
       name: '',
     };
 
-    addBasics(draft, cube.basics);
+    // addBasics expects cards with required index and type_line
+    const draftDocument = draft as unknown as {
+      cards: { cardID: string; index: number; isUnlimited?: boolean; type_line: string }[];
+      basics: number[];
+    };
+    addBasics(draftDocument, cube.basics);
 
-    const draftId = await Draft.put(draft);
+    const draftId = await Draft.put(draftDocument as any);
 
     return redirect(req, res, `/draft/${draftId}`);
   } catch (err) {

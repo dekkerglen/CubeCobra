@@ -1,4 +1,4 @@
-import { csrfProtection } from 'routes/middleware';
+import { csrfProtection } from 'src/router/middleware';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import Stripe from 'stripe';
 
@@ -56,6 +56,10 @@ const checkout = async (req: Request, res: Response) => {
       success_url: `${req.protocol}://${req.get('host')}/merchandise/success`,
       cancel_url: `${req.protocol}://${req.get('host')}/merchandise/cancel`,
     });
+
+    if (!session.url) {
+      throw new Error('Failed to create checkout session');
+    }
 
     return redirect(req, res, session.url);
   } catch (err) {

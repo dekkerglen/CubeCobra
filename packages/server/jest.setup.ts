@@ -1,9 +1,10 @@
 /// <reference types="jest" />
 import path from 'path';
+import dotenv from 'dotenv';
 
 //Load the .env_EXAMPLE into the process environment variables for the tests
 
-require('dotenv').config({ path: path.resolve(process.cwd(), '.env_EXAMPLE') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env_EXAMPLE') });
 
 //Mock the ML utility because when the file runs it tries to load all the models (which takes a while)
 jest.mock('serverutils/ml', () => ({

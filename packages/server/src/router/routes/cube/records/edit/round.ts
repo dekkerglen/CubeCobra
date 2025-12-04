@@ -1,8 +1,8 @@
 import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
 import Joi from 'joi';
-import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { bodyValidation } from 'routes/middleware';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { bodyValidation } from 'src/router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
 

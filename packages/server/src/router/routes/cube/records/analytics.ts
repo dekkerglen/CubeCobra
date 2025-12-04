@@ -6,7 +6,7 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import RecordDao from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
-import { csrfProtection, ensureAuth } from 'routes/middleware';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -89,7 +89,7 @@ const compileAnalytics = async (records: RecordType[]): Promise<RecordAnalytic> 
   const batched = toBatches(records, 20);
 
   for (const batch of batched) {
-    const draftIds = batch.map((record) => record.draft).filter((id) => id);
+    const draftIds = batch.map((record) => record.draft).filter((id): id is string => !!id);
 
     if (draftIds.length === 0) {
       continue;
@@ -166,7 +166,17 @@ const compileAnalytics = async (records: RecordType[]): Promise<RecordAnalytic> 
 
 export const compileAnalyticsHandler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Cube ID is required');
+      return redirect(req, res, '/404');
+    }
+
     const cube = await Cube.getById(req.params.id);
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

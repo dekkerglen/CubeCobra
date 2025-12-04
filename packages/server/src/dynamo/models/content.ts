@@ -3,7 +3,7 @@ import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 import User from './user';
-const { getImageData } = require('serverutils/imageutil');
+import { getImageData } from 'serverutils/imageutil';
 
 import Article from '@utils/datatypes/Article';
 import { Content, ContentType, UnhydratedContent } from '@utils/datatypes/Content';
@@ -16,7 +16,7 @@ import createClient from 'dynamo/util';
 
 import { getBucketName, getObject, putObject } from '../s3client';
 
-const createHydratedContent = (document: UnhydratedContent, image: Image, owner?: UserType): Content => {
+const createHydratedContent = (document: UnhydratedContent, image: Image | undefined, owner?: UserType): Content => {
   //Because type is a known set we don't need a default/unknown type case
   switch (document.type as ContentType) {
     case ContentType.ARTICLE:
@@ -50,7 +50,7 @@ const hydrate = async (content: UnhydratedContent): Promise<Content> => {
   }
 
   const owner = content.owner ? await User.getById(content.owner) : undefined;
-  const image: Image = content.imageName ? getImageData(content.imageName) : undefined;
+  const image: Image | undefined = content.imageName ? getImageData(content.imageName) : undefined;
 
   return createHydratedContent(content, image, owner);
 };
@@ -61,7 +61,7 @@ const batchHydrate = async (contents: UnhydratedContent[]): Promise<Content[]> =
   return contents.map((content) => {
     const owner = owners.find((owner) => owner.id === content.owner);
 
-    const image: Image = content.imageName ? getImageData(content.imageName) : undefined;
+    const image: Image | undefined = content.imageName ? getImageData(content.imageName) : undefined;
 
     //We should always find the owner
     return createHydratedContent(content, image, owner);
