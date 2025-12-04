@@ -1,8 +1,9 @@
-import Cube from 'dynamo/models/cube';
+import { FeedTypes } from '@utils/datatypes/Feed';
 import Blog from 'dynamo/models/blog';
 import Changelog from 'dynamo/models/changelog';
+import Cube from 'dynamo/models/cube';
 import Feed from 'dynamo/models/feed';
-import { FeedTypes } from '@utils/datatypes/Feed';
+
 import { Request, Response } from '../../../../types/express';
 
 export const commitHandler = async (req: Request, res: Response) => {

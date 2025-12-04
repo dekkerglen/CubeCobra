@@ -1,6 +1,6 @@
-const AWS = require("aws-sdk");
-const fs = require("fs");
-const archiver = require("archiver");
+const AWS = require('aws-sdk');
+const fs = require('fs');
+const archiver = require('archiver');
 require('dotenv').config();
 
 // get version from root package.json
@@ -9,7 +9,7 @@ const VERSION = require('../../package.json').version;
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION
+  region: process.env.AWS_REGION,
 });
 
 const bucketName = process.env.CUBECOBRA_APP_BUCKET || 'cubecobra';
@@ -31,24 +31,24 @@ output.on('close', function () {
   // upload the zip file to s3
   const fileStream = fs.createReadStream('target.zip');
   fileStream.on('open', function () {
-      const params = {
-          Bucket: bucketName,
-          Key: zipFileName,
-          Body: fileStream
-      };
-      s3.upload(params, function(err, data) {
-          if (err) {
-              console.log('Error', err);
-          }
-          if (data) {
-              console.log('Upload Success', data.Location);
-          }
-      });
+    const params = {
+      Bucket: bucketName,
+      Key: zipFileName,
+      Body: fileStream,
+    };
+    s3.upload(params, function (err, data) {
+      if (err) {
+        console.log('Error', err);
+      }
+      if (data) {
+        console.log('Upload Success', data.Location);
+      }
+    });
   });
 });
 
-archive.on('error', function(err){
-    throw err;
+archive.on('error', function (err) {
+  throw err;
 });
 
 archive.pipe(output);

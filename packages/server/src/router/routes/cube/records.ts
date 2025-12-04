@@ -1,11 +1,11 @@
 import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
-import { csrfProtection } from 'src/router/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
+import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

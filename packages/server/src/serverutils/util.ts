@@ -1,6 +1,7 @@
 import User, { UserRoles } from '@utils/datatypes/User';
 import Notification from 'dynamo/models/notification';
 import shuffleSeed from 'shuffle-seed';
+
 import { NextFunction, Request, Response } from '../types/express';
 
 // Simple profanity filter replacement to avoid ES module issues

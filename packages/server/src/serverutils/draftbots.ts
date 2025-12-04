@@ -1,5 +1,5 @@
 import carddb, { cardFromId, getReasonableCardByOracle } from './carddb';
-import { draft as draftbotPick, build } from './ml';
+import { build, draft as draftbotPick } from './ml';
 
 /*
   drafterState = {
@@ -181,7 +181,7 @@ export const deckbuild = (pool: any[], basics: any[]): { mainboard: string[]; si
   };
 };
 
-export { draftbotPick, calculateBasics };
+export { calculateBasics, draftbotPick };
 export default {
   draftbotPick,
   deckbuild,

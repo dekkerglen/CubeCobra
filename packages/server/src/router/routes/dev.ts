@@ -4,6 +4,7 @@ import Blog from 'dynamo/models/blog';
 import Feed from 'dynamo/models/feed';
 import { render } from 'serverutils/render';
 import { csrfProtection, ensureRole } from 'src/router/middleware';
+
 import { Request, Response } from '../../types/express';
 
 export const blogHandler = async (req: Request, res: Response) => {

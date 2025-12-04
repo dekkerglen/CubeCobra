@@ -1,6 +1,7 @@
-import { body } from 'express-validator';
 import User from 'dynamo/models/user';
+import { body } from 'express-validator';
 import { ensureAuth, jsonValidationErrors } from 'src/router/middleware';
+
 import { Request, Response } from '../../../../types/express';
 
 export const saveshowtagcolorsHandler = async (req: Request, res: Response) => {

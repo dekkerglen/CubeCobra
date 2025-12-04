@@ -4,9 +4,9 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Joi from 'joi';
 import { addBasics } from 'serverutils/cube';
-import { csrfProtection } from 'src/router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { csrfProtection } from 'src/router/middleware';
 
 import { NextFunction, Request, Response } from '../../../types/express';
 

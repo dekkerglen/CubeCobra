@@ -1,7 +1,9 @@
-import { loadGraphModel, tidy, tensor, type GraphModel } from '@tensorflow/tfjs-node';
-import 'dotenv/config';
+import { type GraphModel, loadGraphModel, tensor, tidy } from '@tensorflow/tfjs-node';
 import { readFileSync } from 'fs';
 import path from 'path';
+
+import 'dotenv/config';
+
 import { getAllOracleIds, getOracleForMl, getReasonableCardByOracle, isOracleBasic } from './carddb';
 import { error } from './cloudwatch';
 

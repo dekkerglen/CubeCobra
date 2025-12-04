@@ -1,4 +1,5 @@
 import { redirect } from 'serverutils/render';
+
 import { Request, Response } from '../../../types/express';
 
 export const handler = (req: Request, res: Response) => {

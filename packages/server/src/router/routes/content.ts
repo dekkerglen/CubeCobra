@@ -3,12 +3,12 @@ import { NoticeType } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import Content from 'dynamo/models/content';
 import Notice from 'dynamo/models/notice';
-import { csrfProtection, ensureAuth, ensureRole } from 'src/router/middleware';
 import generateMeta from 'serverutils/meta';
-import { getFeedData } from 'serverutils/rss';
 import { updatePodcast } from 'serverutils/podcast';
 import { redirect, render } from 'serverutils/render';
+import { getFeedData } from 'serverutils/rss';
 import { getBaseUrl } from 'serverutils/util';
+import { csrfProtection, ensureAuth, ensureRole } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 

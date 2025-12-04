@@ -1,5 +1,6 @@
 import Cube from 'dynamo/models/cube';
 import { generatePack, isCubeViewable } from 'serverutils/cubefn';
+
 import { Request, Response } from '../../../../types/express';
 
 export const p1p1Handler = async (req: Request, res: Response) => {

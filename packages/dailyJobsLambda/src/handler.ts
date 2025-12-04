@@ -1,6 +1,6 @@
+import { rotateP1P1 } from './jobs/rotateDailyP1P1';
 import { rotateQueue } from './jobs/rotateFeaturedQueue';
 import { syncPodcasts } from './jobs/syncPodcasts';
-import { rotateP1P1 } from './jobs/rotateDailyP1P1';
 
 const DAILY_JOBS = [
   { name: 'syncPodcasts', fn: syncPodcasts },

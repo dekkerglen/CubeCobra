@@ -1,5 +1,5 @@
-import { csrfProtection } from 'src/router/middleware';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { csrfProtection } from 'src/router/middleware';
 import Stripe from 'stripe';
 
 import { Request, Response } from '../../types/express';

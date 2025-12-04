@@ -1,7 +1,7 @@
 import Cube from 'dynamo/models/cube';
-import { csrfProtection } from 'src/router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

@@ -1,13 +1,13 @@
 // Load Environment Variables
-import 'dotenv/config';
-
 import {
   CloudWatchLogsClient,
-  PutLogEventsCommand,
   CreateLogStreamCommand,
   InputLogEvent,
+  PutLogEventsCommand,
 } from '@aws-sdk/client-cloudwatch-logs';
 import { v4 as uuidv4 } from 'uuid';
+
+import 'dotenv/config';
 
 const client = new CloudWatchLogsClient({
   endpoint: process.env.AWS_ENDPOINT || undefined,

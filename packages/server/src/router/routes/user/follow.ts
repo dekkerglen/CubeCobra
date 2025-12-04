@@ -2,6 +2,7 @@ import User from 'dynamo/models/user';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
 import { csrfProtection, ensureAuth } from 'src/router/middleware';
+
 import { Request, Response } from '../../../types/express';
 
 export const handler = async (req: Request, res: Response) => {

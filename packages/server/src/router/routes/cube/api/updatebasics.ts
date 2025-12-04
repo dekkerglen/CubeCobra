@@ -1,4 +1,5 @@
 import Cube from 'dynamo/models/cube';
+
 import { Request, Response } from '../../../../types/express';
 
 export const updatebasicsHandler = async (req: Request, res: Response) => {

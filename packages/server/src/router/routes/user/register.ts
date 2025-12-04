@@ -8,6 +8,7 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { hasProfanity, validateEmail } from 'serverutils/util';
 import { csrfProtection, flashValidationErrors, recaptcha } from 'src/router/middleware';
 import { v4 as uuid } from 'uuid';
+
 import { Request, Response } from '../../../types/express';
 
 // For consistency between different forms, validate username through this function.

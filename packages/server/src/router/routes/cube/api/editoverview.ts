@@ -1,9 +1,9 @@
 import CubeType, { CUBE_CATEGORIES } from '@utils/datatypes/Cube';
 import Cube from 'dynamo/models/cube';
 import CubeHash from 'dynamo/models/cubeHash';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
 import { hasProfanity } from 'serverutils/util';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

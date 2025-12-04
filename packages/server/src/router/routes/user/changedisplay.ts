@@ -3,6 +3,7 @@ import { GridTightnessPreference } from '@utils/datatypes/User';
 import User from 'dynamo/models/user';
 import { redirect } from 'serverutils/render';
 import { csrfProtection, ensureAuth } from 'src/router/middleware';
+
 import { Request, Response } from '../../../types/express';
 
 export const handler = async (req: Request, res: Response) => {

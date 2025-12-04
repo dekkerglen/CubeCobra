@@ -3,6 +3,7 @@ import passport from 'passport';
 import { redirect, render } from 'serverutils/render';
 import { getSafeReferrer } from 'serverutils/util';
 import { csrfProtection } from 'src/router/middleware';
+
 import { Request, Response } from '../../../types/express';
 
 const getLoginRedirect = (req: Request) => {

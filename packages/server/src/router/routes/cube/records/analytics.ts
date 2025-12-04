@@ -6,9 +6,9 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import RecordDao from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

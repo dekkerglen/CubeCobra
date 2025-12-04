@@ -1,8 +1,8 @@
-import { Strategy as LocalStrategy } from 'passport-local';
-import bcrypt from 'bcryptjs';
-import { PassportStatic } from 'passport';
-import User from 'dynamo/models/user';
 import type UserType from '@utils/datatypes/User';
+import bcrypt from 'bcryptjs';
+import User from 'dynamo/models/user';
+import { PassportStatic } from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
 
 export default (passport: PassportStatic): void => {
   // Local Strategy

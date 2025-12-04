@@ -1,9 +1,7 @@
-import { Period } from '@utils/datatypes/History';
-import { PrintingPreference } from '@utils/datatypes/Card';
 import cardutil from '@utils/cardutil';
-import { validate as uuidValidate } from 'uuid';
+import { PrintingPreference } from '@utils/datatypes/Card';
+import { Period } from '@utils/datatypes/History';
 import CardHistory from 'dynamo/models/cardhistory';
-import { csrfProtection } from 'src/router/middleware';
 import {
   cardFromId,
   getEnglishVersion,
@@ -14,6 +12,8 @@ import {
 } from 'serverutils/carddb';
 import carddb from 'serverutils/carddb';
 import { redirect } from 'serverutils/render';
+import { csrfProtection } from 'src/router/middleware';
+import { validate as uuidValidate } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
 

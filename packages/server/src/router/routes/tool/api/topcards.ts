@@ -2,8 +2,8 @@ import { makeFilter } from '@utils/filtering/FilterCards';
 import { OrderedSortsType, SortFunctions } from '@utils/sorting/Sort';
 import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
 import Joi from 'joi';
-import { csrfProtection } from 'src/router/middleware';
 import { searchCards } from 'serverutils/tools';
+import { csrfProtection } from 'src/router/middleware';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 

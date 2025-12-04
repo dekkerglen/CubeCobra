@@ -1,15 +1,16 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import { normalizeDraftFormatSteps } from '@utils/draftutil';
 import CubeType from '@utils/datatypes/Cube';
+import { normalizeDraftFormatSteps } from '@utils/draftutil';
+import _ from 'lodash';
+
+import { cardFromId, getPlaceholderCard } from '../../serverutils/carddb';
+import cloudwatch from '../../serverutils/cloudwatch';
+import { getImageData } from '../../serverutils/imageutil';
+import { deleteObject, getObject, putObject } from '../s3client';
 import createClient from '../util';
-import { getObject, putObject, deleteObject } from '../s3client';
 import cubeHash from './cubeHash';
 import User from './user';
-import { cardFromId, getPlaceholderCard } from '../../serverutils/carddb';
-import { getImageData } from '../../serverutils/imageutil';
-import cloudwatch from '../../serverutils/cloudwatch';
-import _ from 'lodash';
 
 interface QueryResult {
   items: CubeType[];
@@ -136,7 +137,7 @@ const stripDetails = (cards: any[]): void => {
   });
 };
 
-const getCards = async (id: string, _skipcache = false): Promise<any> => {
+const getCards = async (id: string): Promise<any> => {
   try {
     const cards = await getObject(process.env.DATA_BUCKET!, `cube/${id}.json`);
 

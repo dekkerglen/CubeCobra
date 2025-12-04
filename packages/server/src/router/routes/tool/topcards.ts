@@ -1,9 +1,9 @@
 import { makeFilter } from '@utils/filtering/FilterCards';
 import { OrderedSortsType } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
-import { csrfProtection } from 'src/router/middleware';
 import { handleRouteError, render } from 'serverutils/render';
 import { searchCards } from 'serverutils/tools';
+import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

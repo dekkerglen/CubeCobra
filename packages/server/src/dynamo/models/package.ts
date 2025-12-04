@@ -7,6 +7,7 @@ import UserType from '@utils/datatypes/User';
 import createClient, { QueryInputType } from 'dynamo/util';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
+
 import User from './user';
 
 const client = createClient({

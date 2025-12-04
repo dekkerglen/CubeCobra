@@ -3,9 +3,9 @@ import CardPackage, { CardPackageStatus } from '@utils/datatypes/CardPackage';
 import { UserRoles } from '@utils/datatypes/User';
 import Package from 'dynamo/models/package';
 import User from 'dynamo/models/user';
-import { csrfProtection, ensureAuth, ensureRole } from 'src/router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { csrfProtection, ensureAuth, ensureRole } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 
@@ -17,7 +17,7 @@ import { Request, Response } from '../../types/express';
  * TODO: Add secondary index for Owner and sorted by Vote count
  */
 const getAllByOwnerSortedByVoteCount = async (ownerId: string, keywords: string | undefined, ascending: boolean) => {
-  let packages: {
+  const packages: {
     items: CardPackage[];
     lastKey: Record<string, NativeAttributeValue> | undefined;
   } = {

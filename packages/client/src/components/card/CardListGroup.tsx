@@ -6,8 +6,8 @@ import Card from '@utils/datatypes/Card';
 import CubeContext from 'contexts/CubeContext';
 
 import { ListGroup, ListGroupItem } from '../base/ListGroup';
-import AutocardListItem from './AutocardListItem';
 import withGroupModal from '../modals/WithGroupModal';
+import AutocardListItem from './AutocardListItem';
 
 const GroupModalListItem = withGroupModal(AutocardListItem);
 
@@ -53,7 +53,7 @@ const CardListGroup: React.FC<CardListGroupProps> = ({
 
       if (existing) {
         existing.duplicates.push(card);
-        existing.quantity++;
+        existing.quantity += 1;
       } else {
         cardsByName.set(name, {
           card,

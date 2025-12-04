@@ -1,6 +1,7 @@
 import { makeFilter } from '@utils/filtering/FilterCards';
-import { getAllMostReasonable, getReasonableCardByOracleWithPrintingPreference } from '../../../../serverutils/carddb';
 import Cube from 'dynamo/models/cube';
+
+import { getAllMostReasonable, getReasonableCardByOracleWithPrintingPreference } from '../../../../serverutils/carddb';
 import { recommend } from '../../../../serverutils/ml';
 import { Request, Response } from '../../../../types/express';
 

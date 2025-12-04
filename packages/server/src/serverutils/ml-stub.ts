@@ -1,31 +1,31 @@
 // Stub implementation of ML module for Lambda environment
 // This allows code to import from ml.ts without requiring TensorFlow
 
-export async function initializeMl(_rootDir: string = '.') {
+export async function initializeMl() {
   console.warn('ML module is stubbed - ML features will not work');
 }
 
-export const ensureModelsReady = (_timeout = 30000): Promise<void> => {
+export const ensureModelsReady = (): Promise<void> => {
   console.warn('ML module is stubbed - ML features will not work');
   return Promise.resolve();
 };
 
-export const encode = (_oracles: string[]) => {
+export const encode = () => {
   throw new Error('ML features are not available in this environment');
 };
 
-export const recommend = (_oracles: string[]) => {
+export const recommend = () => {
   throw new Error('ML features are not available in this environment');
 };
 
-export const build = (_oracles: string[]) => {
+export const build = () => {
   throw new Error('ML features are not available in this environment');
 };
 
-export const draft = (_pack: string[], _pool: string[]) => {
+export const draft = () => {
   throw new Error('ML features are not available in this environment');
 };
 
-export const oracleInData = (_oracle: string) => {
+export const oracleInData = () => {
   return false;
 };

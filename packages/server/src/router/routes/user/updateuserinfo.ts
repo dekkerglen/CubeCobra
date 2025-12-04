@@ -1,9 +1,10 @@
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
+import { handleRouteError, redirect } from 'serverutils/render';
 import { hasProfanity } from 'serverutils/util';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'src/router/middleware';
+
 import { Request, Response } from '../../../types/express';
-import { redirect, handleRouteError } from 'serverutils/render';
 
 // For consistency between different forms, validate username through this function.
 const usernameValid = [

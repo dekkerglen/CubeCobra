@@ -15,9 +15,10 @@ import { abbreviate, compareCubes, isCubeListed, isCubeViewable } from 'serverut
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { hasProfanity, getBaseUrl, addNotification, isAdmin } from 'serverutils/util';
+import { addNotification, getBaseUrl, hasProfanity, isAdmin } from 'serverutils/util';
 import { csrfProtection, ensureAuth, recaptcha } from 'src/router/middleware';
 import uuid from 'uuid';
+
 import { Request, Response } from '../../types/express';
 
 export const addHandler = async (req: Request, res: Response) => {

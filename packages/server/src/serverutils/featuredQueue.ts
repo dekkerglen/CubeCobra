@@ -1,7 +1,7 @@
-import { FeaturedQueue } from 'dynamo/models/featuredQueue';
-import Cube from 'dynamo/models/cube';
-import Patron from 'dynamo/models/patron';
 import { canBeFeatured } from '@utils/featuredQueueUtil';
+import Cube from 'dynamo/models/cube';
+import { FeaturedQueue } from 'dynamo/models/featuredQueue';
+import Patron from 'dynamo/models/patron';
 
 interface RotateResult {
   success: string;

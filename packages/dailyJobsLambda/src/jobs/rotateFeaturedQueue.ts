@@ -1,5 +1,5 @@
-import { rotateFeatured } from '@server/serverutils/featuredQueue';
 import User from '@server/dynamo/models/user';
+import { rotateFeatured } from '@server/serverutils/featuredQueue';
 import util from '@server/serverutils/util';
 
 export const rotateQueue = async () => {

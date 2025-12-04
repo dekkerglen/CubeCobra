@@ -1,11 +1,10 @@
 import Cube from 'dynamo/models/cube';
 import dailyP1P1Model from 'dynamo/models/dailyP1P1';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
-
-import { generatePack } from './cubefn';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
+import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import User from 'dynamo/models/user';
 
+import { generatePack } from './cubefn';
 import * as util from './util';
 
 interface RotationResult {

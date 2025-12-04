@@ -1,7 +1,7 @@
 import Cube from 'dynamo/models/cube';
 import User from 'dynamo/models/user';
-import { csrfProtection } from 'src/router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
+import { csrfProtection } from 'src/router/middleware';
 
 import { NextFunction, Request, Response } from '../../../types/express';
 

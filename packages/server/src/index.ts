@@ -1,11 +1,15 @@
-import 'module-alias/register';
 import dotenv from 'dotenv';
+
+import 'module-alias/register';
 dotenv.config();
 
+import { UserRoles } from '@utils/datatypes/User';
 import bodyParser from 'body-parser';
 import compression from 'compression';
+import connectFlash from 'connect-flash';
 import express from 'express';
 import fileUpload from 'express-fileupload';
+import expressMessages from 'express-messages';
 import session from 'express-session';
 import http from 'http';
 import schedule from 'node-schedule';
@@ -14,23 +18,19 @@ import path from 'path';
 import responseTime from 'response-time';
 import { v4 as uuid } from 'uuid';
 
-import cloudwatch from './serverutils/cloudwatch';
-import { updateCardbase } from './serverutils/updatecards';
-import { initializeCardDb } from './serverutils/cardCatalog';
-import { render } from './serverutils/render';
-import connectFlash from 'connect-flash';
-import { UserRoles } from '@utils/datatypes/User';
-import configurePassport from './config/passport';
-import expressMessages from 'express-messages';
-
 import './types/express'; // Import the express type extensions
 
+import configurePassport from './config/passport';
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
 import router from './router/router';
+import { initializeCardDb } from './serverutils/cardCatalog';
+import cloudwatch from './serverutils/cloudwatch';
 import DynamoDBStore from './serverutils/dynamo-session-store';
 import { sanitizeHttpBody } from './serverutils/logging';
 import { initializeMl } from './serverutils/ml';
+import { render } from './serverutils/render';
+import { updateCardbase } from './serverutils/updatecards';
 import { CustomError } from './types/express';
 
 // global listeners for promise rejections

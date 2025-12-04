@@ -1,10 +1,10 @@
 import { PrintingPreference } from '@utils/datatypes/Card';
 import Cube from 'dynamo/models/cube';
 import CubeHash from 'dynamo/models/cubeHash';
-import { csrfProtection } from 'src/router/middleware';
 import { cardFromId, getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeListed } from 'serverutils/cubefn';
 import { render } from 'serverutils/render';
+import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 

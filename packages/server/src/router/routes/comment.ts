@@ -14,6 +14,7 @@ import { getImageData } from 'serverutils/imageutil';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
 import { csrfProtection, ensureAuth } from 'src/router/middleware';
+
 import { Request, Response } from '../../types/express';
 
 export const getHandler = async (req: Request, res: Response) => {

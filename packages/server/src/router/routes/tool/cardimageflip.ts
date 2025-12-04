@@ -1,7 +1,5 @@
-import { PrintingPreference } from '@utils/datatypes/Card';
 import cardutil from '@utils/cardutil';
-import { validate as uuidValidate } from 'uuid';
-import { csrfProtection } from 'src/router/middleware';
+import { PrintingPreference } from '@utils/datatypes/Card';
 import {
   cardFromId,
   getEnglishVersion,
@@ -11,6 +9,8 @@ import {
 } from 'serverutils/carddb';
 import carddb from 'serverutils/carddb';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { csrfProtection } from 'src/router/middleware';
+import { validate as uuidValidate } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
 

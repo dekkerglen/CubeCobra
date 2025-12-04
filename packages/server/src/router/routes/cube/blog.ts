@@ -8,8 +8,9 @@ import User from 'dynamo/models/user';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { getSafeReferrer, addNotification, getBaseUrl } from 'serverutils/util';
+import { addNotification, getBaseUrl, getSafeReferrer } from 'serverutils/util';
 import { csrfProtection, ensureAuth, ensureAuthJson } from 'src/router/middleware';
+
 import { Request, Response } from '../../../types/express';
 
 const getRedirectUrl = async (req: Request, cubeId: string, isDelete: boolean = false): Promise<string> => {

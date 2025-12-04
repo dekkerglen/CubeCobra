@@ -12,7 +12,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@solutions-unified/utilities": "^1.1.15",
     "archiver": "^7.0.1",
     "@aws-sdk/lib-dynamodb": "^3.927.0",
     "seedrandom": "^2.4.4",

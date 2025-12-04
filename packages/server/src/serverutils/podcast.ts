@@ -1,9 +1,10 @@
+import { ContentStatus, ContentType } from '@utils/datatypes/Content';
+import Content from 'dynamo/models/content';
 import { convert } from 'html-to-text';
 // @ts-ignore - no types available
 import sanitizeHtml from 'sanitize-html';
-import { getFeedEpisodes, getFeedData } from './rss';
-import Content from 'dynamo/models/content';
-import { ContentStatus, ContentType } from '@utils/datatypes/Content';
+
+import { getFeedData, getFeedEpisodes } from './rss';
 
 const removeSpan = (text: string): string =>
   sanitizeHtml(text, {

@@ -1,5 +1,6 @@
 import Draft from 'dynamo/models/draft';
 import { ensureAuth } from 'src/router/middleware';
+
 import { Request, Response } from '../../../../types/express';
 
 export const submitgriddraftHandler = async (req: Request, res: Response) => {

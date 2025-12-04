@@ -1,7 +1,8 @@
-import User from 'dynamo/models/user';
 import Draft from 'dynamo/models/draft';
+import User from 'dynamo/models/user';
+import { handleRouteError, redirect, render } from 'serverutils/render';
 import { csrfProtection } from 'src/router/middleware';
-import { render, redirect, handleRouteError } from 'serverutils/render';
+
 import { Request, Response } from '../../../types/express';
 
 export const handler = async (req: Request, res: Response) => {

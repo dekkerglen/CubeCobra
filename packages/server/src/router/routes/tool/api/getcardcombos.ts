@@ -1,5 +1,5 @@
-import { csrfProtection } from 'src/router/middleware';
 import catalog from 'serverutils/cardCatalog';
+import { csrfProtection } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

@@ -1,11 +1,12 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
-import createClient from '../util';
+
 import { cardFromId } from '../../serverutils/carddb';
 import { getObject, putObject } from '../s3client';
-import User from './user';
+import createClient from '../util';
 import Cube from './cube';
+import User from './user';
 
 interface QueryResult {
   items: any[];

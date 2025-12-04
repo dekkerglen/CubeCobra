@@ -9,9 +9,9 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Notification from 'dynamo/models/notification';
 import Joi from 'joi';
-import { bodyValidation } from 'src/router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import { bodyValidation } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

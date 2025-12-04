@@ -2,15 +2,16 @@ import CubeType from '@utils/datatypes/Cube';
 import Image from '@utils/datatypes/Image';
 import { NotificationStatus } from '@utils/datatypes/Notification';
 import { UserRoles } from '@utils/datatypes/User';
-import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import serialize from 'serialize-javascript';
+
+import 'dotenv/config';
+
 import Cube from '../dynamo/models/cube';
 import Notification from '../dynamo/models/notification';
-import { getBaseUrl } from './util';
-
 import { Request, Response } from '../types/express';
+import { getBaseUrl } from './util';
 
 interface BundleManifest {
   [key: string]: string;

@@ -1,10 +1,5 @@
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
-
-import User from './user';
-import { getImageData } from 'serverutils/imageutil';
-
 import Article from '@utils/datatypes/Article';
 import { Content, ContentType, UnhydratedContent } from '@utils/datatypes/Content';
 import Episode from '@utils/datatypes/Episode';
@@ -13,8 +8,11 @@ import Podcast from '@utils/datatypes/Podcast';
 import UserType from '@utils/datatypes/User';
 import Video from '@utils/datatypes/Video';
 import createClient from 'dynamo/util';
+import { getImageData } from 'serverutils/imageutil';
+import { v4 as uuidv4 } from 'uuid';
 
 import { getBucketName, getObject, putObject } from '../s3client';
+import User from './user';
 
 const createHydratedContent = (document: UnhydratedContent, image: Image | undefined, owner?: UserType): Content => {
   //Because type is a known set we don't need a default/unknown type case

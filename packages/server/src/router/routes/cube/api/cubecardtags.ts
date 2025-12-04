@@ -1,6 +1,7 @@
 import Cube from 'dynamo/models/cube';
 import { cubeCardTags, isCubeViewable } from 'serverutils/cubefn';
 import { turnToTree } from 'serverutils/util';
+
 import { Request, Response } from '../../../../types/express';
 
 export const cubecardtagsHandler = async (req: Request, res: Response) => {

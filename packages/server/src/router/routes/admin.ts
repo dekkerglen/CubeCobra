@@ -9,11 +9,11 @@ import Draft from 'dynamo/models/draft';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import Notice from 'dynamo/models/notice';
 import User from 'dynamo/models/user';
-import { ensureRole, csrfProtection } from 'src/router/middleware';
 import sendEmail from 'serverutils/email';
 import * as fq from 'serverutils/featuredQueue';
-import { render, redirect } from 'serverutils/render';
+import { redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl } from 'serverutils/util';
+import { csrfProtection, ensureRole } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 
@@ -331,7 +331,7 @@ export const banUserHandler = async (req: Request, res: Response) => {
 
     const userToBan = notice.subject;
 
-    let aggregates = {
+    const aggregates = {
       commentsWiped: 0,
       cubesDeleted: 0,
       blogPostsDeleted: 0,
@@ -381,7 +381,7 @@ export const banUserHandler = async (req: Request, res: Response) => {
       await Draft.delete(draftId);
     }
 
-    let commentResponse = await Comment.queryByOwner(userToBan);
+    const commentResponse = await Comment.queryByOwner(userToBan);
     let lastkey = commentResponse.lastKey;
     let comments = commentResponse.items || [];
 

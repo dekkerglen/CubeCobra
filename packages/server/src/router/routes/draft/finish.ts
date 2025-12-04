@@ -6,9 +6,9 @@ import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Joi from 'joi';
-import { csrfProtection } from 'src/router/middleware';
 import { deckbuild } from 'serverutils/draftbots';
 import { addNotification } from 'serverutils/util';
+import { csrfProtection } from 'src/router/middleware';
 
 import { NextFunction, Request, Response } from '../../../types/express';
 

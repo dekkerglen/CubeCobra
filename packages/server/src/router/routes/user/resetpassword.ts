@@ -3,6 +3,7 @@ import User from 'dynamo/models/user';
 import { body } from 'express-validator';
 import { redirect } from 'serverutils/render';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'src/router/middleware';
+
 import { Request, Response } from '../../../types/express';
 
 export const handler = async (req: Request, res: Response) => {

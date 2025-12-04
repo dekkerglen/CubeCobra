@@ -1,5 +1,6 @@
 import Cube from 'dynamo/models/cube';
 import { buildTagColors, isCubeViewable } from 'serverutils/cubefn';
+
 import { Request, Response } from '../../../../types/express';
 
 export const cubetagcolorsHandler = async (req: Request, res: Response) => {

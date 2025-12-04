@@ -3,6 +3,7 @@ import Notice from 'dynamo/models/notice';
 import User from 'dynamo/models/user';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { csrfProtection, ensureAuth } from 'src/router/middleware';
+
 import { Request, Response } from '../../../types/express';
 
 export const handler = async (req: Request, res: Response) => {

@@ -1,5 +1,6 @@
 import Cube from 'dynamo/models/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
+
 import { Request, Response } from '../../../../types/express';
 
 export const dateupdatedHandler = async (req: Request, res: Response) => {

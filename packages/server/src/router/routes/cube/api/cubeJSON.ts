@@ -1,6 +1,6 @@
-import rateLimit from 'express-rate-limit';
-import Cube from 'dynamo/models/cube';
 import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
+import Cube from 'dynamo/models/cube';
+import rateLimit from 'express-rate-limit';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
