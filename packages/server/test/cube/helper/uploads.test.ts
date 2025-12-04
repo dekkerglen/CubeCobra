@@ -1,5 +1,6 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
 import * as carddb from 'serverutils/carddb';
+import { bulkUpload } from 'serverutils/cube';
 import * as cubefn from 'serverutils/cubefn';
 import * as render from 'serverutils/render';
 import * as util from 'serverutils/util';
@@ -8,7 +9,6 @@ import Blog from '../../../src/dynamo/models/blog';
 import Changelog from '../../../src/dynamo/models/changelog';
 import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
-import { bulkUpload } from 'serverutils/cube';
 import { createCardDetails, createCube, createUser } from '../../test-utils/data';
 
 jest.mock('../../../src/dynamo/models/cube');
