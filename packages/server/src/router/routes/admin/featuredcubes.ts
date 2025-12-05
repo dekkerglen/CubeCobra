@@ -1,6 +1,6 @@
 import { UserRoles } from '@utils/datatypes/User';
 import Cube from 'dynamo/models/cube';
-import FeaturedQueue from 'dynamo/models/featuredQueue';
+import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import { csrfProtection, ensureRole } from 'routes/middleware';
 import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
@@ -10,8 +10,10 @@ export const featuredcubesHandler = async (req: Request, res: Response) => {
   let lastkey: Record<string, any> | null | undefined = null;
 
   do {
-    const response = await FeaturedQueue.querySortedByDate(lastkey || undefined);
-    featured = featured.concat(response.items);
+    const response: { items?: any[]; lastKey?: Record<string, any> } = await FeaturedQueue.querySortedByDate(
+      lastkey || undefined,
+    );
+    featured = featured.concat(response.items || []);
     lastkey = response.lastKey;
   } while (lastkey);
 

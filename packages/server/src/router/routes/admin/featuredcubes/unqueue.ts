@@ -1,9 +1,9 @@
 import { UserRoles } from '@utils/datatypes/User';
-import FeaturedQueue from 'dynamo/models/featuredQueue';
+import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureRole } from 'routes/middleware';
 import { redirect } from 'serverutils/render';
-import util from 'serverutils/util';
+import { addNotification } from 'serverutils/util';
 import { Request, Response } from 'types/express';
 
 export const unqueueHandler = async (req: Request, res: Response) => {
@@ -23,7 +23,7 @@ export const unqueueHandler = async (req: Request, res: Response) => {
 
   const user = await User.getById(queuedCube.owner);
   if (user && req.user) {
-    await util.addNotification(
+    await addNotification(
       user,
       req.user,
       '/user/account?nav=patreon',

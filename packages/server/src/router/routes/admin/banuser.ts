@@ -13,7 +13,7 @@ import { Request, Response } from 'types/express';
 export const banuserHandler = async (req: Request, res: Response) => {
   try {
     const notice = await Notice.getById(req.params.id!);
-    const userToBan = notice.subject;
+    const userToBan = notice.subject!;
 
     const aggregates = {
       commentsWiped: 0,

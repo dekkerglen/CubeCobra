@@ -1,9 +1,9 @@
 import { UserRoles } from '@utils/datatypes/User';
 import Cube from 'dynamo/models/cube';
 import { csrfProtection, ensureRole } from 'routes/middleware';
-import fq from 'serverutils/featuredQueue';
+import { addNewCubeToQueue } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
-import util from 'serverutils/util';
+import { addNotification } from 'serverutils/util';
 import { Request, Response } from 'types/express';
 
 export const queueHandler = async (req: Request, res: Response) => {
@@ -17,15 +17,15 @@ export const queueHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  if (cube.isPrivate) {
+  if (cube.visibility === 'pr') {
     req.flash('danger', 'Cannot feature private cube');
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  await fq.addNewCubeToQueue(cube.owner.id, cube.id);
+  await addNewCubeToQueue(cube.owner.id, cube.id);
 
   if (req.user) {
-    await util.addNotification(
+    await addNotification(
       cube.owner,
       req.user,
       '/user/account?nav=patreon',

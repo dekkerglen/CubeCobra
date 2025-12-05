@@ -5,7 +5,7 @@ import User from 'dynamo/models/user';
 import { csrfProtection, ensureRole } from 'routes/middleware';
 import sendEmail from 'serverutils/email';
 import { redirect } from 'serverutils/render';
-import util from 'serverutils/util';
+import { addNotification, getBaseUrl } from 'serverutils/util';
 import { Request, Response } from 'types/express';
 
 export const removereviewHandler = async (req: Request, res: Response) => {
@@ -22,7 +22,7 @@ export const removereviewHandler = async (req: Request, res: Response) => {
   await Content.update(document);
 
   if (document.owner && req.user) {
-    await util.addNotification(
+    await addNotification(
       document.owner,
       req.user,
       `/content/${document.type}/${document.id}`,
@@ -33,7 +33,7 @@ export const removereviewHandler = async (req: Request, res: Response) => {
     const owner = await User.getByIdWithSensitiveData(document.owner.id);
 
     if (owner) {
-      const baseUrl = util.getBaseUrl();
+      const baseUrl = getBaseUrl();
       await sendEmail(owner.email, 'Your Content was not published', 'content_decline', {
         title: document.title,
         url: `${baseUrl}/content/${document.type}/${document.id}`,

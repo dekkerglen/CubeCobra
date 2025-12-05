@@ -1,13 +1,13 @@
 import { UserRoles } from '@utils/datatypes/User';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureRole } from 'routes/middleware';
-import fq from 'serverutils/featuredQueue';
+import { rotateFeatured } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
-import util from 'serverutils/util';
+import { addNotification } from 'serverutils/util';
 import { Request, Response } from 'types/express';
 
 export const rotateHandler = async (req: Request, res: Response) => {
-  const rotate = await fq.rotateFeatured();
+  const rotate = await rotateFeatured();
   for (const message of rotate.messages) {
     req.flash('danger', message);
   }
@@ -23,13 +23,11 @@ export const rotateHandler = async (req: Request, res: Response) => {
   if (req.user) {
     for (const old of olds) {
       notifications.push(
-        util.addNotification(old, req.user, '/user/account?nav=patreon', 'Your cube is no longer featured.'),
+        addNotification(old, req.user, '/user/account?nav=patreon', 'Your cube is no longer featured.'),
       );
     }
     for (const newO of news) {
-      notifications.push(
-        util.addNotification(newO, req.user, '/user/account?nav=patreon', 'Your cube has been featured!'),
-      );
+      notifications.push(addNotification(newO, req.user, '/user/account?nav=patreon', 'Your cube has been featured!'));
     }
   }
   await Promise.all(notifications);
