@@ -1,9 +1,9 @@
 import CubeType, { CUBE_CATEGORIES } from '@utils/datatypes/Cube';
 import Cube from 'dynamo/models/cube';
 import CubeHash from 'dynamo/models/cubeHash';
-import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
-import util from 'serverutils/util';
+import { hasProfanity } from 'serverutils/util';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -14,7 +14,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     const cube = await Cube.getById(updatedCube.id);
     const { user } = req;
 
-    if (!isCubeViewable(cube, user)) {
+    if (!cube || !isCubeViewable(cube, user)) {
       res.status(404).json({ error: 'Cube not found' });
       return;
     }
@@ -33,7 +33,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    if (util.hasProfanity(updatedCube.name)) {
+    if (hasProfanity(updatedCube.name)) {
       res.status(400).json({
         error:
           'Could not update cube, the name contains a banned word. If you feel this was a mistake, please contact us.',
@@ -42,7 +42,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     }
 
     if (updatedCube.shortId !== cube.shortId) {
-      if (util.hasProfanity(updatedCube.shortId)) {
+      if (hasProfanity(updatedCube.shortId)) {
         res.status(400).json({
           error:
             'Could not update cube, the short id contains a banned word. If you feel this was a mistake, please contact us.',
@@ -52,7 +52,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
 
       const taken = await CubeHash.getSortedByName(CubeHash.getShortIdHash(updatedCube.shortId));
 
-      if (taken.items.length === 1 && taken.items[0].cube !== cube.id) {
+      if (taken.items.length === 1 && taken.items[0]?.cube !== cube.id) {
         res.status(400).json({ error: 'Could not update cube, the short id is already taken.' });
         return;
       }
@@ -83,7 +83,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
 
       cube.categoryOverride = updatedCube.categoryOverride;
     } else {
-      cube.categoryOverride = null;
+      cube.categoryOverride = undefined;
     }
 
     if (updatedCube.categoryPrefixes !== null) {

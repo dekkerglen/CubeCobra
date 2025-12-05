@@ -338,5 +338,4 @@ const createClient = (config: ClientConfig): ClientInterface => {
     },
   };
 };
-module.exports = createClient;
 export default createClient;

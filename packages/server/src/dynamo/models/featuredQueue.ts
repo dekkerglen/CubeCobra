@@ -20,7 +20,7 @@ const client = createClient({
   },
 });
 
-const featuredQueue = {
+export const FeaturedQueue = {
   getByCube: async (id: string): Promise<FeaturedQueueItem> => {
     return (await client.get(id)).Item as FeaturedQueueItem;
   },
@@ -93,6 +93,3 @@ const featuredQueue = {
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   delete: async (id: string): Promise<void> => client.delete({ cube: id }),
 };
-
-module.exports = featuredQueue;
-export default featuredQueue;

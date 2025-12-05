@@ -17,7 +17,12 @@ declare global {
       logger: {
         error: (...args: any[]) => void;
       };
-      flash(type: string, message: string): void;
+      flash: {
+        (): { [key: string]: string[] };
+        (message: string): string[];
+        (type: string, message: string | string[]): number;
+        (type: string, format: string, ...args: any[]): number;
+      };
       validated?: boolean;
       isAuthenticated(): boolean;
       csrfToken(): string;
@@ -26,13 +31,18 @@ declare global {
 }
 
 // Export types for use in other files
-export interface Request extends Omit<express.Request, 'isAuthenticated'> {
+export interface Request extends Omit<express.Request, 'isAuthenticated' | 'flash'> {
   user?: Express.User;
   uuid: string;
   logger: {
     error: (...args: any[]) => void;
   };
-  flash(type: string, message: string): void;
+  flash: {
+    (): { [key: string]: string[] };
+    (message: string): string[];
+    (type: string, message: string | string[]): number;
+    (type: string, format: string, ...args: any[]): number;
+  };
   validated?: boolean;
   isAuthenticated(): boolean;
   csrfToken(): string;

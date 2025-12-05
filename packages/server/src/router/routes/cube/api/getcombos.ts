@@ -1,4 +1,3 @@
-import { csrfProtection } from 'routes/middleware';
 import catalog from 'serverutils/cardCatalog';
 
 import { Request, Response } from '../../../../types/express';
@@ -40,6 +39,6 @@ export const routes = [
   {
     method: 'post',
     path: '/',
-    handler: [csrfProtection, getCombos],
+    handler: [getCombos],
   },
 ];

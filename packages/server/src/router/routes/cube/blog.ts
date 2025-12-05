@@ -1,28 +1,29 @@
+import CubeType from '@utils/datatypes/Cube';
+import { FeedTypes } from '@utils/datatypes/Feed';
+import UserType from '@utils/datatypes/User';
 import Blog from 'dynamo/models/blog';
 import Cube from 'dynamo/models/cube';
 import Feed from 'dynamo/models/feed';
 import User from 'dynamo/models/user';
-import { csrfProtection, ensureAuth, ensureAuthJson } from 'routes/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
-import { render } from 'serverutils/render';
-import util from 'serverutils/util';
+import { handleRouteError, redirect, render } from 'serverutils/render';
+import { addNotification, getBaseUrl, getSafeReferrer } from 'serverutils/util';
+import { csrfProtection, ensureAuth, ensureAuthJson } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
-const { handleRouteError, redirect } = require('serverutils/render');
-
-import CubeType from '@utils/datatypes/Cube';
-import { FeedTypes } from '@utils/datatypes/Feed';
-import UserType from '@utils/datatypes/User';
-
 const getRedirectUrl = async (req: Request, cubeId: string, isDelete: boolean = false): Promise<string> => {
   const cube = await Cube.getById(cubeId);
-  return await getRedirectUrlForCube(req, cube, isDelete);
+  return await getRedirectUrlForCube(req, cube!, isDelete);
 };
 
-const getRedirectUrlForCube = async (req: Request, cube: CubeType, isDelete: boolean = false): Promise<string> => {
-  const referrer = util.getSafeReferrer(req);
+const getRedirectUrlForCube = async (
+  req: Request,
+  cube: CubeType | null | undefined,
+  isDelete: boolean = false,
+): Promise<string> => {
+  const referrer = getSafeReferrer(req);
 
   //Prefer short ID in the URL if the cube has it
   const cubeOrFallbackUrl = cube ? `/cube/blog/${encodeURIComponent(cube.shortId || cube.id)}` : '/dashboard';
@@ -56,7 +57,7 @@ const getRedirectUrlForCube = async (req: Request, cube: CubeType, isDelete: boo
 
 export const createBlogHandler = async (req: Request, res: Response) => {
   try {
-    const cubeId = req.params.id;
+    const cubeId = req.params.id!;
     //Generally going to assume the cube exists here. Definitely required for a new blog, not so for an edit
     const cube = await Cube.getById(cubeId);
 
@@ -100,7 +101,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    if (!isCubeViewable(cube, user)) {
+    if (!isCubeViewable(cube, user) || !cube) {
       res.status(404).json({ error: 'Cube not found' });
       return;
     }
@@ -136,7 +137,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
         if (mentioned) {
           mentionedUsers.push(mentioned);
-          await util.addNotification(
+          await addNotification(
             mentioned,
             user,
             `/cube/blog/blogpost/${id}`,
@@ -194,7 +195,7 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
 
     return render(req, res, 'BlogPostPage', { post }, { noindex: true });
   } catch (err) {
-    return handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err as Error, '/404');
   }
 };
 
@@ -233,7 +234,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
     req.flash('success', 'Post Removed');
     return redirect(req, res, redirectUrl);
   } catch (err) {
-    return handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err as Error, '/404');
   }
 };
 
@@ -261,13 +262,13 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
 
     const cube = await Cube.getById(req.params.id);
 
-    if (!isCubeViewable(cube, req.user)) {
+    if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
 
     const query = await Blog.getByCube(cube.id, 20);
-    const baseUrl = util.getBaseUrl();
+    const baseUrl = getBaseUrl();
 
     return render(
       req,
@@ -289,7 +290,7 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id!)}`);
+    return handleRouteError(req, res, err as Error, `/cube/overview/${encodeURIComponent(req.params.id!)}`);
   }
 };
 

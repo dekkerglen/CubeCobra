@@ -174,7 +174,7 @@ export const rarityOperation = (op: OperatorType, value: string): FilterFunction
   }
 };
 
-const convertParsedCost = (parsedCost: string[]): string[][] =>
+export const convertParsedCost = (parsedCost: string[]): string[][] =>
   parsedCost.map((symbol: string) => symbol.toLowerCase().split('-'));
 
 export const manaCostOperation = (op: OperatorType, value: string[][]): FilterFunction<string[]> => {

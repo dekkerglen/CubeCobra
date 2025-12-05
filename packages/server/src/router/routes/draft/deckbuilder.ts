@@ -1,16 +1,20 @@
 import DraftType from '@utils/datatypes/Draft';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
-import { csrfProtection } from 'routes/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import util from 'serverutils/util';
+import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
 
 const handler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Deck not found');
+      return redirect(req, res, '/404');
+    }
+
     const deck: DraftType = await Draft.getById(req.params.id);
     if (!deck) {
       req.flash('danger', 'Deck not found');
@@ -32,12 +36,12 @@ const handler = async (req: Request, res: Response) => {
     }
 
     const cube = await Cube.getById(deck.cube);
-    if (!isCubeViewable(cube, req.user)) {
+    if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
 
-    const baseUrl = util.getBaseUrl();
+    const baseUrl = getBaseUrl();
     return render(
       req,
       res,
@@ -57,7 +61,7 @@ const handler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err as Error, '/404');
   }
 };
 
@@ -65,6 +69,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'get',
-    handler: [csrfProtection, handler],
+    handler: [handler],
   },
 ];

@@ -1,6 +1,6 @@
 // import * as filterCards from '../@utils/filtering/FilterCards';
 import CubeFn from 'serverutils/cubefn';
-import Util from 'serverutils/util';
+import * as Util from 'serverutils/util';
 
 import Cube from '../../../src/dynamo/models/cube';
 import CubeHash from '../../../src/dynamo/models/cubeHash';
@@ -230,7 +230,6 @@ describe('Edit overview API', () => {
         shortId: updatedCube.shortId,
         date: expect.any(Number),
         tags: ['foo', 'bar', 'baz'],
-        categoryOverride: null,
         categoryPrefixes: [],
       }),
     );

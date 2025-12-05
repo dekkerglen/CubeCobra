@@ -2,7 +2,6 @@ import DraftType from '@utils/datatypes/Draft';
 import { setupPicks } from '@utils/draftutil';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
-import { csrfProtection } from 'routes/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -10,6 +9,11 @@ import { Request, Response } from '../../../types/express';
 
 const handler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Draft ID is required');
+      return redirect(req, res, '/404');
+    }
+
     const base: DraftType = await Draft.getById(req.params.id);
 
     if (!base) {
@@ -30,6 +34,11 @@ const handler = async (req: Request, res: Response) => {
     }
 
     const cube = await Cube.getById(base.cube);
+    if (!cube) {
+      req.flash('danger', 'The cube that this deck belongs to no longer exists.');
+      return redirect(req, res, `/cube/deck/${req.params.id}`);
+    }
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'The cube that this deck belongs to no longer exists.');
       return redirect(req, res, `/cube/deck/${req.params.id}`);
@@ -74,6 +83,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'get',
-    handler: [csrfProtection, handler],
+    handler: [handler],
   },
 ];

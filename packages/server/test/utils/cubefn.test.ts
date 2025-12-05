@@ -1,12 +1,12 @@
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cardFromId } from 'serverutils/carddb';
 import { generateBalancedPack, generatePack } from 'serverutils/cubefn';
+import { getBotPrediction } from 'serverutils/userUtil';
 
-import { getBotPrediction } from '../../src/server/util/userUtil';
 import { createCardDetails, createCube } from '../test-utils/data';
 
 // Mock dependencies
-jest.mock('../../src/server/util/userUtil');
+jest.mock('serverutils/userUtil');
 jest.mock('@utils/drafting/createdraft');
 jest.mock('serverutils/carddb');
 

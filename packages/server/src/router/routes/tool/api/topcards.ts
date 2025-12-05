@@ -2,7 +2,6 @@ import { makeFilter } from '@utils/filtering/FilterCards';
 import { OrderedSortsType, SortFunctions } from '@utils/sorting/Sort';
 import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
 import Joi from 'joi';
-import { csrfProtection } from 'routes/middleware';
 import { searchCards } from 'serverutils/tools';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
@@ -69,6 +68,6 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, validateQuery, getTopCardsPage],
+    handler: [validateQuery, getTopCardsPage],
   },
 ];

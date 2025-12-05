@@ -8,6 +8,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
 import { Certificates } from './certificates';
+import { DailyJobsLambdaConstruct } from './daily-jobs-lambda';
 import { ECR } from './ecr';
 import { ElasticBeanstalk } from './elastic-beanstalk';
 import { Route53 } from './route53';
@@ -92,6 +93,21 @@ export class CubeCobraStack extends cdk.Stack {
     // Register all the scheduled jobs we have
     params.jobs?.forEach((jobProps, jobName) => {
       new ScheduledJob(this, jobName, fargateCluster, ecr.repository, jobProps);
+    });
+
+    // Create the daily jobs lambda
+    const lambdaEnvVars = createEnvironmentVariables(params, props);
+    // Remove Lambda reserved environment variables
+    delete lambdaEnvVars.AWS_ACCESS_KEY_ID;
+    delete lambdaEnvVars.AWS_SECRET_ACCESS_KEY;
+    delete lambdaEnvVars.AWS_REGION;
+
+    new DailyJobsLambdaConstruct(this, 'DailyJobsLambda', {
+      codeArtifactsBucket: params.appBucket,
+      version: params.version,
+      subdomain: params.domain.split('.')[0],
+      stage: params.env,
+      environmentVariables: lambdaEnvVars,
     });
   }
 }
