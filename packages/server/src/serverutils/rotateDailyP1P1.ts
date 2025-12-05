@@ -84,8 +84,8 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     const result = await generatePackFn(cube, cards, seedPrefix, 10, null);
 
     // Extract pack and seed from result (handles both GeneratePackResult and BalancedPackResult)
-    const packCards = 'packResult' in result ? (result as any).packResult.pack : result.pack;
-    const packSeed = 'packResult' in result ? (result as any).packResult.seed : result.seed;
+    const packCards = (result as any).packResult?.pack ?? result.pack;
+    const packSeed = (result as any).packResult?.seed ?? result.seed;
 
     console.log('Generated pack with', packCards.length, 'cards');
 
