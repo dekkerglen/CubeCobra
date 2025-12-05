@@ -5,18 +5,28 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Record from 'dynamo/models/record';
 import Joi from 'joi'; // Import Joi for validation
-import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { bodyValidation } from 'routes/middleware';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { bodyValidation } from 'src/router/middleware';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
 
 export const createRecordPageHandler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Cube ID is required');
+      return redirect(req, res, '/404');
+    }
+
     const cube = await Cube.getById(req.params.id);
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -37,7 +47,12 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - Create Record`,
-        metadata: generateMeta(`Cube Cobra Create Record: ${cube.name}`, cube.description, cube.image.uri),
+        metadata: generateMeta(
+          `Cube Cobra Create Record: ${cube.name}`,
+          cube.description,
+          cube.image.uri,
+          `${req.protocol}://${req.get('host')}/cube/records/create/${cube.id}`,
+        ),
       },
     );
   } catch (err) {
@@ -47,7 +62,17 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
 
 export const createRecordPageFromDraftHandler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Cube ID is required');
+      return redirect(req, res, '/404');
+    }
+
     const cube = await Cube.getById(req.params.id);
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -72,7 +97,12 @@ export const createRecordPageFromDraftHandler = async (req: Request, res: Respon
       },
       {
         title: `${abbreviate(cube.name)} - Create Record`,
-        metadata: generateMeta(`Cube Cobra Create Record: ${cube.name}`, cube.description, cube.image.uri),
+        metadata: generateMeta(
+          `Cube Cobra Create Record: ${cube.name}`,
+          cube.description,
+          cube.image.uri,
+          `${req.protocol}://${req.get('host')}/cube/records/create/fromDraft/${cube.id}`,
+        ),
       },
     );
   } catch (err) {
@@ -109,7 +139,17 @@ const recordSchema = Joi.object({
 
 export const createRecordHandler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Cube ID is required');
+      return redirect(req, res, '/404');
+    }
+
     const cube = await Cube.getById(req.params.id);
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
@@ -159,7 +199,17 @@ export const createRecordHandler = async (req: Request, res: Response) => {
 
 export const createRecordFromDraftHandler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Cube ID is required');
+      return redirect(req, res, '/404');
+    }
+
     const cube = await Cube.getById(req.params.id);
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');

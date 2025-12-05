@@ -1,6 +1,5 @@
 import { createTypeGuard } from '@utils/typeGuards';
 import CardHistory from 'dynamo/models/cardhistory';
-import { csrfProtection } from 'routes/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -58,6 +57,6 @@ export const routes = [
   {
     method: 'post',
     path: '/',
-    handler: [csrfProtection, getCardHistoryHandler],
+    handler: [getCardHistoryHandler],
   },
 ];

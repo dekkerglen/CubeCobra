@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "typeRoots": ["node_modules/@types"],
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "target": "ES2020",
+    "baseUrl": "./",
+    "paths": {
+      "@utils/*": ["../utils/src/*"],
+      "@server/*": ["../server/src/*"]
+    },
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "exclude": ["node_modules", "dist"],
+  "include": ["src/**/*.ts", "../utils/src", "../server/src"]
+}

@@ -1,5 +1,5 @@
 import User from 'dynamo/models/user';
-import { csrfProtection, ensureAuth } from 'routes/middleware';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

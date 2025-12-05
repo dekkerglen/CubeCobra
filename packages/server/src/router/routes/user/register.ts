@@ -1,0 +1,163 @@
+import { DefaultPrintingPreference } from '@utils/datatypes/Card';
+import { DefaultGridTightnessPreference } from '@utils/datatypes/User';
+import bcrypt from 'bcryptjs';
+import User from 'dynamo/models/user';
+import { body } from 'express-validator';
+import sendEmail from 'serverutils/email';
+import { handleRouteError, redirect, render } from 'serverutils/render';
+import { hasProfanity, validateEmail } from 'serverutils/util';
+import { csrfProtection, flashValidationErrors, recaptcha } from 'src/router/middleware';
+import { v4 as uuid } from 'uuid';
+
+import { Request, Response } from '../../../types/express';
+
+// For consistency between different forms, validate username through this function.
+const usernameValid = [
+  body('username', 'username is required').notEmpty(),
+  body('username', 'username must be between 5 and 24 characters.').isLength({
+    min: 5,
+    max: 24,
+  }),
+  body('username', 'username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i'),
+  body('username', 'username may not use profanity.').custom((value: string) => !hasProfanity(value)),
+];
+
+export const getHandler = (req: Request, res: Response) => {
+  return render(req, res, 'RegisterPage');
+};
+
+export const postHandler = async (req: Request, res: Response) => {
+  try {
+    const email = req.body.email.toLowerCase();
+    const { username, password } = req.body;
+
+    const attempt = { email, username };
+
+    if (!req.validated) {
+      return render(req, res, 'RegisterPage', attempt);
+    }
+
+    try {
+      validateEmail(email);
+    } catch (err) {
+      req.flash('danger', (err as Error).message);
+      return render(req, res, 'RegisterPage', attempt);
+    }
+
+    const userByName = await User.getByUsername(req.body.username.toLowerCase());
+
+    if (userByName) {
+      req.flash('danger', 'username already taken.');
+      return render(req, res, 'RegisterPage', attempt);
+    }
+
+    // check if user exists
+    const user = await User.getByEmail(req.body.email.toLowerCase());
+
+    if (user) {
+      req.flash('danger', 'email already associated with an existing account.');
+      return render(req, res, 'RegisterPage', attempt);
+    }
+
+    const newUser = {
+      email,
+      username,
+      followedCubes: [],
+      followedUsers: [],
+      following: [],
+      hideFeatured: false,
+      hideTagColors: false,
+      imageName: 'Ambush Viper',
+      roles: [],
+      theme: 'default',
+      emailVerified: false,
+      token: uuid(),
+      dateCreated: new Date().valueOf(),
+      defaultPrinting: DefaultPrintingPreference,
+      gridTightness: DefaultGridTightnessPreference,
+      autoBlog: false,
+    };
+
+    const salt = await bcrypt.genSalt(10);
+    (newUser as any).passwordHash = await bcrypt.hash(password, salt);
+    const id = await User.put(newUser as any);
+
+    await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
+      id,
+      token: newUser.token,
+    });
+
+    req.flash('success', 'Account successfully created. Please check your email for a verification link to login.');
+    return redirect(req, res, '/user/login');
+  } catch (err) {
+    handleRouteError(req, res, err as Error, '/user/register');
+  }
+};
+
+export const confirmHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id || !req.params.token) {
+      req.flash('danger', 'Invalid confirmation link');
+      return redirect(req, res, '/user/login');
+    }
+
+    const user = (await User.getById(req.params.id)) as any;
+
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/user/login');
+    }
+
+    if (user.token !== req.params.token) {
+      req.flash('danger', 'Invalid token');
+      return redirect(req, res, '/user/login');
+    }
+
+    user.emailVerified = true;
+    await User.update(user);
+
+    req.flash('success', 'Email verified. You can now login.');
+    return redirect(req, res, '/user/login');
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, '/user/login');
+  }
+};
+
+export const routes = [
+  {
+    path: '/',
+    method: 'get',
+    handler: [csrfProtection, getHandler],
+  },
+  {
+    path: '/',
+    method: 'post',
+    handler: [
+      csrfProtection,
+      body('email', 'email is required').notEmpty(),
+      body('email', 'email is not valid').isEmail(),
+      body('email', 'email must be between 5 and 100 characters.').isLength({
+        min: 5,
+        max: 100,
+      }),
+      body('password', 'Password is required').notEmpty(),
+      body('password', 'Password must be between 8 and 24 characters.').isLength({
+        min: 8,
+        max: 24,
+      }),
+      body('password2', 'Confirm Password is required').notEmpty(),
+      body('password2', 'Confirm Password must match password.').custom((value: string, { req }: any) => {
+        return value === req.body.password;
+      }),
+      ...usernameValid,
+      recaptcha,
+      flashValidationErrors,
+      postHandler,
+    ],
+  },
+  {
+    path: '/confirm/:id/:token',
+    method: 'get',
+    handler: [csrfProtection, confirmHandler],
+  },
+];

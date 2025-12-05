@@ -40,7 +40,7 @@ describe('CardHistory Model Initialization', () => {
   it('cardhistory table created with proper configuration', async () => {
     // Import to trigger createClient
 
-    require('../../src/dynamo/models/cardhistory');
+    await import('../../src/dynamo/models/cardhistory');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith({
       name: 'CARD_HISTORY',

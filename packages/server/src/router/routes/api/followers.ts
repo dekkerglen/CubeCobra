@@ -1,6 +1,5 @@
 import Cube from 'dynamo/models/cube';
 import User from 'dynamo/models/user';
-import { csrfProtection } from 'routes/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { NextFunction, Request, Response } from '../../../types/express';
@@ -9,8 +8,13 @@ export const ensureCubeVisible = async (req: Request, res: Response, next: NextF
   const { id, type } = req.params;
 
   if (type === 'cube') {
+    if (!id) {
+      res.status(400).send({ error: 'Invalid cube ID' });
+      return;
+    }
+
     const cube = await Cube.getById(id);
-    if (!isCubeViewable(cube, req.user)) {
+    if (!cube || !isCubeViewable(cube, req.user)) {
       res.status(404).send({ error: 'Cube not found' });
       return;
     } else {
@@ -61,6 +65,6 @@ export const routes = [
   {
     method: 'get',
     path: '/:type/:id',
-    handler: [csrfProtection, ensureCubeVisible, getFollowers],
+    handler: [ensureCubeVisible, getFollowers],
   },
 ];

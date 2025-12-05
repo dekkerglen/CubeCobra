@@ -1,13 +1,18 @@
-const { rotateFeatured } = require('serverutils/featuredQueue');
-
-const FeaturedQueue = require('../../src/dynamo/models/featuredQueue');
-
-const Patron = require('../../src/dynamo/models/patron');
 import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
 
 // Mock dependencies
-jest.mock('../../src/dynamo/models/featuredQueue');
+jest.mock('../../src/dynamo/models/featuredQueue', () => ({
+  FeaturedQueue: {
+    querySortedByDate: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
 jest.mock('../../src/dynamo/models/patron');
+
+const { rotateFeatured } = require('serverutils/featuredQueue');
+const { FeaturedQueue } = require('../../src/dynamo/models/featuredQueue');
+const Patron = require('../../src/dynamo/models/patron');
 
 describe('Featured Queue Rotation', () => {
   beforeEach(() => {
@@ -322,7 +327,7 @@ describe('Featured Queue Rotation', () => {
 
     expect(result.success).toBe('true');
     expect(FeaturedQueue.querySortedByDate).toHaveBeenCalledTimes(2);
-    expect(FeaturedQueue.querySortedByDate).toHaveBeenNthCalledWith(1, null);
+    expect(FeaturedQueue.querySortedByDate).toHaveBeenNthCalledWith(1, undefined);
     expect(FeaturedQueue.querySortedByDate).toHaveBeenNthCalledWith(2, 'key1');
   });
 });

@@ -4,11 +4,11 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Record from 'dynamo/models/record';
 import Joi from 'joi'; // Import Joi for validation
-import { csrfProtection, ensureAuth } from 'routes/middleware';
-import { bodyValidation } from 'routes/middleware';
 import { getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { bodyValidation } from 'src/router/middleware';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
@@ -76,7 +76,17 @@ const sideboardSchema = Joi.array().items(Joi.string()).max(200).default([]);
 
 export const importRecordHandler = async (req: Request, res: Response) => {
   try {
+    if (!req.params.id) {
+      req.flash('danger', 'Cube ID is required');
+      return redirect(req, res, '/404');
+    }
+
     const cube = await Cube.getById(req.params.id);
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');

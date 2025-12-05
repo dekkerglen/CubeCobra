@@ -1,43 +1,33 @@
 // Mock all dependencies
 jest.mock('serverutils/cubefn', () => ({
-  generateBalancedPack: jest.fn(),
-}));
-jest.mock('serverutils/ml', () => ({
-  ensureModelsReady: jest.fn(),
-}));
-jest.mock('serverutils/cardCatalog', () => ({
-  initializeCardDb: jest.fn(),
+  generatePack: jest.fn(),
 }));
 jest.mock('../../src/dynamo/models/cube');
 jest.mock('../../src/dynamo/models/p1p1Pack');
 jest.mock('../../src/dynamo/models/dailyP1P1');
 jest.mock('../../src/dynamo/models/featuredQueue', () => ({
-  querySortedByDate: jest.fn(),
+  FeaturedQueue: {
+    querySortedByDate: jest.fn(),
+  },
 }));
 jest.mock('../../src/dynamo/models/user');
 jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
 }));
 
-import { initializeCardDb } from 'serverutils/cardCatalog';
-import { generateBalancedPack } from 'serverutils/cubefn';
-import { ensureModelsReady } from 'serverutils/ml';
-import rotateDailyP1P1 from 'serverutils/rotateDailyP1P1';
+import { generatePack } from 'serverutils/cubefn';
+import { rotateDailyP1P1 } from 'serverutils/rotateDailyP1P1';
 import { addNotification } from 'serverutils/util';
 
 import Cube from '../../src/dynamo/models/cube';
 import dailyP1P1Model from '../../src/dynamo/models/dailyP1P1';
+import { FeaturedQueue } from '../../src/dynamo/models/featuredQueue';
 import p1p1PackModel from '../../src/dynamo/models/p1p1Pack';
 import User from '../../src/dynamo/models/user';
-
-const FeaturedQueue = require('../../src/dynamo/models/featuredQueue');
 
 describe('rotateDailyP1P1', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Setup default successful mocks
-    (initializeCardDb as jest.Mock).mockResolvedValue(undefined);
-    (ensureModelsReady as jest.Mock).mockResolvedValue(undefined);
     // By default, no current daily P1P1 exists
     (dailyP1P1Model.getCurrentDailyP1P1 as jest.Mock).mockResolvedValue(null);
   });
@@ -54,7 +44,7 @@ describe('rotateDailyP1P1', () => {
 
       (dailyP1P1Model.getCurrentDailyP1P1 as jest.Mock).mockResolvedValue(existingDailyP1P1);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: true,
@@ -94,17 +84,14 @@ describe('rotateDailyP1P1', () => {
       });
       (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
       (Cube.getCards as jest.Mock).mockResolvedValue(mockCards);
-      (generateBalancedPack as jest.Mock).mockResolvedValue({
-        packResult: { pack: mockCards },
-        botResult: { botPickIndex: 0, botWeights: [] },
-        maxBotWeight: 0.5,
+      (generatePack as jest.Mock).mockResolvedValue({
+        pack: mockCards,
         seed: 'test-seed',
-        allCandidates: [{ maxBotWeight: 0.5 }],
       });
       (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Model.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       // Should create a new pack
       expect(result.success).toBe(true);
@@ -119,7 +106,7 @@ describe('rotateDailyP1P1', () => {
         items: [],
       });
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -133,7 +120,7 @@ describe('rotateDailyP1P1', () => {
         items: null,
       });
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -147,7 +134,7 @@ describe('rotateDailyP1P1', () => {
       });
       (Cube.getById as jest.Mock).mockResolvedValue(null);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -165,9 +152,9 @@ describe('rotateDailyP1P1', () => {
         name: 'Test Cube',
       });
       (Cube.getCards as jest.Mock).mockResolvedValue([]);
-      (generateBalancedPack as jest.Mock).mockRejectedValue(new Error('Pack generation failed'));
+      (generatePack as jest.Mock).mockRejectedValue(new Error('Pack generation failed'));
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -184,16 +171,13 @@ describe('rotateDailyP1P1', () => {
         name: 'Test Cube',
       });
       (Cube.getCards as jest.Mock).mockResolvedValue([]);
-      (generateBalancedPack as jest.Mock).mockResolvedValue({
-        packResult: { pack: [] },
-        botResult: { botPickIndex: 0, botWeights: [] },
-        maxBotWeight: 0.5,
+      (generatePack as jest.Mock).mockResolvedValue({
+        pack: [],
         seed: 'test-seed',
-        allCandidates: [{ maxBotWeight: 0.5 }],
       });
       (p1p1PackModel.put as jest.Mock).mockRejectedValue(new Error('Database write failed'));
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -234,12 +218,9 @@ describe('rotateDailyP1P1', () => {
       });
       (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
       (Cube.getCards as jest.Mock).mockResolvedValue(mockCards);
-      (generateBalancedPack as jest.Mock).mockResolvedValue({
-        packResult: { pack: mockCards },
-        botResult: { botPickIndex: 0, botWeights: [0.5, 0.3] },
-        maxBotWeight: 0.5,
+      (generatePack as jest.Mock).mockResolvedValue({
+        pack: mockCards,
         seed: 'test-seed-123',
-        allCandidates: [{ maxBotWeight: 0.5 }],
       });
       (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Model.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
@@ -250,7 +231,7 @@ describe('rotateDailyP1P1', () => {
       });
       (addNotification as jest.Mock).mockResolvedValue(undefined);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: true,
@@ -287,18 +268,15 @@ describe('rotateDailyP1P1', () => {
       });
       (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
       (Cube.getCards as jest.Mock).mockResolvedValue(mockCards);
-      (generateBalancedPack as jest.Mock).mockResolvedValue({
-        packResult: { pack: mockCards },
-        botResult: { botPickIndex: 0, botWeights: [] },
-        maxBotWeight: 0.5,
+      (generatePack as jest.Mock).mockResolvedValue({
+        pack: mockCards,
         seed: 'test-seed',
-        allCandidates: [{ maxBotWeight: 0.5 }],
       });
       (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Model.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
       (User.getById as jest.Mock).mockRejectedValue(new Error('User fetch failed'));
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       // Should still return success even if notification fails
       expect(result).toEqual({
@@ -330,17 +308,14 @@ describe('rotateDailyP1P1', () => {
       });
       (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
       (Cube.getCards as jest.Mock).mockResolvedValue(mockCards);
-      (generateBalancedPack as jest.Mock).mockResolvedValue({
-        packResult: { pack: mockCards },
-        botResult: { botPickIndex: 0, botWeights: [] },
-        maxBotWeight: 0.5,
+      (generatePack as jest.Mock).mockResolvedValue({
+        pack: mockCards,
         seed: 'test-seed',
-        allCandidates: [{ maxBotWeight: 0.5 }],
       });
       (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Model.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: true,
@@ -350,33 +325,6 @@ describe('rotateDailyP1P1', () => {
       });
       expect(User.getById).not.toHaveBeenCalled();
       expect(addNotification).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('initialization', () => {
-    it('initializes card database and ML models', async () => {
-      (FeaturedQueue.querySortedByDate as jest.Mock).mockResolvedValue({
-        items: [{ cube: 'cube-123' }],
-      });
-      (Cube.getById as jest.Mock).mockResolvedValue({
-        id: 'cube-123',
-        name: 'Test Cube',
-      });
-      (Cube.getCards as jest.Mock).mockResolvedValue([]);
-      (generateBalancedPack as jest.Mock).mockResolvedValue({
-        packResult: { pack: [] },
-        botResult: { botPickIndex: 0, botWeights: [] },
-        maxBotWeight: 0.5,
-        seed: 'test-seed',
-        allCandidates: [{ maxBotWeight: 0.5 }],
-      });
-      (p1p1PackModel.put as jest.Mock).mockResolvedValue({ id: 'pack-123' });
-      (dailyP1P1Model.setActiveDailyP1P1 as jest.Mock).mockResolvedValue({ id: 'daily-123' });
-
-      await rotateDailyP1P1();
-
-      expect(initializeCardDb).toHaveBeenCalled();
-      expect(ensureModelsReady).toHaveBeenCalled();
     });
   });
 });

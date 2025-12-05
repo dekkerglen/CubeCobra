@@ -6,7 +6,6 @@ import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Joi from 'joi';
-import { csrfProtection } from 'routes/middleware';
 import { deckbuild } from 'serverutils/draftbots';
 import { addNotification } from 'serverutils/util';
 
@@ -54,6 +53,13 @@ export const validateBody = (req: Request, res: Response, next: NextFunction) =>
 export const handler = async (req: Request, res: Response) => {
   try {
     const body = req.body as FinishDraftBody;
+
+    if (!req.params.id) {
+      return res.status(400).send({
+        success: false,
+        message: 'Draft ID is required',
+      });
+    }
 
     const draft: DraftType = await Draft.getById(req.params.id);
 
@@ -197,6 +203,10 @@ const sendDraftNotification = async (draftId: string, cubeOwner: User, draftOwne
   }
 
   const cube = await Cube.getById(cubeId);
+  if (!cube) {
+    return;
+  }
+
   if (cube.disableAlerts) {
     return;
   }
@@ -217,6 +227,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'post',
-    handler: [csrfProtection, validateBody, handler],
+    handler: [validateBody, handler],
   },
 ];

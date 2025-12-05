@@ -8,7 +8,7 @@ import Email from 'email-templates';
 import { createTransport } from 'nodemailer';
 import path from 'path';
 
-import utils from './util';
+import * as utils from './util';
 
 const ses = new SESClient({
   endpoint: process.env.AWS_ENDPOINT || undefined,

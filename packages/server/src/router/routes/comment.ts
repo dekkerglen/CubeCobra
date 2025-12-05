@@ -11,13 +11,12 @@ import Notice from 'dynamo/models/notice';
 import Package from 'dynamo/models/package';
 import Record from 'dynamo/models/record';
 import DynamoUser from 'dynamo/models/user';
-import { csrfProtection, ensureAuth } from 'routes/middleware';
 import { getImageData } from 'serverutils/imageutil';
-import util from 'serverutils/util';
+import { handleRouteError, redirect, render } from 'serverutils/render';
+import { addNotification } from 'serverutils/util';
+import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
-
-const { handleRouteError, redirect, render } = require('serverutils/render');
 
 export const getHandler = async (req: Request, res: Response) => {
   try {
@@ -35,7 +34,7 @@ export const getHandler = async (req: Request, res: Response) => {
 
     return render(req, res, 'CommentPage', { comment }, { title: 'Comment' });
   } catch (err) {
-    return handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err as Error, '/404');
   }
 };
 
@@ -60,7 +59,7 @@ export const reportHandler = async (req: Request, res: Response) => {
 
     return redirect(req, res, `/comment/${commentid}`);
   } catch (err) {
-    return handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err as Error, '/404');
   }
 };
 
@@ -75,7 +74,7 @@ export const getCommentsHandler = async (req: Request, res: Response) => {
       lastKey: comments.lastKey,
     });
   } catch (err) {
-    return handleRouteError(req, res, err, '/404');
+    return handleRouteError(req, res, err as Error, '/404');
   }
 };
 
@@ -141,7 +140,7 @@ export const addCommentHandler = async (req: Request, res: Response) => {
   if (isNotifiableCommentType(type)) {
     const owner = await getReplyContext[type](parent);
     if (owner) {
-      await util.addNotification(
+      await addNotification(
         owner,
         user,
         `/comment/${id}`,
@@ -155,7 +154,7 @@ export const addCommentHandler = async (req: Request, res: Response) => {
   for (const mention of userMentions) {
     const mentioned = await DynamoUser.getByUsername(mention);
     if (mentioned) {
-      await util.addNotification(mentioned, user, `/comment/${id}`, `${user?.username} mentioned you in their comment`);
+      await addNotification(mentioned, user, `/comment/${id}`, `${user?.username} mentioned you in their comment`);
     }
   }
 

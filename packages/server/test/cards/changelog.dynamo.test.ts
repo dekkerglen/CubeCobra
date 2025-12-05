@@ -23,6 +23,10 @@ jest.mock('serverutils/carddb');
 jest.mock('../../src/dynamo/s3client');
 jest.mock('../../src/dynamo/util');
 
+// Access global mocks
+declare const mockDynamoClient: any;
+declare const mockDynamoCreateClient: any;
+
 // Test helpers
 const createUnhydratedChangelog = (overrides?: Partial<ChangelogType>): ChangelogType => ({
   id: 'changelog-1',
@@ -63,7 +67,7 @@ const createHydratedChangelog = (initialChanges: Changes, hydratedCard: Card): C
 
 describe('Changelog Model Initialization', () => {
   it('creates changelog table with proper configuration', async () => {
-    require('../../src/dynamo/models/changelog');
+    await import('../../src/dynamo/models/changelog');
 
     expect(mockDynamoCreateClient).toHaveBeenCalledWith({
       name: 'CUBE_CHANGELOG',

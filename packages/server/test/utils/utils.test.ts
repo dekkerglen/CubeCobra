@@ -9,11 +9,9 @@ import {
   isFoilFinish,
   normalizeName,
 } from '@utils/cardutil';
-import util from 'serverutils/util';
+import { getSafeReferrer, shuffle, turnToTree } from 'serverutils/util';
 
 import { createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
-
-// ...existing code...
 
 describe('getSafeReferrer', () => {
   const OLD_ENV = process.env;
@@ -34,7 +32,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue(null),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBeNull();
     expect(req.header).toHaveBeenCalledWith('Referrer');
   });
@@ -44,7 +42,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue('https://example.com/some/path'),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBeNull();
   });
 
@@ -53,7 +51,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue('https://cubecobra.com/cube/view/123'),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBe('/cube/view/123');
   });
 
@@ -62,7 +60,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue('not-a-url'),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBe('/not-a-url');
   });
 
@@ -71,7 +69,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue('https://www.cubecobra.com/cube/view/123'),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBe('/cube/view/123');
   });
 
@@ -80,7 +78,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue('https://cubecobra.com/cube/view/123?sort=name#top'),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBe('/cube/view/123');
   });
 
@@ -89,7 +87,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue('/cube/view/123'),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBe('/cube/view/123');
   });
 
@@ -98,7 +96,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue('../cube/../blog/view/123'),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBe('/blog/view/123');
   });
 
@@ -107,7 +105,7 @@ describe('getSafeReferrer', () => {
       header: jest.fn().mockReturnValue('https://example.com/../blog/view/123'),
     } as any;
 
-    const result = util.getSafeReferrer(req);
+    const result = getSafeReferrer(req);
     expect(result).toBeNull();
   });
 });
@@ -117,7 +115,7 @@ describe('turnToTree', () => {
   const SHUFFLE_SEED = 1742131471000;
 
   it('Empty list is empty tree', () => {
-    const result = util.turnToTree([]);
+    const result = turnToTree([]);
     expect(result).toEqual({});
   });
 
@@ -133,7 +131,7 @@ describe('turnToTree', () => {
 
   const deepTreeCases = [
     { descriptor: 'sorted', cardNames: deepCardNames },
-    { descriptor: 'unsorted', cardNames: util.shuffle(deepCardNames, SHUFFLE_SEED) },
+    { descriptor: 'unsorted', cardNames: shuffle(deepCardNames, SHUFFLE_SEED) },
   ];
 
   it.each(deepTreeCases)('Deep tree of card names ($descriptor)', async ({ cardNames }) => {
@@ -257,7 +255,7 @@ describe('turnToTree', () => {
       },
     };
 
-    const result = util.turnToTree(normalizedNames);
+    const result = turnToTree(normalizedNames);
     expect(result).toEqual(expectedTree);
   });
 
@@ -265,7 +263,7 @@ describe('turnToTree', () => {
 
   const wideTreeCases = [
     { descriptor: 'sorted', cardNames: wideCardNames },
-    { descriptor: 'unsorted', cardNames: util.shuffle(wideCardNames, SHUFFLE_SEED) },
+    { descriptor: 'unsorted', cardNames: shuffle(wideCardNames, SHUFFLE_SEED) },
   ];
 
   it.each(wideTreeCases)('Wide tree of card names ($descriptor)', async ({ cardNames }) => {
@@ -397,7 +395,7 @@ describe('turnToTree', () => {
       },
     };
 
-    const result = util.turnToTree(normalizedNames);
+    const result = turnToTree(normalizedNames);
     expect(result).toEqual(expectedTree);
   });
 });

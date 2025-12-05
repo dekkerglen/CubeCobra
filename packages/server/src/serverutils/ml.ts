@@ -1,33 +1,26 @@
-require('dotenv').config();
-
+import { type GraphModel, loadGraphModel, tensor, tidy } from '@tensorflow/tfjs-node';
+import { readFileSync } from 'fs';
 import path from 'path';
 
-import { getAllOracleIds, isOracleBasic } from './carddb';
+import 'dotenv/config';
 
-const tf = require('@tensorflow/tfjs-node');
-const fs = require('fs');
-const cloudwatch = require('./cloudwatch');
-
-const { getOracleForMl, getReasonableCardByOracle } = require('./carddb');
+import { getAllOracleIds, getOracleForMl, getReasonableCardByOracle, isOracleBasic } from './carddb';
+import { error } from './cloudwatch';
 
 let indexToOracle: Record<number, string> = {};
 let oracleToIndex: Record<string, number> = {};
 let numOracles = 0;
 
-interface Model {
-  predict: (arg0: any) => { (): any; new (): any; dataSync: { (): any; new (): any } };
-}
-
-let encoder: Model;
-let recommendDecoder: Model;
-let deckbuilderDecoder: Model;
-let draftDecoder: Model;
+let encoder: GraphModel;
+let recommendDecoder: GraphModel;
+let deckbuilderDecoder: GraphModel;
+let draftDecoder: GraphModel;
 
 const errorHandler = (modelName: string, err: { message: any; stack: any }) => {
   if (process.env?.NODE_ENV === 'development') {
     console.warn(`${modelName} not found, bot stuff will not work as expected`);
   } else {
-    cloudwatch.error(err.message, err.stack);
+    error(err.message, err.stack);
   }
 };
 
@@ -36,15 +29,14 @@ export async function initializeMl(rootDir: string = '.') {
 
   // Load the oracle mapping
   const oracleMapPath = path.join(rootDir, 'model', 'indexToOracleMap.json');
-  indexToOracle = JSON.parse(fs.readFileSync(oracleMapPath, 'utf8'));
+  indexToOracle = JSON.parse(readFileSync(oracleMapPath, 'utf8'));
   oracleToIndex = Object.fromEntries(Object.entries(indexToOracle).map(([key, value]) => [value, parseInt(key, 10)]));
   numOracles = Object.keys(oracleToIndex).length;
 
   // Load models
   const modelPromises = [
-    tf
-      .loadGraphModel(`file://${path.join(rootDir, 'model', 'encoder', 'model.json')}`)
-      .then((model: Model) => {
+    loadGraphModel(`file://${path.join(rootDir, 'model', 'encoder', 'model.json')}`)
+      .then((model) => {
         encoder = model;
         console.info('encoder loaded');
       })
@@ -52,9 +44,8 @@ export async function initializeMl(rootDir: string = '.') {
         errorHandler('encoder', err);
       }),
 
-    tf
-      .loadGraphModel(`file://${path.join(rootDir, 'model', 'cube_decoder', 'model.json')}`)
-      .then((model: Model) => {
+    loadGraphModel(`file://${path.join(rootDir, 'model', 'cube_decoder', 'model.json')}`)
+      .then((model) => {
         recommendDecoder = model;
         console.info('recommend_decoder loaded');
       })
@@ -62,9 +53,8 @@ export async function initializeMl(rootDir: string = '.') {
         errorHandler('recommend_decoder', err);
       }),
 
-    tf
-      .loadGraphModel(`file://${path.join(rootDir, 'model', 'deck_build_decoder', 'model.json')}`)
-      .then((model: Model) => {
+    loadGraphModel(`file://${path.join(rootDir, 'model', 'deck_build_decoder', 'model.json')}`)
+      .then((model) => {
         deckbuilderDecoder = model;
         console.info('deck_build_decoder loaded');
       })
@@ -72,9 +62,8 @@ export async function initializeMl(rootDir: string = '.') {
         errorHandler('deck_build_decoder', err);
       }),
 
-    tf
-      .loadGraphModel(`file://${path.join(rootDir, 'model', 'draft_decoder', 'model.json')}`)
-      .then((model: Model) => {
+    loadGraphModel(`file://${path.join(rootDir, 'model', 'draft_decoder', 'model.json')}`)
+      .then((model) => {
         draftDecoder = model;
         console.info('draft_decoder loaded');
       })
@@ -148,9 +137,10 @@ export const encode = (oracles: string[]) => {
     ),
   ];
 
-  return tf.tidy(() => {
-    const tensor = tf.tensor(vector);
-    return encoder.predict(tensor).dataSync();
+  return tidy(() => {
+    const inputTensor = tensor(vector);
+    const result = encoder.predict(inputTensor) as any;
+    return result.dataSync();
   });
 };
 
@@ -163,11 +153,11 @@ const oracleIdToMlIndex = (oracleId: string) => {
 
   const card = getReasonableCardByOracle(oracleId);
 
-  if (card.cubeCount < 50 || card.isToken || isOracleBasic(oracleId)) {
+  if ((card.cubeCount ?? 0) < 50 || card.isToken || isOracleBasic(oracleId)) {
     return null;
   }
 
-  const subOracle = getOracleForMl(oracleId);
+  const subOracle = getOracleForMl(oracleId, null);
 
   return oracleToIndex[subOracle];
 };
@@ -189,11 +179,12 @@ export const recommend = (oracles: string[]) => {
     ),
   ];
 
-  const array = tf.tidy(() => {
-    const tensor = tf.tensor(vector);
-    const encoded = encoder.predict(tensor);
+  const array = tidy(() => {
+    const inputTensor = tensor(vector);
+    const encoded = encoder.predict(inputTensor) as any;
 
-    return recommendDecoder.predict([encoded]).dataSync();
+    const result = recommendDecoder.predict([encoded]) as any;
+    return result.dataSync();
   });
 
   const res = [];
@@ -239,7 +230,7 @@ export const build = (oracles: string[]) => {
   }
   const allOracles = getAllOracleIds();
 
-  const array = tf.tidy(() => {
+  const array = tidy(() => {
     const vector = [
       encodeIndeces(
         oracles
@@ -247,10 +238,11 @@ export const build = (oracles: string[]) => {
           .filter((index): index is number => index !== null && index !== undefined),
       ),
     ];
-    const tensor = tf.tensor(vector);
+    const inputTensor = tensor(vector);
 
-    const encoded = encoder.predict(tensor);
-    return deckbuilderDecoder.predict([encoded]).dataSync();
+    const encoded = encoder.predict(inputTensor) as any;
+    const result = deckbuilderDecoder.predict([encoded]) as any;
+    return result.dataSync();
   });
 
   const res = [];
@@ -278,15 +270,16 @@ export const draft = (pack: string[], pool: string[]) => {
     return [];
   }
 
-  const array = tf.tidy(() => {
+  const array = tidy(() => {
     const vector = [
       encodeIndeces(
         pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
       ),
     ];
-    const tensor = tf.tensor(vector);
-    const encoded = encoder.predict(tensor);
-    return draftDecoder.predict([encoded]).dataSync();
+    const inputTensor = tensor(vector);
+    const encoded = encoder.predict(inputTensor) as any;
+    const result = draftDecoder.predict([encoded]) as any;
+    return result.dataSync();
   });
   const allOracles = getAllOracleIds();
 

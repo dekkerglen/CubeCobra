@@ -303,7 +303,7 @@ export interface MarkdownProps {
 const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
-    <div className="markdown">
+    <Flexbox className="markdown" direction="col" gap="2">
       <ReactMarkdown
         remarkPlugins={ALL_PLUGINS as any}
         rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
@@ -311,7 +311,7 @@ const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
       >
         {markdownStr}
       </ReactMarkdown>
-    </div>
+    </Flexbox>
   );
 };
 

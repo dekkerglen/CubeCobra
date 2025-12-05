@@ -6,7 +6,7 @@ import cubeMetadata from '@server/dynamo/models/cube';
 import cubeHash from '@server/dynamo/models/cubeHash';
 import dailyP1P1 from '@server/dynamo/models/dailyP1P1';
 import draft from '@server/dynamo/models/draft';
-import featuredQueue from '@server/dynamo/models/featuredQueue';
+import { FeaturedQueue as featuredQueue } from '@server/dynamo/models/featuredQueue';
 import feed from '@server/dynamo/models/feed';
 import notice from '@server/dynamo/models/notice';
 import notification from '@server/dynamo/models/notification';

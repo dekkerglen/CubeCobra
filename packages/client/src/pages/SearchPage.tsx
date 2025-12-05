@@ -42,7 +42,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
   const fetchMoreData = useCallback(async () => {
     setLoading(true);
 
-    const response = await csrfFetch(`/getmoresearchitems`, {
+    const response = await csrfFetch(`/search/getmoresearchitems`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
       setItems([]);
       setPage(0);
 
-      const response = await csrfFetch(`/getmoresearchitems`, {
+      const response = await csrfFetch(`/search/getmoresearchitems`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
