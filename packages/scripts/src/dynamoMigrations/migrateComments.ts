@@ -64,7 +64,7 @@ interface ScanResult {
     let batchNumber = 0;
 
     do {
-      batchNumber++;
+      batchNumber += 1;
       console.log(`\nProcessing batch ${batchNumber}...`);
 
       // Scan the old comments table
@@ -75,14 +75,14 @@ interface ScanResult {
         console.log(`Found ${result.items.length} comments in this batch`);
 
         for (const oldComment of result.items as UnhydratedComment[]) {
-          stats.total++;
+          stats.total += 1;
 
           try {
             // Check if comment already exists in new format
             const existingComment = await commentDao.getById(oldComment.id!);
 
             if (existingComment) {
-              stats.skipped++;
+              stats.skipped += 1;
               if (stats.total % 100 === 0) {
                 console.log(
                   `Progress: ${stats.total} processed (${stats.skipped} skipped, ${stats.migrated} migrated, ${stats.errors} errors)`,
@@ -102,7 +102,7 @@ interface ScanResult {
             };
 
             await commentDao.put(commentToMigrate);
-            stats.migrated++;
+            stats.migrated += 1;
 
             if (stats.total % 100 === 0) {
               console.log(
@@ -110,7 +110,7 @@ interface ScanResult {
               );
             }
           } catch (error) {
-            stats.errors++;
+            stats.errors += 1;
             console.error(`Error migrating comment ${oldComment.id}:`, error);
 
             if (stats.errors > 10) {

@@ -12,9 +12,9 @@
       "@jobs/*": ["../jobs/src/*"],
       "@utils/*": ["../utils/src/*"],
       "serverutils/*": ["src/serverutils/*"],
-      "routes/*": ["src/routes/*"],
+      "routes/*": ["src/router/routes/*", "src/router/*"],
       "dynamo/*": ["src/dynamo/*"],
-      "types/*": ["src/types/*"],
+      "types/*": ["src/types/*"]
     },
     "module": "commonjs",
     "moduleResolution": "node",

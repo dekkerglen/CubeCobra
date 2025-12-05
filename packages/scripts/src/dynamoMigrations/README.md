@@ -9,12 +9,14 @@ This directory contains migration scripts for transitioning data from old Dynamo
 The `migrateComments.ts` script migrates comment data from the old COMMENTS table format to the new single-table design used by `CommentDynamoDao`.
 
 ### Old Format (COMMENTS table)
+
 - Partition key: `id` (String)
 - GSI `ByParent`: `parent` (PK), `date` (SK)
 - GSI `ByOwner`: `owner` (PK), `date` (SK)
 - Direct storage of `UnhydratedComment` objects
 
 ### New Format (Single Table Design)
+
 - Partition key: `PK` = `COMMENT#{id}`
 - Sort key: `SK` = `COMMENT`
 - GSI1: `GSI1PK` = `COMMENT#PARENT#{parent}`, `GSI1SK` = `DATE#{date}`
@@ -23,6 +25,7 @@ The `migrateComments.ts` script migrates comment data from the old COMMENTS tabl
 ## Prerequisites
 
 1. Build the server package first:
+
    ```bash
    cd packages/server
    npm run build

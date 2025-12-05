@@ -8,8 +8,8 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
 import { Certificates } from './certificates';
-import { DynamodbTables } from './dynamodb-tables';
 import { DailyJobsLambdaConstruct } from './daily-jobs-lambda';
+import { DynamodbTables } from './dynamodb-tables';
 import { ECR } from './ecr';
 import { ElasticBeanstalk } from './elastic-beanstalk';
 import { Route53 } from './route53';
