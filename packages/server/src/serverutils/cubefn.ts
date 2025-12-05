@@ -44,6 +44,26 @@ export interface GeneratePackResult {
   pack: any[];
 }
 
+export interface BalancedPackCandidate {
+  packResult: GeneratePackResult;
+  botResult: {
+    botPickIndex: number | null;
+    botWeights: number[];
+  };
+  maxBotWeight: number;
+  seed: string;
+}
+
+export interface BalancedPackResult extends GeneratePackResult {
+  packResult: GeneratePackResult;
+  botResult: {
+    botPickIndex: number | null;
+    botWeights: number[];
+  };
+  maxBotWeight: number;
+  allCandidates: BalancedPackCandidate[];
+}
+
 function getCubeId(cube: { shortId?: string; id: string }): string {
   if (cube.shortId) return cube.shortId;
   return cube.id;
@@ -432,10 +452,10 @@ async function generateBalancedPack(
   seedPrefix: string,
   candidateCount: number = 10,
   deterministicSeed: number | null = null,
-): Promise<GeneratePackResult> {
+): Promise<BalancedPackResult> {
   // Use deterministicSeed if provided (for routes), otherwise use Date.now() (for daily P1P1)
   const baseSeed = deterministicSeed || Date.now();
-  const packCandidates = [];
+  const packCandidates: BalancedPackCandidate[] = [];
 
   for (let i = 0; i < candidateCount; i++) {
     const seed = `${seedPrefix}-${baseSeed}-${i}`;
@@ -476,7 +496,14 @@ async function generateBalancedPack(
     current.maxBotWeight < best.maxBotWeight ? current : best,
   );
 
-  return selectedCandidate.packResult;
+  // Return full result with all candidate information for testing/debugging
+  return {
+    ...selectedCandidate.packResult,
+    packResult: selectedCandidate.packResult,
+    botResult: selectedCandidate.botResult,
+    maxBotWeight: selectedCandidate.maxBotWeight,
+    allCandidates: packCandidates,
+  };
 }
 
 function sanitize(html: string): string {

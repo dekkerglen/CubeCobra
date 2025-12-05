@@ -83,13 +83,17 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
 
     const result = await generatePackFn(cube, cards, seedPrefix, 10, null);
 
-    console.log('Generated pack with', result.pack.length, 'cards');
+    // Extract pack and seed from result (handles both GeneratePackResult and BalancedPackResult)
+    const packCards = 'packResult' in result ? (result as any).packResult.pack : result.pack;
+    const packSeed = 'packResult' in result ? (result as any).packResult.seed : result.seed;
+
+    console.log('Generated pack with', packCards.length, 'cards');
 
     // Create S3 data for the pack
     const s3Data = {
-      cards: result.pack,
+      cards: packCards,
       createdByUsername: 'CubeCobra',
-      seed: result.seed,
+      seed: packSeed,
     };
 
     // Create P1P1 pack (owned by CubeCobra to prevent deletion)

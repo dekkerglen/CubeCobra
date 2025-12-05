@@ -44,7 +44,7 @@ describe('rotateDailyP1P1', () => {
 
       (dailyP1P1Model.getCurrentDailyP1P1 as jest.Mock).mockResolvedValue(existingDailyP1P1);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: true,
@@ -91,7 +91,7 @@ describe('rotateDailyP1P1', () => {
       (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Model.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       // Should create a new pack
       expect(result.success).toBe(true);
@@ -106,7 +106,7 @@ describe('rotateDailyP1P1', () => {
         items: [],
       });
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -120,7 +120,7 @@ describe('rotateDailyP1P1', () => {
         items: null,
       });
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -134,7 +134,7 @@ describe('rotateDailyP1P1', () => {
       });
       (Cube.getById as jest.Mock).mockResolvedValue(null);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -154,7 +154,7 @@ describe('rotateDailyP1P1', () => {
       (Cube.getCards as jest.Mock).mockResolvedValue([]);
       (generatePack as jest.Mock).mockRejectedValue(new Error('Pack generation failed'));
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -177,7 +177,7 @@ describe('rotateDailyP1P1', () => {
       });
       (p1p1PackModel.put as jest.Mock).mockRejectedValue(new Error('Database write failed'));
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: false,
@@ -231,7 +231,7 @@ describe('rotateDailyP1P1', () => {
       });
       (addNotification as jest.Mock).mockResolvedValue(undefined);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: true,
@@ -276,7 +276,7 @@ describe('rotateDailyP1P1', () => {
       (dailyP1P1Model.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
       (User.getById as jest.Mock).mockRejectedValue(new Error('User fetch failed'));
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       // Should still return success even if notification fails
       expect(result).toEqual({
@@ -315,7 +315,7 @@ describe('rotateDailyP1P1', () => {
       (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Model.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
 
-      const result = await rotateDailyP1P1();
+      const result = await rotateDailyP1P1(generatePack);
 
       expect(result).toEqual({
         success: true,

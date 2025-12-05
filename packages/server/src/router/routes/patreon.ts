@@ -3,7 +3,7 @@ import { UserRoles } from '@utils/datatypes/User';
 import crypto from 'crypto';
 import Patron from 'dynamo/models/patron';
 import User from 'dynamo/models/user';
-import { oauth,patreon } from 'patreon';
+import { oauth, patreon } from 'patreon';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { ensureAuth } from 'src/router/middleware';
 
