@@ -261,7 +261,15 @@ const mapTotalsToCardHistory = (
       for (const cube of Object.values(cubes)) {
         const cubeCards = cube.map((id) => cardFromId(id));
         const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
-        const { pauper, peasant, type } = getCubeTypes(cubeCards.map((card) => ({ cardID: card.scryfall_id })));
+        const { pauper, peasant, type } = getCubeTypes(
+          cubeCards.map((card) => ({
+            cardID: card.scryfall_id,
+            status: 'Not Owned',
+            cmc: card.cmc || 0,
+            tags: [],
+            colors: card.colors || [],
+          })),
+        );
 
         const size = cube.length;
 

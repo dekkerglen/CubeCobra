@@ -39,6 +39,11 @@ interface CubeTypeResult {
   type: number;
 }
 
+export interface GeneratePackResult {
+  seed: string;
+  pack: any[];
+}
+
 function getCubeId(cube: { shortId?: string; id: string }): string {
   if (cube.shortId) return cube.shortId;
   return cube.id;
@@ -427,7 +432,7 @@ async function generateBalancedPack(
   seedPrefix: string,
   candidateCount: number = 10,
   deterministicSeed: number | null = null,
-): Promise<any> {
+): Promise<GeneratePackResult> {
   // Use deterministicSeed if provided (for routes), otherwise use Date.now() (for daily P1P1)
   const baseSeed = deterministicSeed || Date.now();
   const packCandidates = [];
@@ -471,13 +476,7 @@ async function generateBalancedPack(
     current.maxBotWeight < best.maxBotWeight ? current : best,
   );
 
-  return {
-    packResult: selectedCandidate.packResult,
-    botResult: selectedCandidate.botResult,
-    seed: selectedCandidate.seed,
-    maxBotWeight: selectedCandidate.maxBotWeight,
-    allCandidates: packCandidates,
-  };
+  return selectedCandidate.packResult;
 }
 
 function sanitize(html: string): string {
@@ -487,7 +486,7 @@ function sanitize(html: string): string {
   });
 }
 
-async function generatePack(cube: any, cards: any, seed?: string): Promise<any> {
+async function generatePack(cube: any, cards: any, seed?: string): Promise<GeneratePackResult> {
   if (!seed) {
     seed = Date.now().toString();
   }

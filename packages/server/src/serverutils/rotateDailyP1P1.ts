@@ -4,7 +4,7 @@ import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import User from 'dynamo/models/user';
 
-import { generatePack } from './cubefn';
+import { generateBalancedPack, generatePack, GeneratePackResult } from './cubefn';
 import * as util from './util';
 
 interface RotationResult {
@@ -16,12 +16,16 @@ interface RotationResult {
   dailyP1P1?: any;
 }
 
-interface GeneratePackResult {
-  seed: string;
-  pack: any[];
-}
+// Pack generation strategy type
+export type PackGenerationStrategy = (
+  cube: any,
+  cards: any,
+  seedPrefix: string,
+  candidateCount?: number,
+  deterministicSeed?: number | null,
+) => Promise<GeneratePackResult>;
 
-export async function rotateDailyP1P1(): Promise<RotationResult> {
+export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): Promise<RotationResult> {
   try {
     console.log('Starting daily P1P1 rotation...');
 
@@ -72,12 +76,12 @@ export async function rotateDailyP1P1(): Promise<RotationResult> {
     // Get cube cards
     const cards = await Cube.getCards(cube.id);
 
-    // Generate pack
+    // Generate pack using the provided strategy
     const seedPrefix = 'p1p1-of-the-day';
 
     console.log('Generating pack...');
 
-    const result = (await generatePack(cube, cards, seedPrefix)) as GeneratePackResult;
+    const result = await generatePackFn(cube, cards, seedPrefix, 10, null);
 
     console.log('Generated pack with', result.pack.length, 'cards');
 
@@ -148,4 +152,20 @@ export async function rotateDailyP1P1(): Promise<RotationResult> {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return { success: false, error: errorMessage };
   }
+}
+
+/**
+ * Rotate daily P1P1 using the balanced pack generation strategy
+ * This generates multiple pack candidates and selects the most balanced one
+ */
+export async function rotateDailyP1P1WithBalancedPack(): Promise<RotationResult> {
+  return rotateDailyP1P1(generateBalancedPack);
+}
+
+/**
+ * Rotate daily P1P1 using the standard pack generation strategy
+ * This generates a single pack without balance optimization
+ */
+export async function rotateDailyP1P1WithStandardPack(): Promise<RotationResult> {
+  return rotateDailyP1P1(generatePack);
 }
