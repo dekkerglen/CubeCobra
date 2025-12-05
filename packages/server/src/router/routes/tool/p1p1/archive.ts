@@ -2,6 +2,7 @@ import Cube from 'dynamo/models/cube';
 import dailyP1P1Model from 'dynamo/models/dailyP1P1';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import { render } from 'serverutils/render';
+
 import { Request, Response } from '../../../../types/express';
 
 export const getArchiveHandler = async (req: Request, res: Response) => {

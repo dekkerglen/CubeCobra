@@ -8,6 +8,7 @@ import Draft from 'dynamo/models/draft';
 import Joi from 'joi';
 import { deckbuild } from 'serverutils/draftbots';
 import { addNotification } from 'serverutils/util';
+
 import { NextFunction, Request, Response } from '../../../types/express';
 
 interface FinishDraftBody {

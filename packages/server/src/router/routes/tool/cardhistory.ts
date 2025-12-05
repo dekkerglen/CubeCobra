@@ -1,5 +1,6 @@
 import { createTypeGuard } from '@utils/typeGuards';
 import CardHistory from 'dynamo/models/cardhistory';
+
 import { Request, Response } from '../../../types/express';
 
 const zoomValues = ['month', 'year'] as const;

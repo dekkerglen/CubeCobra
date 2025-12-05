@@ -2,6 +2,7 @@ import User from 'dynamo/models/user';
 import passport from 'passport';
 import { redirect, render } from 'serverutils/render';
 import { getSafeReferrer } from 'serverutils/util';
+
 import { Request, Response } from '../../../types/express';
 
 const getLoginRedirect = (req: Request) => {

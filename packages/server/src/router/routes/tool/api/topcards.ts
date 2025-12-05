@@ -3,6 +3,7 @@ import { OrderedSortsType, SortFunctions } from '@utils/sorting/Sort';
 import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
 import Joi from 'joi';
 import { searchCards } from 'serverutils/tools';
+
 import { NextFunction, Request, Response } from '../../../../types/express';
 
 const validSortNames = Object.keys(SortFunctions);

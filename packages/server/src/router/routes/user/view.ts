@@ -2,6 +2,7 @@ import Cube from 'dynamo/models/cube';
 import User from 'dynamo/models/user';
 import { isCubeListed } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+
 import { Request, Response } from '../../../types/express';
 
 export const handler = async (req: Request, res: Response) => {

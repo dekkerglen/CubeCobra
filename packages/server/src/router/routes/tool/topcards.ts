@@ -3,6 +3,7 @@ import { OrderedSortsType } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
 import { handleRouteError, render } from 'serverutils/render';
 import { searchCards } from 'serverutils/tools';
+
 import { Request, Response } from '../../../types/express';
 
 /* Minimum number of picks for data to show up in Top cards list. */
