@@ -1,4 +1,4 @@
-import { redirect } from '../../serverutils/render';
+import { redirect } from 'serverutils/render';
 import { Request, Response } from '../../types/express';
 
 // Draft shortcut redirect - /d/:id redirects to /draft/:id

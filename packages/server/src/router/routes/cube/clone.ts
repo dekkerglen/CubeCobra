@@ -2,7 +2,7 @@ import Cube from 'dynamo/models/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
 
@@ -22,7 +22,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
     const sourceCards = await Cube.getCards(source.id);
 
     const cube = {
-      id: uuid.v4(),
+      id: uuidv4(),
       shortId: null,
       name: `Clone of ${source.name}`,
       owner: req.user.id,

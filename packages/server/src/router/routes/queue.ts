@@ -1,7 +1,7 @@
 import Cube from 'dynamo/models/cube';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 
-import { render } from '../../serverutils/render';
+import { render } from 'serverutils/render';
 import { Request, Response } from '../../types/express';
 
 const queueHandler = async (req: Request, res: Response) => {

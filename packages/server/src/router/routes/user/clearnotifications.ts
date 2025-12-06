@@ -1,6 +1,6 @@
 import { NotificationStatus } from '@utils/datatypes/Notification';
 import Notification from 'dynamo/models/notification';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

@@ -2,9 +2,9 @@ import Cube from 'dynamo/models/cube';
 import CubeHash from 'dynamo/models/cubeHash';
 import Draft from 'dynamo/models/draft';
 
-import { isCubeListed } from '../../serverutils/cubefn';
-import { getFeaturedCubes } from '../../serverutils/featuredQueue';
-import { render } from '../../serverutils/render';
+import { isCubeListed } from 'serverutils/cubefn';
+import { getFeaturedCubes } from 'serverutils/featuredQueue';
+import { render } from 'serverutils/render';
 import { Request, Response } from '../../types/express';
 
 const exploreHandler = async (req: Request, res: Response) => {

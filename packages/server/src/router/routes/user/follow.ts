@@ -1,7 +1,7 @@
 import User from 'dynamo/models/user';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

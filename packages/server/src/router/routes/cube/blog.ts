@@ -9,7 +9,7 @@ import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl, getSafeReferrer } from 'serverutils/util';
-import { csrfProtection, ensureAuth, ensureAuthJson } from 'src/router/middleware';
+import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

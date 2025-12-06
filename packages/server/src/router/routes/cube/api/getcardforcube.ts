@@ -1,4 +1,4 @@
-import { getMostReasonable } from '../../../../serverutils/carddb';
+import { getMostReasonable } from 'serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const getcardforcubeHandler = async (req: Request, res: Response) => {

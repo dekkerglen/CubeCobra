@@ -3,7 +3,7 @@ import Cube from 'dynamo/models/cube';
 import CubeHash from 'dynamo/models/cubeHash';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
 import { hasProfanity } from 'serverutils/util';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

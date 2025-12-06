@@ -5,7 +5,7 @@ import Package from 'dynamo/models/package';
 import User from 'dynamo/models/user';
 import { cardFromId } from 'serverutils/carddb';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { csrfProtection, ensureAuth, ensureRole } from 'src/router/middleware';
+import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 
 import { Request, Response } from '../../types/express';
 

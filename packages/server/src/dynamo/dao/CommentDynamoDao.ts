@@ -4,7 +4,7 @@ import { CubeImage } from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 import { v4 as uuidv4 } from 'uuid';
 
-import { getImageData } from '../../serverutils/imageutil';
+import { getImageData } from 'serverutils/imageutil';
 import CommentModel from '../models/comment';
 import UserModel from '../models/user';
 import { BaseDynamoDao } from './BaseDynamoDao';

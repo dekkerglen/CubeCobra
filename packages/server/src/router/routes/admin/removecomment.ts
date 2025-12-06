@@ -2,7 +2,7 @@ import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { commentDao } from 'dynamo/daos';
 import Notice from 'dynamo/models/notice';
-import { csrfProtection, ensureRole } from 'routes/middleware';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 

@@ -324,6 +324,50 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
     return this.putWithOptimisticLocking(item);
   }
 
+  /**
+   * Writes multiple items to the table in batches of 25 (DynamoDB limit).
+   * Note: BatchWrite does not support conditional writes, so this bypasses optimistic locking.
+   * Use with caution, especially for updates.
+   *
+   * @param items - The items to write.
+   * @returns A promise that resolves when all items have been written.
+   */
+  public async batchPut(items: T[]): Promise<void> {
+    if (items.length === 0) {
+      return;
+    }
+
+    const dynamoItems = items.map((item) => this.toDynamoItem(item));
+
+    // Batch writes in chunks of 25 (DynamoDB limit)
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < dynamoItems.length; i += BATCH_SIZE) {
+      const batch = dynamoItems.slice(i, i + BATCH_SIZE);
+
+      try {
+        await this.dynamoClient.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              [this.tableName]: batch.map((dynamoItem) => ({
+                PutRequest: {
+                  Item: dynamoItem,
+                },
+              })),
+            },
+          }),
+        );
+      } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
+        const code = error instanceof DaoError ? error.code : ErrorCode.INTERNAL_SERVER_ERROR;
+
+        throw new DaoError(`Error batch putting items: ${error.message}`, code, {
+          cause: error,
+          meta: { batchIndex: i, batchSize: batch.length },
+        });
+      }
+    }
+  }
+
   public async update(item: T): Promise<void> {
     const dynamoItem = await this.getRaw({
       PK: this.partitionKey(item),

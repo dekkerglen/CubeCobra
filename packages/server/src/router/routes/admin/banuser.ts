@@ -6,7 +6,7 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Notice from 'dynamo/models/notice';
 import User from 'dynamo/models/user';
-import { csrfProtection, ensureRole } from 'routes/middleware';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 

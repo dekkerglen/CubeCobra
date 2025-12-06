@@ -3,7 +3,7 @@ import User from 'dynamo/models/user';
 import { body } from 'express-validator';
 import sendEmail from 'serverutils/email';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { csrfProtection, flashValidationErrors } from 'src/router/middleware';
+import { csrfProtection, flashValidationErrors } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

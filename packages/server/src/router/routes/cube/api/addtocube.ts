@@ -6,9 +6,9 @@ import Feed from 'dynamo/models/feed';
 import Package from 'dynamo/models/package';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { newCard } from 'serverutils/util';
-import { ensureAuth } from 'src/router/middleware';
+import { ensureAuth } from 'router/middleware';
 
-import { cardFromId } from '../../../../serverutils/carddb';
+import { cardFromId } from 'serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const addtocubeHandler = async (req: Request, res: Response) => {

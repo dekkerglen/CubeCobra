@@ -4,10 +4,10 @@ import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import Joi from 'joi';
 import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
-import { bodyValidation } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
+import { bodyValidation } from 'router/middleware';
 
-import { getBotPrediction } from '../../../../serverutils/userUtil';
+import { getBotPrediction } from 'serverutils/userUtil';
 import { Request, Response } from '../../../../types/express';
 
 const CreateP1P1FromPackSchema = Joi.object({

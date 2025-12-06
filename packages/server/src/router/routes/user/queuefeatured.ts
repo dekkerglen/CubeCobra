@@ -2,7 +2,7 @@ import Cube from 'dynamo/models/cube';
 import Patron from 'dynamo/models/patron';
 import * as fq from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

@@ -1,6 +1,6 @@
 import { UserRoles } from '@utils/datatypes/User';
 import User from 'dynamo/models/user';
-import { csrfProtection, ensureRole } from 'routes/middleware';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { rotateFeatured } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';

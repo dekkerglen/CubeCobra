@@ -1,7 +1,7 @@
 import Cube from 'dynamo/models/cube';
 import User from 'dynamo/models/user';
 import { handleRouteError, render } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

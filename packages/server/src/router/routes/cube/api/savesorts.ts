@@ -1,6 +1,6 @@
 import Cube from 'dynamo/models/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
-import { ensureAuth } from 'src/router/middleware';
+import { ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

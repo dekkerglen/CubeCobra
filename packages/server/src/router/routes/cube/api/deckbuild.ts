@@ -1,4 +1,4 @@
-import { deckbuild } from '../../../../serverutils/draftbots';
+import { deckbuild } from 'serverutils/draftbots';
 import { Request, Response } from '../../../../types/express';
 
 export const deckbuildHandler = async (req: Request, res: Response) => {

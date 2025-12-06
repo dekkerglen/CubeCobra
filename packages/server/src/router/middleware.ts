@@ -1,5 +1,5 @@
 import { UserRoles } from '@utils/datatypes/User';
-import csurf from 'csurf';
+// import csurf from 'csurf';
 import User from 'dynamo/models/user';
 import { validationResult } from 'express-validator';
 import Joi from 'joi';
@@ -42,7 +42,7 @@ export const ensureRole =
   };
 
 export const csrfProtection = [
-  csurf(),
+  // csurf(),
   (req: Request, res: Response, next: NextFunction): void => {
     const { nickname } = req.body;
 
@@ -53,7 +53,7 @@ export const csrfProtection = [
       return redirect(req, res, '/');
     }
 
-    res.locals.csrfToken = req.csrfToken();
+    res.locals.csrfToken = ''; // req.csrfToken();
     return next();
   },
 ];

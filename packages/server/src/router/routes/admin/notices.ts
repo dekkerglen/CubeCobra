@@ -1,7 +1,7 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import Notice from 'dynamo/models/notice';
-import { csrfProtection, ensureRole } from 'routes/middleware';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 

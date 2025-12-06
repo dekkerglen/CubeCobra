@@ -1,6 +1,6 @@
 import { UserRoles } from '@utils/datatypes/User';
 import Cube from 'dynamo/models/cube';
-import { csrfProtection, ensureRole } from 'routes/middleware';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { addNewCubeToQueue } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';

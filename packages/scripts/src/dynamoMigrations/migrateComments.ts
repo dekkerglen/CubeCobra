@@ -1,12 +1,10 @@
 // Load Environment Variables
-require('dotenv').config();
+import 'dotenv/config';
 
 import { UnhydratedComment } from '@utils/datatypes/Comment';
-
-const client = require('../../server/build/dynamo/client').default;
-const { CommentDynamoDao } = require('../../server/build/dynamo/dao/CommentDynamoDao');
-const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
-const CommentModel = require('../../server/build/dynamo/models/comment').default;
+import documentClient from '@server/dynamo/documentClient';
+import { CommentDynamoDao } from 'dynamo/dao/CommentDynamoDao';
+import CommentModel from '@server/dynamo/models/comment';
 
 interface MigrationStats {
   total: number;
@@ -41,7 +39,6 @@ interface ScanResult {
     console.log('Starting comment migration from old format to new DynamoDB format');
     console.log('='.repeat(80));
 
-    const documentClient = DynamoDBDocumentClient.from(client);
     const tableName = process.env.DYNAMO_TABLE;
 
     if (!tableName) {
@@ -60,7 +57,7 @@ interface ScanResult {
       errors: 0,
     };
 
-    let lastKey = null;
+    let lastKey: Record<string, any> | undefined;
     let batchNumber = 0;
 
     do {
@@ -74,49 +71,50 @@ interface ScanResult {
       if (result.items && result.items.length > 0) {
         console.log(`Found ${result.items.length} comments in this batch`);
 
-        for (const oldComment of result.items as UnhydratedComment[]) {
-          stats.total += 1;
+        try {
+          // Check which comments already exist in new format
+          const existingChecks = await Promise.all(
+            result.items.map(async (oldComment) => ({
+              comment: oldComment,
+              exists: !!(await commentDao.getById(oldComment.id!)),
+            })),
+          );
 
-          try {
-            // Check if comment already exists in new format
-            const existingComment = await commentDao.getById(oldComment.id!);
+          // Filter to only comments that need to be migrated
+          const commentsToMigrate = existingChecks
+            .filter((check) => !check.exists)
+            .map((check) => ({
+              id: check.comment.id!,
+              parent: check.comment.parent,
+              type: check.comment.type,
+              owner: check.comment.owner ? ({ id: check.comment.owner } as any) : undefined,
+              body: check.comment.body,
+              date: check.comment.date,
+            }));
 
-            if (existingComment) {
-              stats.skipped += 1;
-              if (stats.total % 100 === 0) {
-                console.log(
-                  `Progress: ${stats.total} processed (${stats.skipped} skipped, ${stats.migrated} migrated, ${stats.errors} errors)`,
-                );
-              }
-              continue;
-            }
+          const skippedCount = result.items.length - commentsToMigrate.length;
+          stats.skipped += skippedCount;
+          stats.total += result.items.length;
 
-            // Create the comment in new format
-            const commentToMigrate = {
-              id: oldComment.id!,
-              parent: oldComment.parent,
-              type: oldComment.type,
-              owner: oldComment.owner ? ({ id: oldComment.owner } as any) : undefined,
-              body: oldComment.body,
-              date: oldComment.date,
-            };
+          if (commentsToMigrate.length > 0) {
+            // Batch write all comments that need to be migrated
+            await commentDao.batchPut(commentsToMigrate);
+            stats.migrated += commentsToMigrate.length;
+            console.log(`Migrated ${commentsToMigrate.length} comments, skipped ${skippedCount}`);
+          } else {
+            console.log(`All ${result.items.length} comments already exist, skipped`);
+          }
 
-            await commentDao.put(commentToMigrate);
-            stats.migrated += 1;
+          console.log(
+            `Progress: ${stats.total} processed (${stats.skipped} skipped, ${stats.migrated} migrated, ${stats.errors} errors)`,
+          );
+        } catch (error) {
+          stats.errors += result.items.length;
+          console.error(`Error migrating batch:`, error);
 
-            if (stats.total % 100 === 0) {
-              console.log(
-                `Progress: ${stats.total} processed (${stats.skipped} skipped, ${stats.migrated} migrated, ${stats.errors} errors)`,
-              );
-            }
-          } catch (error) {
-            stats.errors += 1;
-            console.error(`Error migrating comment ${oldComment.id}:`, error);
-
-            if (stats.errors > 10) {
-              console.error('Too many errors, stopping migration');
-              throw new Error('Migration failed with too many errors');
-            }
+          if (stats.errors > 100) {
+            console.error('Too many errors, stopping migration');
+            throw new Error('Migration failed with too many errors');
           }
         }
       }

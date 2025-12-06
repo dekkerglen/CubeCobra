@@ -5,7 +5,7 @@ import Patron from 'dynamo/models/patron';
 import User from 'dynamo/models/user';
 import { oauth, patreon } from 'patreon';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { ensureAuth } from 'src/router/middleware';
+import { ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../types/express';
 

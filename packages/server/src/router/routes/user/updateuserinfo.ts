@@ -2,7 +2,7 @@ import User from 'dynamo/models/user';
 import { body } from 'express-validator';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { hasProfanity } from 'serverutils/util';
-import { csrfProtection, ensureAuth, flashValidationErrors } from 'src/router/middleware';
+import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

@@ -1,4 +1,4 @@
-import carddb from '../../../../serverutils/carddb';
+import carddb from 'serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const cardnamesHandler = async (_req: Request, res: Response) => {

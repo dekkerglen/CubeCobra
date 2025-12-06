@@ -8,18 +8,31 @@ import CubeAnalytic from 'dynamo/models/cubeAnalytic';
 import Draft from 'dynamo/models/draft';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import Notice from 'dynamo/models/notice';
+import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import User from 'dynamo/models/user';
 import RSS from 'rss';
 import { cardFromId, getIdsFromName } from 'serverutils/carddb';
-import { abbreviate, compareCubes, isCubeListed, isCubeViewable } from 'serverutils/cubefn';
+import {
+  abbreviate,
+  cachePromise,
+  compareCubes,
+  generateBalancedPack,
+  generatePack,
+  isCubeListed,
+  isCubeViewable,
+} from 'serverutils/cubefn';
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
+import { generateSamplepackImage } from 'serverutils/imageUtils';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl, hasProfanity, isAdmin } from 'serverutils/util';
-import { csrfProtection, ensureAuth, recaptcha } from 'src/router/middleware';
-import uuid from 'uuid';
+import { csrfProtection, ensureAuth, recaptcha } from 'router/middleware';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../types/express';
+
+const CARD_HEIGHT = 680;
+const CARD_WIDTH = 488;
 
 export const addHandler = async (req: Request, res: Response) => {
   try {
@@ -61,7 +74,7 @@ export const addHandler = async (req: Request, res: Response) => {
     }
 
     const cube = {
-      id: uuid.v4(),
+      id: uuidv4(),
       shortId: null,
       name: name,
       owner: user!.id,
@@ -708,6 +721,56 @@ export const analysisHandler = async (req: Request, res: Response) => {
   }
 };
 
+export const playtestHandler = async (req: Request, res: Response) => {
+  try {
+    const cube = await Cube.getById(req.params.id!);
+
+    if (!isCubeViewable(cube, req.user) || !cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    const decks = await Draft.getByCube(cube.id);
+
+    // Get previous P1P1 packs for this cube
+    let previousPacks: any[] = [];
+    let previousPacksLastKey: any = null;
+    try {
+      const previousPacksResult = await p1p1PackModel.queryByCube(cube.id, undefined, 10);
+      previousPacks = previousPacksResult.items || [];
+      previousPacksLastKey = previousPacksResult.lastKey;
+    } catch (error) {
+      // If we can't get previous packs, just continue without them
+      req.logger.error('Failed to fetch previous P1P1 packs:', error);
+    }
+
+    const baseUrl = getBaseUrl();
+    return render(
+      req,
+      res,
+      'CubePlaytestPage',
+      {
+        cube,
+        decks: decks.items,
+        decksLastKey: (decks as any).lastKey || null,
+        previousPacks,
+        previousPacksLastKey,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Playtest`,
+        metadata: generateMeta(
+          `Cube Cobra Playtest: ${cube.name}`,
+          cube.description,
+          cube.image.uri,
+          `${baseUrl}/cube/playtest/${req.params.id}`,
+        ),
+      },
+    );
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, `/cube/overview/${req.params.id}`);
+  }
+};
+
 export const recentsHandler = async (req: Request, res: Response) => {
   const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
 
@@ -860,6 +923,151 @@ export const unfeatureHandler = async (req: Request, res: Response) => {
   }
 };
 
+// Helper function to generate pack image
+const generatePackImage = async (pack: any[]): Promise<Buffer> => {
+  const width = Math.floor(Math.sqrt((5 / 3) * pack.length));
+  const height = Math.ceil(pack.length / width);
+
+  const sources = pack.map((card, index) => {
+    const x = (index % width) * CARD_WIDTH;
+    const y = Math.floor(index / width) * CARD_HEIGHT;
+    return {
+      src: card.details?.image_normal || card.details?.image_small || '',
+      x,
+      y,
+      width: CARD_WIDTH,
+      height: CARD_HEIGHT,
+    };
+  });
+
+  return generateSamplepackImage(sources, width * CARD_WIDTH, height * CARD_HEIGHT);
+};
+
+export const samplePackImageHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.seed || !req.params.id) {
+      req.flash('danger', 'Invalid parameters');
+      return redirect(req, res, '/404');
+    }
+
+    req.params.seed = req.params.seed.replace('.png', '');
+    const cube = await Cube.getById(req.params.id);
+
+    if (!isCubeViewable(cube, req.user) || !cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/cube/playtest/404');
+    }
+
+    const cards = await Cube.getCards(cube.id);
+    const isBalanced = req.query.balanced === 'true';
+
+    const cacheKey = `/samplepack/${req.params.id}/${req.params.seed}${isBalanced ? '?balanced=true' : ''}`;
+    const imageBuffer = await cachePromise(cacheKey, async () => {
+      if (isBalanced) {
+        const result = await generateBalancedPack(cube, cards, req.params.seed!, 10, null);
+        return generatePackImage(result.packResult.pack);
+      } else {
+        const pack = await generatePack(cube, cards, req.params.seed);
+        return generatePackImage(pack.pack);
+      }
+    });
+
+    res.writeHead(200, {
+      'Content-Type': 'image/webp',
+    });
+    return res.end(imageBuffer);
+  } catch (err) {
+    req.flash('danger', (err as Error).message);
+    return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id!)}`);
+  }
+};
+
+export const p1p1Handler = async (req: Request, res: Response) => {
+  try {
+    const { packId } = req.params;
+
+    // Validate pack exists
+    const pack = await p1p1PackModel.getById(packId!);
+    if (!pack) {
+      req.flash('danger', 'P1P1 pack not found');
+      return redirect(req, res, '/404');
+    }
+
+    // Get cube data
+    const cube = await Cube.getById(pack.cubeId);
+    if (!cube) {
+      req.flash('danger', 'Associated cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    // Calculate pack image dimensions
+    const width = Math.floor(Math.sqrt((5 / 3) * pack.cards.length));
+    const height = Math.ceil(pack.cards.length / width);
+
+    const baseUrl = getBaseUrl();
+    return render(
+      req,
+      res,
+      'P1P1Page',
+      {
+        packId,
+        cube,
+      },
+      {
+        title: 'Pack 1 Pick 1',
+        metadata: generateMeta(
+          'Pack 1 Pick 1 - Cube Cobra',
+          'Vote on your first pick from this pack!',
+          `${baseUrl}/cube/p1p1packimage/${packId}.png`,
+          `${baseUrl}/cube/p1p1/${packId}`,
+          CARD_WIDTH * width,
+          CARD_HEIGHT * height,
+        ),
+      },
+    );
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, '/404');
+  }
+};
+
+export const p1p1PackImageHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.packId) {
+      req.flash('danger', 'Invalid pack ID');
+      return redirect(req, res, '/404');
+    }
+
+    req.params.packId = req.params.packId.replace('.png', '');
+    const { packId } = req.params;
+
+    const pack = await p1p1PackModel.getById(packId);
+    if (!pack || !pack.cards || pack.cards.length === 0) {
+      req.flash('danger', 'P1P1 pack not found');
+      return redirect(req, res, '/404');
+    }
+
+    const cube = await Cube.getById(pack.cubeId);
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    const imageBuffer = await cachePromise(`/p1p1pack/${packId}`, async () => {
+      return generatePackImage(pack.cards);
+    });
+
+    res.writeHead(200, {
+      'Content-Type': 'image/webp',
+      'Cache-Control': 'public, max-age=86400, immutable',
+      ETag: `"${packId}"`,
+    });
+    return res.end(imageBuffer);
+  } catch (err) {
+    req.flash('danger', (err as Error).message || 'Error generating pack image');
+    return redirect(req, res, '/404');
+  }
+};
+
 export const routes = [
   {
     path: '/add',
@@ -942,6 +1150,11 @@ export const routes = [
     handler: [analysisHandler],
   },
   {
+    path: '/playtest/:id',
+    method: 'get',
+    handler: [playtestHandler],
+  },
+  {
     path: '/recents',
     method: 'get',
     handler: [csrfProtection, recentsHandler],
@@ -970,5 +1183,20 @@ export const routes = [
     path: '/unfeature/:id',
     method: 'get',
     handler: [csrfProtection, ensureAuth, unfeatureHandler],
+  },
+  {
+    path: '/samplepackimage/:id/:seed',
+    method: 'get',
+    handler: [samplePackImageHandler],
+  },
+  {
+    path: '/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
+    method: 'get',
+    handler: [p1p1Handler],
+  },
+  {
+    path: '/p1p1packimage/:packId',
+    method: 'get',
+    handler: [p1p1PackImageHandler],
   },
 ];

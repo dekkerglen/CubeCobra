@@ -11,7 +11,7 @@ import Notification from 'dynamo/models/notification';
 import Joi from 'joi';
 import { cardFromId } from 'serverutils/carddb';
 import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
-import { bodyValidation } from 'src/router/middleware';
+import { bodyValidation } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

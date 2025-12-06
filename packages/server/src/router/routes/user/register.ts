@@ -6,7 +6,7 @@ import { body } from 'express-validator';
 import sendEmail from 'serverutils/email';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { hasProfanity, validateEmail } from 'serverutils/util';
-import { csrfProtection, flashValidationErrors, recaptcha } from 'src/router/middleware';
+import { csrfProtection, flashValidationErrors, recaptcha } from 'router/middleware';
 import { v4 as uuid } from 'uuid';
 
 import { Request, Response } from '../../../types/express';

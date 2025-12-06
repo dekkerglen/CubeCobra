@@ -12,7 +12,7 @@
       "@jobs/*": ["../jobs/src/*"],
       "@utils/*": ["../utils/src/*"],
       "serverutils/*": ["src/serverutils/*"],
-      "routes/*": ["src/router/routes/*", "src/router/*"],
+      "router/*": ["src/router/*"],
       "dynamo/*": ["src/dynamo/*"],
       "types/*": ["src/types/*"]
     },

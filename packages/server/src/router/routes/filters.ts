@@ -1,4 +1,4 @@
-import { render } from '../../serverutils/render';
+import { render } from 'serverutils/render';
 import { Request, Response } from '../../types/express';
 
 const filtersHandler = (req: Request, res: Response) => {

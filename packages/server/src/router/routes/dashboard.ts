@@ -3,9 +3,9 @@ import Content from 'dynamo/models/content';
 import Draft from 'dynamo/models/draft';
 import Feed from 'dynamo/models/feed';
 
-import { getDailyP1P1 } from '../../serverutils/dailyP1P1';
-import { getFeaturedCubes } from '../../serverutils/featuredQueue';
-import { handleRouteError, redirect, render } from '../../serverutils/render';
+import { getDailyP1P1 } from 'serverutils/dailyP1P1';
+import { getFeaturedCubes } from 'serverutils/featuredQueue';
+import { handleRouteError, redirect, render } from 'serverutils/render';
 import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
 

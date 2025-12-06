@@ -1,7 +1,7 @@
 import Cube from 'dynamo/models/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 
-import { cardFromId } from '../../../../serverutils/carddb';
+import { cardFromId } from 'serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const cubelistHandler = async (req: Request, res: Response) => {

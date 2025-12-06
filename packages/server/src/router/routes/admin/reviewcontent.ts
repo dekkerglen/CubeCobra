@@ -1,7 +1,7 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { UserRoles } from '@utils/datatypes/User';
 import Content from 'dynamo/models/content';
-import { csrfProtection, ensureRole } from 'routes/middleware';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 

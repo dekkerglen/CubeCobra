@@ -14,7 +14,7 @@ import DynamoUser from 'dynamo/models/user';
 import { getImageData } from 'serverutils/imageutil';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../types/express';
 

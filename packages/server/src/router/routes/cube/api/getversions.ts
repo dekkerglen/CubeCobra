@@ -1,9 +1,9 @@
 import cardutil from '@utils/cardutil';
 import { body } from 'express-validator';
-import { jsonValidationErrors } from 'src/router/middleware';
+import { jsonValidationErrors } from 'router/middleware';
 
-import { cardFromId, getAllVersionIds } from '../../../../serverutils/carddb';
-import { isValidUUID } from '../../../../serverutils/validation';
+import { cardFromId, getAllVersionIds } from 'serverutils/carddb';
+import { isValidUUID } from 'serverutils/validation';
 import { Request, Response } from '../../../../types/express';
 
 export const getversionsParamHandler = async (req: Request, res: Response) => {

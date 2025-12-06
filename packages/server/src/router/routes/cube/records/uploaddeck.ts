@@ -12,8 +12,8 @@ import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'se
 import { addBasics, createPool } from 'serverutils/cube';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { bodyValidation } from 'src/router/middleware';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { bodyValidation } from 'router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

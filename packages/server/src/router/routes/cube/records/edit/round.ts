@@ -3,8 +3,8 @@ import Record from 'dynamo/models/record';
 import Joi from 'joi';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
-import { bodyValidation } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
+import { bodyValidation } from 'router/middleware';
 
 import { Request, Response } from '../../../../../types/express';
 

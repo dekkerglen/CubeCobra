@@ -8,7 +8,7 @@ import { updatePodcast } from 'serverutils/podcast';
 import { redirect, render } from 'serverutils/render';
 import { getFeedData } from 'serverutils/rss';
 import { getBaseUrl } from 'serverutils/util';
-import { csrfProtection, ensureAuth, ensureRole } from 'src/router/middleware';
+import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 
 import { Request, Response } from '../../types/express';
 

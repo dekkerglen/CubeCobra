@@ -5,7 +5,7 @@ const replacements = {
   '../../../../utils': '../../utils',
   '../../../dynamo': '../dynamo',
   '../../../serverutils': '../serverutils',
-  '../../../routes': '../routes',
+  '../../../router': '../router',
 };
 
 function replaceInFile(file) {

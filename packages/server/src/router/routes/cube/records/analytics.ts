@@ -8,7 +8,7 @@ import RecordDao from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

@@ -1,6 +1,6 @@
 // Load Environment Variables
 import { UserRoles } from '@utils/datatypes/User';
-import { csrfProtection, ensureRole } from 'routes/middleware';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 

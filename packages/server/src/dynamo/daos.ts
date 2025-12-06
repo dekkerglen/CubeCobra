@@ -7,4 +7,4 @@ if (!tableName) {
   throw new Error('DYNAMO_TABLE must be a defined environment variable');
 }
 
-export const commentDao: CommentDynamoDao = new CommentDynamoDao(documentClient, tableName, true);
+export const commentDao: CommentDynamoDao = new CommentDynamoDao(documentClient, tableName, false);

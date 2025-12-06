@@ -4,10 +4,10 @@ import filterutil from '@utils/filtering/FilterCards';
 import { sortForDownload } from '@utils/sorting/Sort';
 import Cube from 'dynamo/models/cube';
 
-import { cardFromId } from '../../../serverutils/carddb';
-import { CSV_HEADER, exportToMtgo, writeCard } from '../../../serverutils/cube';
-import { isCubeViewable } from '../../../serverutils/cubefn';
-import { handleRouteError, redirect } from '../../../serverutils/render';
+import { cardFromId } from 'serverutils/carddb';
+import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
+import { isCubeViewable } from 'serverutils/cubefn';
+import { handleRouteError, redirect } from 'serverutils/render';
 import { Request, Response } from '../../../types/express';
 
 const sortCardsByQuery = (req: Request, cards: Card[]): Card[] => {

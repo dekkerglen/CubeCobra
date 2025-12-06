@@ -2,7 +2,7 @@ import { commentDao } from 'dynamo/daos';
 import Cube from 'dynamo/models/cube';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import { isValidUUID } from 'serverutils/validation';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

@@ -1,8 +1,8 @@
 import { makeFilter } from '@utils/filtering/FilterCards';
 import Cube from 'dynamo/models/cube';
 
-import { getAllMostReasonable, getReasonableCardByOracleWithPrintingPreference } from '../../../../serverutils/carddb';
-import { recommend } from '../../../../serverutils/ml';
+import { getAllMostReasonable, getReasonableCardByOracleWithPrintingPreference } from 'serverutils/carddb';
+import { recommend } from 'serverutils/ml';
 import { Request, Response } from '../../../../types/express';
 
 export const cutsHandler = async (req: Request, res: Response) => {

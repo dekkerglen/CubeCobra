@@ -1,6 +1,6 @@
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
-import { ensureAuth, jsonValidationErrors } from 'src/router/middleware';
+import { ensureAuth, jsonValidationErrors } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 

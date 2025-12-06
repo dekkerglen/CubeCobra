@@ -1,7 +1,7 @@
 import { UserRoles } from '@utils/datatypes/User';
 import Cube from 'dynamo/models/cube';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
-import { csrfProtection, ensureRole } from 'routes/middleware';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
