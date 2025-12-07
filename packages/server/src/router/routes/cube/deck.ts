@@ -1,6 +1,7 @@
 import cardutil from '@utils/cardutil';
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { cubeDao, draftDao } from 'dynamo/daos';
+import Card from '@utils/datatypes/Card';
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
 import { ensureAuth } from 'router/middleware';
@@ -667,6 +668,16 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       added.push([]);
     }
 
+    const customCardNameMap = mainboard
+      .filter((card: any) => card.custom_name)
+      .reduce((map: Map<string, Card>, card: any) => {
+        const normalizedCustomName = cardutil.normalizeName(card.custom_name);
+        if (!map.has(normalizedCustomName)) {
+          map.set(normalizedCustomName, card);
+        }
+        return map;
+      }, new Map<string, Card>());
+
     for (let i = 0; i < cards.length; i += 1) {
       const item = cards[i].toLowerCase().trim();
       const numericMatch = item.match(/([0-9]+)x? (.*)/);
@@ -704,7 +715,17 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
               };
             }
           }
+        } else if (customCardNameMap.has(normalizedName)) {
+          const cubeCard = customCardNameMap.get(normalizedName)!;
+          selected = {
+            finish: cubeCard.finish,
+            imgBackUrl: cubeCard.imgBackUrl,
+            imgUrl: cubeCard.imgUrl,
+            cardID: cubeCard.cardID,
+            details: cardFromId(cubeCard.cardID),
+          };
         }
+
         if (selected) {
           // push into correct column.
           const details = selected.details;
