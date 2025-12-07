@@ -1,8 +1,7 @@
 import { ContentStatus, ContentType } from '@utils/datatypes/Content';
-import Content from 'dynamo/models/content';
 import { convert } from 'html-to-text';
-// @ts-ignore - no types available
 import sanitizeHtml from 'sanitize-html';
+import { episodeDao, podcastDao } from 'dynamo/daos';
 
 import { getFeedData, getFeedEpisodes } from './rss';
 
@@ -14,14 +13,24 @@ const removeSpan = (text: string): string =>
 export const updatePodcast = async (podcast: any): Promise<void> => {
   const feedData = await getFeedData(podcast.url);
   const feedEpisodes = await getFeedEpisodes(podcast.url);
-  const existingEpisodes = await Content.getPodcastEpisodes(podcast.id, ContentStatus.PUBLISHED);
+  const result = await episodeDao.queryByPodcastAndStatus(podcast.id, ContentStatus.PUBLISHED);
+
+  const existingEpisodes = result.items || [];
+  let lastKey = result.lastKey;
+
+  do {
+    const nextResult = await episodeDao.queryByPodcastAndStatus(podcast.id, ContentStatus.PUBLISHED, lastKey);
+    existingEpisodes.push(...(nextResult.items || []));
+    lastKey = nextResult.lastKey;
+  } while (lastKey);
+
   const existingGuids = existingEpisodes.map((episode) => episode.podcastGuid);
 
   // Find episodes that need image updates
   const episodesToUpdate = existingEpisodes.filter((episode) => episode.image !== feedData.image);
 
   if (episodesToUpdate.length > 0) {
-    await Content.batchPut(
+    await episodeDao.batchPut(
       episodesToUpdate.map((episode) => ({
         ...episode,
         image: feedData.image,
@@ -32,7 +41,7 @@ export const updatePodcast = async (podcast: any): Promise<void> => {
   // Update podcast image if different
   if (podcast.image !== feedData.image) {
     podcast.image = feedData.image;
-    await Content.update(podcast);
+    await podcastDao.update(podcast);
   }
 
   const filtered = feedEpisodes.filter((episode) => episode.guid && !existingGuids.includes(episode.guid));
@@ -57,10 +66,10 @@ export const updatePodcast = async (podcast: any): Promise<void> => {
         }).substring(0, 200),
       };
 
-      return Content.put(podcastEpisode as any, ContentType.EPISODE);
+      return episodeDao.createEpisode(podcastEpisode);
     }),
   );
 
   podcast.date = new Date().valueOf();
-  await Content.update(podcast);
+  await podcastDao.update(podcast);
 };

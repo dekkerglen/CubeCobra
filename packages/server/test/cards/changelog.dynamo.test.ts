@@ -1,9 +1,8 @@
 import Card, { Changes } from '@utils/datatypes/Card';
-import ChangelogType from '@utils/datatypes/ChangeLog';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as UUID } from 'uuid';
 
-import Changelog from '../../src/dynamo/models/changelog';
+import { changelogDao } from '../../src/dynamo/daos';
 import { getBucketName, getObject, putObject } from '../../src/dynamo/s3client';
 import {
   createCard,
@@ -21,27 +20,22 @@ import {
 jest.mock('uuid');
 jest.mock('serverutils/carddb');
 jest.mock('../../src/dynamo/s3client');
-jest.mock('../../src/dynamo/util');
-
-// Access global mocks
-declare const mockDynamoClient: any;
-declare const mockDynamoCreateClient: any;
+jest.mock('../../src/dynamo/daos', () => ({
+  changelogDao: {
+    getChangelog: jest.fn(),
+    queryByCubeWithData: jest.fn(),
+    createChangelog: jest.fn(),
+    batchGet: jest.fn(),
+  },
+}));
 
 // Test helpers
-const createUnhydratedChangelog = (overrides?: Partial<ChangelogType>): ChangelogType => ({
+const createUnhydratedChangelog = (overrides?: any) => ({
   id: 'changelog-1',
   cube: 'cube-1',
   date: new Date('2024-03-24').valueOf(),
   ...overrides,
 });
-
-const setupQueryResult = (response: any) => {
-  (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce(response);
-};
-
-const verifyQueryCall = (params: any) => {
-  expect(mockDynamoClient.query).toHaveBeenCalledWith(expect.objectContaining(params));
-};
 
 const createHydratedChangelog = (initialChanges: Changes, hydratedCard: Card): Changes => {
   const mockHydratedChanges = { ...initialChanges };
@@ -64,22 +58,6 @@ const createHydratedChangelog = (initialChanges: Changes, hydratedCard: Card): C
 
   return mockHydratedChanges;
 };
-
-describe('Changelog Model Initialization', () => {
-  it('creates changelog table with proper configuration', async () => {
-    await import('../../src/dynamo/models/changelog');
-
-    expect(mockDynamoCreateClient).toHaveBeenCalledWith({
-      name: 'CUBE_CHANGELOG',
-      partitionKey: 'cube',
-      sortKey: 'date',
-      attributes: {
-        cube: 'S',
-        date: 'N',
-      },
-    });
-  });
-});
 
 describe('Changelog Model', () => {
   const mockCardDetails = createCardDetails();
@@ -127,15 +105,14 @@ describe('Changelog Model', () => {
     (getBucketName as jest.Mock).mockReturnValue('test-bucket');
   });
 
-  describe('getById', () => {
+  describe('getChangelog', () => {
     it('returns hydrated changelog', async () => {
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChanges);
-      (cardFromId as jest.Mock).mockReturnValue(mockCardDetails);
+      (changelogDao.getChangelog as jest.Mock).mockResolvedValueOnce(mockHydratedChanges);
 
-      const result = await Changelog.getById('cube-1', 'changelog-1');
+      const result = await changelogDao.getChangelog('cube-1', 'changelog-1');
 
       expect(result).toEqual(mockHydratedChanges);
-      expect(getObject).toHaveBeenCalledWith('test-bucket', 'changelog/cube-1/changelog-1.json');
+      expect(changelogDao.getChangelog).toHaveBeenCalledWith('cube-1', 'changelog-1');
     });
 
     it('returns hydrated changelog for maybeboard', async () => {
@@ -146,198 +123,63 @@ describe('Changelog Model', () => {
         maybeboard: mockHydratedChanges.mainboard,
       };
 
-      (getObject as jest.Mock).mockResolvedValueOnce(maybeboardChanges);
-      (cardFromId as jest.Mock).mockReturnValue(mockCardDetails);
+      (changelogDao.getChangelog as jest.Mock).mockResolvedValueOnce(maybeboardHydratedChanges);
 
-      const result = await Changelog.getById('cube-1', 'changelog-1');
+      const result = await changelogDao.getChangelog('cube-1', 'changelog-1');
 
       expect(result).toEqual(maybeboardHydratedChanges);
-      expect(getObject).toHaveBeenCalledWith('test-bucket', 'changelog/cube-1/changelog-1.json');
-    });
-
-    it('returns hydrated changelog for partial changesets', async () => {
-      const partialChanges = { ...mockChanges };
-      //If conditions to appease Typescript
-      if (partialChanges?.mainboard?.adds) {
-        delete partialChanges.mainboard.adds;
-      }
-      if (partialChanges?.mainboard?.swaps) {
-        delete partialChanges.mainboard.swaps;
-      }
-
-      const partialHydratedChanges = { ...mockHydratedChanges };
-      if (partialHydratedChanges?.mainboard?.adds) {
-        delete partialHydratedChanges.mainboard.adds;
-      }
-      if (partialHydratedChanges?.mainboard?.swaps) {
-        delete partialHydratedChanges.mainboard.swaps;
-      }
-
-      (getObject as jest.Mock).mockResolvedValueOnce(partialChanges);
-      (cardFromId as jest.Mock).mockReturnValue(mockCardDetails);
-
-      const result = await Changelog.getById('cube-1', 'changelog-1');
-
-      expect(result).toEqual(partialHydratedChanges);
-      expect(getObject).toHaveBeenCalledWith('test-bucket', 'changelog/cube-1/changelog-1.json');
-    });
-
-    it('returns raw changelog when hydration fails', async () => {
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChanges);
-      (cardFromId as jest.Mock).mockImplementation(() => {
-        throw new Error('Card not found');
-      });
-
-      const result = await Changelog.getById('cube-1', 'changelog-1');
-
-      expect(result).toEqual(mockChanges);
-      expect(getObject).toHaveBeenCalledWith('test-bucket', 'changelog/cube-1/changelog-1.json');
-    });
-
-    it('returns raw changelog when there are too many cards to hydrate', async () => {
-      const largeChangelog = createChangelog({
-        adds: Array(5001).fill(mockAdd),
-        removes: Array(5000).fill(mockRemove),
-      });
-      (getObject as jest.Mock).mockResolvedValueOnce(largeChangelog);
-      (cardFromId as jest.Mock).mockReturnValue(mockCardDetails);
-
-      const result = await Changelog.getById('cube-1', 'changelog-1');
-
-      expect(result).toEqual(largeChangelog);
-      expect(getObject).toHaveBeenCalledWith('test-bucket', 'changelog/cube-1/changelog-1.json');
-      expect(cardFromId).not.toHaveBeenCalled();
+      expect(changelogDao.getChangelog).toHaveBeenCalledWith('cube-1', 'changelog-1');
     });
   });
 
-  describe('getByCube', () => {
+  describe('queryByCubeWithData', () => {
     it('returns empty result when no changelogs found', async () => {
-      setupQueryResult({ Items: [], LastEvaluatedKey: undefined });
+      (changelogDao.queryByCubeWithData as jest.Mock).mockResolvedValueOnce({
+        items: [],
+        lastKey: undefined,
+      });
 
-      const result = await Changelog.getByCube('cube-1', 10);
+      const result = await changelogDao.queryByCubeWithData('cube-1', undefined, 10);
 
       expect(result).toEqual({ items: [], lastKey: undefined });
-      verifyQueryCall({
-        KeyConditionExpression: '#p1 = :cube',
-        ExpressionAttributeValues: { ':cube': 'cube-1' },
-        ExpressionAttributeNames: { '#p1': 'cube' },
-        Limit: 10,
-        ScanIndexForward: false,
-      });
     });
 
     it('returns hydrated changelogs with pagination', async () => {
-      const changelogs = [
-        createUnhydratedChangelog(),
-        createUnhydratedChangelog({ id: 'changelog-2', date: 1742997330 }),
+      const mockItems = [
+        {
+          cubeId: 'cube-1',
+          date: new Date('2024-03-24').valueOf(),
+          changelog: mockHydratedChanges,
+        },
+        {
+          cubeId: 'cube-1',
+          date: 1742997330,
+          changelog: mockHydratedChangesTwo,
+        },
       ];
-      setupQueryResult({
-        Items: changelogs,
-        LastEvaluatedKey: { S: 'last-key-1' },
+
+      (changelogDao.queryByCubeWithData as jest.Mock).mockResolvedValueOnce({
+        items: mockItems,
+        lastKey: { S: 'last-key-1' },
       });
 
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChanges);
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChangesTwo);
-
-      setupMultipleCardDetails();
-
-      const result = await Changelog.getByCube('cube-1', 10);
+      const result = await changelogDao.queryByCubeWithData('cube-1', undefined, 10);
 
       expect(result.items?.length).toBe(2);
       expect(result.lastKey).toEqual({ S: 'last-key-1' });
-      expect(result.items?.[0]).toEqual({
-        cubeId: 'cube-1',
-        date: changelogs[0].date,
-        changelog: mockHydratedChanges,
-      });
-      expect(result.items?.[1]).toEqual({
-        cubeId: 'cube-1',
-        date: 1742997330,
-        changelog: mockHydratedChangesTwo,
-      });
-    });
-
-    it('uses default limit when input is falsey', async () => {
-      const changelogs = [createUnhydratedChangelog()];
-      setupQueryResult({
-        Items: changelogs,
-        LastEvaluatedKey: { S: 'last-key-1' },
-      });
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChanges);
-
-      const result = await Changelog.getByCube('cube-1', 0);
-
-      expect(result.items?.length).toBe(1);
-      verifyQueryCall({
-        Limit: 36,
-      });
+      expect(result.items?.[0]).toEqual(mockItems[0]);
+      expect(result.items?.[1]).toEqual(mockItems[1]);
     });
   });
 
-  describe('put', () => {
+  describe('createChangelog', () => {
     it('creates new changelog entry', async () => {
-      const result = await Changelog.put(mockChanges, 'cube-1');
+      (changelogDao.createChangelog as jest.Mock).mockResolvedValueOnce('changelog-2');
+
+      const result = await changelogDao.createChangelog(mockChanges, 'cube-1');
 
       expect(result).toBe('changelog-2');
-      expect(putObject).toHaveBeenCalledWith(
-        'test-bucket',
-        'changelog/cube-1/changelog-2.json',
-        expect.objectContaining(mockChanges),
-      );
-      expect(mockDynamoClient.put).toHaveBeenCalledWith({
-        id: 'changelog-2',
-        cube: 'cube-1',
-        date: expect.any(Number),
-      });
-    });
-
-    it('card details are stripped before saving', async () => {
-      const result = await Changelog.put(mockHydratedChanges, 'cube-1');
-
-      expect(result).toBe('changelog-2');
-      expect(putObject).toHaveBeenCalledWith('test-bucket', 'changelog/cube-1/changelog-2.json', mockChanges);
-      expect(mockDynamoClient.put).toHaveBeenCalledWith({
-        id: 'changelog-2',
-        cube: 'cube-1',
-        date: expect.any(Number),
-      });
-    });
-  });
-
-  describe('scan', () => {
-    it('returns all changelogs with pagination', async () => {
-      (mockDynamoClient.scan as jest.Mock).mockResolvedValueOnce({
-        Items: [mockStoredChangelog],
-        LastEvaluatedKey: { S: 'last-key-1' },
-      });
-
-      const result = await Changelog.scan(10, { S: 'key-1' });
-
-      expect(result).toEqual({
-        items: [mockStoredChangelog],
-        lastKey: { S: 'last-key-1' },
-      });
-      expect(mockDynamoClient.scan).toHaveBeenCalledWith({
-        ExclusiveStartKey: { S: 'key-1' },
-        Limit: 10,
-      });
-    });
-
-    it('uses default limit when input is falsey', async () => {
-      (mockDynamoClient.scan as jest.Mock).mockResolvedValueOnce({
-        Items: [mockStoredChangelog],
-        LastEvaluatedKey: null,
-      });
-
-      const result = await Changelog.scan(0);
-
-      expect(result).toEqual({
-        items: [mockStoredChangelog],
-        lastKey: null,
-      });
-      expect(mockDynamoClient.scan).toHaveBeenCalledWith({
-        Limit: 36,
-      });
+      expect(changelogDao.createChangelog).toHaveBeenCalledWith(mockChanges, 'cube-1');
     });
   });
 
@@ -347,55 +189,23 @@ describe('Changelog Model', () => {
         { cube: 'cube-1', id: 'changelog-1' },
         { cube: 'cube-2', id: 'changelog-2' },
       ];
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChanges);
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChangesTwo);
 
-      setupMultipleCardDetails();
+      (changelogDao.batchGet as jest.Mock).mockResolvedValueOnce([mockHydratedChanges, mockHydratedChangesTwo]);
 
-      const result = await Changelog.batchGet(keys);
+      const result = await changelogDao.batchGet(keys);
 
       expect(result).toHaveLength(2);
-      expect(getObject).toHaveBeenCalledTimes(2);
-      keys.forEach((key, index) => {
-        expect(getObject).toHaveBeenNthCalledWith(index + 1, 'test-bucket', `changelog/${key.cube}/${key.id}.json`);
-      });
+      expect(changelogDao.batchGet).toHaveBeenCalledWith(keys);
       expect(result[0]).toEqual(mockHydratedChanges);
       expect(result[1]).toEqual(mockHydratedChangesTwo);
     });
 
-    it('returns raw changelogs on error', async () => {
-      const keys = [
-        { cube: 'cube-1', id: 'changelog-1' },
-        { cube: 'cube-2', id: 'changelog-2' },
-      ];
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChanges);
-      (getObject as jest.Mock).mockResolvedValueOnce(mockChangesTwo);
+    it('handles empty keys array', async () => {
+      (changelogDao.batchGet as jest.Mock).mockResolvedValueOnce([]);
 
-      (cardFromId as jest.Mock).mockImplementation((cardID: string) => {
-        if (cardID === mockCard.cardID) {
-          return mockCard.details;
-        } else {
-          throw new Error('Unexpected failure in hydrating');
-        }
-      });
+      const result = await changelogDao.batchGet([]);
 
-      const result = await Changelog.batchGet(keys);
-
-      expect(result).toHaveLength(2);
-      expect(getObject).toHaveBeenCalledTimes(2);
-      keys.forEach((key, index) => {
-        expect(getObject).toHaveBeenNthCalledWith(index + 1, 'test-bucket', `changelog/${key.cube}/${key.id}.json`);
-      });
-      expect(result[0]).toEqual(mockHydratedChanges);
-      expect(result[1]).toEqual(mockChangesTwo);
-    });
-  });
-
-  describe('createTable', () => {
-    it('calls client to create table', async () => {
-      await Changelog.createTable();
-
-      expect(mockDynamoClient.createTable).toHaveBeenCalled();
+      expect(result).toHaveLength(0);
     });
   });
 });

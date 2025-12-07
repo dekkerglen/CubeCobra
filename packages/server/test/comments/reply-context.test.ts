@@ -1,24 +1,34 @@
 import User from '@utils/datatypes/User';
 
-import Blog from '../../src/dynamo/models/blog';
-import Content from '../../src/dynamo/models/content';
 import Draft from '../../src/dynamo/models/draft';
 import Package from '../../src/dynamo/models/package';
 import { getReplyContext } from '../../src/router/routes/comment';
 
-// Mock the commentDao from dynamo/daos
+// Mock the DAOs from dynamo/daos
 jest.mock('../../src/dynamo/daos', () => ({
   commentDao: {
     getById: jest.fn(),
   },
+  blogDao: {
+    getById: jest.fn(),
+  },
+  articleDao: {
+    getById: jest.fn(),
+  },
+  videoDao: {
+    getById: jest.fn(),
+  },
+  podcastDao: {
+    getById: jest.fn(),
+  },
+  episodeDao: {
+    getById: jest.fn(),
+  },
 }));
 
-// Import the mocked commentDao
-import { commentDao } from '../../src/dynamo/daos';
-
-jest.mock('../../src/dynamo/models/blog');
+// Import the mocked DAOs
+import { articleDao, blogDao, commentDao, episodeDao, podcastDao, videoDao } from '../../src/dynamo/daos';
 jest.mock('../../src/dynamo/models/draft');
-jest.mock('../../src/dynamo/models/content');
 jest.mock('../../src/dynamo/models/package');
 
 describe('getReplyContext', () => {
@@ -38,11 +48,11 @@ describe('getReplyContext', () => {
   });
 
   it('should return the owner of a blog', async () => {
-    (Blog.getById as jest.Mock).mockResolvedValue({ id: 'blog123', owner: mockUser });
+    (blogDao.getById as jest.Mock).mockResolvedValue({ id: 'blog123', owner: mockUser });
 
     const owner = await getReplyContext.blog('blog123');
 
-    expect(Blog.getById).toHaveBeenCalledWith('blog123');
+    expect(blogDao.getById).toHaveBeenCalledWith('blog123');
     expect(owner).toEqual(mockUser);
   });
 
@@ -56,38 +66,38 @@ describe('getReplyContext', () => {
   });
 
   it('should return the owner of an article', async () => {
-    (Content.getById as jest.Mock).mockResolvedValue({ id: 'article123', owner: mockUser });
+    (articleDao.getById as jest.Mock).mockResolvedValue({ id: 'article123', owner: mockUser });
 
     const owner = await getReplyContext.article('article123');
 
-    expect(Content.getById).toHaveBeenCalledWith('article123');
+    expect(articleDao.getById).toHaveBeenCalledWith('article123');
     expect(owner).toEqual(mockUser);
   });
 
   it('should return the owner of a podcast', async () => {
-    (Content.getById as jest.Mock).mockResolvedValue({ id: 'podcast123', owner: mockUser });
+    (podcastDao.getById as jest.Mock).mockResolvedValue({ id: 'podcast123', owner: mockUser });
 
     const owner = await getReplyContext.podcast('podcast123');
 
-    expect(Content.getById).toHaveBeenCalledWith('podcast123');
+    expect(podcastDao.getById).toHaveBeenCalledWith('podcast123');
     expect(owner).toEqual(mockUser);
   });
 
   it('should return the owner of a video', async () => {
-    (Content.getById as jest.Mock).mockResolvedValue({ id: 'video123', owner: mockUser });
+    (videoDao.getById as jest.Mock).mockResolvedValue({ id: 'video123', owner: mockUser });
 
     const owner = await getReplyContext.video('video123');
 
-    expect(Content.getById).toHaveBeenCalledWith('video123');
+    expect(videoDao.getById).toHaveBeenCalledWith('video123');
     expect(owner).toEqual(mockUser);
   });
 
   it('should return the owner of an episode', async () => {
-    (Content.getById as jest.Mock).mockResolvedValue({ id: 'episode123', owner: mockUser });
+    (episodeDao.getById as jest.Mock).mockResolvedValue({ id: 'episode123', owner: mockUser });
 
     const owner = await getReplyContext.episode('episode123');
 
-    expect(Content.getById).toHaveBeenCalledWith('episode123');
+    expect(episodeDao.getById).toHaveBeenCalledWith('episode123');
     expect(owner).toEqual(mockUser);
   });
 
@@ -110,11 +120,11 @@ describe('getReplyContext', () => {
   });
 
   it('should return undefined if the resource does not exist', async () => {
-    (Blog.getById as jest.Mock).mockResolvedValue(null);
+    (blogDao.getById as jest.Mock).mockResolvedValue(null);
 
     const owner = await getReplyContext.blog('nonexistent-id');
 
-    expect(Blog.getById).toHaveBeenCalledWith('nonexistent-id');
+    expect(blogDao.getById).toHaveBeenCalledWith('nonexistent-id');
     expect(owner).toBeUndefined();
   });
 });

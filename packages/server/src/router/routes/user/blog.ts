@@ -1,4 +1,4 @@
-import Blog from 'dynamo/models/blog';
+import { blogDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
@@ -18,7 +18,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const posts = await Blog.getByOwner(req.params.userid, 10);
+    const posts = await blogDao.queryByOwner(req.params.userid, undefined, 10);
 
     return render(
       req,

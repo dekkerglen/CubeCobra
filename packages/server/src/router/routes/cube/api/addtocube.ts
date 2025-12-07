@@ -1,14 +1,13 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
-import Blog from 'dynamo/models/blog';
-import Changelog from 'dynamo/models/changelog';
+import { blogDao, changelogDao } from 'dynamo/daos';
 import Cube from 'dynamo/models/cube';
 import Feed from 'dynamo/models/feed';
 import Package from 'dynamo/models/package';
+import { ensureAuth } from 'router/middleware';
+import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { newCard } from 'serverutils/util';
-import { ensureAuth } from 'router/middleware';
 
-import { cardFromId } from 'serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const addtocubeHandler = async (req: Request, res: Response) => {
@@ -71,18 +70,17 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
 
     await Cube.updateCards(req.params.id, cubeCards);
 
-    const changelist = await Changelog.put(
+    const changelist = await changelogDao.createChangelog(
       {
         [req.body.board]: { adds },
       },
-      cube.id,
+      req.params.id,
     );
 
     if (tag) {
-      const id = await Blog.put({
+      const id = await blogDao.createBlog({
         body: `Add from the package [${tag}](/packages/${req.body.packid})`,
         owner: req.user.id,
-        date: new Date().valueOf(),
         cube: cube.id,
         title: `Added Package "${tag}"`,
         changelist,

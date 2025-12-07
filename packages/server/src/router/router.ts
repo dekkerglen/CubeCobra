@@ -1,8 +1,8 @@
 import express, { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
-
 import { redirect } from 'serverutils/render';
+
 import { Request, Response } from '../types/express';
 
 const router: Router = express.Router();

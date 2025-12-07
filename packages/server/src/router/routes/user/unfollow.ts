@@ -1,6 +1,6 @@
 import User from 'dynamo/models/user';
-import { redirect } from 'serverutils/render';
 import { csrfProtection, ensureAuth } from 'router/middleware';
+import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 

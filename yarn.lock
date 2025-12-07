@@ -7413,6 +7413,13 @@
   resolved "https://registry.npmjs.org/@types/rss/-/rss-0.0.32.tgz"
   integrity sha512-2oKNqKyUY4RSdvl5eZR1n2Q9yvw3XTe3mQHsFPn9alaNBxfPnbXBtGP8R0SV8pK1PrVnLul0zx7izbm5/gF5Qw==
 
+"@types/sanitize-html@^2.16.0":
+  version "2.16.0"
+  resolved "https://registry.npmjs.org/@types/sanitize-html/-/sanitize-html-2.16.0.tgz"
+  integrity sha512-l6rX1MUXje5ztPT0cAFtUayXF06DqPhRyfVXareEN5gGCFaP/iwsxIyKODr9XDhfxPpN6vXUFNfo5kZMXCxBtw==
+  dependencies:
+    htmlparser2 "^8.0.0"
+
 "@types/seedrandom@^2.4.28":
   version "2.4.34"
   resolved "https://registry.npmjs.org/@types/seedrandom/-/seedrandom-2.4.34.tgz"

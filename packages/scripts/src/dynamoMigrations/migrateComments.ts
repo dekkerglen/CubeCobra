@@ -1,10 +1,10 @@
 // Load Environment Variables
-import 'dotenv/config';
-
-import { UnhydratedComment } from '@utils/datatypes/Comment';
 import documentClient from '@server/dynamo/documentClient';
-import { CommentDynamoDao } from 'dynamo/dao/CommentDynamoDao';
 import CommentModel from '@server/dynamo/models/comment';
+import { UnhydratedComment } from '@utils/datatypes/Comment';
+import { CommentDynamoDao } from 'dynamo/dao/CommentDynamoDao';
+
+import 'dotenv/config';
 
 interface MigrationStats {
   total: number;

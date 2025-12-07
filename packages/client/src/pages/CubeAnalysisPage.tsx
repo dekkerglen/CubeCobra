@@ -72,7 +72,7 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
     'Mana Value': convertToCharacteristic('Mana Value', cardCmc),
     Power: convertToCharacteristic('Power', (card) => cardPower(card)),
     Toughness: convertToCharacteristic('Toughness', (card) => cardToughness(card)),
-    elo: convertToCharacteristic('elo', (card) => cardElo(card)),
+    Elo: convertToCharacteristic('Elo', (card) => cardElo(card)),
     Price: convertToCharacteristic('Price', (card) => cardPrice(card) ?? 0),
     'Price USD': convertToCharacteristic('Price USD', (card) => cardNormalPrice(card) ?? 0),
     'Price USD Foil': convertToCharacteristic('Price USD Foil', (card) => cardFoilPrice(card) ?? 0),

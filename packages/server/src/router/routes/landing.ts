@@ -1,10 +1,10 @@
-import { ContentStatus, ContentType } from '@utils/datatypes/Content';
-import Content from 'dynamo/models/content';
+import { ContentStatus } from '@utils/datatypes/Content';
 import Draft from 'dynamo/models/draft';
-
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
 import { redirect, render } from 'serverutils/render';
+import { articleDao, episodeDao, videoDao } from 'dynamo/daos';
+
 import { Request, Response } from '../../types/express';
 
 const landingHandler = async (req: Request, res: Response) => {
@@ -15,7 +15,19 @@ const landingHandler = async (req: Request, res: Response) => {
 
   const featured = await getFeaturedCubes();
 
-  const content = await Content.getByStatus(ContentStatus.PUBLISHED);
+  // Query all content types in parallel (excluding podcasts, only episodes)
+  const [articlesResult, videosResult, episodesResult] = await Promise.all([
+    articleDao.queryByStatus(ContentStatus.PUBLISHED),
+    videoDao.queryByStatus(ContentStatus.PUBLISHED),
+    episodeDao.queryByStatus(ContentStatus.PUBLISHED),
+  ]);
+
+  // Merge and sort by date descending
+  const content = [
+    ...(articlesResult.items || []),
+    ...(videosResult.items || []),
+    ...(episodesResult.items || []),
+  ].sort((a, b) => b.date - a.date);
 
   const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
 
@@ -24,7 +36,7 @@ const landingHandler = async (req: Request, res: Response) => {
 
   return render(req, res, 'LandingPage', {
     featured,
-    content: content.items?.filter((item: any) => item.type !== ContentType.PODCAST) || [],
+    content,
     recentDecks: recentDecks.items.filter((deck: any) => deck.complete),
     dailyP1P1,
   });

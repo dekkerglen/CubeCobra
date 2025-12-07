@@ -1,6 +1,5 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
-import Blog from 'dynamo/models/blog';
-import Changelog from 'dynamo/models/changelog';
+import { blogDao, changelogDao } from 'dynamo/daos';
 import Cube from 'dynamo/models/cube';
 import Feed from 'dynamo/models/feed';
 
@@ -102,13 +101,12 @@ export const commitHandler = async (req: Request, res: Response) => {
 
     await Cube.updateCards(cube.id, cards);
     try {
-      const changelogId = await Changelog.put(changes, cube.id);
+      const changelogId = await changelogDao.createChangelog(changes, cube.id);
 
       if (useBlog) {
-        const blogId = await Blog.put({
+        const blogId = await blogDao.createBlog({
           body: blog,
           owner: req.user.id,
-          date: new Date().valueOf(),
           cube: cube.id,
           title,
           changelist: changelogId,

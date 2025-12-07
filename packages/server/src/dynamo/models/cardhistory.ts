@@ -1,3 +1,5 @@
+// Migrated to /dao/CardHistoryDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
@@ -30,6 +32,18 @@ const cardhistory = {
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
       Limit: limit || 100,
+    });
+
+    return {
+      items: result.Items as UnhydratedCardHistory[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  scan: async (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: UnhydratedCardHistory[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
     });
 
     return {

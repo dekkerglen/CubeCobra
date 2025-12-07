@@ -1,7 +1,7 @@
 import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
-import { isCubeEditable } from 'serverutils/cubefn';
 import { csrfProtection, ensureAuth } from 'router/middleware';
+import { isCubeEditable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
 

@@ -5,15 +5,20 @@ import * as cubefn from 'serverutils/cubefn';
 import * as render from 'serverutils/render';
 import * as util from 'serverutils/util';
 
-import Blog from '../../../src/dynamo/models/blog';
-import Changelog from '../../../src/dynamo/models/changelog';
+import { blogDao, changelogDao } from '../../../src/dynamo/daos';
 import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
 import { createCardDetails, createCube, createUser } from '../../test-utils/data';
 
 jest.mock('../../../src/dynamo/models/cube');
-jest.mock('../../../src/dynamo/models/blog');
-jest.mock('../../../src/dynamo/models/changelog');
+jest.mock('../../../src/dynamo/daos', () => ({
+  blogDao: {
+    createBlog: jest.fn(),
+  },
+  changelogDao: {
+    createChangelog: jest.fn(),
+  },
+}));
 jest.mock('../../../src/dynamo/models/feed');
 jest.mock('serverutils/carddb');
 jest.mock('serverutils/cubefn');
@@ -33,8 +38,8 @@ describe('Bulk Upload', () => {
     existingCards: { mainboard: any[]; maybeboard: any[] } = { mainboard: [], maybeboard: [] },
   ) => {
     (Cube.getCards as jest.Mock).mockResolvedValue(existingCards);
-    (Changelog.put as jest.Mock).mockResolvedValue('changelog-id');
-    (Blog.put as jest.Mock).mockResolvedValue('blog-id');
+    (changelogDao.createChangelog as jest.Mock).mockResolvedValue('changelog-id');
+    (blogDao.createBlog as jest.Mock).mockResolvedValue('blog-id');
   };
 
   const createMockCardFromCSV = (details: any) => ({
@@ -49,7 +54,7 @@ describe('Bulk Upload', () => {
   });
 
   const expectSuccessfulUpload = (owner: any, cube: any) => {
-    expect(Blog.put).toHaveBeenCalledWith(
+    expect(blogDao.createBlog).toHaveBeenCalledWith(
       expect.objectContaining({
         owner: owner.id,
         cube: cube.id,

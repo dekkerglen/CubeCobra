@@ -3,10 +3,10 @@ import { DefaultGridTightnessPreference } from '@utils/datatypes/User';
 import bcrypt from 'bcryptjs';
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
+import { csrfProtection, flashValidationErrors, recaptcha } from 'router/middleware';
 import sendEmail from 'serverutils/email';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { hasProfanity, validateEmail } from 'serverutils/util';
-import { csrfProtection, flashValidationErrors, recaptcha } from 'router/middleware';
 import { v4 as uuid } from 'uuid';
 
 import { Request, Response } from '../../../types/express';

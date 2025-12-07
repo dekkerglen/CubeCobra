@@ -1,3 +1,5 @@
+// Migrated to /dao/BlogDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import BlogPost, { UnhydratedBlogPost } from '@utils/datatypes/BlogPost';
@@ -188,6 +190,17 @@ const blog = {
     await client.batchPut(documents.map((document) => fillRequiredDetails(document)));
   },
   batchGet: async (ids: string[]): Promise<BlogPost[]> => batchHydrate(await client.batchGet(ids)),
+  scan: async (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: UnhydratedBlogPost[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+    return {
+      items: result.Items as UnhydratedBlogPost[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   changelogToText: (changelog: Changes): string => {
     let result = '';

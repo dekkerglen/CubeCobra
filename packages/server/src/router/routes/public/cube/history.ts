@@ -1,4 +1,4 @@
-import Changelog from 'dynamo/models/changelog';
+import { changelogDao } from 'dynamo/daos';
 import Cube from 'dynamo/models/cube';
 import rateLimit from 'express-rate-limit';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -34,7 +34,7 @@ export const historyHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
-    const query = await Changelog.getByCube(cube.id, 50, req.body.lastKey);
+    const query = await changelogDao.queryByCube(cube.id, req.body.lastKey, 50);
     return res.status(200).send({
       success: 'true',
       posts: query.items,

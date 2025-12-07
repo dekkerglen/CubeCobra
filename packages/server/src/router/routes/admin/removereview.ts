@@ -1,15 +1,28 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { UserRoles } from '@utils/datatypes/User';
-import Content from 'dynamo/models/content';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import sendEmail from 'serverutils/email';
 import { redirect } from 'serverutils/render';
 import { addNotification, getBaseUrl } from 'serverutils/util';
+import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { Request, Response } from 'types/express';
 
 export const removereviewHandler = async (req: Request, res: Response) => {
-  const document = await Content.getById(req.params.id!);
+  // Try to find the content in each DAO
+  const [article, video, podcast, episode] = await Promise.all([
+    articleDao.getById(req.params.id!),
+    videoDao.getById(req.params.id!),
+    podcastDao.getById(req.params.id!),
+    episodeDao.getById(req.params.id!),
+  ]);
+
+  const document = article || video || podcast || episode;
+
+  if (!document) {
+    req.flash('danger', 'Content not found');
+    return redirect(req, res, '/admin/reviewcontent');
+  }
 
   if (document.status !== ContentStatus.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
@@ -19,20 +32,31 @@ export const removereviewHandler = async (req: Request, res: Response) => {
   document.status = ContentStatus.DRAFT;
   document.date = new Date().valueOf();
 
-  await Content.update(document);
+  // Update using the appropriate DAO
+  if (article) {
+    await articleDao.update(article);
+  } else if (video) {
+    await videoDao.update(video);
+  } else if (podcast) {
+    await podcastDao.update(podcast);
+  } else if (episode) {
+    await episodeDao.update(episode);
+  }
 
   if (document.owner && req.user) {
-    await addNotification(
-      document.owner,
-      req.user,
-      `/content/${document.type}/${document.id}`,
-      `${req.user.username} has declined to publish your content: ${document.title}`,
-    );
+    const ownerId = typeof document.owner === 'string' ? document.owner : document.owner.id;
 
     //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
-    const owner = await User.getByIdWithSensitiveData(document.owner.id);
+    const owner = await User.getByIdWithSensitiveData(ownerId);
 
     if (owner) {
+      await addNotification(
+        owner as any,
+        req.user,
+        `/content/${document.type}/${document.id}`,
+        `${req.user.username} has declined to publish your content: ${document.title}`,
+      );
+
       const baseUrl = getBaseUrl();
       await sendEmail(owner.email, 'Your Content was not published', 'content_decline', {
         title: document.title,

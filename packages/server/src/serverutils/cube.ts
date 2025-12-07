@@ -1,8 +1,7 @@
 import * as cardutil from '@utils/cardutil';
 import Card, { Changes } from '@utils/datatypes/Card';
 import { FeedTypes } from '@utils/datatypes/Feed';
-import Blog from 'dynamo/models/blog';
-import Changelog from 'dynamo/models/changelog';
+import { blogDao, changelogDao } from 'dynamo/daos';
 import Cube from 'dynamo/models/cube';
 import Feed from 'dynamo/models/feed';
 
@@ -91,11 +90,10 @@ async function updateCubeAndBlog(
     if (Object.keys(changelog).length > 0) {
       await Cube.updateCards(cube.id, cardsToWrite);
 
-      const changelist = await Changelog.put(changelog, cube.id);
+      const changelist = await changelogDao.createChangelog(changelog, cube.id);
 
-      const id = await Blog.put({
+      const id = await blogDao.createBlog({
         owner: req.user!.id,
-        date: new Date().valueOf(),
         cube: cube.id,
         title: 'Cube Bulk Import - Automatic Post',
         changelist,

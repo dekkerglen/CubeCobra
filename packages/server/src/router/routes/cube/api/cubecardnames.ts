@@ -1,8 +1,8 @@
 import Cube from 'dynamo/models/cube';
+import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { binaryInsert, turnToTree } from 'serverutils/util';
 
-import { cardFromId } from 'serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const cubecardnamesHandler = async (req: Request, res: Response) => {

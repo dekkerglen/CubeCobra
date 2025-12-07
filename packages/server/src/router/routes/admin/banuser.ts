@@ -1,7 +1,7 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { commentDao } from 'dynamo/daos';
-import Blog from 'dynamo/models/blog';
+import { blogDao } from 'dynamo/daos';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Notice from 'dynamo/models/notice';
@@ -32,20 +32,19 @@ export const banuserHandler = async (req: Request, res: Response) => {
     }
 
     // delete all blog posts
-    const blogResponse = await Blog.getByOwner(userToBan!, 100);
+    const blogResponse = await blogDao.queryByOwner(userToBan);
 
     let lastKey = blogResponse.lastKey;
     let blogIds = blogResponse.items.map((blog) => blog.id);
 
     while (lastKey) {
-      const nextResponse = await Blog.getByOwner(userToBan!, 100, lastKey);
+      const nextResponse = await blogDao.queryByOwner(userToBan, lastKey);
       lastKey = nextResponse.lastKey;
       blogIds = blogIds.concat(nextResponse.items.map((blog) => blog.id));
-    }
-
-    aggregates.blogPostsDeleted += blogIds.length;
-    for (const blogId of blogIds) {
-      await Blog.delete(blogId);
+      aggregates.blogPostsDeleted += nextResponse.items.length;
+      for (const blog of nextResponse.items) {
+        await blogDao.delete(blog);
+      }
     }
 
     // delete all drafts

@@ -1,15 +1,15 @@
 import CubeType from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
-import Blog from 'dynamo/models/blog';
+import { blogDao } from 'dynamo/daos';
 import Cube from 'dynamo/models/cube';
 import Feed from 'dynamo/models/feed';
 import User from 'dynamo/models/user';
+import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl, getSafeReferrer } from 'serverutils/util';
-import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -80,13 +80,13 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
     if (req.body.id && req.body.id.length > 0) {
       // update an existing blog post
-      const blog = await Blog.getUnhydrated(req.body.id);
+      const blog = await blogDao.getById(req.body.id);
       if (!blog) {
         res.status(404).json({ error: 'Blog not found.' });
         return;
       }
 
-      if (blog.owner !== user.id) {
+      if (blog.owner.id !== user.id) {
         res.status(403).json({ error: 'Unable to update this blog post: Unauthorized.' });
         return;
       }
@@ -94,7 +94,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       blog.body = req.body.markdown.substring(0, 10000);
       blog.title = req.body.title;
 
-      await Blog.put(blog);
+      await blogDao.update(blog);
 
       const redirectUrl = await getRedirectUrlForCube(req, cube);
       res.status(200).json({ ok: 'Blog update successful, reloading...', redirect: redirectUrl });
@@ -118,10 +118,9 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    const id: string = await Blog.put({
+    const id: string = await blogDao.createBlog({
       body: req.body.markdown?.substring(0, 10000) || '',
       owner: user.id,
-      date: new Date().valueOf(),
       cube: cube.id,
       title: req.body.title,
     });
@@ -176,7 +175,7 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const post = await Blog.getById(req.params.id);
+    const post = await blogDao.getById(req.params.id);
     if (!post) {
       req.flash('danger', 'Blog post not found');
 
@@ -216,7 +215,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/blog/blogpost/${encodeURIComponent(id)}`);
     }
 
-    const blog = await Blog.getById(id);
+    const blog = await blogDao.getById(id);
 
     if (!blog) {
       req.flash('danger', 'Blog post not found');
@@ -228,7 +227,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    await Blog.delete(id);
+    await blogDao.delete(blog);
     const redirectUrl = await getRedirectUrl(req, blog.cube, true);
 
     req.flash('success', 'Post Removed');
@@ -244,7 +243,7 @@ export const getMoreBlogPostsForCubeHandler = async (req: Request, res: Response
   }
 
   const { lastKey } = req.body;
-  const posts = await Blog.getByCube(req.params.id, 20, lastKey);
+  const posts = await blogDao.queryByCube(req.params.id, lastKey, 20);
 
   return res.status(200).send({
     success: 'true',
@@ -267,7 +266,7 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
       return redirect(req, res, '/404');
     }
 
-    const query = await Blog.getByCube(cube.id, 20);
+    const query = await blogDao.queryByCube(cube.id, undefined, 20);
     const baseUrl = getBaseUrl();
 
     return render(

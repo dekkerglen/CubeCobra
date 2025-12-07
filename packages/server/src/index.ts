@@ -324,14 +324,10 @@ schedule.scheduleJob('0 10 * * *', async () => {
 });
 
 // Start server after carddb and ML models are initialized.
-// Promise.all([initializeCardDb(), initializeMl()]).then(async () => {
-(async () => {
+Promise.all([initializeCardDb(), initializeMl()]).then(async () => {
   const port = process.env.PORT || 5000;
   const host = process.env.LISTEN_ON || '127.0.0.1';
   http.createServer(app).listen(Number(port), host);
 
   console.info(`Server started on port ${port}, listening on ${host}...`);
-})();
-
-initializeCardDb();
-initializeMl();
+});

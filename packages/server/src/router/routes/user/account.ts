@@ -1,8 +1,8 @@
 import Cube from 'dynamo/models/cube';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import Patron from 'dynamo/models/patron';
-import { redirect, render } from 'serverutils/render';
 import { csrfProtection, ensureAuth } from 'router/middleware';
+import { redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 

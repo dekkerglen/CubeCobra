@@ -1,8 +1,8 @@
 import { NoticeType } from '@utils/datatypes/Notice';
 import Notice from 'dynamo/models/notice';
 import User from 'dynamo/models/user';
-import { handleRouteError, redirect } from 'serverutils/render';
 import { csrfProtection, ensureAuth } from 'router/middleware';
+import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 

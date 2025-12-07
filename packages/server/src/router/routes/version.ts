@@ -1,5 +1,6 @@
 import { GIT_COMMIT } from 'serverutils/git';
 import { render } from 'serverutils/render';
+
 import { Request, Response } from '../../types/express';
 
 const versionHandler = async (req: Request, res: Response) => {

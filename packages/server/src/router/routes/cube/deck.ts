@@ -3,13 +3,13 @@ import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
+import { ensureAuth } from 'router/middleware';
 import { cardFromId, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
 import { addBasics, createPool, exportToMtgo } from 'serverutils/cube';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl } from 'serverutils/util';
-import { ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

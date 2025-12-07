@@ -1,8 +1,8 @@
 import { PrintingPreference } from '@utils/datatypes/Card';
 import { GridTightnessPreference } from '@utils/datatypes/User';
 import User from 'dynamo/models/user';
-import { redirect } from 'serverutils/render';
 import { csrfProtection, ensureAuth } from 'router/middleware';
+import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 

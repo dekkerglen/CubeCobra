@@ -2,19 +2,34 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import Content from 'dynamo/models/content';
 import Notice from 'dynamo/models/notice';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
+import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { Request, Response } from 'types/express';
 
 export const dashboardHandler = async (req: Request, res: Response) => {
   const noticeCount = await Notice.getByStatus(NoticeStatus.ACTIVE);
-  const contentInReview = await Content.getByStatus(ContentStatus.IN_REVIEW);
+
+  // Query all content types in review in parallel
+  const [articlesResult, videosResult, podcastsResult, episodesResult] = await Promise.all([
+    articleDao.queryByStatus(ContentStatus.IN_REVIEW),
+    videoDao.queryByStatus(ContentStatus.IN_REVIEW),
+    podcastDao.queryByStatus(ContentStatus.IN_REVIEW),
+    episodeDao.queryByStatus(ContentStatus.IN_REVIEW),
+  ]);
+
+  // Merge all content in review
+  const contentInReview = [
+    ...(articlesResult.items || []),
+    ...(videosResult.items || []),
+    ...(podcastsResult.items || []),
+    ...(episodesResult.items || []),
+  ];
 
   return render(req, res, 'AdminDashboardPage', {
     noticeCount: noticeCount.items?.length || 0,
-    contentInReview: contentInReview.items?.length || 0,
+    contentInReview: contentInReview.length,
   });
 };
 

@@ -1,8 +1,8 @@
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
+import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { hasProfanity } from 'serverutils/util';
-import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

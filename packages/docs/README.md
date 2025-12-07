@@ -34,3 +34,4 @@ This directory contains comprehensive documentation for setting up, developing, 
 - [Updating Cards](./maintenance/updating-cards.md) - Keeping card data current
 - [Analytics](./maintenance/analytics.md) - Card analytics and data exports
 - [Scheduled Jobs](./maintenance/scheduled-jobs.md) - Automated maintenance tasks
+- [DynamoDB Migration](./maintenance/dynamodb-migration.md) - Single table design migration status and guide

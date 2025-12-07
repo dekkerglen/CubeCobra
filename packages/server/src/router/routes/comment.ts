@@ -3,18 +3,17 @@ import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
 import { commentDao } from 'dynamo/daos';
-import Blog from 'dynamo/models/blog';
-import Content from 'dynamo/models/content';
+import { blogDao, articleDao, videoDao, podcastDao, episodeDao } from 'dynamo/daos';
 import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import Notice from 'dynamo/models/notice';
 import Package from 'dynamo/models/package';
 import Record from 'dynamo/models/record';
 import DynamoUser from 'dynamo/models/user';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getImageData } from 'serverutils/imageutil';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
-import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../types/express';
 
@@ -175,7 +174,7 @@ export const getReplyContext: Record<NotifiableCommentType, (id: string) => Prom
     return comment?.owner;
   },
   blog: async (id) => {
-    const blog = await Blog.getById(id);
+    const blog = await blogDao.getById(id);
     return blog?.owner;
   },
   deck: async (id) => {
@@ -183,19 +182,19 @@ export const getReplyContext: Record<NotifiableCommentType, (id: string) => Prom
     return deck?.owner;
   },
   article: async (id) => {
-    const article = await Content.getById(id);
+    const article = await articleDao.getById(id);
     return article?.owner;
   },
   podcast: async (id) => {
-    const podcast = await Content.getById(id);
+    const podcast = await podcastDao.getById(id);
     return podcast?.owner;
   },
   video: async (id) => {
-    const video = await Content.getById(id);
+    const video = await videoDao.getById(id);
     return video?.owner;
   },
   episode: async (id: string) => {
-    const episode = await Content.getById(id);
+    const episode = await episodeDao.getById(id);
     return episode?.owner;
   },
   package: async (id: string) => {

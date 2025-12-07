@@ -1,14 +1,15 @@
 import { ContentStatus, ContentType } from '@utils/datatypes/Content';
 import { NoticeType } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import Content from 'dynamo/models/content';
+import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
 import Notice from 'dynamo/models/notice';
+import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 import generateMeta from 'serverutils/meta';
 import { updatePodcast } from 'serverutils/podcast';
 import { redirect, render } from 'serverutils/render';
 import { getFeedData } from 'serverutils/rss';
 import { getBaseUrl } from 'serverutils/util';
-import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
+import Article from '@utils/datatypes/Article';
 
 import { Request, Response } from '../../types/express';
 
@@ -52,41 +53,81 @@ export const creatorsHandler = async (req: Request, res: Response) => {
     req.flash('danger', 'Please log in to view this page.');
     return redirect(req, res, '/');
   }
-  const articles = await Content.getByTypeAndOwner(ContentType.ARTICLE, req.user.id);
-  const videos = await Content.getByTypeAndOwner(ContentType.VIDEO, req.user.id);
-  const podcasts = await Content.getByTypeAndOwner(ContentType.PODCAST, req.user.id);
+  const articles = await articleDao.queryByOwner(req.user.id);
+  const videos = await videoDao.queryByOwner(req.user.id);
+  const podcasts = await podcastDao.queryByOwner(req.user.id);
   return render(req, res, 'CreatorsPage', { articles, videos, podcasts });
 };
 
 // GET /content/browse
 export const browseHandler = async (req: Request, res: Response) => {
-  const content = await Content.getByStatus(ContentStatus.PUBLISHED);
+  // Query all three content types in parallel with page size of 20
+  const [articlesResult, videosResult, episodesResult] = await Promise.all([
+    articleDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 20),
+    videoDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 20),
+    episodeDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 20),
+  ]);
+
+  // Merge and sort by date descending
+  const allContent = [
+    ...(articlesResult.items || []),
+    ...(videosResult.items || []),
+    ...(episodesResult.items || []),
+  ].sort((a, b) => b.date - a.date);
+
+  // Create a dictionary of last keys for each content type
+  const lastKey = {
+    article: articlesResult.lastKey,
+    video: videosResult.lastKey,
+    episode: episodesResult.lastKey,
+  };
 
   return render(req, res, 'BrowseContentPage', {
-    content: (content.items || []).filter((item) =>
-      [ContentType.ARTICLE, ContentType.VIDEO, ContentType.EPISODE].includes(item.type as ContentType),
-    ),
-    lastKey: content.lastKey,
+    content: allContent,
+    lastKey,
   });
 };
 
 // POST /content/getmore
 export const getMoreHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
-  const content = await Content.getByStatus(ContentStatus.PUBLISHED, lastKey);
+
+  // lastKey is now a dict with keys for each content type
+  const articleLastKey = lastKey?.article;
+  const videoLastKey = lastKey?.video;
+  const episodeLastKey = lastKey?.episode;
+
+  // Query all three content types in parallel with page size of 20
+  const [articlesResult, videosResult, episodesResult] = await Promise.all([
+    articleDao.queryByStatus(ContentStatus.PUBLISHED, articleLastKey, 20),
+    videoDao.queryByStatus(ContentStatus.PUBLISHED, videoLastKey, 20),
+    episodeDao.queryByStatus(ContentStatus.PUBLISHED, episodeLastKey, 20),
+  ]);
+
+  // Merge and sort by date descending
+  const allContent = [
+    ...(articlesResult.items || []),
+    ...(videosResult.items || []),
+    ...(episodesResult.items || []),
+  ].sort((a, b) => b.date - a.date);
+
+  // Create a dictionary of last keys for each content type
+  const newLastKey = {
+    article: articlesResult.lastKey,
+    video: videosResult.lastKey,
+    episode: episodesResult.lastKey,
+  };
 
   return res.status(200).send({
     success: 'true',
-    items: (content.items || []).filter((item) =>
-      [ContentType.ARTICLE, ContentType.VIDEO, ContentType.EPISODE].includes(item.type as ContentType),
-    ),
-    lastKey: content.lastKey,
+    items: allContent,
+    lastKey: newLastKey,
   });
 };
 
 // GET /content/articles
 export const articlesHandler = async (req: Request, res: Response) => {
-  const content = await Content.getByTypeAndStatus(ContentType.ARTICLE, ContentStatus.PUBLISHED);
+  const content = await articleDao.queryByStatus(ContentStatus.PUBLISHED);
 
   return render(req, res, 'ArticlesPage', { articles: content.items, lastKey: content.lastKey });
 };
@@ -94,7 +135,7 @@ export const articlesHandler = async (req: Request, res: Response) => {
 // POST /content/getmorearticles
 export const getMoreArticlesHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
-  const content = await Content.getByTypeAndStatus(ContentType.ARTICLE, ContentStatus.PUBLISHED, lastKey);
+  const content = await articleDao.queryByStatus(ContentStatus.PUBLISHED, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -105,7 +146,7 @@ export const getMoreArticlesHandler = async (req: Request, res: Response) => {
 
 // GET /content/videos
 export const videosHandler = async (req: Request, res: Response) => {
-  const content = await Content.getByTypeAndStatus(ContentType.VIDEO, ContentStatus.PUBLISHED);
+  const content = await videoDao.queryByStatus(ContentStatus.PUBLISHED);
 
   return render(req, res, 'VideosPage', { videos: content.items, lastKey: content.lastKey });
 };
@@ -113,7 +154,7 @@ export const videosHandler = async (req: Request, res: Response) => {
 // POST /content/getmorevideos
 export const getMoreVideosHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
-  const content = await Content.getByTypeAndStatus(ContentType.VIDEO, ContentStatus.PUBLISHED, lastKey);
+  const content = await videoDao.queryByStatus(ContentStatus.PUBLISHED, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -125,8 +166,8 @@ export const getMoreVideosHandler = async (req: Request, res: Response) => {
 // GET /content/podcasts
 export const podcastsHandler = async (req: Request, res: Response) => {
   // Get episodes across all podcasts
-  const content = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED);
-  const podcasts = await Content.getByTypeAndStatus(ContentType.PODCAST, ContentStatus.PUBLISHED);
+  const content = await episodeDao.queryByStatus(ContentStatus.PUBLISHED);
+  const podcasts = await podcastDao.queryByStatus(ContentStatus.PUBLISHED);
 
   return render(req, res, 'PodcastsPage', {
     episodes: content.items,
@@ -139,7 +180,7 @@ export const podcastsHandler = async (req: Request, res: Response) => {
 export const getMorePodcastsHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
   // Get episodes across all podcasts
-  const content = await Content.getByTypeAndStatus(ContentType.EPISODE, ContentStatus.PUBLISHED, lastKey);
+  const content = await episodeDao.queryByStatus(ContentStatus.PUBLISHED, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -170,7 +211,7 @@ export const articleHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/content/browse');
   }
 
-  const article = await Content.getById(req.params.id);
+  const article = await articleDao.getById(req.params.id);
 
   if (!article) {
     req.flash('danger', 'Article not found');
@@ -213,14 +254,14 @@ export const podcastHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/content/browse');
   }
 
-  const podcast = await Content.getById(req.params.id);
+  const podcast = await podcastDao.getById(req.params.id);
 
   if (!podcast) {
     req.flash('danger', 'Podcast not found');
     return redirect(req, res, '/content/browse');
   }
 
-  const episodes = await Content.getPodcastEpisodes(podcast.id, ContentStatus.PUBLISHED);
+  const episodes = await episodeDao.queryByPodcast(podcast.id, undefined, ContentStatus.PUBLISHED);
 
   const baseUrl = getBaseUrl();
   return render(
@@ -247,7 +288,7 @@ export const episodeHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/content/browse');
   }
 
-  const episode = await Content.getById(req.params.id);
+  const episode = await episodeDao.getById(req.params.id);
 
   if (!episode) {
     req.flash('danger', 'Podcast episode not found');
@@ -279,7 +320,7 @@ export const videoHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/content/browse');
   }
 
-  const video = await Content.getById(req.params.id);
+  const video = await videoDao.getById(req.params.id);
 
   if (!video) {
     req.flash('danger', 'Video not found');
@@ -316,7 +357,7 @@ export const articleEditHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/');
   }
 
-  const article = await Content.getById(req.params.id);
+  const article = await articleDao.getById(req.params.id);
 
   if (!article) {
     req.flash('danger', 'Article not found');
@@ -348,7 +389,7 @@ export const podcastEditHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/');
   }
 
-  const podcast = await Content.getById(req.params.id);
+  const podcast = await podcastDao.getById(req.params.id);
 
   if (!podcast) {
     req.flash('danger', 'Podcast not found');
@@ -380,7 +421,7 @@ export const podcastUpdateHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/');
   }
 
-  const podcast = await Content.getById(req.params.id);
+  const podcast = await podcastDao.getById(req.params.id);
 
   if (!podcast) {
     req.flash('danger', 'Podcast not found');
@@ -416,7 +457,7 @@ export const videoEditHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/');
   }
 
-  const video = await Content.getById(req.params.id);
+  const video = await videoDao.getById(req.params.id);
 
   if (!video) {
     req.flash('danger', 'Video not found');
@@ -445,7 +486,7 @@ export const editArticleHandler = async (req: Request, res: Response) => {
 
   const { articleid, title, imagename, body, short } = req.body;
 
-  const article = await Content.getById(articleid);
+  const article = await articleDao.getById(articleid);
 
   if (!article) {
     req.flash('danger', 'Article not found');
@@ -467,7 +508,7 @@ export const editArticleHandler = async (req: Request, res: Response) => {
   article.imageName = imagename.substring(0, 1000);
   article.body = body.substring(0, 1000000);
 
-  await Content.update(article);
+  await articleDao.update(article);
 
   return redirect(req, res, `/content/article/edit/${article.id}`);
 };
@@ -481,7 +522,7 @@ export const editPodcastHandler = async (req: Request, res: Response) => {
 
   const { podcastid, rss } = req.body;
 
-  const podcast = await Content.getById(podcastid);
+  const podcast = await podcastDao.getById(podcastid);
 
   if (!podcast) {
     req.flash('danger', 'Podcast not found');
@@ -505,7 +546,7 @@ export const editPodcastHandler = async (req: Request, res: Response) => {
   (podcast as any).podcastLink = fields.url;
   (podcast as any).image = fields.image;
 
-  await Content.update(podcast);
+  await podcastDao.update(podcast);
 
   return redirect(req, res, `/content/podcast/edit/${podcast.id}`);
 };
@@ -519,7 +560,7 @@ export const editVideoHandler = async (req: Request, res: Response) => {
 
   const { videoid, title, imagename, body, url, short } = req.body;
 
-  const video = await Content.getById(videoid);
+  const video = await videoDao.getById(videoid);
 
   if (!video) {
     req.flash('danger', 'Video not found');
@@ -542,7 +583,7 @@ export const editVideoHandler = async (req: Request, res: Response) => {
   video.url = url.substring(0, 1000);
   video.body = body.substring(0, 1000000);
 
-  await Content.update(video);
+  await videoDao.update(video);
 
   return redirect(req, res, `/content/video/edit/${video.id}`);
 };
@@ -556,7 +597,7 @@ export const submitArticleHandler = async (req: Request, res: Response) => {
 
   const { articleid, title, imagename, body, short } = req.body;
 
-  const article = await Content.getById(articleid);
+  const article = await articleDao.getById(articleid);
 
   if (!article) {
     req.flash('danger', 'Article not found');
@@ -579,7 +620,7 @@ export const submitArticleHandler = async (req: Request, res: Response) => {
   article.body = body.substring(0, 1000000);
   article.status = ContentStatus.IN_REVIEW;
 
-  await Content.update(article);
+  await articleDao.update(article);
   req.flash(
     'success',
     'Your article has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
@@ -597,7 +638,7 @@ export const submitPodcastHandler = async (req: Request, res: Response) => {
 
   const { podcastid, rss } = req.body;
 
-  const podcast = await Content.getById(podcastid);
+  const podcast = await podcastDao.getById(podcastid);
 
   if (!podcast) {
     req.flash('danger', 'Podcast not found');
@@ -622,7 +663,7 @@ export const submitPodcastHandler = async (req: Request, res: Response) => {
   (podcast as any).image = fields.image;
   podcast.status = ContentStatus.IN_REVIEW;
 
-  await Content.update(podcast);
+  await podcastDao.update(podcast);
   req.flash(
     'success',
     'Your podcast has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
@@ -640,7 +681,7 @@ export const submitVideoHandler = async (req: Request, res: Response) => {
 
   const { videoid, title, imagename, body, url, short } = req.body;
 
-  const video = await Content.getById(videoid);
+  const video = await videoDao.getById(videoid);
 
   if (!video) {
     req.flash('danger', 'Video not found');
@@ -664,7 +705,7 @@ export const submitVideoHandler = async (req: Request, res: Response) => {
   video.body = body.substring(0, 1000000);
   video.status = ContentStatus.IN_REVIEW;
 
-  await Content.update(video);
+  await videoDao.update(video);
   req.flash(
     'success',
     'Your video has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
@@ -684,15 +725,19 @@ export const newArticleHandler = async (req: Request, res: Response) => {
     title: 'New Article',
     owner: req.user.id,
     date: new Date().valueOf(),
-    image:
-      'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
+    image: {
+      uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
+      artist: 'Craig J. Spearing',
+      id: 'decb78dd-03d7-43a0-8ff5-1b97c6f515c9',
+      imageName: 'emmessi tome [mb1-1579]',
+    },
     short: 'This is a brand new article!',
     imageName: 'emmessi tome [mb1-1579]',
     status: ContentStatus.DRAFT,
     username: req.user.username,
   };
 
-  const id = await Content.put(article as any, ContentType.ARTICLE);
+  const id = await articleDao.createArticle(article);
 
   return redirect(req, res, `/content/article/edit/${id}`);
 };
@@ -712,9 +757,10 @@ export const newPodcastHandler = async (req: Request, res: Response) => {
     date: new Date().valueOf(),
     status: ContentStatus.DRAFT,
     username: req.user.username,
+    url: '',
   };
 
-  const id = await Content.put(podcast as any, ContentType.PODCAST);
+  const id = await podcastDao.createPodcast(podcast);
 
   return redirect(req, res, `/content/podcast/edit/${id}`);
 };
@@ -736,9 +782,10 @@ export const newVideoHandler = async (req: Request, res: Response) => {
     imageName: 'emmessi tome [mb1-1579]',
     status: ContentStatus.DRAFT,
     username: req.user.username,
+    url: '',
   };
 
-  const id = await Content.put(video as any, ContentType.VIDEO);
+  const id = await videoDao.createVideo(video);
 
   return redirect(req, res, `/content/video/edit/${id}`);
 };
@@ -752,13 +799,42 @@ export const getCreatorContentHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const { lastKey, type } = req.body;
-  const content = await Content.getByTypeAndOwner(type, req.user.id, lastKey);
+  const { lastKey } = req.body;
+
+  // lastKey is a dict with keys for each content type
+  const articleLastKey = lastKey?.article;
+  const videoLastKey = lastKey?.video;
+  const podcastLastKey = lastKey?.podcast;
+  const episodeLastKey = lastKey?.episode;
+
+  // Query all four content types in parallel
+  const [articlesResult, videosResult, podcastsResult, episodesResult] = await Promise.all([
+    articleDao.queryByOwner(req.user.id, articleLastKey),
+    videoDao.queryByOwner(req.user.id, videoLastKey),
+    podcastDao.queryByOwner(req.user.id, podcastLastKey),
+    episodeDao.queryByOwner(req.user.id, episodeLastKey),
+  ]);
+
+  // Merge and sort by date descending
+  const allContent = [
+    ...(articlesResult.items || []),
+    ...(videosResult.items || []),
+    ...(podcastsResult.items || []),
+    ...(episodesResult.items || []),
+  ].sort((a, b) => b.date - a.date);
+
+  // Create a dictionary of last keys for each content type
+  const newLastKey = {
+    article: articlesResult.lastKey,
+    video: videosResult.lastKey,
+    podcast: podcastsResult.lastKey,
+    episode: episodesResult.lastKey,
+  };
 
   return res.status(200).send({
     success: 'true',
-    content: content.items,
-    lastKey: content.lastKey,
+    content: allContent,
+    lastKey: newLastKey,
   });
 };
 
@@ -779,7 +855,15 @@ export const deleteHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const content = await Content.getById(req.params.id);
+    // Try to find the content in each DAO
+    const [article, video, podcast, episode] = await Promise.all([
+      articleDao.getById(req.params.id),
+      videoDao.getById(req.params.id),
+      podcastDao.getById(req.params.id),
+      episodeDao.getById(req.params.id),
+    ]);
+
+    const content = article || video || podcast || episode;
 
     if (!content) {
       return res.status(404).send({
@@ -789,7 +873,8 @@ export const deleteHandler = async (req: Request, res: Response) => {
     }
 
     // Verify the user owns the content
-    if (req.user.id !== content.owner.id) {
+    const ownerId = typeof content.owner === 'string' ? content.owner : content.owner.id;
+    if (req.user.id !== ownerId) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized: Only content owners can delete their content.',
@@ -804,8 +889,16 @@ export const deleteHandler = async (req: Request, res: Response) => {
       });
     }
 
-    // Delete the content
-    await Content.batchDelete([{ id: content.id }]);
+    // Delete the content using the appropriate DAO
+    if (article) {
+      await articleDao.delete(article);
+    } else if (video) {
+      await videoDao.delete(video);
+    } else if (podcast) {
+      await podcastDao.delete(podcast);
+    } else if (episode) {
+      await episodeDao.delete(episode);
+    }
 
     return res.status(200).send({
       success: 'true',

@@ -2,8 +2,8 @@ import bcrypt from 'bcryptjs';
 import PasswordReset from 'dynamo/models/passwordReset';
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
-import { handleRouteError, redirect, render } from 'serverutils/render';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
+import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 

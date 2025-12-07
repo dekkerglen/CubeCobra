@@ -1,10 +1,10 @@
 import Cube from 'dynamo/models/cube';
 import Record from 'dynamo/models/record';
 import Joi from 'joi';
-import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
-import { redirect } from 'serverutils/render';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../../../types/express';
 

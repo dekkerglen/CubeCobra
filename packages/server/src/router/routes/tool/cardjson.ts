@@ -1,7 +1,7 @@
 import cardutil from '@utils/cardutil';
 import { PrintingPreference } from '@utils/datatypes/Card';
 import { Period } from '@utils/datatypes/History';
-import CardHistory from 'dynamo/models/cardhistory';
+import { cardHistoryDao } from 'dynamo/daos';
 import {
   cardFromId,
   getEnglishVersion,
@@ -69,7 +69,7 @@ export const getCardJsonHandler = async (req: Request, res: Response) => {
     }
 
     // otherwise just go to this ID.
-    const history = await CardHistory.getByOracleAndType(card.oracle_id, Period.WEEK, 52);
+    const history = await cardHistoryDao.queryByOracleAndType(card.oracle_id, Period.WEEK, 52);
 
     if (history.items && history.items.length === 0) {
       history.items.push({} as any);

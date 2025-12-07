@@ -2,7 +2,6 @@ import { FeedTypes } from '@utils/datatypes/Feed';
 import * as render from 'serverutils/render';
 import * as util from 'serverutils/util';
 
-import Blog from '../../../src/dynamo/models/blog';
 import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
 import {
@@ -34,14 +33,18 @@ jest.mock('../../../src/dynamo/models/cube', () => ({
   getById: jest.fn(),
 }));
 
-jest.mock('../../../src/dynamo/models/blog', () => ({
-  ...jest.requireActual('../../../src/dynamo/models/blog'),
-  put: jest.fn(),
-  getById: jest.fn(),
-  delete: jest.fn(),
-  getByCube: jest.fn(),
-  getUnhydrated: jest.fn(),
+jest.mock('../../../src/dynamo/daos', () => ({
+  blogDao: {
+    createBlog: jest.fn(),
+    getById: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    getByCube: jest.fn(),
+    queryByCube: jest.fn(),
+  },
 }));
+
+import { blogDao } from '../../../src/dynamo/daos';
 
 jest.mock('../../../src/dynamo/models/feed', () => ({
   ...jest.requireActual('../../../src/dynamo/models/feed'),
@@ -137,7 +140,7 @@ describe('Create Blog Post', () => {
     const cube = createCube({ owner });
 
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
-    (Blog.put as jest.Mock).mockResolvedValueOnce('blog-id');
+    (blogDao.createBlog as jest.Mock).mockResolvedValueOnce('blog-id');
     (Feed.batchPut as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
@@ -147,7 +150,7 @@ describe('Create Blog Post', () => {
       .withParams({ id: cube.id })
       .send();
 
-    expect(Blog.put).toHaveBeenCalledWith(
+    expect(blogDao.createBlog).toHaveBeenCalledWith(
       expect.objectContaining({
         body: 'My blog content',
         owner: owner.id,
@@ -183,7 +186,7 @@ describe('Create Blog Post', () => {
     const cube = createCube({ owner, shortId: undefined });
 
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
-    (Blog.put as jest.Mock).mockResolvedValueOnce('blog-id');
+    (blogDao.createBlog as jest.Mock).mockResolvedValueOnce('blog-id');
     (Feed.batchPut as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.id}`);
 
@@ -193,7 +196,7 @@ describe('Create Blog Post', () => {
       .withParams({ id: cube.id })
       .send();
 
-    expect(Blog.put).toHaveBeenCalled();
+    expect(blogDao.createBlog).toHaveBeenCalled();
 
     expect(Feed.batchPut).toHaveBeenCalled();
 
@@ -230,7 +233,7 @@ describe('Edit Blog Post', () => {
   it('should 404 when trying to edit a missing blog post', async () => {
     const cube = createCube({ id: 'cube-id' });
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
-    (Blog.getUnhydrated as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(createBlogHandler)
       .as(createUser())
@@ -249,8 +252,8 @@ describe('Edit Blog Post', () => {
     const user = createUser();
     const blog = createBlogPost({ owner: user, title: 'My blog title' });
 
-    (Blog.getUnhydrated as jest.Mock).mockResolvedValue({ ...blog, owner: user.id });
-    (Blog.put as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue({ ...blog, owner: user });
+    (blogDao.update as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(createBlogHandler)
       .as(user)
@@ -258,10 +261,9 @@ describe('Edit Blog Post', () => {
       .withBody({ title: blog.title, id: blog.id, markdown: 'My updated blog post' })
       .send();
 
-    expect(Blog.put).toHaveBeenCalledWith(
+    expect(blogDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         body: 'My updated blog post',
-        owner: user.id,
         title: blog.title,
       }),
     );
@@ -277,8 +279,8 @@ describe('Edit Blog Post', () => {
     const user = createUser();
     const blog = createBlogPost({ owner: user, title: 'My blog title' });
 
-    (Blog.getUnhydrated as jest.Mock).mockResolvedValue({ ...blog, owner: user.id });
-    (Blog.put as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue({ ...blog, owner: user });
+    (blogDao.update as jest.Mock).mockResolvedValue(undefined);
     (Cube.getById as jest.Mock).mockResolvedValue(undefined);
     //This would happen if the cube was deleted in one tab and then edit occurred in another
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/888-666-444`);
@@ -289,7 +291,7 @@ describe('Edit Blog Post', () => {
       .withBody({ title: blog.title, id: blog.id, markdown: 'Updated content' })
       .send();
 
-    expect(Blog.put).toHaveBeenCalled();
+    expect(blogDao.update).toHaveBeenCalled();
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
@@ -302,8 +304,8 @@ describe('Edit Blog Post', () => {
     const user = createUser();
     const blog = createBlogPost({ owner: user, title: 'My blog title' });
 
-    (Blog.getUnhydrated as jest.Mock).mockResolvedValue({ ...blog, owner: user.id });
-    (Blog.put as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue({ ...blog, owner: user });
+    (blogDao.update as jest.Mock).mockResolvedValue(undefined);
     (Cube.getById as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
 
@@ -313,7 +315,7 @@ describe('Edit Blog Post', () => {
       .withBody({ title: blog.title, id: blog.id, markdown: 'Updated content' })
       .send();
 
-    expect(Blog.put).toHaveBeenCalled();
+    expect(blogDao.update).toHaveBeenCalled();
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       ok: 'Blog update successful, reloading...',
@@ -325,8 +327,8 @@ describe('Edit Blog Post', () => {
     const user = createUser();
     const blog = createBlogPost({ owner: user, title: 'My blog title' });
 
-    (Blog.getUnhydrated as jest.Mock).mockResolvedValue({ ...blog, owner: user.id });
-    (Blog.put as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue({ ...blog, owner: user });
+    (blogDao.update as jest.Mock).mockResolvedValue(undefined);
     (Cube.getById as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/user/blog/${user.id}`);
 
@@ -336,7 +338,7 @@ describe('Edit Blog Post', () => {
       .withBody({ title: blog.title, id: blog.id, markdown: 'Updated content' })
       .send();
 
-    expect(Blog.put).toHaveBeenCalled();
+    expect(blogDao.update).toHaveBeenCalled();
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       ok: 'Blog update successful, reloading...',
@@ -353,7 +355,7 @@ describe('Get Blog Post', () => {
   });
 
   it(`should return a 404 if blog post doesn't exist`, async () => {
-    (Blog.getById as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     await call(getBlogPostHandler).withFlash(flashMock).withParams({ id: 'blog-id' }).send();
 
@@ -368,7 +370,7 @@ describe('Get Blog Post', () => {
     });
     const blog = createBlogPost({ cube: cube.id });
 
-    (Blog.getById as jest.Mock).mockResolvedValue(blog);
+    (blogDao.getById as jest.Mock).mockResolvedValue(blog);
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
 
     await call(getBlogPostHandler)
@@ -384,7 +386,7 @@ describe('Get Blog Post', () => {
     const cube = createCube({ id: 'cube-id', owner: createUser({ id: 'cube-owner' }) });
     const blog = createBlogPost({ cube: cube.id });
 
-    (Blog.getById as jest.Mock).mockResolvedValue(blog);
+    (blogDao.getById as jest.Mock).mockResolvedValue(blog);
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
 
     await call(getBlogPostHandler).withParams({ id: blog.id }).send();
@@ -400,7 +402,7 @@ describe('Get Blog Post', () => {
 
   it('should handle errors gracefully', async () => {
     const error = new Error('something went wrong');
-    (Blog.getById as jest.Mock).mockRejectedValue(error);
+    (blogDao.getById as jest.Mock).mockRejectedValue(error);
 
     await call(getBlogPostHandler).withParams({ id: 'blog-id' }).send();
 
@@ -425,7 +427,7 @@ describe('Delete a Blog Post', () => {
   });
 
   it(`should return a 404 if blog post doesn't exists`, async () => {
-    (Blog.getById as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue('/cube/blog/blogpost/blog-id');
 
     await call(deleteBlogHandler)
@@ -440,7 +442,7 @@ describe('Delete a Blog Post', () => {
 
   it(`should fail is the user isn't the author`, async () => {
     const blog = createBlogPost({ owner: createUser({ id: 'blogger' }) });
-    (Blog.getById as jest.Mock).mockResolvedValue(blog);
+    (blogDao.getById as jest.Mock).mockResolvedValue(blog);
     (util.getSafeReferrer as jest.Mock).mockReturnValue('/cube/blog/blogpost/blog-id');
 
     await call(deleteBlogHandler)
@@ -460,8 +462,8 @@ describe('Delete a Blog Post', () => {
     const blog = createBlogPost({ owner, cube: 'cube-id' });
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
-    (Blog.getById as jest.Mock).mockResolvedValue(blog);
-    (Blog.delete as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue(blog);
+    (blogDao.delete as jest.Mock).mockResolvedValue(undefined);
 
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
@@ -476,8 +478,8 @@ describe('Delete a Blog Post', () => {
     const blog = createBlogPost({ owner, cube: 'cube-id' });
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
 
-    (Blog.getById as jest.Mock).mockResolvedValue(blog);
-    (Blog.delete as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue(blog);
+    (blogDao.delete as jest.Mock).mockResolvedValue(undefined);
 
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
@@ -491,8 +493,8 @@ describe('Delete a Blog Post', () => {
     const blog = createBlogPost({ owner, cube: 'cube-id' });
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
 
-    (Blog.getById as jest.Mock).mockResolvedValue(blog);
-    (Blog.delete as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue(blog);
+    (blogDao.delete as jest.Mock).mockResolvedValue(undefined);
 
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
@@ -507,13 +509,13 @@ describe('Delete a Blog Post', () => {
     //This would happen if the cube was deleted in one tab and then edit occurred in another
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/888-ddd-555`);
 
-    (Blog.getById as jest.Mock).mockResolvedValue(blog);
-    (Blog.delete as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue(blog);
+    (blogDao.delete as jest.Mock).mockResolvedValue(undefined);
     (Cube.getById as jest.Mock).mockResolvedValue(undefined);
 
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
-    expect(Blog.delete).toHaveBeenCalledWith(blog.id);
+    expect(blogDao.delete).toHaveBeenCalledWith(blog);
     expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
     expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/dashboard');
   });
@@ -523,13 +525,13 @@ describe('Delete a Blog Post', () => {
     const blog = createBlogPost({ owner, cube: 'non-existent-cube' });
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/user/blog/${owner.id}`);
 
-    (Blog.getById as jest.Mock).mockResolvedValue(blog);
-    (Blog.delete as jest.Mock).mockResolvedValue(undefined);
+    (blogDao.getById as jest.Mock).mockResolvedValue(blog);
+    (blogDao.delete as jest.Mock).mockResolvedValue(undefined);
     (Cube.getById as jest.Mock).mockResolvedValue(undefined);
 
     await call(deleteBlogHandler).withFlash(flashMock).as(owner).withParams({ id: blog.id }).send();
 
-    expect(Blog.delete).toHaveBeenCalledWith(blog.id);
+    expect(blogDao.delete).toHaveBeenCalledWith(blog);
     expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
     expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/user/blog/${owner.id}`);
   });
@@ -540,7 +542,7 @@ describe('Blog Posts Pagination', () => {
     const items = [createBlogPost(), createBlogPost()];
     const lastKey = { id: '12345', timestamp: 1234567 };
 
-    (Blog.getByCube as jest.Mock).mockResolvedValue({ items, lastKey });
+    (blogDao.queryByCube as jest.Mock).mockResolvedValue({ items, lastKey });
 
     const res = await call(getMoreBlogPostsForCubeHandler)
       .withParams({ id: 'blog-id' })
@@ -613,7 +615,7 @@ describe('View Blog Posts', () => {
     const cube = createCube();
 
     (Cube.getById as jest.Mock).mockResolvedValue(cube);
-    (Blog.getByCube as jest.Mock).mockResolvedValue({ items: posts, lastKey });
+    (blogDao.queryByCube as jest.Mock).mockResolvedValue({ items: posts, lastKey });
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: cube.id }).send();
 
