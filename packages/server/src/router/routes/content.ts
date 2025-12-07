@@ -1,4 +1,4 @@
-import { ContentStatus, ContentType } from '@utils/datatypes/Content';
+import { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeType } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
@@ -9,7 +9,6 @@ import { updatePodcast } from 'serverutils/podcast';
 import { redirect, render } from 'serverutils/render';
 import { getFeedData } from 'serverutils/rss';
 import { getBaseUrl } from 'serverutils/util';
-import Article from '@utils/datatypes/Article';
 
 import { Request, Response } from '../../types/express';
 

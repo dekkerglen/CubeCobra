@@ -1,7 +1,7 @@
-import { ContentStatus, ContentType } from '@utils/datatypes/Content';
+import { ContentStatus } from '@utils/datatypes/Content';
+import { episodeDao, podcastDao } from 'dynamo/daos';
 import { convert } from 'html-to-text';
 import sanitizeHtml from 'sanitize-html';
-import { episodeDao, podcastDao } from 'dynamo/daos';
 
 import { getFeedData, getFeedEpisodes } from './rss';
 
