@@ -1,14 +1,14 @@
 {
   "stats": {
-    "total": 20813806,
-    "migrated": 12573637,
+    "total": 21120214,
+    "migrated": 12880045,
     "skipped": 8240169,
     "errors": 0
   },
   "lastKey": {
-    "OTComp": "0bfa4512-e35a-4c93-b324-80ec659f5a97:day",
-    "date": 1607922000000
+    "OTComp": "9df1c48b-52a8-47d7-8315-272fecf1a8a0:week",
+    "date": 1644987600000
   },
-  "batchNumber": 6108,
-  "timestamp": "2025-12-08T01:45:52.782Z"
+  "batchNumber": 6198,
+  "timestamp": "2025-12-08T02:07:57.021Z"
 }

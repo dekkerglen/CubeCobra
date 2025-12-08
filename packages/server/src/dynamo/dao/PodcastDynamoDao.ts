@@ -40,6 +40,8 @@ export class PodcastDynamoDao extends BaseDynamoDao<Podcast, UnhydratedContent> 
     GSI2SK: string | undefined;
     GSI3PK: string | undefined;
     GSI3SK: string | undefined;
+    GSI4PK: string | undefined;
+    GSI4SK: string | undefined;
   } {
     const ownerId = typeof item.owner === 'string' ? item.owner : item.owner?.id;
 
@@ -50,6 +52,8 @@ export class PodcastDynamoDao extends BaseDynamoDao<Podcast, UnhydratedContent> 
       GSI2SK: item.date ? `DATE#${item.date}` : undefined,
       GSI3PK: undefined,
       GSI3SK: undefined,
+      GSI4PK: undefined,
+      GSI4SK: undefined,
     };
   }
 
@@ -71,6 +75,8 @@ export class PodcastDynamoDao extends BaseDynamoDao<Podcast, UnhydratedContent> 
       url: item.url,
       short: item.description,
       username: item.username,
+      dateCreated: item.dateCreated,
+      dateLastUpdated: item.dateLastUpdated,
       // body is handled separately via S3
     };
   }
@@ -300,7 +306,10 @@ export class PodcastDynamoDao extends BaseDynamoDao<Podcast, UnhydratedContent> 
    * Creates a new podcast with generated ID and proper defaults.
    */
   public async createPodcast(
-    partial: Omit<UnhydratedContent, 'id' | 'type' | 'typeStatusComp' | 'typeOwnerComp' | 'date'> &
+    partial: Omit<
+      UnhydratedContent,
+      'id' | 'type' | 'typeStatusComp' | 'typeOwnerComp' | 'date' | 'dateCreated' | 'dateLastUpdated'
+    > &
       Partial<Pick<UnhydratedContent, 'status'>> & { url: string },
   ): Promise<string> {
     const id = uuidv4();
@@ -318,6 +327,8 @@ export class PodcastDynamoDao extends BaseDynamoDao<Podcast, UnhydratedContent> 
       url: partial.url,
       description: partial.short || '',
       username: partial.username,
+      dateCreated: date,
+      dateLastUpdated: date,
     };
 
     await this.put(podcast);

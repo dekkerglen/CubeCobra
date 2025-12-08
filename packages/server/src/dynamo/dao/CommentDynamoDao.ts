@@ -40,6 +40,8 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
     GSI2SK: string | undefined;
     GSI3PK: string | undefined;
     GSI3SK: string | undefined;
+    GSI4PK: string | undefined;
+    GSI4SK: string | undefined;
   } {
     return {
       GSI1PK: item.parent ? `${this.itemType()}#PARENT#${item.parent}` : undefined,
@@ -48,6 +50,8 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
       GSI2SK: item.date ? `DATE#${item.date}` : undefined,
       GSI3PK: undefined,
       GSI3SK: undefined,
+      GSI4PK: undefined,
+      GSI4SK: undefined,
     };
   }
 
@@ -62,6 +66,8 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
       owner: item.owner ? item.owner.id : undefined,
       body: item.body,
       date: item.date,
+      dateCreated: item.dateCreated,
+      dateLastUpdated: item.dateLastUpdated,
     };
   }
 
@@ -121,6 +127,8 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
       body: document.body,
       owner: owner,
       image: image,
+      dateCreated: document.dateCreated,
+      dateLastUpdated: document.dateLastUpdated,
     };
   }
 
@@ -275,6 +283,8 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
       body: comment.body!,
       date,
       image: comment.image,
+      dateCreated: comment.dateCreated || date,
+      dateLastUpdated: comment.dateLastUpdated || date,
     };
 
     await this.put(newComment);

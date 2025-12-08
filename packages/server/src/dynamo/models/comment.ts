@@ -43,6 +43,8 @@ const createHydratedComment = (document: UnhydratedComment, owner: User, image: 
     body: document.body,
     owner: owner,
     image: image,
+    dateCreated: document.dateCreated,
+    dateLastUpdated: document.dateLastUpdated,
   };
 };
 

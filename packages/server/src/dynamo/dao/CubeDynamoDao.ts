@@ -484,9 +484,18 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
     }
 
-    // Update hash rows if cards changed
-    const oldCards = await this.getCards(id);
-    await this.updateHashRows(cube, oldCards, newCards);
+    // Update hash rows if cards changed - only if cube exists in DynamoDB
+    // During migration, the cube might only exist in the old system
+    const existingCubeInDynamo = await this.get({
+      PK: this.partitionKey(cube),
+      SK: this.itemType(),
+    });
+
+    if (existingCubeInDynamo) {
+      const oldCards = await this.getCards(id);
+      await this.updateHashRows(cube, oldCards, newCards);
+    }
+    // If cube doesn't exist in DynamoDB, updateHashRows will be handled by update() method
 
     // Save to S3 and DynamoDB
     await Promise.all([putObject(process.env.DATA_BUCKET!, `cube/${id}.json`, newCards), this.update(cube)]);
@@ -565,14 +574,25 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       SK: this.itemType(),
     });
 
-    if (!oldCube) {
-      throw new Error('Cube not found');
-    }
-
     // Update timestamps
     const now = Date.now();
     item.date = now; // Legacy field
     item.dateLastUpdated = now;
+
+    if (!oldCube) {
+      // Cube not migrated yet - create it in DynamoDB
+      if (this.dualWriteEnabled) {
+        // In dual write mode, just create the cube without error
+        await this.put(item);
+        // Create initial hash rows
+        const hashes = await this.getHashes(item);
+        await this.writeHashes(this.partitionKey(item), hashes);
+        return;
+      } else {
+        // Not in dual write mode, this is a real error
+        throw new Error('Cube not found');
+      }
+    }
 
     // Update hash rows if metadata changed
     const oldHashes = await this.getHashes(oldCube);

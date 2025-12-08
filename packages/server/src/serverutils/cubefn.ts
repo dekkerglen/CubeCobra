@@ -2,7 +2,6 @@ import { convertFromLegacyCardColorCategory } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
 import { type TagColor, type CubeCards, CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
-import { cubeDao } from 'dynamo/daos';
 import _ from 'lodash';
 import NodeCache from 'node-cache';
 import Papa from 'papaparse';
