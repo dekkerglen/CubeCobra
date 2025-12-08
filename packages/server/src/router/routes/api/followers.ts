@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { isCubeViewable } from 'serverutils/cubefn';
 
@@ -13,7 +13,7 @@ export const ensureCubeVisible = async (req: Request, res: Response, next: NextF
       return;
     }
 
-    const cube = await Cube.getById(id);
+    const cube = await cubeDao.getById(id);
     if (!cube || !isCubeViewable(cube, req.user)) {
       res.status(404).send({ error: 'Cube not found' });
       return;

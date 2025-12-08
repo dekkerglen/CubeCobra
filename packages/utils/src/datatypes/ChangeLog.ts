@@ -1,3 +1,4 @@
+import { BaseObject } from './BaseObject';
 import { Changes } from './Card';
 
 export interface CubeChangeLog {
@@ -6,7 +7,7 @@ export interface CubeChangeLog {
   changelog: Changes;
 }
 
-export default interface ChangeLog {
+export default interface ChangeLog extends BaseObject {
   cube: string;
   date: number;
   id: string;

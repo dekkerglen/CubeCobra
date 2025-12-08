@@ -1,6 +1,6 @@
 import DraftType from '@utils/datatypes/Draft';
 import { setupPicks } from '@utils/draftutil';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -33,7 +33,7 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/deck/${req.params.id}`);
     }
 
-    const cube = await Cube.getById(base.cube);
+    const cube = await cubeDao.getById(base.cube);
     if (!cube) {
       req.flash('danger', 'The cube that this deck belongs to no longer exists.');
       return redirect(req, res, `/cube/deck/${req.params.id}`);

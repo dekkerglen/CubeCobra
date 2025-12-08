@@ -112,6 +112,8 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
     GSI2SK: string | undefined;
     GSI3PK: string | undefined;
     GSI3SK: string | undefined;
+    GSI4PK: string | undefined;
+    GSI4SK: string | undefined;
   } {
     return {
       GSI1PK: undefined,
@@ -120,6 +122,8 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
       GSI2SK: undefined,
       GSI3PK: undefined,
       GSI3SK: undefined,
+      GSI4PK: undefined,
+      GSI4SK: undefined,
     };
   }
 
@@ -251,6 +255,8 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
       GSI2SK: GSIKeys.GSI2SK,
       GSI3PK: GSIKeys.GSI3PK,
       GSI3SK: GSIKeys.GSI3SK,
+      GSI4PK: GSIKeys.GSI4PK,
+      GSI4SK: GSIKeys.GSI4SK,
       DynamoVersion: 1,
       item: dehydrated,
     };

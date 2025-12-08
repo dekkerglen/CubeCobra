@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import { body } from 'express-validator';
 import { addBasics, createPool, shuffle } from 'serverutils/cube';
@@ -18,8 +18,8 @@ export const startGridDraftHandler = async (req: Request, res: Response) => {
 
     const numCards = numPacks * 9;
 
-    const cube = await Cube.getById(req.params.id!);
-    const cubeCards = await Cube.getCards(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
+    const cubeCards = await cubeDao.getCards(req.params.id!);
     const { mainboard } = cubeCards;
 
     if (!isCubeViewable(cube, req.user) || !cube) {

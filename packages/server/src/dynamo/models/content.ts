@@ -1,3 +1,5 @@
+// Migrated to dao/articleDao.ts, dao/EpisodeDynamoDao.ts, dao/PodcastDynamoDao.ts, dao/VideoDynamoDao.ts, dao/PodcastDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import Article from '@utils/datatypes/Article';

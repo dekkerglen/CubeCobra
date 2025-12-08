@@ -1,5 +1,5 @@
 import CubeType, { CUBE_CATEGORIES } from '@utils/datatypes/Cube';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import CubeHash from 'dynamo/models/cubeHash';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
@@ -11,7 +11,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
   try {
     const updatedCube: CubeType = req.body.cube;
 
-    const cube = await Cube.getById(updatedCube.id);
+    const cube = await cubeDao.getById(updatedCube.id);
     const { user } = req;
 
     if (!cube || !isCubeViewable(cube, user)) {
@@ -114,7 +114,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     // cube tags
     cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
 
-    await Cube.update(cube);
+    await cubeDao.update(cube);
 
     const redirect = `/cube/overview/${getCubeId(cube)}`;
 

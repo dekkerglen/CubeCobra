@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { bulkUpload } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -8,7 +8,7 @@ import { Request, Response } from '../../../types/express';
 
 export const bulkUploadHandler = async (req: Request, res: Response) => {
   try {
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');

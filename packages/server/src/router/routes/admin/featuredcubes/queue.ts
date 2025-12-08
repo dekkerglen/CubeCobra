@@ -1,17 +1,17 @@
 import { UserRoles } from '@utils/datatypes/User';
-import Cube from 'dynamo/models/cube';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { addNewCubeToQueue } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
 import { Request, Response } from 'types/express';
+import { cubeDao } from 'dynamo/daos';
 
 export const queueHandler = async (req: Request, res: Response) => {
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
     return redirect(req, res, '/admin/featuredcubes');
   }
-  const cube = await Cube.getById(req.body.cubeId);
+  const cube = await cubeDao.getById(req.body.cubeId);
   if (!cube) {
     req.flash('danger', 'Cube does not exist');
     return redirect(req, res, '/admin/featuredcubes');

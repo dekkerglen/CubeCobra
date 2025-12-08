@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { updateCubeAndBlog } from 'serverutils/cube';
@@ -15,7 +15,7 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
     // decode base64
     const items = Buffer.from(encodedFile, 'base64').toString('utf8');
 
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');
@@ -23,7 +23,7 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
     }
 
     // use this to maintain customized fields
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
 
     if (cube.owner.id !== req.user!.id) {
       req.flash('danger', 'Not Authorized');

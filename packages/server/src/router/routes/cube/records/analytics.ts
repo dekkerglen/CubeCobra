@@ -2,7 +2,7 @@ import { cardOracleId } from '@utils/cardutil';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
 import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import RecordDao from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
@@ -171,7 +171,7 @@ export const compileAnalyticsHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');

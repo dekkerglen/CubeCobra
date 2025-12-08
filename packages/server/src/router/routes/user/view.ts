@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { isCubeListed } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -19,7 +19,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cubes = (await Cube.getByOwner(user.id)).items.filter((cube: any) => isCubeListed(cube, req.user));
+    const cubes = (await cubeDao.queryByOwner(user.id)).items.filter((cube: any) => isCubeListed(cube, req.user));
 
     const following = req.user && user.following && user.following.some((id) => id === req.user?.id);
 

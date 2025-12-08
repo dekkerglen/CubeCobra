@@ -8,7 +8,7 @@ import serialize from 'serialize-javascript';
 
 import 'dotenv/config';
 
-import Cube from '../dynamo/models/cube';
+import { cubeDao } from '../dynamo/daos';
 import Notification from '../dynamo/models/notification';
 import { Request, Response } from '../types/express';
 import { getBaseUrl } from './util';
@@ -40,7 +40,7 @@ const getCubes = async (req: Request, callback: (cubes: CubeType[]) => void): Pr
   if (!req.user) {
     callback([]);
   } else {
-    const query = await Cube.getByOwner(req.user.id);
+    const query = await cubeDao.queryByOwner(req.user.id);
     callback(query.items);
   }
 };

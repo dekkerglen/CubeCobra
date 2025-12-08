@@ -1,5 +1,5 @@
 import { UserRoles } from '@utils/datatypes/User';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
@@ -17,7 +17,7 @@ export const featuredcubesHandler = async (req: Request, res: Response) => {
     lastkey = response.lastKey;
   } while (lastkey);
 
-  const cubes = await Cube.batchGet(featured.map((f: any) => f.cube));
+  const cubes = await cubeDao.batchGet(featured.map((f: any) => f.cube));
   const sortedCubes = featured
     .map((f: any) => cubes.find((c: any) => c.id === f.cube))
     .filter((c): c is NonNullable<typeof c> => c !== undefined && c !== null);

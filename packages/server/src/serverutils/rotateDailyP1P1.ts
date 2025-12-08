@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import dailyP1P1Model from 'dynamo/models/dailyP1P1';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
@@ -65,7 +65,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     console.log('Selected cube from featured queue:', selectedQueueItem.cube);
 
     // Get the cube
-    const cube = await Cube.getById(selectedQueueItem.cube);
+    const cube = await cubeDao.getById(selectedQueueItem.cube);
     if (!cube) {
       console.error('Selected cube not found:', selectedQueueItem.cube);
       return { success: false, error: 'Selected cube not found' };
@@ -74,7 +74,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     console.log('Found cube:', cube.name);
 
     // Get cube cards
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
 
     // Generate pack using the provided strategy
     const seedPrefix = 'p1p1-of-the-day';

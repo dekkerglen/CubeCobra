@@ -48,6 +48,13 @@ export class DynamodbTables extends Construct {
       projectionType: ProjectionType.ALL,
     });
 
+    table.addGlobalSecondaryIndex({
+      indexName: 'GSI4',
+      partitionKey: { name: 'GSI4PK', type: AttributeType.STRING },
+      sortKey: { name: 'GSI4SK', type: AttributeType.STRING },
+      projectionType: ProjectionType.ALL,
+    });
+
     Tags.of(table).add('environment', props.prefix);
 
     this.table = table;

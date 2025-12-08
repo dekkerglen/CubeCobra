@@ -1,5 +1,4 @@
-import { blogDao } from 'dynamo/daos';
-import Cube from 'dynamo/models/cube';
+import { blogDao, cubeDao } from 'dynamo/daos';
 import RSS from 'rss';
 import { changelogToText } from 'serverutils/blog';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -17,7 +16,7 @@ export const rssHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(cubeID);
+    const cube = await cubeDao.getById(cubeID);
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', `Cube ID ${req.params.id} not found`);
       return redirect(req, res, '/404');

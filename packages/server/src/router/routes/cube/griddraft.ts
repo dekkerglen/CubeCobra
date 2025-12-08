@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
@@ -21,7 +21,7 @@ export const gridDraftHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(document.cube);
+    const cube = await cubeDao.getById(document.cube);
 
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');

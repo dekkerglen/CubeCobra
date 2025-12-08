@@ -42,6 +42,8 @@ export class ArticleDynamoDao extends BaseDynamoDao<Article, UnhydratedContent> 
     GSI2SK: string | undefined;
     GSI3PK: string | undefined;
     GSI3SK: string | undefined;
+    GSI4PK: string | undefined;
+    GSI4SK: string | undefined;
   } {
     const ownerId = typeof item.owner === 'string' ? item.owner : item.owner?.id;
 
@@ -52,6 +54,8 @@ export class ArticleDynamoDao extends BaseDynamoDao<Article, UnhydratedContent> 
       GSI2SK: item.date ? `DATE#${item.date}` : undefined,
       GSI3PK: undefined,
       GSI3SK: undefined,
+      GSI4PK: undefined,
+      GSI4SK: undefined,
     };
   }
 
@@ -73,6 +77,8 @@ export class ArticleDynamoDao extends BaseDynamoDao<Article, UnhydratedContent> 
       short: item.short,
       username: item.username,
       imageName: item.imageName,
+      dateCreated: item.dateCreated,
+      dateLastUpdated: item.dateLastUpdated,
       // body is handled separately via S3
     };
   }
@@ -302,7 +308,10 @@ export class ArticleDynamoDao extends BaseDynamoDao<Article, UnhydratedContent> 
    * Creates a new article with generated ID and proper defaults.
    */
   public async createArticle(
-    partial: Omit<UnhydratedContent, 'id' | 'type' | 'typeStatusComp' | 'typeOwnerComp' | 'date'> &
+    partial: Omit<
+      UnhydratedContent,
+      'id' | 'type' | 'typeStatusComp' | 'typeOwnerComp' | 'date' | 'dateCreated' | 'dateLastUpdated'
+    > &
       Partial<Pick<UnhydratedContent, 'status'>>,
   ): Promise<string> {
     const id = uuidv4();
@@ -321,6 +330,8 @@ export class ArticleDynamoDao extends BaseDynamoDao<Article, UnhydratedContent> 
       imageName: partial.imageName,
       body: partial.body,
       username: partial.username,
+      dateCreated: date,
+      dateLastUpdated: date,
     };
 
     await this.put(article);

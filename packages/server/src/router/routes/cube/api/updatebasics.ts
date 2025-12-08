@@ -1,5 +1,4 @@
-import Cube from 'dynamo/models/cube';
-
+import { cubeDao } from 'dynamo/daos';
 import { Request, Response } from '../../../../types/express';
 
 export const updatebasicsHandler = async (req: Request, res: Response) => {
@@ -11,7 +10,7 @@ export const updatebasicsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube) {
       return res.status(404).send({
@@ -29,7 +28,7 @@ export const updatebasicsHandler = async (req: Request, res: Response) => {
 
     cube.basics = req.body;
 
-    await Cube.update(cube);
+    await cubeDao.update(cube);
 
     return res.status(200).send({
       success: 'true',

@@ -9,7 +9,7 @@ export interface UnhydratedComment extends BaseObject {
   type: string;
   owner?: string;
   body: string;
-  date: number;
+  date: number; // Legacy field - this is dateCreated, kept for backwards compatibility
 }
 
 type Comment = Omit<UnhydratedComment, 'id' | 'owner'> & {

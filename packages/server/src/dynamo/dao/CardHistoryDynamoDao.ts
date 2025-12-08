@@ -46,6 +46,8 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
     GSI2SK: string | undefined;
     GSI3PK: string | undefined;
     GSI3SK: string | undefined;
+    GSI4PK: string | undefined;
+    GSI4SK: string | undefined;
   } {
     const [oracle] = item.OTComp.split(':');
     return {
@@ -55,6 +57,8 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
       GSI2SK: item.date ? `DATE#${item.date}` : undefined,
       GSI3PK: undefined,
       GSI3SK: undefined,
+      GSI4PK: undefined,
+      GSI4SK: undefined,
     };
   }
 
@@ -79,6 +83,8 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
       size720: item.size720,
       cubeCount: item.cubeCount,
       total: item.total,
+      dateCreated: item.dateCreated,
+      dateLastUpdated: item.dateLastUpdated,
     };
 
     if (item.elo !== undefined) {

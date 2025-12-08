@@ -1,7 +1,7 @@
 import DraftType from '@utils/datatypes/Draft';
 import DraftRecord from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import Record from 'dynamo/models/record';
 import Joi from 'joi'; // Import Joi for validation
@@ -21,7 +21,7 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -67,7 +67,7 @@ export const createRecordPageFromDraftHandler = async (req: Request, res: Respon
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -144,7 +144,7 @@ export const createRecordHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
@@ -204,7 +204,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');

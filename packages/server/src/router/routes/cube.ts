@@ -1,6 +1,5 @@
 import { NoticeType } from '@utils/datatypes/Notice';
-import { changelogDao } from 'dynamo/daos';
-import Cube from 'dynamo/models/cube';
+import { changelogDao, cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import Notice from 'dynamo/models/notice';
@@ -22,13 +21,14 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl, isAdmin } from 'serverutils/util';
 
 import { Request, Response } from '../../types/express';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 
 export const reportHandler = async (req: Request, res: Response) => {
   try {
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -63,7 +63,7 @@ export const removeHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(cubeId);
+    const cube = await cubeDao.getById(cubeId);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -74,7 +74,7 @@ export const removeHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/overview/${encodeURIComponent(cubeId)}`);
     }
 
-    await Cube.deleteById(cubeId);
+    await cubeDao.deleteById(cubeId);
 
     req.flash('success', 'Cube Removed');
     return redirect(req, res, '/dashboard');
@@ -91,7 +91,7 @@ export const defaultDraftFormatHandler = async (req: Request, res: Response) => 
   const cubeid = req.params.id!;
   const formatId = parseInt(req.params.formatId!, 10);
 
-  const cube = await Cube.getById(cubeid);
+  const cube = await cubeDao.getById(cubeid);
   if (
     !isCubeViewable(cube, req.user) ||
     !cube ||
@@ -105,20 +105,20 @@ export const defaultDraftFormatHandler = async (req: Request, res: Response) => 
   }
   cube.defaultFormat = formatId;
 
-  await Cube.update(cube);
+  await cubeDao.update(cube);
   req.flash('success', 'Default draft format updated.');
   return redirect(req, res, `/cube/playtest/${encodeURIComponent(cubeid)}`);
 };
 
 export const listHandler = async (req: Request, res: Response) => {
   try {
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
 
     const baseUrl = getBaseUrl();
     return render(
@@ -146,7 +146,7 @@ export const listHandler = async (req: Request, res: Response) => {
 
 export const historyHandler = async (req: Request, res: Response) => {
   try {
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
@@ -209,7 +209,7 @@ export const getMoreDecksHandler = async (req: Request, res: Response) => {
 };
 
 export const recentsHandler = async (req: Request, res: Response) => {
-  const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
+  const result = await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, 'date', false);
 
   return render(req, res, 'RecentlyUpdateCubesPage', {
     items: result.items.filter((cube: any) => isCubeListed(cube, req.user)),
@@ -220,7 +220,7 @@ export const recentsHandler = async (req: Request, res: Response) => {
 export const getMoreRecentsHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
 
-  const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC, lastKey);
+  const result = await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, 'date', false, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -231,7 +231,7 @@ export const getMoreRecentsHandler = async (req: Request, res: Response) => {
 
 export const followHandler = async (req: Request, res: Response) => {
   const { user } = req;
-  const cube = await Cube.getById(req.params.id!);
+  const cube = await cubeDao.getById(req.params.id!);
 
   if (!isCubeViewable(cube, user) || !cube) {
     req.flash('danger', 'Cube not found');
@@ -253,7 +253,7 @@ export const followHandler = async (req: Request, res: Response) => {
   //TODO: Can remove after fixing models to not muck with the original input
   const cubeOwner = cube.owner;
   await User.update(user!);
-  await Cube.update(cube);
+  await cubeDao.update(cube);
 
   await addNotification(
     cubeOwner,
@@ -268,7 +268,7 @@ export const followHandler = async (req: Request, res: Response) => {
 };
 
 export const unfollowHandler = async (req: Request, res: Response) => {
-  const cube = await Cube.getById(req.params.id!);
+  const cube = await cubeDao.getById(req.params.id!);
 
   if (!isCubeViewable(cube, req.user) || !cube) {
     req.flash('danger', 'Cube not found');
@@ -282,7 +282,7 @@ export const unfollowHandler = async (req: Request, res: Response) => {
   user!.followedCubes = user!.followedCubes?.filter((id: string) => cube.id !== id) || [];
 
   await User.update(user!);
-  await Cube.update(cube);
+  await cubeDao.update(cube);
 
   return res.status(200).send({
     success: 'true',
@@ -298,13 +298,13 @@ export const featureHandler = async (req: Request, res: Response) => {
       return redirect(req, res, redirectUrl);
     }
 
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, redirectUrl);
     }
-    if (cube.visibility !== Cube.VISIBILITY.PUBLIC) {
+    if (cube.visibility !== CUBE_VISIBILITY.PUBLIC) {
       req.flash('danger', 'Cannot feature a private cube');
       return redirect(req, res, redirectUrl);
     }
@@ -338,7 +338,7 @@ export const unfeatureHandler = async (req: Request, res: Response) => {
       return redirect(req, res, redirectUrl);
     }
 
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -368,14 +368,14 @@ export const samplePackImageHandler = async (req: Request, res: Response) => {
     }
 
     req.params.seed = req.params.seed.replace('.png', '');
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/cube/playtest/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
     const isBalanced = req.query.balanced === 'true';
 
     const cacheKey = `/samplepack/${req.params.id}/${req.params.seed}${isBalanced ? '?balanced=true' : ''}`;
@@ -411,7 +411,7 @@ export const p1p1Handler = async (req: Request, res: Response) => {
     }
 
     // Get cube data
-    const cube = await Cube.getById(pack.cubeId);
+    const cube = await cubeDao.getById(pack.cubeId);
     if (!cube) {
       req.flash('danger', 'Associated cube not found');
       return redirect(req, res, '/404');
@@ -463,7 +463,7 @@ export const p1p1PackImageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(pack.cubeId);
+    const cube = await cubeDao.getById(pack.cubeId);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');

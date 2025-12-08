@@ -13,6 +13,9 @@ export interface DynamoItem<T extends BaseObject> {
   GSI3PK?: string;
   GSI3SK?: string;
 
+  GSI4PK?: string;
+  GSI4SK?: string;
+
   // Used for optimistic locking
   DynamoVersion: number;
 

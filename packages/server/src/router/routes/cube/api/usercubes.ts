@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -11,7 +11,7 @@ export const usercubesHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const cubes = await Cube.getByOwner(req.params.id);
+  const cubes = await cubeDao.queryByOwner(req.params.id);
 
   return res.status(200).send({
     success: 'true',

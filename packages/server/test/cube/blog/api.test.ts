@@ -2,7 +2,6 @@ import { FeedTypes } from '@utils/datatypes/Feed';
 import * as render from 'serverutils/render';
 import * as util from 'serverutils/util';
 
-import Cube from '../../../src/dynamo/models/cube';
 import Feed from '../../../src/dynamo/models/feed';
 import {
   createBlogHandler,
@@ -28,12 +27,10 @@ jest.mock('serverutils/render', () => ({
   render: jest.fn(),
 }));
 
-jest.mock('../../../src/dynamo/models/cube', () => ({
-  ...jest.requireActual('../../../src/dynamo/models/cube'),
-  getById: jest.fn(),
-}));
-
 jest.mock('../../../src/dynamo/daos', () => ({
+  cubeDao: {
+    getById: jest.fn(),
+  },
   blogDao: {
     createBlog: jest.fn(),
     getById: jest.fn(),
@@ -44,7 +41,7 @@ jest.mock('../../../src/dynamo/daos', () => ({
   },
 }));
 
-import { blogDao } from '../../../src/dynamo/daos';
+import { blogDao, cubeDao } from '../../../src/dynamo/daos';
 
 jest.mock('../../../src/dynamo/models/feed', () => ({
   ...jest.requireActual('../../../src/dynamo/models/feed'),

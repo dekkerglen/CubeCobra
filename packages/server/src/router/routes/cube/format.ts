@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -7,7 +7,7 @@ import { Request, Response } from '../../../types/express';
 
 export const formatAddHandler = async (req: Request, res: Response) => {
   try {
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -40,7 +40,7 @@ export const formatAddHandler = async (req: Request, res: Response) => {
       message = 'Custom format successfully edited.';
     }
 
-    await Cube.update(cube);
+    await cubeDao.update(cube);
     req.flash('success', message);
     return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id!)}`);
   } catch (err) {
@@ -53,7 +53,7 @@ export const formatRemoveHandler = async (req: Request, res: Response) => {
     const { cubeid, index } = req.params;
     const indexNum = parseInt(index!, 10);
 
-    const cube = await Cube.getById(cubeid!);
+    const cube = await cubeDao.getById(cubeid!);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
@@ -80,7 +80,7 @@ export const formatRemoveHandler = async (req: Request, res: Response) => {
       cube.defaultFormat -= 1;
     }
 
-    await Cube.update(cube);
+    await cubeDao.update(cube);
 
     req.flash('success', 'Format removed.');
     return redirect(req, res, `/cube/playtest/${encodeURIComponent(cubeid!)}`);

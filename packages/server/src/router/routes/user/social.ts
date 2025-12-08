@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { handleRouteError, render } from 'serverutils/render';
@@ -11,7 +11,7 @@ export const handler = async (req: Request, res: Response) => {
       return res.status(401).send({ success: 'false', message: 'User not authenticated' });
     }
 
-    const followedCubes = (await Cube.batchGet(req.user.followedCubes || [])).filter(
+    const followedCubes = (await cubeDao.batchGet(req.user.followedCubes || [])).filter(
       (cube: any) => cube.visibility !== 'pr',
     );
     const followers = await User.batchGet(req.user.following || []);

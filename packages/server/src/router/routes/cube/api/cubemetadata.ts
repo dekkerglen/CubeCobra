@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -9,7 +9,7 @@ export const cubemetadataHandler = async (req: Request, res: Response) => {
       return res.status(400).send('Cube ID is required.');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send('Cube not found.');

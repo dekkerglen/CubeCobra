@@ -1,3 +1,5 @@
+// migrated to dao/CubeDynamoDao
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { CubeCards } from '@utils/datatypes/Cube';

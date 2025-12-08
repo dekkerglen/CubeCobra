@@ -1,6 +1,5 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
-import { blogDao, changelogDao } from 'dynamo/daos';
-import Cube from 'dynamo/models/cube';
+import { blogDao, changelogDao, cubeDao } from 'dynamo/daos';
 import Feed from 'dynamo/models/feed';
 import Package from 'dynamo/models/package';
 import { ensureAuth } from 'router/middleware';
@@ -19,7 +18,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(400).send({
@@ -35,7 +34,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await Cube.getCards(req.params.id);
+    const cubeCards = await cubeDao.getCards(req.params.id);
 
     let tag: string | null = null;
     if (req.body.packid) {
@@ -51,28 +50,30 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       return c;
     });
 
-    if (!['mainboard', 'maybeboard'].includes(req.body.board)) {
+    const board = req.body.board as 'mainboard' | 'maybeboard';
+
+    if (!['mainboard', 'maybeboard'].includes(board)) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid board',
       });
     }
 
-    if (!cubeCards[req.body.board]) {
-      cubeCards[req.body.board] = [];
+    if (!cubeCards[board]) {
+      cubeCards[board] = [];
     }
 
     if (tag) {
-      cubeCards[req.body.board].push(...adds);
+      cubeCards[board].push(...adds);
     } else {
-      cubeCards[req.body.board].push(...req.body.cards.map((id: string) => newCard(cardFromId(id), [])));
+      cubeCards[board].push(...req.body.cards.map((id: string) => newCard(cardFromId(id), [])));
     }
 
-    await Cube.updateCards(req.params.id, cubeCards);
+    await cubeDao.updateCards(req.params.id, cubeCards);
 
     const changelist = await changelogDao.createChangelog(
       {
-        [req.body.board]: { adds },
+        [board]: { adds },
       },
       req.params.id,
     );

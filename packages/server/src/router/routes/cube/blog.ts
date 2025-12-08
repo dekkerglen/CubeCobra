@@ -1,8 +1,7 @@
 import CubeType from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
-import { blogDao } from 'dynamo/daos';
-import Cube from 'dynamo/models/cube';
+import { blogDao, cubeDao } from 'dynamo/daos';
 import Feed from 'dynamo/models/feed';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
@@ -14,7 +13,7 @@ import { addNotification, getBaseUrl, getSafeReferrer } from 'serverutils/util';
 import { Request, Response } from '../../../types/express';
 
 const getRedirectUrl = async (req: Request, cubeId: string, isDelete: boolean = false): Promise<string> => {
-  const cube = await Cube.getById(cubeId);
+  const cube = await cubeDao.getById(cubeId);
   return await getRedirectUrlForCube(req, cube!, isDelete);
 };
 
@@ -59,7 +58,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
   try {
     const cubeId = req.params.id!;
     //Generally going to assume the cube exists here. Definitely required for a new blog, not so for an edit
-    const cube = await Cube.getById(cubeId);
+    const cube = await cubeDao.getById(cubeId);
 
     if (req.body.title.length < 5 || req.body.title.length > 100) {
       res.status(400).json({ error: 'Blog title length must be between 5 and 100 characters.' });
@@ -183,7 +182,7 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
     }
 
     if (post.cube !== 'DEVLOG') {
-      const cube = await Cube.getById(post.cube);
+      const cube = await cubeDao.getById(post.cube);
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Blog post not found');
@@ -259,7 +258,7 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

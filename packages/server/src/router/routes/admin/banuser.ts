@@ -1,8 +1,7 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { commentDao } from 'dynamo/daos';
-import { blogDao } from 'dynamo/daos';
-import Cube from 'dynamo/models/cube';
+import { blogDao, cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import Notice from 'dynamo/models/notice';
 import User from 'dynamo/models/user';
@@ -24,11 +23,11 @@ export const banuserHandler = async (req: Request, res: Response) => {
     };
 
     // delete all cubes
-    const response = await Cube.getByOwner(userToBan);
+    const response = await cubeDao.queryByOwner(userToBan);
 
     aggregates.cubesDeleted += response.items.length;
     for (const cube of response.items) {
-      await Cube.deleteById(cube.id);
+      await cubeDao.deleteById(cube.id);
     }
 
     // delete all blog posts

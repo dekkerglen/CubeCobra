@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { compareCubes, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -10,8 +10,8 @@ export const compareHandler = async (req: Request, res: Response) => {
   try {
     const { idA, idB } = req.params;
 
-    const cubeAq = Cube.getById(idA!);
-    const cubeBq = Cube.getById(idB!);
+    const cubeAq = cubeDao.getById(idA!);
+    const cubeBq = cubeDao.getById(idB!);
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
 
@@ -24,7 +24,7 @@ export const compareHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const [cardsA, cardsB] = await Promise.all([Cube.getCards(cubeA.id), Cube.getCards(cubeB.id)]);
+    const [cardsA, cardsB] = await Promise.all([cubeDao.getCards(cubeA.id), cubeDao.getCards(cubeB.id)]);
 
     const { aOracles, bOracles, inBoth, allCards } = await compareCubes(cardsA, cardsB);
 

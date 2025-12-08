@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Record from 'dynamo/models/record';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
@@ -20,7 +20,7 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

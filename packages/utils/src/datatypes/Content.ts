@@ -1,3 +1,4 @@
+import { BaseObject } from './BaseObject';
 import User from './User';
 
 export enum ContentType {
@@ -18,7 +19,7 @@ export const ContentStatusEnglish = {
   [ContentStatus.IN_REVIEW]: 'In Review',
   [ContentStatus.PUBLISHED]: 'Published',
 };
-export interface UnhydratedContent {
+export interface UnhydratedContent extends BaseObject {
   id: string;
   type: string;
   typeStatusComp: string;

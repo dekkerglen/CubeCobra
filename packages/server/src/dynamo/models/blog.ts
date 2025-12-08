@@ -52,6 +52,8 @@ const createHydratedBlog = (
     owner: owner,
     cubeName: cubeName,
     Changelog: Changelog,
+    dateCreated: document.dateCreated,
+    dateLastUpdated: document.dateLastUpdated,
   };
 };
 
@@ -110,14 +112,17 @@ const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]
 };
 
 const fillRequiredDetails = (document: UnhydratedBlogPost): UnhydratedBlogPost => {
+  const now = Date.now().valueOf();
   return {
     id: document.id || uuidv4(),
     cube: document.cube,
-    date: document.date || Date.now().valueOf(),
+    date: document.date || now,
     owner: document.owner,
     body: document.body ? document.body.substring(0, 10000) : undefined,
     title: document.title,
     changelist: document.changelist,
+    dateCreated: document.dateCreated || now,
+    dateLastUpdated: document.dateLastUpdated || now,
   };
 };
 

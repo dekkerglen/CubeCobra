@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Record from 'dynamo/models/record';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeEditable } from 'serverutils/cubefn';
@@ -21,7 +21,7 @@ export const deleteRecordHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const cube = await Cube.getById(record.cube);
+  const cube = await cubeDao.getById(record.cube);
   const user = req.user;
 
   if (!user) {

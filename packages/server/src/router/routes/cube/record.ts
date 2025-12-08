@@ -1,6 +1,6 @@
 import DraftType from '@utils/datatypes/Draft';
 import UserType from '@utils/datatypes/User';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import Record from 'dynamo/models/record';
 import User from 'dynamo/models/user';
@@ -24,7 +24,7 @@ export const handler = async (req: Request, res: Response) => {
       req.flash('danger', 'Record not found');
       return redirect(req, res, '/404');
     }
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

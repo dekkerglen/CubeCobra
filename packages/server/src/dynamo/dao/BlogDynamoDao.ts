@@ -6,24 +6,27 @@ import UserType from '@utils/datatypes/User';
 import { v4 as uuidv4 } from 'uuid';
 
 import BlogModel from '../models/blog';
-import CubeModel from '../models/cube';
 import UserModel from '../models/user';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { ChangelogDynamoDao } from './ChangelogDynamoDao';
+import { CubeDynamoDao } from './CubeDynamoDao';
 
 export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
   private readonly dualWriteEnabled: boolean;
   private readonly changelogDao: ChangelogDynamoDao;
+  private readonly cubeDao: CubeDynamoDao;
 
   constructor(
     dynamoClient: DynamoDBDocumentClient,
     changelogDao: ChangelogDynamoDao,
+    cubeDao: CubeDynamoDao,
     tableName: string,
     dualWriteEnabled: boolean = false,
   ) {
     super(dynamoClient, tableName);
     this.dualWriteEnabled = dualWriteEnabled;
     this.changelogDao = changelogDao;
+    this.cubeDao = cubeDao;
   }
 
   protected itemType(): string {
@@ -49,6 +52,8 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     GSI2SK: string | undefined;
     GSI3PK: string | undefined;
     GSI3SK: string | undefined;
+    GSI4PK: string | undefined;
+    GSI4SK: string | undefined;
   } {
     return {
       GSI1PK: item.cube ? `${this.itemType()}#CUBE#${item.cube}` : undefined,
@@ -57,6 +62,8 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       GSI2SK: item.date ? `DATE#${item.date}` : undefined,
       GSI3PK: undefined,
       GSI3SK: undefined,
+      GSI4PK: undefined,
+      GSI4SK: undefined,
     };
   }
 
@@ -69,6 +76,8 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       body: item.body,
       owner: item.owner ? item.owner.id : '',
       date: item.date,
+      dateCreated: item.dateCreated,
+      dateLastUpdated: item.dateLastUpdated,
       cube: item.cube,
       title: item.title,
       changelist: undefined, // changelist is stored separately in the Changelog table
@@ -84,7 +93,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     const owner = await UserModel.getById(item.owner);
 
     if (item.cube && item.cube !== 'DEVBLOG') {
-      const cube = await CubeModel.getById(item.cube);
+      const cube = await this.cubeDao.getById(item.cube);
       if (cube) {
         cubeName = cube.name;
       }
@@ -112,7 +121,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
 
     const [owners, cubes] = await Promise.all([
       ownerIds.length > 0 ? UserModel.batchGet(ownerIds) : Promise.resolve([]),
-      cubeIds.length > 0 ? CubeModel.batchGet(cubeIds) : Promise.resolve([]),
+      cubeIds.length > 0 ? this.cubeDao.batchGet(cubeIds) : Promise.resolve([]),
     ]);
 
     const changelistKeys = items
@@ -154,7 +163,9 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     return {
       id: document.id!,
       body: document.body || '',
-      date: document.date!,
+      date: document.date!, // Legacy field
+      dateCreated: document.dateCreated,
+      dateLastUpdated: document.dateLastUpdated,
       cube: document.cube,
       title: document.title,
       owner: owner,
@@ -265,7 +276,9 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
   /**
    * Creates a new blog post with an auto-generated ID and date.
    */
-  public async createBlog(item: Omit<UnhydratedBlogPost, 'id' | 'date'>): Promise<string> {
+  public async createBlog(
+    item: Omit<UnhydratedBlogPost, 'id' | 'date' | 'dateCreated' | 'dateLastUpdated'>,
+  ): Promise<string> {
     const id = uuidv4();
     const date = Date.now();
 
@@ -273,6 +286,8 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       ...item,
       id,
       date,
+      dateCreated: date,
+      dateLastUpdated: date,
     };
 
     if (this.dualWriteEnabled) {

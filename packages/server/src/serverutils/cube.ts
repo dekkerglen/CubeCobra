@@ -1,8 +1,7 @@
 import * as cardutil from '@utils/cardutil';
 import Card, { Changes } from '@utils/datatypes/Card';
 import { FeedTypes } from '@utils/datatypes/Feed';
-import { blogDao, changelogDao } from 'dynamo/daos';
-import Cube from 'dynamo/models/cube';
+import { blogDao, changelogDao, cubeDao } from 'dynamo/daos';
 import Feed from 'dynamo/models/feed';
 
 import { Request, Response } from '../types/express';
@@ -88,7 +87,7 @@ async function updateCubeAndBlog(
     }
 
     if (Object.keys(changelog).length > 0) {
-      await Cube.updateCards(cube.id, cardsToWrite);
+      await cubeDao.updateCards(cube.id, cardsToWrite);
 
       const changelist = await changelogDao.createChangelog(changelog, cube.id);
 
@@ -122,7 +121,7 @@ async function updateCubeAndBlog(
 }
 
 async function bulkUpload(req: Request, res: Response, list: string, cube: Cube) {
-  const cards = await Cube.getCards(cube.id);
+  const cards = await cubeDao.getCards(cube.id);
   const cardsToWrite: Cards = JSON.parse(JSON.stringify(cards));
   const { mainboard } = cardsToWrite;
   const { maybeboard } = cardsToWrite;

@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -12,7 +12,7 @@ export const savetagcolorsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -29,7 +29,7 @@ export const savetagcolorsHandler = async (req: Request, res: Response) => {
     }
 
     // filter out tags that don't exist on any cards
-    const cubeCards = await Cube.getCards(cube.id);
+    const cubeCards = await cubeDao.getCards(cube.id);
     const tags = new Set<string>();
 
     for (const [board, list] of Object.entries(cubeCards)) {
@@ -46,7 +46,7 @@ export const savetagcolorsHandler = async (req: Request, res: Response) => {
 
     cube.tagColors = req.body.tag_colors.filter((tagColor: any) => allTags.includes(tagColor.tag));
 
-    await Cube.update(cube);
+    await cubeDao.update(cube);
     return res.status(200).send({
       success: 'true',
     });

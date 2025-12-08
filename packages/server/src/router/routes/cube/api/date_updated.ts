@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -12,7 +12,7 @@ export const dateupdatedHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await Cube.getById(req.params.id);
+    const result = await cubeDao.getById(req.params.id);
 
     if (!result || !isCubeViewable(result, req.user)) {
       return res.status(404).send({

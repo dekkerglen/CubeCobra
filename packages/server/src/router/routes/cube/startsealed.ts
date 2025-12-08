@@ -1,5 +1,5 @@
 import * as cardutil from '@utils/cardutil';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
@@ -30,14 +30,14 @@ export const startSealedHandler = async (req: Request, res: Response) => {
 
     const numCards = packs * cards;
 
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
 
-    const cubeCards = await Cube.getCards(req.params.id!);
+    const cubeCards = await cubeDao.getCards(req.params.id!);
     const { mainboard } = cubeCards;
 
     if (mainboard.length < numCards) {
@@ -107,7 +107,7 @@ export const startSealedHandler = async (req: Request, res: Response) => {
     cube.numDecks += 1;
 
     const cubeOwner = cube.owner;
-    await Cube.update(cube);
+    await cubeDao.update(cube);
 
     if (!cube.disableAlerts && cubeOwner) {
       await addNotification(

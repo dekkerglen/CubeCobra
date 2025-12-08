@@ -14,10 +14,8 @@ const CARD_LIMIT = 10000;
  * UnhydratedChangeLog represents the minimal data stored in DynamoDB.
  * The actual changelog data (Changes) is stored in S3.
  */
-export interface UnhydratedChangeLog {
-  id: string;
-  cube: string;
-  date: number;
+export interface UnhydratedChangeLog extends ChangeLog {
+  // Inherits id, cube, date, dateCreated, dateLastUpdated from ChangeLog
 }
 
 /**
@@ -165,6 +163,8 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
     GSI2SK: string | undefined;
     GSI3PK: string | undefined;
     GSI3SK: string | undefined;
+    GSI4PK: string | undefined;
+    GSI4SK: string | undefined;
   } {
     return {
       GSI1PK: item.cube ? `${this.itemType()}#CUBE#${item.cube}` : undefined,
@@ -173,6 +173,8 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
       GSI2SK: undefined,
       GSI3PK: undefined,
       GSI3SK: undefined,
+      GSI4PK: undefined,
+      GSI4SK: undefined,
     };
   }
 
@@ -185,6 +187,8 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
       id: item.id,
       cube: item.cube,
       date: item.date,
+      dateCreated: item.dateCreated,
+      dateLastUpdated: item.dateLastUpdated,
     };
   }
 
@@ -198,6 +202,8 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
       id: item.id,
       cube: item.cube,
       date: item.date,
+      dateCreated: item.dateCreated,
+      dateLastUpdated: item.dateLastUpdated,
     };
   }
 
@@ -283,6 +289,8 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
           cube: item.cubeId,
           date: item.date,
           changelog: item.changelog,
+          dateCreated: item.date, // Use date as dateCreated for legacy data
+          dateLastUpdated: item.date, // Use date as dateLastUpdated for legacy data
         })),
         lastKey: result.lastKey,
       };
@@ -345,6 +353,8 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
       id,
       cube: cubeId,
       date,
+      dateCreated: date,
+      dateLastUpdated: date,
     };
 
     await this.put(changelogItem);

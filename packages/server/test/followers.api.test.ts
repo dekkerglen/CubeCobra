@@ -1,6 +1,5 @@
 import CubeFn from 'serverutils/cubefn';
 
-import Cube from '../src/dynamo/models/cube';
 import User from '../src/dynamo/models/user';
 import { ensureCubeVisible, getFollowers } from '../src/router/routes/api/followers';
 import { createCube, createUser } from './test-utils/data';
@@ -8,8 +7,14 @@ import { expectRegisteredRoutes } from './test-utils/route';
 import { call, middleware } from './test-utils/transport';
 
 jest.mock('../src/dynamo/models/user');
-jest.mock('../src/dynamo/models/cube');
+jest.mock('../src/dynamo/daos', () => ({
+  cubeDao: {
+    getById: jest.fn(),
+  },
+}));
 jest.mock('serverutils/cubefn');
+
+import { cubeDao } from '../src/dynamo/daos';
 
 describe('Followers API', () => {
   afterEach(() => {
@@ -36,7 +41,7 @@ describe('Followers API', () => {
 
   it('should get followers for a cube', async () => {
     const mockCube = createCube({ following: ['user1', 'user2', 'user3'] });
-    (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
     const users = [createUser({ id: 'user1' }), createUser({ id: 'user2' })];
     (User.batchGet as jest.Mock).mockResolvedValue(users);
 
@@ -110,7 +115,7 @@ describe('Ensure Cube Visible Middleware', () => {
 
   it('should call next if cube is viewable', async () => {
     const mockCube = { id: '123', viewable: true };
-    (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
 
     const res = await middleware(ensureCubeVisible).withParams({ id: '123', type: 'cube' }).as(createUser()).send();
@@ -120,7 +125,7 @@ describe('Ensure Cube Visible Middleware', () => {
   });
 
   it('should return 404 if cube is not viewable', async () => {
-    (Cube.getById as jest.Mock).mockResolvedValue(null);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(null);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(false);
 
     const res = await middleware(ensureCubeVisible).withParams({ id: '123', type: 'cube' }).as(createUser()).send();

@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { abbreviate, generateBalancedPack, generatePack, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -20,14 +20,14 @@ export const samplePackRedirectHandler = (req: Request, res: Response) => {
 
 export const samplePackHandler = async (req: Request, res: Response) => {
   try {
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/cube/playtest/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
     const isBalanced = req.query.balanced === 'true';
 
     let pack: any;

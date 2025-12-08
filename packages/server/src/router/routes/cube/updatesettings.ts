@@ -1,10 +1,11 @@
 import { CARD_STATUSES, PrintingPreference } from '@utils/datatypes/Card';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
+import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 
 export const updateSettingsHandler = async (req: Request, res: Response) => {
   try {
@@ -23,7 +24,7 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
     if (![PrintingPreference.RECENT, PrintingPreference.FIRST].includes(defaultPrinting)) {
       errors.push({ msg: 'Printing must be valid.' });
     }
-    if (!Object.values(Cube.VISIBILITY).includes(visibility)) {
+    if (!Object.values(CUBE_VISIBILITY).includes(visibility)) {
       errors.push({ msg: 'Visibility must be valid' });
     }
 
@@ -32,7 +33,7 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/cube/overview/' + req.params.id);
     }
 
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found.');
@@ -51,10 +52,9 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
       }
     }
     cube.disableAlerts = update.disableAlerts === 'true';
-    cube.priceVisibility =
-      update.priceVisibility === 'true' ? Cube.PRICE_VISIBILITY.PUBLIC : Cube.PRICE_VISIBILITY.PRIVATE;
+    cube.priceVisibility = update.priceVisibility === 'true' ? PRICE_VISIBILITY.PUBLIC : PRICE_VISIBILITY.PRIVATE;
 
-    await Cube.update(cube);
+    await cubeDao.update(cube);
     req.flash('success', 'Settings updated successfully.');
     return redirect(req, res, '/cube/overview/' + req.params.id);
   } catch (err) {

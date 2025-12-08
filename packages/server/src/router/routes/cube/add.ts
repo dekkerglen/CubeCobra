@@ -1,10 +1,13 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, recaptcha } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { hasProfanity } from 'serverutils/util';
+import { getImageData } from 'serverutils/imageutil';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
+import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
+import Cube from '@utils/datatypes/Cube';
 
 export const addHandler = async (req: Request, res: Response) => {
   try {
@@ -12,6 +15,12 @@ export const addHandler = async (req: Request, res: Response) => {
       body: { name },
       user,
     } = req;
+
+    if (!user) {
+      req.flash('danger', 'You must be logged in to create a cube.');
+      return redirect(req, res, '/login');
+    }
+
     if (!name || name.length < 5 || name.length > 100) {
       req.flash('danger', 'Cube name should be at least 5 characters long, and shorter than 100 characters.');
       return redirect(req, res, `/user/view/${user!.id}`);
@@ -23,7 +32,7 @@ export const addHandler = async (req: Request, res: Response) => {
     }
 
     // if this user has two empty cubes, we deny them from making a new cube
-    const cubes = await Cube.getByOwner(user!.id);
+    const cubes = await cubeDao.queryByOwner(user.id);
 
     const emptyCubes = cubes.items.filter((cube) => cube.cardCount === 0);
 
@@ -45,17 +54,23 @@ export const addHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const cube = {
+    const now = Date.now().valueOf();
+    const imageName = 'doubling cube [10e-321]';
+    const cube: Cube = {
       id: uuidv4(),
-      shortId: null,
+      shortId: '',
       name: name,
-      owner: user!.id,
-      imageName: 'doubling cube [10e-321]',
+      owner: user!,
+      imageName: imageName,
+      image: getImageData(imageName),
       description: 'This is a brand new cube!',
-      date: Date.now().valueOf(),
-      visibility: Cube.VISIBILITY.PUBLIC,
-      priceVisibility: Cube.PRICE_VISIBILITY.PUBLIC,
+      date: now,
+      dateCreated: now,
+      dateLastUpdated: now,
+      visibility: CUBE_VISIBILITY.PUBLIC,
+      priceVisibility: PRICE_VISIBILITY.PUBLIC,
       featured: false,
+      categoryPrefixes: [],
       tagColors: [],
       defaultFormat: -1,
       numDecks: 0,
@@ -65,7 +80,7 @@ export const addHandler = async (req: Request, res: Response) => {
       formats: [],
       following: [],
       defaultStatus: 'Not Owned',
-      defaultPrinting: 'recent' as const,
+      defaultPrinting: 'recent',
       disableAlerts: false,
       basics: [
         '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
@@ -75,13 +90,12 @@ export const addHandler = async (req: Request, res: Response) => {
         '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
       ],
       tags: [],
+      keywords: [],
       cardCount: 0,
+      version: 1,
     };
 
-    await Cube.putNewCube(cube);
-
-    await Cube.putCards({
-      id: cube.id,
+    await cubeDao.putNewCube(cube, {
       mainboard: [],
       maybeboard: [],
     });

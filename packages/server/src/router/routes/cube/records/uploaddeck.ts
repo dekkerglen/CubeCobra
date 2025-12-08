@@ -4,7 +4,7 @@ import CubeType from '@utils/datatypes/Cube';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
 import { setupPicks } from '@utils/draftutil';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import Record from 'dynamo/models/record';
 import Joi from 'joi';
@@ -31,7 +31,7 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -63,7 +63,7 @@ export const associateNewDraft = async (
   mainboardOracles: string[],
   sideboardOracles: string[] = [],
 ) => {
-  const cubeCards = await Cube.getCards(cube.id);
+  const cubeCards = await cubeDao.getCards(cube.id);
   const { mainboard } = cubeCards;
 
   const deck: number[][][] = createPool();
@@ -155,7 +155,7 @@ export const associateNewDraft = async (
   const id = await Draft.put(draftDocument as any);
 
   cube.numDecks += 1;
-  await Cube.update(cube);
+  await cubeDao.update(cube);
 
   record.draft = id;
   await Record.put(record);
@@ -168,7 +168,7 @@ export const associateWithExistingDraft = async (
   mainboardOracles: string[],
   sideboardOracles: string[] = [],
 ) => {
-  const cubeCards = await Cube.getCards(cube.id);
+  const cubeCards = await cubeDao.getCards(cube.id);
   const { mainboard } = cubeCards;
 
   const deck: number[][][] = createPool();
@@ -243,7 +243,7 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');

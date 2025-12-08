@@ -1,5 +1,5 @@
 import { commentDao } from 'dynamo/daos';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isValidUUID } from 'serverutils/validation';
@@ -36,7 +36,7 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Check if user has permission to delete (cube owner or pack creator)
-    const cube = await Cube.getById(pack.cubeId);
+    const cube = await cubeDao.getById(pack.cubeId);
     const isCubeOwner = cube && cube.owner && cube.owner.id === user.id;
     const isPackCreator = pack.createdBy === user.id;
 

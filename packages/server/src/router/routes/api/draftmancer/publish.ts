@@ -5,7 +5,7 @@ import DraftType, { DraftmancerLog } from '@utils/datatypes/Draft';
 import { PublishDraftBody } from '@utils/datatypes/Draftmancer';
 import type DraftSeatType from '@utils/datatypes/DraftSeat';
 import { setupPicks } from '@utils/draftutil';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import Notification from 'dynamo/models/notification';
 import Joi from 'joi';
@@ -61,7 +61,7 @@ export const handler = async (req: Request, res: Response) => {
   }
 
   try {
-    const cube = await Cube.getById(publishDraftBody.cubeID);
+    const cube = await cubeDao.getById(publishDraftBody.cubeID);
     if (!cube) {
       return res.status(404).json({ error: 'Cube not found' });
     }

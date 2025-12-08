@@ -1,9 +1,9 @@
-import Cube from 'dynamo/models/cube';
 import Draft from 'dynamo/models/draft';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
+import { cubeDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../types/express';
 
@@ -21,7 +21,7 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(draft.cube);
+    const cube = await cubeDao.getById(draft.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

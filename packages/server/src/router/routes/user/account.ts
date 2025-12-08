@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import Patron from 'dynamo/models/patron';
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -30,7 +30,7 @@ export const handler = async (req: Request, res: Response) => {
   const i = entireQueue.findIndex((f) => f.owner === req.user?.id);
   let myFeatured;
   if (i !== -1 && entireQueue[i]) {
-    const cube = await Cube.getById(entireQueue[i].cube);
+    const cube = await cubeDao.getById(entireQueue[i].cube);
     myFeatured = { cube, position: i + 1 };
   }
 

@@ -1,5 +1,5 @@
 import Card from '@utils/datatypes/Card';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -45,13 +45,13 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
     }
 
     // Get the cube metadata
-    const cube = await Cube.getById(cubeId);
+    const cube = await cubeDao.getById(cubeId);
     if (!cube || !isCubeViewable(cube, user)) {
       return res.status(404).json({ error: 'Cube not found' });
     }
 
     // Get the actual cards from S3 (getById only returns metadata)
-    const cubeCards = await Cube.getCards(cubeId);
+    const cubeCards = await cubeDao.getCards(cubeId);
 
     // Get actual Card objects from the cube for the given cards
     const cards: Card[] = [];

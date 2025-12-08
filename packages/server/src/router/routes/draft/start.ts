@@ -1,6 +1,6 @@
 import type DraftType from '@utils/datatypes/Draft';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import Joi from 'joi';
 import { addBasics } from 'serverutils/cube';
@@ -47,14 +47,14 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(cubeId)}`);
     }
 
-    const cube = await Cube.getById(cubeId);
+    const cube = await cubeDao.getById(cubeId);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
 
-    const cubeCards = await Cube.getCards(cubeId);
+    const cubeCards = await cubeDao.getCards(cubeId);
     const { mainboard } = cubeCards;
 
     if (mainboard.length === 0) {

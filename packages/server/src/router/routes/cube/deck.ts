@@ -1,5 +1,5 @@
 import cardutil from '@utils/cardutil';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
@@ -435,7 +435,7 @@ export const rebuildHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(base.cube);
+    const cube = await cubeDao.getById(base.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -486,7 +486,7 @@ export const rebuildHandler = async (req: Request, res: Response) => {
     const cubeOwner = cube.owner;
 
     const id = await Draft.put(deck);
-    await Cube.update(cube);
+    await cubeDao.update(cube);
 
     if (user && cube.owner.id !== user.id && !cube.disableAlerts) {
       await addNotification(
@@ -578,14 +578,14 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found.');
       return redirect(req, res, '/404');
     }
 
-    const cubeCards = await Cube.getCards(cube.id);
+    const cubeCards = await cubeDao.getCards(cube.id);
     const { mainboard } = cubeCards;
 
     if (!req.user || cube.owner.id !== req.user.id) {
@@ -684,7 +684,7 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
     const id = await Draft.put(deck);
 
     cube.numDecks += 1;
-    await Cube.update(cube);
+    await cubeDao.update(cube);
 
     return redirect(req, res, `/draft/deckbuilder/${id}`);
   } catch (err) {
@@ -706,7 +706,7 @@ export const getDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(draft.cube);
+    const cube = await cubeDao.getById(draft.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

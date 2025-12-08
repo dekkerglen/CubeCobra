@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Record from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
@@ -15,7 +15,7 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -24,7 +24,7 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
 
     const result = await Record.getByCube(cube.id, 20);
     const analytics = await recordAnalytic.getByCube(cube.id);
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
 
     const baseUrl = getBaseUrl();
     return render(

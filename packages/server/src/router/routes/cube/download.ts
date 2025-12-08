@@ -2,7 +2,7 @@ import { cardCollectorNumber, cardName, cardSet } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import filterutil from '@utils/filtering/FilterCards';
 import { sortForDownload } from '@utils/sorting/Sort';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
 import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -40,13 +40,13 @@ export const cubecobraHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
     let { mainboard } = cards;
 
     for (const card of mainboard) {
@@ -75,14 +75,14 @@ export const csvHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
     let { mainboard } = cards;
     const { maybeboard } = cards;
 
@@ -118,14 +118,14 @@ export const forgeHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
     let { mainboard } = cards;
 
     for (const card of mainboard) {
@@ -157,14 +157,14 @@ export const mtgoHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
     let { mainboard } = cards;
     const { maybeboard } = cards;
 
@@ -188,14 +188,14 @@ export const xmageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
     let { mainboard } = cards;
 
     for (const card of mainboard) {
@@ -224,14 +224,14 @@ export const plaintextHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');

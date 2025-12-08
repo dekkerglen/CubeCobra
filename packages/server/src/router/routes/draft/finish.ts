@@ -3,7 +3,7 @@ import DraftType from '@utils/datatypes/Draft';
 import { State } from '@utils/datatypes/DraftState';
 import User from '@utils/datatypes/User';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import Joi from 'joi';
 import { deckbuild } from 'serverutils/draftbots';
@@ -202,7 +202,7 @@ const sendDraftNotification = async (draftId: string, cubeOwner: User, draftOwne
     return;
   }
 
-  const cube = await Cube.getById(cubeId);
+  const cube = await cubeDao.getById(cubeId);
   if (!cube) {
     return;
   }

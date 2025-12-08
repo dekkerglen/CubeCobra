@@ -3,8 +3,7 @@ import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
 import { commentDao } from 'dynamo/daos';
-import { blogDao, articleDao, videoDao, podcastDao, episodeDao } from 'dynamo/daos';
-import Cube from 'dynamo/models/cube';
+import { blogDao, articleDao, videoDao, podcastDao, episodeDao, cubeDao } from 'dynamo/daos';
 import Draft from 'dynamo/models/draft';
 import Notice from 'dynamo/models/notice';
 import Package from 'dynamo/models/package';
@@ -125,10 +124,13 @@ export const addCommentHandler = async (req: Request, res: Response) => {
     });
   }
 
+  const now = Date.now() - 1000;
   const comment: Omit<Comment, 'id'> = {
     owner: user,
     body: body.substring(0, 5000),
-    date: Date.now() - 1000,
+    date: now,
+    dateCreated: now,
+    dateLastUpdated: now,
     parent: parent.substring(0, 500),
     type,
   };
@@ -206,7 +208,7 @@ export const getReplyContext: Record<NotifiableCommentType, (id: string) => Prom
     if (!record) {
       return undefined;
     }
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
     return cube?.owner;
   },
 };

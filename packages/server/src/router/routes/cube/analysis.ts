@@ -1,5 +1,5 @@
 import miscutil from '@utils/Util';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import CubeAnalytic from 'dynamo/models/cubeAnalytic';
 import { cardFromId } from 'serverutils/carddb';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
@@ -11,14 +11,14 @@ import { Request, Response } from '../../../types/express';
 
 export const analysisHandler = async (req: Request, res: Response) => {
   try {
-    const cube = await Cube.getById(req.params.id!);
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
     const tokenMap: Record<string, any> = {};
 
     for (const [boardname, list] of Object.entries(cards)) {

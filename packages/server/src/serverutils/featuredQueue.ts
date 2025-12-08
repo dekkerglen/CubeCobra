@@ -1,5 +1,5 @@
 import { canBeFeatured } from '@utils/featuredQueueUtil';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { FeaturedQueue } from 'dynamo/models/featuredQueue';
 import Patron from 'dynamo/models/patron';
 
@@ -96,7 +96,7 @@ export async function getFeaturedCubes() {
   }
 
   const cubeIds = queueResult.items.map((item) => item.cube);
-  const cubes = await Cube.batchGet(cubeIds);
+  const cubes = await cubeDao.batchGet(cubeIds);
   return cubes;
 }
 
