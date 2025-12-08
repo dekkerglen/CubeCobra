@@ -6,7 +6,7 @@ dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 import { Upload } from '@aws-sdk/lib-storage';
 import { s3 } from '@server/dynamo/s3client';
 import { fileToAttribute } from '@server/serverutils/cardCatalog';
-import util from '@server/serverutils/util';
+import { binaryInsert, turnToTree } from '@server/serverutils/util';
 import * as cardutil from '@utils/cardutil';
 import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '@utils/datatypes/Card';
 import { CardMetadata } from '@utils/datatypes/CardCatalog';
@@ -182,8 +182,8 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
     catalog.oracleToId[card.oracle_id] = [];
   }
   catalog.oracleToId[card.oracle_id]!.push(card.scryfall_id);
-  util.binaryInsert(normalizedName, catalog.names);
-  util.binaryInsert(normalizedFullName, catalog.full_names);
+  binaryInsert(normalizedName, catalog.names);
+  binaryInsert(normalizedFullName, catalog.full_names);
 }
 
 async function writeFile(filepath: string, data: any) {
@@ -615,12 +615,12 @@ async function writeCatalog(basePath = PRIVATE_DIR) {
   const start = Date.now();
 
   await writeFile(path.join(basePath, 'names.json'), catalog.names);
-  await writeFile(path.join(basePath, 'cardtree.json'), util.turnToTree(catalog.names));
+  await writeFile(path.join(basePath, 'cardtree.json'), turnToTree(catalog.names));
   await writeFile(path.join(basePath, 'carddict.json'), catalog.dict);
   await writeFile(path.join(basePath, 'nameToId.json'), catalog.nameToId);
   await writeFile(path.join(basePath, 'oracleToId.json'), catalog.oracleToId);
   await writeFile(path.join(basePath, 'english.json'), catalog.english);
-  await writeFile(path.join(basePath, 'full_names.json'), util.turnToTree(catalog.full_names));
+  await writeFile(path.join(basePath, 'full_names.json'), turnToTree(catalog.full_names));
   await writeFile(path.join(basePath, 'imagedict.json'), catalog.imagedict);
   await writeFile(path.join(basePath, 'cardimages.json'), catalog.cardimages);
   await writeFile(path.join(basePath, 'metadatadict.json'), catalog.metadatadict);

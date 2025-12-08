@@ -163,6 +163,7 @@ describe('POST /cube/api/getversions', () => {
     expect(cardFromId).toHaveBeenNthCalledWith(2, mockShock.scryfall_id);
     expect(getAllVersionIds).toHaveBeenNthCalledWith(1, mockLightningBolt);
     expect(getAllVersionIds).toHaveBeenNthCalledWith(2, mockShock);
+    expect(getAllVersionIds).toHaveBeenCalledTimes(2);
   });
 
   it('should group versions with different names even if the same oracle id', async () => {
@@ -198,9 +199,7 @@ describe('POST /cube/api/getversions', () => {
       .mockReturnValueOnce(mockCardV1)
       .mockReturnValueOnce(mockCardV2);
 
-    (getAllVersionIds as jest.Mock)
-      .mockReturnValueOnce([scryfallId1, scryfallId2])
-      .mockReturnValueOnce([scryfallId1, scryfallId2]);
+    (getAllVersionIds as jest.Mock).mockReturnValueOnce([scryfallId1, scryfallId2]);
 
     const res = await request(app).post('/cube/api/getversions').send([scryfallId1]);
 
@@ -252,6 +251,8 @@ describe('POST /cube/api/getversions', () => {
         ],
       },
     });
+    // Only get versions for each unique oracle id
+    expect(getAllVersionIds).toHaveBeenCalledTimes(1);
   });
 
   it('should handle input both custom-card and real card', async () => {
@@ -431,5 +432,6 @@ describe('POST /cube/api/getversions', () => {
     // Verify the calls
     expect(cardFromId).toHaveBeenNthCalledWith(1, backV2.scryfall_id);
     expect(getAllVersionIds).toHaveBeenCalledWith(backV2);
+    expect(getAllVersionIds).toHaveBeenCalledTimes(1);
   });
 });
