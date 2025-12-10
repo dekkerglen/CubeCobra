@@ -4,6 +4,7 @@
  * STORAGE STRATEGY:
  * - Cube metadata: Stored in DynamoDB with PK = CUBE#{id}, SK = CUBE
  * - Cube cards: Stored in S3 at cube/{id}.json
+ * - Cube analytics: Stored in S3 at cube_analytic/{id}.json
  * - Hash rows: Stored with PK = hash, SK = CUBE#{id} for search functionality
  *
  * QUERY PATTERNS:
@@ -17,6 +18,13 @@
  * - queryByOracleId(oracleId, sortBy): Get cubes containing a specific card
  * - queryByMultipleHashes(hashes, sortBy, cardCountFilter): Get cubes matching ALL hash criteria (max 10 hashes)
  *   with optional card count filtering (eq/gt/lt)
+ *
+ * ANALYTICS METHODS:
+ * - getAnalytics(cubeId): Get cube analytics from S3
+ * - putAnalytics(cubeId, analytic): Update analytics for a single cube
+ * - batchPutAnalytics(analytics): Batch update analytics for multiple cubes
+ * - deleteAnalytics(cubeId): Delete analytics for a cube
+ * - analyticsExist(cubeId): Check if analytics exist for a cube
  *
  * SORTING OPTIONS (for hash-based queries):
  * - 'popularity': Sort by follower count (default)
@@ -41,6 +49,7 @@
 import { DynamoDBDocumentClient, QueryCommandInput, BatchWriteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import Cube from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
+import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import { CardStatus } from '@utils/datatypes/Card';
 import User from '@utils/datatypes/User';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
@@ -1260,6 +1269,73 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         return 'cards';
       default:
         return 'pop';
+    }
+  }
+
+  // =====================
+  // CUBE ANALYTICS METHODS
+  // =====================
+
+  /**
+   * Gets analytics for a specific cube from S3.
+   *
+   * @param cubeId - The ID of the cube to get analytics for
+   * @returns The cube analytics, or an empty object if not found
+   */
+  public async getAnalytics(cubeId: string): Promise<CubeAnalytic | Record<string, never>> {
+    try {
+      return await getObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
+    } catch {
+      // Return empty object if analytics don't exist
+      return {};
+    }
+  }
+
+  /**
+   * Updates analytics for a single cube in S3.
+   *
+   * @param cubeId - The ID of the cube
+   * @param analytic - The analytics data to save
+   */
+  public async putAnalytics(cubeId: string, analytic: CubeAnalytic): Promise<void> {
+    await putObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`, analytic);
+  }
+
+  /**
+   * Batch updates analytics for multiple cubes in S3.
+   * Processes all cubes in parallel for efficiency.
+   *
+   * @param analytics - Dictionary mapping cube IDs to their analytics
+   */
+  public async batchPutAnalytics(analytics: { [cubeId: string]: CubeAnalytic }): Promise<void> {
+    await Promise.all(
+      Object.keys(analytics).map(async (cubeId) => {
+        await putObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`, analytics[cubeId]);
+      }),
+    );
+  }
+
+  /**
+   * Deletes analytics for a specific cube from S3.
+   *
+   * @param cubeId - The ID of the cube to delete analytics for
+   */
+  public async deleteAnalytics(cubeId: string): Promise<void> {
+    await deleteObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
+  }
+
+  /**
+   * Checks if analytics exist for a specific cube.
+   *
+   * @param cubeId - The ID of the cube to check
+   * @returns True if analytics exist, false otherwise
+   */
+  public async analyticsExist(cubeId: string): Promise<boolean> {
+    try {
+      const result = await getObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
+      return Object.keys(result).length > 0;
+    } catch {
+      return false;
     }
   }
 }

@@ -1,6 +1,5 @@
 import miscutil from '@utils/Util';
 import { cubeDao } from 'dynamo/daos';
-import CubeAnalytic from 'dynamo/models/cubeAnalytic';
 import { cardFromId } from 'serverutils/carddb';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
@@ -44,7 +43,7 @@ export const analysisHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const cubeAnalytics = await CubeAnalytic.getByCube(cube.id);
+    const cubeAnalytics = await cubeDao.getAnalytics(cube.id);
 
     const baseUrl = getBaseUrl();
     return render(
