@@ -90,6 +90,10 @@ export interface BlogPostChangelogProps {
 }
 
 const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
+  if (!changelog || typeof changelog !== 'object') {
+    return null;
+  }
+
   return (
     <div>
       {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]: [string, BoardChanges]) => {

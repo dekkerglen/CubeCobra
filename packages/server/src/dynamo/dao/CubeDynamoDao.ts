@@ -427,6 +427,15 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     try {
       const cards = await getObject(process.env.DATA_BUCKET!, `cube/${id}.json`);
 
+      // If cards is null or doesn't have the expected structure, return default empty cards
+      if (!cards || !cards.mainboard || !cards.maybeboard) {
+        cloudwatch.info(`No cards found for cube: ${id}, returning empty default`);
+        return {
+          mainboard: [],
+          maybeboard: [],
+        };
+      }
+
       const totalCardCount = cards.mainboard.length + cards.maybeboard.length;
 
       if (totalCardCount > CARD_LIMIT) {
@@ -445,6 +454,15 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
       return cards;
     } catch (e: any) {
+      // If the error is NoSuchKey (file doesn't exist), return empty default
+      if (e.name === 'NoSuchKey' || e.Code === 'NoSuchKey') {
+        cloudwatch.info(`Cards file does not exist for cube: ${id}, returning empty default`);
+        return {
+          mainboard: [],
+          maybeboard: [],
+        };
+      }
+
       cloudwatch.error(`Failed to load cards for cube: ${id} - ${e.message}`, e.stack);
       throw new Error(`Failed to load cards for cube: ${id} - ${e.message}`);
     }
@@ -452,8 +470,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
   /**
    * Updates cube cards in S3 and metadata in DynamoDB.
+   * Returns the new version number.
    */
-  public async updateCards(id: string, newCards: CubeCards): Promise<void> {
+  public async updateCards(id: string, newCards: CubeCards): Promise<number> {
     const nullCards = this.countNullCards(newCards.mainboard) + this.countNullCards(newCards.maybeboard);
 
     if (nullCards > 0) {
@@ -476,6 +495,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     cube.cardCount = newCards.mainboard.length;
     cube.version = (cube.version || 0) + 1;
     cube.date = Date.now();
+
+    const newVersion = cube.version;
 
     // Strip details from cards
     for (const [board, list] of Object.entries(newCards)) {
@@ -501,8 +522,12 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     await Promise.all([putObject(process.env.DATA_BUCKET!, `cube/${id}.json`, newCards), this.update(cube)]);
 
     if (this.dualWriteEnabled) {
-      await CubeModel.updateCards(id, newCards);
+      // Update the old model with the same version to keep them in sync
+      // Don't use CubeModel.updateCards as it will increment version independently
+      await CubeModel.update(this.dehydrateItem(cube));
     }
+
+    return newVersion;
   }
 
   /**
@@ -552,12 +577,12 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
     }
 
-    // Create hash rows
+    // Save metadata and cards first
+    await Promise.all([this.put(cube), putObject(process.env.DATA_BUCKET!, `cube/${cube.id}.json`, cards)]);
+
+    // Create hash rows after cube is saved (writeHashes needs to fetch the cube)
     const hashes = await this.getHashes(cube);
     await this.writeHashes(this.partitionKey(cube), hashes);
-
-    // Save metadata and cards
-    await Promise.all([this.put(cube), putObject(process.env.DATA_BUCKET!, `cube/${cube.id}.json`, cards)]);
   }
 
   /**

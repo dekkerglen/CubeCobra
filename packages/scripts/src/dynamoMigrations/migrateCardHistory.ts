@@ -29,7 +29,7 @@ interface CheckpointData {
 
 const CHECKPOINT_FILE = path.join(__dirname, 'cardhistory-migration-checkpoint.json');
 const CHECKPOINT_INTERVAL = 100000; // Save checkpoint every 100k writes
-const SKIP_FIRST_N_ITEMS = 8238000; // Skip the first N items from scan results
+const SKIP_FIRST_N_ITEMS = 0; // Skip the first N items from scan results
 
 /**
  * Load checkpoint data from file if it exists

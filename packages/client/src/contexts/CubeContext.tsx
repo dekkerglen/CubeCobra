@@ -830,12 +830,15 @@ export function CubeContextProvider({
           }
 
           setModalSelection([]);
+          // Update version BEFORE clearing changes so new changes get the correct version
+          const newVersion = json.version || version + 1;
+          setVersion(newVersion);
           clearChanges();
           setCube({
             ...cube,
             cards: newCards,
+            version: newVersion, // Update cube version too
           });
-          setVersion(version + 1);
           const newTags = getAllTags(newCards);
           //Make sure to use tagColors instead of cube.tagColors so any previous edits apply
           setTagColors(computeTagColors(tagColors, newTags));

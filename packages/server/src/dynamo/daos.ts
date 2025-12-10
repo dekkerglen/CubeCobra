@@ -15,12 +15,6 @@ if (!tableName) {
   throw new Error('DYNAMO_TABLE must be a defined environment variable');
 }
 
-// We haven't migrated the data yet, so enable dual writes - these are deployed to prod, so we can start migration
-export const cardHistoryDao: CardHistoryDynamoDao = new CardHistoryDynamoDao(documentClient, tableName, true);
-export const changelogDao: ChangelogDynamoDao = new ChangelogDynamoDao(documentClient, tableName, true);
-export const cubeDao: CubeDynamoDao = new CubeDynamoDao(documentClient, tableName, true);
-export const blogDao: BlogDynamoDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, tableName, true);
-
 // We haven't migrated the data yet, so enable dual writes - these are NOT deployed to prod yet, so we can't start migration
 export const articleDao: ArticleDynamoDao = new ArticleDynamoDao(documentClient, tableName, true);
 export const videoDao: VideoDynamoDao = new VideoDynamoDao(documentClient, tableName, true);
@@ -29,3 +23,9 @@ export const episodeDao: EpisodeDynamoDao = new EpisodeDynamoDao(documentClient,
 
 // We have completed the data migration, so disable dual writes
 export const commentDao: CommentDynamoDao = new CommentDynamoDao(documentClient, tableName, false);
+export const changelogDao: ChangelogDynamoDao = new ChangelogDynamoDao(documentClient, tableName, false);
+
+// We haven't migrated the data yet, so enable dual writes - these are deployed to prod, so we can start migration
+export const cardHistoryDao: CardHistoryDynamoDao = new CardHistoryDynamoDao(documentClient, tableName, true);
+export const cubeDao: CubeDynamoDao = new CubeDynamoDao(documentClient, tableName, true);
+export const blogDao: BlogDynamoDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, tableName, true);

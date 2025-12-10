@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import { cardsAreEquivalent } from '@utils/cardutil';
 import Card, { BoardType, Changes } from '@utils/datatypes/Card';
@@ -42,8 +42,13 @@ interface ChangesContextProvider {
 
 export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ children, cube, cards }) => {
   const [changes, updateChanges] = useLocalStorage<Changes>(`cubecobra-changes-${cube.id}`, {});
-  const [version, setVersion] = useState(cube.version);
+  const [version, setVersionState] = useState(cube.version);
   const { setOpenCollapse } = useContext(DisplayContext);
+
+  // Wrapper to ensure version updates are captured
+  const setVersion = useCallback((newVersion: number) => {
+    setVersionState(newVersion);
+  }, []);
 
   const setChanges = useCallback(
     (newChanges: Changes) => {

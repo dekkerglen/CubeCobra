@@ -141,10 +141,12 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
         }
       }
 
-      let changelog;
+      let changelog: Changes | undefined;
       if (item.changelist) {
         const changelistIndex = changelistKeys.findIndex((key) => key.id === item.changelist);
-        changelog = changelists[changelistIndex];
+        if (changelistIndex >= 0 && changelistIndex < changelists.length) {
+          changelog = changelists[changelistIndex];
+        }
       }
 
       return this.createHydratedBlog(item, owner!, cubeName, changelog);

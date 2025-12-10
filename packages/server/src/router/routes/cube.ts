@@ -152,7 +152,7 @@ export const historyHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const query = await changelogDao.queryByCube(cube.id, undefined, 36);
+    const query = await changelogDao.queryByCubeWithData(cube.id, undefined, 36);
 
     const baseUrl = getBaseUrl();
     return render(
@@ -181,7 +181,7 @@ export const historyHandler = async (req: Request, res: Response) => {
 
 export const getMoreChangelogsHandler = async (req: Request, res: Response) => {
   const { lastKey, cubeId } = req.body;
-  const query = await changelogDao.queryByCube(cubeId, lastKey, 18);
+  const query = await changelogDao.queryByCubeWithData(cubeId, lastKey, 18);
 
   return res.status(200).send({
     success: 'true',

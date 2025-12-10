@@ -98,7 +98,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       }
     }
 
-    await cubeDao.updateCards(cube.id, cards);
+    const newVersion = await cubeDao.updateCards(cube.id, cards);
     try {
       const changelogId = await changelogDao.createChangelog(changes, cube.id);
 
@@ -126,6 +126,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       return res.status(200).send({
         success: 'true',
         updateApplied: true,
+        version: newVersion,
       });
     } catch (err) {
       const error = err as Error;
@@ -134,6 +135,7 @@ export const commitHandler = async (req: Request, res: Response) => {
         success: 'false',
         message: `Changes applied succesfully, but encountered an error creating history/blog/feed items: ${error.message}\n${error.stack}`,
         updateApplied: true,
+        version: newVersion,
       });
     }
   } catch (err) {
