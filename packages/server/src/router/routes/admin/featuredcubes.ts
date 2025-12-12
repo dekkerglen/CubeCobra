@@ -1,6 +1,5 @@
 import { UserRoles } from '@utils/datatypes/User';
-import { cubeDao } from 'dynamo/daos';
-import { FeaturedQueue } from 'dynamo/models/featuredQueue';
+import { cubeDao, featuredQueueDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
@@ -10,7 +9,7 @@ export const featuredcubesHandler = async (req: Request, res: Response) => {
   let lastkey: Record<string, any> | null | undefined = null;
 
   do {
-    const response: { items?: any[]; lastKey?: Record<string, any> } = await FeaturedQueue.querySortedByDate(
+    const response: { items?: any[]; lastKey?: Record<string, any> } = await featuredQueueDao.querySortedByDate(
       lastkey || undefined,
     );
     featured = featured.concat(response.items || []);

@@ -5,8 +5,7 @@ import DraftType, { DraftmancerLog } from '@utils/datatypes/Draft';
 import { PublishDraftBody } from '@utils/datatypes/Draftmancer';
 import type DraftSeatType from '@utils/datatypes/DraftSeat';
 import { setupPicks } from '@utils/draftutil';
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import Notification from 'dynamo/models/notification';
 import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
@@ -130,7 +129,7 @@ export const handler = async (req: Request, res: Response) => {
       DraftmancerLog: draftmancerLog,
     };
 
-    const draftId = await Draft.put(draft);
+    const draftId = await draftDao.createDraft(draft);
 
     await sendDraftNotification(draftId, drafterName, cube);
 

@@ -1,11 +1,11 @@
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { addBasics, createPool, shuffle } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 export const startGridDraftHandler = async (req: Request, res: Response) => {
   try {
@@ -44,7 +44,7 @@ export const startGridDraftHandler = async (req: Request, res: Response) => {
       owner: req.user.id,
       cubeOwner: cube.owner.id,
       date: new Date().valueOf(),
-      type: Draft.TYPES.GRID,
+      type: DRAFT_TYPES.GRID,
       seats: [],
       cards: [],
       InitialState: [],
@@ -95,7 +95,7 @@ export const startGridDraftHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const id = await Draft.put(doc);
+    const id = await draftDao.createDraft(doc);
 
     return redirect(req, res, `/cube/griddraft/${id}`);
   } catch (err) {

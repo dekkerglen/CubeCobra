@@ -1,8 +1,7 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { commentDao } from 'dynamo/daos';
-import { blogDao, cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { blogDao, cubeDao, draftDao } from 'dynamo/daos';
 import Notice from 'dynamo/models/notice';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureRole } from 'router/middleware';
@@ -47,20 +46,20 @@ export const banuserHandler = async (req: Request, res: Response) => {
     }
 
     // delete all drafts
-    const draftResponse = await Draft.getByOwner(userToBan!);
+    const draftResponse = await draftDao.queryByOwner(userToBan!);
 
-    lastKey = draftResponse.lastEvaluatedKey;
+    lastKey = draftResponse.lastKey;
     let draftIds = draftResponse.items.map((draft: any) => draft.id);
 
     while (lastKey) {
-      const nextResponse = await Draft.getByOwner(userToBan!, lastKey, 100);
-      lastKey = nextResponse.lastEvaluatedKey;
+      const nextResponse = await draftDao.queryByOwner(userToBan!, lastKey, 100);
+      lastKey = nextResponse.lastKey;
       draftIds = draftIds.concat(nextResponse.items.map((draft: any) => draft.id));
     }
 
     aggregates.draftsDeleted += draftIds.length;
     for (const draftId of draftIds) {
-      await Draft.delete(draftId);
+      await draftDao.deleteById(draftId);
     }
 
     const commentResponse = await commentDao.queryByOwner(userToBan!);

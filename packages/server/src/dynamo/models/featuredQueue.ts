@@ -21,13 +21,17 @@ const client = createClient({
 });
 
 export const FeaturedQueue = {
-  getByCube: async (id: string): Promise<FeaturedQueueItem> => {
-    return (await client.get(id)).Item as FeaturedQueueItem;
+  getByCube: async (id: string): Promise<FeaturedQueueItem | undefined> => {
+    const result = await client.get(id);
+    return result.Item as FeaturedQueueItem | undefined;
   },
-  put: async (document: NewFeaturedQueueItem): Promise<void> => {
+  put: async (document: NewFeaturedQueueItem | FeaturedQueueItem): Promise<void> => {
+    const now = Date.now();
     await client.put({
       ...document,
-      status: FeaturedQueueStatus.ACTIVE,
+      status: 'status' in document ? document.status : FeaturedQueueStatus.ACTIVE,
+      dateCreated: 'dateCreated' in document ? document.dateCreated : now,
+      dateLastUpdated: 'dateLastUpdated' in document ? document.dateLastUpdated : now,
     });
   },
   querySortedByDate: async (

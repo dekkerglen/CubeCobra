@@ -1,4 +1,6 @@
-export interface DailyP1P1 {
+import { BaseObject } from './BaseObject';
+
+export interface DailyP1P1 extends BaseObject {
   id: string;
   type: string; // Constant 'HISTORY' for GSI querying
   packId: string;
@@ -7,4 +9,4 @@ export interface DailyP1P1 {
   isActive: boolean; // Whether this is currently the active daily P1P1
 }
 
-export type NewDailyP1P1 = Omit<DailyP1P1, 'id' | 'type'>;
+export type NewDailyP1P1 = Omit<DailyP1P1, 'id' | 'type' | 'dateCreated' | 'dateLastUpdated'>;

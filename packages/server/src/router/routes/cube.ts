@@ -1,7 +1,5 @@
 import { NoticeType } from '@utils/datatypes/Notice';
-import { changelogDao, cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
-import { FeaturedQueue } from 'dynamo/models/featuredQueue';
+import { changelogDao, cubeDao, draftDao, featuredQueueDao } from 'dynamo/daos';
 import Notice from 'dynamo/models/notice';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import User from 'dynamo/models/user';
@@ -193,7 +191,7 @@ export const getMoreChangelogsHandler = async (req: Request, res: Response) => {
 export const getMoreDecksHandler = async (req: Request, res: Response) => {
   try {
     const { lastKey } = req.body;
-    const query = await Draft.getByCube(req.params.id!, lastKey);
+    const query = await draftDao.queryByCube(req.params.id!, lastKey);
 
     return res.status(200).send({
       success: 'true',
@@ -315,7 +313,7 @@ export const featureHandler = async (req: Request, res: Response) => {
       return redirect(req, res, redirectUrl);
     }
 
-    await FeaturedQueue.put({
+    await featuredQueueDao.createFeaturedQueueItem({
       cube: cube.id,
       date: Date.now().valueOf(),
       owner: typeof cube.owner === 'object' ? cube.owner.id : cube.owner,
@@ -351,7 +349,7 @@ export const unfeatureHandler = async (req: Request, res: Response) => {
       return redirect(req, res, redirectUrl);
     }
 
-    await FeaturedQueue.delete(cube.id);
+    await featuredQueueDao.delete(existingQueueItem);
 
     req.flash('success', 'Cube removed from featured queue successfully.');
     return redirect(req, res, redirectUrl);

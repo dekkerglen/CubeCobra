@@ -1,8 +1,8 @@
 import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
 
 // Mock dependencies
-jest.mock('../../src/dynamo/models/featuredQueue', () => ({
-  FeaturedQueue: {
+jest.mock('../../src/dynamo/daos', () => ({
+  featuredQueueDao: {
     querySortedByDate: jest.fn(),
     put: jest.fn(),
     delete: jest.fn(),
@@ -11,7 +11,7 @@ jest.mock('../../src/dynamo/models/featuredQueue', () => ({
 jest.mock('../../src/dynamo/models/patron');
 
 const { rotateFeatured } = require('serverutils/featuredQueue');
-const { FeaturedQueue } = require('../../src/dynamo/models/featuredQueue');
+const { featuredQueueDao } = require('../../src/dynamo/daos');
 const Patron = require('../../src/dynamo/models/patron');
 
 describe('Featured Queue Rotation', () => {
@@ -20,7 +20,7 @@ describe('Featured Queue Rotation', () => {
   });
 
   const mockQueueData = (items: any[]) => {
-    (FeaturedQueue.querySortedByDate as jest.Mock).mockResolvedValueOnce({ items, lastKey: null });
+    (featuredQueueDao.querySortedByDate as jest.Mock).mockResolvedValueOnce({ items, lastKey: null });
   };
 
   const createPatron = (status: string, level: number) => ({
@@ -60,8 +60,8 @@ describe('Featured Queue Rotation', () => {
     // Mock all patrons as eligible
     const activePatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling'] + 1);
     (Patron.getById as jest.Mock).mockResolvedValue(activePatron);
-    (FeaturedQueue.put as jest.Mock).mockResolvedValue({});
-    (FeaturedQueue.delete as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.put as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.delete as jest.Mock).mockResolvedValue({});
 
     const result = await rotateFeatured();
 
@@ -72,13 +72,13 @@ describe('Featured Queue Rotation', () => {
     expect(result.added[1].cube).toBe('cube4');
 
     // Verify old cubes (first 2) were moved to back with updated date
-    expect(FeaturedQueue.put).toHaveBeenCalledWith(
+    expect(featuredQueueDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube1',
         date: expect.any(Number),
       }),
     );
-    expect(FeaturedQueue.put).toHaveBeenCalledWith(
+    expect(featuredQueueDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube2',
         date: expect.any(Number),
@@ -109,8 +109,8 @@ describe('Featured Queue Rotation', () => {
       return Promise.resolve(activePatron);
     });
 
-    (FeaturedQueue.put as jest.Mock).mockResolvedValue({});
-    (FeaturedQueue.delete as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.put as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.delete as jest.Mock).mockResolvedValue({});
 
     const result = await rotateFeatured();
 
@@ -121,8 +121,8 @@ describe('Featured Queue Rotation', () => {
     expect(result.messages).toContain('Removed 2 cubes due to patron status');
 
     // Verify ineligible cubes were deleted
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube3');
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube5');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube3');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube5');
 
     // Verify rotation happened with remaining eligible cubes
     expect(result.added).toHaveLength(2);
@@ -150,15 +150,15 @@ describe('Featured Queue Rotation', () => {
       return Promise.resolve(activePatron);
     });
 
-    (FeaturedQueue.put as jest.Mock).mockResolvedValue({});
-    (FeaturedQueue.delete as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.put as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.delete as jest.Mock).mockResolvedValue({});
 
     const result = await rotateFeatured();
 
     expect(result.success).toBe('true');
     expect(result.removed).toHaveLength(1);
     expect(result.removed[0].cube).toBe('cube1');
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube1');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube1');
 
     // Verify rotation still happened with remaining cubes
     // After removing cube1, the queue is [cube2, cube3, cube4, cube5]
@@ -169,14 +169,14 @@ describe('Featured Queue Rotation', () => {
     expect(result.added[1].cube).toBe('cube5');
 
     // Verify cube2 (first cube after removal) was moved to back
-    expect(FeaturedQueue.put).toHaveBeenCalledWith(
+    expect(featuredQueueDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube2',
         date: expect.any(Number),
       }),
     );
     // Verify cube3 (second cube after removal) was also moved to back
-    expect(FeaturedQueue.put).toHaveBeenCalledWith(
+    expect(featuredQueueDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube3',
         date: expect.any(Number),
@@ -204,7 +204,7 @@ describe('Featured Queue Rotation', () => {
       return Promise.resolve(inactivePatron);
     });
 
-    (FeaturedQueue.delete as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.delete as jest.Mock).mockResolvedValue({});
 
     const result = await rotateFeatured();
 
@@ -213,9 +213,9 @@ describe('Featured Queue Rotation', () => {
     expect(result.removed).toHaveLength(3);
 
     // Verify ineligible cubes were still removed
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube3');
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube4');
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube5');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube3');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube4');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube5');
   });
 
   it('should handle large queue with multiple user cubes and mixed patron statuses', async () => {
@@ -243,8 +243,8 @@ describe('Featured Queue Rotation', () => {
       return Promise.resolve(activePatron);
     });
 
-    (FeaturedQueue.put as jest.Mock).mockResolvedValue({});
-    (FeaturedQueue.delete as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.put as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.delete as jest.Mock).mockResolvedValue({});
 
     const result = await rotateFeatured();
 
@@ -253,9 +253,9 @@ describe('Featured Queue Rotation', () => {
     expect(result.messages).toContain('Removed 3 cubes due to patron status');
 
     // Verify ineligible cubes were deleted
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube3');
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube6');
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube7');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube3');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube6');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube7');
 
     // Verify patron data was fetched only once per unique owner
     const uniqueOwners = ['alice', 'bob', 'charlie', 'diana', 'eve', 'frank', 'grace'];
@@ -267,12 +267,12 @@ describe('Featured Queue Rotation', () => {
     expect(result.added[1].cube).toBe('cube5'); // alice (second cube)
 
     // Verify old featured cubes (first 2) were moved to back
-    expect(FeaturedQueue.put).toHaveBeenCalledWith(
+    expect(featuredQueueDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube1',
       }),
     );
-    expect(FeaturedQueue.put).toHaveBeenCalledWith(
+    expect(featuredQueueDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         cube: 'cube2',
       }),
@@ -298,15 +298,15 @@ describe('Featured Queue Rotation', () => {
       return Promise.resolve(activePatron);
     });
 
-    (FeaturedQueue.put as jest.Mock).mockResolvedValue({});
-    (FeaturedQueue.delete as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.put as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.delete as jest.Mock).mockResolvedValue({});
 
     const result = await rotateFeatured();
 
     expect(result.success).toBe('true');
     expect(result.removed).toHaveLength(1);
     expect(result.removed[0].cube).toBe('cube3');
-    expect(FeaturedQueue.delete).toHaveBeenCalledWith('cube3');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube3');
   });
 
   it('should correctly handle pagination when fetching queue', async () => {
@@ -315,19 +315,19 @@ describe('Featured Queue Rotation', () => {
 
     const page2 = [createCube('cube3', 'user3', Date.now() - 2000), createCube('cube4', 'user4', Date.now() - 1000)];
 
-    (FeaturedQueue.querySortedByDate as jest.Mock)
+    (featuredQueueDao.querySortedByDate as jest.Mock)
       .mockResolvedValueOnce({ items: page1, lastKey: 'key1' })
       .mockResolvedValueOnce({ items: page2, lastKey: null });
 
     const activePatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling'] + 1);
     (Patron.getById as jest.Mock).mockResolvedValue(activePatron);
-    (FeaturedQueue.put as jest.Mock).mockResolvedValue({});
+    (featuredQueueDao.put as jest.Mock).mockResolvedValue({});
 
     const result = await rotateFeatured();
 
     expect(result.success).toBe('true');
-    expect(FeaturedQueue.querySortedByDate).toHaveBeenCalledTimes(2);
-    expect(FeaturedQueue.querySortedByDate).toHaveBeenNthCalledWith(1, undefined);
-    expect(FeaturedQueue.querySortedByDate).toHaveBeenNthCalledWith(2, 'key1');
+    expect(featuredQueueDao.querySortedByDate).toHaveBeenCalledTimes(2);
+    expect(featuredQueueDao.querySortedByDate).toHaveBeenNthCalledWith(1, undefined);
+    expect(featuredQueueDao.querySortedByDate).toHaveBeenNthCalledWith(2, 'key1');
   });
 });

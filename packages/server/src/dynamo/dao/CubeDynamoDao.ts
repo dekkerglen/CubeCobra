@@ -146,13 +146,18 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     GSI4PK: string | undefined;
     GSI4SK: string | undefined;
   } {
+    // Handle both User object and string owner ID
+    const ownerId = typeof item.owner === 'string' ? item.owner : item.owner?.id;
+    // last digit of ID for sharding
+    const shard = item.id.charCodeAt(item.id.length - 1) % 10; // Simple sharding by last character of ID
+
     return {
-      GSI1PK: item.owner?.id ? `${this.itemType()}#OWNER#${item.owner.id}` : undefined,
+      GSI1PK: ownerId ? `${this.itemType()}#OWNER#${ownerId}` : undefined,
       GSI1SK: item.dateLastUpdated ? `DATE#${item.dateLastUpdated}` : undefined,
       GSI2PK: item.visibility ? `${this.itemType()}#VISIBILITY#${item.visibility}` : undefined,
       GSI2SK: item.dateLastUpdated ? `DATE#${item.dateLastUpdated}` : undefined,
-      GSI3PK: undefined,
-      GSI3SK: undefined,
+      GSI3PK: `${this.itemType()}#${shard}`,
+      GSI3SK: item.id,
       GSI4PK: undefined,
       GSI4SK: undefined,
     };
@@ -200,6 +205,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Hydrates a single UnhydratedCube to Cube.
    */
   protected async hydrateItem(item: UnhydratedCube): Promise<Cube> {
+    // Skip cubes with invalid owner
+    if (!item.owner) {
+      throw new Error(`Cube ${item.id} has null or undefined owner`);
+    }
+
     const owner = await UserModel.getById(item.owner);
     const image = getImageData(item.imageName);
 
@@ -1337,5 +1347,131 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Scans all cubes by querying GSI3 shard by shard.
+   * GSI3 is sharded by the last character of cube ID (0-9).
+   * This method iterates through all 10 shards and yields cubes from each shard.
+   *
+   * @param batchSize - Number of items to fetch per query (default 100)
+   * @returns AsyncGenerator that yields batches of cubes
+   */
+  public async *scanAllCubes(batchSize: number = 100): AsyncGenerator<Cube[], void, undefined> {
+    if (this.dualWriteEnabled) {
+      throw new Error('scanAllCubes is not supported in dual write mode');
+    }
+
+    // Query each shard (0-9)
+    for (let shard = 0; shard < 10; shard++) {
+      let lastKey: Record<string, any> | undefined = undefined;
+
+      do {
+        const params: QueryCommandInput = {
+          TableName: this.tableName,
+          IndexName: 'GSI3',
+          KeyConditionExpression: 'GSI3PK = :shardKey',
+          ExpressionAttributeValues: {
+            ':shardKey': `${this.itemType()}#${shard}`,
+          },
+          Limit: batchSize,
+          ExclusiveStartKey: lastKey,
+        };
+
+        const result = await this.query(params);
+
+        if (result.items.length > 0) {
+          yield result.items;
+        }
+
+        lastKey = result.lastKey;
+      } while (lastKey);
+    }
+  }
+
+  /**
+   * Scans the entire table for cube items (SK = 'CUBE').
+   * This is useful for migration scripts that need to process all cubes.
+   *
+   * Note: Uses FilterExpression to filter server-side, reducing data transfer.
+   * The scan may return 0 items but still have LastEvaluatedKey if filtered items
+   * were encountered - callers must continue scanning while lastKey exists.
+   *
+   * @param lastKey - Optional key to continue from a previous scan
+   * @returns Promise with items and lastKey for pagination
+   */
+  public async scanCubeItems(lastKey?: Record<string, any>): Promise<{
+    items: Cube[];
+    lastKey?: Record<string, any>;
+  }> {
+    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+
+    const scanResult = await this.dynamoClient.send(
+      new ScanCommand({
+        TableName: this.tableName,
+        FilterExpression: 'begins_with(PK, :cubePrefix) AND SK = :sk',
+        ExpressionAttributeValues: {
+          ':cubePrefix': 'CUBE#',
+          ':sk': 'CUBE',
+        },
+        ExclusiveStartKey: lastKey,
+      }),
+    );
+
+    // May return 0 items but still have LastEvaluatedKey - that's expected
+    if (!scanResult.Items || scanResult.Items.length === 0) {
+      return { items: [], lastKey: scanResult.LastEvaluatedKey };
+    }
+
+    // Extract cube IDs from items
+    const cubeIds = scanResult.Items.map((item: any) => {
+      // Extract ID from PK (CUBE#{id})
+      const pk = item.PK as string;
+      return pk.replace('CUBE#', '');
+    });
+
+    // Fetch full cube objects
+    const cubes = await this.batchGet(cubeIds);
+
+    return {
+      items: cubes,
+      lastKey: scanResult.LastEvaluatedKey,
+    };
+  }
+
+  /**
+   * Scans the entire table for raw cube items without hydration.
+   * Useful for migration scripts that need to inspect/fix data issues.
+   *
+   * @param lastKey - Optional key to continue from a previous scan
+   * @returns Promise with raw unhydrated items and lastKey for pagination
+   */
+  public async scanRawCubeItems(lastKey?: Record<string, any>): Promise<{
+    items: UnhydratedCube[];
+    lastKey?: Record<string, any>;
+  }> {
+    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+
+    const scanResult = await this.dynamoClient.send(
+      new ScanCommand({
+        TableName: this.tableName,
+        FilterExpression: 'begins_with(PK, :cubePrefix) AND SK = :sk',
+        ExpressionAttributeValues: {
+          ':cubePrefix': 'CUBE#',
+          ':sk': 'CUBE',
+        },
+        ExclusiveStartKey: lastKey,
+      }),
+    );
+
+    // May return 0 items but still have LastEvaluatedKey - that's expected
+    if (!scanResult.Items || scanResult.Items.length === 0) {
+      return { items: [], lastKey: scanResult.LastEvaluatedKey };
+    }
+
+    return {
+      items: scanResult.Items as UnhydratedCube[],
+      lastKey: scanResult.LastEvaluatedKey,
+    };
   }
 }

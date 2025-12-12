@@ -1,8 +1,6 @@
-import DraftType from '@utils/datatypes/Draft';
 import DraftRecord from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import Record from 'dynamo/models/record';
 import Joi from 'joi'; // Import Joi for validation
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -84,7 +82,7 @@ export const createRecordPageFromDraftHandler = async (req: Request, res: Respon
       return redirect(req, res, '/404');
     }
 
-    const decks = await Draft.getByCube(cube.id);
+    const decks = await draftDao.queryByCube(cube.id);
 
     return render(
       req,
@@ -93,7 +91,7 @@ export const createRecordPageFromDraftHandler = async (req: Request, res: Respon
       {
         cube,
         decks: decks.items,
-        decksLastKey: decks.lastEvaluatedKey,
+        decksLastKey: decks.lastKey,
       },
       {
         title: `${abbreviate(cube.name)} - Create Record`,
@@ -239,7 +237,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       return redirect(req, res, `/cube/records/${req.params.id}`);
     }
 
-    const draft: DraftType = await Draft.getById(draftId);
+    const draft = await draftDao.getById(draftId);
 
     if (!draft || draft.cube !== cube.id) {
       req.flash('danger', 'Draft not found or does not belong to this cube');

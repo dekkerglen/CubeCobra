@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import dailyP1P1Model from 'dynamo/models/dailyP1P1';
+import { cubeDao, dailyP1P1Dao } from 'dynamo/daos';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 
 interface Logger {
@@ -20,7 +19,7 @@ interface DailyP1P1Result {
 async function getDailyP1P1(logger?: Logger): Promise<DailyP1P1Result | null> {
   let dailyP1P1: DailyP1P1Result | null = null;
   try {
-    const dailyP1P1Record = await dailyP1P1Model.getCurrentDailyP1P1();
+    const dailyP1P1Record = await dailyP1P1Dao.getCurrentDailyP1P1();
     if (dailyP1P1Record) {
       const p1p1pack = await p1p1PackModel.getById(dailyP1P1Record.packId);
       const p1p1cube = await cubeDao.getById(dailyP1P1Record.cubeId);

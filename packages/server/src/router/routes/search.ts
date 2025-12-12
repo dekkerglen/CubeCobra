@@ -4,6 +4,7 @@ import { SortOrder as DaoSortOrder } from 'dynamo/dao/CubeDynamoDao';
 import { getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeListed } from 'serverutils/cubefn';
 import { render } from 'serverutils/render';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 
 import { Request, Response } from '../../types/express';
 
@@ -233,11 +234,8 @@ const buildHashesForQuery = (
     hashes.push(`keywords:${keywordQueries[0].value.toLowerCase()}`);
   }
 
-  // If no hashes, use featured:false to get all public cubes
-  if (hashes.length === 0) {
-    hashes.push(`featured:false`);
-  }
-
+  // If no hashes, return empty array - performSearch will handle this case
+  // by querying all public cubes via queryByVisibility
   return hashes;
 };
 
@@ -287,11 +285,40 @@ const performSearch = async (
   }
 
   try {
-    // Use queryByMultipleHashes from cubeDao
-    const cubes = await cubeDao.queryByMultipleHashes(hashes, mapSortOrder(order), ascending, cardCountFilter);
+    let cubes: any[];
+
+    // If no specific queries, get all public cubes via visibility query
+    if (hashes.length === 0) {
+      console.log('[Search] No hashes, querying all public cubes');
+      // Query for all public cubes using queryByVisibility (single page only)
+      const result = await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, mapSortOrder(order), ascending, undefined, 36);
+      console.log(`[Search] Found ${result.items.length} public cubes`);
+      cubes = result.items;
+
+      // Apply card count filter if present
+      if (cardCountFilter) {
+        cubes = cubes.filter((cube: any) => {
+          const cardCount = cube.cardCount || 0;
+          switch (cardCountFilter.operator) {
+            case 'eq':
+              return cardCount === cardCountFilter.value;
+            case 'gt':
+              return cardCount > cardCountFilter.value;
+            case 'lt':
+              return cardCount < cardCountFilter.value;
+            default:
+              return true;
+          }
+        });
+      }
+    } else {
+      // Use queryByMultipleHashes from cubeDao
+      cubes = await cubeDao.queryByMultipleHashes(hashes, mapSortOrder(order), ascending, cardCountFilter);
+    }
 
     // Filter by listing visibility
     const visibleCubes = cubes.filter((cube: any) => isCubeListed(cube, user));
+    console.log(`[Search] After visibility filter: ${visibleCubes.length} cubes`);
 
     // Apply additional keyword filters (for keywords beyond the first one)
     let filteredCubes = visibleCubes;
@@ -306,10 +333,12 @@ const performSearch = async (
         }
         return true;
       });
+      console.log(`[Search] After keyword filter: ${filteredCubes.length} cubes`);
     }
 
     // Limit to 36 results per page
     const paginatedCubes = filteredCubes.slice(0, 36);
+    console.log(`[Search] Final paginated result: ${paginatedCubes.length} cubes`);
 
     return {
       cubes: paginatedCubes,
@@ -340,11 +369,14 @@ const searchCubes = async (
 ): Promise<SearchCubesResult> => {
   // separate query into tokens, respecting quotes
   const tokens = tokenize(query);
+  console.log('[Search] Query:', query, 'Tokens:', tokens);
 
   const cardQueries = getCardQueries(tokens, user?.defaultPrinting);
   const keywordQueries = getKeywordQueries(tokens);
   const tagQueries = getTagQueries(tokens);
   const sizeQueries = getSizeQueries(tokens);
+
+  console.log('[Search] Parsed queries:', { cardQueries, keywordQueries, tagQueries, sizeQueries });
 
   const searchResult = await performSearch(
     cardQueries,
@@ -355,6 +387,8 @@ const searchCubes = async (
     ascending,
     user,
   );
+
+  console.log('[Search] Result:', { cubesCount: searchResult.cubes.length, error: searchResult.error });
 
   return {
     cubes: searchResult.cubes,

@@ -267,10 +267,16 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
    */
   public async update(item: History): Promise<void> {
     if (this.dualWriteEnabled) {
+      // Check if item exists in new table first
+      const existsInNewTable = await this.get({
+        PK: this.partitionKey(item),
+        SK: this.itemType(),
+      });
+
       const unhydrated = this.dehydrateItem(item);
       await Promise.all([
         CardHistoryModel.put(unhydrated), // Old model doesn't have separate update
-        super.update(item),
+        existsInNewTable ? super.update(item) : super.put(item),
       ]);
     } else {
       await super.update(item);

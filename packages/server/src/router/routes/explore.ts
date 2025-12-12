@@ -1,11 +1,11 @@
-import Draft from 'dynamo/models/draft';
 import { isCubeListed } from 'serverutils/cubefn';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
 import { render } from 'serverutils/render';
-import { cubeDao } from 'dynamo/daos';
+import { cubeDao, draftDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../types/express';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 const exploreHandler = async (req: Request, res: Response) => {
   const recents = (await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, 'date', false)).items.filter((cube: any) =>
@@ -18,7 +18,7 @@ const exploreHandler = async (req: Request, res: Response) => {
     (cube: any) => isCubeListed(cube, req.user),
   );
 
-  const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
+  const recentDecks = await draftDao.queryByTypeAndDate(DRAFT_TYPES.DRAFT);
   const recentlyDrafted = (await cubeDao.batchGet(recentDecks.items.map((deck: any) => deck.cube))).filter(
     (cube: any) => cube.visibility !== 'pr',
   );

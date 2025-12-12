@@ -1,6 +1,5 @@
 import * as cardutil from '@utils/cardutil';
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
 import { cardFromId } from 'serverutils/carddb';
@@ -10,6 +9,7 @@ import { handleRouteError, redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 export const startSealedHandler = async (req: Request, res: Response) => {
   try {
@@ -86,7 +86,7 @@ export const startSealedHandler = async (req: Request, res: Response) => {
       owner: req.user.id,
       cubeOwner: cube.owner.id,
       date: new Date().valueOf(),
-      type: Draft.TYPES.SEALED,
+      type: DRAFT_TYPES.SEALED,
       seats: [],
       cards: cardsArray,
       complete: true,
@@ -102,7 +102,7 @@ export const startSealedHandler = async (req: Request, res: Response) => {
       sideboard: createPool(),
     });
 
-    const deckId = await Draft.put(deck);
+    const deckId = await draftDao.createDraft(deck);
 
     cube.numDecks += 1;
 

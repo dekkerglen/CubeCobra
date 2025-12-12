@@ -1,22 +1,22 @@
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 export const gridDraftHandler = async (req: Request, res: Response) => {
   try {
-    const document = await Draft.getById(req.params.id!);
+    const document = await draftDao.getById(req.params.id!);
 
     if (!document) {
       req.flash('danger', 'Draft not found');
       return redirect(req, res, '/404');
     }
 
-    if (document.type !== Draft.TYPES.GRID) {
+    if (document.type !== DRAFT_TYPES.GRID) {
       req.flash('danger', 'Draft is not a grid draft');
       return redirect(req, res, '/404');
     }

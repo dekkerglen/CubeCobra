@@ -1,10 +1,9 @@
 import { ContentStatus } from '@utils/datatypes/Content';
-import Draft from 'dynamo/models/draft';
 import Feed from 'dynamo/models/feed';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { articleDao, episodeDao, videoDao } from 'dynamo/daos';
+import { articleDao, episodeDao, videoDao, draftDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
@@ -33,7 +32,7 @@ const dashboardHandler = async (req: Request, res: Response) => {
       ...(episodesResult.items || []),
     ].sort((a, b) => b.date - a.date);
 
-    const decks = await Draft.getByCubeOwner(req.user.id);
+    const decks = await draftDao.queryByCubeOwner(req.user.id);
 
     // Get daily P1P1
     const dailyP1P1 = await getDailyP1P1(req.logger);
@@ -42,7 +41,7 @@ const dashboardHandler = async (req: Request, res: Response) => {
       posts: posts.items?.map((item: any) => item.document) || [],
       lastKey: posts.lastKey,
       decks: decks.items,
-      lastDeckKey: decks.lastEvaluatedKey,
+      lastDeckKey: decks.lastKey,
       content,
       featured,
       dailyP1P1,
@@ -76,12 +75,12 @@ const getMoreDecksHandler = async (req: Request, res: Response) => {
 
   const { lastKey } = req.body;
 
-  const result = await Draft.getByCubeOwner(req.user.id, lastKey);
+  const result = await draftDao.queryByCubeOwner(req.user.id, lastKey);
 
   return res.status(200).send({
     success: 'true',
     items: result.items,
-    lastKey: result.lastEvaluatedKey,
+    lastKey: result.lastKey,
   });
 };
 

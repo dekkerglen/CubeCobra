@@ -10,7 +10,6 @@ import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } fr
 import request from 'supertest';
 
 import Cube from '../../src/dynamo/models/cube';
-import Draft from '../../src/dynamo/models/draft';
 import Notification from '../../src/dynamo/models/notification';
 import { bodyValidation } from '../../src/router/middleware';
 import { handler, PublishDraftBodySchema, routes } from '../../src/router/routes/api/draftmancer/publish';
@@ -29,9 +28,14 @@ jest.mock('../../src/dynamo/models/cube', () => ({
   getById: jest.fn(),
 }));
 
-jest.mock('../../src/dynamo/models/draft', () => ({
-  put: jest.fn(),
+jest.mock('../../src/dynamo/daos', () => ({
+  draftDao: {
+    putDraft: jest.fn(),
+  },
 }));
+
+// Import the mocked draftDao
+import { draftDao } from '../../src/dynamo/daos';
 
 jest.mock('../../src/dynamo/models/notification', () => ({
   put: jest.fn(),
@@ -39,10 +43,6 @@ jest.mock('../../src/dynamo/models/notification', () => ({
 
 jest.mock('serverutils/carddb', () => ({
   cardFromId: jest.fn(),
-}));
-
-jest.mock('../../src/dynamo/models/draft', () => ({
-  put: jest.fn(),
 }));
 
 jest.mock('serverutils/draftmancerUtil', () => ({
@@ -230,14 +230,14 @@ describe('Publish', () => {
       }
       return mockCards.get(cardID);
     });
-    (Draft.put as jest.Mock).mockResolvedValue('test-draft-id');
+    (draftDao.putDraft as jest.Mock).mockResolvedValue('test-draft-id');
 
     return { cube: mockCube, cardDetails };
   };
 
   // Helper function to verify high level draft details
   const verifyDraftCreation = (cube: CubeType) => {
-    expect(Draft.put).toHaveBeenCalledWith(
+    expect(draftDao.putDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Draftmancer Draft',
         cube: cube.id,
@@ -338,7 +338,7 @@ describe('Publish', () => {
 
     expect(response.status).toBe(200);
 
-    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    const putCall = (draftDao.putDraft as jest.Mock).mock.calls[0][0];
     expect(putCall.seats.every((seat: any) => seat.bot === false)).toBeTruthy();
     expect(putCall.seats.every((seat: any) => seat.description.includes('drafted on Draftmancer by'))).toBeTruthy();
 
@@ -409,7 +409,7 @@ describe('Publish', () => {
 
     expect(response.status).toBe(200);
 
-    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    const putCall = (draftDao.putDraft as jest.Mock).mock.calls[0][0];
     validateHumanDraftSeat(putCall.seats[0], playerOneDraftSeat);
     validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat);
 
@@ -469,7 +469,7 @@ describe('Publish', () => {
 
     expect(response.status).toBe(200);
 
-    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    const putCall = (draftDao.putDraft as jest.Mock).mock.calls[0][0];
     validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat);
     validateHumanDraftSeat(putCall.seats[1], playerTwoDraftSeat);
 
@@ -531,7 +531,7 @@ describe('Publish', () => {
 
     expect(response.status).toBe(200);
 
-    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    const putCall = (draftDao.putDraft as jest.Mock).mock.calls[0][0];
     validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat);
     validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat);
 

@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import dailyP1P1Model from 'dynamo/models/dailyP1P1';
+import { cubeDao, dailyP1P1Dao } from 'dynamo/daos';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import { render } from 'serverutils/render';
 
@@ -10,7 +9,7 @@ export const getArchiveHandler = async (req: Request, res: Response) => {
     const limit = 10;
 
     // Get daily P1P1 archive
-    const result = await dailyP1P1Model.getDailyP1P1History(undefined, limit);
+    const result = await dailyP1P1Dao.getDailyP1P1History(undefined, limit);
 
     let history = [];
     let hasMore = false;

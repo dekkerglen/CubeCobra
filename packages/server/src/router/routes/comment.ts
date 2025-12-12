@@ -3,8 +3,7 @@ import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
 import { commentDao } from 'dynamo/daos';
-import { blogDao, articleDao, videoDao, podcastDao, episodeDao, cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { blogDao, articleDao, videoDao, podcastDao, episodeDao, cubeDao, draftDao } from 'dynamo/daos';
 import Notice from 'dynamo/models/notice';
 import Package from 'dynamo/models/package';
 import Record from 'dynamo/models/record';
@@ -180,7 +179,7 @@ export const getReplyContext: Record<NotifiableCommentType, (id: string) => Prom
     return blog?.owner;
   },
   deck: async (id) => {
-    const deck = await Draft.getById(id);
+    const deck = await draftDao.getById(id);
     return deck?.owner;
   },
   article: async (id) => {

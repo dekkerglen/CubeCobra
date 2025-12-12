@@ -1,9 +1,8 @@
-import Draft from 'dynamo/models/draft';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
-import { cubeDao } from 'dynamo/daos';
+import { cubeDao, draftDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../types/express';
 
@@ -14,7 +13,7 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const draft = await Draft.getById(req.params.id);
+    const draft = await draftDao.getById(req.params.id);
 
     if (!draft) {
       req.flash('danger', 'Draft not found');

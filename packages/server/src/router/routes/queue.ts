@@ -1,4 +1,4 @@
-import { FeaturedQueue } from 'dynamo/models/featuredQueue';
+import { featuredQueueDao } from 'dynamo/daos';
 import { render } from 'serverutils/render';
 import { cubeDao } from 'dynamo/daos';
 
@@ -9,7 +9,7 @@ const queueHandler = async (req: Request, res: Response) => {
   let lastkey: any = null;
 
   do {
-    const response = await FeaturedQueue.querySortedByDate(lastkey || undefined);
+    const response = await featuredQueueDao.querySortedByDate(lastkey || undefined);
     featured = featured.concat(response.items);
     lastkey = response.lastKey;
   } while (lastkey);

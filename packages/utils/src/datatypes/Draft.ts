@@ -37,6 +37,20 @@ export interface DraftmancerLog {
   players: DraftmancerPick[][];
 }
 
+export const DRAFT_TYPES = {
+  GRID: 'g',
+  DRAFT: 'd',
+  UPLOAD: 'u',
+  SEALED: 's',
+} as const;
+
+export const REVERSE_TYPES: Record<string, string> = {
+  g: 'Grid Draft',
+  d: 'Draft',
+  u: 'Upload',
+  s: 'Sealed',
+} as const;
+
 export default interface Draft {
   seats: DraftSeat[];
   cards: Card[];

@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import dailyP1P1Model from 'dynamo/models/dailyP1P1';
+import { cubeDao, dailyP1P1Dao } from 'dynamo/daos';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 
 import { Request, Response } from '../../../../types/express';
@@ -10,7 +9,7 @@ export const getDailyP1P1HistoryHandler = async (req: Request, res: Response) =>
     const limit = 10;
 
     // Get daily P1P1 history
-    const result = await dailyP1P1Model.getDailyP1P1History(lastKey ? JSON.parse(lastKey as string) : undefined, limit);
+    const result = await dailyP1P1Dao.getDailyP1P1History(lastKey ? JSON.parse(lastKey as string) : undefined, limit);
 
     if (!result.items || result.items.length === 0) {
       return res.status(200).json({

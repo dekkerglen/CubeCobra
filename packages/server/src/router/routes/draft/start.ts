@@ -1,7 +1,6 @@
 import type DraftType from '@utils/datatypes/Draft';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { addBasics } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -90,7 +89,7 @@ const handler = async (req: Request, res: Response) => {
       type_line: card.type_line || card.details?.type || '',
     }));
 
-    const draft: Omit<DraftType, 'id'> = {
+    const draft = {
       complete: false,
       cube: cube.id,
       cubeOwner: cube.owner.id,
@@ -98,20 +97,17 @@ const handler = async (req: Request, res: Response) => {
       InitialState: populated.InitialState,
       owner: req.user?.id,
       seats: populated.seats,
-      type: 'd',
+      type: 'd' as const,
       cards: cardsWithIndex,
-      basics: [],
+      basics: [] as number[], // Will be populated by addBasics
       name: '',
     };
 
-    // addBasics expects cards with required index and type_line
-    const draftDocument = draft as unknown as {
-      cards: { cardID: string; index: number; isUnlimited?: boolean; type_line: string }[];
-      basics: number[];
-    };
-    addBasics(draftDocument, cube.basics);
+    // addBasics modifies the draft object in place, adding basic cards to cards array
+    // and setting basics to be an array of card indices
+    addBasics(draft, cube.basics);
 
-    const draftId = await Draft.put(draftDocument as any);
+    const draftId = await draftDao.createDraft(draft);
 
     return redirect(req, res, `/draft/${draftId}`);
   } catch (err) {

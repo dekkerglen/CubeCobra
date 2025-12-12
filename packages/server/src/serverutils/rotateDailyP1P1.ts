@@ -1,6 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import dailyP1P1Model from 'dynamo/models/dailyP1P1';
-import { FeaturedQueue } from 'dynamo/models/featuredQueue';
+import { cubeDao, dailyP1P1Dao, featuredQueueDao } from 'dynamo/daos';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import User from 'dynamo/models/user';
 
@@ -30,7 +28,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     console.log('Starting daily P1P1 rotation...');
 
     // Idempotency check: If there's already an active daily P1P1 from today, don't create another
-    const currentDailyP1P1 = await dailyP1P1Model.getCurrentDailyP1P1();
+    const currentDailyP1P1 = await dailyP1P1Dao.getCurrentDailyP1P1();
     if (currentDailyP1P1) {
       // Check if it was created within the last 23 hours
       // Note: stored date has +6 hour offset, so we check against (now - 17 hours) to effectively check creation time > (now - 23 hours)
@@ -46,7 +44,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     }
 
     // Get featured cubes queue
-    const queueResult = await FeaturedQueue.querySortedByDate(undefined, 999);
+    const queueResult = await featuredQueueDao.querySortedByDate(undefined, 999);
     if (!queueResult.items || queueResult.items.length === 0) {
       console.log('No featured cubes in queue, skipping rotation');
       return { success: false, error: 'No featured cubes in queue' };
@@ -108,7 +106,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     console.log('Created P1P1 pack:', pack.id);
 
     // Set as new daily P1P1 (this will deactivate the previous one)
-    const dailyP1P1 = await dailyP1P1Model.setActiveDailyP1P1(pack.id, cube.id);
+    const dailyP1P1 = await dailyP1P1Dao.setActiveDailyP1P1(pack.id, cube.id);
 
     console.log('Successfully rotated daily P1P1:', dailyP1P1.id);
 

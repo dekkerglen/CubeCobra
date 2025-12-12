@@ -1,4 +1,4 @@
-import Draft from 'dynamo/models/draft';
+import { draftDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
@@ -14,7 +14,7 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     const user = await User.getById(userid);
-    const decks = await Draft.getByOwner(userid);
+    const decks = await draftDao.queryByOwner(userid);
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -26,7 +26,7 @@ export const handler = async (req: Request, res: Response) => {
       followersCount: (user.following || []).length,
       following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
       decks: decks.items,
-      lastKey: decks.lastEvaluatedKey,
+      lastKey: decks.lastKey,
     });
   } catch (err) {
     return handleRouteError(req, res, err as Error, '/404');

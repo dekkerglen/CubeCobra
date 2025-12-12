@@ -2,8 +2,7 @@ import { cardOracleId } from '@utils/cardutil';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
 import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import RecordDao from 'dynamo/models/record';
 import recordAnalytic from 'dynamo/models/recordAnalytic';
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -95,7 +94,7 @@ const compileAnalytics = async (records: RecordType[]): Promise<RecordAnalytic> 
       continue;
     }
 
-    const drafts = await Draft.batchGet(draftIds);
+    const drafts = await draftDao.batchGet(draftIds);
     const draftById: Record<string, DraftType> = Object.fromEntries(
       drafts.map((draft: DraftType) => [draft.id, draft]),
     );

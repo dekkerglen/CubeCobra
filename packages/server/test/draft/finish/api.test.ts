@@ -8,7 +8,6 @@ import * as draftbots from 'serverutils/draftbots';
 import * as util from 'serverutils/util';
 
 import Cube from '../../../src/dynamo/models/cube';
-import Draft from '../../../src/dynamo/models/draft';
 import { handler as finishDraftHandler, validateBody } from '../../../src/router/routes/draft/finish';
 import { createCompletedSoloDraft as createDraft, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
@@ -22,10 +21,15 @@ jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
 }));
 
-jest.mock('../../../src/dynamo/models/draft', () => ({
-  getById: jest.fn(),
-  put: jest.fn(),
+jest.mock('../../../src/dynamo/daos', () => ({
+  draftDao: {
+    getById: jest.fn(),
+    putDraft: jest.fn(),
+  },
 }));
+
+// Import the mocked draftDao
+import { draftDao } from '../../../src/dynamo/daos';
 
 jest.mock('serverutils/draftbots', () => ({
   deckbuild: jest.fn(),
@@ -251,8 +255,8 @@ describe('Finish Draft', () => {
 
   // Helper function to set up common mocks
   const setupSuccessReturns = (draft: DraftType) => {
-    (Draft.getById as jest.Mock).mockResolvedValue(draft);
-    (Draft.put as jest.Mock).mockResolvedValue(draft.id);
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+    (draftDao.putDraft as jest.Mock).mockResolvedValue(draft.id);
     (cardOracleId as jest.Mock).mockImplementation((card) => card.details.oracle_id);
   };
 
@@ -270,7 +274,7 @@ describe('Finish Draft', () => {
       success: true,
     });
 
-    expect(Draft.put).toHaveBeenCalledWith(
+    expect(draftDao.putDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         complete: true,
         seats: [
@@ -292,7 +296,7 @@ describe('Finish Draft', () => {
   };
 
   it('should fail if user is not logged in', async () => {
-    (Draft.getById as jest.Mock).mockResolvedValue(createDraft());
+    (draftDao.getById as jest.Mock).mockResolvedValue(createDraft());
 
     const res = await call(finishDraftHandler).withParams({ id: 'draft-id' }).withBody(validBody).send();
 
@@ -304,7 +308,7 @@ describe('Finish Draft', () => {
   });
 
   it('should fail if draft does not exist', async () => {
-    (Draft.getById as jest.Mock).mockResolvedValue(null);
+    (draftDao.getById as jest.Mock).mockResolvedValue(null);
 
     const res = await call(finishDraftHandler)
       .as(createUser())
@@ -323,7 +327,7 @@ describe('Finish Draft', () => {
     const owner = createUser({ id: 'owner-id' });
     const draft = createDraft({ owner });
 
-    (Draft.getById as jest.Mock).mockResolvedValue(draft);
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
 
     const res = await call(finishDraftHandler)
       .as(createUser({ id: 'other-user' }))
@@ -503,7 +507,7 @@ describe('Finish Draft', () => {
 
   it('should handle server errors gracefully', async () => {
     const error = new Error('Database error');
-    (Draft.getById as jest.Mock).mockRejectedValue(error);
+    (draftDao.getById as jest.Mock).mockRejectedValue(error);
 
     const res = await call(finishDraftHandler)
       .as(createUser())

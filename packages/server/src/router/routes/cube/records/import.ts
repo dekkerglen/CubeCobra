@@ -1,7 +1,6 @@
 import DraftRecord from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import Record from 'dynamo/models/record';
 import Joi from 'joi'; // Import Joi for validation
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -156,7 +155,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/record/${recordId}?tab=1`);
     }
 
-    const draft = await Draft.getById(record.draft);
+    const draft = await draftDao.getById(record.draft);
 
     if (!draft) {
       // underlying draft object may have been deleted, we need to create a new one
@@ -170,7 +169,8 @@ export const importRecordHandler = async (req: Request, res: Response) => {
     }
 
     // if this draft already has a deck for this user, we don't want to overwrite it
-    if (draft.seats[userIndex - 1]?.mainboard?.flat(3).length > 0) {
+    const userSeat = draft.seats[userIndex - 1];
+    if (userSeat?.mainboard && userSeat.mainboard.flat(3).length > 0) {
       req.flash('danger', 'This user already has a deck associated with this draft.');
       return redirect(req, res, `/cube/records/uploaddeck/${record.id}`);
     }

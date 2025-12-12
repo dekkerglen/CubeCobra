@@ -155,7 +155,7 @@ function deleteCheckpoint(): void {
       console.log(`\nProcessing batch ${batchNumber}...`);
 
       // Scan the old content table
-      const result: ScanResult = lastKey ? await ContentModel.scan(lastKey) : await ContentModel.scan({} as any);
+      const result: ScanResult = await ContentModel.scan(lastKey as any);
       lastKey = result.lastKey;
 
       if (result.items && result.items.length > 0) {

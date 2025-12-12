@@ -2,6 +2,41 @@
 
 This directory contains migration scripts for transitioning data from old DynamoDB table formats to the new single-table design.
 
+## Daily P1P1 Migration
+
+### Overview
+
+The `migrateDailyP1P1.ts` script migrates daily P1P1 data from the old DAILY_P1P1 table format to the new single-table design used by `DailyP1P1DynamoDao`.
+
+### Old Format (DAILY_P1P1 table)
+
+- Partition key: `id` (String)
+- GSI `ByDate`: `type` (PK), `date` (SK)
+- Scan with filter for active P1P1 records
+- Direct storage of `DailyP1P1` objects
+
+### New Format (Single Table Design)
+
+- Partition key: `PK` = `DAILY_P1P1#{id}`
+- Sort key: `SK` = `DAILY_P1P1`
+- GSI1: `GSI1PK` = `DAILY_P1P1#TYPE#{type}`, `GSI1SK` = `DATE#{date}` (for history queries)
+- GSI2: `GSI2PK` = `DAILY_P1P1#ACTIVE`, `GSI2SK` = `DATE#{date}` (for active record queries)
+
+### Running the Migration
+
+```bash
+cd packages/scripts
+ts-node -r tsconfig-paths/register src/dynamoMigrations/migrateDailyP1P1.ts
+```
+
+### What the Script Does
+
+1. **Scans** all daily P1P1 records from the old DAILY_P1P1 table in batches
+2. **Checks** if each record already exists in the new format (to support resume on failure)
+3. **Migrates** records that don't exist in the new format, ensuring `dateCreated` and `dateLastUpdated` are set
+4. **Verifies** the active record exists in the new format
+5. **Reports** progress and provides a final summary
+
 ## Comment Migration
 
 ### Overview

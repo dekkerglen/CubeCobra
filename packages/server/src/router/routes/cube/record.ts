@@ -1,7 +1,6 @@
 import DraftType from '@utils/datatypes/Draft';
 import UserType from '@utils/datatypes/User';
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import Record from 'dynamo/models/record';
 import User from 'dynamo/models/user';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
@@ -42,7 +41,7 @@ export const handler = async (req: Request, res: Response) => {
 
     let draft: DraftType | undefined;
     if (record.draft) {
-      draft = await Draft.getById(record.draft);
+      draft = await draftDao.getById(record.draft);
     }
 
     const baseUrl = getBaseUrl();

@@ -1,7 +1,8 @@
-import Draft from 'dynamo/models/draft';
+import { draftDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 export const submitgriddraftHandler = async (req: Request, res: Response) => {
   try {
@@ -12,7 +13,7 @@ export const submitgriddraftHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const draft = await Draft.getById(req.body.id);
+    const draft = await draftDao.getById(req.body.id);
 
     if (!draft) {
       return res.status(404).send({
@@ -21,7 +22,7 @@ export const submitgriddraftHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (draft.type !== Draft.TYPES.GRID) {
+    if (draft.type !== DRAFT_TYPES.GRID) {
       return res.status(400).send({
         success: 'false',
         message: 'Draft is not a grid draft',
@@ -33,7 +34,7 @@ export const submitgriddraftHandler = async (req: Request, res: Response) => {
     draft.seats = seats;
     draft.complete = true;
 
-    await Draft.put(draft);
+    await draftDao.update(draft);
 
     return res.status(200).send({
       success: 'true',

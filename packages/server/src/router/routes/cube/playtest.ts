@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
@@ -17,7 +16,7 @@ export const playtestHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const decks = await Draft.getByCube(cube.id);
+    const decks = await draftDao.queryByCube(cube.id);
 
     // Get previous P1P1 packs for this cube
     let previousPacks: any[] = [];

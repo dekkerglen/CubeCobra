@@ -1,10 +1,9 @@
 import { ContentStatus } from '@utils/datatypes/Content';
-import Draft from 'dynamo/models/draft';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
+import { articleDao, draftDao, episodeDao, videoDao } from 'dynamo/daos';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
 import { redirect, render } from 'serverutils/render';
-import { articleDao, episodeDao, videoDao } from 'dynamo/daos';
-
 import { Request, Response } from '../../types/express';
 
 const landingHandler = async (req: Request, res: Response) => {
@@ -29,7 +28,7 @@ const landingHandler = async (req: Request, res: Response) => {
     ...(episodesResult.items || []),
   ].sort((a, b) => b.date - a.date);
 
-  const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
+  const recentDecks = await draftDao.queryByTypeAndDate(DRAFT_TYPES.DRAFT);
 
   // Get daily P1P1
   const dailyP1P1 = await getDailyP1P1(req.logger);

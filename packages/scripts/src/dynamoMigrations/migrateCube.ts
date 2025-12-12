@@ -9,7 +9,6 @@ import 'dotenv/config';
 interface MigrationStats {
   total: number;
   migrated: number;
-  skipped: number;
   errors: number;
 }
 
@@ -55,7 +54,6 @@ interface MigrationStats {
     const stats: MigrationStats = {
       total: 0,
       migrated: 0,
-      skipped: 0,
       errors: 0,
     };
 
@@ -71,62 +69,49 @@ interface MigrationStats {
       lastKey = result.lastKey;
 
       if (result.items && result.items.length > 0) {
-        console.log(`Found ${result.items.length} cubes in this batch`);
+        console.log(`Found ${result.items.length} cubes in this batch - will update/create entries`);
 
         try {
-          // Check which cubes already exist in new format
-          const existingChecks = await Promise.all(
-            result.items.map(async (oldCube) => ({
-              cube: oldCube,
-              exists: !!(await cubeDao.getById(oldCube.id)),
-            })),
-          );
-
-          // Filter to only cubes that need to be migrated
-          const cubesToMigrate = existingChecks.filter((check) => !check.exists).map((check) => check.cube);
-
-          const skippedCount = result.items.length - cubesToMigrate.length;
-          stats.skipped += skippedCount;
           stats.total += result.items.length;
 
-          if (cubesToMigrate.length > 0) {
-            // Process cubes one at a time to handle hash generation properly
-            for (const oldCube of cubesToMigrate) {
-              try {
-                // The old cube is already hydrated, so we can use it directly
-                const cube = oldCube as Cube;
+          // Process cubes individually to ensure hash rows are properly updated
+          for (const oldCube of result.items) {
+            try {
+              const cube = oldCube as Cube;
 
-                // Put the cube with hash rows
-                // Note: Cards are already in S3, no need to migrate them
-                // Hash rows will be created automatically by the DAO
-                await cubeDao.put(cube);
+              // Check if cube exists in new format
+              const existingCube = await cubeDao.getById(cube.id);
 
-                stats.migrated += 1;
+              if (existingCube) {
+                // Update existing cube - this will handle hash row updates
+                await cubeDao.update(cube);
+              } else {
+                // Create new cube with hash rows
+                const cards = await cubeDao.getCards(cube.id);
+                await cubeDao.putNewCube(cube, cards);
+              }
 
-                if (stats.migrated % 10 === 0) {
-                  console.log(
-                    `Progress: ${stats.migrated}/${cubesToMigrate.length} migrated in this batch (${stats.total} total processed)`,
-                  );
-                }
-              } catch (error) {
-                console.error(`Error migrating cube ${oldCube.id}:`, error);
-                stats.errors += 1;
+              stats.migrated += 1;
 
-                if (stats.errors > 100) {
-                  console.error('Too many errors, stopping migration');
-                  throw new Error('Migration failed with too many errors');
-                }
+              if (stats.migrated % 10 === 0) {
+                console.log(
+                  `Progress: ${stats.migrated}/${result.items.length} migrated in this batch (${stats.total} total processed)`,
+                );
+              }
+            } catch (error) {
+              console.error(`Error migrating cube ${oldCube.id}:`, error);
+              stats.errors += 1;
+
+              if (stats.errors > 100) {
+                console.error('Too many errors, stopping migration');
+                throw new Error('Migration failed with too many errors');
               }
             }
-
-            console.log(`Migrated ${cubesToMigrate.length} cubes, skipped ${skippedCount}`);
-          } else {
-            console.log(`All ${result.items.length} cubes already exist, skipped`);
           }
 
-          console.log(
-            `Progress: ${stats.total} processed (${stats.skipped} skipped, ${stats.migrated} migrated, ${stats.errors} errors)`,
-          );
+          console.log(`Migrated ${result.items.length} cubes (updated/created entries)`);
+
+          console.log(`Progress: ${stats.total} processed (${stats.migrated} migrated, ${stats.errors} errors)`);
         } catch (error) {
           stats.errors += result.items.length;
           console.error(`Error processing batch:`, error);
@@ -138,19 +123,17 @@ interface MigrationStats {
         }
       }
 
-      console.log(
-        `Batch ${batchNumber} complete. Stats: ${stats.migrated} migrated, ${stats.skipped} skipped, ${stats.errors} errors`,
-      );
+      console.log(`Batch ${batchNumber} complete. Stats: ${stats.migrated} migrated, ${stats.errors} errors`);
     } while (lastKey);
 
     console.log('\n' + '='.repeat(80));
     console.log('Migration complete!');
     console.log(`Total cubes processed: ${stats.total}`);
     console.log(`Successfully migrated: ${stats.migrated}`);
-    console.log(`Skipped (already exists): ${stats.skipped}`);
     console.log(`Errors: ${stats.errors}`);
     console.log('\n' + 'Note: Cards remain in S3 and do not need migration.');
     console.log('Note: Hash rows were created fresh during migration.');
+    console.log('Note: All existing cubes were overwritten.');
     console.log('='.repeat(80));
 
     process.exit(0);

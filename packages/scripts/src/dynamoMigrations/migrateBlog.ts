@@ -2,6 +2,8 @@
 import documentClient from '@server/dynamo/documentClient';
 import BlogModel from '@server/dynamo/models/blog';
 import { BlogDynamoDao } from 'dynamo/dao/BlogDynamoDao';
+import { ChangelogDynamoDao } from 'dynamo/dao/ChangelogDynamoDao';
+import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
 
 import 'dotenv/config';
 
@@ -41,8 +43,10 @@ interface MigrationStats {
 
     console.log(`Target table: ${tableName}`);
 
-    // Initialize the new DAO (with dualWrite disabled since we're migrating)
-    const blogDao = new BlogDynamoDao(documentClient, tableName, false);
+    // Initialize the DAOs (with dualWrite disabled since we're migrating)
+    const changelogDao = new ChangelogDynamoDao(documentClient, tableName, false);
+    const cubeDao = new CubeDynamoDao(documentClient, tableName, false);
+    const blogDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, tableName, false);
 
     const stats: MigrationStats = {
       total: 0,
@@ -82,6 +86,8 @@ interface MigrationStats {
               body: check.blog.body || '',
               owner: check.blog.owner ? ({ id: check.blog.owner } as any) : ({ id: '404' } as any),
               date: check.blog.date || Date.now(),
+              dateCreated: check.blog.dateCreated || check.blog.date || Date.now(),
+              dateLastUpdated: check.blog.dateLastUpdated || check.blog.date || Date.now(),
               cube: check.blog.cube,
               title: check.blog.title,
               cubeName: '', // Will be hydrated on read

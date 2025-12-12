@@ -1,5 +1,5 @@
 import { cubeDao } from 'dynamo/daos';
-import { FeaturedQueue } from 'dynamo/models/featuredQueue';
+import { featuredQueueDao } from 'dynamo/daos';
 import Patron from 'dynamo/models/patron';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect, render } from 'serverutils/render';
@@ -19,7 +19,7 @@ export const handler = async (req: Request, res: Response) => {
     let lastKey;
 
     do {
-      const result = await FeaturedQueue.querySortedByDate(lastKey);
+      const result = await featuredQueueDao.querySortedByDate(lastKey);
       lastKey = result.lastKey;
       if (result.items) {
         entireQueue.push(...result.items);

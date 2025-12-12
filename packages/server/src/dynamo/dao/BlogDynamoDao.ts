@@ -321,10 +321,17 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
    */
   public async update(item: BlogPost): Promise<void> {
     if (this.dualWriteEnabled) {
+      // Check if item exists in new table first
+      const existsInNewTable = await this.get({
+        PK: this.partitionKey(item),
+        SK: this.itemType(),
+      });
+
       // Write to both old and new paths
+      // If item doesn't exist in new table yet, use put instead of update
       await Promise.all([
         BlogModel.put(this.dehydrateItem(item)), // Old model doesn't have separate update
-        super.update(item),
+        existsInNewTable ? super.update(item) : super.put(item),
       ]);
     } else {
       await super.update(item);

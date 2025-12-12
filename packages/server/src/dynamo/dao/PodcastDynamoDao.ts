@@ -260,8 +260,15 @@ export class PodcastDynamoDao extends BaseDynamoDao<Podcast, UnhydratedContent> 
     }
 
     if (this.dualWriteEnabled) {
+      // Check if item exists in new table first
+      const existsInNewTable = await this.get({
+        PK: this.partitionKey(item),
+        SK: this.itemType(),
+      });
+
       // Write to both old and new paths
-      await Promise.all([ContentModel.update(item), super.update(item)]);
+      // If item doesn't exist in new table yet, use put instead of update
+      await Promise.all([ContentModel.update(item), existsInNewTable ? super.update(item) : super.put(item)]);
     } else {
       await super.update(item);
     }

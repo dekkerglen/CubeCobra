@@ -1,6 +1,5 @@
 import User from '@utils/datatypes/User';
 
-import Draft from '../../src/dynamo/models/draft';
 import Package from '../../src/dynamo/models/package';
 import { getReplyContext } from '../../src/router/routes/comment';
 
@@ -10,6 +9,9 @@ jest.mock('../../src/dynamo/daos', () => ({
     getById: jest.fn(),
   },
   blogDao: {
+    getById: jest.fn(),
+  },
+  draftDao: {
     getById: jest.fn(),
   },
   articleDao: {
@@ -27,8 +29,7 @@ jest.mock('../../src/dynamo/daos', () => ({
 }));
 
 // Import the mocked DAOs
-import { articleDao, blogDao, commentDao, episodeDao, podcastDao, videoDao } from '../../src/dynamo/daos';
-jest.mock('../../src/dynamo/models/draft');
+import { articleDao, blogDao, commentDao, draftDao, episodeDao, podcastDao, videoDao } from '../../src/dynamo/daos';
 jest.mock('../../src/dynamo/models/package');
 
 describe('getReplyContext', () => {
@@ -57,11 +58,11 @@ describe('getReplyContext', () => {
   });
 
   it('should return the owner of a deck', async () => {
-    (Draft.getById as jest.Mock).mockResolvedValue({ id: 'deck123', owner: mockUser });
+    (draftDao.getById as jest.Mock).mockResolvedValue({ id: 'deck123', owner: mockUser });
 
     const owner = await getReplyContext.deck('deck123');
 
-    expect(Draft.getById).toHaveBeenCalledWith('deck123');
+    expect(draftDao.getById).toHaveBeenCalledWith('deck123');
     expect(owner).toEqual(mockUser);
   });
 

@@ -1,3 +1,5 @@
+// migrated to /dao/DraftDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { cardFromId } from 'serverutils/carddb';
