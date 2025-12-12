@@ -247,6 +247,7 @@ const performSearch = async (
   order: SortOrder,
   ascending: boolean,
   user: any,
+  lastKey?: any,
 ): Promise<SearchResult> => {
   // Check for unsupported combinations
   if (cardQueries.length > 10) {
@@ -286,14 +287,22 @@ const performSearch = async (
 
   try {
     let cubes: any[];
+    let resultLastKey: any = null;
 
     // If no specific queries, get all public cubes via visibility query
     if (hashes.length === 0) {
-      console.log('[Search] No hashes, querying all public cubes');
+      console.log('[Search] No hashes, querying all public cubes', { lastKey });
       // Query for all public cubes using queryByVisibility (single page only)
-      const result = await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, mapSortOrder(order), ascending, undefined, 36);
+      const result = await cubeDao.queryByVisibility(
+        CUBE_VISIBILITY.PUBLIC,
+        mapSortOrder(order),
+        ascending,
+        lastKey || undefined,
+        36,
+      );
       console.log(`[Search] Found ${result.items.length} public cubes`);
       cubes = result.items;
+      resultLastKey = result.lastKey;
 
       // Apply card count filter if present
       if (cardCountFilter) {
@@ -314,6 +323,8 @@ const performSearch = async (
     } else {
       // Use queryByMultipleHashes from cubeDao
       cubes = await cubeDao.queryByMultipleHashes(hashes, mapSortOrder(order), ascending, cardCountFilter);
+      // Note: queryByMultipleHashes doesn't support pagination yet
+      resultLastKey = null;
     }
 
     // Filter by listing visibility
@@ -342,7 +353,7 @@ const performSearch = async (
 
     return {
       cubes: paginatedCubes,
-      lastKey: null, // Note: pagination not yet implemented with new approach
+      lastKey: resultLastKey,
     };
   } catch (error: any) {
     return {
@@ -363,7 +374,7 @@ interface SearchCubesResult {
 const searchCubes = async (
   query: string,
   order: SortOrder,
-  _lastKey: any, // Reserved for future pagination implementation
+  lastKey: any,
   ascending: boolean,
   user: any,
 ): Promise<SearchCubesResult> => {
@@ -386,6 +397,7 @@ const searchCubes = async (
     order,
     ascending,
     user,
+    lastKey,
   );
 
   console.log('[Search] Result:', { cubesCount: searchResult.cubes.length, error: searchResult.error });

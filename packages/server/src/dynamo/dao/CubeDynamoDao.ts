@@ -390,7 +390,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     }
 
     // For visibility queries, we can only sort by date using GSI2
-    // For other sorts, we need to fetch all and sort in memory
     if (sortBy === 'date') {
       const params: QueryCommandInput = {
         TableName: this.tableName,
@@ -401,40 +400,41 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         },
         ScanIndexForward: ascending,
         Limit: limit,
-        ExclusiveStartKey: lastKey,
       };
+
+      // Only add ExclusiveStartKey if lastKey is provided
+      if (lastKey) {
+        params.ExclusiveStartKey = lastKey;
+      }
 
       return this.query(params);
     } else {
-      // Fetch all cubes for this visibility and sort in memory
-      const allCubes: Cube[] = [];
-      let currentLastKey: Record<string, any> | undefined = undefined;
+      // For other sorts, fetch the requested batch and sort in memory
+      const params: QueryCommandInput = {
+        TableName: this.tableName,
+        IndexName: 'GSI2',
+        KeyConditionExpression: 'GSI2PK = :visibility',
+        ExpressionAttributeValues: {
+          ':visibility': `${this.itemType()}#VISIBILITY#${visibility}`,
+        },
+        ScanIndexForward: false,
+        Limit: limit,
+      };
 
-      do {
-        const params: QueryCommandInput = {
-          TableName: this.tableName,
-          IndexName: 'GSI2',
-          KeyConditionExpression: 'GSI2PK = :visibility',
-          ExpressionAttributeValues: {
-            ':visibility': `${this.itemType()}#VISIBILITY#${visibility}`,
-          },
-          ScanIndexForward: false,
-          Limit: 100,
-          ExclusiveStartKey: currentLastKey,
-        };
+      // Only add ExclusiveStartKey if lastKey is provided
+      if (lastKey) {
+        params.ExclusiveStartKey = lastKey;
+      }
 
-        const result = await this.query(params);
-        allCubes.push(...result.items);
-        currentLastKey = result.lastKey;
-      } while (currentLastKey);
+      const result = await this.query(params);
 
       // Sort in memory
-      const sorted = this.sortCubes(allCubes, sortBy, ascending);
+      const sorted = this.sortCubes(result.items, sortBy, ascending);
 
-      // Apply pagination
+      // Return sorted results with pagination key
       return {
-        items: sorted.slice(0, limit),
-        lastKey: sorted.length > limit ? { offset: limit } : undefined,
+        items: sorted,
+        lastKey: result.lastKey,
       };
     }
   }
