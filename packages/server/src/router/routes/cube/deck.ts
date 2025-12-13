@@ -1,7 +1,7 @@
-import cardutil from '@utils/cardutil';
+import { normalizeName } from '@utils/cardutil';
+import Card from '@utils/datatypes/Card';
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { cubeDao, draftDao } from 'dynamo/daos';
-import Card from '@utils/datatypes/Card';
 import User from 'dynamo/models/user';
 import { body } from 'express-validator';
 import { ensureAuth } from 'router/middleware';
@@ -647,9 +647,6 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cubeCards = await cubeDao.getCards(cube.id);
-    const { mainboard } = cubeCards;
-
     if (!req.user || cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -668,10 +665,13 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       added.push([]);
     }
 
+    const cubeCards = await cubeDao.getCards(cube.id);
+    const { mainboard } = cubeCards;
+
     const customCardNameMap = mainboard
       .filter((card: any) => card.custom_name)
       .reduce((map: Map<string, Card>, card: any) => {
-        const normalizedCustomName = cardutil.normalizeName(card.custom_name);
+        const normalizedCustomName = normalizeName(card.custom_name);
         if (!map.has(normalizedCustomName)) {
           map.set(normalizedCustomName, card);
         }
@@ -692,7 +692,7 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       } else {
         let selected = null;
         // does not have set info
-        const normalizedName = cardutil.normalizeName(item);
+        const normalizedName = normalizeName(item);
         const potentialIds = getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
           const inCube = mainboard.find((card: any) => cardFromId(card.cardID).name_lower === normalizedName);
