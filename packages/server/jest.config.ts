@@ -45,7 +45,7 @@ const jestConfig: Config = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['json', 'text'],
-  collectCoverageFrom: ['src/**/*.{js,ts,tsx}', 'src/dynamo/models/*.js', '!src/**/*.d.ts', '!src/**/index.{js,ts}'],
+  collectCoverageFrom: ['src/**/*.{js,ts,tsx}', '!src/**/*.d.ts', '!src/**/index.{js,ts}', '!src/client/**'],
 };
 
 export default jestConfig;
