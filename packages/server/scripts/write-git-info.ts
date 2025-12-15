@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 
 //Include the GIT_COMMIT into our src so it gets compiled into the build
-const OUT_FILE = 'src/util/git.ts';
+const OUT_FILE = 'src/serverutils/git.ts';
 try {
   const commitHash = execSync('git rev-parse HEAD').toString().trim();
 
