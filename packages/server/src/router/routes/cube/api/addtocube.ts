@@ -1,6 +1,5 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
-import { blogDao, changelogDao, cubeDao } from 'dynamo/daos';
-import Feed from 'dynamo/models/feed';
+import { blogDao, changelogDao, cubeDao, feedDao } from 'dynamo/daos';
 import Package from 'dynamo/models/package';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
@@ -96,7 +95,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
         type: FeedTypes.BLOG,
       }));
 
-      await Feed.batchPut(feedItems);
+      await feedDao.batchPutUnhydrated(feedItems);
     }
 
     return res.status(200).send({

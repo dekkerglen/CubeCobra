@@ -3,7 +3,6 @@ import { NoticeType } from '@utils/datatypes/Notice';
 import * as util from 'serverutils/render';
 import * as routeUtil from 'serverutils/util';
 
-import Notice from '../../src/dynamo/models/notice';
 import DynamoUser from '../../src/dynamo/models/user';
 import {
   addCommentHandler,
@@ -16,7 +15,7 @@ import { createUser } from '../test-utils/data';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';
 
-// Mock the commentDao from dynamo/daos
+// Mock the commentDao and noticeDao from dynamo/daos
 jest.mock('../../src/dynamo/daos', () => ({
   commentDao: {
     getById: jest.fn(),
@@ -24,10 +23,14 @@ jest.mock('../../src/dynamo/daos', () => ({
     put: jest.fn(),
     createComment: jest.fn(),
   },
+  noticeDao: {
+    put: jest.fn(),
+    createNotice: jest.fn(),
+  },
 }));
 
-// Import the mocked commentDao
-import { commentDao } from '../../src/dynamo/daos';
+// Import the mocked daos
+import { commentDao, noticeDao } from '../../src/dynamo/daos';
 
 jest.mock('../../src/dynamo/models/user', () => ({
   getByUsername: jest.fn(),
@@ -40,13 +43,6 @@ jest.mock('@utils/datatypes/Comment', () => ({
     value: unknown,
   ) => value is ReturnType<typeof isNotifiableCommentType>,
 }));
-
-jest.mock('../../src/dynamo/models/notice', () => {
-  return {
-    ...jest.requireActual('../../src/dynamo/models/notice'),
-    put: jest.fn(),
-  };
-});
 
 jest.mock('serverutils/render', () => ({
   handleRouteError: jest.fn(),
@@ -128,7 +124,7 @@ describe('Report Comment', () => {
 
   it('handles a report', async () => {
     const reporter = createUser({ username: 'reporter' });
-    (Notice.put as jest.Mock).mockResolvedValue(undefined);
+    (noticeDao.put as jest.Mock).mockResolvedValue(undefined);
 
     await call(reportHandler)
       .as(reporter)
@@ -142,7 +138,7 @@ describe('Report Comment', () => {
       })
       .send();
 
-    expect(Notice.put).toHaveBeenCalledWith(
+    expect(noticeDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         subject: '12345',
         body: 'Report reason\n\nReport info',
@@ -156,7 +152,7 @@ describe('Report Comment', () => {
 
   it('should handle errors gracefully', async () => {
     const error = new Error('Something went wrong');
-    (Notice.put as jest.Mock).mockRejectedValue(error);
+    (noticeDao.put as jest.Mock).mockRejectedValue(error);
 
     await call(reportHandler)
       .withFlash(flashMock)

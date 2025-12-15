@@ -1,18 +1,22 @@
 import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
 
-import p1p1PackModel from '../../../src/dynamo/models/p1p1Pack';
 import { voteP1P1Handler } from '../../../src/router/routes/tool/api/votep1p1';
 import { createUser } from '../../test-utils/data';
 import { call } from '../../test-utils/transport';
 
 const uuid = jest.requireActual('uuid');
 
-jest.mock('../../../src/dynamo/models/p1p1Pack', () => ({
-  ...jest.requireActual('../../../src/dynamo/models/p1p1Pack'),
-  getById: jest.fn(),
-  addVote: jest.fn(),
-  getVoteSummary: jest.fn(),
+// Mock the DAO
+jest.mock('../../../src/dynamo/daos', () => ({
+  ...jest.requireActual('../../../src/dynamo/daos'),
+  p1p1PackDao: {
+    getById: jest.fn(),
+    addVote: jest.fn(),
+    getVoteSummary: jest.fn(),
+  },
 }));
+
+import { p1p1PackDao } from '../../../src/dynamo/daos';
 
 const createP1P1Pack = (overrides?: Partial<P1P1Pack>): P1P1Pack => ({
   id: uuid.v4(),
@@ -52,11 +56,11 @@ describe('Vote P1P1 API', () => {
     const user = createUser();
     const packId = uuid.v4();
 
-    (p1p1PackModel.getById as jest.Mock).mockResolvedValue(undefined);
+    (p1p1PackDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(voteP1P1Handler).as(user).withFlash(mockFlash).withBody({ packId, cardIndex: 0 }).send();
 
-    expect(p1p1PackModel.getById).toHaveBeenCalledWith(packId);
+    expect(p1p1PackDao.getById).toHaveBeenCalledWith(packId);
     expect(res.status).toEqual(404);
     expect(res.body).toEqual({
       error: 'P1P1 pack not found',
@@ -89,9 +93,9 @@ describe('Vote P1P1 API', () => {
       botWeights: [0.8, 0.6, 0.4],
     };
 
-    (p1p1PackModel.getById as jest.Mock).mockResolvedValue(pack);
-    (p1p1PackModel.addVote as jest.Mock).mockResolvedValue(updatedPack);
-    (p1p1PackModel.getVoteSummary as jest.Mock).mockReturnValue(voteSummary);
+    (p1p1PackDao.getById as jest.Mock).mockResolvedValue(pack);
+    (p1p1PackDao.addVote as jest.Mock).mockResolvedValue(updatedPack);
+    (p1p1PackDao.getVoteSummary as jest.Mock).mockReturnValue(voteSummary);
 
     const res = await call(voteP1P1Handler)
       .as(user)
@@ -99,9 +103,9 @@ describe('Vote P1P1 API', () => {
       .withBody({ packId: pack.id, cardIndex: 1 })
       .send();
 
-    expect(p1p1PackModel.getById).toHaveBeenCalledWith(pack.id);
-    expect(p1p1PackModel.addVote).toHaveBeenCalledWith(pack, user.id, 1);
-    expect(p1p1PackModel.getVoteSummary).toHaveBeenCalledWith(updatedPack, user.id);
+    expect(p1p1PackDao.getById).toHaveBeenCalledWith(pack.id);
+    expect(p1p1PackDao.addVote).toHaveBeenCalledWith(pack.id, user.id, 1);
+    expect(p1p1PackDao.getVoteSummary).toHaveBeenCalledWith(updatedPack, user.id);
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: true,
@@ -113,8 +117,8 @@ describe('Vote P1P1 API', () => {
     const user = createUser({ username: 'testuser' });
     const pack = createP1P1Pack();
 
-    (p1p1PackModel.getById as jest.Mock).mockResolvedValue(pack);
-    (p1p1PackModel.addVote as jest.Mock).mockResolvedValue(null);
+    (p1p1PackDao.getById as jest.Mock).mockResolvedValue(pack);
+    (p1p1PackDao.addVote as jest.Mock).mockResolvedValue(null);
 
     const res = await call(voteP1P1Handler)
       .as(user)
@@ -132,7 +136,7 @@ describe('Vote P1P1 API', () => {
     const user = createUser();
     const packId = uuid.v4();
 
-    (p1p1PackModel.getById as jest.Mock).mockRejectedValue(new Error('Database error'));
+    (p1p1PackDao.getById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
     const res = await call(voteP1P1Handler).as(user).withFlash(mockFlash).withBody({ packId, cardIndex: 0 }).send();
 

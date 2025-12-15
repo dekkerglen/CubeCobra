@@ -5,8 +5,7 @@ import DraftType, { DraftmancerLog } from '@utils/datatypes/Draft';
 import { PublishDraftBody } from '@utils/datatypes/Draftmancer';
 import type DraftSeatType from '@utils/datatypes/DraftSeat';
 import { setupPicks } from '@utils/draftutil';
-import { cubeDao, draftDao } from 'dynamo/daos';
-import Notification from 'dynamo/models/notification';
+import { cubeDao, draftDao, notificationDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
@@ -150,7 +149,7 @@ const sendDraftNotification = async (draftId: string, drafterName: string, cube:
   const cubeOwner = cube.owner;
 
   //Cannot use helper as the from is not a real user
-  await Notification.put({
+  await notificationDao.put({
     date: new Date().valueOf(),
     to: cubeOwner.id,
     fromUsername: drafterName,

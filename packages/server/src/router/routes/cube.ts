@@ -1,7 +1,5 @@
 import { NoticeType } from '@utils/datatypes/Notice';
-import { changelogDao, cubeDao, draftDao, featuredQueueDao } from 'dynamo/daos';
-import Notice from 'dynamo/models/notice';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { changelogDao, cubeDao, draftDao, featuredQueueDao, noticeDao, p1p1PackDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { abbreviate, cachePromise, generateBalancedPack, generatePack, isCubeViewable } from 'serverutils/cubefn';
@@ -33,7 +31,7 @@ export const reportHandler = async (req: Request, res: Response) => {
       type: NoticeType.CUBE_REPORT,
     };
 
-    await Notice.put(report);
+    await noticeDao.put(report);
 
     req.flash(
       'success',
@@ -374,7 +372,7 @@ export const p1p1Handler = async (req: Request, res: Response) => {
     const { packId } = req.params;
 
     // Validate pack exists
-    const pack = await p1p1PackModel.getById(packId!);
+    const pack = await p1p1PackDao.getById(packId!);
     if (!pack) {
       req.flash('danger', 'P1P1 pack not found');
       return redirect(req, res, '/404');
@@ -427,7 +425,7 @@ export const p1p1PackImageHandler = async (req: Request, res: Response) => {
     req.params.packId = req.params.packId.replace('.png', '');
     const { packId } = req.params;
 
-    const pack = await p1p1PackModel.getById(packId);
+    const pack = await p1p1PackDao.getById(packId);
     if (!pack || !pack.cards || pack.cards.length === 0) {
       req.flash('danger', 'P1P1 pack not found');
       return redirect(req, res, '/404');

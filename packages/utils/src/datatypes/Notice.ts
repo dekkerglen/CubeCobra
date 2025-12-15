@@ -23,9 +23,13 @@ export type NewNotice = {
 //The information loaded from Dynamo
 export type UnhydratedNotice = NewNotice & {
   status: NoticeStatus;
+  dateCreated: number;
+  dateLastUpdated: number;
 };
 
 export type Notice = Omit<UnhydratedNotice, 'id' | 'user'> & {
   id: string;
   user: User;
+  dateCreated: number;
+  dateLastUpdated: number;
 };

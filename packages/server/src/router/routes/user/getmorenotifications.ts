@@ -1,4 +1,4 @@
-import Notification from 'dynamo/models/notification';
+import { notificationDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
@@ -12,7 +12,7 @@ export const handler = async (req: Request, res: Response) => {
   }
 
   const { lastKey } = req.body;
-  const notifications = await Notification.getByTo(`${req.user.id}`, lastKey);
+  const notifications = await notificationDao.getByTo(`${req.user.id}`, lastKey);
 
   return res.status(200).send({
     success: 'true',

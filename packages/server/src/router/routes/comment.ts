@@ -3,8 +3,7 @@ import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
 import { commentDao } from 'dynamo/daos';
-import { blogDao, articleDao, videoDao, podcastDao, episodeDao, cubeDao, draftDao } from 'dynamo/daos';
-import Notice from 'dynamo/models/notice';
+import { blogDao, articleDao, videoDao, podcastDao, episodeDao, cubeDao, draftDao, noticeDao } from 'dynamo/daos';
 import Package from 'dynamo/models/package';
 import Record from 'dynamo/models/record';
 import DynamoUser from 'dynamo/models/user';
@@ -47,7 +46,7 @@ export const reportHandler = async (req: Request, res: Response) => {
       type: NoticeType.COMMENT_REPORT,
     };
 
-    await Notice.put(report);
+    await noticeDao.put(report);
 
     req.flash(
       'success',

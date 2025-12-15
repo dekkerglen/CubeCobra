@@ -1,6 +1,5 @@
 import Card from '@utils/datatypes/Card';
-import { cubeDao } from 'dynamo/daos';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { cubeDao, p1p1PackDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
@@ -126,7 +125,7 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
     };
 
     // Create P1P1 pack
-    const pack = await p1p1PackModel.put(
+    const pack = await p1p1PackDao.createPack(
       {
         cubeId: cube.id,
         createdBy: user.id,

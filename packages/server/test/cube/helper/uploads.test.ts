@@ -5,9 +5,8 @@ import * as cubefn from 'serverutils/cubefn';
 import * as render from 'serverutils/render';
 import * as util from 'serverutils/util';
 
-import { blogDao, changelogDao } from '../../../src/dynamo/daos';
+import { blogDao, changelogDao, feedDao } from '../../../src/dynamo/daos';
 import Cube from '../../../src/dynamo/models/cube';
-import Feed from '../../../src/dynamo/models/feed';
 import { createCardDetails, createCube, createUser } from '../../test-utils/data';
 
 jest.mock('../../../src/dynamo/models/cube');
@@ -18,8 +17,10 @@ jest.mock('../../../src/dynamo/daos', () => ({
   changelogDao: {
     createChangelog: jest.fn(),
   },
+  feedDao: {
+    batchPutUnhydrated: jest.fn(),
+  },
 }));
-jest.mock('../../../src/dynamo/models/feed');
 jest.mock('serverutils/carddb');
 jest.mock('serverutils/cubefn');
 jest.mock('serverutils/render');
@@ -64,7 +65,7 @@ describe('Bulk Upload', () => {
     );
 
     if (owner.following?.length) {
-      expect(Feed.batchPut).toHaveBeenCalledWith(
+      expect(feedDao.batchPutUnhydrated).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             id: 'blog-id',

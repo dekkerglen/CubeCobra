@@ -1,16 +1,20 @@
 import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
 
-import p1p1PackModel from '../../../src/dynamo/models/p1p1Pack';
 import { getP1P1Handler } from '../../../src/router/routes/tool/api/getp1p1';
 import { call } from '../../test-utils/transport';
 
 const uuid = jest.requireActual('uuid');
 
-jest.mock('../../../src/dynamo/models/p1p1Pack', () => ({
-  ...jest.requireActual('../../../src/dynamo/models/p1p1Pack'),
-  getById: jest.fn(),
-  getVoteSummary: jest.fn(),
+// Mock the DAO
+jest.mock('../../../src/dynamo/daos', () => ({
+  ...jest.requireActual('../../../src/dynamo/daos'),
+  p1p1PackDao: {
+    getById: jest.fn(),
+    getVoteSummary: jest.fn(),
+  },
 }));
+
+import { p1p1PackDao } from '../../../src/dynamo/daos';
 
 const createP1P1Pack = (overrides?: Partial<P1P1Pack>): P1P1Pack => ({
   id: uuid.v4(),
@@ -37,11 +41,11 @@ describe('Get P1P1 Pack API', () => {
 
   it('should return 404 if pack is not found', async () => {
     const packId = uuid.v4();
-    (p1p1PackModel.getById as jest.Mock).mockResolvedValue(undefined);
+    (p1p1PackDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(getP1P1Handler).withParams({ packId }).send();
 
-    expect(p1p1PackModel.getById).toHaveBeenCalledWith(packId);
+    expect(p1p1PackDao.getById).toHaveBeenCalledWith(packId);
     expect(res.status).toEqual(404);
     expect(res.body).toEqual({
       error: 'P1P1 pack not found',
@@ -59,12 +63,12 @@ describe('Get P1P1 Pack API', () => {
       botWeights: [0.8, 0.6, 0.4],
     };
 
-    (p1p1PackModel.getById as jest.Mock).mockResolvedValue(pack);
-    (p1p1PackModel.getVoteSummary as jest.Mock).mockReturnValue(voteSummary);
+    (p1p1PackDao.getById as jest.Mock).mockResolvedValue(pack);
+    (p1p1PackDao.getVoteSummary as jest.Mock).mockReturnValue(voteSummary);
 
     const res = await call(getP1P1Handler).withParams({ packId }).send();
 
-    expect(p1p1PackModel.getById).toHaveBeenCalledWith(packId);
+    expect(p1p1PackDao.getById).toHaveBeenCalledWith(packId);
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: true,
@@ -76,7 +80,7 @@ describe('Get P1P1 Pack API', () => {
   it('should handle pack fetch error gracefully', async () => {
     const packId = uuid.v4();
 
-    (p1p1PackModel.getById as jest.Mock).mockRejectedValue(new Error('Database error'));
+    (p1p1PackDao.getById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
     const res = await call(getP1P1Handler).withParams({ packId }).send();
 
@@ -88,7 +92,7 @@ describe('Get P1P1 Pack API', () => {
 
   it('should return 500 on unexpected error', async () => {
     const packId = uuid.v4();
-    (p1p1PackModel.getById as jest.Mock).mockRejectedValue(new Error('Database error'));
+    (p1p1PackDao.getById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
     const res = await call(getP1P1Handler).withParams({ packId }).send();
 

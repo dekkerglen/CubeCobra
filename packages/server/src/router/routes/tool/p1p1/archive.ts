@@ -1,5 +1,4 @@
-import { cubeDao, dailyP1P1Dao } from 'dynamo/daos';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { cubeDao, dailyP1P1Dao, p1p1PackDao } from 'dynamo/daos';
 import { render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
@@ -19,7 +18,7 @@ export const getArchiveHandler = async (req: Request, res: Response) => {
       // Get pack and cube data for each history item
       const historyWithData = await Promise.all(
         result.items.map(async (item: any) => {
-          const [pack, cube] = await Promise.all([p1p1PackModel.getById(item.packId), cubeDao.getById(item.cubeId)]);
+          const [pack, cube] = await Promise.all([p1p1PackDao.getById(item.packId), cubeDao.getById(item.cubeId)]);
 
           return {
             ...item,

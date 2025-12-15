@@ -1,6 +1,4 @@
-import { commentDao } from 'dynamo/daos';
-import { cubeDao } from 'dynamo/daos';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { commentDao, cubeDao, p1p1PackDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isValidUUID } from 'serverutils/validation';
 
@@ -25,7 +23,7 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Get the pack to check permissions
-    const pack = await p1p1PackModel.getById(packId);
+    const pack = await p1p1PackDao.getById(packId);
     if (!pack) {
       return res.status(404).json({ error: 'P1P1 pack not found' });
     }
@@ -65,7 +63,7 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Delete the pack itself
-    await p1p1PackModel.deleteById(packId);
+    await p1p1PackDao.deleteById(packId);
 
     return res.status(200).json({ success: true });
   } catch (err) {

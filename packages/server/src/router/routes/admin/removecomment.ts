@@ -1,17 +1,22 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import { commentDao } from 'dynamo/daos';
-import Notice from 'dynamo/models/notice';
+import { commentDao, noticeDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 export const removecommentHandler = async (req: Request, res: Response) => {
-  const report = await Notice.getById(req.params.id!);
+  const report = await noticeDao.getById(req.params.id!);
+
+  if (!report) {
+    req.flash('danger', 'Report not found.');
+    return redirect(req, res, '/admin/notices');
+  }
+
   const comment = await commentDao.getById(report.subject!);
 
   report.status = NoticeStatus.PROCESSED;
-  await Notice.put(report);
+  await noticeDao.put(report);
 
   if (comment) {
     comment.owner = undefined;

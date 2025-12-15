@@ -1,6 +1,6 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import Notice from 'dynamo/models/notice';
+import { noticeDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import sendEmail from 'serverutils/email';
@@ -8,7 +8,12 @@ import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 export const approveHandler = async (req: Request, res: Response) => {
-  const application = await Notice.getById(req.params.id!);
+  const application = await noticeDao.getById(req.params.id!);
+
+  if (!application) {
+    req.flash('danger', 'Application not found.');
+    return redirect(req, res, '/admin/notices');
+  }
 
   if (!application.user.roles) {
     application.user.roles = [];
@@ -22,7 +27,7 @@ export const approveHandler = async (req: Request, res: Response) => {
   const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
 
   application.status = NoticeStatus.PROCESSED;
-  Notice.put(application);
+  noticeDao.put(application);
 
   if (applicationUser) {
     await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_approve');

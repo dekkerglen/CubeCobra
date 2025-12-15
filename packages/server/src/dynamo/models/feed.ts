@@ -1,3 +1,5 @@
+// migrated to /daos/FeedDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import BlogPost from '@utils/datatypes/BlogPost';

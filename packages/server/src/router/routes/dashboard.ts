@@ -1,5 +1,5 @@
 import { ContentStatus } from '@utils/datatypes/Content';
-import Feed from 'dynamo/models/feed';
+import { feedDao } from 'dynamo/daos';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -14,7 +14,7 @@ const dashboardHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/landing');
     }
 
-    const posts = await Feed.getByTo(req.user.id);
+    const posts = await feedDao.getByTo(req.user.id);
 
     const featured = await getFeaturedCubes();
 
@@ -59,7 +59,7 @@ const getMoreFeedItemsHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
   const { user } = req;
 
-  const result = await Feed.getByTo(user.id, lastKey);
+  const result = await feedDao.getByTo(user.id, lastKey);
 
   return res.status(200).send({
     success: 'true',

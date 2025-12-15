@@ -1,3 +1,5 @@
+// migrated to /daos/P1P1PackDynamoDao.ts
+
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import Card from '@utils/datatypes/Card';
 import {

@@ -10,7 +10,6 @@ import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } fr
 import request from 'supertest';
 
 import Cube from '../../src/dynamo/models/cube';
-import Notification from '../../src/dynamo/models/notification';
 import { bodyValidation } from '../../src/router/middleware';
 import { handler, PublishDraftBodySchema, routes } from '../../src/router/routes/api/draftmancer/publish';
 import { RequestHandler } from '../../src/types/express';
@@ -30,16 +29,15 @@ jest.mock('../../src/dynamo/models/cube', () => ({
 
 jest.mock('../../src/dynamo/daos', () => ({
   draftDao: {
-    putDraft: jest.fn(),
+    createDraft: jest.fn(),
+  },
+  notificationDao: {
+    put: jest.fn(),
   },
 }));
 
-// Import the mocked draftDao
-import { draftDao } from '../../src/dynamo/daos';
-
-jest.mock('../../src/dynamo/models/notification', () => ({
-  put: jest.fn(),
-}));
+// Import the mocked daos
+import { draftDao, notificationDao } from '../../src/dynamo/daos';
 
 jest.mock('serverutils/carddb', () => ({
   cardFromId: jest.fn(),
@@ -348,7 +346,7 @@ describe('Publish', () => {
     verifyDraftCreation(cube);
 
     // Verify notification was sent
-    expect(Notification.put).toHaveBeenCalledWith(
+    expect(notificationDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         date: expect.any(Number),
         to: cube.owner.id,
@@ -418,7 +416,7 @@ describe('Publish', () => {
 
     verifyDraftCreation(cube);
 
-    expect(Notification.put).not.toHaveBeenCalled();
+    expect(notificationDao.put).not.toHaveBeenCalled();
   });
 
   it('should draft notification users the first human players name', async () => {
@@ -479,7 +477,7 @@ describe('Publish', () => {
     verifyDraftCreation(cube);
 
     // Verify notification was sent with human player name
-    expect(Notification.put).toHaveBeenCalledWith(
+    expect(notificationDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         date: expect.any(Number),
         to: cube.owner.id,
@@ -541,7 +539,7 @@ describe('Publish', () => {
     verifyDraftCreation(cube);
 
     // Verify no notification was sent since all players were bots
-    expect(Notification.put).not.toHaveBeenCalled();
+    expect(notificationDao.put).not.toHaveBeenCalled();
   });
 
   it('should handle database errors gracefully', async () => {

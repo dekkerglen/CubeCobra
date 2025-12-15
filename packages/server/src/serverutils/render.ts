@@ -8,8 +8,7 @@ import serialize from 'serialize-javascript';
 
 import 'dotenv/config';
 
-import { cubeDao } from '../dynamo/daos';
-import Notification from '../dynamo/models/notification';
+import { cubeDao, notificationDao } from '../dynamo/daos';
 import { Request, Response } from '../types/express';
 import { getBaseUrl } from './util';
 
@@ -120,7 +119,7 @@ const render = (
 ): void => {
   getCubes(req, async (cubes) => {
     if (req.user) {
-      const notifications = await Notification.getByToAndStatus(req.user.id, NotificationStatus.UNREAD);
+      const notifications = await notificationDao.getByToAndStatus(req.user.id, NotificationStatus.UNREAD);
 
       reactProps.user = {
         id: req.user.id,

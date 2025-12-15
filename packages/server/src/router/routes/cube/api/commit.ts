@@ -1,6 +1,5 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
-import { blogDao, changelogDao, cubeDao } from 'dynamo/daos';
-import Feed from 'dynamo/models/feed';
+import { blogDao, changelogDao, cubeDao, feedDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -120,7 +119,7 @@ export const commitHandler = async (req: Request, res: Response) => {
           type: FeedTypes.BLOG,
         }));
 
-        await Feed.batchPut(feedItems);
+        await feedDao.batchPutUnhydrated(feedItems);
       }
 
       return res.status(200).send({

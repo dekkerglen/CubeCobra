@@ -3,7 +3,6 @@ jest.mock('serverutils/cubefn', () => ({
   generatePack: jest.fn(),
 }));
 jest.mock('../../src/dynamo/models/cube');
-jest.mock('../../src/dynamo/models/p1p1Pack');
 jest.mock('../../src/dynamo/daos', () => ({
   dailyP1P1Dao: {
     getCurrentDailyP1P1: jest.fn(),
@@ -11,6 +10,9 @@ jest.mock('../../src/dynamo/daos', () => ({
   },
   featuredQueueDao: {
     querySortedByDate: jest.fn(),
+  },
+  p1p1PackDao: {
+    createPack: jest.fn(),
   },
 }));
 jest.mock('../../src/dynamo/models/user');
@@ -23,8 +25,7 @@ import { rotateDailyP1P1 } from 'serverutils/rotateDailyP1P1';
 import { addNotification } from 'serverutils/util';
 
 import Cube from '../../src/dynamo/models/cube';
-import { dailyP1P1Dao, featuredQueueDao } from '../../src/dynamo/daos';
-import p1p1PackModel from '../../src/dynamo/models/p1p1Pack';
+import { dailyP1P1Dao, featuredQueueDao, p1p1PackDao } from '../../src/dynamo/daos';
 import User from '../../src/dynamo/models/user';
 
 describe('rotateDailyP1P1', () => {
@@ -55,7 +56,7 @@ describe('rotateDailyP1P1', () => {
       });
       // Should not create a new pack
       expect(featuredQueueDao.querySortedByDate).not.toHaveBeenCalled();
-      expect(p1p1PackModel.put).not.toHaveBeenCalled();
+      expect(p1p1PackDao.createPack).not.toHaveBeenCalled();
     });
 
     it('creates new pack if existing daily P1P1 is older than 23 hours', async () => {
@@ -90,14 +91,14 @@ describe('rotateDailyP1P1', () => {
         pack: mockCards,
         seed: 'test-seed',
       });
-      (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
+      (p1p1PackDao.createPack as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Dao.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
 
       const result = await rotateDailyP1P1(generatePack);
 
       // Should create a new pack
       expect(result.success).toBe(true);
-      expect(p1p1PackModel.put).toHaveBeenCalled();
+      expect(p1p1PackDao.createPack).toHaveBeenCalled();
       expect(dailyP1P1Dao.setActiveDailyP1P1).toHaveBeenCalled();
     });
   });
@@ -177,7 +178,7 @@ describe('rotateDailyP1P1', () => {
         pack: [],
         seed: 'test-seed',
       });
-      (p1p1PackModel.put as jest.Mock).mockRejectedValue(new Error('Database write failed'));
+      (p1p1PackDao.createPack as jest.Mock).mockRejectedValue(new Error('Database write failed'));
 
       const result = await rotateDailyP1P1(generatePack);
 
@@ -224,7 +225,7 @@ describe('rotateDailyP1P1', () => {
         pack: mockCards,
         seed: 'test-seed-123',
       });
-      (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
+      (p1p1PackDao.createPack as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Dao.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
       (User.getById as jest.Mock).mockImplementation((id) => {
         if (id === 'owner-456') return Promise.resolve(mockOwner);
@@ -274,7 +275,7 @@ describe('rotateDailyP1P1', () => {
         pack: mockCards,
         seed: 'test-seed',
       });
-      (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
+      (p1p1PackDao.createPack as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Dao.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
       (User.getById as jest.Mock).mockRejectedValue(new Error('User fetch failed'));
 
@@ -314,7 +315,7 @@ describe('rotateDailyP1P1', () => {
         pack: mockCards,
         seed: 'test-seed',
       });
-      (p1p1PackModel.put as jest.Mock).mockResolvedValue(mockPack);
+      (p1p1PackDao.createPack as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Dao.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
 
       const result = await rotateDailyP1P1(generatePack);

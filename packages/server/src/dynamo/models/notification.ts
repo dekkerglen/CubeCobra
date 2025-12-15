@@ -1,3 +1,5 @@
+// migrated to /daos/NotificationDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import Notification, { NewNotification, NotificationStatus } from '@utils/datatypes/Notification';

@@ -1,8 +1,7 @@
 import * as cardutil from '@utils/cardutil';
 import Card, { Changes } from '@utils/datatypes/Card';
 import { FeedTypes } from '@utils/datatypes/Feed';
-import { blogDao, changelogDao, cubeDao } from 'dynamo/daos';
-import Feed from 'dynamo/models/feed';
+import { blogDao, changelogDao, cubeDao, feedDao } from 'dynamo/daos';
 
 import { Request, Response } from '../types/express';
 import { cardFromId, getIdsFromName, getMostReasonable } from './carddb';
@@ -107,7 +106,7 @@ async function updateCubeAndBlog(
         type: FeedTypes.BLOG,
       }));
 
-      await Feed.batchPut(feedItems);
+      await feedDao.batchPutUnhydrated(feedItems);
 
       req.flash('success', 'All cards successfully added.');
     } else {

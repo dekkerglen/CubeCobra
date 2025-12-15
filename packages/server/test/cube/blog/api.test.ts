@@ -1,8 +1,8 @@
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import * as render from 'serverutils/render';
 import * as util from 'serverutils/util';
 
-import Feed from '../../../src/dynamo/models/feed';
 import {
   createBlogHandler,
   deleteBlogHandler,
@@ -39,14 +39,12 @@ jest.mock('../../../src/dynamo/daos', () => ({
     getByCube: jest.fn(),
     queryByCube: jest.fn(),
   },
+  feedDao: {
+    batchPutUnhydrated: jest.fn(),
+  },
 }));
 
-import { blogDao, cubeDao } from '../../../src/dynamo/daos';
-
-jest.mock('../../../src/dynamo/models/feed', () => ({
-  ...jest.requireActual('../../../src/dynamo/models/feed'),
-  batchPut: jest.fn(),
-}));
+import { blogDao, cubeDao, feedDao } from '../../../src/dynamo/daos';
 
 describe('Create Blog Post', () => {
   beforeEach(() => {
@@ -55,7 +53,7 @@ describe('Create Blog Post', () => {
 
   it('should fail if the blog title is too short', async () => {
     const cube = createCube({ id: 'cube-id' });
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     const res = await call(createBlogHandler).withParams({ id: 'cube-id' }).withBody({ title: 'Hi' }).send();
 
@@ -67,7 +65,7 @@ describe('Create Blog Post', () => {
 
   it('should fail if the blog title is too long', async () => {
     const cube = createCube({ id: 'cube-id' });
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     const res = await call(createBlogHandler)
       .withParams({ id: 'cube-id' })
@@ -81,8 +79,8 @@ describe('Create Blog Post', () => {
   });
 
   it(`should fail if the cube isn't visible to the user`, async () => {
-    const cube = createCube({ visibility: Cube.VISIBILITY.PRIVATE });
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    const cube = createCube({ visibility: CUBE_VISIBILITY.PRIVATE });
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     const res = await call(createBlogHandler)
       .as(createUser({ id: 'random' }))
@@ -100,7 +98,7 @@ describe('Create Blog Post', () => {
     const owner = createUser({ id: 'cube-owner' });
     const cube = createCube({ owner, cardCount: 0 });
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     const res = await call(createBlogHandler)
       .as(owner)
@@ -118,7 +116,7 @@ describe('Create Blog Post', () => {
     const owner = createUser({ id: 'cube-owner' });
     const cube = createCube({ owner, cardCount: 100 });
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     const res = await call(createBlogHandler)
       .as(createUser({ id: 'random-user' }))
@@ -136,9 +134,9 @@ describe('Create Blog Post', () => {
     const owner = createUser({ following: ['user-1', 'user-2'] });
     const cube = createCube({ owner });
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (blogDao.createBlog as jest.Mock).mockResolvedValueOnce('blog-id');
-    (Feed.batchPut as jest.Mock).mockResolvedValue(undefined);
+    (feedDao.batchPutUnhydrated as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
     const res = await call(createBlogHandler)
@@ -156,7 +154,7 @@ describe('Create Blog Post', () => {
       }),
     );
 
-    expect(Feed.batchPut).toHaveBeenCalledWith(
+    expect(feedDao.batchPutUnhydrated).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({
           id: 'blog-id',
@@ -182,9 +180,9 @@ describe('Create Blog Post', () => {
     const owner = createUser({ following: ['user-1', 'user-2'] });
     const cube = createCube({ owner, shortId: undefined });
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (blogDao.createBlog as jest.Mock).mockResolvedValueOnce('blog-id');
-    (Feed.batchPut as jest.Mock).mockResolvedValue(undefined);
+    (feedDao.batchPutUnhydrated as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.id}`);
 
     const res = await call(createBlogHandler)
@@ -195,7 +193,7 @@ describe('Create Blog Post', () => {
 
     expect(blogDao.createBlog).toHaveBeenCalled();
 
-    expect(Feed.batchPut).toHaveBeenCalled();
+    expect(feedDao.batchPutUnhydrated).toHaveBeenCalled();
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
@@ -207,7 +205,7 @@ describe('Create Blog Post', () => {
   it('should handle errors gracefully', async () => {
     const owner = createUser();
     const error = new Error('something went wrong');
-    (Cube.getById as jest.Mock).mockRejectedValue(error);
+    (cubeDao.getById as jest.Mock).mockRejectedValue(error);
 
     const res = await call(createBlogHandler)
       .as(owner)
@@ -229,7 +227,7 @@ describe('Edit Blog Post', () => {
 
   it('should 404 when trying to edit a missing blog post', async () => {
     const cube = createCube({ id: 'cube-id' });
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (blogDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(createBlogHandler)
@@ -245,7 +243,7 @@ describe('Edit Blog Post', () => {
 
   it('should update a blog post', async () => {
     const cube = createCube({ id: 'cube-id' });
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     const user = createUser();
     const blog = createBlogPost({ owner: user, title: 'My blog title' });
 
@@ -278,7 +276,7 @@ describe('Edit Blog Post', () => {
 
     (blogDao.getById as jest.Mock).mockResolvedValue({ ...blog, owner: user });
     (blogDao.update as jest.Mock).mockResolvedValue(undefined);
-    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(undefined);
     //This would happen if the cube was deleted in one tab and then edit occurred in another
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/888-666-444`);
 
@@ -303,7 +301,7 @@ describe('Edit Blog Post', () => {
 
     (blogDao.getById as jest.Mock).mockResolvedValue({ ...blog, owner: user });
     (blogDao.update as jest.Mock).mockResolvedValue(undefined);
-    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
 
     const res = await call(createBlogHandler)
@@ -326,7 +324,7 @@ describe('Edit Blog Post', () => {
 
     (blogDao.getById as jest.Mock).mockResolvedValue({ ...blog, owner: user });
     (blogDao.update as jest.Mock).mockResolvedValue(undefined);
-    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(undefined);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/user/blog/${user.id}`);
 
     const res = await call(createBlogHandler)
@@ -362,13 +360,13 @@ describe('Get Blog Post', () => {
   it('should should 404 if the cube is private', async () => {
     const cube = createCube({
       id: 'cube-id',
-      visibility: Cube.VISIBILITY.PRIVATE,
+      visibility: CUBE_VISIBILITY.PRIVATE,
       owner: createUser({ id: 'cube-owner' }),
     });
     const blog = createBlogPost({ cube: cube.id });
 
     (blogDao.getById as jest.Mock).mockResolvedValue(blog);
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     await call(getBlogPostHandler)
       .as(createUser({ id: 'visitor' }))
@@ -384,7 +382,7 @@ describe('Get Blog Post', () => {
     const blog = createBlogPost({ cube: cube.id });
 
     (blogDao.getById as jest.Mock).mockResolvedValue(blog);
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     await call(getBlogPostHandler).withParams({ id: blog.id }).send();
 
@@ -454,7 +452,7 @@ describe('Delete a Blog Post', () => {
 
   it('should delete a blog and return to the cube', async () => {
     const cube = createCube({ id: 'cube-id' });
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     const owner = createUser({ id: 'blogger' });
     const blog = createBlogPost({ owner, cube: 'cube-id' });
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
@@ -470,7 +468,7 @@ describe('Delete a Blog Post', () => {
 
   it('should delete a blog and return to the cube, even if doing so from the post itself', async () => {
     const cube = createCube({ id: 'cube-id' });
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     const owner = createUser({ id: 'blogger' });
     const blog = createBlogPost({ owner, cube: 'cube-id' });
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
@@ -485,7 +483,7 @@ describe('Delete a Blog Post', () => {
   });
 
   it('should delete a blog and go to the dashboard, if now both the cube and blog are gone', async () => {
-    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(undefined);
     const owner = createUser({ id: 'blogger' });
     const blog = createBlogPost({ owner, cube: 'cube-id' });
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/blogpost/${blog.id}`);
@@ -508,7 +506,7 @@ describe('Delete a Blog Post', () => {
 
     (blogDao.getById as jest.Mock).mockResolvedValue(blog);
     (blogDao.delete as jest.Mock).mockResolvedValue(undefined);
-    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
@@ -524,7 +522,7 @@ describe('Delete a Blog Post', () => {
 
     (blogDao.getById as jest.Mock).mockResolvedValue(blog);
     (blogDao.delete as jest.Mock).mockResolvedValue(undefined);
-    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     await call(deleteBlogHandler).withFlash(flashMock).as(owner).withParams({ id: blog.id }).send();
 
@@ -565,11 +563,11 @@ describe('View Blog Posts', () => {
   it('should should 404 if the cube is private', async () => {
     const cube = createCube({
       id: 'cube-id',
-      visibility: Cube.VISIBILITY.PRIVATE,
+      visibility: CUBE_VISIBILITY.PRIVATE,
       owner: createUser({ id: 'cube-owner' }),
     });
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     await call(getBlogPostsForCubeHandler)
       .as(createUser({ id: 'visitor' }))
@@ -582,7 +580,7 @@ describe('View Blog Posts', () => {
   });
 
   it(`should return a 404 if cube doesn't exists`, async () => {
-    (Cube.getById as jest.Mock).mockResolvedValue(undefined);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).send();
 
@@ -592,7 +590,7 @@ describe('View Blog Posts', () => {
 
   it('should handle errors gracefully', async () => {
     const error = new Error('something went wrong');
-    (Cube.getById as jest.Mock).mockRejectedValue(error);
+    (cubeDao.getById as jest.Mock).mockRejectedValue(error);
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).send();
 
@@ -611,7 +609,7 @@ describe('View Blog Posts', () => {
 
     const cube = createCube();
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (blogDao.queryByCube as jest.Mock).mockResolvedValue({ items: posts, lastKey });
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: cube.id }).send();

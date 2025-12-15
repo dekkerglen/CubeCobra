@@ -1,4 +1,4 @@
-import Notification from 'dynamo/models/notification';
+import { notificationDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect, render } from 'serverutils/render';
 
@@ -9,7 +9,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/login');
   }
 
-  const notifications = await Notification.getByTo(`${req.user.id}`);
+  const notifications = await notificationDao.getByTo(`${req.user.id}`);
 
   return render(req, res, 'NotificationsPage', {
     notifications: notifications.items,

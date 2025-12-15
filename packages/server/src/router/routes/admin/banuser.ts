@@ -1,8 +1,6 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import { commentDao } from 'dynamo/daos';
-import { blogDao, cubeDao, draftDao } from 'dynamo/daos';
-import Notice from 'dynamo/models/notice';
+import { blogDao, commentDao, cubeDao, draftDao, noticeDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { redirect } from 'serverutils/render';
@@ -10,7 +8,13 @@ import { Request, Response } from 'types/express';
 
 export const banuserHandler = async (req: Request, res: Response) => {
   try {
-    const notice = await Notice.getById(req.params.id!);
+    const notice = await noticeDao.getById(req.params.id!);
+
+    if (!notice) {
+      req.flash('danger', 'Notice not found.');
+      return redirect(req, res, '/admin/notices');
+    }
+
     const userToBan = notice.subject!;
 
     const aggregates = {
@@ -93,7 +97,7 @@ export const banuserHandler = async (req: Request, res: Response) => {
     }
 
     notice.status = NoticeStatus.PROCESSED;
-    await Notice.put(notice);
+    await noticeDao.put(notice);
 
     req.flash(
       'success',

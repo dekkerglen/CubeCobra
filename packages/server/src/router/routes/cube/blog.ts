@@ -1,8 +1,7 @@
 import CubeType from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
-import { blogDao, cubeDao } from 'dynamo/daos';
-import Feed from 'dynamo/models/feed';
+import { blogDao, cubeDao, feedDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
@@ -156,7 +155,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       type: FeedTypes.BLOG,
     }));
 
-    await Feed.batchPut(feedItems);
+    await feedDao.batchPutUnhydrated(feedItems);
 
     const redirectUrl = await getRedirectUrlForCube(req, cube);
     res.status(200).json({ ok: 'Blog post successful, reloading...', redirect: redirectUrl });

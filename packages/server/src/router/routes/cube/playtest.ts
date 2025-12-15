@@ -1,5 +1,4 @@
-import { cubeDao, draftDao } from 'dynamo/daos';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { cubeDao, draftDao, p1p1PackDao } from 'dynamo/daos';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -22,7 +21,7 @@ export const playtestHandler = async (req: Request, res: Response) => {
     let previousPacks: any[] = [];
     let previousPacksLastKey: any = null;
     try {
-      const previousPacksResult = await p1p1PackModel.queryByCube(cube.id, undefined, 10);
+      const previousPacksResult = await p1p1PackDao.queryByCube(cube.id, undefined, 10);
       previousPacks = previousPacksResult.items || [];
       previousPacksLastKey = previousPacksResult.lastKey;
     } catch (error) {

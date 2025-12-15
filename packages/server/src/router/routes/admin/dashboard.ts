@@ -2,14 +2,13 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import Notice from 'dynamo/models/notice';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
-import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
+import { articleDao, episodeDao, podcastDao, videoDao, noticeDao } from 'dynamo/daos';
 import { Request, Response } from 'types/express';
 
 export const dashboardHandler = async (req: Request, res: Response) => {
-  const noticeCount = await Notice.getByStatus(NoticeStatus.ACTIVE);
+  const noticeCount = await noticeDao.getByStatus(NoticeStatus.ACTIVE);
 
   // Query all content types in review in parallel
   const [articlesResult, videosResult, podcastsResult, episodesResult] = await Promise.all([

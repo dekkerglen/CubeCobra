@@ -1,7 +1,6 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { UserRoles } from '@utils/datatypes/User';
-import { blogDao } from 'dynamo/daos';
-import Feed from 'dynamo/models/feed';
+import { blogDao, feedDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
 
@@ -46,7 +45,7 @@ export const blogPostHandler = async (req: Request, res: Response) => {
     }));
 
     if (feedItems && feedItems.length > 0) {
-      await Feed.batchPut(feedItems);
+      await feedDao.batchPutUnhydrated(feedItems);
     }
 
     return res.status(200).send({

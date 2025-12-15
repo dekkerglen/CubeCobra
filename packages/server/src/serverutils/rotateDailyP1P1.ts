@@ -1,5 +1,4 @@
-import { cubeDao, dailyP1P1Dao, featuredQueueDao } from 'dynamo/daos';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { cubeDao, dailyP1P1Dao, featuredQueueDao, p1p1PackDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 
 import { generateBalancedPack, generatePack, GeneratePackResult } from './cubefn';
@@ -95,7 +94,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     };
 
     // Create P1P1 pack (owned by CubeCobra to prevent deletion)
-    const pack = await p1p1PackModel.put(
+    const pack = await p1p1PackDao.createPack(
       {
         cubeId: cube.id,
         createdBy: 'CubeCobra',

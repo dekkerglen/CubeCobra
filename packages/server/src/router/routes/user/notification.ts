@@ -1,5 +1,5 @@
 import { NotificationStatus } from '@utils/datatypes/Notification';
-import Notification from 'dynamo/models/notification';
+import { notificationDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 
@@ -12,7 +12,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const notification = await Notification.getById(req.params.id);
+    const notification = await notificationDao.getById(req.params.id);
 
     if (!notification) {
       req.flash('danger', 'Not Found');
@@ -21,7 +21,7 @@ export const handler = async (req: Request, res: Response) => {
 
     if (notification.status === NotificationStatus.UNREAD) {
       notification.status = NotificationStatus.READ;
-      await Notification.update(notification);
+      await notificationDao.update(notification);
     }
 
     return redirect(req, res, notification.url || '/');

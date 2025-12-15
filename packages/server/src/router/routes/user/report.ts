@@ -1,5 +1,5 @@
 import { NoticeType } from '@utils/datatypes/Notice';
-import Notice from 'dynamo/models/notice';
+import { noticeDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -28,7 +28,7 @@ export const handler = async (req: Request, res: Response) => {
       type: NoticeType.CUBE_REPORT,
     };
 
-    await Notice.put(report);
+    await noticeDao.put(report);
 
     req.flash(
       'success',

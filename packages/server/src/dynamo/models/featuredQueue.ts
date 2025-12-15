@@ -94,6 +94,17 @@ export const FeaturedQueue = {
     };
   },
   batchPut: async (documents: FeaturedQueueItem[]): Promise<void> => client.batchPut(documents),
+  scan: async (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: FeaturedQueueItem[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+    return {
+      items: result.Items as FeaturedQueueItem[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   delete: async (id: string): Promise<void> => client.delete({ cube: id }),
 };

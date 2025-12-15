@@ -1,8 +1,7 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeType } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
-import Notice from 'dynamo/models/notice';
+import { articleDao, episodeDao, podcastDao, videoDao, noticeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 import generateMeta from 'serverutils/meta';
 import { updatePodcast } from 'serverutils/podcast';
@@ -36,7 +35,7 @@ export const submitApplicationHandler = async (req: Request, res: Response) => {
       date: new Date().valueOf(),
       type: NoticeType.APPLICATION,
     };
-    await Notice.put(application);
+    await noticeDao.put(application);
 
     req.flash('success', 'Your application has been submitted. We will reach out via email when a decision is made.');
     return render(req, res, 'ApplicationPage');

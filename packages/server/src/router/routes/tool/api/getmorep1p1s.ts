@@ -1,4 +1,4 @@
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { p1p1PackDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -11,7 +11,7 @@ export const getMoreP1P1sHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Cube ID is required' });
     }
 
-    const result = await p1p1PackModel.queryByCube(cubeId, lastKey, 10);
+    const result = await p1p1PackDao.queryByCube(cubeId, lastKey, 10);
 
     return res.status(200).json({
       success: true,

@@ -1,3 +1,5 @@
+// migrated to /daos/NoticeDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { NewNotice, Notice, NoticeStatus, UnhydratedNotice } from '@utils/datatypes/Notice';
@@ -29,6 +31,8 @@ const createHydratedNotice = (document: UnhydratedNotice, user: UserType): Notic
     ...document,
     id: document.id!,
     user: user,
+    dateCreated: document.dateCreated || Date.now(),
+    dateLastUpdated: document.dateLastUpdated || Date.now(),
   };
 };
 
@@ -106,6 +110,8 @@ const notice = {
       userId = document.user;
     }
 
+    const now = Date.now();
+
     await client.put({
       id: id,
       date: document.date,
@@ -114,10 +120,23 @@ const notice = {
       status: getStatus(document),
       type: document.type,
       subject: document.subject,
+      dateCreated: 'dateCreated' in document ? document.dateCreated : now,
+      dateLastUpdated: 'dateLastUpdated' in document ? document.dateLastUpdated : now,
     } as UnhydratedNotice);
   },
   batchPut: async (documents: UnhydratedNotice[]): Promise<void> => client.batchPut(documents),
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
+  scan: async (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: UnhydratedNotice[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+    return {
+      items: result.Items as UnhydratedNotice[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
 };
 
 module.exports = notice;
