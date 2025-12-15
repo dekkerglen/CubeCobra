@@ -389,10 +389,12 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       return byId;
     }
 
-    // Try by shortId using hash lookup
-    const byShortId = await CubeHashModel.getSortedByName(CubeHashModel.getShortIdHash(id));
-    if (byShortId.items && byShortId.items.length > 0) {
-      const cubeId = byShortId.items[0]!.cube;
+    // Try by shortId using hash lookup from the new unified table
+    const shortIdHash = await this.hash({ type: 'shortid', value: id });
+    const hashResult = await this.queryByHashForIdsOnly(shortIdHash, 'popularity', false, undefined, 1);
+
+    if (hashResult.cubeIds.length > 0) {
+      const cubeId = hashResult.cubeIds[0]!;
       return this.get({
         PK: this.typedKey(cubeId),
         SK: this.itemType(),
