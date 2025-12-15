@@ -1,5 +1,4 @@
-import PasswordReset from 'dynamo/models/passwordReset';
-import User from 'dynamo/models/user';
+import { passwordResetDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
 import sendEmail from 'serverutils/email';
@@ -18,14 +17,14 @@ export const postHandler = async (req: Request, res: Response) => {
     }
     const recoveryEmail = req.body.email.toLowerCase();
 
-    const userByEmail = await User.getByEmail(recoveryEmail);
+    const userByEmail = await userDao.getByEmail(recoveryEmail);
 
     if (!userByEmail) {
       req.flash('danger', 'No user with that email found.');
       return render(req, res, 'LostPasswordPage');
     }
 
-    const user = await User.getByIdWithSensitiveData(userByEmail.id);
+    const user = await userDao.getByIdWithSensitiveData(userByEmail.id);
 
     if (!user) {
       req.flash('danger', 'User not found.');
@@ -37,7 +36,7 @@ export const postHandler = async (req: Request, res: Response) => {
       date: new Date().valueOf(),
     };
 
-    const id = await PasswordReset.put(passwordReset);
+    const id = await passwordResetDao.putAndReturnId(passwordReset);
 
     await sendEmail(user.email, 'Password Reset', 'password_reset', {
       id,

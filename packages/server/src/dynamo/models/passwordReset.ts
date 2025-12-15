@@ -1,3 +1,5 @@
+// migrated to /dao/PasswordResetDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import PasswordReset, { UnhydratedPasswordReset } from '@utils/datatypes/PasswordReset';
 import createClient from 'dynamo/util';

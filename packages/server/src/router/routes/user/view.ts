@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { cubeDao, userDao } from 'dynamo/daos';
 import { isCubeListed } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
@@ -12,7 +11,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const user = await User.getByIdOrUsername(req.params.id);
+    const user = await userDao.getByIdOrUsername(req.params.id);
 
     if (!user) {
       req.flash('danger', 'User not found');

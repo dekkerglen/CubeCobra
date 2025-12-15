@@ -1,8 +1,8 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
 import CubeModel from '@server/dynamo/models/cube';
-import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
 import Cube from '@utils/datatypes/Cube';
+import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
 
 import 'dotenv/config';
 

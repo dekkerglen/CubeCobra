@@ -1,3 +1,4 @@
+import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import { blogDao, cubeDao } from 'dynamo/daos';
 import { cardFromId, getIdsFromName } from 'serverutils/carddb';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
@@ -7,7 +8,6 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
-import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 
 export const overviewHandler = async (req: Request, res: Response) => {
   try {

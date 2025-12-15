@@ -1,14 +1,15 @@
+// migrated to daos/PackageDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { normalizeName } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
 import UserType from '@utils/datatypes/User';
+import { userDao } from 'dynamo/daos';
 import createClient, { QueryInputType } from 'dynamo/util';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
-
-import User from './user';
 
 const client = createClient({
   name: 'PACKAGE',
@@ -59,6 +60,8 @@ const createHydratedPackage = (
     keywords: document.keywords,
     voters: document.voters,
     voteCount: document.voteCount,
+    dateCreated: document.dateCreated,
+    dateLastUpdated: document.dateLastUpdated,
   } as CardPackage;
 };
 
@@ -67,7 +70,7 @@ const hydrate = async (pack?: UnhydratedCardPackage): Promise<CardPackage | unde
     return pack;
   }
 
-  const owner = await User.getById(pack.owner);
+  const owner = await userDao.getById(pack.owner);
   const cards = pack.cards.map((c) => {
     // @ts-expect-error -- Temporary solution for cards accidently saved to dynamo instead of card ids
     if (typeof c !== 'string' && c.scryfall_id) {
@@ -82,7 +85,7 @@ const hydrate = async (pack?: UnhydratedCardPackage): Promise<CardPackage | unde
 };
 
 const batchHydrate = async (packs: UnhydratedCardPackage[]): Promise<CardPackage[]> => {
-  const owners: UserType[] = await User.batchGet(packs.map((pack) => pack.owner));
+  const owners: UserType[] = await userDao.batchGet(packs.map((pack) => pack.owner));
 
   return packs.map((pack) => {
     const owner = owners.find((owner) => owner.id === pack.owner);
@@ -170,6 +173,8 @@ const packages = {
       voters: document.voters,
       keywords: document.keywords,
       voteCount: document.voters.length,
+      dateCreated: document.dateCreated || Date.now(),
+      dateLastUpdated: document.dateLastUpdated || Date.now(),
     });
     return id;
   },

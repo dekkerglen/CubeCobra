@@ -6,20 +6,22 @@ import UserType from '@utils/datatypes/User';
 import { v4 as uuidv4 } from 'uuid';
 
 import BlogModel from '../models/blog';
-import UserModel from '../models/user';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { ChangelogDynamoDao } from './ChangelogDynamoDao';
 import { CubeDynamoDao } from './CubeDynamoDao';
+import { UserDynamoDao } from './UserDynamoDao';
 
 export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
   private readonly dualWriteEnabled: boolean;
   private readonly changelogDao: ChangelogDynamoDao;
   private readonly cubeDao: CubeDynamoDao;
+  private readonly userDao: UserDynamoDao;
 
   constructor(
     dynamoClient: DynamoDBDocumentClient,
     changelogDao: ChangelogDynamoDao,
     cubeDao: CubeDynamoDao,
+    userDao: UserDynamoDao,
     tableName: string,
     dualWriteEnabled: boolean = false,
   ) {
@@ -27,6 +29,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     this.dualWriteEnabled = dualWriteEnabled;
     this.changelogDao = changelogDao;
     this.cubeDao = cubeDao;
+    this.userDao = userDao;
   }
 
   protected itemType(): string {
@@ -90,7 +93,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
   protected async hydrateItem(item: UnhydratedBlogPost): Promise<BlogPost> {
     let cubeName = 'Unknown';
 
-    const owner = await UserModel.getById(item.owner);
+    const owner = await this.userDao.getById(item.owner);
 
     if (item.cube && item.cube !== 'DEVBLOG') {
       const cube = await this.cubeDao.getById(item.cube);
@@ -120,7 +123,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     const cubeIds = items.filter((item) => item.cube && item.cube !== 'DEVBLOG').map((item) => item.cube);
 
     const [owners, cubes] = await Promise.all([
-      ownerIds.length > 0 ? UserModel.batchGet(ownerIds) : Promise.resolve([]),
+      ownerIds.length > 0 ? this.userDao.batchGet(ownerIds) : Promise.resolve([]),
       cubeIds.length > 0 ? this.cubeDao.batchGet(cubeIds) : Promise.resolve([]),
     ]);
 

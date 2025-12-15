@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import Record from 'dynamo/models/record';
+import { cubeDao, recordDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
@@ -13,7 +12,7 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const record = await Record.getById(req.params.id);
+    const record = await recordDao.getById(req.params.id);
 
     if (!record) {
       req.flash('danger', 'Record not found');
@@ -55,7 +54,7 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
     // Update the record with the new trophy
     record.trophy = updatedTrophies;
 
-    await Record.put(record);
+    await recordDao.put(record);
 
     req.flash('success', 'Trophy updated successfully');
     return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);

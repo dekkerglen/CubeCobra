@@ -1,3 +1,4 @@
+import { BaseObject } from './BaseObject';
 import { CardDetails } from './Card';
 import User from './User';
 
@@ -6,7 +7,7 @@ export enum CardPackageStatus {
   SUBMITTED = 's',
 }
 
-export type UnhydratedCardPackage = {
+export type UnhydratedCardPackage = BaseObject & {
   id?: string;
   title: string;
   date: number;

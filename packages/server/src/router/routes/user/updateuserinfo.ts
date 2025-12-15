@@ -1,4 +1,4 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -30,7 +30,7 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     if (req.body.username.toLowerCase() !== user.username.toLowerCase()) {
-      const userByName = await User.getByUsername(req.body.username.toLowerCase());
+      const userByName = await userDao.getByUsername(req.body.username.toLowerCase());
 
       if (userByName) {
         req.flash('danger', 'username already taken.');
@@ -54,7 +54,7 @@ export const handler = async (req: Request, res: Response) => {
     if (req.body.image) {
       user.imageName = req.body.image;
     }
-    await User.update(user);
+    await userDao.update(user);
 
     req.flash('success', 'User information updated.');
     return redirect(req, res, '/user/account');

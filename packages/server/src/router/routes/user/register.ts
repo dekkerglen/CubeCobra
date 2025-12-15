@@ -1,7 +1,7 @@
 import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import { DefaultGridTightnessPreference } from '@utils/datatypes/User';
 import bcrypt from 'bcryptjs';
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors, recaptcha } from 'router/middleware';
 import sendEmail from 'serverutils/email';
@@ -44,7 +44,7 @@ export const postHandler = async (req: Request, res: Response) => {
       return render(req, res, 'RegisterPage', attempt);
     }
 
-    const userByName = await User.getByUsername(req.body.username.toLowerCase());
+    const userByName = await userDao.getByUsername(req.body.username.toLowerCase());
 
     if (userByName) {
       req.flash('danger', 'username already taken.');
@@ -52,7 +52,7 @@ export const postHandler = async (req: Request, res: Response) => {
     }
 
     // check if user exists
-    const user = await User.getByEmail(req.body.email.toLowerCase());
+    const user = await userDao.getByEmail(req.body.email.toLowerCase());
 
     if (user) {
       req.flash('danger', 'email already associated with an existing account.');
@@ -80,7 +80,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
     const salt = await bcrypt.genSalt(10);
     (newUser as any).passwordHash = await bcrypt.hash(password, salt);
-    const id = await User.put(newUser as any);
+    const id = await userDao.put(newUser as any);
 
     await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
       id,
@@ -101,7 +101,7 @@ export const confirmHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/user/login');
     }
 
-    const user = (await User.getById(req.params.id)) as any;
+    const user = (await userDao.getById(req.params.id)) as any;
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -114,7 +114,7 @@ export const confirmHandler = async (req: Request, res: Response) => {
     }
 
     user.emailVerified = true;
-    await User.update(user);
+    await userDao.update(user);
 
     req.flash('success', 'Email verified. You can now login.');
     return redirect(req, res, '/user/login');

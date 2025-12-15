@@ -1,11 +1,10 @@
-import { cubeDao } from 'dynamo/daos';
-import Patron from 'dynamo/models/patron';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
+import { cubeDao, patronDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import * as fq from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
-import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 
 export const handler = async (req: Request, res: Response) => {
   const redirectTo = '/user/account?nav=patreon&tab=4';
@@ -35,7 +34,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, redirectTo);
   }
 
-  const patron = await Patron.getById(req.user.id);
+  const patron = await patronDao.getById(req.user.id);
   if (!fq.canBeFeatured(patron)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');
     return redirect(req, res, redirectTo);

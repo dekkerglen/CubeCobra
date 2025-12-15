@@ -1,10 +1,10 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
+import { UnhydratedFeed } from '@utils/datatypes/Feed';
 import { BlogDynamoDao } from 'dynamo/dao/BlogDynamoDao';
 import { ChangelogDynamoDao } from 'dynamo/dao/ChangelogDynamoDao';
 import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
 import { FeedDynamoDao } from 'dynamo/dao/FeedDynamoDao';
-import { UnhydratedFeed } from '@utils/datatypes/Feed';
 import fs from 'fs';
 import path from 'path';
 

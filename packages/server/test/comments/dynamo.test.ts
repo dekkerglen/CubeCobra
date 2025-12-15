@@ -5,13 +5,25 @@ import { getImageData } from 'serverutils/imageutil';
 import { v4 as UUID } from 'uuid';
 
 import { CommentDynamoDao } from '../../src/dynamo/dao/CommentDynamoDao';
-import UserModel from '../../src/dynamo/models/user';
+import { UserDynamoDao } from '../../src/dynamo/dao/UserDynamoDao';
 import { createUser } from '../test-utils/data';
 
 // Mock dependencies
-jest.mock('../../src/dynamo/models/user');
+jest.mock('../../src/dynamo/dao/UserDynamoDao');
 jest.mock('serverutils/imageutil');
 jest.mock('uuid');
+
+// Mock the DynamoDB client
+const mockSend = jest.fn();
+const mockDynamoDBClient = {
+  send: mockSend,
+} as unknown as DynamoDBDocumentClient;
+
+// Mock UserDynamoDao
+const mockUserDao = {
+  getById: jest.fn(),
+  batchGet: jest.fn(),
+} as unknown as jest.Mocked<UserDynamoDao>;
 
 // Mock the DynamoDB client
 const mockSend = jest.fn();
@@ -59,7 +71,7 @@ describe('CommentDynamoDao', () => {
     (UUID as jest.Mock).mockReturnValue('comment-2');
     (getImageData as jest.Mock).mockReturnValue(mockImage);
     // Create DAO instance with disabled dual write for testing
-    commentDao = new CommentDynamoDao(mockDynamoDBClient, 'test-table', false);
+    commentDao = new CommentDynamoDao(mockDynamoDBClient, mockUserDao, 'test-table', false);
     mockSend.mockReset();
   });
 
@@ -74,7 +86,7 @@ describe('CommentDynamoDao', () => {
 
     it('returns hydrated comment with owner', async () => {
       mockSend.mockResolvedValueOnce({ Item: { item: mockStoredComment } });
-      (UserModel.getById as jest.Mock).mockResolvedValueOnce(mockUser);
+      mockUserDao.getById.mockResolvedValueOnce(mockUser);
 
       const result = await commentDao.getById('comment-1');
 
@@ -103,7 +115,7 @@ describe('CommentDynamoDao', () => {
         },
         image: anonymousUserImage,
       });
-      expect(UserModel.getById).not.toHaveBeenCalled();
+      expect(mockUserDao.getById).not.toHaveBeenCalled();
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
     });
 
@@ -122,7 +134,7 @@ describe('CommentDynamoDao', () => {
         },
         image: anonymousUserImage,
       });
-      expect(UserModel.getById).not.toHaveBeenCalled();
+      expect(mockUserDao.getById).not.toHaveBeenCalled();
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
     });
   });
@@ -142,7 +154,7 @@ describe('CommentDynamoDao', () => {
         Items: comments.map((comment) => ({ item: comment })),
         LastEvaluatedKey: { S: 'last-key-1' },
       });
-      (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([mockUser]);
+      mockUserDao.batchGet.mockResolvedValueOnce([mockUser]);
 
       const result = await commentDao.queryByParent('cube-1');
 
@@ -162,7 +174,7 @@ describe('CommentDynamoDao', () => {
         Items: comments.map((comment) => ({ item: comment })),
         LastEvaluatedKey: { S: 'last-key-2' },
       });
-      (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([]);
+      mockUserDao.batchGet.mockResolvedValueOnce([]);
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
 
       const result = await commentDao.queryByParent('cube-1');
@@ -176,7 +188,7 @@ describe('CommentDynamoDao', () => {
         expect(item.image).toEqual(anonymousUserImage);
       });
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
-      expect(UserModel.batchGet).toHaveBeenCalledWith(['user-1', 'user-1']);
+      expect(mockUserDao.batchGet).toHaveBeenCalledWith(['user-1', 'user-1']);
     });
 
     it('uses provided lastKey for pagination', async () => {
@@ -200,7 +212,7 @@ describe('CommentDynamoDao', () => {
     it('returns hydrated comments with owner', async () => {
       const comments = [createUnhydratedComment()];
       mockSend.mockResolvedValueOnce({ Items: comments.map((comment) => ({ item: comment })) });
-      (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([mockUser]);
+      mockUserDao.batchGet.mockResolvedValueOnce([mockUser]);
 
       const result = await commentDao.queryByOwner('user-1');
 
@@ -222,8 +234,8 @@ describe('CommentDynamoDao', () => {
         });
         expect(item.image).toEqual(anonymousUserImage);
       });
-      // UserModel.batchGet should not be called at all when all owners are falsey/anonymous
-      expect(UserModel.batchGet).not.toHaveBeenCalled();
+      // mockUserDao.batchGet should not be called at all when all owners are falsey/anonymous
+      expect(mockUserDao.batchGet).not.toHaveBeenCalled();
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
     });
   });

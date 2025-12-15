@@ -1,20 +1,22 @@
 import CubeFn from 'serverutils/cubefn';
 
-import User from '../src/dynamo/models/user';
 import { ensureCubeVisible, getFollowers } from '../src/router/routes/api/followers';
 import { createCube, createUser } from './test-utils/data';
 import { expectRegisteredRoutes } from './test-utils/route';
 import { call, middleware } from './test-utils/transport';
 
-jest.mock('../src/dynamo/models/user');
 jest.mock('../src/dynamo/daos', () => ({
   cubeDao: {
     getById: jest.fn(),
   },
+  userDao: {
+    getById: jest.fn(),
+    batchGet: jest.fn(),
+  },
 }));
 jest.mock('serverutils/cubefn');
 
-import { cubeDao } from '../src/dynamo/daos';
+import { cubeDao, userDao } from '../src/dynamo/daos';
 
 describe('Followers API', () => {
   afterEach(() => {
@@ -23,9 +25,9 @@ describe('Followers API', () => {
 
   it('should get followers for a user', async () => {
     const mockUser = createUser({ following: ['user1', 'user2'] });
-    (User.getById as jest.Mock).mockResolvedValue(mockUser);
+    (userDao.getById as jest.Mock).mockResolvedValue(mockUser);
     const users = [createUser({ id: 'user1' }), createUser({ id: 'user2' })];
-    (User.batchGet as jest.Mock).mockResolvedValue(users);
+    (userDao.batchGet as jest.Mock).mockResolvedValue(users);
 
     const res = await call(getFollowers)
       .withParams({ id: '123', type: 'user' })
@@ -43,7 +45,7 @@ describe('Followers API', () => {
     const mockCube = createCube({ following: ['user1', 'user2', 'user3'] });
     (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
     const users = [createUser({ id: 'user1' }), createUser({ id: 'user2' })];
-    (User.batchGet as jest.Mock).mockResolvedValue(users);
+    (userDao.batchGet as jest.Mock).mockResolvedValue(users);
 
     const res = await call(getFollowers)
       .withParams({ id: '123', type: 'cube' })
@@ -68,7 +70,7 @@ describe('Followers API', () => {
   });
 
   it('should handle errors', async () => {
-    (User.getById as jest.Mock).mockRejectedValue(new Error('Failed to get user'));
+    (userDao.getById as jest.Mock).mockRejectedValue(new Error('Failed to get user'));
 
     const res = await call(getFollowers).withParams({ id: '123', type: 'user' }).send();
 
@@ -78,11 +80,11 @@ describe('Followers API', () => {
 
   it('should handle more followers than the limit', async () => {
     const mockUser = createUser({ following: ['user1', 'user2', 'user3', 'user4'] });
-    (User.getById as jest.Mock).mockResolvedValue(mockUser);
+    (userDao.getById as jest.Mock).mockResolvedValue(mockUser);
     const usersSetOne = [createUser({ id: 'user1' }), createUser({ id: 'user2' })];
     const usersSetTwo = [createUser({ id: 'user3' }), createUser({ id: 'user4' })];
-    (User.batchGet as jest.Mock).mockResolvedValueOnce(usersSetOne);
-    (User.batchGet as jest.Mock).mockResolvedValueOnce(usersSetTwo);
+    (userDao.batchGet as jest.Mock).mockResolvedValueOnce(usersSetOne);
+    (userDao.batchGet as jest.Mock).mockResolvedValueOnce(usersSetTwo);
 
     const res = await call(getFollowers)
       .withParams({ id: '123', type: 'user' })

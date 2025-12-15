@@ -7,12 +7,13 @@ jest.mock('../../src/dynamo/daos', () => ({
     put: jest.fn(),
     delete: jest.fn(),
   },
+  patronDao: {
+    getById: jest.fn(),
+  },
 }));
-jest.mock('../../src/dynamo/models/patron');
 
 const { rotateFeatured } = require('serverutils/featuredQueue');
-const { featuredQueueDao } = require('../../src/dynamo/daos');
-const Patron = require('../../src/dynamo/models/patron');
+const { featuredQueueDao, patronDao } = require('../../src/dynamo/daos');
 
 describe('Featured Queue Rotation', () => {
   beforeEach(() => {
@@ -59,7 +60,7 @@ describe('Featured Queue Rotation', () => {
 
     // Mock all patrons as eligible
     const activePatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling'] + 1);
-    (Patron.getById as jest.Mock).mockResolvedValue(activePatron);
+    (patronDao.getById as jest.Mock).mockResolvedValue(activePatron);
     (featuredQueueDao.put as jest.Mock).mockResolvedValue({});
     (featuredQueueDao.delete as jest.Mock).mockResolvedValue({});
 
@@ -103,7 +104,7 @@ describe('Featured Queue Rotation', () => {
     const inactivePatron = createPatron(PatronStatuses.INACTIVE, PatronLevels['Cobra Hatchling'] + 1);
     const lowLevelPatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling']);
 
-    (Patron.getById as jest.Mock).mockImplementation((userId: string) => {
+    (patronDao.getById as jest.Mock).mockImplementation((userId: string) => {
       if (userId === 'user3') return Promise.resolve(inactivePatron);
       if (userId === 'user5') return Promise.resolve(lowLevelPatron);
       return Promise.resolve(activePatron);
@@ -145,7 +146,7 @@ describe('Featured Queue Rotation', () => {
     const activePatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling'] + 1);
     const expiredPatron = createPatron(PatronStatuses.INACTIVE, PatronLevels['Cobra Hatchling'] + 1);
 
-    (Patron.getById as jest.Mock).mockImplementation((userId: string) => {
+    (patronDao.getById as jest.Mock).mockImplementation((userId: string) => {
       if (userId === 'user1') return Promise.resolve(expiredPatron);
       return Promise.resolve(activePatron);
     });
@@ -199,7 +200,7 @@ describe('Featured Queue Rotation', () => {
     const activePatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling'] + 1);
     const inactivePatron = createPatron(PatronStatuses.INACTIVE, PatronLevels['Cobra Hatchling'] + 1);
 
-    (Patron.getById as jest.Mock).mockImplementation((userId: string) => {
+    (patronDao.getById as jest.Mock).mockImplementation((userId: string) => {
       if (userId === 'user1' || userId === 'user2') return Promise.resolve(activePatron);
       return Promise.resolve(inactivePatron);
     });
@@ -236,7 +237,7 @@ describe('Featured Queue Rotation', () => {
     const activePatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling'] + 1);
     const inactivePatron = createPatron(PatronStatuses.INACTIVE, PatronLevels['Cobra Hatchling'] + 1);
 
-    (Patron.getById as jest.Mock).mockImplementation((userId: string) => {
+    (patronDao.getById as jest.Mock).mockImplementation((userId: string) => {
       if (['charlie', 'eve', 'frank'].includes(userId)) {
         return Promise.resolve(inactivePatron);
       }
@@ -259,7 +260,7 @@ describe('Featured Queue Rotation', () => {
 
     // Verify patron data was fetched only once per unique owner
     const uniqueOwners = ['alice', 'bob', 'charlie', 'diana', 'eve', 'frank', 'grace'];
-    expect(Patron.getById).toHaveBeenCalledTimes(uniqueOwners.length);
+    expect(patronDao.getById).toHaveBeenCalledTimes(uniqueOwners.length);
 
     // Verify rotation happened with remaining eligible cubes
     expect(result.added).toHaveLength(2);
@@ -293,7 +294,7 @@ describe('Featured Queue Rotation', () => {
     const activePatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling'] + 1);
     const nullPatron = null;
 
-    (Patron.getById as jest.Mock).mockImplementation((userId: string) => {
+    (patronDao.getById as jest.Mock).mockImplementation((userId: string) => {
       if (userId === 'user3') return Promise.resolve(nullPatron);
       return Promise.resolve(activePatron);
     });
@@ -320,7 +321,7 @@ describe('Featured Queue Rotation', () => {
       .mockResolvedValueOnce({ items: page2, lastKey: null });
 
     const activePatron = createPatron(PatronStatuses.ACTIVE, PatronLevels['Cobra Hatchling'] + 1);
-    (Patron.getById as jest.Mock).mockResolvedValue(activePatron);
+    (patronDao.getById as jest.Mock).mockResolvedValue(activePatron);
     (featuredQueueDao.put as jest.Mock).mockResolvedValue({});
 
     const result = await rotateFeatured();

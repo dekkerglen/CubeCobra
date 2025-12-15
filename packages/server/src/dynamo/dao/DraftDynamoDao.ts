@@ -21,16 +21,16 @@
 
 import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import DraftType, { DRAFT_TYPES, REVERSE_TYPES, DraftmancerLog } from '@utils/datatypes/Draft';
+import DraftType, { DRAFT_TYPES, DraftmancerLog,REVERSE_TYPES } from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
-import { v4 as uuidv4 } from 'uuid';
 import { cardFromId } from 'serverutils/carddb';
+import { v4 as uuidv4 } from 'uuid';
 
-import { getObject, putObject } from '../s3client';
 import DraftModel from '../models/draft';
-import UserModel from '../models/user';
+import { getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { CubeDynamoDao } from './CubeDynamoDao';
+import { UserDynamoDao } from './UserDynamoDao';
 
 /**
  * Extended Draft type that includes fields required for DynamoDB storage.
@@ -67,16 +67,19 @@ interface QueryResult {
 export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   private readonly dualWriteEnabled: boolean;
   private readonly cubeDao: CubeDynamoDao;
+  private readonly userDao: UserDynamoDao;
 
   constructor(
     dynamoClient: DynamoDBDocumentClient,
     cubeDao: CubeDynamoDao,
+    userDao: UserDynamoDao,
     tableName: string,
     dualWriteEnabled: boolean = false,
   ) {
     super(dynamoClient, tableName);
     this.dualWriteEnabled = dualWriteEnabled;
     this.cubeDao = cubeDao;
+    this.userDao = userDao;
   }
 
   protected itemType(): string {
@@ -146,7 +149,10 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Hydrates a single UnhydratedDraft to Draft.
    */
   protected async hydrateItem(item: UnhydratedDraft): Promise<Draft> {
-    const [owner, cubeOwner] = await Promise.all([UserModel.getById(item.owner), UserModel.getById(item.cubeOwner)]);
+    const [owner, cubeOwner] = await Promise.all([
+      this.userDao.getById(item.owner),
+      this.userDao.getById(item.cubeOwner),
+    ]);
 
     const defaultUser = {
       username: 'Anonymous',
@@ -200,7 +206,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     });
 
     // Batch get users
-    const users = await UserModel.batchGet(Array.from(userIds));
+    const users = await this.userDao.batchGet(Array.from(userIds));
 
     // Batch get cards and seats for all drafts
     const cardsAndSeats = await Promise.all(
@@ -434,7 +440,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     // Resolve cube owner
     let cubeOwner: User;
     if (typeof draftData.cubeOwner === 'string') {
-      const owner = await UserModel.getById(draftData.cubeOwner);
+      const owner = await this.userDao.getById(draftData.cubeOwner);
       cubeOwner = owner || ({ username: 'Anonymous', id: '404' } as User);
     } else {
       cubeOwner = draftData.cubeOwner;
@@ -444,7 +450,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     let owner: User | undefined;
     if (draftData.owner) {
       if (typeof draftData.owner === 'string') {
-        owner = (await UserModel.getById(draftData.owner)) || undefined;
+        owner = (await this.userDao.getById(draftData.owner)) || undefined;
       } else {
         owner = draftData.owner;
       }

@@ -1,5 +1,5 @@
-import { Changes } from './Card';
 import { BaseObject } from './BaseObject';
+import { Changes } from './Card';
 import Commentable from './Commentable';
 import User from './User';
 

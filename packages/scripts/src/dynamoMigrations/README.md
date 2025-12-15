@@ -300,3 +300,94 @@ After successful migration:
 2. Test the application with the new `NotificationDynamoDao`
 3. Monitor for any issues before removing the old NOTIFICATIONS table
 4. Consider keeping dual-write mode enabled temporarily as a safety measure
+
+## Checkpointing Feature
+
+All migration scripts now support checkpointing, which allows them to resume from where they left off if interrupted. This is especially useful for large migrations that may take a long time or could be interrupted by network issues, timeouts, or other failures.
+
+### How It Works
+
+- After each batch of items is processed, the script saves a checkpoint to `.migration-checkpoints/` directory
+- The checkpoint includes:
+  - The last DynamoDB pagination key (`lastKey`)
+  - Current statistics (migrated, skipped, errors, etc.)
+  - Batch number
+  - Timestamp
+- If the script is interrupted, you can resume from the last checkpoint instead of starting over
+
+### Command Line Options
+
+Migration scripts that support checkpointing accept these options:
+
+- **`--resume`**: Resume from the last checkpoint (if it exists)
+- **`--reset`**: Clear any existing checkpoint and start fresh
+
+### Scripts with Checkpointing
+
+#### Blog Migration (`migrateBlog.ts`)
+
+Migrates blog posts from old DynamoDB format to new single-table design.
+
+**Usage:**
+
+```bash
+# Start fresh migration
+ts-node -r tsconfig-paths/register src/dynamoMigrations/migrateBlog.ts
+
+# Resume from last checkpoint
+ts-node -r tsconfig-paths/register src/dynamoMigrations/migrateBlog.ts --resume
+
+# Clear checkpoint and start over
+ts-node -r tsconfig-paths/register src/dynamoMigrations/migrateBlog.ts --reset
+```
+
+#### Fix Blog Changelogs (`fixBlogChangelogs.ts`)
+
+Fixes blog posts that are missing changelog references.
+
+**Usage:**
+
+```bash
+# Fix all blogs
+ts-node -r tsconfig-paths/register src/dynamoMigrations/fixBlogChangelogs.ts
+
+# Fix a single blog (for testing)
+ts-node -r tsconfig-paths/register src/dynamoMigrations/fixBlogChangelogs.ts --blog-id=<blog-id>
+
+# Resume from last checkpoint
+ts-node -r tsconfig-paths/register src/dynamoMigrations/fixBlogChangelogs.ts --resume
+
+# Clear checkpoint and start over
+ts-node -r tsconfig-paths/register src/dynamoMigrations/fixBlogChangelogs.ts --reset
+```
+
+### Checkpoint Files
+
+Checkpoint files are stored in `.migration-checkpoints/` directory at the workspace root:
+
+- `migrateBlog.json` - Checkpoint for blog migration
+- `fixBlogChangelogs.json` - Checkpoint for blog changelog fixes
+
+These files are automatically created, updated, and deleted by the scripts. You don't need to manage them manually, but you can inspect them to see the current state of a migration.
+
+### Example Workflow
+
+```bash
+# Start a migration
+ts-node -r tsconfig-paths/register src/dynamoMigrations/migrateBlog.ts
+
+# If interrupted (Ctrl+C or error), resume with:
+ts-node -r tsconfig-paths/register src/dynamoMigrations/migrateBlog.ts --resume
+
+# If you want to start completely fresh:
+ts-node -r tsconfig-paths/register src/dynamoMigrations/migrateBlog.ts --reset
+```
+
+### Notes on Checkpointing
+
+- Checkpoints are saved after each successful batch, minimizing data loss on interruption
+- The scripts automatically clear checkpoints on successful completion
+- Checkpoints are migration-specific (each script has its own checkpoint file)
+- If a migration script encounters too many errors, it will stop and preserve the checkpoint
+- You can safely run `--resume` even if there's no checkpoint (it will start from the beginning)
+- The `.migration-checkpoints/` directory can be safely deleted if you want to clear all checkpoints

@@ -1,7 +1,6 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import { noticeDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { noticeDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import sendEmail from 'serverutils/email';
 import { redirect } from 'serverutils/render';
@@ -21,10 +20,10 @@ export const approveHandler = async (req: Request, res: Response) => {
   if (!application.user.roles.includes(UserRoles.CONTENT_CREATOR)) {
     application.user.roles.push(UserRoles.CONTENT_CREATOR);
   }
-  await User.update(application.user);
+  await userDao.update(application.user);
 
   //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
-  const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
+  const applicationUser = await userDao.getByIdWithSensitiveData(application.user.id);
 
   application.status = NoticeStatus.PROCESSED;
   noticeDao.put(application);

@@ -1,6 +1,5 @@
 import User from '@utils/datatypes/User';
 
-import Package from '../../src/dynamo/models/package';
 import { getReplyContext } from '../../src/router/routes/comment';
 
 // Mock the DAOs from dynamo/daos
@@ -26,11 +25,22 @@ jest.mock('../../src/dynamo/daos', () => ({
   episodeDao: {
     getById: jest.fn(),
   },
+  packageDao: {
+    getById: jest.fn(),
+  },
 }));
 
 // Import the mocked DAOs
-import { articleDao, blogDao, commentDao, draftDao, episodeDao, podcastDao, videoDao } from '../../src/dynamo/daos';
-jest.mock('../../src/dynamo/models/package');
+import {
+  articleDao,
+  blogDao,
+  commentDao,
+  draftDao,
+  episodeDao,
+  packageDao,
+  podcastDao,
+  videoDao,
+} from '../../src/dynamo/daos';
 
 describe('getReplyContext', () => {
   const mockUser: User = { id: 'user123', username: 'Test User' };
@@ -103,11 +113,11 @@ describe('getReplyContext', () => {
   });
 
   it('should return the owner of a package', async () => {
-    (Package.getById as jest.Mock).mockResolvedValue({ id: 'package123', owner: mockUser });
+    (packageDao.getById as jest.Mock).mockResolvedValue({ id: 'package123', owner: mockUser });
 
     const owner = await getReplyContext.package('package123');
 
-    expect(Package.getById).toHaveBeenCalledWith('package123');
+    expect(packageDao.getById).toHaveBeenCalledWith('package123');
     expect(owner).toEqual(mockUser);
   });
 

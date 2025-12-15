@@ -1,8 +1,7 @@
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import CardPackage, { CardPackageStatus } from '@utils/datatypes/CardPackage';
 import { UserRoles } from '@utils/datatypes/User';
-import Package from 'dynamo/models/package';
-import User from 'dynamo/models/user';
+import { packageDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -27,7 +26,7 @@ const getAllByOwnerSortedByVoteCount = async (ownerId: string, keywords: string 
 
   // Get all packages for the owner into memory
   do {
-    const result = await Package.queryByOwner(ownerId, packages.lastKey);
+    const result = await packageDao.queryByOwner(ownerId, packages.lastKey);
 
     packages.items.push(...(result.items || []));
     packages.lastKey = result.lastKey;
@@ -77,13 +76,18 @@ const getPackages = async (
     if (sort === 'votes' || sort === '') {
       packages = await getAllByOwnerSortedByVoteCount(req.user.id, keywords, ascending);
     } else {
-      const result = await Package.queryByOwnerSortedByDate(req.user.id, keywords || '', ascending, packages.lastKey);
+      const result = await packageDao.queryByOwnerSortedByDate(
+        req.user.id,
+        keywords || '',
+        ascending,
+        packages.lastKey,
+      );
       packages.items = result.items || [];
       packages.lastKey = result.lastKey;
     }
   } else {
     if (sort === 'votes' || sort === '') {
-      const result = await Package.querySortedByVoteCount(
+      const result = await packageDao.querySortedByVoteCount(
         type as CardPackageStatus,
         keywords || '',
         ascending,
@@ -92,7 +96,7 @@ const getPackages = async (
       packages.items = result.items || [];
       packages.lastKey = result.lastKey;
     } else {
-      const result = await Package.querySortedByDate(
+      const result = await packageDao.querySortedByDate(
         type as CardPackageStatus,
         keywords || '',
         ascending,
@@ -175,7 +179,7 @@ export const submitHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const poster = await User.getById(req.user.id);
+    const poster = await userDao.getById(req.user.id);
     if (!poster) {
       return res.status(400).send({
         success: 'false',
@@ -199,18 +203,15 @@ export const submitHandler = async (req: Request, res: Response) => {
     // make distinct
     const distinctKeywords = keywords.filter((value, index, self) => self.indexOf(value) === index);
 
-    const pack = {
+    await packageDao.createPackage({
       title: packageName,
-      date: new Date().valueOf(),
+      date: Date.now(),
       owner: poster.id,
       status: 's' as CardPackageStatus,
       cards,
       voters: [],
       keywords: distinctKeywords,
-      voteCount: 0,
-    };
-
-    await Package.put(pack);
+    });
 
     return res.status(200).send({
       success: 'true',
@@ -229,7 +230,7 @@ export const upvoteHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const pack = await Package.getById(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
 
     if (!pack) {
       return res.status(404).send({
@@ -246,7 +247,7 @@ export const upvoteHandler = async (req: Request, res: Response) => {
     }
 
     pack.voters = [...new Set([...pack.voters, req.user.id])];
-    await Package.put(pack);
+    await packageDao.update(pack);
 
     return res.status(200).send({
       success: 'true',
@@ -266,7 +267,7 @@ export const downvoteHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const pack = await Package.getById(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
 
     if (!pack) {
       return res.status(404).send({
@@ -283,7 +284,7 @@ export const downvoteHandler = async (req: Request, res: Response) => {
     }
 
     pack.voters = pack.voters.filter((voter: string) => voter !== req.user!.id);
-    await Package.put(pack);
+    await packageDao.update(pack);
 
     return res.status(200).send({
       success: 'true',
@@ -303,7 +304,7 @@ export const approveHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const pack = await Package.getById(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
 
     if (!pack) {
       return res.status(404).send({
@@ -313,7 +314,7 @@ export const approveHandler = async (req: Request, res: Response) => {
     }
 
     pack.status = CardPackageStatus.APPROVED;
-    await Package.put(pack);
+    await packageDao.update(pack);
 
     return res.status(200).send({
       success: 'true',
@@ -332,7 +333,7 @@ export const unapproveHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const pack = await Package.getById(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
 
     if (!pack) {
       return res.status(404).send({
@@ -342,7 +343,7 @@ export const unapproveHandler = async (req: Request, res: Response) => {
     }
 
     pack.status = CardPackageStatus.SUBMITTED;
-    await Package.put(pack);
+    await packageDao.update(pack);
 
     return res.status(200).send({
       success: 'true',
@@ -361,7 +362,10 @@ export const removeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    await Package.delete(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
+    if (pack) {
+      await packageDao.delete(pack);
+    }
 
     return res.status(200).send({
       success: 'true',
@@ -378,7 +382,7 @@ export const getPackageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/packages');
     }
 
-    const pack = await Package.getById(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
 
     if (!pack) {
       req.flash('danger', `Package not found`);

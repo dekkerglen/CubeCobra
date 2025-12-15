@@ -1,3 +1,5 @@
+// migrated to /daos/RecordDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import RecordType from '@utils/datatypes/Record';

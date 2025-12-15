@@ -4,14 +4,21 @@ import User from '@utils/datatypes/User';
 import { v4 as uuidv4 } from 'uuid';
 
 import NoticeModel from '../models/notice';
-import UserModel from '../models/user';
 import { BaseDynamoDao } from './BaseDynamoDao';
+import { UserDynamoDao } from './UserDynamoDao';
 
 export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
   private readonly dualWriteEnabled: boolean;
+  private readonly userDao: UserDynamoDao;
 
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(
+    dynamoClient: DynamoDBDocumentClient,
+    userDao: UserDynamoDao,
+    tableName: string,
+    dualWriteEnabled: boolean = false,
+  ) {
     super(dynamoClient, tableName);
+    this.userDao = userDao;
     this.dualWriteEnabled = dualWriteEnabled;
   }
 
@@ -77,7 +84,7 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
       return this.createHydratedNoticeWithoutUser(item);
     }
 
-    const user = await UserModel.getById(item.user);
+    const user = await this.userDao.getById(item.user);
     if (!user) {
       return this.createHydratedNoticeWithoutUser(item);
     }
@@ -95,7 +102,7 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
 
     const userIds = items.filter((item) => item.user).map((item) => item.user) as string[];
 
-    const users = userIds.length > 0 ? await UserModel.batchGet(userIds) : [];
+    const users = userIds.length > 0 ? await this.userDao.batchGet(userIds) : [];
 
     return items
       .map((item) => {
@@ -290,7 +297,7 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
 
     const userId = typeof document.user === 'string' ? document.user : null;
 
-    const user = userId ? await UserModel.getById(userId) : this.getAnonymousUser();
+    const user = userId ? await this.userDao.getById(userId) : this.getAnonymousUser();
 
     const now = Date.now();
 

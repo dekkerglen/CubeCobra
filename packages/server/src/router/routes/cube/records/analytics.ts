@@ -2,9 +2,7 @@ import { cardOracleId } from '@utils/cardutil';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
 import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
-import { cubeDao, draftDao } from 'dynamo/daos';
-import RecordDao from 'dynamo/models/record';
-import recordAnalytic from 'dynamo/models/recordAnalytic';
+import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -191,7 +189,7 @@ export const compileAnalyticsHandler = async (req: Request, res: Response) => {
     let lastKey: any = undefined;
 
     do {
-      const result = await RecordDao.getByCube(cube.id, 1000, lastKey);
+      const result = await recordDao.getByCube(cube.id, 1000, lastKey);
 
       if (!result || !result.items) {
         break;
@@ -203,7 +201,7 @@ export const compileAnalyticsHandler = async (req: Request, res: Response) => {
 
     const analyticsData = await compileAnalytics(records);
 
-    await recordAnalytic.put(cube.id, analyticsData);
+    await recordDao.putAnalytics(cube.id, analyticsData);
 
     req.flash('success', 'Analytics compiled successfully');
     return redirect(req, res, `/cube/records/${cube.id}?tab=2`);

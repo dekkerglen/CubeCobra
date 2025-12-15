@@ -3,7 +3,6 @@ import { NoticeType } from '@utils/datatypes/Notice';
 import * as util from 'serverutils/render';
 import * as routeUtil from 'serverutils/util';
 
-import DynamoUser from '../../src/dynamo/models/user';
 import {
   addCommentHandler,
   editCommentHandler,
@@ -27,14 +26,13 @@ jest.mock('../../src/dynamo/daos', () => ({
     put: jest.fn(),
     createNotice: jest.fn(),
   },
+  userDao: {
+    getByUsername: jest.fn(),
+  },
 }));
 
 // Import the mocked daos
-import { commentDao, noticeDao } from '../../src/dynamo/daos';
-
-jest.mock('../../src/dynamo/models/user', () => ({
-  getByUsername: jest.fn(),
-}));
+import { commentDao, noticeDao, userDao } from '../../src/dynamo/daos';
 
 jest.mock('@utils/datatypes/Comment', () => ({
   ...jest.requireActual('@utils/datatypes/Comment'),
@@ -454,7 +452,7 @@ describe('Add Comment', () => {
     (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
     (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
-    (DynamoUser.getByUsername as jest.Mock).mockImplementation((username: string) =>
+    (userDao.getByUsername as jest.Mock).mockImplementation((username: string) =>
       Promise.resolve({ id: `id-${username}`, username: username }),
     );
 
@@ -500,7 +498,7 @@ describe('Add Comment', () => {
     (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
     (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
-    (DynamoUser.getByUsername as jest.Mock).mockImplementation((username: string) =>
+    (userDao.getByUsername as jest.Mock).mockImplementation((username: string) =>
       Promise.resolve({ id: `id-${username}`, username: username }),
     );
 

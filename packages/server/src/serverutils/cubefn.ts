@@ -1,6 +1,6 @@
 import { convertFromLegacyCardColorCategory } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
-import { type TagColor, type CubeCards, CUBE_VISIBILITY } from '@utils/datatypes/Cube';
+import { CUBE_VISIBILITY,type CubeCards, type TagColor } from '@utils/datatypes/Cube';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import _ from 'lodash';
 import NodeCache from 'node-cache';

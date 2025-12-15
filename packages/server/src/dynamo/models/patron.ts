@@ -1,3 +1,5 @@
+// migrated to /daos/PatronDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { UnhydratedPatron } from '@utils/datatypes/Patron';
@@ -30,7 +32,15 @@ const patron = {
     });
     return result.Items ? (result.Items[0] as UnhydratedPatron) : undefined;
   },
-  put: async (document: UnhydratedPatron): Promise<PutCommandOutput> => client.put(document),
+  put: async (document: UnhydratedPatron): Promise<PutCommandOutput> => {
+    const now = Date.now();
+    const enrichedDocument = {
+      ...document,
+      dateCreated: document.dateCreated || now,
+      dateLastUpdated: now,
+    };
+    return client.put(enrichedDocument);
+  },
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   deleteById: async (id: string): Promise<void> => client.delete({ owner: id }),
 };

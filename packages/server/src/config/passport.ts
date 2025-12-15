@@ -1,6 +1,6 @@
 import type UserType from '@utils/datatypes/User';
 import bcrypt from 'bcryptjs';
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { PassportStatic } from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 
@@ -8,10 +8,10 @@ export default (passport: PassportStatic): void => {
   // Local Strategy
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      let fromQuery = await User.getByUsername(username);
+      let fromQuery = await userDao.getByUsername(username);
 
       if (!fromQuery) {
-        fromQuery = await User.getByEmail(username);
+        fromQuery = await userDao.getByEmail(username);
       }
 
       if (!fromQuery) {
@@ -20,7 +20,7 @@ export default (passport: PassportStatic): void => {
         });
       }
 
-      const userWithSensitiveData = await User.getByIdWithSensitiveData(fromQuery.id);
+      const userWithSensitiveData = await userDao.getByIdWithSensitiveData(fromQuery.id);
 
       if (!userWithSensitiveData) {
         return done(null, false, {
@@ -51,7 +51,7 @@ export default (passport: PassportStatic): void => {
   });
 
   passport.deserializeUser(async (id: string, done) => {
-    const user = await User.getById(id);
+    const user = await userDao.getById(id);
     done(null, user);
   });
 };

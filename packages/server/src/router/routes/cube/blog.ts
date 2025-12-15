@@ -1,8 +1,7 @@
 import CubeType from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
-import { blogDao, cubeDao, feedDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
@@ -130,7 +129,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     // mentions are only added for new posts and ignored on edits
     if (userMentions.length > 0) {
       for (const mention of userMentions) {
-        const mentioned = await User.getByUsername(mention);
+        const mentioned = await userDao.getByUsername(mention);
 
         if (mentioned) {
           mentionedUsers.push(mentioned);

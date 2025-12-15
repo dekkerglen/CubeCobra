@@ -1,6 +1,6 @@
 import { PrintingPreference } from '@utils/datatypes/Card';
-import { cubeDao } from 'dynamo/daos';
 import { SortOrder as DaoSortOrder } from 'dynamo/dao/CubeDynamoDao';
+import { cubeDao } from 'dynamo/daos';
 import { getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeListed } from 'serverutils/cubefn';
 import { render } from 'serverutils/render';

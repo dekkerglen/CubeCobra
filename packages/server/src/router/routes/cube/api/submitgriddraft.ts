@@ -1,8 +1,8 @@
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { draftDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
-import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 export const submitgriddraftHandler = async (req: Request, res: Response) => {
   try {

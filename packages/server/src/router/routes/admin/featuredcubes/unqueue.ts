@@ -1,10 +1,9 @@
 import { UserRoles } from '@utils/datatypes/User';
-import User from 'dynamo/models/user';
+import { featuredQueueDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
 import { Request, Response } from 'types/express';
-import { featuredQueueDao } from 'dynamo/daos';
 
 export const unqueueHandler = async (req: Request, res: Response) => {
   if (!req.body.cubeId) {
@@ -21,7 +20,7 @@ export const unqueueHandler = async (req: Request, res: Response) => {
 
   await featuredQueueDao.delete(queuedCube);
 
-  const user = await User.getById(queuedCube.owner);
+  const user = await userDao.getById(queuedCube.owner);
   if (user && req.user) {
     await addNotification(
       user,

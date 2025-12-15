@@ -57,16 +57,16 @@
  */
 
 import {
-  DynamoDBDocumentClient,
-  QueryCommandInput,
   BatchWriteCommand,
+  DynamoDBDocumentClient,
   QueryCommand,
+  QueryCommandInput,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { CardStatus } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
-import { CardStatus } from '@utils/datatypes/Card';
 import User from '@utils/datatypes/User';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
 import _ from 'lodash';
@@ -74,12 +74,12 @@ import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
 import cloudwatch from 'serverutils/cloudwatch';
 import { getImageData } from 'serverutils/imageutil';
 
-import { deleteObject, getObject, putObject } from '../s3client';
-import { listObjectVersions, getObjectVersion } from '../s3client';
-import CubeHashModel from '../models/cubeHash';
 import CubeModel from '../models/cube';
-import UserModel from '../models/user';
+import CubeHashModel from '../models/cubeHash';
+import { deleteObject, getObject, putObject } from '../s3client';
+import { getObjectVersion,listObjectVersions } from '../s3client';
 import { BaseDynamoDao, HashRow } from './BaseDynamoDao';
+import { UserDynamoDao } from './UserDynamoDao';
 
 /**
  * UnhydratedCube is the cube metadata without the owner User object and image.
@@ -151,10 +151,17 @@ const createDeletedUserPlaceholder = (userId: string): User => {
 
 export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   private readonly dualWriteEnabled: boolean;
+  private readonly userDao: UserDynamoDao;
 
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(
+    dynamoClient: DynamoDBDocumentClient,
+    userDao: UserDynamoDao,
+    tableName: string,
+    dualWriteEnabled: boolean = false,
+  ) {
     super(dynamoClient, tableName);
     this.dualWriteEnabled = dualWriteEnabled;
+    this.userDao = userDao;
   }
 
   protected itemType(): string {
@@ -261,7 +268,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       } as Cube;
     }
 
-    const owner = await UserModel.getById(item.owner);
+    const owner = await this.userDao.getById(item.owner);
 
     // If owner doesn't exist in the database, use placeholder
     if (!owner) {
@@ -321,7 +328,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Get owners for valid items
     const ownerIds = itemsWithOwners.map((item) => item.owner);
-    const owners = ownerIds.length > 0 ? await UserModel.batchGet(ownerIds) : [];
+    const owners = ownerIds.length > 0 ? await this.userDao.batchGet(ownerIds) : [];
 
     // Hydrate items with owners
     const cubesWithOwners = itemsWithOwners.map((item) => {
@@ -391,7 +398,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Try by shortId using hash lookup from the new unified table
     const shortIdHash = await this.hash({ type: 'shortid', value: id });
-    const hashResult = await this.queryByHashForIdsOnly(shortIdHash, 'popularity', false, undefined, 1);
+    const hashResult = await this.queryByHashForIdsOnly(shortIdHash, 'popularity', false, undefined, 2);
 
     if (hashResult.cubeIds.length > 0) {
       const cubeId = hashResult.cubeIds[0]!;
@@ -1324,8 +1331,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     limit?: number,
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'cube', value: 'all' });
-    console.log('[CubeDynamoDao] queryAllCubes hash:', hashString, 'sortBy:', sortBy);
-
     if (this.dualWriteEnabled) {
       const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
       const cubeIds = result.items.map((item) => item.cube);
@@ -1362,21 +1367,12 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     lastKey?: Record<string, any>,
     cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
   ): Promise<QueryResult> {
-    console.log('[queryByMultipleHashes] Starting query', {
-      hashCount: hashes.length,
-      sortBy,
-      ascending,
-      hasLastKey: !!lastKey,
-      cardCountFilter,
-    });
-
     if (hashes.length === 0) {
       return { items: [] };
     }
 
     if (hashes.length === 1) {
       // Single hash - use the optimized single-hash query
-      console.log('[queryByMultipleHashes] Single hash detected, using optimized query');
       const [type, value] = hashes[0]!.split(':');
       if (!type || !value) {
         return { items: [] };
@@ -1406,14 +1402,10 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       return { items: [] };
     }
 
-    console.log('[queryByMultipleHashes] Valid hash strings:', validHashStrings.length);
-
     // First hash is the primary query (should be most restrictive)
     const primaryHash = validHashStrings[0]!;
     // Remaining hashes to filter by
     const filterHashes = new Set(validHashStrings.slice(1));
-
-    console.log('[queryByMultipleHashes] Primary hash:', primaryHash, 'Filter hashes:', filterHashes.size);
 
     const MAX_PAGES = 10;
     const PAGE_SIZE = 100;
@@ -1424,7 +1416,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Keep querying pages until we find matches or hit the page limit
     while (pagesChecked < MAX_PAGES && matchingCubes.length === 0) {
       pagesChecked++;
-      console.log(`[queryByMultipleHashes] Checking page ${pagesChecked}/${MAX_PAGES}`);
 
       // Query one page of candidates from the first hash using the appropriate GSI for sorting
       // No limit specified - use DynamoDB's default max page size (1MB of data)
@@ -1436,13 +1427,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         PAGE_SIZE,
       );
 
-      console.log(
-        `[queryByMultipleHashes] Page ${pagesChecked} returned ${candidatesResult.cubeIds.length} candidates`,
-      );
-
       if (candidatesResult.cubeIds.length === 0) {
         // No more results
-        console.log('[queryByMultipleHashes] No more results available');
         break;
       }
 
@@ -1470,8 +1456,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         })
         .map((candidate) => candidate.cubeId);
 
-      console.log(`[queryByMultipleHashes] Page ${pagesChecked} found ${matchingIds.length} matches after filtering`);
-
       if (matchingIds.length > 0) {
         // Found matches! Hydrate cubes
         const cubes = await this.batchGet(matchingIds);
@@ -1492,14 +1476,10 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
                 return true;
             }
           });
-          console.log(
-            `[queryByMultipleHashes] Card count filter reduced ${cubes.length} to ${filteredCubes.length} cubes`,
-          );
         }
 
         matchingCubes.push(...filteredCubes);
 
-        console.log(`[queryByMultipleHashes] Returning ${matchingCubes.length} matching cubes`);
         // Return with pagination key for next query
         // Note: Results are already sorted by the GSI query
         return {
@@ -1513,21 +1493,18 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
       if (!currentLastKey) {
         // No more pages to check
-        console.log('[queryByMultipleHashes] No more pages available');
         break;
       }
     }
 
     // If we exhausted pages without finding anything, provide helpful error
     if (pagesChecked >= MAX_PAGES && matchingCubes.length === 0) {
-      console.log('[queryByMultipleHashes] Exhausted max pages without finding matches');
       throw new Error(
         `Search query too expensive: No matches found after checking ${MAX_PAGES} pages. ` +
           `Tip: Move the most restrictive criteria to the front of the query to improve performance.`,
       );
     }
 
-    console.log('[queryByMultipleHashes] Search completed with no matches');
     // Return whatever we found (might be empty)
     return {
       items: matchingCubes,
@@ -1621,10 +1598,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Query hash rows
     const queryResult = await this.dynamoClient.send(new QueryCommand(params));
 
-    console.log(
-      `[CubeDynamoDao] queryByHashWithSort result: ${queryResult.Items?.length || 0} hash rows, index: ${indexName}, hash: ${hash}`,
-    );
-
     if (!queryResult.Items || queryResult.Items.length === 0) {
       return { items: [] };
     }
@@ -1637,12 +1610,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       return pk.replace('HASH#CUBE#', '');
     });
 
-    console.log(`[CubeDynamoDao] Extracted ${cubeIds.length} cube IDs, fetching cubes...`);
-
     // Fetch cubes
     const cubes = await this.batchGet(cubeIds);
-
-    console.log(`[CubeDynamoDao] batchGet returned ${cubes.length} cubes`);
 
     return {
       items: cubes,
@@ -1661,8 +1630,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     lastKey?: Record<string, any>,
     limit?: number,
   ): Promise<{ cubeIds: string[]; lastKey?: Record<string, any> }> {
-    console.log('[queryByHashForIdsOnly] Query params:', { hash, sortBy, ascending, hasLastKey: !!lastKey, limit });
-
     let indexName: string;
     let gsiPK: string;
 
@@ -1700,29 +1667,21 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       ExclusiveStartKey: lastKey,
     };
 
-    console.log('[queryByHashForIdsOnly] DynamoDB query params:', {
-      tableName: this.tableName,
-      indexName,
-      gsiPK,
-      hash,
-      limit,
-    });
-
     try {
       // Query hash rows
       const queryResult = await this.dynamoClient.send(new QueryCommand(params));
-
-      console.log('[queryByHashForIdsOnly] Query result:', {
-        itemCount: queryResult.Items?.length || 0,
-        hasLastKey: !!queryResult.LastEvaluatedKey,
-      });
 
       if (!queryResult.Items || queryResult.Items.length === 0) {
         return { cubeIds: [] };
       }
 
       // Extract cube IDs from hash rows (no hydration)
-      const cubeIds = queryResult.Items.map((item) => {
+      // Filter out old format rows (where PK is a 64-char hex hash instead of HASH#CUBE#{id})
+      const cubeIds = queryResult.Items.filter((item) => {
+        const pk = item.PK as string;
+        // Only include new format rows that start with 'HASH#CUBE#'
+        return pk && pk.startsWith('HASH#CUBE#');
+      }).map((item) => {
         // PK contains the cube partition key: HASH#CUBE#{id}
         const pk = item.PK as string;
         if (!pk) {
@@ -1732,8 +1691,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         // Remove 'HASH#CUBE#' prefix to get the cube ID
         return pk.replace('HASH#CUBE#', '');
       });
-
-      console.log('[queryByHashForIdsOnly] Extracted cube IDs:', cubeIds.length);
 
       return {
         cubeIds,

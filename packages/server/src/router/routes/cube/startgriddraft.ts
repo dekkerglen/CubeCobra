@@ -1,3 +1,4 @@
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { addBasics, createPool, shuffle } from 'serverutils/cube';
@@ -5,7 +6,6 @@ import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
-import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 export const startGridDraftHandler = async (req: Request, res: Response) => {
   try {

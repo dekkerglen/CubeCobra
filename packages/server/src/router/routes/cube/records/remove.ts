@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import Record from 'dynamo/models/record';
+import { cubeDao, recordDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeEditable } from 'serverutils/cubefn';
 
@@ -14,7 +13,7 @@ export const deleteRecordHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const record = await Record.getById(recordId);
+  const record = await recordDao.getById(recordId);
   if (!record) {
     return res.status(404).json({
       error: 'Record not found',
@@ -40,7 +39,7 @@ export const deleteRecordHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    await Record.delete(recordId);
+    await recordDao.deleteById(recordId);
     return res.status(204).send();
   } catch {
     return res.status(500).json({

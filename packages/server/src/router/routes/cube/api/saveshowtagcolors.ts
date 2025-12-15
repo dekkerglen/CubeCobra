@@ -1,4 +1,4 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { ensureAuth, jsonValidationErrors } from 'router/middleware';
 
@@ -13,7 +13,7 @@ export const saveshowtagcolorsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.getById(req.user.id);
+    const user = await userDao.getById(req.user.id);
 
     if (!user) {
       return res.status(404).send({
@@ -24,7 +24,7 @@ export const saveshowtagcolorsHandler = async (req: Request, res: Response) => {
 
     user.hideTagColors = !req.body.show_tag_colors;
 
-    await User.update(user);
+    await userDao.update(user);
     return res.status(200).send({
       success: 'true',
     });

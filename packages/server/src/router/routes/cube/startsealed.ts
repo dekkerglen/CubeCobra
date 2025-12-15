@@ -1,6 +1,6 @@
 import * as cardutil from '@utils/cardutil';
-import { cubeDao, draftDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
+import { cubeDao, draftDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { cardFromId } from 'serverutils/carddb';
 import { addBasics, createPool, shuffle } from 'serverutils/cube';
@@ -9,7 +9,6 @@ import { handleRouteError, redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
-import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 export const startSealedHandler = async (req: Request, res: Response) => {
   try {
@@ -18,7 +17,7 @@ export const startSealedHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/playtest/${req.params.id}`);
     }
 
-    const user = await User.getById(req.user.id);
+    const user = await userDao.getById(req.user.id);
 
     if (!user) {
       req.flash('danger', 'Please Login to build a sealed deck.');

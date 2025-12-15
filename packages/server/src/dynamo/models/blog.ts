@@ -6,13 +6,13 @@ import BlogPost, { UnhydratedBlogPost } from '@utils/datatypes/BlogPost';
 import { BoardChanges, BoardType, Changes } from '@utils/datatypes/Card';
 import CubeType from '@utils/datatypes/Cube';
 import UserType from '@utils/datatypes/User';
+import { userDao } from 'dynamo/daos';
 import createClient from 'dynamo/util';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
 import Changelog from './changelog';
 import Cube from './cube';
-import User from './user';
 
 const client = createClient({
   name: 'BLOG',
@@ -64,7 +64,7 @@ const hydrate = async (document?: UnhydratedBlogPost): Promise<BlogPost | undefi
 
   let cubeName = 'Unknown';
 
-  const owner = await User.getById(document.owner);
+  const owner = await userDao.getById(document.owner);
 
   if (document.cube && document.cube !== 'DEVBLOG') {
     const cube = await Cube.getById(document.cube);
@@ -88,7 +88,7 @@ const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]
     .map((document) => ({ cube: document.cube, id: document.changelist }));
   const changelists = await Changelog.batchGet(keys);
 
-  const owners: UserType[] = await User.batchGet(documents.map((document) => document.owner));
+  const owners: UserType[] = await userDao.batchGet(documents.map((document) => document.owner));
   const cubes: CubeType[] = await Cube.batchGet(documents.map((document) => document.cube));
 
   return documents.map((document) => {

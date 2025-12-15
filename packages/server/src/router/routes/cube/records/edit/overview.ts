@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import Record from 'dynamo/models/record';
+import { cubeDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
@@ -22,7 +21,7 @@ export const editRecordOverviewHandler = async (req: Request, res: Response) => 
       return redirect(req, res, '/404');
     }
 
-    const record = await Record.getById(req.params.id);
+    const record = await recordDao.getById(req.params.id);
 
     if (!record) {
       req.flash('danger', 'Record not found');
@@ -47,7 +46,7 @@ export const editRecordOverviewHandler = async (req: Request, res: Response) => 
     record.description = updatedRecord.description;
     record.date = updatedRecord.date;
 
-    await Record.put(record);
+    await recordDao.put(record);
 
     req.flash('success', 'Record updated successfully');
     return redirect(req, res, `/cube/record/${req.params.id}`);

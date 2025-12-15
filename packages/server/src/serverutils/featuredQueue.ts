@@ -1,7 +1,6 @@
 import { FeaturedQueueItem } from '@utils/datatypes/FeaturedQueue';
 import { canBeFeatured } from '@utils/featuredQueueUtil';
-import { cubeDao, featuredQueueDao } from 'dynamo/daos';
-import Patron from 'dynamo/models/patron';
+import { cubeDao, featuredQueueDao, patronDao } from 'dynamo/daos';
 
 interface RotateResult {
   success: string;
@@ -32,7 +31,7 @@ export async function rotateFeatured(): Promise<RotateResult> {
 
   // Step 2: Check patron status for all cubes and remove ineligible ones
   const uniqueOwners = [...new Set(cubes.map((c) => c.owner))];
-  const patronData = await Promise.all(uniqueOwners.map((ownerId) => Patron.getById(ownerId)));
+  const patronData = await Promise.all(uniqueOwners.map((ownerId) => patronDao.getById(ownerId)));
   const patronMap: Record<string, any> = {};
   uniqueOwners.forEach((ownerId, index) => {
     patronMap[ownerId] = patronData[index];

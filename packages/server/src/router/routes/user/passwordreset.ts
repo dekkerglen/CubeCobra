@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
-import PasswordReset from 'dynamo/models/passwordReset';
-import User from 'dynamo/models/user';
+import { passwordResetDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -20,7 +19,7 @@ export const getHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/');
   }
 
-  const document = await PasswordReset.getById(req.params.id);
+  const document = await passwordResetDao.getById(req.params.id);
   if (!document || Date.now().valueOf() > document.date + 6 * 60 * 60 * 1000) {
     req.flash('danger', 'Password recovery link expired');
     return redirect(req, res, '/');
@@ -34,20 +33,20 @@ export const postHandler = async (req: Request, res: Response) => {
       return render(req, res, 'PasswordResetPage', { code: req.body.code });
     }
     const recoveryEmail = req.body.email.toLowerCase();
-    const passwordreset = await PasswordReset.getById(req.body.code);
+    const passwordreset = await passwordResetDao.getById(req.body.code);
 
     if (!passwordreset) {
       req.flash('danger', 'Incorrect email and recovery code combination.');
       return render(req, res, 'PasswordResetPage', { code: req.body.code });
     }
-    const userByEmail = await User.getByEmail(recoveryEmail);
+    const userByEmail = await userDao.getByEmail(recoveryEmail);
 
     if (!userByEmail) {
       req.flash('danger', 'No user with that email found! Are you sure you created an account?');
       return render(req, res, 'PasswordResetPage', { code: req.body.code });
     }
 
-    const user = await User.getByIdWithSensitiveData(userByEmail.id);
+    const user = await userDao.getByIdWithSensitiveData(userByEmail.id);
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -61,7 +60,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
     const salt = await bcrypt.genSalt(10);
     user.passwordHash = await bcrypt.hash(req.body.password2, salt);
-    await User.update(user as any);
+    await userDao.update(user as any);
 
     req.flash('success', 'Password updated successfully');
     return redirect(req, res, '/user/login');

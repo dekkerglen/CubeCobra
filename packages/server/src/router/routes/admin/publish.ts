@@ -1,11 +1,11 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { UserRoles } from '@utils/datatypes/User';
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
+import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import sendEmail from 'serverutils/email';
 import { redirect } from 'serverutils/render';
 import { addNotification, getBaseUrl } from 'serverutils/util';
-import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { Request, Response } from 'types/express';
 
 export const publishHandler = async (req: Request, res: Response) => {
@@ -47,7 +47,7 @@ export const publishHandler = async (req: Request, res: Response) => {
     const ownerId = typeof document.owner === 'string' ? document.owner : document.owner.id;
 
     //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
-    const owner = await User.getByIdWithSensitiveData(ownerId);
+    const owner = await userDao.getByIdWithSensitiveData(ownerId);
 
     if (owner) {
       await addNotification(

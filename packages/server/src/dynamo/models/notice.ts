@@ -4,10 +4,9 @@ import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { NewNotice, Notice, NoticeStatus, UnhydratedNotice } from '@utils/datatypes/Notice';
 import UserType from '@utils/datatypes/User';
+import { userDao } from 'dynamo/daos';
 import createClient from 'dynamo/util';
 import { v4 as uuidv4 } from 'uuid';
-
-import User from './user';
 
 const client = createClient({
   name: 'NOTICES',
@@ -41,12 +40,12 @@ const hydrate = async (notice: UnhydratedNotice): Promise<Notice> => {
     return notice;
   }
 
-  const user = await User.getById(notice.user!);
+  const user = await userDao.getById(notice.user!);
   return createHydratedNotice(notice, user!);
 };
 
 const batchHydrate = async (notices: UnhydratedNotice[]): Promise<Notice[]> => {
-  const users: UserType[] = await User.batchGet(notices.map((notice) => notice.user!));
+  const users: UserType[] = await userDao.batchGet(notices.map((notice) => notice.user!));
 
   return notices
     .map((notice) => {

@@ -1,6 +1,6 @@
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { NoticeType } from '@utils/datatypes/Notice';
-import { changelogDao, cubeDao, draftDao, featuredQueueDao, noticeDao, p1p1PackDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { changelogDao, cubeDao, draftDao, featuredQueueDao, noticeDao, p1p1PackDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { abbreviate, cachePromise, generateBalancedPack, generatePack, isCubeViewable } from 'serverutils/cubefn';
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
@@ -10,7 +10,6 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl, isAdmin } from 'serverutils/util';
 
 import { Request, Response } from '../../types/express';
-import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
@@ -220,7 +219,7 @@ export const followHandler = async (req: Request, res: Response) => {
 
   //TODO: Can remove after fixing models to not muck with the original input
   const cubeOwner = cube.owner;
-  await User.update(user!);
+  await userDao.update(user!);
   await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   await addNotification(
@@ -249,7 +248,7 @@ export const unfollowHandler = async (req: Request, res: Response) => {
   cube.following = cube.following?.filter((id: string) => req.user!.id !== id) || [];
   user!.followedCubes = user!.followedCubes?.filter((id: string) => cube.id !== id) || [];
 
-  await User.update(user!);
+  await userDao.update(user!);
   await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   return res.status(200).send({

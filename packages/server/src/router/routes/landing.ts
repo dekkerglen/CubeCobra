@@ -4,6 +4,7 @@ import { articleDao, draftDao, episodeDao, videoDao } from 'dynamo/daos';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
 import { redirect, render } from 'serverutils/render';
+
 import { Request, Response } from '../../types/express';
 
 const landingHandler = async (req: Request, res: Response) => {

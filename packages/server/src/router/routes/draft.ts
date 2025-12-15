@@ -1,8 +1,8 @@
+import { cubeDao, draftDao } from 'dynamo/daos';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
-import { cubeDao, draftDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../types/express';
 

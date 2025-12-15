@@ -1,5 +1,4 @@
-import { blogDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { blogDao, userDao } from 'dynamo/daos';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -11,7 +10,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const user = await User.getByIdOrUsername(req.params.userid);
+    const user = await userDao.getByIdOrUsername(req.params.userid);
 
     if (!user) {
       req.flash('danger', 'User not found');

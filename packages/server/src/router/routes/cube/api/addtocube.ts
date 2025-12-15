@@ -1,6 +1,5 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
-import { blogDao, changelogDao, cubeDao, feedDao } from 'dynamo/daos';
-import Package from 'dynamo/models/package';
+import { blogDao, changelogDao, cubeDao, feedDao, packageDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -37,7 +36,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
 
     let tag: string | null = null;
     if (req.body.packid) {
-      const pack = await Package.getById(req.body.packid);
+      const pack = await packageDao.getById(req.body.packid);
       if (pack) {
         tag = pack.title;
       }

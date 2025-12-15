@@ -6,15 +6,22 @@ import { getImageData } from 'serverutils/imageutil';
 import { v4 as uuidv4 } from 'uuid';
 
 import CommentModel from '../models/comment';
-import UserModel from '../models/user';
 import { BaseDynamoDao } from './BaseDynamoDao';
+import { UserDynamoDao } from './UserDynamoDao';
 
 export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> {
   private readonly dualWriteEnabled: boolean;
+  private readonly userDao: UserDynamoDao;
 
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(
+    dynamoClient: DynamoDBDocumentClient,
+    userDao: UserDynamoDao,
+    tableName: string,
+    dualWriteEnabled: boolean = false,
+  ) {
     super(dynamoClient, tableName);
     this.dualWriteEnabled = dualWriteEnabled;
+    this.userDao = userDao;
   }
 
   protected itemType(): string {
@@ -79,7 +86,7 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
       return this.createHydratedCommentWithoutOwner(item);
     }
 
-    const owner = await UserModel.getById(item.owner);
+    const owner = await this.userDao.getById(item.owner);
     if (!owner) {
       return this.createHydratedCommentWithoutOwner(item);
     }
@@ -99,7 +106,7 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
       .filter((item) => item.owner && item.owner !== 'null' && item.owner !== '404')
       .map((item) => item.owner) as string[];
 
-    const owners = ownerIds.length > 0 ? await UserModel.batchGet(ownerIds) : [];
+    const owners = ownerIds.length > 0 ? await this.userDao.batchGet(ownerIds) : [];
 
     return items.map((item) => {
       if (!item.owner || item.owner === 'null' || item.owner === '404') {

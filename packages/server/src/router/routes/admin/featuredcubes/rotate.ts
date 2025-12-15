@@ -1,5 +1,5 @@
 import { UserRoles } from '@utils/datatypes/User';
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { rotateFeatured } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
@@ -17,8 +17,8 @@ export const rotateHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  const olds = await User.batchGet(rotate.removed.map((f: any) => f.ownerID));
-  const news = await User.batchGet(rotate.added.map((f: any) => f.ownerID));
+  const olds = await userDao.batchGet(rotate.removed.map((f: any) => f.ownerID));
+  const news = await userDao.batchGet(rotate.added.map((f: any) => f.ownerID));
   const notifications = [];
   if (req.user) {
     for (const old of olds) {

@@ -1,7 +1,6 @@
 import DraftRecord from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
-import { cubeDao, draftDao } from 'dynamo/daos';
-import Record from 'dynamo/models/record';
+import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi'; // Import Joi for validation
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
@@ -181,7 +180,7 @@ export const createRecordHandler = async (req: Request, res: Response) => {
       id: uuidv4(),
     };
 
-    const createdRecordId = await Record.put(newRecord);
+    const createdRecordId = await recordDao.createRecord(newRecord);
 
     if (!createdRecordId) {
       req.flash('danger', 'Error creating record');
@@ -267,7 +266,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       id: uuidv4(),
     };
 
-    const createdRecordId = await Record.put(newRecord);
+    const createdRecordId = await recordDao.createRecord(newRecord);
 
     if (!createdRecordId) {
       req.flash('danger', 'Error creating record');

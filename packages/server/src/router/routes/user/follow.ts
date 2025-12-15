@@ -1,4 +1,4 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
@@ -14,7 +14,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const other = await User.getById(req.params.id);
+    const other = await userDao.getById(req.params.id);
 
     if (!other) {
       req.flash('danger', 'User not found');
@@ -36,7 +36,7 @@ export const handler = async (req: Request, res: Response) => {
 
     await addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
 
-    await User.batchPut([other, user]);
+    await userDao.batchPut([other, user]);
 
     return redirect(req, res, `/user/view/${req.params.id}`);
   } catch (err) {

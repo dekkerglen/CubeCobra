@@ -1,3 +1,4 @@
+import { Changes } from '@utils/datatypes/Card';
 import { changelogDao, cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
@@ -6,7 +7,6 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
-import { Changes } from '@utils/datatypes/Card';
 
 /**
  * GET handler to display the restore page with version history

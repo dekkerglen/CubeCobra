@@ -1,4 +1,4 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
@@ -12,7 +12,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const user = await User.getByUsername(id);
+    const user = await userDao.getByUsername(id);
 
     if (!user) {
       res.status(404).send({ error: 'User not found' });

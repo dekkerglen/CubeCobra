@@ -1,7 +1,6 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import { blogDao, commentDao, cubeDao, draftDao, noticeDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { blogDao, commentDao, cubeDao, draftDao, noticeDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
@@ -87,13 +86,13 @@ export const banuserHandler = async (req: Request, res: Response) => {
     }
 
     // ban user
-    const user = await User.getById(userToBan!);
+    const user = await userDao.getById(userToBan!);
 
     if (user) {
       user.roles = [UserRoles.BANNED];
       user.about = '[deleted]';
 
-      await User.put(user);
+      await userDao.put(user);
     }
 
     notice.status = NoticeStatus.PROCESSED;

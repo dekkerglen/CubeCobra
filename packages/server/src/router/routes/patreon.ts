@@ -1,8 +1,7 @@
 import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
 import { UserRoles } from '@utils/datatypes/User';
 import crypto from 'crypto';
-import Patron from 'dynamo/models/patron';
-import User from 'dynamo/models/user';
+import { patronDao, userDao } from 'dynamo/daos';
 import { oauth, patreon } from 'patreon';
 import { ensureAuth } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -21,13 +20,13 @@ const isValidPatreonSignature = (signature: string, body: any): boolean => {
 
 export const unlinkHandler = async (req: Request, res: Response) => {
   try {
-    await Patron.deleteById(req.user!.id);
+    await patronDao.deleteById(req.user!.id);
 
-    const user = await User.getById(req.user!.id);
+    const user = await userDao.getById(req.user!.id);
     if (user) {
       user.roles = user.roles?.filter((role) => role !== UserRoles.PATRON);
       user.patron = undefined;
-      await User.update(user);
+      await userDao.update(user);
     }
 
     req.flash('success', `Patron account has been unlinked.`);
@@ -61,7 +60,7 @@ export const hookHandler = async (req: Request, res: Response) => {
     const email = users[0].attributes.email.toLowerCase();
 
     // if a patron with this email is already linked, we can't use it
-    const document = await Patron.getByEmail(email);
+    const document = await patronDao.getByEmail(email);
 
     if (!document) {
       req.logger.error(`Recieved a patreon hook without a found email: "${email}"`);
@@ -71,7 +70,7 @@ export const hookHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.getById(document.owner);
+    const user = await userDao.getById(document.owner);
 
     if (!user) {
       req.logger.error(`Recieved a patreon hook without a found user: "${document.owner}"`);
@@ -107,8 +106,8 @@ export const hookHandler = async (req: Request, res: Response) => {
       });
     }
 
-    await Patron.put(document);
-    await User.update(user);
+    await patronDao.put(document);
+    await userDao.update(user);
 
     return res.status(200).send({
       success: 'false',
@@ -124,7 +123,7 @@ export const hookHandler = async (req: Request, res: Response) => {
 export const redirectHandler = async (req: Request, res: Response) => {
   const oauthGrantCode = req.query.code as string;
 
-  const patron = await Patron.getById(req.user!.id);
+  const patron = await patronDao.getById(req.user!.id);
 
   // if this user is already a patron, error
   if (patron && patron.status === PatronStatuses.ACTIVE) {
@@ -143,7 +142,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
       const email = rawJson.data.attributes.email.toLowerCase();
 
       // if a patron with this email is already linked, we can't use it
-      const document = await Patron.getByEmail(email);
+      const document = await patronDao.getByEmail(email);
 
       if (document) {
         req.flash(
@@ -199,14 +198,14 @@ export const redirectHandler = async (req: Request, res: Response) => {
 
       newPatron.status = PatronStatuses.ACTIVE;
 
-      await Patron.put(newPatron);
+      await patronDao.put(newPatron);
 
-      const user = await User.getById(req.user!.id);
+      const user = await userDao.getById(req.user!.id);
       if (user) {
         if (!user.roles?.includes(UserRoles.PATRON)) {
           user.roles?.push(UserRoles.PATRON);
         }
-        await User.update(user);
+        await userDao.update(user);
       }
 
       if (newPatron.level === 0) {

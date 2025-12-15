@@ -1,6 +1,6 @@
 import { featuredQueueDao } from 'dynamo/daos';
-import { render } from 'serverutils/render';
 import { cubeDao } from 'dynamo/daos';
+import { render } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
 

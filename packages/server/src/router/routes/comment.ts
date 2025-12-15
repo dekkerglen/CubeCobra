@@ -2,11 +2,19 @@ import type Comment from '@utils/datatypes/Comment';
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@utils/datatypes/Comment';
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
-import { commentDao } from 'dynamo/daos';
-import { blogDao, articleDao, videoDao, podcastDao, episodeDao, cubeDao, draftDao, noticeDao } from 'dynamo/daos';
-import Package from 'dynamo/models/package';
+import { commentDao, userDao } from 'dynamo/daos';
+import {
+  articleDao,
+  blogDao,
+  cubeDao,
+  draftDao,
+  episodeDao,
+  noticeDao,
+  packageDao,
+  podcastDao,
+  videoDao,
+} from 'dynamo/daos';
 import Record from 'dynamo/models/record';
-import DynamoUser from 'dynamo/models/user';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getImageData } from 'serverutils/imageutil';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -151,7 +159,7 @@ export const addCommentHandler = async (req: Request, res: Response) => {
   //Front-end joins the mentioned usernames with ; for the Form
   const userMentions: string[] = mentions ? mentions.split(';') : []; //Stupid JS thing where split of empty string is an array of empty string
   for (const mention of userMentions) {
-    const mentioned = await DynamoUser.getByUsername(mention);
+    const mentioned = await userDao.getByUsername(mention);
     if (mentioned) {
       await addNotification(mentioned, user, `/comment/${id}`, `${user?.username} mentioned you in their comment`);
     }
@@ -198,7 +206,7 @@ export const getReplyContext: Record<NotifiableCommentType, (id: string) => Prom
     return episode?.owner;
   },
   package: async (id: string) => {
-    const pack = await Package.getById(id);
+    const pack = await packageDao.getById(id);
     return pack?.owner;
   },
   record: async (id: string) => {

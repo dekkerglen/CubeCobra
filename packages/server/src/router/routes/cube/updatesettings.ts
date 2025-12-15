@@ -1,11 +1,11 @@
 import { CARD_STATUSES, PrintingPreference } from '@utils/datatypes/Card';
+import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
-import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 
 export const updateSettingsHandler = async (req: Request, res: Response) => {
   try {

@@ -1,10 +1,10 @@
 import { UserRoles } from '@utils/datatypes/User';
+import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { addNewCubeToQueue } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
 import { Request, Response } from 'types/express';
-import { cubeDao } from 'dynamo/daos';
 
 export const queueHandler = async (req: Request, res: Response) => {
   if (!req.body.cubeId) {

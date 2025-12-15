@@ -1,5 +1,6 @@
 import React, { useContext, useMemo, useState } from 'react';
 
+import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
@@ -7,7 +8,6 @@ import Text from '../base/Text';
 import CSRFForm from '../CSRFForm';
 import ConfirmActionModal from '../modals/ConfirmActionModal';
 import withModal from '../WithModal';
-import UserContext from '../../contexts/UserContext';
 
 const ConfirmDeleteButton = withModal(Button, ConfirmActionModal);
 

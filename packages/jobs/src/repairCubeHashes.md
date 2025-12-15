@@ -23,6 +23,7 @@ This job:
 The job repairs all types of hashes:
 
 ### Metadata Hashes
+
 - `cube:all` - Global cube hash
 - `shortid:{shortId}` - Cube short ID lookup
 - `featured:true` - Featured cubes (if applicable)
@@ -31,6 +32,7 @@ The job repairs all types of hashes:
 - `keywords:{keywords}` - All keyword combinations from cube name
 
 ### Card Hashes
+
 - `oracle:{oracleId}` - One hash per unique card in the cube
   - Enables querying "cubes containing card X"
   - Automatically calculated from cube's mainboard cards
@@ -106,6 +108,7 @@ The job leverages `CubeDynamoDao.repairHashes()` which:
 ## Hash Row Structure
 
 Each hash row stores:
+
 ```typescript
 {
   PK: 'HASH#CUBE#{cubeId}',      // Partition key

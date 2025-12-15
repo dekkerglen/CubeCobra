@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 
 import BlogPostType from '@utils/datatypes/BlogPost';
 import Cube, { CubeCards } from '@utils/datatypes/Cube';
+import { getCubeId } from '@utils/Util';
 
 import Button from 'components/base/Button';
 import Controls from 'components/base/Controls';
@@ -21,7 +22,6 @@ import UserContext from 'contexts/UserContext';
 import useAlerts from 'hooks/UseAlerts';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import { getCubeId } from '@utils/Util';
 
 const CubeOverviewModalLink = withModal(Link, CubeOverviewModal);
 const CubeSettingsModalLink = withModal(Link, CubeSettingsModal);

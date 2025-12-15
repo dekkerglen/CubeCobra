@@ -1,8 +1,8 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { UserRoles } from '@utils/datatypes/User';
+import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
-import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { Request, Response } from 'types/express';
 
 export const reviewcontentHandler = async (req: Request, res: Response) => {

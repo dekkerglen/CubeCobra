@@ -1,4 +1,4 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
 
@@ -13,7 +13,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const other = await User.getById(req.params.id);
+    const other = await userDao.getById(req.params.id);
 
     if (!other) {
       req.flash('danger', 'User not found');
@@ -23,7 +23,7 @@ export const handler = async (req: Request, res: Response) => {
     other.following = (other.following || []).filter((id) => user.id !== id);
     user.followedUsers = (user.followedUsers || []).filter((id) => id !== req.params.id);
 
-    await User.batchPut([user, other]);
+    await userDao.batchPut([user, other]);
 
     return redirect(req, res, `/user/view/${req.params.id}`);
   } catch (err) {

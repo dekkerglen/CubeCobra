@@ -1,7 +1,6 @@
 import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import { noticeDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { noticeDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import sendEmail from 'serverutils/email';
 import { redirect } from 'serverutils/render';
@@ -19,7 +18,7 @@ export const declineHandler = async (req: Request, res: Response) => {
   noticeDao.put(application);
 
   //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
-  const applicationUser = await User.getByIdWithSensitiveData(application.user.id);
+  const applicationUser = await userDao.getByIdWithSensitiveData(application.user.id);
 
   if (applicationUser) {
     await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_decline');

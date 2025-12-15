@@ -1,3 +1,4 @@
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
@@ -5,7 +6,6 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
-import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 export const gridDraftHandler = async (req: Request, res: Response) => {
   try {

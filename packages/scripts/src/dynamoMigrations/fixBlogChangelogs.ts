@@ -7,6 +7,8 @@ import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
 
 import 'dotenv/config';
 
+import { CheckpointManager } from './checkpointUtil';
+
 interface FixStats {
   total: number;
   fixed: number;
@@ -26,6 +28,8 @@ interface FixStats {
  * Usage:
  *   npm run fix-blog-changelogs                    # Fix all blogs
  *   npm run fix-blog-changelogs -- --blog-id=<id>  # Fix a single blog for testing
+ *   npm run fix-blog-changelogs -- --resume        # Resume from checkpoint
+ *   npm run fix-blog-changelogs -- --reset         # Clear checkpoint and start fresh
  */
 (async () => {
   try {
@@ -33,6 +37,15 @@ interface FixStats {
     const args = process.argv.slice(2);
     const blogIdArg = args.find((arg) => arg.startsWith('--blog-id='));
     const singleBlogId = blogIdArg ? blogIdArg.split('=')[1] : null;
+    const shouldResume = args.includes('--resume');
+    const shouldReset = args.includes('--reset');
+
+    const checkpointManager = new CheckpointManager('fixBlogChangelogs');
+
+    if (shouldReset) {
+      console.log('Clearing checkpoint and starting fresh...');
+      checkpointManager.clear();
+    }
 
     if (singleBlogId) {
       console.log(`Starting blog changelog fix for single blog: ${singleBlogId}`);
@@ -118,6 +131,28 @@ interface FixStats {
     let lastKey: Record<string, any> | undefined;
     let batchNumber = 0;
 
+    // Try to resume from checkpoint
+    if (shouldResume && checkpointManager.exists()) {
+      const checkpoint = checkpointManager.load();
+      if (checkpoint) {
+        console.log('\nResuming from checkpoint...');
+        console.log(
+          `Previous run: batch ${checkpoint.batchNumber}, timestamp: ${new Date(checkpoint.timestamp).toISOString()}`,
+        );
+        lastKey = checkpoint.lastKey;
+        batchNumber = checkpoint.batchNumber;
+        stats.total = checkpoint.stats.total || 0;
+        stats.fixed = checkpoint.stats.fixed || 0;
+        stats.skipped = checkpoint.stats.skipped || 0;
+        stats.notFound = checkpoint.stats.notFound || 0;
+        stats.errors = checkpoint.stats.errors || 0;
+        console.log(
+          `Resuming with stats: ${stats.fixed} fixed, ${stats.skipped} skipped, ${stats.notFound} not found, ${stats.errors} errors`,
+        );
+        console.log('='.repeat(80));
+      }
+    }
+
     do {
       batchNumber += 1;
       console.log(`\nProcessing batch ${batchNumber}...`);
@@ -185,6 +220,20 @@ interface FixStats {
       console.log(
         `Batch ${batchNumber} complete - Fixed: ${stats.fixed}, Skipped: ${stats.skipped}, Not found: ${stats.notFound}, Errors: ${stats.errors}`,
       );
+
+      // Save checkpoint after each batch
+      checkpointManager.save({
+        lastKey,
+        stats: {
+          total: stats.total,
+          fixed: stats.fixed,
+          skipped: stats.skipped,
+          notFound: stats.notFound,
+          errors: stats.errors,
+        },
+        timestamp: Date.now(),
+        batchNumber,
+      });
     } while (lastKey);
 
     console.log('\n' + '='.repeat(80));
@@ -195,6 +244,10 @@ interface FixStats {
     console.log(`Not found in new table: ${stats.notFound}`);
     console.log(`Errors: ${stats.errors}`);
     console.log('='.repeat(80));
+
+    // Clear checkpoint on successful completion
+    checkpointManager.clear();
+    console.log('Checkpoint cleared.');
 
     process.exit(0);
   } catch (err) {

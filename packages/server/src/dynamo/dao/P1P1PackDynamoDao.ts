@@ -26,11 +26,11 @@ import {
   P1P1VoteResult,
   P1P1VoteSummary,
 } from '@utils/datatypes/P1P1Pack';
-import { v4 as uuidv4 } from 'uuid';
 import { cardFromId } from 'serverutils/carddb';
+import { v4 as uuidv4 } from 'uuid';
 
-import { deleteObject, getBucketName, getObject, putObject } from '../s3client';
 import p1p1PackModel from '../models/p1p1Pack';
+import { deleteObject, getBucketName, getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 const S3_PREFIX = 'p1p1-packs/';

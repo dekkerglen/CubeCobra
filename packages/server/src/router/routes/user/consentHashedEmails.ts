@@ -1,4 +1,4 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
@@ -19,7 +19,7 @@ export const handler = async (req: Request, res: Response) => {
     });
   }
 
-  const userToUpdate = await User.getById(user.id);
+  const userToUpdate = await userDao.getById(user.id);
 
   if (!userToUpdate) {
     return res.status(404).send({
@@ -27,7 +27,7 @@ export const handler = async (req: Request, res: Response) => {
     });
   }
   userToUpdate.consentToHashedEmail = preference;
-  await User.update(userToUpdate);
+  await userDao.update(userToUpdate);
 
   return res.status(200).send({
     success: 'true',

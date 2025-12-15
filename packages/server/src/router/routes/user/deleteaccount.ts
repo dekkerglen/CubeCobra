@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { blogDao, commentDao, cubeDao, draftDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { blogDao, commentDao, cubeDao, draftDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 import { redirect } from 'serverutils/render';
@@ -17,7 +16,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/account?tab=5');
   }
 
-  const user = await User.getByIdWithSensitiveData(req.user.id);
+  const user = await userDao.getByIdWithSensitiveData(req.user.id);
 
   if (!user) {
     req.flash('danger', 'User not found');
@@ -100,7 +99,7 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     // Delete the user
-    await User.deleteById(user.id);
+    await userDao.deleteById(user.id);
 
     // Log the user out by destroying the session
     req.logout((err) => {

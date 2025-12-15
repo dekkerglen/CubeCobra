@@ -6,16 +6,23 @@ import Video from '@utils/datatypes/Video';
 import { getImageData } from 'serverutils/imageutil';
 import { v4 as uuidv4 } from 'uuid';
 
-import { getBucketName, getObject, putObject } from '../s3client';
 import ContentModel from '../models/content';
-import UserModel from '../models/user';
+import { getBucketName, getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
+import { UserDynamoDao } from './UserDynamoDao';
 
 export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
   private readonly dualWriteEnabled: boolean;
+  private readonly userDao: UserDynamoDao;
 
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(
+    dynamoClient: DynamoDBDocumentClient,
+    userDao: UserDynamoDao,
+    tableName: string,
+    dualWriteEnabled: boolean = false,
+  ) {
     super(dynamoClient, tableName);
+    this.userDao = userDao;
     this.dualWriteEnabled = dualWriteEnabled;
   }
 
@@ -88,7 +95,7 @@ export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
    * Hydrates a single UnhydratedContent to Video.
    */
   protected async hydrateItem(item: UnhydratedContent): Promise<Video> {
-    const owner = item.owner ? await UserModel.getById(item.owner) : undefined;
+    const owner = item.owner ? await this.userDao.getById(item.owner) : undefined;
     const image: CubeImage | undefined = item.imageName ? getImageData(item.imageName) : undefined;
 
     // Load body from S3
@@ -112,7 +119,7 @@ export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
     }
 
     const ownerIds = items.map((item) => item.owner).filter(Boolean) as string[];
-    const owners = ownerIds.length > 0 ? await UserModel.batchGet(ownerIds) : [];
+    const owners = ownerIds.length > 0 ? await this.userDao.batchGet(ownerIds) : [];
 
     return items.map((item) => {
       const owner = owners.find((o: User) => o.id === item.owner);

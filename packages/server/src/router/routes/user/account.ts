@@ -1,6 +1,6 @@
 import { cubeDao } from 'dynamo/daos';
 import { featuredQueueDao } from 'dynamo/daos';
-import Patron from 'dynamo/models/patron';
+import { patronDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect, render } from 'serverutils/render';
 
@@ -11,7 +11,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/login');
   }
 
-  const patron = await Patron.getById(req.user.id);
+  const patron = await patronDao.getById(req.user.id);
 
   const entireQueue = [];
 

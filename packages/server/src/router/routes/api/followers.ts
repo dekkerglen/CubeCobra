@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { cubeDao, userDao } from 'dynamo/daos';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { NextFunction, Request, Response } from '../../../types/express';
@@ -40,7 +39,7 @@ export const getFollowers = async (req: Request, res: Response) => {
         return;
       }
 
-      const user = await User.getById(id);
+      const user = await userDao.getById(id);
       followerIds = user?.following || [];
     } else if (type === 'cube') {
       followerIds = res.locals.cube?.following || [];
@@ -54,7 +53,7 @@ export const getFollowers = async (req: Request, res: Response) => {
     const slice = followerIds.slice(skip, skip + limit);
     const hasMore = followerIds.length > skip + limit;
 
-    const followers = await User.batchGet(slice);
+    const followers = await userDao.batchGet(slice);
     res.status(200).send({ followers: followers, hasMore });
   } catch {
     res.status(500).send({ error: 'Error' });

@@ -1,7 +1,6 @@
 import cardutil from '@utils/cardutil';
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
-import { cubeDao, draftDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { cubeDao, draftDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
@@ -533,7 +532,7 @@ export const rebuildHandler = async (req: Request, res: Response) => {
 
     cube.numDecks += 1;
 
-    const user = await User.getById(req.user.id);
+    const user = await userDao.getById(req.user.id);
     // const baseUser = await User.getById(base.owner);
     // const cubeOwner = await User.getById(cube.owner);
 

@@ -1,8 +1,8 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
 import DraftModel from '@server/dynamo/models/draft';
-import { DraftDynamoDao } from 'dynamo/dao/DraftDynamoDao';
 import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
+import { DraftDynamoDao } from 'dynamo/dao/DraftDynamoDao';
 import { Draft } from 'dynamo/dao/DraftDynamoDao';
 import fs from 'fs';
 import path from 'path';

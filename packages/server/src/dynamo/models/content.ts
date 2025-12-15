@@ -9,12 +9,12 @@ import Image from '@utils/datatypes/Image';
 import Podcast from '@utils/datatypes/Podcast';
 import UserType from '@utils/datatypes/User';
 import Video from '@utils/datatypes/Video';
+import { userDao } from 'dynamo/daos';
 import createClient from 'dynamo/util';
 import { getImageData } from 'serverutils/imageutil';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getBucketName, getObject, putObject } from '../s3client';
-import User from './user';
 
 const createHydratedContent = (document: UnhydratedContent, image: Image | undefined, owner?: UserType): Content => {
   //Because type is a known set we don't need a default/unknown type case
@@ -49,14 +49,14 @@ const hydrate = async (content: UnhydratedContent): Promise<Content> => {
     return content;
   }
 
-  const owner = content.owner ? await User.getById(content.owner) : undefined;
+  const owner = content.owner ? await userDao.getById(content.owner) : undefined;
   const image: Image | undefined = content.imageName ? getImageData(content.imageName) : undefined;
 
   return createHydratedContent(content, image, owner);
 };
 
 const batchHydrate = async (contents: UnhydratedContent[]): Promise<Content[]> => {
-  const owners: UserType[] = await User.batchGet(contents.map((content) => content.owner));
+  const owners: UserType[] = await userDao.batchGet(contents.map((content) => content.owner));
 
   return contents.map((content) => {
     const owner = owners.find((owner) => owner.id === content.owner);

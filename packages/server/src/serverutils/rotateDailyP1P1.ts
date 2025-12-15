@@ -1,5 +1,4 @@
-import { cubeDao, dailyP1P1Dao, featuredQueueDao, p1p1PackDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { cubeDao, dailyP1P1Dao, featuredQueueDao, p1p1PackDao, userDao } from 'dynamo/daos';
 
 import { generateBalancedPack, generatePack, GeneratePackResult } from './cubefn';
 import * as util from './util';
@@ -123,8 +122,8 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
         };
       }
 
-      const cubeOwner = await User.getById(ownerId);
-      const admin = await User.getById('5d1125b00e0713602c55d967');
+      const cubeOwner = await userDao.getById(ownerId);
+      const admin = await userDao.getById('5d1125b00e0713602c55d967');
 
       if (cubeOwner && admin) {
         await util.addNotification(

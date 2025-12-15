@@ -162,9 +162,7 @@ const deleteCheckpoint = (): void => {
           );
 
           // Filter to only items that need to be migrated
-          const itemsToMigrate = existingChecks
-            .filter((check) => !check.exists)
-            .map((check) => check.item);
+          const itemsToMigrate = existingChecks.filter((check) => !check.exists).map((check) => check.item);
 
           const alreadyExistCount = validNotifications.length - itemsToMigrate.length;
           stats.skipped += alreadyExistCount;
@@ -235,5 +233,3 @@ const deleteCheckpoint = (): void => {
     process.exit(1);
   }
 })();
-
-```

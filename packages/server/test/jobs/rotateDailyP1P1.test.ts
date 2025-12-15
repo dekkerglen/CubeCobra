@@ -14,8 +14,10 @@ jest.mock('../../src/dynamo/daos', () => ({
   p1p1PackDao: {
     createPack: jest.fn(),
   },
+  userDao: {
+    getById: jest.fn(),
+  },
 }));
-jest.mock('../../src/dynamo/models/user');
 jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
 }));
@@ -24,9 +26,8 @@ import { generatePack } from 'serverutils/cubefn';
 import { rotateDailyP1P1 } from 'serverutils/rotateDailyP1P1';
 import { addNotification } from 'serverutils/util';
 
+import { dailyP1P1Dao, featuredQueueDao, p1p1PackDao, userDao } from '../../src/dynamo/daos';
 import Cube from '../../src/dynamo/models/cube';
-import { dailyP1P1Dao, featuredQueueDao, p1p1PackDao } from '../../src/dynamo/daos';
-import User from '../../src/dynamo/models/user';
 
 describe('rotateDailyP1P1', () => {
   beforeEach(() => {
@@ -227,7 +228,7 @@ describe('rotateDailyP1P1', () => {
       });
       (p1p1PackDao.createPack as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Dao.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
-      (User.getById as jest.Mock).mockImplementation((id) => {
+      (userDao.getById as jest.Mock).mockImplementation((id) => {
         if (id === 'owner-456') return Promise.resolve(mockOwner);
         if (id === '5d1125b00e0713602c55d967') return Promise.resolve(mockAdmin);
         return Promise.resolve(null);
@@ -277,7 +278,7 @@ describe('rotateDailyP1P1', () => {
       });
       (p1p1PackDao.createPack as jest.Mock).mockResolvedValue(mockPack);
       (dailyP1P1Dao.setActiveDailyP1P1 as jest.Mock).mockResolvedValue(mockDailyP1P1);
-      (User.getById as jest.Mock).mockRejectedValue(new Error('User fetch failed'));
+      (userDao.getById as jest.Mock).mockRejectedValue(new Error('User fetch failed'));
 
       const result = await rotateDailyP1P1(generatePack);
 
@@ -326,7 +327,7 @@ describe('rotateDailyP1P1', () => {
         cube: mockCube,
         dailyP1P1: mockDailyP1P1,
       });
-      expect(User.getById).not.toHaveBeenCalled();
+      expect(userDao.getById).not.toHaveBeenCalled();
       expect(addNotification).not.toHaveBeenCalled();
     });
   });

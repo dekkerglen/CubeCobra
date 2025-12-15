@@ -6,8 +6,8 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cubeDao } from '@server/dynamo/daos';
+import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import type Cube from '@utils/datatypes/Cube';
 
 const privateDir = '../server/private/';

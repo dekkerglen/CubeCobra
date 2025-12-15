@@ -1,5 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
-import User from 'dynamo/models/user';
+import { cubeDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { handleRouteError, render } from 'serverutils/render';
 
@@ -14,8 +13,8 @@ export const handler = async (req: Request, res: Response) => {
     const followedCubes = (await cubeDao.batchGet(req.user.followedCubes || [])).filter(
       (cube: any) => cube.visibility !== 'pr',
     );
-    const followers = await User.batchGet(req.user.following || []);
-    const followedUsers = await User.batchGet(req.user.followedUsers || []);
+    const followers = await userDao.batchGet(req.user.following || []);
+    const followedUsers = await userDao.batchGet(req.user.followedUsers || []);
 
     return render(
       req,
