@@ -18,12 +18,13 @@ export interface UnhydratedBlogPost extends BaseObject {
  * by Hydrating it is no longer a simple type
  */
 type BlogPost = Commentable &
-  Omit<UnhydratedBlogPost, 'id' | 'owner' | 'body' | 'date' | 'changelist'> & {
+  Omit<UnhydratedBlogPost, 'id' | 'owner' | 'body' | 'date'> & {
     id: string;
     body: string | null;
     owner: User;
     date: number;
     cubeName: string;
+    changelist?: string; // Keep the changelog ID reference for dehydration
     Changelog?: Partial<Changes>;
   };
 

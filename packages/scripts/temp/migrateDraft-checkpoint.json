@@ -1,13 +1,13 @@
 {
   "lastKey": {
-    "id": "f96898ac-c87e-4a91-a545-9929780c2eac"
+    "id": "640d2c2abe6cb45f9808cbb5"
   },
   "stats": {
-    "total": 339400,
-    "migrated": 329156,
+    "total": 1587400,
+    "migrated": 1539676,
     "errors": 0,
-    "skipped": 10244
+    "skipped": 47724
   },
-  "batchNumber": 1697,
-  "timestamp": 1765770917714
+  "batchNumber": 7937,
+  "timestamp": 1765816294162
 }

@@ -38,12 +38,12 @@ export interface GroupModalProps {
   setOpen: (open: boolean) => void;
   cards: Card[];
   canEdit?: boolean;
-  bulkEditCard: (cards: { board: BoardType; index: number }[]) => void;
+  bulkEditCard: (cards: Card[]) => void | Promise<void>;
   bulkMoveCard: (cards: { board: BoardType; index: number }[], board: 'maybeboard' | 'mainboard') => void;
   bulkRevertEdit: (cards: { board: BoardType; index: number }[]) => void;
   bulkRevertRemove: (cards: { board: BoardType; index: number }[]) => void;
   bulkRemoveCard: (cards: { board: BoardType; index: number }[]) => void;
-  setModalSelection: (cards: { board: BoardType; index: number }[]) => void;
+  setModalSelection: (cards: { board: BoardType; index: number }[] | Card[]) => void;
   allTags: string[];
   tagColors: TagColor[];
 }

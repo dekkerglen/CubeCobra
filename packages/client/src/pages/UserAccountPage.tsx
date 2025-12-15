@@ -9,6 +9,7 @@ import { Card, CardBody } from 'components/base/Card';
 import { TabbedView } from 'components/base/Tabs';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import UserAccountDeletion from 'components/user/UserAccountDeletion';
 import UserEmailForm from 'components/user/UserEmailForm';
 import UserPasswordForm from 'components/user/UserPasswordForm';
 import UserPatreonConfig from 'components/user/UserPatreonConfig';
@@ -96,6 +97,15 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patr
                   >
                     Link Patreon Account
                   </Button>
+                </CardBody>
+              ),
+            },
+            {
+              label: 'Delete Account',
+              onClick: () => setActiveTab('5'),
+              content: (
+                <CardBody>
+                  <UserAccountDeletion />
                 </CardBody>
               ),
             },

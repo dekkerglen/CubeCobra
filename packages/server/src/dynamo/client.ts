@@ -11,8 +11,8 @@ const client = new DynamoDB({
   credentials: fromNodeProviderChain(),
   region: process.env.AWS_REGION,
   requestHandler: new NodeHttpHandler({
-    connectionTimeout: 5000,
-    socketTimeout: 5000,
+    connectionTimeout: 15000, // Increased from 5000 to handle bulk operations
+    socketTimeout: 30000, // Increased from 5000 to handle bulk operations
     httpsAgent: {
       maxSockets: 200, // Increase from default 50
     },

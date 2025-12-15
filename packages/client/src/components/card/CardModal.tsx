@@ -62,7 +62,7 @@ export interface CardModalProps {
   card: Card;
   canEdit?: boolean;
   versionDict: Record<string, CardDetails[]>;
-  editCard: (index: number, card: Card, board: BoardType) => void;
+  editCard: (index: number, card: Card, board: BoardType) => void | Promise<void>;
   revertEdit: (index: number, board: BoardType) => void;
   revertRemove: (index: number, board: BoardType) => void;
   removeCard: (index: number, board: BoardType) => void;

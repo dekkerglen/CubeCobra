@@ -47,18 +47,60 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
         })),
       };
 
+      // Calculate delta for mainboard
+      const currentMainboardIds = new Map(cards.mainboard.map((c, idx) => [c.cardID, { card: c, index: idx }]));
+      const newMainboardIds = new Set(newList.mainboard.map((c) => c.cardID));
+
+      const mainboardAdds = newList.mainboard.filter((c) => !currentMainboardIds.has(c.cardID));
+      const mainboardRemoves = cards.mainboard
+        .filter((c) => !newMainboardIds.has(c.cardID))
+        .map((c) => {
+          const info = currentMainboardIds.get(c.cardID);
+          return {
+            index: info?.index ?? 0,
+            oldCard: c,
+          };
+        });
+
+      // Calculate delta for maybeboard
+      const currentMaybeIds = new Map(cards.maybeboard.map((c, idx) => [c.cardID, { card: c, index: idx }]));
+      const newMaybeIds = new Set(newList.maybeboard.map((c) => c.cardID));
+
+      const maybeAdds = newList.maybeboard.filter((c) => !currentMaybeIds.has(c.cardID));
+      const maybeRemoves = cards.maybeboard
+        .filter((c) => !newMaybeIds.has(c.cardID))
+        .map((c) => {
+          const info = currentMaybeIds.get(c.cardID);
+          return {
+            index: info?.index ?? 0,
+            oldCard: c,
+          };
+        });
+
       const changelog = {
         mainboard: {
-          adds: newList.mainboard.map(({ cardID }: any) => ({ cardID })),
-          removes: cards.mainboard.map(({ cardID }: any) => ({ oldCard: { cardID } })),
+          adds: mainboardAdds.length > 0 ? mainboardAdds : undefined,
+          removes: mainboardRemoves.length > 0 ? mainboardRemoves : undefined,
         },
         maybeboard: {
-          adds: newList.maybeboard.map(({ cardID }: any) => ({ cardID })),
-          removes: cards.maybeboard.map(({ cardID }: any) => ({ oldCard: { cardID } })),
+          adds: maybeAdds.length > 0 ? maybeAdds : undefined,
+          removes: maybeRemoves.length > 0 ? maybeRemoves : undefined,
         },
       };
 
-      added.push(...newList.mainboard);
+      // Check if there are any changes
+      const hasChanges =
+        mainboardAdds.length > 0 || mainboardRemoves.length > 0 || maybeAdds.length > 0 || maybeRemoves.length > 0;
+
+      if (!hasChanges) {
+        req.flash(
+          'danger',
+          'The uploaded file contains the same cards as your current cube list. No changes were made. Please upload a file with different cards to update your cube.',
+        );
+        return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id!)}`);
+      }
+
+      added.push(...mainboardAdds);
 
       return updateCubeAndBlog(req, res, cube, cards, newList as any, changelog as any, added, missing);
     }

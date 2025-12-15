@@ -80,7 +80,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       dateLastUpdated: item.dateLastUpdated,
       cube: item.cube,
       title: item.title,
-      changelist: undefined, // changelist is stored separately in the Changelog table
+      changelist: item.changelist, // Preserve the changelog ID reference
     };
   }
 
@@ -130,6 +130,15 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
 
     const changelists = changelistKeys.length > 0 ? await this.changelogDao.batchGet(changelistKeys) : [];
 
+    // Create a map for efficient changelog lookup
+    // Key is changelist ID, value is the changelog data
+    const changelogMap = new Map<string, Changes>();
+    changelistKeys.forEach((key, index) => {
+      if (changelists[index]) {
+        changelogMap.set(key.id, changelists[index]);
+      }
+    });
+
     return items.map((item) => {
       const owner = owners.find((o: UserType) => o.id === item.owner);
       let cubeName = 'Unknown';
@@ -143,10 +152,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
 
       let changelog: Changes | undefined;
       if (item.changelist) {
-        const changelistIndex = changelistKeys.findIndex((key) => key.id === item.changelist);
-        if (changelistIndex >= 0 && changelistIndex < changelists.length) {
-          changelog = changelists[changelistIndex];
-        }
+        changelog = changelogMap.get(item.changelist);
       }
 
       return this.createHydratedBlog(item, owner!, cubeName, changelog);
@@ -172,6 +178,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       title: document.title,
       owner: owner,
       cubeName: cubeName,
+      changelist: document.changelist, // Preserve the changelog ID
       Changelog: changelog,
     };
   }

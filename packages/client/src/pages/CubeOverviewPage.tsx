@@ -21,6 +21,7 @@ import UserContext from 'contexts/UserContext';
 import useAlerts from 'hooks/UseAlerts';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import { getCubeId } from '@utils/Util';
 
 const CubeOverviewModalLink = withModal(Link, CubeOverviewModal);
 const CubeSettingsModalLink = withModal(Link, CubeSettingsModal);
@@ -82,6 +83,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
                 >
                   Customize basics
                 </CustomizeBasicsModalLink>
+                <Link href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}>Restore</Link>
                 <DeleteCubeModalLink modalprops={{ cube }}>Delete Cube</DeleteCubeModalLink>
               </Flexbox>
             </Controls>

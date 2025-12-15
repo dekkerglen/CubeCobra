@@ -75,6 +75,7 @@ import cloudwatch from 'serverutils/cloudwatch';
 import { getImageData } from 'serverutils/imageutil';
 
 import { deleteObject, getObject, putObject } from '../s3client';
+import { listObjectVersions, getObjectVersion } from '../s3client';
 import CubeHashModel from '../models/cubeHash';
 import CubeModel from '../models/cube';
 import UserModel from '../models/user';
@@ -535,6 +536,82 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
       cloudwatch.error(`Failed to load cards for cube: ${id} - ${e.message}`, e.stack);
       throw new Error(`Failed to load cards for cube: ${id} - ${e.message}`);
+    }
+  }
+
+  /**
+   * Lists all versions of cube cards from S3 with version IDs and timestamps.
+   * Returns versions sorted by last modified date (newest first).
+   *
+   * @param id - The cube ID
+   * @returns Array of version information including versionId, timestamp, and isLatest flag
+   */
+  public async listCubeCardsVersions(
+    id: string,
+  ): Promise<Array<{ versionId: string; timestamp: Date; isLatest: boolean }>> {
+    try {
+      const versions = await listObjectVersions(process.env.DATA_BUCKET!, `cube/${id}.json`);
+
+      return versions.map((version) => ({
+        versionId: version.versionId,
+        timestamp: version.lastModified,
+        isLatest: version.isLatest,
+      }));
+    } catch (e: any) {
+      cloudwatch.error(`Failed to list versions for cube: ${id} - ${e.message}`, e.stack);
+      throw new Error(`Failed to list versions for cube: ${id} - ${e.message}`);
+    }
+  }
+
+  /**
+   * Gets a specific version of cube cards from S3.
+   *
+   * @param id - The cube ID
+   * @param versionId - The S3 version ID to retrieve
+   * @returns The cube cards for the specified version, with details added
+   */
+  public async getCubeCardsVersion(id: string, versionId: string): Promise<CubeCards> {
+    try {
+      const cards = await getObjectVersion(process.env.DATA_BUCKET!, `cube/${id}.json`, versionId);
+
+      // If cards is null or doesn't have the expected structure, return default empty cards
+      if (!cards || !cards.mainboard || !cards.maybeboard) {
+        cloudwatch.info(`No cards found for cube: ${id} version: ${versionId}, returning empty default`);
+        return {
+          mainboard: [],
+          maybeboard: [],
+        };
+      }
+
+      const totalCardCount = cards.mainboard.length + cards.maybeboard.length;
+
+      if (totalCardCount > CARD_LIMIT) {
+        throw new Error(`Cannot load cube: ${id} version: ${versionId} - too many cards: ${totalCardCount}`);
+      }
+
+      // Add details to cards
+      for (const [board, list] of Object.entries(cards)) {
+        if (board !== 'id') {
+          this.addDetails(list as any[]);
+          for (let i = 0; i < (list as any[]).length; i++) {
+            (list as any[])[i].index = i;
+            (list as any[])[i].board = board;
+          }
+        }
+      }
+      return cards;
+    } catch (e: any) {
+      // If the error is NoSuchKey (file doesn't exist), return empty default
+      if (e.name === 'NoSuchKey' || e.Code === 'NoSuchKey') {
+        cloudwatch.info(`Cards file does not exist for cube: ${id} version: ${versionId}, returning empty default`);
+        return {
+          mainboard: [],
+          maybeboard: [],
+        };
+      }
+
+      cloudwatch.error(`Failed to load cards for cube: ${id} version: ${versionId} - ${e.message}`, e.stack);
+      throw new Error(`Failed to load cards for cube: ${id} version: ${versionId} - ${e.message}`);
     }
   }
 
