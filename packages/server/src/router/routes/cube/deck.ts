@@ -1,4 +1,5 @@
-import cardutil from '@utils/cardutil';
+import { normalizeName } from '@utils/cardutil';
+import Card from '@utils/datatypes/Card';
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import User from 'dynamo/models/user';
@@ -646,9 +647,6 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cubeCards = await cubeDao.getCards(cube.id);
-    const { mainboard } = cubeCards;
-
     if (!req.user || cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -667,6 +665,19 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       added.push([]);
     }
 
+    const cubeCards = await cubeDao.getCards(cube.id);
+    const { mainboard } = cubeCards;
+
+    const customCardNameMap = mainboard
+      .filter((card: any) => card.custom_name)
+      .reduce((map: Map<string, Card>, card: any) => {
+        const normalizedCustomName = normalizeName(card.custom_name);
+        if (!map.has(normalizedCustomName)) {
+          map.set(normalizedCustomName, card);
+        }
+        return map;
+      }, new Map<string, Card>());
+
     for (let i = 0; i < cards.length; i += 1) {
       const item = cards[i].toLowerCase().trim();
       const numericMatch = item.match(/([0-9]+)x? (.*)/);
@@ -681,7 +692,7 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       } else {
         let selected = null;
         // does not have set info
-        const normalizedName = cardutil.normalizeName(item);
+        const normalizedName = normalizeName(item);
         const potentialIds = getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
           const inCube = mainboard.find((card: any) => cardFromId(card.cardID).name_lower === normalizedName);
@@ -704,7 +715,17 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
               };
             }
           }
+        } else if (customCardNameMap.has(normalizedName)) {
+          const cubeCard = customCardNameMap.get(normalizedName)!;
+          selected = {
+            finish: cubeCard.finish,
+            imgBackUrl: cubeCard.imgBackUrl,
+            imgUrl: cubeCard.imgUrl,
+            cardID: cubeCard.cardID,
+            details: cardFromId(cubeCard.cardID),
+          };
         }
+
         if (selected) {
           // push into correct column.
           const details = selected.details;
