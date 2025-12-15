@@ -525,7 +525,23 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Overrides update to support dual writes.
    */
   public async update(item: Draft): Promise<void> {
+    // Update item's timestamp
+    item.dateLastUpdated = Date.now();
+
+    // Save cards and seats to S3 before updating metadata
+    await Promise.all([
+      putObject(process.env.DATA_BUCKET!, `cardlist/${item.id}.json`, this.stripDetails(item.cards)),
+      putObject(process.env.DATA_BUCKET!, `seats/${item.id}.json`, {
+        seats: item.seats,
+        basics: item.basics,
+        InitialState: item.InitialState,
+      }),
+    ]);
+
     if (this.dualWriteEnabled) {
+      // Update old model
+      await DraftModel.put(item);
+
       // Check if item exists in new table first
       const existsInNewTable = await this.get({
         PK: this.partitionKey(item),
@@ -651,6 +667,9 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Strips card details before storage.
    */
   private stripDetails(cards: any[]): any[] {
+    if (!cards || !Array.isArray(cards)) {
+      return [];
+    }
     return cards.map((card: any) => {
       const stripped = { ...card };
       delete stripped.details;

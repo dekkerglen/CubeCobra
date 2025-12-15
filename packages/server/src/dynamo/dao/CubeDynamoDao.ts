@@ -5,12 +5,12 @@
  * - Cube metadata: Stored in DynamoDB with PK = CUBE#{id}, SK = CUBE
  * - Cube cards: Stored in S3 at cube/{id}.json
  * - Cube analytics: Stored in S3 at cube_analytic/{id}.json
- * - Hash rows: Stored with PK = hash, SK = CUBE#{id} for search functionality
+ * - Hash rows: Stored with PK = HASH#CUBE#{id}, SK = hashString for search functionality
  *
  * QUERY PATTERNS:
  * - getById(id): Get cube by ID or shortId
  * - queryByOwner(ownerId, sortBy): Get cubes by owner with sorting
- * - queryByVisibility(visibility, sortBy): Get cubes by visibility with sorting
+ * - queryAllCubes(sortBy): Get all public cubes with sorting
  * - queryByFeatured(sortBy): Get featured cubes with sorting
  * - queryByCategory(category, sortBy): Get cubes by category with sorting
  * - queryByTag(tag, sortBy): Get cubes by tag with sorting
@@ -18,6 +18,8 @@
  * - queryByOracleId(oracleId, sortBy): Get cubes containing a specific card
  * - queryByMultipleHashes(hashes, sortBy, cardCountFilter): Get cubes matching ALL hash criteria (max 10 hashes)
  *   with optional card count filtering (eq/gt/lt)
+ * - getHashesForCube(cubeId): Get all hash rows for a cube (for cleanup/sweeper operations)
+ * - repairHashes(cubeId): Repair hash rows by comparing current vs expected and writing the delta
  *
  * ANALYTICS METHODS:
  * - getAnalytics(cubeId): Get cube analytics from S3
@@ -34,19 +36,31 @@
  *
  * HASH ROW STRUCTURE:
  * Hash rows enable efficient search with sortable attributes:
- * - PK: hash string (e.g., "shortid:mycube", "tag:vintage", "oracle:abc123")
- * - SK: CUBE#{cubeId}
- * - GSI1: Hash + followers count for popularity sorting
- * - GSI2: Hash + cube name for alphabetical sorting
- * - GSI3: Hash + card count for size sorting
- * - GSI4: Hash + last updated date for recency sorting
+ * - PK: HASH#CUBE#{cubeId} (allows querying all hashes for a cube)
+ * - SK: hash string (e.g., "shortid:mycube", "tag:vintage", "oracle:abc123")
+ * - GSI1PK: hash string, GSI1SK: FOLLOWERS#... for popularity sorting
+ * - GSI2PK: hash string, GSI2SK: NAME#... for alphabetical sorting
+ * - GSI3PK: hash string, GSI3SK: CARDS#... for card count sorting
+ * - GSI4PK: hash string, GSI4SK: DATE#... for recency sorting
+ *
+ * CUBE METADATA ROW STRUCTURE:
+ * Main cube metadata rows (PK=CUBE#{id}, SK=CUBE) use:
+ * - GSI1: Owner + date for querying user's cubes
+ * - GSI3: Shard + id for scanning all cubes efficiently
+ * Note: GSI2 is NOT used for cube metadata, only for hash rows
  *
  * DUAL WRITE MODE:
  * Supports gradual migration from old cube model by writing to both systems
  * when dualWriteEnabled flag is set.
  */
 
-import { DynamoDBDocumentClient, QueryCommandInput, BatchWriteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  QueryCommandInput,
+  BatchWriteCommand,
+  QueryCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 import Cube from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
@@ -62,7 +76,7 @@ import { deleteObject, getObject, putObject } from '../s3client';
 import CubeHashModel from '../models/cubeHash';
 import CubeModel from '../models/cube';
 import UserModel from '../models/user';
-import { BaseDynamoDao } from './BaseDynamoDao';
+import { BaseDynamoDao, HashRow } from './BaseDynamoDao';
 
 /**
  * UnhydratedCube is the cube metadata without the owner User object and image.
@@ -110,6 +124,28 @@ export type SortOrder = 'popularity' | 'alphabetical' | 'cards' | 'date';
 
 const CARD_LIMIT = 10000;
 
+/**
+ * Creates a placeholder user for deleted/banned accounts
+ */
+const createDeletedUserPlaceholder = (userId: string): User => {
+  return {
+    id: userId,
+    username: '[Deleted User]',
+    email: '',
+    about: '',
+    hideTagColors: false,
+    defaultNav: [],
+    roles: [],
+    theme: 'default',
+    hideFeatured: false,
+    followedCubes: [],
+    followedUsers: [],
+    notifications: [],
+    imageName: 'default',
+    patron: '',
+  } as User;
+};
+
 export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   private readonly dualWriteEnabled: boolean;
 
@@ -132,9 +168,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   /**
    * Gets the GSI keys for the cube.
    * GSI1: Query by owner and date
-   * GSI2: Query by visibility and date
-   * GSI3: Not used by cube metadata
-   * GSI4: Not used by cube metadata
+   * GSI3: Sharding for scanning all cubes
+   * Note: GSI2 is not used for cube metadata (only for hash rows)
    */
   protected GSIKeys(item: Cube): {
     GSI1PK: string | undefined;
@@ -154,8 +189,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     return {
       GSI1PK: ownerId ? `${this.itemType()}#OWNER#${ownerId}` : undefined,
       GSI1SK: item.dateLastUpdated ? `DATE#${item.dateLastUpdated}` : undefined,
-      GSI2PK: item.visibility ? `${this.itemType()}#VISIBILITY#${item.visibility}` : undefined,
-      GSI2SK: item.dateLastUpdated ? `DATE#${item.dateLastUpdated}` : undefined,
+      GSI2PK: undefined,
+      GSI2SK: undefined,
       GSI3PK: `${this.itemType()}#${shard}`,
       GSI3SK: item.id,
       GSI4PK: undefined,
@@ -205,12 +240,46 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Hydrates a single UnhydratedCube to Cube.
    */
   protected async hydrateItem(item: UnhydratedCube): Promise<Cube> {
-    // Skip cubes with invalid owner
+    // Handle cubes with invalid owner
     if (!item.owner) {
-      throw new Error(`Cube ${item.id} has null or undefined owner`);
+      cloudwatch.error(`Cube ${item.id} has null or undefined owner - using deleted user placeholder`);
+      const deletedUser = createDeletedUserPlaceholder('deleted');
+      const image = getImageData(item.imageName);
+
+      const draftFormats = item.formats || [];
+      for (let format of draftFormats) {
+        format = normalizeDraftFormatSteps(format);
+      }
+
+      return {
+        ...item,
+        owner: deletedUser,
+        image,
+      } as Cube;
     }
 
     const owner = await UserModel.getById(item.owner);
+
+    // If owner doesn't exist in the database, use placeholder
+    if (!owner) {
+      cloudwatch.error(
+        `Cube ${item.id} has owner ${item.owner} that doesn't exist in database - using deleted user placeholder`,
+      );
+      const deletedUser = createDeletedUserPlaceholder(item.owner);
+      const image = getImageData(item.imageName);
+
+      const draftFormats = item.formats || [];
+      for (let format of draftFormats) {
+        format = normalizeDraftFormatSteps(format);
+      }
+
+      return {
+        ...item,
+        owner: deletedUser,
+        image,
+      } as Cube;
+    }
+
     const image = getImageData(item.imageName);
 
     const draftFormats = item.formats || [];
@@ -221,7 +290,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     return {
       ...item,
-      owner: owner!,
+      owner: owner,
       image,
     } as Cube;
   }
@@ -234,25 +303,69 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       return [];
     }
 
-    const ownerIds = items.filter((item) => item.owner).map((item) => item.owner);
+    // Separate items with and without owners
+    const itemsWithOwners: UnhydratedCube[] = [];
+    const itemsWithoutOwners: UnhydratedCube[] = [];
+
+    for (const item of items) {
+      if (!item.owner) {
+        cloudwatch.error(`Cube ${item.id} has null or undefined owner - using deleted user placeholder`);
+        itemsWithoutOwners.push(item);
+      } else {
+        itemsWithOwners.push(item);
+      }
+    }
+
+    // Get owners for valid items
+    const ownerIds = itemsWithOwners.map((item) => item.owner);
     const owners = ownerIds.length > 0 ? await UserModel.batchGet(ownerIds) : [];
 
-    return items.map((item) => {
+    // Hydrate items with owners
+    const cubesWithOwners = itemsWithOwners.map((item) => {
       const owner = owners.find((o: User) => o.id === item.owner);
+
+      // If owner doesn't exist, use placeholder
+      const finalOwner =
+        owner ||
+        (() => {
+          cloudwatch.error(
+            `Cube ${item.id} has owner ${item.owner} that doesn't exist in database - using deleted user placeholder`,
+          );
+          return createDeletedUserPlaceholder(item.owner);
+        })();
+
       const image = getImageData(item.imageName);
 
       const draftFormats = item.formats || [];
-      // Correct bad custom draft formats on load
       for (let format of draftFormats) {
         format = normalizeDraftFormatSteps(format);
       }
 
       return {
         ...item,
-        owner: owner!,
+        owner: finalOwner,
         image,
       } as Cube;
     });
+
+    // Hydrate items without owners
+    const cubesWithoutOwners = itemsWithoutOwners.map((item) => {
+      const deletedUser = createDeletedUserPlaceholder('deleted');
+      const image = getImageData(item.imageName);
+
+      const draftFormats = item.formats || [];
+      for (let format of draftFormats) {
+        format = normalizeDraftFormatSteps(format);
+      }
+
+      return {
+        ...item,
+        owner: deletedUser,
+        image,
+      } as Cube;
+    });
+
+    return [...cubesWithOwners, ...cubesWithoutOwners];
   }
 
   /**
@@ -371,70 +484,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       return {
         items: sorted.slice(0, limit),
         lastKey: sorted.length > limit ? { offset: limit } : undefined,
-      };
-    }
-  }
-
-  /**
-   * Queries cubes by visibility with sorting and pagination.
-   */
-  public async queryByVisibility(
-    visibility: string,
-    sortBy: SortOrder = 'date',
-    ascending: boolean = false,
-    lastKey?: Record<string, any>,
-    limit: number = 36,
-  ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return CubeModel.getByVisibility(visibility, lastKey, limit);
-    }
-
-    // For visibility queries, we can only sort by date using GSI2
-    if (sortBy === 'date') {
-      const params: QueryCommandInput = {
-        TableName: this.tableName,
-        IndexName: 'GSI2',
-        KeyConditionExpression: 'GSI2PK = :visibility',
-        ExpressionAttributeValues: {
-          ':visibility': `${this.itemType()}#VISIBILITY#${visibility}`,
-        },
-        ScanIndexForward: ascending,
-        Limit: limit,
-      };
-
-      // Only add ExclusiveStartKey if lastKey is provided
-      if (lastKey) {
-        params.ExclusiveStartKey = lastKey;
-      }
-
-      return this.query(params);
-    } else {
-      // For other sorts, fetch the requested batch and sort in memory
-      const params: QueryCommandInput = {
-        TableName: this.tableName,
-        IndexName: 'GSI2',
-        KeyConditionExpression: 'GSI2PK = :visibility',
-        ExpressionAttributeValues: {
-          ':visibility': `${this.itemType()}#VISIBILITY#${visibility}`,
-        },
-        ScanIndexForward: false,
-        Limit: limit,
-      };
-
-      // Only add ExclusiveStartKey if lastKey is provided
-      if (lastKey) {
-        params.ExclusiveStartKey = lastKey;
-      }
-
-      const result = await this.query(params);
-
-      // Sort in memory
-      const sorted = this.sortCubes(result.items, sortBy, ascending);
-
-      // Return sorted results with pagination key
-      return {
-        items: sorted,
-        lastKey: result.lastKey,
       };
     }
   }
@@ -562,9 +611,15 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       return;
     }
 
+    // Get cards to calculate all hashes (including card-derived categories)
+    const cards = await this.getCards(id);
+    const metadataHashes = await this.getHashStringsWithCards(cube, cards);
+    const oracleIds = this.getOracleIds(cards);
+    const oracleHashes = await Promise.all(oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })));
+    const allHashes = [...metadataHashes, ...oracleHashes];
+
     // Delete hash rows
-    const hashes = await this.getHashes(cube);
-    await this.deleteHashes(this.partitionKey(cube), hashes);
+    await this.deleteHashesBySK(this.partitionKey(cube), allHashes);
 
     // Delete cube metadata and cards
     await Promise.all([this.delete(cube), deleteObject(process.env.DATA_BUCKET!, `cube/${id}.json`)]);
@@ -599,15 +654,26 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Save metadata and cards first
     await Promise.all([this.put(cube), putObject(process.env.DATA_BUCKET!, `cube/${cube.id}.json`, cards)]);
 
-    // Create hash rows after cube is saved (writeHashes needs to fetch the cube)
-    const hashes = await this.getHashes(cube);
-    await this.writeHashes(this.partitionKey(cube), hashes);
+    // Create hash rows after cube is saved (including card-derived category hashes)
+    const metadataHashes = await this.getHashStringsWithCards(cube, cards);
+    const oracleIds = this.getOracleIds(cards);
+    const oracleHashes = await Promise.all(oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })));
+    const allHashes = [...metadataHashes, ...oracleHashes];
+    await this.writeHashes(this.partitionKey(cube), allHashes);
   }
 
   /**
    * Overrides update to handle hash row updates.
    */
-  public async update(item: Cube): Promise<void> {
+  /**
+   * Updates a cube's metadata.
+   * @param item - The cube to update
+   * @param options - Update options
+   * @param options.skipTimestampUpdate - If true, does not update date/dateLastUpdated.
+   *                                       Use this for counter updates (numDecks, following)
+   *                                       that shouldn't trigger "recently edited" status.
+   */
+  public async update(item: Cube, options?: { skipTimestampUpdate?: boolean }): Promise<void> {
     if (this.dualWriteEnabled) {
       await CubeModel.update(this.dehydrateItem(item));
     }
@@ -618,10 +684,12 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       SK: this.itemType(),
     });
 
-    // Update timestamps
-    const now = Date.now();
-    item.date = now; // Legacy field
-    item.dateLastUpdated = now;
+    // Update timestamps only if not skipped
+    if (!options?.skipTimestampUpdate) {
+      const now = Date.now();
+      item.date = now; // Legacy field
+      item.dateLastUpdated = now;
+    }
 
     if (!oldCube) {
       // Cube not migrated yet - create it in DynamoDB
@@ -646,7 +714,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const hashesToAdd = newHashes.filter((hash) => !oldHashes.includes(hash));
 
     if (hashesToDelete.length > 0) {
-      await this.deleteHashes(this.partitionKey(item), hashesToDelete);
+      await this.deleteHashesBySK(this.partitionKey(item), hashesToDelete);
     }
 
     if (hashesToAdd.length > 0) {
@@ -655,6 +723,43 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Update metadata
     await super.update(item);
+  }
+
+  /**
+   * Update raw DynamoDB fields for a cube without hydration.
+   * Useful for fixing data issues like null owners during migrations.
+   *
+   * @param cubeId - The cube ID to update
+   * @param updates - Object with fields to update
+   */
+  public async updateRaw(cubeId: string, updates: Record<string, any>): Promise<void> {
+    const PK = `CUBE#${cubeId}`;
+    const SK = 'CUBE';
+
+    // Build update expression
+    const updateExpressionParts: string[] = [];
+    const expressionAttributeNames: Record<string, string> = {};
+    const expressionAttributeValues: Record<string, any> = {};
+
+    let index = 0;
+    for (const [key, value] of Object.entries(updates)) {
+      const nameKey = `#field${index}`;
+      const valueKey = `:value${index}`;
+      updateExpressionParts.push(`${nameKey} = ${valueKey}`);
+      expressionAttributeNames[nameKey] = key;
+      expressionAttributeValues[valueKey] = value;
+      index++;
+    }
+
+    await this.dynamoClient.send(
+      new UpdateCommand({
+        TableName: this.tableName,
+        Key: { PK, SK },
+        UpdateExpression: `SET ${updateExpressionParts.join(', ')}`,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues,
+      }),
+    );
   }
 
   /**
@@ -669,8 +774,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const hashStrings = await this.getHashStrings(cube);
 
     return hashStrings.map((hashString) => ({
-      PK: hashString,
-      SK: this.partitionKey(cube),
+      PK: `HASH#${this.partitionKey(cube)}`,
+      SK: hashString,
       GSI1PK: hashString,
       GSI1SK: `FOLLOWERS#${String(cube.following.length).padStart(10, '0')}`,
       GSI2PK: hashString,
@@ -692,6 +797,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   protected async getHashStrings(cube: Cube): Promise<string[]> {
     const hashes: string[] = [];
 
+    // generic hash
+    hashes.push(await this.hash({ type: 'cube', value: 'all' }));
+
     // ShortId hash
     if (cube.shortId && cube.shortId.length > 0) {
       hashes.push(await this.hash({ type: 'shortid', value: cube.shortId }));
@@ -704,7 +812,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Category hashes
     if (cube.categoryOverride) {
-      hashes.push(await this.hash({ type: 'category', value: cube.categoryOverride }));
+      hashes.push(await this.hash({ type: 'category', value: cube.categoryOverride.toLowerCase() }));
 
       for (const prefix of cube.categoryPrefixes || []) {
         hashes.push(await this.hash({ type: 'category', value: prefix.toLowerCase() }));
@@ -717,20 +825,96 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     }
 
     // Keyword hashes (from cube name)
-    const namewords = cube.name
-      .replace(/[^\w\s]/gi, '')
-      .toLowerCase()
-      .split(' ')
-      .filter((keyword: string) => keyword.length > 0);
+    if (cube.name) {
+      const namewords = cube.name
+        .replace(/[^\w\s]/gi, '')
+        .toLowerCase()
+        .split(' ')
+        .filter((keyword: string) => keyword.length > 0);
 
-    for (let i = 0; i < namewords.length; i++) {
-      for (let j = i + 1; j < namewords.length + 1; j++) {
-        const slice = namewords.slice(i, j);
-        hashes.push(await this.hash({ type: 'keywords', value: slice.join(' ') }));
+      for (let i = 0; i < namewords.length; i++) {
+        for (let j = i + 1; j < namewords.length + 1; j++) {
+          const slice = namewords.slice(i, j);
+          hashes.push(await this.hash({ type: 'keywords', value: slice.join(' ') }));
+        }
       }
     }
 
     return Array.from(new Set(hashes));
+  }
+
+  /**
+   * Gets hash strings for a cube including card-derived categories.
+   * This should be used when we have access to the cube's cards and need complete hashes.
+   */
+  protected async getHashStringsWithCards(cube: Cube, cards: CubeCards): Promise<string[]> {
+    const hashes = await this.getHashStrings(cube);
+
+    // If there's no categoryOverride, we need to calculate categories from cards
+    // and add those category hashes
+    if (!cube.categoryOverride && cards.mainboard.length > 0) {
+      const categories = this.calculateCategoriesFromCards(cards);
+      for (const category of categories) {
+        const categoryHash = await this.hash({ type: 'category', value: category.toLowerCase() });
+        hashes.push(categoryHash);
+      }
+    }
+
+    return Array.from(new Set(hashes));
+  }
+
+  /**
+   * Calculates cube categories based on card legalities.
+   * This mirrors the logic in setCubeType from cubefn.ts
+   */
+  private calculateCategoriesFromCards(cards: CubeCards): string[] {
+    const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
+
+    let pauper = true;
+    let peasant = false;
+    let type = FORMATS.length - 1;
+
+    for (const card of cards.mainboard) {
+      const cardDetails = cardFromId(card.cardID);
+
+      // Check pauper legality
+      if (pauper && cardDetails.legalities.Pauper !== 'legal' && cardDetails.legalities.Pauper !== 'banned') {
+        pauper = false;
+        peasant = true;
+      }
+
+      // Check peasant (uncommon or common in at least one printing)
+      if (!pauper && peasant && cardDetails.rarity !== 'common' && cardDetails.rarity !== 'uncommon') {
+        peasant = false;
+      }
+
+      // Find most restrictive legal format
+      while (type > 0) {
+        const legality = FORMATS[type];
+        if (legality && cardDetails.legalities[legality] !== 'legal' && cardDetails.legalities[legality] !== 'banned') {
+          type -= 1;
+        } else {
+          break;
+        }
+      }
+    }
+
+    const categories: string[] = [];
+
+    // Add base format
+    const baseFormat = FORMATS[type];
+    if (baseFormat) {
+      categories.push(baseFormat);
+    }
+
+    // Add modifiers
+    if (pauper) {
+      categories.push('Pauper');
+    } else if (peasant) {
+      categories.push('Peasant');
+    }
+
+    return categories;
   }
 
   /**
@@ -758,20 +942,29 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       throw new Error('Cube not found when writing hashes');
     }
 
+    // Safely access fields that might be undefined
+    const cubeName = cube.name;
+    const cubeFollowers = cube.following.length;
+    const cubeCardCount = cube.cardCount || 0;
+    const cubeDate = cube.dateLastUpdated || cube.date || Date.now();
+
+    // Use NEW hash row structure: PK = HASH#CUBE#{id}, SK = hashString
+    const hashPK = `HASH#${itemPK}`;
+
     const hashRows = hashes.map((hashString) => ({
-      PK: hashString,
-      SK: itemPK,
+      PK: hashPK,
+      SK: hashString,
       GSI1PK: hashString,
-      GSI1SK: `FOLLOWERS#${String(cube.following.length).padStart(10, '0')}`,
+      GSI1SK: `FOLLOWERS#${String(cubeFollowers).padStart(10, '0')}`,
       GSI2PK: hashString,
-      GSI2SK: `NAME#${cube.name.toLowerCase()}`,
+      GSI2SK: `NAME#${cubeName.toLowerCase()}`,
       GSI3PK: hashString,
-      GSI3SK: `CARDS#${String(cube.cardCount).padStart(10, '0')}`,
+      GSI3SK: `CARDS#${String(cubeCardCount).padStart(10, '0')}`,
       GSI4PK: hashString,
-      GSI4SK: `DATE#${String(cube.date).padStart(15, '0')}`,
-      cubeName: cube.name,
-      cubeFollowers: cube.following.length,
-      cubeCardCount: cube.cardCount,
+      GSI4SK: `DATE#${String(cubeDate).padStart(15, '0')}`,
+      cubeName: cubeName,
+      cubeFollowers: cubeFollowers,
+      cubeCardCount: cubeCardCount,
     }));
 
     // Batch writes in chunks of 25 (DynamoDB limit)
@@ -794,9 +987,10 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
-   * Updates hash rows when cards change (oracle hashes).
+   * Updates hash rows when cards change (oracle hashes and category hashes).
    */
   private async updateHashRows(cube: Cube, oldCards: CubeCards, newCards: CubeCards): Promise<void> {
+    // Handle oracle hash changes
     const oldOracleIds = this.getOracleIds(oldCards);
     const newOracleIds = this.getOracleIds(newCards);
 
@@ -811,8 +1005,29 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       oraclesToAdd.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })),
     );
 
+    // Handle category hash changes (if cube doesn't have categoryOverride)
+    // Categories are derived from cards, so they might change when cards change
+    if (!cube.categoryOverride) {
+      const oldCategories = this.calculateCategoriesFromCards(oldCards);
+      const newCategories = this.calculateCategoriesFromCards(newCards);
+
+      const categoriesToDelete = oldCategories.filter((cat) => !newCategories.includes(cat));
+      const categoriesToAdd = newCategories.filter((cat) => !oldCategories.includes(cat));
+
+      const categoryHashesToDelete = await Promise.all(
+        categoriesToDelete.map((category) => this.hash({ type: 'category', value: category.toLowerCase() })),
+      );
+
+      const categoryHashesToAdd = await Promise.all(
+        categoriesToAdd.map((category) => this.hash({ type: 'category', value: category.toLowerCase() })),
+      );
+
+      hashesToDelete.push(...categoryHashesToDelete);
+      hashesToAdd.push(...categoryHashesToAdd);
+    }
+
     if (hashesToDelete.length > 0) {
-      await this.deleteHashes(this.partitionKey(cube), hashesToDelete);
+      await this.deleteHashesBySK(this.partitionKey(cube), hashesToDelete);
     }
 
     if (hashesToAdd.length > 0) {
@@ -893,7 +1108,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     sortBy: SortOrder = 'popularity',
     ascending: boolean = false,
     lastKey?: Record<string, any>,
-    limit: number = 36,
+    limit?: number,
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'featured', value: 'true' });
 
@@ -918,7 +1133,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     sortBy: SortOrder = 'popularity',
     ascending: boolean = false,
     lastKey?: Record<string, any>,
-    limit: number = 36,
+    limit?: number,
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'category', value: category });
 
@@ -943,7 +1158,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     sortBy: SortOrder = 'popularity',
     ascending: boolean = false,
     lastKey?: Record<string, any>,
-    limit: number = 36,
+    limit?: number,
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'tag', value: tag.toLowerCase() });
 
@@ -962,15 +1177,22 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
   /**
    * Queries cubes by keyword(s) with sorting.
+   * Normalizes the search keywords to match how cube names are stored.
    */
   public async queryByKeyword(
     keywords: string,
     sortBy: SortOrder = 'popularity',
     ascending: boolean = false,
     lastKey?: Record<string, any>,
-    limit: number = 36,
+    limit?: number,
   ): Promise<QueryResult> {
-    const hashString = await this.hash({ type: 'keywords', value: keywords.toLowerCase() });
+    // Normalize keywords the same way we normalize cube names when storing hashes
+    const normalizedKeywords = keywords
+      .replace(/[^\w\s]/gi, '')
+      .toLowerCase()
+      .trim();
+
+    const hashString = await this.hash({ type: 'keywords', value: normalizedKeywords });
 
     if (this.dualWriteEnabled) {
       const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
@@ -993,9 +1215,35 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     sortBy: SortOrder = 'popularity',
     ascending: boolean = false,
     lastKey?: Record<string, any>,
-    limit: number = 36,
+    limit?: number,
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'oracle', value: oracleId });
+
+    if (this.dualWriteEnabled) {
+      const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
+      const cubeIds = result.items.map((item) => item.cube);
+      const cubes = await this.batchGet(cubeIds);
+      return {
+        items: cubes,
+        lastKey: result.lastKey,
+      };
+    }
+
+    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
+  }
+
+  /**
+   * Queries all public cubes using the global 'cube:all' hash with sorting and pagination.
+   * This is the preferred method for getting all cubes with full sort support.
+   */
+  public async queryAllCubes(
+    sortBy: SortOrder = 'popularity',
+    ascending: boolean = false,
+    lastKey?: Record<string, any>,
+    limit?: number,
+  ): Promise<QueryResult> {
+    const hashString = await this.hash({ type: 'cube', value: 'all' });
+    console.log('[CubeDynamoDao] queryAllCubes hash:', hashString, 'sortBy:', sortBy);
 
     if (this.dualWriteEnabled) {
       const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
@@ -1044,18 +1292,33 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const querySortBy = cardCountFilter ? 'cards' : sortBy;
 
     // Query all hashes completely (paginate to end for each)
+    // Use ID-only queries to avoid hydrating cubes that will be filtered out
     const cubeIdSets = await Promise.all(
       hashes.map(async (hash) => {
         const cubeIds = new Set<string>();
         let lastKey: Record<string, any> | undefined = undefined;
+        const [type, value] = hash.split(':');
+
+        if (!type || !value) {
+          return cubeIds;
+        }
+
+        const hashString = await this.hash({ type, value });
 
         do {
-          const result: QueryResult = cardCountFilter
-            ? await this.queryByHashWithCardCountFilter(hash, cardCountFilter, lastKey)
-            : await this.queryByHashWithSort(hash, querySortBy, ascending, lastKey, 100);
+          const result: { cubeIds: string[]; lastKey?: Record<string, any> } = cardCountFilter
+            ? await this.queryByHashWithCardCountFilterForIdsOnly(hashString, cardCountFilter, lastKey)
+            : await this.queryByHashForIdsOnly(hashString, querySortBy, ascending, lastKey);
 
-          result.items.forEach((cube: Cube) => cubeIds.add(cube.id));
+          result.cubeIds.forEach((cubeId: string) => cubeIds.add(cubeId));
           lastKey = result.lastKey;
+
+          // Early exit if any single hash query exceeds 10k cubes - query is too broad
+          if (cubeIds.size > 10000) {
+            throw new Error(
+              `Search query too broad: "${hash}" matches more than 10,000 cubes. Please use a more specific filter to search with multiple criteria.`,
+            );
+          }
         } while (lastKey);
 
         return cubeIds;
@@ -1088,7 +1351,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
     }
 
-    // Fetch cubes
+    // Fetch and hydrate cubes only for the final intersection
     const cubes = await this.batchGet(Array.from(intersectionIds));
 
     // Sort results according to sortBy parameter (always in-memory when card count filter is used)
@@ -1122,7 +1385,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         break;
       case 'date':
         sorted.sort((a, b) => {
-          const diff = a.date - b.date;
+          const diff = a.dateLastUpdated - b.dateLastUpdated;
           return ascending ? diff : -diff;
         });
         break;
@@ -1139,7 +1402,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     sortBy: SortOrder,
     ascending: boolean,
     lastKey?: Record<string, any>,
-    limit: number = 36,
+    limit?: number,
   ): Promise<QueryResult> {
     let indexName: string;
     let gsiPK: string;
@@ -1181,19 +1444,28 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Query hash rows
     const queryResult = await this.dynamoClient.send(new QueryCommand(params));
 
+    console.log(
+      `[CubeDynamoDao] queryByHashWithSort result: ${queryResult.Items?.length || 0} hash rows, index: ${indexName}, hash: ${hash}`,
+    );
+
     if (!queryResult.Items || queryResult.Items.length === 0) {
       return { items: [] };
     }
 
     // Extract cube IDs from hash rows
     const cubeIds = queryResult.Items.map((item) => {
-      // SK contains the cube partition key (CUBE#{id})
-      const sk = item.SK as string;
-      return sk.replace(`${this.itemType()}#`, '');
+      // PK contains the cube partition key: HASH#CUBE#{id}
+      const pk = item.PK as string;
+      // Remove 'HASH#CUBE#' prefix to get the cube ID
+      return pk.replace('HASH#CUBE#', '');
     });
+
+    console.log(`[CubeDynamoDao] Extracted ${cubeIds.length} cube IDs, fetching cubes...`);
 
     // Fetch cubes
     const cubes = await this.batchGet(cubeIds);
+
+    console.log(`[CubeDynamoDao] batchGet returned ${cubes.length} cubes`);
 
     return {
       items: cubes,
@@ -1202,15 +1474,84 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
-   * Helper method to query by hash with card count filter using GSI3 key condition.
-   * Uses DynamoDB key condition expressions for efficient filtering at the database level.
+   * Helper method to query by hash and return only cube IDs (no hydration).
+   * Used by queryByMultipleHashes to avoid hydrating cubes that will be filtered out.
    */
-  private async queryByHashWithCardCountFilter(
+  private async queryByHashForIdsOnly(
+    hash: string,
+    sortBy: SortOrder,
+    ascending: boolean,
+    lastKey?: Record<string, any>,
+    limit?: number,
+  ): Promise<{ cubeIds: string[]; lastKey?: Record<string, any> }> {
+    let indexName: string;
+    let gsiPK: string;
+
+    switch (sortBy) {
+      case 'popularity':
+        indexName = 'GSI1';
+        gsiPK = 'GSI1PK';
+        break;
+      case 'alphabetical':
+        indexName = 'GSI2';
+        gsiPK = 'GSI2PK';
+        break;
+      case 'cards':
+        indexName = 'GSI3';
+        gsiPK = 'GSI3PK';
+        break;
+      case 'date':
+        indexName = 'GSI4';
+        gsiPK = 'GSI4PK';
+        break;
+      default:
+        indexName = 'GSI1';
+        gsiPK = 'GSI1PK';
+    }
+
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: indexName,
+      KeyConditionExpression: `${gsiPK} = :hash`,
+      ExpressionAttributeValues: {
+        ':hash': hash,
+      },
+      ScanIndexForward: ascending,
+      Limit: limit,
+      ExclusiveStartKey: lastKey,
+    };
+
+    // Query hash rows
+    const queryResult = await this.dynamoClient.send(new QueryCommand(params));
+
+    if (!queryResult.Items || queryResult.Items.length === 0) {
+      return { cubeIds: [] };
+    }
+
+    // Extract cube IDs from hash rows (no hydration)
+    const cubeIds = queryResult.Items.map((item) => {
+      // PK contains the cube partition key: HASH#CUBE#{id}
+      const pk = item.PK as string;
+      // Remove 'HASH#CUBE#' prefix to get the cube ID
+      return pk.replace('HASH#CUBE#', '');
+    });
+
+    return {
+      cubeIds,
+      lastKey: queryResult.LastEvaluatedKey,
+    };
+  }
+
+  /**
+   * Helper method to query by hash with card count filter and return only cube IDs (no hydration).
+   * Used by queryByMultipleHashes to avoid hydrating cubes that will be filtered out.
+   */
+  private async queryByHashWithCardCountFilterForIdsOnly(
     hash: string,
     cardCountFilter: { operator: 'eq' | 'gt' | 'lt'; value: number },
     lastKey?: Record<string, any>,
-    limit: number = 100,
-  ): Promise<QueryResult> {
+    limit?: number,
+  ): Promise<{ cubeIds: string[]; lastKey?: Record<string, any> }> {
     const paddedCardCount = `CARDS#${String(cardCountFilter.value).padStart(10, '0')}`;
 
     let keyConditionExpression: string;
@@ -1247,21 +1588,19 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const queryResult = await this.dynamoClient.send(new QueryCommand(params));
 
     if (!queryResult.Items || queryResult.Items.length === 0) {
-      return { items: [] };
+      return { cubeIds: [] };
     }
 
-    // Extract cube IDs from hash rows
+    // Extract cube IDs from hash rows (no hydration)
     const cubeIds = queryResult.Items.map((item) => {
-      // SK contains the cube partition key (CUBE#{id})
-      const sk = item.SK as string;
-      return sk.replace(`${this.itemType()}#`, '');
+      // PK contains the cube partition key: HASH#CUBE#{id}
+      const pk = item.PK as string;
+      // Remove 'HASH#CUBE#' prefix to get the cube ID
+      return pk.replace('HASH#CUBE#', '');
     });
 
-    // Fetch cubes
-    const cubes = await this.batchGet(cubeIds);
-
     return {
-      items: cubes,
+      cubeIds,
       lastKey: queryResult.LastEvaluatedKey,
     };
   }
@@ -1350,128 +1689,164 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
-   * Scans all cubes by querying GSI3 shard by shard.
-   * GSI3 is sharded by the last character of cube ID (0-9).
-   * This method iterates through all 10 shards and yields cubes from each shard.
+   * Gets all hash rows for a specific cube.
+   * This is useful for cleanup/sweeper operations to verify or remove stale hashes.
    *
-   * @param batchSize - Number of items to fetch per query (default 100)
-   * @returns AsyncGenerator that yields batches of cubes
+   * @param cubeId - The ID of the cube to get hashes for
+   * @returns Promise with array of hash strings and their metadata
    */
-  public async *scanAllCubes(batchSize: number = 100): AsyncGenerator<Cube[], void, undefined> {
-    if (this.dualWriteEnabled) {
-      throw new Error('scanAllCubes is not supported in dual write mode');
+  public async getHashesForCube(cubeId: string): Promise<{
+    hashes: Array<{
+      hash: string;
+      cubeName?: string;
+      cubeFollowers?: number;
+      cubeCardCount?: number;
+    }>;
+    lastKey?: Record<string, any>;
+  }> {
+    const cubePK = this.typedKey(cubeId);
+    const hashPK = `HASH#${cubePK}`;
+
+    const queryResult = await this.dynamoClient.send(
+      new QueryCommand({
+        TableName: this.tableName,
+        KeyConditionExpression: 'PK = :pk',
+        ExpressionAttributeValues: {
+          ':pk': hashPK,
+        },
+      }),
+    );
+
+    if (!queryResult.Items || queryResult.Items.length === 0) {
+      return { hashes: [] };
     }
 
-    // Query each shard (0-9)
-    for (let shard = 0; shard < 10; shard++) {
-      let lastKey: Record<string, any> | undefined = undefined;
+    const hashes = queryResult.Items.map((item: any) => ({
+      hash: item.SK as string,
+      cubeName: item.cubeName,
+      cubeFollowers: item.cubeFollowers,
+      cubeCardCount: item.cubeCardCount,
+    }));
 
-      do {
-        const params: QueryCommandInput = {
-          TableName: this.tableName,
-          IndexName: 'GSI3',
-          KeyConditionExpression: 'GSI3PK = :shardKey',
-          ExpressionAttributeValues: {
-            ':shardKey': `${this.itemType()}#${shard}`,
+    return {
+      hashes,
+      lastKey: queryResult.LastEvaluatedKey,
+    };
+  }
+
+  /**
+   * Repairs hash rows for a cube by comparing current hashes with expected hashes
+   * and writing the delta (removing stale hashes and adding missing ones).
+   * This includes both metadata hashes and card (oracle) hashes.
+   * This is useful for cleanup operations when hash logic changes or data becomes inconsistent.
+   *
+   * @param cubeId - The ID of the cube to repair hashes for
+   * @param fixOwner - Optional owner ID to fix if cube has null/undefined owner
+   * @returns Promise with repair statistics
+   */
+  public async repairHashes(
+    cubeId: string,
+    fixOwner?: string,
+  ): Promise<{
+    added: number;
+    removed: number;
+    unchanged: number;
+    ownerFixed: boolean;
+  }> {
+    // Get the cube
+    const cube = await this.getById(cubeId);
+
+    if (!cube) {
+      throw new Error(`Cube not found: ${cubeId}`);
+    }
+
+    let ownerFixed = false;
+
+    // Fix owner if needed - check for null, undefined, or empty string owner ID
+    const ownerId = typeof cube.owner === 'string' ? cube.owner : cube.owner?.id;
+    if (fixOwner && (!ownerId || ownerId === null || ownerId === undefined)) {
+      await this.updateRaw(cubeId, { owner: fixOwner });
+      // Update the owner in the cube object for hash calculation
+      cube.owner = fixOwner as any;
+      ownerFixed = true;
+    }
+
+    // Get current hash rows
+    const currentHashesResult = await this.getHashesForCube(cubeId);
+    const currentHashes = new Set(currentHashesResult.hashes.map((h) => h.hash));
+
+    // Calculate expected hashes (metadata + oracle + card-derived categories)
+    const expectedHashes = new Set<string>();
+
+    // Get cards first so we can calculate card-derived hashes
+    const cards = await this.getCards(cubeId);
+
+    // Add metadata hashes (including card-derived categories)
+    const metadataHashes = await this.getHashStringsWithCards(cube, cards);
+    metadataHashes.forEach((hash) => expectedHashes.add(hash));
+
+    // Add oracle hashes from cards
+    const oracleIds = this.getOracleIds(cards);
+    const oracleHashes = await Promise.all(oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })));
+    oracleHashes.forEach((hash) => expectedHashes.add(hash));
+
+    // Find hashes to add and remove
+    const hashesToAdd = Array.from(expectedHashes).filter((hash) => !currentHashes.has(hash));
+    const hashesToRemove = Array.from(currentHashes).filter((hash) => !expectedHashes.has(hash));
+    const unchanged = Array.from(expectedHashes).filter((hash) => currentHashes.has(hash));
+
+    // Remove stale hashes
+    if (hashesToRemove.length > 0) {
+      await this.deleteHashesBySK(this.partitionKey(cube), hashesToRemove);
+    }
+
+    // Add missing hashes
+    if (hashesToAdd.length > 0) {
+      await this.writeHashes(this.partitionKey(cube), hashesToAdd);
+    }
+
+    return {
+      added: hashesToAdd.length,
+      removed: hashesToRemove.length,
+      unchanged: unchanged.length,
+      ownerFixed,
+    };
+  }
+
+  /**
+   * Deletes hash rows by their SK (hash string) values.
+   * This is used by repairHashes to remove specific hash rows.
+   *
+   * @param itemPK - The partition key of the cube (CUBE#{id})
+   * @param hashes - The hash strings (SK values) to delete
+   */
+  private async deleteHashesBySK(itemPK: string, hashes: string[]): Promise<void> {
+    if (hashes.length === 0) {
+      return;
+    }
+
+    const hashPK = `HASH#${itemPK}`;
+    const hashRows: HashRow[] = hashes.map((hash) => ({
+      PK: hashPK,
+      SK: hash,
+    }));
+
+    // Batch deletes in chunks of 25 (DynamoDB limit)
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < hashRows.length; i += BATCH_SIZE) {
+      const batch = hashRows.slice(i, i + BATCH_SIZE);
+
+      await this.dynamoClient.send(
+        new BatchWriteCommand({
+          RequestItems: {
+            [this.tableName]: batch.map((hashRow) => ({
+              DeleteRequest: {
+                Key: hashRow,
+              },
+            })),
           },
-          Limit: batchSize,
-          ExclusiveStartKey: lastKey,
-        };
-
-        const result = await this.query(params);
-
-        if (result.items.length > 0) {
-          yield result.items;
-        }
-
-        lastKey = result.lastKey;
-      } while (lastKey);
+        }),
+      );
     }
-  }
-
-  /**
-   * Scans the entire table for cube items (SK = 'CUBE').
-   * This is useful for migration scripts that need to process all cubes.
-   *
-   * Note: Uses FilterExpression to filter server-side, reducing data transfer.
-   * The scan may return 0 items but still have LastEvaluatedKey if filtered items
-   * were encountered - callers must continue scanning while lastKey exists.
-   *
-   * @param lastKey - Optional key to continue from a previous scan
-   * @returns Promise with items and lastKey for pagination
-   */
-  public async scanCubeItems(lastKey?: Record<string, any>): Promise<{
-    items: Cube[];
-    lastKey?: Record<string, any>;
-  }> {
-    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
-
-    const scanResult = await this.dynamoClient.send(
-      new ScanCommand({
-        TableName: this.tableName,
-        FilterExpression: 'begins_with(PK, :cubePrefix) AND SK = :sk',
-        ExpressionAttributeValues: {
-          ':cubePrefix': 'CUBE#',
-          ':sk': 'CUBE',
-        },
-        ExclusiveStartKey: lastKey,
-      }),
-    );
-
-    // May return 0 items but still have LastEvaluatedKey - that's expected
-    if (!scanResult.Items || scanResult.Items.length === 0) {
-      return { items: [], lastKey: scanResult.LastEvaluatedKey };
-    }
-
-    // Extract cube IDs from items
-    const cubeIds = scanResult.Items.map((item: any) => {
-      // Extract ID from PK (CUBE#{id})
-      const pk = item.PK as string;
-      return pk.replace('CUBE#', '');
-    });
-
-    // Fetch full cube objects
-    const cubes = await this.batchGet(cubeIds);
-
-    return {
-      items: cubes,
-      lastKey: scanResult.LastEvaluatedKey,
-    };
-  }
-
-  /**
-   * Scans the entire table for raw cube items without hydration.
-   * Useful for migration scripts that need to inspect/fix data issues.
-   *
-   * @param lastKey - Optional key to continue from a previous scan
-   * @returns Promise with raw unhydrated items and lastKey for pagination
-   */
-  public async scanRawCubeItems(lastKey?: Record<string, any>): Promise<{
-    items: UnhydratedCube[];
-    lastKey?: Record<string, any>;
-  }> {
-    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
-
-    const scanResult = await this.dynamoClient.send(
-      new ScanCommand({
-        TableName: this.tableName,
-        FilterExpression: 'begins_with(PK, :cubePrefix) AND SK = :sk',
-        ExpressionAttributeValues: {
-          ':cubePrefix': 'CUBE#',
-          ':sk': 'CUBE',
-        },
-        ExclusiveStartKey: lastKey,
-      }),
-    );
-
-    // May return 0 items but still have LastEvaluatedKey - that's expected
-    if (!scanResult.Items || scanResult.Items.length === 0) {
-      return { items: [], lastKey: scanResult.LastEvaluatedKey };
-    }
-
-    return {
-      items: scanResult.Items as UnhydratedCube[],
-      lastKey: scanResult.LastEvaluatedKey,
-    };
   }
 }

@@ -4,14 +4,7 @@ import Notice from 'dynamo/models/notice';
 import p1p1PackModel from 'dynamo/models/p1p1Pack';
 import User from 'dynamo/models/user';
 import { csrfProtection, ensureAuth } from 'router/middleware';
-import {
-  abbreviate,
-  cachePromise,
-  generateBalancedPack,
-  generatePack,
-  isCubeListed,
-  isCubeViewable,
-} from 'serverutils/cubefn';
+import { abbreviate, cachePromise, generateBalancedPack, generatePack, isCubeViewable } from 'serverutils/cubefn';
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
 import { generatePackImage } from 'serverutils/imageUtils';
 import generateMeta from 'serverutils/meta';
@@ -206,27 +199,6 @@ export const getMoreDecksHandler = async (req: Request, res: Response) => {
   }
 };
 
-export const recentsHandler = async (req: Request, res: Response) => {
-  const result = await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, 'date', false);
-
-  return render(req, res, 'RecentlyUpdateCubesPage', {
-    items: result.items.filter((cube: any) => isCubeListed(cube, req.user)),
-    lastKey: result.lastKey,
-  });
-};
-
-export const getMoreRecentsHandler = async (req: Request, res: Response) => {
-  const { lastKey } = req.body;
-
-  const result = await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, 'date', false, lastKey);
-
-  return res.status(200).send({
-    success: 'true',
-    items: result.items.filter((cube: any) => isCubeListed(cube, req.user)),
-    lastKey: result.lastKey,
-  });
-};
-
 export const followHandler = async (req: Request, res: Response) => {
   const { user } = req;
   const cube = await cubeDao.getById(req.params.id!);
@@ -251,7 +223,7 @@ export const followHandler = async (req: Request, res: Response) => {
   //TODO: Can remove after fixing models to not muck with the original input
   const cubeOwner = cube.owner;
   await User.update(user!);
-  await cubeDao.update(cube);
+  await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   await addNotification(
     cubeOwner,
@@ -280,7 +252,7 @@ export const unfollowHandler = async (req: Request, res: Response) => {
   user!.followedCubes = user!.followedCubes?.filter((id: string) => cube.id !== id) || [];
 
   await User.update(user!);
-  await cubeDao.update(cube);
+  await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   return res.status(200).send({
     success: 'true',
@@ -523,16 +495,6 @@ export const routes = [
     path: '/getmoredecks/:id',
     method: 'post',
     handler: [getMoreDecksHandler],
-  },
-  {
-    path: '/recents',
-    method: 'get',
-    handler: [csrfProtection, recentsHandler],
-  },
-  {
-    path: '/getmorerecents',
-    method: 'post',
-    handler: [csrfProtection, ensureAuth, getMoreRecentsHandler],
   },
   {
     path: '/follow/:id',

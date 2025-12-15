@@ -38,7 +38,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ recents, featured, drafted, p
             className="mt-4"
             cubes={recents}
             alternateViewFewer={
-              <Button color="primary" block type="link" href={`/cube/recents`}>
+              <Button color="primary" block type="link" href={`/search?order=date&ascending=false`}>
                 View All
               </Button>
             }

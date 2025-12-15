@@ -107,7 +107,7 @@ export const startSealedHandler = async (req: Request, res: Response) => {
     cube.numDecks += 1;
 
     const cubeOwner = cube.owner;
-    await cubeDao.update(cube);
+    await cubeDao.update(cube, { skipTimestampUpdate: true });
 
     if (!cube.disableAlerts && cubeOwner) {
       await addNotification(

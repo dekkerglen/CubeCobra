@@ -153,7 +153,7 @@ export const associateNewDraft = async (
   const id = await draftDao.createDraft(newDraft);
 
   cube.numDecks += 1;
-  await cubeDao.update(cube);
+  await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   record.draft = id;
   await Record.put(record);

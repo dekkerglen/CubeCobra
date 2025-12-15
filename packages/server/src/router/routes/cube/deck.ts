@@ -541,7 +541,7 @@ export const rebuildHandler = async (req: Request, res: Response) => {
     const cubeOwner = cube.owner;
 
     const id = await draftDao.createDraft(deck);
-    await cubeDao.update(cube);
+    await cubeDao.update(cube, { skipTimestampUpdate: true });
 
     if (user && cube.owner.id !== user.id && !cube.disableAlerts) {
       await addNotification(
@@ -745,7 +745,7 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
     const id = await draftDao.createDraft(deck);
 
     cube.numDecks += 1;
-    await cubeDao.update(cube);
+    await cubeDao.update(cube, { skipTimestampUpdate: true });
 
     return redirect(req, res, `/draft/deckbuilder/${id}`);
   } catch (err) {

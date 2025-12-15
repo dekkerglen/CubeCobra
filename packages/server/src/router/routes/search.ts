@@ -4,31 +4,40 @@ import { SortOrder as DaoSortOrder } from 'dynamo/dao/CubeDynamoDao';
 import { getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeListed } from 'serverutils/cubefn';
 import { render } from 'serverutils/render';
-import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 
 import { Request, Response } from '../../types/express';
 
-type SortOrder = 'pop' | 'alpha' | 'cards';
+type SortOrder = 'pop' | 'alpha' | 'cards' | 'date';
 
 interface CardQuery {
   type: 'card' | 'oracle';
   value: string;
+  originalToken: string;
 }
 
 interface KeywordQuery {
   type: 'keywords';
   value: string;
+  originalToken: string;
 }
 
 interface TagQuery {
   type: 'tag';
   value: string;
+  originalToken: string;
+}
+
+interface CategoryQuery {
+  type: 'category';
+  value: string;
+  originalToken: string;
 }
 
 interface SizeQuery {
   type: 'size';
   operator: 'eq' | 'gt' | 'lt';
   value: number;
+  originalToken: string;
 }
 
 const tokenize = (query: string): string[] => {
@@ -68,16 +77,16 @@ const getCardQueries = (tokens: string[], printing: PrintingPreference = Printin
     const split = token.split(':');
 
     if (split[0] === 'oracle' && split[1]) {
-      queries.push({ type: 'oracle', value: split[1] });
+      queries.push({ type: 'oracle', value: split[1], originalToken: token });
     }
 
     if (split[0] === 'card' && split[1]) {
       const card = getMostReasonable(split[1], printing);
 
       if (card) {
-        queries.push({ type: 'card', value: card.oracle_id });
+        queries.push({ type: 'card', value: card.oracle_id, originalToken: token });
       } else {
-        queries.push({ type: 'card', value: '' });
+        queries.push({ type: 'card', value: '', originalToken: token });
       }
     }
   }
@@ -92,11 +101,16 @@ const getKeywordQueries = (tokens: string[]): KeywordQuery[] => {
     const split = token.split(':');
 
     if (split[0] === 'keywords' && split[1]) {
-      queries.push({ type: 'keywords', value: split[1] });
+      queries.push({ type: 'keywords', value: split[1], originalToken: token });
     }
 
+    // Only treat as keyword if it doesn't have a colon and doesn't match size/cards pattern
     if (split.length === 1 && split[0] && split[0].length > 0) {
-      queries.push({ type: 'keywords', value: split[0] });
+      // Check if it matches size/cards pattern (e.g., "size>250", "cards=399")
+      const sizeMatch = token.match(/^(?:size|cards)([><=])\d+$/i);
+      if (!sizeMatch) {
+        queries.push({ type: 'keywords', value: split[0], originalToken: token });
+      }
     }
   }
 
@@ -110,7 +124,21 @@ const getTagQueries = (tokens: string[]): TagQuery[] => {
     const split = token.split(':');
 
     if (split[0] === 'tag' && split[1]) {
-      queries.push({ type: 'tag', value: split[1] });
+      queries.push({ type: 'tag', value: split[1], originalToken: token });
+    }
+  }
+
+  return queries;
+};
+
+const getCategoryQueries = (tokens: string[]): CategoryQuery[] => {
+  const queries: CategoryQuery[] = [];
+
+  for (const token of tokens) {
+    const split = token.split(':');
+
+    if (split[0] === 'category' && split[1]) {
+      queries.push({ type: 'category', value: split[1], originalToken: token });
     }
   }
 
@@ -139,7 +167,7 @@ const getSizeQueries = (tokens: string[]): SizeQuery[] => {
         continue;
       }
 
-      queries.push({ type: 'size', operator: op, value });
+      queries.push({ type: 'size', operator: op, value, originalToken: token });
     }
   }
 
@@ -150,7 +178,9 @@ const getHumanReadableQuery = (
   cardQueries: CardQuery[],
   keywordQueries: KeywordQuery[],
   tagQueries: TagQuery[],
+  categoryQueries: CategoryQuery[],
   sizeQueries: SizeQuery[],
+  ignoredTokens: string[],
 ): string[] => {
   const result: string[] = [];
 
@@ -171,9 +201,17 @@ const getHumanReadableQuery = (
     result.push(`Cube has tag "${query.value}"`);
   }
 
+  for (const query of categoryQueries) {
+    result.push(`Cube category "${query.value}"`);
+  }
+
   for (const query of sizeQueries) {
     const opText = query.operator === 'eq' ? '=' : query.operator === 'gt' ? '>' : '<';
     result.push(`Cube size ${opText} ${query.value} cards`);
+  }
+
+  for (const token of ignoredTokens) {
+    result.push(`Ignored unrecognized query: "${token}"`);
   }
 
   if (result.length === 0) {
@@ -200,6 +238,8 @@ const mapSortOrder = (order: SortOrder): DaoSortOrder => {
       return 'alphabetical';
     case 'cards':
       return 'cards';
+    case 'date':
+      return 'date';
     default:
       return 'popularity';
   }
@@ -212,6 +252,7 @@ const buildHashesForQuery = (
   cardQueries: CardQuery[],
   keywordQueries: KeywordQuery[],
   tagQueries: TagQuery[],
+  categoryQueries: CategoryQuery[],
 ): string[] => {
   const hashes: string[] = [];
 
@@ -227,15 +268,29 @@ const buildHashesForQuery = (
     hashes.push(`tag:${query.value.toLowerCase()}`);
   }
 
+  // Add category hashes for category queries
+  for (const query of categoryQueries) {
+    hashes.push(`category:${query.value.toLowerCase()}`);
+  }
+
   // Add keyword hashes for keyword queries
   // Note: For multiple keywords, we'll use the first one as primary hash
   // and filter the rest in memory
+  // Normalize keywords the same way cube names are normalized when storing hashes
   if (keywordQueries.length > 0 && keywordQueries[0]) {
-    hashes.push(`keywords:${keywordQueries[0].value.toLowerCase()}`);
+    const normalizedKeyword = keywordQueries[0].value
+      .replace(/[^\w\s]/gi, '')
+      .toLowerCase()
+      .trim();
+    hashes.push(`keywords:${normalizedKeyword}`);
   }
 
-  // If no hashes, return empty array - performSearch will handle this case
-  // by querying all public cubes via queryByVisibility
+  // If no hashes, use the global 'cube:all' hash to query all public cubes
+  // This allows us to use the efficient hash-based sorting
+  if (hashes.length === 0) {
+    hashes.push('cube:all');
+  }
+
   return hashes;
 };
 
@@ -243,6 +298,7 @@ const performSearch = async (
   cardQueries: CardQuery[],
   keywordQueries: KeywordQuery[],
   tagQueries: TagQuery[],
+  categoryQueries: CategoryQuery[],
   sizeQueries: SizeQuery[],
   order: SortOrder,
   ascending: boolean,
@@ -266,7 +322,15 @@ const performSearch = async (
     };
   }
 
-  const hashes = buildHashesForQuery(cardQueries, keywordQueries, tagQueries);
+  if (categoryQueries.length > 10) {
+    return {
+      error: 'Can only search for up to 10 categories at a time',
+      cubes: [],
+      lastKey: null,
+    };
+  }
+
+  const hashes = buildHashesForQuery(cardQueries, keywordQueries, tagQueries, categoryQueries);
 
   if (hashes.length > 10) {
     return {
@@ -289,39 +353,51 @@ const performSearch = async (
     let cubes: any[];
     let resultLastKey: any = null;
 
-    // If no specific queries, get all public cubes via visibility query
-    if (hashes.length === 0) {
-      console.log('[Search] No hashes, querying all public cubes', { lastKey });
-      // Query for all public cubes using queryByVisibility (single page only)
-      const result = await cubeDao.queryByVisibility(
-        CUBE_VISIBILITY.PUBLIC,
-        mapSortOrder(order),
-        ascending,
-        lastKey || undefined,
-        36,
-      );
-      console.log(`[Search] Found ${result.items.length} public cubes`);
+    if (hashes.length === 1) {
+      console.log('[Search] Querying by single hash', { hash: hashes[0], cardCountFilter, lastKey });
+      // Determine which query method to use based on hash prefix
+      const hash = hashes[0] || '';
+      let result;
+
+      if (hash.startsWith('oracle:')) {
+        const oracleId = hash.substring('oracle:'.length);
+        console.log('[Search] Using queryByOracleId', { oracleId });
+        result = await cubeDao.queryByOracleId(oracleId, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByOracleId returned ${result.items.length} cubes`);
+      } else if (hash.startsWith('tag:')) {
+        const tag = hash.substring('tag:'.length);
+        console.log('[Search] Using queryByTag', { tag });
+        result = await cubeDao.queryByTag(tag, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByTag returned ${result.items.length} cubes`);
+      } else if (hash.startsWith('keywords:')) {
+        const keywords = hash.substring('keywords:'.length);
+        console.log('[Search] Using queryByKeyword', { keywords });
+        result = await cubeDao.queryByKeyword(keywords, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByKeyword returned ${result.items.length} cubes`);
+      } else if (hash.startsWith('category:')) {
+        const category = hash.substring('category:'.length);
+        console.log('[Search] Using queryByCategory', { category });
+        result = await cubeDao.queryByCategory(category, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByCategory returned ${result.items.length} cubes`);
+      } else if (hash === 'featured:true') {
+        console.log('[Search] Using queryByFeatured');
+        result = await cubeDao.queryByFeatured(mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByFeatured returned ${result.items.length} cubes`);
+      } else if (hash === 'cube:all') {
+        console.log('[Search] Using queryAllCubes to query all cubes');
+        result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryAllCubes returned ${result.items.length} cubes`);
+      } else {
+        console.log('[Search] Unknown hash type, skipping', { hash });
+        // Unknown hash type - return empty results
+        result = { items: [], lastKey: undefined };
+      }
+
       cubes = result.items;
       resultLastKey = result.lastKey;
-
-      // Apply card count filter if present
-      if (cardCountFilter) {
-        cubes = cubes.filter((cube: any) => {
-          const cardCount = cube.cardCount || 0;
-          switch (cardCountFilter.operator) {
-            case 'eq':
-              return cardCount === cardCountFilter.value;
-            case 'gt':
-              return cardCount > cardCountFilter.value;
-            case 'lt':
-              return cardCount < cardCountFilter.value;
-            default:
-              return true;
-          }
-        });
-      }
     } else {
-      // Use queryByMultipleHashes from cubeDao
+      console.log('[Search] Querying by multiple hashes', { hashes, cardCountFilter });
+      // Use queryByMultipleHashes from cubeDao (which efficiently handles cardCountFilter natively)
       cubes = await cubeDao.queryByMultipleHashes(hashes, mapSortOrder(order), ascending, cardCountFilter);
       // Note: queryByMultipleHashes doesn't support pagination yet
       resultLastKey = null;
@@ -331,28 +407,8 @@ const performSearch = async (
     const visibleCubes = cubes.filter((cube: any) => isCubeListed(cube, user));
     console.log(`[Search] After visibility filter: ${visibleCubes.length} cubes`);
 
-    // Apply additional keyword filters (for keywords beyond the first one)
-    let filteredCubes = visibleCubes;
-    if (keywordQueries.length > 1) {
-      filteredCubes = visibleCubes.filter((cube: any) => {
-        const cubeName = cube.name.toLowerCase();
-        for (let i = 1; i < keywordQueries.length; i++) {
-          const query = keywordQueries[i];
-          if (query && !cubeName.includes(query.value.toLowerCase())) {
-            return false;
-          }
-        }
-        return true;
-      });
-      console.log(`[Search] After keyword filter: ${filteredCubes.length} cubes`);
-    }
-
-    // Limit to 36 results per page
-    const paginatedCubes = filteredCubes.slice(0, 36);
-    console.log(`[Search] Final paginated result: ${paginatedCubes.length} cubes`);
-
     return {
-      cubes: paginatedCubes,
+      cubes: visibleCubes,
       lastKey: resultLastKey,
     };
   } catch (error: any) {
@@ -385,14 +441,34 @@ const searchCubes = async (
   const cardQueries = getCardQueries(tokens, user?.defaultPrinting);
   const keywordQueries = getKeywordQueries(tokens);
   const tagQueries = getTagQueries(tokens);
+  const categoryQueries = getCategoryQueries(tokens);
   const sizeQueries = getSizeQueries(tokens);
 
-  console.log('[Search] Parsed queries:', { cardQueries, keywordQueries, tagQueries, sizeQueries });
+  // Track which tokens were actually used in queries
+  const usedTokens = new Set<string>();
+  cardQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+  keywordQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+  tagQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+  categoryQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+  sizeQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+
+  // Find tokens that weren't used in any query
+  const ignoredTokens = tokens.filter((token) => !usedTokens.has(token.toLowerCase()));
+
+  console.log('[Search] Parsed queries:', {
+    cardQueries,
+    keywordQueries,
+    tagQueries,
+    categoryQueries,
+    sizeQueries,
+    ignoredTokens,
+  });
 
   const searchResult = await performSearch(
     cardQueries,
     keywordQueries,
     tagQueries,
+    categoryQueries,
     sizeQueries,
     order,
     ascending,
@@ -405,7 +481,14 @@ const searchCubes = async (
   return {
     cubes: searchResult.cubes,
     lastKey: searchResult.lastKey,
-    parsedQuery: getHumanReadableQuery(cardQueries, keywordQueries, tagQueries, sizeQueries),
+    parsedQuery: getHumanReadableQuery(
+      cardQueries,
+      keywordQueries,
+      tagQueries,
+      categoryQueries,
+      sizeQueries,
+      ignoredTokens,
+    ),
     error: searchResult.error,
   };
 };

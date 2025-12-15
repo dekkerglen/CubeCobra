@@ -4,18 +4,17 @@ import { render } from 'serverutils/render';
 import { cubeDao, draftDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../types/express';
-import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 
 const exploreHandler = async (req: Request, res: Response) => {
-  const recents = (await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, 'date', false)).items.filter((cube: any) =>
+  const recents = (await cubeDao.queryAllCubes('date', false)).items.filter((cube: any) =>
     isCubeListed(cube, req.user),
   );
 
   const featured = await getFeaturedCubes();
 
-  const popular = (await cubeDao.queryByVisibility(CUBE_VISIBILITY.PUBLIC, 'popularity', false)).items.filter(
-    (cube: any) => isCubeListed(cube, req.user),
+  const popular = (await cubeDao.queryAllCubes('popularity', false)).items.filter((cube: any) =>
+    isCubeListed(cube, req.user),
   );
 
   const recentDecks = await draftDao.queryByTypeAndDate(DRAFT_TYPES.DRAFT);
@@ -24,9 +23,9 @@ const exploreHandler = async (req: Request, res: Response) => {
   );
 
   return render(req, res, 'ExplorePage', {
-    recents: recents.sort((a: any, b: any) => b.date - a.date).slice(0, 12),
+    recents: recents.sort((a: any, b: any) => b.dateLastUpdated - a.dateLastUpdated).slice(0, 12),
     featured,
-    drafted: recentlyDrafted.sort((a: any, b: any) => b.date - a.date).slice(0, 12),
+    drafted: recentlyDrafted.sort((a: any, b: any) => b.dateLastUpdated - a.dateLastUpdated).slice(0, 12),
     popular: popular.sort((a: any, b: any) => b.following.length - a.following.length).slice(0, 12),
   });
 };
