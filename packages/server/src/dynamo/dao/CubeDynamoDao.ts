@@ -16,8 +16,10 @@
  * - queryByTag(tag, sortBy): Get cubes by tag with sorting
  * - queryByKeyword(keywords, sortBy): Get cubes by name keywords with sorting
  * - queryByOracleId(oracleId, sortBy): Get cubes containing a specific card
- * - queryByMultipleHashes(hashes, sortBy, cardCountFilter): Get cubes matching ALL hash criteria (max 10 hashes)
- *   with optional card count filtering (eq/gt/lt)
+ * - queryByMultipleHashes(hashes, sortBy, lastKey, cardCountFilter): Get cubes matching ALL hash criteria
+ *   using efficient two-phase querying (first hash + filtering). Uses GSI for sorting (not in-memory).
+ *   Card count filters are applied in memory. Supports pagination.
+ *   Tip: Put most restrictive criteria first for best performance.
  * - getHashesForCube(cubeId): Get all hash rows for a cube (for cleanup/sweeper operations)
  * - repairHashes(cubeId): Repair hash rows by comparing current vs expected and writing the delta
  *
@@ -1260,102 +1262,198 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
   /**
    * Queries cubes that match ALL provided hash criteria (intersection).
-   * Paginates through all results for each hash and returns cubes present in all result sets.
+   * Uses a two-phase approach:
+   * 1. Query the first hash to get a page of candidates (using GSI for sorting)
+   * 2. Load all hashes for those candidates and filter by remaining criteria
+   * 3. Apply card count filter in memory if provided
+   * 4. Return results once we have hits, or continue up to 10 pages
    *
-   * @param hashes - Array of hash strings to query (max 10)
-   * @param sortBy - How to sort the final results
+   * @param hashes - Array of hash strings to query. First hash should be most restrictive.
+   * @param sortBy - How to sort the results from the first hash query (uses appropriate GSI)
    * @param ascending - Sort direction
+   * @param lastKey - Pagination key from previous query
    * @param cardCountFilter - Optional filter for card count { operator: 'eq' | 'gt' | 'lt', value: number }
-   * @returns Cubes that match ALL hash criteria
+   * @returns Query result with cubes and pagination key
    * @throws Error if dual write mode is enabled (old data model doesn't support this operation)
    */
   public async queryByMultipleHashes(
     hashes: string[],
     sortBy: SortOrder = 'popularity',
     ascending: boolean = false,
+    lastKey?: Record<string, any>,
     cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
-  ): Promise<Cube[]> {
+  ): Promise<QueryResult> {
+    console.log('[queryByMultipleHashes] Starting query', {
+      hashCount: hashes.length,
+      sortBy,
+      ascending,
+      hasLastKey: !!lastKey,
+      cardCountFilter,
+    });
+
     if (hashes.length === 0) {
-      return [];
+      return { items: [] };
     }
 
-    if (hashes.length > 10) {
-      throw new Error('Cannot query more than 10 hashes at once');
+    if (hashes.length === 1) {
+      // Single hash - use the optimized single-hash query
+      console.log('[queryByMultipleHashes] Single hash detected, using optimized query');
+      const [type, value] = hashes[0]!.split(':');
+      if (!type || !value) {
+        return { items: [] };
+      }
+      const hashString = await this.hash({ type, value });
+      return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey);
     }
 
     if (this.dualWriteEnabled) {
       throw new Error('queryByMultipleHashes is not supported in dual write mode');
     }
 
-    // If card count filter is present, we must use GSI3 (cards) for the query
-    // to leverage key condition on the sort key
-    const querySortBy = cardCountFilter ? 'cards' : sortBy;
-
-    // Query all hashes completely (paginate to end for each)
-    // Use ID-only queries to avoid hydrating cubes that will be filtered out
-    const cubeIdSets = await Promise.all(
+    // Convert all hash strings
+    const hashStrings = await Promise.all(
       hashes.map(async (hash) => {
-        const cubeIds = new Set<string>();
-        let lastKey: Record<string, any> | undefined = undefined;
         const [type, value] = hash.split(':');
-
         if (!type || !value) {
-          return cubeIds;
+          return null;
         }
-
-        const hashString = await this.hash({ type, value });
-
-        do {
-          const result: { cubeIds: string[]; lastKey?: Record<string, any> } = cardCountFilter
-            ? await this.queryByHashWithCardCountFilterForIdsOnly(hashString, cardCountFilter, lastKey)
-            : await this.queryByHashForIdsOnly(hashString, querySortBy, ascending, lastKey);
-
-          result.cubeIds.forEach((cubeId: string) => cubeIds.add(cubeId));
-          lastKey = result.lastKey;
-
-          // Early exit if any single hash query exceeds 10k cubes - query is too broad
-          if (cubeIds.size > 10000) {
-            throw new Error(
-              `Search query too broad: "${hash}" matches more than 10,000 cubes. Please use a more specific filter to search with multiple criteria.`,
-            );
-          }
-        } while (lastKey);
-
-        return cubeIds;
+        return this.hash({ type, value });
       }),
     );
 
-    // Find intersection - cubes present in ALL sets
-    if (cubeIdSets.length === 0 || !cubeIdSets[0]) {
-      return [];
+    // Filter out invalid hashes
+    const validHashStrings = hashStrings.filter((h): h is string => h !== null);
+    if (validHashStrings.length === 0) {
+      return { items: [] };
     }
 
-    let intersectionIds: Set<string> = cubeIdSets[0];
-    for (let i = 1; i < cubeIdSets.length; i++) {
-      const currentSet = cubeIdSets[i];
-      if (!currentSet) {
-        continue;
+    console.log('[queryByMultipleHashes] Valid hash strings:', validHashStrings.length);
+
+    // First hash is the primary query (should be most restrictive)
+    const primaryHash = validHashStrings[0]!;
+    // Remaining hashes to filter by
+    const filterHashes = new Set(validHashStrings.slice(1));
+
+    console.log('[queryByMultipleHashes] Primary hash:', primaryHash, 'Filter hashes:', filterHashes.size);
+
+    const MAX_PAGES = 10;
+    const PAGE_SIZE = 100;
+    let pagesChecked = 0;
+    let currentLastKey = lastKey;
+    const matchingCubes: Cube[] = [];
+
+    // Keep querying pages until we find matches or hit the page limit
+    while (pagesChecked < MAX_PAGES && matchingCubes.length === 0) {
+      pagesChecked++;
+      console.log(`[queryByMultipleHashes] Checking page ${pagesChecked}/${MAX_PAGES}`);
+
+      // Query one page of candidates from the first hash using the appropriate GSI for sorting
+      // No limit specified - use DynamoDB's default max page size (1MB of data)
+      const candidatesResult = await this.queryByHashForIdsOnly(
+        primaryHash,
+        sortBy,
+        ascending,
+        currentLastKey,
+        PAGE_SIZE,
+      );
+
+      console.log(
+        `[queryByMultipleHashes] Page ${pagesChecked} returned ${candidatesResult.cubeIds.length} candidates`,
+      );
+
+      if (candidatesResult.cubeIds.length === 0) {
+        // No more results
+        console.log('[queryByMultipleHashes] No more results available');
+        break;
       }
 
-      const newIntersection = new Set<string>();
-      for (const id of intersectionIds) {
-        if (currentSet.has(id)) {
-          newIntersection.add(id);
+      // Load all hashes for each candidate cube
+      const candidateHashes = await Promise.all(
+        candidatesResult.cubeIds.map(async (cubeId) => {
+          const result = await this.getHashesForCube(cubeId);
+          return {
+            cubeId,
+            hashes: new Set(result.hashes.map((h) => h.hash)),
+          };
+        }),
+      );
+
+      // Filter candidates that have all required hashes
+      const matchingIds = candidateHashes
+        .filter((candidate) => {
+          // Check if this cube has all the filter hashes
+          for (const requiredHash of filterHashes) {
+            if (!candidate.hashes.has(requiredHash)) {
+              return false;
+            }
+          }
+          return true;
+        })
+        .map((candidate) => candidate.cubeId);
+
+      console.log(`[queryByMultipleHashes] Page ${pagesChecked} found ${matchingIds.length} matches after filtering`);
+
+      if (matchingIds.length > 0) {
+        // Found matches! Hydrate cubes
+        const cubes = await this.batchGet(matchingIds);
+
+        // Apply card count filter in memory if provided
+        let filteredCubes = cubes;
+        if (cardCountFilter) {
+          filteredCubes = cubes.filter((cube) => {
+            const count = cube.cardCount || 0;
+            switch (cardCountFilter.operator) {
+              case 'eq':
+                return count === cardCountFilter.value;
+              case 'gt':
+                return count > cardCountFilter.value;
+              case 'lt':
+                return count < cardCountFilter.value;
+              default:
+                return true;
+            }
+          });
+          console.log(
+            `[queryByMultipleHashes] Card count filter reduced ${cubes.length} to ${filteredCubes.length} cubes`,
+          );
         }
-      }
-      intersectionIds = newIntersection;
 
-      // Early exit if intersection is empty
-      if (intersectionIds.size === 0) {
-        return [];
+        matchingCubes.push(...filteredCubes);
+
+        console.log(`[queryByMultipleHashes] Returning ${matchingCubes.length} matching cubes`);
+        // Return with pagination key for next query
+        // Note: Results are already sorted by the GSI query
+        return {
+          items: matchingCubes,
+          lastKey: candidatesResult.lastKey,
+        };
+      }
+
+      // No matches in this page, continue to next page
+      currentLastKey = candidatesResult.lastKey;
+
+      if (!currentLastKey) {
+        // No more pages to check
+        console.log('[queryByMultipleHashes] No more pages available');
+        break;
       }
     }
 
-    // Fetch and hydrate cubes only for the final intersection
-    const cubes = await this.batchGet(Array.from(intersectionIds));
+    // If we exhausted pages without finding anything, provide helpful error
+    if (pagesChecked >= MAX_PAGES && matchingCubes.length === 0) {
+      console.log('[queryByMultipleHashes] Exhausted max pages without finding matches');
+      throw new Error(
+        `Search query too expensive: No matches found after checking ${MAX_PAGES} pages. ` +
+          `Tip: Move the most restrictive criteria to the front of the query to improve performance.`,
+      );
+    }
 
-    // Sort results according to sortBy parameter (always in-memory when card count filter is used)
-    return this.sortCubes(cubes, sortBy, ascending);
+    console.log('[queryByMultipleHashes] Search completed with no matches');
+    // Return whatever we found (might be empty)
+    return {
+      items: matchingCubes,
+      lastKey: undefined,
+    };
   }
 
   /**
@@ -1484,6 +1582,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     lastKey?: Record<string, any>,
     limit?: number,
   ): Promise<{ cubeIds: string[]; lastKey?: Record<string, any> }> {
+    console.log('[queryByHashForIdsOnly] Query params:', { hash, sortBy, ascending, hasLastKey: !!lastKey, limit });
+
     let indexName: string;
     let gsiPK: string;
 
@@ -1521,88 +1621,53 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       ExclusiveStartKey: lastKey,
     };
 
-    // Query hash rows
-    const queryResult = await this.dynamoClient.send(new QueryCommand(params));
-
-    if (!queryResult.Items || queryResult.Items.length === 0) {
-      return { cubeIds: [] };
-    }
-
-    // Extract cube IDs from hash rows (no hydration)
-    const cubeIds = queryResult.Items.map((item) => {
-      // PK contains the cube partition key: HASH#CUBE#{id}
-      const pk = item.PK as string;
-      // Remove 'HASH#CUBE#' prefix to get the cube ID
-      return pk.replace('HASH#CUBE#', '');
+    console.log('[queryByHashForIdsOnly] DynamoDB query params:', {
+      tableName: this.tableName,
+      indexName,
+      gsiPK,
+      hash,
+      limit,
     });
 
-    return {
-      cubeIds,
-      lastKey: queryResult.LastEvaluatedKey,
-    };
-  }
+    try {
+      // Query hash rows
+      const queryResult = await this.dynamoClient.send(new QueryCommand(params));
 
-  /**
-   * Helper method to query by hash with card count filter and return only cube IDs (no hydration).
-   * Used by queryByMultipleHashes to avoid hydrating cubes that will be filtered out.
-   */
-  private async queryByHashWithCardCountFilterForIdsOnly(
-    hash: string,
-    cardCountFilter: { operator: 'eq' | 'gt' | 'lt'; value: number },
-    lastKey?: Record<string, any>,
-    limit?: number,
-  ): Promise<{ cubeIds: string[]; lastKey?: Record<string, any> }> {
-    const paddedCardCount = `CARDS#${String(cardCountFilter.value).padStart(10, '0')}`;
+      console.log('[queryByHashForIdsOnly] Query result:', {
+        itemCount: queryResult.Items?.length || 0,
+        hasLastKey: !!queryResult.LastEvaluatedKey,
+      });
 
-    let keyConditionExpression: string;
-    const expressionAttributeValues: Record<string, any> = {
-      ':hash': hash,
-    };
+      if (!queryResult.Items || queryResult.Items.length === 0) {
+        return { cubeIds: [] };
+      }
 
-    switch (cardCountFilter.operator) {
-      case 'eq':
-        keyConditionExpression = 'GSI3PK = :hash AND GSI3SK = :cardCount';
-        expressionAttributeValues[':cardCount'] = paddedCardCount;
-        break;
-      case 'gt':
-        keyConditionExpression = 'GSI3PK = :hash AND GSI3SK > :cardCount';
-        expressionAttributeValues[':cardCount'] = paddedCardCount;
-        break;
-      case 'lt':
-        keyConditionExpression = 'GSI3PK = :hash AND GSI3SK < :cardCount';
-        expressionAttributeValues[':cardCount'] = paddedCardCount;
-        break;
+      // Extract cube IDs from hash rows (no hydration)
+      const cubeIds = queryResult.Items.map((item) => {
+        // PK contains the cube partition key: HASH#CUBE#{id}
+        const pk = item.PK as string;
+        if (!pk) {
+          console.error('[queryByHashForIdsOnly] Item missing PK:', item);
+          throw new Error('Hash row missing PK field');
+        }
+        // Remove 'HASH#CUBE#' prefix to get the cube ID
+        return pk.replace('HASH#CUBE#', '');
+      });
+
+      console.log('[queryByHashForIdsOnly] Extracted cube IDs:', cubeIds.length);
+
+      return {
+        cubeIds,
+        lastKey: queryResult.LastEvaluatedKey,
+      };
+    } catch (error: any) {
+      console.error('[queryByHashForIdsOnly] Error during query:', {
+        error: error.message,
+        stack: error.stack,
+        params,
+      });
+      throw error;
     }
-
-    const params: QueryCommandInput = {
-      TableName: this.tableName,
-      IndexName: 'GSI3',
-      KeyConditionExpression: keyConditionExpression,
-      ExpressionAttributeValues: expressionAttributeValues,
-      ScanIndexForward: true, // Ascending by card count
-      Limit: limit,
-      ExclusiveStartKey: lastKey,
-    };
-
-    // Query hash rows
-    const queryResult = await this.dynamoClient.send(new QueryCommand(params));
-
-    if (!queryResult.Items || queryResult.Items.length === 0) {
-      return { cubeIds: [] };
-    }
-
-    // Extract cube IDs from hash rows (no hydration)
-    const cubeIds = queryResult.Items.map((item) => {
-      // PK contains the cube partition key: HASH#CUBE#{id}
-      const pk = item.PK as string;
-      // Remove 'HASH#CUBE#' prefix to get the cube ID
-      return pk.replace('HASH#CUBE#', '');
-    });
-
-    return {
-      cubeIds,
-      lastKey: queryResult.LastEvaluatedKey,
-    };
   }
 
   /**

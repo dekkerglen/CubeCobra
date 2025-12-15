@@ -149,13 +149,13 @@ const SearchSyntaxModal: React.FC<SearchSyntaxModalProps> = ({ setOpen, isOpen }
             </Text>
             <ul className="list-disc list-inside space-y-1">
               <li>
-                <Text sm>Maximum of 10 combined card/tag/keyword filters total</Text>
+                <Text sm>
+                  Multi-criteria searches will check up to 1000 cubes matching the first term before stopping if no
+                  matches to all terms are found.
+                </Text>
               </li>
               <li>
-                <Text sm>Only public cubes are searchable</Text>
-              </li>
-              <li>
-                <Text sm>Search results are limited to 1000 cubes</Text>
+                <Text sm>For best performance, put the most restrictive criteria first in your query</Text>
               </li>
             </ul>
           </Flexbox>

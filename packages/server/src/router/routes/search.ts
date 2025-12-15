@@ -256,10 +256,20 @@ const buildHashesForQuery = (
 ): string[] => {
   const hashes: string[] = [];
 
+  console.log('[buildHashesForQuery] Input queries:', {
+    cardQueriesCount: cardQueries.length,
+    cardQueries: cardQueries.map((q) => ({ type: q.type, value: q.value, originalToken: q.originalToken })),
+    keywordQueriesCount: keywordQueries.length,
+    tagQueriesCount: tagQueries.length,
+    categoryQueriesCount: categoryQueries.length,
+  });
+
   // Add oracle hashes for card queries
   for (const query of cardQueries) {
     if (query.value && query.value !== '') {
       hashes.push(`oracle:${query.value}`);
+    } else {
+      console.warn('[buildHashesForQuery] Skipping card query with empty value:', query.originalToken);
     }
   }
 
@@ -291,6 +301,8 @@ const buildHashesForQuery = (
     hashes.push('cube:all');
   }
 
+  console.log('[buildHashesForQuery] Built hashes:', hashes);
+
   return hashes;
 };
 
@@ -305,6 +317,16 @@ const performSearch = async (
   user: any,
   lastKey?: any,
 ): Promise<SearchResult> => {
+  console.log('[performSearch] Starting search with queries:', {
+    cardQueriesCount: cardQueries.length,
+    keywordQueriesCount: keywordQueries.length,
+    tagQueriesCount: tagQueries.length,
+    categoryQueriesCount: categoryQueries.length,
+    sizeQueriesCount: sizeQueries.length,
+    order,
+    ascending,
+  });
+
   // Check for unsupported combinations
   if (cardQueries.length > 10) {
     return {
@@ -396,11 +418,28 @@ const performSearch = async (
       cubes = result.items;
       resultLastKey = result.lastKey;
     } else {
-      console.log('[Search] Querying by multiple hashes', { hashes, cardCountFilter });
+      console.log('[Search] Querying by multiple hashes', {
+        hashCount: hashes.length,
+        hashes,
+        cardCountFilter,
+        order,
+        ascending,
+        hasLastKey: !!lastKey,
+      });
       // Use queryByMultipleHashes from cubeDao (which efficiently handles cardCountFilter natively)
-      cubes = await cubeDao.queryByMultipleHashes(hashes, mapSortOrder(order), ascending, cardCountFilter);
-      // Note: queryByMultipleHashes doesn't support pagination yet
-      resultLastKey = null;
+      const multiHashResult = await cubeDao.queryByMultipleHashes(
+        hashes,
+        mapSortOrder(order),
+        ascending,
+        lastKey || undefined,
+        cardCountFilter,
+      );
+      console.log('[Search] queryByMultipleHashes returned', {
+        resultCount: multiHashResult.items.length,
+        hasLastKey: !!multiHashResult.lastKey,
+      });
+      cubes = multiHashResult.items;
+      resultLastKey = multiHashResult.lastKey;
     }
 
     // Filter by listing visibility
@@ -498,7 +537,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const order = (req.query.order as SortOrder) || 'pop';
   const query = (req.query.q as string) || '';
 
-  const result = await searchCubes(query, order, null, ascending === 'true', req.user);
+  const result = await searchCubes(query, order, undefined, ascending === 'true', req.user);
 
   if (result.error) {
     req.flash('danger', result.error);
