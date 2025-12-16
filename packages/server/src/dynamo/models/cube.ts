@@ -2,7 +2,7 @@
 
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import CubeType from '@utils/datatypes/Cube';
+import CubeType, { CubeCards } from '@utils/datatypes/Cube';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
 import { userDao } from 'dynamo/daos';
 import _ from 'lodash';
@@ -139,7 +139,7 @@ const stripDetails = (cards: any[]): void => {
   });
 };
 
-const getCards = async (id: string): Promise<any> => {
+const getCards = async (id: string): Promise<CubeCards> => {
   try {
     const cards = await getObject(process.env.DATA_BUCKET!, `cube/${id}.json`);
 
