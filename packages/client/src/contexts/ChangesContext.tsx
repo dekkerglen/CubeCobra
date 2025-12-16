@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import { cardsAreEquivalent } from '@utils/cardutil';
 import Card, { BoardType, Changes } from '@utils/datatypes/Card';
@@ -196,7 +196,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       clearChanges,
       versionMismatch,
     };
-  }, [cards, changes, clearChanges, setChanges, version]);
+  }, [cards, changes, clearChanges, setChanges, setVersion, version]);
 
   return <ChangesContext.Provider value={value}>{children}</ChangesContext.Provider>;
 };

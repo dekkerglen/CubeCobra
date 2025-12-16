@@ -196,6 +196,8 @@ const Swap = ({
 };
 
 const Changelist: React.FC = () => {
+  const [isLoadingNewCards, setIsLoadingNewCards] = useState(false);
+
   const cubeContextValue = useContext(CubeContext);
   if (cubeContextValue === null || cubeContextValue.cube === undefined) {
     return <></>;
@@ -212,8 +214,6 @@ const Changelist: React.FC = () => {
     setModalSelection,
     setModalOpen,
   } = cubeContextValue;
-  const [isLoadingNewCards, setIsLoadingNewCards] = useState(false);
-  const [newCardsForModal, setNewCardsForModal] = useState<CardData[]>([]);
 
   const handleEditAllNewCards = async () => {
     setIsLoadingNewCards(true);
@@ -258,7 +258,6 @@ const Changelist: React.FC = () => {
     }
 
     if (newCards.length > 0) {
-      setNewCardsForModal(newCards);
       // Set modal selection to indicate group modal for new cards
       setModalSelection(newCards as any);
       setModalOpen(true);

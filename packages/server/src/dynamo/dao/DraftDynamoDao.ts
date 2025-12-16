@@ -21,7 +21,7 @@
 
 import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import DraftType, { DRAFT_TYPES, DraftmancerLog,REVERSE_TYPES } from '@utils/datatypes/Draft';
+import DraftType, { DRAFT_TYPES, DraftmancerLog, REVERSE_TYPES } from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';

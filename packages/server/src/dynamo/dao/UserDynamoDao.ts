@@ -22,7 +22,7 @@
  * when dualWriteEnabled flag is set.
  */
 
-import { BatchGetCommand,DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import { BatchGetCommand, DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { BaseObject } from '@utils/datatypes/BaseObject';
 import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import User, {

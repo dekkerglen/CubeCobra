@@ -1,7 +1,7 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeType } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
-import { articleDao, episodeDao, noticeDao,podcastDao, videoDao } from 'dynamo/daos';
+import { articleDao, episodeDao, noticeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 import generateMeta from 'serverutils/meta';
 import { updatePodcast } from 'serverutils/podcast';

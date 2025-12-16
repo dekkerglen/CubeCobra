@@ -207,7 +207,7 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
    */
   public async put(item: Notice | NewNotice): Promise<void> {
     // Determine the status - NewNotice doesn't have status, defaults to ACTIVE
-    const status = 'status' in item ? item.status : NoticeStatus.ACTIVE;
+    const status = Object.prototype.hasOwnProperty.call(item, 'status') ? (item as Notice).status : NoticeStatus.ACTIVE;
 
     // Generate ID if not provided
     const id = item.id || uuidv4();
@@ -229,8 +229,12 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
       status: status,
       type: item.type,
       subject: item.subject,
-      dateCreated: 'dateCreated' in item ? (item.dateCreated as number) : now,
-      dateLastUpdated: 'dateLastUpdated' in item ? (item.dateLastUpdated as number) : now,
+      dateCreated: Object.prototype.hasOwnProperty.call(item, 'dateCreated')
+        ? ((item as Notice).dateCreated as number)
+        : now,
+      dateLastUpdated: Object.prototype.hasOwnProperty.call(item, 'dateLastUpdated')
+        ? ((item as Notice).dateLastUpdated as number)
+        : now,
     };
 
     if (this.dualWriteEnabled) {

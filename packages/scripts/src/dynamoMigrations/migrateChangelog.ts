@@ -156,7 +156,7 @@ function deleteCheckpoint(): void {
                 item,
                 exists: !!existing,
               };
-            } catch (error) {
+            } catch {
               // If error, assume it doesn't exist
               return {
                 item,

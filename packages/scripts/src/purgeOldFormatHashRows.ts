@@ -10,7 +10,7 @@ import documentClient from '@server/dynamo/documentClient';
 import * as fs from 'fs';
 
 // Import commands from the server package to avoid version mismatches
- 
+
 const { ScanCommand, BatchWriteCommand } = require('../../server/node_modules/@aws-sdk/lib-dynamodb');
 
 interface OldHashRow {
@@ -114,8 +114,7 @@ async function purgeOldFormatHashRows(): Promise<void> {
 
   try {
     do {
-      segmentNumber++;
-      const segmentStartTime = Date.now();
+      segmentNumber += 1;
 
       // Scan a segment of the table
       // Filter for old format hash rows: SK starts with "CUBE#"
@@ -174,8 +173,6 @@ async function purgeOldFormatHashRows(): Promise<void> {
           }
         }
       }
-
-      const segmentDuration = ((Date.now() - segmentStartTime) / 1000).toFixed(2);
 
       // Save checkpoint periodically
       if (segmentNumber % CHECKPOINT_INTERVAL === 0) {
@@ -248,7 +245,7 @@ if (dryRun) {
         const pk = item.PK as string;
         // Check if PK is a 64-char hex hash (old format)
         if (/^[0-9a-f]{64}$/i.test(pk)) {
-          oldFormatFound++;
+          oldFormatFound += 1;
           if (samples.length < 5) {
             samples.push({ PK: item.PK, SK: item.SK });
           }

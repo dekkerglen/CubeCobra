@@ -1,9 +1,8 @@
 import Card, { Changes } from '@utils/datatypes/Card';
-import { cardFromId } from 'serverutils/carddb';
 import { v4 as UUID } from 'uuid';
 
 import { changelogDao } from '../../src/dynamo/daos';
-import { getBucketName, getObject, putObject } from '../../src/dynamo/s3client';
+import { getBucketName } from '../../src/dynamo/s3client';
 import {
   createCard,
   createCardDetails,
@@ -30,12 +29,6 @@ jest.mock('../../src/dynamo/daos', () => ({
 }));
 
 // Test helpers
-const createUnhydratedChangelog = (overrides?: any) => ({
-  id: 'changelog-1',
-  cube: 'cube-1',
-  date: new Date('2024-03-24').valueOf(),
-  ...overrides,
-});
 
 const createHydratedChangelog = (initialChanges: Changes, hydratedCard: Card): Changes => {
   const mockHydratedChanges = { ...initialChanges };
@@ -74,7 +67,6 @@ describe('Changelog Model', () => {
     edits: [mockEdit],
     swaps: [mockSwap],
   });
-  const mockStoredChangelog = createUnhydratedChangelog();
 
   /* In the real world these would all be different cards / details, but for simplicity of tests...
    * Extending the existing mocks so the indexes are consistent between the unhydrated and hydrated.
@@ -87,16 +79,6 @@ describe('Changelog Model', () => {
 
   const mockChangesTwo = { ...mockChanges };
   const mockHydratedChangesTwo = createHydratedChangelog(mockChangesTwo, mockCardTwo);
-
-  const setupMultipleCardDetails = () => {
-    (cardFromId as jest.Mock).mockImplementation((cardID: string) => {
-      if (cardID === mockCard.cardID) {
-        return mockCard.details;
-      } else {
-        return mockCardTwo.details;
-      }
-    });
-  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -116,9 +98,6 @@ describe('Changelog Model', () => {
     });
 
     it('returns hydrated changelog for maybeboard', async () => {
-      const maybeboardChanges = {
-        maybeboard: mockChanges.mainboard,
-      };
       const maybeboardHydratedChanges = {
         maybeboard: mockHydratedChanges.mainboard,
       };

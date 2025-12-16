@@ -171,10 +171,15 @@ export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notificat
    */
   public async put(item: Notification | NewNotification): Promise<void> {
     // Determine the status - NewNotification doesn't have status, defaults to UNREAD
-    const status = 'status' in item ? item.status : NotificationStatus.UNREAD;
+    const status = Object.prototype.hasOwnProperty.call(item, 'status')
+      ? (item as Notification).status
+      : NotificationStatus.UNREAD;
 
     // Generate ID if not provided
-    const id = 'id' in item && item.id ? item.id : uuidv4();
+    const id =
+      Object.prototype.hasOwnProperty.call(item, 'id') && (item as Notification).id
+        ? (item as Notification).id
+        : uuidv4();
 
     const now = Date.now();
 
@@ -189,8 +194,12 @@ export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notificat
       body: item.body,
       status: status,
       toStatusComp: `${item.to}:${status}`,
-      dateCreated: 'dateCreated' in item ? (item.dateCreated as number) : now,
-      dateLastUpdated: 'dateLastUpdated' in item ? (item.dateLastUpdated as number) : now,
+      dateCreated: Object.prototype.hasOwnProperty.call(item, 'dateCreated')
+        ? ((item as Notification).dateCreated as number)
+        : now,
+      dateLastUpdated: Object.prototype.hasOwnProperty.call(item, 'dateLastUpdated')
+        ? ((item as Notification).dateLastUpdated as number)
+        : now,
     };
 
     if (this.dualWriteEnabled) {

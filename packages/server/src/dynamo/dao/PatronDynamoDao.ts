@@ -84,7 +84,7 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
     if (this.dualWriteEnabled) {
       try {
         return await PatronModel.getById(id);
-      } catch (error) {
+      } catch {
         // If patron not found in old model, return undefined
         return undefined;
       }

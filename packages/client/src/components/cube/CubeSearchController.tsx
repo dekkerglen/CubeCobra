@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { QuestionIcon } from '@primer/octicons-react';
 
 import Banner from '../Banner';
-import Button from '../base/Button';
 import Controls from '../base/Controls';
 import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';

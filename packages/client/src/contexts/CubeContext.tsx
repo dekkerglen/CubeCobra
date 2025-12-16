@@ -336,15 +336,21 @@ export function CubeContextProvider({
   // Fetch details for newly added cards when modal is opened
   useEffect(() => {
     if (modalOpen && modalSelection && !Array.isArray(modalSelection)) {
-      if ('isNewlyAdded' in modalSelection && modalSelection.isNewlyAdded) {
-        const card = changes[modalSelection.board]?.adds?.[modalSelection.addIndex];
+      if (
+        Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
+        (modalSelection as any).isNewlyAdded
+      ) {
+        const card = changes[modalSelection.board]?.adds?.[(modalSelection as any).addIndex];
         if (card) {
           getDetails(csrfFetch, card.cardID).then((details) => {
             setAddedCardDetails(details);
           });
         }
-      } else if ('isSwapped' in modalSelection && modalSelection.isSwapped) {
-        const card = changes[modalSelection.board]?.swaps?.[modalSelection.swapIndex]?.card;
+      } else if (
+        Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
+        (modalSelection as any).isSwapped
+      ) {
+        const card = changes[modalSelection.board]?.swaps?.[(modalSelection as any).swapIndex]?.card;
         if (card) {
           getDetails(csrfFetch, card.cardID).then((details) => {
             setAddedCardDetails(details);
@@ -466,7 +472,7 @@ export function CubeContextProvider({
     };
 
     fetchVersionsForPendingChanges();
-  }, []); // Run only once on mount
+  }, [changes, fetchCardVersions, versionDict]); // Run only once on mount
 
   const updateShowTagColors = useCallback(
     async (showColors: boolean) => {
@@ -1439,12 +1445,12 @@ export function CubeContextProvider({
         {children}
         {modalSelection &&
           !Array.isArray(modalSelection) &&
-          'isNewlyAdded' in modalSelection &&
-          modalSelection.isNewlyAdded &&
-          changes[modalSelection.board]?.adds?.[modalSelection.addIndex] && (
+          Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
+          (modalSelection as any).isNewlyAdded &&
+          changes[modalSelection.board]?.adds?.[(modalSelection as any).addIndex] && (
             <CardModal
               card={{
-                ...changes[modalSelection.board]!.adds![modalSelection.addIndex],
+                ...changes[modalSelection.board]!.adds![(modalSelection as any).addIndex],
                 board: modalSelection.board,
                 index: -1, // Use -1 as a sentinel value for newly added cards
                 details: addedCardDetails || undefined,
@@ -1453,7 +1459,7 @@ export function CubeContextProvider({
               setOpen={setModalOpen}
               canEdit={canEdit}
               versionDict={versionDictProxy}
-              editCard={(_, card, board) => editAddedCard(modalSelection.addIndex, card, board)}
+              editCard={(_, card, board) => editAddedCard((modalSelection as any).addIndex, card, board)}
               revertEdit={() => {}}
               revertRemove={() => {}}
               removeCard={() => {}}
@@ -1464,12 +1470,12 @@ export function CubeContextProvider({
           )}
         {modalSelection &&
           !Array.isArray(modalSelection) &&
-          'isSwapped' in modalSelection &&
-          modalSelection.isSwapped &&
-          changes[modalSelection.board]?.swaps?.[modalSelection.swapIndex] && (
+          Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
+          (modalSelection as any).isSwapped &&
+          changes[modalSelection.board]?.swaps?.[(modalSelection as any).swapIndex] && (
             <CardModal
               card={{
-                ...changes[modalSelection.board]!.swaps![modalSelection.swapIndex].card,
+                ...changes[modalSelection.board]!.swaps![(modalSelection as any).swapIndex].card,
                 board: modalSelection.board,
                 index: -1, // Use -1 as a sentinel value for swapped cards
                 details: addedCardDetails || undefined,
@@ -1478,7 +1484,7 @@ export function CubeContextProvider({
               setOpen={setModalOpen}
               canEdit={canEdit}
               versionDict={versionDictProxy}
-              editCard={(_, card, board) => editSwappedCard(modalSelection.swapIndex, card, board)}
+              editCard={(_, card, board) => editSwappedCard((modalSelection as any).swapIndex, card, board)}
               revertEdit={() => {}}
               revertRemove={() => {}}
               removeCard={() => {}}
@@ -1489,8 +1495,8 @@ export function CubeContextProvider({
           )}
         {modalSelection &&
           !Array.isArray(modalSelection) &&
-          !('isNewlyAdded' in modalSelection) &&
-          !('isSwapped' in modalSelection) &&
+          !Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
+          !Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
             <CardModal
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
@@ -1511,7 +1517,8 @@ export function CubeContextProvider({
           <GroupModal
             cards={
               // Check if this is a list of new cards (with addIndex or swapIndex)
-              'addIndex' in modalSelection[0] || 'swapIndex' in modalSelection[0]
+              Object.prototype.hasOwnProperty.call(modalSelection[0], 'addIndex') ||
+              Object.prototype.hasOwnProperty.call(modalSelection[0], 'swapIndex')
                 ? (modalSelection as Card[])
                 : modalSelection.map((s) => unfilteredChangedCards[s.board][s.index])
             }
@@ -1520,7 +1527,8 @@ export function CubeContextProvider({
             canEdit={canEdit}
             bulkEditCard={
               // Use bulkEditNewCard for new cards, bulkEditCard for existing cards
-              'addIndex' in modalSelection[0] || 'swapIndex' in modalSelection[0]
+              Object.prototype.hasOwnProperty.call(modalSelection[0], 'addIndex') ||
+              Object.prototype.hasOwnProperty.call(modalSelection[0], 'swapIndex')
                 ? (cards: Card[]) => bulkEditNewCard(cards)
                 : (cards: Card[]) => bulkEditCard(cards as any)
             }

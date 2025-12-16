@@ -29,9 +29,15 @@ export const FeaturedQueue = {
     const now = Date.now();
     await client.put({
       ...document,
-      status: 'status' in document ? document.status : FeaturedQueueStatus.ACTIVE,
-      dateCreated: 'dateCreated' in document ? document.dateCreated : now,
-      dateLastUpdated: 'dateLastUpdated' in document ? document.dateLastUpdated : now,
+      status: Object.prototype.hasOwnProperty.call(document, 'status')
+        ? (document as FeaturedQueueItem).status
+        : FeaturedQueueStatus.ACTIVE,
+      dateCreated: Object.prototype.hasOwnProperty.call(document, 'dateCreated')
+        ? (document as FeaturedQueueItem).dateCreated
+        : now,
+      dateLastUpdated: Object.prototype.hasOwnProperty.call(document, 'dateLastUpdated')
+        ? (document as FeaturedQueueItem).dateLastUpdated
+        : now,
     });
   },
   querySortedByDate: async (

@@ -69,7 +69,6 @@ import { CubeCards } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
-import _ from 'lodash';
 import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
 import cloudwatch from 'serverutils/cloudwatch';
 import { getImageData } from 'serverutils/imageutil';
@@ -77,7 +76,7 @@ import { getImageData } from 'serverutils/imageutil';
 import CubeModel from '../models/cube';
 import CubeHashModel from '../models/cubeHash';
 import { deleteObject, getObject, putObject } from '../s3client';
-import { getObjectVersion,listObjectVersions } from '../s3client';
+import { getObjectVersion, listObjectVersions } from '../s3client';
 import { BaseDynamoDao, HashRow } from './BaseDynamoDao';
 import { UserDynamoDao } from './UserDynamoDao';
 
@@ -836,7 +835,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       updateExpressionParts.push(`${nameKey} = ${valueKey}`);
       expressionAttributeNames[nameKey] = key;
       expressionAttributeValues[valueKey] = value;
-      index++;
+      index += 1;
     }
 
     await this.dynamoClient.send(
@@ -1415,7 +1414,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Keep querying pages until we find matches or hit the page limit
     while (pagesChecked < MAX_PAGES && matchingCubes.length === 0) {
-      pagesChecked++;
+      pagesChecked += 1;
 
       // Query one page of candidates from the first hash using the appropriate GSI for sorting
       // No limit specified - use DynamoDB's default max page size (1MB of data)

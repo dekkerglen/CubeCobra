@@ -32,10 +32,10 @@ const repairCubeHashes = async (cube: Cube, stats: RepairStats): Promise<void> =
     // Use the repairHashes method which handles both metadata and card hashes
     const result = await cubeDao.repairHashes(cube.id);
 
-    stats.cubesProcessed++;
+    stats.cubesProcessed += 1;
 
     if (result.added > 0 || result.removed > 0) {
-      stats.cubesWithChanges++;
+      stats.cubesWithChanges += 1;
       console.log(
         `Repaired cube ${cube.id} (${cube.name}): +${result.added} -${result.removed} =${result.unchanged}${result.ownerFixed ? ' [owner fixed]' : ''}`,
       );
@@ -46,10 +46,10 @@ const repairCubeHashes = async (cube: Cube, stats: RepairStats): Promise<void> =
     stats.totalUnchanged += result.unchanged;
 
     if (result.ownerFixed) {
-      stats.ownersFixed++;
+      stats.ownersFixed += 1;
     }
   } catch (err: any) {
-    stats.errors++;
+    stats.errors += 1;
     console.error(`Error repairing cube ${cube.id}: ${err.message}`);
   }
 };
@@ -123,7 +123,7 @@ const repairAllCubes = async (): Promise<void> => {
   try {
     // Iterate through all cubes using queryAllCubes with pagination
     do {
-      batchNumber++;
+      batchNumber += 1;
       const batchStartTime = Date.now();
 
       // Query a batch of cubes

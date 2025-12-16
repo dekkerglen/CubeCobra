@@ -119,8 +119,12 @@ const notice = {
       status: getStatus(document),
       type: document.type,
       subject: document.subject,
-      dateCreated: 'dateCreated' in document ? document.dateCreated : now,
-      dateLastUpdated: 'dateLastUpdated' in document ? document.dateLastUpdated : now,
+      dateCreated: Object.prototype.hasOwnProperty.call(document, 'dateCreated')
+        ? (document as Notice).dateCreated
+        : now,
+      dateLastUpdated: Object.prototype.hasOwnProperty.call(document, 'dateLastUpdated')
+        ? (document as Notice).dateLastUpdated
+        : now,
     } as UnhydratedNotice);
   },
   batchPut: async (documents: UnhydratedNotice[]): Promise<void> => client.batchPut(documents),
