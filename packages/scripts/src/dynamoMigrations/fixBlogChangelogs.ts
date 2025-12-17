@@ -1,4 +1,5 @@
 // Load Environment Variables
+import { UserDynamoDao } from '@server/dynamo/dao/UserDynamoDao';
 import documentClient from '@server/dynamo/documentClient';
 import BlogModel from '@server/dynamo/models/blog';
 import { BlogDynamoDao } from 'dynamo/dao/BlogDynamoDao';
@@ -63,9 +64,10 @@ interface FixStats {
     console.log(`Target table: ${tableName}`);
 
     // Initialize the DAOs
+    const userDao = new UserDynamoDao(documentClient, tableName, true);
     const changelogDao = new ChangelogDynamoDao(documentClient, tableName, false);
-    const cubeDao = new CubeDynamoDao(documentClient, tableName, false);
-    const blogDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, tableName, false);
+    const cubeDao = new CubeDynamoDao(documentClient, userDao, tableName, false);
+    const blogDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, userDao, tableName, false);
 
     const stats: FixStats = {
       total: 0,

@@ -25,12 +25,6 @@ const mockUserDao = {
   batchGet: jest.fn(),
 } as unknown as jest.Mocked<UserDynamoDao>;
 
-// Mock the DynamoDB client
-const mockSend = jest.fn();
-const mockDynamoDBClient = {
-  send: mockSend,
-} as unknown as DynamoDBDocumentClient;
-
 // Test helpers
 const createUnhydratedComment = (overrides?: Partial<UnhydratedComment>): UnhydratedComment => ({
   id: 'comment-1',
@@ -39,6 +33,8 @@ const createUnhydratedComment = (overrides?: Partial<UnhydratedComment>): Unhydr
   type: 'cube',
   body: 'Test comment',
   owner: 'user-1',
+  dateCreated: Date.now(),
+  dateLastUpdated: Date.now(),
   ...overrides,
 });
 
@@ -216,7 +212,7 @@ describe('CommentDynamoDao', () => {
 
       const result = await commentDao.queryByOwner('user-1');
 
-      expect(result.items?.[0].owner).toEqual(mockUser);
+      expect(result.items?.[0]?.owner).toEqual(mockUser);
     });
 
     it('handles comments with falsey owners as anonymous', async () => {
@@ -260,6 +256,8 @@ describe('CommentDynamoDao', () => {
         body: 'Test comment',
         owner: mockUser,
         image: mockImage,
+        dateCreated: Date.now(),
+        dateLastUpdated: Date.now(),
       };
 
       (UUID as jest.Mock).mockReturnValue('abcdefg-hijklom');

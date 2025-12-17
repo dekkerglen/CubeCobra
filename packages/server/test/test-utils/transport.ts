@@ -117,7 +117,7 @@ class CallBuilder {
     }
 
     if (this.flash) {
-      this.request = { flash: this.flash, ...this.request };
+      this.request = { flash: this.flash as any, ...this.request };
     }
 
     const req = createMockRequest(this.request);

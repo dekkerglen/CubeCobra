@@ -1,4 +1,5 @@
 // Load Environment Variables
+import { UserDynamoDao } from '@server/dynamo/dao/UserDynamoDao';
 import documentClient from '@server/dynamo/documentClient';
 import DraftModel from '@server/dynamo/models/draft';
 import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
@@ -110,8 +111,9 @@ const deleteCheckpoint = (): void => {
     console.log(`Target table: ${tableName}`);
 
     // Initialize the new DAOs (with dualWrite disabled since we're migrating)
-    const cubeDao = new CubeDynamoDao(documentClient, tableName, false);
-    const draftDao = new DraftDynamoDao(documentClient, cubeDao, tableName, false);
+    const userDao = new UserDynamoDao(documentClient, tableName, true);
+    const cubeDao = new CubeDynamoDao(documentClient, userDao, tableName, false);
+    const draftDao = new DraftDynamoDao(documentClient, cubeDao, userDao, tableName, false);
 
     // Load checkpoint if it exists
     const checkpoint = loadCheckpoint();

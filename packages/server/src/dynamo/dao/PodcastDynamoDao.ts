@@ -82,6 +82,7 @@ export class PodcastDynamoDao extends BaseDynamoDao<Podcast, UnhydratedContent> 
       url: item.url,
       short: item.description,
       username: item.username,
+      image: item.image,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
       // body is handled separately via S3

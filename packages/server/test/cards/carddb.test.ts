@@ -67,12 +67,12 @@ describe('getMostReasonable', () => {
       if (!mockCardCatalog.nameToId.hasOwnProperty(name)) {
         mockCardCatalog.nameToId[name] = [];
       }
-      mockCardCatalog.nameToId[name].push(cardId);
+      mockCardCatalog.nameToId[name]?.push(cardId);
 
       if (!mockCardCatalog.oracleToId.hasOwnProperty(oracleId)) {
         mockCardCatalog.oracleToId[oracleId] = [];
       }
-      mockCardCatalog.oracleToId[oracleId].push(cardId);
+      mockCardCatalog.oracleToId[oracleId]?.push(cardId);
     });
   };
 

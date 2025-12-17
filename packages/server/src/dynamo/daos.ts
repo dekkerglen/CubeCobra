@@ -27,7 +27,7 @@ if (!tableName) {
   throw new Error('DYNAMO_TABLE must be a defined environment variable');
 }
 
-// We haven't migrated the data yet, so enable dual writes - these are NOT deployed to prod yet, so we can't start migration
+// We haven't migrated the data yet, so enable dual writes - these are deployed to prod  so we can start migration
 export const passwordResetDao: PasswordResetDynamoDao = new PasswordResetDynamoDao(documentClient, tableName, true);
 export const patronDao: PatronDynamoDao = new PatronDynamoDao(documentClient, tableName, true);
 export const recordDao: RecordDynamoDao = new RecordDynamoDao(documentClient, tableName, true);

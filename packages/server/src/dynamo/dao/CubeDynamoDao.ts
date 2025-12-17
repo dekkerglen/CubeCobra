@@ -1835,6 +1835,31 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
+   * Deletes all hash rows for a specific cube.
+   * This is useful for cleanup operations when removing a cube or resetting its hashes.
+   *
+   * @param cubeId - The ID of the cube to delete hash rows for
+   * @returns Promise with the number of hash rows deleted
+   */
+  public async deleteHashRowsForCube(cubeId: string): Promise<number> {
+    // Get all hash rows for this cube
+    const hashesResult = await this.getHashesForCube(cubeId);
+
+    if (hashesResult.hashes.length === 0) {
+      return 0;
+    }
+
+    // Extract just the hash strings
+    const hashStrings = hashesResult.hashes.map((h) => h.hash);
+
+    // Delete all hash rows
+    const cubePK = this.typedKey(cubeId);
+    await this.deleteHashesBySK(cubePK, hashStrings);
+
+    return hashStrings.length;
+  }
+
+  /**
    * Repairs hash rows for a cube by comparing current hashes with expected hashes
    * and writing the delta (removing stale hashes and adding missing ones).
    * This includes both metadata hashes and card (oracle) hashes.

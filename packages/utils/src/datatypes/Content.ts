@@ -32,6 +32,7 @@ export interface UnhydratedContent extends BaseObject {
   short?: string;
   url?: string;
   username?: string;
+  image?: string;
   imageName?: string;
 }
 

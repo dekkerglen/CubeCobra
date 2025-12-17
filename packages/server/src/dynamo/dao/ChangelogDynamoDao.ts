@@ -155,6 +155,7 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
   /**
    * Gets the GSI keys for the changelog.
    * GSI1: Query by cube and date (descending)
+   * GSI2: Query by day (YYYY-MM-DD)
    */
   protected GSIKeys(item: Changelog): {
     GSI1PK: string | undefined;
@@ -166,11 +167,20 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
     GSI4PK: string | undefined;
     GSI4SK: string | undefined;
   } {
+    let gsi2PK: string | undefined;
+    if (item.date) {
+      const date = new Date(item.date);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      gsi2PK = `${this.itemType()}#DAY#${year}-${month}-${day}`;
+    }
+
     return {
       GSI1PK: item.cube ? `${this.itemType()}#CUBE#${item.cube}` : undefined,
       GSI1SK: item.date ? `DATE#${item.date}` : undefined,
-      GSI2PK: undefined,
-      GSI2SK: undefined,
+      GSI2PK: gsi2PK,
+      GSI2SK: item.id ? this.typedKey(item.id) : undefined,
       GSI3PK: undefined,
       GSI3SK: undefined,
       GSI4PK: undefined,
@@ -415,5 +425,42 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
    */
   public async batchGetChangelogData(keys: Array<{ cube: string; id: string }>): Promise<Changes[]> {
     return this.batchGet(keys);
+  }
+
+  /**
+   * Queries changelogs by day (year, month, day).
+   * Returns metadata only - changelog data must be loaded separately.
+   * @param year The year (e.g., 2024)
+   * @param month The month (1-12)
+   * @param day The day (1-31)
+   * @param lastKey Optional pagination key
+   * @param limit Maximum number of items to return
+   */
+  public async queryByDay(
+    year: number,
+    month: number,
+    day: number,
+    lastKey?: Record<string, any>,
+    limit?: number,
+  ): Promise<{
+    items: Changelog[];
+    lastKey?: Record<string, any>;
+  }> {
+    const paddedMonth = String(month).padStart(2, '0');
+    const paddedDay = String(day).padStart(2, '0');
+    const dateKey = `${year}-${paddedMonth}-${paddedDay}`;
+
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI2',
+      KeyConditionExpression: 'GSI2PK = :day',
+      ExpressionAttributeValues: {
+        ':day': `${this.itemType()}#DAY#${dateKey}`,
+      },
+      Limit: limit,
+      ExclusiveStartKey: lastKey,
+    };
+
+    return this.query(params);
   }
 }

@@ -28,6 +28,8 @@ const createUnhydratedCardHistory = (overrides?: Partial<UnhydratedCardHistory>)
   vintage: [0, 0],
   cubeCount: undefined,
   total: [83, 120],
+  dateCreated: Date.now(),
+  dateLastUpdated: Date.now(),
   ...overrides,
 });
 
@@ -63,7 +65,7 @@ describe('CardHistoryDynamoDao', () => {
       const result = await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY, 10);
 
       expect(result.items?.length).toBe(2);
-      expect(result.items?.[0].cubes).toBeDefined(); // Check hydration
+      expect(result.items?.[0]?.cubes).toBeDefined(); // Check hydration
       expect(result.lastKey).toEqual({ PK: 'lastKey' });
       expect(mockSend).toHaveBeenCalled();
     });
@@ -111,7 +113,7 @@ describe('CardHistoryDynamoDao', () => {
       const result = await cardHistoryDao.queryByOracle('oracle-123');
 
       expect(result.items?.length).toBe(2);
-      expect(result.items?.[0].cubes).toBeDefined(); // Check hydration
+      expect(result.items?.[0]?.cubes).toBeDefined(); // Check hydration
     });
   });
 
@@ -127,7 +129,7 @@ describe('CardHistoryDynamoDao', () => {
       const result = await cardHistoryDao.queryByDateRange(1000, 2000);
 
       expect(result.items?.length).toBe(1);
-      expect(result.items?.[0].cubes).toBeDefined(); // Check hydration
+      expect(result.items?.[0]?.cubes).toBeDefined(); // Check hydration
     });
 
     it('handles open-ended date range', async () => {
@@ -184,7 +186,7 @@ describe('CardHistoryDynamoDao', () => {
       const result = await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY);
 
       expect(result.items?.length).toBe(1);
-      expect(result.items?.[0].cubes).toBe(93); // 50 + 33 + 10
+      expect(result.items?.[0]?.cubes).toBe(93); // 50 + 33 + 10
     });
   });
 });

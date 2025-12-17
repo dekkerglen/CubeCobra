@@ -92,6 +92,7 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       podcast: item.podcast,
       podcastName: item.podcastName,
       podcastGuid: item.podcastGuid,
+      image: item.image,
       imageName: item.imageName,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,

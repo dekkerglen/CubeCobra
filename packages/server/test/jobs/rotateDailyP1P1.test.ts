@@ -4,6 +4,10 @@ jest.mock('serverutils/cubefn', () => ({
 }));
 jest.mock('../../src/dynamo/models/cube');
 jest.mock('../../src/dynamo/daos', () => ({
+  cubeDao: {
+    getById: jest.fn(),
+    getCards: jest.fn(),
+  },
   dailyP1P1Dao: {
     getCurrentDailyP1P1: jest.fn(),
     setActiveDailyP1P1: jest.fn(),
@@ -26,8 +30,7 @@ import { generatePack } from 'serverutils/cubefn';
 import { rotateDailyP1P1 } from 'serverutils/rotateDailyP1P1';
 import { addNotification } from 'serverutils/util';
 
-import { dailyP1P1Dao, featuredQueueDao, p1p1PackDao, userDao } from '../../src/dynamo/daos';
-import Cube from '../../src/dynamo/models/cube';
+import { cubeDao, dailyP1P1Dao, featuredQueueDao, p1p1PackDao, userDao } from '../../src/dynamo/daos';
 
 describe('rotateDailyP1P1', () => {
   beforeEach(() => {
@@ -86,8 +89,8 @@ describe('rotateDailyP1P1', () => {
       (featuredQueueDao.querySortedByDate as jest.Mock).mockResolvedValue({
         items: [{ cube: 'cube-123' }],
       });
-      (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
-      (Cube.getCards as jest.Mock).mockResolvedValue(mockCards);
+      (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
+      (cubeDao.getCards as jest.Mock).mockResolvedValue(mockCards);
       (generatePack as jest.Mock).mockResolvedValue({
         pack: mockCards,
         seed: 'test-seed',
@@ -116,7 +119,7 @@ describe('rotateDailyP1P1', () => {
         success: false,
         error: 'No featured cubes in queue',
       });
-      expect(Cube.getById).not.toHaveBeenCalled();
+      expect(cubeDao.getById).not.toHaveBeenCalled();
     });
 
     it('returns { success: false } when queue items is null/undefined', async () => {
@@ -136,7 +139,7 @@ describe('rotateDailyP1P1', () => {
       (featuredQueueDao.querySortedByDate as jest.Mock).mockResolvedValue({
         items: [{ cube: 'cube-123' }],
       });
-      (Cube.getById as jest.Mock).mockResolvedValue(null);
+      (cubeDao.getById as jest.Mock).mockResolvedValue(null);
 
       const result = await rotateDailyP1P1(generatePack);
 
@@ -144,18 +147,18 @@ describe('rotateDailyP1P1', () => {
         success: false,
         error: 'Selected cube not found',
       });
-      expect(Cube.getById).toHaveBeenCalledWith('cube-123');
+      expect(cubeDao.getById).toHaveBeenCalledWith('cube-123');
     });
 
     it('returns { success: false } when an error occurs during pack generation', async () => {
       (featuredQueueDao.querySortedByDate as jest.Mock).mockResolvedValue({
         items: [{ cube: 'cube-123' }],
       });
-      (Cube.getById as jest.Mock).mockResolvedValue({
+      (cubeDao.getById as jest.Mock).mockResolvedValue({
         id: 'cube-123',
         name: 'Test Cube',
       });
-      (Cube.getCards as jest.Mock).mockResolvedValue([]);
+      (cubeDao.getCards as jest.Mock).mockResolvedValue([]);
       (generatePack as jest.Mock).mockRejectedValue(new Error('Pack generation failed'));
 
       const result = await rotateDailyP1P1(generatePack);
@@ -170,11 +173,11 @@ describe('rotateDailyP1P1', () => {
       (featuredQueueDao.querySortedByDate as jest.Mock).mockResolvedValue({
         items: [{ cube: 'cube-123' }],
       });
-      (Cube.getById as jest.Mock).mockResolvedValue({
+      (cubeDao.getById as jest.Mock).mockResolvedValue({
         id: 'cube-123',
         name: 'Test Cube',
       });
-      (Cube.getCards as jest.Mock).mockResolvedValue([]);
+      (cubeDao.getCards as jest.Mock).mockResolvedValue([]);
       (generatePack as jest.Mock).mockResolvedValue({
         pack: [],
         seed: 'test-seed',
@@ -220,8 +223,8 @@ describe('rotateDailyP1P1', () => {
       (featuredQueueDao.querySortedByDate as jest.Mock).mockResolvedValue({
         items: [{ cube: 'cube-123' }],
       });
-      (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
-      (Cube.getCards as jest.Mock).mockResolvedValue(mockCards);
+      (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
+      (cubeDao.getCards as jest.Mock).mockResolvedValue(mockCards);
       (generatePack as jest.Mock).mockResolvedValue({
         pack: mockCards,
         seed: 'test-seed-123',
@@ -270,8 +273,8 @@ describe('rotateDailyP1P1', () => {
       (featuredQueueDao.querySortedByDate as jest.Mock).mockResolvedValue({
         items: [{ cube: 'cube-123' }],
       });
-      (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
-      (Cube.getCards as jest.Mock).mockResolvedValue(mockCards);
+      (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
+      (cubeDao.getCards as jest.Mock).mockResolvedValue(mockCards);
       (generatePack as jest.Mock).mockResolvedValue({
         pack: mockCards,
         seed: 'test-seed',
@@ -286,7 +289,11 @@ describe('rotateDailyP1P1', () => {
       expect(result).toEqual({
         success: true,
         pack: mockPack,
-        cube: mockCube,
+        cube: {
+          id: 'cube-123',
+          name: 'Test Cube',
+          owner: 'owner-456',
+        },
         dailyP1P1: mockDailyP1P1,
       });
     });
@@ -310,8 +317,8 @@ describe('rotateDailyP1P1', () => {
       (featuredQueueDao.querySortedByDate as jest.Mock).mockResolvedValue({
         items: [{ cube: 'cube-123' }],
       });
-      (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
-      (Cube.getCards as jest.Mock).mockResolvedValue(mockCards);
+      (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
+      (cubeDao.getCards as jest.Mock).mockResolvedValue(mockCards);
       (generatePack as jest.Mock).mockResolvedValue({
         pack: mockCards,
         seed: 'test-seed',

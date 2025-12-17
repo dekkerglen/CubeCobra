@@ -40,7 +40,7 @@ describe('getZoomValue', () => {
     const invalidZooms = ['invalid', '', 'day', 'week'];
     periodValues.forEach((period) => {
       invalidZooms.forEach((zoom) => {
-        const result = getZoomValue(zoom, period);
+        const result = getZoomValue(zoom as any, period);
         expect(result).toBe(0);
       });
     });
@@ -50,7 +50,7 @@ describe('getZoomValue', () => {
     const invalidPeriods = ['invalid', '', 'hour', 'year'];
     zoomValues.forEach((zoom) => {
       invalidPeriods.forEach((period) => {
-        const result = getZoomValue(zoom, period);
+        const result = getZoomValue(zoom, period as any);
         expect(result).toBe(0);
       });
     });
@@ -62,7 +62,7 @@ describe('getZoomValue', () => {
 
     invalidZooms.forEach((zoom) => {
       invalidPeriods.forEach((period) => {
-        const result = getZoomValue(zoom, period);
+        const result = getZoomValue(zoom as any, period as any);
         expect(result).toBe(0);
       });
     });

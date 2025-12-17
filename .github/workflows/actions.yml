@@ -46,24 +46,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run eslint on changed files
-        # Always run both eslint and prettier
+      - name: Run linting (Prettier + ESLint)
         if: always()
-        uses: ./.github/actions/eslint
-        with:
-          config_path: 'eslint.config.mjs'
-          eslint_flags: '--max-warnings=0 --no-warn-ignored'
-
-      - name: Run Prettier on changed files
-        # Always run both eslint and prettier
-        if: always()
-        uses: ./.github/actions/prettier
-        with:
-          fail_on_error: true
-          filter_mode: file
-          level: warning
-          prettier_flags: '**/*.{js,jsx,ts,tsx}'
-          reporter: github-pr-review
+        run: npm run lint:check
 
       - name: Run tests
         if: always()

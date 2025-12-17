@@ -32,19 +32,19 @@ jest.mock('../../src/dynamo/daos', () => ({
 
 const createHydratedChangelog = (initialChanges: Changes, hydratedCard: Card): Changes => {
   const mockHydratedChanges = { ...initialChanges };
-  if (mockHydratedChanges.mainboard?.adds) {
+  if (mockHydratedChanges.mainboard?.adds && mockHydratedChanges.mainboard.adds[0]) {
     mockHydratedChanges.mainboard.adds[0].details = hydratedCard.details;
   }
-  if (mockHydratedChanges.mainboard?.removes) {
+  if (mockHydratedChanges.mainboard?.removes && mockHydratedChanges.mainboard.removes[0]) {
     mockHydratedChanges.mainboard.removes[0].oldCard.details = hydratedCard.details;
   }
 
-  if (mockHydratedChanges.mainboard?.edits) {
+  if (mockHydratedChanges.mainboard?.edits && mockHydratedChanges.mainboard.edits[0]) {
     mockHydratedChanges.mainboard.edits[0].oldCard.details = hydratedCard.details;
     mockHydratedChanges.mainboard.edits[0].newCard.details = hydratedCard.details;
   }
 
-  if (mockHydratedChanges.mainboard?.swaps) {
+  if (mockHydratedChanges.mainboard?.swaps && mockHydratedChanges.mainboard.swaps[0]) {
     mockHydratedChanges.mainboard.swaps[0].oldCard.details = hydratedCard.details;
     mockHydratedChanges.mainboard.swaps[0].card.details = hydratedCard.details;
   }

@@ -723,12 +723,8 @@ export const newArticleHandler = async (req: Request, res: Response) => {
     title: 'New Article',
     owner: req.user.id,
     date: new Date().valueOf(),
-    image: {
-      uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
-      artist: 'Craig J. Spearing',
-      id: 'decb78dd-03d7-43a0-8ff5-1b97c6f515c9',
-      imageName: 'emmessi tome [mb1-1579]',
-    },
+    image:
+      'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
     short: 'This is a brand new article!',
     imageName: 'emmessi tome [mb1-1579]',
     status: ContentStatus.DRAFT,

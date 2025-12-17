@@ -1,12 +1,13 @@
 {
   "name": "cubecobra",
-  "version": "1.4.39",
+  "version": "1.4.40",
   "description": "",
   "engines": {
     "node": ">=22.0.0 <23.0.0"
   },
   "scripts": {
     "lint": "npx prettier --write . && npx eslint --fix .",
+    "lint:check": "npx prettier --check . && npx eslint --max-warnings=0 .",
     "test:ci": "npm run test:ci --workspace=packages/client && npm run test:ci --workspace=packages/server",
     "ci-build": "npm run build --workspace=packages/client && npm run build --workspace=packages/server",
     "download-data-files": "npm run download-data-files --workspace=packages/scripts",
