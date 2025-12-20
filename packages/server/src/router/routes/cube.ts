@@ -181,7 +181,8 @@ export const getMoreChangelogsHandler = async (req: Request, res: Response) => {
 export const getMoreDecksHandler = async (req: Request, res: Response) => {
   try {
     const { lastKey } = req.body;
-    const query = await draftDao.queryByCube(req.params.id!, lastKey);
+    // Use unhydrated query to avoid loading cards/seats from S3 for better performance
+    const query = await draftDao.queryByCubeUnhydrated(req.params.id!, lastKey);
 
     return res.status(200).send({
       success: 'true',

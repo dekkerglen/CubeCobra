@@ -20,19 +20,18 @@ const dashboardHandler = async (req: Request, res: Response) => {
 
     // Query all content types in parallel (excluding podcasts, only episodes)
     const [articlesResult, videosResult, episodesResult] = await Promise.all([
-      articleDao.queryByStatus(ContentStatus.PUBLISHED),
-      videoDao.queryByStatus(ContentStatus.PUBLISHED),
-      episodeDao.queryByStatus(ContentStatus.PUBLISHED),
+      articleDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 36),
+      videoDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 36),
+      episodeDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 36),
     ]);
 
     // Merge and sort by date descending
-    const content = [
-      ...(articlesResult.items || []),
-      ...(videosResult.items || []),
-      ...(episodesResult.items || []),
-    ].sort((a, b) => b.date - a.date);
+    const content = [...(articlesResult.items || []), ...(videosResult.items || []), ...(episodesResult.items || [])]
+      .sort((a, b) => b.date - a.date)
+      .slice(0, 36);
 
-    const decks = await draftDao.queryByCubeOwner(req.user.id);
+    // Use unhydrated query to avoid loading cards/seats from S3 for better performance
+    const decks = await draftDao.queryByCubeOwnerUnhydrated(req.user.id);
 
     // Get daily P1P1
     const dailyP1P1 = await getDailyP1P1(req.logger);
@@ -75,7 +74,8 @@ const getMoreDecksHandler = async (req: Request, res: Response) => {
 
   const { lastKey } = req.body;
 
-  const result = await draftDao.queryByCubeOwner(req.user.id, lastKey);
+  // Use unhydrated query to avoid loading cards/seats from S3 for better performance
+  const result = await draftDao.queryByCubeOwnerUnhydrated(req.user.id, lastKey);
 
   return res.status(200).send({
     success: 'true',

@@ -1,9 +1,9 @@
 // Load Environment Variables
+import { UserDynamoDao } from '@server/dynamo/dao/UserDynamoDao';
 import documentClient from '@server/dynamo/documentClient';
-import NoticeModel from '@server/dynamo/models/notice';
-import { UnhydratedNotice } from '@utils/datatypes/Notice';
-import { NoticeDynamoDao } from 'dynamo/dao/NoticeDynamoDao';
-import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
+import PackageModel from '@server/dynamo/models/package';
+import { PackageDynamoDao } from 'dynamo/dao/PackageDynamoDao';
+import { UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
 import fs from 'fs';
 import path from 'path';
 
@@ -23,12 +23,7 @@ interface Checkpoint {
   timestamp: number;
 }
 
-interface ScanResult {
-  items?: UnhydratedNotice[];
-  lastKey?: Record<string, any>;
-}
-
-const CHECKPOINT_FILE = path.join(__dirname, '..', '..', 'temp', 'migrateNotice-checkpoint.json');
+const CHECKPOINT_FILE = path.join(__dirname, '..', '..', 'temp', 'migratePackage-checkpoint.json');
 
 /**
  * Saves checkpoint to disk
@@ -71,28 +66,34 @@ const deleteCheckpoint = (): void => {
 };
 
 /**
- * Migration script to move notices from old DynamoDB format to new single-table format.
+ * Migration script to move packages from old DynamoDB format to new single-table format.
  *
- * Old format (NOTICES table):
+ * Old format (PACKAGE table):
  * - Simple table with partition key 'id'
- * - GSI on 'status' and 'date' (ByStatus index)
- * - Stores UnhydratedNotice directly
+ * - GSI on 'status' with sort key 'voteCount' (ByVoteCount)
+ * - GSI on 'status' with sort key 'date' (ByDate)
+ * - GSI on 'owner' with sort key 'date' (ByOwner)
+ * - Stores package metadata including cards (as scryfall_ids)
  *
  * New format (Single table design):
- * - PK: NOTICE#{id}
- * - SK: NOTICE
- * - GSI1PK: NOTICE#STATUS#{status}
+ * - PK: PACKAGE#{id}
+ * - SK: PACKAGE
+ * - GSI1PK: PACKAGE#STATUS#{status}
  * - GSI1SK: DATE#{date}
- * - All other fields remain the same
+ * - GSI2PK: PACKAGE#STATUS#{status}
+ * - GSI2SK: VOTECOUNT#{voteCount}
+ * - GSI3PK: PACKAGE#OWNER#{ownerId}
+ * - GSI3SK: DATE#{date}
+ * - Stores package metadata including cards (as scryfall_ids)
  *
  * CHECKPOINTING:
- * - Progress is saved after each batch to migrateNotice-checkpoint.json
+ * - Progress is saved after each batch to migratePackage-checkpoint.json
  * - If interrupted, run again to resume from last checkpoint
  * - Checkpoint file is deleted upon successful completion
  */
 (async () => {
   try {
-    console.log('Starting notice migration from old format to new DynamoDB format');
+    console.log('Starting package migration from old format to new DynamoDB format');
     console.log('='.repeat(80));
 
     const tableName = process.env.DYNAMO_TABLE;
@@ -103,9 +104,9 @@ const deleteCheckpoint = (): void => {
 
     console.log(`Target table: ${tableName}`);
 
-    // Initialize the new DAO (with dualWrite disabled since we're migrating)
+    // Initialize the new DAOs (with dualWrite disabled since we're migrating)
     const userDao = new UserDynamoDao(documentClient, tableName, false);
-    const noticeDao = new NoticeDynamoDao(documentClient, userDao, tableName, false);
+    const packageDao = new PackageDynamoDao(documentClient, userDao, tableName, false);
 
     // Load checkpoint if it exists
     const checkpoint = loadCheckpoint();
@@ -128,49 +129,57 @@ const deleteCheckpoint = (): void => {
     do {
       batchNumber += 1;
 
-      // Scan the old notices table
-      const result: ScanResult = await NoticeModel.scan(lastKey);
+      // Scan the old package table
+      const result = await PackageModel.scan(lastKey);
       lastKey = result.lastKey;
 
       if (result.items && result.items.length > 0) {
         try {
           stats.total += result.items.length;
 
-          // Filter to valid notices first (must have required fields)
-          const validItems = result.items.filter((item: UnhydratedNotice) => item.id && item.date && item.status);
+          // Filter to valid packages first
+          const validPackages = result.items.filter((pkg) => pkg.id && pkg.owner && pkg.status);
 
-          stats.skipped += result.items.length - validItems.length;
+          stats.skipped += result.items.length - validPackages.length;
 
-          // Check which items already exist in new format
-          const existingChecks = await Promise.all(
-            validItems.map(async (oldItem: UnhydratedNotice) => ({
-              item: oldItem,
-              exists: !!(await noticeDao.getById(oldItem.id!)),
-            })),
-          );
+          // Transform to new format
+          const packagesToMigrate: UnhydratedCardPackage[] = [];
 
-          // Filter to only items that need to be migrated
-          const itemsToMigrate = existingChecks.filter((check: any) => !check.exists).map((check: any) => check.item);
+          for (const oldPackage of validPackages) {
+            // Ensure cards are stored as scryfall_ids
+            const cardIds = oldPackage.cards
+              .map((card: any) => {
+                if (typeof card !== 'string' && card.scryfall_id) {
+                  return card.scryfall_id;
+                } else if (typeof card === 'string') {
+                  return card;
+                }
+                return undefined;
+              })
+              .filter((cardId: any) => cardId !== undefined) as string[];
 
-          stats.skipped += validItems.length - itemsToMigrate.length;
+            // Transform old package to new format
+            const pkg: UnhydratedCardPackage = {
+              id: oldPackage.id,
+              title: oldPackage.title,
+              date: oldPackage.date,
+              owner: oldPackage.owner,
+              status: oldPackage.status,
+              cards: cardIds,
+              keywords: oldPackage.keywords || [],
+              voters: oldPackage.voters || [],
+              voteCount: oldPackage.voteCount || oldPackage.voters?.length || 0,
+              dateCreated: oldPackage.dateCreated || oldPackage.date || Date.now(),
+              dateLastUpdated: oldPackage.dateLastUpdated || oldPackage.date || Date.now(),
+            };
 
-          // Convert UnhydratedNotice items to Notice items for the DAO
-          const noticesForDao = itemsToMigrate.map((item: UnhydratedNotice) => ({
-            id: item.id!,
-            date: item.date!,
-            user: item.user ? ({ id: item.user } as any) : ({ id: '404', username: 'Anonymous' } as any),
-            body: item.body!,
-            type: item.type!,
-            status: item.status!,
-            subject: item.subject,
-            dateCreated: item.dateCreated || Date.now(),
-            dateLastUpdated: item.dateLastUpdated || Date.now(),
-          }));
+            packagesToMigrate.push(pkg);
+          }
 
-          // Batch put all items at once
-          if (noticesForDao.length > 0) {
-            await noticeDao.batchPut(noticesForDao);
-            stats.migrated += noticesForDao.length;
+          // Batch put all packages at once
+          if (packagesToMigrate.length > 0) {
+            await packageDao.batchPut(packagesToMigrate);
+            stats.migrated += packagesToMigrate.length;
           }
         } catch (error) {
           console.error(`Error processing batch ${batchNumber}:`, error);
@@ -201,11 +210,11 @@ const deleteCheckpoint = (): void => {
 
     console.log('\n' + '='.repeat(80));
     console.log('Migration complete!');
-    console.log(`Total notices processed: ${stats.total}`);
+    console.log(`Total packages processed: ${stats.total}`);
     console.log(`Successfully migrated: ${stats.migrated}`);
     console.log(`Skipped (already exist or invalid): ${stats.skipped}`);
     console.log(`Errors: ${stats.errors}`);
-    console.log('\n' + 'Note: Items without required fields (id, date, status) were skipped.');
+    console.log('\n' + 'Note: Packages without required fields (id, owner, status) were skipped.');
     console.log('='.repeat(80));
 
     // Delete checkpoint file on successful completion

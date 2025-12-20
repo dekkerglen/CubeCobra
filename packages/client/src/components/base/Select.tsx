@@ -22,6 +22,7 @@ interface SelectProps {
   id?: string;
   dense?: boolean;
   disabled?: boolean;
+  loading?: boolean;
   onPointerDown?: React.PointerEventHandler<HTMLSelectElement>;
 }
 
@@ -36,6 +37,7 @@ const Select: React.FC<SelectProps> = ({
   dense,
   className = '',
   disabled,
+  loading,
   onPointerDown,
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -71,21 +73,28 @@ const Select: React.FC<SelectProps> = ({
           </a>
         )}
       </Flexbox>
-      <select
-        onPointerDown={onPointerDown}
-        className={classes}
-        defaultValue={defaultValue}
-        onChange={handleChange}
-        id={id}
-        value={value}
-        disabled={disabled}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      {loading ? (
+        <div className="flex items-center gap-2 px-3 py-2">
+          <div className="animate-spin h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full" />
+          <span className="text-sm text-gray-500">Loading...</span>
+        </div>
+      ) : (
+        <select
+          onPointerDown={onPointerDown}
+          className={classes}
+          defaultValue={defaultValue}
+          onChange={handleChange}
+          id={id}
+          value={value}
+          disabled={disabled}
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 };

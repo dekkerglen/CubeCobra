@@ -1,9 +1,7 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
-import NoticeModel from '@server/dynamo/models/notice';
-import { UnhydratedNotice } from '@utils/datatypes/Notice';
-import { NoticeDynamoDao } from 'dynamo/dao/NoticeDynamoDao';
-import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
+import p1p1PackModel from '@server/dynamo/models/p1p1Pack';
+import { P1P1PackDynamoDao, P1P1PackExtended } from 'dynamo/dao/P1P1PackDynamoDao';
 import fs from 'fs';
 import path from 'path';
 
@@ -23,12 +21,7 @@ interface Checkpoint {
   timestamp: number;
 }
 
-interface ScanResult {
-  items?: UnhydratedNotice[];
-  lastKey?: Record<string, any>;
-}
-
-const CHECKPOINT_FILE = path.join(__dirname, '..', '..', 'temp', 'migrateNotice-checkpoint.json');
+const CHECKPOINT_FILE = path.join(__dirname, '..', '..', 'temp', 'migrateP1P1Pack-checkpoint.json');
 
 /**
  * Saves checkpoint to disk
@@ -71,28 +64,31 @@ const deleteCheckpoint = (): void => {
 };
 
 /**
- * Migration script to move notices from old DynamoDB format to new single-table format.
+ * Migration script to move P1P1 packs from old DynamoDB format to new single-table format.
  *
- * Old format (NOTICES table):
+ * Old format (P1P1_PACKS table):
  * - Simple table with partition key 'id'
- * - GSI on 'status' and 'date' (ByStatus index)
- * - Stores UnhydratedNotice directly
+ * - GSI on 'cubeId' and 'date' (ByCube index)
+ * - Stores P1P1PackDynamoData (metadata only)
+ * - Extended data (cards, etc.) stored in S3 at p1p1-packs/{id}.json
  *
  * New format (Single table design):
- * - PK: NOTICE#{id}
- * - SK: NOTICE
- * - GSI1PK: NOTICE#STATUS#{status}
+ * - PK: P1P1PACK#{id}
+ * - SK: P1P1PACK
+ * - GSI1PK: P1P1PACK#CUBE#{cubeId}
  * - GSI1SK: DATE#{date}
- * - All other fields remain the same
+ * - Extended data still in S3 at p1p1-packs/{id}.json (no migration needed)
+ *
+ * Note: This script only migrates pack metadata. S3 data is already in place and doesn't need migration.
  *
  * CHECKPOINTING:
- * - Progress is saved after each batch to migrateNotice-checkpoint.json
+ * - Progress is saved after each batch to migrateP1P1Pack-checkpoint.json
  * - If interrupted, run again to resume from last checkpoint
  * - Checkpoint file is deleted upon successful completion
  */
 (async () => {
   try {
-    console.log('Starting notice migration from old format to new DynamoDB format');
+    console.log('Starting P1P1 pack migration from old format to new DynamoDB format');
     console.log('='.repeat(80));
 
     const tableName = process.env.DYNAMO_TABLE;
@@ -104,8 +100,7 @@ const deleteCheckpoint = (): void => {
     console.log(`Target table: ${tableName}`);
 
     // Initialize the new DAO (with dualWrite disabled since we're migrating)
-    const userDao = new UserDynamoDao(documentClient, tableName, false);
-    const noticeDao = new NoticeDynamoDao(documentClient, userDao, tableName, false);
+    const p1p1PackDao = new P1P1PackDynamoDao(documentClient, tableName, false);
 
     // Load checkpoint if it exists
     const checkpoint = loadCheckpoint();
@@ -128,53 +123,78 @@ const deleteCheckpoint = (): void => {
     do {
       batchNumber += 1;
 
-      // Scan the old notices table
-      const result: ScanResult = await NoticeModel.scan(lastKey);
+      // Scan the old P1P1_PACKS table
+      const result = await p1p1PackModel.scan(undefined, lastKey);
       lastKey = result.lastKey;
+      const items = result.items || [];
 
-      if (result.items && result.items.length > 0) {
+      if (items.length > 0) {
         try {
-          stats.total += result.items.length;
+          stats.total += items.length;
 
-          // Filter to valid notices first (must have required fields)
-          const validItems = result.items.filter((item: UnhydratedNotice) => item.id && item.date && item.status);
+          // Filter to valid packs first (must have required fields)
+          const validPacks = items.filter((pack: any) => pack.id && pack.cubeId && pack.date);
 
-          stats.skipped += result.items.length - validItems.length;
+          stats.skipped += items.length - validPacks.length;
 
-          // Check which items already exist in new format
+          // Check which packs already exist in new format
           const existingChecks = await Promise.all(
-            validItems.map(async (oldItem: UnhydratedNotice) => ({
-              item: oldItem,
-              exists: !!(await noticeDao.getById(oldItem.id!)),
+            validPacks.map(async (oldPack: any) => ({
+              pack: oldPack,
+              exists: !!(await p1p1PackDao.getById(oldPack.id)),
             })),
           );
 
-          // Filter to only items that need to be migrated
-          const itemsToMigrate = existingChecks.filter((check: any) => !check.exists).map((check: any) => check.item);
+          // Filter to only packs that need to be migrated
+          const packsToMigrate = existingChecks.filter((check: any) => !check.exists).map((check: any) => check.pack);
 
-          stats.skipped += validItems.length - itemsToMigrate.length;
+          stats.skipped += validPacks.length - packsToMigrate.length;
 
-          // Convert UnhydratedNotice items to Notice items for the DAO
-          const noticesForDao = itemsToMigrate.map((item: UnhydratedNotice) => ({
-            id: item.id!,
-            date: item.date!,
-            user: item.user ? ({ id: item.user } as any) : ({ id: '404', username: 'Anonymous' } as any),
-            body: item.body!,
-            type: item.type!,
-            status: item.status!,
-            subject: item.subject,
-            dateCreated: item.dateCreated || Date.now(),
-            dateLastUpdated: item.dateLastUpdated || Date.now(),
-          }));
+          // Load S3 data for all packs in batch
+          const s3DataPromises = packsToMigrate.map(async (oldPack: any) => {
+            const s3Data = await p1p1PackDao['getS3Data'](oldPack.id);
+            return { oldPack, s3Data };
+          });
 
-          // Batch put all items at once
-          if (noticesForDao.length > 0) {
-            await noticeDao.batchPut(noticesForDao);
-            stats.migrated += noticesForDao.length;
+          const s3DataResults = await Promise.all(s3DataPromises);
+
+          // Transform to new format
+          const packsForDao: P1P1PackExtended[] = [];
+
+          for (const { oldPack, s3Data } of s3DataResults) {
+            // Skip if missing critical S3 data
+            if (!s3Data || !s3Data.cards || !Array.isArray(s3Data.cards) || s3Data.cards.length === 0) {
+              stats.skipped += 1;
+              continue;
+            }
+
+            // Add details to cards (needed for the pack object)
+            const cardsWithDetails = p1p1PackDao['addDetails'](s3Data.cards);
+
+            // Transform old pack to new format
+            const pack: P1P1PackExtended = {
+              id: oldPack.id,
+              createdBy: oldPack.createdBy,
+              cubeId: oldPack.cubeId,
+              date: oldPack.date,
+              votesByUser: oldPack.votesByUser || {},
+              dateCreated: oldPack.date,
+              dateLastUpdated: oldPack.date,
+              ...s3Data,
+              cards: cardsWithDetails,
+            };
+
+            packsForDao.push(pack);
+          }
+
+          // Batch put all packs at once
+          if (packsForDao.length > 0) {
+            await p1p1PackDao.batchPut(packsForDao);
+            stats.migrated += packsForDao.length;
           }
         } catch (error) {
           console.error(`Error processing batch ${batchNumber}:`, error);
-          stats.errors += result.items.length;
+          stats.errors += items.length;
 
           if (stats.errors > 100) {
             console.error('Too many errors, stopping migration');
@@ -201,11 +221,12 @@ const deleteCheckpoint = (): void => {
 
     console.log('\n' + '='.repeat(80));
     console.log('Migration complete!');
-    console.log(`Total notices processed: ${stats.total}`);
+    console.log(`Total P1P1 packs processed: ${stats.total}`);
     console.log(`Successfully migrated: ${stats.migrated}`);
     console.log(`Skipped (already exist or invalid): ${stats.skipped}`);
     console.log(`Errors: ${stats.errors}`);
-    console.log('\n' + 'Note: Items without required fields (id, date, status) were skipped.');
+    console.log('\n' + 'Note: S3 pack data remains in place and does not need migration.');
+    console.log('Note: Packs without required fields (id, cubeId, date) or missing S3 data were skipped.');
     console.log('='.repeat(80));
 
     // Delete checkpoint file on successful completion

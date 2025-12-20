@@ -2,10 +2,45 @@ import express, { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { redirect } from 'serverutils/render';
+import responseTime from 'response-time';
+import { sanitizeHttpBody } from '../serverutils/logging';
+import cloudwatch from '../serverutils/cloudwatch';
 
 import { Request, Response } from '../types/express';
 
 const router: Router = express.Router();
+
+//After static routes so we don't bother logging response times for static assets
+const responseTimer = (path: string) =>
+  responseTime((req: express.Request, res: express.Response, time: number) => {
+    const responseHeaders = res.getHeaders();
+    const contentLength = responseHeaders['content-length']
+      ? parseInt(String(responseHeaders['content-length']), 10)
+      : -1;
+    const isError = res.locals.isError ?? false;
+
+    cloudwatch.info(
+      JSON.stringify(
+        {
+          id: req.uuid,
+          method: req.method,
+          path: req.originalUrl,
+          matchedPath: path,
+          user_id: req.user ? req.user.id : null,
+          username: req.user ? req.user.username : null,
+          remoteAddr: req.ip,
+          body: sanitizeHttpBody(req.body),
+          duration: Math.round(time * 100) / 100, //Rounds to 2 decimal places
+          status: res.statusCode,
+          isError: isError,
+          responseSize: contentLength,
+          requestSize: req.socket.bytesRead,
+        },
+        null,
+        2,
+      ),
+    );
+  });
 
 // Home route - redirects to dashboard if logged in, otherwise to landing
 const homeHandler = async (req: Request, res: Response) => {
@@ -34,12 +69,14 @@ export const registerRoutes = (directory: string, base: string) => {
     const { routes } = require(path.join(__dirname, `./routes${base}/${trimmed}`));
 
     for (const route of routes) {
+      const path = `${base}/${trimmed}${route.path}`;
+
       if (route.method === 'get') {
-        router.get(`${base}/${trimmed}${route.path}`, route.handler);
+        router.get(path, responseTimer(path), route.handler);
       } else if (route.method === 'post') {
-        router.post(`${base}/${trimmed}${route.path}`, route.handler);
+        router.post(path, responseTimer(path), route.handler);
       } else if (route.method === 'delete') {
-        router.delete(`${base}/${trimmed}${route.path}`, route.handler);
+        router.delete(path, responseTimer(path), route.handler);
       }
     }
   }

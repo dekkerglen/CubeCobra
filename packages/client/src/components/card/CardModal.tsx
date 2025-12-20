@@ -62,6 +62,7 @@ export interface CardModalProps {
   card: Card;
   canEdit?: boolean;
   versionDict: Record<string, CardDetails[]>;
+  fetchVersionsForCard: (cardId: string) => Promise<boolean>;
   editCard: (index: number, card: Card, board: BoardType) => void | Promise<void>;
   revertEdit: (index: number, board: BoardType) => void;
   revertRemove: (index: number, board: BoardType) => void;
@@ -82,6 +83,7 @@ const CardModal: React.FC<CardModalProps> = ({
   card,
   canEdit = false,
   versionDict,
+  fetchVersionsForCard,
   editCard,
   revertEdit,
   revertRemove,
@@ -91,14 +93,30 @@ const CardModal: React.FC<CardModalProps> = ({
   allTags,
 }) => {
   const [versions, setVersions] = useState<Record<string, CardDetails> | null>(null);
+  const [versionsLoading, setVersionsLoading] = useState(false);
 
   useEffect(() => {
-    if (!versionDict[normalizeName(cardName(card))]) {
+    const cardNorm = normalizeName(cardName(card));
+    const cardVersions = versionDict[cardNorm];
+
+    if (!cardVersions) {
+      // Versions not loaded yet - fetch them
+      setVersionsLoading(true);
       setVersions({});
+
+      if (card.cardID) {
+        fetchVersionsForCard(card.cardID).finally(() => {
+          setVersionsLoading(false);
+        });
+      } else {
+        setVersionsLoading(false);
+      }
     } else {
-      setVersions(Object.fromEntries(versionDict[normalizeName(cardName(card))].map((v) => [v.scryfall_id, v])));
+      // Versions already loaded
+      setVersions(Object.fromEntries(cardVersions.map((v) => [v.scryfall_id, v])));
+      setVersionsLoading(false);
     }
-  }, [card, versionDict]);
+  }, [card, versionDict, fetchVersionsForCard]);
 
   const disabled = !canEdit || card.markedForDelete;
 
@@ -301,6 +319,7 @@ const CardModal: React.FC<CardModalProps> = ({
                       };
                     })}
                     disabled={disabled}
+                    loading={versionsLoading}
                   />
                 )}
                 <Select

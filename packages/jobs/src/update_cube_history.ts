@@ -239,47 +239,64 @@ const mapTotalsToCardHistory = (
 
     console.log(`Loaded ${dayChangelogs.length} changelogs for ${key}`);
 
-    // Batch get the changelog data from S3
-    const logRows = dayChangelogs.map((cl) => ({ cube: cl.cube, id: cl.id }));
-    const logs = await changelogDao.batchGet(logRows);
+    // Process changelogs in batches to avoid overwhelming batchGet
+    const CHANGELOG_BATCH_SIZE = 500;
+    for (let batchStart = 0; batchStart < dayChangelogs.length; batchStart += CHANGELOG_BATCH_SIZE) {
+      const batchEnd = Math.min(batchStart + CHANGELOG_BATCH_SIZE, dayChangelogs.length);
+      const changelogBatch = dayChangelogs.slice(batchStart, batchEnd);
 
-    // Apply changelog changes to cube state
-    for (let j = 0; j < logs.length; j++) {
-      const log = logs[j];
-      const changelog = dayChangelogs[j];
+      // Batch get the changelog data from S3
+      const logRows = changelogBatch.map((cl) => ({ cube: cl.cube, id: cl.id }));
+      const logs = await changelogDao.batchGet(logRows);
 
-      if (!log || !changelog) continue; // Skip undefined logs or changelogs
+      // Apply changelog changes to cube state
+      for (let j = 0; j < logs.length; j++) {
+        const log = logs[j];
+        const changelog = changelogBatch[j];
 
-      if (!cubes[changelog.cube]) {
-        cubes[changelog.cube] = [];
-      }
+        if (!log || !changelog) continue; // Skip undefined logs or changelogs
 
-      if (log.mainboard && log.mainboard.adds) {
-        for (const add of log.mainboard.adds) {
-          cubes[changelog.cube]?.push(add.cardID);
+        if (!cubes[changelog.cube]) {
+          cubes[changelog.cube] = [];
         }
-      }
 
-      if (log.mainboard && log.mainboard.removes) {
-        for (const remove of log.mainboard.removes) {
-          const cubeArray = cubes[changelog.cube];
-          if (cubeArray) {
-            cubeArray.splice(cubeArray.indexOf(remove.oldCard.cardID), 1);
+        if (log.mainboard && log.mainboard.adds) {
+          for (const add of log.mainboard.adds) {
+            cubes[changelog.cube]?.push(add.cardID);
+          }
+        }
+
+        if (log.mainboard && log.mainboard.removes) {
+          for (const remove of log.mainboard.removes) {
+            const cubeArray = cubes[changelog.cube];
+            if (cubeArray) {
+              cubeArray.splice(cubeArray.indexOf(remove.oldCard.cardID), 1);
+            }
+          }
+        }
+
+        if (log.mainboard && log.mainboard.swaps) {
+          for (const swap of log.mainboard.swaps) {
+            const cubeArray = cubes[changelog.cube];
+            if (cubeArray) {
+              cubeArray.splice(cubeArray.indexOf(swap.oldCard.cardID), 1, swap.card.cardID);
+            }
           }
         }
       }
 
-      if (log.mainboard && log.mainboard.swaps) {
-        for (const swap of log.mainboard.swaps) {
-          const cubeArray = cubes[changelog.cube];
-          if (cubeArray) {
-            cubeArray.splice(cubeArray.indexOf(swap.oldCard.cardID), 1, swap.card.cardID);
-          }
-        }
+      if (batchStart + CHANGELOG_BATCH_SIZE < dayChangelogs.length) {
+        console.log(`  Processed ${batchEnd} / ${dayChangelogs.length} changelogs...`);
       }
     }
 
+    console.log(`  Saving cube state snapshot to temp/cubes_history/${key}.json...`);
     await saveCubesHistory(cubes, key);
+    console.log(`  Saved ${Object.keys(cubes).length} cubes to history file`);
+
+    // Allow connection pool to recover after processing changelogs
+    console.log(`  Waiting 5 seconds for connection pool to settle...`);
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const totals: Totals = {
       size180: 0,
@@ -298,7 +315,14 @@ const mapTotalsToCardHistory = (
 
     const data: Record<string, Totals> = {};
 
+    console.log(`  Calculating card statistics for ${Object.keys(cubes).length} cubes...`);
+    let processedCubes = 0;
+    const totalCubes = Object.values(cubes).length;
     for (const cube of Object.values(cubes)) {
+      processedCubes++;
+      if (processedCubes % 5000 === 0) {
+        console.log(`    Analyzed ${processedCubes} / ${totalCubes} cubes...`);
+      }
       const cubeCards = cube.map((id) => cardFromId(id));
       const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
       const { pauper, peasant, type } = getCubeTypes(
@@ -379,37 +403,58 @@ const mapTotalsToCardHistory = (
         }
       }
     }
+    console.log(`  Completed analysis: found ${Object.keys(data).length} unique cards across all cubes`);
 
     if (fs.existsSync(`temp/global_draft_history/${key}.json`)) {
+      console.log(`  Loading ELO data from temp/global_draft_history/${key}.json...`);
       const eloFile = fs.readFileSync(`temp/global_draft_history/${key}.json`, 'utf-8');
       oracleToElo = JSON.parse(eloFile).eloByOracleId;
+      console.log(`  Loaded ELO data for ${Object.keys(oracleToElo).length} cards`);
     }
 
     const date = new Date(year, month, day).valueOf();
 
-    await cardHistoryDao.batchPut(
-      Object.entries(data).map(([oracle, history]) =>
+    // Write card history in smaller batches with delays to avoid overwhelming connection pool
+    const WRITE_BATCH_SIZE = 200; // Process 200 cards at a time to avoid connection pool issues
+    const WRITE_DELAY_MS = 250; // 250ms delay between DynamoDB batches (of 25 items)
+
+    // Process and write entries in chunks instead of materializing all at once
+    const dataEntries = Object.entries(data);
+    console.log(`  Writing ${dataEntries.length} daily history entries...`);
+    for (let i = 0; i < dataEntries.length; i += WRITE_BATCH_SIZE) {
+      const chunk = dataEntries.slice(i, i + WRITE_BATCH_SIZE);
+      const historyEntries = chunk.map(([oracle, history]) =>
         mapTotalsToCardHistory(oracle, Period.DAY, history, totals, date, oracleToElo[oracle] ?? 0),
-      ),
-    );
+      );
+      await cardHistoryDao.batchPut(historyEntries, WRITE_DELAY_MS);
+      console.log(`    Written ${Math.min(i + WRITE_BATCH_SIZE, dataEntries.length)} / ${dataEntries.length}...`);
+    }
 
     // if key is a sunday
     const dateObj = new Date(year, month, day);
     if (dateObj.getDay() === 0) {
-      await cardHistoryDao.batchPut(
-        Object.entries(data).map(([oracle, history]) =>
+      console.log(`  Writing ${dataEntries.length} weekly history entries...`);
+      for (let i = 0; i < dataEntries.length; i += WRITE_BATCH_SIZE) {
+        const chunk = dataEntries.slice(i, i + WRITE_BATCH_SIZE);
+        const historyEntries = chunk.map(([oracle, history]) =>
           mapTotalsToCardHistory(oracle, Period.WEEK, history, totals, date, oracleToElo[oracle] ?? 0),
-        ),
-      );
+        );
+        await cardHistoryDao.batchPut(historyEntries, WRITE_DELAY_MS);
+        console.log(`    Written ${Math.min(i + WRITE_BATCH_SIZE, dataEntries.length)} / ${dataEntries.length}...`);
+      }
     }
 
     // if key is first of the month
     if (dateObj.getDate() === 1) {
-      await cardHistoryDao.batchPut(
-        Object.entries(data).map(([oracle, history]) =>
+      console.log(`  Writing ${dataEntries.length} monthly history entries...`);
+      for (let i = 0; i < dataEntries.length; i += WRITE_BATCH_SIZE) {
+        const chunk = dataEntries.slice(i, i + WRITE_BATCH_SIZE);
+        const historyEntries = chunk.map(([oracle, history]) =>
           mapTotalsToCardHistory(oracle, Period.MONTH, history, totals, date, oracleToElo[oracle] ?? 0),
-        ),
-      );
+        );
+        await cardHistoryDao.batchPut(historyEntries, WRITE_DELAY_MS);
+        console.log(`    Written ${Math.min(i + WRITE_BATCH_SIZE, dataEntries.length)} / ${dataEntries.length}...`);
+      }
     }
 
     console.log(`Finished ${i + 1} / ${keys.length}: Processed ${dayChangelogs.length} logs for ${key}`);

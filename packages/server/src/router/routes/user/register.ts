@@ -80,7 +80,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
     const salt = await bcrypt.genSalt(10);
     (newUser as any).passwordHash = await bcrypt.hash(password, salt);
-    const id = await userDao.put(newUser as any);
+    const id = await userDao.createUser(newUser as any);
 
     await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
       id,

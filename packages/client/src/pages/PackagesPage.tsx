@@ -1,6 +1,8 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import CardPackageData, { CardPackageStatus } from '@utils/datatypes/CardPackage';
+import { QuestionIcon } from '@primer/octicons-react';
+
+import CardPackageData from '@utils/datatypes/CardPackage';
 
 import Banner from 'components/Banner';
 import Alert from 'components/base/Alert';
@@ -9,6 +11,7 @@ import Controls from 'components/base/Controls';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import Pagination from 'components/base/Pagination';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
@@ -16,6 +19,7 @@ import Text from 'components/base/Text';
 import CardPackage from 'components/card/CardPackage';
 import DynamicFlash from 'components/DynamicFlash';
 import CreatePackageModal from 'components/modals/CreatePackageModal';
+import PackageSearchSyntaxModal from 'components/modals/PackageSearchSyntaxModal';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
@@ -25,17 +29,19 @@ import MainLayout from 'layouts/MainLayout';
 
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 
+const PAGE_SIZE = 36;
+
 interface PackagesPageProps {
   items: CardPackageData[];
   lastKey: string | null;
+  parsedQuery?: string[];
 }
 
-const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
+const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey, parsedQuery }) => {
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
 
-  const [type, setType] = useQueryParam('t', CardPackageStatus.APPROVED);
-  const [filter, setFilter] = useQueryParam('kw', '');
+  const [query, setQuery] = useQueryParam('q', '');
   const [sort, setSort] = useQueryParam('s', 'votes');
   const [ascending, setAscending] = useQueryParam('a', 'false');
 
@@ -43,21 +49,26 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
   const [packages, setPackages] = useState<CardPackageData[]>(items);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [currentParsedQuery, setParsedQuery] = useState<string[]>(parsedQuery || []);
+  const [showSyntaxModal, setShowSyntaxModal] = useState(false);
+
+  const pageCount = Math.ceil(packages.length / PAGE_SIZE);
+  const hasMore = !!currentLastKey;
 
   const addAlert = (color: string, message: string) => {
     setAlerts([...alerts, { color, message }]);
   };
 
   const getData = useCallback(
-    async (t: string | null, f: string | null, s: string | null, a: string | null, key: any) => {
+    async (q: string | null, s: string | null, a: string | null, key: any) => {
       const response = await csrfFetch('/packages/getmore', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: t,
-          keywords: f,
+          query: q,
           sort: s,
           ascending: a,
           lastKey: key,
@@ -75,30 +86,56 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
 
   const fetchMoreData = useCallback(async () => {
     setLoading(true);
-    const result = await getData(type, filter, sort, ascending, currentLastKey);
+    const result = await getData(query, sort, ascending, currentLastKey);
 
-    setPackages([...packages, ...result.packages]);
+    const newPackages = [...packages, ...result.packages];
+    setPackages(newPackages);
     setLastKey(result.lastKey);
+    if (result.parsedQuery) {
+      setParsedQuery(result.parsedQuery);
+    }
+
+    const numItemsShowOnLastPage = packages.length % PAGE_SIZE;
+    const newItemsShowOnLastPage = newPackages.length % PAGE_SIZE;
+
+    if (numItemsShowOnLastPage === 0 && newItemsShowOnLastPage > 0) {
+      setPage(page + 1);
+    }
+
     setLoading(false);
-  }, [getData, type, filter, sort, ascending, currentLastKey, packages]);
+  }, [getData, query, sort, ascending, currentLastKey, packages, page]);
 
   const getNewData = useCallback(
-    async (t: string | null, f: string | null, s: string | null, a: string | null) => {
+    async (q: string | null, s: string | null, a: string | null) => {
       setLoading(true);
       setPackages([]);
-      const result = await getData(t, f, s, a, null);
+      setPage(0);
+      const result = await getData(q, s, a, null);
 
       setPackages(result.packages);
       setLastKey(result.lastKey);
+      if (result.parsedQuery) {
+        setParsedQuery(result.parsedQuery);
+      }
       setLoading(false);
     },
     [getData],
   );
 
-  const loader = (
-    <div className="centered py-3 my-4">
-      <Spinner className="position-absolute" />
-    </div>
+  const pager = (
+    <Pagination
+      count={pageCount}
+      active={page}
+      hasMore={hasMore}
+      onClick={async (newPage) => {
+        if (newPage >= pageCount) {
+          await fetchMoreData();
+        } else {
+          setPage(newPage);
+        }
+      }}
+      loading={loading}
+    />
   );
 
   return (
@@ -124,15 +161,25 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
                 </Flexbox>
               </ResponsiveDiv>
             </Flexbox>
-            <Flexbox direction="row" gap="2">
+            <Text sm className="text-text-secondary">
+              Search by keywords, or filter packages that include a card using <code>card:cardname</code> syntax
+            </Text>
+            <Flexbox direction="row" gap="2" alignItems="center">
+              <button
+                onClick={() => setShowSyntaxModal(true)}
+                className="text-green-600 hover:text-green-700 cursor-pointer"
+                aria-label="Search syntax help"
+              >
+                <QuestionIcon size={20} />
+              </button>
               <Input
                 type="text"
-                placeholder="Search for keywords or packages that include a card..."
-                value={filter || ''}
-                onChange={(e) => setFilter(e.target.value)}
+                placeholder='Search for keywords or packages: e.g. "reanimator" or "card:Griselbrand"'
+                value={query || ''}
+                onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    getNewData(type, filter, sort, ascending);
+                    getNewData(query, sort, ascending);
                   }
                 }}
                 className="flex-grow"
@@ -140,45 +187,36 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
               <Button
                 color="primary"
                 onClick={async () => {
-                  await getNewData(type, filter, sort, ascending);
+                  await getNewData(query, sort, ascending);
                 }}
               >
                 <span className="px-4">Apply</span>
               </Button>
             </Flexbox>
+            {currentParsedQuery.length > 0 && (
+              <Flexbox direction="row" justify="start" gap="2" className="w-full">
+                <Text sm semibold italic>
+                  {currentParsedQuery.join(', ')}
+                </Text>
+              </Flexbox>
+            )}
             <Row>
-              <Col sm={4}>
-                <Select
-                  label="Type"
-                  options={[
-                    { value: 'a', label: 'Approved' },
-                    { value: 's', label: 'Submitted' },
-                    { value: 'u', label: 'Your Packages' },
-                  ]}
-                  value={type || 'approved'}
-                  setValue={async (value) => {
-                    setType(value);
-                    await getNewData(value, filter, sort, ascending);
-                  }}
-                  className="mt-1"
-                />
-              </Col>
-              <Col sm={4}>
+              <Col sm={6}>
                 <Select
                   label="Sort By"
                   options={[
-                    { value: 'votes', label: 'Votes' },
+                    { value: 'votes', label: 'Popularity' },
                     { value: 'date', label: 'Date' },
                   ]}
                   value={sort || 'votes'}
                   setValue={async (value) => {
                     setSort(value);
-                    await getNewData(type, filter, value, ascending);
+                    await getNewData(query, value, ascending);
                   }}
                   className="mt-1"
                 />
               </Col>
-              <Col sm={4}>
+              <Col sm={6}>
                 <Select
                   label="Direction"
                   options={[
@@ -188,7 +226,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
                   value={ascending || 'false'}
                   setValue={async (value) => {
                     setAscending(value);
-                    await getNewData(type, filter, sort, value);
+                    await getNewData(query, sort, value);
                   }}
                   className="mt-1"
                 />
@@ -197,7 +235,10 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
           </Flexbox>
         </Controls>
         {user && (
-          <Flexbox direction="row" justify="end">
+          <Flexbox direction="row" justify="end" gap="2">
+            <Button color="primary" type="link" href={`/packages?q=user:${user.username}`}>
+              <span className="p-2">Your Packages</span>
+            </Button>
             <CreatePackageModalLink
               color="primary"
               modalprops={{
@@ -217,17 +258,22 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey }) => {
           <p>No packages found</p>
         ) : (
           <Flexbox direction="col" gap="2">
-            {packages.map((pack) => (
+            <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+              <Text lg semibold>
+                Packages Found ({packages.length}
+                {hasMore ? '+' : ''})
+              </Text>
+              {packages.length > 0 && pager}
+            </Flexbox>
+            {packages.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((pack) => (
               <CardPackage key={pack.id} cardPackage={pack} />
             ))}
-            {loading && loader}
-            {!loading && currentLastKey && (
-              <Button color="primary" onClick={fetchMoreData}>
-                Load More
-              </Button>
-            )}
+            <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+              {pager}
+            </Flexbox>
           </Flexbox>
         )}
+        <PackageSearchSyntaxModal isOpen={showSyntaxModal} setOpen={setShowSyntaxModal} />
       </Flexbox>
     </MainLayout>
   );

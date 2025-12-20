@@ -13,7 +13,8 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     const user = await userDao.getById(userid);
-    const decks = await draftDao.queryByOwner(userid);
+    // Use unhydrated query to avoid loading cards/seats from S3 for better performance
+    const decks = await draftDao.queryByOwnerUnhydrated(userid);
 
     if (!user) {
       req.flash('danger', 'User not found');

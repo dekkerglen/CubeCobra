@@ -307,8 +307,11 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       return [];
     }
 
+    // Deduplicate IDs to avoid DynamoDB validation error
+    const uniqueIds = Array.from(new Set(ids));
+
     // Use the base class method to fetch items
-    const keys = ids.map((id) => ({
+    const keys = uniqueIds.map((id) => ({
       PK: this.typedKey(id),
       SK: this.itemType(),
     }));
@@ -336,6 +339,39 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     }
 
     return this.hydrateItems(allItems);
+  }
+
+  /**
+   * Creates a new user, generating an ID if not provided.
+   * Uses optimistic locking to prevent duplicate creation.
+   *
+   * @param user - The user to create (can omit id, it will be generated)
+   * @returns The ID of the created user
+   */
+  public async createUser(
+    user:
+      | (Omit<User, 'id'> & Partial<Pick<User, 'id'>>)
+      | (Omit<UserWithSensitiveInformation, 'id'> & Partial<Pick<UserWithSensitiveInformation, 'id'>>),
+  ): Promise<string> {
+    const userId = user.id || (await import('uuid')).v4();
+    const now = Date.now();
+
+    const userWithId: any = {
+      ...user,
+      id: userId,
+      usernameLower: user.username?.toLowerCase(),
+      dateCreated: (user as any).dateCreated ?? now,
+      dateLastUpdated: (user as any).dateLastUpdated ?? now,
+    };
+
+    if (this.dualWriteEnabled) {
+      // Write to both old and new paths
+      await Promise.all([UserModel.put(userWithId as User), super.put(userWithId)]);
+    } else {
+      await super.put(userWithId);
+    }
+
+    return userId;
   }
 
   /**

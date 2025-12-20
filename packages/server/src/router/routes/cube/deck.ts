@@ -609,7 +609,7 @@ export const editDeckHandler = async (req: Request, res: Response) => {
 
     deck.complete = true;
 
-    await draftDao.putDraft(deck);
+    await draftDao.update(deck);
 
     req.flash('success', 'Deck saved successfully');
     return redirect(req, res, `/cube/deck/${deck.id}`);

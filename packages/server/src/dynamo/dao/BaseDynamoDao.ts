@@ -336,9 +336,10 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
    * Use with caution, especially for updates.
    *
    * @param items - The items to write.
+   * @param delayMs - Optional delay in milliseconds between batches to avoid overwhelming the connection pool.
    * @returns A promise that resolves when all items have been written.
    */
-  public async batchPut(items: T[]): Promise<void> {
+  public async batchPut(items: T[], delayMs: number = 0): Promise<void> {
     if (items.length === 0) {
       return;
     }
@@ -350,26 +351,64 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
     for (let i = 0; i < dynamoItems.length; i += BATCH_SIZE) {
       const batch = dynamoItems.slice(i, i + BATCH_SIZE);
 
-      try {
-        await this.dynamoClient.send(
-          new BatchWriteCommand({
-            RequestItems: {
-              [this.tableName]: batch.map((dynamoItem) => ({
-                PutRequest: {
-                  Item: dynamoItem,
-                },
-              })),
-            },
-          }),
-        );
-      } catch (e) {
-        const error = e instanceof Error ? e : new Error(String(e));
-        const code = error instanceof DaoError ? error.code : ErrorCode.INTERNAL_SERVER_ERROR;
+      // Retry logic for connection errors (ECONNABORTED, ECONNRESET, etc.)
+      const MAX_RETRIES = 3;
+      let lastError: Error | undefined;
 
-        throw new DaoError(`Error batch putting items: ${error.message}`, code, {
-          cause: error,
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          await this.dynamoClient.send(
+            new BatchWriteCommand({
+              RequestItems: {
+                [this.tableName]: batch.map((dynamoItem) => ({
+                  PutRequest: {
+                    Item: dynamoItem,
+                  },
+                })),
+              },
+            }),
+          );
+
+          // Success - break retry loop
+          lastError = undefined;
+          break;
+        } catch (e) {
+          lastError = e instanceof Error ? e : new Error(String(e));
+
+          // Check if it's a connection error that we should retry
+          const isConnectionError =
+            lastError.message.includes('ECONNABORTED') ||
+            lastError.message.includes('ECONNRESET') ||
+            lastError.message.includes('ETIMEDOUT') ||
+            lastError.message.includes('socket hang up');
+
+          if (isConnectionError && attempt < MAX_RETRIES - 1) {
+            // Exponential backoff: 1s, 2s, 4s
+            const backoffMs = Math.pow(2, attempt) * 1000;
+            console.warn(
+              `Connection error on batch ${i}-${i + batch.length}, attempt ${attempt + 1}/${MAX_RETRIES}. Retrying in ${backoffMs}ms...`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, backoffMs));
+            continue;
+          }
+
+          // If not a connection error or out of retries, throw
+          break;
+        }
+      }
+
+      // If we still have an error after all retries, throw it
+      if (lastError) {
+        const code = lastError instanceof DaoError ? lastError.code : ErrorCode.INTERNAL_SERVER_ERROR;
+        throw new DaoError(`Error batch putting items: ${lastError.message}`, code, {
+          cause: lastError,
           meta: { batchIndex: i, batchSize: batch.length },
         });
+      }
+
+      // Add delay between batches if specified
+      if (delayMs > 0 && i + BATCH_SIZE < dynamoItems.length) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
   }

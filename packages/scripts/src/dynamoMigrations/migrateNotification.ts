@@ -132,7 +132,6 @@ const deleteCheckpoint = (): void => {
         // Scan the old notifications table directly
         const scanResult = await documentClient.scan({
           TableName: oldTableName,
-          Limit: 200,
           ExclusiveStartKey: lastKey,
         });
 

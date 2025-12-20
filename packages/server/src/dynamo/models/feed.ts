@@ -97,6 +97,20 @@ const feed = {
       lastKey: result.LastEvaluatedKey,
     };
   },
+  scan: async (
+    limit?: number,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items: UnhydratedFeed[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    });
+
+    return {
+      items: (result.Items ?? []) as UnhydratedFeed[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };
 

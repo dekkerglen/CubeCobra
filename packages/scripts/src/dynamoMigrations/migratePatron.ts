@@ -1,9 +1,8 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
-import NoticeModel from '@server/dynamo/models/notice';
-import { UnhydratedNotice } from '@utils/datatypes/Notice';
-import { NoticeDynamoDao } from 'dynamo/dao/NoticeDynamoDao';
-import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
+import PatronModel from '@server/dynamo/models/patron';
+import { PatronDynamoDao } from 'dynamo/dao/PatronDynamoDao';
+import Patron from '@utils/datatypes/Patron';
 import fs from 'fs';
 import path from 'path';
 
@@ -23,12 +22,7 @@ interface Checkpoint {
   timestamp: number;
 }
 
-interface ScanResult {
-  items?: UnhydratedNotice[];
-  lastKey?: Record<string, any>;
-}
-
-const CHECKPOINT_FILE = path.join(__dirname, '..', '..', 'temp', 'migrateNotice-checkpoint.json');
+const CHECKPOINT_FILE = path.join(__dirname, '..', '..', 'temp', 'migratePatron-checkpoint.json');
 
 /**
  * Saves checkpoint to disk
@@ -71,28 +65,30 @@ const deleteCheckpoint = (): void => {
 };
 
 /**
- * Migration script to move notices from old DynamoDB format to new single-table format.
+ * Migration script to move patrons from old DynamoDB format to new single-table format.
  *
- * Old format (NOTICES table):
- * - Simple table with partition key 'id'
- * - GSI on 'status' and 'date' (ByStatus index)
- * - Stores UnhydratedNotice directly
+ * Old format (PATRON table):
+ * - Simple table with partition key 'owner'
+ * - GSI on 'email' for email lookups
+ * - Stores patron information with level, status, and timestamps
  *
  * New format (Single table design):
- * - PK: NOTICE#{id}
- * - SK: NOTICE
- * - GSI1PK: NOTICE#STATUS#{status}
- * - GSI1SK: DATE#{date}
- * - All other fields remain the same
+ * - PK: PATRON#{owner}
+ * - SK: PATRON
+ * - GSI1PK: PATRON#EMAIL#{email}
+ * - GSI1SK: PATRON
+ * - Includes dateCreated and dateLastUpdated timestamps
  *
  * CHECKPOINTING:
- * - Progress is saved after each batch to migrateNotice-checkpoint.json
+ * - Progress is saved after each batch to migratePatron-checkpoint.json
  * - If interrupted, run again to resume from last checkpoint
  * - Checkpoint file is deleted upon successful completion
+ *
+ * Note: No page limits used - scans entire table in continuous batches
  */
 (async () => {
   try {
-    console.log('Starting notice migration from old format to new DynamoDB format');
+    console.log('Starting patron migration from old format to new DynamoDB format');
     console.log('='.repeat(80));
 
     const tableName = process.env.DYNAMO_TABLE;
@@ -104,8 +100,7 @@ const deleteCheckpoint = (): void => {
     console.log(`Target table: ${tableName}`);
 
     // Initialize the new DAO (with dualWrite disabled since we're migrating)
-    const userDao = new UserDynamoDao(documentClient, tableName, false);
-    const noticeDao = new NoticeDynamoDao(documentClient, userDao, tableName, false);
+    const patronDao = new PatronDynamoDao(documentClient, tableName, false);
 
     // Load checkpoint if it exists
     const checkpoint = loadCheckpoint();
@@ -128,49 +123,33 @@ const deleteCheckpoint = (): void => {
     do {
       batchNumber += 1;
 
-      // Scan the old notices table
-      const result: ScanResult = await NoticeModel.scan(lastKey);
+      // Scan the old patron table without page limit
+      const result = await PatronModel.scan(undefined, lastKey);
       lastKey = result.lastKey;
 
       if (result.items && result.items.length > 0) {
         try {
           stats.total += result.items.length;
 
-          // Filter to valid notices first (must have required fields)
-          const validItems = result.items.filter((item: UnhydratedNotice) => item.id && item.date && item.status);
+          // Filter to valid patrons first
+          const validPatrons = result.items.filter((patron) => patron.owner && patron.email);
 
-          stats.skipped += result.items.length - validItems.length;
+          stats.skipped += result.items.length - validPatrons.length;
 
-          // Check which items already exist in new format
-          const existingChecks = await Promise.all(
-            validItems.map(async (oldItem: UnhydratedNotice) => ({
-              item: oldItem,
-              exists: !!(await noticeDao.getById(oldItem.id!)),
-            })),
-          );
-
-          // Filter to only items that need to be migrated
-          const itemsToMigrate = existingChecks.filter((check: any) => !check.exists).map((check: any) => check.item);
-
-          stats.skipped += validItems.length - itemsToMigrate.length;
-
-          // Convert UnhydratedNotice items to Notice items for the DAO
-          const noticesForDao = itemsToMigrate.map((item: UnhydratedNotice) => ({
-            id: item.id!,
-            date: item.date!,
-            user: item.user ? ({ id: item.user } as any) : ({ id: '404', username: 'Anonymous' } as any),
-            body: item.body!,
-            type: item.type!,
-            status: item.status!,
-            subject: item.subject,
-            dateCreated: item.dateCreated || Date.now(),
-            dateLastUpdated: item.dateLastUpdated || Date.now(),
+          // Transform to new format
+          const patronsToMigrate: Patron[] = validPatrons.map((oldPatron) => ({
+            owner: oldPatron.owner,
+            email: oldPatron.email,
+            level: oldPatron.level ?? 0,
+            status: oldPatron.status ?? 'i',
+            dateCreated: oldPatron.dateCreated ?? Date.now(),
+            dateLastUpdated: oldPatron.dateLastUpdated ?? Date.now(),
           }));
 
-          // Batch put all items at once
-          if (noticesForDao.length > 0) {
-            await noticeDao.batchPut(noticesForDao);
-            stats.migrated += noticesForDao.length;
+          // Batch put all patrons at once
+          if (patronsToMigrate.length > 0) {
+            await patronDao.batchPut(patronsToMigrate);
+            stats.migrated += patronsToMigrate.length;
           }
         } catch (error) {
           console.error(`Error processing batch ${batchNumber}:`, error);
@@ -183,12 +162,10 @@ const deleteCheckpoint = (): void => {
         }
       }
 
-      // Log progress every 10 batches
-      if (batchNumber % 10 === 0) {
-        console.log(
-          `Progress: Batch ${batchNumber} | ${stats.migrated.toLocaleString()} migrated, ${stats.skipped.toLocaleString()} skipped, ${stats.errors} errors`,
-        );
-      }
+      // Log progress every batch (no limit on batches)
+      console.log(
+        `Progress: Batch ${batchNumber} | ${stats.migrated.toLocaleString()} migrated, ${stats.skipped.toLocaleString()} skipped, ${stats.errors} errors`,
+      );
 
       // Save checkpoint after each batch
       saveCheckpoint({
@@ -201,11 +178,11 @@ const deleteCheckpoint = (): void => {
 
     console.log('\n' + '='.repeat(80));
     console.log('Migration complete!');
-    console.log(`Total notices processed: ${stats.total}`);
+    console.log(`Total patrons processed: ${stats.total}`);
     console.log(`Successfully migrated: ${stats.migrated}`);
     console.log(`Skipped (already exist or invalid): ${stats.skipped}`);
     console.log(`Errors: ${stats.errors}`);
-    console.log('\n' + 'Note: Items without required fields (id, date, status) were skipped.');
+    console.log('\n' + 'Note: Patrons without required fields (owner, email) were skipped.');
     console.log('='.repeat(80));
 
     // Delete checkpoint file on successful completion

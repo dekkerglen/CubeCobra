@@ -1,9 +1,7 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
-import NoticeModel from '@server/dynamo/models/notice';
-import { UnhydratedNotice } from '@utils/datatypes/Notice';
-import { NoticeDynamoDao } from 'dynamo/dao/NoticeDynamoDao';
-import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
+import RecordModel from '@server/dynamo/models/record';
+import { RecordDynamoDao, RecordEntity } from 'dynamo/dao/RecordDynamoDao';
 import fs from 'fs';
 import path from 'path';
 
@@ -23,12 +21,7 @@ interface Checkpoint {
   timestamp: number;
 }
 
-interface ScanResult {
-  items?: UnhydratedNotice[];
-  lastKey?: Record<string, any>;
-}
-
-const CHECKPOINT_FILE = path.join(__dirname, '..', '..', 'temp', 'migrateNotice-checkpoint.json');
+const CHECKPOINT_FILE = path.join(__dirname, '..', '..', 'temp', 'migrateRecord-checkpoint.json');
 
 /**
  * Saves checkpoint to disk
@@ -71,28 +64,30 @@ const deleteCheckpoint = (): void => {
 };
 
 /**
- * Migration script to move notices from old DynamoDB format to new single-table format.
+ * Migration script to move records from old DynamoDB format to new single-table format.
  *
- * Old format (NOTICES table):
+ * Old format (RECORD table):
  * - Simple table with partition key 'id'
- * - GSI on 'status' and 'date' (ByStatus index)
- * - Stores UnhydratedNotice directly
+ * - GSI on 'cube' and 'date' for cube-based queries
+ * - Stores tournament/event records with players, matches, and results
  *
  * New format (Single table design):
- * - PK: NOTICE#{id}
- * - SK: NOTICE
- * - GSI1PK: NOTICE#STATUS#{status}
+ * - PK: RECORD#{id}
+ * - SK: RECORD
+ * - GSI1PK: RECORD#CUBE#{cubeId}
  * - GSI1SK: DATE#{date}
- * - All other fields remain the same
+ * - Includes dateCreated and dateLastUpdated timestamps
  *
  * CHECKPOINTING:
- * - Progress is saved after each batch to migrateNotice-checkpoint.json
+ * - Progress is saved after each batch to migrateRecord-checkpoint.json
  * - If interrupted, run again to resume from last checkpoint
  * - Checkpoint file is deleted upon successful completion
+ *
+ * Note: No page limits used - scans entire table in continuous batches
  */
 (async () => {
   try {
-    console.log('Starting notice migration from old format to new DynamoDB format');
+    console.log('Starting record migration from old format to new DynamoDB format');
     console.log('='.repeat(80));
 
     const tableName = process.env.DYNAMO_TABLE;
@@ -104,8 +99,7 @@ const deleteCheckpoint = (): void => {
     console.log(`Target table: ${tableName}`);
 
     // Initialize the new DAO (with dualWrite disabled since we're migrating)
-    const userDao = new UserDynamoDao(documentClient, tableName, false);
-    const noticeDao = new NoticeDynamoDao(documentClient, userDao, tableName, false);
+    const recordDao = new RecordDynamoDao(documentClient, tableName, false);
 
     // Load checkpoint if it exists
     const checkpoint = loadCheckpoint();
@@ -128,49 +122,41 @@ const deleteCheckpoint = (): void => {
     do {
       batchNumber += 1;
 
-      // Scan the old notices table
-      const result: ScanResult = await NoticeModel.scan(lastKey);
+      // Scan the old record table without page limit
+      const result = await RecordModel.scan(undefined, lastKey);
       lastKey = result.lastKey;
 
       if (result.items && result.items.length > 0) {
         try {
           stats.total += result.items.length;
 
-          // Filter to valid notices first (must have required fields)
-          const validItems = result.items.filter((item: UnhydratedNotice) => item.id && item.date && item.status);
+          // Filter to valid records first
+          const validRecords = result.items.filter((record) => record.id && record.cube && record.name);
 
-          stats.skipped += result.items.length - validItems.length;
+          stats.skipped += result.items.length - validRecords.length;
 
-          // Check which items already exist in new format
-          const existingChecks = await Promise.all(
-            validItems.map(async (oldItem: UnhydratedNotice) => ({
-              item: oldItem,
-              exists: !!(await noticeDao.getById(oldItem.id!)),
-            })),
-          );
+          // Transform to new format
+          const recordsToMigrate: RecordEntity[] = validRecords.map((oldRecord) => {
+            const now = Date.now();
+            return {
+              id: oldRecord.id,
+              cube: oldRecord.cube,
+              date: oldRecord.date ?? now,
+              name: oldRecord.name,
+              description: oldRecord.description ?? '',
+              players: oldRecord.players ?? [],
+              matches: oldRecord.matches ?? [],
+              trophy: Array.isArray(oldRecord.trophy) ? oldRecord.trophy : [],
+              draft: oldRecord.draft,
+              dateCreated: oldRecord.date ?? now,
+              dateLastUpdated: oldRecord.date ?? now,
+            };
+          });
 
-          // Filter to only items that need to be migrated
-          const itemsToMigrate = existingChecks.filter((check: any) => !check.exists).map((check: any) => check.item);
-
-          stats.skipped += validItems.length - itemsToMigrate.length;
-
-          // Convert UnhydratedNotice items to Notice items for the DAO
-          const noticesForDao = itemsToMigrate.map((item: UnhydratedNotice) => ({
-            id: item.id!,
-            date: item.date!,
-            user: item.user ? ({ id: item.user } as any) : ({ id: '404', username: 'Anonymous' } as any),
-            body: item.body!,
-            type: item.type!,
-            status: item.status!,
-            subject: item.subject,
-            dateCreated: item.dateCreated || Date.now(),
-            dateLastUpdated: item.dateLastUpdated || Date.now(),
-          }));
-
-          // Batch put all items at once
-          if (noticesForDao.length > 0) {
-            await noticeDao.batchPut(noticesForDao);
-            stats.migrated += noticesForDao.length;
+          // Batch put all records at once
+          if (recordsToMigrate.length > 0) {
+            await recordDao.batchPut(recordsToMigrate);
+            stats.migrated += recordsToMigrate.length;
           }
         } catch (error) {
           console.error(`Error processing batch ${batchNumber}:`, error);
@@ -183,12 +169,10 @@ const deleteCheckpoint = (): void => {
         }
       }
 
-      // Log progress every 10 batches
-      if (batchNumber % 10 === 0) {
-        console.log(
-          `Progress: Batch ${batchNumber} | ${stats.migrated.toLocaleString()} migrated, ${stats.skipped.toLocaleString()} skipped, ${stats.errors} errors`,
-        );
-      }
+      // Log progress every batch (no limit on batches)
+      console.log(
+        `Progress: Batch ${batchNumber} | ${stats.migrated.toLocaleString()} migrated, ${stats.skipped.toLocaleString()} skipped, ${stats.errors} errors`,
+      );
 
       // Save checkpoint after each batch
       saveCheckpoint({
@@ -201,11 +185,12 @@ const deleteCheckpoint = (): void => {
 
     console.log('\n' + '='.repeat(80));
     console.log('Migration complete!');
-    console.log(`Total notices processed: ${stats.total}`);
+    console.log(`Total records processed: ${stats.total}`);
     console.log(`Successfully migrated: ${stats.migrated}`);
     console.log(`Skipped (already exist or invalid): ${stats.skipped}`);
     console.log(`Errors: ${stats.errors}`);
-    console.log('\n' + 'Note: Items without required fields (id, date, status) were skipped.');
+    console.log('\n' + 'Note: Records without required fields (id, cube, name) were skipped.');
+    console.log('Note: Record analytics remain in S3 and do not need migration.');
     console.log('='.repeat(80));
 
     // Delete checkpoint file on successful completion

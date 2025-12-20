@@ -15,7 +15,8 @@ export const playtestHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const decks = await draftDao.queryByCube(cube.id);
+    // Use unhydrated query to avoid loading cards/seats from S3 for better performance
+    const decks = await draftDao.queryByCubeUnhydrated(cube.id);
 
     // Get previous P1P1 packs for this cube
     let previousPacks: any[] = [];

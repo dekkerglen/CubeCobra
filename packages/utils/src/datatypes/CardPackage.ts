@@ -2,17 +2,11 @@ import { BaseObject } from './BaseObject';
 import { CardDetails } from './Card';
 import User from './User';
 
-export enum CardPackageStatus {
-  APPROVED = 'a',
-  SUBMITTED = 's',
-}
-
 export type UnhydratedCardPackage = BaseObject & {
   id?: string;
   title: string;
   date: number;
   owner: string;
-  status: CardPackageStatus;
   cards: string[]; //List of card ids
   keywords: string[];
   voters: string[]; //List of user ids

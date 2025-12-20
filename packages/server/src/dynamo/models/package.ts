@@ -4,7 +4,7 @@ import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { normalizeName } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
-import CardPackage, { CardPackageStatus, UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
+import CardPackage, { UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
 import UserType from '@utils/datatypes/User';
 import { userDao } from 'dynamo/daos';
 import createClient, { QueryInputType } from 'dynamo/util';
@@ -17,12 +17,12 @@ const client = createClient({
   indexes: [
     {
       name: 'ByVoteCount',
-      partitionKey: 'status',
+      partitionKey: 'id',
       sortKey: 'voteCount',
     },
     {
       name: 'ByDate',
-      partitionKey: 'status',
+      partitionKey: 'id',
       sortKey: 'date',
     },
     {
@@ -33,7 +33,6 @@ const client = createClient({
   ],
   attributes: {
     id: 'S',
-    status: 'S',
     voteCount: 'N',
     date: 'N',
     owner: 'S',
@@ -41,7 +40,6 @@ const client = createClient({
 });
 
 //Using keyof .. provides static checking that the attribute exists in the type. Also its own const b/c inline "as keyof" not validating
-const statusAttr: keyof UnhydratedCardPackage = 'status';
 const ownerAttr: keyof UnhydratedCardPackage = 'owner';
 const keywordsAttr: keyof UnhydratedCardPackage = 'keywords';
 
@@ -55,7 +53,6 @@ const createHydratedPackage = (
     title: document.title,
     date: document.date,
     owner,
-    status: document.status,
     cards: cards,
     keywords: document.keywords,
     voters: document.voters,
@@ -168,7 +165,6 @@ const packages = {
       title: document.title,
       date: document.date,
       owner: ownerId,
-      status: document.status,
       cards: cardIds,
       voters: document.voters,
       keywords: document.keywords,
@@ -178,60 +174,7 @@ const packages = {
     });
     return id;
   },
-  querySortedByDate: async (
-    status: CardPackageStatus,
-    keywords: string,
-    ascending: boolean,
-    lastKey?: Record<string, NativeAttributeValue>,
-  ): Promise<QueryResponse> => {
-    const query = {
-      IndexName: 'ByDate',
-      KeyConditionExpression: '#status = :status',
-      ExpressionAttributeNames: {
-        '#status': statusAttr,
-      },
-      ExpressionAttributeValues: {
-        ':status': status,
-      },
-      ScanIndexForward: ascending,
-      ExclusiveStartKey: lastKey,
-      Limit: 36,
-    } as QueryInputType;
 
-    const result = await client.query(applyKeywordFilter(query, keywords));
-
-    return {
-      items: await batchHydrate(result.Items as UnhydratedCardPackage[]),
-      lastKey: result.LastEvaluatedKey,
-    };
-  },
-  querySortedByVoteCount: async (
-    status: CardPackageStatus,
-    keywords: string,
-    ascending: boolean,
-    lastKey?: Record<string, NativeAttributeValue>,
-  ): Promise<QueryResponse> => {
-    const query = {
-      IndexName: 'ByVoteCount',
-      KeyConditionExpression: '#status = :status',
-      ExpressionAttributeNames: {
-        '#status': statusAttr,
-      },
-      ExpressionAttributeValues: {
-        ':status': status,
-      },
-      ScanIndexForward: ascending,
-      ExclusiveStartKey: lastKey,
-      Limit: 36,
-    } as QueryInputType;
-
-    const result = await client.query(applyKeywordFilter(query, keywords));
-
-    return {
-      items: await batchHydrate(result.Items as UnhydratedCardPackage[]),
-      lastKey: result.LastEvaluatedKey,
-    };
-  },
   queryByOwner: async (owner: string, lastKey?: Record<string, NativeAttributeValue>): Promise<QueryResponse> => {
     const query = {
       IndexName: 'ByOwner',

@@ -44,16 +44,6 @@ export const addHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/user/view/${user!.id}`);
     }
 
-    // if this account is younger than a week, we deny them from making a new cube
-    if ((req.user as any).dateCreated && Date.now() - (req.user as any).dateCreated < 1000 * 60 * 60 * 24 * 7) {
-      const totalCubes = cubes.items.length;
-
-      if (totalCubes > 2) {
-        req.flash('danger', 'You may only have two cubes until your account is a week old.');
-        return redirect(req, res, `/user/view/${user!.id}`);
-      }
-    }
-
     const now = Date.now().valueOf();
     const imageName = 'doubling cube [10e-321]';
     const cube: Cube = {

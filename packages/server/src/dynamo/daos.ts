@@ -27,14 +27,11 @@ if (!tableName) {
   throw new Error('DYNAMO_TABLE must be a defined environment variable');
 }
 
-// We haven't migrated the data yet, so enable dual writes - these are deployed to prod  so we can start migration
-export const passwordResetDao: PasswordResetDynamoDao = new PasswordResetDynamoDao(documentClient, tableName, true);
-export const patronDao: PatronDynamoDao = new PatronDynamoDao(documentClient, tableName, true);
-export const recordDao: RecordDynamoDao = new RecordDynamoDao(documentClient, tableName, true);
-export const userDao: UserDynamoDao = new UserDynamoDao(documentClient, tableName, true);
-export const packageDao: PackageDynamoDao = new PackageDynamoDao(documentClient, userDao, tableName, true);
-
 // We have completed the data migration, so disable dual writes
+export const userDao: UserDynamoDao = new UserDynamoDao(documentClient, tableName, false);
+export const recordDao: RecordDynamoDao = new RecordDynamoDao(documentClient, tableName, false);
+export const patronDao: PatronDynamoDao = new PatronDynamoDao(documentClient, tableName, false);
+export const passwordResetDao: PasswordResetDynamoDao = new PasswordResetDynamoDao(documentClient, tableName, false);
 export const commentDao: CommentDynamoDao = new CommentDynamoDao(documentClient, userDao, tableName, false);
 export const changelogDao: ChangelogDynamoDao = new ChangelogDynamoDao(documentClient, tableName, false);
 export const articleDao: ArticleDynamoDao = new ArticleDynamoDao(documentClient, userDao, tableName, false);
@@ -53,10 +50,9 @@ export const blogDao: BlogDynamoDao = new BlogDynamoDao(
 export const cardHistoryDao: CardHistoryDynamoDao = new CardHistoryDynamoDao(documentClient, tableName, false);
 export const dailyP1P1Dao: DailyP1P1DynamoDao = new DailyP1P1DynamoDao(documentClient, tableName, false);
 export const featuredQueueDao: FeaturedQueueDynamoDao = new FeaturedQueueDynamoDao(documentClient, tableName, false);
-
-// We haven't migrated the data yet, so enable dual writes - these are deployed to prod, so we can start migration
-export const draftDao: DraftDynamoDao = new DraftDynamoDao(documentClient, cubeDao, userDao, tableName, true); // in progress
-export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao, tableName, true);
-export const noticeDao: NoticeDynamoDao = new NoticeDynamoDao(documentClient, userDao, tableName, true);
-export const notificationDao: NotificationDynamoDao = new NotificationDynamoDao(documentClient, tableName, true);
-export const p1p1PackDao: P1P1PackDynamoDao = new P1P1PackDynamoDao(documentClient, tableName, true);
+export const packageDao: PackageDynamoDao = new PackageDynamoDao(documentClient, userDao, tableName, false);
+export const draftDao: DraftDynamoDao = new DraftDynamoDao(documentClient, cubeDao, userDao, tableName, false);
+export const noticeDao: NoticeDynamoDao = new NoticeDynamoDao(documentClient, userDao, tableName, false);
+export const p1p1PackDao: P1P1PackDynamoDao = new P1P1PackDynamoDao(documentClient, tableName, false);
+export const notificationDao: NotificationDynamoDao = new NotificationDynamoDao(documentClient, tableName, false);
+export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao, tableName, false);

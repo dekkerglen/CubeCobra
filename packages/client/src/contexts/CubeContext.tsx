@@ -71,6 +71,7 @@ export interface CubeContextValue {
   revertSwap: (index: number, board: BoardType) => void;
   revertEdit: (index: number, board: BoardType) => void;
   versionDict: Record<string, CardVersion[]>;
+  fetchVersionsForCard: (cardId: string) => Promise<boolean>;
   commitChanges: (title: string, blog: string) => Promise<void>;
   setModalSelection: Dispatch<
     SetStateAction<
@@ -139,6 +140,7 @@ const CubeContext = createContext<CubeContextValue>({
   revertSwap: defaultFn,
   revertEdit: defaultFn,
   versionDict: {} as Record<string, CardVersion[]>,
+  fetchVersionsForCard: defaultFn,
   commitChanges: defaultFn,
   setModalSelection: defaultFn,
   setModalOpen: defaultFn,
@@ -291,6 +293,23 @@ export function CubeContextProvider({
     }
   }, [cube.cards, fetchCardVersions, loadVersionDict, versionDictLoaded, versionDictLoading]);
 
+  // Fetch versions for a single card lazily
+  const fetchVersionsForCard = useCallback(
+    async (cardId: string): Promise<boolean> => {
+      if (!loadVersionDict) {
+        return false;
+      }
+
+      const dict = await fetchCardVersions([cardId]);
+      if (dict) {
+        setVersionDict((prev) => ({ ...prev, ...dict }));
+        return true;
+      }
+      return false;
+    },
+    [fetchCardVersions, loadVersionDict],
+  );
+
   // The versionDictProxy is a Proxy around the versionDict state.
   // Its purpose is to lazily load the version dictionary from the server
   // only when it is first accessed by a consumer (such as ListView or CardModal).
@@ -437,43 +456,6 @@ export function CubeContextProvider({
     }
   });
 
-  // Fetch versions for newly added cards in the pending changelist
-  useEffect(() => {
-    const fetchVersionsForPendingChanges = async () => {
-      const cardIds: string[] = [];
-
-      // Collect cardIDs from adds
-      for (const board of boardTypes) {
-        const adds = changes[board]?.adds || [];
-        for (const card of adds) {
-          if (card.cardID && !versionDict[card.cardID]) {
-            cardIds.push(card.cardID);
-          }
-        }
-      }
-
-      // Collect cardIDs from swaps (new cards)
-      for (const board of boardTypes) {
-        const swaps = changes[board]?.swaps || [];
-        for (const swap of swaps) {
-          if (swap.card.cardID && !versionDict[swap.card.cardID]) {
-            cardIds.push(swap.card.cardID);
-          }
-        }
-      }
-
-      // Fetch versions if we have any card IDs
-      if (cardIds.length > 0) {
-        const dict = await fetchCardVersions(cardIds);
-        if (dict) {
-          setVersionDict((prev) => ({ ...prev, ...dict }));
-        }
-      }
-    };
-
-    fetchVersionsForPendingChanges();
-  }, [changes, fetchCardVersions, versionDict]); // Run only once on mount
-
   const updateShowTagColors = useCallback(
     async (showColors: boolean) => {
       const response = await csrfFetch('/cube/api/saveshowtagcolors', {
@@ -505,16 +487,8 @@ export function CubeContextProvider({
       }
       newChanges[board].adds.push(card);
       setChanges(newChanges);
-
-      // Fetch versions for the newly added card
-      if (loadVersionDict && card.cardID) {
-        const dict = await fetchCardVersions([card.cardID]);
-        if (dict) {
-          setVersionDict((prev) => ({ ...prev, ...dict }));
-        }
-      }
     },
-    [changes, setChanges, loadVersionDict, fetchCardVersions],
+    [changes, setChanges],
   );
 
   const bulkAddCard = useCallback(
@@ -528,19 +502,8 @@ export function CubeContextProvider({
       }
       newChanges[board].adds.push(...newCards);
       setChanges(newChanges);
-
-      // Fetch versions for all newly added cards
-      if (loadVersionDict && newCards.length > 0) {
-        const cardIds = newCards.map((c) => c.cardID).filter((id) => id);
-        if (cardIds.length > 0) {
-          const dict = await fetchCardVersions(cardIds);
-          if (dict) {
-            setVersionDict((prev) => ({ ...prev, ...dict }));
-          }
-        }
-      }
     },
-    [changes, setChanges, loadVersionDict, fetchCardVersions],
+    [changes, setChanges],
   );
 
   const revertAdd = useCallback(
@@ -575,16 +538,8 @@ export function CubeContextProvider({
       }
       newChanges[board].swaps.push({ index, card: { ...card, index }, oldCard });
       setChanges(newChanges);
-
-      // Fetch versions for the newly swapped-in card
-      if (loadVersionDict && card.cardID) {
-        const dict = await fetchCardVersions([card.cardID]);
-        if (dict) {
-          setVersionDict((prev) => ({ ...prev, ...dict }));
-        }
-      }
     },
-    [changes, cube.cards, setChanges, loadVersionDict, fetchCardVersions],
+    [changes, cube.cards, setChanges],
   );
 
   const revertSwap = useCallback(
@@ -776,6 +731,80 @@ export function CubeContextProvider({
       setOpenCollapse('edit');
     },
     [changes, cube.cards, setChanges, setOpenCollapse],
+  );
+
+  const moveAddedCard = useCallback(
+    (addIndex: number, board: BoardType, newBoard: BoardType) => {
+      if (board === newBoard) {
+        return;
+      }
+
+      const newChanges = deepCopy(changes);
+
+      if (!newChanges[board]?.adds || !newChanges[board].adds[addIndex]) {
+        console.error('Card not found in adds array:', { addIndex, board });
+        return;
+      }
+
+      // Get the card from the current board's adds array
+      const cardToMove = deepCopy(newChanges[board].adds[addIndex]);
+
+      // Remove it from the current board's adds array
+      newChanges[board].adds.splice(addIndex, 1);
+
+      // Ensure the new board has the proper structure
+      if (!newChanges[newBoard]) {
+        newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
+      }
+      if (!newChanges[newBoard].adds) {
+        newChanges[newBoard].adds = [];
+      }
+
+      // Add it to the new board's adds array
+      newChanges[newBoard].adds.push(cardToMove);
+
+      setChanges(newChanges);
+      setOpenCollapse('edit');
+    },
+    [changes, setChanges, setOpenCollapse],
+  );
+
+  const moveSwappedCard = useCallback(
+    (swapIndex: number, board: BoardType, newBoard: BoardType) => {
+      if (board === newBoard) {
+        return;
+      }
+
+      const newChanges = deepCopy(changes);
+
+      if (!newChanges[board]?.swaps || !newChanges[board].swaps[swapIndex]) {
+        console.error('Card not found in swaps array:', { swapIndex, board });
+        return;
+      }
+
+      // Get the swap entry from the current board's swaps array
+      const swapEntry = deepCopy(newChanges[board].swaps[swapIndex]);
+      const cardToMove = swapEntry.card;
+
+      // Remove the swap from the current board since we're moving the card
+      newChanges[board].swaps.splice(swapIndex, 1);
+
+      // Ensure the new board has the proper structure
+      if (!newChanges[newBoard]) {
+        newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
+      }
+      if (!newChanges[newBoard].adds) {
+        newChanges[newBoard].adds = [];
+      }
+
+      // Add the card to the new board's adds array
+      // (it's now being added to a different board, not swapped)
+      newChanges[newBoard].adds.push(cardToMove);
+
+      setChanges(newChanges);
+      setOpenCollapse('edit');
+    },
+    [changes, setChanges, setOpenCollapse],
   );
 
   const bulkMoveCard = useCallback(
@@ -1007,15 +1036,6 @@ export function CubeContextProvider({
             }
           }
 
-          //Fetch the versions of cards added so add them to the dictionary
-          //Previously a useEffect would fetch all versions each time the card list changed
-          const dict = await fetchCardVersions(newCardsToFetchVersions);
-          if (dict) {
-            Object.entries(dict as Record<string, CardVersion[]>).forEach(([key, value]) => {
-              versionDict[key] = value;
-            });
-          }
-
           setModalSelection([]);
           // Update version BEFORE clearing changes so new changes get the correct version
           const newVersion = json.version || version + 1;
@@ -1043,7 +1063,6 @@ export function CubeContextProvider({
       cube,
       useBlog,
       unfilteredChangedCards,
-      fetchCardVersions,
       clearChanges,
       setVersion,
       version,
@@ -1351,6 +1370,7 @@ export function CubeContextProvider({
       revertSwap,
       revertEdit,
       versionDict: versionDictProxy,
+      fetchVersionsForCard,
       commitChanges,
       setModalSelection,
       setModalOpen,
@@ -1404,6 +1424,7 @@ export function CubeContextProvider({
       revertSwap,
       revertEdit,
       versionDictProxy,
+      fetchVersionsForCard,
       commitChanges,
       setModalSelection,
       setModalOpen,
@@ -1459,12 +1480,13 @@ export function CubeContextProvider({
               setOpen={setModalOpen}
               canEdit={canEdit}
               versionDict={versionDictProxy}
+              fetchVersionsForCard={fetchVersionsForCard}
               editCard={(_, card, board) => editAddedCard((modalSelection as any).addIndex, card, board)}
               revertEdit={() => {}}
               revertRemove={() => {}}
               removeCard={() => {}}
               tagColors={tagColors}
-              moveCard={() => {}}
+              moveCard={(_, board, newBoard) => moveAddedCard((modalSelection as any).addIndex, board, newBoard)}
               allTags={allTags}
             />
           )}
@@ -1484,12 +1506,13 @@ export function CubeContextProvider({
               setOpen={setModalOpen}
               canEdit={canEdit}
               versionDict={versionDictProxy}
+              fetchVersionsForCard={fetchVersionsForCard}
               editCard={(_, card, board) => editSwappedCard((modalSelection as any).swapIndex, card, board)}
               revertEdit={() => {}}
               revertRemove={() => {}}
               removeCard={() => {}}
               tagColors={tagColors}
-              moveCard={() => {}}
+              moveCard={(_, board, newBoard) => moveSwappedCard((modalSelection as any).swapIndex, board, newBoard)}
               allTags={allTags}
             />
           )}
@@ -1504,6 +1527,7 @@ export function CubeContextProvider({
               setOpen={setModalOpen}
               canEdit={canEdit}
               versionDict={versionDictProxy}
+              fetchVersionsForCard={fetchVersionsForCard}
               editCard={editCard}
               revertEdit={revertEdit}
               revertRemove={revertRemove}

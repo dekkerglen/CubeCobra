@@ -17,17 +17,15 @@ const landingHandler = async (req: Request, res: Response) => {
 
   // Query all content types in parallel (excluding podcasts, only episodes)
   const [articlesResult, videosResult, episodesResult] = await Promise.all([
-    articleDao.queryByStatus(ContentStatus.PUBLISHED),
-    videoDao.queryByStatus(ContentStatus.PUBLISHED),
-    episodeDao.queryByStatus(ContentStatus.PUBLISHED),
+    articleDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 36),
+    videoDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 36),
+    episodeDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 36),
   ]);
 
   // Merge and sort by date descending
-  const content = [
-    ...(articlesResult.items || []),
-    ...(videosResult.items || []),
-    ...(episodesResult.items || []),
-  ].sort((a, b) => b.date - a.date);
+  const content = [...(articlesResult.items || []), ...(videosResult.items || []), ...(episodesResult.items || [])]
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 36);
 
   const recentDecks = await draftDao.queryByTypeAndDate(DRAFT_TYPES.DRAFT);
 

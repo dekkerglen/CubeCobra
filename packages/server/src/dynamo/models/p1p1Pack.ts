@@ -289,6 +289,21 @@ const p1p1Pack = {
     };
   },
 
+  scan: async (
+    limit?: number,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items: any[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    });
+
+    return {
+      items: result.Items ?? [],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+
   createTable: async () => client.createTable(),
 };
 

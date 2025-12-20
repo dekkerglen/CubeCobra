@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import { StarFillIcon } from '@primer/octicons-react';
 import { cardId, detailsToCard } from '@utils/cardutil';
-import CardPackageData, { CardPackageStatus } from '@utils/datatypes/CardPackage';
+import CardPackageData from '@utils/datatypes/CardPackage';
 import { UserRoles } from '@utils/datatypes/User';
 import TimeAgo from 'react-timeago';
 
@@ -48,10 +48,6 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
     setLoading(false);
   }, [cardPackage.id, csrfFetch, loading, voted]);
 
-  const approve = async () => csrfFetch(`/packages/approve/${cardPackage.id}`);
-
-  const unapprove = async () => csrfFetch(`/packages/unapprove/${cardPackage.id}`);
-
   const remove = async () => csrfFetch(`/packages/remove/${cardPackage.id}`);
 
   return (
@@ -77,20 +73,9 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
                 Add To Cube
               </AddGroupToCubeModalLink>
               {user && user.roles && user.roles.includes(UserRoles.ADMIN) && (
-                <>
-                  {cardPackage.status === CardPackageStatus.APPROVED ? (
-                    <Button outline color="primary" onClick={unapprove}>
-                      Remove Approval
-                    </Button>
-                  ) : (
-                    <Button outline color="primary" onClick={approve}>
-                      Approve
-                    </Button>
-                  )}
-                  <Button outline color="danger" onClick={remove}>
-                    Delete
-                  </Button>
-                </>
+                <Button outline color="danger" onClick={remove}>
+                  Delete
+                </Button>
               )}
               <Voter votes={voters.length} toggleVote={toggleVote} hasVoted={voted} loading={loading} />
             </Flexbox>

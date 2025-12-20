@@ -19,7 +19,7 @@
  * when dualWriteEnabled flag is set.
  */
 
-import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import DraftType, { DRAFT_TYPES, DraftmancerLog, REVERSE_TYPES } from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
@@ -287,7 +287,91 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   }
 
   /**
-   * Queries drafts by owner with pagination.
+   * Queries drafts by owner with pagination (unhydrated version for listing).
+   * Only hydrates user data, skips loading cards/seats from S3 for better performance.
+   */
+  public async queryByOwnerUnhydrated(
+    owner: string,
+    lastKey?: Record<string, NativeAttributeValue>,
+    limit: number = 200,
+  ): Promise<QueryResult> {
+    if (this.dualWriteEnabled) {
+      return DraftModel.getByOwner(owner, lastKey, limit);
+    }
+
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :owner',
+      FilterExpression: '#item.#complete = :complete',
+      ExpressionAttributeNames: {
+        '#item': 'item',
+        '#complete': 'complete',
+      },
+      ExpressionAttributeValues: {
+        ':owner': `${this.itemType()}#OWNER#${owner}`,
+        ':complete': true,
+      },
+      ScanIndexForward: false,
+      Limit: limit,
+      ExclusiveStartKey: lastKey,
+    };
+
+    // Query DynamoDB
+    const data = await this.dynamoClient.send(new QueryCommand(params));
+    const dynamoItems = (data.Items || []) as any[];
+    const unhydratedItems = dynamoItems.map((item) => item.item as UnhydratedDraft);
+
+    if (unhydratedItems.length === 0) {
+      return {
+        items: [],
+        lastKey: data.LastEvaluatedKey,
+      };
+    }
+
+    // Only hydrate user data, skip S3 reads for cards/seats
+    const userIds = new Set<string>();
+    unhydratedItems.forEach((item) => {
+      if (item.owner) userIds.add(item.owner);
+      if (item.cubeOwner) userIds.add(item.cubeOwner);
+    });
+
+    const users = await this.userDao.batchGet(Array.from(userIds));
+    const defaultUser = { username: 'Anonymous', id: '404' } as User;
+
+    const hydratedItems = unhydratedItems.map((item) => {
+      const owner = users.find((u: User) => u.id === item.owner) || defaultUser;
+      const cubeOwner = users.find((u: User) => u.id === item.cubeOwner) || defaultUser;
+
+      return {
+        id: item.id,
+        cube: item.cube,
+        owner,
+        cubeOwner,
+        date: item.date,
+        dateCreated: item.dateCreated,
+        dateLastUpdated: item.dateLastUpdated,
+        type: item.type as 'g' | 'd' | 'u' | 's',
+        complete: item.complete,
+        name: item.name,
+        seatNames: item.seatNames,
+        cards: [], // Empty array to satisfy type
+        seats: [],
+        basics: [],
+        InitialState: [],
+        DraftmancerLog: item.DraftmancerLog,
+      };
+    });
+
+    return {
+      items: hydratedItems,
+      lastKey: data.LastEvaluatedKey,
+    };
+  }
+
+  /**
+   * Queries drafts by owner with pagination (full hydration with S3 reads).
+   * Use queryByOwnerUnhydrated for listing/display purposes for better performance.
    */
   public async queryByOwner(
     owner: string,
@@ -302,8 +386,9 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       TableName: this.tableName,
       IndexName: 'GSI1',
       KeyConditionExpression: 'GSI1PK = :owner',
-      FilterExpression: '#complete = :complete',
+      FilterExpression: '#item.#complete = :complete',
       ExpressionAttributeNames: {
+        '#item': 'item',
         '#complete': 'complete',
       },
       ExpressionAttributeValues: {
@@ -319,7 +404,90 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   }
 
   /**
-   * Queries drafts by cube with pagination.
+   * Queries drafts by cube with pagination (unhydrated version for listing).
+   * Only hydrates user data, skips loading cards/seats from S3 for better performance.
+   */
+  public async queryByCubeUnhydrated(
+    cubeId: string,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<QueryResult> {
+    if (this.dualWriteEnabled) {
+      return DraftModel.getByCube(cubeId, lastKey);
+    }
+
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI2',
+      KeyConditionExpression: 'GSI2PK = :cube',
+      FilterExpression: '#item.#complete = :complete',
+      ExpressionAttributeNames: {
+        '#item': 'item',
+        '#complete': 'complete',
+      },
+      ExpressionAttributeValues: {
+        ':cube': `${this.itemType()}#CUBE#${cubeId}`,
+        ':complete': true,
+      },
+      ScanIndexForward: false,
+      Limit: 200,
+      ExclusiveStartKey: lastKey,
+    };
+
+    // Query DynamoDB
+    const data = await this.dynamoClient.send(new QueryCommand(params));
+    const dynamoItems = (data.Items || []) as any[];
+    const unhydratedItems = dynamoItems.map((item) => item.item as UnhydratedDraft);
+
+    if (unhydratedItems.length === 0) {
+      return {
+        items: [],
+        lastKey: data.LastEvaluatedKey,
+      };
+    }
+
+    // Only hydrate user data, skip S3 reads for cards/seats
+    const userIds = new Set<string>();
+    unhydratedItems.forEach((item) => {
+      if (item.owner) userIds.add(item.owner);
+      if (item.cubeOwner) userIds.add(item.cubeOwner);
+    });
+
+    const users = await this.userDao.batchGet(Array.from(userIds));
+    const defaultUser = { username: 'Anonymous', id: '404' } as User;
+
+    const hydratedItems = unhydratedItems.map((item) => {
+      const owner = users.find((u: User) => u.id === item.owner) || defaultUser;
+      const cubeOwner = users.find((u: User) => u.id === item.cubeOwner) || defaultUser;
+
+      return {
+        id: item.id,
+        cube: item.cube,
+        owner,
+        cubeOwner,
+        date: item.date,
+        dateCreated: item.dateCreated,
+        dateLastUpdated: item.dateLastUpdated,
+        type: item.type as 'g' | 'd' | 'u' | 's',
+        complete: item.complete,
+        name: item.name,
+        seatNames: item.seatNames,
+        cards: [], // Empty array to satisfy type
+        seats: [],
+        basics: [],
+        InitialState: [],
+        DraftmancerLog: item.DraftmancerLog,
+      };
+    });
+
+    return {
+      items: hydratedItems,
+      lastKey: data.LastEvaluatedKey,
+    };
+  }
+
+  /**
+   * Queries drafts by cube with pagination (full hydration with S3 reads).
+   * Use queryByCubeUnhydrated for listing/display purposes for better performance.
    */
   public async queryByCube(cubeId: string, lastKey?: Record<string, NativeAttributeValue>): Promise<QueryResult> {
     if (this.dualWriteEnabled) {
@@ -330,8 +498,9 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       TableName: this.tableName,
       IndexName: 'GSI2',
       KeyConditionExpression: 'GSI2PK = :cube',
-      FilterExpression: '#complete = :complete',
+      FilterExpression: '#item.#complete = :complete',
       ExpressionAttributeNames: {
+        '#item': 'item',
         '#complete': 'complete',
       },
       ExpressionAttributeValues: {
@@ -347,7 +516,90 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   }
 
   /**
-   * Queries drafts by cube owner with pagination.
+   * Queries drafts by cube owner with pagination (unhydrated version for listing).
+   * Only hydrates user data, skips loading cards/seats from S3 for better performance.
+   */
+  public async queryByCubeOwnerUnhydrated(
+    cubeOwner: string,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<QueryResult> {
+    if (this.dualWriteEnabled) {
+      return DraftModel.getByCubeOwner(cubeOwner, lastKey);
+    }
+
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI3',
+      KeyConditionExpression: 'GSI3PK = :cubeOwner',
+      FilterExpression: '#item.#complete = :complete',
+      ExpressionAttributeNames: {
+        '#item': 'item',
+        '#complete': 'complete',
+      },
+      ExpressionAttributeValues: {
+        ':cubeOwner': `${this.itemType()}#CUBEOWNER#${cubeOwner}`,
+        ':complete': true,
+      },
+      ScanIndexForward: false,
+      Limit: 200,
+      ExclusiveStartKey: lastKey,
+    };
+
+    // Query DynamoDB
+    const data = await this.dynamoClient.send(new QueryCommand(params));
+    const dynamoItems = (data.Items || []) as any[];
+    const unhydratedItems = dynamoItems.map((item) => item.item as UnhydratedDraft);
+
+    if (unhydratedItems.length === 0) {
+      return {
+        items: [],
+        lastKey: data.LastEvaluatedKey,
+      };
+    }
+
+    // Only hydrate user data, skip S3 reads for cards/seats
+    const userIds = new Set<string>();
+    unhydratedItems.forEach((item) => {
+      if (item.owner) userIds.add(item.owner);
+      if (item.cubeOwner) userIds.add(item.cubeOwner);
+    });
+
+    const users = await this.userDao.batchGet(Array.from(userIds));
+    const defaultUser = { username: 'Anonymous', id: '404' } as User;
+
+    const hydratedItems = unhydratedItems.map((item) => {
+      const owner = users.find((u: User) => u.id === item.owner) || defaultUser;
+      const cubeOwner = users.find((u: User) => u.id === item.cubeOwner) || defaultUser;
+
+      return {
+        id: item.id,
+        cube: item.cube,
+        owner,
+        cubeOwner,
+        date: item.date,
+        dateCreated: item.dateCreated,
+        dateLastUpdated: item.dateLastUpdated,
+        type: item.type as 'g' | 'd' | 'u' | 's',
+        complete: item.complete,
+        name: item.name,
+        seatNames: item.seatNames,
+        cards: [], // Empty array to satisfy type
+        seats: [],
+        basics: [],
+        InitialState: [],
+        DraftmancerLog: item.DraftmancerLog,
+      };
+    });
+
+    return {
+      items: hydratedItems,
+      lastKey: data.LastEvaluatedKey,
+    };
+  }
+
+  /**
+   * Queries drafts by cube owner with pagination (full hydration with S3 reads).
+   * Use queryByCubeOwnerUnhydrated for listing/display purposes for better performance.
    */
   public async queryByCubeOwner(
     cubeOwner: string,
@@ -361,8 +613,9 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       TableName: this.tableName,
       IndexName: 'GSI3',
       KeyConditionExpression: 'GSI3PK = :cubeOwner',
-      FilterExpression: '#complete = :complete',
+      FilterExpression: '#item.#complete = :complete',
       ExpressionAttributeNames: {
+        '#item': 'item',
         '#complete': 'complete',
       },
       ExpressionAttributeValues: {
@@ -389,9 +642,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       TableName: this.tableName,
       IndexName: 'GSI4',
       KeyConditionExpression: 'GSI4PK = :type',
-      ExpressionAttributeNames: {
-        '#type': 'type',
-      },
       ExpressionAttributeValues: {
         ':type': `${this.itemType()}#TYPE#${type}`,
       },
@@ -401,6 +651,100 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     };
 
     return this.query(params);
+  }
+
+  /**
+   * Queries drafts by type within a specific date range.
+   * This is more efficient than queryByTypeAndDate when you need drafts from a specific day.
+   * @param type - Draft type ('g', 'd', 'u', 's')
+   * @param startDate - Start date timestamp (inclusive)
+   * @param endDate - End date timestamp (inclusive)
+   * @param lastKey - Optional pagination key
+   * @param limit - Maximum number of items to return
+   */
+  public async queryByTypeAndDateRange(
+    type: string,
+    startDate: number,
+    endDate: number,
+    lastKey?: Record<string, NativeAttributeValue>,
+    limit: number = 1000,
+  ): Promise<QueryResult> {
+    if (this.dualWriteEnabled) {
+      // For dual write mode, we need to scan since old model doesn't support date range queries
+      // This will be removed once migration is complete
+      return DraftModel.queryByTypeAndDate(type, lastKey);
+    }
+
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI4',
+      KeyConditionExpression: 'GSI4PK = :type AND GSI4SK BETWEEN :startDate AND :endDate',
+      ExpressionAttributeValues: {
+        ':type': `${this.itemType()}#TYPE#${type}`,
+        ':startDate': `DATE#${startDate}`,
+        ':endDate': `DATE#${endDate}`,
+      },
+      ScanIndexForward: false,
+      Limit: limit,
+      ExclusiveStartKey: lastKey,
+    };
+
+    return this.query(params);
+  }
+
+  /**
+   * Queries drafts by type within a specific date range without hydration (no S3 reads).
+   * Returns only the metadata stored in DynamoDB - cards and seats are not loaded.
+   * This is much more efficient when you only need basic draft information.
+   * @param type - Draft type ('g', 'd', 'u', 's')
+   * @param startDate - Start date timestamp (inclusive)
+   * @param endDate - End date timestamp (inclusive)
+   * @param lastKey - Optional pagination key
+   * @param limit - Maximum number of items to return
+   */
+  public async queryByTypeAndDateRangeUnhydrated(
+    type: string,
+    startDate: number,
+    endDate: number,
+    lastKey?: Record<string, NativeAttributeValue>,
+    limit: number = 1000,
+  ): Promise<{
+    items: UnhydratedDraft[];
+    lastKey?: Record<string, NativeAttributeValue>;
+  }> {
+    if (this.dualWriteEnabled) {
+      // For dual write mode, fall back to hydrated query
+      // This will be removed once migration is complete
+      const result = await DraftModel.queryByTypeAndDate(type, lastKey);
+      return {
+        items: result.items.map((item) => this.dehydrateItem(item)),
+        lastKey: result.lastEvaluatedKey,
+      };
+    }
+
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI4',
+      KeyConditionExpression: 'GSI4PK = :type AND GSI4SK BETWEEN :startDate AND :endDate',
+      ExpressionAttributeValues: {
+        ':type': `${this.itemType()}#TYPE#${type}`,
+        ':startDate': `DATE#${startDate}`,
+        ':endDate': `DATE#${endDate}`,
+      },
+      ScanIndexForward: false,
+      Limit: limit,
+      ExclusiveStartKey: lastKey,
+    };
+
+    // Query directly without hydration
+    const data = await this.dynamoClient.send(new QueryCommand(params));
+    const dynamoItems = (data.Items || []) as any[];
+    const unhydratedItems = dynamoItems.map((item) => item.item as UnhydratedDraft);
+
+    return {
+      items: unhydratedItems,
+      lastKey: data.LastEvaluatedKey,
+    };
   }
 
   /**
@@ -533,6 +877,15 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   public async update(item: Draft): Promise<void> {
     // Update item's timestamp
     item.dateLastUpdated = Date.now();
+
+    // Recalculate seat names from mainboard colors
+    const names = item.seats.map((seat: any) => this.assessColors(seat.mainboard, item.cards).join(''));
+    item.seatNames = names;
+
+    // Update seat names within each seat
+    for (let i = 0; i < item.seats.length; i++) {
+      item.seats[i]!.name = names[i];
+    }
 
     // Save cards and seats to S3 before updating metadata
     await Promise.all([

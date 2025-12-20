@@ -39,6 +39,8 @@ export const postHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/login');
   }
 
+  console.log(user);
+
   if ((user as any).emailVerified === false) {
     req.flash('danger', 'Your account is not verified. Please check your email for a verification link.');
     return redirect(req, res, '/user/login');

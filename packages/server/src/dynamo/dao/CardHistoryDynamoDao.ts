@@ -253,12 +253,12 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
   /**
    * Overrides batchPut to support dual writes.
    */
-  public async batchPut(items: History[]): Promise<void> {
+  public async batchPut(items: History[], delayMs: number = 0): Promise<void> {
     if (this.dualWriteEnabled) {
       const unhydrated = items.map((item) => this.dehydrateItem(item));
-      await Promise.all([CardHistoryModel.batchPut(unhydrated), super.batchPut(items)]);
+      await Promise.all([CardHistoryModel.batchPut(unhydrated), super.batchPut(items, delayMs)]);
     } else {
-      await super.batchPut(items);
+      await super.batchPut(items, delayMs);
     }
   }
 

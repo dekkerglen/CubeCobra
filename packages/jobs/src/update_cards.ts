@@ -16,7 +16,7 @@ import fs, { createWriteStream } from 'fs';
 // @ts-ignore - JSONStream doesn't have proper types
 import JSONStream from 'JSONStream';
 import fetch from 'node-fetch';
-import path, { join } from 'path';
+import path from 'path';
 import stream, { pipeline } from 'stream';
 
 import {
@@ -65,7 +65,8 @@ const catalog: Catalog = {
 const PRIVATE_DIR = path.resolve(__dirname, '..', '..', 'server', 'private');
 
 async function downloadFile(url: string, filePath: string) {
-  const folder = join(__dirname, `../${filePath.substring(0, filePath.lastIndexOf('/'))}`);
+  // filePath should be an absolute path
+  const folder = filePath.substring(0, filePath.lastIndexOf(path.sep));
   if (!fs.existsSync(folder)) {
     fs.mkdirSync(folder, { recursive: true });
   }

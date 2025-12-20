@@ -1,10 +1,12 @@
 // Load Environment Variables
+import { UserDynamoDao } from '@server/dynamo/dao/UserDynamoDao';
 import documentClient from '@server/dynamo/documentClient';
-import { UnhydratedFeed } from '@utils/datatypes/Feed';
+import FeedModel from '@server/dynamo/models/feed';
 import { BlogDynamoDao } from 'dynamo/dao/BlogDynamoDao';
 import { ChangelogDynamoDao } from 'dynamo/dao/ChangelogDynamoDao';
 import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
 import { FeedDynamoDao } from 'dynamo/dao/FeedDynamoDao';
+import { UnhydratedFeed } from '@utils/datatypes/Feed';
 import fs from 'fs';
 import path from 'path';
 
@@ -70,19 +72,15 @@ const deleteCheckpoint = (): void => {
  * Migration script to move feed items from old DynamoDB format to new single-table format.
  *
  * Old format (FEED table):
- * - Partition key: 'id' (the blog post ID)
- * - Sort key: 'to' (the user receiving the feed item)
- * - GSI 'ByTo': partition key 'to', sort key 'date'
- * - Attributes: id, to, date, type
- * - Feed items reference blog posts by ID
+ * - Partition key: 'id' (blog post ID)
+ * - Sort key: 'to' (user ID)
+ * - GSI 'ByTo': 'to' (PK), 'date' (SK)
  *
  * New format (Single table design):
- * - PK: FEED#{id} (the blog post ID)
- * - SK: FEED#TO#{to} (the user receiving the feed item)
+ * - PK: FEED#{id}
+ * - SK: FEED#TO#{to}
  * - GSI1PK: FEED#TO#{to}
  * - GSI1SK: DATE#{date}
- * - Additional fields: dateCreated, dateLastUpdated
- * - Feed items still reference blog posts by ID (hydrated on read)
  *
  * CHECKPOINTING:
  * - Progress is saved after each batch to migrateFeed-checkpoint.json
@@ -103,9 +101,10 @@ const deleteCheckpoint = (): void => {
     console.log(`Target table: ${tableName}`);
 
     // Initialize the new DAOs (with dualWrite disabled since we're migrating)
-    const cubeDao = new CubeDynamoDao(documentClient, tableName, false);
+    const userDao = new UserDynamoDao(documentClient, tableName, false);
     const changelogDao = new ChangelogDynamoDao(documentClient, tableName, false);
-    const blogDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, tableName, false);
+    const cubeDao = new CubeDynamoDao(documentClient, userDao, tableName, false);
+    const blogDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, userDao, tableName, false);
     const feedDao = new FeedDynamoDao(documentClient, blogDao, tableName, false);
 
     // Load checkpoint if it exists
@@ -126,68 +125,74 @@ const deleteCheckpoint = (): void => {
       console.log(`Previous stats: ${stats.migrated} migrated, ${stats.skipped} skipped, ${stats.errors} errors`);
     }
 
-    // Since the old Feed model doesn't have a scan method, we need to scan the table directly
-    // We'll use the DynamoDB DocumentClient to scan the old FEED table
-    const oldTableName = 'FEED';
-    console.log(`Scanning old table: ${oldTableName}`);
-
     do {
       batchNumber += 1;
 
-      try {
-        // Scan the old feed table directly using DocumentClient
-        const scanResult = await documentClient.scan({
-          TableName: oldTableName,
-          Limit: 200,
-          ExclusiveStartKey: lastKey,
-        });
+      // Scan the old feed table
+      const result = await FeedModel.scan(undefined, lastKey);
+      lastKey = result.lastKey;
 
-        lastKey = scanResult.LastEvaluatedKey;
+      if (result.items && result.items.length > 0) {
+        stats.total += result.items.length;
 
-        if (scanResult.Items && scanResult.Items.length > 0) {
-          const oldFeeds = scanResult.Items as UnhydratedFeed[];
-          stats.total += oldFeeds.length;
+        // Filter to valid feed items first
+        const validFeeds = result.items.filter((feed: UnhydratedFeed) => feed.id && feed.to && feed.date && feed.type);
 
-          // Filter to valid feed items
-          const validFeeds = oldFeeds.filter((feed) => {
-            // Check required fields
-            if (!feed.id || !feed.to || !feed.date || !feed.type) {
-              return false;
+        stats.skipped += result.items.length - validFeeds.length;
+
+        // Check which blog posts exist before trying to migrate
+        const blogPostChecks = await Promise.all(
+          validFeeds.map(async (feed: UnhydratedFeed) => {
+            try {
+              const blogPost = await blogDao.getById(feed.id);
+              return { feed, exists: !!blogPost };
+            } catch (error) {
+              return { feed, exists: false };
             }
-            return true;
-          });
+          }),
+        );
 
-          stats.skipped += oldFeeds.length - validFeeds.length;
+        // Filter to only feeds with existing blog posts
+        const feedsWithValidBlogs = blogPostChecks.filter((check) => check.exists).map((check) => check.feed);
+        const feedsWithMissingBlogs = blogPostChecks.filter((check) => !check.exists);
 
-          if (validFeeds.length > 0) {
-            // Batch put using the new DAO
-            // The DAO will hydrate the feed items by fetching the blog posts
-            await feedDao.batchPutUnhydrated(validFeeds);
-            stats.migrated += validFeeds.length;
-          }
+        if (feedsWithMissingBlogs.length > 0) {
+          console.warn(
+            `  Skipping ${feedsWithMissingBlogs.length} feed items with missing blog posts (e.g., ${feedsWithMissingBlogs[0].feed.id})`,
+          );
+          stats.skipped += feedsWithMissingBlogs.length;
+        }
 
-          // Log progress every 10 batches
-          if (batchNumber % 10 === 0) {
-            console.log(
-              `Progress: Batch ${batchNumber} | ${stats.migrated.toLocaleString()} migrated, ${stats.skipped.toLocaleString()} skipped, ${stats.errors} errors`,
-            );
+        // Transform to unhydrated feed items for batch put
+        const feedsToMigrate: UnhydratedFeed[] = feedsWithValidBlogs.map((oldFeed: UnhydratedFeed) => ({
+          id: oldFeed.id,
+          to: oldFeed.to,
+          date: oldFeed.date,
+          type: oldFeed.type,
+        }));
+
+        // Batch put all feed items at once
+        if (feedsToMigrate.length > 0) {
+          try {
+            await feedDao.batchPutUnhydrated(feedsToMigrate);
+            stats.migrated += feedsToMigrate.length;
+          } catch (error) {
+            console.error(`Error processing batch ${batchNumber}:`, error);
+            stats.errors += feedsToMigrate.length;
+
+            if (stats.errors > 100) {
+              console.error('Too many errors, stopping migration');
+              throw new Error('Migration failed with too many errors');
+            }
           }
         }
-      } catch (error) {
-        console.error(`Error processing batch ${batchNumber}:`, error);
+      }
 
-        // If the error is about a blog post not found, we should skip those items
-        if (error instanceof Error && error.message.includes('not found for feed item')) {
-          console.warn('Skipping feed items with missing blog posts');
-          stats.skipped += 1;
-        } else {
-          stats.errors += 1;
-
-          if (stats.errors > 100) {
-            console.error('Too many errors, stopping migration');
-            throw new Error('Migration failed with too many errors');
-          }
-        }
+      // Log progress every 10 batches
+      if (batchNumber % 10 === 0) {
+        console.log(
+          `Progress: Batch ${batchNumber} | ${stats.migrated.toLocaleString()} migrated, ${stats.skipped.toLocaleString()} skipped, ${stats.errors} errors`,
+        );
       }
 
       // Save checkpoint after each batch
@@ -203,10 +208,11 @@ const deleteCheckpoint = (): void => {
     console.log('Migration complete!');
     console.log(`Total feed items processed: ${stats.total}`);
     console.log(`Successfully migrated: ${stats.migrated}`);
-    console.log(`Skipped (already exist, invalid, or missing blog posts): ${stats.skipped}`);
+    console.log(`Skipped (invalid or missing blog posts): ${stats.skipped}`);
     console.log(`Errors: ${stats.errors}`);
-    console.log('\n' + 'Note: Feed items without required fields (id, to, date, type) were skipped.');
-    console.log('Note: Feed items pointing to non-existent blog posts were skipped.');
+    console.log(
+      '\n' + 'Note: Feed items without required fields (id, to, date, type) or with missing blog posts were skipped.',
+    );
     console.log('='.repeat(80));
 
     // Delete checkpoint file on successful completion

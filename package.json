@@ -1,6 +1,6 @@
 {
   "name": "cubecobra",
-  "version": "1.4.40",
+  "version": "1.4.53",
   "description": "",
   "engines": {
     "node": ">=22.0.0 <23.0.0"
