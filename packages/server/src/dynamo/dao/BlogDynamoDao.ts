@@ -92,6 +92,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
    */
   protected async hydrateItem(item: UnhydratedBlogPost): Promise<BlogPost> {
     let cubeName = 'Unknown';
+    let cubeVisibility: string | undefined;
 
     const owner = await this.userDao.getById(item.owner);
 
@@ -99,16 +100,17 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       const cube = await this.cubeDao.getById(item.cube);
       if (cube) {
         cubeName = cube.name;
+        cubeVisibility = cube.visibility;
       }
     }
 
     if (!item.changelist) {
-      return this.createHydratedBlog(item, owner!, cubeName);
+      return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility);
     }
 
     const changelog = await this.changelogDao.getChangelog(item.cube, item.changelist);
 
-    return this.createHydratedBlog(item, owner!, cubeName, changelog);
+    return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility, changelog);
   }
 
   /**
@@ -145,11 +147,13 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     return items.map((item) => {
       const owner = owners.find((o: UserType) => o.id === item.owner);
       let cubeName = 'Unknown';
+      let cubeVisibility: string | undefined;
 
       if (item.cube && item.cube !== 'DEVBLOG') {
         const cube = cubes.find((c: CubeType) => c.id === item.cube);
         if (cube) {
           cubeName = cube.name;
+          cubeVisibility = cube.visibility;
         }
       }
 
@@ -158,7 +162,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
         changelog = changelogMap.get(item.changelist);
       }
 
-      return this.createHydratedBlog(item, owner!, cubeName, changelog);
+      return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility, changelog);
     });
   }
 
@@ -169,6 +173,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     document: UnhydratedBlogPost,
     owner: UserType,
     cubeName: string,
+    cubeVisibility?: string,
     changelog?: Partial<Changes>,
   ): BlogPost {
     return {
@@ -181,6 +186,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       title: document.title,
       owner: owner,
       cubeName: cubeName,
+      cubeVisibility: cubeVisibility,
       changelist: document.changelist, // Preserve the changelog ID
       Changelog: changelog,
     };

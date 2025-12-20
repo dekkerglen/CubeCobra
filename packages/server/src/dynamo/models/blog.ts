@@ -42,6 +42,7 @@ const createHydratedBlog = (
   owner: UserType,
   cubeName: string,
   Changelog?: Partial<Changes>,
+  cubeVisibility?: string,
 ): BlogPost => {
   return {
     id: document.id!,
@@ -51,6 +52,7 @@ const createHydratedBlog = (
     title: document.title,
     owner: owner,
     cubeName: cubeName,
+    cubeVisibility: cubeVisibility,
     Changelog: Changelog,
     dateCreated: document.dateCreated,
     dateLastUpdated: document.dateLastUpdated,
@@ -63,6 +65,7 @@ const hydrate = async (document?: UnhydratedBlogPost): Promise<BlogPost | undefi
   }
 
   let cubeName = 'Unknown';
+  let cubeVisibility: string | undefined;
 
   const owner = await userDao.getById(document.owner);
 
@@ -70,16 +73,17 @@ const hydrate = async (document?: UnhydratedBlogPost): Promise<BlogPost | undefi
     const cube = await Cube.getById(document.cube);
     if (cube) {
       cubeName = cube.name;
+      cubeVisibility = cube.visibility;
     }
   }
 
   if (!document.changelist) {
-    return createHydratedBlog(document, owner!, cubeName);
+    return createHydratedBlog(document, owner!, cubeName, undefined, cubeVisibility);
   }
 
   const changelog = await Changelog.getById(document.cube, document.changelist);
 
-  return createHydratedBlog(document, owner!, cubeName, changelog);
+  return createHydratedBlog(document, owner!, cubeName, changelog, cubeVisibility);
 };
 
 const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]> => {
@@ -94,10 +98,12 @@ const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]
   return documents.map((document) => {
     const owner = owners.find((owner) => owner.id === document.owner);
     let cubeName = 'Unknown';
+    let cubeVisibility: string | undefined;
     if (document.cube && document.cube !== 'DEVBLOG') {
       const cube = cubes.find((c) => c.id === document.cube);
       if (cube) {
         cubeName = cube.name;
+        cubeVisibility = cube.visibility;
       }
     }
 
@@ -107,7 +113,7 @@ const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]
       Changelog = changelists[id];
     }
 
-    return createHydratedBlog(document, owner!, cubeName, Changelog);
+    return createHydratedBlog(document, owner!, cubeName, Changelog, cubeVisibility);
   });
 };
 

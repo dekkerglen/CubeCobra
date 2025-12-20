@@ -40,6 +40,7 @@ export interface GroupModalProps {
   canEdit?: boolean;
   bulkEditCard: (cards: Card[]) => void | Promise<void>;
   bulkMoveCard: (cards: { board: BoardType; index: number }[], board: 'maybeboard' | 'mainboard') => void;
+  bulkMoveCards?: (cards: Card[], board: 'maybeboard' | 'mainboard') => void;
   bulkRevertEdit: (cards: { board: BoardType; index: number }[]) => void;
   bulkRevertRemove: (cards: { board: BoardType; index: number }[]) => void;
   bulkRemoveCard: (cards: { board: BoardType; index: number }[]) => void;
@@ -54,6 +55,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
   cards,
   bulkEditCard,
   bulkMoveCard,
+  bulkMoveCards,
   bulkRevertEdit,
   bulkRevertRemove,
   bulkRemoveCard,
@@ -383,7 +385,11 @@ const GroupModal: React.FC<GroupModalProps> = ({
           color="accent"
           block
           onClick={() => {
-            bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
+            if (bulkMoveCards) {
+              bulkMoveCards(cards, 'maybeboard');
+            } else {
+              bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
+            }
             setOpen(false);
           }}
         >
@@ -393,7 +399,11 @@ const GroupModal: React.FC<GroupModalProps> = ({
           color="accent"
           block
           onClick={() => {
-            bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
+            if (bulkMoveCards) {
+              bulkMoveCards(cards, 'mainboard');
+            } else {
+              bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
+            }
             setOpen(false);
           }}
         >

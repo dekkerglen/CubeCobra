@@ -1,4 +1,5 @@
 import { ContentStatus } from '@utils/datatypes/Content';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { feedDao } from 'dynamo/daos';
 import { articleDao, draftDao, episodeDao, videoDao } from 'dynamo/daos';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
@@ -8,6 +9,27 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
 
+// Helper function to filter feed items based on cube privacy
+const filterFeedItemsByPrivacy = (feedItems: any[], userId?: string): any[] => {
+  return feedItems.filter((item) => {
+    const blog = item.document;
+    if (!blog) return false;
+
+    // DEVLOG posts are always visible
+    if (blog.cube === 'DEVBLOG') {
+      return true;
+    }
+
+    // If the cube is private, only show to the owner
+    if (blog.cubeVisibility === CUBE_VISIBILITY.PRIVATE) {
+      return userId && userId === blog.owner.id;
+    }
+
+    // All other cubes (public, unlisted) are visible
+    return true;
+  });
+};
+
 const dashboardHandler = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -15,6 +37,9 @@ const dashboardHandler = async (req: Request, res: Response) => {
     }
 
     const posts = await feedDao.getByTo(req.user.id);
+
+    // Filter out blog posts from private cubes that the user doesn't own
+    const filteredPosts = filterFeedItemsByPrivacy(posts.items || [], req.user.id);
 
     const featured = await getFeaturedCubes();
 
@@ -37,7 +62,7 @@ const dashboardHandler = async (req: Request, res: Response) => {
     const dailyP1P1 = await getDailyP1P1(req.logger);
 
     return render(req, res, 'DashboardPage', {
-      posts: posts.items?.map((item: any) => item.document) || [],
+      posts: filteredPosts.map((item: any) => item.document),
       lastKey: posts.lastKey,
       decks: decks.items,
       lastDeckKey: decks.lastKey,
@@ -60,9 +85,12 @@ const getMoreFeedItemsHandler = async (req: Request, res: Response) => {
 
   const result = await feedDao.getByTo(user.id, lastKey);
 
+  // Filter out blog posts from private cubes that the user doesn't own
+  const filteredItems = filterFeedItemsByPrivacy(result.items || [], user.id);
+
   return res.status(200).send({
     success: 'true',
-    items: result.items?.map((item: any) => item.document) || [],
+    items: filteredItems.map((item: any) => item.document),
     lastKey: result.lastKey,
   });
 };

@@ -848,6 +848,98 @@ export function CubeContextProvider({
     [changes, cube.cards, setChanges, setOpenCollapse],
   );
 
+  const bulkMoveCards = useCallback(
+    (cards: Card[], newBoard: BoardType) => {
+      // Check if these are newly added/swapped cards or existing cards
+      const hasAddIndex = cards.some((card) => (card as any).addIndex !== undefined);
+      const hasSwapIndex = cards.some((card) => (card as any).swapIndex !== undefined);
+
+      if (hasAddIndex || hasSwapIndex) {
+        // Handle newly added or swapped cards
+        const newChanges = deepCopy(changes);
+
+        // Group cards by their board and type (adds vs swaps)
+        const cardsByBoard: Record<BoardType, { adds: Card[]; swaps: Card[] }> = {
+          mainboard: { adds: [], swaps: [] },
+          maybeboard: { adds: [], swaps: [] },
+        };
+
+        for (const card of cards) {
+          if (card.board && card.board !== newBoard) {
+            if ((card as any).addIndex !== undefined) {
+              cardsByBoard[card.board].adds.push(card);
+            } else if ((card as any).swapIndex !== undefined) {
+              cardsByBoard[card.board].swaps.push(card);
+            }
+          }
+        }
+
+        // Process adds
+        for (const board of boardTypes) {
+          const addsToMove = cardsByBoard[board].adds;
+          if (addsToMove.length > 0) {
+            // Sort by addIndex in descending order to avoid index shifting issues
+            const sortedAdds = addsToMove.sort((a, b) => (b as any).addIndex - (a as any).addIndex);
+
+            for (const card of sortedAdds) {
+              const addIndex = (card as any).addIndex;
+              if (newChanges[board]?.adds && newChanges[board].adds[addIndex]) {
+                const cardToMove = deepCopy(newChanges[board].adds[addIndex]);
+                newChanges[board].adds.splice(addIndex, 1);
+
+                // Ensure the new board has the proper structure
+                if (!newChanges[newBoard]) {
+                  newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
+                }
+                if (!newChanges[newBoard].adds) {
+                  newChanges[newBoard].adds = [];
+                }
+
+                newChanges[newBoard].adds.push(cardToMove);
+              }
+            }
+          }
+
+          // Process swaps
+          const swapsToMove = cardsByBoard[board].swaps;
+          if (swapsToMove.length > 0) {
+            // Sort by swapIndex in descending order to avoid index shifting issues
+            const sortedSwaps = swapsToMove.sort((a, b) => (b as any).swapIndex - (a as any).swapIndex);
+
+            for (const card of sortedSwaps) {
+              const swapIndex = (card as any).swapIndex;
+              if (newChanges[board]?.swaps && newChanges[board].swaps[swapIndex]) {
+                const swapEntry = deepCopy(newChanges[board].swaps[swapIndex]);
+                const cardToMove = swapEntry.card;
+                newChanges[board].swaps.splice(swapIndex, 1);
+
+                // Ensure the new board has the proper structure
+                if (!newChanges[newBoard]) {
+                  newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
+                }
+                if (!newChanges[newBoard].adds) {
+                  newChanges[newBoard].adds = [];
+                }
+
+                newChanges[newBoard].adds.push(cardToMove);
+              }
+            }
+          }
+        }
+
+        setChanges(newChanges);
+        setOpenCollapse('edit');
+      } else {
+        // Handle existing cards - convert to the format expected by the original bulkMoveCard
+        const cardList = cards
+          .filter((card) => card.board !== undefined && card.index !== undefined)
+          .map((card) => ({ board: card.board!, index: card.index! }));
+        bulkMoveCard(cardList, newBoard);
+      }
+    },
+    [changes, setChanges, setOpenCollapse, bulkMoveCard],
+  );
+
   const removeCard = useCallback(
     (index: number, board: BoardType) => {
       const newChanges = deepCopy(changes);
@@ -1562,6 +1654,7 @@ export function CubeContextProvider({
             setModalSelection={(cards: any) => setModalSelection(cards)}
             tagColors={tagColors}
             bulkMoveCard={bulkMoveCard}
+            bulkMoveCards={bulkMoveCards}
             allTags={allTags}
           />
         )}

@@ -143,18 +143,26 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const followers: string[] = [
-      ...new Set([...(user.following || []), ...cube.following, ...mentionedUsers.map((u) => u.id)]),
-    ];
+    // Only publish to follower feeds if the cube is public (not unlisted or private)
+    // Private cubes should not have their blog posts visible to anyone except the owner
+    // Unlisted cubes should not publish to follower feeds
+    const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
+    const shouldPublishToFeed = cube.visibility === CUBE_VISIBILITY.PUBLIC;
 
-    const feedItems = followers.map((userId) => ({
-      id,
-      to: userId,
-      date: new Date().valueOf(),
-      type: FeedTypes.BLOG,
-    }));
+    if (shouldPublishToFeed) {
+      const followers: string[] = [
+        ...new Set([...(user.following || []), ...cube.following, ...mentionedUsers.map((u) => u.id)]),
+      ];
 
-    await feedDao.batchPutUnhydrated(feedItems);
+      const feedItems = followers.map((userId) => ({
+        id,
+        to: userId,
+        date: new Date().valueOf(),
+        type: FeedTypes.BLOG,
+      }));
+
+      await feedDao.batchPutUnhydrated(feedItems);
+    }
 
     const redirectUrl = await getRedirectUrlForCube(req, cube);
     res.status(200).json({ ok: 'Blog post successful, reloading...', redirect: redirectUrl });
@@ -186,6 +194,15 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
         req.flash('danger', 'Blog post not found');
 
         return redirect(req, res, '/404');
+      }
+
+      // Additional check for private cubes - only owner can view
+      const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
+      if (cube && cube.visibility === CUBE_VISIBILITY.PRIVATE) {
+        if (!req.user || cube.owner.id !== req.user.id) {
+          req.flash('danger', 'Blog post not found');
+          return redirect(req, res, '/404');
+        }
       }
     }
 

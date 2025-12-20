@@ -24,6 +24,7 @@ type BlogPost = Commentable &
     owner: User;
     date: number;
     cubeName: string;
+    cubeVisibility?: string; // Cube visibility setting for privacy checks
     changelist?: string; // Keep the changelog ID reference for dehydration
     Changelog?: Partial<Changes>;
   };
