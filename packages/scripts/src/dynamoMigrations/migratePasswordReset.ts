@@ -1,8 +1,8 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
 import PasswordResetModel from '@server/dynamo/models/passwordReset';
-import { PasswordResetDynamoDao } from 'dynamo/dao/PasswordResetDynamoDao';
 import PasswordReset from '@utils/datatypes/PasswordReset';
+import { PasswordResetDynamoDao } from 'dynamo/dao/PasswordResetDynamoDao';
 import fs from 'fs';
 import path from 'path';
 

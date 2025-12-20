@@ -1,7 +1,7 @@
-import { cardFromId } from '../../server/src/serverutils/carddb';
-import { initializeCardDb } from '../../server/src/serverutils/cardCatalog';
 // @ts-ignore - using old model for scan operation
 import packageModel from '../../server/src/dynamo/models/package';
+import { initializeCardDb } from '../../server/src/serverutils/cardCatalog';
+import { cardFromId } from '../../server/src/serverutils/carddb';
 
 async function findSteamVents() {
   console.log('Loading card database...');
@@ -27,14 +27,14 @@ async function findSteamVents() {
           try {
             const card = cardFromId(cardId);
             if (card && card.name.toLowerCase().includes('steam vents')) {
-              foundCount++;
+              foundCount += 1;
               console.log(`\nFound in package: ${pkg.id} (${pkg.title})`);
               console.log(`  Card: ${card.name}`);
               console.log(`  Oracle ID: ${card.oracle_id}`);
               console.log(`  Card ID: ${cardId}`);
               break; // Only log once per package
             }
-          } catch (error) {
+          } catch {
             // Skip invalid cards
           }
         }

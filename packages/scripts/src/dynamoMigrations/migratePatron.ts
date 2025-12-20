@@ -1,8 +1,8 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
 import PatronModel from '@server/dynamo/models/patron';
-import { PatronDynamoDao } from 'dynamo/dao/PatronDynamoDao';
 import Patron from '@utils/datatypes/Patron';
+import { PatronDynamoDao } from 'dynamo/dao/PatronDynamoDao';
 import fs from 'fs';
 import path from 'path';
 

@@ -1,6 +1,6 @@
 import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
+
 import packageModel from '../../server/src/dynamo/models/package';
-import { initializeCardDb } from '../../server/src/server/cards/cardCatalog';
 
 const TABLE_NAME = process.env.DYNAMO_TABLE_NAME || 'CubeCobraTable';
 
@@ -29,25 +29,25 @@ async function dehydratePackages() {
         // Check if cards are already dehydrated (strings) or need dehydration (objects)
         if (!Array.isArray(pkg.cards) || pkg.cards.length === 0) {
           console.log(`Package ${pkg.id} has no cards, skipping`);
-          skippedCount++;
+          skippedCount += 1;
           continue;
         }
 
         const firstCard = pkg.cards[0];
-        
+
         // If first card is a string, assume all are strings (already dehydrated)
         if (typeof firstCard === 'string') {
           console.log(`Package ${pkg.id} already dehydrated, skipping`);
-          skippedCount++;
+          skippedCount += 1;
           continue;
         }
 
         // If first card is an object, dehydrate all cards
         if (typeof firstCard === 'object' && firstCard !== null) {
           const cardIds: string[] = [];
-          
+
           for (const card of pkg.cards) {
-            if (card && typeof card === 'object' && 'scryfall_id' in card) {
+            if (card && typeof card === 'object' && Object.prototype.hasOwnProperty.call(card, 'scryfall_id')) {
               cardIds.push(card.scryfall_id as string);
             } else {
               console.warn(`Invalid card object in package ${pkg.id}`);
@@ -56,7 +56,7 @@ async function dehydratePackages() {
 
           if (cardIds.length === 0) {
             console.log(`Package ${pkg.id} has no valid card IDs, skipping`);
-            skippedCount++;
+            skippedCount += 1;
             continue;
           }
 
@@ -67,14 +67,14 @@ async function dehydratePackages() {
           });
 
           console.log(`Dehydrated package ${pkg.id}: ${pkg.title} (${cardIds.length} cards)`);
-          processedCount++;
+          processedCount += 1;
         } else {
           console.log(`Package ${pkg.id} has unexpected card format, skipping`);
-          skippedCount++;
+          skippedCount += 1;
         }
-      } catch (error) {
-        console.error(`Error processing package ${pkg.id}:`, error);
-        skippedCount++;
+      } catch {
+        console.error(`Error processing package ${pkg.id}`);
+        skippedCount += 1;
       }
     }
 

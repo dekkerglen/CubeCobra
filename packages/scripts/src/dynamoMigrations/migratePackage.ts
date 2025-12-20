@@ -2,8 +2,8 @@
 import { UserDynamoDao } from '@server/dynamo/dao/UserDynamoDao';
 import documentClient from '@server/dynamo/documentClient';
 import PackageModel from '@server/dynamo/models/package';
-import { PackageDynamoDao } from 'dynamo/dao/PackageDynamoDao';
 import { UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
+import { PackageDynamoDao } from 'dynamo/dao/PackageDynamoDao';
 import fs from 'fs';
 import path from 'path';
 

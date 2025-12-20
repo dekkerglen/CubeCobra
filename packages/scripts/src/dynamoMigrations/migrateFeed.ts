@@ -2,11 +2,11 @@
 import { UserDynamoDao } from '@server/dynamo/dao/UserDynamoDao';
 import documentClient from '@server/dynamo/documentClient';
 import FeedModel from '@server/dynamo/models/feed';
+import { UnhydratedFeed } from '@utils/datatypes/Feed';
 import { BlogDynamoDao } from 'dynamo/dao/BlogDynamoDao';
 import { ChangelogDynamoDao } from 'dynamo/dao/ChangelogDynamoDao';
 import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
 import { FeedDynamoDao } from 'dynamo/dao/FeedDynamoDao';
-import { UnhydratedFeed } from '@utils/datatypes/Feed';
 import fs from 'fs';
 import path from 'path';
 
@@ -146,7 +146,7 @@ const deleteCheckpoint = (): void => {
             try {
               const blogPost = await blogDao.getById(feed.id);
               return { feed, exists: !!blogPost };
-            } catch (error) {
+            } catch {
               return { feed, exists: false };
             }
           }),

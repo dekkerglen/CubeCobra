@@ -1,11 +1,11 @@
 import express, { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { redirect } from 'serverutils/render';
 import responseTime from 'response-time';
-import { sanitizeHttpBody } from '../serverutils/logging';
-import cloudwatch from '../serverutils/cloudwatch';
+import { redirect } from 'serverutils/render';
 
+import cloudwatch from '../serverutils/cloudwatch';
+import { sanitizeHttpBody } from '../serverutils/logging';
 import { Request, Response } from '../types/express';
 
 const router: Router = express.Router();

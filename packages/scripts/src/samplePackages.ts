@@ -1,7 +1,7 @@
 // @ts-ignore - using old model for scan operation
 import packageModel from '../../server/src/dynamo/models/package';
-import { cardFromId } from '../../server/src/serverutils/carddb';
 import { initializeCardDb } from '../../server/src/serverutils/cardCatalog';
+import { cardFromId } from '../../server/src/serverutils/carddb';
 
 async function samplePackages() {
   console.log('Loading card database...');

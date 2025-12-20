@@ -1149,18 +1149,7 @@ export function CubeContextProvider({
       setModalSelection([]);
       setLoading(false);
     },
-    [
-      csrfFetch,
-      changes,
-      cube,
-      useBlog,
-      unfilteredChangedCards,
-      clearChanges,
-      setVersion,
-      version,
-      versionDict,
-      tagColors,
-    ],
+    [csrfFetch, changes, cube, useBlog, unfilteredChangedCards, clearChanges, setVersion, version, tagColors],
   );
 
   const bulkEditCard = useCallback(

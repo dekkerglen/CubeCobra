@@ -319,7 +319,7 @@ const mapTotalsToCardHistory = (
     let processedCubes = 0;
     const totalCubes = Object.values(cubes).length;
     for (const cube of Object.values(cubes)) {
-      processedCubes++;
+      processedCubes += 1;
       if (processedCubes % 5000 === 0) {
         console.log(`    Analyzed ${processedCubes} / ${totalCubes} cubes...`);
       }

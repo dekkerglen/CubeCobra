@@ -3,13 +3,14 @@
  * This enables the new query system to find all packages.
  */
 
-import { BatchWriteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { Sha256 } from '@aws-crypto/sha256-js';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { BatchWriteCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+
 // @ts-ignore - using old model for scan operation
 import packageModel from '../../server/src/dynamo/models/package';
-import { cardFromId } from '../../server/src/serverutils/carddb';
 import { initializeCardDb } from '../../server/src/serverutils/cardCatalog';
+import { cardFromId } from '../../server/src/serverutils/carddb';
 
 // Initialize DynamoDB client
 const dynamoClient = DynamoDBDocumentClient.from(
@@ -123,7 +124,11 @@ async function migratePackageHashes() {
               if (typeof cardItem === 'string') {
                 // Card is stored as ID string
                 card = cardFromId(cardItem);
-              } else if (cardItem && typeof cardItem === 'object' && 'oracle_id' in cardItem) {
+              } else if (
+                cardItem &&
+                typeof cardItem === 'object' &&
+                Object.prototype.hasOwnProperty.call(cardItem, 'oracle_id')
+              ) {
                 // Card is already hydrated - use it directly
                 card = cardItem;
               } else {
@@ -223,14 +228,14 @@ async function migratePackageHashes() {
           hashRows.push(...currentPackageHashRows);
         }
 
-        processedCount++;
+        processedCount += 1;
 
         if (processedCount % 50 === 0) {
           console.log(`Processed ${processedCount} packages so far...`);
         }
       } catch (error) {
         console.error(`Error preparing hash for package ${pkg.id}:`, error);
-        skippedCount++;
+        skippedCount += 1;
       }
     }
 

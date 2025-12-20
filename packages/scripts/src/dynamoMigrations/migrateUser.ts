@@ -1,5 +1,4 @@
 // Load Environment Variables
-import { ScanCommand } from '../../../server/node_modules/@aws-sdk/lib-dynamodb';
 import documentClient from '@server/dynamo/documentClient';
 import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
 import { UserWithBaseFields } from 'dynamo/dao/UserDynamoDao';
@@ -7,6 +6,8 @@ import fs from 'fs';
 import path from 'path';
 
 import 'dotenv/config';
+
+import { ScanCommand } from '../../../server/node_modules/@aws-sdk/lib-dynamodb';
 
 interface MigrationStats {
   total: number;
