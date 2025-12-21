@@ -15,6 +15,22 @@ export interface EnvironmentConfiguration {
 }
 
 export const environments: { [key: string]: EnvironmentConfiguration } = {
+  local: {
+    stackName: 'CubeCobraLocalStack',
+    account: '000000000000',
+    region: 'us-east-1',
+    dataBucket: 'local',
+    appBucket: 'app-code',
+    domain: 'localhost',
+    awsLogGroup: 'CUBECOBRA',
+    awsLogStream: 'DEVELOPMENT',
+    downTimeActive: false,
+    dynamoPrefix: 'LOCAL',
+    nitroPayEnabled: false,
+    patreonRedirectUri: 'http://localhost:8080/patreon/redirect',
+    fleetSize: 1,
+  },
+
   development: {
     stackName: 'CubeCobraDevStack',
     account: '816705121310',
