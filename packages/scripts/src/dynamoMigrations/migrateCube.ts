@@ -3,6 +3,7 @@ import documentClient from '@server/dynamo/documentClient';
 import CubeModel from '@server/dynamo/models/cube';
 import Cube from '@utils/datatypes/Cube';
 import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
+import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
 
 import 'dotenv/config';
 
@@ -49,7 +50,8 @@ interface MigrationStats {
     console.log(`Target table: ${tableName}`);
 
     // Initialize the new DAO (with dualWrite disabled since we're migrating)
-    const cubeDao = new CubeDynamoDao(documentClient, tableName, false);
+    const userDao = new UserDynamoDao(documentClient, tableName, false);
+    const cubeDao = new CubeDynamoDao(documentClient, userDao, tableName, false);
 
     const stats: MigrationStats = {
       total: 0,

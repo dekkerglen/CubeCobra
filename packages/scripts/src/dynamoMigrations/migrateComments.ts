@@ -3,6 +3,7 @@ import documentClient from '@server/dynamo/documentClient';
 import CommentModel from '@server/dynamo/models/comment';
 import { UnhydratedComment } from '@utils/datatypes/Comment';
 import { CommentDynamoDao } from 'dynamo/dao/CommentDynamoDao';
+import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
 
 import 'dotenv/config';
 
@@ -47,8 +48,9 @@ interface ScanResult {
 
     console.log(`Target table: ${tableName}`);
 
+    const userDao = new UserDynamoDao(documentClient, tableName, false);
     // Initialize the new DAO (with dualWrite disabled since we're migrating)
-    const commentDao = new CommentDynamoDao(documentClient, tableName, false);
+    const commentDao = new CommentDynamoDao(documentClient, userDao, tableName, false);
 
     const stats: MigrationStats = {
       total: 0,

@@ -5,6 +5,7 @@ import { ContentType, UnhydratedContent } from '@utils/datatypes/Content';
 import { ArticleDynamoDao } from 'dynamo/dao/ArticleDynamoDao';
 import { EpisodeDynamoDao } from 'dynamo/dao/EpisodeDynamoDao';
 import { PodcastDynamoDao } from 'dynamo/dao/PodcastDynamoDao';
+import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
 import { VideoDynamoDao } from 'dynamo/dao/VideoDynamoDao';
 import fs from 'fs';
 import path from 'path';
@@ -133,11 +134,12 @@ function deleteCheckpoint(): void {
 
     console.log(`Target table: ${tableName}`);
 
+    const userDao = new UserDynamoDao(documentClient, tableName, false);
     // Initialize the new DAOs (with dualWrite disabled since we're migrating)
-    const articleDao = new ArticleDynamoDao(documentClient, tableName, false);
-    const videoDao = new VideoDynamoDao(documentClient, tableName, false);
-    const podcastDao = new PodcastDynamoDao(documentClient, tableName, false);
-    const episodeDao = new EpisodeDynamoDao(documentClient, tableName, false);
+    const articleDao = new ArticleDynamoDao(documentClient, userDao, tableName, false);
+    const videoDao = new VideoDynamoDao(documentClient, userDao, tableName, false);
+    const podcastDao = new PodcastDynamoDao(documentClient, userDao, tableName, false);
+    const episodeDao = new EpisodeDynamoDao(documentClient, userDao, tableName, false);
 
     // Try to load checkpoint
     const checkpoint = loadCheckpoint();
