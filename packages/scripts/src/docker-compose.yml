@@ -48,7 +48,7 @@ services:
     ports:
       - 4566:4566
     environment:
-      - DYNAMODB_HEAP_SIZE=1G
+      - DYNAMODB_HEAP_SIZE=2G
       # New engine from 4.8 onwards has problems, on restart all cloudformation status is lost
       - PROVIDER_OVERRIDE_CLOUDFORMATION=engine-legacy
 
