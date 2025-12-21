@@ -32,7 +32,7 @@ services:
   localstack:
     # Localstack community does not persist anything out of the box, that is available in localstack-pro.
     # This variant (https://hub.docker.com/r/gresau/localstack-persist) causes the state to be persisted on actions and reloaded when the container starts
-    image: gresau/localstack-persist:3.8
+    image: gresau/localstack-persist:4.12
     container_name: localstack
     volumes:
       - localstack:/persisted-data
