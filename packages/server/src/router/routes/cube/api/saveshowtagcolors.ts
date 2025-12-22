@@ -13,7 +13,7 @@ export const saveshowtagcolorsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await userDao.getById(req.user.id);
+    const user = await userDao.getByIdWithSensitiveData(req.user.id);
 
     if (!user) {
       return res.status(404).send({
@@ -24,7 +24,7 @@ export const saveshowtagcolorsHandler = async (req: Request, res: Response) => {
 
     user.hideTagColors = !req.body.show_tag_colors;
 
-    await userDao.update(user);
+    await userDao.update(user as any);
     return res.status(200).send({
       success: 'true',
     });

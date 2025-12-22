@@ -2,7 +2,6 @@ import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb
 import BlogPost from '@utils/datatypes/BlogPost';
 import { Feed, FeedTypes, UnhydratedFeed } from '@utils/datatypes/Feed';
 
-import FeedModel from '../models/feed';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { BlogDynamoDao } from './BlogDynamoDao';
 
@@ -20,17 +19,10 @@ type StoredFeedItem = Feed & {
 };
 
 export class FeedDynamoDao extends BaseDynamoDao<StoredFeedItem, StoredFeed> {
-  private readonly dualWriteEnabled: boolean;
   private readonly blogDao: BlogDynamoDao;
 
-  constructor(
-    dynamoClient: DynamoDBDocumentClient,
-    blogDao: BlogDynamoDao,
-    tableName: string,
-    dualWriteEnabled: boolean = false,
-  ) {
+  constructor(dynamoClient: DynamoDBDocumentClient, blogDao: BlogDynamoDao, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
     this.blogDao = blogDao;
   }
 
@@ -180,14 +172,6 @@ export class FeedDynamoDao extends BaseDynamoDao<StoredFeedItem, StoredFeed> {
     items: Feed[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await FeedModel.getByTo(user, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -219,10 +203,6 @@ export class FeedDynamoDao extends BaseDynamoDao<StoredFeedItem, StoredFeed> {
   public async batchPutUnhydrated(items: UnhydratedFeed[]): Promise<void> {
     const now = Date.now();
 
-    if (this.dualWriteEnabled) {
-      await FeedModel.batchPut(items);
-    }
-
     // Hydrate items to StoredFeedItems for new table
     const storedItems: StoredFeedItem[] = await Promise.all(
       items.map(async (item) => {
@@ -244,10 +224,6 @@ export class FeedDynamoDao extends BaseDynamoDao<StoredFeedItem, StoredFeed> {
   public async putFeedItem(item: UnhydratedFeed): Promise<void> {
     const now = Date.now();
 
-    if (this.dualWriteEnabled) {
-      await FeedModel.batchPut([item]);
-    }
-
     const storedItem = await this.hydrateItem({
       ...item,
       dateCreated: now,
@@ -261,12 +237,6 @@ export class FeedDynamoDao extends BaseDynamoDao<StoredFeedItem, StoredFeed> {
    * Delete is not typically used for feeds, but included for completeness.
    */
   public async delete(item: StoredFeedItem): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Old model doesn't have a delete method for individual feed items
-      // We would need to implement this if needed
-      console.warn('Delete not implemented in old feed model');
-    }
-
     await super.delete(item);
   }
 }

@@ -208,19 +208,28 @@ export const followHandler = async (req: Request, res: Response) => {
     });
   }
 
-  cube.following = [...new Set([...(cube.following || []), user!.id])];
+  // Fetch user with sensitive data to preserve email field during update
+  const userToUpdate = await userDao.getByIdWithSensitiveData(user!.id);
 
-  if (!user!.followedCubes) {
-    user!.followedCubes = [];
+  if (!userToUpdate) {
+    return res.status(404).send({
+      success: 'false',
+    });
   }
 
-  if (!user!.followedCubes.some((id: string) => id === cube.id)) {
-    user!.followedCubes.push(cube.id);
+  cube.following = [...new Set([...(cube.following || []), user!.id])];
+
+  if (!userToUpdate.followedCubes) {
+    userToUpdate.followedCubes = [];
+  }
+
+  if (!userToUpdate.followedCubes.some((id: string) => id === cube.id)) {
+    userToUpdate.followedCubes.push(cube.id);
   }
 
   //TODO: Can remove after fixing models to not muck with the original input
   const cubeOwner = cube.owner;
-  await userDao.update(user!);
+  await userDao.update(userToUpdate as any);
   await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   await addNotification(
@@ -245,11 +254,19 @@ export const unfollowHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const { user } = req;
-  cube.following = cube.following?.filter((id: string) => req.user!.id !== id) || [];
-  user!.followedCubes = user!.followedCubes?.filter((id: string) => cube.id !== id) || [];
+  // Fetch user with sensitive data to preserve email field during update
+  const userToUpdate = await userDao.getByIdWithSensitiveData(req.user!.id);
 
-  await userDao.update(user!);
+  if (!userToUpdate) {
+    return res.status(404).send({
+      success: 'false',
+    });
+  }
+
+  cube.following = cube.following?.filter((id: string) => req.user!.id !== id) || [];
+  userToUpdate.followedCubes = userToUpdate.followedCubes?.filter((id: string) => cube.id !== id) || [];
+
+  await userDao.update(userToUpdate as any);
   await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   return res.status(200).send({
@@ -349,7 +366,7 @@ export const samplePackImageHandler = async (req: Request, res: Response) => {
     const cacheKey = `/samplepack/${req.params.id}/${req.params.seed}${isBalanced ? '?balanced=true' : ''}`;
     const imageBuffer = await cachePromise(cacheKey, async () => {
       if (isBalanced) {
-        const result = await generateBalancedPack(cube, cards, req.params.seed!, 10, null);
+        const result = await generateBalancedPack(cube, cards, req.params.seed!, 10, parseInt(req.params.seed!, 10));
         return generatePackImage(result.packResult.pack);
       } else {
         const pack = await generatePack(cube, cards, req.params.seed);

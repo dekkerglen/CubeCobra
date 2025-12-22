@@ -34,7 +34,7 @@ export const samplePackHandler = async (req: Request, res: Response) => {
     let maxBotWeight: number | undefined;
     try {
       if (isBalanced) {
-        const result = await generateBalancedPack(cube, cards, req.params.seed!, 10, null);
+        const result = await generateBalancedPack(cube, cards, req.params.seed!, 10, parseInt(req.params.seed!, 10));
         pack = result.packResult;
         maxBotWeight = result.maxBotWeight;
       } else {

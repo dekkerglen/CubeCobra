@@ -19,7 +19,6 @@
 
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 
-import CubeAnalyticModel from '../models/cubeAnalytic';
 import { getObject, putObject } from '../s3client';
 
 export interface CubeAnalyticBatch {
@@ -27,11 +26,7 @@ export interface CubeAnalyticBatch {
 }
 
 export class CubeAnalyticDynamoDao {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dualWriteEnabled: boolean = false) {
-    this.dualWriteEnabled = dualWriteEnabled;
-  }
+  constructor() {}
 
   /**
    * Gets analytics for a specific cube from S3.
@@ -40,10 +35,6 @@ export class CubeAnalyticDynamoDao {
    * @returns The cube analytics, or an empty object if not found
    */
   public async getByCube(cubeId: string): Promise<CubeAnalytic | Record<string, never>> {
-    if (this.dualWriteEnabled) {
-      return CubeAnalyticModel.getByCube(cubeId);
-    }
-
     try {
       return await getObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
     } catch {
@@ -59,12 +50,7 @@ export class CubeAnalyticDynamoDao {
    * @param analytic - The analytics data to save
    */
   public async put(cubeId: string, analytic: CubeAnalytic): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths (they're the same S3 location, so just write once)
-      await putObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`, analytic);
-    } else {
-      await putObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`, analytic);
-    }
+    await putObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`, analytic);
   }
 
   /**
@@ -74,16 +60,11 @@ export class CubeAnalyticDynamoDao {
    * @param analytics - Dictionary mapping cube IDs to their analytics
    */
   public async batchPut(analytics: CubeAnalyticBatch): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Write using the old model's batchPut
-      await CubeAnalyticModel.batchPut(analytics);
-    } else {
-      await Promise.all(
-        Object.keys(analytics).map(async (cubeId) => {
-          await putObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`, analytics[cubeId]);
-        }),
-      );
-    }
+    await Promise.all(
+      Object.keys(analytics).map(async (cubeId) => {
+        await putObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`, analytics[cubeId]);
+      }),
+    );
   }
 
   /**
@@ -93,14 +74,8 @@ export class CubeAnalyticDynamoDao {
    * @param cubeId - The ID of the cube to delete analytics for
    */
   public async deleteByCube(cubeId: string): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from the old model path (which is the same S3 location)
-      const { deleteObject } = await import('../s3client');
-      await deleteObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
-    } else {
-      const { deleteObject } = await import('../s3client');
-      await deleteObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
-    }
+    const { deleteObject } = await import('../s3client');
+    await deleteObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
   }
 
   /**
@@ -110,16 +85,6 @@ export class CubeAnalyticDynamoDao {
    * @returns True if analytics exist, false otherwise
    */
   public async exists(cubeId: string): Promise<boolean> {
-    if (this.dualWriteEnabled) {
-      // Use the old model to check existence
-      try {
-        await CubeAnalyticModel.getByCube(cubeId);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-
     try {
       await getObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
       return true;

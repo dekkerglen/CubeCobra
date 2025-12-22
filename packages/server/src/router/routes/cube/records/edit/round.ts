@@ -49,8 +49,9 @@ export const addRoundHandler = async (req: Request, res: Response) => {
 
     record.matches = record.matches || [];
     record.matches.push(JSON.parse(req.body.round));
+    record.dateLastUpdated = Date.now();
 
-    await recordDao.put(record);
+    await recordDao.update(record);
 
     req.flash('success', 'Added new round of matches to record successfully');
     return redirect(req, res, `/cube/record/${req.params.id}?tab=3`);
@@ -95,8 +96,9 @@ export const editRoundHandler = async (req: Request, res: Response) => {
     }
 
     record.matches[roundIndex] = JSON.parse(req.body.round);
+    record.dateLastUpdated = Date.now();
 
-    await recordDao.put(record);
+    await recordDao.update(record);
 
     req.flash('success', 'Added new round of matches to record successfully');
     return redirect(req, res, `/cube/record/${req.params.id}?tab=3`);

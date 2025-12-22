@@ -2,15 +2,11 @@ import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb
 import Notification, { NewNotification, NotificationStatus } from '@utils/datatypes/Notification';
 import { v4 as uuidv4 } from 'uuid';
 
-import NotificationModel from '../models/notification';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notification> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -88,10 +84,6 @@ export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notificat
    * Gets a notification by ID.
    */
   public async getById(id: string): Promise<Notification | undefined> {
-    if (this.dualWriteEnabled) {
-      return NotificationModel.getById(id);
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -108,14 +100,6 @@ export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notificat
     items: Notification[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await NotificationModel.getByTo(to, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -142,14 +126,6 @@ export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notificat
     items: Notification[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await NotificationModel.getByToAndStatus(to, status, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -202,12 +178,7 @@ export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notificat
         : now,
     };
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([NotificationModel.put(item as NewNotification), super.put(notification)]);
-    } else {
-      await super.put(notification);
-    }
+    await super.put(notification);
   }
 
   /**
@@ -217,18 +188,7 @@ export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notificat
     // Ensure toStatusComp is set correctly
     item.toStatusComp = `${item.to}:${item.status}`;
 
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // Write to both old and new paths
-      await Promise.all([NotificationModel.update(item), existsInNewTable ? super.update(item) : super.put(item)]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
@@ -241,11 +201,7 @@ export class NotificationDynamoDao extends BaseDynamoDao<Notification, Notificat
       toStatusComp: `${item.to}:${item.status}`,
     }));
 
-    if (this.dualWriteEnabled) {
-      await Promise.all([NotificationModel.batchPut(normalizedItems), super.batchPut(normalizedItems)]);
-    } else {
-      await super.batchPut(normalizedItems);
-    }
+    await super.batchPut(normalizedItems);
   }
 
   /**

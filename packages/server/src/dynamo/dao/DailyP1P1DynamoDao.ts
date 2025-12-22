@@ -2,7 +2,6 @@ import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb
 import { DailyP1P1, NewDailyP1P1 } from '@utils/datatypes/DailyP1P1';
 import { v4 as uuidv4 } from 'uuid';
 
-import dailyP1P1Model from '../models/dailyP1P1';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 /**
@@ -11,11 +10,8 @@ import { BaseDynamoDao } from './BaseDynamoDao';
 export interface UnhydratedDailyP1P1 extends DailyP1P1 {}
 
 export class DailyP1P1DynamoDao extends BaseDynamoDao<DailyP1P1, UnhydratedDailyP1P1> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -100,11 +96,6 @@ export class DailyP1P1DynamoDao extends BaseDynamoDao<DailyP1P1, UnhydratedDaily
    * Gets a daily P1P1 by ID.
    */
   public async getById(id: string): Promise<DailyP1P1 | undefined> {
-    if (this.dualWriteEnabled) {
-      const result = await dailyP1P1Model.getById(id);
-      return result || undefined;
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -115,11 +106,6 @@ export class DailyP1P1DynamoDao extends BaseDynamoDao<DailyP1P1, UnhydratedDaily
    * Gets the currently active daily P1P1.
    */
   public async getCurrentDailyP1P1(): Promise<DailyP1P1 | undefined> {
-    if (this.dualWriteEnabled) {
-      const result = await dailyP1P1Model.getCurrentDailyP1P1();
-      return result || undefined;
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -145,14 +131,6 @@ export class DailyP1P1DynamoDao extends BaseDynamoDao<DailyP1P1, UnhydratedDaily
     items: DailyP1P1[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await dailyP1P1Model.getDailyP1P1History(lastKey, limit);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -217,42 +195,20 @@ export class DailyP1P1DynamoDao extends BaseDynamoDao<DailyP1P1, UnhydratedDaily
    * Overrides put to support dual writes.
    */
   public async put(item: DailyP1P1): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([dailyP1P1Model.put(item), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
    * Overrides update to support dual writes.
    */
   public async update(item: DailyP1P1): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // Write to both old and new paths
-      // If item doesn't exist in new table yet, use put instead of update
-      await Promise.all([dailyP1P1Model.update(item), existsInNewTable ? super.update(item) : super.put(item)]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
    * Overrides delete to support dual writes.
    */
   public async delete(item: DailyP1P1): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      await Promise.all([dailyP1P1Model.delete(item.id), super.delete(item)]);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 }

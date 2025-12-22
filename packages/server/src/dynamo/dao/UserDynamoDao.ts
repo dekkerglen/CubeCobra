@@ -16,10 +16,6 @@
  * GSI STRUCTURE:
  * - GSI1: Query by username (usernameLower)
  * - GSI2: Query by email (case-insensitive)
- *
- * DUAL WRITE MODE:
- * Supports gradual migration from old user model by writing to both systems
- * when dualWriteEnabled flag is set.
  */
 
 import { BatchGetCommand, DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
@@ -32,7 +28,6 @@ import User, {
 } from '@utils/datatypes/User';
 import { getImageData } from 'serverutils/imageutil';
 
-import UserModel from '../models/user';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 /**
@@ -46,11 +41,8 @@ export type UserWithBaseFields = User & BaseObject;
 export type StoredUserWithSensitiveInfo = UserWithSensitiveInformation & BaseObject;
 
 export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserWithSensitiveInfo> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -182,10 +174,6 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
    * Gets a user by ID, stripping sensitive data.
    */
   public async getById(id: string): Promise<User | undefined> {
-    if (this.dualWriteEnabled) {
-      return UserModel.getById(id);
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -196,19 +184,6 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
    * Gets a user by ID with sensitive information (password hash, email).
    */
   public async getByIdWithSensitiveData(id: string): Promise<StoredUserWithSensitiveInfo | undefined> {
-    if (this.dualWriteEnabled) {
-      const user = await UserModel.getByIdWithSensitiveData(id);
-      if (!user) return undefined;
-
-      // Add BaseObject fields if missing
-      const now = Date.now();
-      return {
-        ...user,
-        dateCreated: (user as any).dateCreated ?? now,
-        dateLastUpdated: (user as any).dateLastUpdated ?? now,
-      };
-    }
-
     const dynamoItem = await (this as any).getRaw({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -225,10 +200,6 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
    * Queries a user by username (case-insensitive).
    */
   public async getByUsername(username: string): Promise<User | null> {
-    if (this.dualWriteEnabled) {
-      return UserModel.getByUsername(username);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -252,10 +223,6 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
    * Queries a user by email (case-insensitive).
    */
   public async getByEmail(email: string): Promise<User | null> {
-    if (this.dualWriteEnabled) {
-      return UserModel.getByEmail(email);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -280,10 +247,6 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
    * First attempts to get by ID (fast direct lookup), then falls back to username query.
    */
   public async getByIdOrUsername(idOrUsername: string): Promise<User | null> {
-    if (this.dualWriteEnabled) {
-      return UserModel.getByIdOrUsername(idOrUsername);
-    }
-
     // Try to get by ID first
     const userById = await this.getById(idOrUsername);
 
@@ -299,10 +262,6 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
    * Batch gets multiple users by their IDs.
    */
   public async batchGet(ids: string[]): Promise<User[]> {
-    if (this.dualWriteEnabled) {
-      return UserModel.batchGet(ids);
-    }
-
     if (ids.length === 0) {
       return [];
     }
@@ -364,18 +323,13 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       dateLastUpdated: (user as any).dateLastUpdated ?? now,
     };
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([UserModel.put(userWithId as User), super.put(userWithId)]);
-    } else {
-      await super.put(userWithId);
-    }
+    await super.put(userWithId);
 
     return userId;
   }
 
   /**
-   * Overrides put to support dual writes.
+   * Puts a user.
    */
   public async put(item: User | UserWithSensitiveInformation | UserWithBaseFields): Promise<void> {
     // Ensure usernameLower and BaseObject fields are set
@@ -387,16 +341,11 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       dateLastUpdated: (item as any).dateLastUpdated ?? now,
     };
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([UserModel.put(item as User), super.put(itemWithLower)]);
-    } else {
-      await super.put(itemWithLower);
-    }
+    await super.put(itemWithLower);
   }
 
   /**
-   * Overrides update to support dual writes and merge with existing data.
+   * Updates a user and merges with existing data.
    */
   public async update(document: User | UserWithBaseFields): Promise<void> {
     // Ensure dateLastUpdated is updated
@@ -406,11 +355,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       dateLastUpdated: Date.now(),
     } as UserWithBaseFields;
 
-    if (this.dualWriteEnabled) {
-      await Promise.all([UserModel.update(document as User), super.update(docWithTimestamp)]);
-    } else {
-      await super.update(docWithTimestamp);
-    }
+    await super.update(docWithTimestamp);
   }
 
   /**
@@ -426,11 +371,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       dateLastUpdated: (doc as any).dateLastUpdated ?? now,
     })) as UserWithBaseFields[];
 
-    if (this.dualWriteEnabled) {
-      await Promise.all([UserModel.batchPut(documents), super.batchPut(normalizedDocs)]);
-    } else {
-      await super.batchPut(normalizedDocs);
-    }
+    await super.batchPut(normalizedDocs);
   }
 
   /**
@@ -451,10 +392,6 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
 
     const userWithBase = user as UserWithBaseFields;
 
-    if (this.dualWriteEnabled) {
-      await Promise.all([UserModel.deleteById(id), this.delete(userWithBase)]);
-    } else {
-      await this.delete(userWithBase);
-    }
+    await this.delete(userWithBase);
   }
 }

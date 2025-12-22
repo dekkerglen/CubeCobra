@@ -14,12 +14,16 @@ import TextEntry from 'components/TextEntry';
 import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
 
-const UserProfile: React.FC = () => {
+interface UserProfileProps {
+  userEmail?: string;
+}
+
+const UserProfile: React.FC<UserProfileProps> = ({ userEmail }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
   const [markdown, setMarkdown] = useState(user?.about || '');
   const [username, setUsername] = useState(user?.username);
-  const [email, setEmail] = useState(user?.email);
+  const [email, setEmail] = useState(userEmail || user?.email);
   const formRef = React.useRef<HTMLFormElement>(null);
   const [imageDict, setImageDict] = useState<Record<string, Image>>({});
   const [imagename, setImagename] = useState(user?.image?.imageName || '');

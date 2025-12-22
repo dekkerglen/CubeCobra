@@ -101,7 +101,7 @@ export const confirmHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/user/login');
     }
 
-    const user = (await userDao.getById(req.params.id)) as any;
+    const user = (await userDao.getByIdWithSensitiveData(req.params.id)) as any;
 
     if (!user) {
       req.flash('danger', 'User not found');

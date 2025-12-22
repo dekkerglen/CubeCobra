@@ -27,9 +27,16 @@ interface UserAccountPageProps {
     cube: Cube;
     position: number;
   };
+  userEmail?: string;
 }
 
-const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patreonRedirectUri, patron, featured }) => {
+const UserAccountPage: React.FC<UserAccountPageProps> = ({
+  patreonClientId,
+  patreonRedirectUri,
+  patron,
+  featured,
+  userEmail,
+}) => {
   const [activeTab, setActiveTab] = useQueryParam('tab', '0');
 
   return (
@@ -45,7 +52,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patr
               onClick: () => setActiveTab('0'),
               content: (
                 <CardBody>
-                  <UserProfile />
+                  <UserProfile userEmail={userEmail} />
                 </CardBody>
               ),
             },
@@ -63,7 +70,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patr
               onClick: () => setActiveTab('2'),
               content: (
                 <CardBody>
-                  <UserEmailForm />
+                  <UserEmailForm currentEmail={userEmail} />
                 </CardBody>
               ),
             },

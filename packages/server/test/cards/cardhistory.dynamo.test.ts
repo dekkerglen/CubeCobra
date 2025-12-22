@@ -38,8 +38,8 @@ describe('CardHistoryDynamoDao', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Create DAO instance with disabled dual write for testing
-    cardHistoryDao = new CardHistoryDynamoDao(mockDynamoDBClient, 'test-table', false);
+    // Create DAO instance for testing
+    cardHistoryDao = new CardHistoryDynamoDao(mockDynamoDBClient, 'test-table');
     mockSend.mockReset();
   });
 

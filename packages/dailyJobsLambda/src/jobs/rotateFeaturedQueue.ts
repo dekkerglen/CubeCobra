@@ -1,4 +1,4 @@
-import User from '@server/dynamo/models/user';
+import { userDao } from '@server/dynamo/daos';
 import { rotateFeatured } from '@server/serverutils/featuredQueue';
 import { addNotification } from '@server/serverutils/util';
 
@@ -10,8 +10,8 @@ export const rotateQueue = async () => {
     return;
   }
 
-  const olds = await User.batchGet(rotate.removed.map((f) => f.ownerID));
-  const news = await User.batchGet(rotate.added.map((f) => f.ownerID));
+  const olds = await userDao.batchGet(rotate.removed.map((f) => f.ownerID));
+  const news = await userDao.batchGet(rotate.added.map((f) => f.ownerID));
   const notifications = [];
   for (const old of olds) {
     notifications.push(addNotification(old, null, '/user/account?nav=patreon', 'Your cube is no longer featured.'));

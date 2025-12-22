@@ -2,19 +2,20 @@ import type Comment from '@utils/datatypes/Comment';
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@utils/datatypes/Comment';
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
-import { commentDao, userDao } from 'dynamo/daos';
 import {
   articleDao,
   blogDao,
+  commentDao,
   cubeDao,
   draftDao,
   episodeDao,
   noticeDao,
   packageDao,
   podcastDao,
+  recordDao,
+  userDao,
   videoDao,
 } from 'dynamo/daos';
-import Record from 'dynamo/models/record';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getImageData } from 'serverutils/imageutil';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -210,7 +211,7 @@ export const getReplyContext: Record<NotifiableCommentType, (id: string) => Prom
     return pack?.owner;
   },
   record: async (id: string) => {
-    const record = await Record.getById(id);
+    const record = await recordDao.getById(id);
     if (!record) {
       return undefined;
     }

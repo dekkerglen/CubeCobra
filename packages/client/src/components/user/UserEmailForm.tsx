@@ -5,7 +5,11 @@ import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import CSRFForm from '../CSRFForm';
 
-const UserEmailForm: React.FC = () => {
+interface UserEmailFormProps {
+  currentEmail?: string;
+}
+
+const UserEmailForm: React.FC<UserEmailFormProps> = ({ currentEmail }) => {
   const [newEmail, setNewEmail] = useState('');
   const [password, setPassword] = useState('');
   const formRef = React.useRef<HTMLFormElement>(null);
@@ -14,6 +18,11 @@ const UserEmailForm: React.FC = () => {
   return (
     <CSRFForm method="POST" action="/user/updateemail" ref={formRef} formData={formData}>
       <Flexbox direction="col" gap="2">
+        {currentEmail && (
+          <div className="mb-3">
+            <strong>Current email:</strong> {currentEmail}
+          </div>
+        )}
         <Input
           label="New email"
           id="email"

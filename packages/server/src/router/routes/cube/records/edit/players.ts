@@ -45,7 +45,8 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
 
     const players = JSON.parse(req.body.players);
     record.players = players;
-    await recordDao.put(record);
+    record.dateLastUpdated = Date.now();
+    await recordDao.update(record);
 
     req.flash('success', 'Record updated successfully');
     return redirect(req, res, `/cube/record/${req.params.id}`);

@@ -22,11 +22,11 @@ export const unlinkHandler = async (req: Request, res: Response) => {
   try {
     await patronDao.deleteById(req.user!.id);
 
-    const user = await userDao.getById(req.user!.id);
+    const user = await userDao.getByIdWithSensitiveData(req.user!.id);
     if (user) {
       user.roles = user.roles?.filter((role) => role !== UserRoles.PATRON);
       user.patron = undefined;
-      await userDao.update(user);
+      await userDao.update(user as any);
     }
 
     req.flash('success', `Patron account has been unlinked.`);
@@ -70,7 +70,7 @@ export const hookHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await userDao.getById(document.owner);
+    const user = await userDao.getByIdWithSensitiveData(document.owner);
 
     if (!user) {
       req.logger.error(`Recieved a patreon hook without a found user: "${document.owner}"`);
@@ -107,7 +107,7 @@ export const hookHandler = async (req: Request, res: Response) => {
     }
 
     await patronDao.put(document);
-    await userDao.update(user);
+    await userDao.update(user as any);
 
     return res.status(200).send({
       success: 'false',
@@ -200,12 +200,12 @@ export const redirectHandler = async (req: Request, res: Response) => {
 
       await patronDao.put(newPatron);
 
-      const user = await userDao.getById(req.user!.id);
+      const user = await userDao.getByIdWithSensitiveData(req.user!.id);
       if (user) {
         if (!user.roles?.includes(UserRoles.PATRON)) {
           user.roles?.push(UserRoles.PATRON);
         }
-        await userDao.update(user);
+        await userDao.update(user as any);
       }
 
       if (newPatron.level === 0) {

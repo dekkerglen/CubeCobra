@@ -9,6 +9,7 @@ import {
   equalityOperation,
   setOperation,
   rarityOperation,
+  colorCategoryOperation,
   convertParsedCost,
   manaCostOperation,
   castableCostOperation,
@@ -26,6 +27,7 @@ import {
   cardCmc,
   cardColors,
   cardColorIdentity,
+  cardColorCategory,
   cardType,
   cardOracleText,
   cardSet,
@@ -77,6 +79,7 @@ condition -> (
     cmcCondition
   | colorCondition
   | colorIdentityCondition
+  | colorCategoryCondition
   | typeCondition
   | oracleCondition
   | setCondition
@@ -118,6 +121,8 @@ cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCon
 colorCondition -> ("c"i | "color"i | "colors"i) colorCombinationOpValue {% ([, valuePred]) => genericCondition('colors', cardColors, valuePred) %}
 
 colorIdentityCondition -> ("ci"i | "id"i | "identity"i | "coloridentity"i | "color_identity"i) colorIdentityOpValue {% ([, valuePred]) => genericCondition('color_identity',cardColorIdentity, valuePred) %}
+
+colorCategoryCondition -> ("cc"i | "colorcategory"i | "color_category"i) colorCategoryOpValue {% ([, valuePred]) => genericCondition('colorcategory', cardColorCategory, valuePred) %}
 
 typeCondition -> ("t"i |  "type"i | "type_line"i | "typeline"i) stringContainOpValue {% ([, valuePred]) => genericCondition('type_line', cardType, valuePred) %}
 

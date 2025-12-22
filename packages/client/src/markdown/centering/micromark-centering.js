@@ -84,6 +84,7 @@ function centering() {
   }
 
   function tokenizeLine(effects, ok, nok) {
+    let hasContent = false;
     return start;
 
     function start(code) {
@@ -98,6 +99,7 @@ function centering() {
       if (!code || markdownLineEnding(code)) {
         return nok(code);
       }
+      hasContent = true;
       effects.consume(code);
       return content;
     }
@@ -106,11 +108,17 @@ function centering() {
       if (code !== 60) {
         return nok(code);
       }
+      hasContent = true;
       effects.consume(code);
       return content;
     }
 
     function end(code) {
+      // Only exit centeringLineValue if we actually have content
+      // Otherwise, this is an empty centering block (>>> <<<) which should fail
+      if (!hasContent) {
+        return nok(code);
+      }
       effects.exit('centeringLineValue');
       return effects.attempt(endingConstruct, ok)(code);
     }

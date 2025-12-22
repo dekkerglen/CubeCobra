@@ -4,7 +4,6 @@ import Episode from '@utils/datatypes/Episode';
 import User from '@utils/datatypes/User';
 import { v4 as uuidv4 } from 'uuid';
 
-import ContentModel from '../models/content';
 import { getBucketName, getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { UserDynamoDao } from './UserDynamoDao';
@@ -16,18 +15,11 @@ interface UnhydratedEpisode extends UnhydratedContent {
 }
 
 export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> {
-  private readonly dualWriteEnabled: boolean;
   private readonly userDao: UserDynamoDao;
 
-  constructor(
-    dynamoClient: DynamoDBDocumentClient,
-    userDao: UserDynamoDao,
-    tableName: string,
-    dualWriteEnabled: boolean = false,
-  ) {
+  constructor(dynamoClient: DynamoDBDocumentClient, userDao: UserDynamoDao, tableName: string) {
     super(dynamoClient, tableName);
     this.userDao = userDao;
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -173,10 +165,6 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
    * Gets an episode by ID.
    */
   public async getById(id: string): Promise<Episode | undefined> {
-    if (this.dualWriteEnabled) {
-      return ContentModel.getById(id) as Promise<Episode>;
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -194,14 +182,6 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
     items: Episode[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await ContentModel.getByTypeAndStatus(ContentType.EPISODE, status, lastKey);
-      return {
-        items: (result.items || []) as Episode[],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -227,14 +207,6 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
     items: Episode[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await ContentModel.getByTypeAndOwner(ContentType.EPISODE, ownerId, lastKey);
-      return {
-        items: (result.items || []) as Episode[],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -261,36 +233,6 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
     items: Episode[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      // The old model doesn't have a specific method for this, so we simulate it
-      if (status) {
-        const episodes = await ContentModel.getPodcastEpisodes(podcastId, status);
-        return {
-          items: episodes,
-          lastKey: undefined,
-        };
-      } else {
-        const allEpisodes: Episode[] = [];
-        let currentLastKey = undefined;
-
-        do {
-          const result = await ContentModel.getByTypeAndStatus(
-            ContentType.EPISODE,
-            ContentStatus.PUBLISHED,
-            currentLastKey,
-          );
-          const filteredEpisodes = ((result.items || []) as Episode[]).filter((item) => item.podcast === podcastId);
-          allEpisodes.push(...filteredEpisodes);
-          currentLastKey = result.lastKey;
-        } while (currentLastKey);
-
-        return {
-          items: allEpisodes,
-          lastKey: undefined,
-        };
-      }
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI3',
@@ -329,14 +271,6 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
     items: Episode[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const episodes = await ContentModel.getPodcastEpisodes(podcastId, status);
-      return {
-        items: episodes,
-        lastKey: undefined,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI3',
@@ -370,12 +304,7 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       await this.putBody(item.id, item.body);
     }
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([ContentModel.put(item, ContentType.EPISODE), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
@@ -387,31 +316,14 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       await this.putBody(item.id, item.body);
     }
 
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // Write to both old and new paths
-      // If item doesn't exist in new table yet, use put instead of update
-      await Promise.all([ContentModel.update(item), existsInNewTable ? super.update(item) : super.put(item)]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
    * Overrides delete to support dual writes.
    */
   public async delete(item: Episode): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      await Promise.all([ContentModel.batchDelete([{ id: item.id }]), super.delete(item)]);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 
   /**
@@ -430,11 +342,7 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       }),
     );
 
-    if (this.dualWriteEnabled) {
-      await Promise.all([ContentModel.batchPut(items), super.batchPut(items)]);
-    } else {
-      await super.batchPut(items);
-    }
+    await super.batchPut(items);
   }
 
   /**

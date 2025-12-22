@@ -2,9 +2,9 @@ import { cardOracleId } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import CubeType from '@utils/datatypes/Cube';
 import DraftType, { DRAFT_TYPES } from '@utils/datatypes/Draft';
-import RecordType from '@utils/datatypes/Record';
 import { setupPicks } from '@utils/draftutil';
 import { Draft } from 'dynamo/dao/DraftDynamoDao';
+import { RecordEntity } from 'dynamo/dao/RecordDynamoDao';
 import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
@@ -57,7 +57,7 @@ const sideboardSchema = Joi.array().items(Joi.string()).max(200).default([]);
 
 export const associateNewDraft = async (
   cube: CubeType,
-  record: RecordType,
+  record: RecordEntity,
   userIndex: number,
   mainboardOracles: string[],
   sideboardOracles: string[] = [],
@@ -155,12 +155,9 @@ export const associateNewDraft = async (
   await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   record.draft = id;
+  record.dateLastUpdated = Date.now();
   // Update the record with the draft ID
-  await recordDao.put({
-    ...record,
-    dateCreated: Date.now(),
-    dateLastUpdated: Date.now(),
-  });
+  await recordDao.update(record);
 };
 
 export const associateWithExistingDraft = async (

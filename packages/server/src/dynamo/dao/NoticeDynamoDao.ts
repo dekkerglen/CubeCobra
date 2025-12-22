@@ -3,23 +3,15 @@ import { NewNotice, Notice, NoticeStatus, UnhydratedNotice } from '@utils/dataty
 import User from '@utils/datatypes/User';
 import { v4 as uuidv4 } from 'uuid';
 
-import NoticeModel from '../models/notice';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { UserDynamoDao } from './UserDynamoDao';
 
 export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
-  private readonly dualWriteEnabled: boolean;
   private readonly userDao: UserDynamoDao;
 
-  constructor(
-    dynamoClient: DynamoDBDocumentClient,
-    userDao: UserDynamoDao,
-    tableName: string,
-    dualWriteEnabled: boolean = false,
-  ) {
+  constructor(dynamoClient: DynamoDBDocumentClient, userDao: UserDynamoDao, tableName: string) {
     super(dynamoClient, tableName);
     this.userDao = userDao;
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -159,10 +151,6 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
    * Gets a notice by ID.
    */
   public async getById(id: string): Promise<Notice | undefined> {
-    if (this.dualWriteEnabled) {
-      return NoticeModel.getById(id);
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -179,14 +167,6 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
     items: Notice[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await NoticeModel.getByStatus(status, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -237,46 +217,21 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
         : now,
     };
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([NoticeModel.put(item), super.put(notice)]);
-    } else {
-      await super.put(notice);
-    }
+    await super.put(notice);
   }
 
   /**
    * Overrides update to support dual writes.
    */
   public async update(item: Notice): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // Write to both old and new paths
-      await Promise.all([
-        NoticeModel.put(item), // Old model doesn't have separate update
-        existsInNewTable ? super.update(item) : super.put(item),
-      ]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
    * Overrides delete to support dual writes.
    */
   public async delete(item: Notice): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      // Old model doesn't have a delete method, so we only delete from new table
-      await super.delete(item);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 
   /**
@@ -284,13 +239,7 @@ export class NoticeDynamoDao extends BaseDynamoDao<Notice, UnhydratedNotice> {
    * Overrides batchPut to handle the old model's signature that uses UnhydratedNotice[].
    */
   public async batchPut(items: Notice[]): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Convert Notice[] to UnhydratedNotice[] for the old model
-      const unhydratedItems = this.dehydrateItems(items);
-      await Promise.all([NoticeModel.batchPut(unhydratedItems), super.batchPut(items)]);
-    } else {
-      await super.batchPut(items);
-    }
+    await super.batchPut(items);
   }
 
   /**

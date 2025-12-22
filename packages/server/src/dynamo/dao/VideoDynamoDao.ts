@@ -6,24 +6,16 @@ import Video from '@utils/datatypes/Video';
 import { getImageData } from 'serverutils/imageutil';
 import { v4 as uuidv4 } from 'uuid';
 
-import ContentModel from '../models/content';
 import { getBucketName, getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { UserDynamoDao } from './UserDynamoDao';
 
 export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
-  private readonly dualWriteEnabled: boolean;
   private readonly userDao: UserDynamoDao;
 
-  constructor(
-    dynamoClient: DynamoDBDocumentClient,
-    userDao: UserDynamoDao,
-    tableName: string,
-    dualWriteEnabled: boolean = false,
-  ) {
+  constructor(dynamoClient: DynamoDBDocumentClient, userDao: UserDynamoDao, tableName: string) {
     super(dynamoClient, tableName);
     this.userDao = userDao;
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -164,10 +156,6 @@ export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
    * Gets a video by ID.
    */
   public async getById(id: string): Promise<Video | undefined> {
-    if (this.dualWriteEnabled) {
-      return ContentModel.getById(id) as Promise<Video>;
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -185,14 +173,6 @@ export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
     items: Video[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await ContentModel.getByTypeAndStatus(ContentType.VIDEO, status, lastKey);
-      return {
-        items: (result.items || []) as Video[],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -218,14 +198,6 @@ export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
     items: Video[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await ContentModel.getByTypeAndOwner(ContentType.VIDEO, ownerId, lastKey);
-      return {
-        items: (result.items || []) as Video[],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -254,12 +226,7 @@ export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
       await this.putBody(item.id, item.body);
     }
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([ContentModel.put(item, ContentType.VIDEO), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
@@ -271,31 +238,14 @@ export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
       await this.putBody(item.id, item.body);
     }
 
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // Write to both old and new paths
-      // If item doesn't exist in new table yet, use put instead of update
-      await Promise.all([ContentModel.update(item), existsInNewTable ? super.update(item) : super.put(item)]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
    * Overrides delete to support dual writes.
    */
   public async delete(item: Video): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      await Promise.all([ContentModel.batchDelete([{ id: item.id }]), super.delete(item)]);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 
   /**
@@ -314,11 +264,7 @@ export class VideoDynamoDao extends BaseDynamoDao<Video, UnhydratedContent> {
       }),
     );
 
-    if (this.dualWriteEnabled) {
-      await Promise.all([ContentModel.batchPut(items), super.batchPut(items)]);
-    } else {
-      await super.batchPut(items);
-    }
+    await super.batchPut(items);
   }
 
   /**

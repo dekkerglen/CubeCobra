@@ -5,14 +5,12 @@ import CubeType from '@utils/datatypes/Cube';
 import UserType from '@utils/datatypes/User';
 import { v4 as uuidv4 } from 'uuid';
 
-import BlogModel from '../models/blog';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { ChangelogDynamoDao } from './ChangelogDynamoDao';
 import { CubeDynamoDao } from './CubeDynamoDao';
 import { UserDynamoDao } from './UserDynamoDao';
 
 export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
-  private readonly dualWriteEnabled: boolean;
   private readonly changelogDao: ChangelogDynamoDao;
   private readonly cubeDao: CubeDynamoDao;
   private readonly userDao: UserDynamoDao;
@@ -23,10 +21,8 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     cubeDao: CubeDynamoDao,
     userDao: UserDynamoDao,
     tableName: string,
-    dualWriteEnabled: boolean = false,
   ) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
     this.changelogDao = changelogDao;
     this.cubeDao = cubeDao;
     this.userDao = userDao;
@@ -196,10 +192,6 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
    * Gets a blog post by ID.
    */
   public async getById(id: string): Promise<BlogPost | undefined> {
-    if (this.dualWriteEnabled) {
-      return BlogModel.getById(id);
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -217,14 +209,6 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     items: BlogPost[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await BlogModel.getByCube(cube, limit, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -251,14 +235,6 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     items: BlogPost[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await BlogModel.getByOwner(owner, limit, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -308,11 +284,6 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       dateLastUpdated: date,
     };
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await BlogModel.put(unhydratedItem);
-    }
-
     // Hydrate and write to new table
     const hydratedItem = await this.hydrateItem(unhydratedItem);
     await super.put(hydratedItem);
@@ -321,59 +292,30 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
   }
 
   /**
-   * Overrides put to support dual writes.
+   * Puts a blog post.
    */
   public async put(item: BlogPost): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([BlogModel.put(this.dehydrateItem(item)), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
-   * Overrides update to support dual writes.
+   * Updates a blog post.
    */
   public async update(item: BlogPost): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // Write to both old and new paths
-      // If item doesn't exist in new table yet, use put instead of update
-      await Promise.all([
-        BlogModel.put(this.dehydrateItem(item)), // Old model doesn't have separate update
-        existsInNewTable ? super.update(item) : super.put(item),
-      ]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
-   * Overrides delete to support dual writes.
+   * Deletes a blog post.
    */
   public async delete(item: BlogPost): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      await Promise.all([BlogModel.delete(item.id), super.delete(item)]);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 
   /**
    * Batch put blog posts.
    */
   public async batchPut(items: BlogPost[]): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await Promise.all([BlogModel.batchPut(items.map((item) => this.dehydrateItem(item))), super.batchPut(items)]);
-    } else {
-      await super.batchPut(items);
-    }
+    await super.batchPut(items);
   }
 }

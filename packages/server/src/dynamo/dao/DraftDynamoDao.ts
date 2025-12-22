@@ -26,7 +26,6 @@ import User from '@utils/datatypes/User';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
-import DraftModel from '../models/draft';
 import { getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { CubeDynamoDao } from './CubeDynamoDao';
@@ -65,19 +64,11 @@ interface QueryResult {
 }
 
 export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
-  private readonly dualWriteEnabled: boolean;
   private readonly cubeDao: CubeDynamoDao;
   private readonly userDao: UserDynamoDao;
 
-  constructor(
-    dynamoClient: DynamoDBDocumentClient,
-    cubeDao: CubeDynamoDao,
-    userDao: UserDynamoDao,
-    tableName: string,
-    dualWriteEnabled: boolean = false,
-  ) {
+  constructor(dynamoClient: DynamoDBDocumentClient, cubeDao: CubeDynamoDao, userDao: UserDynamoDao, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
     this.cubeDao = cubeDao;
     this.userDao = userDao;
   }
@@ -251,10 +242,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Gets a draft by ID.
    */
   public async getById(id: string): Promise<Draft | undefined> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.getById(id);
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -265,10 +252,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Batch gets drafts by IDs.
    */
   public async batchGet(ids: string[]): Promise<Draft[]> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.batchGet(ids);
-    }
-
     if (ids.length === 0) {
       return [];
     }
@@ -295,10 +278,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     lastKey?: Record<string, NativeAttributeValue>,
     limit: number = 200,
   ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.getByOwner(owner, lastKey, limit);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -378,10 +357,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     lastKey?: Record<string, NativeAttributeValue>,
     limit: number = 200,
   ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.getByOwner(owner, lastKey, limit);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -411,10 +386,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     cubeId: string,
     lastKey?: Record<string, NativeAttributeValue>,
   ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.getByCube(cubeId, lastKey);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -490,10 +461,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Use queryByCubeUnhydrated for listing/display purposes for better performance.
    */
   public async queryByCube(cubeId: string, lastKey?: Record<string, NativeAttributeValue>): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.getByCube(cubeId, lastKey);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -523,10 +490,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     cubeOwner: string,
     lastKey?: Record<string, NativeAttributeValue>,
   ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.getByCubeOwner(cubeOwner, lastKey);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI3',
@@ -605,10 +568,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     cubeOwner: string,
     lastKey?: Record<string, NativeAttributeValue>,
   ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.getByCubeOwner(cubeOwner, lastKey);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI3',
@@ -633,11 +592,11 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   /**
    * Queries drafts by type and date with pagination.
    */
-  public async queryByTypeAndDate(type: string, lastKey?: Record<string, NativeAttributeValue>): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return DraftModel.queryByTypeAndDate(type, lastKey);
-    }
-
+  public async queryByTypeAndDate(
+    type: string,
+    lastKey?: Record<string, NativeAttributeValue>,
+    limit?: number,
+  ): Promise<QueryResult> {
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI4',
@@ -646,7 +605,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         ':type': `${this.itemType()}#TYPE#${type}`,
       },
       ScanIndexForward: false,
-      Limit: 100,
+      Limit: limit || 100,
       ExclusiveStartKey: lastKey,
     };
 
@@ -669,12 +628,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     lastKey?: Record<string, NativeAttributeValue>,
     limit: number = 1000,
   ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      // For dual write mode, we need to scan since old model doesn't support date range queries
-      // This will be removed once migration is complete
-      return DraftModel.queryByTypeAndDate(type, lastKey);
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI4',
@@ -712,16 +665,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     items: UnhydratedDraft[];
     lastKey?: Record<string, NativeAttributeValue>;
   }> {
-    if (this.dualWriteEnabled) {
-      // For dual write mode, fall back to hydrated query
-      // This will be removed once migration is complete
-      const result = await DraftModel.queryByTypeAndDate(type, lastKey);
-      return {
-        items: result.items.map((item) => this.dehydrateItem(item)),
-        lastKey: result.lastEvaluatedKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI4',
@@ -843,11 +786,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     ]);
 
     // Save metadata to DynamoDB
-    if (this.dualWriteEnabled) {
-      await DraftModel.put(draft);
-    } else {
-      await this.put(draft);
-    }
+    await this.put(draft);
 
     return id;
   }
@@ -864,11 +803,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Overrides put to support dual writes.
    */
   public async put(item: Draft): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await DraftModel.put(item);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
@@ -897,35 +832,13 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       }),
     ]);
 
-    if (this.dualWriteEnabled) {
-      // Update old model
-      await DraftModel.put(item);
-
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // If item doesn't exist in new table yet, use put instead of update
-      if (existsInNewTable) {
-        await super.update(item);
-      } else {
-        await super.put(item);
-      }
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
    * Deletes a draft.
    */
   public async deleteById(id: string): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await DraftModel.delete(id);
-    }
-
     const draft = await this.getById(id);
     if (draft) {
       await this.delete(draft);
@@ -966,11 +879,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     );
 
     // Batch put metadata to DynamoDB
-    if (this.dualWriteEnabled) {
-      await DraftModel.batchPut(filtered);
-    } else {
-      await super.batchPut(filtered);
-    }
+    await super.batchPut(filtered);
   }
 
   /**

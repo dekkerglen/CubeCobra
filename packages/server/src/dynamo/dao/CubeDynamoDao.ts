@@ -73,8 +73,6 @@ import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
 import cloudwatch from 'serverutils/cloudwatch';
 import { getImageData } from 'serverutils/imageutil';
 
-import CubeModel from '../models/cube';
-import CubeHashModel from '../models/cubeHash';
 import { deleteObject, getObject, putObject } from '../s3client';
 import { getObjectVersion, listObjectVersions } from '../s3client';
 import { BaseDynamoDao, HashRow } from './BaseDynamoDao';
@@ -149,17 +147,10 @@ const createDeletedUserPlaceholder = (userId: string): User => {
 };
 
 export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
-  private readonly dualWriteEnabled: boolean;
   private readonly userDao: UserDynamoDao;
 
-  constructor(
-    dynamoClient: DynamoDBDocumentClient,
-    userDao: UserDynamoDao,
-    tableName: string,
-    dualWriteEnabled: boolean = false,
-  ) {
+  constructor(dynamoClient: DynamoDBDocumentClient, userDao: UserDynamoDao, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
     this.userDao = userDao;
   }
 
@@ -381,10 +372,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Gets a cube by ID (supports both full ID and shortId).
    */
   public async getById(id: string): Promise<Cube | null | undefined> {
-    if (this.dualWriteEnabled) {
-      return CubeModel.getById(id);
-    }
-
     // Try by full ID first
     const byId = await this.get({
       PK: this.typedKey(id),
@@ -414,10 +401,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Batch gets cubes by IDs.
    */
   public async batchGet(ids: string[]): Promise<Cube[]> {
-    if (this.dualWriteEnabled) {
-      return CubeModel.batchGet(ids);
-    }
-
     if (ids.length === 0) {
       return [];
     }
@@ -445,10 +428,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     lastKey?: Record<string, any>,
     limit: number = 100,
   ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      return CubeModel.getByOwner(owner, lastKey);
-    }
-
     // For owner queries, we can only sort by date using GSI1
     // For other sorts, we need to fetch all and sort in memory
     if (sortBy === 'date') {
@@ -676,12 +655,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Save to S3 and DynamoDB
     await Promise.all([putObject(process.env.DATA_BUCKET!, `cube/${id}.json`, newCards), this.update(cube)]);
 
-    if (this.dualWriteEnabled) {
-      // Update the old model with the same version to keep them in sync
-      // Don't use CubeModel.updateCards as it will increment version independently
-      await CubeModel.update(this.dehydrateItem(cube));
-    }
-
     return newVersion;
   }
 
@@ -689,10 +662,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Deletes a cube (metadata and cards).
    */
   public async deleteById(id: string): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await CubeModel.deleteById(id);
-    }
-
     const cube = await this.getById(id);
     if (!cube) {
       return;
@@ -726,11 +695,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       throw new Error('This cube ID is already taken');
     }
 
-    if (this.dualWriteEnabled) {
-      await CubeModel.putNewCube(this.dehydrateItem(cube));
-      await CubeModel.putCards(cards);
-    }
-
     // Strip details from cards
     for (const [board, list] of Object.entries(cards)) {
       if (board !== 'id') {
@@ -761,10 +725,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    *                                       that shouldn't trigger "recently edited" status.
    */
   public async update(item: Cube, options?: { skipTimestampUpdate?: boolean }): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await CubeModel.update(this.dehydrateItem(item));
-    }
-
     // Get old cube to compare hashes
     const oldCube = await this.get({
       PK: this.partitionKey(item),
@@ -779,18 +739,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     }
 
     if (!oldCube) {
-      // Cube not migrated yet - create it in DynamoDB
-      if (this.dualWriteEnabled) {
-        // In dual write mode, just create the cube without error
-        await this.put(item);
-        // Create initial hash rows
-        const hashes = await this.getHashes(item);
-        await this.writeHashes(this.partitionKey(item), hashes);
-        return;
-      } else {
-        // Not in dual write mode, this is a real error
-        throw new Error('Cube not found');
-      }
+      // Cube not found - this is an error
+      throw new Error('Cube not found');
     }
 
     // Update hash rows if metadata changed
@@ -1199,16 +1149,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'featured', value: 'true' });
 
-    if (this.dualWriteEnabled) {
-      const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
-      const cubeIds = result.items.map((item) => item.cube);
-      const cubes = await this.batchGet(cubeIds);
-      return {
-        items: cubes,
-        lastKey: result.lastKey,
-      };
-    }
-
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
 
@@ -1224,16 +1164,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'category', value: category });
 
-    if (this.dualWriteEnabled) {
-      const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
-      const cubeIds = result.items.map((item) => item.cube);
-      const cubes = await this.batchGet(cubeIds);
-      return {
-        items: cubes,
-        lastKey: result.lastKey,
-      };
-    }
-
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
 
@@ -1248,16 +1178,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     limit?: number,
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'tag', value: tag.toLowerCase() });
-
-    if (this.dualWriteEnabled) {
-      const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
-      const cubeIds = result.items.map((item) => item.cube);
-      const cubes = await this.batchGet(cubeIds);
-      return {
-        items: cubes,
-        lastKey: result.lastKey,
-      };
-    }
 
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
@@ -1281,16 +1201,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     const hashString = await this.hash({ type: 'keywords', value: normalizedKeywords });
 
-    if (this.dualWriteEnabled) {
-      const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
-      const cubeIds = result.items.map((item) => item.cube);
-      const cubes = await this.batchGet(cubeIds);
-      return {
-        items: cubes,
-        lastKey: result.lastKey,
-      };
-    }
-
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
 
@@ -1306,16 +1216,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'oracle', value: oracleId });
 
-    if (this.dualWriteEnabled) {
-      const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
-      const cubeIds = result.items.map((item) => item.cube);
-      const cubes = await this.batchGet(cubeIds);
-      return {
-        items: cubes,
-        lastKey: result.lastKey,
-      };
-    }
-
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
 
@@ -1330,15 +1230,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     limit?: number,
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'cube', value: 'all' });
-    if (this.dualWriteEnabled) {
-      const result = await CubeHashModel.query(hashString, ascending, lastKey, this.mapSortOrder(sortBy), limit);
-      const cubeIds = result.items.map((item) => item.cube);
-      const cubes = await this.batchGet(cubeIds);
-      return {
-        items: cubes,
-        lastKey: result.lastKey,
-      };
-    }
 
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
@@ -1378,10 +1269,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
       const hashString = await this.hash({ type, value });
       return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey);
-    }
-
-    if (this.dualWriteEnabled) {
-      throw new Error('queryByMultipleHashes is not supported in dual write mode');
     }
 
     // Convert all hash strings
@@ -1702,22 +1589,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         params,
       });
       throw error;
-    }
-  }
-
-  /**
-   * Maps our SortOrder to the old cubeHash model's sort order.
-   */
-  private mapSortOrder(sortBy: SortOrder): 'pop' | 'alpha' | 'cards' {
-    switch (sortBy) {
-      case 'popularity':
-        return 'pop';
-      case 'alphabetical':
-        return 'alpha';
-      case 'cards':
-        return 'cards';
-      default:
-        return 'pop';
     }
   }
 

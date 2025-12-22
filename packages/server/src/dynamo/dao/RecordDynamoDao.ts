@@ -24,8 +24,6 @@ import RecordType from '@utils/datatypes/Record';
 import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
 import { v4 as uuidv4 } from 'uuid';
 
-import RecordModel from '../models/record';
-import recordAnalyticModel from '../models/recordAnalytic';
 import { getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
@@ -62,11 +60,8 @@ interface QueryResult {
 }
 
 export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecord> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -190,18 +185,6 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
    * Gets a record by ID.
    */
   public async getById(id: string): Promise<RecordEntity | undefined> {
-    if (this.dualWriteEnabled) {
-      const record = await RecordModel.getById(id);
-      if (!record) return undefined;
-
-      // Add missing timestamps for dual write mode
-      return {
-        ...record,
-        dateCreated: Date.now(),
-        dateLastUpdated: Date.now(),
-      };
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -216,20 +199,6 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
     lastKey?: Record<string, NativeAttributeValue>,
     limit: number = 36,
   ): Promise<QueryResult> {
-    if (this.dualWriteEnabled) {
-      const result = await RecordModel.getByCube(cube, limit, lastKey);
-      // Add missing timestamps for dual write mode
-      const itemsWithTimestamps = (result.items || []).map((item) => ({
-        ...item,
-        dateCreated: Date.now(),
-        dateLastUpdated: Date.now(),
-      }));
-      return {
-        items: itemsWithTimestamps,
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -264,10 +233,6 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
   public async createRecord(document: Partial<RecordType>): Promise<string> {
     const filled = this.fillRequiredDetails(document);
 
-    if (this.dualWriteEnabled) {
-      await RecordModel.put(filled);
-    }
-
     await super.put(filled);
 
     return filled.id;
@@ -277,44 +242,21 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
    * Overrides put to support dual writes.
    */
   public async put(item: RecordEntity): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await Promise.all([RecordModel.put(this.dehydrateItem(item)), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
    * Overrides update to support dual writes.
    */
   public async update(item: RecordEntity): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // Write to both old and new paths
-      // If item doesn't exist in new table yet, use put instead of update
-      await Promise.all([
-        RecordModel.put(this.dehydrateItem(item)), // Old model doesn't have separate update
-        existsInNewTable ? super.update(item) : super.put(item),
-      ]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
    * Overrides delete to support dual writes.
    */
   public async delete(item: RecordEntity): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await Promise.all([RecordModel.delete(item.id), super.delete(item)]);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 
   /**
@@ -340,10 +282,6 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
    * @returns Analytics data, or empty object if not found
    */
   public async getAnalytics(cubeId: string): Promise<RecordAnalytic> {
-    if (this.dualWriteEnabled) {
-      return recordAnalyticModel.getByCube(cubeId);
-    }
-
     try {
       return await getObject(process.env.DATA_BUCKET as string, `record_analytic/${cubeId}.json`);
     } catch {
@@ -358,14 +296,7 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
    * @param analytic - The analytics data to store
    */
   public async putAnalytics(cubeId: string, analytic: RecordAnalytic): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await Promise.all([
-        recordAnalyticModel.put(cubeId, analytic),
-        putObject(process.env.DATA_BUCKET as string, `record_analytic/${cubeId}.json`, analytic),
-      ]);
-    } else {
-      await putObject(process.env.DATA_BUCKET as string, `record_analytic/${cubeId}.json`, analytic);
-    }
+    await putObject(process.env.DATA_BUCKET as string, `record_analytic/${cubeId}.json`, analytic);
   }
 }
 

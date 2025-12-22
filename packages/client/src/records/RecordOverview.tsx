@@ -8,7 +8,7 @@ import FormatttedDate from 'components/base/FormatttedDate';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
-import Markdown from 'components/Markdown';
+import { SafeMarkdown } from 'components/Markdown';
 import EditPlayerListModal from 'components/modals/EditPlayerListModal';
 import EditRecordOverviewModal from 'components/modals/EditRecordOverviewModal';
 import withModal from 'components/WithModal';
@@ -42,7 +42,7 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record, players }) => {
             <Text md className="text-muted">
               <FormatttedDate date={record.date} />
             </Text>
-            <Markdown markdown={record.description} />
+            <SafeMarkdown markdown={record.description} />
             {isOwner && (
               <EditRecordOverviewLink
                 modalprops={{

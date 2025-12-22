@@ -1,4 +1,4 @@
-import { cubeDao } from 'dynamo/daos';
+import { cubeDao, userDao } from 'dynamo/daos';
 import { featuredQueueDao } from 'dynamo/daos';
 import { patronDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -10,6 +10,9 @@ export const handler = async (req: Request, res: Response) => {
   if (!req.user) {
     return redirect(req, res, '/user/login');
   }
+
+  // Fetch user with email to display on account page
+  const userWithEmail = await userDao.getByIdWithSensitiveData(req.user.id);
 
   const patron = await patronDao.getById(req.user.id);
 
@@ -44,6 +47,7 @@ export const handler = async (req: Request, res: Response) => {
       patreonClientId: process.env.PATREON_CLIENT_ID || '',
       patron,
       featured: myFeatured,
+      userEmail: userWithEmail?.email,
     },
     {
       title: 'Account',

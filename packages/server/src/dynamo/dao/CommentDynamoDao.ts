@@ -5,22 +5,14 @@ import User from '@utils/datatypes/User';
 import { getImageData } from 'serverutils/imageutil';
 import { v4 as uuidv4 } from 'uuid';
 
-import CommentModel from '../models/comment';
 import { BaseDynamoDao } from './BaseDynamoDao';
 import { UserDynamoDao } from './UserDynamoDao';
 
 export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> {
-  private readonly dualWriteEnabled: boolean;
   private readonly userDao: UserDynamoDao;
 
-  constructor(
-    dynamoClient: DynamoDBDocumentClient,
-    userDao: UserDynamoDao,
-    tableName: string,
-    dualWriteEnabled: boolean = false,
-  ) {
+  constructor(dynamoClient: DynamoDBDocumentClient, userDao: UserDynamoDao, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
     this.userDao = userDao;
   }
 
@@ -160,10 +152,6 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
    * Gets a comment by ID.
    */
   public async getById(id: string): Promise<Comment | undefined> {
-    if (this.dualWriteEnabled) {
-      return CommentModel.getById(id);
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -181,14 +169,6 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
     items: Comment[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await CommentModel.queryByParentAndType(parent, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -214,14 +194,6 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
     items: Comment[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await CommentModel.queryByOwner(owner, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -237,42 +209,24 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
   }
 
   /**
-   * Overrides put to support dual writes.
+   * Puts a comment.
    */
   public async put(item: Comment): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([CommentModel.put(item), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
-   * Overrides update to support dual writes.
+   * Updates a comment.
    */
   public async update(item: Comment): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([
-        CommentModel.put(item), // Old model doesn't have separate update
-        super.update(item),
-      ]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
-   * Overrides delete to support dual writes.
+   * Deletes a comment.
    */
   public async delete(item: Comment): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      await Promise.all([CommentModel.delete({ id: item.id }), super.delete(item)]);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 
   /**

@@ -2,15 +2,11 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import PasswordReset, { UnhydratedPasswordReset } from '@utils/datatypes/PasswordReset';
 import { v4 as uuidv4 } from 'uuid';
 
-import PasswordResetModel from '../models/passwordReset';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 export class PasswordResetDynamoDao extends BaseDynamoDao<PasswordReset, PasswordReset> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -55,10 +51,6 @@ export class PasswordResetDynamoDao extends BaseDynamoDao<PasswordReset, Passwor
    * Gets a password reset by ID.
    */
   public async getById(id: string): Promise<PasswordReset | undefined> {
-    if (this.dualWriteEnabled) {
-      return PasswordResetModel.getById(id);
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -89,12 +81,7 @@ export class PasswordResetDynamoDao extends BaseDynamoDao<PasswordReset, Passwor
       dateLastUpdated: document.dateLastUpdated ?? now,
     };
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([PasswordResetModel.put(document as UnhydratedPasswordReset), super.put(passwordReset)]);
-    } else {
-      await super.put(passwordReset);
-    }
+    await super.put(passwordReset);
 
     return id;
   }
@@ -116,10 +103,6 @@ export class PasswordResetDynamoDao extends BaseDynamoDao<PasswordReset, Passwor
    * Batch puts multiple password resets.
    */
   public async batchPut(items: PasswordReset[]): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await Promise.all([PasswordResetModel.batchPut(items), super.batchPut(items)]);
-    } else {
-      await super.batchPut(items);
-    }
+    await super.batchPut(items);
   }
 }

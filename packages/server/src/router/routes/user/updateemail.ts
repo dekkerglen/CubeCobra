@@ -21,7 +21,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/account');
   }
 
-  const user = await userDao.getById(req.user.id);
+  const user = await userDao.getByIdWithSensitiveData(req.user.id);
 
   if (!user) {
     req.flash('danger', 'User not found.');
@@ -29,7 +29,7 @@ export const handler = async (req: Request, res: Response) => {
   }
 
   user.email = req.body.email;
-  await userDao.update(user);
+  await userDao.update(user as any);
 
   req.flash('success', 'Your profile has been updated.');
   return redirect(req, res, '/user/account');

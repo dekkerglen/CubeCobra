@@ -1,15 +1,11 @@
 import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import History, { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
 
-import CardHistoryModel from '../models/cardhistory';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardHistory> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -153,15 +149,6 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
     items: History[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await CardHistoryModel.getByOracleAndType(oracle, type, limit, lastKey);
-      const items = result.items || [];
-      return {
-        items: await this.hydrateItems(items),
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       KeyConditionExpression: 'PK = :pk',
@@ -239,60 +226,30 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
   }
 
   /**
-   * Overrides put to support dual writes.
+   * Puts a card history entry.
    */
   public async put(item: History): Promise<void> {
-    if (this.dualWriteEnabled) {
-      const unhydrated = this.dehydrateItem(item);
-      await Promise.all([CardHistoryModel.put(unhydrated), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
-   * Overrides batchPut to support dual writes.
+   * Batch puts card history entries.
    */
   public async batchPut(items: History[], delayMs: number = 0): Promise<void> {
-    if (this.dualWriteEnabled) {
-      const unhydrated = items.map((item) => this.dehydrateItem(item));
-      await Promise.all([CardHistoryModel.batchPut(unhydrated), super.batchPut(items, delayMs)]);
-    } else {
-      await super.batchPut(items, delayMs);
-    }
+    await super.batchPut(items, delayMs);
   }
 
   /**
-   * Overrides update to support dual writes.
+   * Updates a card history entry.
    */
   public async update(item: History): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      const unhydrated = this.dehydrateItem(item);
-      await Promise.all([
-        CardHistoryModel.put(unhydrated), // Old model doesn't have separate update
-        existsInNewTable ? super.update(item) : super.put(item),
-      ]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
-   * Overrides delete to support dual writes.
+   * Deletes a card history entry.
    */
   public async delete(item: History): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      // Note: Old model doesn't have a delete method, so we skip it
-      await super.delete(item);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 }

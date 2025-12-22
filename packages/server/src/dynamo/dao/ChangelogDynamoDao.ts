@@ -4,7 +4,6 @@ import ChangeLog, { CubeChangeLog } from '@utils/datatypes/ChangeLog';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
-import ChangelogModel from '../models/changelog';
 import { getBucketName, getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
@@ -134,11 +133,8 @@ const getChangelogFromS3 = async (cubeId: string, id: string): Promise<Changes> 
 };
 
 export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChangeLog> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -229,12 +225,6 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
    * Gets a changelog by ID without loading the changelog data from S3.
    */
   public async getById(id: string): Promise<Changelog | undefined> {
-    if (this.dualWriteEnabled) {
-      // For dual write, we still use the old model
-      // Since the old model doesn't have a simple getById, we'd need to implement it differently
-      // For now, just use the new path
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -245,10 +235,6 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
    * Gets a changelog by cube ID and changelog ID, loading the changelog data from S3.
    */
   public async getChangelog(cubeId: string, id: string): Promise<Changes> {
-    if (this.dualWriteEnabled) {
-      return ChangelogModel.getById(cubeId, id);
-    }
-
     return getChangelogFromS3(cubeId, id);
   }
 
@@ -289,21 +275,6 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
 
     if (!effectiveCubeId) {
       throw new Error('cubeId must be provided either directly or in lastKey');
-    }
-
-    if (this.dualWriteEnabled) {
-      const result = await ChangelogModel.getByCube(effectiveCubeId, limit, lastKey);
-      return {
-        items: (result.items || []).map((item) => ({
-          id: '', // CubeChangeLog doesn't have id, we'd need to track it differently
-          cube: item.cubeId,
-          date: item.date,
-          changelog: item.changelog,
-          dateCreated: item.date, // Use date as dateCreated for legacy data
-          dateLastUpdated: item.date, // Use date as dateLastUpdated for legacy data
-        })),
-        lastKey: result.lastKey,
-      };
     }
 
     const params: QueryCommandInput = {
@@ -372,28 +343,18 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
   }
 
   /**
-   * Overrides put to support dual writes.
+   * Puts a changelog.
    */
   public async put(item: Changelog): Promise<void> {
-    if (this.dualWriteEnabled && item.changelog) {
-      // Write to both old and new paths
-      await Promise.all([ChangelogModel.put(item.changelog, item.cube), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
-   * Overrides delete to support dual writes.
+   * Deletes a changelog.
    * Note: This only deletes the DynamoDB entry, not the S3 data.
    */
   public async delete(item: Changelog): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // The old model doesn't have a delete method for individual changelogs
-      await super.delete(item);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 
   /**
@@ -401,10 +362,6 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
    * This is the main batch operation used by other DAOs like BlogDynamoDao.
    */
   public async batchGet(keys: Array<{ cube: string; id: string }>): Promise<Changes[]> {
-    if (this.dualWriteEnabled) {
-      return ChangelogModel.batchGet(keys.map((key) => ({ cube: key.cube, id: key.id })));
-    }
-
     const result = await Promise.all(
       keys.map(async (key) => {
         const data = await getObject(getBucketName(), `changelog/${key.cube}/${key.id}.json`);

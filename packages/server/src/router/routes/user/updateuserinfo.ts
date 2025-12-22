@@ -48,13 +48,21 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/user/account');
     }
 
-    user.username = req.body.username;
-    user.usernameLower = req.body.username.toLowerCase();
-    user.about = req.body.body;
-    if (req.body.image) {
-      user.imageName = req.body.image;
+    // Fetch user with sensitive data to preserve email field during update
+    const userToUpdate = await userDao.getByIdWithSensitiveData(user.id);
+
+    if (!userToUpdate) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/user/account');
     }
-    await userDao.update(user);
+
+    userToUpdate.username = req.body.username;
+    userToUpdate.usernameLower = req.body.username.toLowerCase();
+    userToUpdate.about = req.body.body;
+    if (req.body.image) {
+      userToUpdate.imageName = req.body.image;
+    }
+    await userDao.update(userToUpdate as any);
 
     req.flash('success', 'User information updated.');
     return redirect(req, res, '/user/account');

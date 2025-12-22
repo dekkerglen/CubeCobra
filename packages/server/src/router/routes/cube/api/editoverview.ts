@@ -1,6 +1,5 @@
 import CubeType, { CUBE_CATEGORIES } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
-import CubeHash from 'dynamo/models/cubeHash';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
 import { hasProfanity } from 'serverutils/util';
@@ -50,13 +49,10 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
         return;
       }
 
-      const taken = await CubeHash.getSortedByName(CubeHash.getShortIdHash(updatedCube.shortId));
+      // Check if shortId is already taken by another cube
+      const existingCube = await cubeDao.getById(updatedCube.shortId);
 
-      if (taken.items.length === 1 && taken.items[0]?.cube !== cube.id) {
-        res.status(400).json({ error: 'Could not update cube, the short id is already taken.' });
-        return;
-      }
-      if (taken.items.length > 1) {
+      if (existingCube && existingCube.id !== cube.id) {
         res.status(400).json({ error: 'Could not update cube, the short id is already taken.' });
         return;
       }

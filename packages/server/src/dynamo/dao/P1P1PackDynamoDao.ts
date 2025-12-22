@@ -29,7 +29,6 @@ import {
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
-import p1p1PackModel from '../models/p1p1Pack';
 import { deleteObject, getBucketName, getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
@@ -52,11 +51,8 @@ export interface UnhydratedP1P1Pack extends P1P1PackDynamoData {
 }
 
 export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, UnhydratedP1P1Pack> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -175,18 +171,6 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
    * Gets a pack by ID.
    */
   public async getById(id: string): Promise<P1P1PackExtended | undefined> {
-    if (this.dualWriteEnabled) {
-      const pack = await p1p1PackModel.getById(id);
-      if (!pack) return undefined;
-
-      // Add dateCreated and dateLastUpdated if missing
-      return {
-        ...pack,
-        dateCreated: pack.date,
-        dateLastUpdated: pack.date,
-      } as P1P1PackExtended;
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -204,14 +188,6 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
     items: (Pick<P1P1PackDynamoData, 'id' | 'date' | 'createdBy'> & { createdByUsername: string })[];
     lastKey?: Record<string, NativeAttributeValue>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await p1p1PackModel.queryByCube(cubeId, lastKey, limit);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -286,11 +262,7 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
     });
 
     // Store metadata in DynamoDB
-    if (this.dualWriteEnabled) {
-      await p1p1PackModel.put(document, s3Data);
-    } else {
-      await this.put(pack);
-    }
+    await this.put(pack);
 
     return pack;
   }
@@ -311,20 +283,7 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
     // Store extended data in S3
     await this.putS3Data(item.id, s3Data);
 
-    if (this.dualWriteEnabled) {
-      // Extract DynamoDB-only fields for old model
-      const dynamoData: Omit<P1P1PackDynamoData, 'id' | 'date' | 'votesByUser'> = {
-        createdBy: item.createdBy,
-        cubeId: item.cubeId,
-      };
-
-      await p1p1PackModel.put(dynamoData, {
-        ...s3Data,
-        cards: item.cards, // Old model expects cards with details
-      });
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
@@ -346,32 +305,13 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
     // Store extended data in S3
     await this.putS3Data(item.id, s3Data);
 
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // If item doesn't exist in new table yet, use put instead of update
-      if (existsInNewTable) {
-        await super.update(item);
-      } else {
-        await super.put(item);
-      }
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
    * Deletes a pack by ID.
    */
   public async deleteById(id: string): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await p1p1PackModel.deleteById(id);
-    }
-
     // Delete from S3
     try {
       const key = this.getS3Key(id);
@@ -392,20 +332,6 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
    * Adds a vote to a pack.
    */
   public async addVote(packId: string, userId: string, cardIndex: number): Promise<P1P1PackExtended | null> {
-    if (this.dualWriteEnabled) {
-      const pack = await p1p1PackModel.getById(packId);
-      if (!pack) return null;
-
-      const result = await p1p1PackModel.addVote(pack, userId, cardIndex);
-      if (!result) return null;
-
-      return {
-        ...result,
-        dateCreated: result.date,
-        dateLastUpdated: Date.now(),
-      } as P1P1PackExtended;
-    }
-
     try {
       // Atomically set the user's vote (just store the card index)
       const result = await this.dynamoClient.send(
@@ -445,10 +371,6 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
    * Gets vote summary for a pack.
    */
   public getVoteSummary(pack: P1P1PackExtended, currentUserId?: string): P1P1VoteSummary {
-    if (this.dualWriteEnabled) {
-      return p1p1PackModel.getVoteSummary(pack, currentUserId);
-    }
-
     const votesByUser = pack.votesByUser || {};
     const totalVotes = Object.keys(votesByUser).length;
 

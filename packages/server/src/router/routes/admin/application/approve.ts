@@ -20,9 +20,15 @@ export const approveHandler = async (req: Request, res: Response) => {
   if (!application.user.roles.includes(UserRoles.CONTENT_CREATOR)) {
     application.user.roles.push(UserRoles.CONTENT_CREATOR);
   }
-  await userDao.update(application.user);
 
-  //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
+  //Normal hydration of User does not contain email, thus we must fetch it with sensitive data before updating
+  const userToUpdate = await userDao.getByIdWithSensitiveData(application.user.id);
+  if (userToUpdate) {
+    userToUpdate.roles = application.user.roles;
+    await userDao.update(userToUpdate as any);
+  }
+
+  //Fetch again to send notification email
   const applicationUser = await userDao.getByIdWithSensitiveData(application.user.id);
 
   application.status = NoticeStatus.PROCESSED;

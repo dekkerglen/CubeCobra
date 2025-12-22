@@ -28,31 +28,24 @@ if (!tableName) {
 }
 
 // We have completed the data migration, so disable dual writes
-export const userDao: UserDynamoDao = new UserDynamoDao(documentClient, tableName, false);
-export const recordDao: RecordDynamoDao = new RecordDynamoDao(documentClient, tableName, false);
-export const patronDao: PatronDynamoDao = new PatronDynamoDao(documentClient, tableName, false);
-export const passwordResetDao: PasswordResetDynamoDao = new PasswordResetDynamoDao(documentClient, tableName, false);
-export const commentDao: CommentDynamoDao = new CommentDynamoDao(documentClient, userDao, tableName, false);
-export const changelogDao: ChangelogDynamoDao = new ChangelogDynamoDao(documentClient, tableName, false);
-export const articleDao: ArticleDynamoDao = new ArticleDynamoDao(documentClient, userDao, tableName, false);
-export const videoDao: VideoDynamoDao = new VideoDynamoDao(documentClient, userDao, tableName, false);
-export const podcastDao: PodcastDynamoDao = new PodcastDynamoDao(documentClient, userDao, tableName, false);
-export const episodeDao: EpisodeDynamoDao = new EpisodeDynamoDao(documentClient, userDao, tableName, false);
-export const cubeDao: CubeDynamoDao = new CubeDynamoDao(documentClient, userDao, tableName, false);
-export const blogDao: BlogDynamoDao = new BlogDynamoDao(
-  documentClient,
-  changelogDao,
-  cubeDao,
-  userDao,
-  tableName,
-  false,
-);
-export const cardHistoryDao: CardHistoryDynamoDao = new CardHistoryDynamoDao(documentClient, tableName, false);
-export const dailyP1P1Dao: DailyP1P1DynamoDao = new DailyP1P1DynamoDao(documentClient, tableName, false);
-export const featuredQueueDao: FeaturedQueueDynamoDao = new FeaturedQueueDynamoDao(documentClient, tableName, false);
-export const packageDao: PackageDynamoDao = new PackageDynamoDao(documentClient, userDao, tableName, false);
-export const draftDao: DraftDynamoDao = new DraftDynamoDao(documentClient, cubeDao, userDao, tableName, false);
-export const noticeDao: NoticeDynamoDao = new NoticeDynamoDao(documentClient, userDao, tableName, false);
-export const p1p1PackDao: P1P1PackDynamoDao = new P1P1PackDynamoDao(documentClient, tableName, false);
-export const notificationDao: NotificationDynamoDao = new NotificationDynamoDao(documentClient, tableName, false);
-export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao, tableName, false);
+export const userDao: UserDynamoDao = new UserDynamoDao(documentClient, tableName);
+export const recordDao: RecordDynamoDao = new RecordDynamoDao(documentClient, tableName);
+export const patronDao: PatronDynamoDao = new PatronDynamoDao(documentClient, tableName);
+export const passwordResetDao: PasswordResetDynamoDao = new PasswordResetDynamoDao(documentClient, tableName);
+export const commentDao: CommentDynamoDao = new CommentDynamoDao(documentClient, userDao, tableName);
+export const changelogDao: ChangelogDynamoDao = new ChangelogDynamoDao(documentClient, tableName);
+export const articleDao: ArticleDynamoDao = new ArticleDynamoDao(documentClient, userDao, tableName);
+export const videoDao: VideoDynamoDao = new VideoDynamoDao(documentClient, userDao, tableName);
+export const podcastDao: PodcastDynamoDao = new PodcastDynamoDao(documentClient, userDao, tableName);
+export const episodeDao: EpisodeDynamoDao = new EpisodeDynamoDao(documentClient, userDao, tableName);
+export const cubeDao: CubeDynamoDao = new CubeDynamoDao(documentClient, userDao, tableName);
+export const blogDao: BlogDynamoDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, userDao, tableName);
+export const cardHistoryDao: CardHistoryDynamoDao = new CardHistoryDynamoDao(documentClient, tableName);
+export const dailyP1P1Dao: DailyP1P1DynamoDao = new DailyP1P1DynamoDao(documentClient, tableName);
+export const featuredQueueDao: FeaturedQueueDynamoDao = new FeaturedQueueDynamoDao(documentClient, tableName);
+export const packageDao: PackageDynamoDao = new PackageDynamoDao(documentClient, userDao, tableName);
+export const draftDao: DraftDynamoDao = new DraftDynamoDao(documentClient, cubeDao, userDao, tableName);
+export const noticeDao: NoticeDynamoDao = new NoticeDynamoDao(documentClient, userDao, tableName);
+export const p1p1PackDao: P1P1PackDynamoDao = new P1P1PackDynamoDao(documentClient, tableName);
+export const notificationDao: NotificationDynamoDao = new NotificationDynamoDao(documentClient, tableName);
+export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao, tableName);

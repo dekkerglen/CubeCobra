@@ -5,25 +5,17 @@ import UserType from '@utils/datatypes/User';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
-import PackageModel from '../models/package';
 import { BaseDynamoDao, HashRow } from './BaseDynamoDao';
 import { UserDynamoDao } from './UserDynamoDao';
 
 export type SortOrder = 'votes' | 'date';
 
 export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardPackage> {
-  private readonly dualWriteEnabled: boolean;
   private readonly userDao: UserDynamoDao;
 
-  constructor(
-    dynamoClient: DynamoDBDocumentClient,
-    userDao: UserDynamoDao,
-    tableName: string,
-    dualWriteEnabled: boolean = false,
-  ) {
+  constructor(dynamoClient: DynamoDBDocumentClient, userDao: UserDynamoDao, tableName: string) {
     super(dynamoClient, tableName);
     this.userDao = userDao;
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -291,10 +283,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
    * Gets a package by ID.
    */
   public async getById(id: string): Promise<CardPackage | undefined> {
-    if (this.dualWriteEnabled) {
-      return PackageModel.getById(id);
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -314,10 +302,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
     items: CardPackage[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      throw new Error('queryAllPackages is not supported in dual write mode');
-    }
-
     // Use 'package:all' hash to get all packages
     const hashString = await this.hash({ type: 'package', value: 'all' });
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
@@ -336,10 +320,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
     items: CardPackage[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      throw new Error('queryByOracleId is not supported in dual write mode');
-    }
-
     const hashString = await this.hash({ type: 'oracle', value: oracleId });
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
@@ -357,10 +337,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
     items: CardPackage[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      throw new Error('queryByKeyword is not supported in dual write mode');
-    }
-
     // Normalize keyword the same way package titles are normalized when storing hashes
     const normalizedKeyword = keyword
       .replace(/[^\w\s]/gi, '')
@@ -384,14 +360,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
     items: CardPackage[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await PackageModel.queryByOwner(owner, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     // Use hash-based query for user packages
     const hashString = await this.hash({ type: 'user', value: owner });
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
@@ -410,14 +378,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
     items: CardPackage[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await PackageModel.queryByOwnerSortedByDate(owner, keywords, ascending, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     let params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI3',
@@ -439,12 +399,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
    * Batch get packages by IDs.
    */
   public async batchGet(ids: string[]): Promise<CardPackage[]> {
-    if (this.dualWriteEnabled) {
-      // For dual write mode, use the old model's getById in parallel
-      const packages = await Promise.all(ids.map((id) => PackageModel.getById(id)));
-      return packages.filter((pkg): pkg is CardPackage => pkg !== undefined);
-    }
-
     if (ids.length === 0) {
       return [];
     }
@@ -600,10 +554,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
     items: CardPackage[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      throw new Error('queryByHashCriteria is not supported in dual write mode');
-    }
-
     const hashString = await this.hash({ type: hashType, value: hashValue });
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
@@ -638,10 +588,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
       // Single hash - use the optimized single-hash query
       const hash = hashes[0]!;
       return this.queryByHashCriteria(hash.type, hash.value, sortBy, ascending, lastKey, limit);
-    }
-
-    if (this.dualWriteEnabled) {
-      throw new Error('queryByMultipleHashes is not supported in dual write mode');
     }
 
     // Convert all hashes
@@ -759,10 +705,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
    * Only writes the delta (new hashes and deletes old hashes).
    */
   public async repairHashes(packageId: string): Promise<void> {
-    if (this.dualWriteEnabled) {
-      throw new Error('repairHashes is not supported in dual write mode');
-    }
-
     // Get the package
     const pkg = await this.getById(packageId);
     if (!pkg) {
@@ -926,11 +868,6 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
       dateLastUpdated: now,
     };
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await PackageModel.put(unhydratedPackage);
-    }
-
     // Hydrate and write to new table
     const hydratedPackage = await this.hydrateItem(unhydratedPackage);
     await super.put(hydratedPackage);
@@ -948,18 +885,11 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
       voteCount: item.voters.length,
     };
 
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([PackageModel.put(this.dehydrateItem(itemWithVoteCount)), super.put(itemWithVoteCount)]);
-    } else {
-      await super.put(itemWithVoteCount);
-    }
+    await super.put(itemWithVoteCount);
 
     // Create hash rows
-    if (!this.dualWriteEnabled) {
-      const hashes = await this.getHashes(itemWithVoteCount);
-      await this.writeHashes(this.partitionKey(itemWithVoteCount), hashes);
-    }
+    const hashes = await this.getHashes(itemWithVoteCount);
+    await this.writeHashes(this.partitionKey(itemWithVoteCount), hashes);
   }
 
   /**
@@ -972,75 +902,49 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
       voteCount: item.voters.length,
     };
 
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(itemWithVoteCount),
-        SK: this.itemType(),
-      });
+    // Get old package to compare hashes
+    const oldPackage = await this.get({
+      PK: this.partitionKey(itemWithVoteCount),
+      SK: this.itemType(),
+    });
 
-      // Write to both old and new paths
-      // If item doesn't exist in new table yet, use put instead of update
-      await Promise.all([
-        PackageModel.put(this.dehydrateItem(itemWithVoteCount)),
-        existsInNewTable ? super.update(itemWithVoteCount) : super.put(itemWithVoteCount),
-      ]);
-
-      // Create initial hash rows if item didn't exist
-      if (!existsInNewTable) {
-        const hashes = await this.getHashes(itemWithVoteCount);
-        await this.writeHashes(this.partitionKey(itemWithVoteCount), hashes);
-      }
-    } else {
-      // Get old package to compare hashes
-      const oldPackage = await this.get({
-        PK: this.partitionKey(itemWithVoteCount),
-        SK: this.itemType(),
-      });
-
-      if (!oldPackage) {
-        // Package doesn't exist, use put instead
-        await this.put(itemWithVoteCount);
-        return;
-      }
-
-      // Update hash rows if metadata changed
-      const oldHashes = await this.getHashes(oldPackage);
-      const newHashes = await this.getHashes(itemWithVoteCount);
-
-      const hashesToDelete = oldHashes.filter((hash) => !newHashes.includes(hash));
-      const hashesToAdd = newHashes.filter((hash) => !oldHashes.includes(hash));
-
-      if (hashesToDelete.length > 0) {
-        await this.deleteHashesBySK(this.partitionKey(itemWithVoteCount), hashesToDelete);
-      }
-
-      if (hashesToAdd.length > 0) {
-        await this.writeHashes(this.partitionKey(itemWithVoteCount), hashesToAdd);
-      }
-
-      // Update metadata
-      await super.update(itemWithVoteCount);
+    if (!oldPackage) {
+      // Package doesn't exist, use put instead
+      await this.put(itemWithVoteCount);
+      return;
     }
+
+    // Update hash rows if metadata changed
+    const oldHashes = await this.getHashes(oldPackage);
+    const newHashes = await this.getHashes(itemWithVoteCount);
+
+    const hashesToDelete = oldHashes.filter((hash) => !newHashes.includes(hash));
+    const hashesToAdd = newHashes.filter((hash) => !oldHashes.includes(hash));
+
+    if (hashesToDelete.length > 0) {
+      await this.deleteHashesBySK(this.partitionKey(itemWithVoteCount), hashesToDelete);
+    }
+
+    if (hashesToAdd.length > 0) {
+      await this.writeHashes(this.partitionKey(itemWithVoteCount), hashesToAdd);
+    }
+
+    // Update metadata
+    await super.update(itemWithVoteCount);
   }
 
   /**
    * Overrides delete to support dual writes and hash row cleanup.
    */
   public async delete(item: CardPackage): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      await Promise.all([PackageModel.delete(item.id), super.delete(item)]);
-    } else {
-      // Delete hash rows first
-      const hashes = await this.getHashes(item);
-      if (hashes.length > 0) {
-        await this.deleteHashesBySK(this.partitionKey(item), hashes);
-      }
-
-      // Delete the package
-      await super.delete(item);
+    // Delete hash rows first
+    const hashes = await this.getHashes(item);
+    if (hashes.length > 0) {
+      await this.deleteHashesBySK(this.partitionKey(item), hashes);
     }
+
+    // Delete the package
+    await super.delete(item);
   }
 
   /**
@@ -1057,38 +961,31 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
       voteCount: item.voters.length,
     }));
 
-    if (this.dualWriteEnabled) {
-      await Promise.all([
-        PackageModel.batchPut(itemsWithVoteCount.map((item) => this.dehydrateItem(item))),
-        super.batchPut(itemsWithVoteCount),
-      ]);
-    } else {
-      await super.batchPut(itemsWithVoteCount);
+    await super.batchPut(itemsWithVoteCount);
 
-      // Create hash rows for all packages
-      const allHashRows: any[] = [];
-      for (const item of itemsWithVoteCount) {
-        const hashRows = await this.createHashRows(item);
-        allHashRows.push(...hashRows);
-      }
+    // Create hash rows for all packages
+    const allHashRows: any[] = [];
+    for (const item of itemsWithVoteCount) {
+      const hashRows = await this.createHashRows(item);
+      allHashRows.push(...hashRows);
+    }
 
-      // Batch write hash rows in chunks of 25 (DynamoDB limit)
-      const BATCH_SIZE = 25;
-      for (let i = 0; i < allHashRows.length; i += BATCH_SIZE) {
-        const batch = allHashRows.slice(i, i + BATCH_SIZE);
+    // Batch write hash rows in chunks of 25 (DynamoDB limit)
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < allHashRows.length; i += BATCH_SIZE) {
+      const batch = allHashRows.slice(i, i + BATCH_SIZE);
 
-        await this.dynamoClient.send(
-          new BatchWriteCommand({
-            RequestItems: {
-              [this.tableName]: batch.map((hashRow) => ({
-                PutRequest: {
-                  Item: hashRow,
-                },
-              })),
-            },
-          }),
-        );
-      }
+      await this.dynamoClient.send(
+        new BatchWriteCommand({
+          RequestItems: {
+            [this.tableName]: batch.map((hashRow) => ({
+              PutRequest: {
+                Item: hashRow,
+              },
+            })),
+          },
+        }),
+      );
     }
   }
 }

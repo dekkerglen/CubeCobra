@@ -45,8 +45,9 @@ export const editRecordOverviewHandler = async (req: Request, res: Response) => 
     record.name = updatedRecord.name;
     record.description = updatedRecord.description;
     record.date = updatedRecord.date;
+    record.dateLastUpdated = Date.now();
 
-    await recordDao.put(record);
+    await recordDao.update(record);
 
     req.flash('success', 'Record updated successfully');
     return redirect(req, res, `/cube/record/${req.params.id}`);

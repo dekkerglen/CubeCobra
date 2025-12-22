@@ -1,7 +1,6 @@
 import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { FeaturedQueueItem, FeaturedQueueStatus, NewFeaturedQueueItem } from '@utils/datatypes/FeaturedQueue';
 
-import { FeaturedQueue as FeaturedQueueModel } from '../models/featuredQueue';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 /**
@@ -10,11 +9,8 @@ import { BaseDynamoDao } from './BaseDynamoDao';
 export interface UnhydratedFeaturedQueueItem extends FeaturedQueueItem {}
 
 export class FeaturedQueueDynamoDao extends BaseDynamoDao<FeaturedQueueItem, UnhydratedFeaturedQueueItem> {
-  private readonly dualWriteEnabled: boolean;
-
-  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string, dualWriteEnabled: boolean = false) {
+  constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
-    this.dualWriteEnabled = dualWriteEnabled;
   }
 
   protected itemType(): string {
@@ -97,11 +93,6 @@ export class FeaturedQueueDynamoDao extends BaseDynamoDao<FeaturedQueueItem, Unh
    * Gets a featured queue item by cube ID.
    */
   public async getByCube(id: string): Promise<FeaturedQueueItem | undefined> {
-    if (this.dualWriteEnabled) {
-      const result = await FeaturedQueueModel.getByCube(id);
-      return result || undefined;
-    }
-
     return this.get({
       PK: this.typedKey(id),
       SK: this.itemType(),
@@ -134,14 +125,6 @@ export class FeaturedQueueDynamoDao extends BaseDynamoDao<FeaturedQueueItem, Unh
     items: FeaturedQueueItem[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await FeaturedQueueModel.querySortedByDate(lastKey, limit);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -168,14 +151,6 @@ export class FeaturedQueueDynamoDao extends BaseDynamoDao<FeaturedQueueItem, Unh
     items: FeaturedQueueItem[];
     lastKey?: Record<string, any>;
   }> {
-    if (this.dualWriteEnabled) {
-      const result = await FeaturedQueueModel.queryWithOwnerFilter(ownerID, lastKey);
-      return {
-        items: result.items || [],
-        lastKey: result.lastKey,
-      };
-    }
-
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
@@ -199,56 +174,27 @@ export class FeaturedQueueDynamoDao extends BaseDynamoDao<FeaturedQueueItem, Unh
    * Overrides put to support dual writes.
    */
   public async put(item: FeaturedQueueItem): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Write to both old and new paths
-      await Promise.all([FeaturedQueueModel.put(item), super.put(item)]);
-    } else {
-      await super.put(item);
-    }
+    await super.put(item);
   }
 
   /**
    * Overrides update to support dual writes.
    */
   public async update(item: FeaturedQueueItem): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Check if item exists in new table first
-      const existsInNewTable = await this.get({
-        PK: this.partitionKey(item),
-        SK: this.itemType(),
-      });
-
-      // Write to both old and new paths
-      // If item doesn't exist in new table yet, use put instead of update
-      await Promise.all([
-        FeaturedQueueModel.put(item), // Old model doesn't have separate update
-        existsInNewTable ? super.update(item) : super.put(item),
-      ]);
-    } else {
-      await super.update(item);
-    }
+    await super.update(item);
   }
 
   /**
    * Overrides delete to support dual writes.
    */
   public async delete(item: FeaturedQueueItem): Promise<void> {
-    if (this.dualWriteEnabled) {
-      // Delete from both old and new paths
-      await Promise.all([FeaturedQueueModel.delete(item.cube), super.delete(item)]);
-    } else {
-      await super.delete(item);
-    }
+    await super.delete(item);
   }
 
   /**
    * Batch puts multiple featured queue items.
    */
   public async batchPut(items: FeaturedQueueItem[]): Promise<void> {
-    if (this.dualWriteEnabled) {
-      await Promise.all([FeaturedQueueModel.batchPut(items), super.batchPut(items)]);
-    } else {
-      await super.batchPut(items);
-    }
+    await super.batchPut(items);
   }
 }

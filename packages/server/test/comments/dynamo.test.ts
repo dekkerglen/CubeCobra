@@ -66,8 +66,8 @@ describe('CommentDynamoDao', () => {
     jest.clearAllMocks();
     (UUID as jest.Mock).mockReturnValue('comment-2');
     (getImageData as jest.Mock).mockReturnValue(mockImage);
-    // Create DAO instance with disabled dual write for testing
-    commentDao = new CommentDynamoDao(mockDynamoDBClient, mockUserDao, 'test-table', false);
+    // Create DAO instance for testing
+    commentDao = new CommentDynamoDao(mockDynamoDBClient, mockUserDao, 'test-table');
     mockSend.mockReset();
   });
 

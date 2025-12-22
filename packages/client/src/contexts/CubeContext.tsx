@@ -310,38 +310,9 @@ export function CubeContextProvider({
     [fetchCardVersions, loadVersionDict],
   );
 
-  // The versionDictProxy is a Proxy around the versionDict state.
-  // Its purpose is to lazily load the version dictionary from the server
-  // only when it is first accessed by a consumer (such as ListView or CardModal).
-  // This avoids fetching all card versions unless they are actually needed.
-
-  const versionDictProxy = useMemo(() => {
-    // maybeFetch ensures that the fetch is only triggered once (the fetchStartedRef),
-    // and only if the version dictionary is not already loaded or loading.
-    const maybeFetch = () => {
-      if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
-        fetchVersionDict();
-      }
-    };
-    // The Proxy intercepts property access and other object operations.
-    return new Proxy(versionDict, {
-      // The get trap is called whenever a property is accessed, e.g. versionDictProxy[someKey].
-      get(target, prop, receiver) {
-        maybeFetch();
-        return Reflect.get(target, prop, receiver);
-      },
-      // The ownKeys trap is called for operations like Object.keys(versionDictProxy).
-      ownKeys(target) {
-        maybeFetch();
-        return Reflect.ownKeys(target);
-      },
-      // The getOwnPropertyDescriptor trap is called for operations like Object.getOwnPropertyDescriptor.
-      getOwnPropertyDescriptor(target, prop) {
-        maybeFetch();
-        return Reflect.getOwnPropertyDescriptor(target, prop);
-      },
-    });
-  }, [versionDict, fetchVersionDict, loadVersionDict, versionDictLoaded, versionDictLoading]);
+  // versionDict is now used directly without a Proxy.
+  // Versions are loaded lazily only when fetchVersionsForCard is called,
+  // which happens when a user interacts with a card modal or version dropdown.
 
   const [modalSelection, setModalSelection] = useState<
     | { index: number; board: BoardType }
@@ -1004,9 +975,9 @@ export function CubeContextProvider({
               editIndex: i,
             };
 
-            if (versionDictProxy[normalizeName(cardName(card))] && edit.newCard.cardID !== card.cardID) {
+            if (versionDict[normalizeName(cardName(card))] && edit.newCard.cardID !== card.cardID) {
               card = changed[board][edit.index];
-              const newDetails = versionDictProxy[normalizeName(cardName(card))].find(
+              const newDetails = versionDict[normalizeName(cardName(card))].find(
                 (v) => v.scryfall_id === edit.newCard.cardID,
               );
               if (card.details !== undefined && newDetails !== undefined) {
@@ -1050,7 +1021,7 @@ export function CubeContextProvider({
     }
 
     return [result, changed];
-  }, [cube.cards, useChangedCards, cardFilter, filterInput, changes, versionDictProxy]);
+  }, [cube.cards, useChangedCards, cardFilter, filterInput, changes, versionDict]);
 
   const commitChanges = useCallback(
     async (title: string, blog: string) => {
@@ -1450,7 +1421,7 @@ export function CubeContextProvider({
       revertRemove,
       revertSwap,
       revertEdit,
-      versionDict: versionDictProxy,
+      versionDict,
       fetchVersionsForCard,
       commitChanges,
       setModalSelection,
@@ -1504,7 +1475,7 @@ export function CubeContextProvider({
       revertRemove,
       revertSwap,
       revertEdit,
-      versionDictProxy,
+      versionDict,
       fetchVersionsForCard,
       commitChanges,
       setModalSelection,
@@ -1560,7 +1531,7 @@ export function CubeContextProvider({
               isOpen={modalOpen}
               setOpen={setModalOpen}
               canEdit={canEdit}
-              versionDict={versionDictProxy}
+              versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={(_, card, board) => editAddedCard((modalSelection as any).addIndex, card, board)}
               revertEdit={() => {}}
@@ -1586,7 +1557,7 @@ export function CubeContextProvider({
               isOpen={modalOpen}
               setOpen={setModalOpen}
               canEdit={canEdit}
-              versionDict={versionDictProxy}
+              versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={(_, card, board) => editSwappedCard((modalSelection as any).swapIndex, card, board)}
               revertEdit={() => {}}
@@ -1607,7 +1578,7 @@ export function CubeContextProvider({
               isOpen={modalOpen}
               setOpen={setModalOpen}
               canEdit={canEdit}
-              versionDict={versionDictProxy}
+              versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={editCard}
               revertEdit={revertEdit}

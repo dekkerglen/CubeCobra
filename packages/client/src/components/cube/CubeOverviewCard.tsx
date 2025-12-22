@@ -20,7 +20,7 @@ import Link from '../base/Link';
 import Tag from '../base/Tag';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
-import Markdown from '../Markdown';
+import { SafeMarkdown } from '../Markdown';
 import ConfirmActionModal from '../modals/ConfirmActionModal';
 import FollowersModal from '../modals/FollowersModal';
 import QRCodeModal from '../modals/QRCodeModal';
@@ -211,7 +211,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
         <Col xs={12} md={6} lg={7} xl={8}>
           <Card>
             <CardBody>
-              <Markdown markdown={cube.description || ''} />
+              <SafeMarkdown markdown={cube.description || ''} />
             </CardBody>
             {cube.tags && cube.tags.length > 0 && (
               <CardFooter>

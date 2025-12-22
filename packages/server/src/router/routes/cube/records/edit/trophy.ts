@@ -53,8 +53,9 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
 
     // Update the record with the new trophy
     record.trophy = updatedTrophies;
+    record.dateLastUpdated = Date.now();
 
-    await recordDao.put(record);
+    await recordDao.update(record);
 
     req.flash('success', 'Trophy updated successfully');
     return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
