@@ -19,6 +19,17 @@ docker compose -f packages/scripts/src/docker-compose.yml -f packages/scripts/sr
 **Note**: This can take tens of minutes to complete. When it finishes successfully you should see in the last docker logs output similar to the following (order of lines, and container name, may be different):
 
 ```
+cube        | [21:59:00] Stack CubeCobraLocalStack has completed updating
+cube        |
+cube        |  ✅  CubeCobraLocalStack
+cube        |
+cube        | ✨  Deployment time: 5.16s
+cube        |
+cube        | Stack ARN:
+cube        | arn:aws:cloudformation:us-east-1:000000000000:stack/CubeCobraLocalStack/fd70a45c
+cube        |
+cube        | ✨  Total time: 13.7s
+....
 localstack  | 2025-10-27T21:47:56.503  INFO --- [et.reactor-0] localstack.request.aws     : AWS s3.UploadPart => 200
 localstack  | 2025-10-27T21:47:58.803  INFO --- [et.reactor-1] localstack.request.aws     : AWS s3.CompleteMultipartUpload => 200
 cube        | Finished comboDict.json
@@ -57,6 +68,7 @@ This downloads:
 ### What the Initial Setup Does
 
 - Setup LocalStack with S3 bucket and SES email verified
+- Run the CDK for local to create other AWS resources required by the app (within localstack)
 - Install dependencies
 - Download essential data files:
   - Card definitions from Scryfall API

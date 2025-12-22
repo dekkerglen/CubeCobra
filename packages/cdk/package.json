@@ -10,6 +10,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
+    "cdk:local": "cdklocal bootstrap --context environment=local --context version=1.0.0 && cdklocal deploy --context environment=local --context version=1.0.0",
     "test:ci": "npx jest --coverage --coverageReporters text"
   },
   "type": "commonjs",
