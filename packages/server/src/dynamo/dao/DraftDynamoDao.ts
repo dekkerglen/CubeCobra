@@ -923,12 +923,18 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       }
     }
 
-    return cards.map((card: any) => ({
-      ...card,
-      details: {
-        ...cardFromId(card.cardID),
-      },
-    }));
+    if (!cards) {
+      return [];
+    }
+
+    return cards
+      .filter((c: any) => c !== null)
+      .map((card: any) => ({
+        ...card,
+        details: {
+          ...cardFromId(card.cardID),
+        },
+      }));
   }
 
   /**
