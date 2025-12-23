@@ -1,7 +1,5 @@
 import type { Config } from 'jest';
 
-import { compilerOptions } from './tsconfig.json';
-
 const jestConfig: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
@@ -25,7 +23,7 @@ const jestConfig: Config = {
   },
 
   // Transform tsconfig module name mapper to jest
-  modulePaths: [compilerOptions.baseUrl], // <-- This will be set to 'baseUrl' value
+  modulePaths: ['<rootDir>'], // <-- This will be set to 'baseUrl' value
   moduleNameMapper: {
     '^@client/(.*)$': '<rootDir>/../client/src/$1',
     '^@jobs/(.*)$': '<rootDir>/../jobs/src/$1',
