@@ -5,16 +5,25 @@ import * as cubefn from 'serverutils/cubefn';
 import * as render from 'serverutils/render';
 import * as util from 'serverutils/util';
 
-import Blog from '../../../src/dynamo/models/blog';
-import Changelog from '../../../src/dynamo/models/changelog';
-import Cube from '../../../src/dynamo/models/cube';
-import Feed from '../../../src/dynamo/models/feed';
+import { blogDao, changelogDao, cubeDao, feedDao } from '../../../src/dynamo/daos';
 import { createCardDetails, createCube, createUser } from '../../test-utils/data';
 
 jest.mock('../../../src/dynamo/models/cube');
-jest.mock('../../../src/dynamo/models/blog');
-jest.mock('../../../src/dynamo/models/changelog');
-jest.mock('../../../src/dynamo/models/feed');
+jest.mock('../../../src/dynamo/daos', () => ({
+  blogDao: {
+    createBlog: jest.fn(),
+  },
+  changelogDao: {
+    createChangelog: jest.fn(),
+  },
+  cubeDao: {
+    getCards: jest.fn(),
+    updateCards: jest.fn(),
+  },
+  feedDao: {
+    batchPutUnhydrated: jest.fn(),
+  },
+}));
 jest.mock('serverutils/carddb');
 jest.mock('serverutils/cubefn');
 jest.mock('serverutils/render');
@@ -32,9 +41,9 @@ describe('Bulk Upload', () => {
   const setupBasicMocks = (
     existingCards: { mainboard: any[]; maybeboard: any[] } = { mainboard: [], maybeboard: [] },
   ) => {
-    (Cube.getCards as jest.Mock).mockResolvedValue(existingCards);
-    (Changelog.put as jest.Mock).mockResolvedValue('changelog-id');
-    (Blog.put as jest.Mock).mockResolvedValue('blog-id');
+    (cubeDao.getCards as jest.Mock).mockResolvedValue(existingCards);
+    (changelogDao.createChangelog as jest.Mock).mockResolvedValue('changelog-id');
+    (blogDao.createBlog as jest.Mock).mockResolvedValue('blog-id');
   };
 
   const createMockCardFromCSV = (details: any) => ({
@@ -49,7 +58,7 @@ describe('Bulk Upload', () => {
   });
 
   const expectSuccessfulUpload = (owner: any, cube: any) => {
-    expect(Blog.put).toHaveBeenCalledWith(
+    expect(blogDao.createBlog).toHaveBeenCalledWith(
       expect.objectContaining({
         owner: owner.id,
         cube: cube.id,
@@ -59,7 +68,7 @@ describe('Bulk Upload', () => {
     );
 
     if (owner.following?.length) {
-      expect(Feed.batchPut).toHaveBeenCalledWith(
+      expect(feedDao.batchPutUnhydrated).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             id: 'blog-id',
@@ -101,9 +110,9 @@ describe('Bulk Upload', () => {
       setupBasicMocks();
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({ newCards: [mockCard], newMaybe: [], missing: [] });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, csvContent, cube);
+      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, csvContent, cube);
 
-      expect(Cube.updateCards).toHaveBeenCalledWith(cube.id, {
+      expect(cubeDao.updateCards).toHaveBeenCalledWith(cube.id, {
         mainboard: [mockCard],
         maybeboard: [],
       });
@@ -143,9 +152,9 @@ describe('Bulk Upload', () => {
       });
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({ newCards: [mockCard], newMaybe: [], missing: [] });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, csvContent, cube);
+      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, csvContent, cube);
 
-      expect(Cube.updateCards).toHaveBeenCalledWith(cube.id, {
+      expect(cubeDao.updateCards).toHaveBeenCalledWith(cube.id, {
         mainboard: [mockMainboardCard, mockCard],
         maybeboard: [mockMaybeboardCard],
       });
@@ -164,7 +173,7 @@ describe('Bulk Upload', () => {
         missing: ['NotARealCard'],
       });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, csvContent, cube);
+      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, csvContent, cube);
 
       expect(render.render).toHaveBeenCalledWith(
         expect.anything(),
@@ -196,7 +205,7 @@ describe('Bulk Upload', () => {
         missing: ['NotARealCard'],
       });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, csvContent, cube);
+      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, csvContent, cube);
 
       expect(render.render).toHaveBeenCalledWith(
         expect.anything(),
@@ -234,7 +243,7 @@ describe('Bulk Upload', () => {
 
       ((util as any).addCardToBoard as jest.Mock).mockImplementation(mockAddCardToBoardImpl(mockCards));
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
+      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, textContent, cube);
       expectSuccessfulUpload(owner, cube);
     });
 
@@ -252,9 +261,9 @@ describe('Bulk Upload', () => {
         name: 'Lightning Bolt',
       });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
+      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, textContent, cube);
 
-      expect(Cube.updateCards).toHaveBeenCalled();
+      expect(cubeDao.updateCards).toHaveBeenCalled();
       expect(flashMock).toHaveBeenCalledWith('success', 'All cards successfully added.');
     });
 
@@ -266,7 +275,7 @@ describe('Bulk Upload', () => {
       setupBasicMocks();
       (carddb.getMostReasonable as jest.Mock).mockReturnValue(null);
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
+      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, textContent, cube);
 
       expect(render.render).toHaveBeenCalledWith(
         expect.anything(),
@@ -303,7 +312,7 @@ describe('Bulk Upload', () => {
         mockAddCardToBoardImpl(new Map([[hsDetails.scryfall_id, mockHsCard]])),
       );
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } }, {}, textContent, cube);
+      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, textContent, cube);
 
       expect(render.render).toHaveBeenCalledWith(
         expect.anything(),

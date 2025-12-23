@@ -1,5 +1,5 @@
 import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import { isCubeViewable } from 'serverutils/cubefn';
 
@@ -24,7 +24,7 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
       return res.status(400).send('Cube ID is required.');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send('Cube not found.');
@@ -34,7 +34,7 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
-    const cubeCards = await Cube.getCards(cube.id);
+    const cubeCards = await cubeDao.getCards(cube.id);
 
     const sorts = getCubeSorts(cube);
     const sortedMainboard = sortForDownload(

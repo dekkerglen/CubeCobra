@@ -1,3 +1,5 @@
+// migrated to /dao/DailyP1P1DynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { DailyP1P1, NewDailyP1P1 } from '@utils/datatypes/DailyP1P1';
@@ -67,11 +69,14 @@ const dailyP1P1 = {
 
   put: async (document: NewDailyP1P1): Promise<DailyP1P1> => {
     const id = uuidv4();
+    const now = Date.now();
     const item: DailyP1P1 = {
       ...document,
       id,
       type: 'HISTORY',
       isActive: document.isActive,
+      dateCreated: now,
+      dateLastUpdated: now,
     };
 
     await client.put(item);
@@ -85,9 +90,10 @@ const dailyP1P1 = {
     if (current) {
       await client.update({
         Key: { id: current.id },
-        UpdateExpression: 'SET isActive = :inactive',
+        UpdateExpression: 'SET isActive = :inactive, dateLastUpdated = :dateLastUpdated',
         ExpressionAttributeValues: {
           ':inactive': false,
+          ':dateLastUpdated': Date.now(),
         },
       });
     }

@@ -242,6 +242,14 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     };
   }, [treePath, treeUrl, value]);
 
+  // Reset position when value changes externally (e.g., cleared after submit)
+  useEffect(() => {
+    setPosition(-1);
+    if (!value) {
+      setVisible(false);
+    }
+  }, [value]);
+
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setValue(event.target.value);

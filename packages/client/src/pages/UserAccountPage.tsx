@@ -9,6 +9,7 @@ import { Card, CardBody } from 'components/base/Card';
 import { TabbedView } from 'components/base/Tabs';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import UserAccountDeletion from 'components/user/UserAccountDeletion';
 import UserEmailForm from 'components/user/UserEmailForm';
 import UserPasswordForm from 'components/user/UserPasswordForm';
 import UserPatreonConfig from 'components/user/UserPatreonConfig';
@@ -26,9 +27,16 @@ interface UserAccountPageProps {
     cube: Cube;
     position: number;
   };
+  userEmail?: string;
 }
 
-const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patreonRedirectUri, patron, featured }) => {
+const UserAccountPage: React.FC<UserAccountPageProps> = ({
+  patreonClientId,
+  patreonRedirectUri,
+  patron,
+  featured,
+  userEmail,
+}) => {
   const [activeTab, setActiveTab] = useQueryParam('tab', '0');
 
   return (
@@ -44,7 +52,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patr
               onClick: () => setActiveTab('0'),
               content: (
                 <CardBody>
-                  <UserProfile />
+                  <UserProfile userEmail={userEmail} />
                 </CardBody>
               ),
             },
@@ -62,7 +70,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patr
               onClick: () => setActiveTab('2'),
               content: (
                 <CardBody>
-                  <UserEmailForm />
+                  <UserEmailForm currentEmail={userEmail} />
                 </CardBody>
               ),
             },
@@ -96,6 +104,15 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({ patreonClientId, patr
                   >
                     Link Patreon Account
                   </Button>
+                </CardBody>
+              ),
+            },
+            {
+              label: 'Delete Account',
+              onClick: () => setActiveTab('5'),
+              content: (
+                <CardBody>
+                  <UserAccountDeletion />
                 </CardBody>
               ),
             },

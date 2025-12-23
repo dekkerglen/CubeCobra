@@ -1,3 +1,5 @@
+import { BaseObject } from './BaseObject';
+
 export type CubeType =
   | 'legacy'
   | 'modern'
@@ -19,7 +21,7 @@ export enum Period {
 }
 
 //Type related directly to DynamoDB
-export interface UnhydratedCardHistory extends Record<CubeType, [number, number] | undefined> {
+export interface UnhydratedCardHistory extends BaseObject, Record<CubeType, [number, number] | undefined> {
   OTComp: string; //Oracle id colon Period
   oracle: string;
   date: number;

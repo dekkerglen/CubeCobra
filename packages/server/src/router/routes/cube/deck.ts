@@ -1,15 +1,15 @@
-import cardutil from '@utils/cardutil';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
-import User from 'dynamo/models/user';
+import { normalizeName } from '@utils/cardutil';
+import Card from '@utils/datatypes/Card';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
+import { cubeDao, draftDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
+import { ensureAuth } from 'router/middleware';
 import { cardFromId, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
 import { addBasics, createPool, exportToMtgo } from 'serverutils/cube';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl } from 'serverutils/util';
-import { ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -22,7 +22,7 @@ export const downloadXmageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
 
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
@@ -30,6 +30,11 @@ export const downloadXmageHandler = async (req: Request, res: Response) => {
     }
 
     const seat = deck.seats[parseInt(req.params.seat, 10)];
+
+    if (!seat || !seat.name) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -39,7 +44,9 @@ export const downloadXmageHandler = async (req: Request, res: Response) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const details = cardFromId(card.cardID);
           const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
           if (main[name]) {
             main[name] += 1;
@@ -57,7 +64,9 @@ export const downloadXmageHandler = async (req: Request, res: Response) => {
     for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const details = cardFromId(card.cardID);
           const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
           if (side[name]) {
             side[name] += 1;
@@ -83,12 +92,17 @@ export const downloadForgeHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
     const seat = deck.seats[parseInt(req.params.seat, 10)];
+
+    if (!seat || !seat.name) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -100,7 +114,9 @@ export const downloadForgeHandler = async (req: Request, res: Response) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const details = cardFromId(card.cardID);
           const name = `${details.name}|${details.set.toUpperCase()}`;
           if (main[name]) {
             main[name] += 1;
@@ -119,7 +135,9 @@ export const downloadForgeHandler = async (req: Request, res: Response) => {
     for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const details = cardFromId(card.cardID);
           const name = `${details.name}|${details.set.toUpperCase()}`;
           if (side[name]) {
             side[name] += 1;
@@ -146,12 +164,16 @@ export const downloadTxtHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
     const seat = deck.seats[parseInt(req.params.seat, 10)];
+    if (!seat || !seat.name) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -159,7 +181,9 @@ export const downloadTxtHandler = async (req: Request, res: Response) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const { name } = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const { name } = cardFromId(card.cardID);
           res.write(`${name}\r\n`);
         }
       }
@@ -177,12 +201,16 @@ export const downloadMtgoHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
     const seat = deck.seats[parseInt(req.params.seat, 10)];
+    if (!seat || !seat.name) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
     return exportToMtgo(res, seat.name, seat.mainboard.flat(), seat.sideboard.flat(), deck.cards);
   } catch (err) {
     return handleRouteError(req, res, err as Error, '/404');
@@ -196,12 +224,16 @@ export const downloadArenaHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
     const seat = deck.seats[parseInt(req.params.seat, 10)];
+    if (!seat || !seat.name) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -211,7 +243,9 @@ export const downloadArenaHandler = async (req: Request, res: Response) => {
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const details = cardFromId(card.cardID);
           const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
           if (main[name]) {
             main[name] += 1;
@@ -230,7 +264,9 @@ export const downloadArenaHandler = async (req: Request, res: Response) => {
     for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const details = cardFromId(card.cardID);
           const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
           if (side[name]) {
             side[name] += 1;
@@ -257,12 +293,16 @@ export const downloadCockatriceHandler = async (req: Request, res: Response) => 
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
     const seat = deck.seats[parseInt(req.params.seat, 10)];
+    if (!seat || !seat.name) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -271,7 +311,9 @@ export const downloadCockatriceHandler = async (req: Request, res: Response) => 
     for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const details = cardFromId(card.cardID);
           const name = `${details.name}`;
           if (main[name]) {
             main[name] += 1;
@@ -290,7 +332,9 @@ export const downloadCockatriceHandler = async (req: Request, res: Response) => 
     for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
-          const details = cardFromId(deck.cards[cardIndex].cardID);
+          const card = deck.cards[cardIndex];
+          if (!card) continue;
+          const details = cardFromId(card.cardID);
           const name = `${details.name}`;
           if (side[name]) {
             side[name] += 1;
@@ -317,12 +361,16 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
     if (!deck) {
       req.flash('danger', `Deck ID ${req.params.id} not found/`);
       return redirect(req, res, '/404');
     }
     const seat = deck.seats[parseInt(req.params.seat, 10)];
+    if (!seat) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
 
     res.setHeader('Content-disposition', `attachment; filename=${req.params.id}_${req.params.seat}.csv`);
     res.setHeader('Content-type', 'text/plain');
@@ -337,7 +385,8 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
       for (const col of row) {
         for (const cardIndex of col) {
           const card = deck.cards[cardIndex];
-          const oracleId = `${card.details.oracleId}`;
+          if (!card || !card.details) continue;
+          const oracleId = `${card.details.oracle_id}`;
           if (main[oracleId]) {
             main[oracleId] += 1;
           } else {
@@ -359,7 +408,8 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
       for (const col of row) {
         for (const cardIndex of col) {
           const card = deck.cards[cardIndex];
-          const oracleId = `${card.details.oracleId}`;
+          if (!card || !card.details) continue;
+          const oracleId = `${card.details.oracle_id}`;
           if (side[oracleId]) {
             side[oracleId] += 1;
           } else {
@@ -390,7 +440,7 @@ export const deleteDeckHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
 
     if (!deck) {
       req.flash('danger', 'Deck not found');
@@ -400,7 +450,10 @@ export const deleteDeckHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (!req.user || (req.user.id !== deck.owner.id && req.user.id !== deck.cubeOwner.id)) {
+    const ownerId = typeof deck.owner === 'string' ? deck.owner : deck.owner.id;
+    const cubeOwnerId = typeof deck.cubeOwner === 'string' ? deck.cubeOwner : deck.cubeOwner.id;
+
+    if (!req.user || (req.user.id !== ownerId && req.user.id !== cubeOwnerId)) {
       req.flash('danger', 'Unauthorized');
       return res.status(401).send({
         success: 'false',
@@ -408,7 +461,7 @@ export const deleteDeckHandler = async (req: Request, res: Response) => {
       });
     }
 
-    await Draft.delete(deck.id);
+    await draftDao.deleteById(deck.id);
 
     req.flash('success', 'Deck Deleted');
     return res.send('Success');
@@ -428,14 +481,14 @@ export const rebuildHandler = async (req: Request, res: Response) => {
     }
 
     const index = parseInt(req.params.index, 10);
-    const base = await Draft.getById(req.params.id);
+    const base = await draftDao.getById(req.params.id);
 
     if (!base) {
       req.flash('danger', 'Deck not found');
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(base.cube);
+    const cube = await cubeDao.getById(base.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -453,10 +506,12 @@ export const rebuildHandler = async (req: Request, res: Response) => {
       cardsArray.push(newCard);
     }
 
+    const baseCubeOwnerId = typeof base.cubeOwner === 'string' ? base.cubeOwner : base.cubeOwner.id;
+
     const deck: any = {
       cube: base.cube,
       owner: req.user.id,
-      cubeOwner: base.cubeOwner.id,
+      cubeOwner: baseCubeOwnerId,
       date: new Date().valueOf(),
       type: base.type,
       seats: [],
@@ -478,15 +533,15 @@ export const rebuildHandler = async (req: Request, res: Response) => {
 
     cube.numDecks += 1;
 
-    const user = await User.getById(req.user.id);
+    const user = await userDao.getById(req.user.id);
     // const baseUser = await User.getById(base.owner);
     // const cubeOwner = await User.getById(cube.owner);
 
     //TODO: Can remove after fixing models to not muck with the original input
     const cubeOwner = cube.owner;
 
-    const id = await Draft.put(deck);
-    await Cube.update(cube);
+    const id = await draftDao.createDraft(deck);
+    await cubeDao.update(cube, { skipTimestampUpdate: true });
 
     if (user && cube.owner.id !== user.id && !cube.disableAlerts) {
       await addNotification(
@@ -518,7 +573,7 @@ export const editDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
 
     if (!deck) {
       req.flash('danger', 'Deck not found');
@@ -541,14 +596,20 @@ export const editDeckHandler = async (req: Request, res: Response) => {
 
     const { main, side, title, description } = req.body;
 
-    deck.seats[0].mainboard = JSON.parse(main);
-    deck.seats[0].sideboard = JSON.parse(side);
-    deck.seats[0].title = (title || '').substring(0, 100);
-    deck.seats[0].body = (description || '').substring(0, 1000);
+    const seat0 = deck.seats[0];
+    if (!seat0) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
+
+    seat0.mainboard = JSON.parse(main);
+    seat0.sideboard = JSON.parse(side);
+    (seat0 as any).title = (title || '').substring(0, 100);
+    (seat0 as any).body = (description || '').substring(0, 1000);
 
     deck.complete = true;
 
-    await Draft.put(deck);
+    await draftDao.update(deck);
 
     req.flash('success', 'Deck saved successfully');
     return redirect(req, res, `/cube/deck/${deck.id}`);
@@ -578,15 +639,12 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found.');
       return redirect(req, res, '/404');
     }
-
-    const cubeCards = await Cube.getCards(cube.id);
-    const { mainboard } = cubeCards;
 
     if (!req.user || cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
@@ -606,6 +664,19 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       added.push([]);
     }
 
+    const cubeCards = await cubeDao.getCards(cube.id);
+    const { mainboard } = cubeCards;
+
+    const customCardNameMap = mainboard
+      .filter((card: any) => card.custom_name)
+      .reduce((map: Map<string, Card>, card: any) => {
+        const normalizedCustomName = normalizeName(card.custom_name);
+        if (!map.has(normalizedCustomName)) {
+          map.set(normalizedCustomName, card);
+        }
+        return map;
+      }, new Map<string, Card>());
+
     for (let i = 0; i < cards.length; i += 1) {
       const item = cards[i].toLowerCase().trim();
       const numericMatch = item.match(/([0-9]+)x? (.*)/);
@@ -620,7 +691,7 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       } else {
         let selected = null;
         // does not have set info
-        const normalizedName = cardutil.normalizeName(item);
+        const normalizedName = normalizeName(item);
         const potentialIds = getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
           const inCube = mainboard.find((card: any) => cardFromId(card.cardID).name_lower === normalizedName);
@@ -643,7 +714,17 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
               };
             }
           }
+        } else if (customCardNameMap.has(normalizedName)) {
+          const cubeCard = customCardNameMap.get(normalizedName)!;
+          selected = {
+            finish: cubeCard.finish,
+            imgBackUrl: cubeCard.imgBackUrl,
+            imgUrl: cubeCard.imgUrl,
+            cardID: cubeCard.cardID,
+            details: cardFromId(cubeCard.cardID),
+          };
         }
+
         if (selected) {
           // push into correct column.
           const details = selected.details;
@@ -665,7 +746,7 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       owner: req.user.id,
       cubeOwner: cube.owner.id,
       date: new Date().valueOf(),
-      type: Draft.TYPES.UPLOAD,
+      type: DRAFT_TYPES.UPLOAD,
       cards: cardList,
       seats: [
         {
@@ -681,10 +762,10 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
 
     addBasics(deck, cube.basics);
 
-    const id = await Draft.put(deck);
+    const id = await draftDao.createDraft(deck);
 
     cube.numDecks += 1;
-    await Cube.update(cube);
+    await cubeDao.update(cube, { skipTimestampUpdate: true });
 
     return redirect(req, res, `/draft/deckbuilder/${id}`);
   } catch (err) {
@@ -699,14 +780,14 @@ export const getDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const draft = await Draft.getById(req.params.id);
+    const draft = await draftDao.getById(req.params.id);
 
     if (!draft) {
       req.flash('danger', 'Deck not found');
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(draft.cube);
+    const cube = await cubeDao.getById(draft.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

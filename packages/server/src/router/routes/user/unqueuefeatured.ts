@@ -1,6 +1,6 @@
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import * as fq from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 

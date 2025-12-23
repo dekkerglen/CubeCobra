@@ -1,5 +1,4 @@
-import Draft from 'dynamo/models/draft';
-import User from 'dynamo/models/user';
+import { draftDao, userDao } from 'dynamo/daos';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -13,8 +12,9 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const user = await User.getById(userid);
-    const decks = await Draft.getByOwner(userid);
+    const user = await userDao.getById(userid);
+    // Use unhydrated query to avoid loading cards/seats from S3 for better performance
+    const decks = await draftDao.queryByOwnerUnhydrated(userid);
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -26,7 +26,7 @@ export const handler = async (req: Request, res: Response) => {
       followersCount: (user.following || []).length,
       following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
       decks: decks.items,
-      lastKey: decks.lastEvaluatedKey,
+      lastKey: decks.lastKey,
     });
   } catch (err) {
     return handleRouteError(req, res, err as Error, '/404');

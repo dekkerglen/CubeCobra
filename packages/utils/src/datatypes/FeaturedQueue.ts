@@ -1,3 +1,5 @@
+import { BaseObject } from './BaseObject';
+
 export enum FeaturedQueueStatus {
   ACTIVE = 'a',
   INACTIVE = 'i',
@@ -10,6 +12,10 @@ export type NewFeaturedQueueItem = {
   featuredOn: number | null; //Null indicates not yet featured
 };
 
-export type FeaturedQueueItem = NewFeaturedQueueItem & {
+export interface FeaturedQueueItem extends BaseObject {
+  cube: string; //Cube ID
+  date: number;
+  owner: string; //User id
+  featuredOn: number | null; //Null indicates not yet featured
   status: FeaturedQueueStatus;
-};
+}

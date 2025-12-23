@@ -108,7 +108,10 @@ const fetchWithMyriadLandscape = (deck: Deck): Set<ManaSymbol> => {
     }
 
     if (cardType(card).includes('Basic Land')) {
-      fetchableColors.add((card.details?.produced_mana ?? [])[0]);
+      const producedMana = card.details?.produced_mana ?? [];
+      if (producedMana.length > 0 && producedMana[0]) {
+        fetchableColors.add(producedMana[0]);
+      }
     }
   }
 
@@ -207,7 +210,7 @@ export const getCurveByColors = (deck: Deck, buckets: number[]): Record<ManaSymb
 
     // Increment the count for each color the card has
     for (const color of colors) {
-      histogram[color][bucketIndex] = histogram[color][bucketIndex] + 1;
+      histogram[color][bucketIndex] = (histogram[color][bucketIndex] ?? 0) + 1;
     }
   }
 

@@ -1,5 +1,5 @@
-import Draft from 'dynamo/models/draft';
-import { ensureAuth } from 'src/router/middleware';
+import { draftDao } from 'dynamo/daos';
+import { ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -12,7 +12,7 @@ export const submitdraftHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const draft = await Draft.getById(req.body.id);
+    const draft = await draftDao.getById(req.body.id);
 
     if (!draft) {
       return res.status(404).send({
@@ -31,10 +31,23 @@ export const submitdraftHandler = async (req: Request, res: Response) => {
       });
     }
 
-    draft.seats[index].seat = seat;
+    const draftSeat = draft.seats[index];
+    if (!draftSeat) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Seat not found',
+      });
+    }
+
+    // Update seat properties
+    if (seat.mainboard) draftSeat.mainboard = seat.mainboard;
+    if (seat.sideboard) draftSeat.sideboard = seat.sideboard;
+    if (seat.pickorder) draftSeat.pickorder = seat.pickorder;
+    if (seat.trashorder) draftSeat.trashorder = seat.trashorder;
+    if (seat.pickedIndices) draftSeat.pickedIndices = seat.pickedIndices;
     draft.complete = true;
 
-    await Draft.put(draft);
+    await draftDao.update(draft);
 
     return res.status(200).send({
       success: 'true',

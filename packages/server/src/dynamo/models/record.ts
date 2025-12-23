@@ -1,3 +1,5 @@
+// migrated to /daos/RecordDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import RecordType from '@utils/datatypes/Record';
@@ -71,6 +73,20 @@ const record = {
   },
   delete: async (id: string): Promise<void> => {
     await client.delete({ id });
+  },
+  scan: async (
+    limit?: number,
+    lastKey?: Record<string, any>,
+  ): Promise<{ items: any[]; lastKey?: Record<string, any> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    });
+
+    return {
+      items: result.Items ?? [],
+      lastKey: result.LastEvaluatedKey,
+    };
   },
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };

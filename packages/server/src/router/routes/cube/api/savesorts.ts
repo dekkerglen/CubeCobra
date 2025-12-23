@@ -1,6 +1,6 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
+import { ensureAuth } from 'router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
-import { ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -13,7 +13,7 @@ export const savesortsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
     const { sorts, showUnsorted, collapseDuplicateCards } = req.body;
 
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -35,7 +35,7 @@ export const savesortsHandler = async (req: Request, res: Response) => {
     if (collapseDuplicateCards !== undefined) {
       cube.collapseDuplicateCards = collapseDuplicateCards;
     }
-    await Cube.update(cube);
+    await cubeDao.update(cube);
 
     return res.status(200).send({
       success: 'true',

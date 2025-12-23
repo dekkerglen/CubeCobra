@@ -1,4 +1,5 @@
-import { redirect } from '../../serverutils/render';
+import { redirect } from 'serverutils/render';
+
 import { Request, Response } from '../../types/express';
 
 // Cube shortcut redirect - /c/:id redirects to /cube/list/:id

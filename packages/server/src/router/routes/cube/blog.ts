@@ -1,20 +1,17 @@
 import CubeType from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
-import Blog from 'dynamo/models/blog';
-import Cube from 'dynamo/models/cube';
-import Feed from 'dynamo/models/feed';
-import User from 'dynamo/models/user';
+import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl, getSafeReferrer } from 'serverutils/util';
-import { csrfProtection, ensureAuth, ensureAuthJson } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
 const getRedirectUrl = async (req: Request, cubeId: string, isDelete: boolean = false): Promise<string> => {
-  const cube = await Cube.getById(cubeId);
+  const cube = await cubeDao.getById(cubeId);
   return await getRedirectUrlForCube(req, cube!, isDelete);
 };
 
@@ -59,7 +56,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
   try {
     const cubeId = req.params.id!;
     //Generally going to assume the cube exists here. Definitely required for a new blog, not so for an edit
-    const cube = await Cube.getById(cubeId);
+    const cube = await cubeDao.getById(cubeId);
 
     if (req.body.title.length < 5 || req.body.title.length > 100) {
       res.status(400).json({ error: 'Blog title length must be between 5 and 100 characters.' });
@@ -80,13 +77,13 @@ export const createBlogHandler = async (req: Request, res: Response) => {
 
     if (req.body.id && req.body.id.length > 0) {
       // update an existing blog post
-      const blog = await Blog.getUnhydrated(req.body.id);
+      const blog = await blogDao.getById(req.body.id);
       if (!blog) {
         res.status(404).json({ error: 'Blog not found.' });
         return;
       }
 
-      if (blog.owner !== user.id) {
+      if (blog.owner.id !== user.id) {
         res.status(403).json({ error: 'Unable to update this blog post: Unauthorized.' });
         return;
       }
@@ -94,7 +91,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       blog.body = req.body.markdown.substring(0, 10000);
       blog.title = req.body.title;
 
-      await Blog.put(blog);
+      await blogDao.update(blog);
 
       const redirectUrl = await getRedirectUrlForCube(req, cube);
       res.status(200).json({ ok: 'Blog update successful, reloading...', redirect: redirectUrl });
@@ -118,10 +115,9 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    const id: string = await Blog.put({
+    const id: string = await blogDao.createBlog({
       body: req.body.markdown?.substring(0, 10000) || '',
       owner: user.id,
-      date: new Date().valueOf(),
       cube: cube.id,
       title: req.body.title,
     });
@@ -133,7 +129,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     // mentions are only added for new posts and ignored on edits
     if (userMentions.length > 0) {
       for (const mention of userMentions) {
-        const mentioned = await User.getByUsername(mention);
+        const mentioned = await userDao.getByUsername(mention);
 
         if (mentioned) {
           mentionedUsers.push(mentioned);
@@ -147,18 +143,26 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const followers: string[] = [
-      ...new Set([...(user.following || []), ...cube.following, ...mentionedUsers.map((u) => u.id)]),
-    ];
+    // Only publish to follower feeds if the cube is public (not unlisted or private)
+    // Private cubes should not have their blog posts visible to anyone except the owner
+    // Unlisted cubes should not publish to follower feeds
+    const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
+    const shouldPublishToFeed = cube.visibility === CUBE_VISIBILITY.PUBLIC;
 
-    const feedItems = followers.map((userId) => ({
-      id,
-      to: userId,
-      date: new Date().valueOf(),
-      type: FeedTypes.BLOG,
-    }));
+    if (shouldPublishToFeed) {
+      const followers: string[] = [
+        ...new Set([...(user.following || []), ...cube.following, ...mentionedUsers.map((u) => u.id)]),
+      ];
 
-    await Feed.batchPut(feedItems);
+      const feedItems = followers.map((userId) => ({
+        id,
+        to: userId,
+        date: new Date().valueOf(),
+        type: FeedTypes.BLOG,
+      }));
+
+      await feedDao.batchPutUnhydrated(feedItems);
+    }
 
     const redirectUrl = await getRedirectUrlForCube(req, cube);
     res.status(200).json({ ok: 'Blog post successful, reloading...', redirect: redirectUrl });
@@ -176,7 +180,7 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const post = await Blog.getById(req.params.id);
+    const post = await blogDao.getById(req.params.id);
     if (!post) {
       req.flash('danger', 'Blog post not found');
 
@@ -184,12 +188,21 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
     }
 
     if (post.cube !== 'DEVLOG') {
-      const cube = await Cube.getById(post.cube);
+      const cube = await cubeDao.getById(post.cube);
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Blog post not found');
 
         return redirect(req, res, '/404');
+      }
+
+      // Additional check for private cubes - only owner can view
+      const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
+      if (cube && cube.visibility === CUBE_VISIBILITY.PRIVATE) {
+        if (!req.user || cube.owner.id !== req.user.id) {
+          req.flash('danger', 'Blog post not found');
+          return redirect(req, res, '/404');
+        }
       }
     }
 
@@ -216,7 +229,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/blog/blogpost/${encodeURIComponent(id)}`);
     }
 
-    const blog = await Blog.getById(id);
+    const blog = await blogDao.getById(id);
 
     if (!blog) {
       req.flash('danger', 'Blog post not found');
@@ -228,7 +241,7 @@ export const deleteBlogHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    await Blog.delete(id);
+    await blogDao.delete(blog);
     const redirectUrl = await getRedirectUrl(req, blog.cube, true);
 
     req.flash('success', 'Post Removed');
@@ -244,7 +257,7 @@ export const getMoreBlogPostsForCubeHandler = async (req: Request, res: Response
   }
 
   const { lastKey } = req.body;
-  const posts = await Blog.getByCube(req.params.id, 20, lastKey);
+  const posts = await blogDao.queryByCube(req.params.id, lastKey, 20);
 
   return res.status(200).send({
     success: 'true',
@@ -260,14 +273,14 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
 
-    const query = await Blog.getByCube(cube.id, 20);
+    const query = await blogDao.queryByCube(cube.id, undefined, 20);
     const baseUrl = getBaseUrl();
 
     return render(

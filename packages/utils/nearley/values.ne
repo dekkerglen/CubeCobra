@@ -60,6 +60,11 @@ rarityOpValue -> anyOperator rarityValue {% ([op, value]) => rarityOperation(op,
 
 rarityValue -> ("s"i | "special"i | "m"i | "mythic"i | "r"i | "rare"i | "u"i | "uncommon"i | "common"i | "c"i) {% ([[rarity]]) => rarity %}
 
+colorCategoryOpValue -> equalityOperator colorCategoryValue {% ([op, value]) => colorCategoryOperation(op, value) %}
+
+colorCategoryValue -> ("w"i | "white"i | "u"i | "blue"i | "b"i | "black"i | "r"i | "red"i | "g"i | "green"i | "c"i | "colorless"i | "m"i | "multicolored"i | "l"i | "land"i) {% ([[category]]) => category.toLowerCase() %}
+  | "\"" ("w"i | "white"i | "u"i | "blue"i | "b"i | "black"i | "r"i | "red"i | "g"i | "green"i | "c"i | "colorless"i | "m"i | "multicolored"i | "l"i | "land"i) "\"" {% ([, [category]]) => category.toLowerCase() %}
+
 alphaNumericValue -> [a-zA-Z0-9]:+ {% ([letters]) => letters.join('').toLowerCase() %}
 
 alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => equalityOperation(op, value) %}

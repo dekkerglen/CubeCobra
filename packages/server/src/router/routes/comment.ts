@@ -1,19 +1,25 @@
+import type Comment from '@utils/datatypes/Comment';
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@utils/datatypes/Comment';
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
-import Blog from 'dynamo/models/blog';
-import Comment from 'dynamo/models/comment';
-import Content from 'dynamo/models/content';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
-import Notice from 'dynamo/models/notice';
-import Package from 'dynamo/models/package';
-import Record from 'dynamo/models/record';
-import DynamoUser from 'dynamo/models/user';
+import {
+  articleDao,
+  blogDao,
+  commentDao,
+  cubeDao,
+  draftDao,
+  episodeDao,
+  noticeDao,
+  packageDao,
+  podcastDao,
+  recordDao,
+  userDao,
+  videoDao,
+} from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getImageData } from 'serverutils/imageutil';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 
@@ -24,7 +30,7 @@ export const getHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const comment = await Comment.getById(req.params.id);
+    const comment = await commentDao.getById(req.params.id);
 
     if (!comment) {
       req.flash('danger', 'Comment not found.');
@@ -49,7 +55,7 @@ export const reportHandler = async (req: Request, res: Response) => {
       type: NoticeType.COMMENT_REPORT,
     };
 
-    await Notice.put(report);
+    await noticeDao.put(report);
 
     req.flash(
       'success',
@@ -65,7 +71,7 @@ export const reportHandler = async (req: Request, res: Response) => {
 export const getCommentsHandler = async (req: Request, res: Response) => {
   try {
     const { parent, lastKey } = req.body;
-    const comments = await Comment.queryByParentAndType(parent, lastKey);
+    const comments = await commentDao.queryByParent(parent, lastKey);
 
     return res.status(200).send({
       success: 'true',
@@ -80,7 +86,7 @@ export const getCommentsHandler = async (req: Request, res: Response) => {
 export const editCommentHandler = async (req: Request, res: Response) => {
   const { id, content, remove } = req.body.comment;
 
-  const comment = await Comment.getById(id);
+  const comment = await commentDao.getById(id);
 
   if (!comment) {
     return res.status(404).send({
@@ -102,7 +108,7 @@ export const editCommentHandler = async (req: Request, res: Response) => {
     comment.owner = { id: '404', username: 'Anonymous' };
   }
 
-  await Comment.put(comment);
+  await commentDao.put(comment);
 
   return res.status(200).send({ success: 'true' });
 };
@@ -125,15 +131,19 @@ export const addCommentHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const comment = {
-    owner: user?.id,
+  const now = Date.now() - 1000;
+  const comment: Omit<Comment, 'id'> = {
+    owner: user,
     body: body.substring(0, 5000),
-    date: Date.now() - 1000,
+    date: now,
+    dateCreated: now,
+    dateLastUpdated: now,
     parent: parent.substring(0, 500),
     type,
   };
 
-  const id = await Comment.put(comment);
+  const createdComment = await commentDao.createComment(comment);
+  const id = createdComment.id;
 
   if (isNotifiableCommentType(type)) {
     const owner = await getReplyContext[type](parent);
@@ -150,7 +160,7 @@ export const addCommentHandler = async (req: Request, res: Response) => {
   //Front-end joins the mentioned usernames with ; for the Form
   const userMentions: string[] = mentions ? mentions.split(';') : []; //Stupid JS thing where split of empty string is an array of empty string
   for (const mention of userMentions) {
-    const mentioned = await DynamoUser.getByUsername(mention);
+    const mentioned = await userDao.getByUsername(mention);
     if (mentioned) {
       await addNotification(mentioned, user, `/comment/${id}`, `${user?.username} mentioned you in their comment`);
     }
@@ -169,43 +179,43 @@ export const addCommentHandler = async (req: Request, res: Response) => {
 
 export const getReplyContext: Record<NotifiableCommentType, (id: string) => Promise<User | undefined>> = {
   comment: async (id) => {
-    const comment = await Comment.getById(id);
+    const comment = await commentDao.getById(id);
     return comment?.owner;
   },
   blog: async (id) => {
-    const blog = await Blog.getById(id);
+    const blog = await blogDao.getById(id);
     return blog?.owner;
   },
   deck: async (id) => {
-    const deck = await Draft.getById(id);
+    const deck = await draftDao.getById(id);
     return deck?.owner;
   },
   article: async (id) => {
-    const article = await Content.getById(id);
+    const article = await articleDao.getById(id);
     return article?.owner;
   },
   podcast: async (id) => {
-    const podcast = await Content.getById(id);
+    const podcast = await podcastDao.getById(id);
     return podcast?.owner;
   },
   video: async (id) => {
-    const video = await Content.getById(id);
+    const video = await videoDao.getById(id);
     return video?.owner;
   },
   episode: async (id: string) => {
-    const episode = await Content.getById(id);
+    const episode = await episodeDao.getById(id);
     return episode?.owner;
   },
   package: async (id: string) => {
-    const pack = await Package.getById(id);
+    const pack = await packageDao.getById(id);
     return pack?.owner;
   },
   record: async (id: string) => {
-    const record = await Record.getById(id);
+    const record = await recordDao.getById(id);
     if (!record) {
       return undefined;
     }
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
     return cube?.owner;
   },
 };

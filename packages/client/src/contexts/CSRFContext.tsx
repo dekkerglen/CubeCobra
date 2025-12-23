@@ -24,7 +24,7 @@ interface CSRFContextProviderProps {
 }
 
 async function fetchWithTimeout(resource: RequestInfo, options: ExtendedRequestInit = {}): Promise<Response> {
-  const { timeout = 10000 } = options;
+  const { timeout = 60000 } = options;
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);

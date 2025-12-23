@@ -315,4 +315,47 @@ const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   );
 };
 
+interface MarkdownErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class MarkdownErrorBoundary extends React.Component<{ children: ReactNode }, MarkdownErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): MarkdownErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    console.error('Markdown rendering error:', error, errorInfo);
+  }
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div className="border border-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded">
+          <Text semibold className="text-red-700 dark:text-red-400">
+            Error rendering markdown content
+          </Text>
+          <Text sm className="text-red-600 dark:text-red-500 mt-2">
+            The markdown content could not be displayed due to a formatting error. Please check the markdown syntax.
+          </Text>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export const SafeMarkdown: React.FC<MarkdownProps> = (props) => (
+  <MarkdownErrorBoundary>
+    <Markdown {...props} />
+  </MarkdownErrorBoundary>
+);
+
 export default Markdown;

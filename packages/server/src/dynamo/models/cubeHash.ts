@@ -1,3 +1,5 @@
+// migrated to dao/CubeDynamoDao
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { CubeCards } from '@utils/datatypes/Cube';
@@ -161,7 +163,7 @@ const getSortedByFollowers = async (
   hash: string,
   ascending: boolean = true,
   lastKey?: Record<string, NativeAttributeValue>,
-  limit: number = 36,
+  limit?: number,
 ): Promise<QueryResult> => {
   const result = await client.query({
     IndexName: 'SortedByFollowers',
@@ -186,7 +188,7 @@ const getSortedByName = async (
   hash: string,
   ascending: boolean = true,
   lastKey?: Record<string, NativeAttributeValue>,
-  limit: number = 36,
+  limit?: number,
 ): Promise<QueryResult> => {
   const result = await client.query({
     IndexName: 'SortedByName',
@@ -211,7 +213,7 @@ const getSortedByCardCount = async (
   hash: string,
   ascending: boolean = true,
   lastKey?: Record<string, NativeAttributeValue>,
-  limit: number = 36,
+  limit?: number,
 ): Promise<QueryResult> => {
   const result = await client.query({
     IndexName: 'SortedByCardCount',
@@ -238,7 +240,7 @@ const cubeHash = {
     ascending: boolean = true,
     lastKey: Record<string, NativeAttributeValue> | undefined = undefined,
     order: SortOrder = 'pop',
-    limit: number = 36,
+    limit?: number,
   ): Promise<QueryResult> => {
     switch (order) {
       case 'pop':

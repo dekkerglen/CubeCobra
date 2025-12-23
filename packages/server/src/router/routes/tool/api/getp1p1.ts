@@ -1,4 +1,4 @@
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { p1p1PackDao } from 'dynamo/daos';
 import Joi from 'joi';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
@@ -28,13 +28,13 @@ export const getP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Get the pack
-    const pack = await p1p1PackModel.getById(packId);
+    const pack = await p1p1PackDao.getById(packId);
     if (!pack) {
       return res.status(404).json({ error: 'P1P1 pack not found' });
     }
 
     // Get vote summary (includes user's vote if logged in)
-    const voteSummary = p1p1PackModel.getVoteSummary(pack, user?.id);
+    const voteSummary = p1p1PackDao.getVoteSummary(pack, user?.id);
 
     return res.status(200).json({
       success: true,

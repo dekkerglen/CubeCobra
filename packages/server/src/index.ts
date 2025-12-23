@@ -15,7 +15,6 @@ import http from 'http';
 import schedule from 'node-schedule';
 import passport from 'passport';
 import path from 'path';
-import responseTime from 'response-time';
 import { v4 as uuid } from 'uuid';
 
 import './types/express'; // Import the express type extensions
@@ -27,7 +26,6 @@ import router from './router/router';
 import { initializeCardDb } from './serverutils/cardCatalog';
 import cloudwatch from './serverutils/cloudwatch';
 import DynamoDBStore from './serverutils/dynamo-session-store';
-import { sanitizeHttpBody } from './serverutils/logging';
 import { initializeMl } from './serverutils/ml';
 import { render } from './serverutils/render';
 import { updateCardbase } from './serverutils/updatecards';
@@ -220,36 +218,6 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   res.locals.requestId = req.uuid;
   next();
 });
-
-//After static routes so we don't bother logging response times for static assets
-const responseTimer = responseTime((req: express.Request, res: express.Response, time: number) => {
-  const responseHeaders = res.getHeaders();
-  const contentLength = responseHeaders['content-length']
-    ? parseInt(String(responseHeaders['content-length']), 10)
-    : -1;
-  const isError = res.locals.isError ?? false;
-
-  cloudwatch.info(
-    JSON.stringify(
-      {
-        id: req.uuid,
-        method: req.method,
-        path: req.originalUrl,
-        user_id: req.user ? req.user.id : null,
-        username: req.user ? req.user.username : null,
-        remoteAddr: req.ip,
-        body: sanitizeHttpBody(req.body),
-        duration: Math.round(time * 100) / 100, //Rounds to 2 decimal places
-        status: res.statusCode,
-        isError: isError,
-        responseSize: contentLength,
-      },
-      null,
-      2,
-    ),
-  );
-});
-app.use(responseTimer);
 
 // check for downtime
 

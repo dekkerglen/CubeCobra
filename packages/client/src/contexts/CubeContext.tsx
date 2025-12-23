@@ -5,8 +5,8 @@ import React, {
   SetStateAction,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
@@ -56,11 +56,13 @@ export interface CubeContextValue {
   canEdit: boolean;
   hasCustomImages: boolean;
   setCube: Dispatch<SetStateAction<CubeWithCards>>;
-  addCard: (card: Card, board: BoardType) => void;
-  bulkAddCard: (newCards: Card[], board: BoardType) => void;
+  addCard: (card: Card, board: BoardType) => Promise<void>;
+  bulkAddCard: (newCards: Card[], board: BoardType) => Promise<void>;
   removeCard: (index: number, board: BoardType) => void;
-  swapCard: (index: number, card: Card, board: BoardType) => void;
+  swapCard: (index: number, card: Card, board: BoardType) => Promise<void>;
   editCard: (index: number, card: Card, board: BoardType) => void;
+  editAddedCard: (addIndex: number, card: Card, board: BoardType) => Promise<void>;
+  editSwappedCard: (swapIndex: number, card: Card, board: BoardType) => Promise<void>;
   clearChanges: () => void;
   changes: Changes;
   revertAdd: (index: number, board: BoardType) => void;
@@ -68,9 +70,15 @@ export interface CubeContextValue {
   revertSwap: (index: number, board: BoardType) => void;
   revertEdit: (index: number, board: BoardType) => void;
   versionDict: Record<string, CardVersion[]>;
+  fetchVersionsForCard: (cardId: string) => Promise<boolean>;
   commitChanges: (title: string, blog: string) => Promise<void>;
   setModalSelection: Dispatch<
-    SetStateAction<{ index: number; board: BoardType } | { index: number; board: BoardType }[]>
+    SetStateAction<
+      | { index: number; board: BoardType }
+      | { index: number; board: BoardType; isNewlyAdded: true; addIndex: number }
+      | { index: number; board: BoardType; isSwapped: true; swapIndex: number }
+      | { index: number; board: BoardType }[]
+    >
   >;
   setModalOpen: Dispatch<SetStateAction<boolean>>;
   tagColors: TagColor[];
@@ -81,6 +89,7 @@ export interface CubeContextValue {
   bulkRevertEdit: (list: { index: number; board: BoardType }[]) => void;
   bulkRemoveCard: (list: { index: number; board: BoardType }[]) => void;
   bulkRevertRemove: (list: { index: number; board: BoardType }[]) => void;
+  bulkEditNewCard: (cards: Card[]) => Promise<void>;
   alerts: UncontrolledAlertProps[];
   setAlerts: Dispatch<SetStateAction<UncontrolledAlertProps[]>>;
   loading: boolean;
@@ -121,6 +130,8 @@ const CubeContext = createContext<CubeContextValue>({
   removeCard: defaultFn,
   swapCard: defaultFn,
   editCard: defaultFn,
+  editAddedCard: defaultFn,
+  editSwappedCard: defaultFn,
   clearChanges: defaultFn,
   changes: {} as Changes,
   revertAdd: defaultFn,
@@ -128,6 +139,7 @@ const CubeContext = createContext<CubeContextValue>({
   revertSwap: defaultFn,
   revertEdit: defaultFn,
   versionDict: {} as Record<string, CardVersion[]>,
+  fetchVersionsForCard: defaultFn,
   commitChanges: defaultFn,
   setModalSelection: defaultFn,
   setModalOpen: defaultFn,
@@ -139,6 +151,7 @@ const CubeContext = createContext<CubeContextValue>({
   bulkRevertEdit: defaultFn,
   bulkRemoveCard: defaultFn,
   bulkRevertRemove: defaultFn,
+  bulkEditNewCard: defaultFn,
   alerts: [],
   setAlerts: defaultFn,
   loading: false,
@@ -220,9 +233,10 @@ export function CubeContextProvider({
   });
   const defaultSorts = useMemo(() => getCubeSorts(cube), [cube]);
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
-  const [versionDictLoaded, setVersionDictLoaded] = useState(false);
-  const [versionDictLoading, setVersionDictLoading] = useState(false);
-  const fetchStartedRef = useRef(false);
+  // These were only used in the removed fetchVersionDict function
+  // const [versionDictLoaded, setVersionDictLoaded] = useState(false);
+  // const [versionDictLoading, setVersionDictLoading] = useState(false);
+  // const fetchStartedRef = useRef(false);
 
   const fetchCardVersions = useCallback(
     async (ids: string[]): Promise<Record<string, CardVersion[]> | undefined> => {
@@ -252,6 +266,8 @@ export function CubeContextProvider({
     [csrfFetch],
   );
 
+  // Removed unused fetchVersionDict function - it was never called
+  /*
   const fetchVersionDict = useCallback(async () => {
     if (versionDictLoaded || versionDictLoading || !loadVersionDict || fetchStartedRef.current) {
       return;
@@ -278,44 +294,68 @@ export function CubeContextProvider({
       setVersionDictLoading(false);
     }
   }, [cube.cards, fetchCardVersions, loadVersionDict, versionDictLoaded, versionDictLoading]);
+  */
 
-  // The versionDictProxy is a Proxy around the versionDict state.
-  // Its purpose is to lazily load the version dictionary from the server
-  // only when it is first accessed by a consumer (such as ListView or CardModal).
-  // This avoids fetching all card versions unless they are actually needed.
-
-  const versionDictProxy = useMemo(() => {
-    // maybeFetch ensures that the fetch is only triggered once (the fetchStartedRef),
-    // and only if the version dictionary is not already loaded or loading.
-    const maybeFetch = () => {
-      if (loadVersionDict && !versionDictLoaded && !versionDictLoading && !fetchStartedRef.current) {
-        fetchVersionDict();
+  // Fetch versions for a single card lazily
+  const fetchVersionsForCard = useCallback(
+    async (cardId: string): Promise<boolean> => {
+      if (!loadVersionDict) {
+        return false;
       }
-    };
-    // The Proxy intercepts property access and other object operations.
-    return new Proxy(versionDict, {
-      // The get trap is called whenever a property is accessed, e.g. versionDictProxy[someKey].
-      get(target, prop, receiver) {
-        maybeFetch();
-        return Reflect.get(target, prop, receiver);
-      },
-      // The ownKeys trap is called for operations like Object.keys(versionDictProxy).
-      ownKeys(target) {
-        maybeFetch();
-        return Reflect.ownKeys(target);
-      },
-      // The getOwnPropertyDescriptor trap is called for operations like Object.getOwnPropertyDescriptor.
-      getOwnPropertyDescriptor(target, prop) {
-        maybeFetch();
-        return Reflect.getOwnPropertyDescriptor(target, prop);
-      },
-    });
-  }, [versionDict, fetchVersionDict, loadVersionDict, versionDictLoaded, versionDictLoading]);
+
+      const dict = await fetchCardVersions([cardId]);
+      if (dict) {
+        setVersionDict((prev) => ({ ...prev, ...dict }));
+        return true;
+      }
+      return false;
+    },
+    [fetchCardVersions, loadVersionDict],
+  );
+
+  // versionDict is now used directly without a Proxy.
+  // Versions are loaded lazily only when fetchVersionsForCard is called,
+  // which happens when a user interacts with a card modal or version dropdown.
 
   const [modalSelection, setModalSelection] = useState<
-    { index: number; board: BoardType } | { index: number; board: BoardType }[]
+    | { index: number; board: BoardType }
+    | { index: number; board: BoardType; isNewlyAdded: true; addIndex: number }
+    | { index: number; board: BoardType; isSwapped: true; swapIndex: number }
+    | { index: number; board: BoardType }[]
   >([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [addedCardDetails, setAddedCardDetails] = useState<CardDetails | null>(null);
+
+  // Fetch details for newly added cards when modal is opened
+  useEffect(() => {
+    if (modalOpen && modalSelection && !Array.isArray(modalSelection)) {
+      if (
+        Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
+        (modalSelection as any).isNewlyAdded
+      ) {
+        const card = changes[modalSelection.board]?.adds?.[(modalSelection as any).addIndex];
+        if (card) {
+          getDetails(csrfFetch, card.cardID).then((details) => {
+            setAddedCardDetails(details);
+          });
+        }
+      } else if (
+        Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
+        (modalSelection as any).isSwapped
+      ) {
+        const card = changes[modalSelection.board]?.swaps?.[(modalSelection as any).swapIndex]?.card;
+        if (card) {
+          getDetails(csrfFetch, card.cardID).then((details) => {
+            setAddedCardDetails(details);
+          });
+        }
+      } else {
+        setAddedCardDetails(null);
+      }
+    } else {
+      setAddedCardDetails(null);
+    }
+  }, [modalOpen, modalSelection, changes, csrfFetch]);
   const [showTagColors, setShowTagColors] = useState(user ? !user.hideTagColors : false);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
   const [loading, setLoading] = useState(false);
@@ -411,7 +451,7 @@ export function CubeContextProvider({
   );
 
   const addCard = useCallback(
-    (card: Card, board: BoardType) => {
+    async (card: Card, board: BoardType) => {
       const newChanges = deepCopy(changes);
       if (!newChanges[board]) {
         newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
@@ -426,7 +466,7 @@ export function CubeContextProvider({
   );
 
   const bulkAddCard = useCallback(
-    (newCards: Card[], board: BoardType) => {
+    async (newCards: Card[], board: BoardType) => {
       const newChanges = deepCopy(changes);
       if (!newChanges[board]) {
         newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
@@ -456,7 +496,7 @@ export function CubeContextProvider({
   );
 
   const swapCard = useCallback(
-    (index: number, card: Card, board: BoardType) => {
+    async (index: number, card: Card, board: BoardType) => {
       const newChanges = deepCopy(changes);
 
       const oldCard: Card = deepCopy(cube.cards[board][index]);
@@ -549,6 +589,82 @@ export function CubeContextProvider({
     [changes, setChanges],
   );
 
+  const editAddedCard = useCallback(
+    async (addIndex: number, card: Card, board: BoardType) => {
+      console.log('editAddedCard called:', { addIndex, board, cardTags: card.tags, cardID: card.cardID });
+      const newChanges = deepCopy(changes);
+
+      if (!newChanges[board]?.adds) {
+        console.log('No adds array found for board:', board);
+        return;
+      }
+
+      const originalCard = newChanges[board].adds[addIndex];
+      console.log('Original card tags:', originalCard.tags);
+
+      const newCardData = deepCopy(card);
+      console.log('New card data tags after deepCopy:', newCardData.tags);
+
+      // If the cardID changed, fetch new details
+      if (originalCard.cardID !== newCardData.cardID && newCardData.cardID) {
+        const newDetails = await getDetails(csrfFetch, newCardData.cardID);
+        if (newDetails) {
+          newCardData.details = newDetails;
+        }
+      } else if (originalCard.details && !newCardData.details) {
+        // Preserve the details from the original card if they exist and cardID hasn't changed
+        newCardData.details = originalCard.details;
+      }
+
+      delete newCardData.index;
+      delete newCardData.board;
+
+      console.log('About to set new card data with tags:', newCardData.tags);
+      newChanges[board].adds[addIndex] = newCardData;
+      setChanges(newChanges);
+      console.log('Changes set, new adds array:', newChanges[board].adds);
+    },
+    [changes, setChanges, csrfFetch],
+  );
+
+  const editSwappedCard = useCallback(
+    async (swapIndex: number, card: Card, board: BoardType) => {
+      console.log('editSwappedCard called:', { swapIndex, board, cardTags: card.tags, cardID: card.cardID });
+      const newChanges = deepCopy(changes);
+
+      if (!newChanges[board]?.swaps) {
+        console.log('No swaps array found for board:', board);
+        return;
+      }
+
+      const originalCard = newChanges[board].swaps[swapIndex].card;
+      console.log('Original swap card tags:', originalCard.tags);
+
+      const newCardData = deepCopy(card);
+      console.log('New card data tags after deepCopy:', newCardData.tags);
+
+      // If the cardID changed, fetch new details
+      if (originalCard.cardID !== newCardData.cardID && newCardData.cardID) {
+        const newDetails = await getDetails(csrfFetch, newCardData.cardID);
+        if (newDetails) {
+          newCardData.details = newDetails;
+        }
+      } else if (originalCard.details && !newCardData.details) {
+        // Preserve the details from the original card if they exist and cardID hasn't changed
+        newCardData.details = originalCard.details;
+      }
+
+      delete newCardData.index;
+      delete newCardData.board;
+
+      console.log('About to set new swap card data with tags:', newCardData.tags);
+      newChanges[board].swaps[swapIndex].card = newCardData;
+      setChanges(newChanges);
+      console.log('Changes set, new swaps array:', newChanges[board].swaps);
+    },
+    [changes, setChanges, csrfFetch],
+  );
+
   const moveCard = useCallback(
     (index: number, board: BoardType, newBoard: BoardType) => {
       const newChanges = deepCopy(changes);
@@ -591,6 +707,80 @@ export function CubeContextProvider({
     [changes, cube.cards, setChanges, setOpenCollapse],
   );
 
+  const moveAddedCard = useCallback(
+    (addIndex: number, board: BoardType, newBoard: BoardType) => {
+      if (board === newBoard) {
+        return;
+      }
+
+      const newChanges = deepCopy(changes);
+
+      if (!newChanges[board]?.adds || !newChanges[board].adds[addIndex]) {
+        console.error('Card not found in adds array:', { addIndex, board });
+        return;
+      }
+
+      // Get the card from the current board's adds array
+      const cardToMove = deepCopy(newChanges[board].adds[addIndex]);
+
+      // Remove it from the current board's adds array
+      newChanges[board].adds.splice(addIndex, 1);
+
+      // Ensure the new board has the proper structure
+      if (!newChanges[newBoard]) {
+        newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
+      }
+      if (!newChanges[newBoard].adds) {
+        newChanges[newBoard].adds = [];
+      }
+
+      // Add it to the new board's adds array
+      newChanges[newBoard].adds.push(cardToMove);
+
+      setChanges(newChanges);
+      setOpenCollapse('edit');
+    },
+    [changes, setChanges, setOpenCollapse],
+  );
+
+  const moveSwappedCard = useCallback(
+    (swapIndex: number, board: BoardType, newBoard: BoardType) => {
+      if (board === newBoard) {
+        return;
+      }
+
+      const newChanges = deepCopy(changes);
+
+      if (!newChanges[board]?.swaps || !newChanges[board].swaps[swapIndex]) {
+        console.error('Card not found in swaps array:', { swapIndex, board });
+        return;
+      }
+
+      // Get the swap entry from the current board's swaps array
+      const swapEntry = deepCopy(newChanges[board].swaps[swapIndex]);
+      const cardToMove = swapEntry.card;
+
+      // Remove the swap from the current board since we're moving the card
+      newChanges[board].swaps.splice(swapIndex, 1);
+
+      // Ensure the new board has the proper structure
+      if (!newChanges[newBoard]) {
+        newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
+      }
+      if (!newChanges[newBoard].adds) {
+        newChanges[newBoard].adds = [];
+      }
+
+      // Add the card to the new board's adds array
+      // (it's now being added to a different board, not swapped)
+      newChanges[newBoard].adds.push(cardToMove);
+
+      setChanges(newChanges);
+      setOpenCollapse('edit');
+    },
+    [changes, setChanges, setOpenCollapse],
+  );
+
   const bulkMoveCard = useCallback(
     (cardList: { board: BoardType; index: number }[], newBoard: BoardType) => {
       const newChanges = deepCopy(changes);
@@ -630,6 +820,98 @@ export function CubeContextProvider({
       setOpenCollapse('edit');
     },
     [changes, cube.cards, setChanges, setOpenCollapse],
+  );
+
+  const bulkMoveCards = useCallback(
+    (cards: Card[], newBoard: BoardType) => {
+      // Check if these are newly added/swapped cards or existing cards
+      const hasAddIndex = cards.some((card) => (card as any).addIndex !== undefined);
+      const hasSwapIndex = cards.some((card) => (card as any).swapIndex !== undefined);
+
+      if (hasAddIndex || hasSwapIndex) {
+        // Handle newly added or swapped cards
+        const newChanges = deepCopy(changes);
+
+        // Group cards by their board and type (adds vs swaps)
+        const cardsByBoard: Record<BoardType, { adds: Card[]; swaps: Card[] }> = {
+          mainboard: { adds: [], swaps: [] },
+          maybeboard: { adds: [], swaps: [] },
+        };
+
+        for (const card of cards) {
+          if (card.board && card.board !== newBoard) {
+            if ((card as any).addIndex !== undefined) {
+              cardsByBoard[card.board].adds.push(card);
+            } else if ((card as any).swapIndex !== undefined) {
+              cardsByBoard[card.board].swaps.push(card);
+            }
+          }
+        }
+
+        // Process adds
+        for (const board of boardTypes) {
+          const addsToMove = cardsByBoard[board].adds;
+          if (addsToMove.length > 0) {
+            // Sort by addIndex in descending order to avoid index shifting issues
+            const sortedAdds = addsToMove.sort((a, b) => (b as any).addIndex - (a as any).addIndex);
+
+            for (const card of sortedAdds) {
+              const addIndex = (card as any).addIndex;
+              if (newChanges[board]?.adds && newChanges[board].adds[addIndex]) {
+                const cardToMove = deepCopy(newChanges[board].adds[addIndex]);
+                newChanges[board].adds.splice(addIndex, 1);
+
+                // Ensure the new board has the proper structure
+                if (!newChanges[newBoard]) {
+                  newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
+                }
+                if (!newChanges[newBoard].adds) {
+                  newChanges[newBoard].adds = [];
+                }
+
+                newChanges[newBoard].adds.push(cardToMove);
+              }
+            }
+          }
+
+          // Process swaps
+          const swapsToMove = cardsByBoard[board].swaps;
+          if (swapsToMove.length > 0) {
+            // Sort by swapIndex in descending order to avoid index shifting issues
+            const sortedSwaps = swapsToMove.sort((a, b) => (b as any).swapIndex - (a as any).swapIndex);
+
+            for (const card of sortedSwaps) {
+              const swapIndex = (card as any).swapIndex;
+              if (newChanges[board]?.swaps && newChanges[board].swaps[swapIndex]) {
+                const swapEntry = deepCopy(newChanges[board].swaps[swapIndex]);
+                const cardToMove = swapEntry.card;
+                newChanges[board].swaps.splice(swapIndex, 1);
+
+                // Ensure the new board has the proper structure
+                if (!newChanges[newBoard]) {
+                  newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
+                }
+                if (!newChanges[newBoard].adds) {
+                  newChanges[newBoard].adds = [];
+                }
+
+                newChanges[newBoard].adds.push(cardToMove);
+              }
+            }
+          }
+        }
+
+        setChanges(newChanges);
+        setOpenCollapse('edit');
+      } else {
+        // Handle existing cards - convert to the format expected by the original bulkMoveCard
+        const cardList = cards
+          .filter((card) => card.board !== undefined && card.index !== undefined)
+          .map((card) => ({ board: card.board!, index: card.index! }));
+        bulkMoveCard(cardList, newBoard);
+      }
+    },
+    [changes, setChanges, setOpenCollapse, bulkMoveCard],
   );
 
   const removeCard = useCallback(
@@ -696,9 +978,9 @@ export function CubeContextProvider({
               editIndex: i,
             };
 
-            if (versionDictProxy[normalizeName(cardName(card))] && edit.newCard.cardID !== card.cardID) {
+            if (versionDict[normalizeName(cardName(card))] && edit.newCard.cardID !== card.cardID) {
               card = changed[board][edit.index];
-              const newDetails = versionDictProxy[normalizeName(cardName(card))].find(
+              const newDetails = versionDict[normalizeName(cardName(card))].find(
                 (v) => v.scryfall_id === edit.newCard.cardID,
               );
               if (card.details !== undefined && newDetails !== undefined) {
@@ -726,23 +1008,26 @@ export function CubeContextProvider({
       maybeboard: changed.maybeboard.filter(cardFilter.filter),
     };
 
+    return [result, changed];
+  }, [cube.cards, useChangedCards, cardFilter, changes, versionDict]);
+
+  // Update filter result when cards or filter changes
+  useEffect(() => {
     if (filterInput !== '') {
-      if (changed.maybeboard.length > 0) {
+      if (unfilteredChangedCards.maybeboard.length > 0) {
         setFilterResult({
-          mainboard: [result.mainboard.length, changed.mainboard.length],
-          maybeboard: [result.maybeboard.length, changed.maybeboard.length],
+          mainboard: [changedCards.mainboard.length, unfilteredChangedCards.mainboard.length],
+          maybeboard: [changedCards.maybeboard.length, unfilteredChangedCards.maybeboard.length],
         });
       } else {
         setFilterResult({
-          mainboard: [result.mainboard.length, changed.mainboard.length],
+          mainboard: [changedCards.mainboard.length, unfilteredChangedCards.mainboard.length],
         });
       }
     } else {
       setFilterResult({});
     }
-
-    return [result, changed];
-  }, [cube.cards, useChangedCards, cardFilter, filterInput, changes, versionDictProxy]);
+  }, [changedCards, unfilteredChangedCards, filterInput]);
 
   const commitChanges = useCallback(
     async (title: string, blog: string) => {
@@ -820,22 +1105,16 @@ export function CubeContextProvider({
             }
           }
 
-          //Fetch the versions of cards added so add them to the dictionary
-          //Previously a useEffect would fetch all versions each time the card list changed
-          const dict = await fetchCardVersions(newCardsToFetchVersions);
-          if (dict) {
-            Object.entries(dict as Record<string, CardVersion[]>).forEach(([key, value]) => {
-              versionDict[key] = value;
-            });
-          }
-
           setModalSelection([]);
+          // Update version BEFORE clearing changes so new changes get the correct version
+          const newVersion = json.version || version + 1;
+          setVersion(newVersion);
           clearChanges();
           setCube({
             ...cube,
             cards: newCards,
+            version: newVersion, // Update cube version too
           });
-          setVersion(version + 1);
           const newTags = getAllTags(newCards);
           //Make sure to use tagColors instead of cube.tagColors so any previous edits apply
           setTagColors(computeTagColors(tagColors, newTags));
@@ -847,19 +1126,7 @@ export function CubeContextProvider({
       setModalSelection([]);
       setLoading(false);
     },
-    [
-      csrfFetch,
-      changes,
-      cube,
-      useBlog,
-      unfilteredChangedCards,
-      fetchCardVersions,
-      clearChanges,
-      setVersion,
-      version,
-      versionDict,
-      tagColors,
-    ],
+    [csrfFetch, changes, cube, useBlog, unfilteredChangedCards, clearChanges, setVersion, version, tagColors],
   );
 
   const bulkEditCard = useCallback(
@@ -963,6 +1230,86 @@ export function CubeContextProvider({
       setChanges(newChanges);
     },
     [changes, setChanges],
+  );
+
+  const bulkEditNewCard = useCallback(
+    async (cards: Card[]) => {
+      console.log('bulkEditNewCard called with cards:', cards);
+
+      // Create a single deep copy that we'll modify for all cards
+      const newChanges = deepCopy(changes);
+
+      for (const card of cards) {
+        // Determine if this is an added card or a swapped card
+        const { board, addIndex, swapIndex } = card as Card & {
+          addIndex?: number;
+          swapIndex?: number;
+        };
+
+        console.log('Processing card:', { board, addIndex, swapIndex, cardID: card.cardID });
+
+        if (board && addIndex !== undefined) {
+          // Update added card
+          console.log('Updating added card at index:', addIndex);
+          if (newChanges[board]?.adds?.[addIndex]) {
+            const originalCard = newChanges[board].adds[addIndex];
+            const newCardData = deepCopy(card);
+
+            // If the cardID changed, fetch new details
+            if (originalCard.cardID !== newCardData.cardID && newCardData.cardID) {
+              const newDetails = await getDetails(csrfFetch, newCardData.cardID);
+              if (newDetails) {
+                newCardData.details = newDetails;
+              }
+            } else if (originalCard.details && !newCardData.details) {
+              // Preserve the details from the original card if they exist
+              newCardData.details = originalCard.details;
+            }
+
+            delete newCardData.index;
+            delete newCardData.board;
+            delete (newCardData as any).addIndex;
+            delete (newCardData as any).swapIndex;
+
+            console.log('Setting added card with tags:', newCardData.tags);
+            newChanges[board].adds[addIndex] = newCardData;
+          }
+        } else if (board && swapIndex !== undefined) {
+          // Update swapped card
+          console.log('Updating swapped card at index:', swapIndex);
+          if (newChanges[board]?.swaps?.[swapIndex]) {
+            const originalCard = newChanges[board].swaps[swapIndex].card;
+            const newCardData = deepCopy(card);
+
+            // If the cardID changed, fetch new details
+            if (originalCard.cardID !== newCardData.cardID && newCardData.cardID) {
+              const newDetails = await getDetails(csrfFetch, newCardData.cardID);
+              if (newDetails) {
+                newCardData.details = newDetails;
+              }
+            } else if (originalCard.details && !newCardData.details) {
+              // Preserve the details from the original card if they exist
+              newCardData.details = originalCard.details;
+            }
+
+            delete newCardData.index;
+            delete newCardData.board;
+            delete (newCardData as any).addIndex;
+            delete (newCardData as any).swapIndex;
+
+            console.log('Setting swapped card with tags:', newCardData.tags);
+            newChanges[board].swaps[swapIndex].card = newCardData;
+          }
+        } else {
+          console.log('Card does not match added or swapped criteria');
+        }
+      }
+
+      // Set changes once with all updates
+      console.log('Setting all changes at once');
+      setChanges(newChanges);
+    },
+    [changes, setChanges, csrfFetch],
   );
 
   const canEdit = !!user && cube.owner?.id === user.id;
@@ -1072,13 +1419,16 @@ export function CubeContextProvider({
       removeCard,
       swapCard,
       editCard,
+      editAddedCard,
+      editSwappedCard,
       clearChanges,
       changes,
       revertAdd,
       revertRemove,
       revertSwap,
       revertEdit,
-      versionDict: versionDictProxy,
+      versionDict,
+      fetchVersionsForCard,
       commitChanges,
       setModalSelection,
       setModalOpen,
@@ -1090,6 +1440,7 @@ export function CubeContextProvider({
       bulkRevertEdit,
       bulkRemoveCard,
       bulkRevertRemove,
+      bulkEditNewCard,
       alerts,
       setAlerts,
       loading,
@@ -1122,13 +1473,16 @@ export function CubeContextProvider({
       removeCard,
       swapCard,
       editCard,
+      editAddedCard,
+      editSwappedCard,
       clearChanges,
       changes,
       revertAdd,
       revertRemove,
       revertSwap,
       revertEdit,
-      versionDictProxy,
+      versionDict,
+      fetchVersionsForCard,
       commitChanges,
       setModalSelection,
       setModalOpen,
@@ -1140,6 +1494,7 @@ export function CubeContextProvider({
       bulkRevertEdit,
       bulkRemoveCard,
       bulkRevertRemove,
+      bulkEditNewCard,
       alerts,
       setAlerts,
       loading,
@@ -1169,13 +1524,68 @@ export function CubeContextProvider({
         {children}
         {modalSelection &&
           !Array.isArray(modalSelection) &&
+          Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
+          (modalSelection as any).isNewlyAdded &&
+          changes[modalSelection.board]?.adds?.[(modalSelection as any).addIndex] && (
+            <CardModal
+              card={{
+                ...changes[modalSelection.board]!.adds![(modalSelection as any).addIndex],
+                board: modalSelection.board,
+                index: -1, // Use -1 as a sentinel value for newly added cards
+                details: addedCardDetails || undefined,
+              }}
+              isOpen={modalOpen}
+              setOpen={setModalOpen}
+              canEdit={canEdit}
+              versionDict={versionDict}
+              fetchVersionsForCard={fetchVersionsForCard}
+              editCard={(_, card, board) => editAddedCard((modalSelection as any).addIndex, card, board)}
+              revertEdit={() => {}}
+              revertRemove={() => {}}
+              removeCard={() => {}}
+              tagColors={tagColors}
+              moveCard={(_, board, newBoard) => moveAddedCard((modalSelection as any).addIndex, board, newBoard)}
+              allTags={allTags}
+            />
+          )}
+        {modalSelection &&
+          !Array.isArray(modalSelection) &&
+          Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
+          (modalSelection as any).isSwapped &&
+          changes[modalSelection.board]?.swaps?.[(modalSelection as any).swapIndex] && (
+            <CardModal
+              card={{
+                ...changes[modalSelection.board]!.swaps![(modalSelection as any).swapIndex].card,
+                board: modalSelection.board,
+                index: -1, // Use -1 as a sentinel value for swapped cards
+                details: addedCardDetails || undefined,
+              }}
+              isOpen={modalOpen}
+              setOpen={setModalOpen}
+              canEdit={canEdit}
+              versionDict={versionDict}
+              fetchVersionsForCard={fetchVersionsForCard}
+              editCard={(_, card, board) => editSwappedCard((modalSelection as any).swapIndex, card, board)}
+              revertEdit={() => {}}
+              revertRemove={() => {}}
+              removeCard={() => {}}
+              tagColors={tagColors}
+              moveCard={(_, board, newBoard) => moveSwappedCard((modalSelection as any).swapIndex, board, newBoard)}
+              allTags={allTags}
+            />
+          )}
+        {modalSelection &&
+          !Array.isArray(modalSelection) &&
+          !Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
+          !Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
             <CardModal
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}
               setOpen={setModalOpen}
               canEdit={canEdit}
-              versionDict={versionDictProxy}
+              versionDict={versionDict}
+              fetchVersionsForCard={fetchVersionsForCard}
               editCard={editCard}
               revertEdit={revertEdit}
               revertRemove={revertRemove}
@@ -1185,19 +1595,32 @@ export function CubeContextProvider({
               allTags={allTags}
             />
           )}
-        {modalSelection && Array.isArray(modalSelection) && (
+        {modalSelection && Array.isArray(modalSelection) && modalSelection.length > 0 && (
           <GroupModal
-            cards={modalSelection.map((s) => unfilteredChangedCards[s.board][s.index])}
+            cards={
+              // Check if this is a list of new cards (with addIndex or swapIndex)
+              Object.prototype.hasOwnProperty.call(modalSelection[0], 'addIndex') ||
+              Object.prototype.hasOwnProperty.call(modalSelection[0], 'swapIndex')
+                ? (modalSelection as Card[])
+                : modalSelection.map((s) => unfilteredChangedCards[s.board][s.index])
+            }
             isOpen={modalOpen}
             setOpen={setModalOpen}
             canEdit={canEdit}
-            bulkEditCard={bulkEditCard}
+            bulkEditCard={
+              // Use bulkEditNewCard for new cards, bulkEditCard for existing cards
+              Object.prototype.hasOwnProperty.call(modalSelection[0], 'addIndex') ||
+              Object.prototype.hasOwnProperty.call(modalSelection[0], 'swapIndex')
+                ? (cards: Card[]) => bulkEditNewCard(cards)
+                : (cards: Card[]) => bulkEditCard(cards as any)
+            }
             bulkRevertEdit={bulkRevertEdit}
             bulkRemoveCard={bulkRemoveCard}
             bulkRevertRemove={bulkRevertRemove}
-            setModalSelection={setModalSelection}
+            setModalSelection={(cards: any) => setModalSelection(cards)}
             tagColors={tagColors}
             bulkMoveCard={bulkMoveCard}
+            bulkMoveCards={bulkMoveCards}
             allTags={allTags}
           />
         )}

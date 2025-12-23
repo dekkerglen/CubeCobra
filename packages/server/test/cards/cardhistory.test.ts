@@ -1,10 +1,12 @@
-import CardHistory from '../../src/dynamo/models/cardhistory';
+import { cardHistoryDao } from '../../src/dynamo/daos';
 import { getCardHistoryHandler, getZoomValue } from '../../src/router/routes/tool/cardhistory';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';
 
-jest.mock('../../src/dynamo/models/cardhistory', () => ({
-  getByOracleAndType: jest.fn(),
+jest.mock('../../src/dynamo/daos', () => ({
+  cardHistoryDao: {
+    queryByOracleAndType: jest.fn(),
+  },
 }));
 
 describe('getZoomValue', () => {
@@ -38,7 +40,7 @@ describe('getZoomValue', () => {
     const invalidZooms = ['invalid', '', 'day', 'week'];
     periodValues.forEach((period) => {
       invalidZooms.forEach((zoom) => {
-        const result = getZoomValue(zoom, period);
+        const result = getZoomValue(zoom as any, period);
         expect(result).toBe(0);
       });
     });
@@ -48,7 +50,7 @@ describe('getZoomValue', () => {
     const invalidPeriods = ['invalid', '', 'hour', 'year'];
     zoomValues.forEach((zoom) => {
       invalidPeriods.forEach((period) => {
-        const result = getZoomValue(zoom, period);
+        const result = getZoomValue(zoom, period as any);
         expect(result).toBe(0);
       });
     });
@@ -60,7 +62,7 @@ describe('getZoomValue', () => {
 
     invalidZooms.forEach((zoom) => {
       invalidPeriods.forEach((period) => {
-        const result = getZoomValue(zoom, period);
+        const result = getZoomValue(zoom as any, period as any);
         expect(result).toBe(0);
       });
     });
@@ -73,7 +75,7 @@ describe('Cards History', () => {
   });
 
   it('should return card history', async () => {
-    (CardHistory.getByOracleAndType as jest.Mock).mockResolvedValue({
+    (cardHistoryDao.queryByOracleAndType as jest.Mock).mockResolvedValue({
       items: [
         {
           OTComp: 'otcomp',
@@ -81,6 +83,7 @@ describe('Cards History', () => {
           date: 0,
           elo: 0,
           picks: 1,
+          cubes: 100,
         },
       ],
     });
@@ -93,7 +96,7 @@ describe('Cards History', () => {
       })
       .send();
 
-    expect(CardHistory.getByOracleAndType).toHaveBeenCalledWith('id', 'day', 30);
+    expect(cardHistoryDao.queryByOracleAndType).toHaveBeenCalledWith('id', 'day', 30);
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'true',
@@ -104,13 +107,14 @@ describe('Cards History', () => {
           date: 0,
           elo: 0,
           picks: 1,
+          cubes: 100,
         },
       ],
     });
   });
 
   it('should handle errors gracefully', async () => {
-    (CardHistory.getByOracleAndType as jest.Mock).mockRejectedValue(new Error('something went wrong'));
+    (cardHistoryDao.queryByOracleAndType as jest.Mock).mockRejectedValue(new Error('something went wrong'));
 
     const res = await call(getCardHistoryHandler)
       .withBody({
@@ -120,7 +124,7 @@ describe('Cards History', () => {
       })
       .send();
 
-    expect(CardHistory.getByOracleAndType).toHaveBeenCalledWith('id', 'day', 30);
+    expect(cardHistoryDao.queryByOracleAndType).toHaveBeenCalledWith('id', 'day', 30);
     expect(res.status).toEqual(500);
     expect(res.body).toEqual({
       success: 'false',

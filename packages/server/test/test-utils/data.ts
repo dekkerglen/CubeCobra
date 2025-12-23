@@ -224,6 +224,8 @@ export const createCube = (overrides?: Partial<Cube>): Cube => ({
   description: '',
   imageName: '',
   date: 0,
+  dateCreated: Date.now(),
+  dateLastUpdated: Date.now(),
   defaultSorts: [],
   formats: [],
   following: [],

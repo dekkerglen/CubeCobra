@@ -1,11 +1,12 @@
+// migrated to /daos/NoticeDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { NewNotice, Notice, NoticeStatus, UnhydratedNotice } from '@utils/datatypes/Notice';
 import UserType from '@utils/datatypes/User';
+import { userDao } from 'dynamo/daos';
 import createClient from 'dynamo/util';
 import { v4 as uuidv4 } from 'uuid';
-
-import User from './user';
 
 const client = createClient({
   name: 'NOTICES',
@@ -29,6 +30,8 @@ const createHydratedNotice = (document: UnhydratedNotice, user: UserType): Notic
     ...document,
     id: document.id!,
     user: user,
+    dateCreated: document.dateCreated || Date.now(),
+    dateLastUpdated: document.dateLastUpdated || Date.now(),
   };
 };
 
@@ -37,12 +40,12 @@ const hydrate = async (notice: UnhydratedNotice): Promise<Notice> => {
     return notice;
   }
 
-  const user = await User.getById(notice.user!);
+  const user = await userDao.getById(notice.user!);
   return createHydratedNotice(notice, user!);
 };
 
 const batchHydrate = async (notices: UnhydratedNotice[]): Promise<Notice[]> => {
-  const users: UserType[] = await User.batchGet(notices.map((notice) => notice.user!));
+  const users: UserType[] = await userDao.batchGet(notices.map((notice) => notice.user!));
 
   return notices
     .map((notice) => {
@@ -106,6 +109,8 @@ const notice = {
       userId = document.user;
     }
 
+    const now = Date.now();
+
     await client.put({
       id: id,
       date: document.date,
@@ -114,10 +119,27 @@ const notice = {
       status: getStatus(document),
       type: document.type,
       subject: document.subject,
+      dateCreated: Object.prototype.hasOwnProperty.call(document, 'dateCreated')
+        ? (document as Notice).dateCreated
+        : now,
+      dateLastUpdated: Object.prototype.hasOwnProperty.call(document, 'dateLastUpdated')
+        ? (document as Notice).dateLastUpdated
+        : now,
     } as UnhydratedNotice);
   },
   batchPut: async (documents: UnhydratedNotice[]): Promise<void> => client.batchPut(documents),
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
+  scan: async (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: UnhydratedNotice[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+    return {
+      items: result.Items as UnhydratedNotice[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
 };
 
 module.exports = notice;

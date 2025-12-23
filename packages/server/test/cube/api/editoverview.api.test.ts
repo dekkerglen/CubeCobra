@@ -2,17 +2,22 @@
 import CubeFn from 'serverutils/cubefn';
 import * as Util from 'serverutils/util';
 
-import Cube from '../../../src/dynamo/models/cube';
-import CubeHash from '../../../src/dynamo/models/cubeHash';
 import { editOverviewHandler } from '../../../src/router/routes/cube/api/editoverview';
 import { createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call } from '../../test-utils/transport';
 
-jest.mock('../../../src/dynamo/models/cube');
+jest.mock('../../../src/dynamo/daos', () => ({
+  cubeDao: {
+    getById: jest.fn(),
+    update: jest.fn(),
+  },
+}));
 jest.mock('serverutils/cubefn');
 jest.mock('serverutils/util');
 jest.mock('../../../src/dynamo/models/cubeHash');
+
+import { cubeDao } from '../../../src/dynamo/daos';
 
 describe('Edit overview API', () => {
   afterEach(() => {
@@ -23,7 +28,7 @@ describe('Edit overview API', () => {
   it('should fail if the cube isnt found', async () => {
     const cube = createCube();
 
-    (Cube.getById as jest.Mock).mockResolvedValue(false);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(false);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(false);
 
     const res = await call(editOverviewHandler).withBody({ cube: cube }).send();
@@ -38,7 +43,7 @@ describe('Edit overview API', () => {
     const owner = createUser({ id: '12345' });
     const cube = createCube({ owner });
 
-    (Cube.getById as jest.Mock).mockResolvedValue(false);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(false);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(false);
 
     const res = await call(editOverviewHandler).withBody({ cube: cube }).send();
@@ -54,7 +59,7 @@ describe('Edit overview API', () => {
     const cube = createCube({ owner });
     const currentUser = createUser({ id: '56789' });
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: cube }).send();
@@ -70,7 +75,7 @@ describe('Edit overview API', () => {
     const cube = createCube({ owner, cardCount: 0 });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: cube }).send();
@@ -86,7 +91,7 @@ describe('Edit overview API', () => {
     const cube = createCube({ owner, name: 'Bad words' });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(true);
 
@@ -104,7 +109,7 @@ describe('Edit overview API', () => {
     const newCube = createCube({ shortId: 'Bad words', owner });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(existingCube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValueOnce(false).mockReturnValueOnce(true);
 
@@ -121,31 +126,23 @@ describe('Edit overview API', () => {
   it('should fail if the new short id already taken', async () => {
     const owner = createUser({ id: '12345' });
     const existingCube = createCube({ shortId: 'foo', owner });
-    const newCube = createCube({ shortId: 'Foobar', owner });
+    const newCube = createCube({ ...existingCube, shortId: 'Foobar', owner });
     const currentUser = owner;
+    const otherCube = createCube({ shortId: 'Foobar', id: 'other-cube-id' });
 
-    const otherCubeHash = {
-      name: 'OtherCube',
-      cube: 'abcdefgh',
-      hash: 'shortid:Foobar',
-      numFollowers: 0,
-      cardCount: 540,
-    };
-
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockImplementation((id: string) => {
+      if (id === existingCube.id) return Promise.resolve(existingCube);
+      if (id === 'Foobar') return Promise.resolve(otherCube);
+      return Promise.resolve(null);
+    });
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
-    (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({
-      items: [otherCubeHash],
-      lastKey: null,
-    });
-    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:Foobar');
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: newCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, newCube.name);
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(2, newCube.shortId);
-    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:Foobar`);
+    expect(cubeDao.getById).toHaveBeenCalledWith('Foobar');
     expect(res.status).toEqual(400);
     expect(res.body).toEqual({
       error: expect.stringContaining('the short id is already taken'),
@@ -155,38 +152,23 @@ describe('Edit overview API', () => {
   it('should fail if the new short id already taken by multiple cubes', async () => {
     const owner = createUser({ id: '12345' });
     const existingCube = createCube({ shortId: 'foo', owner });
-    const newCube = createCube({ shortId: 'Foobar', owner });
+    const newCube = createCube({ ...existingCube, shortId: 'Foobar', owner });
     const currentUser = owner;
+    const otherCube = createCube({ shortId: 'Foobar', id: 'other-cube-id' });
 
-    const otherCubeHash = {
-      name: 'OtherCube',
-      cube: 'abcdefgh',
-      hash: 'shortid:Foobar',
-      numFollowers: 0,
-      cardCount: 540,
-    };
-    const otherCubeHashTwo = {
-      name: 'OtherCube2',
-      cube: 'aaa-bbb-ccc',
-      hash: 'shortid:Foobar',
-      numFollowers: 5,
-      cardCount: 340,
-    };
-
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockImplementation((id: string) => {
+      if (id === existingCube.id) return Promise.resolve(existingCube);
+      if (id === 'Foobar') return Promise.resolve(otherCube);
+      return Promise.resolve(null);
+    });
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
-    (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({
-      items: [otherCubeHash, otherCubeHashTwo],
-      lastKey: null,
-    });
-    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:Foobar');
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: newCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, newCube.name);
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(2, newCube.shortId);
-    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:Foobar`);
+    expect(cubeDao.getById).toHaveBeenCalledWith('Foobar');
     expect(res.status).toEqual(400);
     expect(res.body).toEqual({
       error: expect.stringContaining('the short id is already taken'),
@@ -210,19 +192,21 @@ describe('Edit overview API', () => {
     });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockImplementation((id: string) => {
+      if (id === existingCube.id) return Promise.resolve(existingCube);
+      if (id === 'bar') return Promise.resolve(null);
+      return Promise.resolve(null);
+    });
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
-    (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({ items: [], lastKey: null });
-    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:bar');
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.shortId);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, updatedCube.name);
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(2, updatedCube.shortId);
-    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:bar`);
-    expect(Cube.update).toHaveBeenCalledWith(
+    expect(cubeDao.getById).toHaveBeenCalledWith('bar');
+    expect(cubeDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: existingCube.id,
         name: updatedCube.name,
@@ -233,7 +217,7 @@ describe('Edit overview API', () => {
         categoryPrefixes: [],
       }),
     );
-    expect((Cube.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
+    expect((cubeDao.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
@@ -252,7 +236,7 @@ describe('Edit overview API', () => {
     });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(existingCube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.id);
@@ -260,7 +244,7 @@ describe('Edit overview API', () => {
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, updatedCube.name);
-    expect(Cube.update).toHaveBeenCalledWith(
+    expect(cubeDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: existingCube.id,
         name: updatedCube.name,
@@ -268,7 +252,7 @@ describe('Edit overview API', () => {
         date: expect.any(Number),
       }),
     );
-    expect((Cube.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
+    expect((cubeDao.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
@@ -282,7 +266,7 @@ describe('Edit overview API', () => {
     const updatedCube = createCube({ ...existingCube, owner, categoryOverride: 'InvalidCategory' });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(existingCube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
 
@@ -300,7 +284,7 @@ describe('Edit overview API', () => {
     const updatedCube = createCube({ ...existingCube, owner, categoryPrefixes: ['InvalidPrefix'] });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(existingCube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
 
@@ -324,19 +308,21 @@ describe('Edit overview API', () => {
     });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockImplementation((id: string) => {
+      if (id === existingCube.id) return Promise.resolve(existingCube);
+      if (id === 'bar') return Promise.resolve(null);
+      return Promise.resolve(null);
+    });
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
-    (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({ items: [], lastKey: null });
-    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:bar');
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.shortId);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, updatedCube.name);
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(2, updatedCube.shortId);
-    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:bar`);
-    expect(Cube.update).toHaveBeenCalledWith(
+    expect(cubeDao.getById).toHaveBeenCalledWith('bar');
+    expect(cubeDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: existingCube.id,
         categoryOverride: updatedCube.categoryOverride,
@@ -356,10 +342,10 @@ describe('Edit overview API', () => {
     const updatedCube = createCube({ shortId: 'bar', owner });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(existingCube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
-    (Cube.update as jest.Mock).mockRejectedValue(new Error('Update failed'));
+    (cubeDao.update as jest.Mock).mockRejectedValue(new Error('Update failed'));
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
 
@@ -381,23 +367,21 @@ describe('Edit overview API', () => {
     });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockImplementation((id: string) => {
+      if (id === existingCube.id) return Promise.resolve(existingCube);
+      if (id === 'newid') return Promise.resolve(null);
+      return Promise.resolve(null);
+    });
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
-    //No cube with the new id
-    (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({
-      items: [],
-      lastKey: null,
-    });
-    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:newid');
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.shortId);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, updatedCube.name);
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(2, updatedCube.shortId);
-    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:newid`);
-    expect(Cube.update).toHaveBeenCalledWith(
+    expect(cubeDao.getById).toHaveBeenCalledWith('newid');
+    expect(cubeDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: existingCube.id,
         name: updatedCube.name,
@@ -406,7 +390,7 @@ describe('Edit overview API', () => {
         date: expect.any(Number),
       }),
     );
-    expect((Cube.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
+    expect((cubeDao.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
       redirect: `/cube/overview/${updatedCube.shortId}`,
@@ -426,23 +410,21 @@ describe('Edit overview API', () => {
     });
     const currentUser = owner;
 
-    (Cube.getById as jest.Mock).mockResolvedValue(existingCube);
+    (cubeDao.getById as jest.Mock).mockImplementation((id: string) => {
+      if (id === existingCube.id) return Promise.resolve(existingCube);
+      if (id === '') return Promise.resolve(null);
+      return Promise.resolve(null);
+    });
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (Util.hasProfanity as jest.Mock).mockReturnValue(false);
-    //No cube with empty short hash
-    (CubeHash.getSortedByName as jest.Mock).mockResolvedValue({
-      items: [],
-      lastKey: null,
-    });
-    (CubeHash.getShortIdHash as jest.Mock).mockReturnValue('shortid:');
     (CubeFn.getCubeId as jest.Mock).mockReturnValue(updatedCube.id);
 
     const res = await call(editOverviewHandler).as(currentUser).withBody({ cube: updatedCube }).send();
 
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(1, updatedCube.name);
     expect(Util.hasProfanity).toHaveBeenNthCalledWith(2, updatedCube.shortId);
-    expect(CubeHash.getSortedByName).toHaveBeenCalledWith(`shortid:`);
-    expect(Cube.update).toHaveBeenCalledWith(
+    expect(cubeDao.getById).toHaveBeenCalledWith('');
+    expect(cubeDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: existingCube.id,
         name: updatedCube.name,
@@ -451,7 +433,7 @@ describe('Edit overview API', () => {
         date: expect.any(Number),
       }),
     );
-    expect((Cube.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
+    expect((cubeDao.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
       redirect: `/cube/overview/${updatedCube.id}`,

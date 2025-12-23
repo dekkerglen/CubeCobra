@@ -1,10 +1,8 @@
 import { cardOracleId } from '@utils/cardutil';
-import DraftType from '@utils/datatypes/Draft';
 import { State } from '@utils/datatypes/DraftState';
 import User from '@utils/datatypes/User';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { deckbuild } from 'serverutils/draftbots';
 import { addNotification } from 'serverutils/util';
@@ -61,7 +59,7 @@ export const handler = async (req: Request, res: Response) => {
       });
     }
 
-    const draft: DraftType = await Draft.getById(req.params.id);
+    const draft = await draftDao.getById(req.params.id);
 
     if (!draft) {
       return res.status(404).send({
@@ -179,7 +177,7 @@ export const handler = async (req: Request, res: Response) => {
     const cubeId = draft.cube;
     const draftOwner = draft.owner;
 
-    await Draft.put(draft);
+    await draftDao.update(draft);
 
     //Annoying guard since the values will be objects
     if (typeof cubeOwner !== 'string' && typeof draftOwner !== 'string') {
@@ -202,7 +200,7 @@ const sendDraftNotification = async (draftId: string, cubeOwner: User, draftOwne
     return;
   }
 
-  const cube = await Cube.getById(cubeId);
+  const cube = await cubeDao.getById(cubeId);
   if (!cube) {
     return;
   }

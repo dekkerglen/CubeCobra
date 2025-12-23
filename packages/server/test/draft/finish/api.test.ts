@@ -7,25 +7,27 @@ import * as draftutil from '@utils/draftutil';
 import * as draftbots from 'serverutils/draftbots';
 import * as util from 'serverutils/util';
 
-import Cube from '../../../src/dynamo/models/cube';
-import Draft from '../../../src/dynamo/models/draft';
 import { handler as finishDraftHandler, validateBody } from '../../../src/router/routes/draft/finish';
 import { createCompletedSoloDraft as createDraft, createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
 import { call, middleware } from '../../test-utils/transport';
 
-jest.mock('../../../src/dynamo/models/cube', () => ({
-  getById: jest.fn(),
-}));
-
 jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
 }));
 
-jest.mock('../../../src/dynamo/models/draft', () => ({
-  getById: jest.fn(),
-  put: jest.fn(),
+jest.mock('../../../src/dynamo/daos', () => ({
+  cubeDao: {
+    getById: jest.fn(),
+  },
+  draftDao: {
+    getById: jest.fn(),
+    update: jest.fn(),
+  },
 }));
+
+// Import the mocked daos
+import { cubeDao, draftDao } from '../../../src/dynamo/daos';
 
 jest.mock('serverutils/draftbots', () => ({
   deckbuild: jest.fn(),
@@ -251,8 +253,8 @@ describe('Finish Draft', () => {
 
   // Helper function to set up common mocks
   const setupSuccessReturns = (draft: DraftType) => {
-    (Draft.getById as jest.Mock).mockResolvedValue(draft);
-    (Draft.put as jest.Mock).mockResolvedValue(draft.id);
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+    (draftDao.update as jest.Mock).mockResolvedValue(draft.id);
     (cardOracleId as jest.Mock).mockImplementation((card) => card.details.oracle_id);
   };
 
@@ -270,7 +272,7 @@ describe('Finish Draft', () => {
       success: true,
     });
 
-    expect(Draft.put).toHaveBeenCalledWith(
+    expect(draftDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         complete: true,
         seats: [
@@ -292,7 +294,7 @@ describe('Finish Draft', () => {
   };
 
   it('should fail if user is not logged in', async () => {
-    (Draft.getById as jest.Mock).mockResolvedValue(createDraft());
+    (draftDao.getById as jest.Mock).mockResolvedValue(createDraft());
 
     const res = await call(finishDraftHandler).withParams({ id: 'draft-id' }).withBody(validBody).send();
 
@@ -304,7 +306,7 @@ describe('Finish Draft', () => {
   });
 
   it('should fail if draft does not exist', async () => {
-    (Draft.getById as jest.Mock).mockResolvedValue(null);
+    (draftDao.getById as jest.Mock).mockResolvedValue(null);
 
     const res = await call(finishDraftHandler)
       .as(createUser())
@@ -323,7 +325,7 @@ describe('Finish Draft', () => {
     const owner = createUser({ id: 'owner-id' });
     const draft = createDraft({ owner });
 
-    (Draft.getById as jest.Mock).mockResolvedValue(draft);
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
 
     const res = await call(finishDraftHandler)
       .as(createUser({ id: 'other-user' }))
@@ -358,7 +360,7 @@ describe('Finish Draft', () => {
     });
 
     setupSuccessReturns(draft);
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     const expectedMainboard = draftutil.setupPicks(2, 8);
     expectedMainboard[0]![1]!.push(9, 8, 10);
@@ -399,7 +401,7 @@ describe('Finish Draft', () => {
     });
 
     setupSuccessReturns(draft);
-    (Cube.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     const expectedMainboard = draftutil.setupPicks(2, 8);
     expectedMainboard[0]![1]!.push(9, 8, 10);
@@ -441,7 +443,7 @@ describe('Finish Draft', () => {
       getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
     );
 
-    expect(Cube.getById).not.toHaveBeenCalled();
+    expect(cubeDao.getById).not.toHaveBeenCalled();
     expect(util.addNotification).not.toHaveBeenCalled();
   });
 
@@ -503,7 +505,7 @@ describe('Finish Draft', () => {
 
   it('should handle server errors gracefully', async () => {
     const error = new Error('Database error');
-    (Draft.getById as jest.Mock).mockRejectedValue(error);
+    (draftDao.getById as jest.Mock).mockRejectedValue(error);
 
     const res = await call(finishDraftHandler)
       .as(createUser())

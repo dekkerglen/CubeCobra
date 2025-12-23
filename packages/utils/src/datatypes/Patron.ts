@@ -3,6 +3,8 @@ export type UnhydratedPatron = {
   level: number;
   status: string;
   owner: string;
+  dateCreated: number;
+  dateLastUpdated: number;
 };
 
 //TODO: Patron is not hydrated, but we could add PatronLevel string and more

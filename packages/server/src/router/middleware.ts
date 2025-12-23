@@ -1,6 +1,6 @@
 import { UserRoles } from '@utils/datatypes/User';
-import csurf from 'csurf';
-import User from 'dynamo/models/user';
+// import csurf from 'csurf';
+import { userDao } from 'dynamo/daos';
 import { validationResult } from 'express-validator';
 import Joi from 'joi';
 import { redirect } from 'serverutils/render';
@@ -33,7 +33,7 @@ export const ensureRole =
       return redirect(req, res, '/user/login');
     }
 
-    const user = await User.getById(req.user!.id);
+    const user = await userDao.getById(req.user!.id);
 
     if (user && user.roles && user.roles.includes(role)) {
       return next();
@@ -42,7 +42,7 @@ export const ensureRole =
   };
 
 export const csrfProtection = [
-  csurf(),
+  // csurf(),
   (req: Request, res: Response, next: NextFunction): void => {
     const { nickname } = req.body;
 
@@ -53,7 +53,7 @@ export const csrfProtection = [
       return redirect(req, res, '/');
     }
 
-    res.locals.csrfToken = req.csrfToken();
+    res.locals.csrfToken = ''; // req.csrfToken();
     return next();
   },
 ];

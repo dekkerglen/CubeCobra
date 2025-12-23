@@ -48,10 +48,62 @@ export const getBucketName = (): string => {
   return process.env.DATA_BUCKET;
 };
 
+/**
+ * Lists all versions of an S3 object, including version IDs and timestamps.
+ */
+export const listObjectVersions = async (
+  bucket: string,
+  key: string,
+): Promise<Array<{ versionId: string; lastModified: Date; isLatest: boolean }>> => {
+  const response = await s3.listObjectVersions({
+    Bucket: bucket,
+    Prefix: key,
+  });
+
+  const versions: Array<{ versionId: string; lastModified: Date; isLatest: boolean }> = [];
+
+  // Filter to exact key match and map to our format
+  if (response.Versions) {
+    for (const version of response.Versions) {
+      if (version.Key === key && version.VersionId && version.LastModified) {
+        versions.push({
+          versionId: version.VersionId,
+          lastModified: version.LastModified,
+          isLatest: version.IsLatest ?? false,
+        });
+      }
+    }
+  }
+
+  // Sort by last modified date, newest first
+  versions.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+
+  return versions;
+};
+
+/**
+ * Gets a specific version of an S3 object by version ID.
+ */
+export const getObjectVersion = async (bucket: string, key: string, versionId: string): Promise<any> => {
+  try {
+    const res = await s3.getObject({
+      Bucket: bucket,
+      Key: key,
+      VersionId: versionId,
+    });
+
+    return JSON.parse(await res!.Body!.transformToString());
+  } catch {
+    return null;
+  }
+};
+
 module.exports = {
   s3,
   getObject,
   putObject,
   deleteObject,
   getBucketName,
+  listObjectVersions,
+  getObjectVersion,
 };

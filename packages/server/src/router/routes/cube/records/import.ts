@@ -1,14 +1,12 @@
 import DraftRecord from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
-import Record from 'dynamo/models/record';
+import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi'; // Import Joi for validation
+import { csrfProtection, ensureAuth } from 'router/middleware';
+import { bodyValidation } from 'router/middleware';
 import { getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
-import { bodyValidation } from 'src/router/middleware';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
@@ -81,7 +79,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
@@ -126,7 +124,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
         id: uuidv4(),
       };
 
-      recordId = await Record.put(newRecord);
+      recordId = await recordDao.createRecord(newRecord);
 
       if (!recordId) {
         req.flash('danger', 'Error creating record');
@@ -138,7 +136,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
     }
 
     // this is either the existing record or the newly created one
-    const record = await Record.getById(recordId!);
+    const record = await recordDao.getById(recordId!);
     if (!record) {
       req.flash('danger', 'Record not found');
       return redirect(req, res, '/404');
@@ -156,7 +154,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/record/${recordId}?tab=1`);
     }
 
-    const draft = await Draft.getById(record.draft);
+    const draft = await draftDao.getById(record.draft);
 
     if (!draft) {
       // underlying draft object may have been deleted, we need to create a new one
@@ -170,7 +168,8 @@ export const importRecordHandler = async (req: Request, res: Response) => {
     }
 
     // if this draft already has a deck for this user, we don't want to overwrite it
-    if (draft.seats[userIndex - 1]?.mainboard?.flat(3).length > 0) {
+    const userSeat = draft.seats[userIndex - 1];
+    if (userSeat?.mainboard && userSeat.mainboard.flat(3).length > 0) {
       req.flash('danger', 'This user already has a deck associated with this draft.');
       return redirect(req, res, `/cube/records/uploaddeck/${record.id}`);
     }

@@ -1,6 +1,6 @@
 import { NotificationStatus } from '@utils/datatypes/Notification';
-import Notification from 'dynamo/models/notification';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { notificationDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -16,13 +16,13 @@ export const handler = async (req: Request, res: Response) => {
     let items, lastKey;
 
     do {
-      const result = await Notification.getByToAndStatus(`${req.user.id}`, NotificationStatus.UNREAD, lastKey);
+      const result = await notificationDao.getByToAndStatus(`${req.user.id}`, NotificationStatus.UNREAD, lastKey);
 
       items = result.items;
       lastKey = result.lastKey;
 
       if (items) {
-        await Notification.batchPut(
+        await notificationDao.batchPut(
           items.map((notification) => ({
             ...notification,
             status: NotificationStatus.READ,

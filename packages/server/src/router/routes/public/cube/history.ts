@@ -1,5 +1,4 @@
-import Changelog from 'dynamo/models/changelog';
-import Cube from 'dynamo/models/cube';
+import { changelogDao, cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import { isCubeViewable } from 'serverutils/cubefn';
 
@@ -24,7 +23,7 @@ export const historyHandler = async (req: Request, res: Response) => {
       return res.status(400).send('Cube ID is required.');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send('Cube not found.');
@@ -34,7 +33,7 @@ export const historyHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
-    const query = await Changelog.getByCube(cube.id, 50, req.body.lastKey);
+    const query = await changelogDao.queryByCube(cube.id, req.body.lastKey, 50);
     return res.status(200).send({
       success: 'true',
       posts: query.items,

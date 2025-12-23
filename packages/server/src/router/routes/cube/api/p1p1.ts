@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { generatePack, isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -12,7 +12,7 @@ export const p1p1Handler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -21,7 +21,7 @@ export const p1p1Handler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await Cube.getCards(req.params.id);
+    const cubeCards = await cubeDao.getCards(req.params.id);
 
     const result = await generatePack(cube, cubeCards);
 
@@ -48,7 +48,7 @@ export const p1p1SeedHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -57,7 +57,7 @@ export const p1p1SeedHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await Cube.getCards(req.params.id);
+    const cubeCards = await cubeDao.getCards(req.params.id);
 
     const result = await generatePack(cube, cubeCards, req.params.seed);
 

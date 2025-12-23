@@ -1,9 +1,6 @@
 import DraftType from '@utils/datatypes/Draft';
 import UserType from '@utils/datatypes/User';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
-import Record from 'dynamo/models/record';
-import User from 'dynamo/models/user';
+import { cubeDao, draftDao, recordDao, userDao } from 'dynamo/daos';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -18,13 +15,13 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const record = await Record.getById(req.params.id);
+    const record = await recordDao.getById(req.params.id);
 
     if (!record) {
       req.flash('danger', 'Record not found');
       return redirect(req, res, '/404');
     }
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -35,14 +32,14 @@ export const handler = async (req: Request, res: Response) => {
 
     const playerIds = record.players.map((player) => player.userId).filter((id) => id !== undefined);
     if (playerIds.length > 0) {
-      const result = await User.batchGet(playerIds);
+      const result = await userDao.batchGet(playerIds);
 
       players = result.filter((user: UserType) => user !== undefined) as UserType[];
     }
 
     let draft: DraftType | undefined;
     if (record.draft) {
-      draft = await Draft.getById(record.draft);
+      draft = await draftDao.getById(record.draft);
     }
 
     const baseUrl = getBaseUrl();

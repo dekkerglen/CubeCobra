@@ -12,8 +12,9 @@
       "@jobs/*": ["../jobs/src/*"],
       "@utils/*": ["../utils/src/*"],
       "serverutils/*": ["src/serverutils/*"],
-      "routes/*": ["src/routes/*"],
-      "dynamo/*": ["src/dynamo/*"]
+      "router/*": ["src/router/*"],
+      "dynamo/*": ["src/dynamo/*"],
+      "types/*": ["src/types/*"]
     },
     "module": "commonjs",
     "moduleResolution": "node",
@@ -30,5 +31,14 @@
     "noFallthroughCasesInSwitch": true
   },
   "exclude": ["node_modules", "src/client"],
-  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx", "src", "../utils/src", "jest.setup.ts", "jest.config.ts"]
+  "include": [
+    "src/**/*.js",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src",
+    "../utils/src",
+    "jest.setup.ts",
+    "jest.config.ts",
+    "test"
+  ]
 }

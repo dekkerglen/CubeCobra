@@ -1,4 +1,5 @@
-import { redirect } from '../../serverutils/render';
+import { redirect } from 'serverutils/render';
+
 import { Request, Response } from '../../types/express';
 
 // Ads.txt redirect to external URL

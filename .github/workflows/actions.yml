@@ -19,23 +19,6 @@ jobs:
           # To use with eslint script
           fetch-depth: 0
 
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            node_modules
-            packages/client/node_modules
-            packages/server/node_modules
-            packages/utils/node_modules
-            packages/scripts/node_modules
-            packages/jobs/node_modules
-            packages/cdk/node_modules
-          key: ${{ runner.os }}-node-v2-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-v2-
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -46,24 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run eslint on changed files
-        # Always run both eslint and prettier
+      - name: Run linting (Prettier + ESLint)
         if: always()
-        uses: ./.github/actions/eslint
-        with:
-          config_path: 'eslint.config.mjs'
-          eslint_flags: '--max-warnings=0 --no-warn-ignored'
-
-      - name: Run Prettier on changed files
-        # Always run both eslint and prettier
-        if: always()
-        uses: ./.github/actions/prettier
-        with:
-          fail_on_error: true
-          filter_mode: file
-          level: warning
-          prettier_flags: '**/*.{js,jsx,ts,tsx}'
-          reporter: github-pr-review
+        run: npm run lint:check
 
       - name: Run tests
         if: always()

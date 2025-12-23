@@ -1,6 +1,6 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -9,7 +9,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/login');
   }
 
-  const emailUser = await User.getByEmail(req.body.email.toLowerCase());
+  const emailUser = await userDao.getByEmail(req.body.email.toLowerCase());
 
   if (emailUser && emailUser.id === req.user.id) {
     req.flash('danger', 'This is already your email.');
@@ -21,7 +21,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/account');
   }
 
-  const user = await User.getById(req.user.id);
+  const user = await userDao.getByIdWithSensitiveData(req.user.id);
 
   if (!user) {
     req.flash('danger', 'User not found.');
@@ -29,7 +29,7 @@ export const handler = async (req: Request, res: Response) => {
   }
 
   user.email = req.body.email;
-  await User.update(user);
+  await userDao.update(user as any);
 
   req.flash('success', 'Your profile has been updated.');
   return redirect(req, res, '/user/account');

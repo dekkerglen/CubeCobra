@@ -1,4 +1,5 @@
-import { render } from '../../serverutils/render';
+import { render } from 'serverutils/render';
+
 import { Request, Response } from '../../types/express';
 
 const tosHandler = (req: Request, res: Response) => {

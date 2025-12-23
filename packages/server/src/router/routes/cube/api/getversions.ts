@@ -1,9 +1,9 @@
 import cardutil from '@utils/cardutil';
 import { body } from 'express-validator';
-import { jsonValidationErrors } from 'src/router/middleware';
+import { jsonValidationErrors } from 'router/middleware';
+import { cardFromId, getAllVersionIds } from 'serverutils/carddb';
+import { isValidUUID } from 'serverutils/validation';
 
-import { cardFromId, getAllVersionIds } from '../../../../serverutils/carddb';
-import { isValidUUID } from '../../../../serverutils/validation';
 import { Request, Response } from '../../../../types/express';
 
 export const getversionsParamHandler = async (req: Request, res: Response) => {
@@ -34,7 +34,15 @@ export const getversionsParamHandler = async (req: Request, res: Response) => {
 
 export const getversionsBodyHandler = async (req: Request, res: Response) => {
   try {
-    const allDetails = req.body.map((cardID: string) => cardFromId(cardID));
+    const allDetails = req.body
+      .map((cardID: string) => cardFromId(cardID))
+      .reduce((acc: any[], cardDetails: any) => {
+        // Deduplicate by oracle_id so that we don't do duplicate work
+        if (!acc.some((c: any) => c.oracle_id === cardDetails.oracle_id)) {
+          acc.push(cardDetails);
+        }
+        return acc;
+      }, []);
     const allIds = allDetails.map((cardDetails: any) => getAllVersionIds(cardDetails));
     const allVersions = allIds.map((versions: any) =>
       versions

@@ -7,6 +7,7 @@
     "update-metadata-dict": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_metadata_dict.ts",
     "update-cards": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cards.ts",
     "update-combos": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_combos.ts",
+    "repair-cube-hashes": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairCubeHashes.ts --",
     "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-combos && npm run update-cards && npm run update-combos && npm run update-cards",
     "build": "npx tsc"
   },

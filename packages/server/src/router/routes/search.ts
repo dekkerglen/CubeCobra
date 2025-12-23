@@ -1,27 +1,43 @@
 import { PrintingPreference } from '@utils/datatypes/Card';
-import Cube from 'dynamo/models/cube';
-import CubeHash from 'dynamo/models/cubeHash';
-import { cardFromId, getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
+import { SortOrder as DaoSortOrder } from 'dynamo/dao/CubeDynamoDao';
+import { cubeDao } from 'dynamo/daos';
+import { getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeListed } from 'serverutils/cubefn';
 import { render } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
 
-type SortOrder = 'pop' | 'alpha' | 'cards';
+type SortOrder = 'pop' | 'alpha' | 'cards' | 'date';
 
 interface CardQuery {
   type: 'card' | 'oracle';
   value: string;
+  originalToken: string;
 }
 
 interface KeywordQuery {
   type: 'keywords';
   value: string;
+  originalToken: string;
 }
 
 interface TagQuery {
   type: 'tag';
   value: string;
+  originalToken: string;
+}
+
+interface CategoryQuery {
+  type: 'category';
+  value: string;
+  originalToken: string;
+}
+
+interface SizeQuery {
+  type: 'size';
+  operator: 'eq' | 'gt' | 'lt';
+  value: number;
+  originalToken: string;
 }
 
 const tokenize = (query: string): string[] => {
@@ -61,16 +77,16 @@ const getCardQueries = (tokens: string[], printing: PrintingPreference = Printin
     const split = token.split(':');
 
     if (split[0] === 'oracle' && split[1]) {
-      queries.push({ type: 'oracle', value: split[1] });
+      queries.push({ type: 'oracle', value: split[1], originalToken: token });
     }
 
     if (split[0] === 'card' && split[1]) {
       const card = getMostReasonable(split[1], printing);
 
       if (card) {
-        queries.push({ type: 'card', value: card.oracle_id });
+        queries.push({ type: 'card', value: card.oracle_id, originalToken: token });
       } else {
-        queries.push({ type: 'card', value: '' });
+        queries.push({ type: 'card', value: '', originalToken: token });
       }
     }
   }
@@ -85,11 +101,16 @@ const getKeywordQueries = (tokens: string[]): KeywordQuery[] => {
     const split = token.split(':');
 
     if (split[0] === 'keywords' && split[1]) {
-      queries.push({ type: 'keywords', value: split[1] });
+      queries.push({ type: 'keywords', value: split[1], originalToken: token });
     }
 
+    // Only treat as keyword if it doesn't have a colon and doesn't match size/cards pattern
     if (split.length === 1 && split[0] && split[0].length > 0) {
-      queries.push({ type: 'keywords', value: split[0] });
+      // Check if it matches size/cards pattern (e.g., "size>250", "cards=399")
+      const sizeMatch = token.match(/^(?:size|cards)([><=])\d+$/i);
+      if (!sizeMatch) {
+        queries.push({ type: 'keywords', value: split[0], originalToken: token });
+      }
     }
   }
 
@@ -103,7 +124,50 @@ const getTagQueries = (tokens: string[]): TagQuery[] => {
     const split = token.split(':');
 
     if (split[0] === 'tag' && split[1]) {
-      queries.push({ type: 'tag', value: split[1] });
+      queries.push({ type: 'tag', value: split[1], originalToken: token });
+    }
+  }
+
+  return queries;
+};
+
+const getCategoryQueries = (tokens: string[]): CategoryQuery[] => {
+  const queries: CategoryQuery[] = [];
+
+  for (const token of tokens) {
+    const split = token.split(':');
+
+    if (split[0] === 'category' && split[1]) {
+      queries.push({ type: 'category', value: split[1], originalToken: token });
+    }
+  }
+
+  return queries;
+};
+
+const getSizeQueries = (tokens: string[]): SizeQuery[] => {
+  const queries: SizeQuery[] = [];
+
+  for (const token of tokens) {
+    // Support both "size>250" and "cards=399" syntax
+    const sizeMatch = token.match(/^(?:size|cards)([><=])(\d+)$/i);
+
+    if (sizeMatch && sizeMatch[1] && sizeMatch[2]) {
+      const operator = sizeMatch[1];
+      const value = parseInt(sizeMatch[2], 10);
+
+      let op: 'eq' | 'gt' | 'lt';
+      if (operator === '=') {
+        op = 'eq';
+      } else if (operator === '>') {
+        op = 'gt';
+      } else if (operator === '<') {
+        op = 'lt';
+      } else {
+        continue;
+      }
+
+      queries.push({ type: 'size', operator: op, value, originalToken: token });
     }
   }
 
@@ -114,6 +178,9 @@ const getHumanReadableQuery = (
   cardQueries: CardQuery[],
   keywordQueries: KeywordQuery[],
   tagQueries: TagQuery[],
+  categoryQueries: CategoryQuery[],
+  sizeQueries: SizeQuery[],
+  ignoredTokens: string[],
 ): string[] => {
   const result: string[] = [];
 
@@ -134,6 +201,19 @@ const getHumanReadableQuery = (
     result.push(`Cube has tag "${query.value}"`);
   }
 
+  for (const query of categoryQueries) {
+    result.push(`Cube category "${query.value}"`);
+  }
+
+  for (const query of sizeQueries) {
+    const opText = query.operator === 'eq' ? '=' : query.operator === 'gt' ? '>' : '<';
+    result.push(`Cube size ${opText} ${query.value} cards`);
+  }
+
+  for (const token of ignoredTokens) {
+    result.push(`Ignored unrecognized query: "${token}"`);
+  }
+
   if (result.length === 0) {
     result.push('All cubes');
   }
@@ -147,187 +227,236 @@ interface SearchResult {
   error?: string;
 }
 
-const searchWithKeywordQuery = async (
-  keywordQueries: KeywordQuery[],
-  order: SortOrder,
-  lastKey: any,
-  ascending: boolean,
-  user: any,
-): Promise<SearchResult> => {
-  let result;
-  const hashRows: any[] = [];
-
-  do {
-    result = await CubeHash.query(
-      keywordQueries.length > 0 && keywordQueries[0]
-        ? `keywords:${keywordQueries[0].value.toLowerCase()}`
-        : `featured:false`,
-      ascending,
-      lastKey,
-      order,
-      128,
-    );
-
-    hashRows.push(
-      ...result.items.filter((hash: any) => {
-        for (const query of keywordQueries) {
-          if (!hash.name.toLowerCase().includes(query.value.toLowerCase())) {
-            return false;
-          }
-        }
-
-        return true;
-      }),
-    );
-
-    lastKey = result.lastKey;
-  } while (hashRows.length < 36 && result.lastKey);
-
-  const items = (result.items.length > 0 ? await Cube.batchGet(hashRows.map((hash) => hash.cube)) : []).filter(
-    (cube: any) => isCubeListed(cube, user),
-  );
-
-  // make sure items is in same order as hashRows
-  const cubes = hashRows
-    .flat()
-    .map((hash) => items.find((cube: any) => cube.id === hash.cube))
-    .filter((cube) => cube);
-
-  return {
-    cubes: cubes,
-    lastKey: result.lastKey,
-  };
+/**
+ * Map the legacy SortOrder type to the DAO SortOrder type
+ */
+const mapSortOrder = (order: SortOrder): DaoSortOrder => {
+  switch (order) {
+    case 'pop':
+      return 'popularity';
+    case 'alpha':
+      return 'alphabetical';
+    case 'cards':
+      return 'cards';
+    case 'date':
+      return 'date';
+    default:
+      return 'popularity';
+  }
 };
 
-const searchWithCardQueries = async (
+/**
+ * Build the hashes array for queryByMultipleHashes based on parsed queries
+ */
+const buildHashesForQuery = (
   cardQueries: CardQuery[],
   keywordQueries: KeywordQuery[],
+  tagQueries: TagQuery[],
+  categoryQueries: CategoryQuery[],
+): string[] => {
+  const hashes: string[] = [];
+
+  console.log('[buildHashesForQuery] Input queries:', {
+    cardQueriesCount: cardQueries.length,
+    cardQueries: cardQueries.map((q) => ({ type: q.type, value: q.value, originalToken: q.originalToken })),
+    keywordQueriesCount: keywordQueries.length,
+    tagQueriesCount: tagQueries.length,
+    categoryQueriesCount: categoryQueries.length,
+  });
+
+  // Add oracle hashes for card queries
+  for (const query of cardQueries) {
+    if (query.value && query.value !== '') {
+      hashes.push(`oracle:${query.value}`);
+    } else {
+      console.warn('[buildHashesForQuery] Skipping card query with empty value:', query.originalToken);
+    }
+  }
+
+  // Add tag hashes for tag queries
+  for (const query of tagQueries) {
+    hashes.push(`tag:${query.value.toLowerCase()}`);
+  }
+
+  // Add category hashes for category queries
+  for (const query of categoryQueries) {
+    hashes.push(`category:${query.value.toLowerCase()}`);
+  }
+
+  // Add keyword hashes for keyword queries
+  // Note: For multiple keywords, we'll use the first one as primary hash
+  // and filter the rest in memory
+  // Normalize keywords the same way cube names are normalized when storing hashes
+  if (keywordQueries.length > 0 && keywordQueries[0]) {
+    const normalizedKeyword = keywordQueries[0].value
+      .replace(/[^\w\s]/gi, '')
+      .toLowerCase()
+      .trim();
+    hashes.push(`keywords:${normalizedKeyword}`);
+  }
+
+  // If no hashes, use the global 'cube:all' hash to query all public cubes
+  // This allows us to use the efficient hash-based sorting
+  if (hashes.length === 0) {
+    hashes.push('cube:all');
+  }
+
+  console.log('[buildHashesForQuery] Built hashes:', hashes);
+
+  return hashes;
+};
+
+const performSearch = async (
+  cardQueries: CardQuery[],
+  keywordQueries: KeywordQuery[],
+  tagQueries: TagQuery[],
+  categoryQueries: CategoryQuery[],
+  sizeQueries: SizeQuery[],
   order: SortOrder,
-  lastKey: any,
   ascending: boolean,
   user: any,
+  lastKey?: any,
 ): Promise<SearchResult> => {
-  if (cardQueries.length > 1) {
+  console.log('[performSearch] Starting search with queries:', {
+    cardQueriesCount: cardQueries.length,
+    keywordQueriesCount: keywordQueries.length,
+    tagQueriesCount: tagQueries.length,
+    categoryQueriesCount: categoryQueries.length,
+    sizeQueriesCount: sizeQueries.length,
+    order,
+    ascending,
+  });
+
+  // Check for unsupported combinations
+  if (cardQueries.length > 10) {
     return {
-      error: 'Can only search for one card at a time',
+      error: 'Can only search for up to 10 cards at a time',
       cubes: [],
       lastKey: null,
     };
   }
 
-  let result;
-  let iterations = 0;
-  const hashRows: any[] = [];
-
-  do {
-    result = await CubeHash.query(`oracle:${cardQueries[0]!.value}`, ascending, lastKey, order, 128);
-    iterations += 1;
-    hashRows.push(
-      ...result.items.filter((hash: any) => {
-        for (const query of keywordQueries) {
-          if (!hash.name.toLowerCase().includes(query.value.toLowerCase())) {
-            return false;
-          }
-        }
-
-        return true;
-      }),
-    );
-
-    lastKey = result.lastKey;
-  } while (hashRows.length < 36 && result.lastKey && iterations < 10);
-
-  const items = (result.items.length > 0 ? await Cube.batchGet(hashRows.map((hash) => hash.cube)) : []).filter(
-    (cube: any) => isCubeListed(cube, user),
-  );
-
-  // make sure items is in same order as hashRows
-  const cubes = hashRows
-    .flat()
-    .map((hash) => items.find((cube: any) => cube.id === hash.cube))
-    .filter((cube) => cube);
-
-  return {
-    cubes: cubes,
-    lastKey: result.lastKey,
-  };
-};
-
-const searchWithTagQueries = async (
-  tagQueries: TagQuery[],
-  cardQueries: CardQuery[],
-  keywordQueries: KeywordQuery[],
-  order: SortOrder,
-  lastKey: any,
-  ascending: boolean,
-  user: any,
-): Promise<SearchResult> => {
-  let result;
-  const hashRows: any[] = [];
-
-  do {
-    result = await CubeHash.query(`tag:${tagQueries[0]!.value}`, ascending, lastKey, order, 128);
-
-    hashRows.push(
-      ...result.items.filter((hash: any) => {
-        for (const query of keywordQueries) {
-          if (!hash.name.toLowerCase().includes(query.value.toLowerCase())) {
-            return false;
-          }
-        }
-
-        return true;
-      }),
-    );
-
-    lastKey = result.lastKey;
-  } while (hashRows.length < 36 && result.lastKey);
-
-  const items = (result.items.length > 0 ? await Cube.batchGet(hashRows.map((hash) => hash.cube)) : []).filter(
-    (cube: any) => isCubeListed(cube, user),
-  );
-
-  // make sure items is in same order as hashRows
-  const cubes = hashRows
-    .flat()
-    .map((hash) => items.find((cube: any) => cube.id === hash.cube))
-    .filter((cube) => cube)
-    .filter((cube: any) => {
-      const lowerCaseTags = (cube.tags || []).map((tag: string) => tag.toLowerCase());
-      for (const query of tagQueries) {
-        if (!lowerCaseTags.includes(query.value.toLowerCase())) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-  if (cardQueries.length === 0) {
+  if (tagQueries.length > 10) {
     return {
-      cubes: cubes,
-      lastKey: result.lastKey,
+      error: 'Can only search for up to 10 tags at a time',
+      cubes: [],
+      lastKey: null,
     };
   }
 
-  const cubeCards = await Promise.all(cubes.map((cube: any) => Cube.getCards(cube.id)));
+  if (categoryQueries.length > 10) {
+    return {
+      error: 'Can only search for up to 10 categories at a time',
+      cubes: [],
+      lastKey: null,
+    };
+  }
 
-  const cubeWithCardFilter = cubes.filter((_cube: any, index: number) => {
-    const cards = cubeCards[index];
-    const oracleIds = cards.mainboard.map((card: any) => cardFromId(card.cardID).oracle_id);
+  const hashes = buildHashesForQuery(cardQueries, keywordQueries, tagQueries, categoryQueries);
 
-    for (const query of cardQueries) {
-      if (!oracleIds.some((o: string) => o === query.value)) {
-        return false;
+  if (hashes.length > 10) {
+    return {
+      error: 'Search query is too complex (max 10 combined card/tag/keyword filters)',
+      cubes: [],
+      lastKey: null,
+    };
+  }
+
+  // Build card count filter from size queries
+  let cardCountFilter: { operator: 'eq' | 'gt' | 'lt'; value: number } | undefined;
+  if (sizeQueries.length > 0 && sizeQueries[0]) {
+    cardCountFilter = {
+      operator: sizeQueries[0].operator,
+      value: sizeQueries[0].value,
+    };
+  }
+
+  try {
+    let cubes: any[];
+    let resultLastKey: any = null;
+
+    if (hashes.length === 1) {
+      console.log('[Search] Querying by single hash', { hash: hashes[0], cardCountFilter, lastKey });
+      // Determine which query method to use based on hash prefix
+      const hash = hashes[0] || '';
+      let result;
+
+      if (hash.startsWith('oracle:')) {
+        const oracleId = hash.substring('oracle:'.length);
+        console.log('[Search] Using queryByOracleId', { oracleId });
+        result = await cubeDao.queryByOracleId(oracleId, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByOracleId returned ${result.items.length} cubes`);
+      } else if (hash.startsWith('tag:')) {
+        const tag = hash.substring('tag:'.length);
+        console.log('[Search] Using queryByTag', { tag });
+        result = await cubeDao.queryByTag(tag, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByTag returned ${result.items.length} cubes`);
+      } else if (hash.startsWith('keywords:')) {
+        const keywords = hash.substring('keywords:'.length);
+        console.log('[Search] Using queryByKeyword', { keywords });
+        result = await cubeDao.queryByKeyword(keywords, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByKeyword returned ${result.items.length} cubes`);
+      } else if (hash.startsWith('category:')) {
+        const category = hash.substring('category:'.length);
+        console.log('[Search] Using queryByCategory', { category });
+        result = await cubeDao.queryByCategory(category, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByCategory returned ${result.items.length} cubes`);
+      } else if (hash === 'featured:true') {
+        console.log('[Search] Using queryByFeatured');
+        result = await cubeDao.queryByFeatured(mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryByFeatured returned ${result.items.length} cubes`);
+      } else if (hash === 'cube:all') {
+        console.log('[Search] Using queryAllCubes to query all cubes');
+        result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, lastKey || undefined, 36);
+        console.log(`[Search] queryAllCubes returned ${result.items.length} cubes`);
+      } else {
+        console.log('[Search] Unknown hash type, skipping', { hash });
+        // Unknown hash type - return empty results
+        result = { items: [], lastKey: undefined };
       }
+
+      cubes = result.items;
+      resultLastKey = result.lastKey;
+    } else {
+      console.log('[Search] Querying by multiple hashes', {
+        hashCount: hashes.length,
+        hashes,
+        cardCountFilter,
+        order,
+        ascending,
+        hasLastKey: !!lastKey,
+      });
+      // Use queryByMultipleHashes from cubeDao (which efficiently handles cardCountFilter natively)
+      const multiHashResult = await cubeDao.queryByMultipleHashes(
+        hashes,
+        mapSortOrder(order),
+        ascending,
+        lastKey || undefined,
+        cardCountFilter,
+      );
+      console.log('[Search] queryByMultipleHashes returned', {
+        resultCount: multiHashResult.items.length,
+        hasLastKey: !!multiHashResult.lastKey,
+      });
+      cubes = multiHashResult.items;
+      resultLastKey = multiHashResult.lastKey;
     }
 
-    return true;
-  });
+    // Filter by listing visibility
+    const visibleCubes = cubes.filter((cube: any) => isCubeListed(cube, user));
+    console.log(`[Search] After visibility filter: ${visibleCubes.length} cubes`);
 
-  return {
-    cubes: cubeWithCardFilter,
-    lastKey: result.lastKey,
-  };
+    return {
+      cubes: visibleCubes,
+      lastKey: resultLastKey,
+    };
+  } catch (error: any) {
+    return {
+      error: error.message || 'An error occurred during search',
+      cubes: [],
+      lastKey: null,
+    };
+  }
 };
 
 interface SearchCubesResult {
@@ -346,47 +475,59 @@ const searchCubes = async (
 ): Promise<SearchCubesResult> => {
   // separate query into tokens, respecting quotes
   const tokens = tokenize(query);
+  console.log('[Search] Query:', query, 'Tokens:', tokens);
 
   const cardQueries = getCardQueries(tokens, user?.defaultPrinting);
   const keywordQueries = getKeywordQueries(tokens);
   const tagQueries = getTagQueries(tokens);
+  const categoryQueries = getCategoryQueries(tokens);
+  const sizeQueries = getSizeQueries(tokens);
 
-  if (tagQueries.length > 0) {
-    const searchResult = await searchWithTagQueries(
-      tagQueries,
-      cardQueries,
-      keywordQueries,
-      order,
-      lastKey,
-      ascending,
-      user,
-    );
+  // Track which tokens were actually used in queries
+  const usedTokens = new Set<string>();
+  cardQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+  keywordQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+  tagQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+  categoryQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
+  sizeQueries.forEach((q) => usedTokens.add(q.originalToken.toLowerCase()));
 
-    return {
-      cubes: searchResult.cubes,
-      lastKey: searchResult.lastKey,
-      parsedQuery: getHumanReadableQuery(cardQueries, keywordQueries, tagQueries),
-      error: searchResult.error,
-    };
-  }
+  // Find tokens that weren't used in any query
+  const ignoredTokens = tokens.filter((token) => !usedTokens.has(token.toLowerCase()));
 
-  if (cardQueries.length > 0) {
-    const searchResult = await searchWithCardQueries(cardQueries, keywordQueries, order, lastKey, ascending, user);
+  console.log('[Search] Parsed queries:', {
+    cardQueries,
+    keywordQueries,
+    tagQueries,
+    categoryQueries,
+    sizeQueries,
+    ignoredTokens,
+  });
 
-    return {
-      cubes: searchResult.cubes,
-      lastKey: searchResult.lastKey,
-      parsedQuery: getHumanReadableQuery(cardQueries, keywordQueries, tagQueries),
-      error: searchResult.error,
-    };
-  }
+  const searchResult = await performSearch(
+    cardQueries,
+    keywordQueries,
+    tagQueries,
+    categoryQueries,
+    sizeQueries,
+    order,
+    ascending,
+    user,
+    lastKey,
+  );
 
-  const searchResult = await searchWithKeywordQuery(keywordQueries, order, lastKey, ascending, user);
+  console.log('[Search] Result:', { cubesCount: searchResult.cubes.length, error: searchResult.error });
 
   return {
     cubes: searchResult.cubes,
     lastKey: searchResult.lastKey,
-    parsedQuery: getHumanReadableQuery(cardQueries, keywordQueries, tagQueries),
+    parsedQuery: getHumanReadableQuery(
+      cardQueries,
+      keywordQueries,
+      tagQueries,
+      categoryQueries,
+      sizeQueries,
+      ignoredTokens,
+    ),
     error: searchResult.error,
   };
 };
@@ -396,7 +537,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const order = (req.query.order as SortOrder) || 'pop';
   const query = (req.query.q as string) || '';
 
-  const result = await searchCubes(query, order, null, ascending === 'true', req.user);
+  const result = await searchCubes(query, order, undefined, ascending === 'true', req.user);
 
   if (result.error) {
     req.flash('danger', result.error);

@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "publish": "npm run build && node publish.js",
-    "build": "node esbuild.config.js"
+    "build": "node esbuild.config.js",
+    "local": "npm run build && node src/local.ts"
   },
   "keywords": [],
   "author": "",

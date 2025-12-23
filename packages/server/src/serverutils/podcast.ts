@@ -1,7 +1,6 @@
-import { ContentStatus, ContentType } from '@utils/datatypes/Content';
-import Content from 'dynamo/models/content';
+import { ContentStatus } from '@utils/datatypes/Content';
+import { episodeDao, podcastDao } from 'dynamo/daos';
 import { convert } from 'html-to-text';
-// @ts-ignore - no types available
 import sanitizeHtml from 'sanitize-html';
 
 import { getFeedData, getFeedEpisodes } from './rss';
@@ -12,16 +11,40 @@ const removeSpan = (text: string): string =>
   });
 
 export const updatePodcast = async (podcast: any): Promise<void> => {
+  console.log(`[updatePodcast] Starting update for podcast: ${podcast.title} (ID: ${podcast.id})`);
+  console.log(
+    `[updatePodcast] Podcast object:`,
+    JSON.stringify({ id: podcast.id, title: podcast.title, owner: podcast.owner }, null, 2),
+  );
+
   const feedData = await getFeedData(podcast.url);
   const feedEpisodes = await getFeedEpisodes(podcast.url);
-  const existingEpisodes = await Content.getPodcastEpisodes(podcast.id, ContentStatus.PUBLISHED);
+  console.log(`[updatePodcast] Found ${feedEpisodes.length} episodes in RSS feed`);
+
+  // Fetch ALL existing episodes for this podcast (regardless of status)
+  const existingEpisodes = [];
+  let lastKey = undefined;
+
+  console.log(`[updatePodcast] Querying for episodes with podcast ID: ${podcast.id}`);
+
+  do {
+    const result = await episodeDao.queryByPodcast(podcast.id, lastKey);
+    console.log(`[updatePodcast] Query result: ${result.items?.length || 0} items, hasMore: ${!!result.lastKey}`);
+    if (result.items && result.items.length > 0) {
+      existingEpisodes.push(...result.items);
+    }
+    lastKey = result.lastKey;
+  } while (lastKey);
+
+  console.log(`[updatePodcast] Found ${existingEpisodes.length} existing episodes in database`);
   const existingGuids = existingEpisodes.map((episode) => episode.podcastGuid);
+  console.log(`[updatePodcast] Existing GUIDs (first 5): ${existingGuids.slice(0, 5).join(', ')}`);
 
   // Find episodes that need image updates
   const episodesToUpdate = existingEpisodes.filter((episode) => episode.image !== feedData.image);
 
   if (episodesToUpdate.length > 0) {
-    await Content.batchPut(
+    await episodeDao.batchPut(
       episodesToUpdate.map((episode) => ({
         ...episode,
         image: feedData.image,
@@ -32,19 +55,55 @@ export const updatePodcast = async (podcast: any): Promise<void> => {
   // Update podcast image if different
   if (podcast.image !== feedData.image) {
     podcast.image = feedData.image;
-    await Content.update(podcast);
+    await podcastDao.update(podcast);
   }
 
-  const filtered = feedEpisodes.filter((episode) => episode.guid && !existingGuids.includes(episode.guid));
+  // Filter out episodes that already exist or have invalid data
+  const filtered = feedEpisodes.filter((episode) => {
+    // Must have a GUID to prevent duplicates
+    if (!episode.guid) {
+      console.warn(`[updatePodcast] Skipping episode without GUID: ${episode.title}`);
+      return false;
+    }
+
+    // Must not already exist
+    if (existingGuids.includes(episode.guid)) {
+      console.log(`[updatePodcast] Skipping existing episode: ${episode.title} (GUID: ${episode.guid})`);
+      return false;
+    }
+
+    // Must have a valid date
+    if (!episode.date) {
+      console.warn(`[updatePodcast] Skipping episode without date: ${episode.title} (GUID: ${episode.guid})`);
+      return false;
+    }
+
+    return true;
+  });
+
+  console.log(`[updatePodcast] Will create ${filtered.length} new episodes`);
+  if (filtered.length > 0) {
+    console.log(
+      `[updatePodcast] New episodes (first 3): ${filtered
+        .slice(0, 3)
+        .map((e) => `"${e.title}" (${e.guid.substring(0, 20)}...)`)
+        .join(', ')}`,
+    );
+  }
 
   await Promise.all(
     filtered.map((episode) => {
+      const episodeDate = new Date(episode.date).valueOf();
+      if (isNaN(episodeDate)) {
+        console.error(`[updatePodcast] Invalid date for episode: ${episode.title}, date string: "${episode.date}"`);
+      }
+
       const podcastEpisode = {
         title: episode.title || '',
         body: removeSpan(episode.description || ''),
-        date: new Date(episode.date || Date.now()).valueOf(),
+        date: episodeDate,
         owner: podcast.owner.id,
-        image: podcast.image,
+        image: feedData.image,
         username: podcast.username,
         podcast: podcast.id,
         podcastName: podcast.title,
@@ -57,10 +116,12 @@ export const updatePodcast = async (podcast: any): Promise<void> => {
         }).substring(0, 200),
       };
 
-      return Content.put(podcastEpisode as any, ContentType.EPISODE);
+      return episodeDao.createEpisode(podcastEpisode);
     }),
   );
 
+  console.log(`[updatePodcast] Successfully created ${filtered.length} new episodes`);
+
   podcast.date = new Date().valueOf();
-  await Content.update(podcast);
+  await podcastDao.update(podcast);
 };

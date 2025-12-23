@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { cubeCardTags, isCubeViewable } from 'serverutils/cubefn';
 import { turnToTree } from 'serverutils/util';
 
@@ -13,7 +13,7 @@ export const cubecardtagsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -22,8 +22,8 @@ export const cubecardtagsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await Cube.getCards(cube.id);
-    const tags = cubeCardTags([...cubeCards.mainboard, ...cubeCards.maybeboard]);
+    const cubeCards = await cubeDao.getCards(cube.id);
+    const tags = cubeCardTags(cubeCards);
 
     return res.status(200).send({
       success: 'true',

@@ -1,7 +1,7 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
+import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 
-import { cardFromId } from '../../../../serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const cubelistHandler = async (req: Request, res: Response) => {
@@ -10,13 +10,13 @@ export const cubelistHandler = async (req: Request, res: Response) => {
       return res.status(400).send('Cube ID is required.');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).send('Cube not found.');
     }
 
-    const cubeCards = await Cube.getCards(cube.id);
+    const cubeCards = await cubeDao.getCards(cube.id);
 
     const names = cubeCards.mainboard.map((card: any) => cardFromId(card.cardID).name);
     res.contentType('text/plain');

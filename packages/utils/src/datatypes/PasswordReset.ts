@@ -1,4 +1,6 @@
-export type UnhydratedPasswordReset = {
+import { BaseObject } from './BaseObject';
+
+export type UnhydratedPasswordReset = BaseObject & {
   id?: string;
   owner: string;
   date: number;

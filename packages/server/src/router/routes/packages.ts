@@ -1,123 +1,338 @@
-import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import CardPackage, { CardPackageStatus } from '@utils/datatypes/CardPackage';
+import { PrintingPreference } from '@utils/datatypes/Card';
+import CardPackage from '@utils/datatypes/CardPackage';
 import { UserRoles } from '@utils/datatypes/User';
-import Package from 'dynamo/models/package';
-import User from 'dynamo/models/user';
-import { cardFromId } from 'serverutils/carddb';
+import { packageDao, userDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
+import { cardFromId, getMostReasonable } from 'serverutils/carddb';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { csrfProtection, ensureAuth, ensureRole } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 
-/*
- * There is no index on the Packages table for Owner and sorted by Vote count. Thus in order
- * to get the packages sorted by vote count, we have to load all the packages for a user, filter
- * by keywords, and then sort them in memory. This is not ideal, but it is the best we can do until
- * an index is added.
- * TODO: Add secondary index for Owner and sorted by Vote count
- */
-const getAllByOwnerSortedByVoteCount = async (ownerId: string, keywords: string | undefined, ascending: boolean) => {
-  const packages: {
-    items: CardPackage[];
-    lastKey: Record<string, NativeAttributeValue> | undefined;
-  } = {
-    items: [],
-    lastKey: undefined,
-  };
+type SortOrder = 'votes' | 'date';
 
-  // Get all packages for the owner into memory
-  do {
-    const result = await Package.queryByOwner(ownerId, packages.lastKey);
+interface CardQuery {
+  type: 'card' | 'oracle';
+  value: string;
+  originalToken: string;
+}
 
-    packages.items.push(...(result.items || []));
-    packages.lastKey = result.lastKey;
-  } while (packages.lastKey);
+interface KeywordQuery {
+  type: 'keywords';
+  value: string;
+  originalToken: string;
+}
 
-  const sortByVotes = (a: CardPackage, b: CardPackage) => {
-    if (ascending) {
-      return a.voters.length - b.voters.length;
+interface UserQuery {
+  type: 'user';
+  value: string;
+  originalToken: string;
+}
+
+const tokenize = (query: string): string[] => {
+  const tokens: string[] = [];
+  let buffer = '';
+  let inQuote = false;
+
+  for (let i = 0; i < query.length; i++) {
+    if (query[i] === '"') {
+      inQuote = !inQuote;
+      if (!inQuote) {
+        // end of quote
+        tokens.push(buffer);
+        buffer = '';
+      }
+    } else if (query[i] === ' ' && !inQuote) {
+      if (buffer.length > 0) {
+        tokens.push(buffer);
+        buffer = '';
+      }
     } else {
-      return b.voters.length - a.voters.length;
+      buffer += query[i];
     }
-  };
-
-  if (keywords) {
-    const words = keywords?.toLowerCase()?.split(' ') || [];
-
-    // all words must exist in the keywords
-    const filterByKeywords = (a: CardPackage) => {
-      // Check that ALL filtering word exists in the package keywords
-      return words.filter((x) => a.keywords.includes(x)).length === words.length;
-    };
-
-    packages.items = packages.items.filter(filterByKeywords);
   }
-  packages.items.sort(sortByVotes);
 
-  return packages;
+  if (buffer.length > 0) {
+    tokens.push(buffer);
+  }
+
+  return tokens;
 };
 
-const getPackages = async (
-  req: Request,
-  type: string,
-  keywords: string | undefined,
-  ascending: boolean,
-  sort: string,
-  lastKey: Record<string, NativeAttributeValue> | undefined,
-) => {
-  let packages: {
-    items: CardPackage[];
-    lastKey: Record<string, NativeAttributeValue> | undefined;
-  } = {
-    items: [],
-    lastKey,
-  };
+const getCardQueries = (tokens: string[], printing: PrintingPreference = PrintingPreference.RECENT): CardQuery[] => {
+  const queries: CardQuery[] = [];
 
-  if (type === 'u' && req.user) {
-    if (sort === 'votes' || sort === '') {
-      packages = await getAllByOwnerSortedByVoteCount(req.user.id, keywords, ascending);
-    } else {
-      const result = await Package.queryByOwnerSortedByDate(req.user.id, keywords || '', ascending, packages.lastKey);
-      packages.items = result.items || [];
-      packages.lastKey = result.lastKey;
+  for (const token of tokens) {
+    const split = token.split(':');
+
+    if (split[0] === 'oracle' && split[1]) {
+      queries.push({ type: 'oracle', value: split[1], originalToken: token });
     }
-  } else {
-    if (sort === 'votes' || sort === '') {
-      const result = await Package.querySortedByVoteCount(
-        type as CardPackageStatus,
-        keywords || '',
-        ascending,
-        packages.lastKey,
-      );
-      packages.items = result.items || [];
-      packages.lastKey = result.lastKey;
-    } else {
-      const result = await Package.querySortedByDate(
-        type as CardPackageStatus,
-        keywords || '',
-        ascending,
-        packages.lastKey,
-      );
-      packages.items = result.items || [];
-      packages.lastKey = result.lastKey;
+
+    if (split[0] === 'card' && split[1]) {
+      const card = getMostReasonable(split[1], printing);
+
+      if (card) {
+        console.log(`[getCardQueries] Found card: ${card.name}, oracle_id: ${card.oracle_id}`);
+        queries.push({ type: 'card', value: card.oracle_id, originalToken: token });
+      } else {
+        console.log(`[getCardQueries] Card not found: ${split[1]}`);
+        queries.push({ type: 'card', value: '', originalToken: token });
+      }
     }
   }
 
-  return packages;
+  return queries;
+};
+
+const getUserQueries = (tokens: string[]): UserQuery[] => {
+  const queries: UserQuery[] = [];
+
+  for (const token of tokens) {
+    const split = token.split(':');
+
+    if (split[0] === 'user' && split[1]) {
+      queries.push({ type: 'user', value: split[1], originalToken: token });
+    }
+  }
+
+  return queries;
+};
+
+const getKeywordQueries = (tokens: string[]): KeywordQuery[] => {
+  const queries: KeywordQuery[] = [];
+
+  for (const token of tokens) {
+    const split = token.split(':');
+
+    if (split[0] === 'keywords' && split[1]) {
+      queries.push({ type: 'keywords', value: split[1], originalToken: token });
+    }
+
+    // Only treat as keyword if it doesn't have a colon
+    if (split.length === 1 && split[0] && split[0].length > 0) {
+      queries.push({ type: 'keywords', value: split[0], originalToken: token });
+    }
+  }
+
+  return queries;
+};
+
+const buildHashesForQuery = (
+  cardQueries: CardQuery[],
+  keywordQueries: KeywordQuery[],
+  userQueries: UserQuery[],
+): Array<{ type: string; value: string }> => {
+  const hashes: Array<{ type: string; value: string }> = [];
+
+  // Add oracle hashes for card queries
+  for (const query of cardQueries) {
+    if (query.value && query.value !== '') {
+      hashes.push({ type: 'oracle', value: query.value });
+    }
+  }
+
+  // Add user hash for user queries
+  for (const query of userQueries) {
+    if (query.value && query.value !== '') {
+      hashes.push({ type: 'user', value: query.value });
+    }
+  }
+
+  // Add keyword hashes for keyword queries
+  // For multiple keywords, we'll use the first one as primary hash
+  // and filter the rest in memory
+  if (keywordQueries.length > 0 && keywordQueries[0]) {
+    const normalizedKeyword = keywordQueries[0].value
+      .replace(/[^\w\s]/gi, '')
+      .toLowerCase()
+      .trim();
+    hashes.push({ type: 'keywords', value: normalizedKeyword });
+  }
+
+  // If no hashes, use the global 'package:all' hash to query all packages
+  if (hashes.length === 0) {
+    hashes.push({ type: 'package', value: 'all' });
+  }
+
+  return hashes;
+};
+
+const performSearch = async (
+  cardQueries: CardQuery[],
+  keywordQueries: KeywordQuery[],
+  userQueries: UserQuery[],
+  order: SortOrder,
+  ascending: boolean,
+  lastKey?: any,
+): Promise<{
+  packages: CardPackage[];
+  lastKey: any;
+  error?: string;
+}> => {
+  // Check for unsupported combinations
+  if (cardQueries.length > 10) {
+    return {
+      error: 'Can only search for up to 10 cards at a time',
+      packages: [],
+      lastKey: null,
+    };
+  }
+
+  if (userQueries.length > 1) {
+    return {
+      error: 'Can only search for one user at a time',
+      packages: [],
+      lastKey: null,
+    };
+  }
+
+  // Handle user query separately (uses different index)
+  if (userQueries.length === 1) {
+    try {
+      // Resolve username to user ID
+      const username = userQueries[0]!.value.toLowerCase();
+      const user = await userDao.getByUsername(username);
+
+      if (!user) {
+        return {
+          error: `User '${username}' not found`,
+          packages: [],
+          lastKey: null,
+        };
+      }
+
+      const result = await packageDao.queryByOwner(user.id, order, ascending, lastKey || undefined, 36);
+      return {
+        packages: result.items || [],
+        lastKey: result.lastKey,
+      };
+    } catch (error) {
+      console.error('[performSearch] Error querying by user:', error);
+      return {
+        error: 'An error occurred while searching packages by user',
+        packages: [],
+        lastKey: null,
+      };
+    }
+  }
+
+  const hashes = buildHashesForQuery(cardQueries, keywordQueries, userQueries);
+
+  if (hashes.length > 10) {
+    return {
+      error: 'Search query is too complex (max 10 combined card/keyword filters)',
+      packages: [],
+      lastKey: null,
+    };
+  }
+
+  try {
+    let packages: CardPackage[];
+    let resultLastKey: any = null;
+
+    if (hashes.length === 1) {
+      // Determine which query method to use based on hash type
+      const hash = hashes[0]!;
+      let result;
+
+      if (hash.type === 'oracle') {
+        result = await packageDao.queryByOracleId(hash.value, order, ascending, lastKey || undefined, 36);
+      } else if (hash.type === 'keywords') {
+        result = await packageDao.queryByKeyword(hash.value, order, ascending, lastKey || undefined, 36);
+      } else if (hash.type === 'package' && hash.value === 'all') {
+        result = await packageDao.queryAllPackages(order, ascending, lastKey || undefined, 36);
+      } else {
+        result = await packageDao.queryByHashCriteria(
+          hash.type,
+          hash.value,
+          order,
+          ascending,
+          lastKey || undefined,
+          36,
+        );
+      }
+
+      packages = result.items || [];
+      resultLastKey = result.lastKey;
+    } else {
+      // Multiple hashes - use queryByMultipleHashes
+      const result = await packageDao.queryByMultipleHashes(hashes, order, ascending, lastKey || undefined, 36);
+      packages = result.items || [];
+      resultLastKey = result.lastKey;
+    }
+
+    return {
+      packages,
+      lastKey: resultLastKey,
+    };
+  } catch (error) {
+    console.error('[performSearch] Error performing search:', error);
+    return {
+      error: 'An error occurred while searching packages',
+      packages: [],
+      lastKey: null,
+    };
+  }
 };
 
 export const getIndexHandler = async (req: Request, res: Response) => {
   try {
-    const type = (req.query.t as string) || CardPackageStatus.APPROVED;
-    const keywords = (req.query.kw as string) || '';
-    const ascending = req.query.a === 'true';
+    const query = (req.query.q as string) || '';
     const sort = (req.query.s as string) || 'votes';
+    const ascending = req.query.a === 'true';
 
-    const packages = await getPackages(req, type, keywords, ascending, sort, undefined);
+    const tokens = tokenize(query);
+    const cardQueries = getCardQueries(tokens);
+    const keywordQueries = getKeywordQueries(tokens);
+    const userQueries = getUserQueries(tokens);
+
+    const result = await performSearch(
+      cardQueries,
+      keywordQueries,
+      userQueries,
+      sort as SortOrder,
+      ascending,
+      undefined,
+    );
+
+    if (result.error) {
+      req.flash('danger', result.error);
+    }
+
+    // Build parsed query display
+    const parsedQuery: string[] = [];
+    const recognizedTokens = new Set<string>();
+
+    for (const cardQuery of cardQueries) {
+      if (cardQuery.type === 'oracle') {
+        parsedQuery.push(`contains card with oracle ID: ${cardQuery.value}`);
+      } else {
+        // card type - extract card name from token
+        const cardName = cardQuery.originalToken.replace(/^card:"?/i, '').replace(/"?$/, '');
+        parsedQuery.push(`contains ${cardName}`);
+      }
+      recognizedTokens.add(cardQuery.originalToken);
+    }
+    for (const userQuery of userQueries) {
+      parsedQuery.push(`owned by ${userQuery.value}`);
+      recognizedTokens.add(userQuery.originalToken);
+    }
+    for (const keywordQuery of keywordQueries) {
+      parsedQuery.push(`keyword: ${keywordQuery.value}`);
+      recognizedTokens.add(keywordQuery.originalToken);
+    }
+
+    // Add unrecognized tokens
+    for (const token of tokens) {
+      if (!recognizedTokens.has(token)) {
+        parsedQuery.push(`[ignored: ${token}]`);
+      }
+    }
 
     return render(req, res, 'PackagesPage', {
-      items: packages.items,
-      lastKey: packages.lastKey,
+      items: result.packages,
+      lastKey: result.lastKey,
+      parsedQuery,
     });
   } catch (err) {
     return handleRouteError(req, res, err, '/404');
@@ -126,17 +341,53 @@ export const getIndexHandler = async (req: Request, res: Response) => {
 
 export const getMoreHandler = async (req: Request, res: Response) => {
   try {
-    const type = req.body.type || CardPackageStatus.APPROVED;
-    const keywords = req.body.keywords || '';
-    const ascending = req.body.ascending === 'true';
+    const query = req.body.query || '';
     const sort = req.body.sort || 'votes';
+    const ascending = req.body.ascending === 'true';
     const lastKey = req.body.lastKey;
 
-    const packages = await getPackages(req, type, keywords, ascending, sort, lastKey);
+    const tokens = tokenize(query);
+    const cardQueries = getCardQueries(tokens);
+    const keywordQueries = getKeywordQueries(tokens);
+    const userQueries = getUserQueries(tokens);
+
+    const result = await performSearch(cardQueries, keywordQueries, userQueries, sort as SortOrder, ascending, lastKey);
+
+    // Build parsed query display
+    const parsedQuery: string[] = [];
+    const recognizedTokens = new Set<string>();
+
+    for (const cardQuery of cardQueries) {
+      if (cardQuery.type === 'oracle') {
+        parsedQuery.push(`contains card with oracle ID: ${cardQuery.value}`);
+      } else {
+        // card type - extract card name from token
+        const cardName = cardQuery.originalToken.replace(/^card:"?/i, '').replace(/"?$/, '');
+        parsedQuery.push(`contains ${cardName}`);
+      }
+      recognizedTokens.add(cardQuery.originalToken);
+    }
+    for (const userQuery of userQueries) {
+      parsedQuery.push(`owned by ${userQuery.value}`);
+      recognizedTokens.add(userQuery.originalToken);
+    }
+    for (const keywordQuery of keywordQueries) {
+      parsedQuery.push(`keyword: ${keywordQuery.value}`);
+      recognizedTokens.add(keywordQuery.originalToken);
+    }
+
+    // Add unrecognized tokens
+    for (const token of tokens) {
+      if (!recognizedTokens.has(token)) {
+        parsedQuery.push(`[ignored: ${token}]`);
+      }
+    }
 
     return res.status(200).send({
-      packages: packages.items,
-      lastKey: packages.lastKey,
+      packages: result.packages,
+      lastKey: result.lastKey,
+      error: result.error,
+      parsedQuery,
     });
   } catch (err) {
     return handleRouteError(req, res, err, '/404');
@@ -175,7 +426,7 @@ export const submitHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const poster = await User.getById(req.user.id);
+    const poster = await userDao.getById(req.user.id);
     if (!poster) {
       return res.status(400).send({
         success: 'false',
@@ -199,18 +450,14 @@ export const submitHandler = async (req: Request, res: Response) => {
     // make distinct
     const distinctKeywords = keywords.filter((value, index, self) => self.indexOf(value) === index);
 
-    const pack = {
+    await packageDao.createPackage({
       title: packageName,
-      date: new Date().valueOf(),
+      date: Date.now(),
       owner: poster.id,
-      status: 's' as CardPackageStatus,
       cards,
       voters: [],
       keywords: distinctKeywords,
-      voteCount: 0,
-    };
-
-    await Package.put(pack);
+    });
 
     return res.status(200).send({
       success: 'true',
@@ -229,7 +476,7 @@ export const upvoteHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const pack = await Package.getById(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
 
     if (!pack) {
       return res.status(404).send({
@@ -246,7 +493,7 @@ export const upvoteHandler = async (req: Request, res: Response) => {
     }
 
     pack.voters = [...new Set([...pack.voters, req.user.id])];
-    await Package.put(pack);
+    await packageDao.update(pack);
 
     return res.status(200).send({
       success: 'true',
@@ -266,7 +513,7 @@ export const downvoteHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const pack = await Package.getById(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
 
     if (!pack) {
       return res.status(404).send({
@@ -283,69 +530,11 @@ export const downvoteHandler = async (req: Request, res: Response) => {
     }
 
     pack.voters = pack.voters.filter((voter: string) => voter !== req.user!.id);
-    await Package.put(pack);
+    await packageDao.update(pack);
 
     return res.status(200).send({
       success: 'true',
       voters: pack.voters,
-    });
-  } catch (err) {
-    return handleRouteError(req, res, err, '/404');
-  }
-};
-
-export const approveHandler = async (req: Request, res: Response) => {
-  try {
-    if (!req.params.id) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Package ID is required.',
-      });
-    }
-
-    const pack = await Package.getById(req.params.id!);
-
-    if (!pack) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Package not found.',
-      });
-    }
-
-    pack.status = CardPackageStatus.APPROVED;
-    await Package.put(pack);
-
-    return res.status(200).send({
-      success: 'true',
-    });
-  } catch (err) {
-    return handleRouteError(req, res, err, '/404');
-  }
-};
-
-export const unapproveHandler = async (req: Request, res: Response) => {
-  try {
-    if (!req.params.id) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Package ID is required.',
-      });
-    }
-
-    const pack = await Package.getById(req.params.id!);
-
-    if (!pack) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Package not found.',
-      });
-    }
-
-    pack.status = CardPackageStatus.SUBMITTED;
-    await Package.put(pack);
-
-    return res.status(200).send({
-      success: 'true',
     });
   } catch (err) {
     return handleRouteError(req, res, err, '/404');
@@ -361,7 +550,10 @@ export const removeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    await Package.delete(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
+    if (pack) {
+      await packageDao.delete(pack);
+    }
 
     return res.status(200).send({
       success: 'true',
@@ -378,7 +570,7 @@ export const getPackageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/packages');
     }
 
-    const pack = await Package.getById(req.params.id!);
+    const pack = await packageDao.getById(req.params.id!);
 
     if (!pack) {
       req.flash('danger', `Package not found`);
@@ -418,16 +610,6 @@ export const routes = [
     path: '/downvote/:id',
     method: 'get',
     handler: [ensureAuth, csrfProtection, downvoteHandler],
-  },
-  {
-    path: '/approve/:id',
-    method: 'get',
-    handler: [ensureRole(UserRoles.ADMIN), csrfProtection, approveHandler],
-  },
-  {
-    path: '/unapprove/:id',
-    method: 'get',
-    handler: [ensureRole(UserRoles.ADMIN), csrfProtection, unapproveHandler],
   },
   {
     path: '/remove/:id',

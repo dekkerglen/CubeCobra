@@ -2,13 +2,10 @@ import { cardOracleId } from '@utils/cardutil';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
 import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
-import RecordDao from 'dynamo/models/record';
-import recordAnalytic from 'dynamo/models/recordAnalytic';
+import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -95,7 +92,7 @@ const compileAnalytics = async (records: RecordType[]): Promise<RecordAnalytic> 
       continue;
     }
 
-    const drafts = await Draft.batchGet(draftIds);
+    const drafts = await draftDao.batchGet(draftIds);
     const draftById: Record<string, DraftType> = Object.fromEntries(
       drafts.map((draft: DraftType) => [draft.id, draft]),
     );
@@ -171,7 +168,7 @@ export const compileAnalyticsHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -192,7 +189,7 @@ export const compileAnalyticsHandler = async (req: Request, res: Response) => {
     let lastKey: any = undefined;
 
     do {
-      const result = await RecordDao.getByCube(cube.id, 1000, lastKey);
+      const result = await recordDao.getByCube(cube.id, 1000, lastKey);
 
       if (!result || !result.items) {
         break;
@@ -204,7 +201,7 @@ export const compileAnalyticsHandler = async (req: Request, res: Response) => {
 
     const analyticsData = await compileAnalytics(records);
 
-    await recordAnalytic.put(cube.id, analyticsData);
+    await recordDao.putAnalytics(cube.id, analyticsData);
 
     req.flash('success', 'Analytics compiled successfully');
     return redirect(req, res, `/cube/records/${cube.id}?tab=2`);

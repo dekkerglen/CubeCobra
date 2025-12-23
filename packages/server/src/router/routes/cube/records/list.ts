@@ -1,5 +1,5 @@
-import Record from 'dynamo/models/record';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
+import { recordDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -14,7 +14,7 @@ export const getRecordsHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const results = await Record.getByCube(cubeId, 20, lastKey || undefined);
+    const results = await recordDao.getByCube(cubeId, 20, lastKey || undefined);
     return res.status(200).json({
       records: results.items,
       lastKey: results.lastKey,

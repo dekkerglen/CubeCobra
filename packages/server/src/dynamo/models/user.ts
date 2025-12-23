@@ -144,7 +144,10 @@ const user = {
     }
 
     for (const [key, value] of Object.entries(document)) {
-      if (key !== idAttr) {
+      // Only update fields that are explicitly set (not undefined)
+      // This prevents erasing sensitive fields like email when updating
+      // a user object that was loaded without sensitive data
+      if (key !== idAttr && value !== undefined) {
         existing.Item[key] = value;
       }
     }
@@ -173,7 +176,10 @@ const user = {
       }
 
       for (const [key, value] of Object.entries(document)) {
-        if (key !== idAttr) {
+        // Only update fields that are explicitly set (not undefined)
+        // This prevents erasing sensitive fields like email when updating
+        // a user object that was loaded without sensitive data
+        if (key !== idAttr && value !== undefined) {
           item[key] = value;
         }
       }

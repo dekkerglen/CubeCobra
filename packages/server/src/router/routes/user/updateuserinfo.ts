@@ -1,8 +1,8 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
+import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { hasProfanity } from 'serverutils/util';
-import { csrfProtection, ensureAuth, flashValidationErrors } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -30,7 +30,7 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     if (req.body.username.toLowerCase() !== user.username.toLowerCase()) {
-      const userByName = await User.getByUsername(req.body.username.toLowerCase());
+      const userByName = await userDao.getByUsername(req.body.username.toLowerCase());
 
       if (userByName) {
         req.flash('danger', 'username already taken.');
@@ -48,13 +48,21 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/user/account');
     }
 
-    user.username = req.body.username;
-    user.usernameLower = req.body.username.toLowerCase();
-    user.about = req.body.body;
-    if (req.body.image) {
-      user.imageName = req.body.image;
+    // Fetch user with sensitive data to preserve email field during update
+    const userToUpdate = await userDao.getByIdWithSensitiveData(user.id);
+
+    if (!userToUpdate) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/user/account');
     }
-    await User.update(user);
+
+    userToUpdate.username = req.body.username;
+    userToUpdate.usernameLower = req.body.username.toLowerCase();
+    userToUpdate.about = req.body.body;
+    if (req.body.image) {
+      userToUpdate.imageName = req.body.image;
+    }
+    await userDao.update(userToUpdate as any);
 
     req.flash('success', 'User information updated.');
     return redirect(req, res, '/user/account');

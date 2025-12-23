@@ -1,8 +1,8 @@
-import Cube from 'dynamo/models/cube';
-import { FeaturedQueue } from 'dynamo/models/featuredQueue';
-import Patron from 'dynamo/models/patron';
+import { cubeDao, userDao } from 'dynamo/daos';
+import { featuredQueueDao } from 'dynamo/daos';
+import { patronDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect, render } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -11,7 +11,10 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/login');
   }
 
-  const patron = await Patron.getById(req.user.id);
+  // Fetch user with email to display on account page
+  const userWithEmail = await userDao.getByIdWithSensitiveData(req.user.id);
+
+  const patron = await patronDao.getById(req.user.id);
 
   const entireQueue = [];
 
@@ -19,7 +22,7 @@ export const handler = async (req: Request, res: Response) => {
     let lastKey;
 
     do {
-      const result = await FeaturedQueue.querySortedByDate(lastKey);
+      const result = await featuredQueueDao.querySortedByDate(lastKey);
       lastKey = result.lastKey;
       if (result.items) {
         entireQueue.push(...result.items);
@@ -30,7 +33,7 @@ export const handler = async (req: Request, res: Response) => {
   const i = entireQueue.findIndex((f) => f.owner === req.user?.id);
   let myFeatured;
   if (i !== -1 && entireQueue[i]) {
-    const cube = await Cube.getById(entireQueue[i].cube);
+    const cube = await cubeDao.getById(entireQueue[i].cube);
     myFeatured = { cube, position: i + 1 };
   }
 
@@ -44,6 +47,7 @@ export const handler = async (req: Request, res: Response) => {
       patreonClientId: process.env.PATREON_CLIENT_ID || '',
       patron,
       featured: myFeatured,
+      userEmail: userWithEmail?.email,
     },
     {
       title: 'Account',

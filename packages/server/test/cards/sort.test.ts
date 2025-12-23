@@ -233,9 +233,9 @@ describe('Sorting by Word Count', () => {
     const sorted = sortWithoutGrouping(cards, SORT);
 
     expect(mapToCardNames(sorted)).toEqual(['Short Card', 'Medium Card', 'Long Card']);
-    expect(sorted[0].details?.wordCount).toBe(5);
-    expect(sorted[1].details?.wordCount).toBe(6);
-    expect(sorted[2].details?.wordCount).toBe(7);
+    expect(sorted[0]?.details?.wordCount).toBe(5);
+    expect(sorted[1]?.details?.wordCount).toBe(6);
+    expect(sorted[2]?.details?.wordCount).toBe(7);
   });
 });
 

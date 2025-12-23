@@ -1,8 +1,4 @@
-import Cube from 'dynamo/models/cube';
-import dailyP1P1Model from 'dynamo/models/dailyP1P1';
-import { FeaturedQueue } from 'dynamo/models/featuredQueue';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
-import User from 'dynamo/models/user';
+import { cubeDao, dailyP1P1Dao, featuredQueueDao, p1p1PackDao, userDao } from 'dynamo/daos';
 
 import { generateBalancedPack, generatePack, GeneratePackResult } from './cubefn';
 import * as util from './util';
@@ -30,7 +26,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     console.log('Starting daily P1P1 rotation...');
 
     // Idempotency check: If there's already an active daily P1P1 from today, don't create another
-    const currentDailyP1P1 = await dailyP1P1Model.getCurrentDailyP1P1();
+    const currentDailyP1P1 = await dailyP1P1Dao.getCurrentDailyP1P1();
     if (currentDailyP1P1) {
       // Check if it was created within the last 23 hours
       // Note: stored date has +6 hour offset, so we check against (now - 17 hours) to effectively check creation time > (now - 23 hours)
@@ -46,7 +42,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     }
 
     // Get featured cubes queue
-    const queueResult = await FeaturedQueue.querySortedByDate(undefined, 999);
+    const queueResult = await featuredQueueDao.querySortedByDate(undefined, 999);
     if (!queueResult.items || queueResult.items.length === 0) {
       console.log('No featured cubes in queue, skipping rotation');
       return { success: false, error: 'No featured cubes in queue' };
@@ -65,7 +61,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     console.log('Selected cube from featured queue:', selectedQueueItem.cube);
 
     // Get the cube
-    const cube = await Cube.getById(selectedQueueItem.cube);
+    const cube = await cubeDao.getById(selectedQueueItem.cube);
     if (!cube) {
       console.error('Selected cube not found:', selectedQueueItem.cube);
       return { success: false, error: 'Selected cube not found' };
@@ -74,7 +70,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     console.log('Found cube:', cube.name);
 
     // Get cube cards
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
 
     // Generate pack using the provided strategy
     const seedPrefix = 'p1p1-of-the-day';
@@ -97,7 +93,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     };
 
     // Create P1P1 pack (owned by CubeCobra to prevent deletion)
-    const pack = await p1p1PackModel.put(
+    const pack = await p1p1PackDao.createPack(
       {
         cubeId: cube.id,
         createdBy: 'CubeCobra',
@@ -108,7 +104,7 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
     console.log('Created P1P1 pack:', pack.id);
 
     // Set as new daily P1P1 (this will deactivate the previous one)
-    const dailyP1P1 = await dailyP1P1Model.setActiveDailyP1P1(pack.id, cube.id);
+    const dailyP1P1 = await dailyP1P1Dao.setActiveDailyP1P1(pack.id, cube.id);
 
     console.log('Successfully rotated daily P1P1:', dailyP1P1.id);
 
@@ -126,8 +122,8 @@ export async function rotateDailyP1P1(generatePackFn: PackGenerationStrategy): P
         };
       }
 
-      const cubeOwner = await User.getById(ownerId);
-      const admin = await User.getById('5d1125b00e0713602c55d967');
+      const cubeOwner = await userDao.getById(ownerId);
+      const admin = await userDao.getById('5d1125b00e0713602c55d967');
 
       if (cubeOwner && admin) {
         await util.addNotification(

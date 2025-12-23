@@ -1,14 +1,10 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
-import Blog from 'dynamo/models/blog';
-import Changelog from 'dynamo/models/changelog';
-import Cube from 'dynamo/models/cube';
-import Feed from 'dynamo/models/feed';
-import Package from 'dynamo/models/package';
+import { blogDao, changelogDao, cubeDao, feedDao, packageDao } from 'dynamo/daos';
+import { ensureAuth } from 'router/middleware';
+import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { newCard } from 'serverutils/util';
-import { ensureAuth } from 'src/router/middleware';
 
-import { cardFromId } from '../../../../serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const addtocubeHandler = async (req: Request, res: Response) => {
@@ -20,7 +16,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(400).send({
@@ -36,11 +32,11 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await Cube.getCards(req.params.id);
+    const cubeCards = await cubeDao.getCards(req.params.id);
 
     let tag: string | null = null;
     if (req.body.packid) {
-      const pack = await Package.getById(req.body.packid);
+      const pack = await packageDao.getById(req.body.packid);
       if (pack) {
         tag = pack.title;
       }
@@ -52,37 +48,38 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       return c;
     });
 
-    if (!['mainboard', 'maybeboard'].includes(req.body.board)) {
+    const board = req.body.board as 'mainboard' | 'maybeboard';
+
+    if (!['mainboard', 'maybeboard'].includes(board)) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid board',
       });
     }
 
-    if (!cubeCards[req.body.board]) {
-      cubeCards[req.body.board] = [];
+    if (!cubeCards[board]) {
+      cubeCards[board] = [];
     }
 
     if (tag) {
-      cubeCards[req.body.board].push(...adds);
+      cubeCards[board].push(...adds);
     } else {
-      cubeCards[req.body.board].push(...req.body.cards.map((id: string) => newCard(cardFromId(id), [])));
+      cubeCards[board].push(...req.body.cards.map((id: string) => newCard(cardFromId(id), [])));
     }
 
-    await Cube.updateCards(req.params.id, cubeCards);
+    await cubeDao.updateCards(req.params.id, cubeCards);
 
-    const changelist = await Changelog.put(
+    const changelist = await changelogDao.createChangelog(
       {
-        [req.body.board]: { adds },
+        [board]: { adds },
       },
-      cube.id,
+      req.params.id,
     );
 
     if (tag) {
-      const id = await Blog.put({
+      const id = await blogDao.createBlog({
         body: `Add from the package [${tag}](/packages/${req.body.packid})`,
         owner: req.user.id,
-        date: new Date().valueOf(),
         cube: cube.id,
         title: `Added Package "${tag}"`,
         changelist,
@@ -97,7 +94,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
         type: FeedTypes.BLOG,
       }));
 
-      await Feed.batchPut(feedItems);
+      await feedDao.batchPutUnhydrated(feedItems);
     }
 
     return res.status(200).send({

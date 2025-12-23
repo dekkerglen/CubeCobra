@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -13,7 +13,7 @@ export const getCardImageForCubeHandler = async (req: Request, res: Response) =>
       return redirect(req, res, '/404');
     }
 
-    const cards = await Cube.getCards(cubeid);
+    const cards = await cubeDao.getCards(cubeid);
     const main = cards.mainboard;
 
     const found = main

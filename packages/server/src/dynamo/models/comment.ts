@@ -1,3 +1,5 @@
+// Migrated to dao/CommentDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import Comment, { UnhydratedComment } from '@utils/datatypes/Comment';
@@ -41,6 +43,8 @@ const createHydratedComment = (document: UnhydratedComment, owner: User, image: 
     body: document.body,
     owner: owner,
     image: image,
+    dateCreated: document.dateCreated,
+    dateLastUpdated: document.dateLastUpdated,
   };
 };
 

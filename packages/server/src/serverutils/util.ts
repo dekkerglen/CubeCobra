@@ -1,5 +1,5 @@
 import User, { UserRoles } from '@utils/datatypes/User';
-import Notification from 'dynamo/models/notification';
+import { notificationDao } from 'dynamo/daos';
 import shuffleSeed from 'shuffle-seed';
 
 import { NextFunction, Request, Response } from '../types/express';
@@ -292,7 +292,7 @@ export function fromEntries(entries: [string, any][]): Record<string, any> {
 export async function addNotification(to: User, from: User | null, url: string, text: string) {
   if (!from) {
     // system notification
-    return await Notification.put({
+    return await notificationDao.put({
       date: new Date().valueOf(),
       to: `${to.id}`,
       from: '5d1125b00e0713602c55d967', // Dekkaru's user ID 😏
@@ -306,7 +306,7 @@ export async function addNotification(to: User, from: User | null, url: string, 
     return; // we don't need to give notifications to ourselves
   }
 
-  return await Notification.put({
+  return await notificationDao.put({
     date: new Date().valueOf(),
     to: `${to.id}`,
     from: `${from.id}`,

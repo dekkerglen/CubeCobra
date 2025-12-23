@@ -96,6 +96,11 @@ export class ElasticBeanstalk extends Construct {
         },
         {
           namespace: 'aws:elasticbeanstalk:command',
+          optionName: 'DeploymentPolicy',
+          value: 'Immutable',
+        },
+        {
+          namespace: 'aws:elasticbeanstalk:command',
           optionName: 'BatchSize',
           value: '50',
         },

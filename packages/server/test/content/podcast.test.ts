@@ -1,9 +1,22 @@
-import { ContentStatus, ContentType } from '@utils/datatypes/Content';
+import { ContentStatus } from '@utils/datatypes/Content';
 import { updatePodcast } from 'serverutils/podcast';
 import { getFeedData, getFeedEpisodes } from 'serverutils/rss';
 
-import Content from '../../src/dynamo/models/content';
 import { createEpisode, createPodcast, createUser } from '../test-utils/data';
+
+// Mock the DAOs
+jest.mock('../../src/dynamo/daos', () => ({
+  podcastDao: {
+    update: jest.fn(),
+  },
+  episodeDao: {
+    queryByPodcast: jest.fn(),
+    queryByPodcastAndStatus: jest.fn(),
+    put: jest.fn(),
+    batchPut: jest.fn(),
+    createEpisode: jest.fn(),
+  },
+}));
 
 const mockSanitize = jest.fn((text) => text);
 
@@ -21,7 +34,9 @@ jest.mock('sanitize-html', () => {
 });
 
 jest.mock('serverutils/rss');
-jest.mock('../../src/dynamo/models/content');
+
+// Import the mocked DAOs after jest.mock
+import { episodeDao, podcastDao } from '../../src/dynamo/daos';
 
 describe('Podcast Utils', () => {
   afterEach(() => {
@@ -47,17 +62,17 @@ describe('Podcast Utils', () => {
         image: 'new-image.jpg',
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue([]);
-      (Content.getPodcastEpisodes as jest.Mock).mockResolvedValue(mockEpisodes);
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: mockEpisodes });
 
       await updatePodcast(mockPodcast);
 
-      expect(Content.batchPut).toHaveBeenCalledWith(
+      expect(episodeDao.batchPut).toHaveBeenCalledWith(
         mockEpisodes.map((episode) => ({
           ...episode,
           image: 'new-image.jpg',
         })),
       );
-      expect(Content.update).toHaveBeenCalledWith({
+      expect(podcastDao.update).toHaveBeenCalledWith({
         ...mockPodcast,
         image: 'new-image.jpg',
         date: expect.any(Number),
@@ -98,30 +113,28 @@ describe('Podcast Utils', () => {
         image: 'image.jpg',
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue(mockFeedEpisodes);
-      (Content.getPodcastEpisodes as jest.Mock).mockResolvedValue([]);
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: [] });
 
       await updatePodcast(mockPodcast);
 
-      expect(Content.put).toHaveBeenCalledTimes(2);
-      expect(Content.put).toHaveBeenCalledWith(
+      expect(episodeDao.createEpisode).toHaveBeenCalledTimes(2);
+      expect(episodeDao.createEpisode).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'New Episode 1',
           body: 'Description 1',
           podcastGuid: 'guid-1',
           status: ContentStatus.PUBLISHED,
         }),
-        ContentType.EPISODE,
       );
 
       // Verify second episode was also sanitized
-      expect(Content.put).toHaveBeenCalledWith(
+      expect(episodeDao.createEpisode).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'New Episode 2',
           body: 'Description 2',
           podcastGuid: 'guid-2',
           status: ContentStatus.PUBLISHED,
         }),
-        ContentType.EPISODE,
       );
     });
 
@@ -151,12 +164,12 @@ describe('Podcast Utils', () => {
         image: mockPodcast.image,
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue(mockFeedEpisodes);
-      (Content.getPodcastEpisodes as jest.Mock).mockResolvedValue([existingEpisode]);
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: [existingEpisode] });
 
       await updatePodcast(mockPodcast);
 
-      expect(Content.put).not.toHaveBeenCalled();
-      expect(Content.update).toHaveBeenCalledWith(
+      expect(episodeDao.createEpisode).not.toHaveBeenCalled();
+      expect(podcastDao.update).toHaveBeenCalledWith(
         expect.objectContaining({
           date: expect.any(Number),
         }),
@@ -179,12 +192,12 @@ describe('Podcast Utils', () => {
         image: 'new-image.jpg',
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue([]);
-      (Content.getPodcastEpisodes as jest.Mock).mockResolvedValue(mockEpisodes);
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: mockEpisodes });
 
       await updatePodcast(mockPodcast);
 
       // Should update episodes even though podcast image matches
-      expect(Content.batchPut).toHaveBeenCalledWith(
+      expect(episodeDao.batchPut).toHaveBeenCalledWith(
         mockEpisodes.map((episode) => ({
           ...episode,
           image: 'new-image.jpg',
@@ -192,7 +205,7 @@ describe('Podcast Utils', () => {
       );
 
       // Should not update podcast since image already matches
-      expect(Content.update).toHaveBeenCalledWith({
+      expect(podcastDao.update).toHaveBeenCalledWith({
         ...mockPodcast,
         date: expect.any(Number),
       });
@@ -214,18 +227,18 @@ describe('Podcast Utils', () => {
         image: 'new-image.jpg',
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue([]);
-      (Content.getPodcastEpisodes as jest.Mock).mockResolvedValue(mockEpisodes);
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: mockEpisodes });
 
       await updatePodcast(mockPodcast);
 
-      expect(Content.batchPut).toHaveBeenCalledWith(
+      expect(episodeDao.batchPut).toHaveBeenCalledWith(
         mockEpisodes.map((episode) => ({
           ...episode,
           image: 'new-image.jpg',
         })),
       );
 
-      expect(Content.update).toHaveBeenCalledWith({
+      expect(podcastDao.update).toHaveBeenCalledWith({
         ...mockPodcast,
         image: 'new-image.jpg',
         date: expect.any(Number),

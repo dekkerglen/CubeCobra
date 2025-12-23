@@ -1,8 +1,5 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
-import Blog from 'dynamo/models/blog';
-import Changelog from 'dynamo/models/changelog';
-import Cube from 'dynamo/models/cube';
-import Feed from 'dynamo/models/feed';
+import { blogDao, changelogDao, cubeDao, feedDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -41,7 +38,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(id);
+    const cube = await cubeDao.getById(id);
 
     if (!cube) {
       return res.status(404).send({
@@ -64,7 +61,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
 
     for (const [board] of Object.entries(changes)) {
       // swaps
@@ -100,15 +97,14 @@ export const commitHandler = async (req: Request, res: Response) => {
       }
     }
 
-    await Cube.updateCards(cube.id, cards);
+    const newVersion = await cubeDao.updateCards(cube.id, cards);
     try {
-      const changelogId = await Changelog.put(changes, cube.id);
+      const changelogId = await changelogDao.createChangelog(changes, cube.id);
 
       if (useBlog) {
-        const blogId = await Blog.put({
+        const blogId = await blogDao.createBlog({
           body: blog,
           owner: req.user.id,
-          date: new Date().valueOf(),
           cube: cube.id,
           title,
           changelist: changelogId,
@@ -123,12 +119,13 @@ export const commitHandler = async (req: Request, res: Response) => {
           type: FeedTypes.BLOG,
         }));
 
-        await Feed.batchPut(feedItems);
+        await feedDao.batchPutUnhydrated(feedItems);
       }
 
       return res.status(200).send({
         success: 'true',
         updateApplied: true,
+        version: newVersion,
       });
     } catch (err) {
       const error = err as Error;
@@ -137,6 +134,7 @@ export const commitHandler = async (req: Request, res: Response) => {
         success: 'false',
         message: `Changes applied succesfully, but encountered an error creating history/blog/feed items: ${error.message}\n${error.stack}`,
         updateApplied: true,
+        version: newVersion,
       });
     }
   } catch (err) {

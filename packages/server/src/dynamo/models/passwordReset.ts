@@ -1,4 +1,7 @@
+// migrated to /dao/PasswordResetDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import PasswordReset, { UnhydratedPasswordReset } from '@utils/datatypes/PasswordReset';
 import createClient from 'dynamo/util';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,6 +27,20 @@ const passwordReset = {
   },
   batchPut: async (documents: PasswordReset[]): Promise<void> => {
     await client.batchPut(documents);
+  },
+  scan: async (
+    limit?: number,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items: any[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    });
+
+    return {
+      items: result.Items ?? [],
+      lastKey: result.LastEvaluatedKey,
+    };
   },
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
 };

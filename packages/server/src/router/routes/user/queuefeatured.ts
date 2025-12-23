@@ -1,8 +1,8 @@
-import Cube from 'dynamo/models/cube';
-import Patron from 'dynamo/models/patron';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
+import { cubeDao, patronDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import * as fq from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -19,7 +19,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, redirectTo);
   }
 
-  const cube = await Cube.getById(req.body.cubeId);
+  const cube = await cubeDao.getById(req.body.cubeId);
   if (!cube) {
     req.flash('danger', 'Cube not found');
     return redirect(req, res, redirectTo);
@@ -29,12 +29,12 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, redirectTo);
   }
 
-  if (cube.visibility === (Cube as any).VISIBILITY.PRIVATE) {
+  if (cube.visibility === CUBE_VISIBILITY.PRIVATE) {
     req.flash('danger', 'Private cubes cannot be featured');
     return redirect(req, res, redirectTo);
   }
 
-  const patron = await Patron.getById(req.user.id);
+  const patron = await patronDao.getById(req.user.id);
   if (!fq.canBeFeatured(patron)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');
     return redirect(req, res, redirectTo);

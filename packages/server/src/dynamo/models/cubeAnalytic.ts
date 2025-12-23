@@ -1,3 +1,5 @@
+// migrated to /dao/CubeDynamoDao.ts
+
 import { getObject, putObject } from '../s3client';
 
 interface CubeAnalytics {

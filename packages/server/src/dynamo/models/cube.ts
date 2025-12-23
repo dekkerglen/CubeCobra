@@ -1,16 +1,18 @@
+// migrated to dao/CubeDynamoDao
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import CubeType from '@utils/datatypes/Cube';
+import CubeType, { CubeCards } from '@utils/datatypes/Cube';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
+import { userDao } from 'dynamo/daos';
 import _ from 'lodash';
+import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
+import cloudwatch from 'serverutils/cloudwatch';
+import { getImageData } from 'serverutils/imageutil';
 
-import { cardFromId, getPlaceholderCard } from '../../serverutils/carddb';
-import cloudwatch from '../../serverutils/cloudwatch';
-import { getImageData } from '../../serverutils/imageutil';
 import { deleteObject, getObject, putObject } from '../s3client';
 import createClient from '../util';
 import cubeHash from './cubeHash';
-import User from './user';
 
 interface QueryResult {
   items: CubeType[];
@@ -137,7 +139,7 @@ const stripDetails = (cards: any[]): void => {
   });
 };
 
-const getCards = async (id: string): Promise<any> => {
+const getCards = async (id: string): Promise<CubeCards> => {
   try {
     const cards = await getObject(process.env.DATA_BUCKET!, `cube/${id}.json`);
 
@@ -168,7 +170,7 @@ const hydrate = async (cube: any): Promise<CubeType | undefined> => {
     return cube;
   }
 
-  cube.owner = await User.getById(cube.owner);
+  cube.owner = await userDao.getById(cube.owner);
   cube.image = getImageData(cube.imageName);
 
   const draftFormats = cube?.formats || [];
@@ -181,7 +183,7 @@ const hydrate = async (cube: any): Promise<CubeType | undefined> => {
 };
 
 const batchHydrate = async (cubes: any[]): Promise<CubeType[]> => {
-  const owners = await User.batchGet(cubes.map((cube: any) => cube.owner).filter((owner: any) => owner));
+  const owners = await userDao.batchGet(cubes.map((cube: any) => cube.owner).filter((owner: any) => owner));
 
   return cubes.map((cube: any) => {
     cube.owner = owners.find((owner) => owner.id === cube.owner);

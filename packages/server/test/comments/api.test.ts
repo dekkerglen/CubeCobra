@@ -3,9 +3,6 @@ import { NoticeType } from '@utils/datatypes/Notice';
 import * as util from 'serverutils/render';
 import * as routeUtil from 'serverutils/util';
 
-import Comment from '../../src/dynamo/models/comment';
-import Notice from '../../src/dynamo/models/notice';
-import DynamoUser from '../../src/dynamo/models/user';
 import {
   addCommentHandler,
   editCommentHandler,
@@ -17,16 +14,25 @@ import { createUser } from '../test-utils/data';
 import { expectRegisteredRoutes } from '../test-utils/route';
 import { call } from '../test-utils/transport';
 
-jest.mock('../../src/dynamo/models/comment', () => ({
-  ...jest.requireActual('../../src/dynamo/models/comment'),
-  getById: jest.fn(),
-  queryByParentAndType: jest.fn(),
-  put: jest.fn(),
+// Mock the commentDao and noticeDao from dynamo/daos
+jest.mock('../../src/dynamo/daos', () => ({
+  commentDao: {
+    getById: jest.fn(),
+    queryByParent: jest.fn(),
+    put: jest.fn(),
+    createComment: jest.fn(),
+  },
+  noticeDao: {
+    put: jest.fn(),
+    createNotice: jest.fn(),
+  },
+  userDao: {
+    getByUsername: jest.fn(),
+  },
 }));
 
-jest.mock('../../src/dynamo/models/user', () => ({
-  getByUsername: jest.fn(),
-}));
+// Import the mocked daos
+import { commentDao, noticeDao, userDao } from '../../src/dynamo/daos';
 
 jest.mock('@utils/datatypes/Comment', () => ({
   ...jest.requireActual('@utils/datatypes/Comment'),
@@ -35,17 +41,6 @@ jest.mock('@utils/datatypes/Comment', () => ({
     value: unknown,
   ) => value is ReturnType<typeof isNotifiableCommentType>,
 }));
-
-jest.mock('../../src/dynamo/models/user', () => ({
-  getByUsername: jest.fn(),
-}));
-
-jest.mock('../../src/dynamo/models/notice', () => {
-  return {
-    ...jest.requireActual('../../src/dynamo/models/notice'),
-    put: jest.fn(),
-  };
-});
 
 jest.mock('serverutils/render', () => ({
   handleRouteError: jest.fn(),
@@ -70,14 +65,14 @@ describe('Get Comment', () => {
       body: 'Hello World',
     };
 
-    (Comment.getById as jest.Mock).mockResolvedValue(mockComment);
+    (commentDao.getById as jest.Mock).mockResolvedValue(mockComment);
 
     await call(getHandler)
       .withFlash(flashMock)
       .withRequest({ params: { id: mockComment.id } })
       .send();
 
-    expect(Comment.getById).toHaveBeenCalledWith(mockComment.id);
+    expect(commentDao.getById).toHaveBeenCalledWith(mockComment.id);
     expect(util.render).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
@@ -91,14 +86,14 @@ describe('Get Comment', () => {
   });
 
   it('alerts when comment is not found', async () => {
-    (Comment.getById as jest.Mock).mockResolvedValue(undefined);
+    (commentDao.getById as jest.Mock).mockResolvedValue(undefined);
 
     await call(getHandler)
       .withFlash(flashMock)
       .withRequest({ params: { id: '12345' } })
       .send();
 
-    expect(Comment.getById).toHaveBeenCalledWith('12345');
+    expect(commentDao.getById).toHaveBeenCalledWith('12345');
     expect(util.render).not.toHaveBeenCalled();
     expect(flashMock).toHaveBeenCalled();
     expect(util.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
@@ -106,7 +101,7 @@ describe('Get Comment', () => {
 
   it('handles errors gracefully', async () => {
     const error = new Error('Something went wrong');
-    (Comment.getById as jest.Mock).mockRejectedValue(error);
+    (commentDao.getById as jest.Mock).mockRejectedValue(error);
     (util.handleRouteError as jest.Mock).mockImplementation(() => {});
 
     await call(getHandler)
@@ -114,7 +109,7 @@ describe('Get Comment', () => {
       .withRequest({ params: { id: '12345' } })
       .send();
 
-    expect(Comment.getById).toHaveBeenCalledWith('12345');
+    expect(commentDao.getById).toHaveBeenCalledWith('12345');
     expect(util.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), error, '/404');
     expect(flashMock).not.toHaveBeenCalled();
     expect(util.redirect).not.toHaveBeenCalled();
@@ -127,7 +122,7 @@ describe('Report Comment', () => {
 
   it('handles a report', async () => {
     const reporter = createUser({ username: 'reporter' });
-    (Notice.put as jest.Mock).mockResolvedValue(undefined);
+    (noticeDao.put as jest.Mock).mockResolvedValue(undefined);
 
     await call(reportHandler)
       .as(reporter)
@@ -141,7 +136,7 @@ describe('Report Comment', () => {
       })
       .send();
 
-    expect(Notice.put).toHaveBeenCalledWith(
+    expect(noticeDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         subject: '12345',
         body: 'Report reason\n\nReport info',
@@ -155,7 +150,7 @@ describe('Report Comment', () => {
 
   it('should handle errors gracefully', async () => {
     const error = new Error('Something went wrong');
-    (Notice.put as jest.Mock).mockRejectedValue(error);
+    (noticeDao.put as jest.Mock).mockRejectedValue(error);
 
     await call(reportHandler)
       .withFlash(flashMock)
@@ -183,7 +178,7 @@ describe('Get Comments', () => {
       lastKey: 'nextLastKey',
     };
 
-    (Comment.queryByParentAndType as jest.Mock).mockResolvedValue(mockComments);
+    (commentDao.queryByParent as jest.Mock).mockResolvedValue(mockComments);
 
     const res = await call(getCommentsHandler)
       .withRequest({
@@ -194,7 +189,7 @@ describe('Get Comments', () => {
       })
       .send();
 
-    expect(Comment.queryByParentAndType).toHaveBeenCalledWith('parent123', 'lastKey123');
+    expect(commentDao.queryByParent).toHaveBeenCalledWith('parent123', 'lastKey123');
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'true',
@@ -205,7 +200,7 @@ describe('Get Comments', () => {
 
   it('should handle errors gracefully', async () => {
     const mockError = new Error('Something went wrong');
-    (Comment.queryByParentAndType as jest.Mock).mockRejectedValue(mockError);
+    (commentDao.queryByParent as jest.Mock).mockRejectedValue(mockError);
 
     await call(getCommentsHandler)
       .withRequest({
@@ -216,7 +211,7 @@ describe('Get Comments', () => {
       })
       .send();
 
-    expect(Comment.queryByParentAndType).toHaveBeenCalledWith('parent123', 'lastKey123');
+    expect(commentDao.queryByParent).toHaveBeenCalledWith('parent123', 'lastKey123');
     expect(util.handleRouteError).toHaveBeenCalledWith(expect.anything(), expect.anything(), mockError, '/404');
   });
 });
@@ -227,7 +222,7 @@ describe('Edit Comment', () => {
   });
 
   it('should return 404 if the comment does not exist', async () => {
-    (Comment.getById as jest.Mock).mockResolvedValue(null);
+    (commentDao.getById as jest.Mock).mockResolvedValue(null);
 
     const res = await call(editCommentHandler)
       .withRequest({
@@ -241,7 +236,7 @@ describe('Edit Comment', () => {
       })
       .send();
 
-    expect(Comment.getById).toHaveBeenCalledWith('123');
+    expect(commentDao.getById).toHaveBeenCalledWith('123');
     expect(res.status).toEqual(404);
     expect(res.body).toEqual({
       success: 'false',
@@ -250,7 +245,7 @@ describe('Edit Comment', () => {
   });
 
   it('should return 404 if the user is not the owner of the comment', async () => {
-    (Comment.getById as jest.Mock).mockResolvedValue({
+    (commentDao.getById as jest.Mock).mockResolvedValue({
       id: '123',
       owner: createUser({ id: 'commenter' }),
     });
@@ -268,7 +263,7 @@ describe('Edit Comment', () => {
       })
       .send();
 
-    expect(Comment.getById).toHaveBeenCalledWith('123');
+    expect(commentDao.getById).toHaveBeenCalledWith('123');
     expect(res.status).toEqual(404);
     expect(res.body).toEqual({
       success: 'false',
@@ -284,8 +279,8 @@ describe('Edit Comment', () => {
       owner: commenter,
     };
 
-    (Comment.getById as jest.Mock).mockResolvedValue(comment);
-    (Comment.put as jest.Mock).mockResolvedValue(undefined);
+    (commentDao.getById as jest.Mock).mockResolvedValue(comment);
+    (commentDao.put as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(editCommentHandler)
       .as(commenter)
@@ -296,7 +291,7 @@ describe('Edit Comment', () => {
 
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({ success: 'true' });
-    expect(Comment.put).toHaveBeenCalledWith(
+    expect(commentDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'comment-to-delete',
         owner: expect.objectContaining({ id: '404' }),
@@ -307,12 +302,12 @@ describe('Edit Comment', () => {
   it('should update the comment successfully', async () => {
     const commenter = createUser({ id: 'commenter' });
 
-    (Comment.getById as jest.Mock).mockResolvedValue({
+    (commentDao.getById as jest.Mock).mockResolvedValue({
       id: '123',
       body: 'Original content',
       owner: commenter,
     });
-    (Comment.put as jest.Mock).mockResolvedValue(undefined);
+    (commentDao.put as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(editCommentHandler)
       .as(commenter)
@@ -327,8 +322,8 @@ describe('Edit Comment', () => {
       })
       .send();
 
-    expect(Comment.getById).toHaveBeenCalledWith('123');
-    expect(Comment.put).toHaveBeenCalledWith(
+    expect(commentDao.getById).toHaveBeenCalledWith('123');
+    expect(commentDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         id: '123',
         body: 'This is the updated comment content.',
@@ -341,11 +336,20 @@ describe('Edit Comment', () => {
 });
 
 describe('Add Comment', () => {
+  const mockCreatedComment = {
+    id: 'comment-id',
+    body: 'This is a new comment',
+    parent: 'parent-id',
+    type: 'comment',
+    owner: createUser(),
+    date: Date.now(),
+  };
+
   beforeEach(() => {
-    (Comment.put as jest.Mock).mockResolvedValue('comment-id');
+    (commentDao.createComment as jest.Mock).mockResolvedValue(mockCreatedComment);
     (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
 
-    (Comment.getById as jest.Mock).mockResolvedValue({
+    (commentDao.getById as jest.Mock).mockResolvedValue({
       id: '12345',
       body: 'Hello World',
       owner: { id: 'another-user' },
@@ -394,9 +398,9 @@ describe('Add Comment', () => {
       })
       .send();
 
-    expect(Comment.put).toHaveBeenCalledWith(
+    expect(commentDao.createComment).toHaveBeenCalledWith(
       expect.objectContaining({
-        owner: commenter.id,
+        owner: commenter,
         body: 'This is a new comment',
         parent: 'parent-id',
         type: 'comment',
@@ -409,6 +413,9 @@ describe('Add Comment', () => {
       comment: expect.objectContaining({
         owner: commenter,
         id: 'comment-id',
+        body: 'This is a new comment',
+        parent: 'parent-id',
+        type: 'comment',
       }),
     });
   });
@@ -445,7 +452,7 @@ describe('Add Comment', () => {
     (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
     (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
-    (DynamoUser.getByUsername as jest.Mock).mockImplementation((username: string) =>
+    (userDao.getByUsername as jest.Mock).mockImplementation((username: string) =>
       Promise.resolve({ id: `id-${username}`, username: username }),
     );
 
@@ -491,7 +498,7 @@ describe('Add Comment', () => {
     (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
     (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
     (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(true);
-    (DynamoUser.getByUsername as jest.Mock).mockImplementation((username: string) =>
+    (userDao.getByUsername as jest.Mock).mockImplementation((username: string) =>
       Promise.resolve({ id: `id-${username}`, username: username }),
     );
 

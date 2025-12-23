@@ -1,7 +1,4 @@
 import type { Config } from 'jest';
-import { pathsToModuleNameMapper } from 'ts-jest';
-
-import { compilerOptions } from './tsconfig.json';
 
 const jestConfig: Config = {
   preset: 'ts-jest',
@@ -25,9 +22,23 @@ const jestConfig: Config = {
     ],
   },
 
-  // Transform tsconfig module name mapper to jest
-  modulePaths: [compilerOptions.baseUrl], // <-- This will be set to 'baseUrl' value
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
+  // Module resolution paths
+  modulePaths: ['<rootDir>'],
+  moduleDirectories: ['node_modules', 'src'],
+
+  // Use default resolver
+  resolver: undefined,
+
+  // Module name mapping for path aliases
+  moduleNameMapper: {
+    '^@client/(.*)$': '<rootDir>/../client/src/$1',
+    '^@jobs/(.*)$': '<rootDir>/../jobs/src/$1',
+    '^@utils/(.*)$': '<rootDir>/../utils/src/$1',
+    '^serverutils/(.*)$': '<rootDir>/src/serverutils/$1',
+    '^router/(.*)$': '<rootDir>/src/router/$1',
+    '^dynamo/(.*)$': '<rootDir>/src/dynamo/$1',
+    '^types/(.*)$': '<rootDir>/src/types/$1',
+  },
 
   // Transform ignore patterns
   transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))'],
@@ -45,7 +56,7 @@ const jestConfig: Config = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['json', 'text'],
-  collectCoverageFrom: ['src/**/*.{js,ts,tsx}', 'src/dynamo/models/*.js', '!src/**/*.d.ts', '!src/**/index.{js,ts}'],
+  collectCoverageFrom: ['src/**/*.{js,ts,tsx}', '!src/**/*.d.ts', '!src/**/index.{js,ts}', '!src/client/**'],
 };
 
 export default jestConfig;

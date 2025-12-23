@@ -9,6 +9,7 @@ import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
 import { Certificates } from './certificates';
 import { DailyJobsLambdaConstruct } from './daily-jobs-lambda';
+import { DynamodbTables } from './dynamodb-tables';
 import { ECR } from './ecr';
 import { ElasticBeanstalk } from './elastic-beanstalk';
 import { Route53 } from './route53';
@@ -59,11 +60,17 @@ export class CubeCobraStack extends cdk.Stack {
 
     const appBucket = Bucket.fromBucketName(this, 'AppBucket', params.appBucket);
 
+    // Create DynamoDB single table
+    const dynamoTables = new DynamodbTables(this, 'DynamoDBTables', { prefix: params.dynamoPrefix });
+
+    // Grant the instance role read/write access to the table
+    dynamoTables.table.grantReadWriteData(role);
+
     // Create everything we need related to ElasticBeanstalk, including the environment and the application
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
       certificate: cert.consoleCertificate,
       environmentName: params.environmentName,
-      environmentVariables: createEnvironmentVariables(params, props),
+      environmentVariables: createEnvironmentVariables(params, props, dynamoTables.table.tableName),
       fleetSize: params.fleetSize,
       instanceProfile: instanceProfile,
       appBucket: appBucket,
@@ -74,9 +81,6 @@ export class CubeCobraStack extends cdk.Stack {
       dnsName: elasticBeanstalk.environment.attrEndpointUrl,
       domain: params.domain,
     });
-
-    // TODO: Not sure if we want this. Creating the tables with the app is beneficial (especially for local dev)
-    // new DynamodbTables(this, "DynamoDBTables", {prefix: params.dynamoPrefix})
 
     // Create the ECS cluster where we'll schedule jobs
     const fargateCluster = new ecs.Cluster(this, 'SharedFargateCluster');
@@ -96,7 +100,7 @@ export class CubeCobraStack extends cdk.Stack {
     });
 
     // Create the daily jobs lambda
-    const lambdaEnvVars = createEnvironmentVariables(params, props);
+    const lambdaEnvVars = createEnvironmentVariables(params, props, dynamoTables.table.tableName);
     // Remove Lambda reserved environment variables
     delete lambdaEnvVars.AWS_ACCESS_KEY_ID;
     delete lambdaEnvVars.AWS_SECRET_ACCESS_KEY;
@@ -115,10 +119,11 @@ export class CubeCobraStack extends cdk.Stack {
 function createEnvironmentVariables(
   params: CubeCobraStackParams,
   props: StackProps | undefined,
+  dynamoTableName?: string,
 ): {
   [key: string]: string;
 } {
-  return {
+  const envVars: { [key: string]: string } = {
     AWS_ACCESS_KEY_ID: params.accessKey,
     AWS_SECRET_ACCESS_KEY: params.secretKey,
     AWS_LOG_GROUP: params.awsLogGroup,
@@ -148,4 +153,11 @@ function createEnvironmentVariables(
     STRIPE_SECRET_KEY: params.stripeSecretKey,
     STRIPE_PUBLIC_KEY: params.stripePublicKey,
   };
+
+  // Add DYNAMO_TABLE if it's provided
+  if (dynamoTableName) {
+    envVars.DYNAMO_TABLE = dynamoTableName;
+  }
+
+  return envVars;
 }

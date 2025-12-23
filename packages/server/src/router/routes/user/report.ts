@@ -1,8 +1,7 @@
 import { NoticeType } from '@utils/datatypes/Notice';
-import Notice from 'dynamo/models/notice';
-import User from 'dynamo/models/user';
+import { noticeDao, userDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -13,7 +12,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const user = await User.getById(req.params.id);
+    const user = await userDao.getById(req.params.id);
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -28,7 +27,7 @@ export const handler = async (req: Request, res: Response) => {
       type: NoticeType.CUBE_REPORT,
     };
 
-    await Notice.put(report);
+    await noticeDao.put(report);
 
     req.flash(
       'success',

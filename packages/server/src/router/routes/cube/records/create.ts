@@ -1,15 +1,12 @@
-import DraftType from '@utils/datatypes/Draft';
 import DraftRecord from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
-import Record from 'dynamo/models/record';
+import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi'; // Import Joi for validation
+import { csrfProtection, ensureAuth } from 'router/middleware';
+import { bodyValidation } from 'router/middleware';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
-import { bodyValidation } from 'src/router/middleware';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
@@ -21,7 +18,7 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -67,7 +64,7 @@ export const createRecordPageFromDraftHandler = async (req: Request, res: Respon
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -84,7 +81,7 @@ export const createRecordPageFromDraftHandler = async (req: Request, res: Respon
       return redirect(req, res, '/404');
     }
 
-    const decks = await Draft.getByCube(cube.id);
+    const decks = await draftDao.queryByCube(cube.id);
 
     return render(
       req,
@@ -93,7 +90,7 @@ export const createRecordPageFromDraftHandler = async (req: Request, res: Respon
       {
         cube,
         decks: decks.items,
-        decksLastKey: decks.lastEvaluatedKey,
+        decksLastKey: decks.lastKey,
       },
       {
         title: `${abbreviate(cube.name)} - Create Record`,
@@ -144,7 +141,7 @@ export const createRecordHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
@@ -183,7 +180,7 @@ export const createRecordHandler = async (req: Request, res: Response) => {
       id: uuidv4(),
     };
 
-    const createdRecordId = await Record.put(newRecord);
+    const createdRecordId = await recordDao.createRecord(newRecord);
 
     if (!createdRecordId) {
       req.flash('danger', 'Error creating record');
@@ -204,7 +201,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
@@ -239,7 +236,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       return redirect(req, res, `/cube/records/${req.params.id}`);
     }
 
-    const draft: DraftType = await Draft.getById(draftId);
+    const draft = await draftDao.getById(draftId);
 
     if (!draft || draft.cube !== cube.id) {
       req.flash('danger', 'Draft not found or does not belong to this cube');
@@ -269,7 +266,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       id: uuidv4(),
     };
 
-    const createdRecordId = await Record.put(newRecord);
+    const createdRecordId = await recordDao.createRecord(newRecord);
 
     if (!createdRecordId) {
       req.flash('danger', 'Error creating record');

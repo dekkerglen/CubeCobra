@@ -1,8 +1,8 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
+import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { binaryInsert, turnToTree } from 'serverutils/util';
 
-import { cardFromId } from '../../../../serverutils/carddb';
 import { Request, Response } from '../../../../types/express';
 
 export const cubecardnamesHandler = async (req: Request, res: Response) => {
@@ -14,7 +14,7 @@ export const cubecardnamesHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -23,11 +23,20 @@ export const cubecardnamesHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await Cube.getCards(cube.id);
+    const cubeCards = await cubeDao.getCards(cube.id);
+
+    const board = req.params.board as 'mainboard' | 'maybeboard';
+
+    if (!['mainboard', 'maybeboard'].includes(board)) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Invalid board',
+      });
+    }
 
     const cardnames: string[] = [];
 
-    for (const card of cubeCards[req.params.board]) {
+    for (const card of cubeCards[board]) {
       binaryInsert(cardFromId(card.cardID).name, cardnames);
     }
 

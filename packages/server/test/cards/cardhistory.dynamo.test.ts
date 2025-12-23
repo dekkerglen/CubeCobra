@@ -1,9 +1,13 @@
-import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import History, { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
 
-import CardHistory from '../../src/dynamo/models/cardhistory';
+import { CardHistoryDynamoDao } from '../../src/dynamo/dao/CardHistoryDynamoDao';
 
-// Mock dependencies
-jest.mock('../../src/dynamo/util');
+// Mock the DynamoDB client
+const mockSend = jest.fn();
+const mockDynamoDBClient = {
+  send: mockSend,
+} as unknown as DynamoDBDocumentClient;
 
 // Test helpers
 const createUnhydratedCardHistory = (overrides?: Partial<UnhydratedCardHistory>): UnhydratedCardHistory => ({
@@ -24,129 +28,165 @@ const createUnhydratedCardHistory = (overrides?: Partial<UnhydratedCardHistory>)
   vintage: [0, 0],
   cubeCount: undefined,
   total: [83, 120],
+  dateCreated: Date.now(),
+  dateLastUpdated: Date.now(),
   ...overrides,
 });
 
-const setupQueryResult = (response: any) => {
-  (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce(response);
-};
-
-const verifyQueryCall = (params: any) => {
-  expect(mockDynamoClient.query).toHaveBeenCalledWith(expect.objectContaining(params));
-};
-
-// First test createClient configuration
-describe('CardHistory Model Initialization', () => {
-  it('cardhistory table created with proper configuration', async () => {
-    // Import to trigger createClient
-
-    await import('../../src/dynamo/models/cardhistory');
-
-    expect(mockDynamoCreateClient).toHaveBeenCalledWith({
-      name: 'CARD_HISTORY',
-      partitionKey: 'OTComp',
-      sortKey: 'date',
-      attributes: {
-        OTComp: 'S',
-        date: 'N',
-      },
-    });
-  });
-});
-
-describe('CardHistory Model', () => {
-  const mockCardHistory = createUnhydratedCardHistory();
+describe('CardHistoryDynamoDao', () => {
+  let cardHistoryDao: CardHistoryDynamoDao;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetAllMocks();
+    // Create DAO instance for testing
+    cardHistoryDao = new CardHistoryDynamoDao(mockDynamoDBClient, 'test-table');
+    mockSend.mockReset();
   });
 
-  describe('getByOracleAndType', () => {
+  describe('queryByOracleAndType', () => {
     it('returns empty result when no history found', async () => {
-      setupQueryResult({ Items: [], LastEvaluatedKey: null });
+      mockSend.mockResolvedValueOnce({ Items: [], LastEvaluatedKey: undefined });
 
-      const result = await CardHistory.getByOracleAndType('oracle-123', Period.DAY, 5);
+      const result = await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY, 5);
 
-      expect(result).toEqual({ items: [], lastKey: null });
-      verifyQueryCall({
-        KeyConditionExpression: 'OTComp = :oracle',
-        ExpressionAttributeValues: {
-          ':oracle': 'oracle-123:day',
-        },
-        ScanIndexForward: false,
-        Limit: 5,
-      });
+      expect(result).toEqual({ items: [], lastKey: undefined });
+      expect(mockSend).toHaveBeenCalled();
     });
 
-    it('returns history items with last key', async () => {
+    it('returns hydrated history items with last key', async () => {
       const history1 = createUnhydratedCardHistory({ date: 1000 });
       const history2 = createUnhydratedCardHistory({ date: 2000 });
 
-      setupQueryResult({
-        Items: [history1, history2],
-        LastEvaluatedKey: { key: 'lastKey' },
+      mockSend.mockResolvedValueOnce({
+        Items: [{ item: history1 }, { item: history2 }],
+        LastEvaluatedKey: { PK: 'lastKey' },
       });
 
-      const result = await CardHistory.getByOracleAndType('oracle-123', Period.DAY, 10);
+      const result = await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY, 10);
 
-      expect(result.items).toEqual([history1, history2]);
-      expect(result.lastKey).toEqual({ key: 'lastKey' });
-      verifyQueryCall({
-        KeyConditionExpression: 'OTComp = :oracle',
-        ExpressionAttributeValues: {
-          ':oracle': 'oracle-123:day',
-        },
-        ScanIndexForward: false,
-        Limit: 10,
-      });
+      expect(result.items?.length).toBe(2);
+      expect(result.items?.[0]?.cubes).toBeDefined(); // Check hydration
+      expect(result.lastKey).toEqual({ PK: 'lastKey' });
+      expect(mockSend).toHaveBeenCalled();
     });
 
-    it('uses default limit when limit is falsey', async () => {
-      setupQueryResult({ Items: [], LastEvaluatedKey: null });
+    it('uses default limit of 100', async () => {
+      mockSend.mockResolvedValueOnce({ Items: [], LastEvaluatedKey: undefined });
 
-      await CardHistory.getByOracleAndType('oracle-123', Period.DAY, 0);
+      await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY);
 
-      verifyQueryCall({
-        Limit: 100,
-      });
+      expect(mockSend).toHaveBeenCalled();
+      const callArgs = mockSend.mock.calls[0][0].input;
+      expect(callArgs.Limit).toBe(100);
     });
 
     it('uses provided last key for pagination', async () => {
-      setupQueryResult({ Items: [], LastEvaluatedKey: null });
+      mockSend.mockResolvedValueOnce({ Items: [], LastEvaluatedKey: undefined });
 
-      const lastKey = { S: 'previousPage' };
-      await CardHistory.getByOracleAndType('oracle-123', Period.DAY, 5, lastKey);
+      const lastKey = { PK: 'previousPage', SK: 'sortKey' };
+      await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY, 5, lastKey);
 
-      verifyQueryCall({
-        ExclusiveStartKey: lastKey,
+      expect(mockSend).toHaveBeenCalled();
+      const callArgs = mockSend.mock.calls[0][0].input;
+      expect(callArgs.ExclusiveStartKey).toEqual(lastKey);
+    });
+  });
+
+  describe('queryByOracle', () => {
+    it('returns empty result when no history found', async () => {
+      mockSend.mockResolvedValueOnce({ Items: [], LastEvaluatedKey: undefined });
+
+      const result = await cardHistoryDao.queryByOracle('oracle-123');
+
+      expect(result).toEqual({ items: [], lastKey: undefined });
+    });
+
+    it('returns hydrated history items across all periods', async () => {
+      const history1 = createUnhydratedCardHistory({ OTComp: 'oracle-123:day', date: 1000 });
+      const history2 = createUnhydratedCardHistory({ OTComp: 'oracle-123:week', date: 2000 });
+
+      mockSend.mockResolvedValueOnce({
+        Items: [{ item: history1 }, { item: history2 }],
+        LastEvaluatedKey: undefined,
       });
+
+      const result = await cardHistoryDao.queryByOracle('oracle-123');
+
+      expect(result.items?.length).toBe(2);
+      expect(result.items?.[0]?.cubes).toBeDefined(); // Check hydration
+    });
+  });
+
+  describe('queryByDateRange', () => {
+    it('returns items within date range', async () => {
+      const history1 = createUnhydratedCardHistory({ date: 1000 });
+
+      mockSend.mockResolvedValueOnce({
+        Items: [{ item: history1 }],
+        LastEvaluatedKey: undefined,
+      });
+
+      const result = await cardHistoryDao.queryByDateRange(1000, 2000);
+
+      expect(result.items?.length).toBe(1);
+      expect(result.items?.[0]?.cubes).toBeDefined(); // Check hydration
+    });
+
+    it('handles open-ended date range', async () => {
+      mockSend.mockResolvedValueOnce({ Items: [], LastEvaluatedKey: undefined });
+
+      await cardHistoryDao.queryByDateRange(1000);
+
+      expect(mockSend).toHaveBeenCalled();
     });
   });
 
   describe('put', () => {
     it('saves card history document', async () => {
-      await CardHistory.put(mockCardHistory);
+      const history: History = {
+        ...createUnhydratedCardHistory(),
+        cubes: 83,
+      };
+      mockSend.mockResolvedValueOnce({});
 
-      expect(mockDynamoClient.put).toHaveBeenCalledWith(mockCardHistory);
+      await cardHistoryDao.put(history);
+
+      expect(mockSend).toHaveBeenCalled();
     });
   });
 
   describe('batchPut', () => {
     it('saves multiple card history documents', async () => {
-      const histories = [createUnhydratedCardHistory({ date: 1000 }), createUnhydratedCardHistory({ date: 2000 })];
+      const histories: History[] = [
+        { ...createUnhydratedCardHistory({ date: 1000 }), cubes: 83 },
+        { ...createUnhydratedCardHistory({ date: 2000 }), cubes: 83 },
+      ];
+      mockSend.mockResolvedValue({});
 
-      await CardHistory.batchPut(histories);
+      await cardHistoryDao.batchPut(histories);
 
-      expect(mockDynamoClient.batchPut).toHaveBeenCalledWith(histories);
+      expect(mockSend).toHaveBeenCalled();
     });
   });
 
-  describe('createTable', () => {
-    it('calls client to create table', async () => {
-      await CardHistory.createTable();
+  describe('hydration', () => {
+    it('correctly calculates cubes from cube type data', async () => {
+      const unhydrated = createUnhydratedCardHistory({
+        legacy: [50, 75],
+        modern: [33, 45],
+        pauper: [10, 15],
+        // Other types are [0, 0] or undefined
+      });
 
-      expect(mockDynamoClient.createTable).toHaveBeenCalled();
+      mockSend.mockResolvedValueOnce({
+        Items: [{ item: unhydrated }],
+        LastEvaluatedKey: undefined,
+      });
+
+      const result = await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY);
+
+      expect(result.items?.length).toBe(1);
+      expect(result.items?.[0]?.cubes).toBe(93); // 50 + 33 + 10
     });
   });
 });

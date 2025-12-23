@@ -6,14 +6,13 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import CardHistory from '@server/dynamo/models/cardhistory';
-import ChangeLog from '@server/dynamo/models/changelog';
+import { cardHistoryDao, changelogDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
 import { getCubeTypes } from '@server/serverutils/cubefn';
 import { DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
-import { Period, UnhydratedCardHistory } from '@utils/datatypes/History';
+import History, { Period } from '@utils/datatypes/History';
 import fs from 'fs';
 type CubeDict = Record<string, string[]>;
 
@@ -79,7 +78,7 @@ const mapTotalsToCardHistory = (
   totals: Totals,
   date: number,
   elo: number,
-): UnhydratedCardHistory => {
+): History => {
   return {
     OTComp: `${oracle}:${type}`,
     oracle,
@@ -96,8 +95,12 @@ const mapTotalsToCardHistory = (
     modern: [history.modern, totals.modern],
     vintage: [history.vintage, totals.vintage],
     total: [history.total, totals.total],
+    cubeCount: [history.total, totals.total],
     elo: elo || DefaultElo,
-  } as UnhydratedCardHistory;
+    cubes: history.total,
+    dateCreated: date,
+    dateLastUpdated: date,
+  };
 };
 
 (async () => {
@@ -111,54 +114,48 @@ const mapTotalsToCardHistory = (
     fs.mkdirSync('./temp/cubes_history');
   }
 
-  const logsByDay: Record<string, ChangeLogType[]> = {};
-  const keys = [];
+  // List existing files in cubes_history to determine which days are already processed
+  // We only check filenames, not file contents, since files are large
+  const existingFiles = fs.existsSync('./temp/cubes_history')
+    ? fs.readdirSync('./temp/cubes_history').filter((f) => f.endsWith('.json'))
+    : [];
 
-  // load all changelogs into memory
-  let lastKey;
-  let changelogs: ChangeLogType[] = [];
-  do {
-    const result = await ChangeLog.scan(1000000, lastKey);
-    changelogs = changelogs.concat(result.items);
-    lastKey = result.lastKey;
+  const processedDays = new Set(existingFiles.map((f) => f.replace('.json', '')));
 
-    console.log(`Loaded ${changelogs.length} changelogs`);
-  } while (lastKey);
+  console.log(`Found ${processedDays.size} already processed days`);
 
-  console.log('Loaded all changelogs');
-  let firstDate: Date = new Date();
+  // Determine the date range - start from earliest processed day or default start date
+  let firstDate: Date;
 
-  for (const log of changelogs) {
-    const date = new Date(log.date);
-    const [year, month, day] = [date.getFullYear(), date.getMonth(), date.getDate()];
-
-    const key = `${year}-${month}-${day}`;
-
-    if (!logsByDay[key]) {
-      logsByDay[key] = [];
-      keys.push(key);
-    }
-
-    if (!firstDate || date < firstDate) {
-      firstDate = date;
-    }
-
-    logsByDay[key].push(log);
+  if (processedDays.size > 0) {
+    // Parse filenames to find the earliest date
+    const existingDates = Array.from(processedDays).map((key) => {
+      const [year, month, day] = key.split('-').map((x) => parseInt(x, 10));
+      return new Date(year ?? 0, month ?? 0, day ?? 0);
+    });
+    firstDate = new Date(Math.min(...existingDates.map((d) => d.valueOf())));
+  } else {
+    // If no processed days, start from a reasonable date (e.g., 2020-01-01)
+    firstDate = new Date(2020, 0, 1);
   }
 
-  const today = new Date().valueOf();
+  const today = new Date();
 
-  for (let i = firstDate.valueOf(); i <= today; i += 86400000) {
+  // Generate all date keys from firstDate to today
+  const allKeys: string[] = [];
+  for (let i = firstDate.valueOf(); i <= today.valueOf(); i += 86400000) {
     const date = new Date(i);
     const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-
-    if (!logsByDay[key]) {
-      logsByDay[key] = [];
-      keys.push(key);
-    }
+    allKeys.push(key);
   }
 
-  console.log('Buckets created');
+  // Filter to only keys that haven't been processed yet
+  const keys = allKeys.filter((key) => !processedDays.has(key));
+
+  console.log(
+    `Processing date range from ${firstDate.toISOString().split('T')[0]} to ${today.toISOString().split('T')[0]}`,
+  );
+  console.log(`${keys.length} days need processing (${processedDays.size} already complete)`);
 
   // sort the keys ascending
   keys.sort((a, b) => {
@@ -184,45 +181,94 @@ const mapTotalsToCardHistory = (
     return safeDayA - safeDayB;
   });
 
-  console.log(`Loaded ${keys.length} days of logs`);
+  console.log(`${keys.length} days need processing (${processedDays.size} already complete)`);
 
   let cubes: CubeDict = {};
   let oracleToElo: Record<string, number> = {};
+
+  // If we have processed days, load the most recent one to get current cube state
+  if (processedDays.size > 0 && keys.length > 0) {
+    // Find the most recent processed day before our first unprocessed day
+    const firstUnprocessedKey = keys[0];
+    const [firstYear, firstMonth, firstDay] = firstUnprocessedKey!.split('-').map((x) => parseInt(x, 10));
+    const firstUnprocessedDate = new Date(firstYear ?? 0, firstMonth ?? 0, firstDay ?? 0).valueOf();
+
+    const previousProcessedKeys = Array.from(processedDays)
+      .map((key) => {
+        const [year, month, day] = key.split('-').map((x) => parseInt(x, 10));
+        return {
+          key,
+          date: new Date(year ?? 0, month ?? 0, day ?? 0).valueOf(),
+        };
+      })
+      .filter((item) => item.date < firstUnprocessedDate)
+      .sort((a, b) => b.date - a.date);
+
+    if (previousProcessedKeys.length > 0) {
+      const mostRecentKey = previousProcessedKeys[0]?.key;
+      if (mostRecentKey) {
+        console.log(`Loading cube state from most recent processed day: ${mostRecentKey}`);
+        cubes = await loadCubesHistory(mostRecentKey);
+      }
+    }
+  }
 
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
 
     if (!key) continue; // Skip undefined keys
 
-    if (fs.existsSync(`./temp/cubes_history/${key}.json`)) {
-      console.log(`Already finished ${i} / ${keys.length}: for ${key}`);
+    // Parse the key to get year, month, day
+    const [year, month, day] = key.split('-').map((x) => parseInt(x, 10));
 
-      if (i < keys.length - 1 && !fs.existsSync(`./temp/cubes_history/${keys[i + 1]}.json`)) {
-        cubes = await loadCubesHistory(key);
-      }
-    } else {
-      const logRows = logsByDay[key] || [];
-      const logs = await ChangeLog.batchGet(logRows);
+    if (!year || month === undefined || !day) {
+      console.error(`Invalid date format for key: ${key}`);
+      continue;
+    }
 
+    // Query changelogs for this specific day using the new GSI2 query method
+    console.log(`Loading changelogs for ${key}...`);
+    let dayChangelogs: ChangeLogType[] = [];
+    let lastKey: Record<string, any> | undefined;
+
+    do {
+      const result = await changelogDao.queryByDay(year, month + 1, day, lastKey);
+      dayChangelogs = dayChangelogs.concat(result.items);
+      lastKey = result.lastKey;
+    } while (lastKey);
+
+    console.log(`Loaded ${dayChangelogs.length} changelogs for ${key}`);
+
+    // Process changelogs in batches to avoid overwhelming batchGet
+    const CHANGELOG_BATCH_SIZE = 500;
+    for (let batchStart = 0; batchStart < dayChangelogs.length; batchStart += CHANGELOG_BATCH_SIZE) {
+      const batchEnd = Math.min(batchStart + CHANGELOG_BATCH_SIZE, dayChangelogs.length);
+      const changelogBatch = dayChangelogs.slice(batchStart, batchEnd);
+
+      // Batch get the changelog data from S3
+      const logRows = changelogBatch.map((cl) => ({ cube: cl.cube, id: cl.id }));
+      const logs = await changelogDao.batchGet(logRows);
+
+      // Apply changelog changes to cube state
       for (let j = 0; j < logs.length; j++) {
         const log = logs[j];
-        const logRow = logRows[j];
+        const changelog = changelogBatch[j];
 
-        if (!log || !logRow) continue; // Skip undefined logs or logRows
+        if (!log || !changelog) continue; // Skip undefined logs or changelogs
 
-        if (!cubes[logRow.cube]) {
-          cubes[logRow.cube] = [];
+        if (!cubes[changelog.cube]) {
+          cubes[changelog.cube] = [];
         }
 
         if (log.mainboard && log.mainboard.adds) {
           for (const add of log.mainboard.adds) {
-            cubes[logRow.cube]?.push(add.cardID);
+            cubes[changelog.cube]?.push(add.cardID);
           }
         }
 
         if (log.mainboard && log.mainboard.removes) {
           for (const remove of log.mainboard.removes) {
-            const cubeArray = cubes[logRow.cube];
+            const cubeArray = cubes[changelog.cube];
             if (cubeArray) {
               cubeArray.splice(cubeArray.indexOf(remove.oldCard.cardID), 1);
             }
@@ -231,7 +277,7 @@ const mapTotalsToCardHistory = (
 
         if (log.mainboard && log.mainboard.swaps) {
           for (const swap of log.mainboard.swaps) {
-            const cubeArray = cubes[logRow.cube];
+            const cubeArray = cubes[changelog.cube];
             if (cubeArray) {
               cubeArray.splice(cubeArray.indexOf(swap.oldCard.cardID), 1, swap.card.cardID);
             }
@@ -239,147 +285,179 @@ const mapTotalsToCardHistory = (
         }
       }
 
-      await saveCubesHistory(cubes, key);
+      if (batchStart + CHANGELOG_BATCH_SIZE < dayChangelogs.length) {
+        console.log(`  Processed ${batchEnd} / ${dayChangelogs.length} changelogs...`);
+      }
+    }
 
-      const totals: Totals = {
-        size180: 0,
-        size360: 0,
-        size450: 0,
-        size540: 0,
-        size720: 0,
-        pauper: 0,
-        peasant: 0,
-        legacy: 0,
-        modern: 0,
-        vintage: 0,
-        pioneer: 0,
-        total: 0,
-      };
+    console.log(`  Saving cube state snapshot to temp/cubes_history/${key}.json...`);
+    await saveCubesHistory(cubes, key);
+    console.log(`  Saved ${Object.keys(cubes).length} cubes to history file`);
 
-      const data: Record<string, Totals> = {};
+    // Allow connection pool to recover after processing changelogs
+    console.log(`  Waiting 5 seconds for connection pool to settle...`);
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-      for (const cube of Object.values(cubes)) {
-        const cubeCards = cube.map((id) => cardFromId(id));
-        const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
-        const { pauper, peasant, type } = getCubeTypes(
-          cubeCards.map((card) => ({
-            cardID: card.scryfall_id,
-            status: 'Not Owned',
-            cmc: card.cmc || 0,
-            tags: [],
-            colors: card.colors || [],
-          })),
-        );
+    const totals: Totals = {
+      size180: 0,
+      size360: 0,
+      size450: 0,
+      size540: 0,
+      size720: 0,
+      pauper: 0,
+      peasant: 0,
+      legacy: 0,
+      modern: 0,
+      vintage: 0,
+      pioneer: 0,
+      total: 0,
+    };
 
-        const size = cube.length;
+    const data: Record<string, Totals> = {};
 
-        const categories: [keyof Totals] = ['total'];
+    console.log(`  Calculating card statistics for ${Object.keys(cubes).length} cubes...`);
+    let processedCubes = 0;
+    const totalCubes = Object.values(cubes).length;
+    for (const cube of Object.values(cubes)) {
+      processedCubes += 1;
+      if (processedCubes % 5000 === 0) {
+        console.log(`    Analyzed ${processedCubes} / ${totalCubes} cubes...`);
+      }
+      const cubeCards = cube.map((id) => cardFromId(id));
+      const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
+      const { pauper, peasant, type } = getCubeTypes(
+        cubeCards.map((card) => ({
+          cardID: card.scryfall_id,
+          status: 'Not Owned',
+          cmc: card.cmc || 0,
+          tags: [],
+          colors: card.colors || [],
+        })),
+      );
 
-        if (size <= 180) {
-          categories.push('size180');
-        } else if (size <= 360) {
-          categories.push('size360');
-        } else if (size <= 450) {
-          categories.push('size450');
-        } else if (size <= 540) {
-          categories.push('size540');
-        } else {
-          categories.push('size720');
-        }
+      const size = cube.length;
 
-        if (pauper) {
-          categories.push('pauper');
-        }
+      const categories: [keyof Totals] = ['total'];
 
-        if (peasant) {
-          categories.push('peasant');
-        }
+      if (size <= 180) {
+        categories.push('size180');
+      } else if (size <= 360) {
+        categories.push('size360');
+      } else if (size <= 450) {
+        categories.push('size450');
+      } else if (size <= 540) {
+        categories.push('size540');
+      } else {
+        categories.push('size720');
+      }
 
-        switch (type) {
-          case 0: // vintage
-            categories.push('vintage');
-            break;
-          case 1: // legacy
-            categories.push('legacy');
-            break;
-          case 2: // modern
-            categories.push('modern');
-            break;
-          case 4: // pioneer
-            categories.push('pioneer');
-            break;
-          default:
-            break;
+      if (pauper) {
+        categories.push('pauper');
+      }
+
+      if (peasant) {
+        categories.push('peasant');
+      }
+
+      switch (type) {
+        case 0: // vintage
+          categories.push('vintage');
+          break;
+        case 1: // legacy
+          categories.push('legacy');
+          break;
+        case 2: // modern
+          categories.push('modern');
+          break;
+        case 4: // pioneer
+          categories.push('pioneer');
+          break;
+        default:
+          break;
+      }
+
+      for (const category of categories) {
+        totals[category] += 1;
+      }
+
+      for (const oracle of oracles) {
+        if (!data[oracle]) {
+          data[oracle] = {
+            total: 0,
+            size180: 0,
+            size360: 0,
+            size450: 0,
+            size540: 0,
+            size720: 0,
+            pauper: 0,
+            peasant: 0,
+            legacy: 0,
+            modern: 0,
+            pioneer: 0,
+            vintage: 0,
+          };
         }
 
         for (const category of categories) {
-          totals[category] += 1;
-        }
-
-        for (const oracle of oracles) {
-          if (!data[oracle]) {
-            data[oracle] = {
-              total: 0,
-              size180: 0,
-              size360: 0,
-              size450: 0,
-              size540: 0,
-              size720: 0,
-              pauper: 0,
-              peasant: 0,
-              legacy: 0,
-              modern: 0,
-              pioneer: 0,
-              vintage: 0,
-            };
-          }
-
-          for (const category of categories) {
-            data[oracle][category] += 1;
-          }
+          data[oracle][category] += 1;
         }
       }
-
-      if (fs.existsSync(`temp/global_draft_history/${key}.json`)) {
-        const eloFile = fs.readFileSync(`temp/global_draft_history/${key}.json`, 'utf-8');
-        oracleToElo = JSON.parse(eloFile).eloByOracleId;
-      }
-
-      const [year, month, day] = key.split('-');
-
-      if (!year || !month || !day) {
-        console.error(`Invalid date format for key: ${key}`);
-        continue;
-      }
-
-      const date = new Date(parseInt(year, 10), parseInt(month, 10), parseInt(day, 10)).valueOf();
-
-      await CardHistory.batchPut(
-        Object.entries(data).map(([oracle, history]) =>
-          mapTotalsToCardHistory(oracle, Period.DAY, history, totals, date, oracleToElo[oracle] ?? 0),
-        ),
-      );
-
-      // if key is a sunday
-      if (new Date(key).getDay() === 0) {
-        await CardHistory.batchPut(
-          Object.entries(data).map(([oracle, history]) =>
-            mapTotalsToCardHistory(oracle, Period.WEEK, history, totals, date, oracleToElo[oracle] ?? 0),
-          ),
-        );
-      }
-
-      // if key is first of the month
-      if (new Date(key).getDate() === 1) {
-        await CardHistory.batchPut(
-          Object.entries(data).map(([oracle, history]) =>
-            mapTotalsToCardHistory(oracle, Period.MONTH, history, totals, date, oracleToElo[oracle] ?? 0),
-          ),
-        );
-      }
-
-      console.log(`Finished  ${i} / ${keys.length}: Processed ${logRows.length} logs for ${key}`);
     }
+    console.log(`  Completed analysis: found ${Object.keys(data).length} unique cards across all cubes`);
+
+    if (fs.existsSync(`temp/global_draft_history/${key}.json`)) {
+      console.log(`  Loading ELO data from temp/global_draft_history/${key}.json...`);
+      const eloFile = fs.readFileSync(`temp/global_draft_history/${key}.json`, 'utf-8');
+      oracleToElo = JSON.parse(eloFile).eloByOracleId;
+      console.log(`  Loaded ELO data for ${Object.keys(oracleToElo).length} cards`);
+    }
+
+    const date = new Date(year, month, day).valueOf();
+
+    // Write card history in smaller batches with delays to avoid overwhelming connection pool
+    const WRITE_BATCH_SIZE = 200; // Process 200 cards at a time to avoid connection pool issues
+    const WRITE_DELAY_MS = 250; // 250ms delay between DynamoDB batches (of 25 items)
+
+    // Process and write entries in chunks instead of materializing all at once
+    const dataEntries = Object.entries(data);
+    console.log(`  Writing ${dataEntries.length} daily history entries...`);
+    for (let i = 0; i < dataEntries.length; i += WRITE_BATCH_SIZE) {
+      const chunk = dataEntries.slice(i, i + WRITE_BATCH_SIZE);
+      const historyEntries = chunk.map(([oracle, history]) =>
+        mapTotalsToCardHistory(oracle, Period.DAY, history, totals, date, oracleToElo[oracle] ?? 0),
+      );
+      await cardHistoryDao.batchPut(historyEntries, WRITE_DELAY_MS);
+      console.log(`    Written ${Math.min(i + WRITE_BATCH_SIZE, dataEntries.length)} / ${dataEntries.length}...`);
+    }
+
+    // if key is a sunday
+    const dateObj = new Date(year, month, day);
+    if (dateObj.getDay() === 0) {
+      console.log(`  Writing ${dataEntries.length} weekly history entries...`);
+      for (let i = 0; i < dataEntries.length; i += WRITE_BATCH_SIZE) {
+        const chunk = dataEntries.slice(i, i + WRITE_BATCH_SIZE);
+        const historyEntries = chunk.map(([oracle, history]) =>
+          mapTotalsToCardHistory(oracle, Period.WEEK, history, totals, date, oracleToElo[oracle] ?? 0),
+        );
+        await cardHistoryDao.batchPut(historyEntries, WRITE_DELAY_MS);
+        console.log(`    Written ${Math.min(i + WRITE_BATCH_SIZE, dataEntries.length)} / ${dataEntries.length}...`);
+      }
+    }
+
+    // if key is first of the month
+    if (dateObj.getDate() === 1) {
+      console.log(`  Writing ${dataEntries.length} monthly history entries...`);
+      for (let i = 0; i < dataEntries.length; i += WRITE_BATCH_SIZE) {
+        const chunk = dataEntries.slice(i, i + WRITE_BATCH_SIZE);
+        const historyEntries = chunk.map(([oracle, history]) =>
+          mapTotalsToCardHistory(oracle, Period.MONTH, history, totals, date, oracleToElo[oracle] ?? 0),
+        );
+        await cardHistoryDao.batchPut(historyEntries, WRITE_DELAY_MS);
+        console.log(`    Written ${Math.min(i + WRITE_BATCH_SIZE, dataEntries.length)} / ${dataEntries.length}...`);
+      }
+    }
+
+    console.log(`Finished ${i + 1} / ${keys.length}: Processed ${dayChangelogs.length} logs for ${key}`);
   }
 
   console.log('Complete');

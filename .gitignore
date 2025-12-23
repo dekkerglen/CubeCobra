@@ -18,6 +18,7 @@ jobs/export/
 /packages/server/src/client/
 **.bundle.js
 
+packages/server/src/serverutils/git.ts
 
 # .gitignore
 
@@ -66,3 +67,6 @@ yarn-error.log*
 
 # any .zip
 *.zip
+
+# migration checkpoints
+.migration-checkpoints/

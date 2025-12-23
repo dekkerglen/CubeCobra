@@ -1,10 +1,9 @@
-import Cube from 'dynamo/models/cube';
-import Record from 'dynamo/models/record';
+import { cubeDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
+import { csrfProtection, ensureAuth } from 'router/middleware';
+import { bodyValidation } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
-import { bodyValidation } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../../types/express';
 
@@ -25,14 +24,14 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const record = await Record.getById(req.params.id);
+    const record = await recordDao.getById(req.params.id);
 
     if (!record) {
       req.flash('danger', 'Record not found');
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -46,7 +45,8 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
 
     const players = JSON.parse(req.body.players);
     record.players = players;
-    await Record.put(record);
+    record.dateLastUpdated = Date.now();
+    await recordDao.update(record);
 
     req.flash('success', 'Record updated successfully');
     return redirect(req, res, `/cube/record/${req.params.id}`);

@@ -1,8 +1,6 @@
-import commentModel from 'dynamo/models/comment';
-import Cube from 'dynamo/models/cube';
-import p1p1PackModel from 'dynamo/models/p1p1Pack';
+import { commentDao, cubeDao, p1p1PackDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isValidUUID } from 'serverutils/validation';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -25,7 +23,7 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Get the pack to check permissions
-    const pack = await p1p1PackModel.getById(packId);
+    const pack = await p1p1PackDao.getById(packId);
     if (!pack) {
       return res.status(404).json({ error: 'P1P1 pack not found' });
     }
@@ -36,7 +34,7 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Check if user has permission to delete (cube owner or pack creator)
-    const cube = await Cube.getById(pack.cubeId);
+    const cube = await cubeDao.getById(pack.cubeId);
     const isCubeOwner = cube && cube.owner && cube.owner.id === user.id;
     const isPackCreator = pack.createdBy === user.id;
 
@@ -51,10 +49,10 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
       // Delete all comments for this pack
       let lastKey;
       do {
-        const result = await commentModel.queryByParentAndType(packId, lastKey);
+        const result = await commentDao.queryByParent(packId, lastKey);
         if (result.items && result.items.length > 0) {
           for (const comment of result.items) {
-            await commentModel.delete({ id: comment.id });
+            await commentDao.delete(comment);
           }
         }
         lastKey = result.lastKey;
@@ -65,7 +63,7 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Delete the pack itself
-    await p1p1PackModel.deleteById(packId);
+    await p1p1PackDao.deleteById(packId);
 
     return res.status(200).json({ success: true });
   } catch (err) {

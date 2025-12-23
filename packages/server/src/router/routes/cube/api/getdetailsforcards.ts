@@ -1,4 +1,5 @@
-import { cardFromId } from '../../../../serverutils/carddb';
+import { cardFromId } from 'serverutils/carddb';
+
 import { Request, Response } from '../../../../types/express';
 
 export const getdetailsforcardsHandler = async (req: Request, res: Response) => {

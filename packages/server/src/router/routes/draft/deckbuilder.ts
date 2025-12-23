@@ -1,6 +1,4 @@
-import DraftType from '@utils/datatypes/Draft';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
+import { cubeDao, draftDao } from 'dynamo/daos';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -15,7 +13,7 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck: DraftType = await Draft.getById(req.params.id);
+    const deck = await draftDao.getById(req.params.id);
     if (!deck) {
       req.flash('danger', 'Deck not found');
       return redirect(req, res, '/404');
@@ -35,7 +33,7 @@ const handler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(deck.cube);
+    const cube = await cubeDao.getById(deck.cube);
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');

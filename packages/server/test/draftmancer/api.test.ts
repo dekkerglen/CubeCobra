@@ -9,9 +9,6 @@ import { cardFromId } from 'serverutils/carddb';
 import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 import request from 'supertest';
 
-import Cube from '../../src/dynamo/models/cube';
-import Draft from '../../src/dynamo/models/draft';
-import Notification from '../../src/dynamo/models/notification';
 import { bodyValidation } from '../../src/router/middleware';
 import { handler, PublishDraftBodySchema, routes } from '../../src/router/routes/api/draftmancer/publish';
 import { RequestHandler } from '../../src/types/express';
@@ -25,24 +22,23 @@ jest.mock('serverutils/draftbots', () => ({
   deckbuild: jest.fn(),
 }));
 
-jest.mock('../../src/dynamo/models/cube', () => ({
-  getById: jest.fn(),
+jest.mock('../../src/dynamo/daos', () => ({
+  cubeDao: {
+    getById: jest.fn(),
+  },
+  draftDao: {
+    createDraft: jest.fn(),
+  },
+  notificationDao: {
+    put: jest.fn(),
+  },
 }));
 
-jest.mock('../../src/dynamo/models/draft', () => ({
-  put: jest.fn(),
-}));
-
-jest.mock('../../src/dynamo/models/notification', () => ({
-  put: jest.fn(),
-}));
+// Import the mocked daos
+import { cubeDao, draftDao, notificationDao } from '../../src/dynamo/daos';
 
 jest.mock('serverutils/carddb', () => ({
   cardFromId: jest.fn(),
-}));
-
-jest.mock('../../src/dynamo/models/draft', () => ({
-  put: jest.fn(),
 }));
 
 jest.mock('serverutils/draftmancerUtil', () => ({
@@ -219,7 +215,7 @@ describe('Publish', () => {
   const setupTestDependencies = () => {
     const cardDetails = createCardDetails();
 
-    (Cube.getById as jest.Mock).mockResolvedValue(mockCube);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
 
     (cardFromId as jest.Mock).mockImplementation((cardID: string) => {
       if (!mockCards.has(cardID)) {
@@ -230,14 +226,14 @@ describe('Publish', () => {
       }
       return mockCards.get(cardID);
     });
-    (Draft.put as jest.Mock).mockResolvedValue('test-draft-id');
+    (draftDao.createDraft as jest.Mock).mockResolvedValue('test-draft-id');
 
     return { cube: mockCube, cardDetails };
   };
 
   // Helper function to verify high level draft details
   const verifyDraftCreation = (cube: CubeType) => {
-    expect(Draft.put).toHaveBeenCalledWith(
+    expect(draftDao.createDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Draftmancer Draft',
         cube: cube.id,
@@ -338,7 +334,7 @@ describe('Publish', () => {
 
     expect(response.status).toBe(200);
 
-    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    const putCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
     expect(putCall.seats.every((seat: any) => seat.bot === false)).toBeTruthy();
     expect(putCall.seats.every((seat: any) => seat.description.includes('drafted on Draftmancer by'))).toBeTruthy();
 
@@ -348,7 +344,7 @@ describe('Publish', () => {
     verifyDraftCreation(cube);
 
     // Verify notification was sent
-    expect(Notification.put).toHaveBeenCalledWith(
+    expect(notificationDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         date: expect.any(Number),
         to: cube.owner.id,
@@ -362,7 +358,7 @@ describe('Publish', () => {
   it('should handle bot players correctly', async () => {
     const { cube } = setupTestDependencies();
     const cubeWithDisabledAlerts = { ...cube, disableAlerts: true };
-    (Cube.getById as jest.Mock).mockResolvedValue(cubeWithDisabledAlerts);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cubeWithDisabledAlerts);
 
     // Player 1 setup
     const playerOneDraftSeat = createDraftSeatPicks(6, [
@@ -409,7 +405,7 @@ describe('Publish', () => {
 
     expect(response.status).toBe(200);
 
-    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    const putCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
     validateHumanDraftSeat(putCall.seats[0], playerOneDraftSeat);
     validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat);
 
@@ -418,7 +414,7 @@ describe('Publish', () => {
 
     verifyDraftCreation(cube);
 
-    expect(Notification.put).not.toHaveBeenCalled();
+    expect(notificationDao.put).not.toHaveBeenCalled();
   });
 
   it('should draft notification users the first human players name', async () => {
@@ -469,7 +465,7 @@ describe('Publish', () => {
 
     expect(response.status).toBe(200);
 
-    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    const putCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
     validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat);
     validateHumanDraftSeat(putCall.seats[1], playerTwoDraftSeat);
 
@@ -479,7 +475,7 @@ describe('Publish', () => {
     verifyDraftCreation(cube);
 
     // Verify notification was sent with human player name
-    expect(Notification.put).toHaveBeenCalledWith(
+    expect(notificationDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         date: expect.any(Number),
         to: cube.owner.id,
@@ -531,7 +527,7 @@ describe('Publish', () => {
 
     expect(response.status).toBe(200);
 
-    const putCall = (Draft.put as jest.Mock).mock.calls[0][0];
+    const putCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
     validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat);
     validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat);
 
@@ -541,12 +537,12 @@ describe('Publish', () => {
     verifyDraftCreation(cube);
 
     // Verify no notification was sent since all players were bots
-    expect(Notification.put).not.toHaveBeenCalled();
+    expect(notificationDao.put).not.toHaveBeenCalled();
   });
 
   it('should handle database errors gracefully', async () => {
     const error = new Error('Database error');
-    (Cube.getById as jest.Mock).mockRejectedValue(error);
+    (cubeDao.getById as jest.Mock).mockRejectedValue(error);
 
     const response = await request(app).post('/api/draftmancer/publish').send(createRequest());
 
@@ -557,7 +553,7 @@ describe('Publish', () => {
   });
 
   it('should handle missing cube gracefully', async () => {
-    (Cube.getById as jest.Mock).mockResolvedValue(null);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(null);
 
     const response = await request(app).post('/api/draftmancer/publish').send(createRequest());
 

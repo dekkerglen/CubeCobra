@@ -21,13 +21,23 @@ const client = createClient({
 });
 
 export const FeaturedQueue = {
-  getByCube: async (id: string): Promise<FeaturedQueueItem> => {
-    return (await client.get(id)).Item as FeaturedQueueItem;
+  getByCube: async (id: string): Promise<FeaturedQueueItem | undefined> => {
+    const result = await client.get(id);
+    return result.Item as FeaturedQueueItem | undefined;
   },
-  put: async (document: NewFeaturedQueueItem): Promise<void> => {
+  put: async (document: NewFeaturedQueueItem | FeaturedQueueItem): Promise<void> => {
+    const now = Date.now();
     await client.put({
       ...document,
-      status: FeaturedQueueStatus.ACTIVE,
+      status: Object.prototype.hasOwnProperty.call(document, 'status')
+        ? (document as FeaturedQueueItem).status
+        : FeaturedQueueStatus.ACTIVE,
+      dateCreated: Object.prototype.hasOwnProperty.call(document, 'dateCreated')
+        ? (document as FeaturedQueueItem).dateCreated
+        : now,
+      dateLastUpdated: Object.prototype.hasOwnProperty.call(document, 'dateLastUpdated')
+        ? (document as FeaturedQueueItem).dateLastUpdated
+        : now,
     });
   },
   querySortedByDate: async (
@@ -90,6 +100,17 @@ export const FeaturedQueue = {
     };
   },
   batchPut: async (documents: FeaturedQueueItem[]): Promise<void> => client.batchPut(documents),
+  scan: async (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: FeaturedQueueItem[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+    return {
+      items: result.Items as FeaturedQueueItem[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   delete: async (id: string): Promise<void> => client.delete({ cube: id }),
 };

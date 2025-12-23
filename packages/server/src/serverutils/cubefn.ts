@@ -1,12 +1,10 @@
 import { convertFromLegacyCardColorCategory } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
-import type { TagColor } from '@utils/datatypes/Cube';
+import { CUBE_VISIBILITY, type CubeCards, type TagColor } from '@utils/datatypes/Cube';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
-import Cube from 'dynamo/models/cube';
 import _ from 'lodash';
 import NodeCache from 'node-cache';
 import Papa from 'papaparse';
-// @ts-ignore - no types available
 import sanitizeHtml from 'sanitize-html';
 
 import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
@@ -212,22 +210,25 @@ function abbreviate(name: string): string {
   return name.length < 20 ? name : `${name.slice(0, 20)}…`;
 }
 
-function buildTagColors(cube: any, cards: CubeCard[]): TagColor[] {
+function buildTagColors(cube: any, cubeCards: CubeCards): TagColor[] {
   const { tagColors } = cube;
   const tags = tagColors.map((item: TagColor) => item.tag);
   const notFound = tagColors.map((item: TagColor) => item.tag);
 
-  for (const card of cards) {
-    for (let tag of card.tags) {
-      tag = tag.trim();
-      if (!tags.includes(tag)) {
-        tagColors.push({
-          tag,
-          color: null,
-        });
-        tags.push(tag);
+  const allCards = [...cubeCards.mainboard, ...cubeCards.maybeboard];
+  for (const card of allCards) {
+    if (card.tags) {
+      for (let tag of card.tags) {
+        tag = tag.trim();
+        if (!tags.includes(tag)) {
+          tagColors.push({
+            tag,
+            color: null,
+          });
+          tags.push(tag);
+        }
+        if (notFound.includes(tag)) notFound.splice(notFound.indexOf(tag), 1);
       }
-      if (notFound.includes(tag)) notFound.splice(notFound.indexOf(tag), 1);
     }
   }
 
@@ -239,9 +240,10 @@ function buildTagColors(cube: any, cards: CubeCard[]): TagColor[] {
   return tmp;
 }
 
-function cubeCardTags(cubeCards: CubeCard[]): string[] {
+function cubeCardTags(cubeCards: CubeCards): string[] {
   const tags: string[] = [];
-  for (const card of cubeCards) {
+  const allCards = [...cubeCards.mainboard, ...cubeCards.maybeboard];
+  for (const card of allCards) {
     if (card.tags) {
       for (let tag of card.tags) {
         tag = tag.trim();
@@ -399,7 +401,7 @@ function isCubeViewable(cube: any, user: any): boolean {
     return false;
   }
 
-  if (cube.visibility === Cube.VISIBILITY.PUBLIC || cube.visibility === Cube.VISIBILITY.UNLISTED) {
+  if (cube.visibility === CUBE_VISIBILITY.PUBLIC || cube.visibility === CUBE_VISIBILITY.UNLISTED) {
     return true;
   }
 
@@ -431,7 +433,7 @@ function isCubeListed(cube: any, user: any): boolean {
     return false;
   }
 
-  if (cube.visibility === Cube.VISIBILITY.PUBLIC) {
+  if (cube.visibility === CUBE_VISIBILITY.PUBLIC) {
     return true;
   }
 

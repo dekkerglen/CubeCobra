@@ -1,11 +1,11 @@
-import Changelog from 'dynamo/models/changelog';
+import { changelogDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../../types/express';
 
 export const changelogHandler = async (req: Request, res: Response) => {
   const { changelogId, cubeId } = req.body;
   try {
-    const changelog = await Changelog.getById(cubeId, changelogId);
+    const changelog = await changelogDao.getChangelog(cubeId, changelogId);
 
     return res.status(200).send({
       success: 'true',

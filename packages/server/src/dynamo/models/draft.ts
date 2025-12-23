@@ -1,12 +1,14 @@
+// migrated to /dao/DraftDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
+import { userDao } from 'dynamo/daos';
+import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
-import { cardFromId } from '../../serverutils/carddb';
 import { getObject, putObject } from '../s3client';
 import createClient from '../util';
 import Cube from './cube';
-import User from './user';
 
 interface QueryResult {
   items: any[];
@@ -242,7 +244,7 @@ const hydrate = async (document: any): Promise<any> => {
     }
   }
 
-  const users = await User.batchGet(ids);
+  const users = await userDao.batchGet(ids);
 
   document.owner = users.find((user: any) => user.id === document.owner);
   document.cubeOwner = users.find((user: any) => user.id === document.cubeOwner);
@@ -303,7 +305,7 @@ const batchHydrate = async (documents: any[]): Promise<any[]> => {
     }
   }
 
-  const users = await User.batchGet(ids);
+  const users = await userDao.batchGet(ids);
 
   for (const document of documents) {
     document.owner = users.find((user) => user.id === document.owner);

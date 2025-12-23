@@ -1,8 +1,8 @@
 import { makeFilter } from '@utils/filtering/FilterCards';
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
+import { getAllMostReasonable, getReasonableCardByOracleWithPrintingPreference } from 'serverutils/carddb';
+import { recommend } from 'serverutils/ml';
 
-import { getAllMostReasonable, getReasonableCardByOracleWithPrintingPreference } from '../../../../serverutils/carddb';
-import { recommend } from '../../../../serverutils/ml';
 import { Request, Response } from '../../../../types/express';
 
 export const addsHandler = async (req: Request, res: Response) => {
@@ -22,7 +22,7 @@ export const addsHandler = async (req: Request, res: Response) => {
     limit = parseInt(limit, 10);
     skip = parseInt(skip, 10);
 
-    const cards = await Cube.getCards(cubeID);
+    const cards = await cubeDao.getCards(cubeID);
 
     const { adds } = recommend(cards.mainboard.map((card: any) => card.details.oracle_id));
 

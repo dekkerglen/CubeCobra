@@ -1,4 +1,5 @@
-import carddb from '../../../../serverutils/carddb';
+import carddb from 'serverutils/carddb';
+
 import { Request, Response } from '../../../../types/express';
 
 export const imagedictHandler = async (_req: Request, res: Response) => {

@@ -45,7 +45,7 @@ const getPicksForPlayer = ({
   const picks = pickRows.map((rowIndex) => {
     if (rowIndex + 1 >= parsedCSV.length) return undefined;
 
-    const cardName = parsedCSV[rowIndex][column];
+    const cardName = parsedCSV[rowIndex]?.[column];
 
     if (!cardName || typeof cardName !== 'string') {
       return undefined;
@@ -93,8 +93,10 @@ export const parseRotoCSV = (csv: string) => {
   let overallPickNumber = 1;
 
   // Initialize the players from the row with player names
+  if (!nameRow) return { players: {}, picks: {}, picksByPlayer: {} };
+
   for (let i = FIRST_NAME_COLUMN_INDEX; i < nameRow.length; i++) {
-    const playerName = nameRow[i].replace(/[^a-zA-Z0-9 ]/g, '').trim();
+    const playerName = nameRow[i]?.replace(/[^a-zA-Z0-9 ]/g, '').trim();
 
     if (!playerName) break;
 
@@ -103,7 +105,7 @@ export const parseRotoCSV = (csv: string) => {
   }
 
   const numPlayers = Object.keys(players).length;
-  const DOUBLE_PICKS_AFTER = parseInt(parsedCSV[DOUBLE_PICKS_AFTER_ROW]?.[DOUBLE_PICKS_AFTER_COLUMN]);
+  const DOUBLE_PICKS_AFTER = parseInt(parsedCSV[DOUBLE_PICKS_AFTER_ROW]?.[DOUBLE_PICKS_AFTER_COLUMN] ?? '999');
   let draftDirection: 'left' | 'right' = 'right';
 
   // Traverse each row of picks, adding them to our picks object
@@ -124,14 +126,20 @@ export const parseRotoCSV = (csv: string) => {
 
     // Go through each pick for this row in the correct drafting direction
     for (let n = startIndex; draftingRight ? n <= endIndex : n >= endIndex; draftingRight ? (n += 1) : (n -= 1)) {
+      const player = players[n];
+      if (!player) continue;
+
+      const playerPicksForIndex = picksByPlayer[n];
+      if (!playerPicksForIndex) continue;
+
       const playerPicks = getPicksForPlayer({
         column: n,
         doublePicks,
         parsedCSV,
-        playerName: players[n].name,
+        playerName: player.name,
         row: i,
         cardCopyTracker,
-        playerPicksByIndex: picksByPlayer[n],
+        playerPicksByIndex: playerPicksForIndex,
       }).filter((pick) => pick !== undefined);
 
       playerPicks.forEach((playerPick) => {
@@ -144,20 +152,23 @@ export const parseRotoCSV = (csv: string) => {
         picks[pickKey] = playerPick;
       });
 
-      picksByPlayer[n] = picksByPlayer[n].concat(playerPicks);
+      const existingPicks = picksByPlayer[n] ?? [];
+      picksByPlayer[n] = existingPicks.concat(playerPicks);
     }
 
     // We found a blank pick in the row, this might be the last row
     if (blankInRow) {
       // Check for data in the next row, which can happen if we're on double picks
       const nextRow = parsedCSV[i + 1];
-      const startPickNextRow = nextRow[startIndex];
+      const startPickNextRow = nextRow?.[startIndex];
 
       // If the start of the next row is empty then we can assume the whole row is empty
       if (startPickNextRow === '') break;
     }
 
     // Swap the direction if there's an arrow at the end to snake the draft
+    if (!pickRow) continue;
+
     if (draftingRight && pickRow[RIGHT_ARROW_COLUMN_INDEX] === '↩') {
       draftDirection = 'left';
     } else if (!draftingRight && pickRow[LEFT_ARROW_COLUMN_INDEX] === '↪') {

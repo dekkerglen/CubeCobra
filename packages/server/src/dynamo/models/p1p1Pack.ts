@@ -1,3 +1,5 @@
+// migrated to /daos/P1P1PackDynamoDao.ts
+
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import Card from '@utils/datatypes/Card';
 import {
@@ -284,6 +286,21 @@ const p1p1Pack = {
       userVote,
       botPick: pack.botPick,
       botWeights: pack.botWeights,
+    };
+  },
+
+  scan: async (
+    limit?: number,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items: any[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    });
+
+    return {
+      items: result.Items ?? [],
+      lastKey: result.LastEvaluatedKey,
     };
   },
 

@@ -1,4 +1,4 @@
-import Cube from 'dynamo/models/cube';
+import { cubeDao } from 'dynamo/daos';
 import { buildTagColors, isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -12,7 +12,7 @@ export const cubetagcolorsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cube = await Cube.getById(req.params.id);
+    const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -21,14 +21,14 @@ export const cubetagcolorsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await Cube.getCards(cube.id);
+    const cubeCards = await cubeDao.getCards(cube.id);
 
     const tagColors = buildTagColors(cube, cubeCards);
     const tags = tagColors.map((item) => item.tag);
 
     if (req.query.b_id) {
-      const cubeB = await Cube.getById(req.query.b_id as string);
-      const cubeBCards = await Cube.getCards(req.query.b_id as string);
+      const cubeB = await cubeDao.getById(req.query.b_id as string);
+      const cubeBCards = await cubeDao.getCards(req.query.b_id as string);
 
       if (!isCubeViewable(cubeB, req.user)) {
         return res.status(404).send({

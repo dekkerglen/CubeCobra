@@ -2,6 +2,17 @@ import Card, { CardStatus } from './Card';
 import { DraftFormat } from './Draft';
 import User from './User';
 
+export const CUBE_VISIBILITY = {
+  PUBLIC: 'pu',
+  PRIVATE: 'pr',
+  UNLISTED: 'un',
+};
+
+export const PRICE_VISIBILITY = {
+  PUBLIC: 'pu',
+  PRIVATE: 'pr',
+};
+
 export interface CubeImage {
   uri: string;
   artist: string;
@@ -48,7 +59,9 @@ interface Cube {
   numDecks: number;
   description: string;
   imageName: string;
-  date: number;
+  date: number; // Legacy field - this is dateLastUpdated, kept for backwards compatibility
+  dateCreated: number;
+  dateLastUpdated: number;
   defaultSorts: string[];
   showUnsorted?: boolean;
   collapseDuplicateCards?: boolean;

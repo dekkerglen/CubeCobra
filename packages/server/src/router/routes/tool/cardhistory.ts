@@ -1,5 +1,5 @@
 import { createTypeGuard } from '@utils/typeGuards';
-import CardHistory from 'dynamo/models/cardhistory';
+import { cardHistoryDao } from 'dynamo/daos';
 
 import { Request, Response } from '../../../types/express';
 
@@ -39,7 +39,7 @@ export const getCardHistoryHandler = async (req: Request, res: Response) => {
 
     const zoomValue = getZoomValue(zoom, period);
 
-    const history = await CardHistory.getByOracleAndType(id, period, zoomValue);
+    const history = await cardHistoryDao.queryByOracleAndType(id, period, zoomValue);
 
     return res.status(200).send({
       success: 'true',

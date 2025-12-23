@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
+import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 import { redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth, flashValidationErrors } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -16,7 +16,7 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/account?nav=password');
   }
 
-  const user = await User.getByIdWithSensitiveData(req.user.id);
+  const user = await userDao.getByIdWithSensitiveData(req.user.id);
 
   if (!user) {
     req.flash('danger', 'User not found');
@@ -39,7 +39,7 @@ export const handler = async (req: Request, res: Response) => {
         }
         if (user) {
           user.passwordHash = hash;
-          await User.update(user as any);
+          await userDao.update(user as any);
         }
         req.flash('success', 'Password updated successfully');
         return redirect(req, res, '/user/account?nav=password');

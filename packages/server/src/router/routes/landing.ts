@@ -1,10 +1,10 @@
-import { ContentStatus, ContentType } from '@utils/datatypes/Content';
-import Content from 'dynamo/models/content';
-import Draft from 'dynamo/models/draft';
+import { ContentStatus } from '@utils/datatypes/Content';
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
+import { articleDao, draftDao, episodeDao, videoDao } from 'dynamo/daos';
+import { getDailyP1P1 } from 'serverutils/dailyP1P1';
+import { getFeaturedCubes } from 'serverutils/featuredQueue';
+import { redirect, render } from 'serverutils/render';
 
-import { getDailyP1P1 } from '../../serverutils/dailyP1P1';
-import { getFeaturedCubes } from '../../serverutils/featuredQueue';
-import { redirect, render } from '../../serverutils/render';
 import { Request, Response } from '../../types/express';
 
 const landingHandler = async (req: Request, res: Response) => {
@@ -15,16 +15,26 @@ const landingHandler = async (req: Request, res: Response) => {
 
   const featured = await getFeaturedCubes();
 
-  const content = await Content.getByStatus(ContentStatus.PUBLISHED);
+  // Query all content types in parallel (excluding podcasts, only episodes)
+  const [articlesResult, videosResult, episodesResult] = await Promise.all([
+    articleDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24),
+    videoDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24),
+    episodeDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24),
+  ]);
 
-  const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
+  // Merge and sort by date descending
+  const content = [...(articlesResult.items || []), ...(videosResult.items || []), ...(episodesResult.items || [])]
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 36);
+
+  const recentDecks = await draftDao.queryByTypeAndDate(DRAFT_TYPES.DRAFT, undefined, 12);
 
   // Get daily P1P1
   const dailyP1P1 = await getDailyP1P1(req.logger);
 
   return render(req, res, 'LandingPage', {
     featured,
-    content: content.items?.filter((item: any) => item.type !== ContentType.PODCAST) || [],
+    content,
     recentDecks: recentDecks.items.filter((deck: any) => deck.complete),
     dailyP1P1,
   });

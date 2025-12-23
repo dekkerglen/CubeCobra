@@ -174,6 +174,44 @@ export const rarityOperation = (op: OperatorType, value: string): FilterFunction
   }
 };
 
+export const colorCategoryOperation = (op: OperatorType, value: string): FilterFunction<string> => {
+  // Map short forms and long forms to the canonical ColorCategory names
+  const colorCategoryMap: Record<string, string> = {
+    w: 'White',
+    u: 'Blue',
+    b: 'Black',
+    r: 'Red',
+    g: 'Green',
+    c: 'Colorless',
+    m: 'Multicolored',
+    l: 'Lands',
+    white: 'White',
+    blue: 'Blue',
+    black: 'Black',
+    red: 'Red',
+    green: 'Green',
+    colorless: 'Colorless',
+    multicolored: 'Multicolored',
+    land: 'Lands',
+  };
+
+  const normalizedValue = colorCategoryMap[value.toLowerCase()];
+  if (normalizedValue === undefined) {
+    throw new Error(`Invalid color category value '${value}'`);
+  }
+
+  switch (op.toString()) {
+    case ':':
+    case '=':
+      return (fieldValue: string) => fieldValue === normalizedValue;
+    case '!=':
+    case '<>':
+      return (fieldValue: string) => fieldValue !== normalizedValue;
+    default:
+      throw new Error(`Unrecognized operator '${op}' for color category`);
+  }
+};
+
 export const convertParsedCost = (parsedCost: string[]): string[][] =>
   parsedCost.map((symbol: string) => symbol.toLowerCase().split('-'));
 

@@ -1,13 +1,11 @@
 import * as cardutil from '@utils/cardutil';
 import Card, { Changes } from '@utils/datatypes/Card';
 import { FeedTypes } from '@utils/datatypes/Feed';
-import Blog from 'dynamo/models/blog';
-import Changelog from 'dynamo/models/changelog';
-import Cube from 'dynamo/models/cube';
-import Feed from 'dynamo/models/feed';
+import { blogDao, changelogDao, cubeDao, feedDao } from 'dynamo/daos';
 
 import { Request, Response } from '../types/express';
 import { cardFromId, getIdsFromName, getMostReasonable } from './carddb';
+import cloudwatch from './cloudwatch';
 import { CSVtoCards } from './cubefn';
 import { handleRouteError, redirect, render } from './render';
 import * as util from './util';
@@ -89,28 +87,37 @@ async function updateCubeAndBlog(
     }
 
     if (Object.keys(changelog).length > 0) {
-      await Cube.updateCards(cube.id, cardsToWrite);
+      await cubeDao.updateCards(cube.id, cardsToWrite);
 
-      const changelist = await Changelog.put(changelog, cube.id);
+      const changelist = await changelogDao.createChangelog(changelog, cube.id);
 
-      const id = await Blog.put({
-        owner: req.user!.id,
-        date: new Date().valueOf(),
-        cube: cube.id,
-        title: 'Cube Bulk Import - Automatic Post',
-        changelist,
-      });
+      try {
+        const id = await blogDao.createBlog({
+          owner: req.user!.id,
+          cube: cube.id,
+          title: 'Cube Bulk Import - Automatic Post',
+          changelist,
+        });
 
-      const followers = [...new Set([...(req.user!.following || []), ...cube.following])];
+        const followers = [...new Set([...(req.user!.following || []), ...cube.following])];
 
-      const feedItems = followers.map((user) => ({
-        id,
-        to: user,
-        date: new Date().valueOf(),
-        type: FeedTypes.BLOG,
-      }));
+        const feedItems = followers.map((user) => ({
+          id,
+          to: user,
+          date: new Date().valueOf(),
+          type: FeedTypes.BLOG,
+        }));
 
-      await Feed.batchPut(feedItems);
+        await feedDao.batchPutUnhydrated(feedItems);
+      } catch (blogErr) {
+        // Log the error but don't fail the entire operation
+        // The cube update and changelog were successful
+        cloudwatch.error('Failed to create blog post after bulk replace', blogErr);
+        req.flash(
+          'warning',
+          'Cards updated successfully, but failed to create blog post. You can create one manually.',
+        );
+      }
 
       req.flash('success', 'All cards successfully added.');
     } else {
@@ -124,7 +131,7 @@ async function updateCubeAndBlog(
 }
 
 async function bulkUpload(req: Request, res: Response, list: string, cube: Cube) {
-  const cards = await Cube.getCards(cube.id);
+  const cards = await cubeDao.getCards(cube.id);
   const cardsToWrite: Cards = JSON.parse(JSON.stringify(cards));
   const { mainboard } = cardsToWrite;
   const { maybeboard } = cardsToWrite;

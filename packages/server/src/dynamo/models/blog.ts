@@ -1,16 +1,18 @@
+// Migrated to /dao/BlogDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import BlogPost, { UnhydratedBlogPost } from '@utils/datatypes/BlogPost';
 import { BoardChanges, BoardType, Changes } from '@utils/datatypes/Card';
 import CubeType from '@utils/datatypes/Cube';
 import UserType from '@utils/datatypes/User';
+import { userDao } from 'dynamo/daos';
 import createClient from 'dynamo/util';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
 import Changelog from './changelog';
 import Cube from './cube';
-import User from './user';
 
 const client = createClient({
   name: 'BLOG',
@@ -40,6 +42,7 @@ const createHydratedBlog = (
   owner: UserType,
   cubeName: string,
   Changelog?: Partial<Changes>,
+  cubeVisibility?: string,
 ): BlogPost => {
   return {
     id: document.id!,
@@ -49,7 +52,10 @@ const createHydratedBlog = (
     title: document.title,
     owner: owner,
     cubeName: cubeName,
+    cubeVisibility: cubeVisibility,
     Changelog: Changelog,
+    dateCreated: document.dateCreated,
+    dateLastUpdated: document.dateLastUpdated,
   };
 };
 
@@ -59,23 +65,25 @@ const hydrate = async (document?: UnhydratedBlogPost): Promise<BlogPost | undefi
   }
 
   let cubeName = 'Unknown';
+  let cubeVisibility: string | undefined;
 
-  const owner = await User.getById(document.owner);
+  const owner = await userDao.getById(document.owner);
 
   if (document.cube && document.cube !== 'DEVBLOG') {
     const cube = await Cube.getById(document.cube);
     if (cube) {
       cubeName = cube.name;
+      cubeVisibility = cube.visibility;
     }
   }
 
   if (!document.changelist) {
-    return createHydratedBlog(document, owner!, cubeName);
+    return createHydratedBlog(document, owner!, cubeName, undefined, cubeVisibility);
   }
 
   const changelog = await Changelog.getById(document.cube, document.changelist);
 
-  return createHydratedBlog(document, owner!, cubeName, changelog);
+  return createHydratedBlog(document, owner!, cubeName, changelog, cubeVisibility);
 };
 
 const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]> => {
@@ -84,16 +92,18 @@ const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]
     .map((document) => ({ cube: document.cube, id: document.changelist }));
   const changelists = await Changelog.batchGet(keys);
 
-  const owners: UserType[] = await User.batchGet(documents.map((document) => document.owner));
+  const owners: UserType[] = await userDao.batchGet(documents.map((document) => document.owner));
   const cubes: CubeType[] = await Cube.batchGet(documents.map((document) => document.cube));
 
   return documents.map((document) => {
     const owner = owners.find((owner) => owner.id === document.owner);
     let cubeName = 'Unknown';
+    let cubeVisibility: string | undefined;
     if (document.cube && document.cube !== 'DEVBLOG') {
       const cube = cubes.find((c) => c.id === document.cube);
       if (cube) {
         cubeName = cube.name;
+        cubeVisibility = cube.visibility;
       }
     }
 
@@ -103,19 +113,22 @@ const batchHydrate = async (documents: UnhydratedBlogPost[]): Promise<BlogPost[]
       Changelog = changelists[id];
     }
 
-    return createHydratedBlog(document, owner!, cubeName, Changelog);
+    return createHydratedBlog(document, owner!, cubeName, Changelog, cubeVisibility);
   });
 };
 
 const fillRequiredDetails = (document: UnhydratedBlogPost): UnhydratedBlogPost => {
+  const now = Date.now().valueOf();
   return {
     id: document.id || uuidv4(),
     cube: document.cube,
-    date: document.date || Date.now().valueOf(),
+    date: document.date || now,
     owner: document.owner,
     body: document.body ? document.body.substring(0, 10000) : undefined,
     title: document.title,
     changelist: document.changelist,
+    dateCreated: document.dateCreated || now,
+    dateLastUpdated: document.dateLastUpdated || now,
   };
 };
 
@@ -188,6 +201,17 @@ const blog = {
     await client.batchPut(documents.map((document) => fillRequiredDetails(document)));
   },
   batchGet: async (ids: string[]): Promise<BlogPost[]> => batchHydrate(await client.batchGet(ids)),
+  scan: async (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items?: UnhydratedBlogPost[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+    return {
+      items: result.Items as UnhydratedBlogPost[],
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   createTable: async (): Promise<CreateTableCommandOutput> => client.createTable(),
   changelogToText: (changelog: Changes): string => {
     let result = '';

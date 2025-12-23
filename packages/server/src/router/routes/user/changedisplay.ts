@@ -1,8 +1,8 @@
 import { PrintingPreference } from '@utils/datatypes/Card';
 import { GridTightnessPreference } from '@utils/datatypes/User';
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -12,7 +12,7 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/user/login');
     }
 
-    const user = await User.getById(req.user.id);
+    const user = await userDao.getByIdWithSensitiveData(req.user.id);
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -43,7 +43,7 @@ export const handler = async (req: Request, res: Response) => {
     user.gridTightness = req.body.gridTightness;
     user.autoBlog = req.body.autoBlog === 'true';
 
-    await User.update(user);
+    await userDao.update(user as any);
 
     req.flash('success', 'Your display preferences have been updated.');
     return redirect(req, res, '/user/account');

@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 
 import BlogPostType from '@utils/datatypes/BlogPost';
 import Cube, { CubeCards } from '@utils/datatypes/Cube';
+import { getCubeId } from '@utils/Util';
 
 import Button from 'components/base/Button';
 import Controls from 'components/base/Controls';
@@ -82,6 +83,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
                 >
                   Customize basics
                 </CustomizeBasicsModalLink>
+                <Link href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}>Restore</Link>
                 <DeleteCubeModalLink modalprops={{ cube }}>Delete Cube</DeleteCubeModalLink>
               </Flexbox>
             </Controls>

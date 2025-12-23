@@ -1,19 +1,18 @@
 import { cardOracleId } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import CubeType from '@utils/datatypes/Cube';
-import DraftType from '@utils/datatypes/Draft';
-import RecordType from '@utils/datatypes/Record';
+import DraftType, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { setupPicks } from '@utils/draftutil';
-import Cube from 'dynamo/models/cube';
-import Draft from 'dynamo/models/draft';
-import Record from 'dynamo/models/record';
+import { Draft } from 'dynamo/dao/DraftDynamoDao';
+import { RecordEntity } from 'dynamo/dao/RecordDynamoDao';
+import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
+import { bodyValidation } from 'router/middleware';
+import { csrfProtection, ensureAuth } from 'router/middleware';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
 import { addBasics, createPool } from 'serverutils/cube';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { bodyValidation } from 'src/router/middleware';
-import { csrfProtection, ensureAuth } from 'src/router/middleware';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -24,14 +23,14 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const record = await Record.getById(req.params.id);
+    const record = await recordDao.getById(req.params.id);
 
     if (!record) {
       req.flash('danger', 'Record not found');
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -40,7 +39,7 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
 
     let draft: DraftType | undefined;
     if (record.draft) {
-      draft = await Draft.getById(record.draft);
+      draft = await draftDao.getById(record.draft);
     }
 
     return render(req, res, 'RecordUploadDeckPage', {
@@ -58,12 +57,12 @@ const sideboardSchema = Joi.array().items(Joi.string()).max(200).default([]);
 
 export const associateNewDraft = async (
   cube: CubeType,
-  record: RecordType,
+  record: RecordEntity,
   userIndex: number,
   mainboardOracles: string[],
   sideboardOracles: string[] = [],
 ) => {
-  const cubeCards = await Cube.getCards(cube.id);
+  const cubeCards = await cubeDao.getCards(cube.id);
   const { mainboard } = cubeCards;
 
   const deck: number[][][] = createPool();
@@ -128,7 +127,7 @@ export const associateNewDraft = async (
     owner: cube.owner.id,
     cubeOwner: cube.owner.id,
     date: record.date,
-    type: Draft.TYPES.UPLOAD,
+    type: DRAFT_TYPES.UPLOAD,
     cards: cardsWithIndex,
     seats: record.players.map((player) => ({
       owner: player.userId,
@@ -137,7 +136,7 @@ export const associateNewDraft = async (
       sideboard: setupPicks(1, 8) as number[][][],
     })),
     complete: true,
-    basics: cube.basics,
+    basics: [] as number[], // Will be populated by addBasics
   };
 
   const targetSeat = newDraft.seats[userIndex - 1];
@@ -146,29 +145,29 @@ export const associateNewDraft = async (
     targetSeat.sideboard = sideboard;
   }
 
-  const draftDocument = newDraft as unknown as {
-    cards: { cardID: string; index: number; isUnlimited?: boolean; type_line: string }[];
-    basics: number[];
-  };
-  addBasics(draftDocument, cube.basics);
+  // addBasics modifies the draft object in place, adding basic cards to cards array
+  // and setting basics to be an array of card indices
+  addBasics(newDraft, cube.basics);
 
-  const id = await Draft.put(draftDocument as any);
+  const id = await draftDao.createDraft(newDraft);
 
   cube.numDecks += 1;
-  await Cube.update(cube);
+  await cubeDao.update(cube, { skipTimestampUpdate: true });
 
   record.draft = id;
-  await Record.put(record);
+  record.dateLastUpdated = Date.now();
+  // Update the record with the draft ID
+  await recordDao.update(record);
 };
 
 export const associateWithExistingDraft = async (
   cube: CubeType,
-  draft: DraftType,
+  draft: Draft,
   userIndex: number,
   mainboardOracles: string[],
   sideboardOracles: string[] = [],
 ) => {
-  const cubeCards = await Cube.getCards(cube.id);
+  const cubeCards = await cubeDao.getCards(cube.id);
   const { mainboard } = cubeCards;
 
   const deck: number[][][] = createPool();
@@ -227,7 +226,8 @@ export const associateWithExistingDraft = async (
     targetSeat.sideboard = sideboard;
   }
 
-  await Draft.put(draft);
+  // Update the draft with the new seat data
+  await draftDao.putDraft(draft);
 };
 
 export const uploadDeckHandler = async (req: Request, res: Response) => {
@@ -237,13 +237,13 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const record = await Record.getById(req.params.id);
+    const record = await recordDao.getById(req.params.id);
     if (!record) {
       req.flash('danger', 'Record not found');
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(record.cube);
+    const cube = await cubeDao.getById(record.cube);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
@@ -271,7 +271,7 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
     }
 
-    const draft = await Draft.getById(record.draft);
+    const draft = await draftDao.getById(record.draft);
 
     if (!draft) {
       // underlying draft object may have been deleted, we need to create a new one
@@ -285,7 +285,8 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
     }
 
     // if this draft already has a deck for this user, we don't want to overwrite it
-    if (draft.seats[userIndex - 1]?.mainboard?.flat(3).length > 0) {
+    const userSeat = draft.seats[userIndex - 1];
+    if (userSeat?.mainboard && userSeat.mainboard.flat(3).length > 0) {
       req.flash('danger', 'This user already has a deck associated with this draft.');
       return redirect(req, res, `/cube/records/uploaddeck/${record.id}`);
     }

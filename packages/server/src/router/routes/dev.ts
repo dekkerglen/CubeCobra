@@ -1,14 +1,13 @@
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { UserRoles } from '@utils/datatypes/User';
-import Blog from 'dynamo/models/blog';
-import Feed from 'dynamo/models/feed';
+import { blogDao, feedDao } from 'dynamo/daos';
+import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
-import { csrfProtection, ensureRole } from 'src/router/middleware';
 
 import { Request, Response } from '../../types/express';
 
 export const blogHandler = async (req: Request, res: Response) => {
-  const blogs = await Blog.getByCube('DEVBLOG', 10);
+  const blogs = await blogDao.getByCube('DEVBLOG', 10);
 
   return render(req, res, 'DevBlog', {
     blogs: blogs.items,
@@ -18,7 +17,7 @@ export const blogHandler = async (req: Request, res: Response) => {
 
 export const getMoreBlogsHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
-  const blogs = await Blog.getByCube('DEVBLOG', 10, lastKey);
+  const blogs = await blogDao.getByCube('DEVBLOG', 10, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -32,22 +31,21 @@ export const blogPostHandler = async (req: Request, res: Response) => {
     const blogpost = {
       body: req.body.body,
       owner: req.user!.id,
-      date: Date.now().valueOf(),
       cube: 'DEVBLOG',
       title: req.body.title,
     };
 
-    const id = await Blog.put(blogpost);
+    const id = await blogDao.createBlog(blogpost);
 
     const feedItems = req.user!.following?.map((user) => ({
       id,
       to: user,
-      date: blogpost.date,
+      date: Date.now().valueOf(),
       type: FeedTypes.BLOG,
     }));
 
     if (feedItems && feedItems.length > 0) {
-      await Feed.batchPut(feedItems);
+      await feedDao.batchPutUnhydrated(feedItems);
     }
 
     return res.status(200).send({

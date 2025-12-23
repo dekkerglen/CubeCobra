@@ -85,9 +85,10 @@ interface ListViewProps {
 }
 
 const ListView: React.FC<ListViewProps> = ({ cards }) => {
-  const { versionDict, editCard, tagColors, allTags, canEdit } = useContext(CubeContext);
+  const { versionDict, fetchVersionsForCard, editCard, tagColors, allTags, canEdit } = useContext(CubeContext);
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
   const [pageSize, setPageSize] = useState(50);
+  const [loadingVersions, setLoadingVersions] = useState<Set<string>>(new Set());
 
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
@@ -153,6 +154,24 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
     [updateField, doCmcValidity],
   );
 
+  // Lazy load versions when user interacts with version dropdown
+  const handleVersionDropdownFocus = useCallback(
+    async (card: CardType) => {
+      const cardNorm = normalizeName(cardName(card));
+      // Only fetch if versions aren't already loaded and not currently loading
+      if (!versionDict[cardNorm] && !loadingVersions.has(card.cardID)) {
+        setLoadingVersions((prev) => new Set(prev).add(card.cardID));
+        await fetchVersionsForCard(card.cardID);
+        setLoadingVersions((prev) => {
+          const next = new Set(prev);
+          next.delete(card.cardID);
+          return next;
+        });
+      }
+    },
+    [versionDict, loadingVersions, fetchVersionsForCard],
+  );
+
   const headers = ['Name', 'Version', 'Type', 'Status', 'Finish', 'CMC', 'Color Identity', 'Tags'];
   const rows = sorted.map((card) => ({
     Name: (
@@ -167,6 +186,8 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
       <Select
         value={card.cardID}
         setValue={(v) => updateField(card, 'cardID', v)}
+        loading={loadingVersions.has(card.cardID)}
+        onPointerDown={() => handleVersionDropdownFocus(card)}
         options={Object.entries(
           versionDict[normalizeName(cardName(card))]
             ? Object.fromEntries(versionDict[normalizeName(cardName(card))].map((v) => [v.scryfall_id, v]))

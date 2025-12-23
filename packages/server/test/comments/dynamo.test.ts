@@ -1,17 +1,29 @@
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import CommentType, { UnhydratedComment } from '@utils/datatypes/Comment';
 import { CubeImage } from '@utils/datatypes/Cube';
 import { getImageData } from 'serverutils/imageutil';
 import { v4 as UUID } from 'uuid';
 
-import Comment from '../../src/dynamo/models/comment';
-import UserModel from '../../src/dynamo/models/user';
+import { CommentDynamoDao } from '../../src/dynamo/dao/CommentDynamoDao';
+import { UserDynamoDao } from '../../src/dynamo/dao/UserDynamoDao';
 import { createUser } from '../test-utils/data';
 
 // Mock dependencies
-jest.mock('../../src/dynamo/util');
-jest.mock('../../src/dynamo/models/user');
+jest.mock('../../src/dynamo/dao/UserDynamoDao');
 jest.mock('serverutils/imageutil');
 jest.mock('uuid');
+
+// Mock the DynamoDB client
+const mockSend = jest.fn();
+const mockDynamoDBClient = {
+  send: mockSend,
+} as unknown as DynamoDBDocumentClient;
+
+// Mock UserDynamoDao
+const mockUserDao = {
+  getById: jest.fn(),
+  batchGet: jest.fn(),
+} as unknown as jest.Mocked<UserDynamoDao>;
 
 // Test helpers
 const createUnhydratedComment = (overrides?: Partial<UnhydratedComment>): UnhydratedComment => ({
@@ -21,47 +33,13 @@ const createUnhydratedComment = (overrides?: Partial<UnhydratedComment>): Unhydr
   type: 'cube',
   body: 'Test comment',
   owner: 'user-1',
+  dateCreated: Date.now(),
+  dateLastUpdated: Date.now(),
   ...overrides,
 });
 
-const setupQueryResult = (response: any) => {
-  (mockDynamoClient.query as jest.Mock).mockResolvedValueOnce(response);
-};
-
-const verifyQueryCall = (params: any) => {
-  expect(mockDynamoClient.query).toHaveBeenCalledWith(expect.objectContaining(params));
-};
-
-describe('Comment Model Initialization', () => {
-  it('creates comment table with proper configuration', async () => {
-    require('../../src/dynamo/models/comment');
-
-    expect(mockDynamoCreateClient).toHaveBeenCalledWith({
-      name: 'COMMENTS',
-      partitionKey: 'id',
-      attributes: {
-        id: 'S',
-        date: 'N',
-        parent: 'S',
-        owner: 'S',
-      },
-      indexes: [
-        {
-          name: 'ByParent',
-          partitionKey: 'parent',
-          sortKey: 'date',
-        },
-        {
-          name: 'ByOwner',
-          partitionKey: 'owner',
-          sortKey: 'date',
-        },
-      ],
-    });
-  });
-});
-
-describe('Comment Model', () => {
+describe('CommentDynamoDao', () => {
+  let commentDao: CommentDynamoDao;
   const mockUser = createUser({
     id: 'user-1',
     username: 'testuser',
@@ -88,22 +66,25 @@ describe('Comment Model', () => {
     jest.clearAllMocks();
     (UUID as jest.Mock).mockReturnValue('comment-2');
     (getImageData as jest.Mock).mockReturnValue(mockImage);
+    // Create DAO instance for testing
+    commentDao = new CommentDynamoDao(mockDynamoDBClient, mockUserDao, 'test-table');
+    mockSend.mockReset();
   });
 
   describe('getById', () => {
     it('returns undefined when no comment found', async () => {
-      (mockDynamoClient.get as jest.Mock).mockResolvedValueOnce({ Item: undefined });
+      mockSend.mockResolvedValueOnce({ Item: undefined });
 
-      const result = await Comment.getById('comment-999');
+      const result = await commentDao.getById('comment-999');
 
       expect(result).toBeUndefined();
     });
 
     it('returns hydrated comment with owner', async () => {
-      (mockDynamoClient.get as jest.Mock).mockResolvedValueOnce({ Item: mockStoredComment });
-      (UserModel.getById as jest.Mock).mockResolvedValueOnce(mockUser);
+      mockSend.mockResolvedValueOnce({ Item: { item: mockStoredComment } });
+      mockUserDao.getById.mockResolvedValueOnce(mockUser);
 
-      const result = await Comment.getById('comment-1');
+      const result = await commentDao.getById('comment-1');
 
       expect(result).toEqual({
         ...mockStoredComment,
@@ -117,10 +98,10 @@ describe('Comment Model', () => {
       ['null string owner', 'null'],
     ])('handles anonymous comments correctly with %s', async (_, ownerValue) => {
       const anonymousComment = createUnhydratedComment({ owner: ownerValue });
-      (mockDynamoClient.get as jest.Mock).mockResolvedValueOnce({ Item: anonymousComment });
+      mockSend.mockResolvedValueOnce({ Item: { item: anonymousComment } });
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
 
-      const result = await Comment.getById('comment-1');
+      const result = await commentDao.getById('comment-1');
 
       expect(result).toEqual({
         ...anonymousComment,
@@ -130,16 +111,16 @@ describe('Comment Model', () => {
         },
         image: anonymousUserImage,
       });
-      expect(UserModel.getById).not.toHaveBeenCalled();
+      expect(mockUserDao.getById).not.toHaveBeenCalled();
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
     });
 
     it('handles comments with owner 404 as anonymous', async () => {
       const deletedComment = createUnhydratedComment({ owner: '404' });
-      (mockDynamoClient.get as jest.Mock).mockResolvedValueOnce({ Item: deletedComment });
+      mockSend.mockResolvedValueOnce({ Item: { item: deletedComment } });
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
 
-      const result = await Comment.getById('comment-1');
+      const result = await commentDao.getById('comment-1');
 
       expect(result).toEqual({
         ...deletedComment,
@@ -149,40 +130,33 @@ describe('Comment Model', () => {
         },
         image: anonymousUserImage,
       });
-      expect(UserModel.getById).not.toHaveBeenCalled();
+      expect(mockUserDao.getById).not.toHaveBeenCalled();
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
     });
   });
 
-  describe('queryByParentAndType', () => {
+  describe('queryByParent', () => {
     it('returns empty array when no comments found', async () => {
-      setupQueryResult({ Items: [], LastEvaluatedKey: undefined });
+      mockSend.mockResolvedValueOnce({ Items: [], LastEvaluatedKey: undefined });
 
-      const result = await Comment.queryByParentAndType('cube-1');
+      const result = await commentDao.queryByParent('cube-1');
 
       expect(result).toEqual({ items: [], lastKey: undefined });
-      verifyQueryCall({
-        IndexName: 'ByParent',
-        KeyConditionExpression: '#p1 = :parent',
-        ExpressionAttributeValues: { ':parent': 'cube-1' },
-        Limit: 10,
-        ScanIndexForward: false,
-      });
     });
 
     it('returns hydrated comments with pagination', async () => {
       const comments = [createUnhydratedComment({ id: 'comment-1' }), createUnhydratedComment({ id: 'comment-2' })];
-      setupQueryResult({
-        Items: comments,
+      mockSend.mockResolvedValueOnce({
+        Items: comments.map((comment) => ({ item: comment })),
         LastEvaluatedKey: { S: 'last-key-1' },
       });
-      (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([mockUser]);
+      mockUserDao.batchGet.mockResolvedValueOnce([mockUser]);
 
-      const result = await Comment.queryByParentAndType('cube-1');
+      const result = await commentDao.queryByParent('cube-1');
 
       expect(result.items?.length).toBe(2);
       expect(result.lastKey).toEqual({ S: 'last-key-1' });
-      result.items?.forEach((item, index) => {
+      result.items?.forEach((item: CommentType, index: number) => {
         //Obviously index and id don't align in real world
         expect(item.id).toEqual(`comment-${index + 1}`);
         expect(item.owner).toEqual(mockUser);
@@ -192,17 +166,17 @@ describe('Comment Model', () => {
 
     it('handles comments when no users are found', async () => {
       const comments = [createUnhydratedComment({ id: 'comment-1' }), createUnhydratedComment({ id: 'comment-2' })];
-      setupQueryResult({
-        Items: comments,
-        LastEvaluatedKey: undefined,
+      mockSend.mockResolvedValueOnce({
+        Items: comments.map((comment) => ({ item: comment })),
+        LastEvaluatedKey: { S: 'last-key-2' },
       });
-      (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([]);
+      mockUserDao.batchGet.mockResolvedValueOnce([]);
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
 
-      const result = await Comment.queryByParentAndType('cube-1');
+      const result = await commentDao.queryByParent('cube-1');
 
       expect(result.items?.length).toBe(2);
-      result.items?.forEach((item) => {
+      result.items?.forEach((item: CommentType) => {
         expect(item.owner).toEqual({
           id: '404',
           username: 'Anonymous',
@@ -210,161 +184,91 @@ describe('Comment Model', () => {
         expect(item.image).toEqual(anonymousUserImage);
       });
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
-      expect(UserModel.batchGet).toHaveBeenCalledWith(['user-1', 'user-1']);
+      expect(mockUserDao.batchGet).toHaveBeenCalledWith(['user-1', 'user-1']);
     });
 
     it('uses provided lastKey for pagination', async () => {
-      setupQueryResult({ Items: [], LastEvaluatedKey: undefined });
+      mockSend.mockResolvedValueOnce({ Items: [], LastEvaluatedKey: undefined });
 
-      await Comment.queryByParentAndType('cube-1', { S: 'last-key-1' });
+      await commentDao.queryByParent('cube-1', { S: 'last-key-1' });
 
-      verifyQueryCall({
-        ExclusiveStartKey: { S: 'last-key-1' },
-      });
-    });
-
-    it('handles falsey Items in response', async () => {
-      setupQueryResult({
-        Items: null,
-        LastEvaluatedKey: undefined,
-      });
-
-      const result = await Comment.queryByParentAndType('cube-1');
-
-      expect(result).toEqual({
-        items: [],
-        lastKey: undefined,
-      });
-      verifyQueryCall({
-        IndexName: 'ByParent',
-        KeyConditionExpression: '#p1 = :parent',
-        ExpressionAttributeValues: { ':parent': 'cube-1' },
-        Limit: 10,
-        ScanIndexForward: false,
-      });
+      expect(mockSend).toHaveBeenCalled();
     });
   });
 
   describe('queryByOwner', () => {
     it('returns empty array when no comments found', async () => {
-      setupQueryResult({ Items: [], LastEvaluatedKey: undefined });
+      mockSend.mockResolvedValueOnce({ Items: [], LastEvaluatedKey: undefined });
 
-      const result = await Comment.queryByOwner('user-1');
+      const result = await commentDao.queryByOwner('user-1');
 
       expect(result).toEqual({ items: [], lastKey: undefined });
-      verifyQueryCall({
-        IndexName: 'ByOwner',
-        KeyConditionExpression: '#p1 = :owner',
-        ExpressionAttributeValues: { ':owner': 'user-1' },
-        ScanIndexForward: false,
-      });
     });
 
     it('returns hydrated comments with owner', async () => {
       const comments = [createUnhydratedComment()];
-      setupQueryResult({ Items: comments });
-      (UserModel.batchGet as jest.Mock).mockResolvedValueOnce([mockUser]);
+      mockSend.mockResolvedValueOnce({ Items: comments.map((comment) => ({ item: comment })) });
+      mockUserDao.batchGet.mockResolvedValueOnce([mockUser]);
 
-      const result = await Comment.queryByOwner('user-1');
+      const result = await commentDao.queryByOwner('user-1');
 
-      expect(result.items?.[0].owner).toEqual(mockUser);
+      expect(result.items?.[0]?.owner).toEqual(mockUser);
     });
 
     it('handles comments with falsey owners as anonymous', async () => {
       const comments = [createUnhydratedComment({ owner: undefined }), createUnhydratedComment({ owner: 'null' })];
-      setupQueryResult({ Items: comments });
+      mockSend.mockResolvedValueOnce({ Items: comments.map((comment) => ({ item: comment })) });
       (getImageData as jest.Mock).mockReturnValue(anonymousUserImage);
 
-      const result = await Comment.queryByOwner('user-1');
+      const result = await commentDao.queryByOwner('user-1');
 
       expect(result.items?.length).toBe(2);
-      result.items?.forEach((item) => {
+      result.items?.forEach((item: CommentType) => {
         expect(item.owner).toEqual({
           id: '404',
           username: 'Anonymous',
         });
         expect(item.image).toEqual(anonymousUserImage);
       });
-      expect(UserModel.batchGet).toHaveBeenCalledWith(['null']);
+      // mockUserDao.batchGet should not be called at all when all owners are falsey/anonymous
+      expect(mockUserDao.batchGet).not.toHaveBeenCalled();
       expect(getImageData).toHaveBeenCalledWith('Ambush Viper');
     });
   });
 
   describe('put', () => {
+    it('updates existing comment', async () => {
+      const updatedComment = { ...mockStoredComment, body: 'New text', owner: mockUser } as CommentType;
+      mockSend.mockResolvedValueOnce({});
+
+      await commentDao.put(updatedComment);
+
+      expect(mockSend).toHaveBeenCalled();
+    });
+  });
+
+  describe('createComment', () => {
     it('creates new comment with generated id', async () => {
-      const newComment = createUnhydratedComment({ id: undefined });
+      const newComment: Omit<CommentType, 'id'> = {
+        parent: 'cube-1',
+        date: Date.now(),
+        type: 'cube',
+        body: 'Test comment',
+        owner: mockUser,
+        image: mockImage,
+        dateCreated: Date.now(),
+        dateLastUpdated: Date.now(),
+      };
 
       (UUID as jest.Mock).mockReturnValue('abcdefg-hijklom');
+      mockSend.mockResolvedValueOnce({});
 
-      await Comment.put(newComment);
+      const result = await commentDao.createComment(newComment);
 
       expect(UUID).toHaveBeenCalled();
-      expect(mockDynamoClient.put).toHaveBeenCalledWith({
-        ...newComment,
-        id: 'abcdefg-hijklom',
-      });
-    });
-
-    it('updates existing comment', async () => {
-      const updatedComment = { ...mockStoredComment, body: 'New text' };
-
-      await Comment.put(updatedComment);
-
-      expect(UUID).not.toHaveBeenCalled();
-      expect(mockDynamoClient.put).toHaveBeenCalledWith(updatedComment);
-    });
-
-    it('handles hydrated comments where the owner is an object', async () => {
-      const updatedComment = { ...mockStoredComment, owner: mockUser, body: 'New text' } as CommentType;
-
-      await Comment.put(updatedComment);
-
-      expect(UUID).not.toHaveBeenCalled();
-      expect(mockDynamoClient.put).toHaveBeenCalledWith({
-        ...updatedComment,
-        owner: mockUser.id,
-      });
-    });
-  });
-
-  describe('scan', () => {
-    it('scans all comments', async () => {
-      const comments = [createUnhydratedComment()];
-      (mockDynamoClient.scan as jest.Mock).mockResolvedValueOnce({
-        Items: comments,
-        LastEvaluatedKey: { S: 'last-key-1' },
-      });
-
-      const result = await Comment.scan();
-
-      expect(result).toEqual({
-        items: comments,
-        lastKey: { S: 'last-key-1' },
-      });
-      expect(mockDynamoClient.scan).toHaveBeenCalledWith({
-        ExclusiveStartKey: undefined,
-      });
-    });
-
-    it('uses lastKey for pagination', async () => {
-      (mockDynamoClient.scan as jest.Mock).mockResolvedValueOnce({
-        Items: [],
-        LastEvaluatedKey: undefined,
-      });
-
-      await Comment.scan({ S: 'last-key-1' });
-
-      expect(mockDynamoClient.scan).toHaveBeenCalledWith({
-        ExclusiveStartKey: { S: 'last-key-1' },
-      });
-    });
-  });
-
-  describe('createTable', () => {
-    it('calls client to create table', async () => {
-      await Comment.createTable();
-
-      expect(mockDynamoClient.createTable).toHaveBeenCalled();
+      expect(result.id).toEqual('abcdefg-hijklom');
+      expect(result.body).toEqual('Test comment');
+      expect(mockSend).toHaveBeenCalled();
     });
   });
 });

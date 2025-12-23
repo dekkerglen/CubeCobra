@@ -1,3 +1,5 @@
+// migrated to /daos/FeedDynamoDao.ts
+
 import { CreateTableCommandOutput } from '@aws-sdk/client-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import BlogPost from '@utils/datatypes/BlogPost';
@@ -92,6 +94,20 @@ const feed = {
           document: itemsById[document.id],
         }))
         .filter((item): item is { type: any; document: BlogPost } => item.document !== undefined),
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  scan: async (
+    limit?: number,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<{ items: UnhydratedFeed[]; lastKey?: Record<string, NativeAttributeValue> }> => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    });
+
+    return {
+      items: (result.Items ?? []) as UnhydratedFeed[],
       lastKey: result.LastEvaluatedKey,
     };
   },

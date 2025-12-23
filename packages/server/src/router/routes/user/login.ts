@@ -1,4 +1,4 @@
-import User from 'dynamo/models/user';
+import { userDao } from 'dynamo/daos';
 import passport from 'passport';
 import { redirect, render } from 'serverutils/render';
 import { getSafeReferrer } from 'serverutils/util';
@@ -29,15 +29,17 @@ export const postHandler = async (req: Request, res: Response) => {
   }
 
   if (req.body.username.includes('@')) {
-    user = await User.getByEmail(req.body.username.toLowerCase());
+    user = await userDao.getByEmail(req.body.username.toLowerCase());
   } else {
-    user = await User.getByUsername(req.body.username.toLowerCase());
+    user = await userDao.getByUsername(req.body.username.toLowerCase());
   }
 
   if (!user) {
     req.flash('danger', 'Incorrect Username or email address.');
     return redirect(req, res, '/user/login');
   }
+
+  console.log(user);
 
   if ((user as any).emailVerified === false) {
     req.flash('danger', 'Your account is not verified. Please check your email for a verification link.');
