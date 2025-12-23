@@ -115,17 +115,13 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
    * Hydrates multiple UnhydratedEpisodes to Episodes (optimized batch operation).
    */
   protected async hydrateItems(items: UnhydratedEpisode[]): Promise<Episode[]> {
-    console.log(`[EpisodeDao.hydrateItems] Hydrating ${items.length} items`);
-
     if (items.length === 0) {
       return [];
     }
 
     const ownerIds = items.map((item) => item.owner).filter(Boolean) as string[];
-    console.log(`[EpisodeDao.hydrateItems] Found ${ownerIds.length} owner IDs`);
 
     const owners = ownerIds.length > 0 ? await this.userDao.batchGet(ownerIds) : [];
-    console.log(`[EpisodeDao.hydrateItems] Fetched ${owners.length} owners`);
 
     const hydrated = items.map((item) => {
       const owner = owners.find((o: User) => o.id === item.owner);
@@ -141,7 +137,6 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       } as Episode;
     });
 
-    console.log(`[EpisodeDao.hydrateItems] Returning ${hydrated.length} hydrated items`);
     return hydrated;
   }
 

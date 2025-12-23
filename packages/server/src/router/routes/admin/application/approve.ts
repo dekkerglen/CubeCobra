@@ -32,7 +32,7 @@ export const approveHandler = async (req: Request, res: Response) => {
   const applicationUser = await userDao.getByIdWithSensitiveData(application.user.id);
 
   application.status = NoticeStatus.PROCESSED;
-  noticeDao.put(application);
+  await noticeDao.update(application);
 
   if (applicationUser) {
     await sendEmail(applicationUser.email, 'Cube Cobra Content Creator', 'application_approve');

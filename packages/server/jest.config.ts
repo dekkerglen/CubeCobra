@@ -25,7 +25,7 @@ const jestConfig: Config = {
   // Module resolution paths
   modulePaths: ['<rootDir>'],
   moduleDirectories: ['node_modules', 'src'],
-  
+
   // Use default resolver
   resolver: undefined,
 

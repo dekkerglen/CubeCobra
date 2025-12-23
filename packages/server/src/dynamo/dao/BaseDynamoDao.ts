@@ -274,14 +274,11 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
   }> {
     try {
       const data = await this.dynamoClient.send(new QueryCommand(params));
-      console.log(`[BaseDynamoDao.query] Raw query returned ${data.Items?.length || 0} items`);
 
       const dynamoItems = data.Items as DynamoItem<U>[];
       const unhydratedItems = dynamoItems.map((item) => item.item);
-      console.log(`[BaseDynamoDao.query] Extracted ${unhydratedItems.length} unhydrated items`);
 
       const hydratedItems = await this.hydrateItems(unhydratedItems);
-      console.log(`[BaseDynamoDao.query] Hydrated to ${hydratedItems.length} items`);
 
       return {
         items: hydratedItems,

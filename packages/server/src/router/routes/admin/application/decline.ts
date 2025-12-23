@@ -15,7 +15,7 @@ export const declineHandler = async (req: Request, res: Response) => {
   }
 
   application.status = NoticeStatus.PROCESSED;
-  noticeDao.put(application);
+  await noticeDao.update(application);
 
   //Normal hydration of User does not contain email, thus we must fetch it in order to notify about their application
   const applicationUser = await userDao.getByIdWithSensitiveData(application.user.id);

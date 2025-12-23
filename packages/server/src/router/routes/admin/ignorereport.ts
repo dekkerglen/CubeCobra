@@ -14,7 +14,7 @@ export const ignorereportHandler = async (req: Request, res: Response) => {
   }
 
   report.status = NoticeStatus.PROCESSED;
-  await noticeDao.put(report);
+  await noticeDao.update(report);
 
   req.flash('success', 'This report has been ignored.');
   return redirect(req, res, '/admin/notices');

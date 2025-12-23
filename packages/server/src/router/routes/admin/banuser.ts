@@ -82,7 +82,7 @@ export const banuserHandler = async (req: Request, res: Response) => {
       comment.owner = undefined;
       comment.body = '[deleted]';
 
-      await commentDao.put(comment);
+      await commentDao.update(comment);
     }
 
     // ban user
@@ -92,11 +92,11 @@ export const banuserHandler = async (req: Request, res: Response) => {
       user.roles = [UserRoles.BANNED];
       user.about = '[deleted]';
 
-      await userDao.put(user);
+      await userDao.update(user);
     }
 
     notice.status = NoticeStatus.PROCESSED;
-    await noticeDao.put(notice);
+    await noticeDao.update(notice);
 
     req.flash(
       'success',

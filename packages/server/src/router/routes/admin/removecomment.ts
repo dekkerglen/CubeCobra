@@ -16,14 +16,14 @@ export const removecommentHandler = async (req: Request, res: Response) => {
   const comment = await commentDao.getById(report.subject!);
 
   report.status = NoticeStatus.PROCESSED;
-  await noticeDao.put(report);
+  await noticeDao.update(report);
 
   if (comment) {
     comment.owner = undefined;
     comment.body = '[removed by moderator]';
     // the -1000 is to prevent weird time display error
     comment.date = Date.now() - 1000;
-    await commentDao.put(comment);
+    await commentDao.update(comment);
   }
 
   req.flash('success', 'This comment has been deleted.');
