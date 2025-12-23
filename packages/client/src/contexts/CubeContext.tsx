@@ -7,7 +7,6 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
@@ -234,9 +233,10 @@ export function CubeContextProvider({
   });
   const defaultSorts = useMemo(() => getCubeSorts(cube), [cube]);
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
-  const [versionDictLoaded, setVersionDictLoaded] = useState(false);
-  const [versionDictLoading, setVersionDictLoading] = useState(false);
-  const fetchStartedRef = useRef(false);
+  // These were only used in the removed fetchVersionDict function
+  // const [versionDictLoaded, setVersionDictLoaded] = useState(false);
+  // const [versionDictLoading, setVersionDictLoading] = useState(false);
+  // const fetchStartedRef = useRef(false);
 
   const fetchCardVersions = useCallback(
     async (ids: string[]): Promise<Record<string, CardVersion[]> | undefined> => {
@@ -266,6 +266,8 @@ export function CubeContextProvider({
     [csrfFetch],
   );
 
+  // Removed unused fetchVersionDict function - it was never called
+  /*
   const fetchVersionDict = useCallback(async () => {
     if (versionDictLoaded || versionDictLoading || !loadVersionDict || fetchStartedRef.current) {
       return;
@@ -292,6 +294,7 @@ export function CubeContextProvider({
       setVersionDictLoading(false);
     }
   }, [cube.cards, fetchCardVersions, loadVersionDict, versionDictLoaded, versionDictLoading]);
+  */
 
   // Fetch versions for a single card lazily
   const fetchVersionsForCard = useCallback(
@@ -1005,23 +1008,26 @@ export function CubeContextProvider({
       maybeboard: changed.maybeboard.filter(cardFilter.filter),
     };
 
+    return [result, changed];
+  }, [cube.cards, useChangedCards, cardFilter, changes, versionDict]);
+
+  // Update filter result when cards or filter changes
+  useEffect(() => {
     if (filterInput !== '') {
-      if (changed.maybeboard.length > 0) {
+      if (unfilteredChangedCards.maybeboard.length > 0) {
         setFilterResult({
-          mainboard: [result.mainboard.length, changed.mainboard.length],
-          maybeboard: [result.maybeboard.length, changed.maybeboard.length],
+          mainboard: [changedCards.mainboard.length, unfilteredChangedCards.mainboard.length],
+          maybeboard: [changedCards.maybeboard.length, unfilteredChangedCards.maybeboard.length],
         });
       } else {
         setFilterResult({
-          mainboard: [result.mainboard.length, changed.mainboard.length],
+          mainboard: [changedCards.mainboard.length, unfilteredChangedCards.mainboard.length],
         });
       }
     } else {
       setFilterResult({});
     }
-
-    return [result, changed];
-  }, [cube.cards, useChangedCards, cardFilter, filterInput, changes, versionDict]);
+  }, [changedCards, unfilteredChangedCards, filterInput]);
 
   const commitChanges = useCallback(
     async (title: string, blog: string) => {

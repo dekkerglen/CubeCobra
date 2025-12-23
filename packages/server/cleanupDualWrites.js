@@ -8,13 +8,13 @@ const path = require('path');
 const daoDir = path.join(__dirname, 'src', 'dynamo', 'dao');
 
 // Get all DAO files
-const daoFiles = fs.readdirSync(daoDir).filter(f => f.endsWith('.ts') && f !== 'BaseDynamoDao.ts');
+const daoFiles = fs.readdirSync(daoDir).filter((f) => f.endsWith('.ts') && f !== 'BaseDynamoDao.ts');
 
 console.log(`Found ${daoFiles.length} DAO files to process\n`);
 
 let totalChanges = 0;
 
-daoFiles.forEach(file => {
+daoFiles.forEach((file) => {
   const filePath = path.join(daoDir, file);
   let content = fs.readFileSync(filePath, 'utf8');
   const originalContent = content;
@@ -54,7 +54,7 @@ daoFiles.forEach(file => {
   // We need to find "if (this.dualWriteEnabled)" blocks and remove them, keeping the else content
   const dualWriteIfRegex = /if \(this\.dualWriteEnabled\) \{[\s\S]*?\n\s*\}/g;
   const dualWriteMatches = content.match(dualWriteIfRegex);
-  
+
   if (dualWriteMatches) {
     console.log(`${file}: Found ${dualWriteMatches.length} dual write conditional block(s) - MANUAL REVIEW NEEDED`);
     // We'll mark these files for manual review rather than auto-removing

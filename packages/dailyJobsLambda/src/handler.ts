@@ -14,6 +14,7 @@ export const handler = async (event: any) => {
 
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const skipWeekly = event?.skipWeekly === true;
 
   try {
     // Run daily jobs
@@ -21,11 +22,13 @@ export const handler = async (event: any) => {
     await Promise.all(DAILY_JOBS.map((job) => job.fn()));
     console.log('Daily jobs completed successfully');
 
-    // Run weekly jobs (Sunday only)
-    if (dayOfWeek === 0) {
+    // Run weekly jobs (Sunday only, unless skipped)
+    if (dayOfWeek === 0 && !skipWeekly) {
       console.log('Running weekly jobs (Sunday)...');
       await Promise.all(WEEKLY_JOBS.map((job) => job.fn()));
       console.log('Weekly jobs completed successfully');
+    } else if (skipWeekly) {
+      console.log('Skipping weekly jobs (skipWeekly flag set)');
     }
 
     return {

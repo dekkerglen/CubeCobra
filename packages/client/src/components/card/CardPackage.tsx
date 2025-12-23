@@ -68,7 +68,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
             <Flexbox direction="row" gap="3" alignItems="start">
               <AddGroupToCubeModalLink
                 color="primary"
-                modalprops={{ cards: cardPackage.cards, cubes: user.cubes || [], packid: cardPackage.id }}
+                modalprops={{ cards: cardPackage.cards, cubes: user.cubes || [], packid: cardPackage.id, voters }}
               >
                 Add To Cube
               </AddGroupToCubeModalLink>

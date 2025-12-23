@@ -5,6 +5,7 @@ import { CardDetails } from '@utils/datatypes/Card';
 import CubePropType from '@utils/datatypes/Cube';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
+import UserContext from '../../contexts/UserContext';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import CardList from '../base/CardList';
@@ -19,6 +20,7 @@ export interface AddGroupToCubeModalProps {
   setOpen: (open: boolean) => void;
   cubes: CubePropType[];
   packid?: string;
+  voters?: string[];
 }
 
 interface AlertProps {
@@ -26,12 +28,21 @@ interface AlertProps {
   message: string;
 }
 
-const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen, setOpen, cubes, packid = null }) => {
+const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
+  cards,
+  isOpen,
+  setOpen,
+  cubes,
+  packid = null,
+  voters = [],
+}) => {
   const { csrfFetch } = useContext(CSRFContext);
+  const user = useContext(UserContext);
   const [selectedCube, setSelectedCube] = useState<string | null>(cubes && cubes.length > 0 ? cubes[0].id : null);
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
   const [board, setBoard] = useState<'mainboard' | 'maybeboard'>('mainboard');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [upvotePackage, setUpvotePackage] = useState(true);
 
   const add = useCallback(async () => {
     setLoadingSubmit(true);
@@ -50,6 +61,10 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
       if (response.ok) {
         const json = await response.json();
         if (json.success === 'true') {
+          // If user wants to upvote and hasn't already, upvote the package
+          if (upvotePackage && packid && user && !voters.includes(user.id)) {
+            await csrfFetch(`/packages/upvote/${packid}`);
+          }
           setOpen(false);
         }
       } else {
@@ -59,7 +74,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
       setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
     }
     setLoadingSubmit(false);
-  }, [csrfFetch, selectedCube, cards, packid, board, alerts, setOpen]);
+  }, [csrfFetch, selectedCube, cards, packid, board, alerts, setOpen, upvotePackage, user, voters]);
 
   if (!cubes || cubes.length === 0) {
     return (
@@ -104,6 +119,17 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
               { value: 'maybeboard', label: 'Maybeboard' },
             ]}
           />
+          {packid && user && !voters.includes(user.id) && (
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={upvotePackage}
+                onChange={(e) => setUpvotePackage(e.target.checked)}
+                className="h-4 w-4"
+              />
+              <span>+1 this package</span>
+            </label>
+          )}
         </Flexbox>
       </ModalBody>
       <ModalFooter>

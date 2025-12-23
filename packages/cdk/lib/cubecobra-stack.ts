@@ -100,7 +100,7 @@ export class CubeCobraStack extends cdk.Stack {
     });
 
     // Create the daily jobs lambda
-    const lambdaEnvVars = createEnvironmentVariables(params, props);
+    const lambdaEnvVars = createEnvironmentVariables(params, props, dynamoTables.table.tableName);
     // Remove Lambda reserved environment variables
     delete lambdaEnvVars.AWS_ACCESS_KEY_ID;
     delete lambdaEnvVars.AWS_SECRET_ACCESS_KEY;

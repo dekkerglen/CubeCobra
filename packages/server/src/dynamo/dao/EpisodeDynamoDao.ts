@@ -115,14 +115,19 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
    * Hydrates multiple UnhydratedEpisodes to Episodes (optimized batch operation).
    */
   protected async hydrateItems(items: UnhydratedEpisode[]): Promise<Episode[]> {
+    console.log(`[EpisodeDao.hydrateItems] Hydrating ${items.length} items`);
+
     if (items.length === 0) {
       return [];
     }
 
     const ownerIds = items.map((item) => item.owner).filter(Boolean) as string[];
-    const owners = ownerIds.length > 0 ? await this.userDao.batchGet(ownerIds) : [];
+    console.log(`[EpisodeDao.hydrateItems] Found ${ownerIds.length} owner IDs`);
 
-    return items.map((item) => {
+    const owners = ownerIds.length > 0 ? await this.userDao.batchGet(ownerIds) : [];
+    console.log(`[EpisodeDao.hydrateItems] Fetched ${owners.length} owners`);
+
+    const hydrated = items.map((item) => {
       const owner = owners.find((o: User) => o.id === item.owner);
 
       // Note: body is not loaded during batch hydration for performance
@@ -135,6 +140,9 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
         podcastGuid: item.podcastGuid!,
       } as Episode;
     });
+
+    console.log(`[EpisodeDao.hydrateItems] Returning ${hydrated.length} hydrated items`);
+    return hydrated;
   }
 
   /**
@@ -271,13 +279,16 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
     items: Episode[];
     lastKey?: Record<string, any>;
   }> {
+    const gsi3pk = `EPISODE#PODCAST#${podcastId}`;
+    console.log(`[EpisodeDao.queryByPodcastAndStatus] Querying GSI3 with PK: ${gsi3pk}, status filter: ${status}`);
+
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI3',
       KeyConditionExpression: 'GSI3PK = :pk',
-      FilterExpression: '#status = :status',
+      FilterExpression: 'item.#status = :status',
       ExpressionAttributeValues: {
-        ':pk': `EPISODE#PODCAST#${podcastId}`,
+        ':pk': gsi3pk,
         ':status': status,
       },
       ExpressionAttributeNames: {
@@ -287,7 +298,14 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       ExclusiveStartKey: lastKey,
     };
 
-    return this.query(params);
+    const result = await this.query(params);
+    console.log(`[EpisodeDao.queryByPodcastAndStatus] Query returned ${result.items?.length || 0} items`);
+    if (result.items && result.items.length > 0 && result.items[0]) {
+      console.log(
+        `[EpisodeDao.queryByPodcastAndStatus] First item GSI3PK should be: ${gsi3pk}, podcast field: ${result.items[0].podcast}`,
+      );
+    }
+    return result;
   }
 
   /**
@@ -351,12 +369,17 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
   public async createEpisode(
     partial: Omit<
       UnhydratedEpisode,
-      'id' | 'type' | 'typeStatusComp' | 'typeOwnerComp' | 'date' | 'dateCreated' | 'dateLastUpdated'
+      'id' | 'type' | 'typeStatusComp' | 'typeOwnerComp' | 'dateCreated' | 'dateLastUpdated'
     > &
-      Partial<Pick<UnhydratedEpisode, 'status'>> & { podcast: string; podcastName: string; podcastGuid: string },
+      Partial<Pick<UnhydratedEpisode, 'status' | 'date'>> & {
+        podcast: string;
+        podcastName: string;
+        podcastGuid: string;
+      },
   ): Promise<string> {
     const id = uuidv4();
-    const date = Date.now();
+    const now = Date.now();
+    const date = partial.date || now;
 
     const episode: Episode = {
       id,
@@ -368,15 +391,15 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       owner: { id: partial.owner } as any,
       title: partial.title,
       short: partial.short,
-      imageName: partial.imageName,
+      image: partial.image,
       body: partial.body,
       url: partial.url,
       username: partial.username,
       podcast: partial.podcast,
       podcastName: partial.podcastName,
       podcastGuid: partial.podcastGuid,
-      dateCreated: date,
-      dateLastUpdated: date,
+      dateCreated: now,
+      dateLastUpdated: now,
     };
 
     await this.put(episode);

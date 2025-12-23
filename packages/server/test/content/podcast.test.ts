@@ -10,6 +10,7 @@ jest.mock('../../src/dynamo/daos', () => ({
     update: jest.fn(),
   },
   episodeDao: {
+    queryByPodcast: jest.fn(),
     queryByPodcastAndStatus: jest.fn(),
     put: jest.fn(),
     batchPut: jest.fn(),
@@ -61,7 +62,7 @@ describe('Podcast Utils', () => {
         image: 'new-image.jpg',
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue([]);
-      (episodeDao.queryByPodcastAndStatus as jest.Mock).mockResolvedValue({ items: mockEpisodes });
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: mockEpisodes });
 
       await updatePodcast(mockPodcast);
 
@@ -112,7 +113,7 @@ describe('Podcast Utils', () => {
         image: 'image.jpg',
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue(mockFeedEpisodes);
-      (episodeDao.queryByPodcastAndStatus as jest.Mock).mockResolvedValue({ items: [] });
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: [] });
 
       await updatePodcast(mockPodcast);
 
@@ -163,7 +164,7 @@ describe('Podcast Utils', () => {
         image: mockPodcast.image,
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue(mockFeedEpisodes);
-      (episodeDao.queryByPodcastAndStatus as jest.Mock).mockResolvedValue({ items: [existingEpisode] });
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: [existingEpisode] });
 
       await updatePodcast(mockPodcast);
 
@@ -191,7 +192,7 @@ describe('Podcast Utils', () => {
         image: 'new-image.jpg',
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue([]);
-      (episodeDao.queryByPodcastAndStatus as jest.Mock).mockResolvedValue({ items: mockEpisodes });
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: mockEpisodes });
 
       await updatePodcast(mockPodcast);
 
@@ -226,7 +227,7 @@ describe('Podcast Utils', () => {
         image: 'new-image.jpg',
       });
       (getFeedEpisodes as jest.Mock).mockResolvedValue([]);
-      (episodeDao.queryByPodcastAndStatus as jest.Mock).mockResolvedValue({ items: mockEpisodes });
+      (episodeDao.queryByPodcast as jest.Mock).mockResolvedValue({ items: mockEpisodes });
 
       await updatePodcast(mockPodcast);
 
