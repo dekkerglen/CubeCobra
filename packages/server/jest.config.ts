@@ -1,5 +1,4 @@
 import type { Config } from 'jest';
-import { pathsToModuleNameMapper } from 'ts-jest';
 
 import { compilerOptions } from './tsconfig.json';
 
@@ -27,7 +26,15 @@ const jestConfig: Config = {
 
   // Transform tsconfig module name mapper to jest
   modulePaths: [compilerOptions.baseUrl], // <-- This will be set to 'baseUrl' value
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
+  moduleNameMapper: {
+    '^@client/(.*)$': '<rootDir>/../client/src/$1',
+    '^@jobs/(.*)$': '<rootDir>/../jobs/src/$1',
+    '^@utils/(.*)$': '<rootDir>/../utils/src/$1',
+    '^serverutils/(.*)$': '<rootDir>/src/serverutils/$1',
+    '^router/(.*)$': '<rootDir>/src/router/$1',
+    '^dynamo/(.*)$': '<rootDir>/src/dynamo/$1',
+    '^types/(.*)$': '<rootDir>/src/types/$1',
+  },
 
   // Transform ignore patterns
   transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))'],
