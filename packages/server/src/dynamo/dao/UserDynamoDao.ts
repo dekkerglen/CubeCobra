@@ -347,7 +347,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
   /**
    * Updates a user and merges with existing data.
    */
-  public async update(document: User | UserWithBaseFields): Promise<void> {
+  public async update(document: User | UserWithBaseFields | UserWithSensitiveInformation): Promise<void> {
     // Ensure dateLastUpdated is updated
     const docWithTimestamp = {
       ...document,
