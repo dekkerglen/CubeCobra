@@ -19,23 +19,6 @@ jobs:
           # To use with eslint script
           fetch-depth: 0
 
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            node_modules
-            packages/client/node_modules
-            packages/server/node_modules
-            packages/utils/node_modules
-            packages/scripts/node_modules
-            packages/jobs/node_modules
-            packages/cdk/node_modules
-          key: ${{ runner.os }}-node-v3-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-v3-
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22

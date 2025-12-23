@@ -26,6 +26,9 @@ const jestConfig: Config = {
   modulePaths: ['<rootDir>'],
   moduleDirectories: ['node_modules', 'src'],
   
+  // Use default resolver
+  resolver: undefined,
+
   // Module name mapping for path aliases
   moduleNameMapper: {
     '^@client/(.*)$': '<rootDir>/../client/src/$1',
