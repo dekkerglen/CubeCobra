@@ -22,8 +22,11 @@ const jestConfig: Config = {
     ],
   },
 
-  // Transform tsconfig module name mapper to jest
-  modulePaths: ['<rootDir>'], // <-- This will be set to 'baseUrl' value
+  // Module resolution paths
+  modulePaths: ['<rootDir>'],
+  moduleDirectories: ['node_modules', 'src'],
+  
+  // Module name mapping for path aliases
   moduleNameMapper: {
     '^@client/(.*)$': '<rootDir>/../client/src/$1',
     '^@jobs/(.*)$': '<rootDir>/../jobs/src/$1',

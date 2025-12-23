@@ -32,9 +32,9 @@ jobs:
             packages/scripts/node_modules
             packages/jobs/node_modules
             packages/cdk/node_modules
-          key: ${{ runner.os }}-node-v2-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-v3-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-v2-
+            ${{ runner.os }}-node-v3-
 
       - uses: actions/setup-node@v4
         with:
