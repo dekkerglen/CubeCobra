@@ -10,6 +10,7 @@ import 'source-map-support/register';
 import { environments } from '../config';
 import { BootstrapStack } from '../lib/bootstrap-stack';
 import { CubeCobraStack } from '../lib/cubecobra-stack';
+import { CubeCobraStackLocal } from '../lib/cubecobra-stack-local';
 
 const app = new cdk.App();
 
@@ -19,6 +20,7 @@ if (!environment || !environments[environment]) {
 }
 
 const config = environments[environment];
+const isLocal = environment === 'local';
 
 const bootstrap = app.node.tryGetContext('bootstrap');
 if (bootstrap && bootstrap === 'true') {
@@ -33,8 +35,9 @@ if (bootstrap && bootstrap === 'true') {
   }
 
   console.log(`Deploying CubeCobra stack to '${environment}'`);
+  const StackClass = isLocal ? CubeCobraStackLocal : CubeCobraStack;
 
-  new CubeCobraStack(
+  new StackClass(
     app,
     config.stackName,
     {

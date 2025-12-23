@@ -10,13 +10,14 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
+    "cdk:local": "cdklocal bootstrap --context environment=local --context version=1.0.0 && cdklocal deploy --context environment=local --context version=1.0.0",
     "test:ci": "npx jest --coverage --coverageReporters text"
   },
   "type": "commonjs",
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "22.7.9",
-    "aws-cdk": "2.1031.2",
+    "aws-cdk": "^2.1031.2",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
@@ -24,6 +25,7 @@
   },
   "dependencies": {
     "aws-cdk-lib": "2.189.1",
+    "aws-cdk-local": "^3.0.1",
     "constructs": "^10.0.0"
   }
 }

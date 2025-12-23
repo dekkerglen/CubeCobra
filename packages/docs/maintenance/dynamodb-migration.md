@@ -20,10 +20,15 @@ Migrating from multiple DynamoDB tables to a single-table design. All DAOs exten
 
 Cubes, Users, Decks, Drafts, Feeds, Notifications, Packages, Podcasts, Videos, Articles
 
+## Updating your .env file
+
+Add `DYNAMO_TABLE="CUBECOBRA"` to your .env file for the server.
+
 ## Running Migrations
 
 ```bash
 cd packages/scripts
+rm -rf temp/*.json
 npx tsx ./src/dynamoMigrations/migrateComments.ts
 npx tsx ./src/dynamoMigrations/migrateBlog.ts
 npx tsx ./src/dynamoMigrations/migrateCardHistory.ts

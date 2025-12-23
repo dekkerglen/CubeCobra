@@ -3,5 +3,21 @@
     "Id": "/hostedzone/Z5BLGHAZY2IZ8",
     "Name": "cubecobra.com."
   },
-  "availability-zones:account=816705121310:region=us-east-2": ["us-east-2a", "us-east-2b", "us-east-2c"]
+  "availability-zones:account=816705121310:region=us-east-2": [
+    "us-east-2a",
+    "us-east-2b",
+    "us-east-2c"
+  ],
+  "acknowledged-issue-numbers": [
+    34892
+  ],
+  "cli-telemetry": false,
+  "availability-zones:account=000000000000:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ]
 }

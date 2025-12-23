@@ -4,6 +4,7 @@ import BlogModel from '@server/dynamo/models/blog';
 import { BlogDynamoDao } from 'dynamo/dao/BlogDynamoDao';
 import { ChangelogDynamoDao } from 'dynamo/dao/ChangelogDynamoDao';
 import { CubeDynamoDao } from 'dynamo/dao/CubeDynamoDao';
+import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
 
 import 'dotenv/config';
 
@@ -60,10 +61,11 @@ interface MigrationStats {
 
     console.log(`Target table: ${tableName}`);
 
+    const userDao = new UserDynamoDao(documentClient, tableName, false);
     // Initialize the DAOs (with dualWrite disabled since we're migrating)
     const changelogDao = new ChangelogDynamoDao(documentClient, tableName, false);
-    const cubeDao = new CubeDynamoDao(documentClient, tableName, false);
-    const blogDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, tableName, false);
+    const cubeDao = new CubeDynamoDao(documentClient, userDao, tableName, false);
+    const blogDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, userDao, tableName, false);
 
     const stats: MigrationStats = {
       total: 0,
