@@ -2,7 +2,6 @@
 import CubeFn from 'serverutils/cubefn';
 import * as Util from 'serverutils/util';
 
-import CubeHash from '../../../src/dynamo/models/cubeHash';
 import { editOverviewHandler } from '../../../src/router/routes/cube/api/editoverview';
 import { createCube, createUser } from '../../test-utils/data';
 import { expectRegisteredRoutes } from '../../test-utils/route';
