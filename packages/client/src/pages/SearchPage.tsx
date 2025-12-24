@@ -63,9 +63,8 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
         setCurrentParsedQuery(json.parsedQuery);
 
         const numItemsShowOnLastPage = items.length % PAGE_SIZE;
-        const newItemsShowOnLastPage = newItems.length % PAGE_SIZE;
-
-        if (numItemsShowOnLastPage === 0 && newItemsShowOnLastPage > 0) {
+        //If current page is full and we just fetched more items, then move to next page
+        if (numItemsShowOnLastPage === 0 && json.cubes.length > 0) {
           setPage(page + 1);
         }
         setCurrentLastKey(json.lastKey);
