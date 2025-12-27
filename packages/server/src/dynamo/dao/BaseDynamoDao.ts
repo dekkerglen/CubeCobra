@@ -282,7 +282,7 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
 
       return {
         items: hydratedItems,
-        lastKey: data.LastEvaluatedKey,
+        lastKey: data?.LastEvaluatedKey,
       };
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));

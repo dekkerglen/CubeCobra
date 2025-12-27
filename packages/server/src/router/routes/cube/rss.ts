@@ -23,7 +23,7 @@ export const rssHandler = async (req: Request, res: Response) => {
     }
 
     const items = [];
-    let queryResult: any = { lastKey: null };
+    let queryResult: any = { lastKey: undefined };
 
     do {
       queryResult = await blogDao.queryByCube(cube.id, queryResult.lastKey, 128);
