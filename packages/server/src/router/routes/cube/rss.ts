@@ -23,12 +23,13 @@ export const rssHandler = async (req: Request, res: Response) => {
     }
 
     const items = [];
-    let queryResult: any = { lastKey: undefined };
+    let lastKey = undefined;
 
     do {
-      queryResult = await blogDao.queryByCube(cube.id, queryResult.lastKey, 128);
+      const queryResult = await blogDao.queryByCube(cube.id, lastKey, 128);
       items.push(...queryResult.items);
-    } while (queryResult.lastKey);
+      lastKey = queryResult.lastKey;
+    } while (lastKey);
 
     const baseUrl = getBaseUrl();
     const feed = new RSS({
