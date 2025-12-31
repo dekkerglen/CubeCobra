@@ -7,3 +7,4 @@ As of 1.4.57
 - Fixed an issue where paginating cube search results would sometimes not go to the next page
 
 # Technical Changes
+- Added codepipeline with integration tests

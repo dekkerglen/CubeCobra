@@ -1,0 +1,4 @@
+# Reports directory
+# Generated after test runs
+*.html
+*.json

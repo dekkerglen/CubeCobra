@@ -152,6 +152,7 @@ function createEnvironmentVariables(
     DRAFTMANCER_API_KEY: params.draftmancerApiKey,
     STRIPE_SECRET_KEY: params.stripeSecretKey,
     STRIPE_PUBLIC_KEY: params.stripePublicKey,
+    ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',
   };
 
   // Add DYNAMO_TABLE if it's provided

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "types": ["node", "@types/node"],
+    "baseUrl": ".",
+    "paths": {
+      "@features/*": ["features/*"],
+      "@steps/*": ["features/steps/*"],
+      "@support/*": ["features/support/*"],
+      "@scripts/*": ["scripts/*"]
+    }
+  },
+  "include": [
+    "features/**/*.ts",
+    "scripts/**/*.ts",
+    "cucumber.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

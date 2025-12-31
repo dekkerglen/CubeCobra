@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+dist/
+
+# Test artifacts
+reports/*.html
+reports/*.json
+reports/screenshots/*.png
+logs/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+
+# Playwright
+playwright-report/
+test-results/
