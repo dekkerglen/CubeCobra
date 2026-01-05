@@ -78,6 +78,10 @@ This downloads:
 
 Once setup is complete, the containers will exit gracefully. The card databases will be stored in `/packages/server/private/` and ML models in `/packages/server/model/`.
 
+## Updating the example environment variables
+
+[Follow these steps](../../docs/setup/environment-variables.md#required-manual-configuration)
+
 ## Running CubeCobra
 
 After initial setup, start the program with:

@@ -105,6 +105,10 @@ npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
 
 _(Adjust the path to match your bash installation)_
 
+## Updating the example environment variables
+
+[Follow these steps](../../docs/setup/environment-variables.md#required-manual-configuration)
+
 ## Running CubeCobra
 
 Start the development server:
@@ -148,6 +152,5 @@ If you're not using Docker and have `LOCALSTACK_SES="true"` in your `.env` file:
 
 ## Next Steps
 
-- [Environment Variables](./environment-variables.md) - Configure additional settings
 - [AWS Configuration](./aws-configuration.md) - Connect to real AWS instead of LocalStack
 - [Updating Cards](../maintenance/updating-cards.md) - Keep card data current
