@@ -1,5 +1,5 @@
 const fs = require('fs');
 
-fs.mkdirSync('model/', { recursive: true });
-fs.writeFileSync('model/elos.json', '[]');
-fs.writeFileSync('model/indexToOracleMap.json', '[]');
+fs.mkdirSync('../server/model/', { recursive: true });
+fs.writeFileSync('../server/model/elos.json', '[]');
+fs.writeFileSync('../server/model/indexToOracleMap.json', '[]');
