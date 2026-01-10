@@ -5,6 +5,7 @@ As of 1.4.57
 
 # Bug Fixes
 - Fixed an issue where paginating cube search results would sometimes not go to the next page
+- Fixed a bug where updating user fields would delete password
 
 # Technical Changes
 - Added codepipeline with integration tests

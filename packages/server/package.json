@@ -12,7 +12,6 @@
     "type-check": "npx tsc --noEmit",
     "start": "node server.js",
     "dev": "npm run write-git-info && nodemon -r tsconfig-paths/register src/index.ts",
-    "publish": "npm run build && node publish.js",
     "clean": "rm -rf dist/ node_modules/ private/ ./src/client",
     "test": "npm run write-git-info && npx jest --coverage=false",
     "test:watch": "npm run write-git-info && npx jest --watch --coverage=false",
