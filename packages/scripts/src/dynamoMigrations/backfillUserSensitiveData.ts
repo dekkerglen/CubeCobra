@@ -1,5 +1,6 @@
 // Load Environment Variables
 import documentClient from '@server/dynamo/documentClient';
+import { UserWithSensitiveInformation } from '@utils/datatypes/User';
 import { UserDynamoDao } from 'dynamo/dao/UserDynamoDao';
 import fs from 'fs';
 import path from 'path';
@@ -7,7 +8,6 @@ import path from 'path';
 import 'dotenv/config';
 
 import { ScanCommand } from '../../../server/node_modules/@aws-sdk/lib-dynamodb';
-import { UserWithSensitiveInformation } from '@utils/datatypes/User';
 
 interface BackfillStats {
   total: number;
@@ -121,7 +121,7 @@ const deleteCheckpoint = (): void => {
     let hasMore = true;
 
     while (hasMore) {
-      batchNumber++;
+      batchNumber += 1;
 
       // Scan old USERS table
       const scanCommand = new ScanCommand({
@@ -159,7 +159,7 @@ const deleteCheckpoint = (): void => {
 
           if (!newUser) {
             console.log(`  [SKIP] User ${oldUser.id} (${oldUser.username}) not found in new table`);
-            stats.skipped++;
+            stats.skipped += 1;
             continue;
           }
 
@@ -182,9 +182,9 @@ const deleteCheckpoint = (): void => {
             }
 
             usersToUpdate.push(updatedUser);
-            stats.backfilled++;
+            stats.backfilled += 1;
           } else {
-            stats.alreadyComplete++;
+            stats.alreadyComplete += 1;
           }
         }
 
@@ -197,7 +197,7 @@ const deleteCheckpoint = (): void => {
               await userDao.update(userToUpdate as any);
             } catch (error) {
               console.error(`  [ERROR] Failed to update user ${userToUpdate.id}:`, error);
-              stats.errors++;
+              stats.errors += 1;
             }
           }
         }
