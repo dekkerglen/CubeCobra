@@ -9,9 +9,9 @@ on:
       - 'master'
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -30,11 +30,26 @@ jobs:
         run: npm install
 
       - name: Run linting (Prettier + ESLint)
-        if: always()
         run: npm run lint:check
 
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Run tests
-        if: always()
         run: npm run test:ci
 
       - name: Upload Jest Coverage Report
@@ -45,5 +60,43 @@ jobs:
           name: jest-coverage
           path: coverage
 
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Build
         run: npm run ci-build
+
+  integrationTests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [lint, test, build]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run integration tests
+        run: npm run test:integration
