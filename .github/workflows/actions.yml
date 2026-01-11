@@ -139,10 +139,12 @@ jobs:
             echo "This PR changes the overall server code coverage." >> coverage-report.md
             
             cat coverage-report.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Coverage report not available" > coverage-report.md
           fi
 
       - name: Comment Coverage on PR
-        if: github.event_name == 'pull_request' && hashFiles('coverage-report.md') != ''
+        if: github.event_name == 'pull_request' && success()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: coverage
