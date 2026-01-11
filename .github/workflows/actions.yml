@@ -55,40 +55,78 @@ jobs:
       - name: Run tests
         run: npm run test:ci
 
+      - name: Save PR coverage
+        if: github.event_name == 'pull_request'
+        run: cp packages/server/coverage/coverage-summary.json coverage-pr.json
+
+      - name: Switch to base branch and get base coverage
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git checkout origin/${{ github.base_ref }}
+          npm install
+          npm run test:ci || echo "Base branch tests failed, will skip delta"
+          if [ -f "packages/server/coverage/coverage-summary.json" ]; then
+            cp packages/server/coverage/coverage-summary.json coverage-base.json
+          else
+            echo '{"total":{"lines":{"pct":0},"statements":{"pct":0},"functions":{"pct":0},"branches":{"pct":0}}}' > coverage-base.json
+          fi
+          git checkout -
+
       - name: Upload Jest Coverage Report
         if: success()
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: jest-coverage
-          path: coverage
+          path: packages/server/coverage
 
-      - name: Generate Coverage Report
+      - name: Generate Coverage Report with Delta
         if: github.event_name == 'pull_request'
         id: coverage
         run: |
-          COVERAGE_FILE="packages/server/coverage/coverage-summary.json"
-          if [ -f "$COVERAGE_FILE" ]; then
-            TOTAL=$(jq '.total' "$COVERAGE_FILE")
-            LINES=$(echo $TOTAL | jq -r '.lines.pct')
-            STATEMENTS=$(echo $TOTAL | jq -r '.statements.pct')
-            FUNCTIONS=$(echo $TOTAL | jq -r '.functions.pct')
-            BRANCHES=$(echo $TOTAL | jq -r '.branches.pct')
+          if [ -f "coverage-pr.json" ]; then
+            PR_TOTAL=$(jq '.total' coverage-pr.json)
+            PR_LINES=$(echo $PR_TOTAL | jq -r '.lines.pct')
+            PR_STATEMENTS=$(echo $PR_TOTAL | jq -r '.statements.pct')
+            PR_FUNCTIONS=$(echo $PR_TOTAL | jq -r '.functions.pct')
+            PR_BRANCHES=$(echo $PR_TOTAL | jq -r '.branches.pct')
             
-            echo "lines=$LINES" >> $GITHUB_OUTPUT
-            echo "statements=$STATEMENTS" >> $GITHUB_OUTPUT
-            echo "functions=$FUNCTIONS" >> $GITHUB_OUTPUT
-            echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
+            BASE_TOTAL=$(jq '.total' coverage-base.json)
+            BASE_LINES=$(echo $BASE_TOTAL | jq -r '.lines.pct')
+            BASE_STATEMENTS=$(echo $BASE_TOTAL | jq -r '.statements.pct')
+            BASE_FUNCTIONS=$(echo $BASE_TOTAL | jq -r '.functions.pct')
+            BASE_BRANCHES=$(echo $BASE_TOTAL | jq -r '.branches.pct')
+            
+            # Calculate deltas
+            LINES_DELTA=$(echo "$PR_LINES - $BASE_LINES" | bc)
+            STATEMENTS_DELTA=$(echo "$PR_STATEMENTS - $BASE_STATEMENTS" | bc)
+            FUNCTIONS_DELTA=$(echo "$PR_FUNCTIONS - $BASE_FUNCTIONS" | bc)
+            BRANCHES_DELTA=$(echo "$PR_BRANCHES - $BASE_BRANCHES" | bc)
+            
+            # Format delta with + sign for positive values
+            format_delta() {
+              if (( $(echo "$1 > 0" | bc -l) )); then
+                echo "+$1"
+              else
+                echo "$1"
+              fi
+            }
+            
+            LINES_DELTA_FMT=$(format_delta $LINES_DELTA)
+            STATEMENTS_DELTA_FMT=$(format_delta $STATEMENTS_DELTA)
+            FUNCTIONS_DELTA_FMT=$(format_delta $FUNCTIONS_DELTA)
+            BRANCHES_DELTA_FMT=$(format_delta $BRANCHES_DELTA)
             
             cat << EOF > coverage-report.md
           ## 📊 Server Code Coverage Report
           
-          | Metric | Coverage |
-          |--------|----------|
-          | Lines | ${LINES}% |
-          | Statements | ${STATEMENTS}% |
-          | Functions | ${FUNCTIONS}% |
-          | Branches | ${BRANCHES}% |
+          | Metric | Coverage | Delta |
+          |--------|----------|-------|
+          | Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |
+          | Statements | ${PR_STATEMENTS}% | ${STATEMENTS_DELTA_FMT}% |
+          | Functions | ${PR_FUNCTIONS}% | ${FUNCTIONS_DELTA_FMT}% |
+          | Branches | ${PR_BRANCHES}% | ${BRANCHES_DELTA_FMT}% |
           EOF
             
             cat coverage-report.md >> $GITHUB_STEP_SUMMARY
