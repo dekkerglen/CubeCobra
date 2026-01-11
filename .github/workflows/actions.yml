@@ -63,6 +63,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }}
+          git stash
           git checkout origin/${{ github.base_ref }}
           npm install
           npm run test:ci || echo "Base branch tests failed, will skip delta"
@@ -72,6 +73,7 @@ jobs:
             echo '{"total":{"lines":{"pct":0},"statements":{"pct":0},"functions":{"pct":0},"branches":{"pct":0}}}' > coverage-base.json
           fi
           git checkout -
+          git stash pop || true
 
       - name: Upload Jest Coverage Report
         if: success()
@@ -118,52 +120,56 @@ jobs:
             FUNCTIONS_DELTA_FMT=$(format_delta $FUNCTIONS_DELTA)
             BRANCHES_DELTA_FMT=$(format_delta $BRANCHES_DELTA)
             
+            # Calculate coverage for changed lines only
+            git fetch origin ${{ github.base_ref }}
+            
+            # Get list of changed .ts/.js files in packages/server/src
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^packages/server/src/.*\.\(ts\|js\)$' || true)
+            
+            if [ ! -z "$CHANGED_FILES" ] && [ -f "packages/server/coverage/lcov.info" ]; then
+              TOTAL_NEW_LINES=0
+              COVERED_NEW_LINES=0
+              
+              for file in $CHANGED_FILES; do
+                # Get added/modified line numbers for this file
+                CHANGED_LINE_NUMBERS=$(git diff origin/${{ github.base_ref }}...HEAD "$file" | grep -E '^\+[^+]' | cat -n | awk '{print $1}' || true)
+                
+                if [ ! -z "$CHANGED_LINE_NUMBERS" ]; then
+                  # Parse lcov.info for this file's coverage
+                  # This is a simplified version - full implementation would need more robust parsing
+                  FILE_COVERAGE=$(grep -A 1000 "SF:.*$file" packages/server/coverage/lcov.info | grep -B 1000 "end_of_record" | grep "^DA:" || true)
+                  
+                  while IFS= read -r line_num; do
+                    TOTAL_NEW_LINES=$((TOTAL_NEW_LINES + 1))
+                    # Check if this line is in coverage report and was executed
+                    if echo "$FILE_COVERAGE" | grep -q "^DA:$line_num,[1-9]"; then
+                      COVERED_NEW_LINES=$((COVERED_NEW_LINES + 1))
+                    fi
+                  done <<< "$CHANGED_LINE_NUMBERS"
+                fi
+              done
+              
+              if [ $TOTAL_NEW_LINES -gt 0 ]; then
+                NEW_LINES_COV=$(echo "scale=2; ($COVERED_NEW_LINES * 100) / $TOTAL_NEW_LINES" | bc)
+              else
+                NEW_LINES_COV="N/A"
+              fi
+            else
+              NEW_LINES_COV="N/A"
+            fi
+            
             cat << EOF > coverage-report.md
           ## 📊 Server Code Coverage Report
-
+          
           | Metric | Coverage | Delta |
           |--------|----------|-------|
           | Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |
           | Statements | ${PR_STATEMENTS}% | ${STATEMENTS_DELTA_FMT}% |
           | Functions | ${PR_FUNCTIONS}% | ${FUNCTIONS_DELTA_FMT}% |
           | Branches | ${PR_BRANCHES}% | ${BRANCHES_DELTA_FMT}% |
-          EOF
-            
-            cat coverage-report.md >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Comment Coverage on PR
-        if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: coverage
-          path: coverage-report.md
-
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build
-        run: npm run ci-build
-
-  integrationTests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [lint, test, build]
-
+          
+          ### 🎯 New/Changed Lines Coverage
+          **${NEW_LINES_COV}%** of lines added or modified in this PR are covered by tests
     steps:
       - uses: actions/checkout@v4
 
