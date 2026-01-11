@@ -148,7 +148,7 @@ jobs:
             echo "coverage-pr.json not found, generating basic report"
             cat << 'EOF' > coverage-report.md
           ## 📊 Server Code Coverage Report
-          
+
           Coverage data is being generated. This report will be available on the next run.
           EOF
           fi
