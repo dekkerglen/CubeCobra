@@ -14,7 +14,7 @@ interface BackfillStats {
   backfilled: number;
   errors: number;
   skipped: number;
-alreadyComplete: number;
+  alreadyComplete: number;
 }
 
 interface Checkpoint {
@@ -144,7 +144,7 @@ const deleteCheckpoint = (): void => {
 
       // Batch get from new table to check for missing data
       const userIds = oldUsers.map((user) => user.id);
-      
+
       try {
         const newUsers = await userDao.batchGetWithSensitiveData(userIds);
 

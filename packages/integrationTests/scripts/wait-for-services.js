@@ -21,18 +21,18 @@ async function checkServer(url) {
 
 async function waitForServer() {
   console.log(`⏳ Waiting for server at ${TARGET_URL}...`);
-  
+
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < MAX_WAIT_TIME) {
     if (await checkServer(TARGET_URL)) {
       console.log(`✅ Server is ready at ${TARGET_URL}`);
       process.exit(0);
     }
-    
-    await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
+
+    await new Promise((resolve) => setTimeout(resolve, CHECK_INTERVAL));
   }
-  
+
   console.error(`❌ Timeout waiting for server at ${TARGET_URL}`);
   console.error(`Make sure the server is running and accessible.`);
   process.exit(1);

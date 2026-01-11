@@ -23,7 +23,6 @@
   "author": "Gwen Dekker",
   "license": "ISC",
   "dependencies": {
-    
     "@playwright/test": "^1.49.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",

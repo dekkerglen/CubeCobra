@@ -122,60 +122,62 @@ const MOCK_DDB_ITEM = {
 
 async function createTable() {
   try {
-    await dynamodb.createTable({
-      TableName: TABLE_NAME,
-      AttributeDefinitions: [
-        { AttributeName: 'PK', AttributeType: 'S' },
-        { AttributeName: 'SK', AttributeType: 'S' },
-        { AttributeName: 'GSI1PK', AttributeType: 'S' },
-        { AttributeName: 'GSI1SK', AttributeType: 'S' },
-        { AttributeName: 'GSI2PK', AttributeType: 'S' },
-        { AttributeName: 'GSI2SK', AttributeType: 'S' },
-        { AttributeName: 'GSI3PK', AttributeType: 'S' },
-        { AttributeName: 'GSI3SK', AttributeType: 'S' },
-        { AttributeName: 'GSI4PK', AttributeType: 'S' },
-        { AttributeName: 'GSI4SK', AttributeType: 'S' },
-      ],
-      KeySchema: [
-        { AttributeName: 'PK', KeyType: 'HASH' },
-        { AttributeName: 'SK', KeyType: 'RANGE' },
-      ],
-      BillingMode: 'PAY_PER_REQUEST',
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: 'GSI1',
-          KeySchema: [
-            { AttributeName: 'GSI1PK', KeyType: 'HASH' },
-            { AttributeName: 'GSI1SK', KeyType: 'RANGE' },
-          ],
-          Projection: { ProjectionType: 'ALL' },
-        },
-        {
-          IndexName: 'GSI2',
-          KeySchema: [
-            { AttributeName: 'GSI2PK', KeyType: 'HASH' },
-            { AttributeName: 'GSI2SK', KeyType: 'RANGE' },
-          ],
-          Projection: { ProjectionType: 'ALL' },
-        },
-        {
-          IndexName: 'GSI3',
-          KeySchema: [
-            { AttributeName: 'GSI3PK', KeyType: 'HASH' },
-            { AttributeName: 'GSI3SK', KeyType: 'RANGE' },
-          ],
-          Projection: { ProjectionType: 'ALL' },
-        },
-        {
-          IndexName: 'GSI4',
-          KeySchema: [
-            { AttributeName: 'GSI4PK', KeyType: 'HASH' },
-            { AttributeName: 'GSI4SK', KeyType: 'RANGE' },
-          ],
-          Projection: { ProjectionType: 'ALL' },
-        },
-      ],
-    }).promise();
+    await dynamodb
+      .createTable({
+        TableName: TABLE_NAME,
+        AttributeDefinitions: [
+          { AttributeName: 'PK', AttributeType: 'S' },
+          { AttributeName: 'SK', AttributeType: 'S' },
+          { AttributeName: 'GSI1PK', AttributeType: 'S' },
+          { AttributeName: 'GSI1SK', AttributeType: 'S' },
+          { AttributeName: 'GSI2PK', AttributeType: 'S' },
+          { AttributeName: 'GSI2SK', AttributeType: 'S' },
+          { AttributeName: 'GSI3PK', AttributeType: 'S' },
+          { AttributeName: 'GSI3SK', AttributeType: 'S' },
+          { AttributeName: 'GSI4PK', AttributeType: 'S' },
+          { AttributeName: 'GSI4SK', AttributeType: 'S' },
+        ],
+        KeySchema: [
+          { AttributeName: 'PK', KeyType: 'HASH' },
+          { AttributeName: 'SK', KeyType: 'RANGE' },
+        ],
+        BillingMode: 'PAY_PER_REQUEST',
+        GlobalSecondaryIndexes: [
+          {
+            IndexName: 'GSI1',
+            KeySchema: [
+              { AttributeName: 'GSI1PK', KeyType: 'HASH' },
+              { AttributeName: 'GSI1SK', KeyType: 'RANGE' },
+            ],
+            Projection: { ProjectionType: 'ALL' },
+          },
+          {
+            IndexName: 'GSI2',
+            KeySchema: [
+              { AttributeName: 'GSI2PK', KeyType: 'HASH' },
+              { AttributeName: 'GSI2SK', KeyType: 'RANGE' },
+            ],
+            Projection: { ProjectionType: 'ALL' },
+          },
+          {
+            IndexName: 'GSI3',
+            KeySchema: [
+              { AttributeName: 'GSI3PK', KeyType: 'HASH' },
+              { AttributeName: 'GSI3SK', KeyType: 'RANGE' },
+            ],
+            Projection: { ProjectionType: 'ALL' },
+          },
+          {
+            IndexName: 'GSI4',
+            KeySchema: [
+              { AttributeName: 'GSI4PK', KeyType: 'HASH' },
+              { AttributeName: 'GSI4SK', KeyType: 'RANGE' },
+            ],
+            Projection: { ProjectionType: 'ALL' },
+          },
+        ],
+      })
+      .promise();
     console.log('DynamoDB table created');
   } catch (e) {
     if (e.code === 'ResourceInUseException') {
@@ -200,19 +202,23 @@ async function createBucket() {
 }
 
 async function insertMockData() {
-  await dynamodb.putItem({
-    TableName: TABLE_NAME,
-    Item: MOCK_DDB_ITEM,
-  }).promise();
+  await dynamodb
+    .putItem({
+      TableName: TABLE_NAME,
+      Item: MOCK_DDB_ITEM,
+    })
+    .promise();
   console.log('Inserted mock card data into DynamoDB');
 
   // Also upload a minimal JSON file to S3
-  await s3.putObject({
-    Bucket: BUCKET_NAME,
-    Key: 'cards.json',
-    Body: JSON.stringify([MOCK_CARD], null, 2),
-    ContentType: 'application/json',
-  }).promise();
+  await s3
+    .putObject({
+      Bucket: BUCKET_NAME,
+      Key: 'cards.json',
+      Body: JSON.stringify([MOCK_CARD], null, 2),
+      ContentType: 'application/json',
+    })
+    .promise();
   console.log('Uploaded cards.json to S3');
 }
 

@@ -1,4 +1,3 @@
-
 # CubeCobra Integration Tests
 
 End-to-end integration tests for CubeCobra using Playwright.
@@ -6,7 +5,6 @@ End-to-end integration tests for CubeCobra using Playwright.
 ## Overview
 
 This package contains browser-based integration tests that verify the complete functionality of CubeCobra against any running instance (local, beta, or production).
-
 
 ## Features
 
@@ -85,11 +83,13 @@ npm run test:smoke:headed
 ### Using .env File
 
 Create a `.env` file from the example:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` to set your target:
+
 ```env
 BASE_URL=http://localhost:5000
 BROWSER=chromium
@@ -97,19 +97,19 @@ HEADED=false
 ```
 
 Then just run:
+
 ```bash
 npm test
 ```
-
 
 ## Writing Tests
 
 Write integration tests using Playwright's test runner in TypeScript. Place your test files in the `tests/` directory. Use Playwright's fixtures and assertions to interact with the application and verify behavior. Unique test data can be generated in test setup code as needed.
 
-
 ### Test Configuration
 
 Target URL for tests (default: `http://localhost:5000`)
+
 - `BROWSER` - Browser to use: `chromium`, `firefox`, or `webkit` (default: `chromium`)
 - `HEADED` - Run with browser visible: `true` or `false` (default: `false`)
 - `CI` - CI mode flag (affects retries and workers)
@@ -117,6 +117,7 @@ Target URL for tests (default: `http://localhost:5000`)
 ### Testing Against Different Environments
 
 **Local Development:**
+
 ```bash
 # Make sure your local server is running first
 cd ../server && npm run dev
@@ -126,12 +127,14 @@ npm run test:local
 ```
 
 **Beta Environment:**
+
 ```bash
 npm run test:beta
 ```
 
 **Production (Caution!):**
-```bash
+
+````bash
 # Only runs smoke tests, avoids destructive operations
 npm run test:prode: `true` or `false` (default: `false`)
 - `CI` - CI mode flag (affects retries and workers)
@@ -139,12 +142,12 @@ npm run test:prode: `true` or `false` (default: `false`)
 Example:
 ```bash
 BROWSER=firefox HEADED=true npm test
-```
-
+````
 
 ### Playwright Configuration
 
 Edit [playwright.config.ts](playwright.config.ts) to customize:
+
 - Timeouts
 - Browser options
 - Screenshot/video settings
@@ -152,8 +155,8 @@ Edit [playwright.config.ts](playwright.config.ts) to customize:
 
 ## Reports
 
-
 After running tests, reports are generated in the `reports/` directory:
+
 - `screenshots/` - Screenshots of failed tests
 - `videos/` - Test execution recordings
 
@@ -162,7 +165,8 @@ After running tests, reports are generated in the `reports/` directory:
 ### Visual Debugging
 
 Run tests in headed mode to see the browser:
-```bash
+
+````bash
 npm run test:local:headed
 ```er Not Ready
 
@@ -173,11 +177,12 @@ curl http://localhost:5000
 
 # Or use the wait script
 node scripts/wait-for-services.js http://localhost:5000
-```
+````
 
 ### Connection Refused
 
 Make sure the target server is running:
+
 ```bash
 # For local testing, start the server first:
 cd ../server && npm run dev
@@ -186,6 +191,7 @@ cd ../server && npm run dev
 ### Browser Not Installed
 
 Install Playwright browsers:
+
 ```bash
 npm run playwright:install
 ```
@@ -193,7 +199,8 @@ npm run playwright:install
 ### Tests Failing on Production
 
 Production tests are limited to smoke tests only. Make sure you're using:
-```bash
+
+````bash
 npm run test:prod  # Only runs @smoke tagged tests
 ### Port Already in Use
 
@@ -211,11 +218,12 @@ npx kinique test data is automatic** - Don't worry about username conflicts; the
 9. **Be careful with production** - Use `npm run test:prod` which only runs safe @smoke tests
 ```bash
 npm run playwright:install
-```
+````
 
 ### LocalStack Issues
 
 Restart LocalStack:
+
 ```bash
 localstack stop
 npm run start:localstack
@@ -231,10 +239,10 @@ npm run start:localstack
 6. **Clean up after tests** - Use hooks to ensure proper cleanup
 7. **Run smoke tests frequently** - Tag critical paths as @smoke
 
-
 ## Contributing
 
 When adding new tests:
+
 1. Write Playwright test files in TypeScript in the `tests/` directory
 2. Use Playwright's fixtures and assertions
 3. Update this README if adding new test categories

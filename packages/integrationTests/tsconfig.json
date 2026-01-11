@@ -20,13 +20,6 @@
       "@scripts/*": ["scripts/*"]
     }
   },
-  "include": [
-    "features/**/*.ts",
-    "scripts/**/*.ts",
-    "cucumber.js"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["features/**/*.ts", "scripts/**/*.ts", "cucumber.js"],
+  "exclude": ["node_modules", "dist"]
 }

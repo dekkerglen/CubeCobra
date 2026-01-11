@@ -24,6 +24,7 @@ This disables captchas and security questions that would block automated tests.
 ## 4. Start Your Target Server
 
 ### For Local Testing
+
 ```bash
 # In a separate terminal, start the CubeCobra server
 cd packages/server
@@ -42,6 +43,7 @@ npm run test:local
 **Note:** Tests automatically generate unique usernames and test data for each run, so you can run them repeatedly against the same environment without conflicts!
 
 Or test against other environments:
+
 ```bash
 # Beta environment
 npm run test:beta
@@ -56,6 +58,7 @@ BASE_URL=https://your-instance.com npm test
 ## 5. View Results
 
 After tests run, open the HTML report:
+
 ```bash
 # Windows
 start reports/cucumber-report.html
@@ -90,11 +93,13 @@ node scripts/wait-for-services.js http://localhost:5000
 ## Environment Configuration
 
 Create a `.env` file for persistent configuration:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env`:
+
 ```env
 BASE_URL=http://localhost:5000
 BROWSER=chromium
@@ -102,6 +107,7 @@ HEADED=false
 ```
 
 Then simply run:
+
 ```bash
 npm test
 ```
@@ -109,23 +115,27 @@ npm test
 ## Troubleshooting
 
 ### Server not running
+
 ```bash
 # Make sure the server is started first:
 cd ../server && npm run dev
 ```
 
 ### Tests can't connect
+
 ```bash
 # Check if server is accessible
 curl http://localhost:5000
 ```
 
 ### Browser not installed
+
 ```bash
 npm run playwright:install
 ```
 
 ### Need more help?
+
 See the full [README.md](README.md) for detailed documentation.
 
 ## Next Steps
