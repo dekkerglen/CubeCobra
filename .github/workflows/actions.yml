@@ -170,6 +170,22 @@ jobs:
           
           ### 🎯 New/Changed Lines Coverage
           **${NEW_LINES_COV}%** of lines added or modified in this PR are covered by tests
+          EOF
+            
+            cat coverage-report.md >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: coverage
+          path: coverage-report.md
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
       - uses: actions/checkout@v4
 
