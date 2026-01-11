@@ -72,8 +72,8 @@ jobs:
             cp packages/server/coverage/coverage-summary.json coverage-base.json
           else
             echo '{"total":{"lines":{"pct":0},"statements":{"pct":0},"functions":{"pct":0},"branches":{"pct":0}}}' > coverage-base.json
-          fi
-          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
+          fi          git reset --hard HEAD
+          git clean -fd          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
           git checkout pr-branch
 
       - name: Upload Jest Coverage Report
