@@ -28,6 +28,8 @@ import User, {
 } from '@utils/datatypes/User';
 import { getImageData } from 'serverutils/imageutil';
 
+import { DaoError } from '../../../errors/DaoError';
+import { ErrorCode } from '../../../errors/errorCodes';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 /**
@@ -184,7 +186,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
    * Gets a user by ID with sensitive information (password hash, email).
    */
   public async getByIdWithSensitiveData(id: string): Promise<StoredUserWithSensitiveInfo | undefined> {
-    const dynamoItem = await (this as any).getRaw({
+    const dynamoItem = await this.getRaw({
       PK: this.typedKey(id),
       SK: this.itemType(),
     });
@@ -301,6 +303,49 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
   }
 
   /**
+   * Batch gets multiple users by their IDs with sensitive information (password hash, email).
+   * Returns users with all fields including sensitive data.
+   */
+  public async batchGetWithSensitiveData(ids: string[]): Promise<StoredUserWithSensitiveInfo[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    // Deduplicate IDs to avoid DynamoDB validation error
+    const uniqueIds = Array.from(new Set(ids));
+
+    // Use the base class method to fetch items
+    const keys = uniqueIds.map((id) => ({
+      PK: this.typedKey(id),
+      SK: this.itemType(),
+    }));
+
+    // Implement batch get using the dynamoClient directly
+    const BATCH_SIZE = 100; // DynamoDB limit
+    const allItems: StoredUserWithSensitiveInfo[] = [];
+
+    for (let i = 0; i < keys.length; i += BATCH_SIZE) {
+      const batch = keys.slice(i, i + BATCH_SIZE);
+
+      const response = await this.dynamoClient.send(
+        new BatchGetCommand({
+          RequestItems: {
+            [this.tableName]: {
+              Keys: batch,
+            },
+          },
+        }),
+      );
+
+      const items = response.Responses?.[this.tableName] || [];
+      // Return the raw items with sensitive data, no hydration needed
+      allItems.push(...items.map((item: any) => item.item));
+    }
+
+    return allItems;
+  }
+
+  /**
    * Creates a new user, generating an ID if not provided.
    * Uses optimistic locking to prevent duplicate creation.
    *
@@ -348,28 +393,69 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
    * Updates a user and merges with existing data.
    */
   public async update(document: User | UserWithBaseFields | UserWithSensitiveInformation): Promise<void> {
-    // Ensure dateLastUpdated is updated
-    const docWithTimestamp = {
-      ...document,
-      dateCreated: (document as any).dateCreated ?? Date.now(),
-      dateLastUpdated: Date.now(),
-    } as UserWithBaseFields;
+    // Fetch existing document to preserve sensitive fields
+    const existing = await this.getByIdWithSensitiveData(document.id);
 
-    await super.update(docWithTimestamp);
+    if (!existing) {
+      throw new DaoError('User not found for update', ErrorCode.NOT_FOUND);
+    }
+
+    // Merge incoming document with existing, only updating fields that are explicitly set (not undefined)
+    // This prevents erasing sensitive fields when updating a user object that was loaded without sensitive data
+    const merged: any = { ...existing };
+
+    for (const [key, value] of Object.entries(document)) {
+      if (key !== 'id' && value !== undefined) {
+        merged[key] = value;
+      }
+    }
+
+    // Ensure dateLastUpdated is updated
+    merged.dateCreated = merged.dateCreated ?? Date.now();
+    merged.dateLastUpdated = Date.now();
+
+    await super.update(merged as UserWithBaseFields);
   }
 
   /**
    * Batch puts multiple users.
+   * Preserves sensitive data (passwordHash, email) by merging with existing records.
    */
   public async batchPut(documents: User[]): Promise<void> {
-    // Ensure usernameLower and BaseObject fields are set for all items
     const now = Date.now();
-    const normalizedDocs = documents.map((doc) => ({
-      ...doc,
-      usernameLower: doc.username?.toLowerCase(),
-      dateCreated: (doc as any).dateCreated ?? now,
-      dateLastUpdated: (doc as any).dateLastUpdated ?? now,
-    })) as UserWithBaseFields[];
+
+    // Fetch existing users to preserve sensitive data
+    const existingUsers = await Promise.all(documents.map((doc) => this.getByIdWithSensitiveData(doc.id)));
+
+    // Merge incoming documents with existing data, preserving sensitive fields
+    const normalizedDocs = documents.map((doc, index) => {
+      const existing = existingUsers[index];
+
+      if (!existing) {
+        // New user - just normalize
+        return {
+          ...doc,
+          usernameLower: doc.username?.toLowerCase(),
+          dateCreated: (doc as any).dateCreated ?? now,
+          dateLastUpdated: (doc as any).dateLastUpdated ?? now,
+        };
+      }
+
+      // Existing user - merge to preserve sensitive data
+      const merged: any = { ...existing };
+
+      for (const [key, value] of Object.entries(doc)) {
+        if (key !== 'id' && value !== undefined) {
+          merged[key] = value;
+        }
+      }
+
+      merged.usernameLower = doc.username?.toLowerCase();
+      merged.dateCreated = merged.dateCreated ?? now;
+      merged.dateLastUpdated = now;
+
+      return merged;
+    }) as UserWithBaseFields[];
 
     await super.batchPut(normalizedDocs);
   }

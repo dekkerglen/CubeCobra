@@ -133,7 +133,7 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
    * @param key - The key to get.
    * @returns A promise that resolves to the raw DynamoItem, or undefined if the item does not exist.
    */
-  private async getRaw(key: Key): Promise<DynamoItem<U> | undefined> {
+  protected async getRaw(key: Key): Promise<DynamoItem<U> | undefined> {
     try {
       const response = await this.dynamoClient.send(
         new GetCommand({
