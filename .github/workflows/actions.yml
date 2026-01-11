@@ -35,6 +35,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +62,17 @@ jobs:
         with:
           name: jest-coverage
           path: coverage
+
+      - name: Report Coverage to PR
+        if: github.event_name == 'pull_request'
+        uses: ArtiomTr/jest-coverage-report-action@v2
+        with:
+          coverage-file: ./packages/server/coverage/coverage-summary.json
+          base-coverage-file: ./packages/server/coverage/coverage-summary.json
+          working-directory: ./packages/server
+          test-script: npm run test:coverage
+          skip-step: all
+          annotations: none
 
   build:
     runs-on: ubuntu-latest
