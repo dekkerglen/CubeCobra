@@ -1,8 +1,9 @@
 import fs from 'fs';
 
 function createMockFiles() {
-  // Ensure directory exists
+  // Ensure directories exist
   fs.mkdirSync('../server/private/', { recursive: true });
+  fs.mkdirSync('../server/model/', { recursive: true });
 
   const mockCard1 = {
     scryfall_id: 'test-card-1',
@@ -286,6 +287,13 @@ function createMockFiles() {
   const comboTree = {};
   const comboDict = {};
 
+  // Create indexToOracleMap for ML models (maps index to oracle_id)
+  const indexToOracleMap: Record<string, string> = {
+    '0': 'oracle-1',
+    '1': 'oracle-2',
+    '2': 'oracle-3',
+  };
+
   // Write all files
   fs.writeFileSync('../server/private/carddict.json', JSON.stringify(carddict, null, 2));
   fs.writeFileSync('../server/private/nameToId.json', JSON.stringify(nameToId, null, 2));
@@ -300,6 +308,9 @@ function createMockFiles() {
   fs.writeFileSync('../server/private/cardtree.json', JSON.stringify(cardtree, null, 2));
   fs.writeFileSync('../server/private/comboTree.json', JSON.stringify(comboTree, null, 2));
   fs.writeFileSync('../server/private/comboDict.json', JSON.stringify(comboDict, null, 2));
+
+  // Write ML model file
+  fs.writeFileSync('../server/model/indexToOracleMap.json', JSON.stringify(indexToOracleMap, null, 2));
 
   console.log('Created mock card catalog files with 3 test cards');
 }
