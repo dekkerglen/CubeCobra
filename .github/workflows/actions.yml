@@ -109,10 +109,12 @@ jobs:
             
             # Format delta with + sign for positive values
             format_delta() {
-              if (( $(echo "$1 > 0" | bc -l) )); then
-                echo "+$1"
+              local val=$1
+              local result=$(echo "$val > 0" | bc -l)
+              if [ "$result" -eq 1 ]; then
+                echo "+$val"
               else
-                echo "$1"
+                echo "$val"
               fi
             }
             
