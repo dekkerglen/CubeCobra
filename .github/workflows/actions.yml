@@ -63,7 +63,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }}
-          git stash
+          git reset --hard HEAD
+          git clean -fd
           git checkout origin/${{ github.base_ref }}
           npm install
           npm run test:ci || echo "Base branch tests failed, will skip delta"
@@ -72,8 +73,8 @@ jobs:
           else
             echo '{"total":{"lines":{"pct":0},"statements":{"pct":0},"functions":{"pct":0},"branches":{"pct":0}}}' > coverage-base.json
           fi
-          git checkout -
-          git stash pop || true
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
+          git checkout pr-branch
 
       - name: Upload Jest Coverage Report
         if: success()
@@ -160,14 +161,14 @@ jobs:
             
             cat << EOF > coverage-report.md
           ## 📊 Server Code Coverage Report
-          
+
           | Metric | Coverage | Delta |
           |--------|----------|-------|
           | Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |
           | Statements | ${PR_STATEMENTS}% | ${STATEMENTS_DELTA_FMT}% |
           | Functions | ${PR_FUNCTIONS}% | ${FUNCTIONS_DELTA_FMT}% |
           | Branches | ${PR_BRANCHES}% | ${BRANCHES_DELTA_FMT}% |
-          
+
           ### 🎯 New/Changed Lines Coverage
           **${NEW_LINES_COV}%** of lines added or modified in this PR are covered by tests
           EOF
@@ -185,6 +186,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run ci-build
+
+  integrationTests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [lint, test, build]
 
     steps:
       - uses: actions/checkout@v4
