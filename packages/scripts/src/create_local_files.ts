@@ -231,7 +231,7 @@ function createMockFiles() {
 
   const cardnames = ['Black Lotus', 'Lightning Bolt', 'Llanowar Elves'];
 
-  const full_names = ['Black Lotus [tst-1]', 'Lightning Bolt [tst-2]', 'Llanowar Elves [tst-3]'];
+  const fullNames = ['Black Lotus [tst-1]', 'Lightning Bolt [tst-2]', 'Llanowar Elves [tst-3]'];
 
   const imagedict = {
     'black lotus [tst-1]': {
@@ -292,7 +292,7 @@ function createMockFiles() {
   fs.writeFileSync('../server/private/oracleToId.json', JSON.stringify(oracleToId, null, 2));
   fs.writeFileSync('../server/private/indexToOracle.json', JSON.stringify(indexToOracle, null, 2));
   fs.writeFileSync('../server/private/names.json', JSON.stringify(cardnames, null, 2));
-  fs.writeFileSync('../server/private/full_names.json', JSON.stringify(full_names, null, 2));
+  fs.writeFileSync('../server/private/full_names.json', JSON.stringify(fullNames, null, 2));
   fs.writeFileSync('../server/private/imagedict.json', JSON.stringify(imagedict, null, 2));
   fs.writeFileSync('../server/private/cardimages.json', JSON.stringify(cardimages, null, 2));
   fs.writeFileSync('../server/private/english.json', JSON.stringify(english, null, 2));
