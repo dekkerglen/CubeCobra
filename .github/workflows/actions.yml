@@ -148,9 +148,13 @@ jobs:
             echo "coverage-pr.json not found, generating basic report"
             cat << 'EOF' > coverage-report.md
           ## 📊 Server Code Coverage Report
-
+          
           Coverage data is being generated. This report will be available on the next run.
           EOF
+          fi
+
+      - name: Comment Coverage on PR
+        if: github.event_name == 'pull_request' && success()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: coverage
