@@ -69,8 +69,6 @@ jobs:
         with:
           coverage-file: ./packages/server/coverage/coverage-summary.json
           base-coverage-file: ./packages/server/coverage/coverage-summary.json
-          working-directory: ./packages/server
-          test-script: npm run test:coverage
           skip-step: all
           annotations: none
 
