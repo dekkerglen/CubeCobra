@@ -40,7 +40,7 @@ For local development, the setup scripts will create a `.env` file based on `.en
 
 ### Required Manual Configuration
 
-After running the setup, you'll need to manually add these values to your `.env` file:
+After running the setup, you'll need to manually add these values to your `packages/server/.env` file:
 
 1. **reCAPTCHA Keys**: Add your `CAPTCHA_SITE_KEY` and `CAPTCHA_SECRET_KEY` from your [reCAPTCHA setup](./prerequisites.md#recaptcha-account)
 
@@ -51,7 +51,7 @@ After running the setup, you'll need to manually add these values to your `.env`
 You can run a local instance of Cube Cobra against real AWS resources rather than LocalStack by:
 
 1. Setting up S3, DynamoDB, and CloudWatch using your AWS account
-2. Inserting your AWS credentials into the `.env` file
+2. Inserting your AWS credentials into the `packages/server/.env` file
 3. Removing or modifying the `AWS_ENDPOINT` variable to point to real AWS
 
 ## Next Steps

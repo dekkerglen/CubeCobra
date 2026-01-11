@@ -22,6 +22,7 @@
 import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import DraftType, { DRAFT_TYPES, DraftmancerLog, REVERSE_TYPES } from '@utils/datatypes/Draft';
+import DraftSeat from '@utils/datatypes/DraftSeat';
 import User from '@utils/datatypes/User';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
@@ -140,11 +141,6 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Hydrates a single UnhydratedDraft to Draft.
    */
   protected async hydrateItem(item: UnhydratedDraft): Promise<Draft> {
-    const [owner, cubeOwner] = await Promise.all([
-      this.userDao.getById(item.owner),
-      this.userDao.getById(item.cubeOwner),
-    ]);
-
     const defaultUser = {
       username: 'Anonymous',
       id: '404',
@@ -156,11 +152,28 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     // Add details to cards
     const cardsWithDetails = this.addDetails(cards);
 
+    const usersToFetch = [item.owner, item.cubeOwner];
+
+    for (const seat of seatsData.seats) {
+      if (seat.owner && typeof seat.owner === 'string') {
+        usersToFetch.push(seat.owner);
+      }
+    }
+
+    const users = await this.userDao.batchGet(usersToFetch);
+    const userMap = new Map(users.map((u: User) => [u.id, u]));
+
+    for (const seat of seatsData.seats) {
+      if (seat.owner && typeof seat.owner === 'string') {
+        seat.owner = userMap.get(seat.owner) || defaultUser;
+      }
+    }
+
     return {
       id: item.id,
       cube: item.cube,
-      owner: owner || defaultUser,
-      cubeOwner: cubeOwner || defaultUser,
+      owner: userMap.get(item.owner) || defaultUser,
+      cubeOwner: userMap.get(item.cubeOwner) || defaultUser,
       date: item.date,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
@@ -196,13 +209,17 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       if (item.cubeOwner) userIds.add(item.cubeOwner);
     });
 
-    // Batch get users
-    const users = await this.userDao.batchGet(Array.from(userIds));
-
     // Batch get cards and seats for all drafts
     const cardsAndSeats = await Promise.all(
       items.map(async (item) => {
         const [cards, seatsData] = await Promise.all([this.getCards(item.id), this.getSeats(item.id)]);
+
+        for (const seat of seatsData.seats) {
+          if (seat.owner && typeof seat.owner === 'string') {
+            userIds.add(seat.owner);
+          }
+        }
+
         return {
           cards: this.addDetails(cards),
           seats: seatsData.seats || [],
@@ -212,10 +229,20 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       }),
     );
 
+    // Batch get users
+    const users = await this.userDao.batchGet(Array.from(userIds));
+    const userMap = new Map(users.map((u: User) => [u.id, u]));
+
     return items.map((item, index) => {
-      const owner = users.find((u: User) => u.id === item.owner) || defaultUser;
-      const cubeOwner = users.find((u: User) => u.id === item.cubeOwner) || defaultUser;
+      const owner = userMap.get(item.owner) || defaultUser;
+      const cubeOwner = userMap.get(item.cubeOwner) || defaultUser;
       const data = cardsAndSeats[index]!;
+
+      for (const seat of data.seats) {
+        if (seat.owner && typeof seat.owner === 'string') {
+          seat.owner = userMap.get(seat.owner) || defaultUser;
+        }
+      }
 
       return {
         id: item.id,
@@ -897,7 +924,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   /**
    * Gets seats data from S3.
    */
-  private async getSeats(id: string): Promise<{ seats: any[]; basics: number[]; InitialState: any }> {
+  private async getSeats(id: string): Promise<{ seats: DraftSeat[]; basics: number[]; InitialState: any }> {
     try {
       const data = await getObject(process.env.DATA_BUCKET!, `seats/${id}.json`);
       return data || { seats: [], basics: [], InitialState: {} };
