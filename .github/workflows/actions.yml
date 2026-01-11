@@ -123,7 +123,7 @@ jobs:
             
             cat << 'EOF' > coverage-report.md
           ## 📊 Server Code Coverage Report
-          
+
           | Metric | Coverage | Delta |
           |--------|----------|-------|
           EOF
