@@ -120,7 +120,7 @@ jobs:
             
             cat << EOF > coverage-report.md
           ## 📊 Server Code Coverage Report
-          
+
           | Metric | Coverage | Delta |
           |--------|----------|-------|
           | Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |
