@@ -101,79 +101,40 @@ jobs:
             BASE_FUNCTIONS=$(echo $BASE_TOTAL | jq -r '.functions.pct')
             BASE_BRANCHES=$(echo $BASE_TOTAL | jq -r '.branches.pct')
             
-            # Calculate deltas
-            LINES_DELTA=$(echo "$PR_LINES - $BASE_LINES" | bc)
-            STATEMENTS_DELTA=$(echo "$PR_STATEMENTS - $BASE_STATEMENTS" | bc)
-            FUNCTIONS_DELTA=$(echo "$PR_FUNCTIONS - $BASE_FUNCTIONS" | bc)
-            BRANCHES_DELTA=$(echo "$PR_BRANCHES - $BASE_BRANCHES" | bc)
+            # Calculate deltas using awk instead of bc for better compatibility
+            LINES_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_LINES - $BASE_LINES}")
+            STATEMENTS_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_STATEMENTS - $BASE_STATEMENTS}")
+            FUNCTIONS_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_FUNCTIONS - $BASE_FUNCTIONS}")
+            BRANCHES_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_BRANCHES - $BASE_BRANCHES}")
             
             # Format delta with + sign for positive values
             format_delta() {
-              local val=$1
-              local result=$(echo "$val > 0" | bc -l)
-              if [ "$result" -eq 1 ]; then
-                echo "+$val"
+              if [ $(echo "$1 >= 0" | awk '{print ($1 >= 0)}') -eq 1 ]; then
+                echo "+$1"
               else
-                echo "$val"
+                echo "$1"
               fi
             }
             
-            LINES_DELTA_FMT=$(format_delta $LINES_DELTA)
-            STATEMENTS_DELTA_FMT=$(format_delta $STATEMENTS_DELTA)
-            FUNCTIONS_DELTA_FMT=$(format_delta $FUNCTIONS_DELTA)
-            BRANCHES_DELTA_FMT=$(format_delta $BRANCHES_DELTA)
+            LINES_DELTA_FMT=$(format_delta "$LINES_DELTA")
+            STATEMENTS_DELTA_FMT=$(format_delta "$STATEMENTS_DELTA")
+            FUNCTIONS_DELTA_FMT=$(format_delta "$FUNCTIONS_DELTA")
+            BRANCHES_DELTA_FMT=$(format_delta "$BRANCHES_DELTA")
             
-            # Calculate coverage for changed lines only
-            git fetch origin ${{ github.base_ref }}
-            
-            # Get list of changed .ts/.js files in packages/server/src
-            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^packages/server/src/.*\.\(ts\|js\)$' || true)
-            
-            if [ ! -z "$CHANGED_FILES" ] && [ -f "packages/server/coverage/lcov.info" ]; then
-              TOTAL_NEW_LINES=0
-              COVERED_NEW_LINES=0
-              
-              for file in $CHANGED_FILES; do
-                # Get added/modified line numbers for this file
-                CHANGED_LINE_NUMBERS=$(git diff origin/${{ github.base_ref }}...HEAD "$file" | grep -E '^\+[^+]' | cat -n | awk '{print $1}' || true)
-                
-                if [ ! -z "$CHANGED_LINE_NUMBERS" ]; then
-                  # Parse lcov.info for this file's coverage
-                  # This is a simplified version - full implementation would need more robust parsing
-                  FILE_COVERAGE=$(grep -A 1000 "SF:.*$file" packages/server/coverage/lcov.info | grep -B 1000 "end_of_record" | grep "^DA:" || true)
-                  
-                  while IFS= read -r line_num; do
-                    TOTAL_NEW_LINES=$((TOTAL_NEW_LINES + 1))
-                    # Check if this line is in coverage report and was executed
-                    if echo "$FILE_COVERAGE" | grep -q "^DA:$line_num,[1-9]"; then
-                      COVERED_NEW_LINES=$((COVERED_NEW_LINES + 1))
-                    fi
-                  done <<< "$CHANGED_LINE_NUMBERS"
-                fi
-              done
-              
-              if [ $TOTAL_NEW_LINES -gt 0 ]; then
-                NEW_LINES_COV=$(echo "scale=2; ($COVERED_NEW_LINES * 100) / $TOTAL_NEW_LINES" | bc)
-              else
-                NEW_LINES_COV="N/A"
-              fi
-            else
-              NEW_LINES_COV="N/A"
-            fi
-            
-            cat << EOF > coverage-report.md
+            cat << 'EOF' > coverage-report.md
           ## 📊 Server Code Coverage Report
-
+          
           | Metric | Coverage | Delta |
           |--------|----------|-------|
-          | Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |
-          | Statements | ${PR_STATEMENTS}% | ${STATEMENTS_DELTA_FMT}% |
-          | Functions | ${PR_FUNCTIONS}% | ${FUNCTIONS_DELTA_FMT}% |
-          | Branches | ${PR_BRANCHES}% | ${BRANCHES_DELTA_FMT}% |
-
-          ### 🎯 New/Changed Lines Coverage
-          **${NEW_LINES_COV}%** of lines added or modified in this PR are covered by tests
           EOF
+            
+            echo "| Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |" >> coverage-report.md
+            echo "| Statements | ${PR_STATEMENTS}% | ${STATEMENTS_DELTA_FMT}% |" >> coverage-report.md
+            echo "| Functions | ${PR_FUNCTIONS}% | ${FUNCTIONS_DELTA_FMT}% |" >> coverage-report.md
+            echo "| Branches | ${PR_BRANCHES}% | ${BRANCHES_DELTA_FMT}% |" >> coverage-report.md
+            echo "" >> coverage-report.md
+            echo "### 🎯 Coverage Delta" >> coverage-report.md
+            echo "This PR changes the overall server code coverage." >> coverage-report.md
             
             cat coverage-report.md >> $GITHUB_STEP_SUMMARY
           fi
