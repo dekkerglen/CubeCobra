@@ -63,14 +63,43 @@ jobs:
           name: jest-coverage
           path: coverage
 
-      - name: Report Coverage to PR
+      - name: Generate Coverage Report
         if: github.event_name == 'pull_request'
-        uses: ArtiomTr/jest-coverage-report-action@v2
+        id: coverage
+        run: |
+          COVERAGE_FILE="packages/server/coverage/coverage-summary.json"
+          if [ -f "$COVERAGE_FILE" ]; then
+            TOTAL=$(jq '.total' "$COVERAGE_FILE")
+            LINES=$(echo $TOTAL | jq -r '.lines.pct')
+            STATEMENTS=$(echo $TOTAL | jq -r '.statements.pct')
+            FUNCTIONS=$(echo $TOTAL | jq -r '.functions.pct')
+            BRANCHES=$(echo $TOTAL | jq -r '.branches.pct')
+            
+            echo "lines=$LINES" >> $GITHUB_OUTPUT
+            echo "statements=$STATEMENTS" >> $GITHUB_OUTPUT
+            echo "functions=$FUNCTIONS" >> $GITHUB_OUTPUT
+            echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
+            
+            cat << EOF > coverage-report.md
+          ## 📊 Server Code Coverage Report
+          
+          | Metric | Coverage |
+          |--------|----------|
+          | Lines | ${LINES}% |
+          | Statements | ${STATEMENTS}% |
+          | Functions | ${FUNCTIONS}% |
+          | Branches | ${BRANCHES}% |
+          EOF
+            
+            cat coverage-report.md >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
-          coverage-file: ./packages/server/coverage/coverage-summary.json
-          base-coverage-file: ./packages/server/coverage/coverage-summary.json
-          skip-step: all
-          annotations: none
+          header: coverage
+          path: coverage-report.md
 
   build:
     runs-on: ubuntu-latest
