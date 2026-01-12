@@ -3,6 +3,7 @@ import { config as dotenvConfig } from 'dotenv';
 dotenvConfig();
 
 import * as cdk from 'aws-cdk-lib';
+
 import 'source-map-support/register';
 
 import { environments } from '../config';
