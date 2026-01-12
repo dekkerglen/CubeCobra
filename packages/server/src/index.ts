@@ -65,7 +65,7 @@ app.post('/healthcheck', (_req: express.Request, res: express.Response) => {
 });
 
 //If this isn't a local developer environment, improve security by only allowing HTTPS
-if (process.env?.NODE_ENV !== 'development') {
+if (process.env?.NODE_ENV !== 'development' && process.env?.HTTP_ONLY !== 'true') {
   app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
     //Redirect to HTTPS for security, assuming the AWS ALB isn't forwarding the HTTPS request along nor is it the ALB health check request
     const userAgent = req.get('User-Agent') || '';
