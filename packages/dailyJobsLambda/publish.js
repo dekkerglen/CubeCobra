@@ -3,8 +3,8 @@ const fs = require('fs');
 const archiver = require('archiver');
 require('dotenv').config();
 
-// get version from root package.json
-const VERSION = require('../../package.json').version;
+// get version from environment variable (for CI/CD) or root package.json (for local dev)
+const VERSION = process.env.LAMBDA_VERSION || require('../../package.json').version;
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,

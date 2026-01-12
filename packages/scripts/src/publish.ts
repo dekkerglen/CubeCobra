@@ -15,10 +15,10 @@ const s3 = new S3({
   region: process.env.AWS_REGION,
 });
 
-// get version from root package.json
+// get version from environment variable (for CI/CD) or root package.json (for local dev)
 const rootPackageJsonPath = path.resolve(__dirname, '../../../package.json');
 const packageJson = JSON.parse(fs.readFileSync(rootPackageJsonPath, 'utf8')) as { version: string };
-const VERSION: string = packageJson.version;
+const VERSION: string = process.env.BUILD_VERSION || packageJson.version;
 
 const bucketName: string = process.env.CUBECOBRA_APP_BUCKET || 'cubecobra';
 const zipFileName: string = `builds/${VERSION}.zip`;
