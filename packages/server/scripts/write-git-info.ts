@@ -11,7 +11,7 @@ let commitHash = process.env.CODEBUILD_RESOLVED_SOURCE_VERSION;
 if (!commitHash) {
   try {
     commitHash = execSync('git rev-parse HEAD', { stdio: 'pipe' }).toString().trim();
-  } catch (error) {
+  } catch {
     console.warn('Git command failed (not a git repository or git not available)');
     commitHash = 'unknown';
   }
