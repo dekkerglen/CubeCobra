@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "bin": {
     "infra": "app/infra.js",
-    "bootstrap": "app/bootstrap.js"
+    "bootstrap": "app/bootstrap.js",
+    "pipeline": "app/pipeline.js"
   },
   "scripts": {
     "build": "tsc",
@@ -11,6 +12,7 @@
     "test": "jest",
     "cdk": "cdk",
     "cdk:local": "cdklocal bootstrap --context environment=local --context version=1.0.0 && cdklocal deploy --context environment=local --context version=1.0.0",
+    "deploy:pipeline": "npm run build && cdk deploy CubeCobraPipelineStack --app 'node app/pipeline.js'",
     "test:ci": "npx jest --coverage --coverageReporters text"
   },
   "type": "commonjs",

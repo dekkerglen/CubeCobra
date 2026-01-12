@@ -1,0 +1,36 @@
+{
+  "name": "@cubecobra/integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for CubeCobra using Playwright.",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:local": "cross-env BASE_URL=http://localhost:5000 npx playwright test",
+    "test:beta": "cross-env BASE_URL=https://beta.cubecobra.com npx playwright test",
+    "test:prod": "cross-env BASE_URL=https://cubecobra.com npx playwright test",
+    "test:headed": "cross-env HEADED=true npx playwright test --headed",
+    "test:ci": "npx playwright test --reporter=dot",
+    "report": "node scripts/generate-report.js",
+    "playwright:install": "npx playwright install",
+    "playwright:codegen": "npx playwright codegen",
+    "playwright:codegen:local": "npx playwright codegen http://localhost:5000"
+  },
+  "keywords": [
+    "playwright",
+    "playwright",
+    "integration-tests",
+    "e2e"
+  ],
+  "author": "Gwen Dekker",
+  "license": "ISC",
+  "dependencies": {
+    "@playwright/test": "^1.49.1",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
