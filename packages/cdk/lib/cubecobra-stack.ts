@@ -59,32 +59,21 @@ export class CubeCobraStack extends cdk.Stack {
 
     const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', { roles: [role.roleName] });
 
-    // Create S3 buckets construct to manage data and app buckets
-    // For beta and development, create the data bucket if it doesn't exist
-    // For production, import the existing bucket (to avoid accidental deletion)
-    const shouldCreateDataBucket = params.env === 'development' || params.environmentName.includes('beta');
-
+    // Create S3 buckets construct to import existing data and app buckets
     const s3Buckets = new S3Buckets(this, 'S3Buckets', {
       dataBucketName: params.dataBucket,
       appBucketName: params.appBucket,
-      createDataBucket: shouldCreateDataBucket,
     });
 
     // Grant the instance role read access to the data bucket
-    if (shouldCreateDataBucket) {
-      // For created buckets, use grantRead which handles everything automatically
-      s3Buckets.dataBucket.grantRead(role);
-    } else {
-      // For imported buckets, we need to explicitly add IAM permissions
-      // because grantRead doesn't work properly with imported bucket references
-      role.addToPolicy(
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ['s3:GetObject', 's3:GetObjectVersion', 's3:ListBucket'],
-          resources: [`arn:aws:s3:::${params.dataBucket}`, `arn:aws:s3:::${params.dataBucket}/*`],
-        }),
-      );
-    }
+    // Since we're importing the bucket, we need to explicitly add IAM permissions
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:GetObject', 's3:GetObjectVersion', 's3:ListBucket'],
+        resources: [`arn:aws:s3:::${params.dataBucket}`, `arn:aws:s3:::${params.dataBucket}/*`],
+      }),
+    );
 
     // Create DynamoDB single table
     const dynamoTables = new DynamodbTables(this, 'DynamoDBTables', { prefix: params.dynamoPrefix });
