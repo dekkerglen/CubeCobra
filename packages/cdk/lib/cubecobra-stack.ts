@@ -71,7 +71,20 @@ export class CubeCobraStack extends cdk.Stack {
     });
 
     // Grant the instance role read access to the data bucket
-    s3Buckets.dataBucket.grantRead(role);
+    if (shouldCreateDataBucket) {
+      // For created buckets, use grantRead which handles everything automatically
+      s3Buckets.dataBucket.grantRead(role);
+    } else {
+      // For imported buckets, we need to explicitly add IAM permissions
+      // because grantRead doesn't work properly with imported bucket references
+      role.addToPolicy(
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['s3:GetObject', 's3:GetObjectVersion', 's3:ListBucket'],
+          resources: [`arn:aws:s3:::${params.dataBucket}`, `arn:aws:s3:::${params.dataBucket}/*`],
+        }),
+      );
+    }
 
     // Create DynamoDB single table
     const dynamoTables = new DynamodbTables(this, 'DynamoDBTables', { prefix: params.dynamoPrefix });
