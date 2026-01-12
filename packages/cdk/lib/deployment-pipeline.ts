@@ -87,7 +87,7 @@ export class DeploymentPipeline extends Construct {
               'echo Building and publishing Lambda function...',
               'cd packages/dailyJobsLambda',
               'npm run build',
-              'export CUBECOBRA_APP_BUCKET=cubecobra-beta',
+              'export CUBECOBRA_APP_BUCKET=cubecobra',
               'node publish.js',
               'cd ../..',
             ],

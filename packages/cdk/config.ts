@@ -52,7 +52,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     account: '816705121310',
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-beta',
-    appBucket: 'cubecobra-beta',
+    appBucket: 'cubecobra',
     domain: 'cubecobradev.com',
     awsLogGroup: 'CUBECOBRA',
     awsLogStream: 'BETA',
