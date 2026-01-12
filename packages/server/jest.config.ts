@@ -55,7 +55,7 @@ const jestConfig: Config = {
   // Coverage configuration
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  coverageReporters: ['json', 'text'],
+  coverageReporters: ['json', 'json-summary', 'text', 'lcov'],
   collectCoverageFrom: ['src/**/*.{js,ts,tsx}', '!src/**/*.d.ts', '!src/**/index.{js,ts}', '!src/client/**'],
 };
 

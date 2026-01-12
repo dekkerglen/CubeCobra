@@ -89,6 +89,11 @@ const answers = [
 ];
 
 export async function recaptcha(req: Request, res: Response, next: NextFunction): Promise<void> {
+  // Skip bot security checks if disabled (for testing)
+  if (process.env.ENABLE_BOT_SECURITY === 'false') {
+    return next();
+  }
+
   const { captcha, question, answer } = req.body;
 
   if (!question || !answer) {
