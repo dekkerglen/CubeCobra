@@ -47,6 +47,22 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     fleetSize: 1,
   },
 
+  beta: {
+    stackName: 'CubeCobraBetaStack',
+    account: '816705121310',
+    region: 'us-east-2',
+    dataBucket: 'cubecobra-data-beta',
+    appBucket: 'cubecobra-beta',
+    domain: 'cubecobradev.com',
+    awsLogGroup: 'CUBECOBRA',
+    awsLogStream: 'BETA',
+    downTimeActive: false,
+    dynamoPrefix: 'BETA',
+    nitroPayEnabled: false,
+    patreonRedirectUri: 'https://cubecobradev.com/patreon/redirect',
+    fleetSize: 1,
+  },
+
   production: {
     stackName: 'CubeCobraProdStack',
     account: '816705121310',
