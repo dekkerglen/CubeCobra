@@ -43,6 +43,7 @@ interface CubeCobraStackParams {
   draftmancerApiKey: string;
   stripeSecretKey: string;
   stripePublicKey: string;
+  enableBotSecurity: boolean;
 }
 
 export type Environment = 'production' | 'development';

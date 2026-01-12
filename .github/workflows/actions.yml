@@ -278,7 +278,6 @@ jobs:
       - name: Run integration tests
         run: npx playwright test --reporter=dot --reporter=html
         working-directory: packages/integrationTests
-        continue-on-error: true
 
       - name: Stop server
         if: always()
