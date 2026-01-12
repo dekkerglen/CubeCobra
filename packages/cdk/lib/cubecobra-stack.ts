@@ -3,7 +3,6 @@ import { StackProps } from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import { CfnInstanceProfile, ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
@@ -13,6 +12,7 @@ import { DynamodbTables } from './dynamodb-tables';
 import { ECR } from './ecr';
 import { ElasticBeanstalk } from './elastic-beanstalk';
 import { Route53 } from './route53';
+import { S3Buckets } from './s3-buckets';
 import { ScheduledJob, ScheduledJobProps } from './scheduled-job';
 
 interface CubeCobraStackParams {
@@ -59,7 +59,19 @@ export class CubeCobraStack extends cdk.Stack {
 
     const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', { roles: [role.roleName] });
 
-    const appBucket = Bucket.fromBucketName(this, 'AppBucket', params.appBucket);
+    // Create S3 buckets construct to manage data and app buckets
+    // For beta and development, create the data bucket if it doesn't exist
+    // For production, import the existing bucket (to avoid accidental deletion)
+    const shouldCreateDataBucket = params.env === 'development' || params.environmentName.includes('beta');
+
+    const s3Buckets = new S3Buckets(this, 'S3Buckets', {
+      dataBucketName: params.dataBucket,
+      appBucketName: params.appBucket,
+      createDataBucket: shouldCreateDataBucket,
+    });
+
+    // Grant the instance role read access to the data bucket
+    s3Buckets.dataBucket.grantRead(role);
 
     // Create DynamoDB single table
     const dynamoTables = new DynamodbTables(this, 'DynamoDBTables', { prefix: params.dynamoPrefix });
@@ -74,7 +86,7 @@ export class CubeCobraStack extends cdk.Stack {
       environmentVariables: createEnvironmentVariables(params, props, dynamoTables.table.tableName),
       fleetSize: params.fleetSize,
       instanceProfile: instanceProfile,
-      appBucket: appBucket,
+      appBucket: s3Buckets.appBucket,
       appVersion: params.version,
     });
 
