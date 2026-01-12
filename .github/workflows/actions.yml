@@ -238,17 +238,32 @@ jobs:
       - name: Start server in background
         run: |
           cd packages/server
-          node dist/server/src/index.js &
+          node dist/server/src/index.js > server.log 2>&1 &
           echo $! > server.pid
           # Wait for server to start
+          echo "Starting server with PID $(cat server.pid)..."
           for i in {1..30}; do
-            if curl -s http://localhost:5000 > /dev/null; then
-              echo "Server is up!"
+            # Check if process is still running
+            if ! kill -0 $(cat server.pid) 2>/dev/null; then
+              echo "Server process died! Checking logs..."
+              cat server.log
+              exit 1
+            fi
+            # Try to hit the health endpoint
+            if curl -f -s http://localhost:5000/ > /dev/null 2>&1; then
+              echo "Server is up and responding!"
               break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Server failed to start within 60 seconds. Logs:"
+              cat server.log
+              exit 1
             fi
             echo "Waiting for server to start... ($i/30)"
             sleep 2
           done
+          echo "Server logs (last 20 lines):"
+          tail -20 server.log
         env:
           AWS_ENDPOINT: http://localhost:4566
           AWS_ACCESS_KEY_ID: test
@@ -283,8 +298,18 @@ jobs:
         if: always()
         run: |
           if [ -f packages/server/server.pid ]; then
+            echo "Stopping server..."
             kill $(cat packages/server/server.pid) || true
           fi
+
+      - name: Upload server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: packages/server/server.log
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload Playwright report
         if: always()
