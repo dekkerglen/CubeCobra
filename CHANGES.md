@@ -14,4 +14,5 @@ As of 1.4.57
 # Technical Changes
 
 - Added codepipeline with integration tests
+- Added integration tests to pull requests, split up checks to make it easier to see failures
 - Fixed docker development setup
