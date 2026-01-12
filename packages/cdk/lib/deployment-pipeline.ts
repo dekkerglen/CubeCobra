@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
-import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
+import * as codepipelineActions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
@@ -256,7 +256,7 @@ export class DeploymentPipeline extends Construct {
     this.pipeline.addStage({
       stageName: 'Source',
       actions: [
-        new codepipeline_actions.CodeStarConnectionsSourceAction({
+        new codepipelineActions.CodeStarConnectionsSourceAction({
           actionName: 'GitHub_Source',
           owner: props.githubOwner,
           repo: props.githubRepo,
@@ -271,7 +271,7 @@ export class DeploymentPipeline extends Construct {
     this.pipeline.addStage({
       stageName: 'DeployBeta',
       actions: [
-        new codepipeline_actions.CodeBuildAction({
+        new codepipelineActions.CodeBuildAction({
           actionName: 'Deploy_To_Beta',
           project: betaDeployProject,
           input: sourceOutput,
@@ -284,7 +284,7 @@ export class DeploymentPipeline extends Construct {
     this.pipeline.addStage({
       stageName: 'IntegrationTests',
       actions: [
-        new codepipeline_actions.CodeBuildAction({
+        new codepipelineActions.CodeBuildAction({
           actionName: 'Run_Integration_Tests',
           project: integrationTestProject,
           input: sourceOutput,
@@ -296,7 +296,7 @@ export class DeploymentPipeline extends Construct {
     this.pipeline.addStage({
       stageName: 'DeployProduction',
       actions: [
-        new codepipeline_actions.CodeBuildAction({
+        new codepipelineActions.CodeBuildAction({
           actionName: 'Deploy_To_Production',
           project: prodDeployProject,
           input: sourceOutput,
