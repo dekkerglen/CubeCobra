@@ -3,9 +3,11 @@ import Stripe from 'stripe';
 
 import { Request, Response } from '../../types/express';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2025-08-27.basil',
-});
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-08-27.basil',
+    })
+  : null;
 
 const products: any[] = [];
 
@@ -27,6 +29,10 @@ const handler = async (req: Request, res: Response) => {
 
 const checkout = async (req: Request, res: Response) => {
   try {
+    if (!stripe) {
+      throw new Error('Stripe is not configured');
+    }
+
     const { body } = req;
     const lineItems = Object.entries(body)
       .filter(([key]) => key.startsWith('prod_'))

@@ -115,6 +115,50 @@ export class DeploymentPipeline extends Construct {
         AWS_DEFAULT_REGION: {
           value: props.region,
         },
+        STRIPE_SECRET_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/stripe-secret-key',
+        },
+        STRIPE_PUBLIC_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/stripe-public-key',
+        },
+        SESSION_TOKEN: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/session-token',
+        },
+        SESSION_SECRET: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/session-secret',
+        },
+        JOBS_TOKEN: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/jobs-token',
+        },
+        PATREON_CLIENT_ID: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/patreon-client-id',
+        },
+        PATREON_CLIENT_SECRET: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/patreon-client-secret',
+        },
+        PATREON_HOOK_SECRET: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/patreon-hook-secret',
+        },
+        CAPTCHA_SITE_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/captcha-site-key',
+        },
+        CAPTCHA_SECRET_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/captcha-secret-key',
+        },
+        DRAFTMANCER_API_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/draftmancer-api-key',
+        },
       },
     });
 
@@ -123,6 +167,14 @@ export class DeploymentPipeline extends Construct {
       new iam.PolicyStatement({
         actions: ['sts:AssumeRole', 'iam:PassRole', 'cloudformation:*', 'ec2:*', 'elasticbeanstalk:*', 's3:*'],
         resources: ['*'],
+      }),
+    );
+
+    // Grant permissions to read Parameter Store
+    betaDeployProject.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['ssm:GetParameter', 'ssm:GetParameters'],
+        resources: [`arn:aws:ssm:${props.region}:${props.account}:parameter/cubecobra/beta/*`],
       }),
     );
 
@@ -246,6 +298,50 @@ export class DeploymentPipeline extends Construct {
         AWS_DEFAULT_REGION: {
           value: props.region,
         },
+        STRIPE_SECRET_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/stripe-secret-key',
+        },
+        STRIPE_PUBLIC_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/stripe-public-key',
+        },
+        SESSION_TOKEN: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/session-token',
+        },
+        SESSION_SECRET: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/session-secret',
+        },
+        JOBS_TOKEN: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/jobs-token',
+        },
+        PATREON_CLIENT_ID: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/patreon-client-id',
+        },
+        PATREON_CLIENT_SECRET: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/patreon-client-secret',
+        },
+        PATREON_HOOK_SECRET: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/patreon-hook-secret',
+        },
+        CAPTCHA_SITE_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/captcha-site-key',
+        },
+        CAPTCHA_SECRET_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/captcha-secret-key',
+        },
+        DRAFTMANCER_API_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/draftmancer-api-key',
+        },
       },
     });
 
@@ -254,6 +350,14 @@ export class DeploymentPipeline extends Construct {
       new iam.PolicyStatement({
         actions: ['sts:AssumeRole', 'iam:PassRole', 'cloudformation:*', 'ec2:*', 'elasticbeanstalk:*', 's3:*'],
         resources: ['*'],
+      }),
+    );
+
+    // Grant permissions to read Parameter Store
+    prodDeployProject.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['ssm:GetParameter', 'ssm:GetParameters'],
+        resources: [`arn:aws:ssm:${props.region}:${props.account}:parameter/cubecobra/prod/*`],
       }),
     );
 
