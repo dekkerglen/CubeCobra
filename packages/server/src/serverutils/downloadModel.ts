@@ -32,6 +32,11 @@ export const downloadModelsFromS3 = async (basePath: string = ''): Promise<void>
       continue;
     }
 
+    // Skip directory markers (keys ending with '/')
+    if (file.Key.endsWith('/')) {
+      continue;
+    }
+
     const res = await s3.getObject({ Bucket: process.env.DATA_BUCKET!, Key: file.Key });
 
     // make sure folders exist
