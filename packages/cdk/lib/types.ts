@@ -29,6 +29,7 @@ export interface CubeCobraStackParams {
   stripeSecretKey: string;
   stripePublicKey: string;
   enableBotSecurity: boolean;
+  maintainCubeCardHashes: boolean;
 }
 
 export type Environment = 'production' | 'development' | 'local';

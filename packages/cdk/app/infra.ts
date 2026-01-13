@@ -68,6 +68,7 @@ if (bootstrap && bootstrap === 'true') {
       stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
       stripePublicKey: process.env.STRIPE_PUBLIC_KEY || '',
       enableBotSecurity: process.env.ENABLE_BOT_SECURITY !== 'false',
+      maintainCubeCardHashes: config.maintainCubeCardHashes,
     },
     {
       env: { account: config.account, region: config.region },

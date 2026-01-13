@@ -44,6 +44,7 @@ interface CubeCobraStackParams {
   stripeSecretKey: string;
   stripePublicKey: string;
   enableBotSecurity: boolean;
+  maintainCubeCardHashes: boolean;
 }
 
 export type Environment = 'production' | 'development';
@@ -168,6 +169,7 @@ function createEnvironmentVariables(
     STRIPE_SECRET_KEY: params.stripeSecretKey,
     STRIPE_PUBLIC_KEY: params.stripePublicKey,
     ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',
+    MAINTAIN_CUBE_CARD_HASHES: params.maintainCubeCardHashes ? 'true' : 'false',
   };
 
   // Add DYNAMO_TABLE if it's provided

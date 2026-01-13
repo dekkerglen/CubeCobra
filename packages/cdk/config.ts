@@ -12,6 +12,7 @@ export interface EnvironmentConfiguration {
   nitroPayEnabled: boolean;
   patreonRedirectUri: string;
   fleetSize: number;
+  maintainCubeCardHashes: boolean;
 }
 
 export const environments: { [key: string]: EnvironmentConfiguration } = {
@@ -29,6 +30,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     nitroPayEnabled: false,
     patreonRedirectUri: 'http://localhost:8080/patreon/redirect',
     fleetSize: 1,
+    maintainCubeCardHashes: true,
   },
 
   development: {
@@ -45,6 +47,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     nitroPayEnabled: false,
     patreonRedirectUri: 'https://cubecobradev.com/patreon/redirect',
     fleetSize: 1,
+    maintainCubeCardHashes: true,
   },
 
   beta: {
@@ -61,6 +64,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     nitroPayEnabled: false,
     patreonRedirectUri: 'https://cubecobradev.com/patreon/redirect',
     fleetSize: 1,
+    maintainCubeCardHashes: false,
   },
 
   production: {
@@ -77,5 +81,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     nitroPayEnabled: true,
     patreonRedirectUri: 'https://cubecobra.com/patreon/redirect',
     fleetSize: 6,
+    maintainCubeCardHashes: false,
   },
 };

@@ -670,9 +670,16 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Get cards to calculate all hashes (including card-derived categories)
     const cards = await this.getCards(id);
     const metadataHashes = await this.getHashStringsWithCards(cube, cards);
-    const oracleIds = this.getOracleIds(cards);
-    const oracleHashes = await Promise.all(oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })));
-    const allHashes = [...metadataHashes, ...oracleHashes];
+
+    // Only include oracle ID hashes if MAINTAIN_CUBE_CARD_HASHES is enabled
+    let allHashes = [...metadataHashes];
+    if (process.env.MAINTAIN_CUBE_CARD_HASHES === 'true') {
+      const oracleIds = this.getOracleIds(cards);
+      const oracleHashes = await Promise.all(
+        oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })),
+      );
+      allHashes = [...metadataHashes, ...oracleHashes];
+    }
 
     // Delete hash rows
     await this.deleteHashesBySK(this.partitionKey(cube), allHashes);
@@ -707,9 +714,17 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Create hash rows after cube is saved (including card-derived category hashes)
     const metadataHashes = await this.getHashStringsWithCards(cube, cards);
-    const oracleIds = this.getOracleIds(cards);
-    const oracleHashes = await Promise.all(oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })));
-    const allHashes = [...metadataHashes, ...oracleHashes];
+
+    // Only include oracle ID hashes if MAINTAIN_CUBE_CARD_HASHES is enabled
+    let allHashes = [...metadataHashes];
+    if (process.env.MAINTAIN_CUBE_CARD_HASHES === 'true') {
+      const oracleIds = this.getOracleIds(cards);
+      const oracleHashes = await Promise.all(
+        oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })),
+      );
+      allHashes = [...metadataHashes, ...oracleHashes];
+    }
+
     await this.writeHashes(this.partitionKey(cube), allHashes);
   }
 
@@ -1027,20 +1042,28 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Updates hash rows when cards change (oracle hashes and category hashes).
    */
   private async updateHashRows(cube: Cube, oldCards: CubeCards, newCards: CubeCards): Promise<void> {
-    // Handle oracle hash changes
-    const oldOracleIds = this.getOracleIds(oldCards);
-    const newOracleIds = this.getOracleIds(newCards);
+    let hashesToDelete: string[] = [];
+    let hashesToAdd: string[] = [];
 
-    const oraclesToDelete = oldOracleIds.filter((id) => !newOracleIds.includes(id));
-    const oraclesToAdd = newOracleIds.filter((id) => !oldOracleIds.includes(id));
+    // Handle oracle hash changes only if MAINTAIN_CUBE_CARD_HASHES is enabled
+    if (process.env.MAINTAIN_CUBE_CARD_HASHES === 'true') {
+      const oldOracleIds = this.getOracleIds(oldCards);
+      const newOracleIds = this.getOracleIds(newCards);
 
-    const hashesToDelete = await Promise.all(
-      oraclesToDelete.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })),
-    );
+      const oraclesToDelete = oldOracleIds.filter((id) => !newOracleIds.includes(id));
+      const oraclesToAdd = newOracleIds.filter((id) => !oldOracleIds.includes(id));
 
-    const hashesToAdd = await Promise.all(
-      oraclesToAdd.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })),
-    );
+      const oracleHashesToDelete = await Promise.all(
+        oraclesToDelete.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })),
+      );
+
+      const oracleHashesToAdd = await Promise.all(
+        oraclesToAdd.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })),
+      );
+
+      hashesToDelete = oracleHashesToDelete;
+      hashesToAdd = oracleHashesToAdd;
+    }
 
     // Handle category hash changes (if cube doesn't have categoryOverride)
     // Categories are derived from cards, so they might change when cards change
@@ -1781,10 +1804,14 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const metadataHashes = await this.getHashStringsWithCards(cube, cards);
     metadataHashes.forEach((hash) => expectedHashes.add(hash));
 
-    // Add oracle hashes from cards
-    const oracleIds = this.getOracleIds(cards);
-    const oracleHashes = await Promise.all(oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })));
-    oracleHashes.forEach((hash) => expectedHashes.add(hash));
+    // Add oracle hashes from cards only if MAINTAIN_CUBE_CARD_HASHES is enabled
+    if (process.env.MAINTAIN_CUBE_CARD_HASHES === 'true') {
+      const oracleIds = this.getOracleIds(cards);
+      const oracleHashes = await Promise.all(
+        oracleIds.map((oracleId) => this.hash({ type: 'oracle', value: oracleId })),
+      );
+      oracleHashes.forEach((hash) => expectedHashes.add(hash));
+    }
 
     // Find hashes to add and remove
     const hashesToAdd = Array.from(expectedHashes).filter((hash) => !currentHashes.has(hash));
