@@ -82,6 +82,27 @@ export class CubeCobraStack extends cdk.Stack {
     // Grant the instance role read/write access to the table
     dynamoTables.table.grantReadWriteData(role);
 
+    // Grant the instance role permissions to create and access the sessions table
+    // The sessions table is auto-created by the application with the same prefix
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:CreateTable',
+          'dynamodb:DescribeTable',
+          'dynamodb:GetItem',
+          'dynamodb:PutItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:DeleteItem',
+          'dynamodb:Query',
+          'dynamodb:Scan',
+        ],
+        resources: [
+          `arn:aws:dynamodb:${props?.env?.region}:${props?.env?.account}:table/${params.dynamoPrefix}_SESSIONS`,
+        ],
+      }),
+    );
+
     // Create everything we need related to ElasticBeanstalk, including the environment and the application
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
       certificate: cert.consoleCertificate,
