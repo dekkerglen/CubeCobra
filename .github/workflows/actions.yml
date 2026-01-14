@@ -153,12 +153,32 @@ jobs:
           EOF
           fi
 
+<<<<<<< Updated upstream
       - name: Comment Coverage on PR
         if: github.event_name == 'pull_request' && success()
         uses: marocchino/sticky-pull-request-comment@v2
+=======
+      - name: Upload coverage report for PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+>>>>>>> Stashed changes
         with:
-          header: coverage
-          path: coverage-report.md
+          name: coverage-report
+          path: |
+            coverage-report.md
+          retention-days: 1
+
+      - name: Save PR number
+        if: github.event_name == 'pull_request'
+        run: echo ${{ github.event.pull_request.number }} > pr-number.txt
+
+      - name: Upload PR number
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-number
+          path: pr-number.txt
+          retention-days: 1
 
   build:
     runs-on: ubuntu-latest
