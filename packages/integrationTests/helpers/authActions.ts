@@ -42,10 +42,7 @@ export async function fillRegistrationForm(page: Page, user: TestUser): Promise<
 export async function submitFormAndWaitForNavigation(page: Page, timeout: number = 15000): Promise<void> {
   // Click the submit button instead of calling form.submit() to ensure proper form data encoding
   const submitButton = page.locator('button[type="submit"], input[type="submit"]').first();
-  await Promise.all([
-    page.waitForNavigation({ timeout }),
-    submitButton.click(),
-  ]);
+  await Promise.all([page.waitForNavigation({ timeout }), submitButton.click()]);
 }
 
 /**
