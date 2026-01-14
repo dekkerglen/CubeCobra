@@ -17,7 +17,7 @@ export function getTestUser(): TestUser {
     // Generate a unique username with timestamp to avoid conflicts
     const timestamp = Date.now();
     const randomId = faker.string.alphanumeric(6).toLowerCase();
-    
+
     testUser = {
       username: `testuser${timestamp}${randomId}`,
       email: faker.internet.email().toLowerCase(),

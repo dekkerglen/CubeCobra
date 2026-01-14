@@ -150,9 +150,9 @@ export const routes = [
         max: 100,
       }),
       body('password', 'Password is required').notEmpty(),
-      body('password', 'Password must be between 8 and 24 characters.').isLength({
+      body('password', 'Password must be between 8 and 1024 characters.').isLength({
         min: 8,
-        max: 24,
+        max: 1024,
       }),
       body('password2', 'Confirm Password is required').notEmpty(),
       body('password2', 'Confirm Password must match password.').custom((value: string, { req }: any) => {
