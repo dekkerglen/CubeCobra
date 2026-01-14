@@ -61,26 +61,28 @@ jobs:
 
       - name: Save PR coverage
         if: github.event_name == 'pull_request'
-        run: cp packages/server/coverage/coverage-summary.json coverage-pr.json
+        run: |
+          if [ -f "packages/server/coverage/coverage-summary.json" ]; then
+            cp packages/server/coverage/coverage-summary.json coverage-pr.json
+            echo "Saved PR coverage"
+          else
+            echo "Warning: PR coverage file not found"
+          fi
 
       - name: Switch to base branch and get base coverage
         if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }}
-          git reset --hard HEAD
-          git clean -fd
           git checkout origin/${{ github.base_ref }}
           npm install
-          npm run test:ci || echo "Base branch tests failed, will skip delta"
+          npm run test:ci || echo "Base branch tests failed, will use zero baseline"
           if [ -f "packages/server/coverage/coverage-summary.json" ]; then
             cp packages/server/coverage/coverage-summary.json coverage-base.json
+            echo "Saved base coverage"
           else
             echo '{"total":{"lines":{"pct":0},"statements":{"pct":0},"functions":{"pct":0},"branches":{"pct":0}}}' > coverage-base.json
+            echo "Base coverage not found, using zero baseline"
           fi
-          git reset --hard HEAD
-          git clean -fd
-          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
-          git checkout pr-branch
 
       - name: Upload Jest Coverage Report
         if: success()
@@ -96,70 +98,75 @@ jobs:
         run: |
           echo "Checking for coverage files..."
           ls -la coverage-*.json || echo "No coverage json files found"
-          ls -la packages/server/coverage/ || echo "No server coverage directory"
 
-          if [ -f "coverage-pr.json" ]; then
-            echo "Found coverage-pr.json"
-            PR_TOTAL=$(jq '.total' coverage-pr.json)
-            PR_LINES=$(echo $PR_TOTAL | jq -r '.lines.pct')
-            PR_STATEMENTS=$(echo $PR_TOTAL | jq -r '.statements.pct')
-            PR_FUNCTIONS=$(echo $PR_TOTAL | jq -r '.functions.pct')
-            PR_BRANCHES=$(echo $PR_TOTAL | jq -r '.branches.pct')
-            
+          if [ ! -f "coverage-pr.json" ]; then
+            echo "Error: coverage-pr.json not found"
+            cat << 'EOF' > coverage-report.md
+          ## 📊 Server Code Coverage Report
+
+          ⚠️ Coverage data could not be generated for this PR. Please check the workflow logs.
+          EOF
+            exit 0
+          fi
+
+          echo "Found coverage-pr.json"
+          PR_TOTAL=$(jq '.total' coverage-pr.json)
+          PR_LINES=$(echo $PR_TOTAL | jq -r '.lines.pct')
+          PR_STATEMENTS=$(echo $PR_TOTAL | jq -r '.statements.pct')
+          PR_FUNCTIONS=$(echo $PR_TOTAL | jq -r '.functions.pct')
+          PR_BRANCHES=$(echo $PR_TOTAL | jq -r '.branches.pct')
+          
+          if [ -f "coverage-base.json" ]; then
             BASE_TOTAL=$(jq '.total' coverage-base.json)
             BASE_LINES=$(echo $BASE_TOTAL | jq -r '.lines.pct')
             BASE_STATEMENTS=$(echo $BASE_TOTAL | jq -r '.statements.pct')
             BASE_FUNCTIONS=$(echo $BASE_TOTAL | jq -r '.functions.pct')
             BASE_BRANCHES=$(echo $BASE_TOTAL | jq -r '.branches.pct')
-            
-            # Calculate deltas using awk instead of bc for better compatibility
-            LINES_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_LINES - $BASE_LINES}")
-            STATEMENTS_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_STATEMENTS - $BASE_STATEMENTS}")
-            FUNCTIONS_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_FUNCTIONS - $BASE_FUNCTIONS}")
-            BRANCHES_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_BRANCHES - $BASE_BRANCHES}")
-            
-            # Format delta with + sign for positive values
-            format_delta() {
-              if [ $(echo "$1 >= 0" | awk '{print ($1 >= 0)}') -eq 1 ]; then
-                echo "+$1"
-              else
-                echo "$1"
-              fi
-            }
-            
-            LINES_DELTA_FMT=$(format_delta "$LINES_DELTA")
-            STATEMENTS_DELTA_FMT=$(format_delta "$STATEMENTS_DELTA")
-            FUNCTIONS_DELTA_FMT=$(format_delta "$FUNCTIONS_DELTA")
-            BRANCHES_DELTA_FMT=$(format_delta "$BRANCHES_DELTA")
-            
-            cat << 'EOF' > coverage-report.md
+          else
+            BASE_LINES=0
+            BASE_STATEMENTS=0
+            BASE_FUNCTIONS=0
+            BASE_BRANCHES=0
+          fi
+          
+          # Calculate deltas using awk
+          LINES_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_LINES - $BASE_LINES}")
+          STATEMENTS_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_STATEMENTS - $BASE_STATEMENTS}")
+          FUNCTIONS_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_FUNCTIONS - $BASE_FUNCTIONS}")
+          BRANCHES_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_BRANCHES - $BASE_BRANCHES}")
+          
+          # Format delta with + sign for positive values
+          format_delta() {
+            if [ $(echo "$1 >= 0" | awk '{print ($1 >= 0)}') -eq 1 ]; then
+              echo "+$1"
+            else
+              echo "$1"
+            fi
+          }
+          
+          LINES_DELTA_FMT=$(format_delta "$LINES_DELTA")
+          STATEMENTS_DELTA_FMT=$(format_delta "$STATEMENTS_DELTA")
+          FUNCTIONS_DELTA_FMT=$(format_delta "$FUNCTIONS_DELTA")
+          BRANCHES_DELTA_FMT=$(format_delta "$BRANCHES_DELTA")
+          
+          cat << 'EOF' > coverage-report.md
           ## 📊 Server Code Coverage Report
 
           | Metric | Coverage | Delta |
           |--------|----------|-------|
           EOF
-            
-            echo "| Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |" >> coverage-report.md
-            echo "| Statements | ${PR_STATEMENTS}% | ${STATEMENTS_DELTA_FMT}% |" >> coverage-report.md
-            echo "| Functions | ${PR_FUNCTIONS}% | ${FUNCTIONS_DELTA_FMT}% |" >> coverage-report.md
-            echo "| Branches | ${PR_BRANCHES}% | ${BRANCHES_DELTA_FMT}% |" >> coverage-report.md
-            echo "" >> coverage-report.md
-            echo "### 🎯 Coverage Delta" >> coverage-report.md
-            echo "This PR changes the overall server code coverage." >> coverage-report.md
-            
-            cat coverage-report.md >> $GITHUB_STEP_SUMMARY
-          else
-            echo "coverage-pr.json not found, generating basic report"
-            cat << 'EOF' > coverage-report.md
-          ## 📊 Server Code Coverage Report
-
-          Coverage data is being generated. This report will be available on the next run.
-          EOF
-          fi
+          
+          echo "| Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |" >> coverage-report.md
+          echo "| Statements | ${PR_STATEMENTS}% | ${STATEMENTS_DELTA_FMT}% |" >> coverage-report.md
+          echo "| Functions | ${PR_FUNCTIONS}% | ${FUNCTIONS_DELTA_FMT}% |" >> coverage-report.md
+          echo "| Branches | ${PR_BRANCHES}% | ${BRANCHES_DELTA_FMT}% |" >> coverage-report.md
+          
+          cat coverage-report.md >> $GITHUB_STEP_SUMMARY
 
       - name: Comment Coverage on PR
-        if: github.event_name == 'pull_request' && success()
+        if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
+        continue-on-error: true
         with:
           header: coverage
           path: coverage-report.md
