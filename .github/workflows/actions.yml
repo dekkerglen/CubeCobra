@@ -350,6 +350,8 @@ jobs:
           CUBECOBRA_VERSION: ci-test
           DRAFTMANCER_API_KEY: test
           STRIPE_SECRET_KEY: test
+          CAPTCHA_SITE_KEY: test_captcha_key
+          CAPTCHA_SECRET_KEY: test_captcha_secret
 
       - name: Install Playwright browsers
         run: npm run playwright:install --workspace=packages/integrationTests

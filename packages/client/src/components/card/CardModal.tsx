@@ -94,26 +94,26 @@ const CardModal: React.FC<CardModalProps> = ({
 }) => {
   const [versions, setVersions] = useState<Record<string, CardDetails> | null>(null);
   const [versionsLoading, setVersionsLoading] = useState(false);
+  const fetchedCardsRef = React.useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const cardNorm = normalizeName(cardName(card));
     const cardVersions = versionDict[cardNorm];
 
-    if (!cardVersions) {
-      // Versions not loaded yet - fetch them
+    if (!cardVersions && card.cardID && !fetchedCardsRef.current.has(card.cardID)) {
+      // Versions not loaded yet and not currently fetching - fetch them
       setVersionsLoading(true);
       setVersions({});
+      fetchedCardsRef.current.add(card.cardID);
 
-      if (card.cardID) {
-        fetchVersionsForCard(card.cardID).finally(() => {
-          setVersionsLoading(false);
-        });
-      } else {
+      fetchVersionsForCard(card.cardID).finally(() => {
         setVersionsLoading(false);
-      }
-    } else {
+      });
+    } else if (cardVersions) {
       // Versions already loaded
       setVersions(Object.fromEntries(cardVersions.map((v) => [v.scryfall_id, v])));
+      setVersionsLoading(false);
+    } else if (!card.cardID) {
       setVersionsLoading(false);
     }
   }, [card, versionDict, fetchVersionsForCard]);
