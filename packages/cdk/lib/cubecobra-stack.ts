@@ -66,12 +66,18 @@ export class CubeCobraStack extends cdk.Stack {
       appBucketName: params.appBucket,
     });
 
-    // Grant the instance role read access to the data bucket
+    // Grant the instance role read/write access to the data bucket
     // Since we're importing the bucket, we need to explicitly add IAM permissions
     role.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ['s3:GetObject', 's3:GetObjectVersion', 's3:ListBucket'],
+        actions: [
+          's3:GetObject',
+          's3:GetObjectVersion',
+          's3:PutObject',
+          's3:DeleteObject',
+          's3:ListBucket',
+        ],
         resources: [`arn:aws:s3:::${params.dataBucket}`, `arn:aws:s3:::${params.dataBucket}/*`],
       }),
     );
