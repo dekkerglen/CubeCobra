@@ -357,6 +357,8 @@ jobs:
       - name: Run integration tests
         run: npx playwright test --reporter=dot --reporter=html
         working-directory: packages/integrationTests
+        env:
+          BASE_URL: http://localhost:5000
 
       - name: Stop server
         if: always()

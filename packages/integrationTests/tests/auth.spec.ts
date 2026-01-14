@@ -6,10 +6,18 @@ test.describe('Authentication', () => {
   const testUser = getTestUser();
 
   test('should register a new account', async ({ page }) => {
+    // Capture console messages for debugging
+    page.on('console', (msg) => console.log('Browser console:', msg.text()));
+    page.on('pageerror', (err) => console.error('Browser error:', err.message));
+
     await page.goto('/user/register', { waitUntil: 'networkidle' });
 
+    // Debug: Check if the page loaded
+    const bodyText = await page.locator('body').textContent();
+    console.log('Page body text:', bodyText?.substring(0, 200));
+
     // Wait for the form to be fully loaded
-    await page.waitForSelector('input[id="email"]', { state: 'visible' });
+    await page.waitForSelector('input[id="email"]', { state: 'visible', timeout: 15000 });
 
     // Fill in the registration form
     await page.fill('input[id="email"]', testUser.email);
