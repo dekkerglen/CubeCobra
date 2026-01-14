@@ -185,6 +185,7 @@ function createEnvironmentVariables(
     AWS_LOG_STREAM: params.awsLogStream,
     AWS_REGION: props?.env?.region || '',
     CACHE_ENABLED: 'false',
+    CLOUDWATCH_ENABLED: params.environmentName === 'local' ? 'false' : 'true',
     CUBECOBRA_VERSION: params.version,
     DATA_BUCKET: params.dataBucket,
     DOMAIN: params.domain,

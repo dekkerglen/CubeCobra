@@ -362,6 +362,7 @@ jobs:
           DYNAMO_TABLE: LOCAL_CUBECOBRA
           ENV: test
           NODE_ENV: production
+          CLOUDWATCH_ENABLED: false
           PORT: 5000
           SESSION_SECRET: test_session_secret
           SESSION: test_session

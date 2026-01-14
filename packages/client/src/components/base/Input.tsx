@@ -30,7 +30,6 @@ const Input: React.FC<InputProps> = ({
   link,
   valid,
   id,
-  name,
   placeholder,
   type,
   innerRef,
@@ -71,7 +70,6 @@ const Input: React.FC<InputProps> = ({
           className,
         )}
         id={id}
-        name={name}
         type={type}
         placeholder={placeholder}
         ref={innerRef}

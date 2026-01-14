@@ -27,11 +27,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }
 
   const formData = useMemo(
     () => ({
+      email: currentEmail,
+      username: currentUsername,
+      password,
+      password2,
       captcha,
       question: challenge.question,
       answer,
     }),
-    [challenge, answer, captcha],
+    [currentEmail, currentUsername, password, password2, challenge, answer, captcha],
   );
 
   return (
@@ -40,7 +44,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }
         <Input
           label="Email Address"
           maxLength={1000}
-          name="email"
           id="email"
           type="text"
           value={currentEmail}
@@ -49,7 +52,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }
         <Input
           label="Username"
           maxLength={1000}
-          name="username"
           id="username"
           type="text"
           value={currentUsername}
@@ -58,7 +60,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }
         <Input
           label="Password"
           maxLength={1000}
-          name="password"
           id="password"
           type="password"
           value={password}
@@ -67,7 +68,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }
         <Input
           label="Confirm Password"
           maxLength={1000}
-          name="password2"
           id="password2"
           type="password"
           value={password2}

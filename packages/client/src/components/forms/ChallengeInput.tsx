@@ -36,7 +36,6 @@ export const generateChallenge = () => {
 const ChallengeInput: React.FC<ChallengeInputProps> = ({ name, question, answer, setAnswer }) => {
   return (
     <Input
-      name={name}
       id={name}
       label={`Security Question: ${question}`}
       value={answer}
