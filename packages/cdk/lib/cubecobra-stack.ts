@@ -179,7 +179,7 @@ function createEnvironmentVariables(
     DOWNTIME_ACTIVE: params.downTimeActive ? 'true' : 'false',
     DYNAMO_PREFIX: params.dynamoPrefix,
     ENV: params.env,
-    NODE_ENV: params.env,
+    NODE_ENV: params.environmentName === 'local' ? 'development' : 'production',
     JOBS_TOKEN: params.jobsToken,
     NITROPAY_ENABLED: params.nitroPayEnabled ? 'true' : 'false',
     PATREON_CLIENT_ID: params.patreonClientId,
