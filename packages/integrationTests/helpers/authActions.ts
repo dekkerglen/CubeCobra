@@ -55,6 +55,7 @@ export async function submitFormAndWaitForNavigation(page: Page, timeout: number
 export async function login(page: Page, username: string, password: string): Promise<void> {
   await navigateToLogin(page);
   await fillLoginForm(page, username, password);
+  await page.waitForTimeout(1000); // Wait 1 second before submitting
   await submitFormAndWaitForNavigation(page);
 }
 

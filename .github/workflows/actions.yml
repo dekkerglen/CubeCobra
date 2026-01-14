@@ -368,6 +368,7 @@ jobs:
           DOMAIN: localhost:5000
           DOWNTIME_ACTIVE: false
           NITROPAY_ENABLED: false
+          DISABLE_NITROPAY: true
           HTTP_ONLY: true
           LOCALSTACK_SES: true
           ENABLE_BOT_SECURITY: false

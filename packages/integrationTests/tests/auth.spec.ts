@@ -13,11 +13,18 @@ import { getTestUser } from '../helpers/testUser';
 test.describe('Authentication', () => {
   const testUser = getTestUser();
 
+  console.log('Test user credentials:', {
+    username: testUser.username,
+    email: testUser.email,
+    passwordLength: testUser.password.length,
+  });
+
   test('should register a new account', async ({ page }) => {
     // Capture console messages for debugging
     page.on('console', (msg) => console.log('Browser console:', msg.text()));
     page.on('pageerror', (err) => console.error('Browser error:', err.message));
 
+    console.log('Registering with username:', testUser.username);
     // Debug: Check if the page loaded
     await navigateToRegister(page);
     const bodyText = await page.locator('body').textContent();
@@ -28,6 +35,7 @@ test.describe('Authentication', () => {
   });
 
   test('should login with the newly created account', async ({ page }) => {
+    console.log('Logging in with username:', testUser.username);
     await login(page, testUser.username, testUser.password);
     await verifyLoginSuccess(page, testUser.username);
   });
