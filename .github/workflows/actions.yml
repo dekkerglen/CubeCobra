@@ -63,8 +63,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           if [ -f "packages/server/coverage/coverage-summary.json" ]; then
-            cp packages/server/coverage/coverage-summary.json coverage-pr.json
-            echo "Saved PR coverage"
+            cp packages/server/coverage/coverage-summary.json /tmp/coverage-pr.json
+            echo "Saved PR coverage to /tmp"
           else
             echo "Warning: PR coverage file not found"
           fi
@@ -79,12 +79,19 @@ jobs:
           npm install
           npm run test:ci || echo "Base branch tests failed, will use zero baseline"
           if [ -f "packages/server/coverage/coverage-summary.json" ]; then
-            cp packages/server/coverage/coverage-summary.json coverage-base.json
-            echo "Saved base coverage"
+            cp packages/server/coverage/coverage-summary.json /tmp/coverage-base.json
+            echo "Saved base coverage to /tmp"
           else
-            echo '{"total":{"lines":{"pct":0},"statements":{"pct":0},"functions":{"pct":0},"branches":{"pct":0}}}' > coverage-base.json
+            echo '{"total":{"lines":{"pct":0},"statements":{"pct":0},"functions":{"pct":0},"branches":{"pct":0}}}' > /tmp/coverage-base.json
             echo "Base coverage not found, using zero baseline"
           fi
+
+      - name: Restore coverage files for comparison
+        if: github.event_name == 'pull_request'
+        run: |
+          cp /tmp/coverage-pr.json coverage-pr.json
+          cp /tmp/coverage-base.json coverage-base.json
+          echo "Restored coverage files from /tmp"
 
       - name: Upload Jest Coverage Report
         if: success()
