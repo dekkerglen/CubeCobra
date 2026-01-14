@@ -108,7 +108,7 @@ export function normalizeUnicode(text: string): string {
 }
 
 export function hasProfanity(text: string): boolean {
-  if (!text) return false;
+  if (!text || typeof text !== 'string') return false;
 
   const variations = [
     text,

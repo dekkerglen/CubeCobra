@@ -66,12 +66,12 @@ export class CubeCobraStack extends cdk.Stack {
       appBucketName: params.appBucket,
     });
 
-    // Grant the instance role read access to the data bucket
+    // Grant the instance role read/write access to the data bucket
     // Since we're importing the bucket, we need to explicitly add IAM permissions
     role.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ['s3:GetObject', 's3:GetObjectVersion', 's3:ListBucket'],
+        actions: ['s3:GetObject', 's3:GetObjectVersion', 's3:PutObject', 's3:DeleteObject', 's3:ListBucket'],
         resources: [`arn:aws:s3:::${params.dataBucket}`, `arn:aws:s3:::${params.dataBucket}/*`],
       }),
     );
@@ -100,6 +100,24 @@ export class CubeCobraStack extends cdk.Stack {
         resources: [
           `arn:aws:dynamodb:${props?.env?.region}:${props?.env?.account}:table/${params.dynamoPrefix}_SESSIONS`,
         ],
+      }),
+    );
+
+    // Grant the instance role permissions to send emails via SES
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+        resources: [`arn:aws:ses:${props?.env?.region}:${props?.env?.account}:identity/*`],
+      }),
+    );
+
+    // Grant the instance role permissions to write logs to CloudWatch
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams'],
+        resources: [`arn:aws:logs:${props?.env?.region}:${props?.env?.account}:log-group:*`],
       }),
     );
 
@@ -167,6 +185,7 @@ function createEnvironmentVariables(
     AWS_LOG_STREAM: params.awsLogStream,
     AWS_REGION: props?.env?.region || '',
     CACHE_ENABLED: 'false',
+    CLOUDWATCH_ENABLED: params.environmentName === 'local' ? 'false' : 'true',
     CUBECOBRA_VERSION: params.version,
     DATA_BUCKET: params.dataBucket,
     DOMAIN: params.domain,

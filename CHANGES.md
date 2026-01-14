@@ -3,6 +3,7 @@ As of 1.4.57
 # New Features
 
 - Added a mechanism to auto +1 packages when added to a cube
+- Increased password limit to 1024 (there is no technical limitation here, some folks just wanted to be able to use longer passwords than we anticipated when we set an arbritrary limit.)
 
 # Bug Fixes
 

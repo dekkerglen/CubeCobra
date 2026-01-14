@@ -9,7 +9,6 @@
   "CardPage": "/js/CardPage.1d08c28e.bundle.js",
   "CardSearchPage": "/js/CardSearchPage.9f99a214.bundle.js",
   "CommentPage": "/js/CommentPage.b21ebb25.bundle.js",
-  "commons": "/js/commons.f0bd3431.bundle.js",
   "ContactPage": "/js/ContactPage.e6567e49.bundle.js",
   "CreateNewRecordPage": "/js/CreateNewRecordPage.f67560d1.bundle.js",
   "CreateRecordFromDraftPage": "/js/CreateRecordFromDraftPage.982c73a1.bundle.js",
@@ -17,8 +16,8 @@
   "CubeAnalysisPage": "/js/CubeAnalysisPage.be853b78.bundle.js",
   "CubeBlogPage": "/js/CubeBlogPage.481a22dc.bundle.js",
   "CubeComparePage": "/js/CubeComparePage.550f2512.bundle.js",
-  "CubeDeckbuilderPage": "/js/CubeDeckbuilderPage.96ca9487.bundle.js",
   "CubeDeckPage": "/js/CubeDeckPage.612b979a.bundle.js",
+  "CubeDeckbuilderPage": "/js/CubeDeckbuilderPage.96ca9487.bundle.js",
   "CubeDraftPage": "/js/CubeDraftPage.80a0ebcb.bundle.js",
   "CubeHistoryPage": "/js/CubeHistoryPage.fd9ff8c3.bundle.js",
   "CubeListPage": "/js/CubeListPage.dae493c8.bundle.js",
@@ -60,7 +59,7 @@
   "PodcastsPage": "/js/PodcastsPage.4e353102.bundle.js",
   "RecordPage": "/js/RecordPage.71f71e7a.bundle.js",
   "RecordUploadDeckPage": "/js/RecordUploadDeckPage.64d8633b.bundle.js",
-  "RegisterPage": "/js/RegisterPage.c07f9028.bundle.js",
+  "RegisterPage": "/js/RegisterPage.74ac4f8d.bundle.js",
   "ReviewContentPage": "/js/ReviewContentPage.556afe85.bundle.js",
   "SearchPage": "/js/SearchPage.87a6f35b.bundle.js",
   "TopCardsPage": "/js/TopCardsPage.29bacd2c.bundle.js",
@@ -69,8 +68,9 @@
   "UserCubePage": "/js/UserCubePage.a14042a3.bundle.js",
   "UserDecksPage": "/js/UserDecksPage.7ad758a5.bundle.js",
   "UserSocialPage": "/js/UserSocialPage.d6b101da.bundle.js",
-  "vendors": "/js/vendors.9f7af2e6.bundle.js",
   "VersionPage": "/js/VersionPage.4a140648.bundle.js",
   "VideoPage": "/js/VideoPage.b041f1bf.bundle.js",
-  "VideosPage": "/js/VideosPage.20352d97.bundle.js"
+  "VideosPage": "/js/VideosPage.20352d97.bundle.js",
+  "commons": "/js/commons.9766dd40.bundle.js",
+  "vendors": "/js/vendors.9f7af2e6.bundle.js"
 }
