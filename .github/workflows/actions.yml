@@ -115,7 +115,7 @@ jobs:
           PR_STATEMENTS=$(echo $PR_TOTAL | jq -r '.statements.pct')
           PR_FUNCTIONS=$(echo $PR_TOTAL | jq -r '.functions.pct')
           PR_BRANCHES=$(echo $PR_TOTAL | jq -r '.branches.pct')
-          
+
           if [ -f "coverage-base.json" ]; then
             BASE_TOTAL=$(jq '.total' coverage-base.json)
             BASE_LINES=$(echo $BASE_TOTAL | jq -r '.lines.pct')
@@ -128,13 +128,13 @@ jobs:
             BASE_FUNCTIONS=0
             BASE_BRANCHES=0
           fi
-          
+
           # Calculate deltas using awk
           LINES_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_LINES - $BASE_LINES}")
           STATEMENTS_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_STATEMENTS - $BASE_STATEMENTS}")
           FUNCTIONS_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_FUNCTIONS - $BASE_FUNCTIONS}")
           BRANCHES_DELTA=$(awk "BEGIN {printf \"%.2f\", $PR_BRANCHES - $BASE_BRANCHES}")
-          
+
           # Format delta with + sign for positive values
           format_delta() {
             if [ $(echo "$1 >= 0" | awk '{print ($1 >= 0)}') -eq 1 ]; then
@@ -143,24 +143,24 @@ jobs:
               echo "$1"
             fi
           }
-          
+
           LINES_DELTA_FMT=$(format_delta "$LINES_DELTA")
           STATEMENTS_DELTA_FMT=$(format_delta "$STATEMENTS_DELTA")
           FUNCTIONS_DELTA_FMT=$(format_delta "$FUNCTIONS_DELTA")
           BRANCHES_DELTA_FMT=$(format_delta "$BRANCHES_DELTA")
-          
+
           cat << 'EOF' > coverage-report.md
           ## 📊 Server Code Coverage Report
 
           | Metric | Coverage | Delta |
           |--------|----------|-------|
           EOF
-          
+
           echo "| Lines | ${PR_LINES}% | ${LINES_DELTA_FMT}% |" >> coverage-report.md
           echo "| Statements | ${PR_STATEMENTS}% | ${STATEMENTS_DELTA_FMT}% |" >> coverage-report.md
           echo "| Functions | ${PR_FUNCTIONS}% | ${FUNCTIONS_DELTA_FMT}% |" >> coverage-report.md
           echo "| Branches | ${PR_BRANCHES}% | ${BRANCHES_DELTA_FMT}% |" >> coverage-report.md
-          
+
           cat coverage-report.md >> $GITHUB_STEP_SUMMARY
 
       - name: Comment Coverage on PR

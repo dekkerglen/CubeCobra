@@ -6,13 +6,16 @@ test.describe('Authentication', () => {
   const testUser = getTestUser();
 
   test('should register a new account', async ({ page }) => {
-    await page.goto('/user/register');
+    await page.goto('/user/register', { waitUntil: 'networkidle' });
+
+    // Wait for the form to be fully loaded
+    await page.waitForSelector('input[id="email"]', { state: 'visible' });
 
     // Fill in the registration form
-    await page.fill('input[name="email"]', testUser.email);
-    await page.fill('input[name="username"]', testUser.username);
-    await page.fill('input[name="password"]', testUser.password);
-    await page.fill('input[name="password2"]', testUser.password);
+    await page.fill('input[id="email"]', testUser.email);
+    await page.fill('input[id="username"]', testUser.username);
+    await page.fill('input[id="password"]', testUser.password);
+    await page.fill('input[id="password2"]', testUser.password);
 
     // Check if there's a challenge question (math question for bot prevention)
     const challengeInput = page.locator('input[name="answer"]');
@@ -60,11 +63,14 @@ test.describe('Authentication', () => {
   });
 
   test('should login with the newly created account', async ({ page }) => {
-    await page.goto('/user/login');
+    await page.goto('/user/login', { waitUntil: 'networkidle' });
+
+    // Wait for the form to be fully loaded
+    await page.waitForSelector('input[id="username"]', { state: 'visible' });
 
     // Fill in login form
-    await page.fill('input[name="username"]', testUser.username);
-    await page.fill('input[name="password"]', testUser.password);
+    await page.fill('input[id="username"]', testUser.username);
+    await page.fill('input[id="password"]', testUser.password);
 
     // Submit the form
     await page.click('button[type="submit"]');
@@ -79,9 +85,13 @@ test.describe('Authentication', () => {
 
   test('should maintain login session across page navigation', async ({ page }) => {
     // First login
-    await page.goto('/user/login');
-    await page.fill('input[name="username"]', testUser.username);
-    await page.fill('input[name="password"]', testUser.password);
+    await page.goto('/user/login', { waitUntil: 'networkidle' });
+
+    // Wait for the form to be fully loaded
+    await page.waitForSelector('input[id="username"]', { state: 'visible' });
+
+    await page.fill('input[id="username"]', testUser.username);
+    await page.fill('input[id="password"]', testUser.password);
     await page.click('button[type="submit"]');
     await page.waitForURL('/');
 
