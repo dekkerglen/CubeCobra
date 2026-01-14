@@ -59,6 +59,8 @@ export const postHandler = async (req: Request, res: Response) => {
       return render(req, res, 'RegisterPage', attempt);
     }
 
+    const skipVerification = process.env.ENABLE_BOT_SECURITY === 'false';
+
     const newUser = {
       email,
       username,
@@ -70,7 +72,7 @@ export const postHandler = async (req: Request, res: Response) => {
       imageName: 'Ambush Viper',
       roles: [],
       theme: 'default',
-      emailVerified: false,
+      emailVerified: skipVerification,
       token: uuid(),
       dateCreated: new Date().valueOf(),
       defaultPrinting: DefaultPrintingPreference,
@@ -82,12 +84,19 @@ export const postHandler = async (req: Request, res: Response) => {
     (newUser as any).passwordHash = await bcrypt.hash(password, salt);
     const id = await userDao.createUser(newUser as any);
 
-    await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
-      id,
-      token: newUser.token,
-    });
+    if (!skipVerification) {
+      await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
+        id,
+        token: newUser.token,
+      });
+    }
 
-    req.flash('success', 'Account successfully created. Please check your email for a verification link to login.');
+    req.flash(
+      'success',
+      skipVerification
+        ? 'Account successfully created. You can now login.'
+        : 'Account successfully created. Please check your email for a verification link to login.',
+    );
     return redirect(req, res, '/user/login');
   } catch (err) {
     handleRouteError(req, res, err as Error, '/user/register');

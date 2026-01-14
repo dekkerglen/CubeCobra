@@ -3899,7 +3899,6 @@
   version "1.0.0"
   resolved "file:packages/integrationTests"
   dependencies:
-    "@cucumber/cucumber" "^11.1.0"
     "@playwright/test" "^1.49.1"
     cross-env "^7.0.3"
     dotenv "^16.3.1"
@@ -4142,6 +4141,11 @@
   integrity sha512-vH9PiIMMwvhCx31Af3HiGzsVNULDbyVkHXwlemn/B0TFj/00ho3y55efXrUZTfQipxoHC5u4xq6zblww1zm1Ig==
   dependencies:
     levn "^0.4.1"
+
+"@faker-js/faker@^10.2.0":
+  version "10.2.0"
+  resolved "https://registry.npmjs.org/@faker-js/faker/-/faker-10.2.0.tgz"
+  integrity sha512-rTXwAsIxpCqzUnZvrxVh3L0QA0NzToqWBLAhV+zDV3MIIwiQhAZHMdPCIaj5n/yADu/tyk12wIPgL6YHGXJP+g==
 
 "@floating-ui/core@^1.7.3":
   version "1.7.3"

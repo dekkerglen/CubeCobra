@@ -29,6 +29,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.2.0",
     "@types/node": "^20.11.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
