@@ -14,14 +14,10 @@ let testUser: TestUser | null = null;
  */
 export function getTestUser(): TestUser {
   if (!testUser) {
-    // Generate a unique username with timestamp to avoid conflicts
-    const timestamp = Date.now();
-    const randomId = faker.string.alphanumeric(6).toLowerCase();
-
     testUser = {
-      username: `testuser${timestamp}${randomId}`,
-      email: faker.internet.email().toLowerCase(),
-      password: 'TestPassword123!',
+      username: faker.internet.username(),
+      email: faker.internet.email(),
+      password: faker.internet.password({ length: 12, memorable: true }),
     };
   }
   return testUser;

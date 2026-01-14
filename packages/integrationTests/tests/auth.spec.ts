@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test';
 
+import {
+  login,
+  navigateToRegister,
+  register,
+  verifyLoginSuccess,
+  verifyRegistrationSuccess,
+  verifyUserLoggedIn,
+} from '../helpers/authActions';
 import { getTestUser } from '../helpers/testUser';
 
 test.describe('Authentication', () => {
@@ -10,103 +18,28 @@ test.describe('Authentication', () => {
     page.on('console', (msg) => console.log('Browser console:', msg.text()));
     page.on('pageerror', (err) => console.error('Browser error:', err.message));
 
-    await page.goto('/user/register', { waitUntil: 'networkidle' });
-
     // Debug: Check if the page loaded
+    await navigateToRegister(page);
     const bodyText = await page.locator('body').textContent();
     console.log('Page body text:', bodyText?.substring(0, 200));
 
-    // Wait for the form to be fully loaded
-    await page.waitForSelector('input[id="email"]', { state: 'visible', timeout: 15000 });
-
-    // Fill in the registration form
-    await page.fill('input[id="email"]', testUser.email);
-    await page.fill('input[id="username"]', testUser.username);
-    await page.fill('input[id="password"]', testUser.password);
-    await page.fill('input[id="password2"]', testUser.password);
-
-    // Check if there's a challenge question (math question for bot prevention)
-    const challengeInput = page.locator('input[name="answer"]');
-    if (await challengeInput.isVisible()) {
-      // Get the challenge question text
-      const questionText = await page.locator('label[for="challenge-answer"]').textContent();
-
-      if (questionText) {
-        // Extract and solve the math equation (e.g., "What is 5 + 3?")
-        const match = questionText.match(/What is (\d+) ([+\-*]) (\d+)\?/);
-        if (match) {
-          const num1 = parseInt(match[1]);
-          const operator = match[2];
-          const num2 = parseInt(match[3]);
-
-          let answer: number;
-          switch (operator) {
-            case '+':
-              answer = num1 + num2;
-              break;
-            case '-':
-              answer = num1 - num2;
-              break;
-            case '*':
-              answer = num1 * num2;
-              break;
-            default:
-              throw new Error(`Unknown operator: ${operator}`);
-          }
-
-          await challengeInput.fill(answer.toString());
-        }
-      }
-    }
-
-    // Submit the form
-    await page.click('button[type="submit"]');
-
-    // Wait for navigation to login page
-    await page.waitForURL(/\/user\/login/);
-
-    // Verify success message (account created)
-    const successMessage = page.locator('.alert-success, .flash-success');
-    await expect(successMessage).toBeVisible();
+    await register(page, testUser);
+    await verifyRegistrationSuccess(page);
   });
 
   test('should login with the newly created account', async ({ page }) => {
-    await page.goto('/user/login', { waitUntil: 'networkidle' });
-
-    // Wait for the form to be fully loaded
-    await page.waitForSelector('input[id="username"]', { state: 'visible' });
-
-    // Fill in login form
-    await page.fill('input[id="username"]', testUser.username);
-    await page.fill('input[id="password"]', testUser.password);
-
-    // Submit the form
-    await page.click('button[type="submit"]');
-
-    // Wait for redirect to home page
-    await page.waitForURL('/');
-
-    // Verify user is logged in by checking for user menu or profile link
-    const userMenu = page.locator('text=' + testUser.username).first();
-    await expect(userMenu).toBeVisible({ timeout: 10000 });
+    await login(page, testUser.username, testUser.password);
+    await verifyLoginSuccess(page, testUser.username);
   });
 
   test('should maintain login session across page navigation', async ({ page }) => {
     // First login
-    await page.goto('/user/login', { waitUntil: 'networkidle' });
-
-    // Wait for the form to be fully loaded
-    await page.waitForSelector('input[id="username"]', { state: 'visible' });
-
-    await page.fill('input[id="username"]', testUser.username);
-    await page.fill('input[id="password"]', testUser.password);
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await login(page, testUser.username, testUser.password);
+    await verifyLoginSuccess(page, testUser.username);
 
     // Navigate to different pages and verify session is maintained
     await page.goto('/explore');
-    const userMenuOnExplore = page.locator('text=' + testUser.username).first();
-    await expect(userMenuOnExplore).toBeVisible({ timeout: 5000 });
+    await verifyUserLoggedIn(page, testUser.username, 5000);
 
     // Navigate to account page
     await page.goto('/user/account');
