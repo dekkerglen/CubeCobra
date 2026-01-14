@@ -28,6 +28,20 @@ export const getHandler = (req: Request, res: Response) => {
 
 export const postHandler = async (req: Request, res: Response) => {
   try {
+    // Validate that required fields are strings
+    if (typeof req.body.email !== 'string' || !req.body.email) {
+      req.flash('danger', 'Email must not be empty.');
+      return render(req, res, 'RegisterPage', {});
+    }
+    if (typeof req.body.username !== 'string' || !req.body.username) {
+      req.flash('danger', 'Username must not be empty.');
+      return render(req, res, 'RegisterPage', { email: req.body.email });
+    }
+    if (typeof req.body.password !== 'string' || !req.body.password) {
+      req.flash('danger', 'Password must not be empty.');
+      return render(req, res, 'RegisterPage', { email: req.body.email, username: req.body.username });
+    }
+
     const email = req.body.email.toLowerCase();
     const { username, password } = req.body;
 
