@@ -20,6 +20,9 @@ Thumbs.db
 .env
 .env.local
 
+# Test configuration (generated at runtime)
+test-config.json
+
 # Playwright
 playwright-report/
 test-results/

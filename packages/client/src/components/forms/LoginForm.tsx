@@ -18,7 +18,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ formRef }) => {
       <Input
         label="Username or Email Address"
         maxLength={1000}
-        name="username"
         id="username"
         type="text"
         value={formData.username}
@@ -27,7 +26,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ formRef }) => {
       <Input
         label="Password"
         maxLength={1000}
-        name="password"
         id="password"
         type="password"
         link={{ href: '/user/lostpassword', text: 'Forgot Password?' }}

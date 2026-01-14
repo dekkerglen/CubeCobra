@@ -23,7 +23,9 @@ let errorLogs: InputLogEvent[] = [];
 
 const id = uuidv4();
 
-const cloudwatchEnabled = process.env.NODE_ENV === 'production';
+const cloudwatchEnabled = process.env.CLOUDWATCH_ENABLED === 'true';
+
+console.log(`CloudWatch logging is ${cloudwatchEnabled ? 'enabled' : 'disabled'}.`);
 
 if (cloudwatchEnabled) {
   // create log streams

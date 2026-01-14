@@ -28,6 +28,20 @@ export const getHandler = (req: Request, res: Response) => {
 
 export const postHandler = async (req: Request, res: Response) => {
   try {
+    // Validate that required fields are strings
+    if (typeof req.body.email !== 'string' || !req.body.email) {
+      req.flash('danger', 'Email must not be empty.');
+      return render(req, res, 'RegisterPage', {});
+    }
+    if (typeof req.body.username !== 'string' || !req.body.username) {
+      req.flash('danger', 'Username must not be empty.');
+      return render(req, res, 'RegisterPage', { email: req.body.email });
+    }
+    if (typeof req.body.password !== 'string' || !req.body.password) {
+      req.flash('danger', 'Password must not be empty.');
+      return render(req, res, 'RegisterPage', { email: req.body.email, username: req.body.username });
+    }
+
     const email = req.body.email.toLowerCase();
     const { username, password } = req.body;
 
@@ -59,6 +73,8 @@ export const postHandler = async (req: Request, res: Response) => {
       return render(req, res, 'RegisterPage', attempt);
     }
 
+    const skipVerification = process.env.ENABLE_BOT_SECURITY === 'false';
+
     const newUser = {
       email,
       username,
@@ -70,7 +86,7 @@ export const postHandler = async (req: Request, res: Response) => {
       imageName: 'Ambush Viper',
       roles: [],
       theme: 'default',
-      emailVerified: false,
+      emailVerified: skipVerification,
       token: uuid(),
       dateCreated: new Date().valueOf(),
       defaultPrinting: DefaultPrintingPreference,
@@ -82,12 +98,19 @@ export const postHandler = async (req: Request, res: Response) => {
     (newUser as any).passwordHash = await bcrypt.hash(password, salt);
     const id = await userDao.createUser(newUser as any);
 
-    await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
-      id,
-      token: newUser.token,
-    });
+    if (!skipVerification) {
+      await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
+        id,
+        token: newUser.token,
+      });
+    }
 
-    req.flash('success', 'Account successfully created. Please check your email for a verification link to login.');
+    req.flash(
+      'success',
+      skipVerification
+        ? 'Account successfully created. You can now login.'
+        : 'Account successfully created. Please check your email for a verification link to login.',
+    );
     return redirect(req, res, '/user/login');
   } catch (err) {
     handleRouteError(req, res, err as Error, '/user/register');
@@ -141,9 +164,9 @@ export const routes = [
         max: 100,
       }),
       body('password', 'Password is required').notEmpty(),
-      body('password', 'Password must be between 8 and 24 characters.').isLength({
+      body('password', 'Password must be between 8 and 1024 characters.').isLength({
         min: 8,
-        max: 24,
+        max: 1024,
       }),
       body('password2', 'Confirm Password is required').notEmpty(),
       body('password2', 'Confirm Password must match password.').custom((value: string, { req }: any) => {
