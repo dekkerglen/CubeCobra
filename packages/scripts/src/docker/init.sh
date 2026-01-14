@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Address dubious ownership git error for Windows
+git config --global --add safe.directory /home/node/app
 # Install and build
 echo "Installing packages"
 npm install

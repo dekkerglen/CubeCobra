@@ -7,6 +7,7 @@ Running CubeCobra within Docker is the simplest and fastest way to get everythin
 - [Docker Desktop installed](./prerequisites.md#docker)
 - [reCAPTCHA account configured](./prerequisites.md#recaptcha-account)
 - Minimum 16GB of memory allocated to Docker
+- For Windows users, make sure that your git is set to preserve line break formatting instead of converting LF to CRLF
 
 ## Initial Setup
 
