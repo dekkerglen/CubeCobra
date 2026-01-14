@@ -73,6 +73,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }}
+          git reset --hard
+          git clean -fd
           git checkout origin/${{ github.base_ref }}
           npm install
           npm run test:ci || echo "Base branch tests failed, will use zero baseline"
