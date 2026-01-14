@@ -69,8 +69,9 @@ export async function verifyUserLoggedIn(page: Page, username: string, timeout: 
  */
 export async function verifyRegistrationSuccess(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/user\/login/);
-  const successMessage = page.locator('.alert-success, .flash-success');
-  await expect(successMessage).toBeVisible();
+  // Success alerts use bg-green-100 text-green-800 Tailwind classes
+  const successMessage = page.locator('.bg-green-100.text-green-800, div:has-text("Account successfully created")');
+  await expect(successMessage).toBeVisible({ timeout: 10000 });
 }
 
 /**
