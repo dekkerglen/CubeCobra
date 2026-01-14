@@ -2,7 +2,7 @@ name: Post Coverage Comment
 
 on:
   workflow_run:
-    workflows: ["CI Tests"]
+    workflows: ['CI Tests']
     types:
       - completed
 
@@ -17,7 +17,6 @@ jobs:
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-
     steps:
       - name: Download coverage report
         uses: actions/download-artifact@v4
