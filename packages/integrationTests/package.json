@@ -10,7 +10,7 @@
     "test:headed": "cross-env HEADED=true npx playwright test --headed",
     "test:ci": "npx playwright test --reporter=dot",
     "report": "node scripts/generate-report.js",
-    "generate-test-config": "tsx scripts/generate-test-config.ts",
+    "generate-test-config": "ts-node scripts/generate-test-config.ts",
     "playwright:install": "npx playwright install",
     "playwright:codegen": "npx playwright codegen",
     "playwright:codegen:local": "npx playwright codegen http://localhost:5000"
