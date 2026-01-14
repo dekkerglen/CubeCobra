@@ -185,8 +185,8 @@ jobs:
           cat << 'EOF' > coverage-report.md
           ## 📊 Server Code Coverage Report
 
-          | Metric | Coverage | Coverage Lines | Delta % | Delta Lines |
-          |--------|----------|----------------|---------|-------------|
+          | Metric | Coverage % | Coverage Raw | Delta % | Delta Raw |
+          |--------|------------|--------------|---------|-----------|
           EOF
 
           echo "| Lines | ${PR_LINES}% | ${PR_LINES_COVERED}/${PR_LINES_TOTAL} | ${LINES_DELTA_FMT}% | ${LINES_COUNT_DELTA_FMT} |" >> coverage-report.md
@@ -380,6 +380,9 @@ jobs:
 
       - name: Install Playwright browsers
         run: npm run playwright:install --workspace=packages/integrationTests
+
+      - name: Generate test configuration
+        run: npm run generate-test-config --workspace=packages/integrationTests
 
       - name: Run integration tests
         run: npx playwright test --reporter=dot --reporter=html

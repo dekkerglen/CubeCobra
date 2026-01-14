@@ -1,5 +1,6 @@
 import { expect, Page } from '@playwright/test';
 
+import { clickButtonWithText } from './commonActions';
 import { TestUser } from './testUser';
 
 /**
@@ -37,22 +38,13 @@ export async function fillRegistrationForm(page: Page, user: TestUser): Promise<
 }
 
 /**
- * Submit a form and wait for navigation to complete
- */
-export async function submitFormAndWaitForNavigation(page: Page, timeout: number = 15000): Promise<void> {
-  // Click the submit button instead of calling form.submit() to ensure proper form data encoding
-  const submitButton = page.locator('button[type="submit"], input[type="submit"]').first();
-  await Promise.all([page.waitForNavigation({ timeout }), submitButton.click()]);
-}
-
-/**
  * Complete login flow: navigate, fill form, and submit
  */
 export async function login(page: Page, username: string, password: string): Promise<void> {
   await navigateToLogin(page);
   await fillLoginForm(page, username, password);
   await page.waitForTimeout(1000); // Wait 1 second before submitting
-  await submitFormAndWaitForNavigation(page);
+  await clickButtonWithText(page, 'Login');
 }
 
 /**
@@ -61,7 +53,7 @@ export async function login(page: Page, username: string, password: string): Pro
 export async function register(page: Page, user: TestUser): Promise<void> {
   await navigateToRegister(page);
   await fillRegistrationForm(page, user);
-  await submitFormAndWaitForNavigation(page);
+  await clickButtonWithText(page, 'Register');
 }
 
 /**

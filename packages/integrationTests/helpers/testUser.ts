@@ -1,4 +1,5 @@
-import { faker } from '@faker-js/faker';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export interface TestUser {
   username: string;
@@ -6,24 +7,37 @@ export interface TestUser {
   password: string;
 }
 
+interface TestConfig {
+  testUser: TestUser;
+}
+
 let testUser: TestUser | null = null;
 
 /**
- * Get or create a test user with consistent credentials for the test suite.
- * This ensures the same user is used across all tests that need authentication.
+ * Load test configuration from the generated config file.
+ * This file should be created by running the generate-test-config script before tests.
+ */
+function loadTestConfig(): TestUser {
+  try {
+    const configPath = join(__dirname, '..', 'test-config.json');
+    const configData = readFileSync(configPath, 'utf-8');
+    const config: TestConfig = JSON.parse(configData);
+    return config.testUser;
+  } catch (error) {
+    throw new Error(
+      'Test configuration file not found. Please run "npm run generate-test-config" before running tests.\n' +
+        `Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+/**
+ * Get the test user credentials from the configuration file.
+ * This ensures the same user is used across all tests and retries.
  */
 export function getTestUser(): TestUser {
   if (!testUser) {
-    // Generate username with only alphanumeric characters
-    const baseUsername = faker.internet.username().replace(/[^a-zA-Z0-9]/g, '');
-    // Ensure it's at least 5 characters (minimum requirement)
-    const username = baseUsername.length >= 5 ? baseUsername : baseUsername + faker.string.alphanumeric(5);
-
-    testUser = {
-      username: username.toLowerCase(),
-      email: faker.internet.email().toLowerCase(),
-      password: faker.internet.password({ length: 12, memorable: true }),
-    };
+    testUser = loadTestConfig();
   }
   return testUser;
 }
