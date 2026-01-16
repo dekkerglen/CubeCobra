@@ -212,8 +212,9 @@ export class DeploymentPipeline extends Construct {
           },
           build: {
             commands: [
-              'echo Running integration tests against beta...',
+              'echo Running integration tests against beta environment...',
               'npm run playwright:install --workspace=packages/integrationTests',
+              'npm run generate-test-config --workspace=packages/integrationTests',
               `BASE_URL=https://${props.betaDomain} npx playwright test --reporter=dot --reporter=html --project=chromium`,
             ],
           },
