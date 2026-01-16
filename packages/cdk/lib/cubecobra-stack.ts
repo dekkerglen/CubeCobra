@@ -181,7 +181,6 @@ function createEnvironmentVariables(
     AWS_LOG_GROUP: params.awsLogGroup,
     AWS_LOG_STREAM: params.awsLogStream,
     AWS_REGION: props?.env?.region || '',
-    CACHE_ENABLED: 'false',
     CLOUDWATCH_ENABLED: params.environmentName === 'local' ? 'false' : 'true',
     CUBECOBRA_VERSION: params.version,
     DATA_BUCKET: params.dataBucket,
@@ -225,8 +224,6 @@ function createLambdaEnvironmentVariables(
   [key: string]: string;
 } {
   const envVars: { [key: string]: string } = {
-    AWS_REGION: props?.env?.region || '',
-    CACHE_ENABLED: 'false',
     CLOUDWATCH_ENABLED: 'false',
     CUBECOBRA_VERSION: params.version,
     DATA_BUCKET: params.dataBucket,
