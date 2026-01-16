@@ -2,6 +2,7 @@
   "name": "@cubecobra/integration-tests",
   "version": "1.0.0",
   "description": "Integration tests for CubeCobra using Playwright.",
+  "type": "module",
   "scripts": {
     "test": "npx playwright test",
     "test:local": "cross-env BASE_URL=http://localhost:5000 npx playwright test",

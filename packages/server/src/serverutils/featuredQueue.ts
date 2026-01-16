@@ -74,7 +74,7 @@ export async function rotateFeatured(): Promise<RotateResult> {
   // Move currently featured to back of queue with new date
   const rotateOperations = currentlyFeatured.map((item) => {
     item.date = now;
-    return featuredQueueDao.put(item);
+    return featuredQueueDao.update(item);
   });
 
   await Promise.all(rotateOperations);

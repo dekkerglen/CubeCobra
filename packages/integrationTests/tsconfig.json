@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "ESNext",
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./",
@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "types": ["node", "@types/node"],
     "baseUrl": ".",
     "paths": {
@@ -19,6 +19,10 @@
       "@support/*": ["features/support/*"],
       "@scripts/*": ["scripts/*"]
     }
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   },
   "include": ["features/**/*.ts", "scripts/**/*.ts", "cucumber.js"],
   "exclude": ["node_modules", "dist"]
