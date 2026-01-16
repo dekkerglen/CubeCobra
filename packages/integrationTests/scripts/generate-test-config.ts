@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 import { faker } from '@faker-js/faker';
 import { writeFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+// eslint-disable-next-line no-underscore-dangle
+const __filename = fileURLToPath(import.meta.url);
+// eslint-disable-next-line no-underscore-dangle
+const __dirname = dirname(__filename);
 
 interface TestConfig {
   testUser: {
