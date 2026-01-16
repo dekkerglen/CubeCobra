@@ -67,7 +67,7 @@ if (bootstrap && bootstrap === 'true') {
       draftmancerApiKey: process.env.DRAFTMANCER_API_KEY || '',
       stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
       stripePublicKey: process.env.STRIPE_PUBLIC_KEY || '',
-      enableBotSecurity: process.env.ENABLE_BOT_SECURITY !== 'false',
+      enableBotSecurity: environment === 'production',
       maintainCubeCardHashes: config.maintainCubeCardHashes,
     },
     {

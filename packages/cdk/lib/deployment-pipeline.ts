@@ -189,26 +189,7 @@ export class DeploymentPipeline extends Construct {
         version: '0.2',
         phases: {
           install: {
-            commands: [
-              'echo Installing Python and AWS CLI...',
-              'pip install awscli awscli-local',
-              'echo Installing Node.js dependencies...',
-              'npm install',
-            ],
-          },
-          pre_build: {
-            commands: [
-              'echo Starting LocalStack...',
-              'docker run -d -p 4566:4566 -e DYNAMODB_HEAP_SIZE=2G -e PROVIDER_OVERRIDE_CLOUDFORMATION=engine-legacy gresau/localstack-persist:4.12',
-              'sleep 10',
-              'echo Initializing LocalStack...',
-              'awslocal s3 mb s3://local || true',
-              'awslocal ses verify-email-identity --email support@cubecobra.com || true',
-              'echo Building client and server...',
-              'npm run build --workspace=packages/client',
-              'npm run build --workspace=packages/server',
-              'npm run create-mock-files --workspace=packages/scripts',
-            ],
+            commands: ['echo Installing Node.js dependencies...', 'npm install'],
           },
           build: {
             commands: [
@@ -231,6 +212,9 @@ export class DeploymentPipeline extends Construct {
         },
       }),
       environmentVariables: {
+        CI: {
+          value: 'true',
+        },
         AWS_ENDPOINT: {
           value: 'http://localhost:4566',
         },
