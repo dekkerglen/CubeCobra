@@ -154,12 +154,9 @@ export class CubeCobraStack extends cdk.Stack {
       new ScheduledJob(this, jobName, fargateCluster, ecr.repository, jobProps);
     });
 
-    // Create the daily jobs lambda
-    const lambdaEnvVars = createEnvironmentVariables(params, props, dynamoTables.table.tableName);
-    // Remove Lambda reserved environment variables
-    delete lambdaEnvVars.AWS_ACCESS_KEY_ID;
-    delete lambdaEnvVars.AWS_SECRET_ACCESS_KEY;
-    delete lambdaEnvVars.AWS_REGION;
+    // Create the daily jobs lambda with environment variables
+    // Lambda uses execution role for AWS credentials, not access keys
+    const lambdaEnvVars = createLambdaEnvironmentVariables(params, props, dynamoTables.table.tableName);
 
     new DailyJobsLambdaConstruct(this, 'DailyJobsLambda', {
       codeArtifactsBucket: params.appBucket,
@@ -208,6 +205,37 @@ function createEnvironmentVariables(
     DRAFTMANCER_API_KEY: params.draftmancerApiKey,
     STRIPE_SECRET_KEY: params.stripeSecretKey,
     STRIPE_PUBLIC_KEY: params.stripePublicKey,
+    ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',
+    MAINTAIN_CUBE_CARD_HASHES: params.maintainCubeCardHashes ? 'true' : 'false',
+  };
+
+  // Add DYNAMO_TABLE if it's provided
+  if (dynamoTableName) {
+    envVars.DYNAMO_TABLE = dynamoTableName;
+  }
+
+  return envVars;
+}
+
+function createLambdaEnvironmentVariables(
+  params: CubeCobraStackParams,
+  props: StackProps | undefined,
+  dynamoTableName?: string,
+): {
+  [key: string]: string;
+} {
+  const envVars: { [key: string]: string } = {
+    AWS_REGION: props?.env?.region || '',
+    CACHE_ENABLED: 'false',
+    CLOUDWATCH_ENABLED: 'false',
+    CUBECOBRA_VERSION: params.version,
+    DATA_BUCKET: params.dataBucket,
+    DOMAIN: params.domain,
+    DYNAMO_PREFIX: params.dynamoPrefix,
+    ENV: params.env,
+    NODE_ENV: params.environmentName === 'local' ? 'development' : 'production',
+    USE_S3: 'true',
+    DRAFTMANCER_API_KEY: params.draftmancerApiKey,
     ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',
     MAINTAIN_CUBE_CARD_HASHES: params.maintainCubeCardHashes ? 'true' : 'false',
   };
