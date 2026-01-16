@@ -11,7 +11,7 @@
     "test:headed": "cross-env HEADED=true npx playwright test --headed",
     "test:ci": "npx playwright test --reporter=dot",
     "report": "node scripts/generate-report.js",
-    "generate-test-config": "ts-node scripts/generate-test-config.ts",
+    "generate-test-config": "tsx scripts/generate-test-config.ts",
     "playwright:install": "npx playwright install",
     "playwright:codegen": "npx playwright codegen",
     "playwright:codegen:local": "npx playwright codegen http://localhost:5000"
@@ -34,6 +34,7 @@
     "@faker-js/faker": "^10.2.0",
     "@types/node": "^20.11.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }
 }
