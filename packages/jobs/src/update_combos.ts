@@ -8,6 +8,7 @@ import 'module-alias/register';
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
+
 import { downloadJson, uploadJson } from './utils/s3';
 
 const loadMetadata = async () => {
@@ -88,7 +89,7 @@ const fetchAllPages = async (
         console.log(`Reading combos from S3 cache: ${cacheKey}`);
         return cachedData;
       }
-    } catch (error) {
+    } catch {
       // Cache miss, continue to download
     }
   }
@@ -134,9 +135,6 @@ const useS3Cache = !!process.env.JOBS_BUCKET;
 
   console.log('Downloading all combos data');
   const initialUrl = 'https://backend.commanderspellbook.com/variants?format=json';
-  const privateDir = path.resolve(__dirname, '..', '..', 'server', 'private');
-  const dataByIdPath = path.join(privateDir, 'comboDict.json');
-  const comboTreePath = path.join(privateDir, 'comboTree.json');
 
   try {
     // Fetch all paginated data

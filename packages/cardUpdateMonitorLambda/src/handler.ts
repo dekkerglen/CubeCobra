@@ -1,4 +1,4 @@
-import { ECSClient, RunTaskCommand, DescribeTasksCommand, DescribeTasksCommandOutput } from '@aws-sdk/client-ecs';
+import { DescribeTasksCommand, DescribeTasksCommandOutput, ECSClient, RunTaskCommand } from '@aws-sdk/client-ecs';
 import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { CardUpdateTaskStatus } from '@utils/datatypes/CardUpdateTask';
 
@@ -101,19 +101,12 @@ async function startCardUpdateTask(taskId: string): Promise<{ taskArn: string; s
 }
 
 /**
- * Check the health of an ECS task
+ * Check the health status of an ECS task
  */
-async function checkEcsTaskHealth(taskArn: string): Promise<{
-  isRunning: boolean;
-  hasExited: boolean;
-  exitCode?: number;
-}> {
-  const clusterName = process.env.ECS_CLUSTER_NAME;
-
-  if (!clusterName) {
-    throw new Error('ECS_CLUSTER_NAME not configured');
-  }
-
+async function checkEcsTaskHealth(
+  taskArn: string,
+  clusterName: string,
+): Promise<{ isRunning: boolean; hasExited: boolean; exitCode?: number }> {
   try {
     const command = new DescribeTasksCommand({
       cluster: clusterName,
@@ -130,7 +123,7 @@ async function checkEcsTaskHealth(taskArn: string): Promise<{
     const task = response.tasks[0];
     const lastStatus = task.lastStatus || '';
 
-    const isRunning = lastStatus === 'RUNNING';
+    const isRunning = lastStatus === 'RUNNING' || lastStatus === 'PENDING' || lastStatus === 'PROVISIONING';
     const hasExited = lastStatus === 'STOPPED' || lastStatus === 'DEACTIVATING' || lastStatus === 'STOPPING';
 
     // Check container exit code
@@ -160,15 +153,45 @@ export async function monitorCardUpdates(): Promise<void> {
     console.log(`Active task found: ${mostRecentTask.id}, step: ${mostRecentTask.step}`);
 
     // Check ECS task health if we have a task ARN stored
-    // For now, we'll implement a simple timeout check
-    const taskAge = Date.now() - (mostRecentTask.startedAt || mostRecentTask.timestamp);
-    const maxTaskDuration = 60 * 60 * 1000; // 1 hour
+    if (mostRecentTask.taskArn) {
+      const clusterName = process.env.ECS_CLUSTER_NAME;
+      if (!clusterName) {
+        console.error('ECS_CLUSTER_NAME not configured, cannot check task health');
+        return;
+      }
 
-    if (taskAge > maxTaskDuration) {
-      console.log(`Task ${mostRecentTask.id} has been running for too long, marking as failed`);
-      await cardUpdateTaskDao.markAsFailed(mostRecentTask.id, 'Task timed out - exceeded maximum duration of 1 hour');
+      const health = await checkEcsTaskHealth(mostRecentTask.taskArn, clusterName);
+      console.log(`Task health: running=${health.isRunning}, exited=${health.hasExited}, exitCode=${health.exitCode}`);
+
+      if (health.hasExited) {
+        if (health.exitCode === 0) {
+          console.log(`Task ${mostRecentTask.id} completed successfully`);
+          // Note: The actual completion should be handled by the job itself
+          // This is just for monitoring
+        } else {
+          console.log(`Task ${mostRecentTask.id} failed with exit code ${health.exitCode}`);
+          await cardUpdateTaskDao.markAsFailed(
+            mostRecentTask.id,
+            `ECS task failed with exit code ${health.exitCode}`,
+          );
+        }
+      } else if (health.isRunning) {
+        console.log(`Task ${mostRecentTask.id} is still running`);
+      }
     } else {
-      console.log(`Task ${mostRecentTask.id} is still in progress, continuing to monitor`);
+      // Fallback to timeout check if no task ARN
+      const taskAge = Date.now() - (mostRecentTask.startedAt || mostRecentTask.timestamp);
+      const maxTaskDuration = 60 * 60 * 1000; // 1 hour
+
+      if (taskAge > maxTaskDuration) {
+        console.log(`Task ${mostRecentTask.id} has been running for too long, marking as failed`);
+        await cardUpdateTaskDao.markAsFailed(
+          mostRecentTask.id,
+          'Task timed out - exceeded maximum duration of 1 hour',
+        );
+      } else {
+        console.log(`Task ${mostRecentTask.id} is still in progress, continuing to monitor`);
+      }
     }
 
     return;
@@ -220,7 +243,12 @@ export async function monitorCardUpdates(): Promise<void> {
   }
 
   console.log(`Card update task started successfully: ${taskArn}`);
-  await cardUpdateTaskDao.updateStep(newTask.id, 'Running ECS task');
+  
+  // Store the task ARN for health monitoring
+  newTask.taskArn = taskArn;
+  newTask.step = 'Running ECS task';
+  newTask.dateLastUpdated = Date.now();
+  await cardUpdateTaskDao.update(newTask);
 }
 
 export const handler = async (event: any) => {

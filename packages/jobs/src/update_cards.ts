@@ -1,13 +1,13 @@
-import dotenv from 'dotenv';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
 
 import 'module-alias/register';
 dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
-import { Upload } from '@aws-sdk/lib-storage';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { s3 } from '@server/dynamo/s3client';
+import { Upload } from '@aws-sdk/lib-storage';
 import { cardUpdateTaskDao } from '@server/dynamo/daos';
+import { s3 } from '@server/dynamo/s3client';
 import { fileToAttribute } from '@server/serverutils/cardCatalog';
 import { binaryInsert, turnToTree } from '@server/serverutils/util';
 import * as cardutil from '@utils/cardutil';
@@ -21,8 +21,8 @@ import JSONStream from 'JSONStream';
 import fetch from 'node-fetch';
 import path from 'path';
 import stream, { pipeline } from 'stream';
-import { downloadJson, getJobsBucket, uploadJson } from './utils/s3';
 
+import { downloadJson, uploadJson } from './utils/s3';
 import {
   convertName,
   ScryfallCard,
@@ -111,7 +111,7 @@ async function getFileWithCache(url: string, filePath: string, useS3Cache?: bool
         fs.writeFileSync(filePath, JSON.stringify(cachedData));
         return fs.createReadStream(filePath);
       }
-    } catch (error) {
+    } catch {
       // Cache miss, continue to download
     }
   }
@@ -941,7 +941,7 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
         previousCardCount = oldManifest.totalCards;
       }
     }
-  } catch (error) {
+  } catch {
     console.log('No previous manifest found, assuming first update');
   }
 
@@ -959,7 +959,7 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
         const previousDict = JSON.parse(allCardsContent);
         previousCardCount = Object.keys(previousDict).length;
       }
-    } catch (error) {
+    } catch {
       console.log('Could not fetch previous all_cards.json');
     }
   }

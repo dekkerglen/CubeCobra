@@ -62,6 +62,7 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
       cardsRemoved: item.cardsRemoved,
       totalCards: item.totalCards,
       step: item.step,
+      taskArn: item.taskArn,
       errorMessage: item.errorMessage,
       startedAt: item.startedAt,
       completedAt: item.completedAt,

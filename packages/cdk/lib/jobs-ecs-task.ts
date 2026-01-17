@@ -129,7 +129,7 @@ export class JobsEcsTask extends Construct {
     });
 
     // Add container
-    const container = this.taskDefinition.addContainer('JobsContainer', {
+    this.taskDefinition.addContainer('JobsContainer', {
       image: ecs.ContainerImage.fromEcrRepository(props.repository, 'latest'),
       logging: ecs.LogDriver.awsLogs({
         streamPrefix: 'jobs',

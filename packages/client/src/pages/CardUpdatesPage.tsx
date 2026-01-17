@@ -3,8 +3,8 @@ import React from 'react';
 import { CardUpdateTask } from '@utils/datatypes/CardUpdateTask';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Text from 'components/base/Text';
 import { Flexbox } from 'components/base/Layout';
+import Text from 'components/base/Text';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 

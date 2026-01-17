@@ -1,5 +1,4 @@
 import { s3 } from 'dynamo/s3client';
-import crypto from 'crypto';
 import fs from 'fs';
 
 import 'dotenv/config';

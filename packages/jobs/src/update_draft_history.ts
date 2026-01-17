@@ -13,6 +13,7 @@ import type DraftType from '@utils/datatypes/Draft';
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 import EloRating from 'elo-rating';
+
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 
 // global listeners for promise rejections
