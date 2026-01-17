@@ -116,6 +116,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
       token: item?.token,
+      emailVerified: item?.emailVerified,
     };
 
     // Preserve sensitive data if it exists
