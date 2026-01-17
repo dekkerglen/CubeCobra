@@ -64,7 +64,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     nitroPayEnabled: false,
     patreonRedirectUri: 'https://cubecobradev.com/patreon/redirect',
     fleetSize: 1,
-    maintainCubeCardHashes: false,
+    maintainCubeCardHashes: true,
   },
 
   production: {
@@ -81,6 +81,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     nitroPayEnabled: true,
     patreonRedirectUri: 'https://cubecobra.com/patreon/redirect',
     fleetSize: 6,
-    maintainCubeCardHashes: false,
+    maintainCubeCardHashes: true,
   },
 };
