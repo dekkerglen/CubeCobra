@@ -30,17 +30,20 @@ const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts }) => 
   const [items, setItems] = useState(posts);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const user = useContext(UserContext);
+  const isCubeOwner = !!user && cube.owner.id === user.id;
 
   return (
     <MainLayout>
-      <CubeLayout cube={cube} activeLink="blog" hasControls={!!user && cube.owner.id === user.id}>
-        <Controls>
-          <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
-            <CreateBlogModalLink color="primary" modalprops={{ cubeID: cube.id, post: null }}>
-              Create new blog post
-            </CreateBlogModalLink>
-          </Flexbox>
-        </Controls>
+      <CubeLayout cube={cube} activeLink="blog" hasControls={isCubeOwner}>
+        {isCubeOwner ? (
+          <Controls>
+            <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
+              <CreateBlogModalLink color="primary" modalprops={{ cubeID: cube.id, post: null }}>
+                Create new blog post
+              </CreateBlogModalLink>
+            </Flexbox>
+          </Controls>
+        ) : null}
         <Flexbox direction="col" gap="2" className="my-2">
           <DynamicFlash />
           <IndefinitePaginatedList
