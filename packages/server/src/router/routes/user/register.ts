@@ -96,7 +96,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
     const salt = await bcrypt.genSalt(10);
     (newUser as any).passwordHash = await bcrypt.hash(password, salt);
-    const id = await userDao.createUser(newUser as any);
+    const id = await userDao.createUser(newUser);
 
     if (!skipVerification) {
       await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
@@ -124,7 +124,7 @@ export const confirmHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/user/login');
     }
 
-    const user = (await userDao.getByIdWithSensitiveData(req.params.id)) as any;
+    const user = await userDao.getByIdWithSensitiveData(req.params.id);
 
     if (!user) {
       req.flash('danger', 'User not found');

@@ -38,6 +38,8 @@ export interface UnhydratedUser {
    */
   autoBlog?: boolean;
   consentToHashedEmail?: boolean;
+  token?: string;
+  emailVerified?: boolean;
 }
 
 export interface UserWithSensitiveInformation extends UnhydratedUser {
