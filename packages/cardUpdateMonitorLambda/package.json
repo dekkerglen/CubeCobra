@@ -1,0 +1,26 @@
+{
+  "name": "@cube-cobra/card-update-monitor-lambda",
+  "version": "5.0.0",
+  "private": true,
+  "description": "Lambda function to monitor and trigger card updates",
+  "main": "dist/handler.js",
+  "scripts": {
+    "build": "node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch",
+    "publish": "npm run build && node publish.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ecs": "^3.525.0",
+    "@aws-sdk/client-s3": "^3.525.0",
+    "@aws-sdk/lib-dynamodb": "^3.525.0",
+    "@cube-cobra/server": "workspace:*,
+    "archiver": "^6.0.1"",
+    "@cube-cobra/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.131",
+    "@types/node": "^20.11.16",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -13,7 +13,7 @@ import type DraftType from '@utils/datatypes/Draft';
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 import EloRating from 'elo-rating';
-import fs from 'fs';
+import { downloadJson, listFiles, uploadJson } from './utils/s3';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {
@@ -41,14 +41,18 @@ const incrementDict = (dict: { [x: string]: number }, key: string) => {
   dict[key] += 1;
 };
 
-const loadAndProcessCubeDraftAnalytics = (cube: string) => {
-  const source = JSON.parse(fs.readFileSync(`./temp/cube_draft_history/${cube}`, 'utf-8')) as {
+const loadAndProcessCubeDraftAnalytics = async (cube: string) => {
+  const source = (await downloadJson(`cube_draft_history/${cube}`)) as {
     eloByCubeAndOracleId: Record<string, number>;
     picksByCubeAndOracleId: Record<string, number>;
     passesByCubeAndOracleId: Record<string, number>;
     mainboardsByCubeAndOracleId: Record<string, number>;
     sideboardsByCubeAndOracleId: Record<string, number>;
-  };
+  } | null;
+
+  if (!source) {
+    return {};
+  }
 
   const cubeAnalytics: Record<string, Partial<CardAnalytic>> = {};
 
@@ -94,32 +98,16 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
 };
 
 (async () => {
-  // create temp folder
-  if (!fs.existsSync('./temp')) {
-    fs.mkdirSync('./temp');
-  }
-  // create global_draft_history and cube_draft_history folders
-  if (!fs.existsSync('./temp/global_draft_history')) {
-    fs.mkdirSync('./temp/global_draft_history');
-  }
-  if (!fs.existsSync('./temp/cube_draft_history')) {
-    fs.mkdirSync('./temp/cube_draft_history');
-  }
-  if (!fs.existsSync('./temp/all_drafts')) {
-    fs.mkdirSync('./temp/all_drafts');
-  }
-  if (!fs.existsSync('./temp/drafts_by_day')) {
-    fs.mkdirSync('./temp/drafts_by_day');
-  }
-
   await initializeCardDb(privateDir);
 
-  // List existing files in drafts_by_day to determine which days are already processed
-  const existingFiles = fs.existsSync('./temp/drafts_by_day')
-    ? fs.readdirSync('./temp/drafts_by_day').filter((f) => f.endsWith('.json'))
-    : [];
-
-  const processedDays = new Set(existingFiles.map((f) => f.replace('.json', '')));
+  // List existing files in S3 drafts_by_day to determine which days are already processed
+  const existingFiles = await listFiles('drafts_by_day/');
+  const processedDays = new Set(
+    existingFiles
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => f.split('/').pop()?.replace('.json', ''))
+      .filter((f): f is string => f !== undefined),
+  );
 
   console.log(`Found ${processedDays.size} already processed days`);
 
@@ -211,13 +199,13 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
 
     if (previousProcessedKeys.length > 0) {
       const mostRecentKey = previousProcessedKeys[0]?.key;
-      if (mostRecentKey && fs.existsSync(`./temp/global_draft_history/${mostRecentKey}.json`)) {
+      if (mostRecentKey) {
         console.log(`Loading draft state from most recent processed day: ${mostRecentKey}`);
-        const loaded = JSON.parse(
-          await fs.promises.readFile(`./temp/global_draft_history/${mostRecentKey}.json`, 'utf-8'),
-        );
-        eloByOracleId = loaded.eloByOracleId;
-        picksByOracleId = loaded.picksByOracleId;
+        const loaded = await downloadJson(`global_draft_history/${mostRecentKey}.json`);
+        if (loaded) {
+          eloByOracleId = loaded.eloByOracleId;
+          picksByOracleId = loaded.picksByOracleId;
+        }
       }
     }
   }
@@ -227,15 +215,17 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
 
     if (!key) continue; // Skip undefined keys
 
-    if (fs.existsSync(`./temp/global_draft_history/${key}.json`)) {
+    const exists = await downloadJson(`global_draft_history/${key}.json`);
+    if (exists) {
       console.log(`Already finished ${i + 1} / ${keys.length}: for ${key}`);
 
       // only do this if the next day is not loaded
-      if (i + 1 < keys.length && !fs.existsSync(`./temp/global_draft_history/${keys[i + 1]}.json`)) {
-        const loaded = JSON.parse(await fs.promises.readFile(`./temp/global_draft_history/${key}.json`, 'utf-8'));
-
-        eloByOracleId = loaded.eloByOracleId;
-        picksByOracleId = loaded.picksByOracleId;
+      if (i + 1 < keys.length) {
+        const nextExists = await downloadJson(`global_draft_history/${keys[i + 1]}.json`);
+        if (!nextExists) {
+          eloByOracleId = exists.eloByOracleId;
+          picksByOracleId = exists.picksByOracleId;
+        }
       }
     } else {
       console.log(`Starting ${i + 1} / ${keys.length}: for ${key}`);
@@ -285,7 +275,7 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
         cube: draft.cube,
         name: draft.name,
       }));
-      fs.writeFileSync(`./temp/drafts_by_day/${key}.json`, JSON.stringify(minimalDrafts));
+      await uploadJson(`drafts_by_day/${key}.json`, minimalDrafts);
 
       const logRowBatches: any[][] = [];
       const batchSize = 100;
@@ -298,23 +288,21 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
         const drafts: DraftType[] = await draftDao.batchGet(batch.filter((item) => item.complete).map((row) => row.id));
 
         // save these drafts to avoid having to load them again, used in update_metadata_dict
-        fs.writeFileSync(
-          `./temp/all_drafts/${key}_${index}.json`,
-          JSON.stringify(
-            drafts
-              .filter((draft) => draft.seats && draft.seats[0])
-              .map((draft) =>
-                draft.seats[0]?.mainboard
-                  ?.flat(3)
-                  .map((cardIndex) => {
-                    if (typeof cardIndex === 'number' && cardIndex < draft.cards.length && cardIndex >= 0) {
-                      return draft.cards[cardIndex]?.details?.oracle_id ?? null;
-                    }
-                    return null;
-                  })
-                  .filter((oracleId) => oracleId),
-              ),
-          ),
+        await uploadJson(
+          `all_drafts/${key}_${index}.json`,
+          drafts
+            .filter((draft) => draft.seats && draft.seats[0])
+            .map((draft) =>
+              draft.seats[0]?.mainboard
+                ?.flat(3)
+                .map((cardIndex) => {
+                  if (typeof cardIndex === 'number' && cardIndex < draft.cards.length && cardIndex >= 0) {
+                    return draft.cards[cardIndex]?.details?.oracle_id ?? null;
+                  }
+                  return null;
+                })
+                .filter((oracleId) => oracleId),
+            ),
         );
         index += 1;
 
@@ -325,11 +313,8 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
           let sideboardsByCubeAndOracleId = {};
           let eloByCubeAndOracleId = {};
           try {
-            if (fs.existsSync(`./temp/cube_draft_history/${draft.cube}.json`)) {
-              const loaded = JSON.parse(
-                await fs.promises.readFile(`./temp/cube_draft_history/${draft.cube}.json`, 'utf-8'),
-              );
-
+            const loaded = await downloadJson(`cube_draft_history/${draft.cube}.json`);
+            if (loaded) {
               eloByCubeAndOracleId = loaded.eloByCubeAndOracleId;
               picksByCubeAndOracleId = loaded.picksByCubeAndOracleId;
               passesByCubeAndOracleId = loaded.passesByCubeAndOracleId;
@@ -424,36 +409,30 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
             console.log(err);
           }
 
-          await fs.promises.writeFile(
-            `./temp/cube_draft_history/${draft.cube}.json`,
-            JSON.stringify({
-              eloByCubeAndOracleId,
-              picksByCubeAndOracleId,
-              passesByCubeAndOracleId,
-              mainboardsByCubeAndOracleId,
-              sideboardsByCubeAndOracleId,
-            }),
-          );
+          await uploadJson(`cube_draft_history/${draft.cube}.json`, {
+            eloByCubeAndOracleId,
+            picksByCubeAndOracleId,
+            passesByCubeAndOracleId,
+            mainboardsByCubeAndOracleId,
+            sideboardsByCubeAndOracleId,
+          });
         }
       }
 
       console.log(`Finished writing ${i + 1} / ${keys.length + 1}: Processed ${logRows.length} logs for ${key}`);
 
-      // and save the file locally
-      await fs.promises.writeFile(
-        `./temp/global_draft_history/${key}.json`,
-        JSON.stringify({
-          eloByOracleId,
-          picksByOracleId,
-        }),
-      );
+      // and save the file to S3
+      await uploadJson(`global_draft_history/${key}.json`, {
+        eloByOracleId,
+        picksByOracleId,
+      });
     }
   }
 
   console.log('Finished writing global draft history');
 
-  // upload the files to S3
-  const allCubes = fs.readdirSync('./temp/cube_draft_history');
+  // upload the files to database
+  const allCubes = await listFiles('cube_draft_history/');
   const batches: any[] = [];
   const batchSize = 100;
   for (let j = 0; j < allCubes.length; j += batchSize) {
@@ -464,9 +443,16 @@ const loadAndProcessCubeDraftAnalytics = (cube: string) => {
 
   for (const batch of batches) {
     console.log(`Uploading ${batch.length} / ${allCubes.length} cube draft histories`);
-    await cubeDao.batchPutAnalytics(
-      Object.fromEntries(batch.map((cube: string) => [cube.split('.')[0], loadAndProcessCubeDraftAnalytics(cube)])),
-    );
+    const cubeData: Record<string, Record<string, Partial<CardAnalytic>>> = {};
+
+    for (const cubeFile of batch) {
+      const cubeName = cubeFile.split('/').pop()?.replace('.json', '');
+      if (cubeName) {
+        cubeData[cubeName] = await loadAndProcessCubeDraftAnalytics(cubeFile.split('/').pop()!);
+      }
+    }
+
+    await cubeDao.batchPutAnalytics(cubeData);
 
     processed += batch.length;
     console.log(`Uploaded ${processed} / ${allCubes.length} cube draft histories`);

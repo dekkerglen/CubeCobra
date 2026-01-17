@@ -13,7 +13,7 @@ import { getCubeTypes } from '@server/serverutils/cubefn';
 import { DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
-import fs from 'fs';
+import { downloadJson, listFiles, uploadJson } from './utils/s3';
 type CubeDict = Record<string, string[]>;
 
 const privateDir = '../server/private/';
@@ -55,11 +55,15 @@ const saveCubesHistory = async (cubes: CubeDict, key: string) => {
       .filter((index): index is number => index !== undefined);
   }
 
-  fs.writeFileSync(`temp/cubes_history/${key}.json`, JSON.stringify(cubeHistory));
+  await uploadJson(`cubes_history/${key}.json`, cubeHistory);
 };
 
 const loadCubesHistory = async (key: string): Promise<CubeDict> => {
-  const data: CubeHistory = JSON.parse(fs.readFileSync(`temp/cubes_history/${key}.json`, 'utf-8'));
+  const data: CubeHistory | null = await downloadJson(`cubes_history/${key}.json`);
+
+  if (!data) {
+    return {};
+  }
 
   const cubes: CubeDict = {};
   for (const [cubeId, cube] of Object.entries(data.cubes)) {
@@ -106,21 +110,15 @@ const mapTotalsToCardHistory = (
 (async () => {
   await initializeCardDb(privateDir);
 
-  if (!fs.existsSync('./temp')) {
-    fs.mkdirSync('./temp');
-  }
-  // create global_draft_history and cube_draft_history folders
-  if (!fs.existsSync('./temp/cubes_history')) {
-    fs.mkdirSync('./temp/cubes_history');
-  }
-
-  // List existing files in cubes_history to determine which days are already processed
+  // List existing files in S3 cubes_history to determine which days are already processed
   // We only check filenames, not file contents, since files are large
-  const existingFiles = fs.existsSync('./temp/cubes_history')
-    ? fs.readdirSync('./temp/cubes_history').filter((f) => f.endsWith('.json'))
-    : [];
-
-  const processedDays = new Set(existingFiles.map((f) => f.replace('.json', '')));
+  const existingFiles = await listFiles('cubes_history/');
+  const processedDays = new Set(
+    existingFiles
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => f.split('/').pop()?.replace('.json', ''))
+      .filter((f): f is string => f !== undefined),
+  );
 
   console.log(`Found ${processedDays.size} already processed days`);
 
@@ -405,10 +403,10 @@ const mapTotalsToCardHistory = (
     }
     console.log(`  Completed analysis: found ${Object.keys(data).length} unique cards across all cubes`);
 
-    if (fs.existsSync(`temp/global_draft_history/${key}.json`)) {
-      console.log(`  Loading ELO data from temp/global_draft_history/${key}.json...`);
-      const eloFile = fs.readFileSync(`temp/global_draft_history/${key}.json`, 'utf-8');
-      oracleToElo = JSON.parse(eloFile).eloByOracleId;
+    const eloFile = await downloadJson(`global_draft_history/${key}.json`);
+    if (eloFile) {
+      console.log(`  Loading ELO data from S3 global_draft_history/${key}.json...`);
+      oracleToElo = eloFile.eloByOracleId;
       console.log(`  Loaded ELO data for ${Object.keys(oracleToElo).length} cards`);
     }
 

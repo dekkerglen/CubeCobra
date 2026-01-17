@@ -12,6 +12,8 @@
     "build": "npx tsc"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.927.0",
+    "@aws-sdk/credential-providers": "^3.926.0",
     "elo-rating": "^1.0.1"
   },
   "devDependencies": {

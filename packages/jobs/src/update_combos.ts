@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-import fs from 'fs';
 import https from 'https';
 import path from 'path';
 
@@ -9,19 +8,18 @@ import 'module-alias/register';
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
-
-const cacheDir = process.env?.CACHE_DIR ?? '';
+import { downloadJson, uploadJson } from './utils/s3';
 
 const loadMetadata = async () => {
-  if (fs.existsSync('./temp') && fs.existsSync('./temp/metadatadict.json')) {
-    const indexToOracle = JSON.parse(fs.readFileSync('./temp/indexToOracle.json', 'utf8'));
+  const indexToOracle = await downloadJson('indexToOracle.json');
 
+  if (indexToOracle) {
     return {
       indexToOracle,
     };
   }
 
-  console.log("Couldn't find metadatadict.json (that is OK)");
+  console.log("Couldn't find indexToOracle.json in S3 (that is OK)");
   return {
     indexToOracle: [],
   };
@@ -79,16 +77,19 @@ const fetchWithRetries = async (url: string, retries = 3, delay = 1000): Promise
 
 const fetchAllPages = async (
   initialUrl: string,
-  filePath: string,
-  cacheDir?: string,
+  cacheKey: string,
+  useS3Cache?: boolean,
 ): Promise<Record<string, Combo>> => {
-  // Check if data exists in cache first
-  if (cacheDir) {
-    const fileName = path.basename(filePath);
-    const cachePath = path.join(cacheDir, fileName);
-    if (fs.existsSync(cachePath)) {
-      console.log(`Reading combos from cache: ${cachePath}`);
-      return JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+  // Check if data exists in S3 cache first
+  if (useS3Cache) {
+    try {
+      const cachedData = await downloadJson(cacheKey);
+      if (cachedData) {
+        console.log(`Reading combos from S3 cache: ${cacheKey}`);
+        return cachedData;
+      }
+    } catch (error) {
+      // Cache miss, continue to download
     }
   }
 
@@ -110,18 +111,16 @@ const fetchAllPages = async (
     url = data.next; // Get the next URL from the response
   }
 
-  // Save to cache if enabled
-  if (cacheDir) {
-    const fileName = path.basename(filePath);
-    const cachePath = path.join(cacheDir, fileName);
-    if (!fs.existsSync(cacheDir)) {
-      fs.mkdirSync(cacheDir, { recursive: true });
-    }
-    fs.writeFileSync(cachePath, JSON.stringify(dataById));
+  // Save to S3 cache if enabled
+  if (useS3Cache) {
+    await uploadJson(cacheKey, dataById);
   }
 
   return dataById;
 };
+
+// Use S3 for caching if JOBS_BUCKET is set
+const useS3Cache = !!process.env.JOBS_BUCKET;
 
 (async () => {
   console.log('Initializing card database...');
@@ -140,23 +139,8 @@ const fetchAllPages = async (
   const comboTreePath = path.join(privateDir, 'comboTree.json');
 
   try {
-    // Ensure the /private directory exists
-    if (!fs.existsSync(privateDir)) {
-      fs.mkdirSync(privateDir, { recursive: true });
-    }
-
     // Fetch all paginated data
-    const dataById = await fetchAllPages(initialUrl, dataByIdPath, cacheDir);
-
-    // Save to original location
-    const folder = path.dirname(dataByIdPath);
-    if (!fs.existsSync(folder)) {
-      fs.mkdirSync(folder, { recursive: true });
-    }
-    const dictWriteStart = Date.now();
-    fs.writeFileSync(dataByIdPath, JSON.stringify(dataById));
-    const dictWriteDuration = (Date.now() - dictWriteStart) / 1000;
-    console.log(`Saved comboDict.json. Duration: ${dictWriteDuration.toFixed(2)}s`);
+    const dataById = await fetchAllPages(initialUrl, 'cache/comboDict.json', useS3Cache);
 
     console.log('Retrieved combo data from cache or API');
 
@@ -196,11 +180,12 @@ const fetchAllPages = async (
       currentNode['$'].push(id);
     }
 
-    console.log('Saving comboTree.json...');
-    const treeWriteStart = Date.now();
-    fs.writeFileSync(comboTreePath, JSON.stringify(comboTree));
-    const treeWriteDuration = (Date.now() - treeWriteStart) / 1000;
-    console.log(`Saved comboTree.json. Duration: ${treeWriteDuration.toFixed(2)}s`);
+    console.log('Saving combo data to S3...');
+    const saveStart = Date.now();
+    await uploadJson('combos/comboDict.json', dataById);
+    await uploadJson('combos/comboTree.json', comboTree);
+    const saveDuration = (Date.now() - saveStart) / 1000;
+    console.log(`Saved combo data to S3. Duration: ${saveDuration.toFixed(2)}s`);
 
     console.log('All combo data saved successfully');
   } catch (error) {
