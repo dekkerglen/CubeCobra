@@ -170,10 +170,7 @@ export async function monitorCardUpdates(): Promise<void> {
           // This is just for monitoring
         } else {
           console.log(`Task ${mostRecentTask.id} failed with exit code ${health.exitCode}`);
-          await cardUpdateTaskDao.markAsFailed(
-            mostRecentTask.id,
-            `ECS task failed with exit code ${health.exitCode}`,
-          );
+          await cardUpdateTaskDao.markAsFailed(mostRecentTask.id, `ECS task failed with exit code ${health.exitCode}`);
         }
       } else if (health.isRunning) {
         console.log(`Task ${mostRecentTask.id} is still running`);
@@ -185,10 +182,7 @@ export async function monitorCardUpdates(): Promise<void> {
 
       if (taskAge > maxTaskDuration) {
         console.log(`Task ${mostRecentTask.id} has been running for too long, marking as failed`);
-        await cardUpdateTaskDao.markAsFailed(
-          mostRecentTask.id,
-          'Task timed out - exceeded maximum duration of 1 hour',
-        );
+        await cardUpdateTaskDao.markAsFailed(mostRecentTask.id, 'Task timed out - exceeded maximum duration of 1 hour');
       } else {
         console.log(`Task ${mostRecentTask.id} is still in progress, continuing to monitor`);
       }
@@ -243,7 +237,7 @@ export async function monitorCardUpdates(): Promise<void> {
   }
 
   console.log(`Card update task started successfully: ${taskArn}`);
-  
+
   // Store the task ARN for health monitoring
   newTask.taskArn = taskArn;
   newTask.step = 'Running ECS task';

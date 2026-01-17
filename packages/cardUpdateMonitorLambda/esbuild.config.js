@@ -9,12 +9,16 @@ const buildOptions = {
   platform: 'node',
   target: 'node22',
   outfile: 'dist/handler.js',
-  external: ['aws-sdk'],
+  external: ['aws-sdk', '@aws-sdk/*'],
   sourcemap: true,
   minify: true,
   format: 'cjs',
   banner: {
     js: "const require = (await import('node:module')).createRequire(import.meta.url);const __filename = (await import('node:url')).fileURLToPath(import.meta.url);const __dirname = (await import('node:path')).dirname(__filename);",
+  },
+  alias: {
+    '@server': path.resolve(__dirname, '../server/src'),
+    '@utils': path.resolve(__dirname, '../utils/src'),
   },
 };
 
