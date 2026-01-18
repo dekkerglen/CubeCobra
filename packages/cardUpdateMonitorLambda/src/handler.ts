@@ -64,7 +64,7 @@ async function startCardUpdateTask(taskId: string): Promise<{ taskArn: string; s
         awsvpcConfiguration: {
           subnets: subnetIds,
           securityGroups: securityGroupIds,
-          assignPublicIp: 'ENABLED',
+          assignPublicIp: 'DISABLED',
         },
       },
       overrides: {

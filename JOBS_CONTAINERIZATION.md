@@ -10,7 +10,7 @@ This implementation containerizes the CubeCobra jobs execution, moving from loca
 
 **File: `packages/jobs/Dockerfile`**
 
-- Multi-stage build using Node.js 20.18.0
+- Multi-stage build using Node.js 22
 - Installs dependencies for jobs, server, and utils packages
 - Builds all TypeScript projects
 - Configurable command execution via CMD override

@@ -96,27 +96,12 @@ async function downloadFile(url: string, filePath: string) {
   });
 }
 
-// Helper to stream file from S3 cache or download and cache it
+// Helper to download file - always fetches fresh data for update jobs
 async function getFileWithCache(url: string, filePath: string, useS3Cache?: boolean): Promise<fs.ReadStream> {
-  if (useS3Cache) {
-    const fileName = path.basename(filePath);
-    const cacheKey = `cache/${fileName}`;
+  // For update jobs, always download fresh data - skip S3 cache check
+  // The cache is only useful for non-update operations
 
-    try {
-      // Try to download from S3 cache
-      const cachedData = await downloadJson(cacheKey);
-      if (cachedData) {
-        console.log(`Reading from S3 cache: ${cacheKey}`);
-        // Save to local file
-        fs.writeFileSync(filePath, JSON.stringify(cachedData));
-        return fs.createReadStream(filePath);
-      }
-    } catch {
-      // Cache miss, continue to download
-    }
-  }
-
-  // Download and cache
+  // Download file
   await downloadFile(url, filePath);
 
   if (useS3Cache) {

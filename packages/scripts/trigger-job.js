@@ -8,7 +8,7 @@
  *   node trigger-job.js update-all --env production
  */
 
-const { ECSClient, RunTaskCommand, DescribeTasksCommand } = require('@aws-sdk/client-ecs');
+const { ECSClient, RunTaskCommand } = require('@aws-sdk/client-ecs');
 const { CloudFormationClient, DescribeStacksCommand } = require('@aws-sdk/client-cloudformation');
 
 const JOB_COMMANDS = {

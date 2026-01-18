@@ -17,6 +17,8 @@ export interface CardUpdateMonitorLambdaProps extends StackProps {
   environmentVariables: { [key: string]: string };
   cluster: ecs.ICluster;
   taskDefinitionArn: string;
+  taskRole: iam.IRole;
+  executionRole: iam.IRole;
   vpc: ec2.IVpc;
 }
 
@@ -70,11 +72,28 @@ export class CardUpdateMonitorLambda extends Construct {
       }),
     );
 
-    // Grant ECS permissions to run tasks
+    // Grant ECS permissions to run tasks (specific to this task definition)
     executionRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ['ecs:RunTask', 'ecs:DescribeTasks'],
-        resources: ['*'],
+        actions: ['ecs:RunTask'],
+        resources: [
+          props.taskDefinitionArn,
+          // Allow running any revision of this task family
+          `${props.taskDefinitionArn.split(':').slice(0, -1).join(':')}:*`,
+        ],
+      }),
+    );
+
+    // Grant permissions to describe tasks (needed to check task health)
+    executionRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['ecs:DescribeTasks'],
+        resources: ['*'], // DescribeTasks doesn't support resource-level permissions
+        conditions: {
+          ArnEquals: {
+            'ecs:cluster': props.cluster.clusterArn,
+          },
+        },
       }),
     );
 
@@ -82,7 +101,7 @@ export class CardUpdateMonitorLambda extends Construct {
     executionRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['iam:PassRole'],
-        resources: ['*'],
+        resources: [props.taskRole.roleArn, props.executionRole.roleArn],
         conditions: {
           StringLike: {
             'iam:PassedToService': 'ecs-tasks.amazonaws.com',

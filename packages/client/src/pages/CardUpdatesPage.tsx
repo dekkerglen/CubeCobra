@@ -62,8 +62,8 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ updates }) => (
       </CardHeader>
       <CardBody>
         <Text md className="mb-4 text-text-secondary">
-          History of card database updates from Scryfall. Updates are checked every 5 minutes and applied automatically
-          when new card data is available.
+          History of card database updates from Scryfall. Updates are checked regularly and applied automatically when
+          new card data is available.
         </Text>
 
         {updates.length === 0 ? (

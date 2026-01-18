@@ -10,10 +10,10 @@ interface CardManifest {
   version?: string;
 }
 
-const MANIFEST_PATH = 'private/manifest.json';
-
 // Lock to prevent concurrent updates
 let isUpdating = false;
+
+const getManifestPath = (basePath: string): string => `${basePath}/manifest.json`;
 
 const downloadManifestFromS3 = async (): Promise<CardManifest | null> => {
   try {
@@ -29,10 +29,11 @@ const downloadManifestFromS3 = async (): Promise<CardManifest | null> => {
   }
 };
 
-const loadLocalManifest = (): CardManifest | null => {
+const loadLocalManifest = (basePath: string = 'private'): CardManifest | null => {
   try {
-    if (fs.existsSync(MANIFEST_PATH)) {
-      const manifestContent = fs.readFileSync(MANIFEST_PATH, 'utf-8');
+    const manifestPath = getManifestPath(basePath);
+    if (fs.existsSync(manifestPath)) {
+      const manifestContent = fs.readFileSync(manifestPath, 'utf-8');
       return JSON.parse(manifestContent);
     }
   } catch (error) {
@@ -41,9 +42,10 @@ const loadLocalManifest = (): CardManifest | null => {
   return null;
 };
 
-const saveLocalManifest = (manifest: CardManifest): void => {
+const saveLocalManifest = (manifest: CardManifest, basePath: string = 'private'): void => {
   try {
-    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+    const manifestPath = getManifestPath(basePath);
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     console.log('Saved manifest to disk');
   } catch (error) {
     console.error('Could not save local manifest:', error);
@@ -117,7 +119,7 @@ export async function checkAndUpdateCardbase(basePath: string = 'private'): Prom
     const remoteManifest = await downloadManifestFromS3();
 
     // Load the local manifest
-    const localManifest = loadLocalManifest();
+    const localManifest = loadLocalManifest(basePath);
 
     // Check if we need to update
     if (shouldUpdateCards(localManifest, remoteManifest)) {
@@ -126,7 +128,7 @@ export async function checkAndUpdateCardbase(basePath: string = 'private'): Prom
 
       // Save the new manifest locally
       if (remoteManifest) {
-        saveLocalManifest(remoteManifest);
+        saveLocalManifest(remoteManifest, basePath);
       }
 
       console.log('Card database updated successfully');

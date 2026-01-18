@@ -81,20 +81,10 @@ const fetchAllPages = async (
   cacheKey: string,
   useS3Cache?: boolean,
 ): Promise<Record<string, Combo>> => {
-  // Check if data exists in S3 cache first
-  if (useS3Cache) {
-    try {
-      const cachedData = await downloadJson(cacheKey);
-      if (cachedData) {
-        console.log(`Reading combos from S3 cache: ${cacheKey}`);
-        return cachedData;
-      }
-    } catch {
-      // Cache miss, continue to download
-    }
-  }
+  // For update jobs, always fetch fresh data - skip S3 cache check
+  // The cache is only useful for non-update operations
 
-  // If not in cache, download and process pages
+  // Download and process pages
   let url = initialUrl;
   const dataById: Record<string, any> = {};
 
