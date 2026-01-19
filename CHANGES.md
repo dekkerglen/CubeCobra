@@ -11,6 +11,7 @@ As of 1.4.57
 - Fixed a bug where updating user fields would delete password
 - Fixed a bug where seat owner names were not showing up
 - Fixed a bug with RSS feeds erroring
+- Removed video ads from banner, as those occasionally went outside the bounding box and affected site UX.
 
 # Technical Changes
 
