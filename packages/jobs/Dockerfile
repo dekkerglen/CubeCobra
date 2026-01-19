@@ -17,8 +17,7 @@ COPY packages/jobs ./packages/jobs
 COPY packages/server ./packages/server
 COPY packages/utils ./packages/utils
 
-# Build the projects (utils -> server -> jobs)
-RUN npm run build --workspace=packages/utils
+# Build the projects (server -> jobs)
 RUN npm run build --workspace=packages/server
 RUN npm run build --workspace=packages/jobs
 
