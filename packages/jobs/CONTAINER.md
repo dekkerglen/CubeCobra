@@ -28,7 +28,6 @@ docker build -t cubecobra-jobs:latest -f packages/jobs/Dockerfile .
 docker run --rm \
   -e AWS_REGION=us-east-2 \
   -e DATA_BUCKET=cubecobra-data-production \
-  -e JOBS_BUCKET=cubecobra-jobs-dev \
   -e DYNAMO_DB_PREFIX=DEV \
   -e AWS_ACCESS_KEY_ID=your-access-key \
   -e AWS_SECRET_ACCESS_KEY=your-secret-key \
@@ -41,8 +40,7 @@ Replace `npm run update-cards` with any other job script name to run different u
 ## Environment Variables
 
 - `AWS_REGION` - AWS region (e.g., us-east-2)
-- `DATA_BUCKET` - S3 bucket for card data
-- `JOBS_BUCKET` - S3 bucket for job state and incremental data
+- `DATA_BUCKET` - S3 bucket for card data and job state
 - `DYNAMO_DB_PREFIX` - Prefix for DynamoDB tables (DEV, BETA, PROD)
 - `DYNAMO_TABLE` - (Optional) DynamoDB table name
 - `NODE_ENV` - Node environment (development or production)

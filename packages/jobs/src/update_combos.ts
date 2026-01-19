@@ -110,8 +110,8 @@ const fetchAllPages = async (
   return dataById;
 };
 
-// Use S3 for caching if JOBS_BUCKET is set
-const useS3Cache = !!process.env.JOBS_BUCKET;
+// Use S3 for caching if DATA_BUCKET is set
+const useS3Cache = !!process.env.DATA_BUCKET;
 
 (async () => {
   console.log('Initializing card database...');

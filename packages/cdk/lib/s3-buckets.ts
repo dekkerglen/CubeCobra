@@ -1,11 +1,9 @@
-import { RemovalPolicy } from 'aws-cdk-lib';
 import { Bucket, IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
 export interface S3BucketsProps {
   dataBucketName: string;
   appBucketName: string;
-  jobsBucketName: string;
 }
 
 /**
@@ -17,7 +15,6 @@ export interface S3BucketsProps {
 export class S3Buckets extends Construct {
   public readonly dataBucket: IBucket;
   public readonly appBucket: IBucket;
-  public readonly jobsBucket: IBucket;
 
   constructor(scope: Construct, id: string, props: S3BucketsProps) {
     super(scope, id);
@@ -27,19 +24,5 @@ export class S3Buckets extends Construct {
 
     // Import existing data bucket
     this.dataBucket = Bucket.fromBucketName(this, 'DataBucket', props.dataBucketName);
-
-    // Create jobs bucket for storing job artifacts and temporary data
-    this.jobsBucket = new Bucket(this, 'JobsBucket', {
-      bucketName: props.jobsBucketName,
-      removalPolicy: RemovalPolicy.RETAIN,
-      versioned: false,
-      publicReadAccess: false,
-      blockPublicAccess: {
-        blockPublicAcls: true,
-        blockPublicPolicy: true,
-        ignorePublicAcls: true,
-        restrictPublicBuckets: true,
-      },
-    });
   }
 }

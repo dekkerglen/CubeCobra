@@ -28,7 +28,6 @@ interface CubeCobraStackParams {
   awsLogStream: string;
   dataBucket: string;
   appBucket: string;
-  jobsBucket: string;
   downTimeActive: boolean;
   dynamoPrefix: string;
   env: Environment;
@@ -64,11 +63,10 @@ export class CubeCobraStack extends cdk.Stack {
 
     const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', { roles: [role.roleName] });
 
-    // Create S3 buckets construct to import existing data and app buckets, and create jobs bucket
+    // Create S3 buckets construct to import existing data and app buckets
     const s3Buckets = new S3Buckets(this, 'S3Buckets', {
       dataBucketName: params.dataBucket,
       appBucketName: params.appBucket,
-      jobsBucketName: params.jobsBucket,
     });
 
     // Grant the instance role read/write access to the data bucket
@@ -80,9 +78,6 @@ export class CubeCobraStack extends cdk.Stack {
         resources: [`arn:aws:s3:::${params.dataBucket}`, `arn:aws:s3:::${params.dataBucket}/*`],
       }),
     );
-
-    // Grant the instance role read/write access to the jobs bucket
-    s3Buckets.jobsBucket.grantReadWrite(role);
 
     // Create DynamoDB single table
     const dynamoTables = new DynamodbTables(this, 'DynamoDBTables', { prefix: params.dynamoPrefix });
@@ -291,7 +286,6 @@ function createJobsEnvironmentVariables(
     AWS_REGION: props?.env?.region || '',
     CLOUDWATCH_ENABLED: 'false',
     DATA_BUCKET: params.dataBucket,
-    JOBS_BUCKET: params.jobsBucket,
     DYNAMO_DB_PREFIX: params.dynamoPrefix,
     NODE_ENV: params.environmentName === 'local' ? 'development' : 'production',
   };

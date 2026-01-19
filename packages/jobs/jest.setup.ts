@@ -6,7 +6,6 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 // Set required environment variables for tests
-process.env.JOBS_BUCKET = 'test-jobs-bucket';
 process.env.DATA_BUCKET = 'test-data-bucket';
 
 // Mock S3 utilities to avoid AWS SDK initialization

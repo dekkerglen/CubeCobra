@@ -50,7 +50,6 @@ if (bootstrap && bootstrap === 'true') {
       awsLogStream: config.awsLogStream,
       dataBucket: config.dataBucket,
       appBucket: config.appBucket,
-      jobsBucket: config.jobsBucket,
       downTimeActive: config.downTimeActive,
       dynamoPrefix: config.dynamoPrefix,
       env: environment,

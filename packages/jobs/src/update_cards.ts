@@ -1094,8 +1094,8 @@ const loadManaPoolPrices = async (useS3Cache?: boolean): Promise<Record<string, 
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
 
-// Use S3 for caching if JOBS_BUCKET is set
-const useS3Cache = !!process.env.JOBS_BUCKET;
+// Use S3 for caching if DATA_BUCKET is set
+const useS3Cache = !!process.env.DATA_BUCKET;
 const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 (async () => {

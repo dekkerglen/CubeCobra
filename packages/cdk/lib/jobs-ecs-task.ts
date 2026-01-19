@@ -68,23 +68,11 @@ export class JobsEcsTask extends Construct {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
 
-    // Grant S3 permissions for JOBS_BUCKET
+    // Grant S3 permissions for DATA_BUCKET (used for both data and job artifacts)
     this.taskRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['s3:GetObject', 's3:PutObject', 's3:ListBucket', 's3:DeleteObject'],
-        resources: [
-          `arn:aws:s3:::${props.environmentVariables.JOBS_BUCKET}`,
-          `arn:aws:s3:::${props.environmentVariables.JOBS_BUCKET}/*`,
-        ],
-      }),
-    );
-
-    // Grant S3 permissions for DATA_BUCKET
-    this.taskRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['s3:GetObject', 's3:PutObject', 's3:ListBucket'],
         resources: [
           `arn:aws:s3:::${props.environmentVariables.DATA_BUCKET}`,
           `arn:aws:s3:::${props.environmentVariables.DATA_BUCKET}/*`,

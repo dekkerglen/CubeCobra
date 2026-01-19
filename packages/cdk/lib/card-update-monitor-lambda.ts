@@ -31,9 +31,7 @@ export class CardUpdateMonitorLambda extends Construct {
     // Define the execution role
     const executionRole = new iam.Role(this, 'CardUpdateMonitorLambdaRole', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-      ],
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')],
     });
 
     const codeBucket = s3.Bucket.fromBucketName(this, 'CodeBucket', props.codeArtifactsBucket);

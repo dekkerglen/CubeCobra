@@ -8,7 +8,7 @@ The `npm run update-all` workflow has been refactored to use Amazon S3 for cumul
 
 ### Required
 
-- `JOBS_BUCKET` - The S3 bucket name where job data and cache files will be stored
+- `DATA_BUCKET` - The S3 bucket name where card data, job data, and cache files will be stored
 
 ### Optional (inherited from server configuration)
 
@@ -18,10 +18,10 @@ The `npm run update-all` workflow has been refactored to use Amazon S3 for cumul
 
 ## S3 Bucket Structure
 
-The JOBS_BUCKET will contain the following structure:
+The DATA_BUCKET will contain the following structure:
 
 ```
-JOBS_BUCKET/
+DATA_BUCKET/
 ├── cache/
 │   ├── cards.json                    # Scryfall card data cache
 │   ├── all-cards.json                # Scryfall all cards cache
@@ -69,7 +69,7 @@ JOBS_BUCKET/
    Add to your `.env` file in `packages/jobs/`:
 
    ```
-   JOBS_BUCKET=your-jobs-bucket-name
+   DATA_BUCKET=your-data-bucket-name
    ```
 
 3. **Upload Existing Local Cache (if migrating)**
@@ -77,7 +77,7 @@ JOBS_BUCKET/
 
    ```bash
    # Example using AWS CLI
-   aws s3 sync ./temp/ s3://your-jobs-bucket-name/ --exclude "*" --include "*.json"
+   aws s3 sync ./temp/ s3://your-data-bucket-name/ --exclude "*" --include "*.json"
    ```
 
 4. **Run Update Jobs**
@@ -101,7 +101,7 @@ All update scripts now:
 - **Scryfall data** (cards, sets) is cached in S3 to avoid repeated downloads
 - **Price data** (Card Kingdom, Mana Pool) is cached in S3
 - **Combo data** from Commander Spellbook is cached in S3
-- All caches are automatically used if the JOBS_BUCKET environment variable is set
+- All caches are automatically used if the DATA_BUCKET environment variable is set
 
 ### Key Benefits
 
@@ -114,9 +114,9 @@ All update scripts now:
 
 The scripts maintain backward compatibility:
 
-- If `JOBS_BUCKET` is not set, some caching features will be disabled
+- If `DATA_BUCKET` is not set, some caching features will be disabled
 - The scripts will still function but may need to download more data
-- For production use, `JOBS_BUCKET` should always be set
+- For production use, `DATA_BUCKET` should always be set
 
 ## Modified Files
 
@@ -139,12 +139,12 @@ Ensure your AWS credentials have the following S3 permissions:
 - `s3:ListBucket`
 - `s3:DeleteObject` (optional, for cleanup)
 
-### Missing JOBS_BUCKET
+### Missing DATA_BUCKET
 
-If you see errors about missing JOBS_BUCKET:
+If you see errors about missing DATA_BUCKET:
 
 ```
-Error: JOBS_BUCKET environment variable is not set
+Error: DATA_BUCKET environment variable is not set
 ```
 
 Set the environment variable before running the jobs.

@@ -4,7 +4,6 @@ export interface EnvironmentConfiguration {
   region: string;
   dataBucket: string;
   appBucket: string;
-  jobsBucket: string;
   domain: string;
   awsLogGroup: string;
   awsLogStream: string;
@@ -23,7 +22,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     region: 'us-east-1',
     dataBucket: 'local',
     appBucket: 'app-code',
-    jobsBucket: 'cubecobra-jobs-local',
     domain: 'localhost',
     awsLogGroup: 'CUBECOBRA',
     awsLogStream: 'DEVELOPMENT',
@@ -41,7 +39,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-production',
     appBucket: 'cubecobra',
-    jobsBucket: 'cubecobra-jobs-dev',
     domain: 'cubecobradev.com',
     awsLogGroup: 'CUBECOBRA',
     awsLogStream: 'DEVELOPMENT',
@@ -59,7 +56,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-beta',
     appBucket: 'cubecobra',
-    jobsBucket: 'cubecobra-jobs-beta',
     domain: 'cubecobradev.com',
     awsLogGroup: 'CUBECOBRA',
     awsLogStream: 'BETA',
@@ -77,7 +73,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-production',
     appBucket: 'cubecobra',
-    jobsBucket: 'cubecobra-jobs-prod',
     domain: 'cubecobra.com',
     awsLogGroup: 'CUBECOBRA',
     awsLogStream: 'PRODUCTION',

@@ -11,13 +11,13 @@ export const s3 = new S3({
 });
 
 /**
- * Get the JOBS_BUCKET name from environment variables
+ * Get the DATA_BUCKET name from environment variables
  */
 export const getJobsBucket = (): string => {
-  if (!process.env.JOBS_BUCKET) {
-    throw new Error('JOBS_BUCKET environment variable is not set');
+  if (!process.env.DATA_BUCKET) {
+    throw new Error('DATA_BUCKET environment variable is not set');
   }
-  return process.env.JOBS_BUCKET;
+  return process.env.DATA_BUCKET;
 };
 
 /**

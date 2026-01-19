@@ -10,7 +10,6 @@ export interface CubeCobraStackParams {
   awsLogStream: string;
   dataBucket: string;
   appBucket: string;
-  jobsBucket: string;
   downTimeActive: boolean;
   dynamoPrefix: string;
   env: Environment;
