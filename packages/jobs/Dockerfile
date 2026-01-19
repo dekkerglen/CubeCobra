@@ -8,9 +8,10 @@ COPY package*.json ./
 COPY packages/jobs/package*.json ./packages/jobs/
 COPY packages/server/package*.json ./packages/server/
 COPY packages/utils/package*.json ./packages/utils/
+COPY packages/client/package*.json ./packages/client/
 
 # Install all dependencies (including dev dependencies for building)
-RUN npm install --workspaces
+RUN npm install --workspaces --include-workspace-root
 
 # Copy source code
 COPY packages/jobs ./packages/jobs
@@ -33,7 +34,7 @@ COPY packages/server/package*.json ./packages/server/
 COPY packages/utils/package*.json ./packages/utils/
 
 # Install only production dependencies
-RUN npm install --workspaces --omit=dev
+RUN npm install --workspaces --omit=dev --include-workspace-root
 
 # Copy built artifacts from builder stage
 COPY --from=builder /app/packages/jobs/dist ./packages/jobs/dist
