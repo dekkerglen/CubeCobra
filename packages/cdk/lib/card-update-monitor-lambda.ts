@@ -99,7 +99,7 @@ export class CardUpdateMonitorLambda extends Construct {
         actions: ['iam:PassRole'],
         resources: [props.taskRole.roleArn, props.executionRole.roleArn],
         conditions: {
-          StringLike: {
+          StringEquals: {
             'iam:PassedToService': 'ecs-tasks.amazonaws.com',
           },
         },
