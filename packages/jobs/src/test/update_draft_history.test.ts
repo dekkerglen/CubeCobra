@@ -88,11 +88,10 @@ describe('ELO Calculation Logic', () => {
 
   describe('Logarithmic Scaling - High ELO Protection', () => {
     it('should give minimal gains when 10x rated card wins', () => {
-      const [winnerChange, loserChange] = adjustElo(10000, 1000, ELO_SPEED);
+      const [winnerChange] = adjustElo(10000, 1000, ELO_SPEED);
 
       expect(winnerChange).toBeGreaterThanOrEqual(0);
       expect(winnerChange).toBeLessThan(0.00000001); // Should be very close to 0
-
     });
 
     it('should make it nearly impossible to reach 100k ELO', () => {
