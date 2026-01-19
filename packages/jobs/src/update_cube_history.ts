@@ -130,7 +130,8 @@ const mapTotalsToCardHistory = (
     // Parse filenames to find the earliest date
     const existingDates = Array.from(processedDays).map((key) => {
       const [year, month, day] = key.split('-').map((x) => parseInt(x, 10));
-      return new Date(year ?? 0, month ?? 0, day ?? 0);
+      // Keys use 1-indexed months (01-12), Date constructor expects 0-indexed (0-11)
+      return new Date(year ?? 0, (month ?? 1) - 1, day ?? 0);
     });
     firstDate = new Date(Math.min(...existingDates.map((d) => d.valueOf())));
   } else {
@@ -144,7 +145,7 @@ const mapTotalsToCardHistory = (
   const allKeys: string[] = [];
   for (let i = firstDate.valueOf(); i <= today.valueOf(); i += 86400000) {
     const date = new Date(i);
-    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     allKeys.push(key);
   }
 
@@ -190,14 +191,16 @@ const mapTotalsToCardHistory = (
     // Find the most recent processed day before our first unprocessed day
     const firstUnprocessedKey = keys[0];
     const [firstYear, firstMonth, firstDay] = firstUnprocessedKey!.split('-').map((x) => parseInt(x, 10));
-    const firstUnprocessedDate = new Date(firstYear ?? 0, firstMonth ?? 0, firstDay ?? 0).valueOf();
+    // Keys are in format YYYY-MM-DD where MM is 1-indexed, so subtract 1 for Date constructor
+    const firstUnprocessedDate = new Date(firstYear ?? 0, (firstMonth ?? 1) - 1, firstDay ?? 0).valueOf();
 
     const previousProcessedKeys = Array.from(processedDays)
       .map((key) => {
         const [year, month, day] = key.split('-').map((x) => parseInt(x, 10));
         return {
           key,
-          date: new Date(year ?? 0, month ?? 0, day ?? 0).valueOf(),
+          // Keys use 1-indexed months, Date constructor expects 0-indexed
+          date: new Date(year ?? 0, (month ?? 1) - 1, day ?? 0).valueOf(),
         };
       })
       .filter((item) => item.date < firstUnprocessedDate)
@@ -231,7 +234,8 @@ const mapTotalsToCardHistory = (
     let lastKey: Record<string, any> | undefined;
 
     do {
-      const result = await changelogDao.queryByDay(year, month + 1, day, lastKey);
+      // Key format is YYYY-MM-DD with 1-indexed month, DAO expects 1-indexed month
+      const result = await changelogDao.queryByDay(year, month, day, lastKey);
       dayChangelogs = dayChangelogs.concat(result.items);
       lastKey = result.lastKey;
     } while (lastKey);
@@ -411,7 +415,7 @@ const mapTotalsToCardHistory = (
       console.log(`  Loaded ELO data for ${Object.keys(oracleToElo).length} cards`);
     }
 
-    const date = new Date(year, month, day).valueOf();
+    const date = new Date(year, month - 1, day).valueOf();
 
     // Write card history in smaller batches with delays to avoid overwhelming connection pool
     const WRITE_BATCH_SIZE = 200; // Process 200 cards at a time to avoid connection pool issues
@@ -430,7 +434,7 @@ const mapTotalsToCardHistory = (
     }
 
     // if key is a sunday
-    const dateObj = new Date(year, month, day);
+    const dateObj = new Date(year, month - 1, day);
     if (dateObj.getDay() === 0) {
       console.log(`  Writing ${dataEntries.length} weekly history entries...`);
       for (let i = 0; i < dataEntries.length; i += WRITE_BATCH_SIZE) {

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "typeRoots": ["node_modules/@types", "src/types", "node_modules/@testing-library"],
+    "types": ["jest", "node"],
+    "typeRoots": ["node_modules/@types", "../../node_modules/@types", "src/types"],
     "outDir": "dist",
     "esModuleInterop": true,
     "target": "ES2020",
@@ -34,6 +35,8 @@
     "src/**/*.tsx",
     "src",
     "../utils/src",
-    "../server/src/util/rotateDailyP1P1.ts"
+    "../server/src/util/rotateDailyP1P1.ts",
+    "jest.config.ts",
+    "jest.setup.ts"
   ]
 }

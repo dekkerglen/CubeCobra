@@ -9,7 +9,9 @@
     "update-combos": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_combos.ts",
     "repair-cube-hashes": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairCubeHashes.ts --",
     "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-combos && npm run update-cards && npm run update-combos && npm run update-cards",
-    "build": "npx tsc"
+    "build": "npx tsc",
+    "test": "npx jest",
+    "test:ci": "npx jest --collectCoverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.927.0",
@@ -17,7 +19,10 @@
     "elo-rating": "^1.0.1"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.12.11",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.5"
