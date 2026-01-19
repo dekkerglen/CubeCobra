@@ -17,6 +17,7 @@ RUN npm install --workspaces --include-workspace-root
 COPY packages/jobs ./packages/jobs
 COPY packages/server ./packages/server
 COPY packages/utils ./packages/utils
+COPY packages/client ./packages/client
 
 # Build the projects (server -> jobs)
 RUN npm run build --workspace=packages/server
@@ -39,12 +40,13 @@ RUN npm install --workspaces --omit=dev --include-workspace-root
 # Copy built artifacts from builder stage
 COPY --from=builder /app/packages/jobs/dist ./packages/jobs/dist
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
-COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+
+# Copy utils source (not built, pure TypeScript)
+COPY --from=builder /app/packages/utils/src ./packages/utils/src
 
 # Copy any additional runtime files needed
 COPY --from=builder /app/packages/jobs/tsconfig.json ./packages/jobs/
 COPY --from=builder /app/packages/server/tsconfig.json ./packages/server/
-COPY --from=builder /app/packages/utils/tsconfig.json ./packages/utils/
 
 # Set working directory to jobs package
 WORKDIR /app/packages/jobs

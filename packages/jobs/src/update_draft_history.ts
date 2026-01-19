@@ -9,6 +9,7 @@ import { cubeDao, draftDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { DefaultElo } from '@utils/datatypes/Card';
 import type { CardAnalytic } from '@utils/datatypes/CubeAnalytic';
+import type CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import type DraftType from '@utils/datatypes/Draft';
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
@@ -47,7 +48,7 @@ const incrementDict = (dict: { [x: string]: number }, key: string) => {
   dict[key] += 1;
 };
 
-const loadAndProcessCubeDraftAnalytics = async (cube: string) => {
+const loadAndProcessCubeDraftAnalytics = async (cube: string): Promise<CubeAnalytic> => {
   const source = (await downloadJson(`cube_draft_history/${cube}`)) as {
     eloByCubeAndOracleId: Record<string, number>;
     picksByCubeAndOracleId: Record<string, number>;
@@ -57,7 +58,7 @@ const loadAndProcessCubeDraftAnalytics = async (cube: string) => {
   } | null;
 
   if (!source) {
-    return {};
+    return { cube, cards: [] };
   }
 
   const cubeAnalytics: Record<string, Partial<CardAnalytic>> = {};
@@ -100,7 +101,17 @@ const loadAndProcessCubeDraftAnalytics = async (cube: string) => {
     cubeAnalytics[key].sideboards = value;
   }
 
-  return cubeAnalytics;
+  // Convert to CardAnalytic array
+  const cards: CardAnalytic[] = Object.entries(cubeAnalytics).map(([oracleId, partial]) => ({
+    cardName: oracleId,
+    picks: partial.picks ?? 0,
+    passes: partial.passes ?? 0,
+    elo: partial.elo ?? DefaultElo,
+    mainboards: partial.mainboards ?? 0,
+    sideboards: partial.sideboards ?? 0,
+  }));
+
+  return { cube, cards };
 };
 
 // Only run the main script if this file is executed directly (not imported for tests)
@@ -457,7 +468,7 @@ if (require.main === module) {
 
     for (const batch of batches) {
       console.log(`Uploading ${batch.length} / ${allCubes.length} cube draft histories`);
-      const cubeData: Record<string, Record<string, Partial<CardAnalytic>>> = {};
+      const cubeData: Record<string, CubeAnalytic> = {};
 
       for (const cubeFile of batch) {
         const cubeName = cubeFile.split('/').pop()?.replace('.json', '');

@@ -47,7 +47,11 @@ interface CubeHistory {
   // load most recent cube history
   const cubeHistoryFiles = await listFiles('cubes_history/');
   cubeHistoryFiles.sort();
-  const cubeHistoryData: CubeHistory | null = await downloadJson(cubeHistoryFiles[cubeHistoryFiles.length - 1]);
+  const lastCubeHistoryFile = cubeHistoryFiles[cubeHistoryFiles.length - 1];
+  if (!lastCubeHistoryFile) {
+    throw new Error('No cube history files found in S3');
+  }
+  const cubeHistoryData: CubeHistory | null = await downloadJson(lastCubeHistoryFile);
 
   if (!cubeHistoryData) {
     throw new Error('No cube history found in S3');
@@ -64,7 +68,11 @@ interface CubeHistory {
   // load most recent global history
   const draftHistoryFiles = await listFiles('global_draft_history/');
   draftHistoryFiles.sort();
-  const draftHistory = await downloadJson(draftHistoryFiles[draftHistoryFiles.length - 1]);
+  const lastDraftHistoryFile = draftHistoryFiles[draftHistoryFiles.length - 1];
+  if (!lastDraftHistoryFile) {
+    throw new Error('No draft history files found in S3');
+  }
+  const draftHistory = await downloadJson(lastDraftHistoryFile);
 
   if (!draftHistory) {
     throw new Error('No draft history found in S3');
