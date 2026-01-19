@@ -83,11 +83,6 @@ export class CardUpdateMonitorLambda extends Construct {
       new iam.PolicyStatement({
         actions: ['ecs:DescribeTasks'],
         resources: ['*'], // DescribeTasks doesn't support resource-level permissions
-        conditions: {
-          ArnEquals: {
-            'ecs:cluster': props.cluster.clusterArn,
-          },
-        },
       }),
     );
 
