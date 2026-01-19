@@ -1,16 +1,19 @@
 import * as cdk from 'aws-cdk-lib';
 import { StackProps } from 'aws-cdk-lib';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import { CfnInstanceProfile, ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
+import { CardUpdateMonitorLambda } from './card-update-monitor-lambda';
 import { Certificates } from './certificates';
 import { DailyJobsLambdaConstruct } from './daily-jobs-lambda';
 import { DynamodbTables } from './dynamodb-tables';
 import { ECR } from './ecr';
 import { ElasticBeanstalk } from './elastic-beanstalk';
+import { JobsEcsTask } from './jobs-ecs-task';
 import { Route53 } from './route53';
 import { S3Buckets } from './s3-buckets';
 import { ScheduledJob, ScheduledJobProps } from './scheduled-job';
@@ -25,6 +28,7 @@ interface CubeCobraStackParams {
   awsLogStream: string;
   dataBucket: string;
   appBucket: string;
+  jobsBucket: string;
   downTimeActive: boolean;
   dynamoPrefix: string;
   env: Environment;
@@ -60,10 +64,11 @@ export class CubeCobraStack extends cdk.Stack {
 
     const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', { roles: [role.roleName] });
 
-    // Create S3 buckets construct to import existing data and app buckets
+    // Create S3 buckets construct to import existing data and app buckets, and create jobs bucket
     const s3Buckets = new S3Buckets(this, 'S3Buckets', {
       dataBucketName: params.dataBucket,
       appBucketName: params.appBucket,
+      jobsBucketName: params.jobsBucket,
     });
 
     // Grant the instance role read/write access to the data bucket
@@ -75,6 +80,9 @@ export class CubeCobraStack extends cdk.Stack {
         resources: [`arn:aws:s3:::${params.dataBucket}`, `arn:aws:s3:::${params.dataBucket}/*`],
       }),
     );
+
+    // Grant the instance role read/write access to the jobs bucket
+    s3Buckets.jobsBucket.grantReadWrite(role);
 
     // Create DynamoDB single table
     const dynamoTables = new DynamodbTables(this, 'DynamoDBTables', { prefix: params.dynamoPrefix });
@@ -138,7 +146,9 @@ export class CubeCobraStack extends cdk.Stack {
     });
 
     // Create the ECS cluster where we'll schedule jobs
-    const fargateCluster = new ecs.Cluster(this, 'SharedFargateCluster');
+    // Use default VPC for simplicity
+    const vpc = ec2.Vpc.fromLookup(this, 'DefaultVpc', { isDefault: true });
+    const fargateCluster = new ecs.Cluster(this, 'SharedFargateCluster', { vpc });
 
     const roleArn = ssm.StringParameter.valueForTypedStringParameterV2(
       this,
@@ -148,6 +158,17 @@ export class CubeCobraStack extends cdk.Stack {
 
     const githubRole = iam.Role.fromRoleArn(this, 'ImportedGitHubActionsRole', roleArn, { mutable: true }) as iam.Role;
     const ecr = new ECR(this, 'Ecr', githubRole);
+
+    // Create ECR repository for jobs container
+    const jobsEcr = new ECR(this, 'JobsEcr', githubRole);
+
+    // Create the jobs ECS task with environment variables
+    const jobsEnvVars = createJobsEnvironmentVariables(params, props, dynamoTables.table.tableName);
+    const jobsTask = new JobsEcsTask(this, 'JobsTask', {
+      repository: jobsEcr.repository,
+      cluster: fargateCluster,
+      environmentVariables: jobsEnvVars,
+    });
 
     // Register all the scheduled jobs we have
     params.jobs?.forEach((jobProps, jobName) => {
@@ -164,6 +185,20 @@ export class CubeCobraStack extends cdk.Stack {
       subdomain: params.domain.split('.')[0],
       stage: params.env,
       environmentVariables: lambdaEnvVars,
+    });
+
+    // Create the card update monitor lambda (runs every 5 minutes)
+    new CardUpdateMonitorLambda(this, 'CardUpdateMonitorLambda', {
+      codeArtifactsBucket: params.appBucket,
+      version: params.version,
+      subdomain: params.domain.split('.')[0],
+      stage: params.env,
+      environmentVariables: lambdaEnvVars,
+      cluster: fargateCluster,
+      taskDefinitionArn: jobsTask.taskDefinition.taskDefinitionArn,
+      taskRole: jobsTask.taskRole,
+      executionRole: jobsTask.executionRole,
+      vpc,
     });
   }
 }
@@ -235,6 +270,30 @@ function createLambdaEnvironmentVariables(
     DRAFTMANCER_API_KEY: params.draftmancerApiKey,
     ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',
     MAINTAIN_CUBE_CARD_HASHES: params.maintainCubeCardHashes ? 'true' : 'false',
+  };
+
+  // Add DYNAMO_TABLE if it's provided
+  if (dynamoTableName) {
+    envVars.DYNAMO_TABLE = dynamoTableName;
+  }
+
+  return envVars;
+}
+
+function createJobsEnvironmentVariables(
+  params: CubeCobraStackParams,
+  props: StackProps | undefined,
+  dynamoTableName?: string,
+): {
+  [key: string]: string;
+} {
+  const envVars: { [key: string]: string } = {
+    AWS_REGION: props?.env?.region || '',
+    CLOUDWATCH_ENABLED: 'false',
+    DATA_BUCKET: params.dataBucket,
+    JOBS_BUCKET: params.jobsBucket,
+    DYNAMO_DB_PREFIX: params.dynamoPrefix,
+    NODE_ENV: params.environmentName === 'local' ? 'development' : 'production',
   };
 
   // Add DYNAMO_TABLE if it's provided

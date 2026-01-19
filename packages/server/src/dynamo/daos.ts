@@ -1,6 +1,7 @@
 import { ArticleDynamoDao } from './dao/ArticleDynamoDao';
 import { BlogDynamoDao } from './dao/BlogDynamoDao';
 import { CardHistoryDynamoDao } from './dao/CardHistoryDynamoDao';
+import { CardUpdateTaskDynamoDao } from './dao/CardUpdateTaskDynamoDao';
 import { ChangelogDynamoDao } from './dao/ChangelogDynamoDao';
 import { CommentDynamoDao } from './dao/CommentDynamoDao';
 import { CubeDynamoDao } from './dao/CubeDynamoDao';
@@ -49,3 +50,4 @@ export const noticeDao: NoticeDynamoDao = new NoticeDynamoDao(documentClient, us
 export const p1p1PackDao: P1P1PackDynamoDao = new P1P1PackDynamoDao(documentClient, tableName);
 export const notificationDao: NotificationDynamoDao = new NotificationDynamoDao(documentClient, tableName);
 export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao, tableName);
+export const cardUpdateTaskDao: CardUpdateTaskDynamoDao = new CardUpdateTaskDynamoDao(documentClient, tableName);

@@ -1423,6 +1423,11 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
 }
+.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+}
 .self-center {
   align-self: center;
 }
@@ -1855,6 +1860,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .py-6 {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
+}
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 .py-\[3px\] {
   padding-top: 3px;

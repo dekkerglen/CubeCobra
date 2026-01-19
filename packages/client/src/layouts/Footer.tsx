@@ -82,6 +82,9 @@ const Footer: React.FC = () => {
                 <li className="mb-2">
                   <FooterLink href="/filters">Filter Syntax</FooterLink>
                 </li>
+                <li className="mb-2">
+                  <FooterLink href="/tool/cardupdates">Card Updates</FooterLink>
+                </li>
               </ul>
             </Text>
           </Col>

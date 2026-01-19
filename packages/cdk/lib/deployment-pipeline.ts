@@ -101,6 +101,16 @@ export class DeploymentPipeline extends Construct {
               'echo Deploying to Beta environment...',
               'cd packages/cdk',
               'npx cdk deploy --require-approval never --context environment=beta --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'cd ../..',
+              'echo Building and pushing jobs Docker image...',
+              'export JOBS_ECR_REPO=$(aws cloudformation describe-stacks --stack-name CubeCobra-Beta --query "Stacks[0].Outputs[?OutputKey==\'JobsEcrRepositoryUri\'].OutputValue" --output text)',
+              'echo Jobs ECR Repository: $JOBS_ECR_REPO',
+              'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $JOBS_ECR_REPO',
+              'docker build -t cubecobra-jobs:$CODEBUILD_RESOLVED_SOURCE_VERSION -f packages/jobs/Dockerfile .',
+              'docker tag cubecobra-jobs:$CODEBUILD_RESOLVED_SOURCE_VERSION $JOBS_ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'docker tag cubecobra-jobs:$CODEBUILD_RESOLVED_SOURCE_VERSION $JOBS_ECR_REPO:latest',
+              'docker push $JOBS_ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'docker push $JOBS_ECR_REPO:latest',
             ],
           },
         },
@@ -166,6 +176,23 @@ export class DeploymentPipeline extends Construct {
     betaDeployProject.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ['sts:AssumeRole', 'iam:PassRole', 'cloudformation:*', 'ec2:*', 'elasticbeanstalk:*', 's3:*'],
+        resources: ['*'],
+      }),
+    );
+
+    // Grant permissions to push to ECR
+    betaDeployProject.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'ecr:GetAuthorizationToken',
+          'ecr:BatchCheckLayerAvailability',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:BatchGetImage',
+          'ecr:PutImage',
+          'ecr:InitiateLayerUpload',
+          'ecr:UploadLayerPart',
+          'ecr:CompleteLayerUpload',
+        ],
         resources: ['*'],
       }),
     );
@@ -272,6 +299,16 @@ export class DeploymentPipeline extends Construct {
               'echo Deploying to Production environment...',
               'cd packages/cdk',
               'npx cdk deploy --require-approval never --context environment=production --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'cd ../..',
+              'echo Building and pushing jobs Docker image...',
+              'export JOBS_ECR_REPO=$(aws cloudformation describe-stacks --stack-name CubeCobra-Production --query "Stacks[0].Outputs[?OutputKey==\'JobsEcrRepositoryUri\'].OutputValue" --output text)',
+              'echo Jobs ECR Repository: $JOBS_ECR_REPO',
+              'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $JOBS_ECR_REPO',
+              'docker build -t cubecobra-jobs:$CODEBUILD_RESOLVED_SOURCE_VERSION -f packages/jobs/Dockerfile .',
+              'docker tag cubecobra-jobs:$CODEBUILD_RESOLVED_SOURCE_VERSION $JOBS_ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'docker tag cubecobra-jobs:$CODEBUILD_RESOLVED_SOURCE_VERSION $JOBS_ECR_REPO:latest',
+              'docker push $JOBS_ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'docker push $JOBS_ECR_REPO:latest',
             ],
           },
         },
@@ -334,6 +371,23 @@ export class DeploymentPipeline extends Construct {
     prodDeployProject.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ['sts:AssumeRole', 'iam:PassRole', 'cloudformation:*', 'ec2:*', 'elasticbeanstalk:*', 's3:*'],
+        resources: ['*'],
+      }),
+    );
+
+    // Grant permissions to push to ECR
+    prodDeployProject.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'ecr:GetAuthorizationToken',
+          'ecr:BatchCheckLayerAvailability',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:BatchGetImage',
+          'ecr:PutImage',
+          'ecr:InitiateLayerUpload',
+          'ecr:UploadLayerPart',
+          'ecr:CompleteLayerUpload',
+        ],
         resources: ['*'],
       }),
     );
