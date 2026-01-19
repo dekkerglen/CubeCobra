@@ -13,5 +13,41 @@
     "us-east-1d",
     "us-east-1e",
     "us-east-1f"
-  ]
+  ],
+  "hosted-zone:account=816705121310:domainName=cubecobradev.com:region=us-east-2": {
+    "Id": "/hostedzone/Z08083002WOR6E77197K0",
+    "Name": "cubecobradev.com."
+  },
+  "vpc-provider:account=816705121310:filter.isDefault=true:region=us-east-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-5cb4ba34",
+    "vpcCidrBlock": "172.31.0.0/16",
+    "ownerAccountId": "816705121310",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-d24978ba",
+            "cidr": "172.31.0.0/20",
+            "availabilityZone": "us-east-2a",
+            "routeTableId": "rtb-3be33550"
+          },
+          {
+            "subnetId": "subnet-0d7c1377",
+            "cidr": "172.31.16.0/20",
+            "availabilityZone": "us-east-2b",
+            "routeTableId": "rtb-3be33550"
+          },
+          {
+            "subnetId": "subnet-9e4a9dd2",
+            "cidr": "172.31.32.0/20",
+            "availabilityZone": "us-east-2c",
+            "routeTableId": "rtb-3be33550"
+          }
+        ]
+      }
+    ]
+  }
 }

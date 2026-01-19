@@ -81,24 +81,27 @@ export class JobsEcsTask extends Construct {
     );
 
     // Grant DynamoDB permissions
-    this.taskRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          'dynamodb:GetItem',
-          'dynamodb:PutItem',
-          'dynamodb:UpdateItem',
-          'dynamodb:DeleteItem',
-          'dynamodb:Query',
-          'dynamodb:Scan',
-          'dynamodb:BatchGetItem',
-          'dynamodb:BatchWriteItem',
-        ],
-        resources: [
-          `arn:aws:dynamodb:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:table/${props.environmentVariables.DYNAMO_DB_PREFIX}_*`,
-        ],
-      }),
-    );
+    if (props.environmentVariables.DYNAMO_TABLE) {
+      this.taskRole.addToPolicy(
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'dynamodb:GetItem',
+            'dynamodb:PutItem',
+            'dynamodb:UpdateItem',
+            'dynamodb:DeleteItem',
+            'dynamodb:Query',
+            'dynamodb:Scan',
+            'dynamodb:BatchGetItem',
+            'dynamodb:BatchWriteItem',
+          ],
+          resources: [
+            `arn:aws:dynamodb:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:table/${props.environmentVariables.DYNAMO_TABLE}`,
+            `arn:aws:dynamodb:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:table/${props.environmentVariables.DYNAMO_TABLE}/index/*`,
+          ],
+        }),
+      );
+    }
 
     // Create log group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {

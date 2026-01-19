@@ -57,23 +57,25 @@ export class CardUpdateMonitorLambda extends Construct {
     });
 
     // Grant DynamoDB permissions
-    executionRole.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:Query', 'dynamodb:Scan'],
-        resources: [
-          `arn:aws:dynamodb:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:table/${props.environmentVariables.DYNAMO_DB_PREFIX}_*`,
-        ],
-      }),
-    );
+    if (props.environmentVariables.DYNAMO_TABLE) {
+      executionRole.addToPolicy(
+        new iam.PolicyStatement({
+          actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:UpdateItem', 'dynamodb:Query', 'dynamodb:Scan'],
+          resources: [
+            `arn:aws:dynamodb:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:table/${props.environmentVariables.DYNAMO_TABLE}`,
+            `arn:aws:dynamodb:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:table/${props.environmentVariables.DYNAMO_TABLE}/index/*`,
+          ],
+        }),
+      );
+    }
 
     // Grant ECS permissions to run tasks (specific to this task definition)
+    // Note: Using wildcard for task definition to allow any revision of the task family
     executionRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['ecs:RunTask'],
         resources: [
-          props.taskDefinitionArn,
-          // Allow running any revision of this task family
-          `${props.taskDefinitionArn.split(':').slice(0, -1).join(':')}:*`,
+          `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task-definition/cubecobra-jobs:*`,
         ],
       }),
     );
