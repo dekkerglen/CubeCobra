@@ -18,4 +18,3 @@ const documentClient = DynamoDBDocument.from(
 );
 
 export default documentClient;
-module.exports = documentClient;

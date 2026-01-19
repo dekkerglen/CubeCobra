@@ -3,11 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 
-const BUCKET_NAME = process.env.APP_BUCKET || '';
-const VERSION = process.env.CUBECOBRA_VERSION || 'local';
+const BUCKET_NAME = process.env.CUBECOBRA_APP_BUCKET || 'cubecobra';
+const VERSION = process.env.LAMBDA_VERSION || require('../../package.json').version;
 
 if (!BUCKET_NAME) {
-  console.error('APP_BUCKET environment variable is required');
+  console.error('CUBECOBRA_APP_BUCKET environment variable is required');
   process.exit(1);
 }
 

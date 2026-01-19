@@ -97,13 +97,3 @@ export const getObjectVersion = async (bucket: string, key: string, versionId: s
     return null;
   }
 };
-
-module.exports = {
-  s3,
-  getObject,
-  putObject,
-  deleteObject,
-  getBucketName,
-  listObjectVersions,
-  getObjectVersion,
-};
