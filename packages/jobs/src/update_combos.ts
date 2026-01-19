@@ -27,7 +27,7 @@ const loadMetadata = async () => {
   };
 };
 
-const fetchWithRetries = async (url: string, retries = 3, delay = 1000): Promise<any> => {
+const fetchWithRetries = async (url: string, retries = 5, delay = 60000): Promise<any> => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       return await new Promise<any>((resolve, reject) => {
