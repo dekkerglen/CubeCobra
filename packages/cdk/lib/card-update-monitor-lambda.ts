@@ -33,14 +33,14 @@ export class CardUpdateMonitorLambda extends Construct {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole'),
       ],
     });
 
     const codeBucket = s3.Bucket.fromBucketName(this, 'CodeBucket', props.codeArtifactsBucket);
 
-    // Get subnet IDs for the ECS tasks
-    const subnetIds = props.vpc.privateSubnets.map((subnet) => subnet.subnetId);
+    // Get subnet IDs for the ECS tasks - use public subnets if no private subnets available
+    const subnets = props.vpc.privateSubnets.length > 0 ? props.vpc.privateSubnets : props.vpc.publicSubnets;
+    const subnetIds = subnets.map((subnet) => subnet.subnetId);
 
     this.lambdaFunction = new lambda.Function(this, 'CardUpdateMonitorLambda', {
       functionName: `CardUpdateMonitor-${props.subdomain}-${props.stage}`,
@@ -56,10 +56,6 @@ export class CardUpdateMonitorLambda extends Construct {
       timeout: cdk.Duration.minutes(5),
       memorySize: 512,
       role: executionRole,
-      vpc: props.vpc,
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-      },
     });
 
     // Grant DynamoDB permissions
