@@ -1,10 +1,17 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const fs = require('fs');
-const path = require('path');
-const archiver = require('archiver');
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import archiver from 'archiver';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Read version from package.json
+const packageJson = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'));
 const BUCKET_NAME = process.env.CUBECOBRA_APP_BUCKET || 'cubecobra';
-const VERSION = process.env.LAMBDA_VERSION || require('../../package.json').version;
+const VERSION = process.env.LAMBDA_VERSION || packageJson.version;
 
 if (!BUCKET_NAME) {
   console.error('CUBECOBRA_APP_BUCKET environment variable is required');
