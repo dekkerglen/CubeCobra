@@ -23,7 +23,7 @@ process.on('unhandledRejection', (reason, p) => {
 
 const ELO_SPEED = 1;
 const CUBE_ELO_SPEED = 10;
-const privateDir = '../server/private/';
+const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
 const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 export const adjustElo = (winnerElo: number, loserElo: number, kFactor: number): [number, number] => {

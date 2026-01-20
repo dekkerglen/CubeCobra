@@ -17,7 +17,7 @@ import History, { Period } from '@utils/datatypes/History';
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 type CubeDict = Record<string, string[]>;
 
-const privateDir = '../server/private/';
+const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
 const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 interface CubeHistory {
