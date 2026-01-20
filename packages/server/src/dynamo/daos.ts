@@ -8,6 +8,7 @@ import { CubeDynamoDao } from './dao/CubeDynamoDao';
 import { DailyP1P1DynamoDao } from './dao/DailyP1P1DynamoDao';
 import { DraftDynamoDao } from './dao/DraftDynamoDao';
 import { EpisodeDynamoDao } from './dao/EpisodeDynamoDao';
+import { ExportTaskDynamoDao } from './dao/ExportTaskDynamoDao';
 import { FeaturedQueueDynamoDao } from './dao/FeaturedQueueDynamoDao';
 import { FeedDynamoDao } from './dao/FeedDynamoDao';
 import { NoticeDynamoDao } from './dao/NoticeDynamoDao';
@@ -51,3 +52,4 @@ export const p1p1PackDao: P1P1PackDynamoDao = new P1P1PackDynamoDao(documentClie
 export const notificationDao: NotificationDynamoDao = new NotificationDynamoDao(documentClient, tableName);
 export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao, tableName);
 export const cardUpdateTaskDao: CardUpdateTaskDynamoDao = new CardUpdateTaskDynamoDao(documentClient, tableName);
+export const exportTaskDao: ExportTaskDynamoDao = new ExportTaskDynamoDao(documentClient, tableName);
