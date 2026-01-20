@@ -94,6 +94,7 @@ async function startCardUpdateTask(taskId: string): Promise<{ taskArn: string; s
   const taskDefinitionArn = process.env.ECS_TASK_DEFINITION_ARN;
   const subnetIds = process.env.ECS_SUBNET_IDS?.split(',') || [];
   const securityGroupIds = process.env.ECS_SECURITY_GROUP_IDS?.split(',') || [];
+  const assignPublicIp = (process.env.ECS_ASSIGN_PUBLIC_IP as 'ENABLED' | 'DISABLED') || 'DISABLED';
 
   if (!clusterName || !taskDefinitionArn) {
     throw new Error('ECS_CLUSTER_NAME or ECS_TASK_DEFINITION_ARN not configured');
@@ -108,7 +109,7 @@ async function startCardUpdateTask(taskId: string): Promise<{ taskArn: string; s
         awsvpcConfiguration: {
           subnets: subnetIds,
           securityGroups: securityGroupIds,
-          assignPublicIp: 'DISABLED',
+          assignPublicIp,
         },
       },
       overrides: {

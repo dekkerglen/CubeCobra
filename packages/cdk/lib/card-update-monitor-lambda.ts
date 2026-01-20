@@ -39,6 +39,8 @@ export class CardUpdateMonitorLambda extends Construct {
     // Get subnet IDs for the ECS tasks - use public subnets if no private subnets available
     const subnets = props.vpc.privateSubnets.length > 0 ? props.vpc.privateSubnets : props.vpc.publicSubnets;
     const subnetIds = subnets.map((subnet) => subnet.subnetId);
+    // Determine if we're using public subnets (need to enable public IP)
+    const usePublicSubnets = props.vpc.privateSubnets.length === 0;
 
     this.lambdaFunction = new lambda.Function(this, 'CardUpdateMonitorLambda', {
       functionName: `CardUpdateMonitor-${props.subdomain}-${props.stage}`,
@@ -50,6 +52,7 @@ export class CardUpdateMonitorLambda extends Construct {
         ECS_CLUSTER_NAME: props.cluster.clusterName,
         ECS_TASK_DEFINITION_ARN: props.taskDefinitionArn,
         ECS_SUBNET_IDS: subnetIds.join(','),
+        ECS_ASSIGN_PUBLIC_IP: usePublicSubnets ? 'ENABLED' : 'DISABLED',
       },
       timeout: cdk.Duration.minutes(5),
       memorySize: 512,
