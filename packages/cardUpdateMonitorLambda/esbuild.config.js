@@ -1,5 +1,10 @@
-const esbuild = require('esbuild');
-const path = require('path');
+import esbuild from 'esbuild';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const watch = process.argv.includes('--watch');
 
@@ -9,7 +14,7 @@ const buildOptions = {
   platform: 'node',
   target: 'node22',
   outfile: 'dist/handler.js',
-  external: ['aws-sdk'],
+  external: ['aws-sdk', '@aws-sdk/*'],
   sourcemap: true,
   minify: true,
   format: 'esm',

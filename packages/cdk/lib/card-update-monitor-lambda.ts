@@ -83,8 +83,8 @@ export class CardUpdateMonitorLambda extends Construct {
     // Grant permissions to describe tasks (needed to check task health)
     executionRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ['ecs:DescribeTasks'],
-        resources: ['*'], // DescribeTasks doesn't support resource-level permissions
+        actions: ['ecs:DescribeTasks', 'ecs:ListTasks'],
+        resources: ['*'], // DescribeTasks and ListTasks don't support resource-level permissions
       }),
     );
 

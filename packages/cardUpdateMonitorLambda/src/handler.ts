@@ -1,4 +1,10 @@
-import { DescribeTasksCommand, DescribeTasksCommandOutput, ECSClient, RunTaskCommand } from '@aws-sdk/client-ecs';
+import {
+  DescribeTasksCommand,
+  DescribeTasksCommandOutput,
+  ECSClient,
+  ListTasksCommand,
+  RunTaskCommand,
+} from '@aws-sdk/client-ecs';
 import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { CardUpdateTaskStatus } from '@utils/datatypes/CardUpdateTask';
 
@@ -39,6 +45,44 @@ async function checkScryfallFileSize(): Promise<{ size: number; updatedAt: strin
   } catch (error) {
     console.error('Error checking Scryfall file size:', error);
     return null;
+  }
+}
+
+/**
+ * Check if any card update tasks are currently running in ECS
+ */
+async function isCardUpdateTaskRunning(): Promise<boolean> {
+  const clusterName = process.env.ECS_CLUSTER_NAME;
+  const taskDefinitionArn = process.env.ECS_TASK_DEFINITION_ARN;
+
+  if (!clusterName || !taskDefinitionArn) {
+    console.error('ECS_CLUSTER_NAME or ECS_TASK_DEFINITION_ARN not configured');
+    return false;
+  }
+
+  try {
+    // Get the task family from the ARN (e.g., "cubecobra-jobs" from "arn:...:task-definition/cubecobra-jobs:1")
+    const taskFamily = taskDefinitionArn.split('/')[1]?.split(':')[0];
+    if (!taskFamily) {
+      console.error('Could not extract task family from task definition ARN');
+      return false;
+    }
+
+    // List all running tasks for this task family
+    const command = new ListTasksCommand({
+      cluster: clusterName,
+      family: taskFamily,
+      desiredStatus: 'RUNNING',
+    });
+
+    const response = await ecsClient.send(command);
+    const runningTaskCount = response.taskArns?.length || 0;
+
+    console.log(`Found ${runningTaskCount} running tasks for family: ${taskFamily}`);
+    return runningTaskCount > 0;
+  } catch (error) {
+    console.error('Error checking for running tasks:', error);
+    return false;
   }
 }
 
@@ -101,7 +145,7 @@ async function startCardUpdateTask(taskId: string): Promise<{ taskArn: string; s
 }
 
 /**
- * Check the health status of an ECS task
+ * Check the health of an ECS task
  */
 async function checkEcsTaskHealth(
   taskArn: string,
@@ -116,17 +160,16 @@ async function checkEcsTaskHealth(
     const response: DescribeTasksCommandOutput = await ecsClient.send(command);
 
     if (!response.tasks || response.tasks.length === 0) {
-      console.warn(`Task ${taskArn} not found`);
+      console.error('Task not found');
       return { isRunning: false, hasExited: true };
     }
 
     const task = response.tasks[0];
     const lastStatus = task.lastStatus || '';
+    const isRunning = lastStatus === 'RUNNING';
+    const hasExited = lastStatus === 'STOPPED' || lastStatus === 'DEPROVISIONING';
 
-    const isRunning = lastStatus === 'RUNNING' || lastStatus === 'PENDING' || lastStatus === 'PROVISIONING';
-    const hasExited = lastStatus === 'STOPPED' || lastStatus === 'DEACTIVATING' || lastStatus === 'STOPPING';
-
-    // Check container exit code
+    // Get exit code from the first container
     let exitCode: number | undefined;
     if (task.containers && task.containers.length > 0) {
       exitCode = task.containers[0].exitCode;
@@ -212,6 +255,13 @@ export async function monitorCardUpdates(): Promise<void> {
   }
 
   console.log('Changes detected! Creating new update task...');
+
+  // Double-check that no ECS tasks are currently running (safety check)
+  const isRunning = await isCardUpdateTaskRunning();
+  if (isRunning) {
+    console.log('ECS task is already running - aborting to maintain max concurrency of 1');
+    return;
+  }
 
   // Create a new IN_PROGRESS task
   const newTask = await cardUpdateTaskDao.create({

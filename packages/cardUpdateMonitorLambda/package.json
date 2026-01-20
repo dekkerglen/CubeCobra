@@ -2,6 +2,7 @@
   "name": "@cube-cobra/card-update-monitor-lambda",
   "version": "5.0.0",
   "private": true,
+  "type": "module",
   "description": "Lambda function to monitor and trigger card updates",
   "main": "dist/handler.js",
   "scripts": {
