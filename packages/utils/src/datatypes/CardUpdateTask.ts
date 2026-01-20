@@ -18,6 +18,7 @@ export interface CardUpdateTask extends BaseObject {
   cardsRemoved: number; // Number of cards removed in this update
   totalCards: number; // Total number of cards after this update
   step: string; // Current step in the update process (e.g., 'Downloading', 'Processing', 'Uploading')
+  completedSteps: string[]; // Array of all completed steps in order
   taskArn?: string; // ECS task ARN for monitoring task health
   errorMessage?: string; // Error message if status is FAILED
   startedAt?: number; // Unix timestamp when processing started

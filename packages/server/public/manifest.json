@@ -8,7 +8,7 @@
   "BulkUploadPage": "/js/BulkUploadPage.f65d89db.bundle.js",
   "CardPage": "/js/CardPage.1d08c28e.bundle.js",
   "CardSearchPage": "/js/CardSearchPage.9f99a214.bundle.js",
-  "CardUpdatesPage": "/js/CardUpdatesPage.a217b96d.bundle.js",
+  "CardUpdatesPage": "/js/CardUpdatesPage.ce38583d.bundle.js",
   "CommentPage": "/js/CommentPage.b21ebb25.bundle.js",
   "ContactPage": "/js/ContactPage.e6567e49.bundle.js",
   "CreateNewRecordPage": "/js/CreateNewRecordPage.f67560d1.bundle.js",
@@ -73,5 +73,5 @@
   "VideoPage": "/js/VideoPage.b041f1bf.bundle.js",
   "VideosPage": "/js/VideosPage.20352d97.bundle.js",
   "commons": "/js/commons.ab5bf790.bundle.js",
-  "vendors": "/js/vendors.80eb3a70.bundle.js"
+  "vendors": "/js/vendors.13bf3e69.bundle.js"
 }

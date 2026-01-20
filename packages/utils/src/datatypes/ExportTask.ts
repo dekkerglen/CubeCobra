@@ -15,6 +15,7 @@ export interface ExportTask extends BaseObject {
   fileSize: number; // File size in bytes of the generated export
   totalRecords: number; // Total number of records exported
   step: string; // Current step in the export process (e.g., 'Downloading', 'Processing', 'Uploading')
+  completedSteps: string[]; // Array of all completed steps in order
   taskArn?: string; // ECS task ARN for monitoring task health
   errorMessage?: string; // Error message if status is FAILED
   startedAt?: number; // Unix timestamp when processing started

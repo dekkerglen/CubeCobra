@@ -9,6 +9,8 @@
     "update-cards": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/update_cards.js",
     "update-combos": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/update_combos.js",
     "repair-cube-hashes": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/repairCubeHashes.js --",
+    "export-data": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/export_cubes.js && node dist/jobs/src/export_decks.js && node dist/jobs/src/export_simple_card_dict.js",
+    "apply-migrations": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/apply_scryfall_migrations.js",
     "dev:update-draft-history": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_draft_history.ts",
     "dev:update-cube-history": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cube_history.ts",
     "dev:update-metadata-dict": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_metadata_dict.ts",

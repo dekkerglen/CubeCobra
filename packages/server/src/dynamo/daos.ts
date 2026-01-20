@@ -11,6 +11,7 @@ import { EpisodeDynamoDao } from './dao/EpisodeDynamoDao';
 import { ExportTaskDynamoDao } from './dao/ExportTaskDynamoDao';
 import { FeaturedQueueDynamoDao } from './dao/FeaturedQueueDynamoDao';
 import { FeedDynamoDao } from './dao/FeedDynamoDao';
+import { MigrationTaskDynamoDao } from './dao/MigrationTaskDynamoDao';
 import { NoticeDynamoDao } from './dao/NoticeDynamoDao';
 import { NotificationDynamoDao } from './dao/NotificationDynamoDao';
 import { P1P1PackDynamoDao } from './dao/P1P1PackDynamoDao';
@@ -53,3 +54,4 @@ export const notificationDao: NotificationDynamoDao = new NotificationDynamoDao(
 export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao, tableName);
 export const cardUpdateTaskDao: CardUpdateTaskDynamoDao = new CardUpdateTaskDynamoDao(documentClient, tableName);
 export const exportTaskDao: ExportTaskDynamoDao = new ExportTaskDynamoDao(documentClient, tableName);
+export const migrationTaskDao: MigrationTaskDynamoDao = new MigrationTaskDynamoDao(documentClient, tableName);
