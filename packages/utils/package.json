@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "nearley": "sh nearley/helper.sh"
+    "nearley": "sh nearley/helper.sh",
+    "clean": "node -e \"const fs = require('fs'); const path = require('path'); ['src'].forEach(dir => { try { require('child_process').execSync(\\`find ${dir} -name '*.js' -type f\\`, {encoding: 'utf8'}).trim().split('\\\\n').filter(Boolean).forEach(jsFile => { const tsFile = jsFile.replace(/\\\\.js$/, '.ts'); if (fs.existsSync(tsFile)) { fs.unlinkSync(jsFile); console.log('Deleted:', jsFile); }}); } catch(e) {} });\""
   },
   "author": "",
   "license": "ISC",

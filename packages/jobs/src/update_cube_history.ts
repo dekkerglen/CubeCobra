@@ -6,7 +6,7 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { cardHistoryDao, changelogDao } from '@server/dynamo/daos';
+import { cardHistoryDao, cardUpdateTaskDao, changelogDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
 import { getCubeTypes } from '@server/serverutils/cubefn';
@@ -18,6 +18,7 @@ import { downloadJson, listFiles, uploadJson } from './utils/s3';
 type CubeDict = Record<string, string[]>;
 
 const privateDir = '../server/private/';
+const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 interface CubeHistory {
   cubes: Record<string, number[]>;
@@ -109,6 +110,10 @@ const mapTotalsToCardHistory = (
 };
 
 (async () => {
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Processing Cube History');
+  }
+
   await initializeCardDb(privateDir);
 
   // List existing files in S3 cubes_history to determine which days are already processed
@@ -461,6 +466,10 @@ const mapTotalsToCardHistory = (
     }
 
     console.log(`Finished ${i + 1} / ${keys.length}: Processed ${dayChangelogs.length} logs for ${key}`);
+  }
+
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Finished Cube History Processing');
   }
 
   console.log('Complete');

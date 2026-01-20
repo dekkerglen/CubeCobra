@@ -7,6 +7,7 @@ import 'module-alias/register';
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 const { DefaultElo } = require('@utils/datatypes/Card');
+import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import carddb, { cardFromId } from '@server/serverutils/carddb';
 import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
@@ -35,7 +36,13 @@ interface CubeHistory {
   indexToOracleMap: Record<number, string>;
 }
 
+const taskId = process.env.CARD_UPDATE_TASK_ID;
+
 (async () => {
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Processing Metadata');
+  }
+
   console.log('Loading card database');
   const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
   await initializeCardDb(privateDir);
@@ -478,6 +485,10 @@ interface CubeHistory {
 
   await uploadJson('metadatadict.json', metadatadict);
   await uploadJson('indexToOracle.json', indexToOracle);
+
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Finished Metadata Processing');
+  }
 
   console.log('Complete');
 

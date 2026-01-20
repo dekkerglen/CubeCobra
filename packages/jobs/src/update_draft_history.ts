@@ -5,7 +5,7 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { cubeDao, draftDao } from '@server/dynamo/daos';
+import { cardUpdateTaskDao, cubeDao, draftDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { DefaultElo } from '@utils/datatypes/Card';
 import type { CardAnalytic } from '@utils/datatypes/CubeAnalytic';
@@ -24,6 +24,7 @@ process.on('unhandledRejection', (reason, p) => {
 const ELO_SPEED = 1;
 const CUBE_ELO_SPEED = 10;
 const privateDir = '../server/private/';
+const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 export const adjustElo = (winnerElo: number, loserElo: number, kFactor: number): [number, number] => {
   // Expected score for winner = 1 / (1 + 10^((loserElo - winnerElo) / 400))
@@ -117,6 +118,10 @@ const loadAndProcessCubeDraftAnalytics = async (cube: string): Promise<CubeAnaly
 // Only run the main script if this file is executed directly (not imported for tests)
 if (require.main === module) {
   (async () => {
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Processing Draft History');
+    }
+
     await initializeCardDb(privateDir);
 
     // List existing files in S3 drafts_by_day to determine which days are already processed
@@ -484,6 +489,11 @@ if (require.main === module) {
     }
 
     console.log(`Uploaded ${allCubes.length} / ${allCubes.length} cube draft histories`);
+
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Finished Draft History Processing');
+    }
+
     console.log('Complete');
 
     process.exit();

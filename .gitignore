@@ -21,6 +21,13 @@ jobs/export/
 
 packages/server/src/serverutils/git.ts
 
+# Generated JS files from bad tsc commands
+packages/server/src/**/*.js
+packages/server/scripts/**/*.js
+packages/server/test/**/*.js
+packages/utils/src/**/*.js
+!packages/utils/src/generated/**/*.js
+
 # .gitignore
 
 # dependencies

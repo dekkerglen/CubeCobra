@@ -116,7 +116,7 @@ async function startCardUpdateTask(taskId: string): Promise<{ taskArn: string; s
         containerOverrides: [
           {
             name: 'JobsContainer',
-            command: ['node', 'dist/update_cards.js', 'update-all'],
+            command: ['npm', 'run', 'update-all'],
             environment: [
               {
                 name: 'CARD_UPDATE_TASK_ID',
@@ -214,7 +214,10 @@ export async function monitorCardUpdates(): Promise<void> {
           // This is just for monitoring
         } else {
           console.log(`Task ${mostRecentTask.id} failed with exit code ${health.exitCode}`);
-          await cardUpdateTaskDao.markAsFailed(mostRecentTask.id, `ECS task failed with exit code ${health.exitCode}`);
+          await cardUpdateTaskDao.markAsFailed(
+            mostRecentTask.id,
+            `Card update job failed. Exit code: ${health.exitCode}`,
+          );
         }
       } else if (health.isRunning) {
         console.log(`Task ${mostRecentTask.id} is still running`);
@@ -283,7 +286,7 @@ export async function monitorCardUpdates(): Promise<void> {
 
   if (!success) {
     console.error('Failed to start ECS task, marking task as failed');
-    await cardUpdateTaskDao.markAsFailed(newTask.id, 'Failed to start ECS task');
+    await cardUpdateTaskDao.markAsFailed(newTask.id, 'Failed to start card update job');
     return;
   }
 
@@ -291,7 +294,7 @@ export async function monitorCardUpdates(): Promise<void> {
 
   // Store the task ARN for health monitoring
   newTask.taskArn = taskArn;
-  newTask.step = 'Running ECS task';
+  newTask.step = 'Processing Job';
   newTask.dateLastUpdated = Date.now();
   await cardUpdateTaskDao.update(newTask);
 }

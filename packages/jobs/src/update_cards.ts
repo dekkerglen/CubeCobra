@@ -1100,25 +1100,14 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 (async () => {
   try {
-    // Update step: Loading metadata
     if (taskId) {
-      await cardUpdateTaskDao.updateStep(taskId, 'Loading metadata');
+      await cardUpdateTaskDao.updateStep(taskId, 'Processing Cards');
     }
 
     const { metadatadict, indexToOracle } = await loadMetadatadict();
 
-    // Update step: Loading prices
-    if (taskId) {
-      await cardUpdateTaskDao.updateStep(taskId, 'Loading prices');
-    }
-
     const manaPoolPrices = await loadManaPoolPrices(useS3Cache);
     const cardKingdomPrices = await loadCardKingdomPrices(useS3Cache);
-
-    // Update step: Downloading from Scryfall
-    if (taskId) {
-      await cardUpdateTaskDao.updateStep(taskId, 'Downloading from Scryfall');
-    }
 
     const scryfallMetadata = await downloadFromScryfall(
       metadatadict,
@@ -1136,15 +1125,10 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
       process.exit(1);
     }
 
-    // Update step: Uploading to S3
-    if (taskId) {
-      await cardUpdateTaskDao.updateStep(taskId, 'Uploading to S3');
-    }
-
     await uploadCardDb(scryfallMetadata, taskId);
 
-    // Mark task as completed
     if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Finished Card Update');
       await cardUpdateTaskDao.markAsCompleted(taskId);
     }
 

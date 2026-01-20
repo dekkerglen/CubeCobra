@@ -28,15 +28,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "exclude": ["node_modules", "src/client"],
-  "include": [
-    "src/**/*.js",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src",
-    "../utils/src",
-    "../server/src/util/rotateDailyP1P1.ts",
-    "jest.config.ts",
-    "jest.setup.ts"
-  ]
+  "exclude": ["node_modules", "src/client", "dist"],
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx"]
 }
