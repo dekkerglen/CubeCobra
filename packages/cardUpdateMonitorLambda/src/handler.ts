@@ -294,7 +294,7 @@ export async function monitorCardUpdates(): Promise<void> {
 
   // Store the task ARN for health monitoring
   newTask.taskArn = taskArn;
-  newTask.step = 'Processing Job';
+  newTask.step = 'Starting Job';
   newTask.dateLastUpdated = Date.now();
   await cardUpdateTaskDao.update(newTask);
 }

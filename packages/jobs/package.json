@@ -30,7 +30,8 @@
     "@aws-sdk/lib-storage": "^3.927.0",
     "dotenv": "^16.0.0",
     "elo-rating": "^1.0.1",
-    "module-alias": "^2.2.3"
+    "module-alias": "^2.2.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
