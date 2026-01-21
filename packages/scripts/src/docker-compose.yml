@@ -12,7 +12,7 @@ services:
       - AWS_ENDPOINT=http://localstack:4566
       - NODE_OPTIONS=--max-old-space-size=8192
     env_file:
-      - ../../server/.env
+      - ../../server/.env_EXAMPLE
     ports:
       # Webpack / browser entry point
       - 8080:8080
