@@ -141,7 +141,7 @@ const processPicks = (
   for (const draftType of draftTypes) {
     let typeLastKey: any = null;
     do {
-      const result = await draftDao.queryByType(draftType, typeLastKey);
+      const result = await draftDao.queryByTypeAndDate(draftType, typeLastKey);
       draftLogs = draftLogs.concat(result.items);
       typeLastKey = result.lastKey;
 

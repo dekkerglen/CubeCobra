@@ -27,7 +27,7 @@ const loadMetadata = async () => {
   };
 };
 
-const fetchWithRetries = async (url: string, retries = 3, delay = 1000): Promise<any> => {
+const fetchWithRetries = async (url: string, retries = 4, delay = 2000): Promise<any> => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       return await new Promise<any>((resolve, reject) => {
@@ -63,7 +63,8 @@ const fetchWithRetries = async (url: string, retries = 3, delay = 1000): Promise
         console.error(`Attempt ${attempt} failed with an unknown error:`, error);
       }
       if (attempt < retries) {
-        const backoff = delay * Math.pow(2, attempt - 1); // Exponential backoff
+        // For the last retry before giving up, wait 5 minutes
+        const backoff = attempt === retries - 1 ? 300000 : delay * Math.pow(2, attempt - 1);
         console.log(`Retrying in ${backoff}ms...`);
         await new Promise((resolve) => setTimeout(resolve, backoff));
       } else {
@@ -101,6 +102,12 @@ const fetchAllPages = async (
       dataById[id] = variant;
     }
     url = data.next; // Get the next URL from the response
+
+    // Add delay between requests to avoid rate limiting
+    if (url) {
+      console.log('Waiting 3 seconds before next request...');
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
   }
 
   // Save to S3 cache if enabled

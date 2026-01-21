@@ -19,10 +19,10 @@ const statusMap = {
 
 const LegalityBadge: React.FC<LegalityBadgeProps> = ({ legality, status }) => {
   return (
-    <Row className="my-1">
+    <Row className="my-2">
       <Col xs={6}>
-        <span
-          className={classNames('px-2 py-1 rounded w-full centered text-button-text', {
+        <div
+          className={classNames('px-2 py-1 rounded centered text-button-text w-full', {
             'bg-button-primary': status === 'legal',
             'bg-button-secondary': status === 'not_legal',
             'bg-button-danger': status === 'banned',
@@ -32,7 +32,7 @@ const LegalityBadge: React.FC<LegalityBadgeProps> = ({ legality, status }) => {
           <Text sm semibold>
             {statusMap[status]}
           </Text>
-        </span>
+        </div>
       </Col>
       <Col xs={6}>
         <span>{legality}</span>

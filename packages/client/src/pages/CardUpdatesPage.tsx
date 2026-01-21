@@ -173,15 +173,16 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ cardUpdates, exportTa
 
 const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) => (
   <CardBody>
-    <Text md className="mb-4 text-text-secondary">
-      History of card database updates from Scryfall. Updates are checked regularly and applied automatically when new
-      card data is available.
-    </Text>
+    <Flexbox direction="col" gap="4">
+      <Text md className="text-text-secondary">
+        History of card database updates from Scryfall. Updates are checked regularly and applied automatically when new
+        card data is available.
+      </Text>
 
-    {updates.length === 0 ? (
-      <Text className="text-center py-8 text-text-secondary">No card updates found.</Text>
-    ) : (
-      <div className="space-y-4">
+      {updates.length === 0 ? (
+        <Text className="text-center py-8 text-text-secondary">No card updates found.</Text>
+      ) : (
+        <div className="space-y-4">
         {updates.map((update) => {
           const statusBadge = getStatusBadge(update.status);
           return (
@@ -280,6 +281,7 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
         })}
       </div>
     )}
+    </Flexbox>
   </CardBody>
 );
 
