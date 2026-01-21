@@ -84,13 +84,20 @@ npm run setup:local
 npm run download-data-files
 ```
 
-This downloads:
+### What This Downloads
 
 - **Card definitions** (~100MB): Complete Magic card database from Scryfall
 - **ML model files** (~500MB): AI models for draft bots and recommendations
 - **Combo data**: Card interaction and synergy information
 
-**This step is only required once** during initial setup. The data files will be saved to:
+### Safety & Requirements
+
+- ✅ **Safe to run** - Downloads from a public S3 bucket (`cubecobra-public`)
+- ✅ **No AWS credentials required** - Public bucket access only
+- ✅ **No LocalStack needed** - Connects directly to AWS public infrastructure
+- **This step is only required once** during initial setup
+
+### Where Files Are Saved
 
 - `/packages/server/private/` - Card definitions and metadata
 - `/packages/server/model/` - ML model files for AI features

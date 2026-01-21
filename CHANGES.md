@@ -21,4 +21,5 @@ As of 1.4.57
 - Added codepipeline with integration tests
 - Added integration tests to pull requests, split up checks to make it easier to see failures
 - Fixed docker development setup
-- Rebuilt card import pipeline to reduce max data staleness from 48 hours to less than 12.
+- Rebuilt card import pipeline to reduce max data staleness from 48 hours to less than 12
+- Created public assets bucket for first time developer setup for a faster and better setup experience

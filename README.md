@@ -128,6 +128,9 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
 2. **Request contributor role** - Message @Dekkaru in Discord to gain access to development channels
 3. **[Set up your environment](./packages/docs/setup/docker-setup.md)** - Follow our setup guides
 4. **Download data files** - Run `npm run download-data-files` for first-time setup
+   - ✅ Safe to run - downloads from public S3 bucket
+   - ✅ No AWS credentials required
+   - Downloads card data (~100MB) and ML models (~500MB)
 5. **Find something to work on** - Check Discord development channels for current needs
 6. **Make your changes** - Follow our coding standards and write tests
 7. **Submit a pull request** - We'll review and help you get it merged!

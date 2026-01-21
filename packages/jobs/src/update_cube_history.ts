@@ -10,11 +10,15 @@ import { cardHistoryDao, cardUpdateTaskDao, changelogDao } from '@server/dynamo/
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
 import { getCubeTypes } from '@server/serverutils/cubefn';
+import { initializeMl } from '@server/serverutils/ml';
 import { DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
+import fs from 'fs';
 
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
+
+const { encode } = require('@server/serverutils/ml');
 type CubeDict = Record<string, string[]>;
 
 const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
@@ -114,7 +118,12 @@ const mapTotalsToCardHistory = (
     await cardUpdateTaskDao.updateStep(taskId, 'Processing Cube History');
   }
 
+  console.log('Loading card database');
   await initializeCardDb(privateDir);
+
+  console.log('Initializing ML models');
+  const rootDir = path.join(__dirname, '..', '..', 'server');
+  await initializeMl(rootDir);
 
   // List existing files in S3 cubes_history to determine which days are already processed
   // We only check filenames, not file contents, since files are large
@@ -467,6 +476,44 @@ const mapTotalsToCardHistory = (
 
     console.log(`Finished ${i + 1} / ${keys.length}: Processed ${dayChangelogs.length} logs for ${key}`);
   }
+
+  // Generate cube embeddings
+  console.log('Generating cube embeddings...');
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Generating Cube Embeddings');
+  }
+
+  const cubeEmbeddings: Record<string, number[]> = {};
+  const cubeIds = Object.keys(cubes);
+  console.log(`Processing ${cubeIds.length} cubes for embeddings...`);
+
+  for (let i = 0; i < cubeIds.length; i++) {
+    const cubeId = cubeIds[i];
+    const cubeOracles = cubes[cubeId];
+
+    if (!cubeOracles || cubeOracles.length === 0) {
+      continue; // Skip empty cubes
+    }
+
+    // Generate embedding for this cube using the ML encoder
+    const embedding = encode(cubeOracles);
+    
+    if (embedding && embedding.length > 0) {
+      cubeEmbeddings[cubeId] = Array.from(embedding);
+    }
+
+    if (i % 1000 === 0 && i > 0) {
+      console.log(`  Processed ${i} / ${cubeIds.length} cubes...`);
+    }
+  }
+
+  console.log(`Generated embeddings for ${Object.keys(cubeEmbeddings).length} cubes`);
+
+  // Save cube embeddings to file
+  const cubeEmbeddingsPath = path.join(privateDir, 'cubeEmbeddings.json');
+  console.log(`Saving cube embeddings to ${cubeEmbeddingsPath}...`);
+  fs.writeFileSync(cubeEmbeddingsPath, JSON.stringify(cubeEmbeddings));
+  console.log('Cube embeddings saved to file');
 
   if (taskId) {
     await cardUpdateTaskDao.updateStep(taskId, 'Finished Cube History Processing');

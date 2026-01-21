@@ -1,21 +1,19 @@
 import { S3 } from '@aws-sdk/client-s3';
-import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 
 import 'dotenv/config';
 
+// Use a dedicated S3 client for downloading from the public bucket
+// This client doesn't use LocalStack and doesn't require credentials for public bucket access
 const s3: S3 = new S3({
-  endpoint: process.env.AWS_ENDPOINT || undefined,
-  forcePathStyle: !!process.env.AWS_ENDPOINT,
-  credentials: fromNodeProviderChain(),
-  region: process.env.AWS_REGION,
+  region: 'us-east-1', // Public bucket is in us-east-1
 });
 
 export const downloadModelsFromS3 = async (basePath: string = ''): Promise<void> => {
-  // list all from s3 under s3://cubecobra/model
-  const listResult = await s3.listObjectsV2({ Bucket: process.env.DATA_BUCKET!, Prefix: 'model/' });
+  // list all from s3 under s3://cubecobra-public/model
+  const listResult = await s3.listObjectsV2({ Bucket: 'cubecobra-public', Prefix: 'model/' });
 
   console.log('Downloading model files from S3...');
 
@@ -37,7 +35,7 @@ export const downloadModelsFromS3 = async (basePath: string = ''): Promise<void>
       continue;
     }
 
-    const res = await s3.getObject({ Bucket: process.env.DATA_BUCKET!, Key: file.Key });
+    const res = await s3.getObject({ Bucket: 'cubecobra-public', Key: file.Key });
 
     // make sure folders exist
     const localFilePath = path.join(basePath, file.Key);

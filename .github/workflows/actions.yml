@@ -263,7 +263,7 @@ jobs:
 
       - name: Build client
         run: npm run build --workspace=packages/client
-        
+
       - name: Build server
         run: npm run build --workspace=packages/server
 

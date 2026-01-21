@@ -51,10 +51,16 @@ The primary script for downloading essential data files during initial setup.
 
 **Purpose**:
 
-- Downloads latest card data from S3/Scryfall
+- Downloads latest card data from the public S3 bucket (`cubecobra-public`)
 - Downloads ML model files for draft bots
 - Places files in correct monorepo locations
 - **First-time setup only** - not for regular updates
+
+**Safety & Requirements**:
+
+- ✅ **Safe to run** - Downloads from a public S3 bucket
+- ✅ **No AWS credentials required** - Public bucket access only
+- ✅ **No LocalStack configuration needed** - Connects directly to AWS
 
 **Usage**:
 
@@ -68,8 +74,8 @@ node --max-old-space-size=8192 packages/scripts/download-data-files.js
 
 **What it does**:
 
-1. Downloads card definitions to `/packages/server/private/`
-2. Downloads ML model files to `/packages/server/model/`
+1. Downloads card definitions to `/packages/server/private/` from `s3://cubecobra-public/cards/`
+2. Downloads ML model files to `/packages/server/model/` from `s3://cubecobra-public/model/`
 3. Ensures directory structure exists
 4. Provides clear feedback on download progress
 

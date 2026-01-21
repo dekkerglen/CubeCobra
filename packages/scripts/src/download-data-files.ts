@@ -9,8 +9,26 @@ config({ path: path.join(__dirname, '..', '.env') });
 import { downloadModelsFromS3 } from '@server/serverutils/downloadModel';
 import { updateCardbase } from '@server/serverutils/updatecards';
 
+/**
+ * Download essential data files for CubeCobra development
+ *
+ * This script downloads card definitions and ML model files from the public
+ * S3 bucket (cubecobra-public) to help new contributors get started quickly.
+ *
+ * Safety:
+ * ✅ Safe to run - downloads from a public S3 bucket
+ * ✅ No AWS credentials required
+ * ✅ No LocalStack configuration needed
+ *
+ * Downloads:
+ * - Card definitions (~100MB) -> /packages/server/private/
+ * - ML model files (~500MB) -> /packages/server/model/
+ *
+ * This is only needed once during initial setup.
+ */
 const downloadDataFiles = async () => {
-  console.log('Downloading card data files...');
+  console.log('Downloading card data files from public S3 bucket (cubecobra-public)...');
+  console.log('✅ Safe to run - no credentials required\n');
 
   // Define target directories in the monorepo structure
   const privateDir = path.join(__dirname, '..', '..', 'server', 'private');

@@ -1,9 +1,15 @@
-import { s3 } from 'dynamo/s3client';
+import { S3 } from '@aws-sdk/client-s3';
 import fs from 'fs';
 
 import 'dotenv/config';
 
 import { fileToAttribute, loadAllFiles } from './cardCatalog';
+
+// Use a dedicated S3 client for downloading from the public bucket
+// This client doesn't use LocalStack and doesn't require credentials for public bucket access
+const s3 = new S3({
+  region: 'us-east-1', // Public bucket is in us-east-1
+});
 
 interface CardManifest {
   checksum: string;
@@ -18,7 +24,7 @@ const getManifestPath = (basePath: string): string => `${basePath}/manifest.json
 const downloadManifestFromS3 = async (): Promise<CardManifest | null> => {
   try {
     const res = await s3.getObject({
-      Bucket: process.env.DATA_BUCKET!,
+      Bucket: 'cubecobra-public',
       Key: 'cards/manifest.json',
     });
     const manifestContent = await res.Body!.transformToString();
@@ -83,7 +89,7 @@ const downloadFromS3 = async (basePath: string = 'private'): Promise<void> => {
   await Promise.all(
     Object.keys(fileToAttribute).map(async (file: string) => {
       const res = await s3.getObject({
-        Bucket: process.env.DATA_BUCKET!,
+        Bucket: 'cubecobra-public',
         Key: `cards/${file}`,
       });
       fs.writeFileSync(`${basePath}/${file}`, await res.Body!.transformToString());
