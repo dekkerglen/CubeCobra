@@ -970,10 +970,10 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
     console.log(`Finished ${file}`);
   }
 
-  // Calculate checksum of the all_cards.json file
-  const allCardsPath = `${PRIVATE_DIR}/all_cards.json`;
-  const allCardsContent = fs.readFileSync(allCardsPath, 'utf-8');
-  const checksum = crypto.createHash('sha256').update(allCardsContent).digest('hex');
+  // Calculate checksum of the carddict.json file (main card database)
+  const cardDictPath = `${PRIVATE_DIR}/carddict.json`;
+  const cardDictContent = fs.readFileSync(cardDictPath, 'utf-8');
+  const checksum = crypto.createHash('sha256').update(cardDictContent).digest('hex');
 
   console.log(`Calculated checksum: ${checksum}`);
 
