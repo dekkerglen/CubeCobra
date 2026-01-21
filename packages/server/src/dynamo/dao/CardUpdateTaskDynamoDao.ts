@@ -63,6 +63,7 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
       totalCards: item.totalCards,
       step: item.step,
       completedSteps: item.completedSteps || [],
+      stepTimestamps: item.stepTimestamps || {},
       taskArn: item.taskArn,
       errorMessage: item.errorMessage,
       startedAt: item.startedAt,
@@ -113,6 +114,7 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
       totalCards: newTask.totalCards,
       step: newTask.step,
       completedSteps: [],
+      stepTimestamps: { [newTask.step]: now },
       errorMessage: newTask.errorMessage,
       startedAt: newTask.status === CardUpdateTaskStatus.IN_PROGRESS ? now : undefined,
       dateCreated: now,
@@ -236,8 +238,11 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
       task.completedSteps.push(task.step);
     }
 
+    const now = Date.now();
     task.step = step;
-    task.dateLastUpdated = Date.now();
+    task.stepTimestamps = task.stepTimestamps || {};
+    task.stepTimestamps[step] = now;
+    task.dateLastUpdated = now;
     await this.update(task);
     return task;
   }

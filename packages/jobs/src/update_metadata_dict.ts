@@ -486,10 +486,6 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
   await uploadJson('metadatadict.json', metadatadict);
   await uploadJson('indexToOracle.json', indexToOracle);
 
-  if (taskId) {
-    await cardUpdateTaskDao.updateStep(taskId, 'Finished Metadata Processing');
-  }
-
   console.log('Complete');
 
   process.exit();

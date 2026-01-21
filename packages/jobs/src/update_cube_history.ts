@@ -517,10 +517,6 @@ const mapTotalsToCardHistory = (
   fs.writeFileSync(cubeEmbeddingsPath, JSON.stringify(cubeEmbeddings));
   console.log('Cube embeddings saved to file');
 
-  if (taskId) {
-    await cardUpdateTaskDao.updateStep(taskId, 'Finished Cube History Processing');
-  }
-
   console.log('Complete');
 
   process.exit();

@@ -490,10 +490,6 @@ if (require.main === module) {
 
     console.log(`Uploaded ${allCubes.length} / ${allCubes.length} cube draft histories`);
 
-    if (taskId) {
-      await cardUpdateTaskDao.updateStep(taskId, 'Finished Draft History Processing');
-    }
-
     console.log('Complete');
 
     process.exit();

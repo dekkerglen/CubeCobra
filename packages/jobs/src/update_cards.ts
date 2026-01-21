@@ -22,7 +22,7 @@ import fetch from 'node-fetch';
 import path from 'path';
 import stream, { pipeline } from 'stream';
 
-import { downloadJson, uploadJson } from './utils/s3';
+import { downloadJson, uploadFile } from './utils/s3';
 import {
   convertName,
   ScryfallCard,
@@ -105,11 +105,10 @@ async function getFileWithCache(url: string, filePath: string, useS3Cache?: bool
   await downloadFile(url, filePath);
 
   if (useS3Cache) {
-    // Upload to S3 cache
+    // Upload to S3 cache using streaming to avoid memory issues with large files
     const fileName = path.basename(filePath);
     const cacheKey = `cache/${fileName}`;
-    const fileContent = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    await uploadJson(cacheKey, fileContent);
+    await uploadFile(cacheKey, filePath, 'application/json');
   }
 
   return fs.createReadStream(filePath);
@@ -1128,7 +1127,6 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
     await uploadCardDb(scryfallMetadata, taskId);
 
     if (taskId) {
-      await cardUpdateTaskDao.updateStep(taskId, 'Finished Card Update');
       await cardUpdateTaskDao.markAsCompleted(taskId);
     }
 

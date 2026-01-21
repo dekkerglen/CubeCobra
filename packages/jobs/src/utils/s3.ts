@@ -36,6 +36,25 @@ export const uploadJson = async (key: string, data: any): Promise<void> => {
 };
 
 /**
+ * Upload a file from the filesystem to S3
+ * Uses streaming to avoid loading large files into memory
+ */
+export const uploadFile = async (key: string, filePath: string, contentType?: string): Promise<void> => {
+  const fs = await import('fs');
+  const bucket = getJobsBucket();
+  const stream = fs.createReadStream(filePath);
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: stream,
+      ContentType: contentType || 'application/json',
+    }),
+  );
+};
+
+/**
  * Download a JSON object from S3
  * Returns null if the object doesn't exist
  */

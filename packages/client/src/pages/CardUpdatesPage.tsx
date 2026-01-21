@@ -89,7 +89,8 @@ const StepProgress: React.FC<{
   completedSteps: string[];
   currentStep: string;
   status: string;
-}> = ({ completedSteps, currentStep, status }) => {
+  stepTimestamps?: Record<string, number>;
+}> = ({ completedSteps, currentStep, status, stepTimestamps = {} }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const allSteps = [...completedSteps];
 
@@ -117,15 +118,23 @@ const StepProgress: React.FC<{
             const isCompleted = completedSteps.includes(step);
             const isCurrent = step === currentStep && !isCompleted;
             const isFailed = status === 'FAILED' && isCurrent;
+            const timestamp = stepTimestamps[step];
 
             return (
-              <Flexbox key={index} direction="row" alignItems="center" gap="2">
-                {isCompleted && <CheckCircleFillIcon size={16} className="text-green-600 flex-shrink-0" />}
-                {isCurrent && !isFailed && <Spinner sm className="flex-shrink-0" />}
-                {isFailed && <XCircleFillIcon size={16} className="text-red-600 flex-shrink-0" />}
-                <Text sm className={isCompleted ? 'text-text' : isFailed ? 'text-red-600' : 'text-text-secondary'}>
-                  {step}
-                </Text>
+              <Flexbox key={index} direction="row" alignItems="center" gap="2" justify="between">
+                <Flexbox direction="row" alignItems="center" gap="2" className="flex-1">
+                  {isCompleted && <CheckCircleFillIcon size={16} className="text-green-600 flex-shrink-0" />}
+                  {isCurrent && !isFailed && <Spinner sm className="flex-shrink-0" />}
+                  {isFailed && <XCircleFillIcon size={16} className="text-red-600 flex-shrink-0" />}
+                  <Text sm className={isCompleted ? 'text-text' : isFailed ? 'text-red-600' : 'text-text-secondary'}>
+                    {step}
+                  </Text>
+                </Flexbox>
+                {timestamp && (
+                  <Text sm className="text-text-secondary whitespace-nowrap">
+                    {new Date(timestamp).toLocaleTimeString()}
+                  </Text>
+                )}
               </Flexbox>
             );
           })}
@@ -224,6 +233,7 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                     completedSteps={update.completedSteps || []}
                     currentStep={update.step}
                     status={update.status}
+                    stepTimestamps={update.stepTimestamps}
                   />
 
                   {update.status === 'COMPLETED' && (
@@ -340,6 +350,7 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
                     completedSteps={task.completedSteps || []}
                     currentStep={task.step}
                     status={task.status}
+                    stepTimestamps={task.stepTimestamps}
                   />
 
                   {task.status === 'COMPLETED' && (
@@ -424,6 +435,7 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
                     completedSteps={task.completedSteps || []}
                     currentStep={task.step}
                     status={task.status}
+                    stepTimestamps={task.stepTimestamps}
                   />
 
                   {task.status === 'COMPLETED' && (

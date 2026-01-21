@@ -200,10 +200,6 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
     process.exit(1);
   }
 
-  if (taskId) {
-    await cardUpdateTaskDao.updateStep(taskId, 'Finished Combo Processing');
-  }
-
   console.log('Complete');
   process.exit();
 })();
