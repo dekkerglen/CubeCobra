@@ -497,7 +497,7 @@ const mapTotalsToCardHistory = (
 
     // Generate embedding for this cube using the ML encoder
     const embedding = encode(cubeOracles);
-    
+
     if (embedding && embedding.length > 0) {
       cubeEmbeddings[cubeId] = Array.from(embedding);
     }

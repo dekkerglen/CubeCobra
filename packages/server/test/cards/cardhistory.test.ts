@@ -110,6 +110,7 @@ describe('Cards History', () => {
           cubes: 100,
         },
       ],
+      hasMore: false,
     });
   });
 
@@ -129,6 +130,7 @@ describe('Cards History', () => {
     expect(res.body).toEqual({
       success: 'false',
       data: [],
+      hasMore: false,
     });
   });
 });

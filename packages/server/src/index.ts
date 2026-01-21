@@ -289,7 +289,9 @@ app.use((err: any, req: express.Request, res: express.Response) => {
 // Update if data is over a week old or if card count has changed
 schedule.scheduleJob('*/5 * * * *', async () => {
   console.info('Checking for card database updates...');
-  await checkAndUpdateCardbase();
+  const bucket = process.env.DATA_BUCKET || 'cubecobra-public';
+  const region = process.env.AWS_REGION || 'us-east-2';
+  await checkAndUpdateCardbase('private', bucket, region);
 });
 
 // Start server after carddb and ML models are initialized.

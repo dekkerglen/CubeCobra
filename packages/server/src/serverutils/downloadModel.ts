@@ -5,15 +5,12 @@ import { Readable } from 'stream';
 
 import 'dotenv/config';
 
-// Use a dedicated S3 client for downloading from the public bucket
-// This client doesn't use LocalStack and doesn't require credentials for public bucket access
-const s3: S3 = new S3({
-  region: 'us-east-1', // Public bucket is in us-east-1
-});
+export const downloadModelsFromS3 = async (basePath: string = '', bucket: string, region: string): Promise<void> => {
+  // Create S3 client with provided region
+  const s3: S3 = new S3({ region });
 
-export const downloadModelsFromS3 = async (basePath: string = ''): Promise<void> => {
-  // list all from s3 under s3://cubecobra-public/model
-  const listResult = await s3.listObjectsV2({ Bucket: 'cubecobra-public', Prefix: 'model/' });
+  // list all from s3 under s3://{bucket}/model
+  const listResult = await s3.listObjectsV2({ Bucket: bucket, Prefix: 'model/' });
 
   console.log('Downloading model files from S3...');
 
@@ -35,7 +32,7 @@ export const downloadModelsFromS3 = async (basePath: string = ''): Promise<void>
       continue;
     }
 
-    const res = await s3.getObject({ Bucket: 'cubecobra-public', Key: file.Key });
+    const res = await s3.getObject({ Bucket: bucket, Key: file.Key });
 
     // make sure folders exist
     const localFilePath = path.join(basePath, file.Key);
