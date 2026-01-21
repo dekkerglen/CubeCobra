@@ -489,6 +489,8 @@ const mapTotalsToCardHistory = (
 
   for (let i = 0; i < cubeIds.length; i++) {
     const cubeId = cubeIds[i];
+    if (!cubeId) continue;
+
     const cubeOracles = cubes[cubeId];
 
     if (!cubeOracles || cubeOracles.length === 0) {
