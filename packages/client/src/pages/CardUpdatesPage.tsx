@@ -183,104 +183,104 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
         <Text className="text-center py-8 text-text-secondary">No card updates found.</Text>
       ) : (
         <div className="space-y-4">
-        {updates.map((update) => {
-          const statusBadge = getStatusBadge(update.status);
-          return (
-            <Card key={update.id} className="border border-border">
-              <CardBody>
-                <Flexbox direction="row" justify="between" alignItems="start" className="mb-3">
-                  <Flexbox direction="col" gap="1" className="flex-1">
-                    <Flexbox direction="row" alignItems="center" gap="2">
-                      <Text semibold lg>
-                        Update on {formatDate(update.completedAt || update.timestamp)}
-                      </Text>
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                        {statusBadge.text}
-                      </span>
+          {updates.map((update) => {
+            const statusBadge = getStatusBadge(update.status);
+            return (
+              <Card key={update.id} className="border border-border">
+                <CardBody>
+                  <Flexbox direction="row" justify="between" alignItems="start" className="mb-3">
+                    <Flexbox direction="col" gap="1" className="flex-1">
+                      <Flexbox direction="row" alignItems="center" gap="2">
+                        <Text semibold lg>
+                          Update on {formatDate(update.completedAt || update.timestamp)}
+                        </Text>
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                          {statusBadge.text}
+                        </span>
+                      </Flexbox>
+                      {update.status === 'IN_PROGRESS' && (
+                        <Text sm className="text-text-secondary">
+                          Step: {update.step}
+                        </Text>
+                      )}
+                      {update.status === 'COMPLETED' && (
+                        <Text sm className="text-text-secondary">
+                          Completed in {formatDuration(update.startedAt, update.completedAt)}
+                        </Text>
+                      )}
+                      {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
                     </Flexbox>
-                    {update.status === 'IN_PROGRESS' && (
-                      <Text sm className="text-text-secondary">
-                        Step: {update.step}
+                    <Flexbox direction="col" gap="1" alignItems="end" className="ml-4">
+                      <Text sm className="text-text-secondary whitespace-nowrap">
+                        Scryfall: {new Date(update.scryfallUpdatedAt).toLocaleDateString()}
                       </Text>
-                    )}
-                    {update.status === 'COMPLETED' && (
-                      <Text sm className="text-text-secondary">
-                        Completed in {formatDuration(update.startedAt, update.completedAt)}
+                      <Text sm className="text-text-secondary whitespace-nowrap">
+                        File Size: {formatFileSize(update.scryfallFileSize)}
                       </Text>
-                    )}
-                    {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
-                  </Flexbox>
-                  <Flexbox direction="col" gap="1" alignItems="end" className="ml-4">
-                    <Text sm className="text-text-secondary whitespace-nowrap">
-                      Scryfall: {new Date(update.scryfallUpdatedAt).toLocaleDateString()}
-                    </Text>
-                    <Text sm className="text-text-secondary whitespace-nowrap">
-                      File Size: {formatFileSize(update.scryfallFileSize)}
-                    </Text>
-                  </Flexbox>
-                </Flexbox>
-
-                <StepProgress
-                  completedSteps={update.completedSteps || []}
-                  currentStep={update.step}
-                  status={update.status}
-                />
-
-                {update.status === 'COMPLETED' && (
-                  <>
-                    <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Total Cards
-                        </Text>
-                        <Text semibold xl>
-                          {update.totalCards.toLocaleString()}
-                        </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Cards Added
-                        </Text>
-                        <Text semibold xl className="text-green-600">
-                          +{update.cardsAdded.toLocaleString()}
-                        </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Cards Removed
-                        </Text>
-                        <Text semibold xl className="text-red-600">
-                          -{update.cardsRemoved.toLocaleString()}
-                        </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Net Change
-                        </Text>
-                        <Text
-                          semibold
-                          xl
-                          className={update.cardsAdded - update.cardsRemoved >= 0 ? 'text-green-600' : 'text-red-600'}
-                        >
-                          {update.cardsAdded - update.cardsRemoved >= 0 ? '+' : ''}
-                          {(update.cardsAdded - update.cardsRemoved).toLocaleString()}
-                        </Text>
-                      </div>
                     </Flexbox>
+                  </Flexbox>
 
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <Text xs className="text-text-secondary font-mono">
-                        Checksum: {update.checksum.substring(0, 16)}...
-                      </Text>
-                    </div>
-                  </>
-                )}
-              </CardBody>
-            </Card>
-          );
-        })}
-      </div>
-    )}
+                  <StepProgress
+                    completedSteps={update.completedSteps || []}
+                    currentStep={update.step}
+                    status={update.status}
+                  />
+
+                  {update.status === 'COMPLETED' && (
+                    <>
+                      <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                        <div className="flex-1">
+                          <Text sm className="text-text-secondary mb-1">
+                            Total Cards
+                          </Text>
+                          <Text semibold xl>
+                            {update.totalCards.toLocaleString()}
+                          </Text>
+                        </div>
+                        <div className="flex-1">
+                          <Text sm className="text-text-secondary mb-1">
+                            Cards Added
+                          </Text>
+                          <Text semibold xl className="text-green-600">
+                            +{update.cardsAdded.toLocaleString()}
+                          </Text>
+                        </div>
+                        <div className="flex-1">
+                          <Text sm className="text-text-secondary mb-1">
+                            Cards Removed
+                          </Text>
+                          <Text semibold xl className="text-red-600">
+                            -{update.cardsRemoved.toLocaleString()}
+                          </Text>
+                        </div>
+                        <div className="flex-1">
+                          <Text sm className="text-text-secondary mb-1">
+                            Net Change
+                          </Text>
+                          <Text
+                            semibold
+                            xl
+                            className={update.cardsAdded - update.cardsRemoved >= 0 ? 'text-green-600' : 'text-red-600'}
+                          >
+                            {update.cardsAdded - update.cardsRemoved >= 0 ? '+' : ''}
+                            {(update.cardsAdded - update.cardsRemoved).toLocaleString()}
+                          </Text>
+                        </div>
+                      </Flexbox>
+
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <Text xs className="text-text-secondary font-mono">
+                          Checksum: {update.checksum.substring(0, 16)}...
+                        </Text>
+                      </div>
+                    </>
+                  )}
+                </CardBody>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </Flexbox>
   </CardBody>
 );
