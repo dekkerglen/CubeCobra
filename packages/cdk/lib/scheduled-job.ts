@@ -44,7 +44,8 @@ export class ScheduledJob extends Construct {
       new targets.EcsTask({
         cluster: cluster,
         taskDefinition: taskDefinition,
-        subnetSelection: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+        subnetSelection: { subnetType: SubnetType.PUBLIC },
+        assignPublicIp: true,
       }),
     );
   }

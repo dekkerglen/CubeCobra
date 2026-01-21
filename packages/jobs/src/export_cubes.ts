@@ -1,21 +1,20 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
-dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
+import path from 'path';
 
+import 'module-alias/register';
+dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
+
+import { cubeDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { getAllOracleIds } from '@server/serverutils/carddb';
 import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import type CubeType from '@utils/datatypes/Cube';
-import path from 'path/win32';
-
-import 'module-alias/register';
-
-const Cube = require('../dynamo/models/cube');
 
 const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>) => {
   try {
-    const cards = await Cube.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id);
 
     return {
       cards: cards.mainboard.map((card: Card) => oracleToIndex[cardOracleId(card)] || -1),
@@ -46,10 +45,10 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
 
   let lastKey: any = null;
   let processed = 0;
-  const cubes: CubeType[] = [];
+  const cubes: any[] = [];
 
   do {
-    const result = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC, lastKey, 100);
+    const result = await cubeDao.queryAllCubes('popularity', false, lastKey, 100);
     lastKey = result.lastKey;
     processed += result.items.length;
 

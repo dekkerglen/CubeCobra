@@ -2,22 +2,55 @@
   "name": "@cubecobra/jobs",
   "version": "1.0.0",
   "scripts": {
-    "update-draft-history": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_draft_history.ts",
-    "update-cube-history": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cube_history.ts",
-    "update-metadata-dict": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_metadata_dict.ts",
-    "update-cards": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cards.ts",
-    "update-combos": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_combos.ts",
-    "repair-cube-hashes": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairCubeHashes.ts --",
-    "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-combos && npm run update-cards && npm run update-combos && npm run update-cards",
-    "build": "npx tsc"
+    "init-data": "node dist/jobs/src/init-data.js",
+    "update-draft-history": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/update_draft_history.js",
+    "update-cube-history": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/update_cube_history.js",
+    "update-metadata-dict": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/update_metadata_dict.js",
+    "update-cards": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/update_cards.js",
+    "update-combos": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/update_combos.js",
+    "repair-cube-hashes": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/repairCubeHashes.js --",
+    "export-data": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/export_cubes.js && node dist/jobs/src/export_decks.js && node dist/jobs/src/export_simple_card_dict.js",
+    "apply-migrations": "NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/apply_scryfall_migrations.js",
+    "dev:update-draft-history": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_draft_history.ts",
+    "dev:update-cube-history": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cube_history.ts",
+    "dev:update-metadata-dict": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_metadata_dict.ts",
+    "dev:update-cards": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cards.ts",
+    "dev:update-combos": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_combos.ts",
+    "dev:repair-cube-hashes": "NODE_OPTIONS=--max_old_space-size=18192 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairCubeHashes.ts --",
+    "update-all": "npm run init-data && npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-combos && npm run update-cards && npm run update-combos && npm run update-cards",
+    "fix-external-paths": "npx resolve-tspaths --out dist && node scripts/fixExternalPaths.js",
+    "build": "npx tsc && npm run fix-external-paths",
+    "clean": "rm -rf dist/ node_modules/",
+    "test": "npx jest",
+    "test:ci": "npx jest --collectCoverage"
   },
   "dependencies": {
-    "elo-rating": "^1.0.1"
+    "@aws-sdk/client-cloudwatch-logs": "^3.529.1",
+    "@aws-sdk/client-s3": "^3.927.0",
+    "@aws-sdk/client-ses": "^3.926.0",
+    "@aws-sdk/credential-providers": "^3.926.0",
+    "@aws-sdk/lib-dynamodb": "^3.927.0",
+    "@aws-sdk/lib-storage": "^3.927.0",
+    "dotenv": "^16.0.0",
+    "elo-rating": "^1.0.1",
+    "module-alias": "^2.2.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.12.11",
+    "jest": "^29.7.0",
+    "resolve-tspaths": "^0.8.22",
+    "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.5"
+  },
+  "_moduleAliases": {
+    "@server": "../server/src",
+    "@utils": "../utils/src",
+    "serverutils": "../server/src/serverutils",
+    "dynamo": "../server/src/dynamo",
+    "routes": "../server/src/routes"
   }
 }

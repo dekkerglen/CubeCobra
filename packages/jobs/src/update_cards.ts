@@ -1,9 +1,12 @@
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 
 import 'module-alias/register';
 dotenv.config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { s3 } from '@server/dynamo/s3client';
 import { fileToAttribute } from '@server/serverutils/cardCatalog';
 import { binaryInsert, turnToTree } from '@server/serverutils/util';
@@ -19,6 +22,7 @@ import fetch from 'node-fetch';
 import path from 'path';
 import stream, { pipeline } from 'stream';
 
+import { downloadJson, uploadJson } from './utils/s3';
 import {
   convertName,
   ScryfallCard,
@@ -92,33 +96,29 @@ async function downloadFile(url: string, filePath: string) {
   });
 }
 
-// Helper to stream file from cache or download and cache it
-async function getFileWithCache(url: string, filePath: string, cacheDir?: string): Promise<fs.ReadStream> {
-  let cachePath: string | undefined = undefined;
-  if (cacheDir) {
-    const fileName = path.basename(filePath);
-    cachePath = path.join(cacheDir, fileName);
-    if (fs.existsSync(cachePath)) {
-      console.log(`Reading from cache: ${cachePath}`);
-      // Save to original location
-      fs.copyFileSync(cachePath, filePath);
-      return fs.createReadStream(cachePath);
-    }
-  }
-  // Download and cache
+// Helper to download file - always fetches fresh data for update jobs
+async function getFileWithCache(url: string, filePath: string, useS3Cache?: boolean): Promise<fs.ReadStream> {
+  // For update jobs, always download fresh data - skip S3 cache check
+  // The cache is only useful for non-update operations
+
+  // Download file
   await downloadFile(url, filePath);
-  if (cacheDir) {
-    // Copy to cache
+
+  if (useS3Cache) {
+    // Upload to S3 cache
     const fileName = path.basename(filePath);
-    cachePath = path.join(cacheDir, fileName);
-    fs.copyFileSync(filePath, cachePath);
+    const cacheKey = `cache/${fileName}`;
+    const fileContent = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    await uploadJson(cacheKey, fileContent);
   }
+
   return fs.createReadStream(filePath);
 }
 
-async function downloadDefaultCards(cacheDir?: string) {
+async function downloadDefaultCards(useS3Cache?: boolean): Promise<{ updatedAt: string; fileSize: number }> {
   let defaultUrl;
   let allUrl;
+  let allCardsMetadata: { updated_at: string; size: number } | undefined;
 
   const res = await fetch('https://api.scryfall.com/bulk-data');
   if (!res.ok) throw new Error(`Download of /bulk-data failed with code ${res.status}`);
@@ -126,6 +126,8 @@ async function downloadDefaultCards(cacheDir?: string) {
     data: Array<{
       type: string;
       download_uri: string;
+      updated_at: string;
+      size: number;
     }>;
   };
 
@@ -134,21 +136,28 @@ async function downloadDefaultCards(cacheDir?: string) {
       defaultUrl = data.download_uri;
     } else if (data.type === 'all_cards') {
       allUrl = data.download_uri;
+      allCardsMetadata = { updated_at: data.updated_at, size: data.size };
     }
   }
 
   if (!defaultUrl) throw new Error('URL for Default cards not found in /bulk-data response');
   if (!allUrl) throw new Error('URL for All cards not found in /bulk-data response');
+  if (!allCardsMetadata) throw new Error('Metadata for All cards not found in /bulk-data response');
 
   // Use getFileWithCache to download or stream from cache
   await Promise.all([
-    getFileWithCache(defaultUrl, `${PRIVATE_DIR}/cards.json`, cacheDir),
-    getFileWithCache(allUrl, `${PRIVATE_DIR}/all-cards.json`, cacheDir),
+    getFileWithCache(defaultUrl, `${PRIVATE_DIR}/cards.json`, useS3Cache),
+    getFileWithCache(allUrl, `${PRIVATE_DIR}/all-cards.json`, useS3Cache),
   ]);
+
+  return {
+    updatedAt: allCardsMetadata.updated_at,
+    fileSize: allCardsMetadata.size,
+  };
 }
 
-async function downloadSets(cacheDir?: string) {
-  await getFileWithCache('https://api.scryfall.com/sets', `${PRIVATE_DIR}/sets.json`, cacheDir);
+async function downloadSets(useS3Cache?: boolean) {
+  await getFileWithCache('https://api.scryfall.com/sets', `${PRIVATE_DIR}/sets.json`, useS3Cache);
 }
 
 function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
@@ -826,10 +835,10 @@ const downloadFromScryfall = async (
   indexToOracle: string[],
   ckPrices: Record<string, number>,
   mpPrices: Record<string, number>,
-  cacheDir?: string,
-) => {
+  useS3Cache?: boolean,
+): Promise<{ updatedAt: string; fileSize: number } | undefined> => {
   try {
-    await downloadSets(cacheDir);
+    await downloadSets(useS3Cache);
     await processSets();
   } catch (error) {
     console.error('Downloading set data failed:');
@@ -837,19 +846,20 @@ const downloadFromScryfall = async (
     console.error(error);
 
     console.error('Sets were not updated');
-    return;
+    return undefined;
   }
 
   console.info('Downloading files from scryfall or cache...');
+  let scryfallMetadata: { updatedAt: string; fileSize: number };
   try {
-    await downloadDefaultCards(cacheDir);
+    scryfallMetadata = await downloadDefaultCards(useS3Cache);
   } catch (error) {
     console.error('Downloading card data failed:');
 
     console.error(error);
 
     console.error('Cardbase was not updated');
-    return;
+    return undefined;
   }
 
   console.info('Creating objects...');
@@ -875,6 +885,7 @@ const downloadFromScryfall = async (
   }
 
   console.info('Finished cardbase update...');
+  return scryfallMetadata;
 };
 
 const uploadLargeObjectToS3 = async (file: any, key: string) => {
@@ -891,7 +902,67 @@ const uploadLargeObjectToS3 = async (file: any, key: string) => {
   }
 };
 
-const uploadCardDb = async () => {
+const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: number }, taskId?: string) => {
+  // Calculate current card count
+  const currentCardCount = Object.keys(catalog.dict).length;
+  console.log(`Current card count: ${currentCardCount}`);
+
+  // Try to get previous card count from the old manifest
+  let previousCardCount = 0;
+  let previousChecksum = '';
+  try {
+    const previousManifest = await s3.send(
+      new GetObjectCommand({
+        Bucket: process.env.DATA_BUCKET || '',
+        Key: 'cards/manifest.json',
+      }),
+    );
+    const manifestContent = await previousManifest.Body?.transformToString();
+    if (manifestContent) {
+      const oldManifest = JSON.parse(manifestContent);
+      previousChecksum = oldManifest.checksum || '';
+      // If old manifest had totalCards, use it; otherwise try to get from old all_cards.json
+      if (oldManifest.totalCards) {
+        previousCardCount = oldManifest.totalCards;
+      }
+    }
+  } catch {
+    console.log('No previous manifest found, assuming first update');
+  }
+
+  // If we still don't have previous count, try to get it from S3 all_cards.json
+  if (previousCardCount === 0 && previousChecksum) {
+    try {
+      const previousAllCards = await s3.send(
+        new GetObjectCommand({
+          Bucket: process.env.DATA_BUCKET || '',
+          Key: 'cards/all_cards.json',
+        }),
+      );
+      const allCardsContent = await previousAllCards.Body?.transformToString();
+      if (allCardsContent) {
+        const previousDict = JSON.parse(allCardsContent);
+        previousCardCount = Object.keys(previousDict).length;
+      }
+    } catch {
+      console.log('Could not fetch previous all_cards.json');
+    }
+  }
+
+  console.log(`Previous card count: ${previousCardCount}`);
+
+  // Calculate changes
+  const cardsAdded = Math.max(0, currentCardCount - previousCardCount);
+  const cardsRemoved = Math.max(0, previousCardCount - currentCardCount);
+
+  console.log(`Cards added: ${cardsAdded}`);
+  console.log(`Cards removed: ${cardsRemoved}`);
+
+  // Update step: Uploading files
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Uploading card files');
+  }
+
   for (const file of Object.keys(fileToAttribute)) {
     console.log(`Uploading ${file}...`);
 
@@ -900,47 +971,79 @@ const uploadCardDb = async () => {
     console.log(`Finished ${file}`);
   }
 
+  // Calculate checksum of the all_cards.json file
+  const allCardsPath = `${PRIVATE_DIR}/all_cards.json`;
+  const allCardsContent = fs.readFileSync(allCardsPath, 'utf-8');
+  const checksum = crypto.createHash('sha256').update(allCardsContent).digest('hex');
+
+  console.log(`Calculated checksum: ${checksum}`);
+
   console.log('Uploading manifest...');
+  const manifest = {
+    checksum: checksum,
+    scryfallUpdatedAt: scryfallMetadata.updatedAt,
+    scryfallFileSize: scryfallMetadata.fileSize,
+    totalCards: currentCardCount,
+    cardsAdded: cardsAdded,
+    cardsRemoved: cardsRemoved,
+    version: '1.0.0',
+  };
+
   await new Upload({
     client: s3,
 
     params: {
       Bucket: process.env.DATA_BUCKET || '',
       Key: `cards/manifest.json`,
-      Body: JSON.stringify({ date_exported: new Date() }),
+      Body: JSON.stringify(manifest, null, 2),
     },
   }).done();
 
   console.log('Finished manifest');
+  console.log(`Manifest: ${JSON.stringify(manifest)}`);
+
+  // Update the task with final statistics
+  if (taskId) {
+    const task = await cardUpdateTaskDao.getById(taskId);
+    if (task) {
+      task.checksum = checksum;
+      task.cardsAdded = cardsAdded;
+      task.cardsRemoved = cardsRemoved;
+      task.totalCards = currentCardCount;
+      task.step = 'Finalizing';
+      await cardUpdateTaskDao.update(task);
+    }
+  }
 
   console.log('done');
+  return checksum;
 };
 
 const loadMetadatadict = async () => {
-  if (fs.existsSync('./temp') && fs.existsSync('./temp/metadatadict.json')) {
-    const metadatadict = JSON.parse(fs.readFileSync('./temp/metadatadict.json', 'utf8'));
-    const indexToOracle = JSON.parse(fs.readFileSync('./temp/indexToOracle.json', 'utf8'));
+  const metadatadict = await downloadJson('metadatadict.json');
+  const indexToOracle = await downloadJson('indexToOracle.json');
 
+  if (metadatadict && indexToOracle) {
     return {
       metadatadict,
       indexToOracle,
     };
   }
 
-  console.log("Couldn't find metadatadict.json (that is OK)");
+  console.log("Couldn't find metadatadict.json in S3 (that is OK)");
   return {
     metadatadict: {},
     indexToOracle: [],
   };
 };
 
-const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
+const loadCardKingdomPrices = async (useS3Cache?: boolean): Promise<Record<string, number>> => {
   // Use cache if available
   const url = 'https://api.cardkingdom.com/api/v2/pricelist';
   const filePath = `${PRIVATE_DIR}/cardkingdom-prices.json`;
   let stream;
-  if (cacheDir) {
-    stream = await getFileWithCache(url, filePath, cacheDir);
+  if (useS3Cache) {
+    stream = await getFileWithCache(url, filePath, useS3Cache);
   } else {
     await downloadFile(url, filePath);
     stream = fs.createReadStream(filePath);
@@ -963,12 +1066,12 @@ const loadCardKingdomPrices = async (): Promise<Record<string, number>> => {
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
 
-const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
+const loadManaPoolPrices = async (useS3Cache?: boolean): Promise<Record<string, number>> => {
   const url = 'https://manapool.com/api/v1/prices/singles';
   const filePath = `${PRIVATE_DIR}/manapool-prices.json`;
   let stream;
-  if (cacheDir) {
-    stream = await getFileWithCache(url, filePath, cacheDir);
+  if (useS3Cache) {
+    stream = await getFileWithCache(url, filePath, useS3Cache);
   } else {
     await downloadFile(url, filePath);
     stream = fs.createReadStream(filePath);
@@ -991,21 +1094,55 @@ const loadManaPoolPrices = async (): Promise<Record<string, number>> => {
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
 
-// Parse CLI args for cache dir (plain JS, no minimist)
-const cacheDir = process.env?.CACHE_DIR ?? '';
+// Use S3 for caching if DATA_BUCKET is set
+const useS3Cache = !!process.env.DATA_BUCKET;
+const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 (async () => {
   try {
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Processing Cards');
+    }
+
     const { metadatadict, indexToOracle } = await loadMetadatadict();
-    const manaPoolPrices = await loadManaPoolPrices();
-    const cardKingdomPrices = await loadCardKingdomPrices();
-    await downloadFromScryfall(metadatadict, indexToOracle, cardKingdomPrices, manaPoolPrices, cacheDir);
-    await uploadCardDb();
+
+    const manaPoolPrices = await loadManaPoolPrices(useS3Cache);
+    const cardKingdomPrices = await loadCardKingdomPrices(useS3Cache);
+
+    const scryfallMetadata = await downloadFromScryfall(
+      metadatadict,
+      indexToOracle,
+      cardKingdomPrices,
+      manaPoolPrices,
+      useS3Cache,
+    );
+
+    if (!scryfallMetadata) {
+      console.error('Failed to download card data from Scryfall');
+      if (taskId) {
+        await cardUpdateTaskDao.markAsFailed(taskId, 'Failed to download card data from Scryfall');
+      }
+      process.exit(1);
+    }
+
+    await uploadCardDb(scryfallMetadata, taskId);
+
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Finished Card Update');
+      await cardUpdateTaskDao.markAsCompleted(taskId);
+    }
 
     console.log('Complete');
 
     process.exit();
   } catch (error) {
     console.error(error);
+    if (taskId) {
+      await cardUpdateTaskDao.markAsFailed(
+        taskId,
+        error instanceof Error ? error.message : 'Unknown error during card update',
+      );
+    }
+    process.exit(1);
   }
 })();

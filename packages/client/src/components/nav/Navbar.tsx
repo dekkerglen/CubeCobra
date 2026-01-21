@@ -48,6 +48,7 @@ const navItems = [
       { label: 'Search Cards', href: '/tool/searchcards' },
       { label: 'Packages', href: '/packages' },
       { label: 'Filter Syntax', href: '/filters' },
+      { label: 'Card Updates', href: '/tool/cardupdates' },
     ],
   },
   {

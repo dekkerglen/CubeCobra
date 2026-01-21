@@ -6,13 +6,15 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-const fs = require('fs');
 const { DefaultElo } = require('@utils/datatypes/Card');
+import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import carddb, { cardFromId } from '@server/serverutils/carddb';
 import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
 const { encode, oracleInData } = require('@server/serverutils/ml');
 import { initializeMl } from '@server/serverutils/ml';
+
+import { downloadJson, listFiles, uploadJson } from './utils/s3';
 const correlationLimit = 36;
 // import { HierarchicalNSW } from 'hnswlib-node';
 
@@ -34,7 +36,13 @@ interface CubeHistory {
   indexToOracleMap: Record<number, string>;
 }
 
+const taskId = process.env.CARD_UPDATE_TASK_ID;
+
 (async () => {
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Processing Metadata');
+  }
+
   console.log('Loading card database');
   const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
   await initializeCardDb(privateDir);
@@ -44,10 +52,18 @@ interface CubeHistory {
   await initializeMl(rootDir);
 
   // load most recent cube history
-  const cubeHistoryFiles = fs.readdirSync('./temp/cubes_history').sort();
-  const cubeHistoryData: CubeHistory = JSON.parse(
-    fs.readFileSync(`./temp/cubes_history/${cubeHistoryFiles[cubeHistoryFiles.length - 1]}`),
-  );
+  const cubeHistoryFiles = await listFiles('cubes_history/');
+  cubeHistoryFiles.sort();
+  const lastCubeHistoryFile = cubeHistoryFiles[cubeHistoryFiles.length - 1];
+  if (!lastCubeHistoryFile) {
+    throw new Error('No cube history files found in S3');
+  }
+  const cubeHistoryData: CubeHistory | null = await downloadJson(lastCubeHistoryFile);
+
+  if (!cubeHistoryData) {
+    throw new Error('No cube history found in S3');
+  }
+
   const cubeHistory: CubeDict = {};
 
   for (const [cubeId, cube] of Object.entries(cubeHistoryData.cubes)) {
@@ -57,10 +73,17 @@ interface CubeHistory {
   }
 
   // load most recent global history
-  const draftHistoryFiles = fs.readdirSync('./temp/global_draft_history').sort();
-  const draftHistory = JSON.parse(
-    fs.readFileSync(`./temp/global_draft_history/${draftHistoryFiles[draftHistoryFiles.length - 1]}`),
-  );
+  const draftHistoryFiles = await listFiles('global_draft_history/');
+  draftHistoryFiles.sort();
+  const lastDraftHistoryFile = draftHistoryFiles[draftHistoryFiles.length - 1];
+  if (!lastDraftHistoryFile) {
+    throw new Error('No draft history files found in S3');
+  }
+  const draftHistory = await downloadJson(lastDraftHistoryFile);
+
+  if (!draftHistory) {
+    throw new Error('No draft history found in S3');
+  }
 
   console.log('Loaded cube and draft history, calculating correlations');
 
@@ -171,12 +194,14 @@ interface CubeHistory {
 
   // calculate draftedwith
 
-  const draftLogFiles = fs.readdirSync('./temp/all_drafts');
+  const draftLogFiles = await listFiles('all_drafts/');
 
   let processed = 0;
 
   for (const draftLog of draftLogFiles) {
-    const drafts = JSON.parse(fs.readFileSync(`./temp/all_drafts/${draftLog}`));
+    const drafts = await downloadJson(draftLog);
+
+    if (!drafts) continue;
 
     for (const draft of drafts) {
       for (let i = 0; i < draft.length; i += 1) {
@@ -458,8 +483,12 @@ interface CubeHistory {
 
   console.log('Finished all oracles, Writing metadatadict.json');
 
-  await fs.promises.writeFile(`./temp/metadatadict.json`, JSON.stringify(metadatadict));
-  await fs.promises.writeFile(`./temp/indexToOracle.json`, JSON.stringify(indexToOracle));
+  await uploadJson('metadatadict.json', metadatadict);
+  await uploadJson('indexToOracle.json', indexToOracle);
+
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Finished Metadata Processing');
+  }
 
   console.log('Complete');
 

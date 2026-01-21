@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "typeRoots": ["node_modules/@types", "src/types", "node_modules/@testing-library"],
+    "types": ["jest", "node"],
+    "typeRoots": ["node_modules/@types", "../../node_modules/@types", "src/types"],
     "outDir": "dist",
     "esModuleInterop": true,
     "target": "ES2020",
@@ -27,13 +28,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "exclude": ["node_modules", "src/client"],
-  "include": [
-    "src/**/*.js",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src",
-    "../utils/src",
-    "../server/src/util/rotateDailyP1P1.ts"
-  ]
+  "exclude": ["node_modules", "src/client", "dist"],
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx"]
 }

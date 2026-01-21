@@ -38,6 +38,8 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
   const [zoom, setZoom] = useState('year');
   const [period, setPeriod] = useState('week');
   const [loading, setLoading] = useState<boolean>(false);
+  const [offset, setOffset] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(true); // Assume there's older data initially
 
   const type: CubeType = cubeType as CubeType;
 
@@ -113,10 +115,8 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
     };
   }, [history, type]);
 
-  const updateZoomAndPeriod = useCallback(
-    async (newZoom: string, newPeriod: string) => {
-      setZoom(newZoom);
-      setPeriod(newPeriod);
+  const fetchHistory = useCallback(
+    async (newZoom: string, newPeriod: string, newOffset: number = 0) => {
       setLoading(true);
 
       const response = await csrfFetch(`/tool/cardhistory`, {
@@ -125,6 +125,7 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
           id: cardId,
           zoom: newZoom,
           period: newPeriod,
+          offset: newOffset,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -134,9 +135,35 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
       const json = await response.json();
 
       setHistory(json.data);
+      setHasMore(json.hasMore || false);
       setLoading(false);
     },
-    [cardId, setZoom, setPeriod, csrfFetch],
+    [csrfFetch, cardId],
+  );
+
+  const updateZoomAndPeriod = useCallback(
+    async (newZoom: string, newPeriod: string) => {
+      setZoom(newZoom);
+      setPeriod(newPeriod);
+      setOffset(0);
+      await fetchHistory(newZoom, newPeriod, 0);
+    },
+    [fetchHistory],
+  );
+
+  const handlePagination = useCallback(
+    async (direction: 'prev' | 'next') => {
+      const zoomMap: Record<string, Record<string, number>> = {
+        month: { day: 30, week: 4, month: 2 },
+        year: { day: 365, week: 52, month: 12 },
+      };
+      const step = zoomMap[zoom]?.[period] || 0;
+      // Previous goes to older data (increase offset), Next goes to newer data (decrease offset)
+      const newOffset = direction === 'prev' ? offset + step : Math.max(0, offset - step);
+      setOffset(newOffset);
+      await fetchHistory(zoom, period, newOffset);
+    },
+    [zoom, period, offset, fetchHistory],
   );
 
   return (
@@ -188,6 +215,28 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
           />
         </Col>
       </Row>
+      {zoom !== 'all' && (
+        <Flexbox direction="row" justify="between" alignItems="center" className="px-2">
+          <button
+            onClick={() => handlePagination('prev')}
+            disabled={!hasMore || loading}
+            className="px-3 py-1 bg-button-primary text-button-text rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ← Previous
+          </button>
+          <span className="text-sm text-text-secondary">
+            {history.length > 1 &&
+              `${formatDate(new Date(history[0].date))} - ${formatDate(new Date(history[history.length - 1].date))}`}
+          </span>
+          <button
+            onClick={() => handlePagination('next')}
+            disabled={offset === 0 || loading}
+            className="px-3 py-1 bg-button-primary text-button-text rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next →
+          </button>
+        </Flexbox>
+      )}
       {loading ? (
         <div className="centered">
           <Spinner lg />

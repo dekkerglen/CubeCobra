@@ -28,7 +28,7 @@ import cloudwatch from './serverutils/cloudwatch';
 import DynamoDBStore from './serverutils/dynamo-session-store';
 import { initializeMl } from './serverutils/ml';
 import { render } from './serverutils/render';
-import { updateCardbase } from './serverutils/updatecards';
+import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { CustomError } from './types/express';
 
 // global listeners for promise rejections
@@ -285,10 +285,11 @@ app.use((err: any, req: express.Request, res: express.Response) => {
   );
 });
 
-// scryfall updates this data at 9, so this will minimize staleness
-schedule.scheduleJob('0 10 * * *', async () => {
-  console.info('starting midnight cardbase update...');
-  await updateCardbase();
+// Check for card database updates every 5 minutes
+// Update if data is over a week old or if card count has changed
+schedule.scheduleJob('*/5 * * * *', async () => {
+  console.info('Checking for card database updates...');
+  await checkAndUpdateCardbase();
 });
 
 // Start server after carddb and ML models are initialized.

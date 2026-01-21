@@ -29,4 +29,3 @@ const client = new DynamoDB({
 });
 
 export default client;
-module.exports = client;

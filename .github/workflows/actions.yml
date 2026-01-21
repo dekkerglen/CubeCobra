@@ -216,9 +216,13 @@ jobs:
           path: pr-number.txt
           retention-days: 1
 
-  build:
+  build-client:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
+    if: |
+      contains(github.event.head_commit.modified, 'packages/client/') ||
+      contains(github.event.head_commit.added, 'packages/client/') ||
+      github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
@@ -233,13 +237,109 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build
-        run: npm run ci-build
+      - name: Build client
+        run: npm run build --workspace=packages/client
+
+  build-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      contains(github.event.head_commit.modified, 'packages/server/') ||
+      contains(github.event.head_commit.added, 'packages/server/') ||
+      github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build server
+        run: npm run build --workspace=packages/server
+
+  build-cdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      contains(github.event.head_commit.modified, 'packages/cdk/') ||
+      contains(github.event.head_commit.added, 'packages/cdk/') ||
+      github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build CDK
+        run: npm run build --workspace=packages/cdk
+
+  build-daily-jobs-lambda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      contains(github.event.head_commit.modified, 'packages/dailyJobsLambda/') ||
+      contains(github.event.head_commit.added, 'packages/dailyJobsLambda/') ||
+      github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Daily Jobs Lambda
+        run: npm run build --workspace=packages/dailyJobsLambda
+
+  build-card-update-monitor-lambda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      contains(github.event.head_commit.modified, 'packages/cardUpdateMonitorLambda/') ||
+      contains(github.event.head_commit.added, 'packages/cardUpdateMonitorLambda/') ||
+      github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Card Update Monitor Lambda
+        run: npm run build --workspace=packages/cardUpdateMonitorLambda
 
   integrationTests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [lint, test, build]
+    needs: [lint, test, build-client, build-server]
 
     services:
       localstack:

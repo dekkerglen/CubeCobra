@@ -10,7 +10,7 @@ import { cubeDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import type Cube from '@utils/datatypes/Cube';
 
-const privateDir = '../server/private/';
+const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
 
 interface RepairStats {
   cubesProcessed: number;

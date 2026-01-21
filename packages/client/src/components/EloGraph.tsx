@@ -38,6 +38,8 @@ const EloGraph: React.FC<EloGraphProps> = ({ defaultHistories, cardId }) => {
   const [zoom, setZoom] = useState<string>('year');
   const [period, setPeriod] = useState<string>('week');
   const [loading, setLoading] = useState<boolean>(false);
+  const [offset, setOffset] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(true); // Assume there's older data initially
 
   const { options, data } = useMemo(() => {
     if (history.length === 0) {
@@ -108,10 +110,8 @@ const EloGraph: React.FC<EloGraphProps> = ({ defaultHistories, cardId }) => {
     };
   }, [history]);
 
-  const updateZoomAndPeriod = useCallback(
-    async (newZoom: string, newPeriod: string) => {
-      setZoom(newZoom);
-      setPeriod(newPeriod);
+  const fetchHistory = useCallback(
+    async (newZoom: string, newPeriod: string, newOffset: number = 0) => {
       setLoading(true);
 
       const response = await csrfFetch(`/tool/cardhistory`, {
@@ -120,6 +120,7 @@ const EloGraph: React.FC<EloGraphProps> = ({ defaultHistories, cardId }) => {
           id: cardId,
           zoom: newZoom,
           period: newPeriod,
+          offset: newOffset,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -129,10 +130,43 @@ const EloGraph: React.FC<EloGraphProps> = ({ defaultHistories, cardId }) => {
       const json = await response.json();
 
       setHistory(json.data);
+      setHasMore(json.hasMore || false);
       setLoading(false);
     },
-    [csrfFetch, cardId, setZoom, setPeriod],
+    [csrfFetch, cardId],
   );
+
+  const updateZoomAndPeriod = useCallback(
+    async (newZoom: string, newPeriod: string) => {
+      setZoom(newZoom);
+      setPeriod(newPeriod);
+      setOffset(0);
+      await fetchHistory(newZoom, newPeriod, 0);
+    },
+    [fetchHistory],
+  );
+
+  const handlePagination = useCallback(
+    async (direction: 'prev' | 'next') => {
+      const zoomMap: Record<string, Record<string, number>> = {
+        month: { day: 30, week: 4, month: 2 },
+        year: { day: 365, week: 52, month: 12 },
+      };
+      const step = zoomMap[zoom]?.[period] || 0;
+      // Previous goes to older data (increase offset), Next goes to newer data (decrease offset)
+      const newOffset = direction === 'prev' ? offset + step : Math.max(0, offset - step);
+      setOffset(newOffset);
+      await fetchHistory(zoom, period, newOffset);
+    },
+    [zoom, period, offset, fetchHistory],
+  );
+
+  const timeRange = useMemo(() => {
+    if (history.length < 2) return '';
+    const start = new Date(history[0].date);
+    const end = new Date(history[history.length - 1].date);
+    return `${formatDate(start)} - ${formatDate(end)}`;
+  }, [history]);
 
   return (
     <Flexbox direction="col" gap="2">
@@ -164,6 +198,27 @@ const EloGraph: React.FC<EloGraphProps> = ({ defaultHistories, cardId }) => {
           />
         </Col>
       </Row>
+      {zoom !== 'all' && (
+        <Flexbox direction="row" justify="between" alignItems="center" className="px-2">
+          <button
+            onClick={() => handlePagination('prev')}
+            disabled={!hasMore || loading}
+            className="px-3 py-1 bg-button-primary text-button-text rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ← Previous
+          </button>
+          <Text sm className="text-text-secondary">
+            {timeRange}
+          </Text>
+          <button
+            onClick={() => handlePagination('next')}
+            disabled={offset === 0 || loading}
+            className="px-3 py-1 bg-button-primary text-button-text rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next →
+          </button>
+        </Flexbox>
+      )}
       {loading ? (
         <div className="centered">
           <Spinner lg />
