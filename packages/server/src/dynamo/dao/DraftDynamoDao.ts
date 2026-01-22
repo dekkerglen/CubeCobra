@@ -744,12 +744,12 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     const id = draftData.id || uuidv4();
     const now = Date.now();
 
-    // Calculate seat names from mainboard colors
-    const names = draftData.seats.map((seat: any) => this.assessColors(seat.mainboard, draftData.cards).join(''));
-
     // Get cube details
     const cube = await this.cubeDao.getById(draftData.cube);
     const cubeName = cube?.name || 'Unknown Cube';
+
+    // Calculate seat names and draft name from mainboard colors
+    const { seatNames, name } = this.getDeckColors(draftData, cubeName);
 
     // Resolve cube owner
     let cubeOwner: User;
@@ -787,8 +787,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       dateLastUpdated: now,
       type: draftData.type,
       complete: draftData.complete,
-      name: `${names[0]} ${REVERSE_TYPES[draftData.type]} of ${cubeName}`,
-      seatNames: names,
+      name,
+      seatNames,
       cards: draftData.cards,
       seats: draftData.seats,
       basics: draftData.basics || [],
@@ -799,7 +799,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
 
     // Add seat names to each seat
     for (let i = 0; i < draft.seats.length; i++) {
-      draft.seats[i]!.name = names[i];
+      draft.seats[i]!.name = seatNames[i];
     }
 
     // Save to S3
@@ -840,13 +840,18 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     // Update item's timestamp
     item.dateLastUpdated = Date.now();
 
-    // Recalculate seat names from mainboard colors
-    const names = item.seats.map((seat: any) => this.assessColors(seat.mainboard, item.cards).join(''));
-    item.seatNames = names;
+    // Get cube details
+    const cube = await this.cubeDao.getById(item.cube);
+    const cubeName = cube?.name || 'Unknown Cube';
+
+    // Recalculate seat names and draft from mainboard colors
+    const { seatNames, name } = this.getDeckColors(item, cubeName);
+    item.seatNames = seatNames;
+    item.name = name;
 
     // Update seat names within each seat
     for (let i = 0; i < item.seats.length; i++) {
-      item.seats[i]!.name = names[i];
+      item.seats[i]!.name = seatNames[i];
     }
 
     // Save cards and seats to S3 before updating metadata
@@ -1012,6 +1017,19 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     }
 
     return colorKeysFiltered;
+  }
+
+  private getDeckColors(
+    draft: Pick<DraftType, 'seats' | 'type' | 'cards'>,
+    cubeName: string,
+  ): { seatNames: string[]; name: string } {
+    // Calculate seat names from mainboard colors
+    const seatNames = draft.seats.map((seat: any) => this.assessColors(seat.mainboard, draft.cards).join(''));
+
+    return {
+      seatNames,
+      name: `${seatNames[0]} ${REVERSE_TYPES[draft.type]} of ${cubeName}`,
+    };
   }
 
   // Static type constants for external use
