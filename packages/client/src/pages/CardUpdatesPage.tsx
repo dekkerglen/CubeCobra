@@ -134,6 +134,28 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
                 </Link>
                 .
               </Text>
+
+              {lastExportTask && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                  <Text semibold md className="mb-2">
+                    📦 Download Latest Data Export
+                  </Text>
+                  <Text sm className="text-text-secondary mb-2">
+                    The latest card data and ML models are available for download from our public S3 bucket. This
+                    includes all the data files needed for local development:
+                  </Text>
+                  <div className="bg-gray-900 text-green-400 p-3 rounded font-mono text-sm overflow-x-auto">
+                    <div className="mb-2"># Download all data files (card definitions + ML models)</div>
+                    <div>npm run download-data-files</div>
+                    <div className="mt-3 mb-2"># Or download manually from S3:</div>
+                    <div>aws s3 sync s3://cubecobra-public/ ./data/ --no-sign-request</div>
+                  </div>
+                  <Text xs className="text-text-secondary mt-2">
+                    ✅ No AWS credentials required • Downloads from public bucket • Safe to run
+                  </Text>
+                </div>
+              )}
+
               {lastExportTask ? (
                 <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
                   <Flexbox direction="col" gap="2" className="flex-1">

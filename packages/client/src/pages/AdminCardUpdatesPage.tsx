@@ -109,14 +109,14 @@ const StepProgress: React.FC<{
       >
         {isExpanded ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />}
         <Text sm semibold>
-          Processing Steps ({completedSteps.length} of {allSteps.length})
+          Processing Steps ({status === 'COMPLETED' ? allSteps.length : completedSteps.length} of {allSteps.length})
         </Text>
       </button>
       {isExpanded && (
         <div className="space-y-2 ml-4">
           {allSteps.map((step, index) => {
-            const isCompleted = completedSteps.includes(step);
-            const isCurrent = step === currentStep && !isCompleted;
+            const isCompleted = completedSteps.includes(step) || status === 'COMPLETED';
+            const isCurrent = step === currentStep && !completedSteps.includes(step) && status !== 'COMPLETED';
             const isFailed = status === 'FAILED' && isCurrent;
             const timestamp = stepTimestamps[step];
 

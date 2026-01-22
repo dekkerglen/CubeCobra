@@ -30,13 +30,26 @@ export async function monitorExportTasks(): Promise<void> {
       if (health.hasExited) {
         if (health.exitCode === 0) {
           console.log(`Export task ${mostRecentTask.id} completed successfully`);
-          // Note: The actual completion should be handled by the job itself
+          // Mark as completed in case the task didn't update itself
+          await exportTaskDao.markAsCompleted(mostRecentTask.id);
         } else {
           console.log(`Export task ${mostRecentTask.id} failed with exit code ${health.exitCode}`);
           await exportTaskDao.markAsFailed(mostRecentTask.id, `Export job failed. Exit code: ${health.exitCode}`);
         }
       } else if (health.isRunning) {
         console.log(`Export task ${mostRecentTask.id} is still running`);
+      } else {
+        // Task is stopped but not running and hasn't exited - this can happen with ECS
+        // Check if task has been running for a reasonable amount of time and mark as complete
+        const taskAge = Date.now() - (mostRecentTask.startedAt || mostRecentTask.timestamp);
+        const minTaskDuration = 5 * 60 * 1000; // 5 minutes minimum
+
+        if (taskAge > minTaskDuration) {
+          console.log(`Export task ${mostRecentTask.id} appears to have stopped, marking as completed`);
+          await exportTaskDao.markAsCompleted(mostRecentTask.id);
+        } else {
+          console.log(`Export task ${mostRecentTask.id} stopped too quickly, may have failed`);
+        }
       }
     } else {
       // Fallback to timeout check if no task ARN
