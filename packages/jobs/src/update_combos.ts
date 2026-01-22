@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import https from 'https';
 import path from 'path';
+import zlib from 'zlib';
 
 import 'module-alias/register';
 
@@ -31,30 +32,49 @@ const fetchWithRetries = async (url: string, retries = 5, delay = 60000): Promis
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       return await new Promise<any>((resolve, reject) => {
-        https
-          .get(url, (response) => {
-            if (response.statusCode !== 200) {
-              reject(new Error(`Failed to fetch data: ${response.statusCode}`));
-              return;
-            }
+        const timeout = 300000; // 5 minute timeout for slow server
 
-            let rawData = '';
-            response.on('data', (chunk) => {
-              rawData += chunk;
-            });
+        const request = https.get(url, (response) => {
+          if (response.statusCode !== 200) {
+            reject(new Error(`Failed to fetch data: ${response.statusCode}`));
+            return;
+          }
 
-            response.on('end', () => {
-              try {
-                const parsedData = JSON.parse(rawData);
-                resolve(parsedData);
-              } catch (err) {
-                reject(err);
-              }
-            });
-          })
-          .on('error', (err) => {
-            reject(err);
+          const isGzipped = url.endsWith('.gz');
+          const chunks: Buffer[] = [];
+
+          response.on('data', (chunk: Buffer) => {
+            chunks.push(chunk);
           });
+
+          response.on('end', () => {
+            try {
+              const buffer = Buffer.concat(chunks);
+              let rawData: string;
+
+              if (isGzipped) {
+                // Decompress gzip data
+                rawData = zlib.gunzipSync(buffer).toString('utf-8');
+              } else {
+                rawData = buffer.toString('utf-8');
+              }
+
+              const parsedData = JSON.parse(rawData);
+              resolve(parsedData);
+            } catch (err) {
+              reject(err);
+            }
+          });
+        });
+
+        request.setTimeout(timeout, () => {
+          request.destroy();
+          reject(new Error(`Request timeout after ${timeout}ms`));
+        });
+
+        request.on('error', (err) => {
+          reject(err);
+        });
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -78,35 +98,31 @@ const fetchWithRetries = async (url: string, retries = 5, delay = 60000): Promis
   }
 };
 
-const fetchAllPages = async (
-  initialUrl: string,
-  cacheKey: string,
-  useS3Cache?: boolean,
-): Promise<Record<string, Combo>> => {
-  // For update jobs, always fetch fresh data - skip S3 cache check
-  // The cache is only useful for non-update operations
+const fetchBulkData = async (url: string, cacheKey: string, useS3Cache?: boolean): Promise<Record<string, Combo>> => {
+  console.log(`Fetching bulk data from: ${url}`);
 
-  // Download and process pages
-  let url = initialUrl;
-  const dataById: Record<string, any> = {};
+  const data = await fetchWithRetries(url);
 
-  while (url) {
-    console.log(`Fetching data from: ${url}`);
-    const data = await fetchWithRetries(url);
-    if (!data || !data.results) {
-      console.error('No results found in the response');
-      break;
-    }
-    for (const variant of data.results) {
-      const id = variant.id;
-      dataById[id] = variant;
-    }
-    url = data.next; // Get the next URL from the response
+  // The response might be an array directly, or an object with results/variants property
+  let variants: any[];
+  if (Array.isArray(data)) {
+    variants = data;
+  } else if (data && Array.isArray(data.results)) {
+    variants = data.results;
+  } else if (data && Array.isArray(data.variants)) {
+    variants = data.variants;
+  } else {
+    console.error('Unexpected response structure:', JSON.stringify(data).substring(0, 500));
+    throw new Error('Invalid response: expected an array or object with variants/results property');
+  }
 
-    // Add delay between requests to avoid rate limiting
-    if (url) {
-      console.log('Waiting 3 seconds before next request...');
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+  console.log(`Retrieved ${variants.length} variants from bulk endpoint`);
+
+  // Convert array to dictionary keyed by ID
+  const dataById: Record<string, Combo> = {};
+  for (const variant of variants) {
+    if (variant && variant.id) {
+      dataById[variant.id] = variant;
     }
   }
 
@@ -137,11 +153,11 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
   });
 
   console.log('Downloading all combos data');
-  const initialUrl = 'https://backend.commanderspellbook.com/variants?format=json';
+  const bulkUrl = 'https://json.commanderspellbook.com/variants.json.gz';
 
   try {
-    // Fetch all paginated data
-    const dataById = await fetchAllPages(initialUrl, 'cache/comboDict.json', useS3Cache);
+    // Fetch bulk data
+    const dataById = await fetchBulkData(bulkUrl, 'cache/comboDict.json', useS3Cache);
 
     console.log('Retrieved combo data from cache or API');
 
