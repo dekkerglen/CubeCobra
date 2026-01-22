@@ -1529,7 +1529,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     return {
       items: cubes,
-      lastKey: queryResult.LastEvaluatedKey,
+      lastKey: queryResult.LastEvaluatedKey || undefined,
     };
   }
 
@@ -1608,7 +1608,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
       return {
         cubeIds,
-        lastKey: queryResult.LastEvaluatedKey,
+        lastKey: queryResult.LastEvaluatedKey || undefined,
       };
     } catch (error: any) {
       console.error('[queryByHashForIdsOnly] Error during query:', {
@@ -1729,7 +1729,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     return {
       hashes,
-      lastKey: queryResult.LastEvaluatedKey,
+      lastKey: queryResult.LastEvaluatedKey || undefined,
     };
   }
 

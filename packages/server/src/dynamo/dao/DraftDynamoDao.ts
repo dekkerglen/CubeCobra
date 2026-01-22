@@ -624,17 +624,19 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     lastKey?: Record<string, NativeAttributeValue>,
     limit?: number,
   ): Promise<QueryResult> {
-    const params: QueryCommandInput = {
-      TableName: this.tableName,
-      IndexName: 'GSI4',
-      KeyConditionExpression: 'GSI4PK = :type',
-      ExpressionAttributeValues: {
-        ':type': `${this.itemType()}#TYPE#${type}`,
+    const params = this.buildQueryParams(
+      {
+        TableName: this.tableName,
+        IndexName: 'GSI4',
+        KeyConditionExpression: 'GSI4PK = :type',
+        ExpressionAttributeValues: {
+          ':type': `${this.itemType()}#TYPE#${type}`,
+        },
+        ScanIndexForward: false,
+        Limit: limit || 100,
       },
-      ScanIndexForward: false,
-      Limit: limit || 100,
-      ExclusiveStartKey: lastKey,
-    };
+      lastKey,
+    );
 
     return this.query(params);
   }
