@@ -5,6 +5,7 @@ import {
   InputLogEvent,
   PutLogEventsCommand,
 } from '@aws-sdk/client-cloudwatch-logs';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { v4 as uuidv4 } from 'uuid';
 
 import 'dotenv/config';
@@ -12,10 +13,7 @@ import 'dotenv/config';
 const client = new CloudWatchLogsClient({
   endpoint: process.env.AWS_ENDPOINT || undefined,
   region: process.env.AWS_REGION || 'us-east-2',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
+  credentials: fromNodeProviderChain(),
 });
 
 let infoLogs: InputLogEvent[] = [];
