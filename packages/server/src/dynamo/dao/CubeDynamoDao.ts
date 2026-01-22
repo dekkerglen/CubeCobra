@@ -1253,7 +1253,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     limit?: number,
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'cube', value: 'all' });
-
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
 
@@ -1524,7 +1523,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     return {
       items: cubes,
-      lastKey: queryResult.LastEvaluatedKey,
+      lastKey: queryResult.LastEvaluatedKey || undefined,
     };
   }
 
@@ -1603,7 +1602,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
       return {
         cubeIds,
-        lastKey: queryResult.LastEvaluatedKey,
+        lastKey: queryResult.LastEvaluatedKey || undefined,
       };
     } catch (error: any) {
       console.error('[queryByHashForIdsOnly] Error during query:', {
@@ -1724,7 +1723,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     return {
       hashes,
-      lastKey: queryResult.LastEvaluatedKey,
+      lastKey: queryResult.LastEvaluatedKey || undefined,
     };
   }
 

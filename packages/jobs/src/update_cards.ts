@@ -835,8 +835,12 @@ const downloadFromScryfall = async (
   ckPrices: Record<string, number>,
   mpPrices: Record<string, number>,
   useS3Cache?: boolean,
+  taskId?: string,
 ): Promise<{ updatedAt: string; fileSize: number } | undefined> => {
   try {
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Downloading set data');
+    }
     await downloadSets(useS3Cache);
     await processSets();
   } catch (error) {
@@ -851,6 +855,9 @@ const downloadFromScryfall = async (
   console.info('Downloading files from scryfall or cache...');
   let scryfallMetadata: { updatedAt: string; fileSize: number };
   try {
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Downloading card data from Scryfall');
+    }
     scryfallMetadata = await downloadDefaultCards(useS3Cache);
   } catch (error) {
     console.error('Downloading card data failed:');
@@ -863,6 +870,9 @@ const downloadFromScryfall = async (
 
   console.info('Creating objects...');
   try {
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Creating card objects');
+    }
     await saveAllCards(metadatadict, indexToOracle, ckPrices, mpPrices);
   } catch (error) {
     console.error('Updating cardbase objects failed:');
@@ -874,6 +884,9 @@ const downloadFromScryfall = async (
 
   try {
     console.info('Saving catalog...');
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Saving catalog');
+    }
     await writeCatalog(PRIVATE_DIR);
   } catch (error) {
     console.error('Updating cardbase objects failed:');
@@ -908,7 +921,7 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
 
   // Try to get previous card count from the old manifest
   let previousCardCount = 0;
-  let previousChecksum = '';
+  let manifestFound = false;
   try {
     const previousManifest = await s3.send(
       new GetObjectCommand({
@@ -919,18 +932,22 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
     const manifestContent = await previousManifest.Body?.transformToString();
     if (manifestContent) {
       const oldManifest = JSON.parse(manifestContent);
-      previousChecksum = oldManifest.checksum || '';
+      manifestFound = true;
       // If old manifest had totalCards, use it; otherwise try to get from old all_cards.json
       if (oldManifest.totalCards) {
         previousCardCount = oldManifest.totalCards;
+        console.log(`Found previous manifest with ${previousCardCount} cards`);
+      } else {
+        console.log('Previous manifest found but missing totalCards field');
       }
     }
-  } catch {
-    console.log('No previous manifest found, assuming first update');
+  } catch (error) {
+    console.log(`No previous manifest found: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
-  // If we still don't have previous count, try to get it from S3 all_cards.json
-  if (previousCardCount === 0 && previousChecksum) {
+  // If we still don't have previous count but found a manifest, try to get it from S3 all_cards.json
+  if (previousCardCount === 0 && manifestFound) {
+    console.log('Attempting to fetch previous all_cards.json for card count...');
     try {
       const previousAllCards = await s3.send(
         new GetObjectCommand({
@@ -942,9 +959,12 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
       if (allCardsContent) {
         const previousDict = JSON.parse(allCardsContent);
         previousCardCount = Object.keys(previousDict).length;
+        console.log(`Fetched previous card count from all_cards.json: ${previousCardCount}`);
       }
-    } catch {
-      console.log('Could not fetch previous all_cards.json');
+    } catch (error) {
+      console.log(
+        `Could not fetch previous all_cards.json: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -976,6 +996,10 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
   const checksum = crypto.createHash('sha256').update(cardDictContent).digest('hex');
 
   console.log(`Calculated checksum: ${checksum}`);
+
+  if (taskId) {
+    await cardUpdateTaskDao.updateStep(taskId, 'Uploading manifest');
+  }
 
   console.log('Uploading manifest...');
   const manifest = {
@@ -1100,11 +1124,14 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
 (async () => {
   try {
     if (taskId) {
-      await cardUpdateTaskDao.updateStep(taskId, 'Processing Cards');
+      await cardUpdateTaskDao.updateStep(taskId, 'Initializing');
     }
 
     const { metadatadict, indexToOracle } = await loadMetadatadict();
 
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Loading price data');
+    }
     const manaPoolPrices = await loadManaPoolPrices(useS3Cache);
     const cardKingdomPrices = await loadCardKingdomPrices(useS3Cache);
 
@@ -1114,6 +1141,7 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
       cardKingdomPrices,
       manaPoolPrices,
       useS3Cache,
+      taskId,
     );
 
     if (!scryfallMetadata) {

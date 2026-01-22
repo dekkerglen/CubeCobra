@@ -43,7 +43,7 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
   const oracleToIndex = Object.fromEntries(allOracles.map((oracle, index) => [oracle, index]));
   const indexToOracleMap = Object.fromEntries(allOracles.map((oracle, index) => [index, oracle]));
 
-  let lastKey: any = null;
+  let lastKey: any = undefined;
   let processed = 0;
   const cubes: any[] = [];
 

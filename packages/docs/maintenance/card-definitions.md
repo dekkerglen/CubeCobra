@@ -79,18 +79,6 @@ node --max-old-space-size=8192 packages/scripts/download-data-files.js
 3. Ensures directory structure exists
 4. Provides clear feedback on download progress
 
-### `force_update.js` (Legacy)
-
-**⚠️ Note**: This script is being phased out in favor of the new `download-data-files.js` for monorepo setups.
-
-**Location**: `packages/scripts/force_update.js`
-
-**Purpose**:
-
-- Legacy script for updating card definitions
-- Still used in some existing workflows
-- Calls `updateCardbase()` and `downloadFromS3()`
-
 ### `updateCardbase()` Function
 
 **Location**: `packages/server/src/util/updatecards.js`

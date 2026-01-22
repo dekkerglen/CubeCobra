@@ -140,6 +140,11 @@ export class ExportTaskDynamoDao extends BaseDynamoDao<ExportTask, ExportTask> {
     const task = await this.getById(id);
     if (!task) return undefined;
 
+    // Move current step to completed steps if it exists and isn't already there
+    if (task.step && !task.completedSteps.includes(task.step)) {
+      task.completedSteps.push(task.step);
+    }
+
     task.status = ExportTaskStatus.COMPLETED;
     task.completedAt = Date.now();
     task.dateLastUpdated = Date.now();

@@ -22,10 +22,10 @@ child.on('exit:code', (code) => {
 });
 
 // download initial card definitions
-updateCardbase()
+updateCardbase('private', process.env.DATA_BUCKET, process.env.AWS_REGION)
   .then(() => {
     // download ml initial model
-    downloadModelsFromS3()
+    downloadModelsFromS3('', process.env.DATA_BUCKET, process.env.AWS_REGION)
       .then(() => {
         child.start();
       })

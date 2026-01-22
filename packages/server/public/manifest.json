@@ -1,5 +1,6 @@
 {
-  "AdminDashboardPage": "/js/AdminDashboardPage.b05824f6.bundle.js",
+  "AdminCardUpdatesPage": "/js/AdminCardUpdatesPage.a0a2a04a.bundle.js",
+  "AdminDashboardPage": "/js/AdminDashboardPage.fcbfe6eb.bundle.js",
   "ApplicationPage": "/js/ApplicationPage.b21e47ff.bundle.js",
   "ArticlePage": "/js/ArticlePage.c759e2d5.bundle.js",
   "ArticlesPage": "/js/ArticlesPage.dfe5f07e.bundle.js",
@@ -8,9 +9,8 @@
   "BulkUploadPage": "/js/BulkUploadPage.f65d89db.bundle.js",
   "CardPage": "/js/CardPage.e33dd88e.bundle.js",
   "CardSearchPage": "/js/CardSearchPage.9f99a214.bundle.js",
-  "CardUpdatesPage": "/js/CardUpdatesPage.b8d54d10.bundle.js",
+  "CardUpdatesPage": "/js/CardUpdatesPage.2b606539.bundle.js",
   "CommentPage": "/js/CommentPage.b21ebb25.bundle.js",
-  "commons": "/js/commons.ab5bf790.bundle.js",
   "ContactPage": "/js/ContactPage.e6567e49.bundle.js",
   "CreateNewRecordPage": "/js/CreateNewRecordPage.f67560d1.bundle.js",
   "CreateRecordFromDraftPage": "/js/CreateRecordFromDraftPage.982c73a1.bundle.js",
@@ -18,8 +18,8 @@
   "CubeAnalysisPage": "/js/CubeAnalysisPage.be853b78.bundle.js",
   "CubeBlogPage": "/js/CubeBlogPage.e337c55a.bundle.js",
   "CubeComparePage": "/js/CubeComparePage.550f2512.bundle.js",
-  "CubeDeckbuilderPage": "/js/CubeDeckbuilderPage.96ca9487.bundle.js",
   "CubeDeckPage": "/js/CubeDeckPage.612b979a.bundle.js",
+  "CubeDeckbuilderPage": "/js/CubeDeckbuilderPage.96ca9487.bundle.js",
   "CubeDraftPage": "/js/CubeDraftPage.80a0ebcb.bundle.js",
   "CubeHistoryPage": "/js/CubeHistoryPage.fd9ff8c3.bundle.js",
   "CubeListPage": "/js/CubeListPage.dae493c8.bundle.js",
@@ -70,8 +70,9 @@
   "UserCubePage": "/js/UserCubePage.a14042a3.bundle.js",
   "UserDecksPage": "/js/UserDecksPage.7ad758a5.bundle.js",
   "UserSocialPage": "/js/UserSocialPage.d6b101da.bundle.js",
-  "vendors": "/js/vendors.13bf3e69.bundle.js",
   "VersionPage": "/js/VersionPage.4a140648.bundle.js",
   "VideoPage": "/js/VideoPage.b041f1bf.bundle.js",
-  "VideosPage": "/js/VideosPage.20352d97.bundle.js"
+  "VideosPage": "/js/VideosPage.20352d97.bundle.js",
+  "commons": "/js/commons.a802ac87.bundle.js",
+  "vendors": "/js/vendors.6ec17bb7.bundle.js"
 }

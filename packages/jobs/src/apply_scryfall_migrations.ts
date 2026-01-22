@@ -1,11 +1,9 @@
 import { cubeDao, migrationTaskDao } from '@server/dynamo/daos';
+import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { MigrationTaskStatus } from '@utils/datatypes/MigrationTask';
 import _ from 'lodash';
 import fetch from 'node-fetch';
 import path from 'path';
-
-// @ts-ignore - cardCatalog uses require internally
-import { initializeCardDb } from '../../util/cardCatalog';
 
 interface ScryfallMigration {
   id: string;

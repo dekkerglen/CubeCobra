@@ -49,6 +49,19 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
   protected abstract hydrateItem(item: U): T | Promise<T>;
 
   /**
+   * Safely builds query parameters, excluding null/undefined ExclusiveStartKey.
+   */
+  protected buildQueryParams(
+    baseParams: Omit<QueryCommandInput, 'ExclusiveStartKey'>,
+    lastKey?: Record<string, any>,
+  ): QueryCommandInput {
+    return {
+      ...baseParams,
+      ...(lastKey && { ExclusiveStartKey: lastKey }),
+    };
+  }
+
+  /**
    * Hydrates multiple unhydrated items (U[]) to hydrated items (T[]).
    * This method should be overridden by subclasses to optimize batch hydration
    * (e.g., fetching all related entities in a single query).

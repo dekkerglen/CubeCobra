@@ -1,487 +1,254 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { CheckCircleFillIcon, ChevronDownIcon, ChevronUpIcon, XCircleFillIcon } from '@primer/octicons-react';
 import { CardUpdateTask } from '@utils/datatypes/CardUpdateTask';
 import { ExportTask } from '@utils/datatypes/ExportTask';
 import { MigrationTask } from '@utils/datatypes/MigrationTask';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
-import Spinner from 'components/base/Spinner';
-import { TabbedView } from 'components/base/Tabs';
+import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import RenderToRoot from 'components/RenderToRoot';
-import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 
 interface CardUpdatesPageProps {
-  cardUpdates: CardUpdateTask[];
-  exportTasks: ExportTask[];
-  migrationTasks: MigrationTask[];
+  lastCardUpdate?: CardUpdateTask;
+  lastExportTask?: ExportTask;
+  lastMigrationTask?: MigrationTask;
 }
 
 const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp);
-  return date.toLocaleString('en-US', {
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 };
 
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-};
-
-const formatDuration = (startedAt?: number, completedAt?: number): string => {
-  if (!startedAt || !completedAt) return 'N/A';
-  const duration = completedAt - startedAt;
-  const minutes = Math.floor(duration / 60000);
-  const seconds = Math.floor((duration % 60000) / 1000);
-  return `${minutes}m ${seconds}s`;
-};
-
-const getStatusBadge = (status: string): { color: string; text: string } => {
-  switch (status) {
-    case 'COMPLETED':
-      return { color: 'bg-green-100 text-green-800', text: 'Completed' };
-    case 'IN_PROGRESS':
-      return { color: 'bg-blue-100 text-blue-800', text: 'In Progress' };
-    case 'FAILED':
-      return { color: 'bg-red-100 text-red-800', text: 'Failed' };
-    case 'PENDING':
-      return { color: 'bg-gray-100 text-gray-800', text: 'Pending' };
-    default:
-      return { color: 'bg-gray-100 text-gray-800', text: status };
-  }
-};
-
-const ErrorDetails: React.FC<{ errorMessage: string }> = ({ errorMessage }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <div className="mt-2">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1 text-red-600 hover:text-red-700 focus:outline-none"
-      >
-        {isExpanded ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />}
-        <Text sm semibold>
-          Update failed
+const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastExportTask, lastMigrationTask }) => (
+  <MainLayout>
+    <Container sm>
+      <Flexbox direction="col" gap="3" className="my-4">
+        <Text semibold xxl className="text-center mb-2">
+          Card Database Status
         </Text>
-      </button>
-      {isExpanded && (
-        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-          <Text xs className="font-mono text-red-800">
-            {errorMessage}
-          </Text>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const StepProgress: React.FC<{
-  completedSteps: string[];
-  currentStep: string;
-  status: string;
-  stepTimestamps?: Record<string, number>;
-}> = ({ completedSteps, currentStep, status, stepTimestamps = {} }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const allSteps = [...completedSteps];
-
-  // Add current step if not already in completed steps
-  if (currentStep && !completedSteps.includes(currentStep)) {
-    allSteps.push(currentStep);
-  }
-
-  if (allSteps.length === 0) return null;
-
-  return (
-    <div className="mt-3 pt-3 border-t border-border">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1 text-text-secondary hover:text-text focus:outline-none mb-2"
-      >
-        {isExpanded ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />}
-        <Text sm semibold>
-          Processing Steps ({completedSteps.length} of {allSteps.length})
+        <Text md className="text-text-secondary text-center mb-4">
+          Last successful updates from our automated maintenance tasks
         </Text>
-      </button>
-      {isExpanded && (
-        <div className="space-y-2 ml-4">
-          {allSteps.map((step, index) => {
-            const isCompleted = completedSteps.includes(step);
-            const isCurrent = step === currentStep && !isCompleted;
-            const isFailed = status === 'FAILED' && isCurrent;
-            const timestamp = stepTimestamps[step];
 
-            return (
-              <Flexbox key={index} direction="row" alignItems="center" gap="2" justify="between">
-                <Flexbox direction="row" alignItems="center" gap="2" className="flex-1">
-                  {isCompleted && <CheckCircleFillIcon size={16} className="text-green-600 flex-shrink-0" />}
-                  {isCurrent && !isFailed && <Spinner sm className="flex-shrink-0" />}
-                  {isFailed && <XCircleFillIcon size={16} className="text-red-600 flex-shrink-0" />}
-                  <Text sm className={isCompleted ? 'text-text' : isFailed ? 'text-red-600' : 'text-text-secondary'}>
-                    {step}
+        {/* Card Database Update */}
+        <Card>
+          <CardHeader>
+            <Text semibold lg>
+              Card Database Update
+            </Text>
+          </CardHeader>
+          <CardBody>
+            <Flexbox direction="col" gap="3">
+              <Text md className="text-text-secondary">
+                CubeCobra automatically downloads and processes the latest Magic: The Gathering card data from{' '}
+                <Link href="https://scryfall.com/docs/api/bulk-data" target="_blank" rel="noopener noreferrer">
+                  Scryfall's bulk data API
+                </Link>
+                . This includes all card information, images, prices, legalities, and set data. Updates run daily to
+                ensure you always have access to the newest cards and accurate information. There are a number of
+                additional data sources that enrich the data, including{' '}
+                <Link href="https://commanderspellbook.com/">Commander Spellbook</Link> for combo data, and pricing data
+                for marketplace specific pricing. We also use our recommendation engine to calculate up to date synergy
+                and cache calculations to improve draftbot performance.
+              </Text>
+              {lastCardUpdate ? (
+                <>
+                  <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Last Update
+                      </Text>
+                      <Text semibold md>
+                        {formatDate(lastCardUpdate.completedAt || lastCardUpdate.timestamp)}
+                      </Text>
+                    </Flexbox>
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Scryfall Date
+                      </Text>
+                      <Text semibold md>
+                        {formatDate(new Date(lastCardUpdate.scryfallUpdatedAt).valueOf())}
+                      </Text>
+                    </Flexbox>
+                  </Flexbox>
+                  <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Cards Added
+                      </Text>
+                      <Text semibold md className="text-green-600">
+                        +{lastCardUpdate.cardsAdded.toLocaleString()}
+                      </Text>
+                    </Flexbox>
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Cards Removed
+                      </Text>
+                      <Text semibold md className="text-red-600">
+                        -{lastCardUpdate.cardsRemoved.toLocaleString()}
+                      </Text>
+                    </Flexbox>
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Total Cards
+                      </Text>
+                      <Text semibold md>
+                        {lastCardUpdate.totalCards.toLocaleString()}
+                      </Text>
+                    </Flexbox>
+                  </Flexbox>
+                </>
+              ) : (
+                <Text className="text-text-secondary pt-3 border-t border-border">
+                  No completed card updates found.
+                </Text>
+              )}
+            </Flexbox>
+          </CardBody>
+        </Card>
+
+        {/* Export Task */}
+        <Card>
+          <CardHeader>
+            <Text semibold lg>
+              Data Export
+            </Text>
+          </CardHeader>
+          <CardBody>
+            <Flexbox direction="col" gap="3">
+              <Text md className="text-text-secondary">
+                Periodic data exports create comprehensive snapshots of all cube data on CubeCobra, including cube
+                lists, analytics, and historical information. These exports are primarily used for data analysis
+                purposes. If you're interested in accessing exported data for research or analysis, please request
+                access via our{' '}
+                <Link href="https://discord.gg/Hn39bCU" target="_blank" rel="noopener noreferrer">
+                  Discord server
+                </Link>
+                .
+              </Text>
+
+              {lastExportTask && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                  <Text semibold md className="mb-2">
+                    📦 Download Latest Data Export
                   </Text>
+                  <Text sm className="text-text-secondary mb-2">
+                    The latest card data and ML models are available for download from our public S3 bucket. This
+                    includes all the data files needed for local development:
+                  </Text>
+                  <div className="bg-gray-900 text-green-400 p-3 rounded font-mono text-sm overflow-x-auto">
+                    <div className="mb-2"># Download all data files (card definitions + ML models)</div>
+                    <div>npm run download-data-files</div>
+                    <div className="mt-3 mb-2"># Or download manually from S3:</div>
+                    <div>aws s3 sync s3://cubecobra-public/ ./data/ --no-sign-request</div>
+                  </div>
+                  <Text xs className="text-text-secondary mt-2">
+                    ✅ No AWS credentials required • Downloads from public bucket • Safe to run
+                  </Text>
+                </div>
+              )}
+
+              {lastExportTask ? (
+                <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                  <Flexbox direction="col" gap="2" className="flex-1">
+                    <Text sm className="text-text-secondary">
+                      Last Export
+                    </Text>
+                    <Text semibold md>
+                      {formatDate(lastExportTask.completedAt || lastExportTask.timestamp)}
+                    </Text>
+                  </Flexbox>
+                  <Flexbox direction="col" gap="2" className="flex-1">
+                    <Text sm className="text-text-secondary">
+                      Total Records
+                    </Text>
+                    <Text semibold md>
+                      {lastExportTask.totalRecords.toLocaleString()}
+                    </Text>
+                  </Flexbox>
                 </Flexbox>
-                {timestamp && (
-                  <Text sm className="text-text-secondary whitespace-nowrap">
-                    {new Date(timestamp).toLocaleTimeString()}
-                  </Text>
-                )}
-              </Flexbox>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
+              ) : (
+                <Text className="text-text-secondary pt-3 border-t border-border">
+                  No completed export tasks found.
+                </Text>
+              )}
+            </Flexbox>
+          </CardBody>
+        </Card>
 
-const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ cardUpdates, exportTasks, migrationTasks }) => {
-  const [activeTab, setActiveTab] = useQueryParam('tab', '0');
-
-  return (
-    <MainLayout>
-      <Card className="m-2">
-        <CardHeader>
-          <Text semibold xl>
-            Card Updates, Exports & Migrations
-          </Text>
-        </CardHeader>
-        <TabbedView
-          activeTab={parseInt(activeTab || '0', 10)}
-          tabs={[
-            {
-              label: 'Card Updates',
-              onClick: () => setActiveTab('0'),
-              content: <CardUpdatesTab updates={cardUpdates} />,
-            },
-            {
-              label: 'Export Tasks',
-              onClick: () => setActiveTab('1'),
-              content: <ExportTasksTab tasks={exportTasks} />,
-            },
-            {
-              label: 'Migrations',
-              onClick: () => setActiveTab('2'),
-              content: <MigrationTasksTab tasks={migrationTasks} />,
-            },
-          ]}
-        />
-      </Card>
-    </MainLayout>
-  );
-};
-
-const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) => (
-  <CardBody>
-    <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of card database updates from Scryfall. Updates are checked regularly and applied automatically when new
-        card data is available.
-      </Text>
-
-      {updates.length === 0 ? (
-        <Text className="text-center py-8 text-text-secondary">No card updates found.</Text>
-      ) : (
-        <div className="space-y-4">
-          {updates.map((update) => {
-            const statusBadge = getStatusBadge(update.status);
-            return (
-              <Card key={update.id} className="border border-border">
-                <CardBody>
-                  <Flexbox direction="row" justify="between" alignItems="start" className="mb-3">
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Flexbox direction="row" alignItems="center" gap="2">
-                        <Text semibold lg>
-                          Update on {formatDate(update.completedAt || update.timestamp)}
-                        </Text>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                          {statusBadge.text}
-                        </span>
-                      </Flexbox>
-                      {update.status === 'IN_PROGRESS' && (
-                        <Text sm className="text-text-secondary">
-                          Step: {update.step}
-                        </Text>
-                      )}
-                      {update.status === 'COMPLETED' && (
-                        <Text sm className="text-text-secondary">
-                          Completed in {formatDuration(update.startedAt, update.completedAt)}
-                        </Text>
-                      )}
-                      {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
-                    </Flexbox>
-                    <Flexbox direction="col" gap="1" alignItems="end" className="ml-4">
-                      <Text sm className="text-text-secondary whitespace-nowrap">
-                        Scryfall: {new Date(update.scryfallUpdatedAt).toLocaleDateString()}
+        {/* Migration Task */}
+        <Card>
+          <CardHeader>
+            <Text semibold lg>
+              Card Migrations
+            </Text>
+          </CardHeader>
+          <CardBody>
+            <Flexbox direction="col" gap="3">
+              <Text md className="text-text-secondary">
+                When Scryfall removes duplicate cards or merges card entries (usually due to corrections in their
+                database), CubeCobra automatically migrates affected cubes to use the correct card versions. This
+                ensures your cubes always reference valid, up-to-date card data and prevents broken links or missing
+                cards. The migration process runs automatically whenever Scryfall publishes card deletions or merges.
+              </Text>
+              {lastMigrationTask ? (
+                <>
+                  <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Last Migration
                       </Text>
-                      <Text sm className="text-text-secondary whitespace-nowrap">
-                        File Size: {formatFileSize(update.scryfallFileSize)}
+                      <Text semibold md>
+                        {formatDate(lastMigrationTask.completedAt || lastMigrationTask.timestamp)}
+                      </Text>
+                    </Flexbox>
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Cubes Affected
+                      </Text>
+                      <Text semibold md>
+                        {lastMigrationTask.cubesAffected.toLocaleString()}
                       </Text>
                     </Flexbox>
                   </Flexbox>
-
-                  <StepProgress
-                    completedSteps={update.completedSteps || []}
-                    currentStep={update.step}
-                    status={update.status}
-                    stepTimestamps={update.stepTimestamps}
-                  />
-
-                  {update.status === 'COMPLETED' && (
-                    <>
-                      <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                        <div className="flex-1">
-                          <Text sm className="text-text-secondary mb-1">
-                            Total Cards
-                          </Text>
-                          <Text semibold xl>
-                            {update.totalCards.toLocaleString()}
-                          </Text>
-                        </div>
-                        <div className="flex-1">
-                          <Text sm className="text-text-secondary mb-1">
-                            Cards Added
-                          </Text>
-                          <Text semibold xl className="text-green-600">
-                            +{update.cardsAdded.toLocaleString()}
-                          </Text>
-                        </div>
-                        <div className="flex-1">
-                          <Text sm className="text-text-secondary mb-1">
-                            Cards Removed
-                          </Text>
-                          <Text semibold xl className="text-red-600">
-                            -{update.cardsRemoved.toLocaleString()}
-                          </Text>
-                        </div>
-                        <div className="flex-1">
-                          <Text sm className="text-text-secondary mb-1">
-                            Net Change
-                          </Text>
-                          <Text
-                            semibold
-                            xl
-                            className={update.cardsAdded - update.cardsRemoved >= 0 ? 'text-green-600' : 'text-red-600'}
-                          >
-                            {update.cardsAdded - update.cardsRemoved >= 0 ? '+' : ''}
-                            {(update.cardsAdded - update.cardsRemoved).toLocaleString()}
-                          </Text>
-                        </div>
-                      </Flexbox>
-
-                      <div className="mt-3 pt-3 border-t border-border">
-                        <Text xs className="text-text-secondary font-mono">
-                          Checksum: {update.checksum.substring(0, 16)}...
-                        </Text>
-                      </div>
-                    </>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </Flexbox>
-  </CardBody>
-);
-
-const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
-  <CardBody>
-    <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of data export tasks. Exports are scheduled to run every 3 months and generate comprehensive data
-        exports for backup and analysis purposes.
-      </Text>
-
-      {tasks.length === 0 ? (
-        <Text className="text-center py-8 text-text-secondary">No export tasks found.</Text>
-      ) : (
-        <div className="space-y-4">
-          {tasks.map((task) => {
-            const statusBadge = getStatusBadge(task.status);
-            return (
-              <Card key={task.id} className="border border-border">
-                <CardBody>
-                  <Flexbox direction="row" justify="between" alignItems="start" className="mb-3">
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Flexbox direction="row" alignItems="center" gap="2">
-                        <Text semibold lg>
-                          Export on {formatDate(task.completedAt || task.timestamp)}
-                        </Text>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                          {statusBadge.text}
-                        </span>
-                      </Flexbox>
-                      {task.status === 'IN_PROGRESS' && (
-                        <Text sm className="text-text-secondary">
-                          Step: {task.step}
-                        </Text>
-                      )}
-                      {task.status === 'COMPLETED' && (
-                        <Text sm className="text-text-secondary">
-                          Completed in {formatDuration(task.startedAt, task.completedAt)}
-                        </Text>
-                      )}
-                      {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
-                    </Flexbox>
-                    <Flexbox direction="col" gap="1" alignItems="end" className="ml-4">
-                      <Text sm className="text-text-secondary whitespace-nowrap">
-                        Type: {task.exportType}
+                  <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Cards Deleted
                       </Text>
-                      {task.fileSize > 0 && (
-                        <Text sm className="text-text-secondary whitespace-nowrap">
-                          File Size: {formatFileSize(task.fileSize)}
-                        </Text>
-                      )}
+                      <Text semibold md>
+                        {lastMigrationTask.cardsDeleted.toLocaleString()}
+                      </Text>
+                    </Flexbox>
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Cards Merged
+                      </Text>
+                      <Text semibold md>
+                        {lastMigrationTask.cardsMerged.toLocaleString()}
+                      </Text>
                     </Flexbox>
                   </Flexbox>
-
-                  <StepProgress
-                    completedSteps={task.completedSteps || []}
-                    currentStep={task.step}
-                    status={task.status}
-                    stepTimestamps={task.stepTimestamps}
-                  />
-
-                  {task.status === 'COMPLETED' && (
-                    <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Total Records
-                        </Text>
-                        <Text semibold xl>
-                          {task.totalRecords.toLocaleString()}
-                        </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Export Size
-                        </Text>
-                        <Text semibold xl>
-                          {formatFileSize(task.fileSize)}
-                        </Text>
-                      </div>
-                    </Flexbox>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </Flexbox>
-  </CardBody>
-);
-
-const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
-  <CardBody>
-    <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of Scryfall card migration tasks. Migrations occur when cards are deleted or merged on Scryfall, and
-        these tasks apply those changes to all cubes.
-      </Text>
-
-      {tasks.length === 0 ? (
-        <Text className="text-center py-8 text-text-secondary">No migration tasks found.</Text>
-      ) : (
-        <div className="space-y-4">
-          {tasks.map((task) => {
-            const statusBadge = getStatusBadge(task.status);
-            return (
-              <Card key={task.id} className="border border-border">
-                <CardBody>
-                  <Flexbox direction="row" justify="between" alignItems="start" className="mb-3">
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Flexbox direction="row" alignItems="center" gap="2">
-                        <Text semibold lg>
-                          Migration on {formatDate(task.completedAt || task.timestamp)}
-                        </Text>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                          {statusBadge.text}
-                        </span>
-                      </Flexbox>
-                      {task.status === 'IN_PROGRESS' && (
-                        <Text sm className="text-text-secondary">
-                          Step: {task.step}
-                        </Text>
-                      )}
-                      {task.status === 'COMPLETED' && (
-                        <Text sm className="text-text-secondary">
-                          Completed in {formatDuration(task.startedAt, task.completedAt)}
-                        </Text>
-                      )}
-                      {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
-                    </Flexbox>
-                    <Flexbox direction="col" gap="1" alignItems="end" className="ml-4">
-                      {task.lastMigrationDate && (
-                        <Text sm className="text-text-secondary whitespace-nowrap">
-                          Last: {new Date(task.lastMigrationDate).toLocaleDateString()}
-                        </Text>
-                      )}
-                    </Flexbox>
-                  </Flexbox>
-
-                  <StepProgress
-                    completedSteps={task.completedSteps || []}
-                    currentStep={task.step}
-                    status={task.status}
-                    stepTimestamps={task.stepTimestamps}
-                  />
-
-                  {task.status === 'COMPLETED' && (
-                    <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Migrations Processed
-                        </Text>
-                        <Text semibold xl>
-                          {task.migrationsProcessed.toLocaleString()}
-                        </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Cubes Affected
-                        </Text>
-                        <Text semibold xl>
-                          {task.cubesAffected.toLocaleString()}
-                        </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Cards Deleted
-                        </Text>
-                        <Text semibold xl>
-                          {task.cardsDeleted.toLocaleString()}
-                        </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
-                          Cards Merged
-                        </Text>
-                        <Text semibold xl>
-                          {task.cardsMerged.toLocaleString()}
-                        </Text>
-                      </div>
-                    </Flexbox>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </Flexbox>
-  </CardBody>
+                </>
+              ) : (
+                <Text className="text-text-secondary pt-3 border-t border-border">
+                  No completed migration tasks found.
+                </Text>
+              )}
+            </Flexbox>
+          </CardBody>
+        </Card>
+      </Flexbox>
+    </Container>
+  </MainLayout>
 );
 
 export default RenderToRoot(CardUpdatesPage);

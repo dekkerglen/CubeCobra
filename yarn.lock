@@ -4573,7 +4573,7 @@
   resolved "https://registry.npmjs.org/@csstools/css-tokenizer/-/css-tokenizer-3.0.4.tgz"
   integrity sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==
 
-"@cube-cobra/card-update-monitor-lambda@file:/home/gdekker/Repos/CubeCobra/packages/cardUpdateMonitorLambda":
+"@cube-cobra/card-update-monitor-lambda@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/cardUpdateMonitorLambda":
   version "5.0.0"
   resolved "file:packages/cardUpdateMonitorLambda"
   dependencies:
@@ -4582,7 +4582,7 @@
     "@aws-sdk/lib-dynamodb" "^3.525.0"
     archiver "^6.0.1"
 
-"@cubecobra/cdk@file:/home/gdekker/Repos/CubeCobra/packages/cdk":
+"@cubecobra/cdk@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/cdk":
   version "0.1.0"
   resolved "file:packages/cdk"
   dependencies:
@@ -4590,7 +4590,7 @@
     aws-cdk-local "^3.0.1"
     constructs "^10.0.0"
 
-"@cubecobra/client@file:/home/gdekker/Repos/CubeCobra/packages/client":
+"@cubecobra/client@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/client":
   version "1.0.0"
   resolved "file:packages/client"
   dependencies:
@@ -4640,7 +4640,7 @@
     unified "^11.0.5"
     uuid "^9.0.1"
 
-"@cubecobra/daily-jobs-lambda@file:/home/gdekker/Repos/CubeCobra/packages/dailyJobsLambda":
+"@cubecobra/daily-jobs-lambda@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/dailyJobsLambda":
   version "1.0.0"
   resolved "file:packages/dailyJobsLambda"
   dependencies:
@@ -4649,7 +4649,7 @@
     seedrandom "^2.4.4"
     shuffle-seed "^1.1.6"
 
-"@cubecobra/integration-tests@file:/home/gdekker/Repos/CubeCobra/packages/integrationTests":
+"@cubecobra/integration-tests@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/integrationTests":
   version "1.0.0"
   resolved "file:packages/integrationTests"
   dependencies:
@@ -4658,7 +4658,7 @@
     dotenv "^16.3.1"
     node-fetch "^3.3.2"
 
-"@cubecobra/jobs@file:/home/gdekker/Repos/CubeCobra/packages/jobs":
+"@cubecobra/jobs@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/jobs":
   version "1.0.0"
   resolved "file:packages/jobs"
   dependencies:
@@ -4671,8 +4671,9 @@
     dotenv "^16.0.0"
     elo-rating "^1.0.1"
     module-alias "^2.2.3"
+    uuid "^9.0.1"
 
-"@cubecobra/scripts@file:/home/gdekker/Repos/CubeCobra/packages/scripts":
+"@cubecobra/scripts@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/scripts":
   version "1.0.0"
   resolved "file:packages/scripts"
   dependencies:
@@ -4684,7 +4685,7 @@
     archiver "^7.0.1"
     dotenv "^17.2.3"
 
-"@cubecobra/server@file:/home/gdekker/Repos/CubeCobra/packages/server":
+"@cubecobra/server@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/server":
   version "1.0.0"
   resolved "file:packages/server"
   dependencies:
@@ -4745,7 +4746,7 @@
     ts-node "^10.9.2"
     uuid "^9.0.1"
 
-"@cubecobra/utils@file:/home/gdekker/Repos/CubeCobra/packages/utils":
+"@cubecobra/utils@file:/home/ANT.AMAZON.COM/gdekker/personal/CubeCobra/packages/utils":
   version "1.0.0"
   resolved "file:packages/utils"
 
@@ -8950,12 +8951,7 @@
   resolved "https://registry.npmjs.org/@types/unist/-/unist-2.0.11.tgz"
   integrity sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==
 
-"@types/uuid@^9.0.1", "@types/uuid@^9.0.8":
-  version "9.0.8"
-  resolved "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.8.tgz"
-  integrity sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==
-
-"@types/uuid@^9.0.7":
+"@types/uuid@^9.0.1", "@types/uuid@^9.0.7", "@types/uuid@^9.0.8":
   version "9.0.8"
   resolved "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.8.tgz"
   integrity sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==
