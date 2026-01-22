@@ -26,8 +26,8 @@ if (fs.existsSync(distDir)) {
   });
 
   // Write to both dist and server/public directories
-  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-  fs.writeFileSync(serverPublicManifestPath, JSON.stringify(manifest, null, 2));
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+  fs.writeFileSync(serverPublicManifestPath, JSON.stringify(manifest, null, 2) + '\n');
   console.log('Generated manifest.json with', Object.keys(manifest).length, 'entries');
 
   // Also copy the JS files to server/public/js
