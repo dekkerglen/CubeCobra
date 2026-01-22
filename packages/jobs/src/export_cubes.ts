@@ -49,7 +49,7 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
 
   do {
     const result = await cubeDao.queryAllCubes('popularity', false, lastKey, 100);
-    lastKey = result.lastKey;
+    lastKey = result.lastKey || undefined;
     processed += result.items.length;
 
     const processedCubes = await Promise.all(result.items.map((item: CubeType) => processCube(item, oracleToIndex)));
