@@ -35,6 +35,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ noticeCount, co
             <Button href="/admin/featuredcubes" block outline color="primary" type="link">
               Featured Cubes Queue
             </Button>
+            <Button href="/admin/cardupdates" block outline color="primary" type="link">
+              Card Updates & Tasks
+            </Button>
           </Flexbox>
         </CardBody>
       </Card>

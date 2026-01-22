@@ -5,26 +5,26 @@ import { Request, Response } from '../../../types/express';
 
 export const getCardUpdatesHandler = async (req: Request, res: Response) => {
   try {
-    // Get the last 10 card updates (all statuses)
-    const { items: cardUpdates } = await cardUpdateTaskDao.listAll(10);
+    // Get recent tasks and find the last successful one of each type
+    const { items: allCardUpdates } = await cardUpdateTaskDao.listAll(10);
+    const { items: allExportTasks } = await exportTaskDao.listAll(10);
+    const { items: allMigrationTasks } = await migrationTaskDao.listAll(10);
 
-    // Get the last 10 export tasks (all statuses)
-    const { items: exportTasks } = await exportTaskDao.listAll(10);
-
-    // Get the last 10 migration tasks (all statuses)
-    const { items: migrationTasks } = await migrationTaskDao.listAll(10);
+    const lastCardUpdate = allCardUpdates.find((task) => task.status === 'COMPLETED');
+    const lastExportTask = allExportTasks.find((task) => task.status === 'COMPLETED');
+    const lastMigrationTask = allMigrationTasks.find((task) => task.status === 'COMPLETED');
 
     return render(
       req,
       res,
       'CardUpdatesPage',
       {
-        cardUpdates,
-        exportTasks,
-        migrationTasks,
+        lastCardUpdate,
+        lastExportTask,
+        lastMigrationTask,
       },
       {
-        title: 'Card Updates',
+        title: 'Card Database Status',
       },
     );
   } catch (err) {
