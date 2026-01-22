@@ -1252,7 +1252,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     lastKey?: Record<string, any>,
     limit?: number,
   ): Promise<QueryResult> {
+    console.log('queryAllCubes called with:', { sortBy, ascending, lastKey, limit });
     const hashString = await this.hash({ type: 'cube', value: 'all' });
+    console.log('Generated hash string:', hashString);
 
     return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
   }
@@ -1467,6 +1469,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     lastKey?: Record<string, any>,
     limit?: number,
   ): Promise<QueryResult> {
+    console.log('queryByHashWithSort called with:', { hash, sortBy, ascending, lastKey, limit });
     let indexName: string;
     let gsiPK: string;
 
@@ -1503,6 +1506,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       Limit: limit,
       ExclusiveStartKey: lastKey,
     };
+
+    console.log('DynamoDB query params:', JSON.stringify(params, null, 2));
 
     // Query hash rows
     const queryResult = await this.dynamoClient.send(new QueryCommand(params));
