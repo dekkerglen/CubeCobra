@@ -921,7 +921,7 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
 
   // Try to get previous card count from the old manifest
   let previousCardCount = 0;
-  let previousChecksum = '';
+  let manifestFound = false;
   try {
     const previousManifest = await s3.send(
       new GetObjectCommand({
@@ -932,18 +932,22 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
     const manifestContent = await previousManifest.Body?.transformToString();
     if (manifestContent) {
       const oldManifest = JSON.parse(manifestContent);
-      previousChecksum = oldManifest.checksum || '';
+      manifestFound = true;
       // If old manifest had totalCards, use it; otherwise try to get from old all_cards.json
       if (oldManifest.totalCards) {
         previousCardCount = oldManifest.totalCards;
+        console.log(`Found previous manifest with ${previousCardCount} cards`);
+      } else {
+        console.log('Previous manifest found but missing totalCards field');
       }
     }
-  } catch {
-    console.log('No previous manifest found, assuming first update');
+  } catch (error) {
+    console.log(`No previous manifest found: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
-  // If we still don't have previous count, try to get it from S3 all_cards.json
-  if (previousCardCount === 0 && previousChecksum) {
+  // If we still don't have previous count but found a manifest, try to get it from S3 all_cards.json
+  if (previousCardCount === 0 && manifestFound) {
+    console.log('Attempting to fetch previous all_cards.json for card count...');
     try {
       const previousAllCards = await s3.send(
         new GetObjectCommand({
@@ -955,9 +959,12 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
       if (allCardsContent) {
         const previousDict = JSON.parse(allCardsContent);
         previousCardCount = Object.keys(previousDict).length;
+        console.log(`Fetched previous card count from all_cards.json: ${previousCardCount}`);
       }
-    } catch {
-      console.log('Could not fetch previous all_cards.json');
+    } catch (error) {
+      console.log(
+        `Could not fetch previous all_cards.json: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
