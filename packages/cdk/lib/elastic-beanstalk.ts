@@ -112,7 +112,7 @@ export class ElasticBeanstalk extends Construct {
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',
           optionName: 'UnhealthyThresholdCount',
-          value: '20',
+          value: '10',
         },
         {
           namespace: 'aws:elasticbeanstalk:command',
