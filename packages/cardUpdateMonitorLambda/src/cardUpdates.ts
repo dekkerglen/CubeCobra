@@ -132,7 +132,6 @@ export async function monitorCardUpdates(): Promise<void> {
     scryfallUpdatedAt: scryfallData.updatedAt,
     scryfallFileSize: scryfallData.size,
     cardsAdded: 0,
-    cardsRemoved: 0,
     totalCards: 0,
     step: 'Initializing',
   });

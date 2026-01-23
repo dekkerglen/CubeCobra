@@ -921,7 +921,6 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
 
   // Try to get previous card count from the old manifest
   let previousCardCount = 0;
-  let manifestFound = false;
   try {
     const previousManifest = await s3.send(
       new GetObjectCommand({
@@ -932,7 +931,6 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
     const manifestContent = await previousManifest.Body?.transformToString();
     if (manifestContent) {
       const oldManifest = JSON.parse(manifestContent);
-      manifestFound = true;
       // If old manifest had totalCards, use it; otherwise try to get from old all_cards.json
       if (oldManifest.totalCards) {
         previousCardCount = oldManifest.totalCards;
@@ -945,25 +943,25 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
     console.log(`No previous manifest found: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
-  // If we still don't have previous count but found a manifest, try to get it from S3 all_cards.json
-  if (previousCardCount === 0 && manifestFound) {
-    console.log('Attempting to fetch previous all_cards.json for card count...');
+  // If we still don't have previous count, try to get it from S3 carddict.json
+  if (previousCardCount === 0) {
+    console.log('Attempting to fetch previous carddict.json for card count...');
     try {
-      const previousAllCards = await s3.send(
+      const previousCardDict = await s3.send(
         new GetObjectCommand({
           Bucket: process.env.DATA_BUCKET || '',
-          Key: 'cards/all_cards.json',
+          Key: 'cards/carddict.json',
         }),
       );
-      const allCardsContent = await previousAllCards.Body?.transformToString();
-      if (allCardsContent) {
-        const previousDict = JSON.parse(allCardsContent);
+      const cardDictContent = await previousCardDict.Body?.transformToString();
+      if (cardDictContent) {
+        const previousDict = JSON.parse(cardDictContent);
         previousCardCount = Object.keys(previousDict).length;
-        console.log(`Fetched previous card count from all_cards.json: ${previousCardCount}`);
+        console.log(`Fetched previous card count from carddict.json: ${previousCardCount}`);
       }
     } catch (error) {
       console.log(
-        `Could not fetch previous all_cards.json: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Could not fetch previous carddict.json: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
@@ -972,10 +970,8 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
 
   // Calculate changes
   const cardsAdded = Math.max(0, currentCardCount - previousCardCount);
-  const cardsRemoved = Math.max(0, previousCardCount - currentCardCount);
 
   console.log(`Cards added: ${cardsAdded}`);
-  console.log(`Cards removed: ${cardsRemoved}`);
 
   // Update step: Uploading files
   if (taskId) {
@@ -1008,7 +1004,6 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
     scryfallFileSize: scryfallMetadata.fileSize,
     totalCards: currentCardCount,
     cardsAdded: cardsAdded,
-    cardsRemoved: cardsRemoved,
     version: '1.0.0',
   };
 
@@ -1031,7 +1026,6 @@ const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: num
     if (task) {
       task.checksum = checksum;
       task.cardsAdded = cardsAdded;
-      task.cardsRemoved = cardsRemoved;
       task.totalCards = currentCardCount;
       task.step = 'Finalizing';
       await cardUpdateTaskDao.update(task);

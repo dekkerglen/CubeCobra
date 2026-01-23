@@ -281,27 +281,6 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                             +{update.cardsAdded.toLocaleString()}
                           </Text>
                         </Flexbox>
-                        <Flexbox direction="col" gap="1" className="flex-1">
-                          <Text sm className="text-text-secondary">
-                            Cards Removed
-                          </Text>
-                          <Text semibold md className="text-red-600">
-                            -{update.cardsRemoved.toLocaleString()}
-                          </Text>
-                        </Flexbox>
-                        <Flexbox direction="col" gap="1" className="flex-1">
-                          <Text sm className="text-text-secondary">
-                            Net Change
-                          </Text>
-                          <Text
-                            semibold
-                            md
-                            className={update.cardsAdded - update.cardsRemoved >= 0 ? 'text-green-600' : 'text-red-600'}
-                          >
-                            {update.cardsAdded - update.cardsRemoved >= 0 ? '+' : ''}
-                            {(update.cardsAdded - update.cardsRemoved).toLocaleString()}
-                          </Text>
-                        </Flexbox>
                       </Flexbox>
 
                       <div className="mt-3 pt-3 border-t border-border">

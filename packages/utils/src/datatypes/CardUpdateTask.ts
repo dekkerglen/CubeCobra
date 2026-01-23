@@ -15,7 +15,6 @@ export interface CardUpdateTask extends BaseObject {
   scryfallUpdatedAt: string; // ISO 8601 timestamp from Scryfall API (when they last updated the data)
   scryfallFileSize: number; // File size in bytes from Scryfall API
   cardsAdded: number; // Number of cards added in this update
-  cardsRemoved: number; // Number of cards removed in this update
   totalCards: number; // Total number of cards after this update
   step: string; // Current step in the update process (e.g., 'Downloading', 'Processing', 'Uploading')
   completedSteps: string[]; // Array of all completed steps in order
@@ -34,7 +33,6 @@ export interface NewCardUpdateTask {
   scryfallUpdatedAt: string;
   scryfallFileSize: number;
   cardsAdded: number;
-  cardsRemoved: number;
   totalCards: number;
   step: string;
   errorMessage?: string;

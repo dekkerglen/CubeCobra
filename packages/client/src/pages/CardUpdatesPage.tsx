@@ -82,26 +82,18 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
                   <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
                     <Flexbox direction="col" gap="2" className="flex-1">
                       <Text sm className="text-text-secondary">
-                        Cards Added
-                      </Text>
-                      <Text semibold md className="text-green-600">
-                        +{lastCardUpdate.cardsAdded.toLocaleString()}
-                      </Text>
-                    </Flexbox>
-                    <Flexbox direction="col" gap="2" className="flex-1">
-                      <Text sm className="text-text-secondary">
-                        Cards Removed
-                      </Text>
-                      <Text semibold md className="text-red-600">
-                        -{lastCardUpdate.cardsRemoved.toLocaleString()}
-                      </Text>
-                    </Flexbox>
-                    <Flexbox direction="col" gap="2" className="flex-1">
-                      <Text sm className="text-text-secondary">
                         Total Cards
                       </Text>
                       <Text semibold md>
                         {lastCardUpdate.totalCards.toLocaleString()}
+                      </Text>
+                    </Flexbox>
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Cards Added
+                      </Text>
+                      <Text semibold md className="text-green-600">
+                        +{lastCardUpdate.cardsAdded.toLocaleString()}
                       </Text>
                     </Flexbox>
                   </Flexbox>
