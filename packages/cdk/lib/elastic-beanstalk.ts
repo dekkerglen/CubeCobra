@@ -126,6 +126,11 @@ export class ElasticBeanstalk extends Construct {
         },
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',
+          optionName: 'StickinessEnabled',
+          value: 'true',
+        },
+        {
+          namespace: 'aws:elasticbeanstalk:environment:process:default',
           optionName: 'StickinessLBCookieDuration',
           value: '86400', // 1 day
         },
