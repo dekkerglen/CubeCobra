@@ -16,7 +16,7 @@ export interface CardUpdateMonitorLambdaProps extends StackProps {
   stage: string;
   environmentVariables: { [key: string]: string };
   cluster: ecs.ICluster;
-  taskDefinitionArn: string;
+  taskDefinition: ecs.ITaskDefinition;
   taskRole: iam.IRole;
   executionRole: iam.IRole;
   vpc: ec2.IVpc;
@@ -50,7 +50,7 @@ export class CardUpdateMonitorLambda extends Construct {
       environment: {
         ...props.environmentVariables,
         ECS_CLUSTER_NAME: props.cluster.clusterName,
-        ECS_TASK_DEFINITION_ARN: props.taskDefinitionArn,
+        ECS_TASK_DEFINITION_ARN: props.taskDefinition.taskDefinitionArn,
         ECS_SUBNET_IDS: subnetIds.join(','),
         ECS_ASSIGN_PUBLIC_IP: usePublicSubnets ? 'ENABLED' : 'DISABLED',
       },
@@ -74,13 +74,11 @@ export class CardUpdateMonitorLambda extends Construct {
 
     // Grant ECS permissions to run tasks (specific to this task definition)
     // Note: Using wildcard for task definition to allow any revision of the task family
-    // Extract the task family from the ARN (e.g., arn:aws:ecs:region:account:task-definition/family:revision)
-    const taskFamily = props.taskDefinitionArn.split('/')[1].split(':')[0];
     executionRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['ecs:RunTask'],
         resources: [
-          `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task-definition/${taskFamily}:*`,
+          `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task-definition/${props.taskDefinition.family}:*`,
         ],
       }),
     );
