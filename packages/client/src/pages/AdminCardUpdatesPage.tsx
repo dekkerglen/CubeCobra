@@ -40,8 +40,13 @@ const formatFileSize = (bytes: number): string => {
 const formatDuration = (startedAt?: number, completedAt?: number): string => {
   if (!startedAt || !completedAt) return 'N/A';
   const duration = completedAt - startedAt;
-  const minutes = Math.floor(duration / 60000);
+  const hours = Math.floor(duration / 3600000);
+  const minutes = Math.floor((duration % 3600000) / 60000);
   const seconds = Math.floor((duration % 60000) / 1000);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
   return `${minutes}m ${seconds}s`;
 };
 
@@ -197,36 +202,57 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
             return (
               <Card key={update.id} className="border border-border">
                 <CardBody>
-                  <Flexbox direction="row" justify="between" alignItems="start" className="mb-3">
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Flexbox direction="row" alignItems="center" gap="2">
-                        <Text semibold lg>
-                          Update on {formatDate(update.completedAt || update.timestamp)}
+                  <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
+                    <Text semibold lg>
+                      Update on {formatDate(update.completedAt || update.timestamp)}
+                    </Text>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                      {statusBadge.text}
+                    </span>
+                  </Flexbox>
+
+                  <Flexbox direction="col" gap="3" className="mb-3">
+                    <Flexbox direction="col" gap="1">
+                      <Text sm className="text-text-secondary">
+                        Scryfall Update Date
+                      </Text>
+                      <Text semibold md>
+                        {new Date(update.scryfallUpdatedAt).toLocaleDateString()}
+                      </Text>
+                    </Flexbox>
+
+                    <Flexbox direction="col" gap="1">
+                      <Text sm className="text-text-secondary">
+                        File Size
+                      </Text>
+                      <Text semibold md>
+                        {formatFileSize(update.scryfallFileSize)}
+                      </Text>
+                    </Flexbox>
+
+                    {update.status === 'IN_PROGRESS' && (
+                      <Flexbox direction="col" gap="1">
+                        <Text sm className="text-text-secondary">
+                          Current Step
                         </Text>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                          {statusBadge.text}
-                        </span>
+                        <Text semibold md>
+                          {update.step}
+                        </Text>
                       </Flexbox>
-                      {update.status === 'IN_PROGRESS' && (
+                    )}
+
+                    {update.status === 'COMPLETED' && (
+                      <Flexbox direction="col" gap="1">
                         <Text sm className="text-text-secondary">
-                          Step: {update.step}
+                          Duration
                         </Text>
-                      )}
-                      {update.status === 'COMPLETED' && (
-                        <Text sm className="text-text-secondary">
-                          Completed in {formatDuration(update.startedAt, update.completedAt)}
+                        <Text semibold md>
+                          {formatDuration(update.startedAt, update.completedAt)}
                         </Text>
-                      )}
-                      {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
-                    </Flexbox>
-                    <Flexbox direction="col" gap="1" alignItems="end" className="ml-4">
-                      <Text sm className="text-text-secondary whitespace-nowrap">
-                        Scryfall: {new Date(update.scryfallUpdatedAt).toLocaleDateString()}
-                      </Text>
-                      <Text sm className="text-text-secondary whitespace-nowrap">
-                        File Size: {formatFileSize(update.scryfallFileSize)}
-                      </Text>
-                    </Flexbox>
+                      </Flexbox>
+                    )}
+
+                    {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
                   </Flexbox>
 
                   <StepProgress
@@ -312,38 +338,59 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
             return (
               <Card key={task.id} className="border border-border">
                 <CardBody>
-                  <Flexbox direction="row" justify="between" alignItems="start" className="mb-3">
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Flexbox direction="row" alignItems="center" gap="2">
-                        <Text semibold lg>
-                          Export on {formatDate(task.completedAt || task.timestamp)}
-                        </Text>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                          {statusBadge.text}
-                        </span>
-                      </Flexbox>
-                      {task.status === 'IN_PROGRESS' && (
-                        <Text sm className="text-text-secondary">
-                          Step: {task.step}
-                        </Text>
-                      )}
-                      {task.status === 'COMPLETED' && (
-                        <Text sm className="text-text-secondary">
-                          Completed in {formatDuration(task.startedAt, task.completedAt)}
-                        </Text>
-                      )}
-                      {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
-                    </Flexbox>
-                    <Flexbox direction="col" gap="1" alignItems="end" className="ml-4">
-                      <Text sm className="text-text-secondary whitespace-nowrap">
-                        Type: {task.exportType}
+                  <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
+                    <Text semibold lg>
+                      Export on {formatDate(task.completedAt || task.timestamp)}
+                    </Text>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                      {statusBadge.text}
+                    </span>
+                  </Flexbox>
+
+                  <Flexbox direction="col" gap="3" className="mb-3">
+                    <Flexbox direction="col" gap="1">
+                      <Text sm className="text-text-secondary">
+                        Export Type
                       </Text>
-                      {task.fileSize > 0 && (
-                        <Text sm className="text-text-secondary whitespace-nowrap">
-                          File Size: {formatFileSize(task.fileSize)}
-                        </Text>
-                      )}
+                      <Text semibold md>
+                        {task.exportType}
+                      </Text>
                     </Flexbox>
+
+                    {task.fileSize > 0 && (
+                      <Flexbox direction="col" gap="1">
+                        <Text sm className="text-text-secondary">
+                          File Size
+                        </Text>
+                        <Text semibold md>
+                          {formatFileSize(task.fileSize)}
+                        </Text>
+                      </Flexbox>
+                    )}
+
+                    {task.status === 'IN_PROGRESS' && (
+                      <Flexbox direction="col" gap="1">
+                        <Text sm className="text-text-secondary">
+                          Current Step
+                        </Text>
+                        <Text semibold md>
+                          {task.step}
+                        </Text>
+                      </Flexbox>
+                    )}
+
+                    {task.status === 'COMPLETED' && (
+                      <Flexbox direction="col" gap="1">
+                        <Text sm className="text-text-secondary">
+                          Duration
+                        </Text>
+                        <Text semibold md>
+                          {formatDuration(task.startedAt, task.completedAt)}
+                        </Text>
+                      </Flexbox>
+                    )}
+
+                    {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
                   </Flexbox>
 
                   <StepProgress
@@ -400,35 +447,50 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
             return (
               <Card key={task.id} className="border border-border">
                 <CardBody>
-                  <Flexbox direction="row" justify="between" alignItems="start" className="mb-3">
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Flexbox direction="row" alignItems="center" gap="2">
-                        <Text semibold lg>
-                          Migration on {formatDate(task.completedAt || task.timestamp)}
+                  <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
+                    <Text semibold lg>
+                      Migration on {formatDate(task.completedAt || task.timestamp)}
+                    </Text>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                      {statusBadge.text}
+                    </span>
+                  </Flexbox>
+
+                  <Flexbox direction="col" gap="3" className="mb-3">
+                    {task.lastMigrationDate && (
+                      <Flexbox direction="col" gap="1">
+                        <Text sm className="text-text-secondary">
+                          Last Migration Date
                         </Text>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                          {statusBadge.text}
-                        </span>
+                        <Text semibold md>
+                          {new Date(task.lastMigrationDate).toLocaleDateString()}
+                        </Text>
                       </Flexbox>
-                      {task.status === 'IN_PROGRESS' && (
+                    )}
+
+                    {task.status === 'IN_PROGRESS' && (
+                      <Flexbox direction="col" gap="1">
                         <Text sm className="text-text-secondary">
-                          Step: {task.step}
+                          Current Step
                         </Text>
-                      )}
-                      {task.status === 'COMPLETED' && (
+                        <Text semibold md>
+                          {task.step}
+                        </Text>
+                      </Flexbox>
+                    )}
+
+                    {task.status === 'COMPLETED' && (
+                      <Flexbox direction="col" gap="1">
                         <Text sm className="text-text-secondary">
-                          Completed in {formatDuration(task.startedAt, task.completedAt)}
+                          Duration
                         </Text>
-                      )}
-                      {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
-                    </Flexbox>
-                    <Flexbox direction="col" gap="1" alignItems="end" className="ml-4">
-                      {task.lastMigrationDate && (
-                        <Text sm className="text-text-secondary whitespace-nowrap">
-                          Last: {new Date(task.lastMigrationDate).toLocaleDateString()}
+                        <Text semibold md>
+                          {formatDuration(task.startedAt, task.completedAt)}
                         </Text>
-                      )}
-                    </Flexbox>
+                      </Flexbox>
+                    )}
+
+                    {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
                   </Flexbox>
 
                   <StepProgress

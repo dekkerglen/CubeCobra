@@ -282,12 +282,21 @@ function createJobsEnvironmentVariables(
 ): {
   [key: string]: string;
 } {
+  // Map environmentName to STAGE (beta -> BETA, production -> PROD)
+  let stage = 'BETA';
+  if (params.environmentName === 'production') {
+    stage = 'PROD';
+  } else if (params.environmentName === 'beta') {
+    stage = 'BETA';
+  }
+
   const envVars: { [key: string]: string } = {
     AWS_REGION: props?.env?.region || '',
     CLOUDWATCH_ENABLED: 'false',
     DATA_BUCKET: params.dataBucket,
     DYNAMO_DB_PREFIX: params.dynamoPrefix,
     NODE_ENV: params.environmentName === 'local' ? 'development' : 'production',
+    STAGE: stage,
   };
 
   // Add DYNAMO_TABLE if it's provided

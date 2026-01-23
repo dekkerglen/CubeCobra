@@ -80,6 +80,17 @@ export class JobsEcsTask extends Construct {
       }),
     );
 
+    // Grant S3 permissions for cubecobra-public bucket (only for PROD)
+    if (props.environmentVariables.STAGE === 'PROD') {
+      this.taskRole.addToPolicy(
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['s3:PutObject', 's3:ListBucket'],
+          resources: ['arn:aws:s3:::cubecobra-public', 'arn:aws:s3:::cubecobra-public/*'],
+        }),
+      );
+    }
+
     // Grant DynamoDB permissions
     if (props.environmentVariables.DYNAMO_TABLE) {
       this.taskRole.addToPolicy(

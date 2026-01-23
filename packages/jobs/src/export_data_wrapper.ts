@@ -56,17 +56,23 @@ const runExportDataWrapper = async () => {
       cwd: path.join(__dirname, '..', '..'),
     });
 
-    // Update task to "Uploading to public bucket"
-    await exportTaskDao.updateStep(taskId, 'Uploading to public bucket');
+    // Only upload to public bucket in PROD (skip in BETA)
+    const stage = process.env.STAGE || 'BETA';
+    if (stage === 'PROD') {
+      // Update task to "Uploading to public bucket"
+      await exportTaskDao.updateStep(taskId, 'Uploading to public bucket');
 
-    // Copy exports to public bucket
-    await copyExportsToPublicBucket();
+      // Copy exports to public bucket
+      await copyExportsToPublicBucket();
 
-    // Update task to "Uploading card definitions"
-    await exportTaskDao.updateStep(taskId, 'Uploading card definitions');
+      // Update task to "Uploading card definitions"
+      await exportTaskDao.updateStep(taskId, 'Uploading card definitions');
 
-    // Copy current card definition files to public bucket
-    await copyCardDefinitionsToPublicBucket(privateDir);
+      // Copy current card definition files to public bucket
+      await copyCardDefinitionsToPublicBucket(privateDir);
+    } else {
+      console.log(`Skipping upload to cubecobra-public (STAGE=${stage})`);
+    }
 
     // Mark task as completed
     await exportTaskDao.markAsCompleted(taskId);

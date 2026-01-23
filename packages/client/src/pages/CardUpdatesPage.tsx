@@ -125,35 +125,30 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
           <CardBody>
             <Flexbox direction="col" gap="3">
               <Text md className="text-text-secondary">
-                Periodic data exports create comprehensive snapshots of all cube data on CubeCobra, including cube
-                lists, analytics, and historical information. These exports are primarily used for data analysis
-                purposes. If you're interested in accessing exported data for research or analysis, please request
-                access via our{' '}
-                <Link href="https://discord.gg/Hn39bCU" target="_blank" rel="noopener noreferrer">
-                  Discord server
-                </Link>
-                .
+                Periodic data exports create comprehensive snapshots of all cube data on CubeCobra. Our public S3 bucket
+                contains card definition files, ML models, and data exports for research and analysis purposes.
               </Text>
 
               {lastExportTask && (
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                  <Text semibold md className="mb-2">
+                <>
+                  <Text semibold md className="mt-3">
                     📦 Download Latest Data Export
                   </Text>
-                  <Text sm className="text-text-secondary mb-2">
-                    The latest card data and ML models are available for download from our public S3 bucket. This
-                    includes all the data files needed for local development:
+                  <Text sm className="text-text-secondary">
+                    All exported data is available from our public S3 bucket. You'll need the{' '}
+                    <Link
+                      href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      AWS CLI
+                    </Link>{' '}
+                    installed to download the files:
                   </Text>
                   <div className="bg-gray-900 text-green-400 p-3 rounded font-mono text-sm overflow-x-auto">
-                    <div className="mb-2"># Download all data files (card definitions + ML models)</div>
-                    <div>npm run download-data-files</div>
-                    <div className="mt-3 mb-2"># Or download manually from S3:</div>
-                    <div>aws s3 sync s3://cubecobra-public/ ./data/ --no-sign-request</div>
+                    aws s3 sync s3://cubecobra-public/ ./data/ --no-sign-request
                   </div>
-                  <Text xs className="text-text-secondary mt-2">
-                    ✅ No AWS credentials required • Downloads from public bucket • Safe to run
-                  </Text>
-                </div>
+                </>
               )}
 
               {lastExportTask ? (
