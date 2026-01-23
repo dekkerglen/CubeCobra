@@ -211,8 +211,8 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                     </span>
                   </Flexbox>
 
-                  <Flexbox direction="col" gap="3" className="mb-3">
-                    <Flexbox direction="col" gap="1">
+                  <Flexbox direction="row" gap="4" className="mb-3">
+                    <Flexbox direction="col" gap="1" className="flex-1">
                       <Text sm className="text-text-secondary">
                         Scryfall Update Date
                       </Text>
@@ -221,7 +221,7 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                       </Text>
                     </Flexbox>
 
-                    <Flexbox direction="col" gap="1">
+                    <Flexbox direction="col" gap="1" className="flex-1">
                       <Text sm className="text-text-secondary">
                         File Size
                       </Text>
@@ -231,7 +231,7 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                     </Flexbox>
 
                     {update.status === 'IN_PROGRESS' && (
-                      <Flexbox direction="col" gap="1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           Current Step
                         </Text>
@@ -242,7 +242,7 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                     )}
 
                     {update.status === 'COMPLETED' && (
-                      <Flexbox direction="col" gap="1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           Duration
                         </Text>
@@ -251,9 +251,9 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                         </Text>
                       </Flexbox>
                     )}
-
-                    {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
                   </Flexbox>
+
+                  {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
 
                   <StepProgress
                     completedSteps={update.completedSteps || []}
@@ -265,43 +265,43 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                   {update.status === 'COMPLETED' && (
                     <>
                       <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                        <div className="flex-1">
-                          <Text sm className="text-text-secondary mb-1">
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
                             Total Cards
                           </Text>
-                          <Text semibold xl>
+                          <Text semibold md>
                             {update.totalCards.toLocaleString()}
                           </Text>
-                        </div>
-                        <div className="flex-1">
-                          <Text sm className="text-text-secondary mb-1">
+                        </Flexbox>
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
                             Cards Added
                           </Text>
-                          <Text semibold xl className="text-green-600">
+                          <Text semibold md className="text-green-600">
                             +{update.cardsAdded.toLocaleString()}
                           </Text>
-                        </div>
-                        <div className="flex-1">
-                          <Text sm className="text-text-secondary mb-1">
+                        </Flexbox>
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
                             Cards Removed
                           </Text>
-                          <Text semibold xl className="text-red-600">
+                          <Text semibold md className="text-red-600">
                             -{update.cardsRemoved.toLocaleString()}
                           </Text>
-                        </div>
-                        <div className="flex-1">
-                          <Text sm className="text-text-secondary mb-1">
+                        </Flexbox>
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
                             Net Change
                           </Text>
                           <Text
                             semibold
-                            xl
+                            md
                             className={update.cardsAdded - update.cardsRemoved >= 0 ? 'text-green-600' : 'text-red-600'}
                           >
                             {update.cardsAdded - update.cardsRemoved >= 0 ? '+' : ''}
                             {(update.cardsAdded - update.cardsRemoved).toLocaleString()}
                           </Text>
-                        </div>
+                        </Flexbox>
                       </Flexbox>
 
                       <div className="mt-3 pt-3 border-t border-border">
@@ -347,8 +347,8 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
                     </span>
                   </Flexbox>
 
-                  <Flexbox direction="col" gap="3" className="mb-3">
-                    <Flexbox direction="col" gap="1">
+                  <Flexbox direction="row" gap="4" className="mb-3">
+                    <Flexbox direction="col" gap="1" className="flex-1">
                       <Text sm className="text-text-secondary">
                         Export Type
                       </Text>
@@ -358,7 +358,7 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
                     </Flexbox>
 
                     {task.fileSize > 0 && (
-                      <Flexbox direction="col" gap="1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           File Size
                         </Text>
@@ -369,7 +369,7 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
                     )}
 
                     {task.status === 'IN_PROGRESS' && (
-                      <Flexbox direction="col" gap="1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           Current Step
                         </Text>
@@ -380,7 +380,7 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
                     )}
 
                     {task.status === 'COMPLETED' && (
-                      <Flexbox direction="col" gap="1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           Duration
                         </Text>
@@ -389,9 +389,9 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
                         </Text>
                       </Flexbox>
                     )}
-
-                    {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
                   </Flexbox>
+
+                  {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
 
                   <StepProgress
                     completedSteps={task.completedSteps || []}
@@ -402,22 +402,22 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
 
                   {task.status === 'COMPLETED' && (
                     <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
                           Total Records
                         </Text>
-                        <Text semibold xl>
+                        <Text semibold md>
                           {task.totalRecords.toLocaleString()}
                         </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
+                      </Flexbox>
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
                           Export Size
                         </Text>
-                        <Text semibold xl>
+                        <Text semibold md>
                           {formatFileSize(task.fileSize)}
                         </Text>
-                      </div>
+                      </Flexbox>
                     </Flexbox>
                   )}
                 </CardBody>
@@ -456,9 +456,9 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
                     </span>
                   </Flexbox>
 
-                  <Flexbox direction="col" gap="3" className="mb-3">
+                  <Flexbox direction="row" gap="4" className="mb-3">
                     {task.lastMigrationDate && (
-                      <Flexbox direction="col" gap="1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           Last Migration Date
                         </Text>
@@ -469,7 +469,7 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
                     )}
 
                     {task.status === 'IN_PROGRESS' && (
-                      <Flexbox direction="col" gap="1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           Current Step
                         </Text>
@@ -480,7 +480,7 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
                     )}
 
                     {task.status === 'COMPLETED' && (
-                      <Flexbox direction="col" gap="1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           Duration
                         </Text>
@@ -489,9 +489,9 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
                         </Text>
                       </Flexbox>
                     )}
-
-                    {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
                   </Flexbox>
+
+                  {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
 
                   <StepProgress
                     completedSteps={task.completedSteps || []}
@@ -502,38 +502,38 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
 
                   {task.status === 'COMPLETED' && (
                     <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
                           Migrations Processed
                         </Text>
-                        <Text semibold xl>
+                        <Text semibold md>
                           {task.migrationsProcessed.toLocaleString()}
                         </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
+                      </Flexbox>
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
                           Cubes Affected
                         </Text>
-                        <Text semibold xl>
+                        <Text semibold md>
                           {task.cubesAffected.toLocaleString()}
                         </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
+                      </Flexbox>
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
                           Cards Deleted
                         </Text>
-                        <Text semibold xl>
+                        <Text semibold md>
                           {task.cardsDeleted.toLocaleString()}
                         </Text>
-                      </div>
-                      <div className="flex-1">
-                        <Text sm className="text-text-secondary mb-1">
+                      </Flexbox>
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
                           Cards Merged
                         </Text>
-                        <Text semibold xl>
+                        <Text semibold md>
                           {task.cardsMerged.toLocaleString()}
                         </Text>
-                      </div>
+                      </Flexbox>
                     </Flexbox>
                   )}
                 </CardBody>
