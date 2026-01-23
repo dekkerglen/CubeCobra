@@ -65,11 +65,6 @@ export class ElasticBeanstalk extends Construct {
           value: `${props.fleetSize + 1}`,
         },
         {
-          namespace: 'aws:autoscaling:asg',
-          optionName: 'HealthCheckGracePeriod',
-          value: '600',
-        },
-        {
           namespace: 'aws:elasticbeanstalk:environment',
           optionName: 'EnvironmentType',
           value: 'LoadBalanced',
@@ -117,7 +112,7 @@ export class ElasticBeanstalk extends Construct {
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',
           optionName: 'UnhealthyThresholdCount',
-          value: '3',
+          value: '20',
         },
         {
           namespace: 'aws:elasticbeanstalk:command',
