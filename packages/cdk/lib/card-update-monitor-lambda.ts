@@ -74,11 +74,13 @@ export class CardUpdateMonitorLambda extends Construct {
 
     // Grant ECS permissions to run tasks (specific to this task definition)
     // Note: Using wildcard for task definition to allow any revision of the task family
+    // Extract the task family from the ARN (e.g., arn:aws:ecs:region:account:task-definition/family:revision)
+    const taskFamily = props.taskDefinitionArn.split('/')[1].split(':')[0];
     executionRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['ecs:RunTask'],
         resources: [
-          `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task-definition/cubecobra-jobs:*`,
+          `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task-definition/${taskFamily}:*`,
         ],
       }),
     );
