@@ -162,6 +162,7 @@ export class CubeCobraStack extends cdk.Stack {
     const jobsTask = new JobsEcsTask(this, 'JobsTask', {
       repository: jobsEcr.repository,
       cluster: fargateCluster,
+      environmentName: params.environmentName,
       environmentVariables: jobsEnvVars,
     });
 

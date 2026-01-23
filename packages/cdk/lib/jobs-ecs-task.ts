@@ -18,6 +18,11 @@ export interface JobsEcsTaskProps {
   cluster: ecs.ICluster;
 
   /**
+   * Environment name (e.g., 'production', 'beta')
+   */
+  environmentName: string;
+
+  /**
    * Environment variables for the task
    */
   environmentVariables: { [key: string]: string };
@@ -116,14 +121,14 @@ export class JobsEcsTask extends Construct {
 
     // Create log group
     const logGroup = new logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/ecs/cubecobra-jobs`,
+      logGroupName: `/ecs/cubecobra-jobs-${props.environmentName}`,
       retention: logs.RetentionDays.ONE_WEEK,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // Create task definition
     this.taskDefinition = new ecs.FargateTaskDefinition(this, 'TaskDefinition', {
-      family: 'cubecobra-jobs',
+      family: `cubecobra-jobs-${props.environmentName}`,
       cpu: props.cpu || 2048, // 2 vCPU
       memoryLimitMiB: props.memoryMiB || 16384, // 16 GB
       taskRole: this.taskRole,
