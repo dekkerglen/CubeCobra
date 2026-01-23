@@ -53,15 +53,15 @@ const formatDuration = (startedAt?: number, completedAt?: number): string => {
 const getStatusBadge = (status: string): { color: string; text: string } => {
   switch (status) {
     case 'COMPLETED':
-      return { color: 'bg-green-100 text-green-800', text: 'Completed' };
+      return { color: 'bg-green-100 text-green-700', text: 'Completed' };
     case 'IN_PROGRESS':
-      return { color: 'bg-blue-100 text-blue-800', text: 'In Progress' };
+      return { color: 'bg-blue-100 text-blue-700', text: 'In Progress' };
     case 'FAILED':
-      return { color: 'bg-red-100 text-red-800', text: 'Failed' };
+      return { color: 'bg-red-100 text-red-700', text: 'Failed' };
     case 'PENDING':
-      return { color: 'bg-gray-100 text-gray-800', text: 'Pending' };
+      return { color: 'bg-bg-active text-text-secondary', text: 'Pending' };
     default:
-      return { color: 'bg-gray-100 text-gray-800', text: status };
+      return { color: 'bg-bg-active text-text-secondary', text: status };
   }
 };
 
@@ -72,7 +72,7 @@ const ErrorDetails: React.FC<{ errorMessage: string }> = ({ errorMessage }) => {
     <div className="mt-2">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1 text-red-600 hover:text-red-700 focus:outline-none"
+        className="flex items-center gap-1 text-red-600 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
       >
         {isExpanded ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />}
         <Text sm semibold>
@@ -81,7 +81,7 @@ const ErrorDetails: React.FC<{ errorMessage: string }> = ({ errorMessage }) => {
       </button>
       {isExpanded && (
         <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-          <Text xs className="font-mono text-red-800">
+          <Text xs className="font-mono text-red-700">
             {errorMessage}
           </Text>
         </div>
@@ -110,7 +110,7 @@ const StepProgress: React.FC<{
     <div className="mt-3 pt-3 border-t border-border">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1 text-text-secondary hover:text-text focus:outline-none mb-2"
+        className="flex items-center gap-1 text-text-secondary hover:text-text focus:outline-none focus:ring-2 focus:ring-button-primary focus:ring-offset-2 rounded mb-2"
       >
         {isExpanded ? <ChevronUpIcon size={16} /> : <ChevronDownIcon size={16} />}
         <Text sm semibold>
@@ -277,7 +277,7 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                           <Text sm className="text-text-secondary">
                             Cards Added
                           </Text>
-                          <Text semibold md className="text-green-600">
+                          <Text semibold md>
                             +{update.cardsAdded.toLocaleString()}
                           </Text>
                         </Flexbox>

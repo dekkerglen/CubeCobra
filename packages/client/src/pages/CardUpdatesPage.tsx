@@ -92,7 +92,7 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
                       <Text sm className="text-text-secondary">
                         Cards Added
                       </Text>
-                      <Text semibold md className="text-green-600">
+                      <Text semibold md>
                         +{lastCardUpdate.cardsAdded.toLocaleString()}
                       </Text>
                     </Flexbox>
@@ -137,7 +137,7 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
                     </Link>{' '}
                     installed to download the files:
                   </Text>
-                  <div className="bg-gray-900 text-green-400 p-3 rounded font-mono text-sm overflow-x-auto">
+                  <div className="bg-bg-active text-text p-3 rounded font-mono text-sm overflow-x-auto border border-border">
                     aws s3 sync s3://cubecobra-public/ ./data/ --no-sign-request
                   </div>
                 </>
