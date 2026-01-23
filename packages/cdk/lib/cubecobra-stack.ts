@@ -189,6 +189,7 @@ export class CubeCobraStack extends cdk.Stack {
       version: params.version,
       subdomain: params.domain.split('.')[0],
       stage: params.env,
+      environmentName: params.environmentName,
       environmentVariables: lambdaEnvVars,
       cluster: fargateCluster,
       taskDefinition: jobsTask.taskDefinition,

@@ -14,6 +14,7 @@ export interface CardUpdateMonitorLambdaProps extends StackProps {
   version: string;
   subdomain: string;
   stage: string;
+  environmentName: string;
   environmentVariables: { [key: string]: string };
   cluster: ecs.ICluster;
   taskDefinition: ecs.ITaskDefinition;
@@ -74,11 +75,12 @@ export class CardUpdateMonitorLambda extends Construct {
 
     // Grant ECS permissions to run tasks (specific to this task definition)
     // Note: Using wildcard for task definition to allow any revision of the task family
+    const taskFamily = `cubecobra-jobs-${props.environmentName}`;
     executionRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['ecs:RunTask'],
         resources: [
-          `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task-definition/${props.taskDefinition.family}:*`,
+          `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:task-definition/${taskFamily}:*`,
         ],
       }),
     );

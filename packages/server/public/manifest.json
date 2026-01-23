@@ -1,5 +1,5 @@
 {
-  "AdminCardUpdatesPage": "/js/AdminCardUpdatesPage.63856f8d.bundle.js",
+  "AdminCardUpdatesPage": "/js/AdminCardUpdatesPage.e11e229e.bundle.js",
   "AdminDashboardPage": "/js/AdminDashboardPage.fcbfe6eb.bundle.js",
   "ApplicationPage": "/js/ApplicationPage.b21e47ff.bundle.js",
   "ArticlePage": "/js/ArticlePage.c759e2d5.bundle.js",
@@ -9,7 +9,7 @@
   "BulkUploadPage": "/js/BulkUploadPage.f65d89db.bundle.js",
   "CardPage": "/js/CardPage.e33dd88e.bundle.js",
   "CardSearchPage": "/js/CardSearchPage.9f99a214.bundle.js",
-  "CardUpdatesPage": "/js/CardUpdatesPage.be4e0024.bundle.js",
+  "CardUpdatesPage": "/js/CardUpdatesPage.2c50c963.bundle.js",
   "CommentPage": "/js/CommentPage.b21ebb25.bundle.js",
   "ContactPage": "/js/ContactPage.e6567e49.bundle.js",
   "CreateNewRecordPage": "/js/CreateNewRecordPage.f67560d1.bundle.js",
