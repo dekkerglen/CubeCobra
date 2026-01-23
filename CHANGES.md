@@ -6,6 +6,8 @@ As of 1.4.57
 - Increased password limit to 1024 (there is no technical limitation here, some folks just wanted to be able to use longer passwords than we anticipated when we set an arbritrary limit.)
 - Add panning to card elo and play rate graphs
 - Created scheduled jobs for card updates, scryfall migrations (removing/merging cards), and exports
+- Added a new page (find it under Cards->Card Updates) to display scheduled job statuses
+- Made data exports public, added instructions under the Card Updates page on how to access them
 
 # Bug Fixes
 
