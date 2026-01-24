@@ -1,0 +1,37 @@
+name: Build Card Update Monitor Lambda
+
+on:
+  pull_request:
+    paths:
+      - 'packages/cardUpdateMonitorLambda/**'
+      - 'packages/utils/**'
+  push:
+    branches:
+      - 'master'
+    paths:
+      - 'packages/cardUpdateMonitorLambda/**'
+      - 'packages/utils/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build-card-update-monitor-lambda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Card Update Monitor Lambda
+        run: npm run build --workspace=packages/cardUpdateMonitorLambda
