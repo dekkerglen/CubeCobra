@@ -380,7 +380,8 @@ async function compareCubes(cardsA: any, cardsB: any): Promise<any> {
 // A cache for promises that are expensive to compute and will always produce
 // the same value, such as pack images. If a promise produces an error, it's
 // removed from the cache. Each promise lives five minutes by default.
-const promiseCache = new NodeCache({ stdTTL: 60 * 5, useClones: false });
+// maxKeys limit prevents unbounded memory growth
+const promiseCache = new NodeCache({ stdTTL: 60 * 5, useClones: false, maxKeys: 10000 });
 
 // / Caches the result of the given callback in `promiseCache` with the given
 // / key.

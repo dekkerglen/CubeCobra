@@ -159,13 +159,13 @@ app.use(
       dynamoService,
       documentClient,
       keepExpired: false,
-      touchInterval: 30000,
-      ttl: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
+      touchInterval: 300000, // 5 minutes - reduced from 30 seconds to reduce memory pressure
+      ttl: 1000 * 60 * 60 * 24 * 30, // 30 days - reduced from 1 year to reduce memory footprint
     }),
-    resave: true,
-    saveUninitialized: true,
+    resave: false, // Changed from true - only save session if modified
+    saveUninitialized: false, // Changed from true - don't save empty sessions
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days - reduced from 1 year
     },
   }),
 );
