@@ -10,6 +10,7 @@ import Collapse from 'components/base/Collapse';
 import Controls from 'components/base/Controls';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import NavMenu from 'components/base/NavMenu';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import CustomImageToggler from 'components/CustomImageToggler';
@@ -41,8 +42,19 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
 
   const controls = (
     <>
-      {user && draft.owner && user.id === (draft.owner as User).id && (
-        <Link href={`/draft/deckbuilder/${draft.id}`}>Edit</Link>
+      {user && draft.owner && user.id === (draft.owner as User).id && draft.seats.length > 1 && (
+        <NavMenu label="Edit">
+          <Flexbox direction="col" gap="2" className="p-3">
+            {draft.seats.map((seat, index) => (
+              <Link key={index} href={`/draft/deckbuilder/${draft.id}?seat=${index}`} className="dropdown-item">
+                Seat {index + 1}: {seat.name}
+              </Link>
+            ))}
+          </Flexbox>
+        </NavMenu>
+      )}
+      {user && draft.owner && user.id === (draft.owner as User).id && draft.seats.length === 1 && (
+        <Link href={`/draft/deckbuilder/${draft.id}?seat=0`}>Edit</Link>
       )}
       <SampleHandModalLink
         modalprops={{

@@ -594,18 +594,19 @@ export const editDeckHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const { main, side, title, description } = req.body;
+    const { main, side, title, description, seat } = req.body;
 
-    const seat0 = deck.seats[0];
-    if (!seat0) {
+    const seatIndex = parseInt(seat || '0', 10);
+    const targetSeat = deck.seats[seatIndex];
+    if (!targetSeat) {
       req.flash('danger', 'Invalid seat');
       return redirect(req, res, '/404');
     }
 
-    seat0.mainboard = JSON.parse(main);
-    seat0.sideboard = JSON.parse(side);
-    (seat0 as any).title = (title || '').substring(0, 100);
-    (seat0 as any).body = (description || '').substring(0, 1000);
+    targetSeat.mainboard = JSON.parse(main);
+    targetSeat.sideboard = JSON.parse(side);
+    (targetSeat as any).title = (title || '').substring(0, 100);
+    (targetSeat as any).body = (description || '').substring(0, 1000);
 
     deck.complete = true;
 

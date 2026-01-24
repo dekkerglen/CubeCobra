@@ -4,6 +4,7 @@ import Banner from 'components/Banner';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import LoginForm from 'components/forms/LoginForm';
@@ -47,6 +48,7 @@ const LoginPage: React.FC = () => {
             <Button type="submit" color="primary" block onClick={() => formRef.current?.submit()}>
               Login
             </Button>
+            {!showResendForm && <Link onClick={() => setShowResendForm(true)}>Need to resend verification email?</Link>}
           </Flexbox>
         </CardBody>
       </Card>
@@ -65,14 +67,6 @@ const LoginPage: React.FC = () => {
             <ResendVerificationForm formRef={resendFormRef} onCancel={() => setShowResendForm(false)} />
           </CardBody>
         </Card>
-      )}
-
-      {!showResendForm && (
-        <div className="text-center mt-3">
-          <Button color="accent" onClick={() => setShowResendForm(true)}>
-            Need to resend verification email?
-          </Button>
-        </div>
       )}
     </MainLayout>
   );

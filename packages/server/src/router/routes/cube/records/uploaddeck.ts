@@ -227,7 +227,7 @@ export const associateWithExistingDraft = async (
   }
 
   // Update the draft with the new seat data
-  await draftDao.putDraft(draft);
+  await draftDao.update(draft);
 };
 
 export const uploadDeckHandler = async (req: Request, res: Response) => {

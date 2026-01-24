@@ -132,7 +132,7 @@ const recordSchema = Joi.object({
     )
     .optional(), // Matches array is optional
   trophy: Joi.array().items(Joi.string()).optional(), // Trophy is optional
-}).unknown(false); // do not allow additional properties
+}).unknown(true); // allow additional properties like dateCreated, dateLastUpdated
 
 export const createRecordHandler = async (req: Request, res: Response) => {
   try {

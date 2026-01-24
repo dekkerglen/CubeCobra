@@ -2038,6 +2038,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-text-opacity: 1;
   color: rgb(var(--bg-accent) / var(--tw-text-opacity));
 }
+.text-blue-700 {
+  --tw-text-opacity: 1;
+  color: rgb(29 78 216 / var(--tw-text-opacity));
+}
 .text-blue-800 {
   --tw-text-opacity: 1;
   color: rgb(30 64 175 / var(--tw-text-opacity));
@@ -2093,6 +2097,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .text-green-600 {
   --tw-text-opacity: 1;
   color: rgb(22 163 74 / var(--tw-text-opacity));
+}
+.text-green-700 {
+  --tw-text-opacity: 1;
+  color: rgb(21 128 61 / var(--tw-text-opacity));
 }
 .text-green-800 {
   --tw-text-opacity: 1;
@@ -2980,6 +2988,11 @@ img.mana-symbol-sm {
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
+.focus\:ring-button-primary:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(var(--button-primary) / var(--tw-ring-opacity));
+}
+
 .focus\:ring-focus-ring:focus {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(var(--focus-ring) / var(--tw-ring-opacity));
@@ -2997,6 +3010,10 @@ img.mana-symbol-sm {
 
 .focus\:ring-opacity-50:focus {
   --tw-ring-opacity: 0.5;
+}
+
+.focus\:ring-offset-2:focus {
+  --tw-ring-offset-width: 2px;
 }
 
 .disabled\:cursor-not-allowed:disabled {

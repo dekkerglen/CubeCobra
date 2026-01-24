@@ -67,7 +67,7 @@ const recordSchema = Joi.object({
     )
     .optional(), // Matches information is optional
   trophy: Joi.array().items(Joi.string()).optional(), // Trophy is optional
-}).unknown(false); // do not allow additional properties
+}).unknown(true); // allow additional properties like dateCreated, dateLastUpdated
 
 const mainboardSchema = Joi.array().items(Joi.string()).min(1).max(200).required();
 const sideboardSchema = Joi.array().items(Joi.string()).max(200).default([]);

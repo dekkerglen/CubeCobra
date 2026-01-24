@@ -18,6 +18,10 @@ interface DeleteCubeModalProps {
 const DeleteCubeModal: React.FC<DeleteCubeModalProps> = ({ isOpen, setOpen, cube }) => {
   const [name, setName] = React.useState('');
   const formRef = React.useRef<HTMLFormElement>(null);
+  const trimmedCubeName = cube.name.trim();
+  const trimmedInputName = name.trim();
+  const namesMatch = trimmedInputName === trimmedCubeName;
+
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} sm>
       <ModalHeader setOpen={setOpen}>Delete Cube</ModalHeader>
@@ -25,13 +29,13 @@ const DeleteCubeModal: React.FC<DeleteCubeModalProps> = ({ isOpen, setOpen, cube
         <Flexbox direction="col" gap="2" className="w-full">
           <CSRFForm method="POST" action={`/cube/remove/${cube.id}`} formData={{}} ref={formRef}>
             <Text>Are you sure you want to delete this cube? To delete, please type the name of the cube.</Text>
-            <Input value={name} onChange={(e) => setName(e.target.value)} valid={name === cube.name} />
+            <Input value={name} onChange={(e) => setName(e.target.value)} valid={namesMatch} />
           </CSRFForm>
         </Flexbox>
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" gap="2" className="w-full">
-          <Button block color="danger" disabled={name !== cube.name} onClick={() => formRef.current?.submit()}>
+          <Button block color="danger" disabled={!namesMatch} onClick={() => formRef.current?.submit()}>
             Delete
           </Button>
           <Button block color="secondary" onClick={() => setOpen(false)}>

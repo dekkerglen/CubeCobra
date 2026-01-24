@@ -51,6 +51,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   addBasics,
   setSideboard,
   setDeck,
+  seat,
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [expanded, toggleExpanded] = useToggle(false);
@@ -59,8 +60,9 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
     () => ({
       main: JSON.stringify(mainboard),
       side: JSON.stringify(sideboard),
+      seat: seat.toString(),
     }),
-    [mainboard, sideboard],
+    [mainboard, sideboard, seat],
   );
 
   const autoBuildDeck = useCallback(async () => {

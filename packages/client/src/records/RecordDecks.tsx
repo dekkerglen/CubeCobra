@@ -66,6 +66,7 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
 
   const controls = (
     <>
+      {isOwner && <Link href={`/draft/deckbuilder/${draft.id}?seat=${selectedUserIndex}`}>Edit Deck</Link>}
       <DraftExportMenu draft={draft} seatIndex={`${selectedUserIndex}`} />
     </>
   );
@@ -73,9 +74,8 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
   return (
     <CardBody>
       <Flexbox direction="col" gap="2">
-        <Flexbox direction="row" justify="between" alignItems="center" className="py-2 px-4">
-          <Flexbox direction="row" justify="start" gap="4" alignItems="center">
-            {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload another deck to this record</Link>}
+        <Flexbox direction="row" justify="between" alignItems="end" className="py-2 px-4">
+          <Flexbox direction="row" justify="start" gap="4" alignItems="end">
             <Select
               value={`${selectedUserIndex}`}
               setValue={(value) => {
@@ -91,6 +91,7 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
                 }))
                 .filter((option) => draft.seats[parseInt(option.value, 10)]?.mainboard?.flat(3).length > 0)}
             />
+            {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload another deck to this record</Link>}
           </Flexbox>
           <ResponsiveDiv baseVisible lg>
             <Button color="secondary" onClick={toggleExpanded}>
