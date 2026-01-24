@@ -1,9 +1,9 @@
-import { S3 } from '@aws-sdk/client-s3';
 import fs from 'fs';
 
 import 'dotenv/config';
 
 import { fileToAttribute, loadAllFiles } from './cardCatalog';
+import { getPublicS3Client } from './s3';
 
 interface CardManifest {
   checksum: string;
@@ -17,7 +17,7 @@ const getManifestPath = (basePath: string): string => `${basePath}/manifest.json
 
 const downloadManifestFromS3 = async (bucket: string, region: string): Promise<CardManifest | null> => {
   try {
-    const s3 = new S3({ region });
+    const s3 = getPublicS3Client(region);
     const res = await s3.getObject({
       Bucket: bucket,
       Key: 'cards/manifest.json',
@@ -81,7 +81,7 @@ const shouldUpdateCards = (localManifest: CardManifest | null, remoteManifest: C
 const downloadFromS3 = async (basePath: string = 'private', bucket: string, region: string): Promise<void> => {
   console.log('Downloading card database files from S3...');
 
-  const s3 = new S3({ region });
+  const s3 = getPublicS3Client(region);
   await Promise.all(
     Object.keys(fileToAttribute).map(async (file: string) => {
       try {

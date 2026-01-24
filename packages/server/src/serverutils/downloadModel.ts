@@ -1,13 +1,14 @@
-import { S3 } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 
 import 'dotenv/config';
 
+import { getPublicS3Client } from './s3';
+
 export const downloadModelsFromS3 = async (basePath: string = '', bucket: string, region: string): Promise<void> => {
   // Create S3 client with provided region
-  const s3: S3 = new S3({ region });
+  const s3 = getPublicS3Client(region);
 
   // list all from s3 under s3://{bucket}/model
   const listResult = await s3.listObjectsV2({ Bucket: bucket, Prefix: 'model/' });
