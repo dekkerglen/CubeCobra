@@ -8,6 +8,10 @@ As of 1.4.57
 - Created scheduled jobs for card updates, scryfall migrations (removing/merging cards), and exports
 - Added a new page (find it under Cards->Card Updates) to display scheduled job statuses
 - Made data exports public, added instructions under the Card Updates page on how to access them
+- Added ability to edit seats other than seat 1 for existing decks
+- Added paste text upload to records
+- Added ability to edit decks in records, and any seat in a playtest draft
+- Minor style improvements in various places in the site
 
 # Bug Fixes
 
@@ -17,6 +21,10 @@ As of 1.4.57
 - Fixed a bug with RSS feeds erroring
 - Removed video ads from banner, as those occasionally went outside the bounding box and affected site UX.
 - Fixed the "All-time" graph on elo and play rate pages
+- Fixed a bug where snapdrafter uploads would fail
+- Fixed a bug preventing users from deleting a cube
+- Fixed a bug where playtest drafts would show as colorless in error
+- Fixed a bug where Patreon linking would 404
 
 # Technical Changes
 
