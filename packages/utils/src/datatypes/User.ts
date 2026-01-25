@@ -9,6 +9,12 @@ export enum GridTightnessPreference {
 }
 export const DefaultGridTightnessPreference = GridTightnessPreference.LOOSE;
 
+export enum YourCubesSortOrder {
+  ALPHA = 'alphabetical',
+  LASTUPDATED = 'lastUpdated',
+}
+export const DefaultYourCubesSortOrder = YourCubesSortOrder.LASTUPDATED;
+
 export enum UserRoles {
   ADMIN = 'Admin',
   CONTENT_CREATOR = 'ContentCreator',
@@ -40,6 +46,7 @@ export interface UnhydratedUser {
   consentToHashedEmail?: boolean;
   token?: string;
   emailVerified?: boolean;
+  yourCubesSortOrder?: YourCubesSortOrder;
 }
 
 export interface UserWithSensitiveInformation extends UnhydratedUser {
