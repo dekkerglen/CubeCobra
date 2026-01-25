@@ -285,9 +285,9 @@ app.use((err: any, req: express.Request, res: express.Response) => {
   );
 });
 
-// Check for card database updates every 5 minutes
+// Check for card database updates every 30 minutes
 // Update if data is over a week old or if card count has changed
-schedule.scheduleJob('*/5 * * * *', async () => {
+schedule.scheduleJob('*/30 * * * *', async () => {
   console.info('Checking for card database updates...');
   const bucket = process.env.DATA_BUCKET || 'cubecobra-public';
   const region = process.env.AWS_REGION || 'us-east-2';
