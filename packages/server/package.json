@@ -17,7 +17,10 @@
     "test:watch": "npm run write-git-info && npx jest --watch --coverage=false",
     "test:coverage": "npm run write-git-info && npx jest --coverage",
     "test:ci": "npm run write-git-info && npx jest --coverage --coverageReporters json-summary text",
-    "write-git-info": "ts-node scripts/write-git-info.ts"
+    "write-git-info": "ts-node scripts/write-git-info.ts",
+    "clinic:doctor": "clinic doctor -- node dist/server/src/index",
+    "clinic:heap": "clinic heapprofiler -- node dist/server/src/index",
+    "clinic:flame": "clinic flame -- node dist/server/src/index"
   },
   "keywords": [],
   "author": "",
@@ -109,6 +112,7 @@
     "@types/sanitize-html": "^2.16.0",
     "@types/stripe": "^8.0.416",
     "@types/uuid": "^9.0.8",
+    "clinic": "^13.0.0",
     "copyfiles": "^2.4.1",
     "eslint": "^7.32.0",
     "eslint-plugin-import": "^2.29.1",

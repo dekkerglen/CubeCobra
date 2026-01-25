@@ -2,7 +2,7 @@ import fs from 'fs';
 
 import 'dotenv/config';
 
-import { s3 as authenticatedS3, publicS3 } from '../dynamo/s3client';
+import { publicS3,s3 as authenticatedS3 } from '../dynamo/s3client';
 import { fileToAttribute, loadAllFiles } from './cardCatalog';
 
 interface CardManifest {
@@ -115,10 +115,7 @@ export async function updateCardbase(basePath: string = 'private', bucket: strin
  * Check the manifest and conditionally update the cardbase.
  * This should be called periodically (e.g., every 30 minutes).
  */
-export async function checkAndUpdateCardbase(
-  basePath: string = 'private',
-  bucket: string,
-): Promise<boolean> {
+export async function checkAndUpdateCardbase(basePath: string = 'private', bucket: string): Promise<boolean> {
   // Prevent concurrent updates
   if (isUpdating) {
     console.log('Card database update already in progress, skipping this check');
