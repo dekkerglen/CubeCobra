@@ -4,11 +4,12 @@ import { Readable } from 'stream';
 
 import 'dotenv/config';
 
+import { s3 as authenticatedS3 } from '../dynamo/s3client';
 import { getPublicS3Client } from './s3';
 
 export const downloadModelsFromS3 = async (basePath: string = '', bucket: string, region: string): Promise<void> => {
   // Create S3 client with provided region
-  const s3 = getPublicS3Client(region);
+  const s3 = bucket === 'cubecobra-public' ? getPublicS3Client(region) : authenticatedS3;
 
   // list all from s3 under s3://{bucket}/model
   const listResult = await s3.listObjectsV2({ Bucket: bucket, Prefix: 'model/' });
