@@ -3,7 +3,7 @@ import { cardFromId } from 'serverutils/carddb';
 import { compareCubes, generateBalancedPack, generatePack } from 'serverutils/cubefn';
 import { getBotPrediction } from 'serverutils/userUtil';
 
-import { createCardDetails, createCube } from '../test-utils/data';
+import { createCardDetails, createCube,createCustomCard } from '../test-utils/data';
 
 // Mock dependencies
 jest.mock('serverutils/userUtil');
@@ -544,9 +544,11 @@ describe('compareCubes', () => {
     it('should identify cards in both cubes', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(4)],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -558,9 +560,11 @@ describe('compareCubes', () => {
     it('should identify cards only in cube A', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [createComparisonCard(1), createComparisonCard(4)],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -572,9 +576,11 @@ describe('compareCubes', () => {
     it('should identify cards only in cube B', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1), createComparisonCard(2)],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [createComparisonCard(1), createComparisonCard(3), createComparisonCard(4)],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -588,9 +594,11 @@ describe('compareCubes', () => {
     it('should return all oracle IDs from cube A', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [createComparisonCard(1)],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -602,9 +610,11 @@ describe('compareCubes', () => {
     it('should return all oracle IDs from cube B', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1)],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -616,9 +626,11 @@ describe('compareCubes', () => {
     it('should return all cards combined in allCards property. Ordered by both, only A, only B', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1), createComparisonCard(2)],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [createComparisonCard(2), createComparisonCard(3)],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -632,6 +644,7 @@ describe('compareCubes', () => {
     it('should handle identical cubes', async () => {
       const cards = {
         mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cards, cards);
@@ -646,8 +659,8 @@ describe('compareCubes', () => {
 
   describe('empty cubes', () => {
     it('should handle both cubes being empty', async () => {
-      const cardsA = { mainboard: [] };
-      const cardsB = { mainboard: [] };
+      const cardsA = { mainboard: [], maybeboard: [] };
+      const cardsB = { mainboard: [], maybeboard: [] };
 
       const result = await compareCubes(cardsA, cardsB);
 
@@ -660,8 +673,9 @@ describe('compareCubes', () => {
     it('should handle one empty cube', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1), createComparisonCard(2)],
+        maybeboard: [],
       };
-      const cardsB = { mainboard: [] };
+      const cardsB = { mainboard: [], maybeboard: [] };
 
       const result = await compareCubes(cardsA, cardsB);
 
@@ -680,9 +694,11 @@ describe('compareCubes', () => {
           createComparisonCard(2, 'oracle1'), // Duplicate oracle_id
           createComparisonCard(3, 'oracle2'),
         ],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [createComparisonCard(4, 'oracle1'), createComparisonCard(5, 'oracle3')],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -698,6 +714,7 @@ describe('compareCubes', () => {
     it('should match cards by oracle_id even with multiple copies in cube B', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1, 'oracle1')],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [
@@ -705,6 +722,7 @@ describe('compareCubes', () => {
           createComparisonCard(3, 'oracle1'), // Duplicate oracle_id
           createComparisonCard(4, 'oracle2'),
         ],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -725,12 +743,14 @@ describe('compareCubes', () => {
           createComparisonCard(1, 'oracle1', 'Lightning Bolt'),
           createComparisonCard(2, 'oracle2', 'Force of Will'),
         ],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [
           createComparisonCard(3, 'oracle1', 'Lightning Bolt'), // Same oracle_id, same name
           createComparisonCard(4, 'oracle3', 'Lightning Bolt'), // Different oracle_id, same name
         ],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -753,9 +773,11 @@ describe('compareCubes', () => {
     it('should maintain card details in results', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1, 'oracle1', 'Test Card')],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [createComparisonCard(2, 'oracle1', 'Test Card')],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
@@ -774,6 +796,7 @@ describe('compareCubes', () => {
           createComparisonCard(2, 'oracle2'),
           createComparisonCard(3, 'oracle3'),
         ],
+        maybeboard: [],
       };
       const cardsB = {
         mainboard: [
@@ -781,12 +804,142 @@ describe('compareCubes', () => {
           createComparisonCard(5, 'oracle1'),
           createComparisonCard(6, 'oracle2'),
         ],
+        maybeboard: [],
       };
 
       const result = await compareCubes(cardsA, cardsB);
 
       // inBoth should be in the order they appear in cardsA
       expect(result.inBoth.map((c: any) => c.details.oracle_id)).toEqual(['oracle1', 'oracle2', 'oracle3']);
+    });
+  });
+
+  describe('custom cards', () => {
+    it('should match custom cards by custom_name when same name, case insensitive, in both cubes', async () => {
+      const cardsA = {
+        mainboard: [createCustomCard('My Custom Card')],
+        maybeboard: [],
+      };
+      const cardsB = {
+        mainboard: [createCustomCard('My Custom Card')],
+        maybeboard: [],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // Custom cards with same custom_name should be in both
+      expect(result.inBoth).toHaveLength(1);
+      expect(result.inBoth[0].custom_name).toBe('My Custom Card');
+    });
+
+    it('should not match custom cards if custom_name differs', async () => {
+      const cardsA = {
+        mainboard: [createCustomCard('Custom Card A')],
+        maybeboard: [],
+      };
+      const cardsB = {
+        mainboard: [createCustomCard('Custom Card B')],
+        maybeboard: [],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // Custom cards with different custom_names should not match
+      expect(result.inBoth).toHaveLength(0);
+      expect(result.onlyA).toHaveLength(1);
+      expect(result.onlyB).toHaveLength(1);
+    });
+
+    it('should match multiple copies of same custom card', async () => {
+      const cardsA = {
+        mainboard: [
+          createCustomCard('Bomb Custom'),
+          createCustomCard('Bomb Custom'),
+          createCustomCard('Another Custom'),
+        ],
+        maybeboard: [],
+      };
+      const cardsB = {
+        mainboard: [createCustomCard('Bomb Custom'), createCustomCard('Different Custom')],
+        maybeboard: [],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // One copy of 'Bomb Custom' should match
+      expect(result.inBoth).toHaveLength(1);
+      expect(result.inBoth[0].custom_name).toBe('Bomb Custom');
+
+      // onlyA should have one 'Bomb Custom' and 'Another Custom'
+      expect(result.onlyA).toHaveLength(2);
+
+      // onlyB should have 'Different Custom'
+      expect(result.onlyB).toHaveLength(1);
+    });
+
+    it('should mix custom cards with regular cards correctly', async () => {
+      const cardsA = {
+        mainboard: [
+          createComparisonCard(1, 'oracle1'),
+          createCustomCard('Custom A'),
+          createComparisonCard(2, 'oracle2'),
+        ],
+        maybeboard: [],
+      };
+      const cardsB = {
+        mainboard: [
+          createComparisonCard(2, 'oracle1'),
+          createCustomCard('Custom A'),
+          createComparisonCard(3, 'oracle3'),
+        ],
+        maybeboard: [],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // oracle1 matches, and custom card with same custom_name should match
+      expect(result.inBoth).toHaveLength(2);
+      const inBothOracleIds = result.inBoth.map((c: any) => c.details?.oracle_id).filter(Boolean);
+      const inBothCustomNames = result.inBoth.map((c: any) => c.custom_name).filter(Boolean);
+
+      expect(inBothOracleIds).toContain('oracle1');
+      expect(inBothCustomNames).toContain('Custom A');
+    });
+
+    it('should handle custom card in cube A only', async () => {
+      const cardsA = {
+        mainboard: [createCustomCard('Only in A')],
+        maybeboard: [],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(1, 'oracle1')],
+        maybeboard: [],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.inBoth).toHaveLength(0);
+      expect(result.onlyA).toHaveLength(1);
+      expect(result.onlyA[0].custom_name).toBe('Only in A');
+      expect(result.onlyB).toHaveLength(1);
+    });
+
+    it('should handle custom card in cube B only', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1, 'oracle1')],
+        maybeboard: [],
+      };
+      const cardsB = {
+        mainboard: [createCustomCard('Only in B')],
+        maybeboard: [],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.inBoth).toHaveLength(0);
+      expect(result.onlyA).toHaveLength(1);
+      expect(result.onlyB).toHaveLength(1);
+      expect(result.onlyB[0].custom_name).toBe('Only in B');
     });
   });
 });

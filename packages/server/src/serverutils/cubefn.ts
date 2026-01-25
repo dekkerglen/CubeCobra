@@ -1,5 +1,6 @@
-import { convertFromLegacyCardColorCategory } from '@utils/cardutil';
+import { cardNameLower, cardOracleId, convertFromLegacyCardColorCategory, isCustomCard } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
+import Card from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY, type CubeCards, type TagColor } from '@utils/datatypes/Cube';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import _ from 'lodash';
@@ -348,25 +349,82 @@ function CSVtoCards(csvString: string): CSVResult {
   return { newCards, newMaybe, missing };
 }
 
-async function compareCubes(cardsA: any, cardsB: any): Promise<any> {
-  const inBoth: any[] = [];
-  const onlyA = cardsA.mainboard.slice(0);
-  const onlyB = cardsB.mainboard.slice(0);
-  const aOracles = onlyA.map((card: any) => card.details.oracle_id);
-  const bOracles = onlyB.map((card: any) => card.details.oracle_id);
+async function compareCubes(cardsA: CubeCards, cardsB: CubeCards): Promise<any> {
+  // Separate custom and regular cards in a single pass
+  const customCardsA: Card[] = [];
+  const regularCardsA: Card[] = [];
   for (const card of cardsA.mainboard) {
-    if (bOracles.includes(card.details.oracle_id)) {
-      inBoth.push(card);
-
-      onlyA.splice(aOracles.indexOf(card.details.oracle_id), 1);
-      onlyB.splice(bOracles.indexOf(card.details.oracle_id), 1);
-
-      aOracles.splice(aOracles.indexOf(card.details.oracle_id), 1);
-      bOracles.splice(bOracles.indexOf(card.details.oracle_id), 1);
+    if (isCustomCard(card)) {
+      customCardsA.push(card);
+    } else {
+      regularCardsA.push(card);
     }
   }
 
+  const customCardsB: Card[] = [];
+  const regularCardsB: Card[] = [];
+  for (const card of cardsB.mainboard) {
+    if (isCustomCard(card)) {
+      customCardsB.push(card);
+    } else {
+      regularCardsB.push(card);
+    }
+  }
+
+  // Compare regular cards by oracle_id (existing logic)
+  const inBothRegular: Card[] = [];
+  const onlyARegular = regularCardsA.slice(0);
+  const onlyBRegular = regularCardsB.slice(0);
+  const aOracles = onlyARegular.map((card) => cardOracleId(card));
+  const bOracles = onlyBRegular.map((card) => cardOracleId(card));
+
+  for (const card of regularCardsA) {
+    if (bOracles.includes(cardOracleId(card))) {
+      inBothRegular.push(card);
+
+      const oracleId = cardOracleId(card);
+      onlyARegular.splice(aOracles.indexOf(oracleId), 1);
+      onlyBRegular.splice(bOracles.indexOf(oracleId), 1);
+
+      aOracles.splice(aOracles.indexOf(oracleId), 1);
+      bOracles.splice(bOracles.indexOf(oracleId), 1);
+    }
+  }
+
+  // Compare custom cards by name (case-insensitive)
+  const inBothCustom: Card[] = [];
+  const onlyACustom = customCardsA.slice(0);
+  const onlyBCustom = customCardsB.slice(0);
+  const bCustomNames = customCardsB.map((card) => cardNameLower(card));
+
+  for (const card of customCardsA) {
+    const customNameLower = cardNameLower(card);
+    const matchIndex = bCustomNames.findIndex((name: string) => name === customNameLower);
+
+    if (matchIndex !== -1) {
+      inBothCustom.push(card);
+
+      const originalIndex = onlyBCustom.findIndex(
+        (c) => cardNameLower(c) === customNameLower && c === customCardsB[matchIndex],
+      );
+      if (originalIndex !== -1) {
+        onlyBCustom.splice(originalIndex, 1);
+        bCustomNames.splice(matchIndex, 1);
+      }
+
+      const aIndex = onlyACustom.indexOf(card);
+      if (aIndex !== -1) {
+        onlyACustom.splice(aIndex, 1);
+      }
+    }
+  }
+
+  // Combine results
+  const inBoth = inBothRegular.concat(inBothCustom);
+  const onlyA = onlyARegular.concat(onlyACustom);
+  const onlyB = onlyBRegular.concat(onlyBCustom);
   const allCards = inBoth.concat(onlyA).concat(onlyB);
+
   return {
     inBoth,
     onlyA,
