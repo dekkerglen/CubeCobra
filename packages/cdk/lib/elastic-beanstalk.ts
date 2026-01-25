@@ -117,7 +117,7 @@ export class ElasticBeanstalk extends Construct {
         {
           namespace: 'aws:elasticbeanstalk:command',
           optionName: 'DeploymentPolicy',
-          value: 'Rolling',
+          value: 'Immutable',
         },
         {
           namespace: 'aws:elasticbeanstalk:command',
