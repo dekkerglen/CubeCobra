@@ -1,6 +1,6 @@
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cardFromId } from 'serverutils/carddb';
-import { generateBalancedPack, generatePack } from 'serverutils/cubefn';
+import { compareCubes, generateBalancedPack, generatePack } from 'serverutils/cubefn';
 import { getBotPrediction } from 'serverutils/userUtil';
 
 import { createCardDetails, createCube } from '../test-utils/data';
@@ -524,6 +524,269 @@ describe('generatePack', () => {
       const result = await generatePack(mockCube, mockCards, 'test-seed');
 
       expect(result.pack).toHaveLength(8);
+    });
+  });
+});
+
+describe('compareCubes', () => {
+  /**
+   * Helper function to create a card with oracle_id and name
+   */
+  const createComparisonCard = (index: number, oracleId?: string, name?: string): any => ({
+    cardID: `card${index}`,
+    details: {
+      oracle_id: oracleId || `oracle${index}`,
+      name: name || `Card ${index}`,
+    },
+  });
+
+  describe('basic functionality', () => {
+    it('should identify cards in both cubes', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(4)],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.inBoth).toHaveLength(2);
+      expect(result.inBoth.map((c: any) => c.details.oracle_id)).toEqual(['oracle1', 'oracle2']);
+    });
+
+    it('should identify cards only in cube A', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(1), createComparisonCard(4)],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.onlyA).toHaveLength(2);
+      expect(result.onlyA.map((c: any) => c.details.oracle_id)).toEqual(['oracle2', 'oracle3']);
+    });
+
+    it('should identify cards only in cube B', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2)],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(1), createComparisonCard(3), createComparisonCard(4)],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.onlyB).toHaveLength(2);
+      expect(result.onlyB.map((c: any) => c.details.oracle_id)).toEqual(['oracle3', 'oracle4']);
+    });
+  });
+
+  describe('comparison results', () => {
+    it('should return all oracle IDs from cube A', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(1)],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.aOracles).toHaveLength(2);
+      expect(result.aOracles).toEqual(['oracle2', 'oracle3']);
+    });
+
+    it('should return all oracle IDs from cube B', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1)],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.bOracles).toHaveLength(2);
+      expect(result.bOracles).toEqual(['oracle2', 'oracle3']);
+    });
+
+    it('should return all cards combined in allCards property. Ordered by both, only A, only B', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2)],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(2), createComparisonCard(3)],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.allCards).toHaveLength(3);
+      expect(result.allCards.map((c: any) => c.details.oracle_id)).toEqual(['oracle2', 'oracle1', 'oracle3']);
+    });
+  });
+
+  describe('identical cubes', () => {
+    it('should handle identical cubes', async () => {
+      const cards = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
+      };
+
+      const result = await compareCubes(cards, cards);
+
+      expect(result.inBoth).toHaveLength(3);
+      expect(result.onlyA).toHaveLength(0);
+      expect(result.onlyB).toHaveLength(0);
+      expect(result.aOracles).toHaveLength(0);
+      expect(result.bOracles).toHaveLength(0);
+    });
+  });
+
+  describe('empty cubes', () => {
+    it('should handle both cubes being empty', async () => {
+      const cardsA = { mainboard: [] };
+      const cardsB = { mainboard: [] };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.inBoth).toHaveLength(0);
+      expect(result.onlyA).toHaveLength(0);
+      expect(result.onlyB).toHaveLength(0);
+      expect(result.allCards).toHaveLength(0);
+    });
+
+    it('should handle one empty cube', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1), createComparisonCard(2)],
+      };
+      const cardsB = { mainboard: [] };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.inBoth).toHaveLength(0);
+      expect(result.onlyA).toHaveLength(2);
+      expect(result.onlyB).toHaveLength(0);
+      expect(result.allCards).toHaveLength(2);
+    });
+  });
+
+  describe('multiple copies of same card', () => {
+    it('should match cards by oracle_id even with multiple copies in cube A', async () => {
+      const cardsA = {
+        mainboard: [
+          createComparisonCard(1, 'oracle1'),
+          createComparisonCard(2, 'oracle1'), // Duplicate oracle_id
+          createComparisonCard(3, 'oracle2'),
+        ],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(4, 'oracle1'), createComparisonCard(5, 'oracle3')],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // oracle1 is in both (even though cube A has 2 copies, only one match)
+      expect(result.inBoth).toHaveLength(1);
+      expect(result.inBoth[0].details.oracle_id).toBe('oracle1');
+
+      // onlyA should have oracle2 (and one oracle1 since one was matched)
+      expect(result.onlyA).toHaveLength(2);
+    });
+
+    it('should match cards by oracle_id even with multiple copies in cube B', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1, 'oracle1')],
+      };
+      const cardsB = {
+        mainboard: [
+          createComparisonCard(2, 'oracle1'),
+          createComparisonCard(3, 'oracle1'), // Duplicate oracle_id
+          createComparisonCard(4, 'oracle2'),
+        ],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // oracle1 is in both
+      expect(result.inBoth).toHaveLength(1);
+      expect(result.inBoth[0].details.oracle_id).toBe('oracle1');
+
+      // onlyB should have one oracle1 and oracle2
+      expect(result.onlyB).toHaveLength(2);
+    });
+  });
+
+  describe('oracle_id comparison', () => {
+    it('should compare cards by oracle_id, not card name', async () => {
+      const cardsA = {
+        mainboard: [
+          createComparisonCard(1, 'oracle1', 'Lightning Bolt'),
+          createComparisonCard(2, 'oracle2', 'Force of Will'),
+        ],
+      };
+      const cardsB = {
+        mainboard: [
+          createComparisonCard(3, 'oracle1', 'Lightning Bolt'), // Same oracle_id, same name
+          createComparisonCard(4, 'oracle3', 'Lightning Bolt'), // Different oracle_id, same name
+        ],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // Only oracle1 is in both
+      expect(result.inBoth).toHaveLength(1);
+      expect(result.inBoth[0].details.oracle_id).toBe('oracle1');
+
+      // onlyA has oracle2
+      expect(result.onlyA).toHaveLength(1);
+      expect(result.onlyA[0].details.oracle_id).toBe('oracle2');
+
+      // onlyB has oracle3
+      expect(result.onlyB).toHaveLength(1);
+      expect(result.onlyB[0].details.oracle_id).toBe('oracle3');
+    });
+  });
+
+  describe('return value structure', () => {
+    it('should maintain card details in results', async () => {
+      const cardsA = {
+        mainboard: [createComparisonCard(1, 'oracle1', 'Test Card')],
+      };
+      const cardsB = {
+        mainboard: [createComparisonCard(2, 'oracle1', 'Test Card')],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      expect(result.inBoth[0]).toHaveProperty('details');
+      expect(result.inBoth[0].details).toHaveProperty('oracle_id', 'oracle1');
+      expect(result.inBoth[0].details).toHaveProperty('name', 'Test Card');
+    });
+  });
+
+  describe('order preservation', () => {
+    it('should maintain relative order in inBoth list', async () => {
+      const cardsA = {
+        mainboard: [
+          createComparisonCard(1, 'oracle1'),
+          createComparisonCard(2, 'oracle2'),
+          createComparisonCard(3, 'oracle3'),
+        ],
+      };
+      const cardsB = {
+        mainboard: [
+          createComparisonCard(4, 'oracle3'),
+          createComparisonCard(5, 'oracle1'),
+          createComparisonCard(6, 'oracle2'),
+        ],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // inBoth should be in the order they appear in cardsA
+      expect(result.inBoth.map((c: any) => c.details.oracle_id)).toEqual(['oracle1', 'oracle2', 'oracle3']);
     });
   });
 });
