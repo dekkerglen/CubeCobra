@@ -205,16 +205,9 @@ export const associateWithExistingDraft = async (
       const row = isSideboard ? 0 : isCreature ? 0 : 1;
       const col = Math.max(0, Math.min(7, Math.floor(cmc)));
 
-      // Check if card already exists to prevent unbounded array growth
-      const existingIndex = cards.findIndex((c) => c.cardID === selected.cardID);
-      const cardIndex = existingIndex >= 0 ? existingIndex : cards.length;
-
       if (targetPool[row] && targetPool[row][col]) {
-        targetPool[row][col].push(cardIndex);
-        // Only add card if it doesn't already exist
-        if (existingIndex < 0) {
-          cards.push(selected);
-        }
+        targetPool[row][col].push(cards.length);
+        cards.push(selected);
       }
     }
   };

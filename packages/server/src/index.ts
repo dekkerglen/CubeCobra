@@ -85,12 +85,12 @@ if (process.env?.NODE_ENV !== 'development' && process.env?.HTTP_ONLY !== 'true'
 
 // request timeout middleware
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-  req.setTimeout(60 * 1000, () => {
+  req.setTimeout(30 * 1000, () => {
     const err = new Error('Request Timeout') as CustomError;
     err.status = 408;
     next(err);
   });
-  res.setTimeout(60 * 1000, () => {
+  res.setTimeout(30 * 1000, () => {
     const err = new Error('Service Unavailable') as CustomError;
     err.status = 503;
     next(err);
@@ -104,13 +104,13 @@ app.use(fileUpload());
 // body parser middleware
 app.use(
   bodyParser.urlencoded({
-    limit: '200mb',
+    limit: '50mb',
     extended: true,
   }),
 );
 app.use(
   bodyParser.json({
-    limit: '200mb',
+    limit: '50mb',
   }),
 );
 
@@ -290,8 +290,7 @@ app.use((err: any, req: express.Request, res: express.Response) => {
 schedule.scheduleJob('*/30 * * * *', async () => {
   console.info('Checking for card database updates...');
   const bucket = process.env.DATA_BUCKET || 'cubecobra-public';
-  const region = process.env.AWS_REGION || 'us-east-2';
-  await checkAndUpdateCardbase('private', bucket, region);
+  await checkAndUpdateCardbase('private', bucket);
 });
 
 // Start server after carddb and ML models are initialized.

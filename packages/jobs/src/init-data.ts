@@ -29,13 +29,12 @@ import fs from 'fs';
     // Download card data from S3
     console.log('Downloading card data from S3...');
     const bucket = process.env.DATA_BUCKET || 'cubecobra-public';
-    const region = process.env.AWS_REGION || 'us-east-2';
-    await updateCardbase(privateDir, bucket, region);
+    await updateCardbase(privateDir, bucket);
     console.log('✅ Card data downloaded');
 
     // Download ML models from S3
     console.log('Downloading ML models from S3...');
-    await downloadModelsFromS3(serverDir, bucket, region);
+    await downloadModelsFromS3(serverDir, bucket);
     console.log('✅ ML models downloaded');
 
     console.log('✅ Initialization complete!');

@@ -2,9 +2,8 @@ import fs from 'fs';
 
 import 'dotenv/config';
 
-import { s3 as authenticatedS3 } from '../dynamo/s3client';
+import { s3 as authenticatedS3, publicS3 } from '../dynamo/s3client';
 import { fileToAttribute, loadAllFiles } from './cardCatalog';
-import { getPublicS3Client } from './s3';
 
 interface CardManifest {
   checksum: string;
@@ -16,9 +15,9 @@ let isUpdating = false;
 
 const getManifestPath = (basePath: string): string => `${basePath}/manifest.json`;
 
-const downloadManifestFromS3 = async (bucket: string, region: string): Promise<CardManifest | null> => {
+const downloadManifestFromS3 = async (bucket: string): Promise<CardManifest | null> => {
   try {
-    const s3 = bucket === 'cubecobra-public' ? getPublicS3Client(region) : authenticatedS3;
+    const s3 = bucket === 'cubecobra-public' ? publicS3 : authenticatedS3;
     const res = await s3.getObject({
       Bucket: bucket,
       Key: 'cards/manifest.json',
@@ -79,10 +78,10 @@ const shouldUpdateCards = (localManifest: CardManifest | null, remoteManifest: C
   return false;
 };
 
-const downloadFromS3 = async (basePath: string = 'private', bucket: string, region: string): Promise<void> => {
+const downloadFromS3 = async (basePath: string = 'private', bucket: string): Promise<void> => {
   console.log('Downloading card database files from S3...');
 
-  const s3 = bucket === 'cubecobra-public' ? getPublicS3Client(region) : authenticatedS3;
+  const s3 = bucket === 'cubecobra-public' ? publicS3 : authenticatedS3;
   await Promise.all(
     Object.keys(fileToAttribute).map(async (file: string) => {
       try {
@@ -103,12 +102,12 @@ const downloadFromS3 = async (basePath: string = 'private', bucket: string, regi
   );
 };
 
-export async function updateCardbase(basePath: string = 'private', bucket: string, region: string): Promise<void> {
+export async function updateCardbase(basePath: string = 'private', bucket: string): Promise<void> {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
 
-  await downloadFromS3(basePath, bucket, region);
+  await downloadFromS3(basePath, bucket);
   await loadAllFiles(basePath);
 }
 
@@ -119,7 +118,6 @@ export async function updateCardbase(basePath: string = 'private', bucket: strin
 export async function checkAndUpdateCardbase(
   basePath: string = 'private',
   bucket: string,
-  region: string,
 ): Promise<boolean> {
   // Prevent concurrent updates
   if (isUpdating) {
@@ -131,7 +129,7 @@ export async function checkAndUpdateCardbase(
     isUpdating = true;
 
     // Download the remote manifest
-    const remoteManifest = await downloadManifestFromS3(bucket, region);
+    const remoteManifest = await downloadManifestFromS3(bucket);
 
     // Load the local manifest
     const localManifest = loadLocalManifest(basePath);
@@ -139,7 +137,7 @@ export async function checkAndUpdateCardbase(
     // Check if we need to update
     if (shouldUpdateCards(localManifest, remoteManifest)) {
       console.log('Updating card database...');
-      await updateCardbase(basePath, bucket, region);
+      await updateCardbase(basePath, bucket);
 
       // Save the new manifest locally
       if (remoteManifest) {

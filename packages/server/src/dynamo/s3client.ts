@@ -12,6 +12,16 @@ export const s3 = new S3({
   region: process.env.AWS_REGION,
 });
 
+// Public S3 client with no credentials for accessing public buckets
+// Reference: https://github.com/aws/aws-sdk-js-v3/issues/4093#issuecomment-2364084415
+export const publicS3 = new S3({
+  region: process.env.AWS_REGION || 'us-east-2',
+  // No credentials
+  credentials: { accessKeyId: '', secretAccessKey: '' },
+  // No signing of requests
+  signer: { sign: async (req) => req },
+});
+
 export const getObject = async (bucket: string, key: string): Promise<any> => {
   try {
     const res = await s3.getObject({

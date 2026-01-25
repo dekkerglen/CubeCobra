@@ -838,22 +838,32 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   /**
    * Overrides update to support dual writes.
    */
-  public async update(item: Draft): Promise<void> {
+  public async update(item: Draft, options?: { skipNameUpdate?: boolean }): Promise<void> {
     // Update item's timestamp
     item.dateLastUpdated = Date.now();
 
-    // Get cube details
-    const cube = await this.cubeDao.getById(item.cube);
-    const cubeName = cube?.name || 'Unknown Cube';
+    // Only recalculate names if seats changed (and not explicitly skipped)
+    if (!options?.skipNameUpdate) {
+      // Extract cube name from existing draft name to avoid extra DB query
+      // Draft name format: "{colors} {type} of {cubeName}"
+      const existingCubeName = item.name?.split(' of ').pop();
+      let cubeName = existingCubeName;
 
-    // Recalculate seat names and draft from mainboard colors
-    const { seatNames, name } = this.getDeckColors(item, cubeName);
-    item.seatNames = seatNames;
-    item.name = name;
+      // Only fetch cube if we don't have a valid cube name
+      if (!cubeName || cubeName === 'Unknown Cube') {
+        const cube = await this.cubeDao.getById(item.cube);
+        cubeName = cube?.name || 'Unknown Cube';
+      }
 
-    // Update seat names within each seat
-    for (let i = 0; i < item.seats.length; i++) {
-      item.seats[i]!.name = seatNames[i];
+      // Recalculate seat names and draft from mainboard colors
+      const { seatNames, name } = this.getDeckColors(item, cubeName);
+      item.seatNames = seatNames;
+      item.name = name;
+
+      // Update seat names within each seat
+      for (let i = 0; i < item.seats.length; i++) {
+        item.seats[i]!.name = seatNames[i];
+      }
     }
 
     // Save cards and seats to S3 before updating metadata

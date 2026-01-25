@@ -11,9 +11,16 @@ export const getdetailsforcardsHandler = async (req: Request, res: Response) => 
       });
     }
 
+    // Pre-size array to avoid reallocation during map
+    const cards = req.body.cards;
+    const details = new Array(cards.length);
+    for (let i = 0; i < cards.length; i++) {
+      details[i] = cardFromId(cards[i]);
+    }
+
     return res.status(200).send({
       success: 'true',
-      details: req.body.cards.map((id: string) => cardFromId(id)),
+      details,
     });
   } catch (err) {
     const error = err as Error;

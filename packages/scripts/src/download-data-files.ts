@@ -45,11 +45,11 @@ const downloadDataFiles = async () => {
   try {
     // Download card definitions to /packages/server/private
     console.log('Downloading card definitions...');
-    await updateCardbase(privateDir, 'cubecobra-public', 'us-east-2');
+    await updateCardbase(privateDir, 'cubecobra-public');
 
     // Download ML model files to /packages/server/model
     console.log('Downloading ML model files...');
-    await downloadModelsFromS3(modelDir, 'cubecobra-public', 'us-east-2');
+    await downloadModelsFromS3(modelDir, 'cubecobra-public');
 
     console.log('✅ Data files downloaded successfully!');
     console.log(`📁 Card data: ${privateDir}`);

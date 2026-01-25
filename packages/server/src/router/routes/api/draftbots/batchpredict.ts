@@ -45,7 +45,16 @@ const handler = async (req: Request, res: Response) => {
   const predictBody = req.body as PredictBody;
 
   try {
-    const prediction = predictBody.inputs.map((input) => draft(input.pack, input.picks));
+    // Pre-allocate array to avoid reallocation during map
+    const inputs = predictBody.inputs;
+    const prediction = new Array(inputs.length);
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i];
+      if (!input || !input.pack || !input.picks) {
+        throw new Error(`Invalid input at index ${i}`);
+      }
+      prediction[i] = draft(input.pack, input.picks);
+    }
 
     const result: PredictResponse = {
       prediction,
