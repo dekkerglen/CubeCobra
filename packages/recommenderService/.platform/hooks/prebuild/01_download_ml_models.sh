@@ -1,17 +1,11 @@
 #!/bin/bash
-# This script runs before the application is started during deployment
-# It downloads the ML models so the recommender service can start immediately
-
+# This hook runs after npm install but before the app starts
 set -e
 
-echo "Running pre-deployment initialization for recommender service..."
-
-# Change to the application directory
-cd /var/app/staging
-
-# Run the initialization script using Node
 echo "Downloading ML models from S3..."
+
 node -e "
+require('module-alias/register');
 const { downloadModelsFromS3 } = require('./dist/recommenderService/src/mlutils/downloadModel');
 
 downloadModelsFromS3('', process.env.DATA_BUCKET || 'cubecobra-data')
@@ -25,4 +19,4 @@ downloadModelsFromS3('', process.env.DATA_BUCKET || 'cubecobra-data')
   });
 "
 
-echo "Pre-deployment initialization complete"
+echo "ML models download complete"

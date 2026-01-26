@@ -1,17 +1,11 @@
 #!/bin/bash
-# This script runs before the application is started during deployment
-# It downloads the card data so the server can start immediately
-
+# This hook runs after npm install but before the app starts
 set -e
 
-echo "Running pre-deployment initialization..."
-
-# Change to the application directory
-cd /var/app/staging
-
-# Run the initialization script using Node
 echo "Downloading card data from S3..."
+
 node -e "
+require('module-alias/register');
 const { updateCardbase } = require('./dist/server/src/serverutils/updatecards');
 
 updateCardbase('private', process.env.DATA_BUCKET || 'cubecobra-data')
@@ -25,4 +19,4 @@ updateCardbase('private', process.env.DATA_BUCKET || 'cubecobra-data')
   });
 "
 
-echo "Pre-deployment initialization complete"
+echo "Card data download complete"
