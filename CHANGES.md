@@ -12,6 +12,7 @@ As of 1.4.57
 - Added paste text upload to records
 - Added ability to edit decks in records, and any seat in a playtest draft
 - Minor style improvements in various places in the site
+- Improved UX for users with a large number of cubes. Pagination on user cubes page, increased cube limit to 256
 
 # Bug Fixes
 
@@ -33,3 +34,4 @@ As of 1.4.57
 - Fixed docker development setup
 - Rebuilt card import pipeline to reduce max data staleness from 48 hours to less than 12
 - Created public assets bucket for first time developer setup for a faster and better setup experience
+- Extracted out ML inference into distinct microservice
