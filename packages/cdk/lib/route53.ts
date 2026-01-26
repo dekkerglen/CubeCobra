@@ -12,11 +12,11 @@ export class Route53 extends Construct {
   constructor(scope: Construct, id: string, props: Route53Props) {
     super(scope, id);
 
-    const hostedZone = HostedZone.fromLookup(scope, 'HostedZone', {
+    const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
       domainName: props.domain,
     });
 
-    this.recordSet = new CfnRecordSet(scope, 'ConsoleAliasRecord', {
+    this.recordSet = new CfnRecordSet(this, 'ConsoleAliasRecord', {
       hostedZoneId: hostedZone.hostedZoneId,
       name: props.domain,
       type: 'A',
