@@ -48,7 +48,7 @@ export const encode = async (oracles: string[]): Promise<number[]> => {
   try {
     const response = await mlServiceRequest<{ success: boolean; encoding: number[] }>('encode', { oracles });
     return response.encoding;
-  } catch (_err) {
+  } catch {
     console.warn('Failed to encode oracles, returning empty array');
     return [];
   }
@@ -92,7 +92,7 @@ export const build = async (oracles: string[]): Promise<{ oracle: string; rating
     }>('build', { oracles });
 
     return response.cards;
-  } catch (_err) {
+  } catch {
     console.warn('Failed to build deck, returning empty array');
     return [];
   }
@@ -106,7 +106,7 @@ export const draft = async (pack: string[], pool: string[]): Promise<{ oracle: s
     }>('draft', { pack, pool });
 
     return response.cards;
-  } catch (_err) {
+  } catch {
     console.warn('Failed to draft, returning empty array');
     return [];
   }

@@ -29,14 +29,14 @@ export function initializeCardCatalog(rootDir: string = '.') {
       try {
         catalog.oracleToId = JSON.parse(readFileSync(oracleToIdPath, 'utf8'));
         console.log('Loaded oracleToId mapping');
-      } catch (_err) {
+      } catch {
         console.warn('Could not load oracleToId.json, oracle lookups may fail');
       }
 
       try {
         catalog._carddict = JSON.parse(readFileSync(carddictPath, 'utf8'));
         console.log('Loaded card dictionary');
-      } catch (_err) {
+      } catch {
         console.warn('Could not load carddict.json, card lookups may fail');
       }
     }
@@ -83,7 +83,7 @@ export function isOracleBasic(oracleId: string): boolean {
 }
 
 // Stub for ML - returns oracle if not found
-export function getOracleForMl(oracleId: string, _printingPreference: any): string {
+export function getOracleForMl(oracleId: string): string {
   return oracleId;
 }
 

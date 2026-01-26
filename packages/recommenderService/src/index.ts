@@ -80,7 +80,7 @@ app.use((_req: express.Request, res: express.Response) => {
 });
 
 // Error handler
-app.use((err: CustomError, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: CustomError, req: express.Request, res: express.Response) => {
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
 
