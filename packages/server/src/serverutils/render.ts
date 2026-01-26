@@ -1,13 +1,14 @@
 import CubeType from '@utils/datatypes/Cube';
 import Image from '@utils/datatypes/Image';
 import { NotificationStatus } from '@utils/datatypes/Notification';
-import { UserRoles } from '@utils/datatypes/User';
+import User, { UserRoles, YourCubesSortOrder } from '@utils/datatypes/User';
 import fs from 'fs';
 import path from 'path';
 import serialize from 'serialize-javascript';
 
 import 'dotenv/config';
 
+import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
 import { cubeDao, notificationDao } from '../dynamo/daos';
 import { Request, Response } from '../types/express';
 import { getBaseUrl } from './util';
@@ -35,11 +36,20 @@ const loadManifest = (): BundleManifest => {
   return bundleManifest || {};
 };
 
+export const getCubesSortValues = (user: User): { sort: SortOrder; ascending: boolean } => {
+  if (user.yourCubesSortOrder === YourCubesSortOrder.ALPHA) {
+    return { sort: 'alphabetical', ascending: true };
+  } else {
+    return { sort: 'date', ascending: false };
+  }
+};
+
 const getCubes = async (req: Request, callback: (cubes: CubeType[]) => void): Promise<void> => {
   if (!req.user) {
     callback([]);
   } else {
-    const query = await cubeDao.queryByOwner(req.user.id);
+    const { sort, ascending } = getCubesSortValues(req.user);
+    const query = await cubeDao.queryByOwner(req.user.id, sort, ascending);
     callback(query.items);
   }
 };
@@ -102,6 +112,7 @@ interface ReactProps {
     autoBlog?: boolean;
     consentToHashedEmail?: boolean;
     email_token: string;
+    yourCubesSortOrder?: YourCubesSortOrder;
   };
   nitroPayEnabled?: boolean;
   baseUrl?: string;
@@ -138,6 +149,7 @@ const render = (
         autoBlog: req.user.autoBlog,
         consentToHashedEmail: req.user.consentToHashedEmail,
         email_token: req.user.consentToHashedEmail && req.user.email ? await sha256(req.user.email) : '',
+        yourCubesSortOrder: req.user.yourCubesSortOrder,
       };
     }
 

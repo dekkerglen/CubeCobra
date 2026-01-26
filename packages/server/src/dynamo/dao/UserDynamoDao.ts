@@ -23,6 +23,7 @@ import { BaseObject } from '@utils/datatypes/BaseObject';
 import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import User, {
   DefaultGridTightnessPreference,
+  DefaultYourCubesSortOrder,
   UnhydratedUser,
   UserWithSensitiveInformation,
 } from '@utils/datatypes/User';
@@ -117,6 +118,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       dateLastUpdated: item.dateLastUpdated,
       token: item?.token,
       emailVerified: item?.emailVerified,
+      yourCubesSortOrder: item?.yourCubesSortOrder,
     };
 
     // Preserve sensitive data if it exists
@@ -162,6 +164,10 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
 
     if (!hydrated.gridTightness) {
       hydrated.gridTightness = DefaultGridTightnessPreference;
+    }
+
+    if (!hydrated.yourCubesSortOrder) {
+      hydrated.yourCubesSortOrder = DefaultYourCubesSortOrder;
     }
 
     return hydrated;

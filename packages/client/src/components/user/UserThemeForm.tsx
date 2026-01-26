@@ -1,7 +1,12 @@
 import React, { useContext, useMemo, useState } from 'react';
 
 import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
-import { DefaultGridTightnessPreference, GridTightnessPreference } from '@utils/datatypes/User';
+import {
+  DefaultGridTightnessPreference,
+  DefaultYourCubesSortOrder,
+  GridTightnessPreference,
+  YourCubesSortOrder,
+} from '@utils/datatypes/User';
 
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
@@ -16,6 +21,9 @@ const UserThemeForm: React.FC = () => {
   const [defaultPrinting, setDefaultPrinting] = useState(user?.defaultPrinting || DefaultPrintingPreference);
   const [gridTightness, setGridTightness] = useState(user?.gridTightness || DefaultGridTightnessPreference);
   const [autoBlog, setAutoblog] = useState(typeof user?.autoBlog !== 'undefined' ? user.autoBlog : false);
+  const [yourCubesSortOrder, setYourCubesSortOrder] = useState(
+    typeof user?.yourCubesSortOrder !== 'undefined' ? user.yourCubesSortOrder : DefaultYourCubesSortOrder,
+  );
   const [hideFeaturedCubes, setHideFeaturedCubes] = useState(user?.hideFeatured || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
@@ -25,8 +33,9 @@ const UserThemeForm: React.FC = () => {
       defaultPrinting,
       gridTightness,
       autoBlog: `${autoBlog}`,
+      yourCubesSortOrder: `${yourCubesSortOrder}`,
     }),
-    [selectedTheme, hideFeaturedCubes, defaultPrinting, gridTightness, autoBlog],
+    [selectedTheme, hideFeaturedCubes, defaultPrinting, gridTightness, autoBlog, yourCubesSortOrder],
   );
 
   return (
@@ -65,6 +74,15 @@ const UserThemeForm: React.FC = () => {
           label="Check 'Create Blog posts' for cube change by default"
           checked={autoBlog}
           setChecked={setAutoblog}
+        />
+        <Select
+          label="Your cubes sort order"
+          value={formData.yourCubesSortOrder}
+          setValue={(value) => setYourCubesSortOrder(value as YourCubesSortOrder)}
+          options={[
+            { value: YourCubesSortOrder.LASTUPDATED, label: 'Last updated date' },
+            { value: YourCubesSortOrder.ALPHA, label: 'Alphabetical' },
+          ]}
         />
         <Button block color="accent" onClick={() => formRef.current?.submit()}>
           Update

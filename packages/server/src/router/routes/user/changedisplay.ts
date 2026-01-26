@@ -1,5 +1,5 @@
 import { PrintingPreference } from '@utils/datatypes/Card';
-import { GridTightnessPreference } from '@utils/datatypes/User';
+import { GridTightnessPreference, YourCubesSortOrder } from '@utils/datatypes/User';
 import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
@@ -32,6 +32,10 @@ export const handler = async (req: Request, res: Response) => {
       errors.push({ msg: 'Grid tightness must be valid.' });
     }
 
+    if (![YourCubesSortOrder.ALPHA, YourCubesSortOrder.LASTUPDATED].includes(req.body.yourCubesSortOrder)) {
+      errors.push({ msg: 'Your cubes sort order must be valid.' });
+    }
+
     if (errors.length > 0) {
       req.flash('danger', 'Error updating display settings: ' + errors.map((error) => error.msg).join(', '));
       return redirect(req, res, '/user/account?nav=display');
@@ -42,6 +46,7 @@ export const handler = async (req: Request, res: Response) => {
     user.defaultPrinting = req.body.defaultPrinting;
     user.gridTightness = req.body.gridTightness;
     user.autoBlog = req.body.autoBlog === 'true';
+    user.yourCubesSortOrder = req.body.yourCubesSortOrder;
 
     await userDao.update(user as any);
 
