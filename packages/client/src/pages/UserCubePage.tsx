@@ -28,7 +28,13 @@ interface UserCubePageProps {
 
 const PAGE_SIZE = 36;
 
-const UserCubePage: React.FC<UserCubePageProps> = ({ owner, followersCount, following, cubes: initialCubes, lastKey: initialLastKey }) => {
+const UserCubePage: React.FC<UserCubePageProps> = ({
+  owner,
+  followersCount,
+  following,
+  cubes: initialCubes,
+  lastKey: initialLastKey,
+}) => {
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState<Cube[]>(initialCubes);

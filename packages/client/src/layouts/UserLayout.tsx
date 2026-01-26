@@ -86,12 +86,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
               </Button>
             )}
             {following && !canEdit && (
-              <Button
-                type="link"
-                color="danger"
-                outline
-                href={`/user/unfollow/${user.id}`}
-              >
+              <Button type="link" color="danger" outline href={`/user/unfollow/${user.id}`}>
                 Unfollow
               </Button>
             )}

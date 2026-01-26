@@ -18,7 +18,7 @@ export const handler = async (req: Request, res: Response) => {
 
   const { sort, ascending } = getCubesSortValues(user);
   const result = await cubeDao.queryByOwner(owner, sort, ascending, lastKey || undefined, 36);
-  
+
   // Filter by listing visibility
   const cubes = result.items.filter((cube: any) => isCubeListed(cube, req.user));
 

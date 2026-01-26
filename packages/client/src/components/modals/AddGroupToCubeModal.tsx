@@ -80,7 +80,20 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
       setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
     }
     setLoadingSubmit(false);
-  }, [csrfFetch, selectedCube, cards, packid, board, alerts, setOpen, upvotePackage, user, voters, autoTag, createBlogPost]);
+  }, [
+    csrfFetch,
+    selectedCube,
+    cards,
+    packid,
+    board,
+    alerts,
+    setOpen,
+    upvotePackage,
+    user,
+    voters,
+    autoTag,
+    createBlogPost,
+  ]);
 
   if (!cubes || cubes.length === 0) {
     return (
@@ -127,24 +140,12 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
           />
           {packid && (
             <>
-              <Checkbox
-                label="Autotag new cards with package name"
-                checked={autoTag}
-                setChecked={setAutoTag}
-              />
-              <Checkbox
-                label="Create blog post"
-                checked={createBlogPost}
-                setChecked={setCreateBlogPost}
-              />
+              <Checkbox label="Autotag new cards with package name" checked={autoTag} setChecked={setAutoTag} />
+              <Checkbox label="Create blog post" checked={createBlogPost} setChecked={setCreateBlogPost} />
             </>
           )}
           {packid && user && !voters.includes(user.id) && (
-            <Checkbox
-              label="+1 this package"
-              checked={upvotePackage}
-              setChecked={setUpvotePackage}
-            />
+            <Checkbox label="+1 this package" checked={upvotePackage} setChecked={setUpvotePackage} />
           )}
         </Flexbox>
       </ModalBody>

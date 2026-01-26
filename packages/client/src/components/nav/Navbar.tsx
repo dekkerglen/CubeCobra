@@ -103,9 +103,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
             </Flexbox>
             <CardFooter>
               <Flexbox direction="col" gap="2">
-                {(user.cubes || []).length > 2 && (
-                  <NavLink href={`/user/view/${user.id}`}>View All</NavLink>
-                )}
+                {(user.cubes || []).length > 2 && <NavLink href={`/user/view/${user.id}`}>View All</NavLink>}
                 <CreateCubeButton>Create A New Cube</CreateCubeButton>
               </Flexbox>
             </CardFooter>
