@@ -20,7 +20,12 @@ child.on('exit:code', (code) => {
   console.error(`Forever detected script exited with code ${code}`);
 });
 
-// ML models are now downloaded during pre-deployment via .platform/hooks/predeploy
-// This allows the service to start immediately without 502 errors
-console.log('Starting recommender service (ML models pre-loaded)');
-child.start();
+// download ml initial model
+downloadModelsFromS3('', process.env.DATA_BUCKET || 'cubecobra-data')
+  .then(() => {
+    child.start();
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

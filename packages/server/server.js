@@ -20,7 +20,14 @@ child.on('exit:code', (code) => {
   console.error(`Forever detected script exited with code ${code}`);
 });
 
-// Card data is now downloaded during pre-deployment via .platform/hooks/predeploy
-// This allows the server to start immediately without 502 errors
-console.log('Starting server (card data pre-loaded, ML service is separate)');
-child.start();
+// download initial card definitions
+updateCardbase('private', process.env.DATA_BUCKET)
+  .then(() => {
+    // ML models are now handled by the recommender service
+    console.log('Starting server (ML service is separate)');
+    child.start();
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
