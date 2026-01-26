@@ -36,7 +36,8 @@
     "forever-monitor": "^3.0.3",
     "module-alias": "^2.2.3",
     "response-time": "^2.3.4",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.2",
