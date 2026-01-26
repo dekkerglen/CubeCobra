@@ -20,7 +20,7 @@ export class Route53 extends Construct {
       domainName: hostedZoneDomain,
     });
 
-    this.recordSet = new CfnRecordSet(this, 'ConsoleAliasRecord', {
+    this.recordSet = new CfnRecordSet(this, 'AliasRecord', {
       hostedZoneId: hostedZone.hostedZoneId,
       name: props.domain,
       type: 'A',
