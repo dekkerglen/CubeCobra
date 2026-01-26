@@ -4,7 +4,7 @@ import { Readable } from 'stream';
 
 import 'dotenv/config';
 
-import { s3 as authenticatedS3, publicS3 } from '../dynamo/s3client';
+import { publicS3,s3 as authenticatedS3 } from '../dynamo/s3client';
 
 export const downloadModelsFromS3 = async (basePath: string = '', bucket: string): Promise<void> => {
   // Use singleton S3 client based on bucket type

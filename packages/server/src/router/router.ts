@@ -11,36 +11,36 @@ import { Request, Response } from '../types/express';
 const router: Router = express.Router();
 
 //After static routes so we don't bother logging response times for static assets
-const responseTimer = (path: string) =>
-  responseTime((req: express.Request, res: express.Response, time: number) => {
-    const responseHeaders = res.getHeaders();
-    const contentLength = responseHeaders['content-length']
-      ? parseInt(String(responseHeaders['content-length']), 10)
-      : -1;
-    const isError = res.locals.isError ?? false;
+// Single middleware instance to avoid creating new closures for each route
+const responseTimer = responseTime((req: express.Request, res: express.Response, time: number) => {
+  const responseHeaders = res.getHeaders();
+  const contentLength = responseHeaders['content-length']
+    ? parseInt(String(responseHeaders['content-length']), 10)
+    : -1;
+  const isError = res.locals.isError ?? false;
 
-    cloudwatch.info(
-      JSON.stringify(
-        {
-          id: req.uuid,
-          method: req.method,
-          path: req.originalUrl,
-          matchedPath: path,
-          user_id: req.user ? req.user.id : null,
-          username: req.user ? req.user.username : null,
-          remoteAddr: req.ip,
-          body: sanitizeHttpBody(req.body),
-          duration: Math.round(time * 100) / 100, //Rounds to 2 decimal places
-          status: res.statusCode,
-          isError: isError,
-          responseSize: contentLength,
-          requestSize: req.socket.bytesRead,
-        },
-        null,
-        2,
-      ),
-    );
-  });
+  cloudwatch.info(
+    JSON.stringify(
+      {
+        id: req.uuid,
+        method: req.method,
+        path: req.originalUrl,
+        matchedPath: req.route?.path ?? req.originalUrl, // Get matched route path
+        user_id: req.user ? req.user.id : null,
+        username: req.user ? req.user.username : null,
+        remoteAddr: req.ip,
+        body: sanitizeHttpBody(req.body),
+        duration: Math.round(time * 100) / 100, //Rounds to 2 decimal places
+        status: res.statusCode,
+        isError: isError,
+        responseSize: contentLength,
+        requestSize: req.socket.bytesRead,
+      },
+      null,
+      2,
+    ),
+  );
+});
 
 // Home route - redirects to dashboard if logged in, otherwise to landing
 const homeHandler = async (req: Request, res: Response) => {
@@ -72,11 +72,11 @@ export const registerRoutes = (directory: string, base: string) => {
       const path = `${base}/${trimmed}${route.path}`;
 
       if (route.method === 'get') {
-        router.get(path, responseTimer(path), route.handler);
+        router.get(path, responseTimer, route.handler);
       } else if (route.method === 'post') {
-        router.post(path, responseTimer(path), route.handler);
+        router.post(path, responseTimer, route.handler);
       } else if (route.method === 'delete') {
-        router.delete(path, responseTimer(path), route.handler);
+        router.delete(path, responseTimer, route.handler);
       }
     }
   }

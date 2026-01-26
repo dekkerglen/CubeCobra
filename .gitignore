@@ -78,3 +78,6 @@ yarn-error.log*
 
 # migration checkpoints
 .migration-checkpoints/
+
+# clinic profiling output
+.clinic
