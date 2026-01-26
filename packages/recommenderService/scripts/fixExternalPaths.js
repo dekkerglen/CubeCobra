@@ -1,39 +1,38 @@
 const fs = require('fs');
 const path = require('path');
 
-// This script fixes import paths in compiled JS files to use .js extensions
-// which is required for ES modules
+const replacements = {
+  '../../../../mlutils': '../../mlutils',
+  '../../../../router': '../../router',
+  '../../../../types': '../../types',
+  '../../../../utils': '../../utils',
+};
 
-const distPath = path.join(__dirname, '../dist');
+function replaceInFile(file) {
+  let content = fs.readFileSync(file, 'utf8');
 
-function fixImportPaths(dir) {
-  if (!fs.existsSync(dir)) {
-    return;
+  for (let [from, to] of Object.entries(replacements)) {
+    const regex = new RegExp(from, 'g');
+    content = content.replace(regex, to);
   }
 
+  fs.writeFileSync(file, content, 'utf8');
+}
+
+function processDir(dir) {
   const files = fs.readdirSync(dir);
 
-  for (const file of files) {
+  for (let file of files) {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
-      fixImportPaths(filePath);
-    } else if (file.endsWith('.js')) {
-      let content = fs.readFileSync(filePath, 'utf8');
-
-      // Fix relative imports that don't have .js extension
-      content = content.replace(/from ['"](\.[^'"]+)['"]/g, (match, p1) => {
-        if (!p1.endsWith('.js') && !p1.endsWith('.json')) {
-          return `from '${p1}.js'`;
-        }
-        return match;
-      });
-
-      fs.writeFileSync(filePath, content, 'utf8');
+      processDir(filePath);
+    } else if (path.extname(filePath) === '.js') {
+      replaceInFile(filePath);
     }
   }
 }
 
-fixImportPaths(distPath);
-console.log('Fixed external paths in dist/');
+processDir('dist');
+
