@@ -154,6 +154,7 @@ export class CubeCobraStack extends cdk.Stack {
     new Route53(this, 'Route53', {
       dnsName: elasticBeanstalk.environment.attrEndpointUrl,
       domain: params.domain,
+      recordSetId: 'ConsoleAliasRecord', // Keep the same ID as before to avoid resource replacement
     });
 
     new Route53(this, 'RecommenderRoute53', {

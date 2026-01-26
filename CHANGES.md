@@ -13,6 +13,7 @@ As of 1.4.57
 - Added ability to edit decks in records, and any seat in a playtest draft
 - Minor style improvements in various places in the site
 - Improved UX for users with a large number of cubes. Pagination on user cubes page, increased cube limit to 256
+- Cloned cubes now default to "Unlisted" visibility
 
 # Bug Fixes
 

@@ -46,7 +46,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
       date: now,
       dateCreated: now,
       dateLastUpdated: now,
-      visibility: CUBE_VISIBILITY.PUBLIC,
+      visibility: CUBE_VISIBILITY.UNLISTED,
       priceVisibility: PRICE_VISIBILITY.PUBLIC,
       featured: false,
       categoryOverride: source.categoryOverride,

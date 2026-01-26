@@ -5,6 +5,7 @@ interface Route53Props {
   domain: string;
   dnsName: string;
   hostedZoneDomain?: string; // Optional: specify the hosted zone domain if different from domain
+  recordSetId?: string; // Optional: custom ID for the record set (defaults to 'AliasRecord')
 }
 
 export class Route53 extends Construct {
@@ -20,7 +21,8 @@ export class Route53 extends Construct {
       domainName: hostedZoneDomain,
     });
 
-    this.recordSet = new CfnRecordSet(this, 'AliasRecord', {
+    const recordSetId = props.recordSetId || 'AliasRecord';
+    this.recordSet = new CfnRecordSet(this, recordSetId, {
       hostedZoneId: hostedZone.hostedZoneId,
       name: props.domain,
       type: 'A',
