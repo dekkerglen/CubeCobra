@@ -128,27 +128,6 @@ Encode card oracles to ML embeddings.
 }
 ```
 
-#### POST /oracleindata
-
-Check if an oracle ID is in the training data.
-
-**Request:**
-
-```json
-{
-  "oracle": "oracle-id-1"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "inData": true
-}
-```
-
 ## Deployment
 
 ### AWS Infrastructure
@@ -158,7 +137,7 @@ The service deploys to AWS Elastic Beanstalk with:
 - Instance type: t3.small
 - Fleet size: 3 instances (production), 1 instance (beta)
 - Domain: ml.cubecobra.com (production), ml-beta.cubecobra.com (beta)
-- Health check: POST /healthcheck
+- Health check: GET /healthcheck
 
 ### Building
 

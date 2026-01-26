@@ -16,6 +16,7 @@ import { initializeCardCatalog } from './mlutils/cardCatalog';
 import cloudwatch from './mlutils/cloudwatch';
 import { downloadModelsFromS3 } from './mlutils/downloadModel';
 import { initializeMl } from './mlutils/ml';
+import { updateCardbase } from './mlutils/updateCards';
 import router from './router/router';
 import { CustomError } from './types/express';
 
@@ -33,7 +34,7 @@ const app = express();
 app.use(compression());
 
 // healthcheck endpoint
-app.post('/healthcheck', (_req: express.Request, res: express.Response) => {
+app.get('/healthcheck', (_req: express.Request, res: express.Response) => {
   res.status(200).send('OK');
 });
 
@@ -112,7 +113,20 @@ async function startServer() {
       console.log('Using existing local ML models.');
     }
 
+    // Check if card data files exist
+    const privateDir = path.join('.', 'private');
+    const requiredCardFiles = ['oracleToId.json', 'carddict.json'];
+    const cardFilesExist = requiredCardFiles.every((file) => fs.existsSync(path.join(privateDir, file)));
+
+    if (!cardFilesExist) {
+      console.log('Card data files not found locally. Downloading from S3...');
+      await updateCardbase('private', process.env.DATA_BUCKET || 'cubecobra-data');
+    } else {
+      console.log('Using existing local card data files.');
+    }
+
     console.log('Initializing card catalog...');
+    initializeCardCatalog('.');
     initializeCardCatalog('.');
 
     console.log('Initializing ML models...');

@@ -17,8 +17,7 @@ import fs from 'fs';
 
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 
-const { encode } = require('@server/serverutils/ml');
-const { initializeMl } = require('../../recommenderService/src/mlutils/ml');
+const { encode, initializeMl } = require('../../recommenderService/src/mlutils/ml');
 type CubeDict = Record<string, string[]>;
 
 const privateDir = path.join(__dirname, '..', '..', 'server', 'private');

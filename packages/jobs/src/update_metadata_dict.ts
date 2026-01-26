@@ -47,7 +47,7 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
   await initializeCardDb(privateDir);
 
   console.log('Initializing ML models');
-  const rootDir = path.join(__dirname, '..', '..', 'server');
+  const rootDir = path.join(__dirname, '..', '..', 'recommenderService');
   await initializeMl(rootDir);
 
   // load most recent cube history
