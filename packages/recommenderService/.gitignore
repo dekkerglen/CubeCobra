@@ -9,3 +9,4 @@ coverage/
 *.js
 *.d.ts
 !scripts/fixExternalPaths.js
+!publish.js
