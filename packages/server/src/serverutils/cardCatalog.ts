@@ -19,7 +19,6 @@ const catalog: Catalog = {
   oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
-  cubeEmbeddings: {},
 };
 
 export const fileToAttribute: Record<string, keyof Catalog> = {
@@ -36,7 +35,6 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'metadatadict.json': 'metadatadict',
   'comboTree.json': 'comboTree',
   'comboDict.json': 'comboDict',
-  'cubeEmbeddings.json': 'cubeEmbeddings',
 };
 
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {

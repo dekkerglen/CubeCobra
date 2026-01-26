@@ -10,7 +10,6 @@ import { cardHistoryDao, cardUpdateTaskDao, changelogDao } from '@server/dynamo/
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
 import { getCubeTypes } from '@server/serverutils/cubefn';
-import { initializeMl } from '@server/serverutils/ml';
 import { DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
@@ -19,6 +18,7 @@ import fs from 'fs';
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 
 const { encode } = require('@server/serverutils/ml');
+const { initializeMl } = require('../../recommenderService/src/mlutils/ml');
 type CubeDict = Record<string, string[]>;
 
 const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
@@ -122,7 +122,7 @@ const mapTotalsToCardHistory = (
   await initializeCardDb(privateDir);
 
   console.log('Initializing ML models');
-  const rootDir = path.join(__dirname, '..', '..', 'server');
+  const rootDir = path.join(__dirname, '..', '..', 'recommenderService');
   await initializeMl(rootDir);
 
   // List existing files in S3 cubes_history to determine which days are already processed

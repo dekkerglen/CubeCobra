@@ -11,9 +11,8 @@ import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import carddb, { cardFromId } from '@server/serverutils/carddb';
 import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
-const { encode, oracleInData } = require('@server/serverutils/ml');
-import { initializeMl } from '@server/serverutils/ml';
 
+import { encode, initializeMl, oracleInData } from '../../recommenderService/src/mlutils/ml';
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 const correlationLimit = 36;
 // import { HierarchicalNSW } from 'hnswlib-node';
@@ -158,7 +157,11 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
   const encodings = [];
   const magnitudes = [];
   for (let i = 0; i < oracleCount; i += 1) {
-    const encoding = encode([indexToOracle[i]]);
+    const oracleId = indexToOracle[i];
+    if (!oracleId) {
+      throw new Error(`Missing oracle ID at index ${i}`);
+    }
+    const encoding = encode([oracleId]);
     encodings.push(encoding);
     magnitudes.push(Math.sqrt(encoding.reduce((acc: number, val: number) => acc + val * val, 0)));
 

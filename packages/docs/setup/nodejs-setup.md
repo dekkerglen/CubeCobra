@@ -121,15 +121,15 @@ _(Adjust the path to match your bash installation)_
 Start the development server:
 
 ```sh
-npm run start:dev
+npm run dev
 ```
 
 ### What This Does
 
-- Ensure LocalStack is running
 - Ensure Nearley parsers for card filters have compiled
 - Compile & watch SCSS (Bootstrap) styles
 - Compile & watch server JavaScript with nodemon
+- Compile & recommeder service JavaScript with nodemon
 - Run & watch webpack dev server
 
 Connect to the app at: **http://localhost:8080**

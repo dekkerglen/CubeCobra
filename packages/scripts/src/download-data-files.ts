@@ -5,9 +5,11 @@ import path from 'path';
 // Load environment variables from the scripts package .env file
 config({ path: path.join(__dirname, '..', '.env') });
 
-// Import the download functions from server package
-import { downloadModelsFromS3 } from '@server/serverutils/downloadModel';
+// Import the download functions
 import { updateCardbase } from '@server/serverutils/updatecards';
+
+import { downloadModelsFromS3 } from '../../recommenderService/src/mlutils/downloadModel';
+import { updateCardbase as updateRecommenderCardbase } from '../../recommenderService/src/mlutils/updateCards';
 
 /**
  * Download essential data files for CubeCobra development
@@ -22,7 +24,8 @@ import { updateCardbase } from '@server/serverutils/updatecards';
  *
  * Downloads:
  * - Card definitions (~100MB) -> /packages/server/private/
- * - ML model files (~500MB) -> /packages/server/model/
+ * - Card definitions (~100MB) -> /packages/recommenderService/private/
+ * - ML model files (~500MB) -> /packages/recommenderService/model/
  *
  * This is only needed once during initial setup.
  */
@@ -32,28 +35,37 @@ const downloadDataFiles = async () => {
 
   // Define target directories in the monorepo structure
   const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
-  const modelDir = path.join(__dirname, '..', '..', 'server');
+  const recommenderPrivateDir = path.join(__dirname, '..', '..', 'recommenderService', 'private');
+  const recommenderDir = path.join(__dirname, '..', '..', 'recommenderService');
 
   // Ensure directories exist
   if (!fs.existsSync(privateDir)) {
     fs.mkdirSync(privateDir, { recursive: true });
   }
-  if (!fs.existsSync(modelDir)) {
-    fs.mkdirSync(modelDir, { recursive: true });
+  if (!fs.existsSync(recommenderPrivateDir)) {
+    fs.mkdirSync(recommenderPrivateDir, { recursive: true });
+  }
+  if (!fs.existsSync(recommenderDir)) {
+    fs.mkdirSync(recommenderDir, { recursive: true });
   }
 
   try {
     // Download card definitions to /packages/server/private
-    console.log('Downloading card definitions...');
+    console.log('Downloading card definitions to server package...');
     await updateCardbase(privateDir, 'cubecobra-public');
 
-    // Download ML model files to /packages/server/model
+    // Download card definitions to /packages/recommenderService/private
+    console.log('Downloading card definitions to recommender service package...');
+    await updateRecommenderCardbase(recommenderPrivateDir, 'cubecobra-public');
+
+    // Download ML model files to /packages/recommenderService
     console.log('Downloading ML model files...');
-    await downloadModelsFromS3(modelDir, 'cubecobra-public');
+    await downloadModelsFromS3(recommenderDir, 'cubecobra-public');
 
     console.log('✅ Data files downloaded successfully!');
-    console.log(`📁 Card data: ${privateDir}`);
-    console.log(`🤖 ML models: ${modelDir}`);
+    console.log(`📁 Server card data: ${privateDir}`);
+    console.log(`📁 Recommender card data: ${recommenderPrivateDir}`);
+    console.log(`🤖 ML models: ${path.join(recommenderDir, 'model')}`);
   } catch (error) {
     console.error('❌ Error downloading data files:', error);
     process.exit(1);

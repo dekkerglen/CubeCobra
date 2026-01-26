@@ -121,5 +121,4 @@ export interface Catalog {
   comboTree: ComboTree;
   comboDict: Record<string, Combo>;
   oracleToIndex: Record<string, number>;
-  cubeEmbeddings: Record<string, number[]>;
 }

@@ -1,0 +1,50 @@
+{
+  "name": "@cubecobra/recommender-service",
+  "version": "1.0.0",
+  "description": "Machine Learning Recommender Service for CubeCobra",
+  "scripts": {
+    "fix-external-paths": "npx resolve-tspaths && node scripts/fixExternalPaths.js",
+    "build": "npx tsc && npm run fix-external-paths",
+    "type-check": "npx tsc --noEmit",
+    "start": "node server.js",
+    "dev": "nodemon -r tsconfig-paths/register src/index.ts",
+    "clean": "rm -rf dist/ node_modules/ private/ && node -e \"const fs = require('fs'); const path = require('path'); ['src', 'scripts', 'test'].forEach(dir => { try { require('child_process').execSync(\\`find ${dir} -name '*.js' -type f\\`, {encoding: 'utf8'}).trim().split('\\\\n').filter(Boolean).forEach(jsFile => { const tsFile = jsFile.replace(/\\\\.js$/, '.ts'); if (fs.existsSync(tsFile)) { fs.unlinkSync(jsFile); console.log('Deleted:', jsFile); }}); } catch(e) {} });\"",
+    "test": "npx jest --coverage=false",
+    "test:watch": "npx jest --watch --coverage=false",
+    "test:coverage": "npx jest --coverage",
+    "test:ci": "npx jest --coverage --coverageReporters json-summary text"
+  },
+  "keywords": [
+    "ml",
+    "recommender",
+    "tensorflow"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.529.1",
+    "@aws-sdk/client-s3": "^3.927.0",
+    "@aws-sdk/lib-storage": "^3.927.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "compression": "^1.8.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "module-alias": "^2.2.3",
+    "response-time": "^2.3.4",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/response-time": "^2.3.8",
+    "@typescript-eslint/eslint-plugin": "^8.8.1",
+    "@typescript-eslint/parser": "^8.8.1",
+    "copyfiles": "^2.4.1",
+    "eslint": "^9.13.0",
+    "nodemon": "^3.1.7",
+    "resolve-tspaths": "^0.8.22",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.6.3"
+  }
+}

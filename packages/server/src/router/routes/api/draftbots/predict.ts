@@ -29,7 +29,7 @@ const handler = async (req: Request, res: Response) => {
   const predictBody = req.body as PredictBody;
 
   try {
-    const prediction = draft(predictBody.pack, predictBody.picks);
+    const prediction = await draft(predictBody.pack, predictBody.picks);
 
     return res.status(200).send({
       prediction,

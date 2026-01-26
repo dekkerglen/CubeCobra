@@ -83,7 +83,7 @@ export const handler = async (req: Request, res: Response) => {
 
       // we need to build the bot decks
       if (player.isBot) {
-        const result = buildBotDeck(pickorder, basics, cards);
+        const result = await buildBotDeck(pickorder, basics, cards);
         mainboard = result.mainboard;
         sideboard = result.sideboard;
       } else {

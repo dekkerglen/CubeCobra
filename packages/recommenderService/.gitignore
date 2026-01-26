@@ -1,0 +1,11 @@
+node_modules/
+dist/
+private/
+model/
+*.log
+.env
+.DS_Store
+coverage/
+*.js
+*.d.ts
+!scripts/fixExternalPaths.js

@@ -1,6 +1,5 @@
 require('module-alias/register');
 const { updateCardbase } = require('./dist/server/src/serverutils/updatecards');
-const { downloadModelsFromS3 } = require('./dist/server/src/serverutils/downloadModel');
 const forever = require('forever-monitor');
 
 const child = new forever.Monitor('dist/server/src/index.js', {
@@ -24,15 +23,9 @@ child.on('exit:code', (code) => {
 // download initial card definitions
 updateCardbase('private', process.env.DATA_BUCKET)
   .then(() => {
-    // download ml initial model
-    downloadModelsFromS3('', process.env.DATA_BUCKET)
-      .then(() => {
-        child.start();
-      })
-      .catch((err) => {
-        console.error(err);
-        process.exit(1);
-      });
+    // ML models are now handled by the recommender service
+    console.log('Starting server (ML service is separate)');
+    child.start();
   })
   .catch((err) => {
     console.error(err);

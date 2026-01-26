@@ -103,14 +103,16 @@ export const formatSideboard = (decklist: Decklist, cardDetails: CardDetails[]) 
   return sideboard;
 };
 
-export const buildBotDeck = (
+export const buildBotDeck = async (
   pickorder: number[],
   basics: number[],
   cards: CardDetails[],
-): { mainboard: number[][][]; sideboard: number[][][] } => {
-  const mainboardBuilt = deckbuild(
-    pickorder.map((index) => cards[index]).filter(Boolean),
-    basics.map((index) => cards[index]).filter(Boolean),
+): Promise<{ mainboard: number[][][]; sideboard: number[][][] }> => {
+  const mainboardBuilt = (
+    await deckbuild(
+      pickorder.map((index) => cards[index]).filter(Boolean),
+      basics.map((index) => cards[index]).filter(Boolean),
+    )
   ).mainboard;
 
   const pool = pickorder.slice();
