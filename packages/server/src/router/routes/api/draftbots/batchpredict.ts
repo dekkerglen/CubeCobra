@@ -53,7 +53,7 @@ const handler = async (req: Request, res: Response) => {
       if (!input || !input.pack || !input.picks) {
         throw new Error(`Invalid input at index ${i}`);
       }
-      prediction[i] = draft(input.pack, input.picks);
+      prediction[i] = await draft(input.pack, input.picks);
     }
 
     const result: PredictResponse = {

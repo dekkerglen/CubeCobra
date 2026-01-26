@@ -106,7 +106,7 @@ export const handler = async (req: Request, res: Response) => {
 
       const picks = stateSeat.picks;
 
-      const { mainboard } = deckbuild(
+      const { mainboard } = await deckbuild(
         picks.map((index) => draft.cards[index]?.details).filter(Boolean),
         draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean),
       );

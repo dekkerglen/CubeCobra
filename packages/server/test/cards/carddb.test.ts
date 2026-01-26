@@ -18,7 +18,7 @@ const mockCardCatalog: Catalog = {
   oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
-  cubeEmbeddings: {},
+
 };
 
 jest.mock('serverutils/cardCatalog', () => {

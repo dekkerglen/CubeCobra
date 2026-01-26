@@ -26,7 +26,7 @@ export const getBotPrediction = async (oracleIds: string[]): Promise<BotResult> 
     }
 
     // Call the draft function directly instead of making HTTP request
-    const predictions: BotPrediction[] = draft(validOracleIds, []); // Empty picks for P1P1
+    const predictions: BotPrediction[] = await draft(validOracleIds, []); // Empty picks for P1P1
 
     if (!predictions || predictions.length === 0) {
       return { botPickIndex: null, botWeights: [] };

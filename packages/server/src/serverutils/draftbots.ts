@@ -141,16 +141,16 @@ const calculateBasics = (mainboard: any[], basics: any[]): any[] => {
   return result;
 };
 
-export const deckbuild = (pool: any[], basics: any[]): { mainboard: string[]; sideboard: string[] } => {
+export const deckbuild = async (pool: any[], basics: any[]): Promise<{ mainboard: string[]; sideboard: string[] }> => {
   const poolOracles = pool.map((card: any) => card.oracle_id);
 
-  const result = build(poolOracles);
+  const result = await build(poolOracles);
 
-  const nonlands = result.filter((item: any) => {
+  const nonlands = result.filter((item) => {
     const oracleIds = carddb.oracleToId[item.oracle];
     return oracleIds && oracleIds[0] && !cardFromId(oracleIds[0]).type.includes('Land');
   });
-  const lands = result.filter((item: any) => {
+  const lands = result.filter((item) => {
     const oracleIds = carddb.oracleToId[item.oracle];
     return oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land');
   });

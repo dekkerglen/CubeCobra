@@ -49,6 +49,7 @@ CubeCobra is a modern web platform that enables Magic: The Gathering players to:
 - **DynamoDB** for data persistence
 - **S3** for file storage and static assets
 - **TypeScript** for type safety
+- **Recommender Service** - Dedicated ML microservice for AI recommendations
 
 ### Frontend
 
@@ -131,9 +132,10 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
    - ✅ Safe to run - downloads from public S3 bucket
    - ✅ No AWS credentials required
    - Downloads card data (~100MB) and ML models (~500MB)
-5. **Find something to work on** - Check Discord development channels for current needs
-6. **Make your changes** - Follow our coding standards and write tests
-7. **Submit a pull request** - We'll review and help you get it merged!
+5. **Start development servers** - Run `npm run dev` to start all services (client, server, ML recommender)
+6. **Find something to work on** - Check Discord development channels for current needs
+7. **Make your changes** - Follow our coding standards and write tests
+8. **Submit a pull request** - We'll review and help you get it merged!
 
 Our developers are happy to help get new folks started with the project - don't hesitate to ask questions in Discord!
 

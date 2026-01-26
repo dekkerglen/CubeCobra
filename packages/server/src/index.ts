@@ -26,7 +26,6 @@ import router from './router/router';
 import { initializeCardDb } from './serverutils/cardCatalog';
 import cloudwatch from './serverutils/cloudwatch';
 import DynamoDBStore from './serverutils/dynamo-session-store';
-import { initializeMl } from './serverutils/ml';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { CustomError } from './types/express';
@@ -293,11 +292,12 @@ schedule.scheduleJob('*/30 * * * *', async () => {
   await checkAndUpdateCardbase('private', bucket);
 });
 
-// Start server after carddb and ML models are initialized.
-Promise.all([initializeCardDb(), initializeMl()]).then(async () => {
+// Start server after carddb is initialized (ML is now in separate service).
+initializeCardDb().then(async () => {
   const port = process.env.PORT || 5000;
   const host = process.env.LISTEN_ON || '127.0.0.1';
   http.createServer(app).listen(Number(port), host);
 
   console.info(`Server started on port ${port}, listening on ${host}...`);
+  console.info(`ML service URL: ${process.env.ML_SERVICE_URL || 'http://localhost:5002'}`);
 });

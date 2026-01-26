@@ -2,7 +2,7 @@ import fs from 'fs';
 
 import 'dotenv/config';
 
-import { publicS3,s3 as authenticatedS3 } from '../dynamo/s3client';
+import { publicS3, s3 as authenticatedS3 } from '../dynamo/s3client';
 import { fileToAttribute, loadAllFiles } from './cardCatalog';
 
 interface CardManifest {

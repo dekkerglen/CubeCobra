@@ -220,7 +220,7 @@ describe('buildBotDeck', () => {
     });
   });
 
-  it('builds deck with correct mainboard and sideboard', () => {
+  it('builds deck with correct mainboard and sideboard', async () => {
     const pickorder = [0, 1, 3];
     const basics = [2, 4];
     const cards = [
@@ -235,7 +235,7 @@ describe('buildBotDeck', () => {
       mainboard: ['card-1', 'card-2', 'basic-1'],
     });
 
-    const result = buildBotDeck(pickorder, basics, cards);
+    const result = await buildBotDeck(pickorder, basics, cards);
 
     expect(deckbuild).toHaveBeenCalledWith([cards[0], cards[1], cards[3]], [cards[2], cards[4]]);
 
@@ -248,7 +248,7 @@ describe('buildBotDeck', () => {
     expect(result.sideboard[0]![4]!).toContain(3); // card-3 in sideboard
   });
 
-  it('handles missing cards gracefully', () => {
+  it('handles missing cards gracefully', async () => {
     const pickorder = [0];
     const basics = [1];
     const cards = [
@@ -260,7 +260,7 @@ describe('buildBotDeck', () => {
       mainboard: ['missing-card'],
     });
 
-    const result = buildBotDeck(pickorder, basics, cards);
+    const result = await buildBotDeck(pickorder, basics, cards);
 
     // Should have empty mainboard since card wasn't found
     expect(result.mainboard.flat(2)).toHaveLength(0);
@@ -268,7 +268,7 @@ describe('buildBotDeck', () => {
     expect(result.sideboard[0]![2]!).toContain(0);
   });
 
-  it('handles basic lands from pool', () => {
+  it('handles basic lands from pool', async () => {
     const pickorder = [0];
     const basics = [1];
     const cards = [
@@ -280,13 +280,13 @@ describe('buildBotDeck', () => {
       mainboard: ['basic-1'],
     });
 
-    const result = buildBotDeck(pickorder, basics, cards);
+    const result = await buildBotDeck(pickorder, basics, cards);
 
     expect(result.mainboard[1]![0]!).toContain(1); // Basic land should be in row 1, col 0
     expect(result.sideboard[0]![2]!).toContain(0); // Non-basic should be in sideboard
   });
 
-  it('handles cards not found in pool or basics', () => {
+  it('handles cards not found in pool or basics', async () => {
     const pickorder = [0];
     const basics = [1];
     const cards = [
@@ -298,13 +298,13 @@ describe('buildBotDeck', () => {
       mainboard: ['missing-card', 'card-1'],
     });
 
-    const result = buildBotDeck(pickorder, basics, cards);
+    const result = await buildBotDeck(pickorder, basics, cards);
 
     expect(result.mainboard[0]![2]!).toContain(0); // Found card should be in mainboard
     expect(result.mainboard.flat(2).length).toBe(1); // Only one card total in mainboard
   });
 
-  it('puts basics in correct position when in mainboard', () => {
+  it('puts basics in correct position when in mainboard', async () => {
     const pickorder = [0];
     const basics = [1];
     const cards = [
@@ -321,7 +321,7 @@ describe('buildBotDeck', () => {
       mainboard: ['basic-1', 'card-1'],
     });
 
-    const result = buildBotDeck(pickorder, basics, cards);
+    const result = await buildBotDeck(pickorder, basics, cards);
 
     expect(result.mainboard[1]![0]!).toContain(1); // Basic land in row 1, col 0
     expect(result.mainboard[0]![2]!).toContain(0); // Creature in row 0, col 2

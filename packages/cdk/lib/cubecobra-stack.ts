@@ -14,6 +14,7 @@ import { DynamodbTables } from './dynamodb-tables';
 import { ECR } from './ecr';
 import { ElasticBeanstalk } from './elastic-beanstalk';
 import { JobsEcsTask } from './jobs-ecs-task';
+import { RecommenderService } from './recommender-service';
 import { Route53 } from './route53';
 import { S3Buckets } from './s3-buckets';
 import { ScheduledJob, ScheduledJobProps } from './scheduled-job';
@@ -124,12 +125,28 @@ export class CubeCobraStack extends cdk.Stack {
       }),
     );
 
+    // Determine ML subdomain based on environment
+    const mlDomain =
+      params.environmentName === 'production' ? 'ml.cubecobra.com' : `ml-${params.environmentName}.cubecobra.com`;
+
     // Create everything we need related to ElasticBeanstalk, including the environment and the application
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
       certificate: cert.consoleCertificate,
       environmentName: params.environmentName,
-      environmentVariables: createEnvironmentVariables(params, props, dynamoTables.table.tableName),
+      environmentVariables: createEnvironmentVariables(params, props, dynamoTables.table.tableName, mlDomain),
       fleetSize: params.fleetSize,
+      instanceProfile: instanceProfile,
+      appBucket: s3Buckets.appBucket,
+      appVersion: params.version,
+    });
+
+    // Create recommender service with smaller instances
+    const recommenderFleetSize = params.environmentName === 'production' ? 3 : 1;
+    const recommenderService = new RecommenderService(this, 'RecommenderService', {
+      certificate: cert.consoleCertificate,
+      environmentName: params.environmentName,
+      environmentVariables: createRecommenderEnvironmentVariables(params, props, mlDomain),
+      fleetSize: recommenderFleetSize,
       instanceProfile: instanceProfile,
       appBucket: s3Buckets.appBucket,
       appVersion: params.version,
@@ -138,6 +155,11 @@ export class CubeCobraStack extends cdk.Stack {
     new Route53(this, 'Route53', {
       dnsName: elasticBeanstalk.environment.attrEndpointUrl,
       domain: params.domain,
+    });
+
+    new Route53(this, 'RecommenderRoute53', {
+      dnsName: recommenderService.environment.attrEndpointUrl,
+      domain: mlDomain,
     });
 
     // Create the ECS cluster where we'll schedule jobs
@@ -204,6 +226,7 @@ function createEnvironmentVariables(
   params: CubeCobraStackParams,
   props: StackProps | undefined,
   dynamoTableName?: string,
+  mlDomain?: string,
 ): {
   [key: string]: string;
 } {
@@ -245,6 +268,11 @@ function createEnvironmentVariables(
     envVars.DYNAMO_TABLE = dynamoTableName;
   }
 
+  // Add ML_SERVICE_URL if mlDomain is provided
+  if (mlDomain) {
+    envVars.ML_SERVICE_URL = `https://${mlDomain}`;
+  }
+
   return envVars;
 }
 
@@ -273,6 +301,26 @@ function createLambdaEnvironmentVariables(
   if (dynamoTableName) {
     envVars.DYNAMO_TABLE = dynamoTableName;
   }
+
+  return envVars;
+}
+
+function createRecommenderEnvironmentVariables(
+  params: CubeCobraStackParams,
+  props: StackProps | undefined,
+  mlDomain: string,
+): {
+  [key: string]: string;
+} {
+  const envVars: { [key: string]: string } = {
+    AWS_REGION: props?.env?.region || '',
+    DATA_BUCKET: params.dataBucket,
+    NODE_ENV: params.environmentName === 'local' ? 'development' : 'production',
+    PORT: '8080',
+    LOG_GROUP_NAME: `/aws/elasticbeanstalk/recommender-service/${params.environmentName}/application`,
+    LOG_STREAM_NAME: 'default',
+    DOMAIN: mlDomain,
+  };
 
   return envVars;
 }
