@@ -117,7 +117,7 @@ export class RecommenderService extends Construct {
         {
           namespace: 'aws:elasticbeanstalk:command',
           optionName: 'DeploymentPolicy',
-          value: 'Immutable',
+          value: 'Rolling',
         },
         {
           namespace: 'aws:elasticbeanstalk:command',
@@ -127,7 +127,7 @@ export class RecommenderService extends Construct {
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',
           optionName: 'StickinessEnabled',
-          value: 'false', // No need for sticky sessions on ML service
+          value: 'true',
         },
         ...Object.keys(props.environmentVariables).map((key) => ({
           namespace: 'aws:elasticbeanstalk:application:environment',
