@@ -127,12 +127,7 @@ export class ElasticBeanstalk extends Construct {
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',
           optionName: 'StickinessEnabled',
-          value: 'true',
-        },
-        {
-          namespace: 'aws:elasticbeanstalk:environment:process:default',
-          optionName: 'StickinessLBCookieDuration',
-          value: '86400', // 1 day
+          value: 'false',
         },
         ...Object.keys(props.environmentVariables).map((key) => ({
           namespace: 'aws:elasticbeanstalk:application:environment',
