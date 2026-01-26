@@ -2,10 +2,11 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 
 import CardType from '@utils/datatypes/Card';
 
-import Button from '../components/base/Button';
 import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Checkbox from '../components/base/Checkbox';
 import { Col, Flexbox, Row } from '../components/base/Layout';
+import Pagination from '../components/base/Pagination';
+import RadioButtonGroup from '../components/base/RadioButtonGroup';
 import Text from '../components/base/Text';
 import { CSRFContext } from '../contexts/CSRFContext';
 import CubeContext from '../contexts/CubeContext';
@@ -19,21 +20,35 @@ const Suggestions: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const { filterInput } = useContext(FilterContext);
   const { cube } = useContext(CubeContext);
-  const [maybeOnly, setMaybeOnly] = useState(false);
+  const [maybeboardFilter, setMaybeboardFilter] = useState<'no' | 'yes' | 'exclusively'>('no');
   const [useImages, setUseImages] = useState(false);
 
   const [addCards, setAddCards] = React.useState<CardType[]>([]);
   const [addsLoading, setAddsLoading] = React.useState(true);
   const [hasMoreAdds, setHasMoreAdds] = React.useState(true);
+  const [addsPage, setAddsPage] = React.useState(0);
 
   const [cutCards, setCutCards] = React.useState<CardType[]>([]);
   const [cutsLoading, setCutsLoading] = React.useState(true);
+  const [cutsPage, setCutsPage] = React.useState(0);
 
-  const addsInMaybe = useMemo(
-    () =>
-      addCards.filter((card) => cube.cards.maybeboard.some((c) => c.details?.oracle_id === card.details?.oracle_id)),
-    [addCards, cube],
+  const maybeboardOracleIds = useMemo(
+    () => new Set(cube.cards.maybeboard.map((c) => c.details?.oracle_id).filter(Boolean)),
+    [cube],
   );
+
+  const filteredAddCards = useMemo(() => {
+    if (maybeboardFilter === 'exclusively') {
+      // Only show cards that are in maybeboard
+      return addCards.filter((card) => maybeboardOracleIds.has(card.details?.oracle_id));
+    } else if (maybeboardFilter === 'no') {
+      // Exclude cards that are in maybeboard
+      return addCards.filter((card) => !maybeboardOracleIds.has(card.details?.oracle_id));
+    } else {
+      // Show all cards (yes)
+      return addCards;
+    }
+  }, [addCards, maybeboardFilter, maybeboardOracleIds]);
 
   useEffect(() => {
     const run = async () => {
@@ -86,7 +101,7 @@ const Suggestions: React.FC = () => {
     run();
   }, [csrfFetch, cube, filterInput]);
 
-  const loadMoreAdds = useCallback(async () => {
+  const fetchMoreAdds = useCallback(async () => {
     setAddsLoading(true);
     const res = await csrfFetch(`/cube/api/adds`, {
       method: 'POST',
@@ -104,11 +119,15 @@ const Suggestions: React.FC = () => {
 
     const json = await res.json();
     setAddCards([...addCards, ...json.adds]);
+    setHasMoreAdds(json.hasMoreAdds);
+    setAddsPage(addsPage + 1);
     setAddsLoading(false);
-  }, [addCards, csrfFetch, cube, filterInput]);
+  }, [addCards, csrfFetch, cube, filterInput, addsPage]);
 
-  const cardsToUse = maybeOnly ? addsInMaybe : addCards;
+  const cardsToUse = filteredAddCards;
+  const addsPageCount = Math.ceil(cardsToUse.length / PAGE_SIZE);
   const reversedCuts = [...cutCards].reverse();
+  const cutsPageCount = Math.ceil(reversedCuts.length / PAGE_SIZE);
 
   return (
     <Flexbox direction="col" gap="2" className="m-2">
@@ -126,43 +145,86 @@ const Suggestions: React.FC = () => {
         <Col xs={12} lg={6}>
           <Card>
             <CardHeader>
-              <Text semibold lg>
-                Recommended Additions
-              </Text>
-              <Checkbox checked={maybeOnly} setChecked={setMaybeOnly} label="Show cards from my maybeboard only." />
+              <Flexbox direction="col" gap="2">
+                <Text semibold lg>
+                  Recommended Additions
+                </Text>
+                <RadioButtonGroup
+                  label="Include suggestions from maybeboard?"
+                  selected={maybeboardFilter}
+                  setSelected={(value) => setMaybeboardFilter(value as 'no' | 'yes' | 'exclusively')}
+                  options={[
+                    { value: 'no', label: "No - don't show cards from maybeboard" },
+                    { value: 'yes', label: 'Yes - show all suggestions including maybeboard' },
+                    { value: 'exclusively', label: 'Exclusively - only show cards from maybeboard' },
+                  ]}
+                />
+              </Flexbox>
             </CardHeader>
             {useImages ? (
-              <CardBody>
-                <Row gutters={2}>
-                  {cardsToUse.map((add, index) => (
-                    <Col key={add.cardID} xs={6} md={4} xl={3} className="p-1">
-                      <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
-                    </Col>
-                  ))}
-                </Row>
-                {addsLoading && <CardBody>Loading...</CardBody>}
-                {!addsLoading && hasMoreAdds && (
-                  <Button onClick={loadMoreAdds} className="my-1" color="primary" block>
-                    Load More
-                  </Button>
+              <>
+                <CardBody>
+                  <Row gutters={2}>
+                    {cardsToUse.slice(addsPage * PAGE_SIZE, (addsPage + 1) * PAGE_SIZE).map((add, index) => (
+                      <Col key={add.cardID} xs={6} md={4} xl={3} className="p-1">
+                        <ImageSuggestion key={add.cardID} index={addsPage * PAGE_SIZE + index} card={add} cube={cube} />
+                      </Col>
+                    ))}
+                  </Row>
+                  {addsLoading && <div className="text-center py-3">Loading...</div>}
+                </CardBody>
+                {cardsToUse.length > 0 && (
+                  <Flexbox direction="row" justify="end" className="p-2">
+                    <Pagination
+                      count={addsPageCount}
+                      active={addsPage}
+                      hasMore={hasMoreAdds}
+                      onClick={async (newPage) => {
+                        if (newPage >= addsPageCount) {
+                          await fetchMoreAdds();
+                        } else {
+                          setAddsPage(newPage);
+                        }
+                      }}
+                      loading={addsLoading}
+                    />
+                  </Flexbox>
                 )}
-              </CardBody>
+              </>
             ) : (
-              <Flexbox direction="col" gap="2">
-                {cardsToUse.length > 0 &&
-                  cardsToUse.map((add, index) => <Suggestion key={add.cardID} index={index} card={add} cube={cube} />)}
-                {!addsLoading && cardsToUse.length === 0 && (
-                  <CardBody>
-                    <em>No results with the given filter.</em>
-                  </CardBody>
+              <>
+                <Flexbox direction="col" gap="2">
+                  {cardsToUse.length > 0 &&
+                    cardsToUse
+                      .slice(addsPage * PAGE_SIZE, (addsPage + 1) * PAGE_SIZE)
+                      .map((add, index) => (
+                        <Suggestion key={add.cardID} index={addsPage * PAGE_SIZE + index} card={add} cube={cube} />
+                      ))}
+                  {!addsLoading && cardsToUse.length === 0 && (
+                    <CardBody>
+                      <em>No results with the given filter.</em>
+                    </CardBody>
+                  )}
+                  {addsLoading && <CardBody>Loading...</CardBody>}
+                </Flexbox>
+                {cardsToUse.length > 0 && (
+                  <Flexbox direction="row" justify="end" className="p-2">
+                    <Pagination
+                      count={addsPageCount}
+                      active={addsPage}
+                      hasMore={hasMoreAdds}
+                      onClick={async (newPage) => {
+                        if (newPage >= addsPageCount) {
+                          await fetchMoreAdds();
+                        } else {
+                          setAddsPage(newPage);
+                        }
+                      }}
+                      loading={addsLoading}
+                    />
+                  </Flexbox>
                 )}
-                {addsLoading && <CardBody>Loading...</CardBody>}
-                {!addsLoading && hasMoreAdds && (
-                  <Button onClick={loadMoreAdds} className="my-1" color="primary" block>
-                    Load More
-                  </Button>
-                )}
-              </Flexbox>
+              </>
             )}
           </Card>
         </Col>
@@ -180,28 +242,55 @@ const Suggestions: React.FC = () => {
               </Flexbox>
             </CardHeader>
             {useImages ? (
-              <CardBody>
-                <Row gutters={2}>
-                  {reversedCuts.map((add, index) => (
-                    <Col key={add.cardID} xs={6} md={4} xl={3} className="p-1">
-                      <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
-                    </Col>
-                  ))}
-                </Row>
-              </CardBody>
-            ) : (
-              <Flexbox direction="col" gap="2">
-                {cutCards.length > 0 &&
-                  reversedCuts.map((add, index) => (
-                    <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
-                  ))}
-                {!cutsLoading && cutCards.length === 0 && (
-                  <CardBody>
-                    <em>No results with the given filter.</em>
-                  </CardBody>
+              <>
+                <CardBody>
+                  <Row gutters={2}>
+                    {reversedCuts.slice(cutsPage * PAGE_SIZE, (cutsPage + 1) * PAGE_SIZE).map((add, index) => (
+                      <Col key={add.cardID} xs={6} md={4} xl={3} className="p-1">
+                        <ImageSuggestion key={add.cardID} index={cutsPage * PAGE_SIZE + index} card={add} cube={cube} />
+                      </Col>
+                    ))}
+                  </Row>
+                  {cutsLoading && <div className="text-center py-3">Loading...</div>}
+                </CardBody>
+                {reversedCuts.length > 0 && cutsPageCount > 1 && (
+                  <Flexbox direction="row" justify="end" className="p-2">
+                    <Pagination
+                      count={cutsPageCount}
+                      active={cutsPage}
+                      onClick={(newPage) => setCutsPage(newPage)}
+                      loading={cutsLoading}
+                    />
+                  </Flexbox>
                 )}
-                {cutsLoading && <CardBody>Loading...</CardBody>}
-              </Flexbox>
+              </>
+            ) : (
+              <>
+                <Flexbox direction="col" gap="2">
+                  {cutCards.length > 0 &&
+                    reversedCuts
+                      .slice(cutsPage * PAGE_SIZE, (cutsPage + 1) * PAGE_SIZE)
+                      .map((add, index) => (
+                        <Suggestion key={add.cardID} index={cutsPage * PAGE_SIZE + index} card={add} cube={cube} />
+                      ))}
+                  {!cutsLoading && cutCards.length === 0 && (
+                    <CardBody>
+                      <em>No results with the given filter.</em>
+                    </CardBody>
+                  )}
+                  {cutsLoading && <CardBody>Loading...</CardBody>}
+                </Flexbox>
+                {reversedCuts.length > 0 && cutsPageCount > 1 && (
+                  <Flexbox direction="row" justify="end" className="p-2">
+                    <Pagination
+                      count={cutsPageCount}
+                      active={cutsPage}
+                      onClick={(newPage) => setCutsPage(newPage)}
+                      loading={cutsLoading}
+                    />
+                  </Flexbox>
+                )}
+              </>
             )}
           </Card>
         </Col>
