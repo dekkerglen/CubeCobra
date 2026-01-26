@@ -153,7 +153,7 @@ const oracleIdToMlIndex = (oracleId: string) => {
     return null;
   }
 
-  const subOracle = getOracleForMl(oracleId, null);
+  const subOracle = getOracleForMl(oracleId);
 
   return oracleToIndex[subOracle];
 };
