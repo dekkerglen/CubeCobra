@@ -44,6 +44,15 @@ export const addHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/user/view/${user!.id}`);
     }
 
+    // Enforce maximum of 256 cubes per user
+    if (cubes.items.length >= 256) {
+      req.flash(
+        'danger',
+        'You have reached the maximum limit of 256 cubes. To create a new cube, please delete an existing cube.',
+      );
+      return redirect(req, res, `/user/view/${user!.id}`);
+    }
+
     const now = Date.now().valueOf();
     const imageName = 'doubling cube [10e-321]';
     const cube: Cube = {

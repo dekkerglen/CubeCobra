@@ -69,7 +69,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
         <Banner className="px-2" />
 
         <Flexbox direction="row" className="px-4" justify="between" wrap="wrap">
-          <Flexbox direction="col" gap="2" className="my-2">
+          <Flexbox direction="row" gap="3" alignItems="center" className="my-2">
             <Text semibold md>
               {user.username}
             </Text>
@@ -81,7 +81,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
               followersText
             )}
             {!following && !canEdit && (
-              <Button type="link" color="accent" className="rounded-0 w-full" href={`/user/follow/${user.id}`}>
+              <Button type="link" color="accent" href={`/user/follow/${user.id}`}>
                 Follow
               </Button>
             )}
@@ -90,7 +90,6 @@ const UserLayout: React.FC<UserLayoutProps> = ({
                 type="link"
                 color="danger"
                 outline
-                className="rounded-0 w-full"
                 href={`/user/unfollow/${user.id}`}
               >
                 Unfollow
@@ -98,7 +97,6 @@ const UserLayout: React.FC<UserLayoutProps> = ({
             )}
             <ConfirmActionModalButton
               color="danger"
-              block
               modalprops={{
                 title: 'Report User',
                 message:

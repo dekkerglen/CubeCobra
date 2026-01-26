@@ -151,10 +151,6 @@
   border-left: 0.3em solid transparent;
 }
 
-div.advertisement-div > div:not(.report-link) {
-  height: 100% !important;
-}
-
 .advertisement-div {
   height: 100%;
 }

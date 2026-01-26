@@ -92,7 +92,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
           <NotificationsNav />
           <NavMenu label="Your Cubes" navBar>
             <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
-              {(user.cubes || []).map((item) => (
+              {(user.cubes || []).slice(0, 36).map((item) => (
                 <NavLink
                   key={`dropdown_cube_${item.name}`}
                   href={`/cube/overview/${encodeURIComponent(getCubeId(item))}`}
@@ -102,7 +102,12 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
               ))}
             </Flexbox>
             <CardFooter>
-              <CreateCubeButton>Create A New Cube</CreateCubeButton>
+              <Flexbox direction="col" gap="2">
+                {(user.cubes || []).length > 2 && (
+                  <NavLink href={`/user/view/${user.id}`}>View All</NavLink>
+                )}
+                <CreateCubeButton>Create A New Cube</CreateCubeButton>
+              </Flexbox>
             </CardFooter>
           </NavMenu>
           <NavMenu label={user.username} navBar>

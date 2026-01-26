@@ -4,6 +4,7 @@ import { Construct } from 'constructs';
 interface Route53Props {
   domain: string;
   dnsName: string;
+  hostedZoneDomain?: string; // Optional: specify the hosted zone domain if different from domain
 }
 
 export class Route53 extends Construct {
@@ -12,8 +13,11 @@ export class Route53 extends Construct {
   constructor(scope: Construct, id: string, props: Route53Props) {
     super(scope, id);
 
+    // Extract root domain for hosted zone lookup (e.g., ml.cubecobradev.com -> cubecobradev.com)
+    const hostedZoneDomain = props.hostedZoneDomain || this.extractRootDomain(props.domain);
+
     const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
-      domainName: props.domain,
+      domainName: hostedZoneDomain,
     });
 
     this.recordSet = new CfnRecordSet(this, 'ConsoleAliasRecord', {
@@ -25,5 +29,15 @@ export class Route53 extends Construct {
         hostedZoneId: 'Z3AADJGX6KTTL2',
       },
     });
+  }
+
+  // Helper to extract root domain from subdomain (e.g., ml.cubecobradev.com -> cubecobradev.com)
+  private extractRootDomain(domain: string): string {
+    const parts = domain.split('.');
+    if (parts.length >= 2) {
+      // Return last two parts (domain.tld)
+      return parts.slice(-2).join('.');
+    }
+    return domain;
   }
 }

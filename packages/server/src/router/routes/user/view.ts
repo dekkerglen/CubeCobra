@@ -20,15 +20,15 @@ export const handler = async (req: Request, res: Response) => {
 
     const { sort, ascending } = getCubesSortValues(user);
 
-    const cubes = (await cubeDao.queryByOwner(user.id, sort, ascending)).items.filter((cube: any) =>
-      isCubeListed(cube, req.user),
-    );
+    const result = await cubeDao.queryByOwner(user.id, sort, ascending, undefined, 36);
+    const cubes = result.items.filter((cube: any) => isCubeListed(cube, req.user));
 
     const following = req.user && user.following && user.following.some((id) => id === req.user?.id);
 
     return render(req, res, 'UserCubePage', {
       owner: user,
       cubes,
+      lastKey: result.lastKey,
       followersCount: (user.following || []).length,
       following,
     });

@@ -426,7 +426,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     sortBy: SortOrder = 'date',
     ascending: boolean = false,
     lastKey?: Record<string, any>,
-    limit: number = 100,
+    limit: number = 200,
   ): Promise<QueryResult> {
     // For owner queries, we can only sort by date using GSI1
     // For other sorts, we need to fetch all and sort in memory
@@ -458,7 +458,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
             ':owner': `${this.itemType()}#OWNER#${owner}`,
           },
           ScanIndexForward: false,
-          Limit: 100,
+          Limit: 200,
           ExclusiveStartKey: currentLastKey,
         };
 

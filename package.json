@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "npm-run-all --parallel dev:client dev:server dev:recommender",
-    "dev:client": "npm run dev --workspace=packages/client",
+    "dev:client": "npm run start --workspace=packages/client",
     "dev:server": "npm run dev --workspace=packages/server",
     "dev:recommender": "npm run dev --workspace=packages/recommenderService",
     "lint": "npx prettier --write . && npx eslint --fix .",

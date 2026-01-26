@@ -22,6 +22,16 @@ export const cloneHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/cube/list/404');
     }
 
+    // Enforce maximum of 256 cubes per user
+    const userCubes = await cubeDao.queryByOwner(req.user.id);
+    if (userCubes.items.length >= 256) {
+      req.flash(
+        'danger',
+        'You have reached the maximum limit of 256 cubes. To clone a cube, please delete an existing cube.',
+      );
+      return redirect(req, res, `/cube/view/${source.id}`);
+    }
+
     const sourceCards = await cubeDao.getCards(source.id);
 
     const now = Date.now().valueOf();

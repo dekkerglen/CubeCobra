@@ -49,7 +49,7 @@ const getCubes = async (req: Request, callback: (cubes: CubeType[]) => void): Pr
     callback([]);
   } else {
     const { sort, ascending } = getCubesSortValues(req.user);
-    const query = await cubeDao.queryByOwner(req.user.id, sort, ascending);
+    const query = await cubeDao.queryByOwner(req.user.id, sort, ascending, undefined, 36);
     callback(query.items);
   }
 };

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import Cube from '@utils/datatypes/Cube';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Collapse from 'components/base/Collapse';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
@@ -20,6 +19,7 @@ interface CubesCardProps {
   };
   lean?: boolean;
   alternateViewFewer?: React.ReactNode;
+  viewAllLink?: string; // Link to view all cubes
   [key: string]: any; // To allow additional props
 }
 
@@ -30,11 +30,11 @@ const CubesCard: React.FC<CubesCardProps> = ({
   sideLink,
   lean = false,
   alternateViewFewer,
+  viewAllLink,
   ...props
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggle = () => setIsOpen(!isOpen);
+  // Only show the first 2 cubes
+  const displayCubes = cubes.slice(0, 2);
 
   return (
     <Card {...props}>
@@ -47,36 +47,19 @@ const CubesCard: React.FC<CubesCardProps> = ({
         </Flexbox>
       </CardHeader>
       <Row gutters={0}>
-        {cubes.slice(0, 2).map((cube) => (
+        {displayCubes.map((cube) => (
           <Col key={cube.id} xs={6}>
             <CubePreview cube={cube} />
           </Col>
         ))}
       </Row>
-      <Collapse isOpen={isOpen}>
-        <Row gutters={0}>
-          {cubes.slice(2).map((cube) => (
-            <Col key={cube.id} xs={6}>
-              <CubePreview cube={cube} />
-            </Col>
-          ))}
-        </Row>
-      </Collapse>
-      {(!lean || cubes.length > 2) && (
+      {(!lean || cubes.length > 2) && viewAllLink && (
         <CardBody>
           {alternateViewFewer ? (
-            <>
-              {isOpen ? (
-                alternateViewFewer
-              ) : (
-                <Button color="primary" block onClick={toggle}>
-                  View More...
-                </Button>
-              )}
-            </>
+            alternateViewFewer
           ) : (
-            <Button color="primary" block onClick={toggle}>
-              {isOpen ? 'View Fewer...' : 'View More...'}
+            <Button color="primary" block href={viewAllLink}>
+              View More...
             </Button>
           )}
         </CardBody>
