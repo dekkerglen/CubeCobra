@@ -126,8 +126,7 @@ export class CubeCobraStack extends cdk.Stack {
     );
 
     // Determine ML subdomain based on environment
-    const mlDomain =
-      params.environmentName === 'production' ? 'ml.cubecobra.com' : `ml-${params.environmentName}.cubecobra.com`;
+    const mlDomain = `ml.${params.domain.replace('www.', '')}`;
 
     // Create everything we need related to ElasticBeanstalk, including the environment and the application
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
