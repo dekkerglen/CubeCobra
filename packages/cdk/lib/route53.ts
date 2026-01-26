@@ -22,7 +22,7 @@ export class Route53 extends Construct {
     });
 
     const recordSetId = props.recordSetId || 'AliasRecord';
-    this.recordSet = new CfnRecordSet(this, recordSetId, {
+    this.recordSet = new CfnRecordSet(scope, recordSetId, {
       hostedZoneId: hostedZone.hostedZoneId,
       name: props.domain,
       type: 'A',

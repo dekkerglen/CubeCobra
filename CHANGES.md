@@ -14,6 +14,7 @@ As of 1.4.57
 - Minor style improvements in various places in the site
 - Improved UX for users with a large number of cubes. Pagination on user cubes page, increased cube limit to 256
 - Cloned cubes now default to "Unlisted" visibility
+- Added toggles when adding packages to cube for autotagging the new cards and creating a blog post
 
 # Bug Fixes
 
@@ -27,6 +28,7 @@ As of 1.4.57
 - Fixed a bug preventing users from deleting a cube
 - Fixed a bug where playtest drafts would show as colorless in error
 - Fixed a bug where Patreon linking would 404
+- Fixed display issue with card tags padding in autocard
 
 # Technical Changes
 

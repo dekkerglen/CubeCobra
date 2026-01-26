@@ -88,10 +88,12 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
           )}
         </Flexbox>
         {tags.length > 0 && (
-          <div className="row g-0 p-1" id="autocardTags">
-            {tags.map((tag) => (
-              <Tag key={tag.value} text={tag.value} colorClass={tag.colorClass} />
-            ))}
+          <div className="p-2" id="autocardTags">
+            <Flexbox direction="row" gap="2" wrap="wrap">
+              {tags.map((tag) => (
+                <Tag key={tag.value} text={tag.value} colorClass={tag.colorClass} />
+              ))}
+            </Flexbox>
           </div>
         )}
       </div>

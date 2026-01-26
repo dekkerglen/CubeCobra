@@ -6,9 +6,11 @@ import CubePropType from '@utils/datatypes/Cube';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
+import useLocalStorage from '../../hooks/useLocalStorage';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import CardList from '../base/CardList';
+import Checkbox from '../base/Checkbox';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Select from '../base/Select';
@@ -43,6 +45,8 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
   const [board, setBoard] = useState<'mainboard' | 'maybeboard'>('mainboard');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [upvotePackage, setUpvotePackage] = useState(true);
+  const [autoTag, setAutoTag] = useLocalStorage<boolean>('addGroupToCubeAutoTag', true);
+  const [createBlogPost, setCreateBlogPost] = useLocalStorage<boolean>('addGroupToCubeCreateBlogPost', true);
 
   const add = useCallback(async () => {
     setLoadingSubmit(true);
@@ -53,6 +57,8 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
           cards: cards.map((card) => card.scryfall_id),
           packid,
           board,
+          autoTag,
+          createBlogPost,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +80,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
       setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
     }
     setLoadingSubmit(false);
-  }, [csrfFetch, selectedCube, cards, packid, board, alerts, setOpen, upvotePackage, user, voters]);
+  }, [csrfFetch, selectedCube, cards, packid, board, alerts, setOpen, upvotePackage, user, voters, autoTag, createBlogPost]);
 
   if (!cubes || cubes.length === 0) {
     return (
@@ -119,16 +125,26 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
               { value: 'maybeboard', label: 'Maybeboard' },
             ]}
           />
-          {packid && user && !voters.includes(user.id) && (
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={upvotePackage}
-                onChange={(e) => setUpvotePackage(e.target.checked)}
-                className="h-4 w-4"
+          {packid && (
+            <>
+              <Checkbox
+                label="Autotag new cards with package name"
+                checked={autoTag}
+                setChecked={setAutoTag}
               />
-              <span>+1 this package</span>
-            </label>
+              <Checkbox
+                label="Create blog post"
+                checked={createBlogPost}
+                setChecked={setCreateBlogPost}
+              />
+            </>
+          )}
+          {packid && user && !voters.includes(user.id) && (
+            <Checkbox
+              label="+1 this package"
+              checked={upvotePackage}
+              setChecked={setUpvotePackage}
+            />
           )}
         </Flexbox>
       </ModalBody>

@@ -35,7 +35,10 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
     const cubeCards = await cubeDao.getCards(req.params.id);
 
     let tag: string | null = null;
-    if (req.body.packid) {
+    const autoTag = req.body.autoTag !== false; // Default to true
+    const createBlogPost = req.body.createBlogPost !== false; // Default to true
+
+    if (req.body.packid && autoTag) {
       const pack = await packageDao.getById(req.body.packid);
       if (pack) {
         tag = pack.title;
@@ -43,8 +46,10 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
     }
 
     const adds = req.body.cards.map((id: string) => {
-      const c: any = newCard(cardFromId(id), [tag]);
-      c.notes = `Added from package "${tag}": ${process.env.DOMAIN}/packages/${req.body.packid}`;
+      const c: any = newCard(cardFromId(id), tag ? [tag] : []);
+      if (tag) {
+        c.notes = `Added from package "${tag}": ${process.env.DOMAIN}/packages/${req.body.packid}`;
+      }
       return c;
     });
 
@@ -61,11 +66,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       cubeCards[board] = [];
     }
 
-    if (tag) {
-      cubeCards[board].push(...adds);
-    } else {
-      cubeCards[board].push(...req.body.cards.map((id: string) => newCard(cardFromId(id), [])));
-    }
+    cubeCards[board].push(...adds);
 
     await cubeDao.updateCards(req.params.id, cubeCards);
 
@@ -76,7 +77,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       req.params.id,
     );
 
-    if (tag) {
+    if (req.body.packid && createBlogPost && tag) {
       const id = await blogDao.createBlog({
         body: `Add from the package [${tag}](/packages/${req.body.packid})`,
         owner: req.user.id,
