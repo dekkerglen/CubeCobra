@@ -108,10 +108,12 @@ export const buildBotDeck = async (
   basics: number[],
   cards: CardDetails[],
 ): Promise<{ mainboard: number[][][]; sideboard: number[][][] }> => {
-  const mainboardBuilt = (await deckbuild(
-    pickorder.map((index) => cards[index]).filter(Boolean),
-    basics.map((index) => cards[index]).filter(Boolean),
-  )).mainboard;
+  const mainboardBuilt = (
+    await deckbuild(
+      pickorder.map((index) => cards[index]).filter(Boolean),
+      basics.map((index) => cards[index]).filter(Boolean),
+    )
+  ).mainboard;
 
   const pool = pickorder.slice();
 

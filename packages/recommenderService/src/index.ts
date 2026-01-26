@@ -5,11 +5,14 @@ dotenv.config();
 
 import compression from 'compression';
 import express from 'express';
+import fs from 'fs';
 import http from 'http';
+import path from 'path';
 import { v4 as uuid } from 'uuid';
 
 import './types/express'; // Import the express type extensions
 
+import { initializeCardCatalog } from './mlutils/cardCatalog';
 import cloudwatch from './mlutils/cloudwatch';
 import { downloadModelsFromS3 } from './mlutils/downloadModel';
 import { initializeMl } from './mlutils/ml';
@@ -93,8 +96,24 @@ const PORT = process.env.PORT || 5002;
 
 async function startServer() {
   try {
-    console.log('Downloading ML models from S3...');
-    await downloadModelsFromS3('', process.env.DATA_BUCKET || 'cubecobra-data');
+    // Check if models already exist locally
+    const modelDir = path.join('.', 'model');
+    // These are the actual directory names in the model folder
+    const requiredModels = ['encoder', 'cube_decoder', 'deck_build_decoder', 'draft_decoder'];
+
+    const modelDirExists = fs.existsSync(modelDir);
+    const modelsExist =
+      modelDirExists && requiredModels.every((model) => fs.existsSync(path.join(modelDir, model, 'model.json')));
+
+    if (!modelsExist) {
+      console.log('Models not found locally. Downloading ML models from S3...');
+      await downloadModelsFromS3('', process.env.DATA_BUCKET || 'cubecobra-data');
+    } else {
+      console.log('Using existing local ML models.');
+    }
+
+    console.log('Initializing card catalog...');
+    initializeCardCatalog('.');
 
     console.log('Initializing ML models...');
     await initializeMl('.');

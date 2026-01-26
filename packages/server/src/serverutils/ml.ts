@@ -8,6 +8,9 @@ const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5002';
  * Make a request to the ML recommender service
  */
 async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
+  console.log(`[ML Service] Making request to ${ML_SERVICE_URL}/${endpoint}`);
+  console.log(`[ML Service] Request body:`, JSON.stringify(body).substring(0, 200));
+
   try {
     const response = await fetch(`${ML_SERVICE_URL}/${endpoint}`, {
       method: 'POST',
@@ -16,6 +19,8 @@ async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
       },
       body: JSON.stringify(body),
     });
+
+    console.log(`[ML Service] Response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       throw new Error(`ML service returned ${response.status}: ${response.statusText}`);
@@ -27,6 +32,7 @@ async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
       throw new Error(data.message || 'ML service request failed');
     }
 
+    console.log(`[ML Service] Request to ${endpoint} succeeded`);
     return data as T;
   } catch (err) {
     if (process.env?.NODE_ENV === 'development') {
@@ -51,6 +57,8 @@ export const encode = async (oracles: string[]): Promise<number[]> => {
 export const recommend = async (
   oracles: string[],
 ): Promise<{ adds: { oracle: string; rating: number }[]; cuts: { oracle: string; rating: number }[] }> => {
+  console.log(`[ML Service] recommend() called with ${oracles.length} oracles`);
+
   try {
     const response = await mlServiceRequest<{
       success: boolean;
@@ -58,12 +66,17 @@ export const recommend = async (
       cuts: { oracle: string; rating: number }[];
     }>('recommend', { oracles });
 
+    console.log(`[ML Service] recommend() returned ${response.adds.length} adds and ${response.cuts.length} cuts`);
+
     return {
       adds: response.adds,
       cuts: response.cuts,
     };
-  } catch (_err) {
-    console.warn('Failed to get recommendations, returning empty arrays');
+  } catch (err) {
+    console.error(
+      '[ML Service] Failed to get recommendations. Error:',
+      err instanceof Error ? err.message : String(err),
+    );
     return {
       adds: [],
       cuts: [],

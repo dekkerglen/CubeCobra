@@ -159,21 +159,32 @@ const oracleIdToMlIndex = (oracleId: string) => {
 };
 
 export const recommend = (oracles: string[]) => {
+  console.log(`[ML] recommend() called with ${oracles.length} oracles`);
+
   if (!encoder || !recommendDecoder) {
+    console.log('[ML] Models not loaded - encoder or recommendDecoder is null');
     return {
       adds: [],
       cuts: [],
     };
   }
-  const allOracles = getAllOracleIds();
 
-  const vector = [
-    encodeIndeces(
-      oracles
-        .map((oracle) => oracleIdToMlIndex(oracle))
-        .filter((index): index is number => index !== null && index !== undefined),
-    ),
-  ];
+  const allOracles = getAllOracleIds();
+  console.log(`[ML] Total oracles available: ${allOracles.length}`);
+
+  const mappedIndices = oracles
+    .map((oracle) => {
+      const index = oracleIdToMlIndex(oracle);
+      if (index === null || index === undefined) {
+        console.log(`[ML] Oracle ${oracle} not found in index`);
+      }
+      return index;
+    })
+    .filter((index): index is number => index !== null && index !== undefined);
+
+  console.log(`[ML] Mapped ${mappedIndices.length} of ${oracles.length} oracles to indices`);
+
+  const vector = [encodeIndeces(mappedIndices)];
 
   const array = tidy(() => {
     const inputTensor = tensor(vector);

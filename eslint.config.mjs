@@ -17,6 +17,8 @@ export default [
       'packages/client/dist/**/*',
       'packages/jobs/dist/**/*',
       'packages/jobs/temp/**/*',
+      'packages/recommenderService/model/**/*',
+      'packages/recommenderService/private/**/*',
       'packages/utils/src/generated/**/*',
       '**/*.js',
       '**/*.jsx',

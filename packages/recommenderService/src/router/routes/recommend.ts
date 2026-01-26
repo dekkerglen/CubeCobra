@@ -13,7 +13,14 @@ const handler = async (req: Request, res: Response) => {
       });
     }
 
+    console.log(`[Recommend] Received request with ${oracles.length} oracles:`, oracles);
+
     const result = recommend(oracles);
+
+    console.log(`[Recommend] Result: ${result.adds.length} adds, ${result.cuts.length} cuts`);
+    if (result.adds.length === 0 && result.cuts.length === 0) {
+      console.log('[Recommend] No recommendations returned - possible oracle mapping issue');
+    }
 
     return res.status(200).json({
       success: true,

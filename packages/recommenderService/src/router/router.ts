@@ -33,7 +33,6 @@ const responseTimer = responseTime((req: express.Request, res: express.Response,
   );
 });
 
-
 router.get('/', (_, res) => {
   return res.json({
     service: 'CubeCobra ML Recommender Service',
