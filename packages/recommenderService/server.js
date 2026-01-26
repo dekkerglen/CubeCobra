@@ -1,5 +1,5 @@
 require('module-alias/register');
-const { downloadModelsFromS3 } = require('./dist/recommenderService/src/mlutils/downloadModel');
+const { downloadModelsFromS3 } = require('./dist/recommenderService/src/mlutils/downloadModel.js');
 const forever = require('forever-monitor');
 
 const child = new forever.Monitor('dist/recommenderService/src/index.js', {
