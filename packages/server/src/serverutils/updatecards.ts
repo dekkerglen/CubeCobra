@@ -107,6 +107,12 @@ export async function updateCardbase(basePath: string = 'private', bucket: strin
     fs.mkdirSync(basePath);
   }
 
+  // Download the manifest first
+  const remoteManifest = await downloadManifestFromS3(bucket);
+  if (remoteManifest) {
+    saveLocalManifest(remoteManifest, basePath);
+  }
+
   await downloadFromS3(basePath, bucket);
   await loadAllFiles(basePath);
 }
