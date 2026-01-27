@@ -17,7 +17,12 @@ function filterOraclesForML(oracles: string[]): string[] {
     }
 
     // Get a reasonable card for this oracle
-    const card = cardFromId(cardIds[0]);
+    const firstCardId = cardIds[0];
+    if (!firstCardId) {
+      return false;
+    }
+
+    const card = cardFromId(firstCardId);
     if (!card) {
       return false;
     }

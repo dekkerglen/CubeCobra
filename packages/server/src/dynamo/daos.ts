@@ -3,6 +3,7 @@ import { BlogDynamoDao } from './dao/BlogDynamoDao';
 import { CardHistoryDynamoDao } from './dao/CardHistoryDynamoDao';
 import { CardUpdateTaskDynamoDao } from './dao/CardUpdateTaskDynamoDao';
 import { ChangelogDynamoDao } from './dao/ChangelogDynamoDao';
+import { ComboDynamoDao } from './dao/ComboDynamoDao';
 import { CommentDynamoDao } from './dao/CommentDynamoDao';
 import { CubeDynamoDao } from './dao/CubeDynamoDao';
 import { DailyP1P1DynamoDao } from './dao/DailyP1P1DynamoDao';
@@ -55,3 +56,4 @@ export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao,
 export const cardUpdateTaskDao: CardUpdateTaskDynamoDao = new CardUpdateTaskDynamoDao(documentClient, tableName);
 export const exportTaskDao: ExportTaskDynamoDao = new ExportTaskDynamoDao(documentClient, tableName);
 export const migrationTaskDao: MigrationTaskDynamoDao = new MigrationTaskDynamoDao(documentClient, tableName);
+export const comboDao: ComboDynamoDao = new ComboDynamoDao(documentClient, tableName);
