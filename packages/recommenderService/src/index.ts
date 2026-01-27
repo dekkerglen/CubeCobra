@@ -127,7 +127,6 @@ async function startServer() {
 
     console.log('Initializing card catalog...');
     initializeCardCatalog('.');
-    initializeCardCatalog('.');
 
     console.log('Initializing ML models...');
     await initializeMl('.');
