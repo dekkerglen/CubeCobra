@@ -18,7 +18,7 @@ export class Certificates extends Construct {
 
     this.consoleCertificate = new acm.Certificate(scope, 'ConsoleCertificate', {
       domainName: props.domain,
-      subjectAlternativeNames: [`www.${props.domain}`],
+      subjectAlternativeNames: [`www.${props.domain}`, `ml.${props.domain}`],
       validation: acm.CertificateValidation.fromDns(hostedZone),
     });
   }
