@@ -113,9 +113,9 @@ async function startServer() {
       console.log('Using existing local ML models.');
     }
 
-    // Check if card data files exist
+    // Check if card data files exist (only oracleToId.json needed now)
     const privateDir = path.join('.', 'private');
-    const requiredCardFiles = ['oracleToId.json', 'carddict.json'];
+    const requiredCardFiles = ['oracleToId.json'];
     const cardFilesExist = requiredCardFiles.every((file) => fs.existsSync(path.join(privateDir, file)));
 
     if (!cardFilesExist) {

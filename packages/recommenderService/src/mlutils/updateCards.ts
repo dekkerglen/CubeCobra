@@ -14,7 +14,7 @@ const authenticatedS3 = new S3Client({
 
 /**
  * Download only the card files needed by the recommender service
- * (oracleToId.json and carddict.json)
+ * (only oracleToId.json - carddict is no longer needed)
  */
 export async function updateCardbase(basePath: string = 'private', bucket: string): Promise<void> {
   console.log('Downloading card data files needed for recommender service...');
@@ -25,8 +25,8 @@ export async function updateCardbase(basePath: string = 'private', bucket: strin
 
   const s3 = bucket === 'cubecobra-public' ? publicS3 : authenticatedS3;
 
-  // Only download the files needed for ML recommendations
-  const requiredFiles = ['oracleToId.json', 'carddict.json'];
+  // Only download oracleToId - filtering is now done on server side
+  const requiredFiles = ['oracleToId.json'];
 
   for (const file of requiredFiles) {
     try {

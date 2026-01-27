@@ -68,7 +68,7 @@ export class ElasticBeanstalk extends Construct {
         {
           namespace: 'aws:autoscaling:launchconfiguration',
           optionName: 'InstanceType',
-          value: 't3.medium',
+          value: 't3.large',
         },
         {
           namespace: 'aws:autoscaling:launchconfiguration',

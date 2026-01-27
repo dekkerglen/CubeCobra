@@ -4,7 +4,7 @@ import path from 'path';
 
 import 'dotenv/config';
 
-import { getAllOracleIds, getOracleForMl, getReasonableCardByOracle, isOracleBasic } from './cardCatalog';
+import { getAllOracleIds } from './cardCatalog';
 import cloudwatch from './cloudwatch';
 
 let indexToOracle: Record<number, string> = {};
@@ -147,15 +147,8 @@ const oracleIdToMlIndex = (oracleId: string) => {
     return oracleIndex;
   }
 
-  const card = getReasonableCardByOracle(oracleId);
-
-  if ((card.cubeCount ?? 0) < 50 || card.isToken || isOracleBasic(oracleId)) {
-    return null;
-  }
-
-  const subOracle = getOracleForMl(oracleId);
-
-  return oracleToIndex[subOracle];
+  // Card not in ML index - filtering is now done on server side
+  return null;
 };
 
 export const recommend = (oracles: string[]) => {

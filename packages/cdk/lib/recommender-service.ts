@@ -63,7 +63,7 @@ export class RecommenderService extends Construct {
         {
           namespace: 'aws:autoscaling:launchconfiguration',
           optionName: 'InstanceType',
-          value: 't3.large', // Large instance for ML service (TensorFlow needs memory)
+          value: 't3.medium', // Medium instance for ML service (without carddict)
         },
         {
           namespace: 'aws:autoscaling:launchconfiguration',

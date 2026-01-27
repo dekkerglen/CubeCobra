@@ -23,7 +23,6 @@ export function initializeCardCatalog(rootDir: string = '.') {
   try {
     // Load minimal card data needed for ML
     const oracleToIdPath = path.join(rootDir, 'private', 'oracleToId.json');
-    const carddictPath = path.join(rootDir, 'private', 'carddict.json');
 
     if (readFileSync) {
       try {
@@ -31,13 +30,6 @@ export function initializeCardCatalog(rootDir: string = '.') {
         console.log('Loaded oracleToId mapping');
       } catch {
         console.warn('Could not load oracleToId.json, oracle lookups may fail');
-      }
-
-      try {
-        catalog._carddict = JSON.parse(readFileSync(carddictPath, 'utf8'));
-        console.log('Loaded card dictionary');
-      } catch {
-        console.warn('Could not load carddict.json, card lookups may fail');
       }
     }
 
@@ -57,29 +49,13 @@ export function getAllOracleIds(): string[] {
 }
 
 export function getReasonableCardByOracle(oracleId: string): any {
-  const ids = catalog.oracleToId[oracleId];
-  if (!ids || ids.length === 0) {
-    return { cubeCount: 0, isToken: false };
-  }
-
-  // Return first reasonable card
-  for (const id of ids) {
-    const card = catalog._carddict[id];
-    if (card && !card.isToken && !card.digital) {
-      return card;
-    }
-  }
-
-  return catalog._carddict[ids[0] || ''] || { cubeCount: 0, isToken: false };
+  // This function is no longer used - filtering moved to server
+  return null;
 }
 
 export function isOracleBasic(oracleId: string): boolean {
-  const ids = catalog.oracleToId[oracleId];
-  if (!ids || ids.length === 0) {
-    return false;
-  }
-  const card = catalog._carddict[ids[0] || ''];
-  return card?.type?.includes('Basic') || false;
+  // This function is no longer used - filtering moved to server
+  return false;
 }
 
 // Stub for ML - returns oracle if not found

@@ -31,7 +31,6 @@
     "@aws-sdk/credential-providers": "^3.926.0",
     "@aws-sdk/lib-dynamodb": "^3.927.0",
     "@aws-sdk/lib-storage": "^3.927.0",
-    "@tensorflow/tfjs-node": "^4.22.0",
     "@types/aws-sdk": "^2.7.0",
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.0",
