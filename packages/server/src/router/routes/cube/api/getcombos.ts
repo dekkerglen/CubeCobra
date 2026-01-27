@@ -1,7 +1,7 @@
 import catalog from 'serverutils/cardCatalog';
 
-import { comboDao } from '../../../../dynamo/daos';
-import { Request, Response } from '../../../../types/express';
+import { comboDao } from 'dynamo/daos';
+import { Request, Response } from 'types/express';
 
 export const getCombos = async (req: Request, res: Response) => {
   try {
