@@ -1,6 +1,7 @@
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { CfnApplication, CfnApplicationVersion, CfnEnvironment } from 'aws-cdk-lib/aws-elasticbeanstalk';
 import { CfnInstanceProfile } from 'aws-cdk-lib/aws-iam';
+import { LogGroup, LogStream, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
@@ -18,9 +19,24 @@ export class RecommenderService extends Construct {
   public readonly application: CfnApplication;
   public readonly appVersion: CfnApplicationVersion;
   public readonly environment: CfnEnvironment;
+  public readonly logGroup: LogGroup;
 
   constructor(scope: Construct, id: string, props: RecommenderServiceProps) {
     super(scope, id);
+
+    // Create CloudWatch log group with new CDK-managed naming schema
+    // Format: /cubecobra/{env}/recommender/application
+    const logGroupName = `/cubecobra/${props.environmentName}/recommender/application`;
+    this.logGroup = new LogGroup(this, 'RecommenderLogGroup', {
+      logGroupName,
+      retention: RetentionDays.ONE_MONTH,
+    });
+
+    // Create the default log stream
+    new LogStream(this, 'RecommenderLogStream', {
+      logGroup: this.logGroup,
+      logStreamName: 'default',
+    });
 
     this.application = new CfnApplication(scope, 'RecommenderApplication', {
       applicationName: `CubeCobra-Recommender-${props.environmentName}-app`,

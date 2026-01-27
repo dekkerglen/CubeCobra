@@ -1,6 +1,7 @@
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { CfnApplication, CfnApplicationVersion, CfnEnvironment } from 'aws-cdk-lib/aws-elasticbeanstalk';
 import { CfnInstanceProfile } from 'aws-cdk-lib/aws-iam';
+import { LogGroup, LogStream, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
@@ -18,9 +19,29 @@ export class ElasticBeanstalk extends Construct {
   public readonly application: CfnApplication;
   public readonly appVersion: CfnApplicationVersion;
   public readonly environment: CfnEnvironment;
+  public readonly logGroup: LogGroup;
 
   constructor(scope: Construct, id: string, props: ElasticBeanstalkApplicationProps) {
     super(scope, id);
+
+    // Create CloudWatch log groups with new CDK-managed naming schema
+    // Format: /cubecobra/{env}/server/{level}
+    const infoLogGroupName = `/cubecobra/${props.environmentName}/server/info`;
+    const errorLogGroupName = `/cubecobra/${props.environmentName}/server/error`;
+
+    // Create INFO log group
+    const infoLogGroup = new LogGroup(this, 'ServerInfoLogGroup', {
+      logGroupName: infoLogGroupName,
+      retention: RetentionDays.ONE_MONTH,
+    });
+
+    // Create ERROR log group
+    const errorLogGroup = new LogGroup(this, 'ServerErrorLogGroup', {
+      logGroupName: errorLogGroupName,
+      retention: RetentionDays.ONE_MONTH,
+    });
+
+    this.logGroup = infoLogGroup; // For compatibility
 
     this.application = new CfnApplication(scope, 'Application', {
       applicationName: `CubeCobra-${props.environmentName}-app`,

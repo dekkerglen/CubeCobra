@@ -233,8 +233,8 @@ function createEnvironmentVariables(
   const envVars: { [key: string]: string } = {
     AWS_ACCESS_KEY_ID: params.accessKey,
     AWS_SECRET_ACCESS_KEY: params.secretKey,
-    AWS_LOG_GROUP: params.awsLogGroup,
-    AWS_LOG_STREAM: params.awsLogStream,
+    AWS_LOG_GROUP: `/cubecobra/${params.environmentName}/server`,
+    AWS_LOG_STREAM: 'application',
     AWS_REGION: props?.env?.region || '',
     CLOUDWATCH_ENABLED: params.environmentName === 'local' ? 'false' : 'true',
     CUBECOBRA_VERSION: params.version,
@@ -317,7 +317,7 @@ function createRecommenderEnvironmentVariables(
     DATA_BUCKET: params.dataBucket,
     NODE_ENV: params.environmentName === 'local' ? 'development' : 'production',
     PORT: '8080',
-    LOG_GROUP_NAME: `/aws/elasticbeanstalk/recommender-service/${params.environmentName}/application`,
+    LOG_GROUP_NAME: `/cubecobra/${params.environmentName}/recommender/application`,
     LOG_STREAM_NAME: 'default',
     DOMAIN: mlDomain,
   };

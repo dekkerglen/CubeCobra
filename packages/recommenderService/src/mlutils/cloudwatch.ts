@@ -16,7 +16,10 @@ const log = async (level: string, message: string, meta?: string) => {
     console.log(logMessage);
   }
 
-  // Send to CloudWatch in production
+  // Always log to console
+  console.log(logMessage);
+
+  // Also send to CloudWatch in production
   if (process.env.NODE_ENV === 'production') {
     try {
       const params: any = {
@@ -37,8 +40,9 @@ const log = async (level: string, message: string, meta?: string) => {
       const command = new PutLogEventsCommand(params);
       const response = await client.send(command);
       sequenceToken = response.nextSequenceToken;
-    } catch (err) {
-      console.error('Failed to send log to CloudWatch:', err);
+    } catch (err: any) {
+      // Log CloudWatch errors but don't fail
+      console.error('CloudWatch logging failed:', err.message);
     }
   }
 };
