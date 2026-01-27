@@ -63,7 +63,7 @@ export class RecommenderService extends Construct {
         {
           namespace: 'aws:autoscaling:launchconfiguration',
           optionName: 'InstanceType',
-          value: 't3.small', // Smaller instance for ML service
+          value: 't3.large', // Large instance for ML service (TensorFlow needs memory)
         },
         {
           namespace: 'aws:autoscaling:launchconfiguration',

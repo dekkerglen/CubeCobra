@@ -29,6 +29,7 @@ As of 1.4.57
 - Fixed a bug where playtest drafts would show as colorless in error
 - Fixed a bug where Patreon linking would 404
 - Fixed display issue with card tags padding in autocard
+- Fixed a styling issue that caused certain advertisements to pop out of their bounding box
 
 # Technical Changes
 
