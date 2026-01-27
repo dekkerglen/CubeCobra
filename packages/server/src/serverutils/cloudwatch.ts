@@ -30,7 +30,7 @@ if (cloudwatchEnabled) {
   client
     .send(
       new CreateLogStreamCommand({
-        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_INFO`,
+        logGroupName: `${process.env.AWS_LOG_GROUP}/info`,
         logStreamName: `${id}`,
       }),
     )
@@ -41,7 +41,7 @@ if (cloudwatchEnabled) {
   client
     .send(
       new CreateLogStreamCommand({
-        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_ERROR`,
+        logGroupName: `${process.env.AWS_LOG_GROUP}/error`,
         logStreamName: `${id}`,
       }),
     )
@@ -59,7 +59,7 @@ if (cloudwatchEnabled) {
       client
         .send(
           new PutLogEventsCommand({
-            logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_INFO`,
+            logGroupName: `${process.env.AWS_LOG_GROUP}/info`,
             logStreamName: `${id}`,
             logEvents,
           }),
@@ -77,7 +77,7 @@ if (cloudwatchEnabled) {
       client
         .send(
           new PutLogEventsCommand({
-            logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_ERROR`,
+            logGroupName: `${process.env.AWS_LOG_GROUP}/error`,
             logStreamName: `${id}`,
             logEvents,
           }),
