@@ -5228,16 +5228,20 @@
   dependencies:
     "@aws-sdk/client-cloudwatch-logs" "^3.529.1"
     "@aws-sdk/client-s3" "^3.927.0"
+    "@aws-sdk/credential-providers" "^3.927.0"
     "@aws-sdk/lib-storage" "^3.927.0"
     "@tensorflow/tfjs-node" "^4.22.0"
     "@types/express" "^4.17.21"
     "@types/node" "^20.11.0"
+    archiver "^7.0.1"
     compression "^1.8.1"
     dotenv "^16.3.1"
     express "^4.18.2"
+    forever-monitor "^3.0.3"
     module-alias "^2.2.3"
     response-time "^2.3.4"
     ts-node "^10.9.2"
+    uuid "^9.0.1"
 
 "@cubecobra/scripts@file:/home/gdekker/Repos/CubeCobra/packages/scripts":
   version "1.0.0"
