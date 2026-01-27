@@ -82,12 +82,13 @@ const ignore = [
   'nodemon.json',
   '.esprintrc',
   '.yarnrc.yml',
+  'scripts/**', // Exclude build scripts
 ];
 
 // Change to recommender service directory and archive from there
 process.chdir(recommenderPath);
 
 // append files from recommenderService directory, putting its contents at the root of archive
-archive.glob('**/*', { ignore, dot: true });
+archive.glob('**/*', { ignore, dot: true, gitignore: false });
 
 archive.finalize();
