@@ -133,7 +133,7 @@ export class RecommenderService extends Construct {
         {
           namespace: 'aws:elasticbeanstalk:command',
           optionName: 'DeploymentPolicy',
-          value: 'Immutable',
+          value: 'Rolling',
         },
         {
           namespace: 'aws:elasticbeanstalk:command',
