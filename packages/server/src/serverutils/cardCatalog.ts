@@ -9,7 +9,6 @@ const catalog: Catalog = {
   cardimages: {},
   cardnames: [],
   comboTree: {},
-  comboDict: {},
   full_names: [],
   nameToId: {},
   oracleToId: {},
@@ -35,8 +34,6 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'metadatadict.json': 'metadatadict',
   'comboTree.json': 'comboTree',
 };
-
-// comboDict is no longer loaded - combos are fetched from DynamoDB
 
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {
   return new Promise<void>((resolve, reject) => {

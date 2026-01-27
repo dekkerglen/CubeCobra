@@ -151,7 +151,6 @@ const copyCardDefinitionsToPublicBucket = async (privateDir: string) => {
     'carddict.json',
     'cardimages.json',
     'cardtree.json',
-    'comboDict.json',
     'comboTree.json',
     'cubeEmbeddings.json',
     'english.json',

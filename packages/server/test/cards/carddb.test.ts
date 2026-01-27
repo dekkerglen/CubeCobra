@@ -8,7 +8,6 @@ const mockCardCatalog: Catalog = {
   cardimages: {},
   cardnames: [],
   comboTree: {},
-  comboDict: {},
   full_names: [],
   nameToId: {},
   oracleToId: {},

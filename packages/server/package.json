@@ -74,6 +74,7 @@
     "rss": "^1.2.2",
     "rss-parser": "^3.13.0",
     "sanitize-html": "^2.17.0",
+    "seedrandom": "^3.0.5",
     "serialize-javascript": "^6.0.2",
     "sharp": "^0.34.5",
     "shuffle-seed": "^1.1.6",

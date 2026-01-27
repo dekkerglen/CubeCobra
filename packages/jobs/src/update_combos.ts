@@ -157,7 +157,7 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
 
   try {
     // Fetch bulk data
-    const dataById = await fetchBulkData(bulkUrl, 'cache/comboDict.json', useS3Cache);
+    const dataById = await fetchBulkData(bulkUrl, 'cache/combos.json', useS3Cache);
 
     console.log('Retrieved combo data from cache or API');
 

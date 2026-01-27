@@ -121,6 +121,5 @@ export interface Catalog {
   metadatadict: Record<string, CardMetadata>;
   printedCardList: any[];
   comboTree: ComboTree;
-  comboDict: Record<string, Combo>;
   oracleToIndex: Record<string, number>;
 }
