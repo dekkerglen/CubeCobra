@@ -103,6 +103,8 @@ export interface Combo {
   manaValueNeeded: number;
   easyPrerequisites: string;
   notablePrerequisites: string;
+  dateCreated: number;
+  dateLastUpdated: number;
 }
 
 export interface Catalog {

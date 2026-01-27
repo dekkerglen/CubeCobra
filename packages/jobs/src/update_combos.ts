@@ -8,7 +8,7 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { cardUpdateTaskDao } from '@server/dynamo/daos';
+import { cardUpdateTaskDao, comboDao } from '@server/dynamo/daos';
 import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
 
 import { downloadJson, uploadJson } from './utils/s3';
@@ -197,12 +197,41 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
       currentNode['$'].push(id);
     }
 
-    console.log('Saving combo data to S3...');
+    console.log('Saving combo tree to S3...');
     const saveStart = Date.now();
-    await uploadJson('combos/comboDict.json', dataById);
     await uploadJson('combos/comboTree.json', comboTree);
     const saveDuration = (Date.now() - saveStart) / 1000;
-    console.log(`Saved combo data to S3. Duration: ${saveDuration.toFixed(2)}s`);
+    console.log(`Saved combo tree to S3. Duration: ${saveDuration.toFixed(2)}s`);
+
+    // Save combos to DynamoDB keyed by variant IDs
+    console.log('Saving combos to DynamoDB...');
+    const dynamoStart = Date.now();
+    const combos: Combo[] = [];
+    const now = Date.now();
+
+    for (const id in dataById) {
+      const variant = dataById[id];
+      if (!variant || !variant.uses) {
+        continue;
+      }
+
+      // Add timestamp fields if not present
+      if (!variant.dateCreated) {
+        variant.dateCreated = now;
+      }
+      variant.dateLastUpdated = now;
+
+      combos.push(variant);
+    }
+
+    console.log(`Prepared ${combos.length} combos for DynamoDB`);
+
+    // Batch write with delay to avoid overwhelming DynamoDB
+    const WRITE_DELAY_MS = 100; // 100ms delay between batches
+    await comboDao.batchPutCombos(combos, WRITE_DELAY_MS);
+
+    const dynamoDuration = (Date.now() - dynamoStart) / 1000;
+    console.log(`Saved combo data to DynamoDB. Duration: ${dynamoDuration.toFixed(2)}s`);
 
     console.log('All combo data saved successfully');
   } catch (error) {

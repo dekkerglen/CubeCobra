@@ -28,7 +28,7 @@ const EditMatchResultsModal: React.FC<EditMatchResultsModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} xl>
-      <ModalHeader setOpen={setOpen}>{`Update match results for ${record.name}, Rond ${roundIndex + 1}`}</ModalHeader>
+      <ModalHeader setOpen={setOpen}>{`Update match results for ${record.name}, Round ${roundIndex + 1}`}</ModalHeader>
       <ModalBody className="flex flex-col gap-2">
         <EditMatchRoundResults round={roundState} setRound={setRoundState} />
       </ModalBody>

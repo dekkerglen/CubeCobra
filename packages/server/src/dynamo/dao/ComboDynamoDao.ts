@@ -1,4 +1,3 @@
-import { Sha256 } from '@aws-crypto/sha256-js';
 import { BatchGetCommand, BatchWriteCommand, DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { Combo } from '@utils/datatypes/CardCatalog';
 
@@ -17,26 +16,11 @@ export class ComboDynamoDao extends BaseDynamoDao<Combo, Combo> {
   }
 
   /**
-   * Creates a hash from a sorted list of oracle IDs.
-   */
-  private async hashOracleIds(oracleIds: string[]): Promise<string> {
-    const sorted = [...oracleIds].sort();
-    const hash = new Sha256();
-    hash.update(sorted.join(','));
-    const raw = await hash.digest();
-    return Array.from(raw)
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
-
-  /**
    * Gets the partition key for a combo.
-   * Format: "COMBO#{hash}" where hash is the hash of sorted oracle IDs
+   * Format: "COMBO#{variantId}" where variantId is the Commander Spellbook variant ID
    */
   protected partitionKey(item: Combo): string {
-    // This will be set during put/batchPut operations
-    // For get operations, use getByOracleIds instead
-    throw new Error('Use getByOracleIds or getBatchByOracleIds instead of direct partitionKey access');
+    return `${this.itemType()}#${item.id}`;
   }
 
   /**
@@ -93,15 +77,14 @@ export class ComboDynamoDao extends BaseDynamoDao<Combo, Combo> {
   }
 
   /**
-   * Gets a combo by its oracle IDs.
+   * Gets a combo by its variant ID.
    *
-   * @param oracleIds - The oracle IDs that compose this combo.
+   * @param variantId - The Commander Spellbook variant ID.
    * @returns A promise that resolves to the combo, or undefined if not found.
    */
-  async getByOracleIds(oracleIds: string[]): Promise<Combo | undefined> {
-    const hash = await this.hashOracleIds(oracleIds);
+  async getByVariantId(variantId: string): Promise<Combo | undefined> {
     const key: Key = {
-      PK: `${this.itemType()}#${hash}`,
+      PK: `${this.itemType()}#${variantId}`,
       SK: this.itemType(),
     };
 
@@ -110,30 +93,20 @@ export class ComboDynamoDao extends BaseDynamoDao<Combo, Combo> {
   }
 
   /**
-   * Gets multiple combos by their oracle IDs in batch.
+   * Gets multiple combos by their variant IDs in batch.
    * DynamoDB limits batch gets to 100 items per request.
    *
-   * @param oracleIdSets - Array of oracle ID arrays, each representing a combo.
+   * @param variantIds - Array of Commander Spellbook variant IDs.
    * @returns A promise that resolves to an array of combos (undefined entries for not found).
    */
-  async getBatchByOracleIds(oracleIdSets: string[][]): Promise<(Combo | undefined)[]> {
-    if (oracleIdSets.length === 0) {
+  async getBatchByVariantIds(variantIds: string[]): Promise<(Combo | undefined)[]> {
+    if (variantIds.length === 0) {
       return [];
     }
 
-    // Generate hashes for all oracle ID sets
-    const hashesToSets = new Map<string, string[]>();
-    const hashes: string[] = [];
-    
-    for (const oracleIds of oracleIdSets) {
-      const hash = await this.hashOracleIds(oracleIds);
-      hashes.push(hash);
-      hashesToSets.set(hash, oracleIds);
-    }
-
     // Build keys for batch get
-    const keys: Key[] = hashes.map((hash) => ({
-      PK: `${this.itemType()}#${hash}`,
+    const keys: Key[] = variantIds.map((variantId) => ({
+      PK: `${this.itemType()}#${variantId}`,
       SK: this.itemType(),
     }));
 
@@ -159,9 +132,9 @@ export class ComboDynamoDao extends BaseDynamoDao<Combo, Combo> {
           const items = response.Responses[this.tableName] as DynamoItem<Combo>[];
           for (const dynamoItem of items) {
             const combo = this.hydrateItem(dynamoItem.item);
-            // Extract hash from PK
-            const hash = dynamoItem.PK.replace(`${this.itemType()}#`, '');
-            results.set(hash, combo);
+            // Extract variant ID from PK
+            const variantId = dynamoItem.PK.replace(`${this.itemType()}#`, '');
+            results.set(variantId, combo);
           }
         }
       } catch (e) {
@@ -174,23 +147,17 @@ export class ComboDynamoDao extends BaseDynamoDao<Combo, Combo> {
     }
 
     // Map results back to original order
-    return hashes.map((hash) => results.get(hash));
+    return variantIds.map((variantId) => results.get(variantId));
   }
 
   /**
-   * Puts a combo by its oracle IDs.
-   * This is an upsert operation.
+   * Puts a combo.
+   * This is an upsert operation using the combo's variant ID.
    *
    * @param combo - The combo to store.
-   * @param oracleIds - The oracle IDs that compose this combo.
    */
-  async putByOracleIds(combo: Combo, oracleIds: string[]): Promise<void> {
-    const hash = await this.hashOracleIds(oracleIds);
+  async putCombo(combo: Combo): Promise<void> {
     const dynamoItem = this.toDynamoItem(combo);
-    
-    // Override PK with the hash-based key
-    dynamoItem.PK = `${this.itemType()}#${hash}`;
-    dynamoItem.SK = this.itemType();
 
     try {
       await this.dynamoClient.send(
@@ -208,33 +175,24 @@ export class ComboDynamoDao extends BaseDynamoDao<Combo, Combo> {
   }
 
   /**
-   * Batch puts combos by their oracle IDs.
+   * Batch puts combos.
    * This is an upsert operation done in batches.
    *
-   * @param combosWithOracleIds - Array of tuples containing [combo, oracleIds].
+   * @param combos - Array of combos to store.
    * @param delayMs - Optional delay in milliseconds between batches.
+   * @param onProgress - Optional callback for progress updates.
    */
-  async batchPutByOracleIds(
-    combosWithOracleIds: [Combo, string[]][],
+  async batchPutCombos(
+    combos: Combo[],
     delayMs: number = 0,
+    onProgress?: (current: number, total: number) => void,
   ): Promise<void> {
-    if (combosWithOracleIds.length === 0) {
+    if (combos.length === 0) {
       return;
     }
 
-    // Build dynamo items with hash-based keys
-    const dynamoItems: DynamoItem<Combo>[] = [];
-    
-    for (const [combo, oracleIds] of combosWithOracleIds) {
-      const hash = await this.hashOracleIds(oracleIds);
-      const dynamoItem = this.toDynamoItem(combo);
-      
-      // Override PK with the hash-based key
-      dynamoItem.PK = `${this.itemType()}#${hash}`;
-      dynamoItem.SK = this.itemType();
-      
-      dynamoItems.push(dynamoItem);
-    }
+    // Build dynamo items from combos
+    const dynamoItems: DynamoItem<Combo>[] = combos.map((combo) => this.toDynamoItem(combo));
 
     // Use the parent class's batch write logic
     const BATCH_SIZE = 25;
@@ -247,7 +205,7 @@ export class ComboDynamoDao extends BaseDynamoDao<Combo, Combo> {
       for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
           await this.dynamoClient.send(
-            new this.dynamoClient.config.serviceInputFactory.CommandCtor({
+            new BatchWriteCommand({
               RequestItems: {
                 [this.tableName]: batch.map((dynamoItem) => ({
                   PutRequest: {
@@ -287,6 +245,11 @@ export class ComboDynamoDao extends BaseDynamoDao<Combo, Combo> {
           cause: lastError,
           meta: { batchIndex: i, batchSize: batch.length },
         });
+      }
+
+      // Report progress
+      if (onProgress) {
+        onProgress(Math.min(i + BATCH_SIZE, dynamoItems.length), dynamoItems.length);
       }
 
       if (delayMs > 0 && i + BATCH_SIZE < dynamoItems.length) {

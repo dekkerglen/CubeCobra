@@ -15,7 +15,7 @@
   "CreateNewRecordPage": "/js/CreateNewRecordPage.f67560d1.bundle.js",
   "CreateRecordFromDraftPage": "/js/CreateRecordFromDraftPage.982c73a1.bundle.js",
   "CreatorsPage": "/js/CreatorsPage.2ca85e4b.bundle.js",
-  "CubeAnalysisPage": "/js/CubeAnalysisPage.be853b78.bundle.js",
+  "CubeAnalysisPage": "/js/CubeAnalysisPage.12089d09.bundle.js",
   "CubeBlogPage": "/js/CubeBlogPage.e337c55a.bundle.js",
   "CubeComparePage": "/js/CubeComparePage.550f2512.bundle.js",
   "CubeDeckPage": "/js/CubeDeckPage.de2a2754.bundle.js",
@@ -67,12 +67,12 @@
   "TopCardsPage": "/js/TopCardsPage.29bacd2c.bundle.js",
   "UserAccountPage": "/js/UserAccountPage.f9eac418.bundle.js",
   "UserBlogPage": "/js/UserBlogPage.ae0bcc48.bundle.js",
-  "UserCubePage": "/js/UserCubePage.a14042a3.bundle.js",
+  "UserCubePage": "/js/UserCubePage.5146f8ba.bundle.js",
   "UserDecksPage": "/js/UserDecksPage.7ad758a5.bundle.js",
   "UserSocialPage": "/js/UserSocialPage.d6b101da.bundle.js",
   "VersionPage": "/js/VersionPage.4a140648.bundle.js",
   "VideoPage": "/js/VideoPage.b041f1bf.bundle.js",
   "VideosPage": "/js/VideosPage.20352d97.bundle.js",
-  "commons": "/js/commons.4ce3da11.bundle.js",
-  "vendors": "/js/vendors.6ec17bb7.bundle.js"
+  "commons": "/js/commons.3b662238.bundle.js",
+  "vendors": "/js/vendors.6ea054e4.bundle.js"
 }

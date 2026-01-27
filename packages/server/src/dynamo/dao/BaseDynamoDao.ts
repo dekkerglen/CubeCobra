@@ -106,7 +106,7 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
    * @param item - The item to get the sort key for.
    * @returns The sort key.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   protected sortKey(_item: T): string {
     return this.itemType();
   }
@@ -117,7 +117,7 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
    * @param item - The item to get the GSI keys for.
    * @returns The GSI keys, if any.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   protected GSIKeys(_item: T): {
     GSI1PK: string | undefined;
     GSI1SK: string | undefined;
@@ -495,7 +495,7 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
    * @param item - The item to get hashes for.
    * @returns A promise that resolves to an array of hashes.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   protected async getHashes(_item: T): Promise<string[]> {
     return [];
   } /**

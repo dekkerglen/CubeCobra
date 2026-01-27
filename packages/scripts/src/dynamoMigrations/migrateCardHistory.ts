@@ -222,7 +222,6 @@ function deleteCheckpoint(): void {
                   item,
                   exists: exactMatch || false,
                 };
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
               } catch (_) {
                 // If error, assume it doesn't exist
                 return {

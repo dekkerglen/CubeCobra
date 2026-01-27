@@ -150,7 +150,9 @@ export const draft = async (pack: string[], pool: string[]): Promise<{ oracle: s
   // Filter oracles on the server side before sending to ML service
   const filteredPack = filterOraclesForML(pack);
   const filteredPool = filterOraclesForML(pool);
-  console.log(`[ML Service] draft() filtered pack: ${filteredPack.length}/${pack.length}, pool: ${filteredPool.length}/${pool.length}`);
+  console.log(
+    `[ML Service] draft() filtered pack: ${filteredPack.length}/${pack.length}, pool: ${filteredPool.length}/${pool.length}`,
+  );
 
   try {
     const response = await mlServiceRequest<{

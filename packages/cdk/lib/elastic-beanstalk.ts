@@ -1,7 +1,7 @@
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { CfnApplication, CfnApplicationVersion, CfnEnvironment } from 'aws-cdk-lib/aws-elasticbeanstalk';
 import { CfnInstanceProfile } from 'aws-cdk-lib/aws-iam';
-import { LogGroup, LogStream, RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
@@ -36,7 +36,7 @@ export class ElasticBeanstalk extends Construct {
     });
 
     // Create ERROR log group
-    const errorLogGroup = new LogGroup(this, 'ServerErrorLogGroup', {
+    new LogGroup(this, 'ServerErrorLogGroup', {
       logGroupName: errorLogGroupName,
       retention: RetentionDays.ONE_MONTH,
     });

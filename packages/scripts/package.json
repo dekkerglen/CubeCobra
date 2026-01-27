@@ -14,7 +14,8 @@
     "setup:local:env": "cp -n .env_EXAMPLE .env",
     "setup:local:files": "node src/create_local_files.js",
     "setup:local:db": "NODE_OPTIONS=--max-old-space-size=8192 ts-node -r tsconfig-paths/register src/createTables.ts",
-    "create-mock-files": "ts-node src/create_local_files.ts"
+    "create-mock-files": "ts-node src/create_local_files.ts",
+    "migrate-combos": "ts-node -r tsconfig-paths/register --project tsconfig.json src/migrateCombosToDb.ts"
   },
   "author": "",
   "license": "ISC",

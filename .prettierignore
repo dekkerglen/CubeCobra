@@ -6,5 +6,7 @@ packages/server/src/client/**/*
 packages/client/dist/**/*
 packages/jobs/dist/**/*
 packages/jobs/temp/**/*
+packages/recommenderService/model/**/*
+packages/recommenderService/private/**/*
 packages/utils/src/generated/**/*
 packages/server/public/css/stylesheet.css

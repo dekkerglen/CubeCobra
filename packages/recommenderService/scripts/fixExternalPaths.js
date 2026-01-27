@@ -35,4 +35,3 @@ function processDir(dir) {
 }
 
 processDir('dist');
-

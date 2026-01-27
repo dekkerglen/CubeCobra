@@ -34,8 +34,9 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'indexToOracle.json': 'indexToOracle',
   'metadatadict.json': 'metadatadict',
   'comboTree.json': 'comboTree',
-  'comboDict.json': 'comboDict',
 };
+
+// comboDict is no longer loaded - combos are fetched from DynamoDB
 
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {
   return new Promise<void>((resolve, reject) => {

@@ -1,5 +1,6 @@
 import catalog from 'serverutils/cardCatalog';
 
+import { comboDao } from '../../../../dynamo/daos';
 import { Request, Response } from '../../../../types/express';
 
 export const getCardCombos = async (req: Request, res: Response) => {
@@ -18,20 +19,38 @@ export const getCardCombos = async (req: Request, res: Response) => {
       });
     }
 
-    // Find all combos that include this card
-    const combos = [];
+    // Fetch from DynamoDB by traversing comboTree
+    const oracleIndex = catalog.oracleToIndex[oracleId];
 
-    // Check every combo in the dictionary to see if it includes our card
-    for (const comboId in catalog.comboDict) {
-      const combo = catalog.comboDict[comboId];
-      if (combo && combo.uses.some((use) => use.card.oracleId === oracleId)) {
-        combos.push(combo);
-      }
+    if (oracleIndex === undefined) {
+      return res.status(200).json({ combos: [] });
     }
 
-    return res.status(200).json({
-      combos,
-    });
+    const variantIds: string[] = [];
+
+    // Traverse the entire tree looking for paths that include this card
+    const traverse = (node: any, path: number[]) => {
+      if (node['$'] && path.includes(oracleIndex)) {
+        // This path includes our target oracle - collect variant IDs
+        variantIds.push(...node['$']);
+      }
+
+      if (node.c) {
+        for (const idx in node.c) {
+          traverse(node.c[idx], [...path, parseInt(idx)]);
+        }
+      }
+    };
+
+    traverse(catalog.comboTree, []);
+
+    let combos: any[] = [];
+    if (variantIds.length > 0) {
+      const fetchedCombos = await comboDao.getBatchByVariantIds(variantIds);
+      combos = fetchedCombos.filter((combo) => combo !== undefined);
+    }
+
+    return res.status(200).json({ combos });
   } catch (error) {
     return res.status(500).json({
       error: `Internal server error: ${(error as Error).message}`,

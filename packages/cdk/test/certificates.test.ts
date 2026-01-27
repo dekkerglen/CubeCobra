@@ -8,7 +8,6 @@ import { BaseTestStack } from './base-test-stack';
 
 // Mock HostedZone.fromLookup() to return a fake hosted zone
 jest.spyOn(route53.HostedZone, 'fromLookup').mockImplementation(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (_scope: Construct, _id: string, _props: route53.HostedZoneProviderProps) =>
     ({
       hostedZoneId: 'Z123456ABCDEF', // Mocked hosted zone ID
