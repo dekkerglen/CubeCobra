@@ -2,13 +2,12 @@ import React, { ReactNode, useContext } from 'react';
 
 import Card, { BoardType } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
-import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
 import Banner from '../components/Banner';
 import { Flexbox } from '../components/base/Layout';
-import { Tabs } from '../components/base/Tabs';
-import CubeSubtitle from '../components/cube/CubeSubtitle';
+import CubeHero from '../components/cube/CubeHero';
+import CubeSidebar from '../components/cube/CubeSidebar';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ChangesContextProvider } from '../contexts/ChangesContext';
 import CubeContext, { CubeContextProvider } from '../contexts/CubeContext';
@@ -36,39 +35,8 @@ interface CubeLayoutProps {
   children?: React.ReactNode;
   loadVersionDict?: boolean;
   useChangedCards?: boolean;
-  hasControls?: boolean;
+  controls?: React.ReactNode;
 }
-
-const tabs = [
-  {
-    label: 'Overview',
-    href: '/cube/overview',
-  },
-  {
-    label: 'List',
-    href: '/cube/list',
-  },
-  {
-    label: 'History',
-    href: '/cube/history',
-  },
-  {
-    label: 'Records',
-    href: '/cube/records',
-  },
-  {
-    label: 'Playtest',
-    href: '/cube/playtest',
-  },
-  {
-    label: 'Analysis',
-    href: '/cube/analysis',
-  },
-  {
-    label: 'Blog',
-    href: '/cube/blog',
-  },
-];
 
 const CubeLayout: React.FC<CubeLayoutProps> = ({
   cube,
@@ -77,7 +45,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
   children,
   loadVersionDict = false,
   useChangedCards = false,
-  hasControls = false,
+  controls,
 }) => {
   return (
     <FilterContextProvider>
@@ -88,24 +56,18 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
           loadVersionDict={loadVersionDict}
           useChangedCards={useChangedCards}
         >
-          <div
-            className={classNames('bg-bg-accent border-r border-l border-b border-border', {
-              'rounded-b-md': !hasControls,
-            })}
-          >
-            <Banner className="px-2" />
-            <Flexbox direction="row" className="px-2" justify="between" wrap="wrap">
-              <CubeSubtitle />
-              <Tabs
-                tabs={tabs.map((tab) => ({
-                  label: tab.label,
-                  href: tab.href + '/' + encodeURIComponent(getCubeId(cube)),
-                }))}
-                activeTab={tabs.findIndex((tab) => tab.href.includes(activeLink))}
-              />
-            </Flexbox>
+          <div className="flex flex-grow">
+            <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
+            <div className="flex-1 flex flex-col min-w-0">
+              <CubeHero cube={cube} />
+              <div className="bg-bg-accent border-r border-l border-b border-border px-4">
+                <Banner className="px-2" />
+              </div>
+              <div className="px-4">
+                <CubeLayoutInner>{children}</CubeLayoutInner>
+              </div>
+            </div>
           </div>
-          <CubeLayoutInner>{children}</CubeLayoutInner>
         </CubeContextProvider>
       </ChangesContextProvider>
     </FilterContextProvider>

@@ -50,7 +50,7 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
   }, [selectedUser, record.players.length, draft, mainboardCards.length]);
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">

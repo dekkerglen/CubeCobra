@@ -48,7 +48,7 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
       draft,
     });
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/primer/${req.params.id}`);
   }
 };
 

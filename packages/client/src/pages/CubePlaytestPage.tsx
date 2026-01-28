@@ -5,7 +5,6 @@ import Draft from '@utils/datatypes/Draft';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
-import Controls from 'components/base/Controls';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
@@ -63,24 +62,23 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
     [cube.formats, defaultFormat],
   );
 
+  const controls = user && cube.owner.id === user.id ? (
+    <Flexbox direction="col" gap="2" className="px-2">
+      <CreateCustomFormatLink
+        modalprops={{
+          formatIndex: -1,
+        }}
+      >
+        Create Custom Draft Format
+      </CreateCustomFormatLink>
+      <UploadDecklistModalLink>Upload Decklist</UploadDecklistModalLink>
+    </Flexbox>
+  ) : undefined;
+
   return (
-    <MainLayout>
-      <CubeLayout cube={cube} activeLink="playtest" hasControls={!!user && cube.owner.id === user.id}>
+    <MainLayout useContainer={false}>
+      <CubeLayout cube={cube} activeLink="playtest" controls={controls}>
         <Flexbox direction="col" gap="2" className="mb-2">
-          {user && cube.owner.id === user.id && (
-            <Controls>
-              <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
-                <CreateCustomFormatLink
-                  modalprops={{
-                    formatIndex: -1,
-                  }}
-                >
-                  Create Custom Draft Format
-                </CreateCustomFormatLink>
-                <UploadDecklistModalLink>Upload Decklist</UploadDecklistModalLink>
-              </Flexbox>
-            </Controls>
-          )}
           <DynamicFlash />
           <Row>
             <Col xs={12} md={6} xl={6}>

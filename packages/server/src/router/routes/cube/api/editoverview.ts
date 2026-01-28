@@ -112,7 +112,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
 
     await cubeDao.update(cube);
 
-    const redirect = `/cube/overview/${getCubeId(cube)}`;
+    const redirect = `/cube/primer/${getCubeId(cube)}`;
 
     res.status(200).json({ success: 'Cube updated successfully', redirect });
   } catch (err) {

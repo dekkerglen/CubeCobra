@@ -102,7 +102,7 @@ const Navbar: React.FC<NavbarProps> = () => {
               {(user.cubes || []).slice(0, 36).map((item) => (
                 <NavLink
                   key={`dropdown_cube_${item.name}`}
-                  href={`/cube/overview/${encodeURIComponent(getCubeId(item))}`}
+                  href={`/cube/primer/${encodeURIComponent(getCubeId(item))}`}
                 >
                   {item.name}
                 </NavLink>
@@ -125,7 +125,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                 <NavLink href="/content/creators">Content Creator Dashboard</NavLink>
               )}
               <CreateCubeButton>Create A New Cube</CreateCubeButton>
-              <NavLink href="/user/social">Social</NavLink>
+              <NavLink href="/user/social">Followed and Followers</NavLink>
               <NavLink href="/user/account">Account Information</NavLink>
               <NavLink href="/user/logout">Logout</NavLink>
             </Flexbox>
@@ -310,7 +310,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                     {(user.cubes || []).slice(0, 36).map((item) => (
                       <NavLink
                         key={`mobile_cube_${item.name}`}
-                        href={`/cube/overview/${encodeURIComponent(getCubeId(item))}`}
+                        href={`/cube/primer/${encodeURIComponent(getCubeId(item))}`}
                       >
                         {item.name}
                       </NavLink>
@@ -329,7 +329,7 @@ const Navbar: React.FC<NavbarProps> = () => {
               <div className="bg-bg-active mt-3 p-4 rounded">
                 <Flexbox direction="col" gap="2">
                   <NavLink href={`/user/view/${user.id}`}>Your Profile</NavLink>
-                  <NavLink href="/user/social">Social</NavLink>
+                  <NavLink href="/user/social">Followed and Followers</NavLink>
                   <NavLink href="/user/account">Account Information</NavLink>
                   <NavLink href="/user/logout">Logout</NavLink>
                 </Flexbox>

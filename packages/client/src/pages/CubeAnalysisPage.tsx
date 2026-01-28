@@ -229,7 +229,7 @@ interface CubeAnalysisPageWrapperProps {
 
 const CubeAnalysisPageWrapper: React.FC<CubeAnalysisPageWrapperProps> = ({ cube, cards, cubeAnalytics, tokenMap }) => {
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <CubeLayout cube={cube} cards={cards} activeLink="analysis">
         <CubeAnalysisPage cubeAnalytics={cubeAnalytics} tokenMap={tokenMap} />
       </CubeLayout>

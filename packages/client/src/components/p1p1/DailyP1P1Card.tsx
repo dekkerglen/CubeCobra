@@ -38,7 +38,7 @@ const DailyP1P1Card: React.FC<DailyP1P1CardProps> = ({ pack, cube, date }) => {
         <Flexbox direction="col" gap="2">
           <Text sm className="text-text-secondary">
             From{' '}
-            <Link href={`/cube/overview/${cube.id}`} className="font-semibold">
+            <Link href={`/cube/primer/${cube.id}`} className="font-semibold">
               {cube.name}
             </Link>
             {cube.owner?.username && (

@@ -127,7 +127,7 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
   }, [draftType, botDrafterState, mutations, botIndex]);
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <DynamicFlash />

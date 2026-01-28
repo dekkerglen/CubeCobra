@@ -5,7 +5,6 @@ import Cube, { CubeCards } from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 
 import Button from 'components/base/Button';
-import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Tooltip from 'components/base/Tooltip';
@@ -50,44 +49,43 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
   const user = useContext(UserContext);
   const { alerts, addAlert } = useAlerts();
 
+  const controls = user && cube.owner.id === user.id ? (
+    <Flexbox direction="col" gap="2" className="px-2">
+      {(cube.cardCount > 0 && (
+        <CubeOverviewModalLink
+          modalprops={{
+            cube: cube,
+          }}
+        >
+          Edit Overview
+        </CubeOverviewModalLink>
+      )) || (
+        <Tooltip text="Please add at least one card to the cube in order to edit the overview. This is a spam prevention mechanism.">
+          Edit Overview
+        </Tooltip>
+      )}
+      <CubeSettingsModalLink modalprops={{ addAlert, onCubeUpdate: () => {} }}>
+        Edit Settings
+      </CubeSettingsModalLink>
+      <CustomizeBasicsModalLink
+        modalprops={{
+          cube: cube,
+          onError: (message: string) => {
+            addAlert('danger', message);
+          },
+        }}
+      >
+        Customize basics
+      </CustomizeBasicsModalLink>
+      <Link href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}>Restore</Link>
+      <DeleteCubeModalLink modalprops={{ cube }}>Delete Cube</DeleteCubeModalLink>
+    </Flexbox>
+  ) : undefined;
+
   return (
-    <MainLayout>
-      <CubeLayout cards={cards} cube={cube} activeLink="overview" hasControls={!!user && cube.owner.id === user.id}>
+    <MainLayout useContainer={false}>
+      <CubeLayout cards={cards} cube={cube} activeLink="primer" controls={controls}>
         <Flexbox direction="col" gap="2" className="mb-2">
-          {user && cube.owner.id === user.id && (
-            <Controls>
-              <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
-                {(cube.cardCount > 0 && (
-                  <CubeOverviewModalLink
-                    modalprops={{
-                      cube: cube,
-                    }}
-                  >
-                    Edit Overview
-                  </CubeOverviewModalLink>
-                )) || (
-                  <Tooltip text="Please add at least one card to the cube in order to edit the overview. This is a spam prevention mechanism.">
-                    Edit Overview
-                  </Tooltip>
-                )}
-                <CubeSettingsModalLink modalprops={{ addAlert, onCubeUpdate: () => {} }}>
-                  Edit Settings
-                </CubeSettingsModalLink>
-                <CustomizeBasicsModalLink
-                  modalprops={{
-                    cube: cube,
-                    onError: (message: string) => {
-                      addAlert('danger', message);
-                    },
-                  }}
-                >
-                  Customize basics
-                </CustomizeBasicsModalLink>
-                <Link href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}>Restore</Link>
-                <DeleteCubeModalLink modalprops={{ cube }}>Delete Cube</DeleteCubeModalLink>
-              </Flexbox>
-            </Controls>
-          )}
           <DynamicFlash />
           {alerts.map(({ color, message }, index) => (
             <div className={`alert alert-${color}`} key={index}>

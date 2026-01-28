@@ -117,9 +117,9 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
   );
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} activeLink="playtest" hasControls>
+        <CubeLayout cube={cube} activeLink="playtest">
           <DeckbuilderNavbar
             cards={initialDeck.cards}
             basics={basics}

@@ -163,7 +163,7 @@ interface BulkUploadPageProps {
 }
 
 const BulkUploadPage: React.FC<BulkUploadPageProps> = ({ cube, cards, added, missing }) => (
-  <MainLayout>
+  <MainLayout useContainer={false}>
     <DynamicFlash />
     <CubeLayout cube={cube} cards={cards} activeLink="list" useChangedCards>
       <BulkUploadPageRaw added={added} missing={missing} />

@@ -67,8 +67,8 @@ const CubeRestorePage: React.FC<CubeRestorePageProps> = ({ cube, versions }) => 
   };
 
   return (
-    <MainLayout>
-      <CubeLayout cube={cube} activeLink="overview">
+    <MainLayout useContainer={false}>
+      <CubeLayout cube={cube} activeLink="primer">
         <Flexbox direction="col" gap="2" className="mb-2">
           <DynamicFlash />
           <Card>

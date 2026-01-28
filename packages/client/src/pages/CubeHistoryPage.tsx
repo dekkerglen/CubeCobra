@@ -15,9 +15,9 @@ interface CubeHistoryPageProps {
 }
 
 const CubeHistoryPage: React.FC<CubeHistoryPageProps> = ({ cube, changes, lastKey }) => (
-  <MainLayout>
+  <MainLayout useContainer={false}>
     <DisplayContextProvider cubeID={cube.id}>
-      <CubeLayout cube={cube} activeLink="history">
+      <CubeLayout cube={cube} activeLink="changelog">
         <CubeHistory changes={changes} lastKey={lastKey} />
       </CubeLayout>
     </DisplayContextProvider>

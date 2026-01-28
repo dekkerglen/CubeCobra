@@ -9,7 +9,7 @@ import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
 
-export const overviewHandler = async (req: Request, res: Response) => {
+export const primerHandler = async (req: Request, res: Response) => {
   try {
     const cube = await cubeDao.getById(req.params.id!);
 
@@ -87,9 +87,9 @@ export const overviewHandler = async (req: Request, res: Response) => {
         pricePurchase: cube.priceVisibility === PRICE_VISIBILITY.PUBLIC ? totalPricePurchase : null,
       },
       {
-        title: `${abbreviate(cube.name)} - Overview`,
+        title: `${abbreviate(cube.name)} - Primer`,
         metadata: generateMeta(
-          `Cube Cobra Overview: ${cube.name}`,
+          `Cube Cobra Primer: ${cube.name}`,
           cube.description,
           cube.image.uri,
           `${baseUrl}/cube/primer/${req.params.id}`,
@@ -109,6 +109,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'get',
-    handler: [overviewHandler],
+    handler: [primerHandler],
   },
 ];

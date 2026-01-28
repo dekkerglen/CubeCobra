@@ -85,7 +85,7 @@ const CreateRecordFromDraftPage: React.FC<CreateRecordFromDraftPageProps> = ({ c
   );
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">

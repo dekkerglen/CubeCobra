@@ -30,7 +30,7 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
 
     if (errors.length > 0) {
       req.flash('danger', 'Error updating cube: ' + errors.map((error) => error.msg).join(', '));
-      return redirect(req, res, '/cube/overview/' + req.params.id);
+      return redirect(req, res, '/cube/primer/' + req.params.id);
     }
 
     const cube = await cubeDao.getById(req.params.id!);
@@ -42,7 +42,7 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
 
     if (!cube || cube.owner.id !== req.user!.id) {
       req.flash('danger', 'Unauthorized');
-      return redirect(req, res, '/cube/overview/' + req.params.id);
+      return redirect(req, res, '/cube/primer/' + req.params.id);
     }
 
     const update = req.body;
@@ -56,11 +56,11 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
 
     await cubeDao.update(cube);
     req.flash('success', 'Settings updated successfully.');
-    return redirect(req, res, '/cube/overview/' + req.params.id);
+    return redirect(req, res, '/cube/primer/' + req.params.id);
   } catch (err) {
     req.flash('danger', 'Error updating settings. ' + (err as Error).message);
     req.logger.error('Error updating settings:', err);
-    return redirect(req, res, '/cube/overview/' + req.params.id);
+    return redirect(req, res, '/cube/primer/' + req.params.id);
   }
 };
 

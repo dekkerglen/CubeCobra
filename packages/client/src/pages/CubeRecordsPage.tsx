@@ -6,7 +6,6 @@ import Record from '@utils/datatypes/Record';
 import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
 
 import { Card } from 'components/base/Card';
-import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import { TabbedView } from 'components/base/Tabs';
@@ -50,17 +49,16 @@ const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({ cube, cards, records,
     },
   ];
 
+  const controls = user && cube.owner.id === user.id ? (
+    <Flexbox direction="col" gap="2" className="px-2">
+      <Link href={`/cube/records/create/${cube.id}`}>Create new Record</Link>
+      <Link href={`/cube/records/create/fromDraft/${cube.id}`}>Create Record from existing Draft</Link>
+    </Flexbox>
+  ) : undefined;
+
   return (
-    <MainLayout>
-      <CubeLayout cube={cube} cards={cards} activeLink="records" hasControls={!!user && cube.owner.id === user.id}>
-        {user && cube.owner.id === user.id && (
-          <Controls>
-            <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
-              <Link href={`/cube/records/create/${cube.id}`}>Create new Record</Link>
-              <Link href={`/cube/records/create/fromDraft/${cube.id}`}>Create Record from existing Draft</Link>
-            </Flexbox>
-          </Controls>
-        )}
+    <MainLayout useContainer={false}>
+      <CubeLayout cube={cube} cards={cards} activeLink="records" controls={controls}>
         <DynamicFlash />
         <Card className="my-2">
           <TabbedView

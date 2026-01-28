@@ -37,9 +37,9 @@ export const reportHandler = async (req: Request, res: Response) => {
       'Thank you for the report! Our moderators will review the report can decide whether to take action.',
     );
 
-    return redirect(req, res, `/cube/overview/${req.params.id}`);
+    return redirect(req, res, `/cube/primer/${req.params.id}`);
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/primer/${req.params.id}`);
   }
 };
 
@@ -55,11 +55,11 @@ export const removeHandler = async (req: Request, res: Response) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return redirect(req, res, '/cube/overview/404');
+      return redirect(req, res, '/cube/primer/404');
     }
     if (!cube || cube.owner.id !== req.user!.id) {
       req.flash('danger', 'Not Authorized');
-      return redirect(req, res, `/cube/overview/${encodeURIComponent(cubeId)}`);
+      return redirect(req, res, `/cube/primer/${encodeURIComponent(cubeId)}`);
     }
 
     await cubeDao.deleteById(cubeId);
@@ -72,7 +72,16 @@ export const removeHandler = async (req: Request, res: Response) => {
 };
 
 export const viewHandler = (req: Request, res: Response) => {
-  return redirect(req, res, `/cube/overview/${req.params.id}`);
+  return redirect(req, res, `/cube/primer/${req.params.id}`);
+};
+
+// Redirect handlers for backwards compatibility
+export const overviewRedirectHandler = (req: Request, res: Response) => {
+  return redirect(req, res, `/cube/primer/${req.params.id}`);
+};
+
+export const historyRedirectHandler = (req: Request, res: Response) => {
+  return redirect(req, res, `/cube/changelog/${req.params.id}`);
 };
 
 export const defaultDraftFormatHandler = async (req: Request, res: Response) => {
@@ -128,7 +137,7 @@ export const listHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/primer/${req.params.id}`);
   }
 };
 
@@ -163,7 +172,7 @@ export const historyHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/primer/${req.params.id}`);
   }
 };
 
@@ -235,7 +244,7 @@ export const followHandler = async (req: Request, res: Response) => {
   await addNotification(
     cubeOwner,
     user!,
-    `/cube/overview/${cube.id}`,
+    `/cube/primer/${cube.id}`,
     `${user!.username} followed your cube: ${cube.name}`,
   );
 
@@ -315,7 +324,7 @@ export const featureHandler = async (req: Request, res: Response) => {
 };
 
 export const unfeatureHandler = async (req: Request, res: Response) => {
-  const redirectUrl = `/cube/overview/${encodeURIComponent(req.params.id!)}`;
+  const redirectUrl = `/cube/primer/${encodeURIComponent(req.params.id!)}`;
   try {
     const { user } = req;
     if (!user || !isAdmin(user)) {
@@ -487,6 +496,11 @@ export const routes = [
     handler: [csrfProtection, viewHandler],
   },
   {
+    path: '/overview/:id',
+    method: 'get',
+    handler: [overviewRedirectHandler],
+  },
+  {
     path: '/:id/defaultdraftformat/:formatId',
     method: 'get',
     handler: [csrfProtection, ensureAuth, defaultDraftFormatHandler],
@@ -499,7 +513,7 @@ export const routes = [
   {
     path: '/history/:id',
     method: 'get',
-    handler: [historyHandler],
+    handler: [historyRedirectHandler],
   },
   {
     path: '/getmorechangelogs',

@@ -53,7 +53,7 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
   ];
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">

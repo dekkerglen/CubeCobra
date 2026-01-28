@@ -1,6 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 
 import { UserRoles } from '@utils/datatypes/User';
+import classNames from 'classnames';
 
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
@@ -16,9 +17,10 @@ import Footer from 'layouts/Footer';
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  useContainer?: boolean;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, useContainer = true }) => {
   const user = useContext(UserContext);
 
   const requestConsentForHashEmails = useMemo(() => {
@@ -42,24 +44,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <Flexbox className="min-h-screen text-text" direction="col">
       <Navbar />
-      <div className="bg-bg flex-grow">
-        <Container xxxl>
-          <Flexbox className="flex-grow max-w-full" direction="row" gap="4">
-            <ResponsiveDiv xxl className="pl-2 py-2 min-w-fit">
-              <SideBanner placementId="left-rail" />
-            </ResponsiveDiv>
-            <div className="flex-grow px-2 max-w-full">
-              <ErrorBoundary>{children}</ErrorBoundary>
-              <ConsentToHashedEmailsModal isOpen={requestConsentForHashEmails} />
-            </div>
-            <ResponsiveDiv lg className="pr-2 py-2 min-w-fit">
-              <SideBanner placementId="right-rail" />
-            </ResponsiveDiv>
-            <ResponsiveDiv md>
-              <VideoBanner placementId="video" />
-            </ResponsiveDiv>
-          </Flexbox>
-        </Container>
+      <div className={classNames('bg-bg flex-grow', { 'flex flex-col': !useContainer })}>
+        {useContainer ? (
+          <Container xxxl>
+            <Flexbox className="flex-grow max-w-full" direction="row" gap="4">
+              <ResponsiveDiv xxl className="pl-2 py-2 min-w-fit">
+                <SideBanner placementId="left-rail" />
+              </ResponsiveDiv>
+              <div className="flex-grow px-2 max-w-full">
+                <ErrorBoundary>{children}</ErrorBoundary>
+                <ConsentToHashedEmailsModal isOpen={requestConsentForHashEmails} />
+              </div>
+              <ResponsiveDiv lg className="pr-2 py-2 min-w-fit">
+                <SideBanner placementId="right-rail" />
+              </ResponsiveDiv>
+              <ResponsiveDiv md>
+                <VideoBanner placementId="video" />
+              </ResponsiveDiv>
+            </Flexbox>
+          </Container>
+        ) : (
+          <ErrorBoundary>{children}</ErrorBoundary>
+        )}
       </div>
       <Footer />
       <ResponsiveDiv baseVisible md>

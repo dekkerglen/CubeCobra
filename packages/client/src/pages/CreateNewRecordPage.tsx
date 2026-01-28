@@ -29,7 +29,7 @@ const CreateNewRecordPage: React.FC<CreateNewRecordPageProps> = ({ cube }) => {
   const formRef = React.createRef<HTMLFormElement>();
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">
