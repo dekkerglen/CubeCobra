@@ -3,7 +3,6 @@ import React, { useContext, useState } from 'react';
 import { BellFillIcon } from '@primer/octicons-react';
 import Notification from '@utils/datatypes/Notification';
 
-import Badge from 'components/base/Badge';
 import { CardFooter, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
@@ -29,8 +28,17 @@ const NotificationsNav: React.FC = () => {
 
   const label = (
     <>
-      {items.length > 0 && <Badge color="danger">{items.length > 99 ? '99+' : items.length}</Badge>}
-      <BellFillIcon size={20} className="ml-1" />
+      <span className="relative">
+        {items.length > 0 && (
+          <span
+            className="absolute text-xs font-semibold text-white bg-button-danger rounded-full px-1 py-0.5 min-w-[1.25rem] text-center"
+            style={{ right: '-3px', top: '-12px' }}
+          >
+            {items.length > 99 ? '99+' : items.length}
+          </span>
+        )}
+        <BellFillIcon size={24} />
+      </span>
     </>
   );
 

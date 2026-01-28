@@ -12,7 +12,6 @@ import Navbar from 'components/nav/Navbar';
 import SideBanner from 'components/SideBanner';
 import VideoBanner from 'components/VideoBanner';
 import UserContext from 'contexts/UserContext';
-import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
 
 interface MainLayoutProps {
@@ -20,7 +19,6 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const [expanded, toggle] = useToggle(false);
   const user = useContext(UserContext);
 
   const requestConsentForHashEmails = useMemo(() => {
@@ -43,7 +41,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   return (
     <Flexbox className="min-h-screen text-text" direction="col">
-      <Navbar expanded={expanded} toggle={toggle} />
+      <Navbar />
       <div className="bg-bg flex-grow">
         <Container xxxl>
           <Flexbox className="flex-grow max-w-full" direction="row" gap="4">
