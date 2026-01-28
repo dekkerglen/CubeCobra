@@ -140,7 +140,7 @@ export class CubeCobraStack extends cdk.Stack {
     });
 
     // Create recommender service with smaller instances
-    const recommenderFleetSize = params.environmentName === 'production' ? 3 : 1;
+    const recommenderFleetSize = params.environmentName === 'production' ? 2 : 1;
     const recommenderService = new RecommenderService(this, 'RecommenderService', {
       certificate: cert.consoleCertificate,
       environmentName: params.environmentName,
