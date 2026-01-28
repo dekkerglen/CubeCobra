@@ -509,7 +509,7 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
         }
       }
     }
-    ret = tags.sort();
+    ret = tags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   } else if (sort === 'Date Added') {
     //Convert addedTmsp from a number (or sometimes a string) into Date objects, then to locale string for the labelling and grouping
     const days = (cube ?? [])
