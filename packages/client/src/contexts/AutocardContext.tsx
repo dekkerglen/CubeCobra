@@ -26,6 +26,7 @@ type Position = { left?: string; right?: string; top?: string; bottom?: string }
 
 const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, foilOverlay }) => {
   const [position, setPosition] = useState<Position>({ left: '0px', right: '0px' });
+  const [tagsOnRight, setTagsOnRight] = useState(true);
   const autocardPopup = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,10 +44,12 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
       if (rightPixelSpace > leftPixelSpace) {
         // display on right
         newPosition.left = `${Math.max(window.pageXOffset, 5 + xOffset)}px`;
+        setTagsOnRight(true);
         // newPosition.right = null;
       } else {
         // display on left
         newPosition.right = `${Math.max(window.innerWidth + 5 - xOffset, 0)}px`;
+        setTagsOnRight(false);
         // newPosition.left = null;
       }
       if (autocardPopup.current!.offsetHeight > window.innerHeight) {
@@ -65,39 +68,72 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
     };
   }, []);
 
+  const cardWidth = back ? 30 : 15; // rem
+
+  const tagPosition: React.CSSProperties = {
+    position: 'absolute',
+    pointerEvents: 'none',
+    zIndex,
+    top: position.top,
+    bottom: position.bottom,
+  };
+
+  if (tagsOnRight) {
+    // Tags on the right side of the card
+    if (position.left) {
+      tagPosition.left = `calc(${position.left} + ${cardWidth}rem)`;
+    } else if (position.right) {
+      tagPosition.right = `calc(${position.right} - ${cardWidth}rem)`;
+    }
+  } else {
+    // Tags on the left side of the card
+    if (position.left) {
+      tagPosition.left = `calc(${position.left} - 8rem)`;
+    } else if (position.right) {
+      tagPosition.right = `calc(${position.right} + ${cardWidth}rem)`;
+    }
+  }
+
   return (
-    <div
-      className={(hidden ? `d-none ` : ' ') + (back ? 'double-width' : '')}
-      id="autocardPopup"
-      style={{ zIndex, ...position }}
-      ref={autocardPopup}
-    >
-      <div className="autocard-background bg-bg-accent">
-        <Flexbox direction="row">
-          {front && (
-            <div className="col position-relative card-border">
-              {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
-              <img className="rounded-b-md" id="autocardImageFront" src={front} alt={front} key={front} />
-            </div>
-          )}
-          {back && (
-            <div className="col position-relative card-border">
-              {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
-              <img className="rounded-b-md" id="autocardImageBack" src={back} alt={back} key={back} />
-            </div>
-          )}
-        </Flexbox>
-        {tags.length > 0 && (
-          <div className="p-2" id="autocardTags">
-            <Flexbox direction="row" gap="2" wrap="wrap">
+    <>
+      <div
+        className={(hidden ? `d-none ` : ' ') + (back ? 'double-width' : '')}
+        id="autocardPopup"
+        style={{ zIndex, ...position }}
+        ref={autocardPopup}
+      >
+        <div className="autocard-background bg-bg-accent">
+          <Flexbox direction="row">
+            {front && (
+              <div className="col position-relative card-border">
+                {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
+                <img className="rounded-b-md" id="autocardImageFront" src={front} alt={front} key={front} />
+              </div>
+            )}
+            {back && (
+              <div className="col position-relative card-border">
+                {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
+                <img className="rounded-b-md" id="autocardImageBack" src={back} alt={back} key={back} />
+              </div>
+            )}
+          </Flexbox>
+        </div>
+      </div>
+      {tags.length > 0 && (
+        <div className={hidden ? 'd-none' : ''} id="autocardTags" style={tagPosition}>
+          <div
+            className="mx-2 autocard-tags-container bg-bg-accent"
+            style={{ padding: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', borderRadius: '0.5rem' }}
+          >
+            <Flexbox direction="col" gap="1">
               {tags.map((tag) => (
                 <Tag key={tag.value} text={tag.value} colorClass={tag.colorClass} />
               ))}
             </Flexbox>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 };
 

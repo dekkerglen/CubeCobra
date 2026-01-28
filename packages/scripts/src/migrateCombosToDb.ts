@@ -167,8 +167,8 @@ const migrateCombos = async () => {
         const remaining = (total - current) / rate;
         console.log(
           `  Progress: ${current}/${total} (${percent}%) - ` +
-          `${rate.toFixed(1)} combos/sec - ` +
-          `ETA: ${remaining.toFixed(0)}s`,
+            `${rate.toFixed(1)} combos/sec - ` +
+            `ETA: ${remaining.toFixed(0)}s`,
         );
         lastProgressUpdate = now;
       }
@@ -178,7 +178,7 @@ const migrateCombos = async () => {
     console.log('');
     console.log(`✓ Successfully wrote ${combos.length} combos to DynamoDB`);
     console.log(`  Duration: ${duration.toFixed(2)}s`);
-    console.log(`  Average: ${(duration / combos.length * 1000).toFixed(2)}ms per combo`);
+    console.log(`  Average: ${((duration / combos.length) * 1000).toFixed(2)}ms per combo`);
     console.log('');
     console.log('='.repeat(80));
     console.log('Migration completed successfully!');
