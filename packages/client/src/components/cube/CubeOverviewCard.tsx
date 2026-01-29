@@ -109,6 +109,8 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                     modalprops={{
                       shortId: cube.shortId,
                       fullID: cube.id,
+                      cubeUrl: `${baseUrl}/cube/list/${cube.id}`,
+                      cubeName: cube.name,
                       alert: addAlert,
                     }}
                   >

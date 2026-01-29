@@ -13,6 +13,8 @@ const defaultDisplayContext: DisplayContextValue = {
   toggleShowInlineTagEmojis: jest.fn(),
   showDeckBuilderStatsPanel: false,
   toggleShowDeckBuilderStatsPanel: jest.fn(),
+  rightSidebarMode: 'none',
+  setRightSidebarMode: jest.fn(),
 };
 
 export { defaultDisplayContext };

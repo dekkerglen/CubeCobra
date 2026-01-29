@@ -33,7 +33,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
-  const { showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext) as DisplayContextValue;
+  const { showMaybeboard } = useContext(DisplayContext) as DisplayContextValue;
   const addRef = useRef<HTMLInputElement>(null);
   const removeRef = useRef<HTMLInputElement>(null);
 
@@ -166,19 +166,17 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           </Alert>
         ))}
         <Row className="items-end">
-          {showMaybeboard && (
-            <Col xs={12} md={3}>
-              <Select
-                label="Board"
-                value={activeBoard}
-                setValue={(value) => setActiveBoard(value as BoardType)}
-                options={[
-                  { value: 'mainboard', label: 'Mainboard' },
-                  { value: 'maybeboard', label: 'Maybeboard' },
-                ]}
-              />
-            </Col>
-          )}
+          <Col xs={12} md={3}>
+            <Select
+              label="Board"
+              value={activeBoard}
+              setValue={(value) => setActiveBoard(value as BoardType)}
+              options={[
+                { value: 'mainboard', label: 'Mainboard' },
+                { value: 'maybeboard', label: 'Maybeboard' },
+              ]}
+            />
+          </Col>
           <Col xs={12} md={3}>
             <Flexbox direction="row" justify="start" gap="1">
               <AutocompleteInput
@@ -236,7 +234,6 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
             checked={specifyEdition}
             setChecked={(value) => setSpecifyEdition(value)}
           />
-          <Checkbox label="Use Maybeboard" checked={showMaybeboard} setChecked={toggleShowMaybeboard} />
           <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
           <Tooltip text="The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.">
             <QuestionIcon size={16} />

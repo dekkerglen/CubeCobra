@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import Query from 'utils/Query';
+import Query from '../utils/Query';
 
 const useQueryParam = (name: string, defaultValue: string): [string, React.Dispatch<React.SetStateAction<string>>] => {
   const didMountRef = useRef(false);

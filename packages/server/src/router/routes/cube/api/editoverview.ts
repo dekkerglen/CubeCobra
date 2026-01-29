@@ -66,6 +66,11 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     if (updatedCube.description !== null) {
       cube.description = updatedCube.description;
     }
+
+    if (updatedCube.brief !== undefined) {
+      cube.brief = updatedCube.brief;
+    }
+
     cube.date = Date.now().valueOf();
 
     // cube category override
@@ -112,7 +117,7 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
 
     await cubeDao.update(cube);
 
-    const redirect = `/cube/overview/${getCubeId(cube)}`;
+    const redirect = `/cube/primer/${getCubeId(cube)}`;
 
     res.status(200).json({ success: 'Cube updated successfully', redirect });
   } catch (err) {

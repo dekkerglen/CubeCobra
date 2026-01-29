@@ -598,7 +598,7 @@ describe('View Blog Posts', () => {
       expect.anything(),
       expect.anything(),
       error,
-      '/cube/overview/cube-id',
+      '/cube/list/cube-id',
     );
     expect(render.render).not.toHaveBeenCalled();
   });

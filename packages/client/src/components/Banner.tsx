@@ -35,15 +35,15 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
   if (user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON)) return <></>;
 
   if (option < options.length) {
-    return <div className={`${className} py-2`}>{options[option]}</div>;
+    return <div className={`${className} pt-2 mx-2`}>{options[option]}</div>;
   }
 
   return (
     <Flexbox direction="row" justify="between" gap="2" className={`${className}`}>
-      <ResponsiveDiv lg className="flex-grow py-2">
+      <ResponsiveDiv lg className="flex-grow pt-2">
         <Advertisment placementId="banner" media="desktop" size="banner" />
       </ResponsiveDiv>
-      <ResponsiveDiv xxxl className="pb-8 py-2">
+      <ResponsiveDiv xxxl className="pb-8 pt-2">
         <Card className="h-full bg-advert">
           <CardBody className="bg-advert h-full rounded-md">
             <Flexbox direction="col" justify="center" className="h-full">

@@ -6,7 +6,6 @@ import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
 import { fromEntries } from '@utils/Util';
 
 import Button from 'components/base/Button';
-import { CardBody } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import { SortableTable } from 'components/SortableTable';
@@ -70,7 +69,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ analyticsData }) =>
 
   if (!analyticsData) {
     return (
-      <CardBody>
+      <div className="p-4">
         <Flexbox direction="col" gap="2">
           <Text semibold>No analytics data available.</Text>
           {isOwner && (
@@ -79,41 +78,34 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ analyticsData }) =>
             </Button>
           )}
         </Flexbox>
-      </CardBody>
+      </div>
     );
   }
 
   return (
-    <CardBody>
-      <Flexbox direction="col" gap="2">
-        {isOwner && (
-          <Button block type="link" href={`/cube/records/analytics/${cube.id}`} color="primary">
-            Recompile Analytics
-          </Button>
-        )}
-        <SortableTable
-          columnProps={[
-            {
-              key: 'card',
-              title: 'Card name',
-              heading: true,
-              sortable: true,
-              renderFn: renderCardLink,
-            },
-            { key: 'decks', title: 'Deck Count', sortable: true, heading: false },
-            { key: 'winRate', title: 'Match Win Percent', sortable: true, heading: false, renderFn: renderPercent },
-            { key: 'matchCount', title: 'Match Count', sortable: true, heading: false },
-            { key: 'drawRate', title: 'Draw Percent', sortable: true, heading: false, renderFn: renderPercent },
-            { key: 'gameWinRate', title: 'Game Win Percent', sortable: true, heading: false, renderFn: renderPercent },
-            { key: 'gameCount', title: 'Game Count', sortable: true, heading: false },
-            { key: 'trophyCount', title: 'Trophy Count', sortable: true, heading: false },
-            { key: 'trophyRate', title: 'Trophy Rate', sortable: true, heading: false, renderFn: renderPercent },
-          ]}
-          data={data}
-          sortFns={{ card: compareCardNames }}
-        />
-      </Flexbox>
-    </CardBody>
+    <>
+      <SortableTable
+        columnProps={[
+          {
+            key: 'card',
+            title: 'Card name',
+            heading: true,
+            sortable: true,
+            renderFn: renderCardLink,
+          },
+          { key: 'decks', title: 'Deck Count', sortable: true, heading: false },
+          { key: 'winRate', title: 'Match Win Percent', sortable: true, heading: false, renderFn: renderPercent },
+          { key: 'matchCount', title: 'Match Count', sortable: true, heading: false },
+          { key: 'drawRate', title: 'Draw Percent', sortable: true, heading: false, renderFn: renderPercent },
+          { key: 'gameWinRate', title: 'Game Win Percent', sortable: true, heading: false, renderFn: renderPercent },
+          { key: 'gameCount', title: 'Game Count', sortable: true, heading: false },
+          { key: 'trophyCount', title: 'Trophy Count', sortable: true, heading: false },
+          { key: 'trophyRate', title: 'Trophy Rate', sortable: true, heading: false, renderFn: renderPercent },
+        ]}
+        data={data}
+        sortFns={{ card: compareCardNames }}
+      />
+    </>
   );
 };
 

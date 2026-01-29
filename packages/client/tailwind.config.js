@@ -20,6 +20,8 @@ module.exports = {
       },
       screens: {
         '3xl': '1920px',
+        '4xl': '2560px',
+        '5xl': '3200px',
       },
       colors: {
         bg: 'rgb(var(--bg) / <alpha-value>)',
@@ -57,6 +59,7 @@ module.exports = {
         'card-multi': 'rgb(var(--card-multi) / <alpha-value>)',
         'card-colorless': 'rgb(var(--card-colorless) / <alpha-value>)',
         'card-lands': 'rgb(var(--card-lands) / <alpha-value>)',
+        'hero-bg': 'rgb(var(--hero-bg) / <alpha-value>)',
       },
     },
   },

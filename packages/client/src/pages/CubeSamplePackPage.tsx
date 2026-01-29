@@ -24,7 +24,7 @@ interface SamplePackPageProps {
 
 const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBalanced = false, maxBotWeight }) => {
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="playtest">
         <Flexbox direction="col" gap="2" className="my-2">
           <DynamicFlash />

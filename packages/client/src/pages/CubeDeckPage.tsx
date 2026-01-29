@@ -1,17 +1,12 @@
 import React, { useContext } from 'react';
 
-import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
 
-import Button from 'components/base/Button';
-import Collapse from 'components/base/Collapse';
-import Controls from 'components/base/Controls';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import NavMenu from 'components/base/NavMenu';
-import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckCard from 'components/DeckCard';
@@ -23,7 +18,6 @@ import withModal from 'components/WithModal';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
 import useQueryParam from 'hooks/useQueryParam';
-import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -38,9 +32,8 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
   const user = useContext(UserContext);
   const [seatIndex, setSeatIndex] = useQueryParam('seat', '0');
   const [view, setView] = useQueryParam('view', 'draft');
-  const [expanded, toggleExpanded] = useToggle(false);
 
-  const controls = (
+  const controlsContent = (
     <>
       {user && draft.owner && user.id === (draft.owner as User).id && draft.seats.length > 1 && (
         <NavMenu label="Edit">
@@ -69,52 +62,41 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
     </>
   );
 
+  const controls = (
+    <Flexbox direction="col" gap="2" className="px-2">
+      <Flexbox direction="row" justify="between" alignItems="center" wrap="wrap" gap="2">
+        <Flexbox direction="row" justify="start" gap="2" alignItems="center" wrap="wrap">
+          <Select
+            value={seatIndex}
+            setValue={setSeatIndex}
+            options={draft.seats.map((seat, index) => ({
+              value: index.toString(),
+              label: `Seat ${index + 1}: ${seat.name}`,
+            }))}
+            dense
+          />
+          <Select
+            value={view}
+            setValue={setView}
+            options={[
+              { value: 'draft', label: 'Deck View' },
+              { value: 'visual', label: 'Visual Spoiler' },
+              { value: 'picks', label: 'Pick by Pick Breakdown' },
+            ]}
+            dense
+          />
+        </Flexbox>
+      </Flexbox>
+      <Flexbox direction="col" gap="2">
+        {controlsContent}
+      </Flexbox>
+    </Flexbox>
+  );
+
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} activeLink="playtest" hasControls>
-          <Controls>
-            <Flexbox direction="row" justify="between" alignItems="center" className="py-2 px-4">
-              <Flexbox direction="row" justify="start" gap="4" alignItems="center">
-                <Select
-                  value={seatIndex}
-                  setValue={setSeatIndex}
-                  options={draft.seats.map((seat, index) => ({
-                    value: index.toString(),
-                    label: `Seat ${index + 1}: ${seat.name}`,
-                  }))}
-                  dense
-                />
-                <Select
-                  value={view}
-                  setValue={setView}
-                  options={[
-                    { value: 'draft', label: 'Deck View' },
-                    { value: 'visual', label: 'Visual Spoiler' },
-                    { value: 'picks', label: 'Pick by Pick Breakdown' },
-                  ]}
-                  dense
-                />
-              </Flexbox>
-              <ResponsiveDiv baseVisible lg>
-                <Button color="secondary" onClick={toggleExpanded}>
-                  {expanded ? <ChevronUpIcon size={32} /> : <ThreeBarsIcon size={32} />}
-                </Button>
-              </ResponsiveDiv>
-              <ResponsiveDiv lg>
-                <Flexbox direction="row" justify="start" gap="4" alignItems="center">
-                  {controls}
-                </Flexbox>
-              </ResponsiveDiv>
-            </Flexbox>
-            <ResponsiveDiv baseVisible lg>
-              <Collapse isOpen={expanded}>
-                <Flexbox direction="col" gap="2" className="py-2 px-4">
-                  {controls}
-                </Flexbox>
-              </Collapse>
-            </ResponsiveDiv>
-          </Controls>
+        <CubeLayout cube={cube} activeLink="playtest" controls={controls}>
           <DynamicFlash />
           <Row className="mt-3 mb-3">
             <Col>

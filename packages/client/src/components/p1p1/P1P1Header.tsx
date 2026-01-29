@@ -34,7 +34,7 @@ const P1P1Header: React.FC<P1P1HeaderProps> = ({ pack, votes, showBotWeights, on
       <Flexbox direction="row" justify="between" alignItems="center">
         <Text semibold lg>
           Pack 1 Pick 1 from{' '}
-          <Link href={`/cube/overview/${pack.cubeId}`} className="text-decoration-none">
+          <Link href={`/cube/list/${pack.cubeId}`} className="text-decoration-none">
             {cube.name || 'Unknown Cube'}
           </Link>
           {cube.owner?.username && (

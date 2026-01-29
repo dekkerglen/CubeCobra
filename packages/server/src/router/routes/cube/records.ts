@@ -47,7 +47,7 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/overview/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/list/${req.params.id}`);
   }
 };
 

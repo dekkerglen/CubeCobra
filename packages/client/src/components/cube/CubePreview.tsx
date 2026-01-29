@@ -14,7 +14,7 @@ interface CubePreviewProps {
 
 const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
   return (
-    <Tile href={`/cube/overview/${getCubeId(cube)}`}>
+    <Tile href={`/cube/list/${getCubeId(cube)}`}>
       <Flexbox direction="col-reverse" className="max-h-full h-full">
         <Flexbox direction="col" className="p-1">
           <Text semibold lg className="truncate">

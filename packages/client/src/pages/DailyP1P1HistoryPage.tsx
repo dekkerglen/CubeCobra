@@ -94,7 +94,7 @@ const DailyP1P1HistoryPage: React.FC<DailyP1P1HistoryPageProps> = ({
                     <Flexbox direction="col" gap="2">
                       <Text sm className="text-text-secondary">
                         From{' '}
-                        <Link href={`/cube/overview/${item.cube.id}`} className="font-semibold">
+                        <Link href={`/cube/list/${item.cube.id}`} className="font-semibold">
                           {item.cube.name}
                         </Link>
                         {item.cube.owner?.username && (

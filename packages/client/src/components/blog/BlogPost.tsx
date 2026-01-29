@@ -64,7 +64,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }
             {post.cube === 'DEVBLOG' ? (
               <Link href="/dev/blog">Developer Blog</Link>
             ) : (
-              <Link href={`/cube/overview/${post.cube}`}>{post.cubeName}</Link>
+              <Link href={`/cube/list/${post.cube}`}>{post.cubeName}</Link>
             )}
             {' - '}
             <TimeAgo date={post.date} />

@@ -7,8 +7,10 @@ import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Select from 'components/base/Select';
+import Text from 'components/base/Text';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import NumericField from 'components/NumericField';
 import CubeContext from 'contexts/CubeContext';
@@ -30,6 +32,9 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
       <ModalHeader setOpen={setOpen}>Advanced Filters</ModalHeader>
       <ModalBody scrollable>
         <Flexbox direction="col" gap="2">
+          <Text sm className="mb-2">
+            Having trouble using filter syntax? Check out our <Link href="/filters">syntax guide</Link>.
+          </Text>
           <Input
             name="name"
             label="Card name"

@@ -1,8 +1,11 @@
-import React, { ReactNode, useCallback, useState } from 'react';
+import React, { ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { NumCols } from '../components/base/Layout';
 import useLocalStorage from '../hooks/useLocalStorage';
+import useQueryParam from '../hooks/useQueryParam';
 import Query from '../utils/Query';
+
+export type RightSidebarMode = 'none' | 'edit' | 'sort';
 
 export interface DisplayContextValue {
   showCustomImages: boolean;
@@ -17,6 +20,8 @@ export interface DisplayContextValue {
   setCardsPerRow: React.Dispatch<React.SetStateAction<NumCols>>;
   showDeckBuilderStatsPanel: boolean;
   toggleShowDeckBuilderStatsPanel: () => void;
+  rightSidebarMode: RightSidebarMode;
+  setRightSidebarMode: React.Dispatch<React.SetStateAction<RightSidebarMode>>;
 }
 
 const DisplayContext = React.createContext<DisplayContextValue>({
@@ -32,6 +37,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   setCardsPerRow: () => {},
   showDeckBuilderStatsPanel: false,
   toggleShowDeckBuilderStatsPanel: () => {},
+  rightSidebarMode: 'none',
+  setRightSidebarMode: () => {},
 });
 
 interface DisplayContextProviderProps {
@@ -50,17 +57,19 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setShowCustomImages((prev) => !prev);
   }, [setShowCustomImages]);
 
-  const [showMaybeboard, setShowMaybeboard] = useState<boolean>(() => {
-    return (
-      typeof localStorage !== 'undefined' &&
-      typeof cubeID === 'string' &&
-      localStorage.getItem(`maybeboard-${cubeID}`) === 'true'
-    );
-  });
+  const [boardParam, setBoardParam] = useQueryParam('board', 'mainboard');
+  const [showMaybeboard, setShowMaybeboard] = useState<boolean>(boardParam === 'maybeboard');
+
+  // Sync showMaybeboard with URL parameter
+  useEffect(() => {
+    setShowMaybeboard(boardParam === 'maybeboard');
+  }, [boardParam]);
+
   const toggleShowMaybeboard = useCallback(() => {
-    if (cubeID) localStorage.setItem(`maybeboard-${cubeID}`, (!showMaybeboard).toString());
-    setShowMaybeboard((prev) => !prev);
-  }, [cubeID, showMaybeboard]);
+    const newValue = !showMaybeboard;
+    setShowMaybeboard(newValue);
+    setBoardParam(newValue ? 'maybeboard' : 'mainboard');
+  }, [showMaybeboard, setBoardParam]);
 
   const [showInlineTagEmojis, setShowInlineTagEmojis] = useState<boolean>(() => {
     return (
@@ -84,6 +93,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setShowDeckBuilderStatsPanel((prev) => !prev);
   }, [showDeckBuilderStatsPanel]);
 
+  const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>('none');
+
   const value: DisplayContextValue = {
     showCustomImages,
     toggleShowCustomImages,
@@ -97,6 +108,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setCardsPerRow,
     showDeckBuilderStatsPanel,
     toggleShowDeckBuilderStatsPanel,
+    rightSidebarMode,
+    setRightSidebarMode,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };

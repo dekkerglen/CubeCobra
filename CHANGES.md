@@ -2,6 +2,7 @@ As of 1.4.57
 
 # New Features
 
+- Overhauled Cube pages user experience
 - Added a mechanism to auto +1 packages when added to a cube
 - Increased password limit to 1024 (there is no technical limitation here, some folks just wanted to be able to use longer passwords than we anticipated when we set an arbritrary limit.)
 - Add panning to card elo and play rate graphs
@@ -15,6 +16,7 @@ As of 1.4.57
 - Improved UX for users with a large number of cubes. Pagination on user cubes page, increased cube limit to 256
 - Cloned cubes now default to "Unlisted" visibility
 - Added toggles when adding packages to cube for autotagging the new cards and creating a blog post
+- Refactored mobile nav bar for a better user experience
 
 # Bug Fixes
 

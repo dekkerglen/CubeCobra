@@ -1,11 +1,12 @@
 import React, { useContext } from 'react';
 
-import Card, { BoardType } from '@utils/datatypes/Card';
+import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CubeListNavbar from 'components/cube/CubeListNavbar';
+import CubeListRightSidebar from 'components/cube/CubeListRightSidebar';
 import CurveView from 'components/cube/CurveView';
 import ListView from 'components/cube/ListView';
 import RotisserieDraftPanel from 'components/cube/RotisserieDraftPanel';
@@ -32,14 +33,9 @@ interface CubeListPageProps {
   };
 }
 
-const boardToName: Record<BoardType, string> = {
-  mainboard: 'Mainboard',
-  maybeboard: 'Maybeboard',
-};
-
 const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
-  const { changedCards } = useContext(CubeContext);
+  const { changedCards, filterResult } = useContext(CubeContext);
   const { showMaybeboard } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext);
 
@@ -63,21 +59,27 @@ const CubeListPageRaw: React.FC = () => {
   }
 
   return (
-    <RotoDraftContextProvider>
+    <>
       <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+      {filterResult && filterResult.mainboard && (
+        <div className="text-center py-1">
+          <Text italic sm>
+            {filterResult.mainboard && filterResult.maybeboard
+              ? `Showing ${filterResult.mainboard[0]} / ${filterResult.mainboard[1]} cards in Mainboard, ${filterResult.maybeboard[0]} / ${filterResult.maybeboard[1]} cards in Maybeboard.`
+              : filterResult.mainboard
+                ? `Showing ${filterResult.mainboard[0]} / ${filterResult.mainboard[1]} cards in Mainboard.`
+                : 'No cards to filter.'}
+          </Text>
+        </div>
+      )}
       <DynamicFlash />
       <RotisserieDraftPanel />
       {Object.entries(changedCards)
         .map(([boardname, boardcards]) => (
           <ErrorBoundary key={boardname}>
             <Flexbox direction="col" gap="2">
-              {(showMaybeboard || boardname !== 'maybeboard') && (
+              {((showMaybeboard && boardname === 'maybeboard') || (!showMaybeboard && boardname === 'mainboard')) && (
                 <>
-                  {boardname !== 'mainboard' && (
-                    <Text semibold md>
-                      {boardToName[boardname as BoardType]}
-                    </Text>
-                  )}
                   {boardcards.length === 0 &&
                     (cardFilter ? (
                       <Text semibold md>
@@ -96,25 +98,40 @@ const CubeListPageRaw: React.FC = () => {
                       list: <ListView cards={boardcards} />,
                     }[cubeView]
                   }
-                  {boardname !== 'mainboard' && <hr />}
                 </>
               )}
             </Flexbox>
           </ErrorBoundary>
         ))
         .reverse()}
-    </RotoDraftContextProvider>
+    </>
   );
 };
 
-const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => (
-  <MainLayout>
-    <DisplayContextProvider cubeID={cube.id}>
-      <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict useChangedCards hasControls>
-        <CubeListPageRaw />
-      </CubeLayout>
-    </DisplayContextProvider>
-  </MainLayout>
-);
+const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
+  return (
+    <MainLayout useContainer={false}>
+      <DisplayContextProvider cubeID={cube.id}>
+        <RotoDraftContextProvider>
+          <CubeLayout
+            cube={cube}
+            cards={cards}
+            activeLink="list"
+            loadVersionDict
+            useChangedCards
+            rightSidebar={<CubeListPageRightSidebarWrapper />}
+          >
+            <CubeListPageRaw />
+          </CubeLayout>
+        </RotoDraftContextProvider>
+      </DisplayContextProvider>
+    </MainLayout>
+  );
+};
+
+const CubeListPageRightSidebarWrapper: React.FC = () => {
+  const { canEdit } = useContext(CubeContext);
+  return <CubeListRightSidebar canEdit={canEdit} />;
+};
 
 export default RenderToRoot(CubeListPage);

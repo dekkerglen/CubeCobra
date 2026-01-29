@@ -58,6 +58,7 @@ interface Cube {
   defaultFormat: number;
   numDecks: number;
   description: string;
+  brief?: string;
   imageName: string;
   date: number; // Legacy field - this is dateLastUpdated, kept for backwards compatibility
   dateCreated: number;

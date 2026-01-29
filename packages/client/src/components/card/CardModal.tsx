@@ -120,7 +120,7 @@ const CardModal: React.FC<CardModalProps> = ({
 
   const disabled = !canEdit || card.markedForDelete;
 
-  const { showCustomImages } = useContext(DisplayContext);
+  const { showCustomImages, rightSidebarMode, setRightSidebarMode } = useContext(DisplayContext);
 
   const getCardFrontImage = useCallback(
     (card: Card) => {
@@ -156,8 +156,12 @@ const CardModal: React.FC<CardModalProps> = ({
         setImageUsed(getCardFrontImage(card));
       }
       editCard(card.index!, { ...card, [field]: value }, card.board!);
+      // Auto-expand edit sidebar on desktop when a change is made
+      if (canEdit && rightSidebarMode !== 'edit') {
+        setRightSidebarMode('edit');
+      }
     },
-    [card, editCard, getCardFrontImage, isFrontImage],
+    [card, editCard, getCardFrontImage, isFrontImage, canEdit, rightSidebarMode, setRightSidebarMode],
   );
 
   const doCmcValidity = useCallback((input: HTMLInputElement) => {

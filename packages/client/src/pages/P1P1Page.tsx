@@ -104,7 +104,7 @@ const P1P1Page: React.FC<P1P1PageProps> = ({ packId, cube }) => {
   }
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="playtest">
         <Flexbox direction="col" gap="3" className="my-4">
           <DynamicFlash />

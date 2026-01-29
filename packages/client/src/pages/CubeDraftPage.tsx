@@ -726,7 +726,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     pendingPick !== null;
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <Alerts alerts={alerts} />

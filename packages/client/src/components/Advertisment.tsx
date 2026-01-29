@@ -57,7 +57,7 @@ const Advertisment: React.FC<AdvertismentProps> = ({
   placementId,
   refreshLimit = 10,
   refreshTime = 30,
-  position = 'fixed-bottom-right',
+  position = 'fixed-bottom-left',
   wording = 'Report Ad',
   enabled = true,
   media,
