@@ -101,7 +101,7 @@ export const primerHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/landing/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/list/${req.params.id}`);
   }
 };
 

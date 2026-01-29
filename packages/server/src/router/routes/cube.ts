@@ -75,11 +75,6 @@ export const viewHandler = (req: Request, res: Response) => {
   return redirect(req, res, `/cube/list/${req.params.id}`);
 };
 
-// Redirect handlers for backwards compatibility
-export const overviewRedirectHandler = (req: Request, res: Response) => {
-  return redirect(req, res, `/cube/primer/${req.params.id}`);
-};
-
 export const historyRedirectHandler = (req: Request, res: Response) => {
   return redirect(req, res, `/cube/changelog/${req.params.id}`);
 };
@@ -494,11 +489,6 @@ export const routes = [
     path: '/view/:id',
     method: 'get',
     handler: [csrfProtection, viewHandler],
-  },
-  {
-    path: '/overview/:id',
-    method: 'get',
-    handler: [overviewRedirectHandler],
   },
   {
     path: '/:id/defaultdraftformat/:formatId',

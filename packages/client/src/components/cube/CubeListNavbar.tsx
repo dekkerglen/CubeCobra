@@ -77,7 +77,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           }
         } else {
           const op = isNumField(name) ? filterValues[`${name}Op`] || '=' : ':';
-          let value = (filterValues[name] as string).replace('"', '\\"');
+          let value = (filterValues[name] as string).replace(/"/g, '\\"');
           if (value.indexOf(' ') > -1) {
             value = `"${value}"`;
           }
