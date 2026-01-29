@@ -29,7 +29,15 @@ const Dropdown: React.FC<DropdownProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        // Check if the click is inside a modal (which is rendered via portal)
+        // Headless UI Dialog uses role="dialog" on the DialogPanel
+        const target = event.target as HTMLElement;
+        const isInsideModal = target.closest('[role="dialog"]') !== null;
+        
+        // Don't close the dropdown if clicking inside a modal
+        if (!isInsideModal) {
+          setIsOpen(false);
+        }
       }
     };
 
