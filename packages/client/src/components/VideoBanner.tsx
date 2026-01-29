@@ -13,7 +13,16 @@ const VideoBanner: React.FC<MobileBannerProps> = ({ placementId }) => {
   const user = useContext(UserContext);
 
   if (user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON)) return <></>;
-  return <Advertisment placementId={placementId} size="video" media="desktop" format="floating" refreshTime={30} />;
+  return (
+    <Advertisment
+      placementId={placementId}
+      size="video"
+      media="desktop"
+      format="floating"
+      refreshTime={30}
+      position="fixed-bottom-left"
+    />
+  );
 };
 
 export default VideoBanner;

@@ -182,7 +182,7 @@ export const compileAnalyticsHandler = async (req: Request, res: Response) => {
 
     if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'You do not have permission to compile analytics for this cube');
-      return redirect(req, res, `/cube/records/${cube.id}?tab=2`);
+      return redirect(req, res, `/cube/records/${cube.id}?view=winrate-analytics`);
     }
 
     const records: RecordType[] = [];
@@ -204,9 +204,9 @@ export const compileAnalyticsHandler = async (req: Request, res: Response) => {
     await recordDao.putAnalytics(cube.id, analyticsData);
 
     req.flash('success', 'Analytics compiled successfully');
-    return redirect(req, res, `/cube/records/${cube.id}?tab=2`);
+    return redirect(req, res, `/cube/records/${cube.id}?view=winrate-analytics`);
   } catch (error) {
-    handleRouteError(req, res, error, `/cube/records/${req.params.id}?tab=2`);
+    handleRouteError(req, res, error, `/cube/records/${req.params.id}?view=winrate-analytics`);
   }
 };
 

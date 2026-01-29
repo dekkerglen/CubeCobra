@@ -7,12 +7,10 @@ import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
 
 import { Card } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
-import Link from 'components/base/Link';
-import { TabbedView } from 'components/base/Tabs';
 import DynamicFlash from 'components/DynamicFlash';
+import RecordsNavbar from 'components/records/RecordsNavbar';
 import RenderToRoot from 'components/RenderToRoot';
-import UserContext from 'contexts/UserContext';
-import useQueryParam from 'hooks/useQueryParam';
+import RecordsViewContext, { RecordsViewContextProvider } from 'contexts/RecordsViewContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -31,48 +29,76 @@ interface CubeRecordsPageProps {
 }
 
 const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({ cube, cards, records, analyticsData, lastKey }) => {
-  const user = useContext(UserContext);
-  const [activeTab, setActiveTab] = useQueryParam('tab', '0');
+  const recordsViewContext = useContext(RecordsViewContext);
+  const view = recordsViewContext?.view || 'draft-reports';
 
-  const tabs = [
-    {
-      name: 'Draft Reports',
-      component: () => <DraftReports records={records} lastKey={lastKey} />,
-    },
-    {
-      name: 'Trophy Archive',
-      component: () => <TrophyArchive records={records} lastKey={lastKey} />,
-    },
-    {
-      name: 'Winrate Analytics',
-      component: () => <WinrateAnalytics analyticsData={analyticsData} />,
-    },
-  ];
-
-  const controls = user && cube.owner.id === user.id ? (
-    <Flexbox direction="col" gap="2" className="px-2">
-      <Link href={`/cube/records/create/${cube.id}`}>Create new Record</Link>
-      <Link href={`/cube/records/create/fromDraft/${cube.id}`}>Create Record from existing Draft</Link>
-    </Flexbox>
-  ) : undefined;
+  let content;
+  switch (view) {
+    case 'trophy-archive':
+      content = (
+        <Card>
+          <TrophyArchive records={records} lastKey={lastKey} />
+        </Card>
+      );
+      break;
+    case 'winrate-analytics':
+      content = (
+        <Card>
+          <WinrateAnalytics analyticsData={analyticsData} />
+        </Card>
+      );
+      break;
+    case 'draft-reports':
+    default:
+      content = (
+        <Card>
+          <DraftReports records={records} lastKey={lastKey} />
+        </Card>
+      );
+      break;
+  }
 
   return (
     <MainLayout useContainer={false}>
-      <CubeLayout cube={cube} cards={cards} activeLink="records" controls={controls}>
-        <DynamicFlash />
-        <Card className="my-2">
-          <TabbedView
-            activeTab={parseInt(activeTab || '0', 10)}
-            tabs={tabs.map((tab, index) => ({
-              label: tab.name,
-              onClick: () => setActiveTab(`${index}`),
-              content: tab.component(),
-            }))}
-          />
-        </Card>
+      <CubeLayout cube={cube} cards={cards} activeLink={view}>
+        <Flexbox direction="col" gap="2" className="mb-2">
+          <DynamicFlash />
+          <RecordsNavbar />
+          {content}
+        </Flexbox>
       </CubeLayout>
     </MainLayout>
   );
 };
 
-export default RenderToRoot(CubeRecordsPage);
+const CubeRecordsPageWrapper: React.FC<CubeRecordsPageProps> = (props) => {
+  return (
+    <RecordsViewContextProvider>
+      <CubeRecordsPageInner {...props} />
+    </RecordsViewContextProvider>
+  );
+};
+
+const CubeRecordsPageInner: React.FC<CubeRecordsPageProps> = ({
+  cube,
+  cards,
+  records,
+  analyticsData,
+  lastKey,
+  decks,
+  decksLastKey,
+}) => {
+  return (
+    <CubeRecordsPage
+      cube={cube}
+      cards={cards}
+      records={records}
+      analyticsData={analyticsData}
+      lastKey={lastKey}
+      decks={decks}
+      decksLastKey={decksLastKey}
+    />
+  );
+};
+
+export default RenderToRoot(CubeRecordsPageWrapper);

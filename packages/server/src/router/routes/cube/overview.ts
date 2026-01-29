@@ -92,7 +92,7 @@ export const overviewHandler = async (req: Request, res: Response) => {
           `Cube Cobra Overview: ${cube.name}`,
           cube.description,
           cube.image.uri,
-          `${baseUrl}/cube/primer/${req.params.id}`,
+          `${baseUrl}/cube/list/${req.params.id}`,
         ),
         noindex:
           cube.visibility === CUBE_VISIBILITY.PRIVATE ||

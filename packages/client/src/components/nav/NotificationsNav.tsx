@@ -32,7 +32,7 @@ const NotificationsNav: React.FC = () => {
         {items.length > 0 && (
           <span
             className="absolute text-xs font-semibold text-white bg-button-danger rounded-full px-1 py-0.5 min-w-[1.25rem] text-center"
-            style={{ right: '-3px', top: '-12px' }}
+            style={{ right: '-7px', top: '-12px' }}
           >
             {items.length > 99 ? '99+' : items.length}
           </span>

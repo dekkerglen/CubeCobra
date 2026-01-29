@@ -221,7 +221,7 @@ describe('Edit overview API', () => {
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
-      redirect: `/cube/overview/${updatedCube.shortId}`,
+      redirect: `/cube/primer/${updatedCube.shortId}`,
     });
   });
 
@@ -256,7 +256,7 @@ describe('Edit overview API', () => {
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
-      redirect: `/cube/overview/${updatedCube.id}`,
+      redirect: `/cube/primer/${updatedCube.id}`,
     });
   });
 
@@ -332,7 +332,7 @@ describe('Edit overview API', () => {
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
-      redirect: `/cube/overview/${updatedCube.shortId}`,
+      redirect: `/cube/primer/${updatedCube.shortId}`,
     });
   });
 
@@ -393,7 +393,7 @@ describe('Edit overview API', () => {
     expect((cubeDao.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
-      redirect: `/cube/overview/${updatedCube.shortId}`,
+      redirect: `/cube/primer/${updatedCube.shortId}`,
     });
     expect(res.status).toEqual(200);
   });
@@ -436,7 +436,7 @@ describe('Edit overview API', () => {
     expect((cubeDao.update as jest.Mock).mock.calls[0][0].date).toBeGreaterThanOrEqual(existingCube.date);
     expect(res.body).toEqual({
       success: 'Cube updated successfully',
-      redirect: `/cube/overview/${updatedCube.id}`,
+      redirect: `/cube/primer/${updatedCube.id}`,
     });
     expect(res.status).toEqual(200);
   });

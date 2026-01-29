@@ -100,10 +100,7 @@ const Navbar: React.FC<NavbarProps> = () => {
           <NavMenu label="Your Cubes" navBar>
             <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
               {(user.cubes || []).slice(0, 36).map((item) => (
-                <NavLink
-                  key={`dropdown_cube_${item.name}`}
-                  href={`/cube/primer/${encodeURIComponent(getCubeId(item))}`}
-                >
+                <NavLink key={`dropdown_cube_${item.name}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
                   {item.name}
                 </NavLink>
               ))}
@@ -133,10 +130,12 @@ const Navbar: React.FC<NavbarProps> = () => {
         </>
       ) : (
         <>
-          <NavLink root href="/user/register">
-            Register
-          </NavLink>
-          <LoginButton root>Login</LoginButton>
+          <NavMenu label="Account" navBar>
+            <Flexbox direction="col" gap="2" className="p-3">
+              <NavLink href="/user/register">Create Account</NavLink>
+              <LoginButton>Login</LoginButton>
+            </Flexbox>
+          </NavMenu>
         </>
       )}
     </>
@@ -146,19 +145,19 @@ const Navbar: React.FC<NavbarProps> = () => {
     <>
       <button
         onClick={() => toggleMobileMenu('content')}
-        className={`p-2 rounded transition-colors duration-200 ${mobileMenuOpen === 'content' ? 'bg-bg-active' : ''}`}
+        className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'content' ? 'bg-bg-active' : ''}`}
       >
         <BookIcon size={24} />
       </button>
       <button
         onClick={() => toggleMobileMenu('explore')}
-        className={`p-2 rounded transition-colors duration-200 ${mobileMenuOpen === 'explore' ? 'bg-bg-active' : ''}`}
+        className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'explore' ? 'bg-bg-active' : ''}`}
       >
         <SearchIcon size={24} />
       </button>
       <button
         onClick={() => toggleMobileMenu('about')}
-        className={`p-2 rounded transition-colors duration-200 ${mobileMenuOpen === 'about' ? 'bg-bg-active' : ''}`}
+        className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'about' ? 'bg-bg-active' : ''}`}
       >
         <InfoIcon size={24} />
       </button>
@@ -166,7 +165,7 @@ const Navbar: React.FC<NavbarProps> = () => {
         <>
           <button
             onClick={() => toggleMobileMenu('notifications')}
-            className={`p-2 rounded transition-colors duration-200 relative ${mobileMenuOpen === 'notifications' ? 'bg-bg-active' : ''}`}
+            className={`p-2 rounded transition-colors duration-200 text-white relative ${mobileMenuOpen === 'notifications' ? 'bg-bg-active' : ''}`}
           >
             {notifications.length > 0 && (
               <span className="absolute top-0 right-0 text-xs font-semibold text-white bg-button-danger rounded-full px-1 py-0.5 min-w-[1.25rem] text-center translate-x-1/2 -translate-y-1/2">
@@ -177,21 +176,26 @@ const Navbar: React.FC<NavbarProps> = () => {
           </button>
           <button
             onClick={() => toggleMobileMenu('cubes')}
-            className={`p-2 rounded transition-colors duration-200 ${mobileMenuOpen === 'cubes' ? 'bg-bg-active' : ''}`}
+            className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'cubes' ? 'bg-bg-active' : ''}`}
           >
             <PackageIcon size={24} />
           </button>
           <button
             onClick={() => toggleMobileMenu('user')}
-            className={`p-2 rounded transition-colors duration-200 ${mobileMenuOpen === 'user' ? 'bg-bg-active' : ''}`}
+            className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'user' ? 'bg-bg-active' : ''}`}
           >
             <PersonIcon size={24} />
           </button>
         </>
       ) : (
-        <LoginButton root>
-          <PersonIcon size={24} />
-        </LoginButton>
+        <>
+          <button
+            onClick={() => toggleMobileMenu('account')}
+            className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'account' ? 'bg-bg-active' : ''}`}
+          >
+            <PersonIcon size={24} />
+          </button>
+        </>
       )}
     </>
   );
@@ -310,7 +314,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                     {(user.cubes || []).slice(0, 36).map((item) => (
                       <NavLink
                         key={`mobile_cube_${item.name}`}
-                        href={`/cube/primer/${encodeURIComponent(getCubeId(item))}`}
+                        href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
                       >
                         {item.name}
                       </NavLink>
@@ -332,6 +336,14 @@ const Navbar: React.FC<NavbarProps> = () => {
                   <NavLink href="/user/social">Followed and Followers</NavLink>
                   <NavLink href="/user/account">Account Information</NavLink>
                   <NavLink href="/user/logout">Logout</NavLink>
+                </Flexbox>
+              </div>
+            )}
+            {mobileMenuOpen === 'account' && !user && (
+              <div className="bg-bg-active mt-3 p-4 rounded">
+                <Flexbox direction="col" gap="2">
+                  <NavLink href="/user/register">Create Account</NavLink>
+                  <LoginButton>Login</LoginButton>
                 </Flexbox>
               </div>
             )}

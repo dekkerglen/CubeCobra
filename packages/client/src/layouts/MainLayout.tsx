@@ -64,7 +64,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, useContainer = true }
             </Flexbox>
           </Container>
         ) : (
-          <ErrorBoundary>{children}</ErrorBoundary>
+          <>
+            <ErrorBoundary>{children}</ErrorBoundary>
+            <ResponsiveDiv md>
+              <VideoBanner placementId="video" />
+            </ResponsiveDiv>
+          </>
         )}
       </div>
       <Footer />

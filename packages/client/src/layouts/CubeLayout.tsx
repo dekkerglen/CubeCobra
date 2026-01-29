@@ -2,10 +2,8 @@ import React, { ReactNode, useContext } from 'react';
 
 import Card, { BoardType } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
-import classNames from 'classnames';
 
 import Banner from '../components/Banner';
-import { Flexbox } from '../components/base/Layout';
 import CubeHero from '../components/cube/CubeHero';
 import CubeSidebar from '../components/cube/CubeSidebar';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -36,6 +34,7 @@ interface CubeLayoutProps {
   loadVersionDict?: boolean;
   useChangedCards?: boolean;
   controls?: React.ReactNode;
+  rightSidebar?: React.ReactNode;
 }
 
 const CubeLayout: React.FC<CubeLayoutProps> = ({
@@ -46,6 +45,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
   loadVersionDict = false,
   useChangedCards = false,
   controls,
+  rightSidebar,
 }) => {
   return (
     <FilterContextProvider>
@@ -60,13 +60,12 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
             <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
             <div className="flex-1 flex flex-col min-w-0">
               <CubeHero cube={cube} />
-              <div className="bg-bg-accent border-r border-l border-b border-border px-4">
-                <Banner className="px-2" />
-              </div>
+              <Banner />
               <div className="px-4">
                 <CubeLayoutInner>{children}</CubeLayoutInner>
               </div>
             </div>
+            {rightSidebar}
           </div>
         </CubeContextProvider>
       </ChangesContextProvider>

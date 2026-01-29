@@ -88,7 +88,7 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
     <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
       <ModalHeader setOpen={setOpen}>
         <Text semibold lg>
-          Edit Overview
+          Edit Primer
         </Text>
       </ModalHeader>
       <ModalBody scrollable>
@@ -172,6 +172,16 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
             setValue={changeImage}
             placeholder="Cardname for image"
             autoComplete="off"
+          />
+          <Text semibold md>
+            Brief
+          </Text>
+          <Text sm>A short description displayed in the cube hero (max 500 characters)</Text>
+          <TextEntry
+            name="brief"
+            value={state.brief || ''}
+            setValue={(value) => setState({ ...state, brief: value })}
+            maxLength={500}
           />
           <Text semibold md>
             Description

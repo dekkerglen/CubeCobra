@@ -4,7 +4,6 @@ import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
 
-import Button from 'components/base/Button';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import NavMenu from 'components/base/NavMenu';

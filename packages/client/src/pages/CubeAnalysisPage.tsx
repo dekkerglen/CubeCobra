@@ -28,13 +28,13 @@ import Playtest from '../analytics/PlaytestData';
 import Suggestions from '../analytics/Suggestions';
 import Tokens from '../analytics/Tokens';
 import { Card } from '../components/base/Card';
-import { TabbedView } from '../components/base/Tabs';
+import { Flexbox } from '../components/base/Layout';
 import Text from '../components/base/Text';
+import AnalysisNavbar from '../components/cube/AnalysisNavbar';
 import DynamicFlash from '../components/DynamicFlash';
-import FilterCollapse from '../components/FilterCollapse';
 import RenderToRoot from '../components/RenderToRoot';
+import AnalysisViewContext, { AnalysisViewContextProvider } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
-import useQueryParam from '../hooks/useQueryParam';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 
@@ -44,7 +44,8 @@ interface CubeAnalysisPageProps {
 }
 
 const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, tokenMap }) => {
-  const [activeTab, setActiveTab] = useQueryParam('tab', '0');
+  const analysisViewContext = React.useContext(AnalysisViewContext);
+  const view = analysisViewContext?.view || 'averages';
   const { cube } = useContext(CubeContext);
 
   const convertToCharacteristic = (name: string, func: (card: any) => any) => ({
@@ -154,69 +155,45 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
     'Devotion to Green': convertToCharacteristic('Devotion to Green', (card) => cardDevotion(card, 'g').toString()),
   };
 
-  const analytics = [
-    {
-      name: 'Averages',
-      component: () => <Averages characteristics={characteristics} />,
-    },
-    {
-      name: 'Table',
-      component: () => <AnalyticTable />,
-    },
-    {
-      name: 'Asfans',
-      component: () => <Asfans />,
-    },
-    {
-      name: 'Chart',
-      component: () => <ChartComponent characteristics={characteristics} />,
-    },
-    {
-      name: 'Recommender',
-      component: () => <Suggestions />,
-    },
-    {
-      name: 'Playtest Data',
-      component: () => <Playtest cubeAnalytics={cubeAnalytics} />,
-    },
-    {
-      name: 'Tokens',
-      component: () => <Tokens tokenMap={tokenMap} />,
-    },
-    {
-      name: 'Combos',
-      component: () => <Combos />,
-    },
-  ];
+  let content;
+  switch (view) {
+    case 'table':
+      content = <AnalyticTable />;
+      break;
+    case 'asfans':
+      content = <Asfans />;
+      break;
+    case 'chart':
+      content = <ChartComponent characteristics={characteristics} />;
+      break;
+    case 'recommender':
+      content = <Suggestions />;
+      break;
+    case 'playtest-data':
+      content = <Playtest cubeAnalytics={cubeAnalytics} />;
+      break;
+    case 'tokens':
+      content = <Tokens tokenMap={tokenMap} />;
+      break;
+    case 'combos':
+      content = <Combos />;
+      break;
+    case 'averages':
+    default:
+      content = <Averages characteristics={characteristics} />;
+      break;
+  }
 
   return (
-    <>
+    <Flexbox direction="col" gap="2" className="mb-2">
       <DynamicFlash />
+      <AnalysisNavbar />
       {cube.cards.mainboard.length === 0 ? (
         <Text lg>This cube doesn't have any cards. Add cards to see analytics.</Text>
       ) : (
-        <Card className="my-2">
-          <FilterCollapse
-            isOpen={true}
-            className="p-2"
-            filterTextFn={({ mainboard }) =>
-              mainboard
-                ? `Calculating analytics for ${mainboard[0]} / ${mainboard[1]} cards in mainboard.`
-                : 'No cards for analytics.'
-            }
-            showReset
-          />
-          <TabbedView
-            activeTab={parseInt(activeTab || '0', 10)}
-            tabs={analytics.map((analytic, index) => ({
-              label: analytic.name,
-              onClick: () => setActiveTab(`${index}`),
-              content: analytic.component(),
-            }))}
-          />
-        </Card>
+        <Card>{content}</Card>
       )}
-    </>
+    </Flexbox>
   );
 };
 
@@ -229,8 +206,24 @@ interface CubeAnalysisPageWrapperProps {
 
 const CubeAnalysisPageWrapper: React.FC<CubeAnalysisPageWrapperProps> = ({ cube, cards, cubeAnalytics, tokenMap }) => {
   return (
+    <AnalysisViewContextProvider>
+      <AnalysisViewContextProviderInner cube={cube} cards={cards} cubeAnalytics={cubeAnalytics} tokenMap={tokenMap} />
+    </AnalysisViewContextProvider>
+  );
+};
+
+const AnalysisViewContextProviderInner: React.FC<CubeAnalysisPageWrapperProps> = ({
+  cube,
+  cards,
+  cubeAnalytics,
+  tokenMap,
+}) => {
+  const analysisViewContext = React.useContext(AnalysisViewContext);
+  const view = analysisViewContext?.view || 'averages';
+
+  return (
     <MainLayout useContainer={false}>
-      <CubeLayout cube={cube} cards={cards} activeLink="analysis">
+      <CubeLayout cube={cube} cards={cards} activeLink={view}>
         <CubeAnalysisPage cubeAnalytics={cubeAnalytics} tokenMap={tokenMap} />
       </CubeLayout>
     </MainLayout>

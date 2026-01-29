@@ -53,7 +53,7 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
 
@@ -103,7 +103,7 @@ export const createRecordPageFromDraftHandler = async (req: Request, res: Respon
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
 
@@ -190,7 +190,7 @@ export const createRecordHandler = async (req: Request, res: Response) => {
     req.flash('success', 'Record created successfully');
     return redirect(req, res, `/cube/record/${createdRecordId}`);
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
 
@@ -276,7 +276,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
     req.flash('success', 'Record created successfully');
     return redirect(req, res, `/cube/record/${createdRecordId}`);
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
 

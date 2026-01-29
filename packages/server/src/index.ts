@@ -122,19 +122,22 @@ app.set('view engine', 'pug');
 app.use(
   '/js',
   express.static(path.join(__dirname, '../public/js'), {
-    maxAge: '365d',
-    immutable: true,
+    maxAge: process.env.NODE_ENV === 'development' ? 0 : '365d',
+    immutable: process.env.NODE_ENV !== 'development',
   }),
 );
 
 // CSS and other assets - moderate caching
 app.use(
   express.static(path.join(__dirname, '../public'), {
-    maxAge: '1d',
+    maxAge: process.env.NODE_ENV === 'development' ? 0 : '1d',
     setHeaders: (res: express.Response, filePath: string) => {
       // For hashed files (contains hash in filename), cache forever
       if (/\.[a-f0-9]{8}\.(js|css)$/.test(filePath)) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.setHeader(
+          'Cache-Control',
+          process.env.NODE_ENV === 'development' ? 'no-cache' : 'public, max-age=31536000, immutable',
+        );
       }
     },
   }),

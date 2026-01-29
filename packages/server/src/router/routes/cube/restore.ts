@@ -23,7 +23,7 @@ export const restorePageHandler = async (req: Request, res: Response) => {
     // Only cube owner can restore
     if (!req.user || cube.owner.id !== req.user.id) {
       req.flash('danger', 'You do not have permission to restore this cube');
-      return redirect(req, res, `/cube/primer/${req.params.id}`);
+      return redirect(req, res, `/cube/list/${req.params.id}`);
     }
 
     // Get version history from S3
@@ -50,7 +50,7 @@ export const restorePageHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/list/${req.params.id}`);
   }
 };
 
@@ -77,7 +77,7 @@ export const restoreHandler = async (req: Request, res: Response) => {
     // Only cube owner can restore
     if (!req.user || cube.owner.id !== req.user.id) {
       req.flash('danger', 'You do not have permission to restore this cube');
-      return redirect(req, res, `/cube/primer/${cubeId}`);
+      return redirect(req, res, `/cube/list/${cubeId}`);
     }
 
     // Get the current cards

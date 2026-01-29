@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
@@ -6,21 +6,17 @@ import Draft from '@utils/datatypes/Draft';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
-import Link from 'components/base/Link';
 import Text from 'components/base/Text';
+import PlaytestNavbar from 'components/cube/PlaytestNavbar';
 import CustomDraftCard from 'components/CustomDraftCard';
 import DynamicFlash from 'components/DynamicFlash';
 import GridDraftCard from 'components/GridDraftCard';
-import CustomDraftFormatModal from 'components/modals/CustomDraftFormatModal';
-import UploadDecklistModal from 'components/modals/UploadDecklistModal';
 import PreviousP1P1sCard from 'components/p1p1/PreviousP1P1sCard';
 import PlaytestDecksCard from 'components/PlaytestDecksCard';
 import RenderToRoot from 'components/RenderToRoot';
 import SamplePackCard from 'components/SamplePackCard';
 import SealedCard from 'components/SealedCard';
 import StandardDraftCard from 'components/StandardDraftCard';
-import withModal from 'components/WithModal';
-import UserContext from 'contexts/UserContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -32,9 +28,6 @@ interface CubePlaytestPageProps {
   previousPacksLastKey?: any;
 }
 
-const UploadDecklistModalLink = withModal(Link, UploadDecklistModal);
-const CreateCustomFormatLink = withModal(Link, CustomDraftFormatModal);
-
 const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
   cube,
   decks,
@@ -42,7 +35,6 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
   previousPacks = [],
   previousPacksLastKey,
 }) => {
-  const user = useContext(UserContext);
   const defaultFormat = cube.defaultFormat ?? -1;
 
   // Sort formats alphabetically.
@@ -62,24 +54,12 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
     [cube.formats, defaultFormat],
   );
 
-  const controls = user && cube.owner.id === user.id ? (
-    <Flexbox direction="col" gap="2" className="px-2">
-      <CreateCustomFormatLink
-        modalprops={{
-          formatIndex: -1,
-        }}
-      >
-        Create Custom Draft Format
-      </CreateCustomFormatLink>
-      <UploadDecklistModalLink>Upload Decklist</UploadDecklistModalLink>
-    </Flexbox>
-  ) : undefined;
-
   return (
     <MainLayout useContainer={false}>
-      <CubeLayout cube={cube} activeLink="playtest" controls={controls}>
+      <CubeLayout cube={cube} activeLink="playtest">
         <Flexbox direction="col" gap="2" className="mb-2">
           <DynamicFlash />
+          <PlaytestNavbar />
           <Row>
             <Col xs={12} md={6} xl={6}>
               <Flexbox direction="col" gap="2">

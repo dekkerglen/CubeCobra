@@ -66,6 +66,11 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     if (updatedCube.description !== null) {
       cube.description = updatedCube.description;
     }
+
+    if (updatedCube.brief !== undefined) {
+      cube.brief = updatedCube.brief;
+    }
+
     cube.date = Date.now().valueOf();
 
     // cube category override

@@ -303,7 +303,7 @@ export const getBlogPostsForCubeHandler = async (req: Request, res: Response) =>
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/primer/${encodeURIComponent(req.params.id!)}`);
+    return handleRouteError(req, res, err as Error, `/cube/list/${encodeURIComponent(req.params.id!)}`);
   }
 };
 

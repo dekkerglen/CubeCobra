@@ -31,7 +31,7 @@ export const importRecordPageHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
 
@@ -179,7 +179,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
     req.flash('success', 'Deck uploaded successfully. Draft associated with this record has been updated.');
     return redirect(req, res, `/cube/record/${recordId}?tab=1`);
   } catch (err) {
-    return handleRouteError(req, res, err, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
 

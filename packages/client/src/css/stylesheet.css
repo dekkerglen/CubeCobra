@@ -60,6 +60,7 @@
     --card-multi: 252 248 169;
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
+    --hero-bg: 8 119 21;
   }
 
   :root[class~='light'] {
@@ -98,6 +99,7 @@
     --card-multi: 252 248 169;
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
+    --hero-bg: 8 119 21;
   }
 
   :root[class~='dark'] {
@@ -136,6 +138,7 @@
     --card-multi: 92 88 9;
     --card-colorless: 60 58 64;
     --card-lands: 95 58 36;
+    --hero-bg: 73 95 52;
     color-scheme: dark;
   }
 }
@@ -146,6 +149,16 @@
   vertical-align: 0.255em;
   content: '';
   border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+}
+
+.dropdown-toggle-icon::after {
+  display: inline-block;
+  vertical-align: 0.255em;
+  content: '';
+  border-top: 0.3em solid currentColor;
   border-right: 0.3em solid transparent;
   border-bottom: 0;
   border-left: 0.3em solid transparent;

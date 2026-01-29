@@ -96,6 +96,7 @@ export interface UnhydratedCube {
   defaultFormat: number;
   numDecks: number;
   description: string;
+  brief?: string;
   imageName: string;
   date: number; // Legacy field - this is dateLastUpdated, kept for backwards compatibility
   dateCreated: number;
@@ -216,6 +217,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       defaultFormat: item.defaultFormat,
       numDecks: item.numDecks,
       description: item.description,
+      brief: item.brief,
       imageName: item.imageName,
       date: item.date,
       dateCreated: item.dateCreated,
