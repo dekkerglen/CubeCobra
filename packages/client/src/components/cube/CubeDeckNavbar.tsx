@@ -60,9 +60,7 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
     <Flexbox direction="row" gap="6" alignItems="center" justify="start" className="px-2 mt-2" wrap="wrap">
       <SampleHandModalLink
         modalprops={{
-          deck: draft.seats[parseInt(seatIndex || '0')].mainboard
-            ?.flat(3)
-            .map((cardIndex) => draft.cards[cardIndex]),
+          deck: draft.seats[parseInt(seatIndex || '0')].mainboard?.flat(3).map((cardIndex) => draft.cards[cardIndex]),
         }}
         className="flex items-center gap-2 !text-button-primary hover:!text-button-primary-active transition-colors font-medium cursor-pointer"
       >
