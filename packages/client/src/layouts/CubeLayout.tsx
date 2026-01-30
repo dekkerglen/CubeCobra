@@ -64,7 +64,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
             <div className="flex-1 flex flex-col min-w-0">
               <CubeHero cube={cube} minified={!showFullHero} />
               <Banner />
-              <div className="px-4">
+              <div className="px-2">
                 <CubeLayoutInner>{children}</CubeLayoutInner>
               </div>
             </div>

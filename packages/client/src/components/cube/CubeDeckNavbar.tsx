@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 
-import { PencilIcon, ToolsIcon, UploadIcon } from '@primer/octicons-react';
+import { CopyIcon, EyeClosedIcon, EyeIcon, PencilIcon, SyncIcon, UploadIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
@@ -57,44 +57,35 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
   }, [addAlert, dismissAlerts, draft, seatIndex]);
 
   return (
-    <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2 mt-2">
-      <Dropdown
-        trigger={
-          <Button color="secondary" className="flex items-center gap-2 py-2">
-            <ToolsIcon size={16} />
-          </Button>
-        }
-        align="left"
-        minWidth="16rem"
+    <Flexbox direction="row" gap="6" alignItems="center" justify="start" className="px-2 mt-2" wrap="wrap">
+      <SampleHandModalLink
+        modalprops={{
+          deck: draft.seats[parseInt(seatIndex || '0')].mainboard
+            ?.flat(3)
+            .map((cardIndex) => draft.cards[cardIndex]),
+        }}
+        className="flex items-center gap-2 !text-button-primary hover:!text-button-primary-active transition-colors font-medium cursor-pointer"
       >
-        <Flexbox direction="col" gap="2" className="p-3">
-          <SampleHandModalLink
-            modalprops={{
-              deck: draft.seats[parseInt(seatIndex || '0')].mainboard
-                ?.flat(3)
-                .map((cardIndex) => draft.cards[cardIndex]),
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-          >
-            Sample Hand
-          </SampleHandModalLink>
-          <Link
-            href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-          >
-            Clone and Rebuild
-          </Link>
-          <Link
-            href="#"
-            onClick={() => {
-              toggleShowCustomImages();
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-          >
-            {showCustomImages ? 'Hide' : 'Show'} Custom Images
-          </Link>
-        </Flexbox>
-      </Dropdown>
+        <CopyIcon size={16} />
+        Sample Hand
+      </SampleHandModalLink>
+      <Link
+        href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
+        className="flex items-center gap-2 !text-button-primary hover:!text-button-primary-active transition-colors font-medium cursor-pointer"
+      >
+        <SyncIcon size={16} />
+        Clone and Rebuild
+      </Link>
+      <Link
+        href="#"
+        onClick={() => {
+          toggleShowCustomImages();
+        }}
+        className="flex items-center gap-2 !text-button-primary hover:!text-button-primary-active transition-colors font-medium cursor-pointer"
+      >
+        {showCustomImages ? <EyeClosedIcon size={16} /> : <EyeIcon size={16} />}
+        {showCustomImages ? 'Hide' : 'Show'} Custom Images
+      </Link>
       <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="flex-1" wrap="wrap">
         <div className="inline-block">
           <Select

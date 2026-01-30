@@ -2315,6 +2315,10 @@ video {
   --tw-text-opacity: 1;
   color: rgb(133 77 14 / var(--tw-text-opacity));
 }
+.\!text-button-primary {
+  --tw-text-opacity: 1 !important;
+  color: rgb(var(--button-primary) / var(--tw-text-opacity)) !important;
+}
 .underline {
   -webkit-text-decoration-line: underline;
           text-decoration-line: underline;
@@ -3175,6 +3179,11 @@ img.mana-symbol-sm {
 .hover\:text-white:hover {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
+}
+
+.hover\:\!text-button-primary-active:hover {
+  --tw-text-opacity: 1 !important;
+  color: rgb(var(--button-primary-active) / var(--tw-text-opacity)) !important;
 }
 
 .hover\:underline:hover {

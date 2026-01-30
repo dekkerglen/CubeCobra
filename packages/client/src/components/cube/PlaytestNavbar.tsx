@@ -1,9 +1,7 @@
 import React, { useContext } from 'react';
 
-import { PlusIcon, ToolsIcon, UploadIcon } from '@primer/octicons-react';
+import { PlusIcon, UploadIcon } from '@primer/octicons-react';
 
-import Button from 'components/base/Button';
-import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import CustomDraftFormatModal from 'components/modals/CustomDraftFormatModal';
 import UploadDecklistModal from 'components/modals/UploadDecklistModal';
@@ -25,32 +23,20 @@ const PlaytestNavbar: React.FC = () => {
   }
 
   return (
-    <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2">
-      <Dropdown
-        trigger={
-          <Button color="secondary" className="flex items-center gap-2 py-2">
-            <ToolsIcon size={16} />
-          </Button>
-        }
-        align="left"
-        minWidth="16rem"
+    <Flexbox direction="row" gap="6" alignItems="center" justify="start" className="px-2" wrap="wrap">
+      <CreateCustomFormatButton
+        modalprops={{
+          formatIndex: -1,
+        }}
+        className="flex items-center gap-2 !text-button-primary hover:!text-button-primary-active transition-colors font-medium cursor-pointer"
       >
-        <Flexbox direction="col" gap="2" className="p-3">
-          <CreateCustomFormatButton
-            modalprops={{
-              formatIndex: -1,
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium flex items-center justify-between"
-          >
-            <span>Create Custom Draft Format</span>
-            <PlusIcon size={16} />
-          </CreateCustomFormatButton>
-          <UploadDecklistModalButton className="!text-text hover:!text-link-active hover:cursor-pointer font-medium flex items-center justify-between">
-            <span>Upload Decklist</span>
-            <UploadIcon size={16} />
-          </UploadDecklistModalButton>
-        </Flexbox>
-      </Dropdown>
+        <PlusIcon size={16} />
+        Create Custom Draft Format
+      </CreateCustomFormatButton>
+      <UploadDecklistModalButton className="flex items-center gap-2 !text-button-primary hover:!text-button-primary-active transition-colors font-medium cursor-pointer">
+        <UploadIcon size={16} />
+        Upload Decklist
+      </UploadDecklistModalButton>
     </Flexbox>
   );
 };
