@@ -168,7 +168,7 @@ const Navbar: React.FC<NavbarProps> = () => {
             className={`px-2 py-1 rounded transition-colors duration-200 text-white relative ${mobileMenuOpen === 'notifications' ? 'bg-bg-active' : ''}`}
           >
             {notifications.length > 0 && (
-              <span className="absolute top-0 right-0 text-xs font-semibold text-white bg-button-danger rounded-full px-1 py-0.5 min-w-[1.25rem] text-center translate-x-1/2 -translate-y-1/2">
+              <span className="absolute top-0 right-0 text-xs font-semibold text-white bg-button-danger rounded-full px-1 py-0.5 min-w-[1.25rem] text-center translate-x-1 -translate-y-1">
                 {notifications.length > 99 ? '99+' : notifications.length}
               </span>
             )}

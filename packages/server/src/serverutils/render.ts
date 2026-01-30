@@ -11,6 +11,7 @@ import 'dotenv/config';
 import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
 import { cubeDao, notificationDao } from '../dynamo/daos';
 import { Request, Response } from '../types/express';
+import { GIT_COMMIT } from './git';
 import { getBaseUrl } from './util';
 
 interface BundleManifest {
@@ -182,6 +183,7 @@ const render = (
         notice: process.env.NOTICE,
         theme,
         noindex: options.noindex || false,
+        cssVersion: GIT_COMMIT,
       });
     } catch {
       res.status(500).send('Error rendering page');

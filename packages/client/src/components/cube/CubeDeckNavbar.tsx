@@ -8,6 +8,7 @@ import User from '@utils/datatypes/User';
 import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import DeckDeleteModal from 'components/modals/DeckDeleteModal';
 import SampleHandModal from 'components/modals/SampleHandModal';
@@ -59,190 +60,354 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
   }, [addAlert, dismissAlerts, draft, seatIndex]);
 
   return (
-    <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2 mt-2" wrap="wrap">
-      <div className="inline-block px-2">
-        <Select
-          value={seatIndex}
-          setValue={setSeatIndex}
-          options={draft.seats.map((seat, index) => ({
-            value: index.toString(),
-            label: `Seat ${index + 1}: ${seat.name}`,
-          }))}
-        />
-      </div>
-      <div className="inline-block px-2">
-        <Select
-          value={view}
-          setValue={setView}
-          options={[
-            { value: 'draft', label: 'Deck View' },
-            { value: 'visual', label: 'Visual Spoiler' },
-            { value: 'picks', label: 'Pick by Pick Breakdown' },
-          ]}
-        />
-      </div>
-      <Dropdown
-        trigger={
-          <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
-            <UploadIcon size={16} />
-            Export
-          </Link>
-        }
-        align="left"
-        minWidth="16rem"
-        isOpen={exportDropdownOpen}
-        setIsOpen={setExportDropdownOpen}
-      >
-        <Flexbox direction="col" gap="2" className="p-3">
-          <Link
-            href={`/cube/deck/download/txt/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setExportDropdownOpen(false)}
+    <>
+      {/* Desktop view - single row */}
+      <ResponsiveDiv lg>
+        <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2 mt-2" wrap="wrap">
+          <div className="inline-block px-2">
+            <Select
+              value={seatIndex}
+              setValue={setSeatIndex}
+              options={draft.seats.map((seat, index) => ({
+                value: index.toString(),
+                label: `Seat ${index + 1}: ${seat.name}`,
+              }))}
+            />
+          </div>
+          <div className="inline-block px-2">
+            <Select
+              value={view}
+              setValue={setView}
+              options={[
+                { value: 'draft', label: 'Deck View' },
+                { value: 'visual', label: 'Visual Spoiler' },
+                { value: 'picks', label: 'Pick by Pick Breakdown' },
+              ]}
+            />
+          </div>
+          <Dropdown
+            trigger={
+              <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+                <UploadIcon size={16} />
+                Export
+              </Link>
+            }
+            align="left"
+            minWidth="16rem"
+            isOpen={exportDropdownOpen}
+            setIsOpen={setExportDropdownOpen}
           >
-            Card Names (.txt)
-          </Link>
-          <Link
-            href="#"
-            onClick={() => {
-              copyToClipboard();
-              setExportDropdownOpen(false);
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-          >
-            Card Names to Clipboard
-          </Link>
-          <Link
-            href={`/cube/deck/download/forge/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setExportDropdownOpen(false)}
-          >
-            Forge (.dck)
-          </Link>
-          <Link
-            href={`/cube/deck/download/xmage/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setExportDropdownOpen(false)}
-          >
-            XMage (.dck)
-          </Link>
-          <Link
-            href={`/cube/deck/download/mtgo/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setExportDropdownOpen(false)}
-          >
-            MTGO (.txt)
-          </Link>
-          <Link
-            href={`/cube/deck/download/arena/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setExportDropdownOpen(false)}
-          >
-            Arena (.txt)
-          </Link>
-          <Link
-            href={`/cube/deck/download/cockatrice/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setExportDropdownOpen(false)}
-          >
-            Cockatrice (.txt)
-          </Link>
-          <Link
-            href={`/cube/deck/download/topdecked/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setExportDropdownOpen(false)}
-          >
-            TopDecked (.csv)
-          </Link>
-          <Alerts alerts={alerts} />
-        </Flexbox>
-      </Dropdown>
-      {isOwner && hasMultipleSeats && (
-        <Dropdown
-          trigger={
-            <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+            <Flexbox direction="col" gap="2" className="p-3">
+              <Link
+                href={`/cube/deck/download/txt/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setExportDropdownOpen(false)}
+              >
+                Card Names (.txt)
+              </Link>
+              <Link
+                href="#"
+                onClick={() => {
+                  copyToClipboard();
+                  setExportDropdownOpen(false);
+                }}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+              >
+                Card Names to Clipboard
+              </Link>
+              <Link
+                href={`/cube/deck/download/forge/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setExportDropdownOpen(false)}
+              >
+                Forge (.dck)
+              </Link>
+              <Link
+                href={`/cube/deck/download/xmage/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setExportDropdownOpen(false)}
+              >
+                XMage (.dck)
+              </Link>
+              <Link
+                href={`/cube/deck/download/mtgo/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setExportDropdownOpen(false)}
+              >
+                MTGO (.txt)
+              </Link>
+              <Link
+                href={`/cube/deck/download/arena/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setExportDropdownOpen(false)}
+              >
+                Arena (.txt)
+              </Link>
+              <Link
+                href={`/cube/deck/download/cockatrice/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setExportDropdownOpen(false)}
+              >
+                Cockatrice (.txt)
+              </Link>
+              <Link
+                href={`/cube/deck/download/topdecked/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setExportDropdownOpen(false)}
+              >
+                TopDecked (.csv)
+              </Link>
+              <Alerts alerts={alerts} />
+            </Flexbox>
+          </Dropdown>
+          {isOwner && hasMultipleSeats && (
+            <Dropdown
+              trigger={
+                <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+                  <PencilIcon size={16} />
+                  Edit
+                </Link>
+              }
+              align="left"
+              minWidth="16rem"
+              isOpen={editDropdownOpen}
+              setIsOpen={setEditDropdownOpen}
+            >
+              <Flexbox direction="col" gap="2" className="p-3">
+                {draft.seats.map((seat, index) => (
+                  <Link
+                    key={index}
+                    href={`/draft/deckbuilder/${draft.id}?seat=${index}`}
+                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                    onClick={() => setEditDropdownOpen(false)}
+                  >
+                    Seat {index + 1}: {seat.name}
+                  </Link>
+                ))}
+              </Flexbox>
+            </Dropdown>
+          )}
+          {isOwner && !hasMultipleSeats && (
+            <Link
+              href={`/draft/deckbuilder/${draft.id}?seat=0`}
+              className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+            >
               <PencilIcon size={16} />
               Edit
             </Link>
-          }
-          align="left"
-          minWidth="16rem"
-          isOpen={editDropdownOpen}
-          setIsOpen={setEditDropdownOpen}
-        >
-          <Flexbox direction="col" gap="2" className="p-3">
-            {draft.seats.map((seat, index) => (
-              <Link
-                key={index}
-                href={`/draft/deckbuilder/${draft.id}?seat=${index}`}
-                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setEditDropdownOpen(false)}
-              >
-                Seat {index + 1}: {seat.name}
+          )}
+          <Dropdown
+            trigger={
+              <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+                <KebabHorizontalIcon size={16} />
+                More
               </Link>
-            ))}
-          </Flexbox>
-        </Dropdown>
-      )}
-      {isOwner && !hasMultipleSeats && (
-        <Link
-          href={`/draft/deckbuilder/${draft.id}?seat=0`}
-          className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
-        >
-          <PencilIcon size={16} />
-          Edit
-        </Link>
-      )}
-      <Dropdown
-        trigger={
-          <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
-            <KebabHorizontalIcon size={16} />
-            More
-          </Link>
-        }
-        align="left"
-        minWidth="16rem"
-        isOpen={moreDropdownOpen}
-        setIsOpen={setMoreDropdownOpen}
-      >
-        <Flexbox direction="col" gap="2" className="p-3">
-          <SampleHandModalLink
-            modalprops={{
-              deck: draft.seats[parseInt(seatIndex || '0')].mainboard
-                ?.flat(3)
-                .map((cardIndex) => draft.cards[cardIndex]),
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setMoreDropdownOpen(false)}
+            }
+            align="left"
+            minWidth="16rem"
+            isOpen={moreDropdownOpen}
+            setIsOpen={setMoreDropdownOpen}
           >
-            Sample Hand
-          </SampleHandModalLink>
-          <Link
-            href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setMoreDropdownOpen(false)}
-          >
-            Clone and Rebuild
-          </Link>
-          <Link
-            href="#"
-            onClick={() => {
-              toggleShowCustomImages();
-              setMoreDropdownOpen(false);
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-          >
-            {showCustomImages ? 'Hide' : 'Show'} Custom Images
-          </Link>
-          <DeleteDeckModalLink
-            modalprops={{ deck: draft, cubeID: draft.cube }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setMoreDropdownOpen(false)}
-          >
-            Delete Deck
-          </DeleteDeckModalLink>
+            <Flexbox direction="col" gap="2" className="p-3">
+              <SampleHandModalLink
+                modalprops={{
+                  deck: draft.seats[parseInt(seatIndex || '0')].mainboard
+                    ?.flat(3)
+                    .map((cardIndex) => draft.cards[cardIndex]),
+                }}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setMoreDropdownOpen(false)}
+              >
+                Sample Hand
+              </SampleHandModalLink>
+              <Link
+                href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setMoreDropdownOpen(false)}
+              >
+                Clone and Rebuild
+              </Link>
+              <Link
+                href="#"
+                onClick={() => {
+                  toggleShowCustomImages();
+                  setMoreDropdownOpen(false);
+                }}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+              >
+                {showCustomImages ? 'Hide' : 'Show'} Custom Images
+              </Link>
+              <DeleteDeckModalLink
+                modalprops={{ deck: draft, cubeID: draft.cube }}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                onClick={() => setMoreDropdownOpen(false)}
+              >
+                Delete Deck
+              </DeleteDeckModalLink>
+            </Flexbox>
+          </Dropdown>
         </Flexbox>
-      </Dropdown>
-    </Flexbox>
+      </ResponsiveDiv>
+
+      {/* Mobile view - two rows */}
+      <ResponsiveDiv baseVisible lg>
+        <Flexbox direction="col" gap="2" className="px-2 mt-2">
+          {/* First row: Two selects taking half width each */}
+          <Flexbox direction="row" gap="2" className="w-full">
+            <div className="flex-1">
+              <Select
+                value={seatIndex}
+                setValue={setSeatIndex}
+                options={draft.seats.map((seat, index) => ({
+                  value: index.toString(),
+                  label: `Seat ${index + 1}: ${seat.name}`,
+                }))}
+              />
+            </div>
+            <div className="flex-1">
+              <Select
+                value={view}
+                setValue={setView}
+                options={[
+                  { value: 'draft', label: 'Deck View' },
+                  { value: 'visual', label: 'Visual Spoiler' },
+                  { value: 'picks', label: 'Pick by Pick Breakdown' },
+                ]}
+              />
+            </div>
+          </Flexbox>
+
+          {/* Second row: Export and More controls */}
+          <Flexbox direction="row" gap="2" alignItems="center" justify="between" className="w-full">
+            <Dropdown
+              trigger={
+                <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+                  <UploadIcon size={16} />
+                  Export
+                </Link>
+              }
+              align="left"
+              minWidth="16rem"
+              isOpen={exportDropdownOpen}
+              setIsOpen={setExportDropdownOpen}
+            >
+              <Flexbox direction="col" gap="2" className="p-3">
+                <Link
+                  href={`/cube/deck/download/txt/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setExportDropdownOpen(false)}
+                >
+                  Card Names (.txt)
+                </Link>
+                <Link
+                  href="#"
+                  onClick={() => {
+                    copyToClipboard();
+                    setExportDropdownOpen(false);
+                  }}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                >
+                  Card Names to Clipboard
+                </Link>
+                <Link
+                  href={`/cube/deck/download/forge/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setExportDropdownOpen(false)}
+                >
+                  Forge (.dck)
+                </Link>
+                <Link
+                  href={`/cube/deck/download/xmage/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setExportDropdownOpen(false)}
+                >
+                  XMage (.dck)
+                </Link>
+                <Link
+                  href={`/cube/deck/download/mtgo/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setExportDropdownOpen(false)}
+                >
+                  MTGO (.txt)
+                </Link>
+                <Link
+                  href={`/cube/deck/download/arena/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setExportDropdownOpen(false)}
+                >
+                  Arena (.txt)
+                </Link>
+                <Link
+                  href={`/cube/deck/download/cockatrice/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setExportDropdownOpen(false)}
+                >
+                  Cockatrice (.txt)
+                </Link>
+                <Link
+                  href={`/cube/deck/download/topdecked/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setExportDropdownOpen(false)}
+                >
+                  TopDecked (.csv)
+                </Link>
+                <Alerts alerts={alerts} />
+              </Flexbox>
+            </Dropdown>
+            <Dropdown
+              trigger={
+                <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+                  <KebabHorizontalIcon size={16} />
+                  More
+                </Link>
+              }
+              align="right"
+              minWidth="16rem"
+              isOpen={moreDropdownOpen}
+              setIsOpen={setMoreDropdownOpen}
+            >
+              <Flexbox direction="col" gap="2" className="p-3">
+                <SampleHandModalLink
+                  modalprops={{
+                    deck: draft.seats[parseInt(seatIndex || '0')].mainboard
+                      ?.flat(3)
+                      .map((cardIndex) => draft.cards[cardIndex]),
+                  }}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setMoreDropdownOpen(false)}
+                >
+                  Sample Hand
+                </SampleHandModalLink>
+                <Link
+                  href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setMoreDropdownOpen(false)}
+                >
+                  Clone and Rebuild
+                </Link>
+                <Link
+                  href="#"
+                  onClick={() => {
+                    toggleShowCustomImages();
+                    setMoreDropdownOpen(false);
+                  }}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                >
+                  {showCustomImages ? 'Hide' : 'Show'} Custom Images
+                </Link>
+                <DeleteDeckModalLink
+                  modalprops={{ deck: draft, cubeID: draft.cube }}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  onClick={() => setMoreDropdownOpen(false)}
+                >
+                  Delete Deck
+                </DeleteDeckModalLink>
+              </Flexbox>
+            </Dropdown>
+          </Flexbox>
+        </Flexbox>
+      </ResponsiveDiv>
+    </>
   );
 };
 

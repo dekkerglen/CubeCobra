@@ -26,13 +26,12 @@ import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
 
 import Dropdown from '../base/Dropdown';
-import Link from '../base/Link';
 import Select from '../base/Select';
 import Tooltip from '../base/Tooltip';
 
-const PasteBulkModalItem = withModal(Link, PasteBulkModal);
-const UploadBulkModalItem = withModal(Link, UploadBulkModal);
-const UploadBulkReplaceModalItem = withModal(Link, UploadBulkReplaceModal);
+const PasteBulkModalItem = withModal('button', PasteBulkModal);
+const UploadBulkModalItem = withModal('button', UploadBulkModal);
+const UploadBulkReplaceModalItem = withModal('button', UploadBulkReplaceModal);
 
 interface CubeListNavbarProps {
   cubeView: string;
@@ -91,28 +90,23 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
     setAdvancedOpen(false);
   }, [filterValues, setFilterInput]);
 
-  const [importDropdownOpen, setImportDropdownOpen] = useState(false);
-
   const importMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">
       <PasteBulkModalItem
         modalprops={{ cubeID: cube.id }}
-        className="!text-text hover:!text-link-active"
-        onClick={() => setImportDropdownOpen(false)}
+        className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
       >
         Paste Text
       </PasteBulkModalItem>
       <UploadBulkModalItem
         modalprops={{ cubeID: cube.id }}
-        className="!text-text hover:!text-link-active"
-        onClick={() => setImportDropdownOpen(false)}
+        className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
       >
         Upload File
       </UploadBulkModalItem>
       <UploadBulkReplaceModalItem
         modalprops={{ cubeID: cube.id }}
-        className="!text-text hover:!text-link-active"
-        onClick={() => setImportDropdownOpen(false)}
+        className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
       >
         Replace with CSV Upload
       </UploadBulkReplaceModalItem>
@@ -253,8 +247,6 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               }
               align="right"
               minWidth="16rem"
-              isOpen={importDropdownOpen}
-              setIsOpen={setImportDropdownOpen}
             >
               {importMenuItems}
             </Dropdown>
@@ -273,7 +265,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 className={`px-2 py-1 rounded transition-colors ${cubeView === 'table' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
                 aria-label="Table View"
               >
-                <TableIcon size={20} />
+                <TableIcon size={16} />
               </button>
             </Tooltip>
             <Tooltip text="Visual Spoiler">
@@ -282,7 +274,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 className={`px-2 py-1 rounded transition-colors ${cubeView === 'spoiler' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
                 aria-label="Visual Spoiler"
               >
-                <ImageIcon size={20} />
+                <ImageIcon size={16} />
               </button>
             </Tooltip>
             <Tooltip text="Curve View">
@@ -291,7 +283,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 className={`px-2 py-1 rounded transition-colors ${cubeView === 'curve' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
                 aria-label="Curve View"
               >
-                <GraphIcon size={20} />
+                <GraphIcon size={16} />
               </button>
             </Tooltip>
             {canEdit && (
@@ -301,7 +293,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                   className={`px-2 py-1 rounded transition-colors ${cubeView === 'list' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
                   aria-label="List View"
                 >
-                  <ListUnorderedIcon size={20} />
+                  <ListUnorderedIcon size={16} />
                 </button>
               </Tooltip>
             )}
@@ -334,8 +326,6 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               }
               align="right"
               minWidth="16rem"
-              isOpen={importDropdownOpen}
-              setIsOpen={setImportDropdownOpen}
             >
               {importMenuItems}
             </Dropdown>

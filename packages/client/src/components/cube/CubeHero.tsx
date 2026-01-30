@@ -738,7 +738,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
             </ReportCubeButton>
           </Flexbox>
 
-          {/* Mobile: Share, Purchase, Compare, More with justify-between */}
+          {/* Mobile: Purchase, Export, Compare, More with justify-between */}
           <Flexbox direction="row" justify="between" alignItems="center" className="lg:hidden w-full">
             {user && !isCubeOwner && (
               <button
@@ -752,22 +752,6 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
                 </Text>
               </button>
             )}
-            <ShareCubeButton
-              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
-              aria-label="Share cube"
-              modalprops={{
-                shortId: cube.shortId,
-                fullID: cube.id,
-                cubeUrl: `${baseUrl}/cube/list/${cube.id}`,
-                cubeName: cube.name,
-                alert: addAlert,
-              }}
-            >
-              <LinkIcon size={20} />
-              <Text sm className="text-white">
-                Share
-              </Text>
-            </ShareCubeButton>
             <div className="flex items-center whitespace-nowrap">
               <Dropdown
                 trigger={
@@ -782,6 +766,22 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
                 minWidth="16rem"
               >
                 {purchaseMenuItems}
+              </Dropdown>
+            </div>
+            <div className="flex items-center whitespace-nowrap">
+              <Dropdown
+                trigger={
+                  <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                    <DownloadIcon size={20} />
+                    <Text sm className="text-white">
+                      Export
+                    </Text>
+                  </button>
+                }
+                align="left"
+                minWidth="16rem"
+              >
+                {exportMenuItems}
               </Dropdown>
             </div>
             <CompareModalButton
@@ -807,13 +807,22 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
                 minWidth="16rem"
               >
                 <Flexbox direction="col" gap="2" className="p-3">
-                  <div className="!text-text hover:!text-link-active hover:cursor-pointer font-medium">
-                    <div className="font-semibold mb-2">Export</div>
-                    <Flexbox direction="col" gap="1" className="pl-2">
-                      {exportMenuItems}
+                  <ShareCubeButton
+                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium text-left"
+                    aria-label="Share cube"
+                    modalprops={{
+                      shortId: cube.shortId,
+                      fullID: cube.id,
+                      cubeUrl: `${baseUrl}/cube/list/${cube.id}`,
+                      cubeName: cube.name,
+                      alert: addAlert,
+                    }}
+                  >
+                    <Flexbox direction="row" gap="2" alignItems="center">
+                      <LinkIcon size={16} />
+                      Share
                     </Flexbox>
-                  </div>
-                  <div className="border-t border-border my-1"></div>
+                  </ShareCubeButton>
                   <a
                     href={`/cube/rss/${cube.id}`}
                     className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
