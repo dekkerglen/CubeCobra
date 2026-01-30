@@ -33,7 +33,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         // Headless UI Dialog uses role="dialog" on the DialogPanel
         const target = event.target as HTMLElement;
         const isInsideModal = target.closest('[role="dialog"]') !== null;
-        
+
         // Don't close the dropdown if clicking inside a modal
         if (!isInsideModal) {
           setIsOpen(false);

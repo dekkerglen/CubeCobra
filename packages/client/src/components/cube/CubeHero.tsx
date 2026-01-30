@@ -56,9 +56,10 @@ const FollowersModalLink = withModal(Link, FollowersModal);
 
 interface CubeHeroProps {
   cube: Cube;
+  minified?: boolean;
 }
 
-const CubeHero: React.FC<CubeHeroProps> = ({ cube }) => {
+const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
   const baseUrl = useContext(BaseUrlContext);
@@ -70,6 +71,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube }) => {
   const [maskGradient, setMaskGradient] = useState('linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%)');
   const [mobileMaskGradient, setMobileMaskGradient] = useState(
     'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%)',
+  );
+  const [minifiedMaskGradient, setMinifiedMaskGradient] = useState(
+    'linear-gradient(to left, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%)',
+  );
+  const [minifiedMobileMaskGradient, setMinifiedMobileMaskGradient] = useState(
+    'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)',
   );
   const heroRef = React.useRef<HTMLDivElement>(null);
 
@@ -115,12 +122,19 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube }) => {
         const heroWidth = heroRef.current?.offsetWidth || 0;
         const aspectRatio = img.width / img.height;
 
-        // Desktop gradient calculation (horizontal)
+        // Desktop gradient calculation (horizontal) for full hero (2x zoom)
         const imageWidth = heroHeight * aspectRatio * 2; // 2x zoom means 2x width
         const imageWidthPercent = (imageWidth / heroWidth) * 100;
         const midpoint = imageWidthPercent / 2;
         const desktopGradient = `linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) ${midpoint}%, rgba(0,0,0,0) ${imageWidthPercent}%)`;
         setMaskGradient(desktopGradient);
+
+        // Desktop gradient calculation (horizontal) for minified hero (6x zoom)
+        const minifiedImageWidth = heroHeight * aspectRatio * 6; // 6x zoom means 6x width
+        const minifiedImageWidthPercent = (minifiedImageWidth / heroWidth) * 100;
+        const minifiedMidpoint = minifiedImageWidthPercent / 2;
+        const minifiedDesktopGradient = `linear-gradient(to left, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) ${minifiedMidpoint}%, rgba(0,0,0,0) ${minifiedImageWidthPercent}%)`;
+        setMinifiedMaskGradient(minifiedDesktopGradient);
 
         // Mobile gradient calculation (vertical)
         // Image is sized as 100% width, so height = width / aspectRatio
@@ -130,6 +144,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube }) => {
         // Fade from 50% opacity at top, maintain through midpoint, then fade to transparent at image bottom
         const mobileGradient = `linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) ${mobileMidpoint}%, rgba(0,0,0,0) ${imageHeightPercent}%)`;
         setMobileMaskGradient(mobileGradient);
+        setMinifiedMobileMaskGradient(mobileGradient); // Same for minified on mobile
       };
 
       img.src = cube.image.uri;
@@ -140,6 +155,138 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube }) => {
 
     return () => window.removeEventListener('resize', updateGradient);
   }, [cube.image.uri]);
+
+  // Minified version - just cube name and owner
+  if (minified) {
+    return (
+      <div className="relative w-full bg-hero-bg border-b border-border" style={{ overflow: 'visible' }}>
+        {/* Background image on mobile with triple zoom */}
+        <div
+          className="lg:hidden absolute inset-0"
+          style={{
+            backgroundImage: `url(${cube.image.uri})`,
+            backgroundSize: '100% auto',
+            backgroundPosition: 'top center',
+            backgroundRepeat: 'no-repeat',
+            maskImage: minifiedMobileMaskGradient,
+            WebkitMaskImage: minifiedMobileMaskGradient,
+          }}
+        />
+        {/* Background image on desktop with triple zoom */}
+        <div
+          className="hidden lg:block absolute inset-0"
+          style={{
+            backgroundImage: `url(${cube.image.uri})`,
+            backgroundSize: 'auto 600%',
+            backgroundPosition: 'right center',
+            backgroundRepeat: 'no-repeat',
+            maskImage: minifiedMaskGradient,
+            WebkitMaskImage: minifiedMaskGradient,
+          }}
+        />
+        <div className="relative p-4">
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <div>
+                <h1 className="text-white font-semibold text-2xl">{cube.name}</h1>
+                <Text sm className="text-white/80 mt-1">
+                  {getCubeCardCountSnippet(cube)} Cube
+                </Text>
+              </div>
+              <div className="flex items-center gap-2">
+                {cube.owner.image && (
+                  <a href={`/user/view/${cube.owner.id}`}>
+                    <img
+                      className="profile-thumbnail"
+                      src={cube.owner.image.uri}
+                      alt={cube.owner.image.artist}
+                      title={cube.owner.image.artist}
+                    />
+                  </a>
+                )}
+                <Text sm className="text-white/80">
+                  by{' '}
+                  <a href={`/user/view/${cube.owner.id}`} className="text-white hover:underline">
+                    {cube.owner.username}
+                  </a>
+                </Text>
+              </div>
+            </div>
+            {isCubeOwner && (
+              <div className="flex-shrink-0">
+                <Dropdown
+                  trigger={
+                    <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                      <span
+                        style={{
+                          filter: 'drop-shadow(0 0 3px rgba(0, 0, 0, 1)) drop-shadow(0 0 6px rgba(0, 0, 0, 0.8))',
+                        }}
+                      >
+                        <GearIcon size={24} />
+                      </span>
+                    </button>
+                  }
+                  align="right"
+                  minWidth="16rem"
+                >
+                  <Flexbox direction="col" gap="2" className="p-3">
+                    {(cube.cardCount > 0 && (
+                      <CubeOverviewModalLink
+                        modalprops={{
+                          cube: cube,
+                        }}
+                        className="!text-text hover:!text-link-active"
+                      >
+                        Edit Primer
+                      </CubeOverviewModalLink>
+                    )) || (
+                      <Tooltip text="Please add at least one card to the cube in order to edit the primer. This is a spam prevention mechanism.">
+                        <span className="!text-text opacity-50 cursor-not-allowed">Edit Primer</span>
+                      </Tooltip>
+                    )}
+                    <CubeSettingsModalLink
+                      modalprops={{ addAlert, onCubeUpdate: () => {} }}
+                      className="!text-text hover:!text-link-active"
+                    >
+                      Edit Settings
+                    </CubeSettingsModalLink>
+                    <CustomizeBasicsModalLink
+                      modalprops={{
+                        cube: cube,
+                        onError: (message: string) => {
+                          addAlert('danger', message);
+                        },
+                      }}
+                      className="!text-text hover:!text-link-active"
+                    >
+                      Customize basics
+                    </CustomizeBasicsModalLink>
+                    <Link
+                      href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
+                      className="!text-text hover:!text-link-active"
+                    >
+                      Restore
+                    </Link>
+                    <DeleteCubeModalLink modalprops={{ cube }} className="!text-text hover:!text-link-active">
+                      Delete Cube
+                    </DeleteCubeModalLink>
+                    {hasCustomImages && (
+                      <>
+                        <div className="border-t border-border my-1"></div>
+                        <Link onClick={toggleShowCustomImages} className="!text-text hover:!text-link-active">
+                          {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
+                        </Link>
+                      </>
+                    )}
+                  </Flexbox>
+                </Dropdown>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const urlSegment = '';
 

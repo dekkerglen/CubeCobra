@@ -1,29 +1,25 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
-import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import { PencilIcon, ToolsIcon, TrashIcon } from '@primer/octicons-react';
 import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 
-import DeckBuilderStatsToggler from 'components/DeckBuilderStatsToggler';
+import DisplayContext from 'contexts/DisplayContext';
 
 import { CSRFContext } from '../contexts/CSRFContext';
-import useToggle from '../hooks/UseToggle';
 import Button from './base/Button';
-import Collapse from './base/Collapse';
-import Controls from './base/Controls';
+import Dropdown from './base/Dropdown';
 import { Flexbox } from './base/Layout';
 import Link from './base/Link';
-import ResponsiveDiv from './base/ResponsiveDiv';
 import CSRFForm from './CSRFForm';
-import CustomImageToggler from './CustomImageToggler';
 import BasicsModal from './modals/BasicsModal';
 import DeckDeleteModal from './modals/DeckDeleteModal';
 import withModal from './WithModal';
 
-const DeleteDeckModalLink = withModal(Link, DeckDeleteModal);
-const BasicsModalLink = withModal(Link, BasicsModal);
+const DeleteDeckModalLink = withModal('a', DeckDeleteModal);
+const BasicsModalLink = withModal('a', BasicsModal);
 
 interface DeckbuilderNavbarProps {
   draft: Draft;
@@ -54,7 +50,8 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   seat,
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
-  const [expanded, toggleExpanded] = useToggle(false);
+  const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
+    useContext(DisplayContext);
   const formRef = useRef<HTMLFormElement>(null);
   const formData = useMemo<Record<string, string>>(
     () => ({
@@ -126,50 +123,71 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
     }
   }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard]);
 
-  const controls = (
-    <>
-      <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
-        <Link href="#" onClick={() => formRef.current?.submit()}>
-          Save Deck
-        </Link>
-      </CSRFForm>
-      <DeleteDeckModalLink modalprops={{ deck: draft, cubeID }}>Delete Deck</DeleteDeckModalLink>
-      <BasicsModalLink
-        modalprops={{
-          basics: basics,
-          addBasics,
-          deck: mainboard.flat(2),
-          cards: cards,
-        }}
-      >
-        Add Basic Lands
-      </BasicsModalLink>
-      <Link onClick={() => autoBuildDeck()}>Build for Me</Link>
-      <CustomImageToggler />
-      <DeckBuilderStatsToggler />
-    </>
-  );
-
   return (
-    <Controls>
-      <ResponsiveDiv lg>
-        <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="w-full py-2 px-4">
-          {controls}
-        </Flexbox>
-      </ResponsiveDiv>
-      <ResponsiveDiv baseVisible lg>
-        <Flexbox direction="row" justify="between" gap="4" alignItems="start" className="w-full py-2 px-4">
-          <Collapse isOpen={expanded}>
-            <Flexbox direction="col" gap="2">
-              {controls}
-            </Flexbox>
-          </Collapse>
-          <Button color="secondary" onClick={toggleExpanded}>
-            {expanded ? <ChevronUpIcon size={32} /> : <ThreeBarsIcon size={32} />}
+    <Flexbox direction="row" gap="2" justify="start" className="w-full mt-2 px-2 flex-wrap">
+      {/* Wrench menu with utility actions */}
+      <Dropdown
+        trigger={
+          <Button color="secondary" className="py-2">
+            <ToolsIcon size={16} />
           </Button>
+        }
+        align="left"
+        minWidth="14rem"
+      >
+        <Flexbox direction="col" gap="2" className="p-3">
+          <BasicsModalLink
+            href="#"
+            modalprops={{
+              basics: basics,
+              addBasics,
+              deck: mainboard.flat(2),
+              cards: cards,
+            }}
+            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+          >
+            Add Basic Lands
+          </BasicsModalLink>
+          <Link
+            onClick={() => autoBuildDeck()}
+            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+          >
+            Build for Me
+          </Link>
+          <Link
+            onClick={toggleShowCustomImages}
+            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+          >
+            {showCustomImages ? 'Hide' : 'Show'} Custom Images
+          </Link>
+          <Link
+            onClick={toggleShowDeckBuilderStatsPanel}
+            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+          >
+            {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
+          </Link>
         </Flexbox>
-      </ResponsiveDiv>
-    </Controls>
+      </Dropdown>
+
+      {/* Center section with Save and Delete */}
+      <Flexbox direction="row" gap="2" justify="center" className="flex-1 flex-wrap">
+        <div className="inline-block">
+          <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
+            <Link href="#" onClick={() => formRef.current?.submit()} className="inline-block">
+              <Button color="primary" className="py-2">
+                <PencilIcon size={16} /> Save Deck
+              </Button>
+            </Link>
+          </CSRFForm>
+        </div>
+
+        <DeleteDeckModalLink modalprops={{ deck: draft, cubeID }} className="inline-block">
+          <Button color="danger" className="py-2">
+            <TrashIcon size={16} /> Delete Deck
+          </Button>
+        </DeleteDeckModalLink>
+      </Flexbox>
+    </Flexbox>
   );
 };
 

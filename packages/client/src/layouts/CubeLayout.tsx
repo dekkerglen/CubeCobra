@@ -47,6 +47,9 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
   controls,
   rightSidebar,
 }) => {
+  // Only show full hero on list, primer, blog, and changelog pages
+  const showFullHero = ['list', 'primer', 'blog', 'changelog'].includes(activeLink);
+
   return (
     <FilterContextProvider>
       <ChangesContextProvider cube={cube} cards={cards}>
@@ -59,7 +62,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
           <div className="flex flex-grow">
             <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
             <div className="flex-1 flex flex-col min-w-0">
-              <CubeHero cube={cube} />
+              <CubeHero cube={cube} minified={!showFullHero} />
               <Banner />
               <div className="px-4">
                 <CubeLayoutInner>{children}</CubeLayoutInner>
