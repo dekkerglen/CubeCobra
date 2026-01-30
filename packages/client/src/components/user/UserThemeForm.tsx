@@ -47,7 +47,8 @@ const UserThemeForm: React.FC = () => {
           value={selectedTheme}
           setValue={(value) => setSelectedTheme(value)}
           options={[
-            { value: 'default', label: 'Default' },
+            { value: 'system', label: 'System' },
+            { value: 'light', label: 'Light' },
             { value: 'dark', label: 'Dark' },
           ]}
         />
