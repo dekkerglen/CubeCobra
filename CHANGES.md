@@ -17,6 +17,7 @@ As of 1.4.57
 - Cloned cubes now default to "Unlisted" visibility
 - Added toggles when adding packages to cube for autotagging the new cards and creating a blog post
 - Refactored mobile nav bar for a better user experience
+- Added one card per row as an option for visual spoiler
 
 # Bug Fixes
 

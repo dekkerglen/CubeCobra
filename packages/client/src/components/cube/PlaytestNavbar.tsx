@@ -23,17 +23,17 @@ const PlaytestNavbar: React.FC = () => {
   }
 
   return (
-    <Flexbox direction="row" gap="6" alignItems="center" justify="start" className="px-2" wrap="wrap">
+    <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
       <CreateCustomFormatButton
         modalprops={{
           formatIndex: -1,
         }}
-        className="flex items-center gap-2 !text-button-primary hover:!text-button-primary-active transition-colors font-medium cursor-pointer"
+        className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
       >
         <PlusIcon size={16} />
         Create Custom Draft Format
       </CreateCustomFormatButton>
-      <UploadDecklistModalButton className="flex items-center gap-2 !text-button-primary hover:!text-button-primary-active transition-colors font-medium cursor-pointer">
+      <UploadDecklistModalButton className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
         <UploadIcon size={16} />
         Upload Decklist
       </UploadDecklistModalButton>

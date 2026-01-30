@@ -145,19 +145,19 @@ const Navbar: React.FC<NavbarProps> = () => {
     <>
       <button
         onClick={() => toggleMobileMenu('content')}
-        className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'content' ? 'bg-bg-active' : ''}`}
+        className={`px-2 py-1 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'content' ? 'bg-bg-active' : ''}`}
       >
         <BookIcon size={24} />
       </button>
       <button
         onClick={() => toggleMobileMenu('explore')}
-        className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'explore' ? 'bg-bg-active' : ''}`}
+        className={`px-2 py-1 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'explore' ? 'bg-bg-active' : ''}`}
       >
         <SearchIcon size={24} />
       </button>
       <button
         onClick={() => toggleMobileMenu('about')}
-        className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'about' ? 'bg-bg-active' : ''}`}
+        className={`px-2 py-1 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'about' ? 'bg-bg-active' : ''}`}
       >
         <InfoIcon size={24} />
       </button>
@@ -165,7 +165,7 @@ const Navbar: React.FC<NavbarProps> = () => {
         <>
           <button
             onClick={() => toggleMobileMenu('notifications')}
-            className={`p-2 rounded transition-colors duration-200 text-white relative ${mobileMenuOpen === 'notifications' ? 'bg-bg-active' : ''}`}
+            className={`px-2 py-1 rounded transition-colors duration-200 text-white relative ${mobileMenuOpen === 'notifications' ? 'bg-bg-active' : ''}`}
           >
             {notifications.length > 0 && (
               <span className="absolute top-0 right-0 text-xs font-semibold text-white bg-button-danger rounded-full px-1 py-0.5 min-w-[1.25rem] text-center translate-x-1/2 -translate-y-1/2">
@@ -176,13 +176,13 @@ const Navbar: React.FC<NavbarProps> = () => {
           </button>
           <button
             onClick={() => toggleMobileMenu('cubes')}
-            className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'cubes' ? 'bg-bg-active' : ''}`}
+            className={`px-2 py-1 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'cubes' ? 'bg-bg-active' : ''}`}
           >
             <PackageIcon size={24} />
           </button>
           <button
             onClick={() => toggleMobileMenu('user')}
-            className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'user' ? 'bg-bg-active' : ''}`}
+            className={`px-2 py-1 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'user' ? 'bg-bg-active' : ''}`}
           >
             <PersonIcon size={24} />
           </button>
@@ -191,7 +191,7 @@ const Navbar: React.FC<NavbarProps> = () => {
         <>
           <button
             onClick={() => toggleMobileMenu('account')}
-            className={`p-2 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'account' ? 'bg-bg-active' : ''}`}
+            className={`px-2 py-1 rounded transition-colors duration-200 text-white ${mobileMenuOpen === 'account' ? 'bg-bg-active' : ''}`}
           >
             <PersonIcon size={24} />
           </button>
@@ -201,22 +201,20 @@ const Navbar: React.FC<NavbarProps> = () => {
   );
 
   return (
-    <div className="bg-bg-secondary p-3">
+    <div className="bg-bg-secondary px-3 py-2">
       <Container xxl>
         <Flexbox direction="col">
           <Flexbox justify="between" alignItems="center" direction="row" gap="4">
-            <ResponsiveDiv baseVisible lg className="flex-grow">
-              <Flexbox alignItems="center" direction="row" gap="4">
+            <ResponsiveDiv baseVisible lg className="w-full max-w-full">
+              <Flexbox justify="between" alignItems="center" direction="row">
                 <a href="/">
                   <img
-                    className="h-10"
+                    className="h-8"
                     src="/content/sticker.png"
                     alt="Cube Cobra: a site for Magic: the Gathering Cubing"
                   />
                 </a>
-                <Flexbox justify="between" direction="row" className="height-auto flex-grow">
-                  {mobileNavIcons}
-                </Flexbox>
+                {mobileNavIcons}
               </Flexbox>
             </ResponsiveDiv>
             <ResponsiveDiv lg>

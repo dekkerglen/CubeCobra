@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
-import { PencilIcon, ToolsIcon, TrashIcon } from '@primer/octicons-react';
+import { EyeIcon, PencilIcon, ZapIcon } from '@primer/octicons-react';
 import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
@@ -9,21 +9,18 @@ import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 import DisplayContext from 'contexts/DisplayContext';
 
 import { CSRFContext } from '../contexts/CSRFContext';
-import Button from './base/Button';
 import Dropdown from './base/Dropdown';
 import { Flexbox } from './base/Layout';
 import Link from './base/Link';
 import CSRFForm from './CSRFForm';
 import BasicsModal from './modals/BasicsModal';
-import DeckDeleteModal from './modals/DeckDeleteModal';
 import withModal from './WithModal';
 
-const DeleteDeckModalLink = withModal('a', DeckDeleteModal);
 const BasicsModalLink = withModal('a', BasicsModal);
 
 interface DeckbuilderNavbarProps {
   draft: Draft;
-  cubeID: string;
+  cubeID?: string;
   cards: Card[];
   basics: number[];
   mainboard: number[][][];
@@ -41,7 +38,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   cards,
   basics,
   draft,
-  cubeID,
+  cubeID: _cubeID,
   mainboard,
   sideboard,
   addBasics,
@@ -53,6 +50,8 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
     useContext(DisplayContext);
   const formRef = useRef<HTMLFormElement>(null);
+  const [buildDropdownOpen, setBuildDropdownOpen] = React.useState(false);
+  const [displayDropdownOpen, setDisplayDropdownOpen] = React.useState(false);
   const formData = useMemo<Record<string, string>>(
     () => ({
       main: JSON.stringify(mainboard),
@@ -124,16 +123,18 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard]);
 
   return (
-    <Flexbox direction="row" gap="2" justify="start" className="w-full mt-2 px-2 flex-wrap">
-      {/* Wrench menu with utility actions */}
+    <Flexbox direction="row" gap="2" justify="start" alignItems="center" className="w-full mt-2 px-2" wrap="wrap">
       <Dropdown
         trigger={
-          <Button color="secondary" className="py-2">
-            <ToolsIcon size={16} />
-          </Button>
+          <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+            <ZapIcon size={16} />
+            Build
+          </Link>
         }
         align="left"
-        minWidth="14rem"
+        minWidth="16rem"
+        isOpen={buildDropdownOpen}
+        setIsOpen={setBuildDropdownOpen}
       >
         <Flexbox direction="col" gap="2" className="p-3">
           <BasicsModalLink
@@ -145,48 +146,64 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
               cards: cards,
             }}
             className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+            onClick={() => setBuildDropdownOpen(false)}
           >
             Add Basic Lands
           </BasicsModalLink>
           <Link
-            onClick={() => autoBuildDeck()}
+            onClick={() => {
+              autoBuildDeck();
+              setBuildDropdownOpen(false);
+            }}
             className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
           >
             Build for Me
           </Link>
+        </Flexbox>
+      </Dropdown>
+      <Dropdown
+        trigger={
+          <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+            <EyeIcon size={16} />
+            Display
+          </Link>
+        }
+        align="left"
+        minWidth="16rem"
+        isOpen={displayDropdownOpen}
+        setIsOpen={setDisplayDropdownOpen}
+      >
+        <Flexbox direction="col" gap="2" className="p-3">
           <Link
-            onClick={toggleShowCustomImages}
+            onClick={() => {
+              toggleShowCustomImages();
+              setDisplayDropdownOpen(false);
+            }}
             className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
           >
             {showCustomImages ? 'Hide' : 'Show'} Custom Images
           </Link>
           <Link
-            onClick={toggleShowDeckBuilderStatsPanel}
+            onClick={() => {
+              toggleShowDeckBuilderStatsPanel();
+              setDisplayDropdownOpen(false);
+            }}
             className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
           >
             {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
           </Link>
         </Flexbox>
       </Dropdown>
-
-      {/* Center section with Save and Delete */}
-      <Flexbox direction="row" gap="2" justify="center" className="flex-1 flex-wrap">
-        <div className="inline-block">
-          <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
-            <Link href="#" onClick={() => formRef.current?.submit()} className="inline-block">
-              <Button color="primary" className="py-2">
-                <PencilIcon size={16} /> Save Deck
-              </Button>
-            </Link>
-          </CSRFForm>
-        </div>
-
-        <DeleteDeckModalLink modalprops={{ deck: draft, cubeID }} className="inline-block">
-          <Button color="danger" className="py-2">
-            <TrashIcon size={16} /> Delete Deck
-          </Button>
-        </DeleteDeckModalLink>
-      </Flexbox>
+      <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
+        <Link
+          href="#"
+          onClick={() => formRef.current?.submit()}
+          className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+        >
+          <PencilIcon size={16} />
+          Save Deck
+        </Link>
+      </CSRFForm>
     </Flexbox>
   );
 };

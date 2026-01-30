@@ -121,7 +121,8 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
 
   return (
     <>
-      <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="mt-2" wrap="wrap">
+      {/* Desktop Layout - Original */}
+      <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="hidden lg:flex mt-2" wrap="wrap">
         <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="px-2">
           <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 self-stretch items-center">
             <Tooltip text="Table View">
@@ -171,6 +172,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 setValue={(value) => setCardsPerRow(parseInt(value, 10) as NumCols)}
                 className="bg-bg-active"
                 options={[
+                  { value: '1', label: '1 Card Per Row' },
                   { value: '2', label: '2 Cards Per Row' },
                   { value: '3', label: '3 Cards Per Row' },
                   { value: '4', label: '4 Cards Per Row' },
@@ -258,6 +260,145 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             </Dropdown>
           </div>
         )}
+      </Flexbox>
+
+      {/* Mobile Layout - Reorganized */}
+      <Flexbox direction="col" gap="2" className="lg:hidden mt-2">
+        {/* First row: View select and action buttons */}
+        <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+          <div className="flex gap-0 bg-bg-active rounded py-0.5 items-center">
+            <Tooltip text="Table View">
+              <button
+                onClick={() => setCubeView('table')}
+                className={`px-2 py-1 rounded transition-colors ${cubeView === 'table' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                aria-label="Table View"
+              >
+                <TableIcon size={20} />
+              </button>
+            </Tooltip>
+            <Tooltip text="Visual Spoiler">
+              <button
+                onClick={() => setCubeView('spoiler')}
+                className={`px-2 py-1 rounded transition-colors ${cubeView === 'spoiler' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                aria-label="Visual Spoiler"
+              >
+                <ImageIcon size={20} />
+              </button>
+            </Tooltip>
+            <Tooltip text="Curve View">
+              <button
+                onClick={() => setCubeView('curve')}
+                className={`px-2 py-1 rounded transition-colors ${cubeView === 'curve' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                aria-label="Curve View"
+              >
+                <GraphIcon size={20} />
+              </button>
+            </Tooltip>
+            {canEdit && (
+              <Tooltip text="List View">
+                <button
+                  onClick={() => setCubeView('list')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'list' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="List View"
+                >
+                  <ListUnorderedIcon size={20} />
+                </button>
+              </Tooltip>
+            )}
+          </div>
+          <Button
+            color={rightSidebarMode === 'sort' ? 'primary' : 'secondary'}
+            onClick={() => setRightSidebarMode(rightSidebarMode === 'sort' ? 'none' : 'sort')}
+            className="flex items-center gap-1 transition-colors"
+          >
+            <span className="hidden sm:inline">Sort</span>
+            <SortAscIcon size={16} />
+          </Button>
+          {canEdit && (
+            <Button
+              color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}
+              onClick={() => setRightSidebarMode(rightSidebarMode === 'edit' ? 'none' : 'edit')}
+              className="flex items-center gap-1 transition-colors"
+            >
+              <span className="hidden sm:inline">Edit</span>
+              <PencilIcon size={16} />
+            </Button>
+          )}
+          {canEdit && (
+            <Dropdown
+              trigger={
+                <Button color="secondary" className="flex items-center gap-1">
+                  <span className="hidden sm:inline">Import</span>
+                  <UploadIcon size={16} />
+                </Button>
+              }
+              align="right"
+              minWidth="16rem"
+              isOpen={importDropdownOpen}
+              setIsOpen={setImportDropdownOpen}
+            >
+              {importMenuItems}
+            </Dropdown>
+          )}
+        </Flexbox>
+
+        {/* Conditional row: Cards per row select (only in spoiler view) */}
+        {cubeView === 'spoiler' && (
+          <Flexbox direction="row" alignItems="center" className="w-full">
+            <Select
+              value={`${cardsPerRow}`}
+              setValue={(value) => setCardsPerRow(parseInt(value, 10) as NumCols)}
+              className="bg-bg-active w-full"
+              options={[
+                { value: '1', label: '1 Card Per Row' },
+                { value: '2', label: '2 Cards Per Row' },
+                { value: '3', label: '3 Cards Per Row' },
+                { value: '4', label: '4 Cards Per Row' },
+                { value: '5', label: '5 Cards Per Row' },
+                { value: '6', label: '6 Cards Per Row' },
+                { value: '7', label: '7 Cards Per Row' },
+                { value: '8', label: '8 Cards Per Row' },
+                { value: '9', label: '9 Cards Per Row' },
+                { value: '10', label: '10 Cards Per Row' },
+                { value: '11', label: '11 Cards Per Row' },
+                { value: '12', label: '12 Cards Per Row' },
+              ]}
+            />
+          </Flexbox>
+        )}
+
+        {/* Second row: Filter input */}
+        <Flexbox direction="row" alignItems="center" gap="2" className="w-full">
+          <button
+            onClick={() => setAdvancedOpen(true)}
+            className="text-text hover:text-text-secondary transition-colors flex-shrink-0"
+            aria-label="Open advanced filter"
+          >
+            <QuestionIcon size={20} />
+          </button>
+          <div className="relative flex items-center flex-grow">
+            <span className="absolute" style={{ left: '12px' }}>
+              <SearchIcon size={16} className="text-text-secondary" />
+            </span>
+            <Input
+              type="text"
+              placeholder="Filter"
+              value={localFilterInput}
+              onChange={(e) => setLocalFilterInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setFilterInput(localFilterInput);
+                }
+              }}
+              valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
+              className="pr-3 bg-bg-active w-full"
+              otherInputProps={{
+                style: { paddingLeft: '48px' },
+                onBlur: () => setFilterInput(localFilterInput),
+              }}
+            />
+          </div>
+        </Flexbox>
       </Flexbox>
       <AdvancedFilterModal
         isOpen={advancedOpen}

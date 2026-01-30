@@ -8,6 +8,7 @@ import {
   GlobeIcon,
   HeartFillIcon,
   HeartIcon,
+  KebabHorizontalIcon,
   LinkIcon,
   PackageIcon,
   QuestionIcon,
@@ -79,10 +80,28 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
     'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)',
   );
   const heroRef = React.useRef<HTMLDivElement>(null);
+  const moreMenuRef = React.useRef<HTMLDivElement>(null);
+  const [moreMenuAlign, setMoreMenuAlign] = React.useState<'left' | 'right'>('left');
 
   const { showCustomImages, toggleShowCustomImages } = useContext(DisplayContext);
 
   const { hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
+
+  // Update More menu alignment based on position
+  React.useEffect(() => {
+    const updateMoreMenuAlign = () => {
+      if (moreMenuRef.current) {
+        const rect = moreMenuRef.current.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const screenCenterX = window.innerWidth / 2;
+        setMoreMenuAlign(centerX > screenCenterX ? 'right' : 'left');
+      }
+    };
+
+    updateMoreMenuAlign();
+    window.addEventListener('resize', updateMoreMenuAlign);
+    return () => window.removeEventListener('resize', updateMoreMenuAlign);
+  }, []);
 
   const handleFollowToggle = () => {
     if (!user) return;
@@ -185,7 +204,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
           }}
         />
         <div className="relative p-4">
-          <div className="flex justify-between items-center gap-4">
+          <div className="flex justify-between items-start gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <div>
                 <h1 className="text-white font-semibold text-2xl">{cube.name}</h1>
@@ -608,7 +627,8 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
 
         {/* Action icons */}
         <div>
-          <Flexbox direction="row" gap="4" alignItems="center" wrap="wrap">
+          {/* Desktop: All items in flex row with wrap */}
+          <Flexbox direction="row" gap="4" alignItems="center" wrap="wrap" className="hidden lg:flex">
             {user && !isCubeOwner && (
               <button
                 onClick={handleFollowToggle}
@@ -716,6 +736,125 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
                 Report
               </Text>
             </ReportCubeButton>
+          </Flexbox>
+
+          {/* Mobile: Share, Purchase, Compare, More with justify-between */}
+          <Flexbox direction="row" justify="between" alignItems="center" className="lg:hidden w-full">
+            {user && !isCubeOwner && (
+              <button
+                onClick={handleFollowToggle}
+                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                aria-label={followedState ? 'Unfollow cube' : 'Follow cube'}
+              >
+                {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
+                <Text sm className="text-white">
+                  {followedState ? 'Followed' : 'Follow'}
+                </Text>
+              </button>
+            )}
+            <ShareCubeButton
+              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+              aria-label="Share cube"
+              modalprops={{
+                shortId: cube.shortId,
+                fullID: cube.id,
+                cubeUrl: `${baseUrl}/cube/list/${cube.id}`,
+                cubeName: cube.name,
+                alert: addAlert,
+              }}
+            >
+              <LinkIcon size={20} />
+              <Text sm className="text-white">
+                Share
+              </Text>
+            </ShareCubeButton>
+            <div className="flex items-center whitespace-nowrap">
+              <Dropdown
+                trigger={
+                  <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                    <PackageIcon size={20} />
+                    <Text sm className="text-white">
+                      Purchase
+                    </Text>
+                  </button>
+                }
+                align="left"
+                minWidth="16rem"
+              >
+                {purchaseMenuItems}
+              </Dropdown>
+            </div>
+            <CompareModalButton
+              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+              aria-label="Compare cubes"
+            >
+              <ArrowSwitchIcon size={20} />
+              <Text sm className="text-white">
+                Compare
+              </Text>
+            </CompareModalButton>
+            <div ref={moreMenuRef} className="flex items-center whitespace-nowrap">
+              <Dropdown
+                trigger={
+                  <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                    <KebabHorizontalIcon size={20} />
+                    <Text sm className="text-white">
+                      More
+                    </Text>
+                  </button>
+                }
+                align={moreMenuAlign}
+                minWidth="16rem"
+              >
+                <Flexbox direction="col" gap="2" className="p-3">
+                  <div className="!text-text hover:!text-link-active hover:cursor-pointer font-medium">
+                    <div className="font-semibold mb-2">Export</div>
+                    <Flexbox direction="col" gap="1" className="pl-2">
+                      {exportMenuItems}
+                    </Flexbox>
+                  </div>
+                  <div className="border-t border-border my-1"></div>
+                  <a
+                    href={`/cube/rss/${cube.id}`}
+                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                    aria-label="RSS Feed"
+                  >
+                    <Flexbox direction="row" gap="2" alignItems="center">
+                      <RssIcon size={16} />
+                      RSS
+                    </Flexbox>
+                  </a>
+                  <a
+                    href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                    aria-label="View in Cube Map"
+                  >
+                    <Flexbox direction="row" gap="2" alignItems="center">
+                      <GlobeIcon size={16} />
+                      Cube Map
+                    </Flexbox>
+                  </a>
+                  <ReportCubeButton
+                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium text-left"
+                    aria-label="Report cube"
+                    modalprops={{
+                      title: 'Report Cube',
+                      message:
+                        'Are you sure you want to report this cube? A moderator will review the report and take appropriate action.',
+                      target: `/cube/report/${cube.id}`,
+                      buttonText: 'Report Cube',
+                    }}
+                  >
+                    <Flexbox direction="row" gap="2" alignItems="center">
+                      <StopIcon size={16} />
+                      Report
+                    </Flexbox>
+                  </ReportCubeButton>
+                </Flexbox>
+              </Dropdown>
+            </div>
           </Flexbox>
         </div>
       </div>
