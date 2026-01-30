@@ -171,7 +171,7 @@ const render = (
     }
 
     try {
-      const theme = (req && req.user && req.user.theme) || 'default';
+      const theme = (req && req.user && req.user.theme) || 'system';
       res.render('main', {
         reactHTML: null, // TODO renable ReactDOMServer.renderToString(React.createElement(page, reactProps)),
         reactProps: serialize(reactProps),

@@ -63,6 +63,7 @@
     --hero-bg: 8 119 21;
   }
 
+  :root[class~='system'],
   :root[class~='light'] {
     --bg: 240 240 240;
     --bg-active: 233 233 233;
@@ -140,6 +141,48 @@
     --card-lands: 95 58 36;
     --hero-bg: 73 95 52;
     color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root[class~='system'] {
+      --bg: 52 58 64;
+      --bg-active: 74 80 87;
+      --bg-accent: 63 69 76;
+      --bg-secondary: 36 41 46;
+      --text-secondary: 128 128 128;
+      --text-secondary-active: 255 255 255;
+      --border: 45 51 56;
+      --border-active: 17 12 16;
+      --border-secondary: 109 120 130;
+      --text: 240 240 240;
+      --link: 50 166 255;
+      --link-active: 120 200 255;
+      --button-text: 255 255 255;
+      --button-text-secondary: 33 37 41;
+      --button-primary: 40 167 67;
+      --button-primary-active: 51 127 68;
+      --button-danger: 220 53 69;
+      --button-danger-active: 139 0 0;
+      --button-accent: 13 110 253;
+      --button-accent-active: 11 94 215;
+      --button-secondary: 108 117 125;
+      --button-secondary-active: 74 80 87;
+      --focus-ring: 3 102 214;
+      --advert: 91 90 64;
+      --article: 116 198 135;
+      --podcast: 64 154 191;
+      --video: 254 66 66;
+      --card-white: 95 95 75;
+      --card-blue: 52 77 95;
+      --card-black: 69 63 82;
+      --card-red: 95 56 68;
+      --card-green: 73 95 52;
+      --card-multi: 92 88 9;
+      --card-colorless: 60 58 64;
+      --card-lands: 95 58 36;
+      --hero-bg: 73 95 52;
+      color-scheme: dark;
+    }
   }
 }
 

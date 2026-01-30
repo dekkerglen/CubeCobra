@@ -20,7 +20,7 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     const errors = [];
-    if (!['default', 'dark'].includes(req.body.theme)) {
+    if (!['system', 'light', 'dark'].includes(req.body.theme)) {
       errors.push({ msg: 'Theme must be valid.' });
     }
 
