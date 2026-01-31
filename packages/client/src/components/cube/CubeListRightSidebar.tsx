@@ -44,7 +44,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
           )}
         >
           <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-            <div className="w-96 p-4 pb-8">
+            <div className="w-96 p-4 pb-64">
               <CubeListEditSidebar />
             </div>
           </div>
@@ -64,7 +64,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
           )}
         >
           <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-            <div className="w-96 p-4 pb-8">
+            <div className="w-96 p-4 pb-64">
               <CubeListEditSidebar />
             </div>
           </div>
@@ -83,7 +83,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
         )}
       >
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-          <div className="w-96 p-4 pb-8">
+          <div className="w-96 p-4 pb-64">
             <CubeListSortSidebar canEdit={canEdit} />
           </div>
         </div>
@@ -101,7 +101,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
         )}
       >
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-          <div className="w-96 p-4 pb-8">
+          <div className="w-96 p-4 pb-64">
             <CubeListSortSidebar canEdit={canEdit} />
           </div>
         </div>

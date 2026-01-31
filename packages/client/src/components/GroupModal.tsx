@@ -8,6 +8,7 @@ import TagData from '@utils/datatypes/TagData';
 import { getLabels } from '@utils/sorting/Sort';
 
 import AutocardContext from '../contexts/AutocardContext';
+import DisplayContext from '../contexts/DisplayContext';
 import Button from './base/Button';
 import Input from './base/Input';
 import { Col, Flexbox, Row } from './base/Layout';
@@ -72,6 +73,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const [addTags, setAddTags] = useState(true);
   const [tags, setTags] = useState<{ id: string; text: string }[]>([]);
   const { hideCard } = useContext(AutocardContext);
+  const { setRightSidebarMode } = useContext(DisplayContext);
 
   const filterOut = useCallback(
     (card: Card) => {
@@ -378,7 +380,14 @@ const GroupModal: React.FC<GroupModalProps> = ({
         <Button block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
           Apply all
         </Button>
-        <Button block color="danger" onClick={removeAll}>
+        <Button
+          block
+          color="danger"
+          onClick={() => {
+            removeAll();
+            setRightSidebarMode('edit');
+          }}
+        >
           Remove all
         </Button>
         <Button
@@ -390,6 +399,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             } else {
               bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
             }
+            setRightSidebarMode('edit');
             setOpen(false);
           }}
         >
@@ -404,6 +414,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             } else {
               bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
             }
+            setRightSidebarMode('edit');
             setOpen(false);
           }}
         >

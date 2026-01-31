@@ -123,7 +123,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
               <ThreeBarsIcon size={20} className="text-text" />
             </div>
           ) : (
-            <nav>
+            <nav className="pb-64">
               <Flexbox direction="col" gap="0">
                 {navigationItems.map((item, index) => {
                   const isActive = activeLink === item.key;

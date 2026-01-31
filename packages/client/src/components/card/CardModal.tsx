@@ -490,6 +490,7 @@ const CardModal: React.FC<CardModalProps> = ({
                 className="items-center text-sm"
                 onClick={() => {
                   removeCard(card.index!, card.board!);
+                  setRightSidebarMode('edit');
                   setOpen(false);
                 }}
               >
@@ -504,6 +505,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     className="items-center text-sm"
                     onClick={() => {
                       moveCard(card.index!, card.board!, 'maybeboard');
+                      setRightSidebarMode('edit');
                       setOpen(false);
                     }}
                   >
@@ -519,6 +521,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     className="items-center text-sm"
                     onClick={() => {
                       moveCard(card.index!, card.board!, 'mainboard');
+                      setRightSidebarMode('edit');
                       setOpen(false);
                     }}
                   >
