@@ -63,33 +63,33 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit }) =>
           <ChevronRightIcon size={20} />
         </div>
         <Text semibold lg>
-          Sort Options
+          Display Options
         </Text>
       </Flexbox>
 
       <Select
-        label="Primary Sort"
+        label="Primary Sort (columns)"
         value={sortPrimary || CUBE_DEFAULT_SORTS[0]}
         setValue={setSortPrimary}
         options={SORTS.map((sort) => ({ value: sort, label: sort }))}
       />
 
       <Select
-        label="Secondary Sort"
+        label="Secondary Sort (groups within columns)"
         value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
         setValue={setSortSecondary}
         options={SORTS.map((sort) => ({ value: sort, label: sort }))}
       />
 
       <Select
-        label="Tertiary Sort"
+        label="Tertiary Sort (rows within groups)"
         value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
         setValue={setSortTertiary}
         options={SORTS.map((sort) => ({ value: sort, label: sort }))}
       />
 
       <Select
-        label="Quaternary Sort"
+        label="Ordered Sort"
         value={sortQuaternary || CUBE_DEFAULT_SORTS[3]}
         setValue={setSortQuaternary}
         options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}

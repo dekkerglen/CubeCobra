@@ -41,8 +41,26 @@ export const CUBE_CATEGORIES = [
   'Standard',
   'Set',
   'Custom',
+  'Bar',
 ];
 export type CubeCategory = (typeof CUBE_CATEGORIES)[number];
+
+export const CUBE_PREFIXES = [
+  'Powered',
+  'Unpowered',
+  'Pauper',
+  'Peasant',
+  'Budget',
+  'Silver-bordered',
+  'Commander',
+  'Battle Box',
+  'Multiplayer',
+  'Judge Tower',
+  'Desert',
+  'Twobert',
+  'Rules Modified',
+  'Color Restricted',
+];
 
 interface Cube {
   id: string;

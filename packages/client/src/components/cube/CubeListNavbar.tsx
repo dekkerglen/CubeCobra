@@ -9,7 +9,6 @@ import {
   SearchIcon,
   SortAscIcon,
   TableIcon,
-  UploadIcon,
 } from '@primer/octicons-react';
 import { allFields, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
 
@@ -17,21 +16,12 @@ import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import { Flexbox, NumCols } from 'components/base/Layout';
 import AdvancedFilterModal from 'components/modals/AdvancedFilterModal';
-import PasteBulkModal from 'components/modals/PasteBulkModal';
-import UploadBulkModal from 'components/modals/UploadBulkModal';
-import UploadBulkReplaceModal from 'components/modals/UploadBulkReplaceModal';
-import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
 
-import Dropdown from '../base/Dropdown';
 import Select from '../base/Select';
 import Tooltip from '../base/Tooltip';
-
-const PasteBulkModalItem = withModal('button', PasteBulkModal);
-const UploadBulkModalItem = withModal('button', UploadBulkModal);
-const UploadBulkReplaceModalItem = withModal('button', UploadBulkReplaceModal);
 
 interface CubeListNavbarProps {
   cubeView: string;
@@ -44,7 +34,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   const [filterValues, setFilterValues] = useState<Partial<FilterValues>>({});
   const [localFilterInput, setLocalFilterInput] = useState('');
 
-  const { canEdit, cube } = useContext(CubeContext);
+  const { canEdit } = useContext(CubeContext);
   const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
 
   const { rightSidebarMode, setRightSidebarMode } = useContext(DisplayContext);
@@ -90,34 +80,18 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
     setAdvancedOpen(false);
   }, [filterValues, setFilterInput]);
 
-  const importMenuItems = (
-    <Flexbox direction="col" gap="2" className="p-3">
-      <PasteBulkModalItem
-        modalprops={{ cubeID: cube.id }}
-        className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-      >
-        Paste Text
-      </PasteBulkModalItem>
-      <UploadBulkModalItem
-        modalprops={{ cubeID: cube.id }}
-        className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-      >
-        Upload File
-      </UploadBulkModalItem>
-      <UploadBulkReplaceModalItem
-        modalprops={{ cubeID: cube.id }}
-        className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-      >
-        Replace with CSV Upload
-      </UploadBulkReplaceModalItem>
-    </Flexbox>
-  );
-
   return (
     <>
       {/* Desktop Layout - Original */}
-      <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="hidden md:flex mt-2" wrap="wrap">
-        <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="px-2">
+      <Flexbox
+        direction="row"
+        gap="2"
+        alignItems="center"
+        justify="between"
+        className="hidden lg:flex mt-2 w-full max-w-full"
+        wrap="wrap"
+      >
+        <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="xl:px-2">
           <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 self-stretch items-center">
             <Tooltip text="Table View">
               <button
@@ -160,7 +134,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           </div>
 
           {cubeView === 'spoiler' && (
-            <div className="w-48">
+            <div className="w-36">
               <Select
                 value={`${cardsPerRow}`}
                 setValue={(value) => setCardsPerRow(parseInt(value, 10) as NumCols)}
@@ -183,7 +157,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             </div>
           )}
         </Flexbox>
-        <div className="flex items-center gap-2 px-2">
+        <div className="flex items-center gap-2 xl:px-2 flex-grow">
           <button
             onClick={() => setAdvancedOpen(true)}
             className="text-text hover:text-text-secondary transition-colors"
@@ -191,7 +165,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           >
             <QuestionIcon size={20} />
           </button>
-          <div className="relative flex items-center" style={{ minWidth: '250px', maxWidth: '400px' }}>
+          <div className="relative flex items-center flex-grow" style={{ minWidth: '150px' }}>
             <span className="absolute" style={{ left: '12px' }}>
               <SearchIcon size={16} className="text-text-secondary" />
             </span>
@@ -214,18 +188,18 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             />
           </div>
         </div>
-        <div className="px-2">
+        <div className="xl:px-2">
           <Button
             color={rightSidebarMode === 'sort' ? 'primary' : 'secondary'}
             onClick={() => setRightSidebarMode(rightSidebarMode === 'sort' ? 'none' : 'sort')}
             className="flex items-center gap-2 transition-colors"
           >
-            Sort
+            Display
             <SortAscIcon size={16} />
           </Button>
         </div>
         {canEdit && (
-          <div className="px-2">
+          <div className="xl:px-2">
             <Button
               color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}
               onClick={() => setRightSidebarMode(rightSidebarMode === 'edit' ? 'none' : 'edit')}
@@ -236,28 +210,12 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             </Button>
           </div>
         )}
-        {canEdit && (
-          <div className="px-2">
-            <Dropdown
-              trigger={
-                <Button color="secondary" className="flex items-center gap-2">
-                  Import
-                  <UploadIcon size={16} />
-                </Button>
-              }
-              align="right"
-              minWidth="16rem"
-            >
-              {importMenuItems}
-            </Dropdown>
-          </div>
-        )}
       </Flexbox>
 
       {/* Mobile Layout - Reorganized */}
-      <Flexbox direction="col" gap="2" className="md:hidden mt-2">
+      <Flexbox direction="col" gap="2" className="lg:hidden mt-2">
         {/* First row: View select and action buttons */}
-        <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+        <Flexbox direction="row" alignItems="center" justify="between" className="w-full">
           <div className="flex gap-0 bg-bg-active rounded py-0.5 items-center">
             <Tooltip text="Table View">
               <button
@@ -298,38 +256,26 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               </Tooltip>
             )}
           </div>
-          <Button
-            color={rightSidebarMode === 'sort' ? 'primary' : 'secondary'}
-            onClick={() => setRightSidebarMode(rightSidebarMode === 'sort' ? 'none' : 'sort')}
-            className="flex items-center gap-1 transition-colors"
-          >
-            <span className="hidden sm:inline">Sort</span>
-            <SortAscIcon size={16} />
-          </Button>
-          {canEdit && (
+          <div className="flex gap-2 items-center">
             <Button
-              color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}
-              onClick={() => setRightSidebarMode(rightSidebarMode === 'edit' ? 'none' : 'edit')}
+              color={rightSidebarMode === 'sort' ? 'primary' : 'secondary'}
+              onClick={() => setRightSidebarMode(rightSidebarMode === 'sort' ? 'none' : 'sort')}
               className="flex items-center gap-1 transition-colors"
             >
-              <span className="hidden sm:inline">Edit</span>
-              <PencilIcon size={16} />
+              <span className="hidden sm:inline">Display</span>
+              <SortAscIcon size={16} />
             </Button>
-          )}
-          {canEdit && (
-            <Dropdown
-              trigger={
-                <Button color="secondary" className="flex items-center gap-1">
-                  <span className="hidden sm:inline">Import</span>
-                  <UploadIcon size={16} />
-                </Button>
-              }
-              align="right"
-              minWidth="16rem"
-            >
-              {importMenuItems}
-            </Dropdown>
-          )}
+            {canEdit && (
+              <Button
+                color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}
+                onClick={() => setRightSidebarMode(rightSidebarMode === 'edit' ? 'none' : 'edit')}
+                className="flex items-center gap-1 transition-colors"
+              >
+                <span className="hidden sm:inline">Edit</span>
+                <PencilIcon size={16} />
+              </Button>
+            )}
+          </div>
         </Flexbox>
 
         {/* Conditional row: Cards per row select (only in spoiler view) */}

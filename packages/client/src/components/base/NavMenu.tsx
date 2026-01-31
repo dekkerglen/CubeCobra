@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 
-import { Flexbox } from './Layout';
 import ResponsiveDiv from './ResponsiveDiv';
 
 interface NavMenuProps {
@@ -14,6 +13,7 @@ interface NavMenuProps {
   noChevron?: boolean; // New prop to hide the dropdown chevron
   noActiveStyle?: boolean; // New prop to prevent active styling
   noGap?: boolean; // New prop to remove gap between button and dropdown
+  icon?: React.ReactNode; // Icon to display at smaller breakpoints
 }
 
 const NavMenu: React.FC<NavMenuProps> = ({
@@ -25,6 +25,7 @@ const NavMenu: React.FC<NavMenuProps> = ({
   noChevron = false,
   noActiveStyle = false,
   noGap = false,
+  icon,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -57,70 +58,48 @@ const NavMenu: React.FC<NavMenuProps> = ({
 
   return (
     <div ref={menuRef} className="relative">
-      {/* Mobile */}
-      <ResponsiveDiv baseVisible md>
-        <a
-          className={classNames('py-2 font-semibold flex items-center gap-1', {
-            'text-text-secondary': !isOpen && navBar,
-            'text-text-secondary-active': isOpen && navBar && !noActiveStyle,
-            'text-link': !isOpen && !navBar,
-            'text-link-active': isOpen && !navBar && !noActiveStyle,
-          })}
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {label}
-          {!noChevron && <span className="dropdown-toggle-icon"></span>}
-        </a>
+      <div className={classNames('inline-block cursor-pointer')} onClick={() => setIsOpen(!isOpen)}>
         <div
-          className={classNames('w-full bg-bg shadow-lg rounded-md border border-border', {
+          className={classNames('flex items-center gap-1', {
+            'rounded-md select-none p-2 font-semibold transition-colors duration-200 ease-in-out':
+              !noActiveStyle || navBar,
+            'rounded-br-none': !alignLeft && !noActiveStyle,
+            'rounded-bl-none': alignLeft && !noActiveStyle,
+            'text-text-secondary hover:text-text-secondary-active': !isOpen && navBar && !noActiveStyle,
+            'text-text bg-bg': isOpen && navBar && !noActiveStyle,
+            'text-link hover:text-link-active': !isOpen && !navBar && !noActiveStyle,
+            'bg-link text-bg': isOpen && !navBar && !noActiveStyle,
+          })}
+        >
+          {icon ? (
+            <>
+              <ResponsiveDiv baseVisible lg>
+                {icon}
+              </ResponsiveDiv>
+              <ResponsiveDiv lg>{label}</ResponsiveDiv>
+            </>
+          ) : (
+            label
+          )}
+          {!noChevron && <span className="dropdown-toggle-icon"></span>}
+        </div>
+      </div>
+      <div
+        className={classNames(
+          'absolute bg-bg shadow-lg rounded-md z-10 border border-border transition-all duration-300',
+          {
+            'mt-2': !noGap,
+            'mt-0': noGap,
             'opacity-100 max-h-screen': isOpen,
             'opacity-0 pointer-events-none max-h-0': !isOpen,
             'w-64': !wide,
             'w-96': wide,
-          })}
-        >
-          <Flexbox direction="col" gap="1" className="p-2">
-            {children}
-          </Flexbox>
-        </div>
-      </ResponsiveDiv>
-
-      {/* Desktop */}
-      <ResponsiveDiv md>
-        <div className={classNames('inline-block cursor-pointer')} onClick={() => setIsOpen(!isOpen)}>
-          <div
-            className={classNames('flex items-center gap-1', {
-              'rounded-md select-none p-2 font-semibold transition-colors duration-200 ease-in-out':
-                !noActiveStyle || navBar,
-              'rounded-br-none': !alignLeft && !noActiveStyle,
-              'rounded-bl-none': alignLeft && !noActiveStyle,
-              'text-text-secondary hover:text-text-secondary-active': !isOpen && navBar && !noActiveStyle,
-              'text-text bg-bg': isOpen && navBar && !noActiveStyle,
-              'text-link hover:text-link-active': !isOpen && !navBar && !noActiveStyle,
-              'bg-link text-bg': isOpen && !navBar && !noActiveStyle,
-            })}
-          >
-            {label}
-            {!noChevron && <span className="dropdown-toggle-icon"></span>}
-          </div>
-        </div>
-        <div
-          className={classNames(
-            'absolute bg-bg shadow-lg rounded-md z-10 border border-border transition-all duration-300',
-            {
-              'mt-2': !noGap,
-              'mt-0': noGap,
-              'opacity-100 max-h-screen': isOpen,
-              'opacity-0 pointer-events-none max-h-0': !isOpen,
-              'w-64': !wide,
-              'w-96': wide,
-            },
-          )}
-          style={{ right: 0 }}
-        >
-          {children}
-        </div>
-      </ResponsiveDiv>
+          },
+        )}
+        style={{ right: 0 }}
+      >
+        {children}
+      </div>
     </div>
   );
 };

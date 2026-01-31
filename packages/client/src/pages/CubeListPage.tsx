@@ -38,7 +38,7 @@ const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
   const { changedCards, filterResult, canEdit } = useContext(CubeContext);
   const { showMaybeboard } = useContext(DisplayContext);
-  const { cardFilter } = useContext(FilterContext);
+  const { filterInput } = useContext(FilterContext);
 
   const [cubeView, setCubeView] = useQueryParam('view', 'table');
 
@@ -63,14 +63,16 @@ const CubeListPageRaw: React.FC = () => {
     <>
       {canEdit && <ScryfallDragDropOverlay />}
       <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
-      {filterResult && filterResult.mainboard && (
+      {filterResult && filterInput && filterInput.length > 0 && (
         <div className="text-center py-1">
           <Text italic sm>
-            {filterResult.mainboard && filterResult.maybeboard
-              ? `Showing ${filterResult.mainboard[0]} / ${filterResult.mainboard[1]} cards in Mainboard, ${filterResult.maybeboard[0]} / ${filterResult.maybeboard[1]} cards in Maybeboard.`
+            {showMaybeboard
+              ? filterResult.maybeboard
+                ? `Showing ${filterResult.maybeboard[0]} / ${filterResult.maybeboard[1]} cards in Maybeboard.`
+                : 'Showing 0 / 0 cards in Maybeboard.'
               : filterResult.mainboard
                 ? `Showing ${filterResult.mainboard[0]} / ${filterResult.mainboard[1]} cards in Mainboard.`
-                : 'No cards to filter.'}
+                : 'Showing 0 / 0 cards in Mainboard.'}
           </Text>
         </div>
       )}
@@ -82,16 +84,11 @@ const CubeListPageRaw: React.FC = () => {
             <Flexbox direction="col" gap="2">
               {((showMaybeboard && boardname === 'maybeboard') || (!showMaybeboard && boardname === 'mainboard')) && (
                 <>
-                  {boardcards.length === 0 &&
-                    (cardFilter ? (
-                      <Text semibold md>
-                        No {boardname === 'mainboard' ? 'Mainboard' : 'Maybeboard'} cards match filter.
-                      </Text>
-                    ) : (
-                      <Text semibold md>
-                        This board is empty.
-                      </Text>
-                    ))}
+                  {boardcards.length === 0 && (
+                    <Text semibold md className="text-center mt-4">
+                      This board appears to be empty!
+                    </Text>
+                  )}
                   {
                     {
                       table: <TableView cards={boardcards} />,

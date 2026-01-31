@@ -91,7 +91,7 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
       {/* Bottom Navigation Bar */}
       <nav
         className={classNames(
-          'md:hidden',
+          'sm:hidden',
           'fixed bottom-0 left-0 right-0 z-30',
           'bg-bg border-t border-border',
           'flex justify-around items-center',

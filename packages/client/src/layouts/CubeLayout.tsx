@@ -61,7 +61,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
           loadVersionDict={loadVersionDict}
           useChangedCards={useChangedCards}
         >
-          <div className="flex flex-grow pb-20 md:pb-0">
+          <div className="flex flex-grow pb-20 sm:pb-0">
             <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
             <div className="flex-1 flex flex-col min-w-0">
               <CubeHero cube={cube} minified={!showFullHero} />

@@ -1172,6 +1172,9 @@ video {
   width: -webkit-max-content;
   width: max-content;
 }
+.w-36 {
+  width: 9rem;
+}
 .min-w-0 {
   min-width: 0px;
 }
@@ -1951,6 +1954,10 @@ video {
 .bg-yellow-300 {
   --tw-bg-opacity: 1;
   background-color: rgb(253 224 71 / var(--tw-bg-opacity));
+}
+.bg-gray-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
 }
 .bg-opacity-50 {
   --tw-bg-opacity: 0.5;
@@ -3169,6 +3176,11 @@ img.mana-symbol-sm {
   background-color: rgb(var(--button-secondary-active) / var(--tw-bg-opacity));
 }
 
+.hover\:bg-gray-600:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(75 85 99 / var(--tw-bg-opacity));
+}
+
 .hover\:\!text-link-active:hover {
   --tw-text-opacity: 1 !important;
   color: rgb(var(--link-active) / var(--tw-text-opacity)) !important;
@@ -3475,6 +3487,10 @@ img.mana-symbol-sm {
     gap: 1rem;
   }
 
+  .sm\:pb-0 {
+    padding-bottom: 0px;
+  }
+
   .sm\:text-sm {
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -3637,10 +3653,6 @@ img.mana-symbol-sm {
     padding-right: 1rem;
   }
 
-  .md\:pb-0 {
-    padding-bottom: 0px;
-  }
-
   .md\:pb-4 {
     padding-bottom: 1rem;
   }
@@ -3708,6 +3720,10 @@ img.mana-symbol-sm {
 
   .lg\:block {
     display: block;
+  }
+
+  .lg\:flex {
+    display: flex;
   }
 
   .lg\:hidden {
@@ -3968,6 +3984,11 @@ img.mana-symbol-sm {
 
   .xl\:grid-cols-9 {
     grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
+
+  .xl\:px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
 

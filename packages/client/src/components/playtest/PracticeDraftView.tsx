@@ -35,25 +35,53 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
     [cube.formats, defaultFormat],
   );
 
-  return (
-    <Row>
-      <Col xs={12} md={6} xl={6}>
-        <Flexbox direction="col" gap="2">
-          {defaultFormat === -1 && <StandardDraftCard defaultFormat={defaultFormat} />}
-          {formatsSorted.map((format) => (
-            <CustomDraftCard
-              key={format.index}
-              format={format}
-              defaultFormat={defaultFormat}
-              formatIndex={format.index}
-            />
-          ))}
-          {defaultFormat !== -1 && <StandardDraftCard defaultFormat={defaultFormat} />}
-        </Flexbox>
-      </Col>
-      <Col xs={12} md={6} xl={6}>
-        <Flexbox direction="col" gap="2">
-          <Card>
+  // Create array of all tiles to render
+  const allTiles = useMemo(() => {
+    const tiles = [];
+
+    // Add standard draft card at the beginning if it's default, otherwise at the end
+    if (defaultFormat === -1) {
+      tiles.push({ type: 'standard', key: 'standard' });
+    }
+
+    // Add all custom draft cards
+    formatsSorted.forEach((format) => {
+      tiles.push({ type: 'custom', key: `custom-${format.index}`, format, formatIndex: format.index });
+    });
+
+    // Add standard draft card at the end if it's not default
+    if (defaultFormat !== -1) {
+      tiles.push({ type: 'standard', key: 'standard' });
+    }
+
+    // Add fixed cards
+    tiles.push({ type: 'multiplayer', key: 'multiplayer' });
+    tiles.push({ type: 'sealed', key: 'sealed' });
+    tiles.push({ type: 'grid', key: 'grid' });
+
+    return tiles;
+  }, [defaultFormat, formatsSorted]);
+
+  // Split tiles into two columns using evens and odds for balanced distribution
+  const leftColumnTiles = useMemo(() => allTiles.filter((_, index) => index % 2 === 0), [allTiles]);
+  const rightColumnTiles = useMemo(() => allTiles.filter((_, index) => index % 2 === 1), [allTiles]);
+
+  const renderTile = (tile: any) => {
+    switch (tile.type) {
+      case 'standard':
+        return <StandardDraftCard key={tile.key} defaultFormat={defaultFormat} />;
+      case 'custom':
+        return (
+          <CustomDraftCard
+            key={tile.key}
+            format={tile.format}
+            defaultFormat={defaultFormat}
+            formatIndex={tile.formatIndex}
+          />
+        );
+      case 'multiplayer':
+        return (
+          <Card key={tile.key}>
             <CardHeader>
               <Text semibold lg>
                 Multiplayer Draft
@@ -75,8 +103,26 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
               </Button>
             </CardFooter>
           </Card>
-          <SealedCard />
-          <GridDraftCard />
+        );
+      case 'sealed':
+        return <SealedCard key={tile.key} />;
+      case 'grid':
+        return <GridDraftCard key={tile.key} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Row>
+      <Col xs={12} md={6} xl={6}>
+        <Flexbox direction="col" gap="2">
+          {leftColumnTiles.map(renderTile)}
+        </Flexbox>
+      </Col>
+      <Col xs={12} md={6} xl={6}>
+        <Flexbox direction="col" gap="2">
+          {rightColumnTiles.map(renderTile)}
         </Flexbox>
       </Col>
     </Row>

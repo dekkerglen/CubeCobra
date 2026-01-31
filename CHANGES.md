@@ -19,6 +19,8 @@ As of 1.4.57
 - Added toggles when adding packages to cube for autotagging the new cards and creating a blog post
 - Refactored mobile nav bar for a better user experience
 - Added one card per row as an option for visual spoiler
+- Added "Twobert", "Rules Modified", and "Color Restricted" to cube type prefix
+- Added "Bar" to cube types
 
 # Bug Fixes
 

@@ -108,7 +108,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
       {/* Desktop Sidebar */}
       <div
         className={classNames(
-          'hidden md:block bg-bg-accent border-r border-border transition-all duration-300 flex-shrink-0',
+          'hidden sm:block bg-bg-accent border-r border-border transition-all duration-300 flex-shrink-0',
           {
             'w-64': isExpanded,
             'w-16 cursor-pointer hover:bg-bg-active': !isExpanded,

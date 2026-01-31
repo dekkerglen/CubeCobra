@@ -9,6 +9,7 @@ import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
 import Collapse from 'components/base/Collapse';
+import Dropdown from 'components/base/Dropdown';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
@@ -16,7 +17,11 @@ import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
 import Changelist from 'components/Changelist';
 import LoadingButton from 'components/LoadingButton';
+import PasteBulkModal from 'components/modals/PasteBulkModal';
+import UploadBulkModal from 'components/modals/UploadBulkModal';
+import UploadBulkReplaceModal from 'components/modals/UploadBulkReplaceModal';
 import TextEntry from 'components/TextEntry';
+import withModal from 'components/WithModal';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextValue } from 'contexts/DisplayContext';
@@ -25,11 +30,17 @@ import { getCard } from 'utils/cards/getCard';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
+const PasteBulkButton = withModal(Button, PasteBulkModal);
+const UploadBulkButton = withModal(Button, UploadBulkModal);
+const UploadBulkReplaceButton = withModal(Button, UploadBulkReplaceModal);
+
 const CubeListEditSidebar: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
-  const { setRightSidebarMode } = useContext(DisplayContext) as DisplayContextValue;
+  const { setRightSidebarMode, showMaybeboard, toggleShowMaybeboard } = useContext(
+    DisplayContext,
+  ) as DisplayContextValue;
   const addRef = useRef<HTMLInputElement>(null);
   const removeRef = useRef<HTMLInputElement>(null);
 
@@ -51,10 +62,9 @@ const CubeListEditSidebar: React.FC = () => {
 
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, '');
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, DEFAULT_BLOG_TITLE);
-  const [activeBoard, setActiveBoard] = useLocalStorage<BoardType>(`${cube.id}-useMaybeboard`, 'mainboard');
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
 
-  const boardToEdit = activeBoard;
+  const boardToEdit: BoardType = showMaybeboard ? 'maybeboard' : 'mainboard';
 
   const handleAdd = useCallback(
     async (event: React.FormEvent, match: string) => {
@@ -174,10 +184,51 @@ const CubeListEditSidebar: React.FC = () => {
         </Alert>
       ))}
 
+      <Flexbox direction="col" gap="2">
+        <Text semibold sm>
+          Import Cards
+        </Text>
+        <Dropdown
+          trigger={
+            <Button color="secondary" block>
+              Import
+            </Button>
+          }
+          align="left"
+          minWidth="16rem"
+        >
+          <Flexbox direction="col" gap="2" className="p-3">
+            <PasteBulkButton
+              modalprops={{ cubeID: cube.id }}
+              className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
+            >
+              Paste Text
+            </PasteBulkButton>
+            <UploadBulkButton
+              modalprops={{ cubeID: cube.id }}
+              className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
+            >
+              Upload File
+            </UploadBulkButton>
+            <UploadBulkReplaceButton
+              modalprops={{ cubeID: cube.id }}
+              className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
+            >
+              Replace with CSV Upload
+            </UploadBulkReplaceButton>
+          </Flexbox>
+        </Dropdown>
+      </Flexbox>
+
       <Select
         label="Board"
-        value={activeBoard}
-        setValue={(value) => setActiveBoard(value as BoardType)}
+        value={showMaybeboard ? 'maybeboard' : 'mainboard'}
+        setValue={(value) => {
+          const shouldShowMaybe = value === 'maybeboard';
+          if (shouldShowMaybe !== showMaybeboard) {
+            toggleShowMaybeboard();
+          }
+        }}
         options={[
           { value: 'mainboard', label: 'Mainboard' },
           { value: 'maybeboard', label: 'Maybeboard' },

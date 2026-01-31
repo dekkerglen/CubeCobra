@@ -1,4 +1,4 @@
-import CubeType, { CUBE_CATEGORIES } from '@utils/datatypes/Cube';
+import CubeType, { CUBE_CATEGORIES, CUBE_PREFIXES } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
@@ -88,21 +88,8 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     }
 
     if (updatedCube.categoryPrefixes !== null) {
-      const prefixes = [
-        'Powered',
-        'Unpowered',
-        'Pauper',
-        'Peasant',
-        'Budget',
-        'Silver-bordered',
-        'Commander',
-        'Battle Box',
-        'Multiplayer',
-        'Judge Tower',
-        'Desert',
-      ];
       for (let i = 0; i < (updatedCube.categoryPrefixes || []).length; i += 1) {
-        if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
+        if (!CUBE_PREFIXES.includes(updatedCube.categoryPrefixes[i])) {
           res.status(400).json({ error: 'Not a valid category prefix.' });
           return;
         }

@@ -192,7 +192,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
           <div className="flex justify-between items-start gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <div>
-                <h1 className="text-white font-semibold text-2xl">{cube.name}</h1>
+                <h1 className="text-white font-semibold text-xl">{cube.name}</h1>
                 <Text sm className="text-white/80 mt-1">
                   {getCubeCardCountSnippet(cube)} Cube
                 </Text>
@@ -234,7 +234,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
                   minWidth="16rem"
                 >
                   <Flexbox direction="col" gap="2" className="p-3">
-                    {(cube.cardCount > 0 && (
+                    {(unfilteredChangedCards.mainboard.length > 0 && (
                       <CubeOverviewModalLink
                         modalprops={{
                           cube: cube,
@@ -482,7 +482,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
         <div className="flex justify-between items-start gap-4 mb-4">
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 flex-1">
             <div>
-              <h1 className="text-white font-semibold text-4xl">{cube.name}</h1>
+              <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
               <Text md className="text-white/80 mt-1">
                 {getCubeCardCountSnippet(cube)} Cube •{' '}
                 <FollowersModalLink
@@ -533,7 +533,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
                 minWidth="16rem"
               >
                 <Flexbox direction="col" gap="2" className="p-3">
-                  {(cube.cardCount > 0 && (
+                  {(unfilteredChangedCards.mainboard.length > 0 && (
                     <CubeOverviewModalLink
                       modalprops={{
                         cube: cube,
@@ -596,6 +596,30 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
           </div>
         )}
 
+        {/* Category badges */}
+        {(cube.categoryOverride || (cube.categoryPrefixes && cube.categoryPrefixes.length > 0)) && (
+          <Flexbox direction="row" gap="2" wrap="wrap" className="mb-4">
+            {cube.categoryPrefixes &&
+              cube.categoryPrefixes.map((prefix, index) => (
+                <a
+                  key={`prefix-${index}`}
+                  href={`/search?q=category:"${encodeURIComponent(prefix)}"`}
+                  className="px-3 py-1 bg-button-primary text-white text-sm rounded-full hover:bg-button-primary-active transition-colors font-medium"
+                >
+                  {prefix}
+                </a>
+              ))}
+            {cube.categoryOverride && (
+              <a
+                href={`/search?q=category:"${encodeURIComponent(cube.categoryOverride)}"`}
+                className="px-3 py-1 bg-button-primary text-white text-sm rounded-full hover:bg-button-primary-active transition-colors font-medium"
+              >
+                {cube.categoryOverride}
+              </a>
+            )}
+          </Flexbox>
+        )}
+
         {/* Tags */}
         {cube.tags && cube.tags.length > 0 && (
           <Flexbox direction="row" gap="2" wrap="wrap" className="mb-4">
@@ -603,7 +627,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
               <a
                 key={index}
                 href={`/search?q=tag:"${encodeURIComponent(tag)}"`}
-                className="px-3 py-1 bg-button-primary text-white text-sm rounded-full hover:bg-button-primary-active transition-colors font-medium"
+                className="px-3 py-1 bg-gray-500 text-white text-sm rounded-full hover:bg-gray-600 transition-colors font-medium"
               >
                 {tag}
               </a>

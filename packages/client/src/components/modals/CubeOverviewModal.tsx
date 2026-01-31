@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import Cube, { CUBE_CATEGORIES } from '@utils/datatypes/Cube';
+import Cube, { CUBE_CATEGORIES, CUBE_PREFIXES } from '@utils/datatypes/Cube';
 import Image from '@utils/datatypes/Image';
 import { getCubeDescription } from '@utils/Util';
 
@@ -115,19 +115,7 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
             </Col>
             <Col xs={6}>
               <Flexbox direction="col" gap="2">
-                {[
-                  'Powered',
-                  'Unpowered',
-                  'Pauper',
-                  'Peasant',
-                  'Budget',
-                  'Silver-bordered',
-                  'Commander',
-                  'Battle Box',
-                  'Multiplayer',
-                  'Judge Tower',
-                  'Desert',
-                ].map((label) => (
+                {CUBE_PREFIXES.map((label) => (
                   <Checkbox
                     key={label}
                     label={label}
