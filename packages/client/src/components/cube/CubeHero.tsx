@@ -158,13 +158,8 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
         setMinifiedMaskGradient(minifiedDesktopGradient);
 
         // Mobile gradient calculation (vertical)
-        // Image is sized as 100% width, so height = width / aspectRatio
-        const imageHeight = heroWidth / aspectRatio;
-        const imageHeightPercent = (imageHeight / heroHeight) * 100;
-        const mobileMidpoint = Math.min(imageHeightPercent / 2, 60); // Cap at 60% to ensure gradient reaches bottom
-        // Fade from full opacity at top through midpoint, then fade to transparent at bottom
-        // This masks out the image at bottom, allowing the green hero-bg color to show through
-        const mobileGradient = `linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${mobileMidpoint}%, rgba(0,0,0,0) 100%)`;
+        // Start with medium green at top (50% image opacity), smoothly transition to full green at bottom (0% image opacity)
+        const mobileGradient = `linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%)`;
         setMobileMaskGradient(mobileGradient);
         setMinifiedMobileMaskGradient(mobileGradient); // Same for minified on mobile
       };
@@ -187,7 +182,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
           className="md:hidden absolute inset-0"
           style={{
             backgroundImage: `url(${cube.image.uri})`,
-            backgroundSize: '100% auto',
+            backgroundSize: 'cover',
             backgroundPosition: 'top center',
             backgroundRepeat: 'no-repeat',
             maskImage: minifiedMobileMaskGradient,
@@ -473,11 +468,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
         className="md:hidden absolute inset-0"
         style={{
           backgroundImage: `url(${cube.image.uri})`,
-          backgroundSize: '100% auto',
+          backgroundSize: 'cover',
           backgroundPosition: 'top center',
           backgroundRepeat: 'no-repeat',
           maskImage: mobileMaskGradient,
           WebkitMaskImage: mobileMaskGradient,
+          minHeight: '100%',
         }}
       />
       {/* Background image on the right with gradient for desktop */}

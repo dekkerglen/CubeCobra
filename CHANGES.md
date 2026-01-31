@@ -3,6 +3,7 @@ As of 1.4.57
 # New Features
 
 - Overhauled Cube pages user experience
+- Added scryfall image drag and drop to add cards to your cube
 - Added a mechanism to auto +1 packages when added to a cube
 - Increased password limit to 1024 (there is no technical limitation here, some folks just wanted to be able to use longer passwords than we anticipated when we set an arbritrary limit.)
 - Add panning to card elo and play rate graphs

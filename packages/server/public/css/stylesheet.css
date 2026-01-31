@@ -1599,9 +1599,6 @@ video {
 .overflow-y-visible {
   overflow-y: visible;
 }
-.overflow-x-scroll {
-  overflow-x: scroll;
-}
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1622,6 +1619,9 @@ video {
 .rounded {
   border-radius: 0.25rem;
 }
+.rounded-2xl {
+  border-radius: 1rem;
+}
 .rounded-full {
   border-radius: 9999px;
 }
@@ -1630,12 +1630,6 @@ video {
 }
 .rounded-md {
   border-radius: 0.375rem;
-}
-.rounded-xl {
-  border-radius: 0.75rem;
-}
-.rounded-2xl {
-  border-radius: 1rem;
 }
 .rounded-b-md {
   border-bottom-right-radius: 0.375rem;
@@ -1676,9 +1670,6 @@ video {
 .border-2 {
   border-width: 2px;
 }
-.border-4 {
-  border-width: 4px;
-}
 .border-y {
   border-top-width: 1px;
   border-bottom-width: 1px;
@@ -1703,9 +1694,6 @@ video {
 }
 .border-t {
   border-top-width: 1px;
-}
-.border-dashed {
-  border-style: dashed;
 }
 .border-blue-600 {
   --tw-border-opacity: 1;
@@ -1993,6 +1981,9 @@ video {
 .p-1 {
   padding: 0.25rem;
 }
+.p-12 {
+  padding: 3rem;
+}
 .p-2 {
   padding: 0.5rem;
 }
@@ -2001,12 +1992,6 @@ video {
 }
 .p-4 {
   padding: 1rem;
-}
-.p-8 {
-  padding: 2rem;
-}
-.p-12 {
-  padding: 3rem;
 }
 .px-0 {
   padding-left: 0px;
@@ -2243,6 +2228,10 @@ video {
   --tw-text-opacity: 1;
   color: rgb(var(--bg-accent) / var(--tw-text-opacity));
 }
+.text-blue-500 {
+  --tw-text-opacity: 1;
+  color: rgb(59 130 246 / var(--tw-text-opacity));
+}
 .text-blue-700 {
   --tw-text-opacity: 1;
   color: rgb(29 78 216 / var(--tw-text-opacity));
@@ -2369,10 +2358,6 @@ video {
 .text-yellow-800 {
   --tw-text-opacity: 1;
   color: rgb(133 77 14 / var(--tw-text-opacity));
-}
-.text-blue-500 {
-  --tw-text-opacity: 1;
-  color: rgb(59 130 246 / var(--tw-text-opacity));
 }
 .underline {
   -webkit-text-decoration-line: underline;
@@ -3722,10 +3707,6 @@ img.mana-symbol-sm {
     display: block;
   }
 
-  .lg\:flex {
-    display: flex;
-  }
-
   .lg\:hidden {
     display: none;
   }
@@ -3808,14 +3789,6 @@ img.mana-symbol-sm {
 
   .lg\:gap-6 {
     gap: 1.5rem;
-  }
-
-  .lg\:border-b {
-    border-bottom-width: 1px;
-  }
-
-  .lg\:pb-0 {
-    padding-bottom: 0px;
   }
 
   .lg\:text-2xl {
