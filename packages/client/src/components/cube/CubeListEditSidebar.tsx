@@ -279,6 +279,7 @@ const CubeListEditSidebar: React.FC = () => {
                 clearChanges();
                 setPostTitle(DEFAULT_BLOG_TITLE);
                 setPostContent('');
+                setRightSidebarMode('none');
               }}
             >
               Discard All

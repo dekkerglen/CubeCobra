@@ -2064,6 +2064,9 @@ video {
 .pb-4 {
   padding-bottom: 1rem;
 }
+.pb-64 {
+  padding-bottom: 16rem;
+}
 .pb-8 {
   padding-bottom: 2rem;
 }
@@ -2126,9 +2129,6 @@ video {
 }
 .pt-4 {
   padding-top: 1rem;
-}
-.pb-64 {
-  padding-bottom: 16rem;
 }
 .text-left {
   text-align: left;

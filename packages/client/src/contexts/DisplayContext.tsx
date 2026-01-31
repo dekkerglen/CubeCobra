@@ -93,7 +93,29 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setShowDeckBuilderStatsPanel((prev) => !prev);
   }, [showDeckBuilderStatsPanel]);
 
-  const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>('none');
+  const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>(() => {
+    // Check if there are pending changes in local storage
+    if (typeof localStorage !== 'undefined' && cubeID) {
+      try {
+        const changesKey = `cubecobra-changes-${cubeID}`;
+        const storedChanges = localStorage.getItem(changesKey);
+        if (storedChanges) {
+          const changes = JSON.parse(storedChanges);
+          // Check if there are any pending edits
+          const hasPendingEdits =
+            Object.values(changes.mainboard || {}).some((c: any) => Array.isArray(c) && c.length > 0) ||
+            Object.values(changes.maybeboard || {}).some((c: any) => Array.isArray(c) && c.length > 0);
+
+          if (hasPendingEdits) {
+            return 'edit';
+          }
+        }
+      } catch (_e) {
+        // If parsing fails, just use default
+      }
+    }
+    return 'none';
+  });
 
   const value: DisplayContextValue = {
     showCustomImages,
