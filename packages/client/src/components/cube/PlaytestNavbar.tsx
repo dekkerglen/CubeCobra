@@ -3,6 +3,7 @@ import React, { useContext } from 'react';
 import { PlusIcon, UploadIcon } from '@primer/octicons-react';
 
 import { Flexbox } from 'components/base/Layout';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import CustomDraftFormatModal from 'components/modals/CustomDraftFormatModal';
 import UploadDecklistModal from 'components/modals/UploadDecklistModal';
 import withModal from 'components/WithModal';
@@ -31,11 +32,17 @@ const PlaytestNavbar: React.FC = () => {
         className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
       >
         <PlusIcon size={16} />
-        Create Custom Draft Format
+        <ResponsiveDiv baseVisible md>
+          Custom Draft
+        </ResponsiveDiv>
+        <ResponsiveDiv md>Create Custom Draft Format</ResponsiveDiv>
       </CreateCustomFormatButton>
       <UploadDecklistModalButton className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
         <UploadIcon size={16} />
-        Upload Decklist
+        <ResponsiveDiv baseVisible md>
+          Upload
+        </ResponsiveDiv>
+        <ResponsiveDiv md>Upload Decklist</ResponsiveDiv>
       </UploadDecklistModalButton>
     </Flexbox>
   );

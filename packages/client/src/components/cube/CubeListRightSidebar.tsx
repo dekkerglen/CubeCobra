@@ -25,7 +25,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
       {/* Mobile backdrop overlay */}
       {isSidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={closeSidebar}
           aria-hidden="true"
         />
@@ -35,7 +35,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
       {canEdit && (
         <div
           className={classNames(
-            'lg:hidden bg-bg-accent border-l border-border transition-transform duration-300 ease-in-out flex-shrink-0',
+            'md:hidden bg-bg-accent border-l border-border transition-transform duration-300 ease-in-out flex-shrink-0',
             'fixed top-0 right-0 h-full z-50 w-96 transform',
             {
               'translate-x-0': rightSidebarMode === 'edit',
@@ -55,7 +55,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
       {canEdit && (
         <div
           className={classNames(
-            'hidden lg:block bg-bg-accent border-l border-border transition-all duration-300 ease-in-out flex-shrink-0',
+            'hidden md:block bg-bg-accent border-l border-border transition-all duration-300 ease-in-out flex-shrink-0',
             {
               'w-96': rightSidebarMode === 'edit',
               'w-0': rightSidebarMode !== 'edit',
@@ -74,7 +74,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
       {/* Sort Sidebar - Mobile */}
       <div
         className={classNames(
-          'lg:hidden bg-bg-accent border-l border-border transition-transform duration-300 ease-in-out flex-shrink-0',
+          'md:hidden bg-bg-accent border-l border-border transition-transform duration-300 ease-in-out flex-shrink-0',
           'fixed top-0 right-0 h-full z-50 w-96 transform',
           {
             'translate-x-0': rightSidebarMode === 'sort',
@@ -92,7 +92,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
       {/* Sort Sidebar - Desktop */}
       <div
         className={classNames(
-          'hidden lg:block bg-bg-accent border-l border-border transition-all duration-300 ease-in-out flex-shrink-0',
+          'hidden md:block bg-bg-accent border-l border-border transition-all duration-300 ease-in-out flex-shrink-0',
           {
             'w-96': rightSidebarMode === 'sort',
             'w-0': rightSidebarMode !== 'sort',

@@ -116,7 +116,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   return (
     <>
       {/* Desktop Layout - Original */}
-      <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="hidden lg:flex mt-2" wrap="wrap">
+      <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="hidden md:flex mt-2" wrap="wrap">
         <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="px-2">
           <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 self-stretch items-center">
             <Tooltip text="Table View">
@@ -255,7 +255,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
       </Flexbox>
 
       {/* Mobile Layout - Reorganized */}
-      <Flexbox direction="col" gap="2" className="lg:hidden mt-2">
+      <Flexbox direction="col" gap="2" className="md:hidden mt-2">
         {/* First row: View select and action buttons */}
         <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
           <div className="flex gap-0 bg-bg-active rounded py-0.5 items-center">

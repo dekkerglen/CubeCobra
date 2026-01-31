@@ -205,7 +205,7 @@ const Navbar: React.FC<NavbarProps> = () => {
       <Container xxl>
         <Flexbox direction="col">
           <Flexbox justify="between" alignItems="center" direction="row" gap="4">
-            <ResponsiveDiv baseVisible lg className="w-full max-w-full">
+            <ResponsiveDiv baseVisible md className="w-full max-w-full">
               <Flexbox justify="between" alignItems="center" direction="row">
                 <a href="/">
                   <img
@@ -217,6 +217,13 @@ const Navbar: React.FC<NavbarProps> = () => {
                 {mobileNavIcons}
               </Flexbox>
             </ResponsiveDiv>
+            <a href="/" className="hidden md:block lg:hidden">
+              <img
+                className="h-8"
+                src="/content/sticker.png"
+                alt="Cube Cobra: a site for Magic: the Gathering Cubing"
+              />
+            </a>
             <ResponsiveDiv lg>
               <a href="/">
                 <img
@@ -229,14 +236,14 @@ const Navbar: React.FC<NavbarProps> = () => {
             <ResponsiveDiv xl className="flex-grow">
               <CardSearchBar />
             </ResponsiveDiv>
-            <ResponsiveDiv lg>
+            <ResponsiveDiv md>
               <Flexbox alignContent="end" direction="row" gap="2" className="height-auto">
                 {navs}
               </Flexbox>
             </ResponsiveDiv>
           </Flexbox>
           {/* Mobile Menu Dropdown */}
-          <ResponsiveDiv baseVisible lg>
+          <ResponsiveDiv baseVisible md>
             {mobileMenuOpen === 'content' && (
               <div className="bg-bg-active mt-3 p-4 rounded">
                 <Flexbox direction="col" gap="2">

@@ -10,6 +10,7 @@ import CubeListRightSidebar from 'components/cube/CubeListRightSidebar';
 import CurveView from 'components/cube/CurveView';
 import ListView from 'components/cube/ListView';
 import RotisserieDraftPanel from 'components/cube/RotisserieDraftPanel';
+import ScryfallDragDropOverlay from 'components/cube/ScryfallDragDropOverlay';
 import TableView from 'components/cube/TableView';
 import VersionMismatch from 'components/cube/VersionMismatch';
 import VisualSpoiler from 'components/cube/VisualSpoiler';
@@ -35,7 +36,7 @@ interface CubeListPageProps {
 
 const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
-  const { changedCards, filterResult } = useContext(CubeContext);
+  const { changedCards, filterResult, canEdit } = useContext(CubeContext);
   const { showMaybeboard } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext);
 
@@ -60,6 +61,7 @@ const CubeListPageRaw: React.FC = () => {
 
   return (
     <>
+      {canEdit && <ScryfallDragDropOverlay />}
       <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
       {filterResult && filterResult.mainboard && (
         <div className="text-center py-1">

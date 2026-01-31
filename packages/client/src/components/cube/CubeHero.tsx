@@ -144,24 +144,27 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
         // Desktop gradient calculation (horizontal) for full hero (2x zoom)
         const imageWidth = heroHeight * aspectRatio * 2; // 2x zoom means 2x width
         const imageWidthPercent = (imageWidth / heroWidth) * 100;
-        const midpoint = imageWidthPercent / 2;
-        const desktopGradient = `linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) ${midpoint}%, rgba(0,0,0,0) ${imageWidthPercent}%)`;
+        // Gradient fades from right to left. Need to ensure it reaches transparent BEFORE image ends
+        // Start fade early and complete well before the image boundary to avoid harsh edges
+        const fadeEndPoint = Math.max(imageWidthPercent * 0.7, 50); // End fade at 70% of image width or 50% of screen
+        const desktopGradient = `linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,0) ${fadeEndPoint}%)`;
         setMaskGradient(desktopGradient);
 
         // Desktop gradient calculation (horizontal) for minified hero (6x zoom)
         const minifiedImageWidth = heroHeight * aspectRatio * 6; // 6x zoom means 6x width
         const minifiedImageWidthPercent = (minifiedImageWidth / heroWidth) * 100;
-        const minifiedMidpoint = minifiedImageWidthPercent / 2;
-        const minifiedDesktopGradient = `linear-gradient(to left, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) ${minifiedMidpoint}%, rgba(0,0,0,0) ${minifiedImageWidthPercent}%)`;
+        const minifiedFadeEndPoint = Math.max(minifiedImageWidthPercent * 0.7, 50);
+        const minifiedDesktopGradient = `linear-gradient(to left, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0) ${minifiedFadeEndPoint}%)`;
         setMinifiedMaskGradient(minifiedDesktopGradient);
 
         // Mobile gradient calculation (vertical)
         // Image is sized as 100% width, so height = width / aspectRatio
         const imageHeight = heroWidth / aspectRatio;
         const imageHeightPercent = (imageHeight / heroHeight) * 100;
-        const mobileMidpoint = imageHeightPercent / 2;
-        // Fade from 50% opacity at top, maintain through midpoint, then fade to transparent at image bottom
-        const mobileGradient = `linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) ${mobileMidpoint}%, rgba(0,0,0,0) ${imageHeightPercent}%)`;
+        const mobileMidpoint = Math.min(imageHeightPercent / 2, 60); // Cap at 60% to ensure gradient reaches bottom
+        // Fade from full opacity at top through midpoint, then fade to transparent at bottom
+        // This masks out the image at bottom, allowing the green hero-bg color to show through
+        const mobileGradient = `linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) ${mobileMidpoint}%, rgba(0,0,0,0) 100%)`;
         setMobileMaskGradient(mobileGradient);
         setMinifiedMobileMaskGradient(mobileGradient); // Same for minified on mobile
       };
@@ -178,10 +181,10 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
   // Minified version - just cube name and owner
   if (minified) {
     return (
-      <div className="relative w-full bg-hero-bg border-b border-border" style={{ overflow: 'visible' }}>
+      <div className="relative w-full bg-hero-bg md:border-b border-border" style={{ overflow: 'visible' }}>
         {/* Background image on mobile with triple zoom */}
         <div
-          className="lg:hidden absolute inset-0"
+          className="md:hidden absolute inset-0"
           style={{
             backgroundImage: `url(${cube.image.uri})`,
             backgroundSize: '100% auto',
@@ -193,7 +196,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
         />
         {/* Background image on desktop with triple zoom */}
         <div
-          className="hidden lg:block absolute inset-0"
+          className="hidden md:block absolute inset-0"
           style={{
             backgroundImage: `url(${cube.image.uri})`,
             backgroundSize: 'auto 600%',
@@ -467,7 +470,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
     <div ref={heroRef} className="relative w-full bg-hero-bg" style={{ overflow: 'visible' }}>
       {/* Background image centered on mobile with vertical gradient from top, smooth fade to avoid harsh cutoff */}
       <div
-        className="lg:hidden absolute inset-0"
+        className="md:hidden absolute inset-0"
         style={{
           backgroundImage: `url(${cube.image.uri})`,
           backgroundSize: '100% auto',
@@ -479,7 +482,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
       />
       {/* Background image on the right with gradient for desktop */}
       <div
-        className="hidden lg:block absolute inset-0"
+        className="hidden md:block absolute inset-0"
         style={{
           backgroundImage: `url(${cube.image.uri})`,
           backgroundSize: 'auto 200%',
@@ -494,7 +497,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
       <div className="relative p-4">
         {/* Cube name, card count, followers and gear icon in horizontal layout */}
         <div className="flex justify-between items-start gap-4 mb-4">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6 flex-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 flex-1">
             <div>
               <h1 className="text-white font-semibold text-4xl">{cube.name}</h1>
               <Text md className="text-white/80 mt-1">
@@ -628,7 +631,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
         {/* Action icons */}
         <div>
           {/* Desktop: All items in flex row with wrap */}
-          <Flexbox direction="row" gap="4" alignItems="center" wrap="wrap" className="hidden lg:flex">
+          <Flexbox direction="row" gap="4" alignItems="center" wrap="wrap" className="hidden md:flex">
             {user && !isCubeOwner && (
               <button
                 onClick={handleFollowToggle}
@@ -739,7 +742,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
           </Flexbox>
 
           {/* Mobile: Purchase, Export, Compare, More with justify-between */}
-          <Flexbox direction="row" justify="between" alignItems="center" className="lg:hidden w-full">
+          <Flexbox direction="row" justify="between" alignItems="center" className="md:hidden w-full">
             {user && !isCubeOwner && (
               <button
                 onClick={handleFollowToggle}

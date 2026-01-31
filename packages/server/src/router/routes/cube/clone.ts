@@ -81,7 +81,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
     }
 
     req.flash('success', 'Cube Cloned');
-    return redirect(req, res, `/cube/primer/${cube.id}`);
+    return redirect(req, res, `/cube/about/${cube.id}?view=primer`);
   } catch (err) {
     return handleRouteError(req, res, err as Error, `/cube/list/${encodeURIComponent(req.params.id!)}`);
   }

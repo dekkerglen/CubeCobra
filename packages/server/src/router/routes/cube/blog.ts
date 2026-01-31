@@ -3,10 +3,9 @@ import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
 import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
-import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
-import generateMeta from 'serverutils/meta';
+import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
-import { addNotification, getBaseUrl, getSafeReferrer } from 'serverutils/util';
+import { addNotification, getSafeReferrer } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
 
@@ -23,7 +22,9 @@ const getRedirectUrlForCube = async (
   const referrer = getSafeReferrer(req);
 
   //Prefer short ID in the URL if the cube has it
-  const cubeOrFallbackUrl = cube ? `/cube/blog/${encodeURIComponent(cube.shortId || cube.id)}` : '/dashboard';
+  const cubeOrFallbackUrl = cube
+    ? `/cube/about/${encodeURIComponent(cube.shortId || cube.id)}?view=blog`
+    : '/dashboard';
   //If not a valid referrer on this website, either send to the cube (if it exists) or the dashboard
   if (referrer === null) {
     return cubeOrFallbackUrl;
@@ -267,44 +268,8 @@ export const getMoreBlogPostsForCubeHandler = async (req: Request, res: Response
 };
 
 export const getBlogPostsForCubeHandler = async (req: Request, res: Response) => {
-  try {
-    if (!req.params.id) {
-      req.flash('danger', 'Invalid cube ID');
-      return redirect(req, res, '/404');
-    }
-
-    const cube = await cubeDao.getById(req.params.id);
-
-    if (!cube || !isCubeViewable(cube, req.user)) {
-      req.flash('danger', 'Cube not found');
-      return redirect(req, res, '/404');
-    }
-
-    const query = await blogDao.queryByCube(cube.id, undefined, 20);
-    const baseUrl = getBaseUrl();
-
-    return render(
-      req,
-      res,
-      'CubeBlogPage',
-      {
-        cube,
-        posts: query.items,
-        lastKey: query.lastKey,
-      },
-      {
-        title: `${abbreviate(cube.name)} - Blog`,
-        metadata: generateMeta(
-          `Cube Cobra Blog: ${cube.name}`,
-          cube.description,
-          cube.image.uri,
-          `${baseUrl}/cube/blog/${encodeURIComponent(req.params.id!)}`,
-        ),
-      },
-    );
-  } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/list/${encodeURIComponent(req.params.id!)}`);
-  }
+  // Redirect to the new consolidated about page with blog view
+  return redirect(req, res, `/cube/about/${req.params.id}?view=blog`);
 };
 
 export const routes = [

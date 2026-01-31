@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import { ChevronLeftIcon, ThreeBarsIcon } from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
+import AboutViewContext from '../../contexts/AboutViewContext';
 import AnalysisViewContext from '../../contexts/AnalysisViewContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
@@ -36,11 +37,12 @@ const navigationItems: NavigationItem[] = [
   },
   {
     label: 'About',
+    href: '/cube/about',
     key: 'about',
     subItems: [
-      { label: 'Primer', href: '/cube/primer', key: 'primer' },
-      { label: 'Blog', href: '/cube/blog', key: 'blog' },
-      { label: 'Changelog', href: '/cube/changelog', key: 'changelog' },
+      { label: 'Primer', key: 'primer' },
+      { label: 'Blog', key: 'blog' },
+      { label: 'Changelog', key: 'changelog' },
     ],
   },
   {
@@ -82,6 +84,7 @@ const navigationItems: NavigationItem[] = [
 
 const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+
   // Check if activeLink matches any sub-item
   const isSubItemActive = (item: NavigationItem) => {
     if (item.subItems) {
@@ -90,18 +93,8 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
     return false;
   };
 
-  // Initialize expandedSections based on active page
-  const getInitialExpandedState = () => {
-    const initialState: Record<string, boolean> = {};
-    navigationItems.forEach((item) => {
-      const isActive = activeLink === item.key || isSubItemActive(item);
-      initialState[item.key] = isActive;
-    });
-    return initialState;
-  };
-
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(getInitialExpandedState());
   const { toggleShowMaybeboard, showMaybeboard } = React.useContext(DisplayContext);
+  const aboutViewContext = React.useContext(AboutViewContext);
   const analysisViewContext = React.useContext(AnalysisViewContext);
   const playtestViewContext = React.useContext(PlaytestViewContext);
   const recordsViewContext = React.useContext(RecordsViewContext);
@@ -110,19 +103,12 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
     setIsExpanded(!isExpanded);
   };
 
-  const toggleSection = (key: string) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
   return (
     <>
       {/* Desktop Sidebar */}
       <div
         className={classNames(
-          'hidden lg:block bg-bg-accent border-r border-border transition-all duration-300 flex-shrink-0',
+          'hidden md:block bg-bg-accent border-r border-border transition-all duration-300 flex-shrink-0',
           {
             'w-64': isExpanded,
             'w-16 cursor-pointer hover:bg-bg-active': !isExpanded,
@@ -143,8 +129,8 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                   const isActive = activeLink === item.key;
                   const isParentOfActive = isSubItemActive(item);
                   const fullHref = item.href ? `${item.href}/${encodeURIComponent(getCubeId(cube))}` : undefined;
-                  const hasSubItems = item.subItems && item.subItems.length > 0;
-                  const isExpanded = expandedSections[item.key];
+                  // Only show sub-items when this section is active
+                  const shouldShowSubItems = isActive || isParentOfActive;
                   const isFirstItem = index === 0;
 
                   return (
@@ -160,44 +146,16 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                             },
                           )}
                         >
-                          <div className="flex items-center gap-2 flex-1">
-                            {hasSubItems && (
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleSection(item.key);
-                                }}
-                                className="hover:bg-bg-active transition-colors p-1 rounded flex-shrink-0"
-                                aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${item.label}`}
-                              >
-                                {isExpanded ? (
-                                  <ChevronDownIcon size={16} className="text-text" />
-                                ) : (
-                                  <ChevronRightIcon size={16} className="text-text" />
-                                )}
-                              </button>
-                            )}
-                            <a
-                              href={fullHref}
-                              className="flex-1 text-base text-text"
-                              onClick={(e) => {
-                                if (hasSubItems) {
-                                  e.preventDefault();
-                                  toggleSection(item.key);
-                                }
-                              }}
+                          <a href={fullHref} className="flex-1 text-base text-text">
+                            <span
+                              className={classNames({
+                                'font-bold': isActive || isParentOfActive,
+                                'font-semibold': !isActive && !isParentOfActive,
+                              })}
                             >
-                              <span
-                                className={classNames({
-                                  'font-bold': isActive || isParentOfActive,
-                                  'font-semibold': !isActive && !isParentOfActive,
-                                })}
-                              >
-                                {item.label}
-                              </span>
-                            </a>
-                          </div>
+                              {item.label}
+                            </span>
+                          </a>
                           {isFirstItem && (
                             <button
                               onClick={(e) => {
@@ -215,51 +173,27 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                       ) : (
                         <div
                           className={classNames(
-                            'flex items-center justify-between px-4 py-1.5 transition-colors relative cursor-pointer',
+                            'flex items-center justify-between px-4 py-1.5 transition-colors relative',
                             'hover:bg-bg-active',
                             {
                               'bg-bg-active border-l-4 border-transparent': isParentOfActive,
                               'border-l-4 border-transparent': !isParentOfActive,
                             },
                           )}
-                          onClick={() => {
-                            if (hasSubItems) {
-                              toggleSection(item.key);
-                            }
-                          }}
                         >
-                          <div className="flex items-center gap-2 flex-1">
-                            {hasSubItems && (
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleSection(item.key);
-                                }}
-                                className="hover:bg-bg-active transition-colors p-1 rounded flex-shrink-0"
-                                aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${item.label}`}
-                              >
-                                {isExpanded ? (
-                                  <ChevronDownIcon size={16} className="text-text" />
-                                ) : (
-                                  <ChevronRightIcon size={16} className="text-text" />
-                                )}
-                              </button>
-                            )}
-                            <span
-                              className={classNames('text-base text-text', {
-                                'font-bold': isParentOfActive,
-                                'font-semibold': !isParentOfActive,
-                              })}
-                            >
-                              {item.label}
-                            </span>
-                          </div>
+                          <span
+                            className={classNames('text-base text-text', {
+                              'font-bold': isParentOfActive,
+                              'font-semibold': !isParentOfActive,
+                            })}
+                          >
+                            {item.label}
+                          </span>
                         </div>
                       )}
 
-                      {/* Show sub-items if they exist and section is expanded */}
-                      {item.subItems && isExpanded && (
+                      {/* Show sub-items only when this section is active */}
+                      {item.subItems && shouldShowSubItems && (
                         <div className="p-1">
                           <Flexbox direction="col" gap="1">
                             {item.subItems.map((subItem) => {
@@ -327,6 +261,40 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                   <a
                                     key={subItem.key}
                                     href={recordsHref}
+                                    onClick={handleClick}
+                                    className={classNames(
+                                      'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded cursor-pointer',
+                                      {
+                                        'bg-bg-active font-bold text-text': isActive,
+                                        'font-normal text-text hover:bg-bg-active': !isActive,
+                                      },
+                                    )}
+                                  >
+                                    {subItem.label}
+                                  </a>
+                                );
+                              }
+
+                              // Special handling for About sub-items
+                              if (item.key === 'about' && !subItem.href) {
+                                const aboutHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+                                const isActive = activeLink === subItem.key;
+
+                                const handleClick = (e: React.MouseEvent) => {
+                                  // If already on about page, update view via context
+                                  if (
+                                    aboutViewContext &&
+                                    (activeLink === 'about' || ['primer', 'blog', 'changelog'].includes(activeLink))
+                                  ) {
+                                    e.preventDefault();
+                                    aboutViewContext.setView(subItem.key);
+                                  }
+                                };
+
+                                return (
+                                  <a
+                                    key={subItem.key}
+                                    href={aboutHref}
                                     onClick={handleClick}
                                     className={classNames(
                                       'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded cursor-pointer',

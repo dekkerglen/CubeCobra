@@ -5,6 +5,7 @@ import { getCubeId } from '@utils/Util';
 
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
 
@@ -19,27 +20,36 @@ const RecordsNavbar: React.FC = () => {
   }
 
   return (
-    <Flexbox direction="row" gap="6" alignItems="center" justify="start" className="px-2" wrap="wrap">
+    <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
       <Link
         href={`/cube/records/create/${getCubeId(cube)}`}
         className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
       >
         <PlusIcon size={16} />
-        Create New Record
+        <ResponsiveDiv baseVisible md>
+          New Record
+        </ResponsiveDiv>
+        <ResponsiveDiv md>Create New Record</ResponsiveDiv>
       </Link>
       <Link
         href={`/cube/records/create/fromDraft/${getCubeId(cube)}`}
         className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
       >
         <PlusIcon size={16} />
-        Create from Draft
+        <ResponsiveDiv baseVisible md>
+          From Draft
+        </ResponsiveDiv>
+        <ResponsiveDiv md>Create from Draft</ResponsiveDiv>
       </Link>
       <Link
         href={`/cube/records/analytics/${getCubeId(cube)}`}
         className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
       >
         <GraphIcon size={16} />
-        Compile Analytics
+        <ResponsiveDiv baseVisible md>
+          Recompile
+        </ResponsiveDiv>
+        <ResponsiveDiv md>Compile Analytics</ResponsiveDiv>
       </Link>
     </Flexbox>
   );

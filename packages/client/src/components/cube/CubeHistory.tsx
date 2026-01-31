@@ -77,7 +77,7 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
   );
 
   return (
-    <Flexbox direction="col" gap="2" className="my-2">
+    <Flexbox direction="col" gap="2">
       <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
         <Text lg semibold>
           Changes ({items.length}
@@ -88,7 +88,7 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
       <div className="block sm:hidden">
         {items.length > 0 ? (
           items.map((changelog) => (
-            <Card className="my-2" key={changelog.date}>
+            <Card className="mb-2" key={changelog.date}>
               <div style={{ overflow: 'auto', maxHeight: '20vh' }}>
                 <CardBody>
                   <BlogPostChangelog changelog={changelog.changelog} />
@@ -141,7 +141,7 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
           </Col>
         </Row>
       </div>{' '}
-      <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+      <Flexbox direction="row" justify="end" alignItems="center" className="w-full px-2">
         {pager}
       </Flexbox>
     </Flexbox>

@@ -7,6 +7,7 @@ import Banner from '../components/Banner';
 import CubeBottomNav from '../components/cube/CubeBottomNav';
 import CubeHero from '../components/cube/CubeHero';
 import CubeSidebar from '../components/cube/CubeSidebar';
+import MobileSubNav from '../components/cube/MobileSubNav';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ChangesContextProvider } from '../contexts/ChangesContext';
 import CubeContext, { CubeContextProvider } from '../contexts/CubeContext';
@@ -60,10 +61,11 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
           loadVersionDict={loadVersionDict}
           useChangedCards={useChangedCards}
         >
-          <div className="flex flex-grow pb-20 lg:pb-0">
+          <div className="flex flex-grow pb-20 md:pb-0">
             <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
             <div className="flex-1 flex flex-col min-w-0">
               <CubeHero cube={cube} minified={!showFullHero} />
+              <MobileSubNav cube={cube} activeLink={activeLink} />
               <Banner />
               <div className="px-2">
                 <CubeLayoutInner>{children}</CubeLayoutInner>

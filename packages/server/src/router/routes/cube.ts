@@ -76,7 +76,7 @@ export const viewHandler = (req: Request, res: Response) => {
 };
 
 export const historyRedirectHandler = (req: Request, res: Response) => {
-  return redirect(req, res, `/cube/changelog/${req.params.id}`);
+  return redirect(req, res, `/cube/about/${req.params.id}?view=changelog`);
 };
 
 export const defaultDraftFormatHandler = async (req: Request, res: Response) => {
@@ -132,7 +132,7 @@ export const listHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/about/${req.params.id}?view=primer`);
   }
 };
 
@@ -167,7 +167,7 @@ export const historyHandler = async (req: Request, res: Response) => {
       },
     );
   } catch (err) {
-    return handleRouteError(req, res, err as Error, `/cube/primer/${req.params.id}`);
+    return handleRouteError(req, res, err as Error, `/cube/about/${req.params.id}?view=primer`);
   }
 };
 
