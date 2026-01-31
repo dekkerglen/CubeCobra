@@ -137,25 +137,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
 
       const img = new Image();
       img.onload = () => {
-        const heroHeight = heroRef.current?.offsetHeight || 0;
-        const heroWidth = heroRef.current?.offsetWidth || 0;
-        const aspectRatio = img.width / img.height;
-
-        // Desktop gradient calculation (horizontal) for full hero (2x zoom)
-        const imageWidth = heroHeight * aspectRatio * 2; // 2x zoom means 2x width
-        const imageWidthPercent = (imageWidth / heroWidth) * 100;
-        // Gradient fades from right to left. Need to ensure it reaches transparent BEFORE image ends
-        // Start fade early and complete well before the image boundary to avoid harsh edges
-        const fadeEndPoint = Math.max(imageWidthPercent * 0.7, 50); // End fade at 70% of image width or 50% of screen
-        const desktopGradient = `linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,0) ${fadeEndPoint}%)`;
+        // Desktop gradient: 70% image opacity at right edge, fading to 0% at halfway point (50%)
+        const desktopGradient = `linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%)`;
         setMaskGradient(desktopGradient);
 
-        // Desktop gradient calculation (horizontal) for minified hero (6x zoom)
-        const minifiedImageWidth = heroHeight * aspectRatio * 6; // 6x zoom means 6x width
-        const minifiedImageWidthPercent = (minifiedImageWidth / heroWidth) * 100;
-        const minifiedFadeEndPoint = Math.max(minifiedImageWidthPercent * 0.7, 50);
-        const minifiedDesktopGradient = `linear-gradient(to left, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0) ${minifiedFadeEndPoint}%)`;
-        setMinifiedMaskGradient(minifiedDesktopGradient);
+        // Same gradient for minified hero
+        setMinifiedMaskGradient(desktopGradient);
 
         // Mobile gradient calculation (vertical)
         // Start with medium green at top (50% image opacity), smoothly transition to full green at bottom (0% image opacity)
@@ -194,7 +181,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
           className="hidden md:block absolute inset-0"
           style={{
             backgroundImage: `url(${cube.image.uri})`,
-            backgroundSize: 'auto 600%',
+            backgroundSize: '50% auto',
             backgroundPosition: 'right center',
             backgroundRepeat: 'no-repeat',
             maskImage: minifiedMaskGradient,
@@ -481,7 +468,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
         className="hidden md:block absolute inset-0"
         style={{
           backgroundImage: `url(${cube.image.uri})`,
-          backgroundSize: 'auto 200%',
+          backgroundSize: '50% auto',
           backgroundPosition: 'right center',
           backgroundRepeat: 'no-repeat',
           maskImage: maskGradient,
