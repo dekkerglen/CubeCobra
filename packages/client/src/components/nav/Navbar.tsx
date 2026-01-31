@@ -175,11 +175,15 @@ const Navbar: React.FC<NavbarProps> = () => {
     <>
       {navItems.map((item) => {
         const Icon = item.icon;
+        const isActive = mobileMenuOpen === item.id;
         return (
           <button
             key={item.id}
             onClick={() => toggleMobileMenu(item.id)}
-            className={`px-2 py-1 rounded transition-colors duration-200 text-white ${mobileMenuOpen === item.id ? 'bg-bg-active' : ''}`}
+            className={`px-2 py-1 rounded transition-colors duration-200 ${
+              isActive ? 'bg-bg-active dark:text-white' : 'text-white'
+            }`}
+            style={isActive ? { color: 'var(--bg-secondary)' } : undefined}
           >
             <Icon size={24} />
           </button>
@@ -188,11 +192,15 @@ const Navbar: React.FC<NavbarProps> = () => {
       {user
         ? userNavItems.map((item) => {
             const Icon = item.icon;
+            const isActive = mobileMenuOpen === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => toggleMobileMenu(item.id)}
-                className={`px-2 py-1 rounded transition-colors duration-200 text-white relative ${mobileMenuOpen === item.id ? 'bg-bg-active' : ''}`}
+                className={`px-2 py-1 rounded transition-colors duration-200 relative ${
+                  isActive ? 'bg-bg-active dark:text-white' : 'text-white'
+                }`}
+                style={isActive ? { color: 'var(--bg-secondary)' } : undefined}
               >
                 {item.id === 'notifications' && notifications.length > 0 && (
                   <span className="absolute top-0 right-0 text-xs font-semibold text-white bg-button-danger rounded-full px-1 py-0.5 min-w-[1.25rem] text-center translate-x-1 -translate-y-1">
@@ -205,11 +213,15 @@ const Navbar: React.FC<NavbarProps> = () => {
           })
         : guestNavItems.map((item) => {
             const Icon = item.icon;
+            const isActive = mobileMenuOpen === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => toggleMobileMenu(item.id)}
-                className={`px-2 py-1 rounded transition-colors duration-200 text-white ${mobileMenuOpen === item.id ? 'bg-bg-active' : ''}`}
+                className={`px-2 py-1 rounded transition-colors duration-200 ${
+                  isActive ? 'bg-bg-active dark:text-white' : 'text-white'
+                }`}
+                style={isActive ? { color: 'var(--bg-secondary)' } : undefined}
               >
                 <Icon size={24} />
               </button>
@@ -250,99 +262,97 @@ const Navbar: React.FC<NavbarProps> = () => {
               </Flexbox>
             </ResponsiveDiv>
           </Flexbox>
-          {/* Mobile Menu Dropdown */}
-          <ResponsiveDiv baseVisible sm>
-            {navItems.map(
-              (navItem) =>
-                mobileMenuOpen === navItem.id && (
-                  <div key={navItem.id} className="bg-bg-active mt-3 p-4 rounded">
-                    <Flexbox direction="col" gap="2">
-                      {navItem.items.map((subItem) => (
-                        <NavLink key={subItem.label} href={subItem.href}>
-                          {subItem.label}
-                        </NavLink>
-                      ))}
-                    </Flexbox>
-                  </div>
-                ),
-            )}
-            {mobileMenuOpen === 'notifications' && user && (
-              <div className="bg-bg-active mt-3 rounded">
-                <Flexbox direction="col">
-                  <CardHeader>
-                    <Flexbox justify="between" direction="row" className="font-semibold">
-                      Notifications
-                      <Link className="card-subtitle float-end mt-0" onClick={clearNotifications}>
-                        Clear All
-                      </Link>
-                    </Flexbox>
-                  </CardHeader>
-                  <Flexbox direction="col" className="max-h-96 overflow-auto">
-                    {notifications.length > 0 ? (
-                      notifications.map((notification) => (
-                        <a
-                          className="py-3 px-2 hover:bg-bg-active hover:cursor-pointer"
-                          href={`/user/notification/${notification.id}`}
-                          key={notification.id}
-                        >
-                          {notification.body}
-                        </a>
-                      ))
-                    ) : (
-                      <div className="my-2">
-                        <em className="mx-4">You don't have any notifications to show.</em>
-                      </div>
-                    )}
-                  </Flexbox>
-                  <CardFooter className="pb-1 pt-1 font-semibold">
-                    <Link href="/user/notifications">View Older Notifications</Link>
-                  </CardFooter>
-                </Flexbox>
-              </div>
-            )}
-            {mobileMenuOpen === 'cubes' && user && (
-              <div className="bg-bg-active mt-3 rounded">
-                <Flexbox direction="col">
-                  <CardHeader className="font-semibold">Your Cubes</CardHeader>
-                  <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
-                    {(user.cubes || []).slice(0, 36).map((item) => (
-                      <NavLink
-                        key={`mobile_cube_${item.name}`}
-                        href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
-                      >
-                        {item.name}
-                      </NavLink>
-                    ))}
-                  </Flexbox>
-                  <CardFooter>
-                    <Flexbox direction="col" gap="2">
-                      {(user.cubes || []).length > 2 && <NavLink href={`/user/view/${user.id}`}>View All</NavLink>}
-                      <CreateCubeButton>Create A New Cube</CreateCubeButton>
-                    </Flexbox>
-                  </CardFooter>
-                </Flexbox>
-              </div>
-            )}
-            {mobileMenuOpen === 'user' && user && (
-              <div className="bg-bg-active mt-3 p-4 rounded">
-                <Flexbox direction="col" gap="2">
-                  <NavLink href={`/user/view/${user.id}`}>Your Profile</NavLink>
-                  <NavLink href="/user/social">Followed and Followers</NavLink>
-                  <NavLink href="/user/account">Account Information</NavLink>
-                  <NavLink href="/user/logout">Logout</NavLink>
-                </Flexbox>
-              </div>
-            )}
-            {mobileMenuOpen === 'account' && !user && (
-              <div className="bg-bg-active mt-3 p-4 rounded">
-                <Flexbox direction="col" gap="2">
-                  <NavLink href="/user/register">Create Account</NavLink>
-                  <LoginButton>Login</LoginButton>
-                </Flexbox>
-              </div>
-            )}
-          </ResponsiveDiv>
         </Flexbox>
+      </ResponsiveDiv>
+
+      {/* Mobile Menu Dropdown */}
+      <ResponsiveDiv baseVisible sm>
+        {navItems.map(
+          (navItem) =>
+            mobileMenuOpen === navItem.id && (
+              <div key={navItem.id} className="bg-bg-active mt-3 p-4 rounded">
+                <Flexbox direction="col" gap="2">
+                  {navItem.items.map((subItem) => (
+                    <NavLink key={subItem.label} href={subItem.href}>
+                      {subItem.label}
+                    </NavLink>
+                  ))}
+                </Flexbox>
+              </div>
+            ),
+        )}
+        {mobileMenuOpen === 'notifications' && user && (
+          <div className="bg-bg-active mt-3 rounded">
+            <Flexbox direction="col">
+              <CardHeader>
+                <Flexbox justify="between" direction="row" className="font-semibold">
+                  Notifications
+                  <Link className="card-subtitle float-end mt-0" onClick={clearNotifications}>
+                    Clear All
+                  </Link>
+                </Flexbox>
+              </CardHeader>
+              <Flexbox direction="col" className="max-h-96 overflow-auto">
+                {notifications.length > 0 ? (
+                  notifications.map((notification) => (
+                    <a
+                      className="py-3 px-2 hover:bg-bg-active hover:cursor-pointer"
+                      href={`/user/notification/${notification.id}`}
+                      key={notification.id}
+                    >
+                      {notification.body}
+                    </a>
+                  ))
+                ) : (
+                  <div className="my-2">
+                    <em className="mx-4">You don't have any notifications to show.</em>
+                  </div>
+                )}
+              </Flexbox>
+              <CardFooter className="pb-1 pt-1 font-semibold">
+                <Link href="/user/notifications">View Older Notifications</Link>
+              </CardFooter>
+            </Flexbox>
+          </div>
+        )}
+        {mobileMenuOpen === 'cubes' && user && (
+          <div className="bg-bg-active mt-3 rounded">
+            <Flexbox direction="col">
+              <CardHeader className="font-semibold">Your Cubes</CardHeader>
+              <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
+                {(user.cubes || []).slice(0, 36).map((item) => (
+                  <NavLink key={`mobile_cube_${item.name}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
+                    {item.name}
+                  </NavLink>
+                ))}
+              </Flexbox>
+              <CardFooter>
+                <Flexbox direction="col" gap="2">
+                  {(user.cubes || []).length > 2 && <NavLink href={`/user/view/${user.id}`}>View All</NavLink>}
+                  <CreateCubeButton>Create A New Cube</CreateCubeButton>
+                </Flexbox>
+              </CardFooter>
+            </Flexbox>
+          </div>
+        )}
+        {mobileMenuOpen === 'user' && user && (
+          <div className="bg-bg-active mt-3 p-4 rounded">
+            <Flexbox direction="col" gap="2">
+              <NavLink href={`/user/view/${user.id}`}>Your Profile</NavLink>
+              <NavLink href="/user/social">Followed and Followers</NavLink>
+              <NavLink href="/user/account">Account Information</NavLink>
+              <NavLink href="/user/logout">Logout</NavLink>
+            </Flexbox>
+          </div>
+        )}
+        {mobileMenuOpen === 'account' && !user && (
+          <div className="bg-bg-active mt-3 p-4 rounded">
+            <Flexbox direction="col" gap="2">
+              <NavLink href="/user/register">Create Account</NavLink>
+              <LoginButton>Login</LoginButton>
+            </Flexbox>
+          </div>
+        )}
       </ResponsiveDiv>
     </div>
   );

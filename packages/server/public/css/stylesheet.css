@@ -1095,9 +1095,6 @@ video {
 .h-6 {
   height: 1.5rem;
 }
-.h-8 {
-  height: 2rem;
-}
 .h-full {
   height: 100%;
 }
@@ -1144,6 +1141,9 @@ video {
 .w-2 {
   width: 0.5rem;
 }
+.w-36 {
+  width: 9rem;
+}
 .w-4 {
   width: 1rem;
 }
@@ -1171,9 +1171,6 @@ video {
 .w-max {
   width: -webkit-max-content;
   width: max-content;
-}
-.w-36 {
-  width: 9rem;
 }
 .min-w-0 {
   min-width: 0px;
@@ -1889,6 +1886,10 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity));
 }
+.bg-gray-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
+}
 .bg-gray-700\/80 {
   background-color: rgb(55 65 81 / 0.8);
 }
@@ -1955,9 +1956,9 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(253 224 71 / var(--tw-bg-opacity));
 }
-.bg-gray-500 {
+.bg-\[rgb\(73\2c 95\2c 52\)\] {
   --tw-bg-opacity: 1;
-  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
+  background-color: rgb(73 95 52 / var(--tw-bg-opacity));
 }
 .bg-opacity-50 {
   --tw-bg-opacity: 0.5;
@@ -2368,6 +2369,14 @@ video {
 .text-yellow-800 {
   --tw-text-opacity: 1;
   color: rgb(133 77 14 / var(--tw-text-opacity));
+}
+.text-bg-secondary {
+  --tw-text-opacity: 1;
+  color: rgb(var(--bg-secondary) / var(--tw-text-opacity));
+}
+.text-black {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity));
 }
 .underline {
   -webkit-text-decoration-line: underline;
@@ -3179,6 +3188,15 @@ img.mana-symbol-sm {
 .hover\:bg-gray-600:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(75 85 99 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-\[rgb\(51\2c 70\2c 35\)\]:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(51 70 35 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-card-green\/80:hover {
+  background-color: rgb(var(--card-green) / 0.8);
 }
 
 .hover\:\!text-link-active:hover {
@@ -4163,6 +4181,16 @@ img.mana-symbol-sm {
     background-color: rgb(127 29 29 / 0.2);
   }
 
+  .dark\:bg-bg-active {
+    --tw-bg-opacity: 1;
+    background-color: rgb(var(--bg-active) / var(--tw-bg-opacity));
+  }
+
+  .dark\:bg-button-primary {
+    --tw-bg-opacity: 1;
+    background-color: rgb(var(--button-primary) / var(--tw-bg-opacity));
+  }
+
   .dark\:text-red-400 {
     --tw-text-opacity: 1;
     color: rgb(248 113 113 / var(--tw-text-opacity));
@@ -4171,5 +4199,15 @@ img.mana-symbol-sm {
   .dark\:text-red-500 {
     --tw-text-opacity: 1;
     color: rgb(239 68 68 / var(--tw-text-opacity));
+  }
+
+  .dark\:text-white {
+    --tw-text-opacity: 1;
+    color: rgb(255 255 255 / var(--tw-text-opacity));
+  }
+
+  .dark\:hover\:bg-button-primary-active:hover {
+    --tw-bg-opacity: 1;
+    background-color: rgb(var(--button-primary-active) / var(--tw-bg-opacity));
   }
 }

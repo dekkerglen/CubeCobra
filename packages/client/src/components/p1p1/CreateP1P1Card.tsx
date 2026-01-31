@@ -20,7 +20,7 @@ const CreateP1P1Card: React.FC<CreateP1P1CardProps> = ({ cubeId }) => {
     setError(null);
 
     try {
-      // First generate a sample pack
+      // Generate a sample pack with full card data
       const packResponse = await fetch(`/cube/api/p1p1/${cubeId}`);
 
       if (!packResponse.ok) {
@@ -28,15 +28,6 @@ const CreateP1P1Card: React.FC<CreateP1P1CardProps> = ({ cubeId }) => {
       }
 
       const packData = await packResponse.json();
-
-      // Get the full card data for the pack
-      const cardsResponse = await csrfFetch(`/cube/api/cardsfromseed/${cubeId}/${packData.seed}`);
-
-      if (!cardsResponse.ok) {
-        throw new Error('Failed to fetch pack cards');
-      }
-
-      const cardsData = await cardsResponse.json();
 
       // Create P1P1 from the pack
       const createResponse = await csrfFetch('/tool/api/createp1p1frompack', {
@@ -47,7 +38,7 @@ const CreateP1P1Card: React.FC<CreateP1P1CardProps> = ({ cubeId }) => {
         body: JSON.stringify({
           cubeId: cubeId,
           seed: packData.seed,
-          cards: cardsData.cards.map((card: any) => ({ cardID: card.cardID, index: card.index })),
+          cards: packData.cards.map((card: any) => ({ cardID: card.cardID, index: card.index })),
         }),
       });
 

@@ -27,7 +27,7 @@ export const p1p1Handler = async (req: Request, res: Response) => {
 
     return res.status(200).send({
       seed: result.seed,
-      pack: result.pack.map((card: any) => card.name),
+      cards: result.pack,
     });
   } catch (err) {
     const error = err as Error;
@@ -63,7 +63,7 @@ export const p1p1SeedHandler = async (req: Request, res: Response) => {
 
     return res.status(200).send({
       seed: req.params.seed,
-      pack: result.pack.map((card: any) => card.name),
+      cards: result.pack,
     });
   } catch (err) {
     const error = err as Error;

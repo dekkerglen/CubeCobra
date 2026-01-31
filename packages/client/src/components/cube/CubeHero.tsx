@@ -604,7 +604,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
                 <a
                   key={`prefix-${index}`}
                   href={`/search?q=category:"${encodeURIComponent(prefix)}"`}
-                  className="px-3 py-1 bg-button-primary text-white text-sm rounded-full hover:bg-button-primary-active transition-colors font-medium"
+                  className="px-3 py-1 bg-card-green hover:bg-card-green/80 text-text text-sm rounded-full transition-colors font-medium"
                 >
                   {prefix}
                 </a>
@@ -612,7 +612,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
             {cube.categoryOverride && (
               <a
                 href={`/search?q=category:"${encodeURIComponent(cube.categoryOverride)}"`}
-                className="px-3 py-1 bg-button-primary text-white text-sm rounded-full hover:bg-button-primary-active transition-colors font-medium"
+                className="px-3 py-1 bg-card-green hover:bg-card-green/80 text-text text-sm rounded-full transition-colors font-medium"
               >
                 {cube.categoryOverride}
               </a>
