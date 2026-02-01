@@ -13,6 +13,7 @@ interface ContainerProps {
   xxxl?: boolean;
   xxxxl?: boolean;
   xxxxxl?: boolean;
+  disableCenter?: boolean;
 }
 
 const Container: React.FC<ContainerProps> = ({
@@ -26,10 +27,11 @@ const Container: React.FC<ContainerProps> = ({
   xxxl,
   xxxxl,
   xxxxxl,
+  disableCenter = false,
 }) => {
   const classes = classNames(
     {
-      'mx-auto': true,
+      'mx-auto': !disableCenter,
       container: !sm && !md && !lg && !xl && !xxl && !xxxl && !xxxxl && !xxxxxl, // Default container class if no size is specified
       'sm:max-w-screen-sm': sm,
       'md:max-w-screen-md': md,

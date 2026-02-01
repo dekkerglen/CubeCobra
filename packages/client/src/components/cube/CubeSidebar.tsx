@@ -1,6 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { ChevronLeftIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import {
+  BookIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  GraphIcon,
+  ListUnorderedIcon,
+  PlayIcon,
+  TrophyIcon,
+} from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
@@ -10,12 +18,14 @@ import AnalysisViewContext from '../../contexts/AnalysisViewContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
+import useLocalStorage from '../../hooks/useLocalStorage';
 import { Flexbox } from '../base/Layout';
 
 interface NavigationItem {
   label: string;
   href?: string;
   key: string;
+  icon?: React.ComponentType<any>;
   subItems?: NavigationItem[];
 }
 
@@ -30,6 +40,7 @@ const navigationItems: NavigationItem[] = [
     label: 'List',
     href: '/cube/list',
     key: 'list',
+    icon: ListUnorderedIcon,
     subItems: [
       { label: 'Mainboard', key: 'mainboard' },
       { label: 'Maybeboard', key: 'maybeboard' },
@@ -39,6 +50,7 @@ const navigationItems: NavigationItem[] = [
     label: 'About',
     href: '/cube/about',
     key: 'about',
+    icon: BookIcon,
     subItems: [
       { label: 'Primer', key: 'primer' },
       { label: 'Blog', key: 'blog' },
@@ -49,9 +61,10 @@ const navigationItems: NavigationItem[] = [
     label: 'Playtest',
     href: '/cube/playtest',
     key: 'playtest',
+    icon: PlayIcon,
     subItems: [
-      { label: 'Sample Pack', key: 'sample-pack' },
       { label: 'Practice Draft', key: 'practice-draft' },
+      { label: 'Sample Pack', key: 'sample-pack' },
       { label: 'Decks', key: 'decks' },
     ],
   },
@@ -59,6 +72,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Records',
     href: '/cube/records',
     key: 'records',
+    icon: TrophyIcon,
     subItems: [
       { label: 'Draft Reports', key: 'draft-reports' },
       { label: 'Trophy Archive', key: 'trophy-archive' },
@@ -69,6 +83,7 @@ const navigationItems: NavigationItem[] = [
     label: 'Analysis',
     href: '/cube/analysis',
     key: 'analysis',
+    icon: GraphIcon,
     subItems: [
       { label: 'Averages', key: 'averages' },
       { label: 'Table', key: 'table' },
@@ -83,7 +98,7 @@ const navigationItems: NavigationItem[] = [
 ];
 
 const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useLocalStorage('cubeSidebarExpanded', true);
 
   // Check if activeLink matches any sub-item
   const isSubItemActive = (item: NavigationItem) => {
@@ -110,28 +125,63 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
         className={classNames(
           'hidden sm:block bg-bg-accent border-r border-border transition-all duration-300 flex-shrink-0',
           {
-            'w-64': isExpanded,
-            'w-16 cursor-pointer hover:bg-bg-active': !isExpanded,
+            'w-52': isExpanded,
+            'w-16': !isExpanded,
           },
         )}
-        onClick={!isExpanded ? toggleSidebar : undefined}
       >
         {/* Navigation items */}
         <div className="sticky top-0 max-h-screen overflow-y-auto">
           {!isExpanded ? (
-            <div className="h-full flex items-start justify-center pt-3">
-              <ThreeBarsIcon size={20} className="text-text" />
-            </div>
+            <nav className="pt-3">
+              <Flexbox direction="col" gap="1" alignItems="center">
+                {/* Chevron icon at the top to expand */}
+                <div
+                  onClick={toggleSidebar}
+                  className="cursor-pointer hover:bg-bg-active transition-colors rounded flex items-center justify-center w-12 h-12"
+                  aria-label="Expand sidebar"
+                >
+                  <ChevronRightIcon size={20} className="text-text" />
+                </div>
+                {/* Parent navigation items with icons */}
+                {navigationItems.map((item) => {
+                  const isActive = activeLink === item.key;
+                  const isParentOfActive = isSubItemActive(item);
+                  const fullHref = item.href ? `${item.href}/${encodeURIComponent(getCubeId(cube))}` : undefined;
+                  const IconComponent = item.icon;
+
+                  if (!IconComponent) return null;
+
+                  return (
+                    <a
+                      key={item.key}
+                      href={fullHref}
+                      className={classNames(
+                        'flex items-center justify-center p-2 transition-colors rounded w-12 h-12',
+                        {
+                          'bg-bg-active text-text': isActive || isParentOfActive,
+                          'text-text hover:bg-bg-active': !isActive && !isParentOfActive,
+                        },
+                      )}
+                      aria-label={item.label}
+                    >
+                      <IconComponent size={20} />
+                    </a>
+                  );
+                })}
+              </Flexbox>
+            </nav>
           ) : (
-            <nav className="pb-64">
+            <nav>
               <Flexbox direction="col" gap="0">
                 {navigationItems.map((item, index) => {
                   const isActive = activeLink === item.key;
                   const isParentOfActive = isSubItemActive(item);
                   const fullHref = item.href ? `${item.href}/${encodeURIComponent(getCubeId(cube))}` : undefined;
-                  // Only show sub-items when this section is active
-                  const shouldShowSubItems = isActive || isParentOfActive;
+                  // Always show sub-items
+                  const shouldShowSubItems = true;
                   const isFirstItem = index === 0;
+                  const IconComponent = item.icon;
 
                   return (
                     <div key={item.key}>
@@ -146,7 +196,8 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                             },
                           )}
                         >
-                          <a href={fullHref} className="flex-1 text-base text-text">
+                          <a href={fullHref} className="flex-1 flex items-center gap-2 text-base text-text">
+                            {IconComponent && <IconComponent size={16} />}
                             <span
                               className={classNames({
                                 'font-bold': isActive || isParentOfActive,
@@ -181,14 +232,17 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                             },
                           )}
                         >
-                          <span
-                            className={classNames('text-base text-text', {
-                              'font-bold': isParentOfActive,
-                              'font-semibold': !isParentOfActive,
-                            })}
-                          >
-                            {item.label}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {IconComponent && <IconComponent size={16} />}
+                            <span
+                              className={classNames('text-base text-text', {
+                                'font-bold': isParentOfActive,
+                                'font-semibold': !isParentOfActive,
+                              })}
+                            >
+                              {item.label}
+                            </span>
+                          </div>
                         </div>
                       )}
 

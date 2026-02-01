@@ -29,9 +29,6 @@ interface CubeDeckNavbarProps {
 }
 
 const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex, setSeatIndex, view, setView }) => {
-  const [exportDropdownOpen, setExportDropdownOpen] = React.useState(false);
-  const [editDropdownOpen, setEditDropdownOpen] = React.useState(false);
-  const [moreDropdownOpen, setMoreDropdownOpen] = React.useState(false);
   const { showCustomImages, toggleShowCustomImages } = React.useContext(DisplayContext);
   const { alerts, addAlert, dismissAlerts } = useAlerts();
 
@@ -94,23 +91,17 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
             }
             align="left"
             minWidth="16rem"
-            isOpen={exportDropdownOpen}
-            setIsOpen={setExportDropdownOpen}
           >
             <Flexbox direction="col" gap="2" className="p-3">
               <Link
                 href={`/cube/deck/download/txt/${draft.id}/${seatIndex}`}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setExportDropdownOpen(false)}
               >
                 Card Names (.txt)
               </Link>
               <Link
                 href="#"
-                onClick={() => {
-                  copyToClipboard();
-                  setExportDropdownOpen(false);
-                }}
+                onClick={copyToClipboard}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
               >
                 Card Names to Clipboard
@@ -118,42 +109,36 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               <Link
                 href={`/cube/deck/download/forge/${draft.id}/${seatIndex}`}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setExportDropdownOpen(false)}
               >
                 Forge (.dck)
               </Link>
               <Link
                 href={`/cube/deck/download/xmage/${draft.id}/${seatIndex}`}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setExportDropdownOpen(false)}
               >
                 XMage (.dck)
               </Link>
               <Link
                 href={`/cube/deck/download/mtgo/${draft.id}/${seatIndex}`}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setExportDropdownOpen(false)}
               >
                 MTGO (.txt)
               </Link>
               <Link
                 href={`/cube/deck/download/arena/${draft.id}/${seatIndex}`}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setExportDropdownOpen(false)}
               >
                 Arena (.txt)
               </Link>
               <Link
                 href={`/cube/deck/download/cockatrice/${draft.id}/${seatIndex}`}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setExportDropdownOpen(false)}
               >
                 Cockatrice (.txt)
               </Link>
               <Link
                 href={`/cube/deck/download/topdecked/${draft.id}/${seatIndex}`}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setExportDropdownOpen(false)}
               >
                 TopDecked (.csv)
               </Link>
@@ -170,8 +155,6 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               }
               align="left"
               minWidth="16rem"
-              isOpen={editDropdownOpen}
-              setIsOpen={setEditDropdownOpen}
             >
               <Flexbox direction="col" gap="2" className="p-3">
                 {draft.seats.map((seat, index) => (
@@ -179,7 +162,6 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                     key={index}
                     href={`/draft/deckbuilder/${draft.id}?seat=${index}`}
                     className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                    onClick={() => setEditDropdownOpen(false)}
                   >
                     Seat {index + 1}: {seat.name}
                   </Link>
@@ -205,8 +187,6 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
             }
             align="left"
             minWidth="16rem"
-            isOpen={moreDropdownOpen}
-            setIsOpen={setMoreDropdownOpen}
           >
             <Flexbox direction="col" gap="2" className="p-3">
               <SampleHandModalLink
@@ -216,23 +196,18 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                     .map((cardIndex) => draft.cards[cardIndex]),
                 }}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setMoreDropdownOpen(false)}
               >
                 Sample Hand
               </SampleHandModalLink>
               <Link
                 href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setMoreDropdownOpen(false)}
               >
                 Clone and Rebuild
               </Link>
               <Link
                 href="#"
-                onClick={() => {
-                  toggleShowCustomImages();
-                  setMoreDropdownOpen(false);
-                }}
+                onClick={toggleShowCustomImages}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
               >
                 {showCustomImages ? 'Hide' : 'Show'} Custom Images
@@ -240,7 +215,6 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               <DeleteDeckModalLink
                 modalprops={{ deck: draft, cubeID: draft.cube }}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                onClick={() => setMoreDropdownOpen(false)}
               >
                 Delete Deck
               </DeleteDeckModalLink>
@@ -288,23 +262,17 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               }
               align="left"
               minWidth="16rem"
-              isOpen={exportDropdownOpen}
-              setIsOpen={setExportDropdownOpen}
             >
               <Flexbox direction="col" gap="2" className="p-3">
                 <Link
                   href={`/cube/deck/download/txt/${draft.id}/${seatIndex}`}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setExportDropdownOpen(false)}
                 >
                   Card Names (.txt)
                 </Link>
                 <Link
                   href="#"
-                  onClick={() => {
-                    copyToClipboard();
-                    setExportDropdownOpen(false);
-                  }}
+                  onClick={copyToClipboard}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
                 >
                   Card Names to Clipboard
@@ -312,42 +280,36 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                 <Link
                   href={`/cube/deck/download/forge/${draft.id}/${seatIndex}`}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setExportDropdownOpen(false)}
                 >
                   Forge (.dck)
                 </Link>
                 <Link
                   href={`/cube/deck/download/xmage/${draft.id}/${seatIndex}`}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setExportDropdownOpen(false)}
                 >
                   XMage (.dck)
                 </Link>
                 <Link
                   href={`/cube/deck/download/mtgo/${draft.id}/${seatIndex}`}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setExportDropdownOpen(false)}
                 >
                   MTGO (.txt)
                 </Link>
                 <Link
                   href={`/cube/deck/download/arena/${draft.id}/${seatIndex}`}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setExportDropdownOpen(false)}
                 >
                   Arena (.txt)
                 </Link>
                 <Link
                   href={`/cube/deck/download/cockatrice/${draft.id}/${seatIndex}`}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setExportDropdownOpen(false)}
                 >
                   Cockatrice (.txt)
                 </Link>
                 <Link
                   href={`/cube/deck/download/topdecked/${draft.id}/${seatIndex}`}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setExportDropdownOpen(false)}
                 >
                   TopDecked (.csv)
                 </Link>
@@ -363,8 +325,6 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               }
               align="right"
               minWidth="16rem"
-              isOpen={moreDropdownOpen}
-              setIsOpen={setMoreDropdownOpen}
             >
               <Flexbox direction="col" gap="2" className="p-3">
                 <SampleHandModalLink
@@ -374,23 +334,18 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                       .map((cardIndex) => draft.cards[cardIndex]),
                   }}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setMoreDropdownOpen(false)}
                 >
                   Sample Hand
                 </SampleHandModalLink>
                 <Link
                   href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setMoreDropdownOpen(false)}
                 >
                   Clone and Rebuild
                 </Link>
                 <Link
                   href="#"
-                  onClick={() => {
-                    toggleShowCustomImages();
-                    setMoreDropdownOpen(false);
-                  }}
+                  onClick={toggleShowCustomImages}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
                 >
                   {showCustomImages ? 'Hide' : 'Show'} Custom Images
@@ -398,7 +353,6 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                 <DeleteDeckModalLink
                   modalprops={{ deck: draft, cubeID: draft.cube }}
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  onClick={() => setMoreDropdownOpen(false)}
                 >
                   Delete Deck
                 </DeleteDeckModalLink>

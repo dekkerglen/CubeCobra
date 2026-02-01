@@ -30,18 +30,18 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
   previousPacksLastKey,
 }) => {
   const playtestViewContext = useContext(PlaytestViewContext);
-  const view = playtestViewContext?.view || 'sample-pack';
+  const view = playtestViewContext?.view || 'practice-draft';
 
   let content;
   switch (view) {
     case 'practice-draft':
+    default:
       content = <PracticeDraftView cube={cube} />;
       break;
     case 'decks':
       content = <DecksView decks={decks} decksLastKey={decksLastKey} cubeId={cube.id} />;
       break;
     case 'sample-pack':
-    default:
       content = (
         <SamplePackView
           cubeId={cube.id}

@@ -3,6 +3,7 @@ import React, { useContext } from 'react';
 import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
+import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CubeListNavbar from 'components/cube/CubeListNavbar';
@@ -45,7 +46,9 @@ const CubeListPageRaw: React.FC = () => {
   if (versionMismatch) {
     return (
       <>
-        <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+        <Container xl>
+          <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+        </Container>
         <DynamicFlash />
         <VersionMismatch />
       </>
@@ -62,7 +65,9 @@ const CubeListPageRaw: React.FC = () => {
   return (
     <>
       {canEdit && <ScryfallDragDropOverlay />}
-      <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+      <Container xl>
+        <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+      </Container>
       {filterResult && filterInput && filterInput.length > 0 && (
         <div className="text-center py-1">
           <Text italic sm>
