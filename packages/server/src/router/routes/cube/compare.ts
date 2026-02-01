@@ -26,7 +26,7 @@ export const compareHandler = async (req: Request, res: Response) => {
 
     const [cardsA, cardsB] = await Promise.all([cubeDao.getCards(cubeA.id), cubeDao.getCards(cubeB.id)]);
 
-    const { aOracles, bOracles, inBoth, allCards } = await compareCubes(cardsA, cardsB);
+    const { allCards, inBothIndices, onlyAIndices, onlyBIndices } = await compareCubes(cardsA, cardsB);
 
     const baseUrl = getBaseUrl();
     return render(
@@ -36,9 +36,9 @@ export const compareHandler = async (req: Request, res: Response) => {
       {
         cube: cubeA,
         cubeB,
-        onlyA: aOracles,
-        onlyB: bOracles,
-        both: inBoth.map((card: any) => card.details.oracle_id),
+        onlyA: onlyAIndices,
+        onlyB: onlyBIndices,
+        both: inBothIndices,
         cards: allCards.map((card: any, index: number) =>
           Object.assign(card, {
             index,

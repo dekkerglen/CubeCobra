@@ -138,10 +138,10 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ label, both, onlyA, onlyB }) 
 
 export interface CompareViewProps {
   cards: CardType[];
-  // These fields all take oracle_ids.
-  both: string[];
-  onlyA: string[];
-  onlyB: string[];
+  // These fields all take indices into the cards array.
+  both: number[];
+  onlyA: number[];
+  onlyB: number[];
 }
 
 const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) => {
@@ -163,17 +163,17 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
     let onlyBCount = 0;
     let bothCount = 0;
     for (const card of columnsPrimary[columnLabel]) {
-      const oracleId = card.details?.oracle_id ?? '';
-      let index;
-      if ((index = bothCopyTemp.indexOf(oracleId)) >= 0) {
+      const cardIndex = card.index ?? -1;
+      let idx;
+      if ((idx = bothCopyTemp.indexOf(cardIndex)) >= 0) {
         bothCount += 1;
-        bothCopyTemp.splice(index, 1);
-      } else if ((index = onlyACopyTemp.indexOf(oracleId)) >= 0) {
+        bothCopyTemp.splice(idx, 1);
+      } else if ((idx = onlyACopyTemp.indexOf(cardIndex)) >= 0) {
         onlyACount += 1;
-        onlyACopyTemp.splice(index, 1);
-      } else if ((index = onlyBCopyTemp.indexOf(oracleId)) >= 0) {
+        onlyACopyTemp.splice(idx, 1);
+      } else if ((idx = onlyBCopyTemp.indexOf(cardIndex)) >= 0) {
         onlyBCount += 1;
-        onlyBCopyTemp.splice(index, 1);
+        onlyBCopyTemp.splice(idx, 1);
       }
     }
 
@@ -226,17 +226,17 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
                   const onlyBGroup: CardType[] = [];
 
                   for (const card of group) {
-                    const oracleId = card.details?.oracle_id ?? '';
-                    let index;
-                    if ((index = bothCopy.indexOf(oracleId)) >= 0) {
+                    const cardIndex = card.index ?? -1;
+                    let idx;
+                    if ((idx = bothCopy.indexOf(cardIndex)) >= 0) {
                       bothGroup.push(card);
-                      bothCopy.splice(index, 1);
-                    } else if ((index = onlyACopy.indexOf(oracleId)) >= 0) {
+                      bothCopy.splice(idx, 1);
+                    } else if ((idx = onlyACopy.indexOf(cardIndex)) >= 0) {
                       onlyAGroup.push(card);
-                      onlyACopy.splice(index, 1);
-                    } else if ((index = onlyBCopy.indexOf(oracleId)) >= 0) {
+                      onlyACopy.splice(idx, 1);
+                    } else if ((idx = onlyBCopy.indexOf(cardIndex)) >= 0) {
                       onlyBGroup.push(card);
-                      onlyBCopy.splice(index, 1);
+                      onlyBCopy.splice(idx, 1);
                     }
                   }
 
