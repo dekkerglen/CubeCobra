@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
 
-import { CardDetails } from '@utils/datatypes/Card';
+import { cardId, cardImageUrl, cardName } from '@utils/cardutil';
+import Card from '@utils/datatypes/Card';
 import User from '@utils/datatypes/User';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
@@ -15,7 +16,7 @@ import ImageFallback from '../ImageFallback';
 import LoadingButton from '../LoadingButton';
 
 export interface AddToCubeModalProps {
-  card: CardDetails;
+  card: Card;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
   hideAnalytics?: boolean;
@@ -53,7 +54,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
         method: 'POST',
         body: JSON.stringify({
-          cards: [card.scryfall_id],
+          cards: [cardId(card)],
           board: selectedBoard,
         }),
         headers: {
@@ -77,14 +78,14 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   if (!cubes || cubes.length === 0) {
     return (
       <Modal isOpen={isOpen} setOpen={setOpen} sm scrollable>
-        <ModalHeader setOpen={setOpen}>{card.name}</ModalHeader>
+        <ModalHeader setOpen={setOpen}>{cardName(card)}</ModalHeader>
         <ModalBody className="centered" scrollable>
           <Flexbox direction="col" alignItems="center" gap="2">
             <ImageFallback
               className="w-full mb-3"
-              src={card.image_normal}
+              src={cardImageUrl(card)}
               fallbackSrc="/content/default_card.png"
-              alt={card.name}
+              alt={cardName(card)}
             />
             <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
           </Flexbox>
@@ -92,7 +93,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
         <ModalFooter>
           <Flexbox direction="row" justify="between" gap="2" className="w-full">
             {!hideAnalytics && (
-              <Button block color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
+              <Button block color="accent" href={`/tool/card/${cardId(card)}`} target="_blank">
                 Analytics
               </Button>
             )}
@@ -104,7 +105,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} sm scrollable>
-      <ModalHeader setOpen={setOpen}>{`Add ${card.name} to Cube`}</ModalHeader>
+      <ModalHeader setOpen={setOpen}>{`Add ${cardName(card)} to Cube`}</ModalHeader>
       <ModalBody scrollable>
         <Flexbox direction="col" alignItems="center" gap="2">
           {alerts.map(({ color, message }) => (
@@ -114,9 +115,9 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
           ))}
           <ImageFallback
             className="w-full"
-            src={card.image_normal}
+            src={cardImageUrl(card)}
             fallbackSrc="/content/default_card.png"
-            alt={card.name}
+            alt={cardName(card)}
           />
           <Select
             label="Cube"
@@ -138,7 +139,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
       <ModalFooter>
         <Flexbox direction="row" justify="between" gap="2" className="w-full">
           {!hideAnalytics && (
-            <Button type="link" block color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
+            <Button type="link" block color="accent" href={`/tool/card/${cardId(card)}`} target="_blank">
               Analytics
             </Button>
           )}

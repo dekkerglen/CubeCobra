@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 
-import { CardDetails } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import { getLabels, sortIntoGroups } from '@utils/sorting/Sort';
 
@@ -77,7 +76,7 @@ const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB
                     key={card.index}
                     card={card}
                     className={index === 0 ? 'border-t border-border-secondary' : undefined}
-                    modalprops={{ card: CardDetails(card) }}
+                    modalprops={{ card }}
                   />
                 ))}
               </Col>

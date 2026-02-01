@@ -280,7 +280,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     block
                     outline
                     modalprops={{
-                      card: card.details,
+                      card,
                     }}
                   >
                     Add to another Cube
