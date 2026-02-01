@@ -1,9 +1,10 @@
+import { cardName, cardOracleId } from '@utils/cardutil';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cardFromId } from 'serverutils/carddb';
 import { compareCubes, generateBalancedPack, generatePack } from 'serverutils/cubefn';
 import { getBotPrediction } from 'serverutils/userUtil';
 
-import { createCardDetails, createCube,createCustomCard } from '../test-utils/data';
+import { createCardDetails, createCube, createCustomCard } from '../test-utils/data';
 
 // Mock dependencies
 jest.mock('serverutils/userUtil');
@@ -591,7 +592,7 @@ describe('compareCubes', () => {
   });
 
   describe('comparison results', () => {
-    it('should return all oracle IDs from cube A', async () => {
+    it('should return correct indices for cards only in cube A', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1), createComparisonCard(2), createComparisonCard(3)],
         maybeboard: [],
@@ -603,11 +604,13 @@ describe('compareCubes', () => {
 
       const result = await compareCubes(cardsA, cardsB);
 
-      expect(result.aOracles).toHaveLength(2);
-      expect(result.aOracles).toEqual(['oracle2', 'oracle3']);
+      expect(result.onlyAIndices).toHaveLength(2);
+      // Verify indices point to the correct cards in allCards
+      const onlyACards = result.onlyAIndices.map((idx) => result.allCards[idx]);
+      expect(onlyACards.map((c: any) => c.details.oracle_id)).toEqual(['oracle2', 'oracle3']);
     });
 
-    it('should return all oracle IDs from cube B', async () => {
+    it('should return correct indices for cards only in cube B', async () => {
       const cardsA = {
         mainboard: [createComparisonCard(1)],
         maybeboard: [],
@@ -619,8 +622,10 @@ describe('compareCubes', () => {
 
       const result = await compareCubes(cardsA, cardsB);
 
-      expect(result.bOracles).toHaveLength(2);
-      expect(result.bOracles).toEqual(['oracle2', 'oracle3']);
+      expect(result.onlyBIndices).toHaveLength(2);
+      // Verify indices point to the correct cards in allCards
+      const onlyBCards = result.onlyBIndices.map((idx) => result.allCards[idx]);
+      expect(onlyBCards.map((c: any) => c.details.oracle_id)).toEqual(['oracle2', 'oracle3']);
     });
 
     it('should return all cards combined in allCards property. Ordered by both, only A, only B', async () => {
@@ -637,6 +642,13 @@ describe('compareCubes', () => {
 
       expect(result.allCards).toHaveLength(3);
       expect(result.allCards.map((c: any) => c.details.oracle_id)).toEqual(['oracle2', 'oracle1', 'oracle3']);
+      // Verify indices are correct
+      expect(result.inBothIndices).toHaveLength(1);
+      expect(result.inBothIndices[0]).toBe(0); // oracle2 is at index 0 in allCards
+      expect(result.onlyAIndices).toHaveLength(1);
+      expect(result.onlyAIndices[0]).toBe(1); // oracle1 is at index 1 in allCards
+      expect(result.onlyBIndices).toHaveLength(1);
+      expect(result.onlyBIndices[0]).toBe(2); // oracle3 is at index 2 in allCards
     });
   });
 
@@ -652,8 +664,9 @@ describe('compareCubes', () => {
       expect(result.inBoth).toHaveLength(3);
       expect(result.onlyA).toHaveLength(0);
       expect(result.onlyB).toHaveLength(0);
-      expect(result.aOracles).toHaveLength(0);
-      expect(result.bOracles).toHaveLength(0);
+      expect(result.inBothIndices).toHaveLength(3);
+      expect(result.onlyAIndices).toHaveLength(0);
+      expect(result.onlyBIndices).toHaveLength(0);
     });
   });
 
@@ -668,6 +681,9 @@ describe('compareCubes', () => {
       expect(result.onlyA).toHaveLength(0);
       expect(result.onlyB).toHaveLength(0);
       expect(result.allCards).toHaveLength(0);
+      expect(result.inBothIndices).toHaveLength(0);
+      expect(result.onlyAIndices).toHaveLength(0);
+      expect(result.onlyBIndices).toHaveLength(0);
     });
 
     it('should handle one empty cube', async () => {
@@ -683,6 +699,9 @@ describe('compareCubes', () => {
       expect(result.onlyA).toHaveLength(2);
       expect(result.onlyB).toHaveLength(0);
       expect(result.allCards).toHaveLength(2);
+      expect(result.inBothIndices).toHaveLength(0);
+      expect(result.onlyAIndices).toHaveLength(2);
+      expect(result.onlyBIndices).toHaveLength(0);
     });
   });
 
@@ -705,7 +724,7 @@ describe('compareCubes', () => {
 
       // oracle1 is in both (even though cube A has 2 copies, only one match)
       expect(result.inBoth).toHaveLength(1);
-      expect(result.inBoth[0].details.oracle_id).toBe('oracle1');
+      expect(cardOracleId(result.inBoth[0]!)).toBe('oracle1');
 
       // onlyA should have oracle2 (and one oracle1 since one was matched)
       expect(result.onlyA).toHaveLength(2);
@@ -729,7 +748,7 @@ describe('compareCubes', () => {
 
       // oracle1 is in both
       expect(result.inBoth).toHaveLength(1);
-      expect(result.inBoth[0].details.oracle_id).toBe('oracle1');
+      expect(cardOracleId(result.inBoth[0]!)).toBe('oracle1');
 
       // onlyB should have one oracle1 and oracle2
       expect(result.onlyB).toHaveLength(2);
@@ -757,15 +776,15 @@ describe('compareCubes', () => {
 
       // Only oracle1 is in both
       expect(result.inBoth).toHaveLength(1);
-      expect(result.inBoth[0].details.oracle_id).toBe('oracle1');
+      expect(cardOracleId(result.inBoth[0]!)).toBe('oracle1');
 
       // onlyA has oracle2
       expect(result.onlyA).toHaveLength(1);
-      expect(result.onlyA[0].details.oracle_id).toBe('oracle2');
+      expect(cardOracleId(result.onlyA[0]!)).toBe('oracle2');
 
       // onlyB has oracle3
       expect(result.onlyB).toHaveLength(1);
-      expect(result.onlyB[0].details.oracle_id).toBe('oracle3');
+      expect(cardOracleId(result.onlyB[0]!)).toBe('oracle3');
     });
   });
 
@@ -782,14 +801,14 @@ describe('compareCubes', () => {
 
       const result = await compareCubes(cardsA, cardsB);
 
-      expect(result.inBoth[0]).toHaveProperty('details');
-      expect(result.inBoth[0].details).toHaveProperty('oracle_id', 'oracle1');
-      expect(result.inBoth[0].details).toHaveProperty('name', 'Test Card');
+      expect(result.inBoth).toHaveLength(1);
+      expect(cardOracleId(result.inBoth[0]!)).toEqual('oracle1');
+      expect(cardName(result.inBoth[0]!)).toEqual('Test Card');
     });
   });
 
   describe('order preservation', () => {
-    it('should maintain relative order in inBoth list', async () => {
+    it('should maintain relative order in inBoth list and indices', async () => {
       const cardsA = {
         mainboard: [
           createComparisonCard(1, 'oracle1'),
@@ -811,6 +830,10 @@ describe('compareCubes', () => {
 
       // inBoth should be in the order they appear in cardsA
       expect(result.inBoth.map((c: any) => c.details.oracle_id)).toEqual(['oracle1', 'oracle2', 'oracle3']);
+
+      // Indices should point to the same ordered cards in allCards
+      const inBothCardsFromIndices = result.inBothIndices.map((idx) => result.allCards[idx]);
+      expect(inBothCardsFromIndices.map((c: any) => c.details.oracle_id)).toEqual(['oracle1', 'oracle2', 'oracle3']);
     });
   });
 
@@ -829,7 +852,7 @@ describe('compareCubes', () => {
 
       // Custom cards with same custom_name should be in both
       expect(result.inBoth).toHaveLength(1);
-      expect(result.inBoth[0].custom_name).toBe('My Custom Card');
+      expect(cardName(result.inBoth[0]!)).toBe('My Custom Card');
     });
 
     it('should not match custom cards if custom_name differs', async () => {
@@ -868,7 +891,7 @@ describe('compareCubes', () => {
 
       // One copy of 'Bomb Custom' should match
       expect(result.inBoth).toHaveLength(1);
-      expect(result.inBoth[0].custom_name).toBe('Bomb Custom');
+      expect(cardName(result.inBoth[0]!)).toBe('Bomb Custom');
 
       // onlyA should have one 'Bomb Custom' and 'Another Custom'
       expect(result.onlyA).toHaveLength(2);
@@ -904,6 +927,15 @@ describe('compareCubes', () => {
 
       expect(inBothOracleIds).toContain('oracle1');
       expect(inBothCustomNames).toContain('Custom A');
+
+      // Verify indices are correct
+      expect(result.inBothIndices).toHaveLength(2);
+      const inBothFromIndices = result.inBothIndices.map((idx) => result.allCards[idx]);
+      const oracleIdsFromIndices = inBothFromIndices.map((c: any) => c.details?.oracle_id).filter(Boolean);
+      const customNamesFromIndices = inBothFromIndices.map((c: any) => c.custom_name).filter(Boolean);
+
+      expect(oracleIdsFromIndices).toContain('oracle1');
+      expect(customNamesFromIndices).toContain('Custom A');
     });
 
     it('should handle custom card in cube A only', async () => {
@@ -920,7 +952,7 @@ describe('compareCubes', () => {
 
       expect(result.inBoth).toHaveLength(0);
       expect(result.onlyA).toHaveLength(1);
-      expect(result.onlyA[0].custom_name).toBe('Only in A');
+      expect(cardName(result.onlyA[0]!)).toBe('Only in A');
       expect(result.onlyB).toHaveLength(1);
     });
 
@@ -939,7 +971,7 @@ describe('compareCubes', () => {
       expect(result.inBoth).toHaveLength(0);
       expect(result.onlyA).toHaveLength(1);
       expect(result.onlyB).toHaveLength(1);
-      expect(result.onlyB[0].custom_name).toBe('Only in B');
+      expect(cardName(result.onlyB[0]!)).toBe('Only in B');
     });
   });
 });
