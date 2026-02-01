@@ -32,7 +32,7 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   return (
     <Transition show={isOpen}>
-      <Dialog as="div" className="relative z-30" onClose={() => setOpen(false)}>
+      <Dialog as="div" className="relative z-[60]" onClose={() => setOpen(false)}>
         <TransitionChild
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -43,7 +43,7 @@ export const Modal: React.FC<ModalProps> = ({
         >
           <div className="fixed inset-0 bg-bg bg-opacity-75 transition-opacity" />
         </TransitionChild>
-        <div className="fixed inset-0 z-30">
+        <div className="fixed inset-0 z-[60]">
           <div
             className={classNames('flex min-h-full justify-center text-center items-start max-h-screen overflow-auto')}
           >
