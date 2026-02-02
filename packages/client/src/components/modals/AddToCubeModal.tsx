@@ -51,10 +51,53 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   const add = async (): Promise<void> => {
     setLoading(true);
     try {
+      // Build card object with custom properties if they exist
+      const cardData: any = {
+        cardID: cardId(card),
+      };
+
+      // Include optional custom card properties
+      if (card.tags && card.tags.length > 0) {
+        cardData.tags = card.tags;
+      }
+      if (card.notes) {
+        cardData.notes = card.notes;
+      }
+      if (card.finish) {
+        cardData.finish = card.finish;
+      }
+      if (card.status) {
+        cardData.status = card.status;
+      }
+      if (card.colors && card.colors.length > 0) {
+        cardData.colors = card.colors;
+      }
+      if (card.type_line) {
+        cardData.type_line = card.type_line;
+      }
+      if (card.rarity) {
+        cardData.rarity = card.rarity;
+      }
+      if (card.cmc !== undefined) {
+        cardData.cmc = card.cmc;
+      }
+      if (card.custom_name) {
+        cardData.custom_name = card.custom_name;
+      }
+      if (card.imgUrl) {
+        cardData.imgUrl = card.imgUrl;
+      }
+      if (card.imgBackUrl) {
+        cardData.imgBackUrl = card.imgBackUrl;
+      }
+      if (card.colorCategory) {
+        cardData.colorCategory = card.colorCategory;
+      }
+
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
         method: 'POST',
         body: JSON.stringify({
-          cards: [cardId(card)],
+          cards: [cardData],
           board: selectedBoard,
         }),
         headers: {

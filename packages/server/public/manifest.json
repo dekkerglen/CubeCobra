@@ -18,7 +18,7 @@
   "CubeAboutPage": "/js/CubeAboutPage.7d1d0804.bundle.js",
   "CubeAnalysisPage": "/js/CubeAnalysisPage.2db56be8.bundle.js",
   "CubeBlogPage": "/js/CubeBlogPage.c61aa059.bundle.js",
-  "CubeComparePage": "/js/CubeComparePage.a1865f8e.bundle.js",
+  "CubeComparePage": "/js/CubeComparePage.00a5a921.bundle.js",
   "CubeDeckPage": "/js/CubeDeckPage.528cf197.bundle.js",
   "CubeDeckbuilderPage": "/js/CubeDeckbuilderPage.7a1e3913.bundle.js",
   "CubeDraftPage": "/js/CubeDraftPage.51f40083.bundle.js",
@@ -74,6 +74,6 @@
   "VersionPage": "/js/VersionPage.4a140648.bundle.js",
   "VideoPage": "/js/VideoPage.b041f1bf.bundle.js",
   "VideosPage": "/js/VideosPage.20352d97.bundle.js",
-  "commons": "/js/commons.2189ccc7.bundle.js",
+  "commons": "/js/commons.b9c797b8.bundle.js",
   "vendors": "/js/vendors.9ba30038.bundle.js"
 }
