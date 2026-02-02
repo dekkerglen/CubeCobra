@@ -550,6 +550,10 @@ video {
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
     --hero-bg: 8 119 21;
+    --category-badge-bg: 34 139 34;
+    --category-badge-text: 255 255 255;
+    --tag-badge-bg: 108 117 125;
+    --tag-badge-text: 255 255 255;
   }
 
   :root[class~='system'],
@@ -590,6 +594,10 @@ video {
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
     --hero-bg: 8 119 21;
+    --category-badge-bg: 34 139 34;
+    --category-badge-text: 255 255 255;
+    --tag-badge-bg: 108 117 125;
+    --tag-badge-text: 255 255 255;
   }
 
   :root[class~='dark'] {
@@ -629,6 +637,10 @@ video {
     --card-colorless: 60 58 64;
     --card-lands: 95 58 36;
     --hero-bg: 73 95 52;
+    --category-badge-bg: 76 175 80;
+    --category-badge-text: 33 37 41;
+    --tag-badge-bg: 149 165 166;
+    --tag-badge-text: 33 37 41;
     color-scheme: dark;
   }
 
@@ -667,6 +679,10 @@ video {
       --card-red: 95 56 68;
       --card-green: 73 95 52;
       --card-multi: 92 88 9;
+      --category-badge-bg: 76 175 80;
+      --category-badge-text: 33 37 41;
+      --tag-badge-bg: 149 165 166;
+      --tag-badge-text: 33 37 41;
       --card-colorless: 60 58 64;
       --card-lands: 95 58 36;
       --hero-bg: 73 95 52;
@@ -1888,13 +1904,13 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--card-white) / var(--tw-bg-opacity));
 }
+.bg-category-badge-bg {
+  --tw-bg-opacity: 1;
+  background-color: rgb(var(--category-badge-bg) / var(--tw-bg-opacity));
+}
 .bg-gray-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity));
-}
-.bg-gray-500 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
 }
 .bg-gray-700\/80 {
   background-color: rgb(55 65 81 / 0.8);
@@ -1938,6 +1954,10 @@ video {
 .bg-red-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(239 68 68 / var(--tw-bg-opacity));
+}
+.bg-tag-badge-bg {
+  --tw-bg-opacity: 1;
+  background-color: rgb(var(--tag-badge-bg) / var(--tw-bg-opacity));
 }
 .bg-teal-100 {
   --tw-bg-opacity: 1;
@@ -2281,6 +2301,10 @@ video {
   --tw-text-opacity: 1;
   color: rgb(var(--button-text) / var(--tw-text-opacity));
 }
+.text-category-badge-text {
+  --tw-text-opacity: 1;
+  color: rgb(var(--category-badge-text) / var(--tw-text-opacity));
+}
 .text-gray-500 {
   --tw-text-opacity: 1;
   color: rgb(107 114 128 / var(--tw-text-opacity));
@@ -2340,6 +2364,10 @@ video {
 .text-red-800 {
   --tw-text-opacity: 1;
   color: rgb(153 27 27 / var(--tw-text-opacity));
+}
+.text-tag-badge-text {
+  --tw-text-opacity: 1;
+  color: rgb(var(--tag-badge-text) / var(--tw-text-opacity));
 }
 .text-teal-800 {
   --tw-text-opacity: 1;
@@ -3179,13 +3207,12 @@ img.mana-symbol-sm {
   background-color: rgb(var(--button-secondary-active) / var(--tw-bg-opacity));
 }
 
-.hover\:bg-card-green\/80:hover {
-  background-color: rgb(var(--card-green) / 0.8);
+.hover\:bg-category-badge-bg\/80:hover {
+  background-color: rgb(var(--category-badge-bg) / 0.8);
 }
 
-.hover\:bg-gray-600:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(75 85 99 / var(--tw-bg-opacity));
+.hover\:bg-tag-badge-bg\/80:hover {
+  background-color: rgb(var(--tag-badge-bg) / 0.8);
 }
 
 .hover\:\!text-link-active:hover {
@@ -3811,6 +3838,10 @@ img.mana-symbol-sm {
 
   .lg\:items-center {
     align-items: center;
+  }
+
+  .lg\:gap-4 {
+    gap: 1rem;
   }
 
   .lg\:gap-6 {

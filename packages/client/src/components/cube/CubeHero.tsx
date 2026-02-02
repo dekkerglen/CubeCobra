@@ -27,6 +27,7 @@ import UserContext from '../../contexts/UserContext';
 import useAlerts from '../../hooks/UseAlerts';
 import { cardKingdomBulkLink, getBulkManaPoolLink, tcgMassEntryUrl, tcgplayerAffiliate } from '../../utils/Affiliate';
 import Checkbox from '../base/Checkbox';
+import Container from '../base/Container';
 import Dropdown from '../base/Dropdown';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
@@ -469,7 +470,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
         style={{
           backgroundImage: `url(${cube.image.uri})`,
           backgroundSize: '50% auto',
-          backgroundPosition: 'right center',
+          backgroundPosition: 'right top',
           backgroundRepeat: 'no-repeat',
           maskImage: maskGradient,
           WebkitMaskImage: maskGradient,
@@ -478,162 +479,166 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false }) => {
 
       {/* Content */}
       <div className="relative p-4">
-        {/* Cube name, card count, followers and gear icon in horizontal layout */}
-        <div className="flex justify-between items-start gap-4 mb-4">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 flex-1">
-            <div>
-              <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
-              <Text md className="text-white/80 mt-1">
-                {getCubeCardCountSnippet(cube)} Cube •{' '}
-                <FollowersModalLink
-                  href="#"
-                  modalprops={{ id: cube.id, type: 'cube' }}
-                  className="text-white/80 hover:text-white hover:underline"
-                >
-                  {cube.following?.length || 0} {cube.following?.length === 1 ? 'follower' : 'followers'}
-                </FollowersModalLink>
-              </Text>
+        {/* Flex container for thumbnail and content on lg+ - wraps everything except action icons */}
+        <div className="lg:flex lg:gap-4 mb-4">
+          {/* Cube image thumbnail - only visible on lg and up */}
+          <div className="hidden lg:block flex-shrink-0" style={{ width: 'auto', maxWidth: 'min(25%, 300px)' }}>
+            <div className="relative">
+              <img
+                src={cube.image.uri}
+                alt={`Art by ${cube.image.artist}`}
+                className="w-full rounded-lg shadow-lg"
+                style={{ maxHeight: '400px', objectFit: 'cover', display: 'block' }}
+              />
+              <em className="text-sm absolute bottom-2 right-2 text-white text-shadow">Art by {cube.image.artist}</em>
             </div>
-            <Flexbox direction="row" gap="2" alignItems="center">
-              {cube.owner.image && (
-                <a href={`/user/view/${cube.owner.id}`}>
-                  <img
-                    className="profile-thumbnail"
-                    src={cube.owner.image.uri}
-                    alt={cube.owner.image.artist}
-                    title={cube.owner.image.artist}
-                  />
-                </a>
-              )}
-              <Text md className="text-white">
-                Designed by{' '}
-                <a href={`/user/view/${cube.owner.id}`} className="text-white font-semibold hover:underline">
-                  {cube.owner.username}
-                </a>
-              </Text>
-            </Flexbox>
           </div>
 
-          {/* Gear icon */}
-          {isCubeOwner && (
-            <div className="flex-shrink-0">
-              <Dropdown
-                trigger={
-                  <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
-                    <span
-                      style={{
-                        filter: 'drop-shadow(0 0 3px rgba(0, 0, 0, 1)) drop-shadow(0 0 6px rgba(0, 0, 0, 0.8))',
-                      }}
+          {/* Main content area */}
+          <div className="flex-1 min-w-0">
+            {/* Cube name, card count, followers and gear icon in horizontal layout */}
+            <div className="flex justify-between items-start gap-4 mb-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 flex-1">
+                <div>
+                  <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
+                  <Text md className="text-white/80 mt-1">
+                    {getCubeCardCountSnippet(cube)} Cube •{' '}
+                    <FollowersModalLink
+                      href="#"
+                      modalprops={{ id: cube.id, type: 'cube' }}
+                      className="text-white/80 hover:text-white hover:underline"
                     >
-                      <GearIcon size={24} />
-                    </span>
-                  </button>
-                }
-                align="right"
-                minWidth="16rem"
-              >
-                <Flexbox direction="col" gap="2" className="p-3">
-                  {(unfilteredChangedCards.mainboard.length > 0 && (
-                    <CubeOverviewModalLink
-                      modalprops={{
-                        cube: cube,
-                      }}
-                      className="!text-text hover:!text-link-active"
-                    >
-                      Edit Primer
-                    </CubeOverviewModalLink>
-                  )) || (
-                    <Tooltip text="Please add at least one card to the cube in order to edit the primer. This is a spam prevention mechanism.">
-                      <span className="!text-text opacity-50 cursor-not-allowed">Edit Primer</span>
-                    </Tooltip>
+                      {cube.following?.length || 0} {cube.following?.length === 1 ? 'follower' : 'followers'}
+                    </FollowersModalLink>
+                  </Text>
+                </div>
+                <Flexbox direction="row" gap="2" alignItems="center">
+                  {cube.owner.image && (
+                    <a href={`/user/view/${cube.owner.id}`}>
+                      <img
+                        className="profile-thumbnail"
+                        src={cube.owner.image.uri}
+                        alt={cube.owner.image.artist}
+                        title={cube.owner.image.artist}
+                      />
+                    </a>
                   )}
-                  <CubeSettingsModalLink
-                    modalprops={{ addAlert, onCubeUpdate: () => {} }}
-                    className="!text-text hover:!text-link-active"
-                  >
-                    Edit Settings
-                  </CubeSettingsModalLink>
-                  <CustomizeBasicsModalLink
-                    modalprops={{
-                      cube: cube,
-                      onError: (message: string) => {
-                        addAlert('danger', message);
-                      },
-                    }}
-                    className="!text-text hover:!text-link-active"
-                  >
-                    Customize basics
-                  </CustomizeBasicsModalLink>
-                  <Link
-                    href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
-                    className="!text-text hover:!text-link-active"
-                  >
-                    Restore
-                  </Link>
-                  <DeleteCubeModalLink modalprops={{ cube }} className="!text-text hover:!text-link-active">
-                    Delete Cube
-                  </DeleteCubeModalLink>
-                  {hasCustomImages && (
-                    <>
-                      <div className="border-t border-border my-1"></div>
-                      <Link onClick={toggleShowCustomImages} className="!text-text hover:!text-link-active">
-                        {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
-                      </Link>
-                    </>
-                  )}
+                  <Text md className="text-white">
+                    Designed by{' '}
+                    <a href={`/user/view/${cube.owner.id}`} className="text-white font-semibold hover:underline">
+                      {cube.owner.username}
+                    </a>
+                  </Text>
                 </Flexbox>
-              </Dropdown>
-            </div>
-          )}
-        </div>
+              </div>
 
-        {/* Brief */}
-        {cube.brief && (
-          <div className="mb-4">
-            <div className="text-white">
-              <SafeMarkdown markdown={cube.brief} />
+              {/* Gear icon */}
+              {isCubeOwner && (
+                <div className="flex-shrink-0">
+                  <Dropdown
+                    trigger={
+                      <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                        <span
+                          style={{
+                            filter: 'drop-shadow(0 0 3px rgba(0, 0, 0, 1)) drop-shadow(0 0 6px rgba(0, 0, 0, 0.8))',
+                          }}
+                        >
+                          <GearIcon size={24} />
+                        </span>
+                      </button>
+                    }
+                    align="right"
+                    minWidth="16rem"
+                  >
+                    <Flexbox direction="col" gap="2" className="p-3">
+                      {(unfilteredChangedCards.mainboard.length > 0 && (
+                        <CubeOverviewModalLink
+                          modalprops={{
+                            cube: cube,
+                          }}
+                          className="!text-text hover:!text-link-active"
+                        >
+                          Edit Primer
+                        </CubeOverviewModalLink>
+                      )) || (
+                        <Tooltip text="Please add at least one card to the cube in order to edit the primer. This is a spam prevention mechanism.">
+                          <span className="!text-text opacity-50 cursor-not-allowed">Edit Primer</span>
+                        </Tooltip>
+                      )}
+                      <CubeSettingsModalLink
+                        modalprops={{ addAlert, onCubeUpdate: () => {} }}
+                        className="!text-text hover:!text-link-active"
+                      >
+                        Edit Settings
+                      </CubeSettingsModalLink>
+                      <CustomizeBasicsModalLink
+                        modalprops={{
+                          cube: cube,
+                          onError: (message: string) => {
+                            addAlert('danger', message);
+                          },
+                        }}
+                        className="!text-text hover:!text-link-active"
+                      >
+                        Customize basics
+                      </CustomizeBasicsModalLink>
+                      <Link
+                        href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
+                        className="!text-text hover:!text-link-active"
+                      >
+                        Restore
+                      </Link>
+                      <DeleteCubeModalLink modalprops={{ cube }} className="!text-text hover:!text-link-active">
+                        Delete Cube
+                      </DeleteCubeModalLink>
+                      {hasCustomImages && (
+                        <>
+                          <div className="border-t border-border my-1"></div>
+                          <Link onClick={toggleShowCustomImages} className="!text-text hover:!text-link-active">
+                            {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
+                          </Link>
+                        </>
+                      )}
+                    </Flexbox>
+                  </Dropdown>
+                </div>
+              )}
             </div>
-          </div>
-        )}
 
-        {/* Category badges */}
-        {(cube.categoryOverride || (cube.categoryPrefixes && cube.categoryPrefixes.length > 0)) && (
-          <Flexbox direction="row" gap="2" wrap="wrap" className="mb-4">
-            {cube.categoryPrefixes &&
-              cube.categoryPrefixes.map((prefix, index) => (
-                <a
-                  key={`prefix-${index}`}
-                  href={`/search?q=category:"${encodeURIComponent(prefix)}"`}
-                  className="px-3 py-1 bg-card-green hover:bg-card-green/80 text-text text-sm rounded-full transition-colors font-medium"
-                >
-                  {prefix}
-                </a>
-              ))}
-            {cube.categoryOverride && (
-              <a
-                href={`/search?q=category:"${encodeURIComponent(cube.categoryOverride)}"`}
-                className="px-3 py-1 bg-card-green hover:bg-card-green/80 text-text text-sm rounded-full transition-colors font-medium"
-              >
-                {cube.categoryOverride}
-              </a>
+            {/* Category badges */}
+            {(cube.categoryOverride || (cube.categoryPrefixes && cube.categoryPrefixes.length > 0)) && (
+              <Flexbox direction="row" gap="2" wrap="wrap" className="mb-4">
+                {cube.categoryPrefixes &&
+                  cube.categoryPrefixes.map((prefix, index) => (
+                    <a
+                      key={`prefix-${index}`}
+                      href={`/search?q=category:"${encodeURIComponent(prefix)}"`}
+                      className="px-3 py-1 bg-category-badge-bg hover:bg-category-badge-bg/80 text-category-badge-text text-sm rounded-full transition-colors font-medium"
+                    >
+                      {prefix}
+                    </a>
+                  ))}
+                {cube.categoryOverride && (
+                  <a
+                    href={`/search?q=category:"${encodeURIComponent(cube.categoryOverride)}"`}
+                    className="px-3 py-1 bg-category-badge-bg hover:bg-category-badge-bg/80 text-category-badge-text text-sm rounded-full transition-colors font-medium"
+                  >
+                    {cube.categoryOverride}
+                  </a>
+                )}
+              </Flexbox>
             )}
-          </Flexbox>
-        )}
 
-        {/* Tags */}
-        {cube.tags && cube.tags.length > 0 && (
-          <Flexbox direction="row" gap="2" wrap="wrap" className="mb-4">
-            {cube.tags.map((tag, index) => (
-              <a
-                key={index}
-                href={`/search?q=tag:"${encodeURIComponent(tag)}"`}
-                className="px-3 py-1 bg-gray-500 text-white text-sm rounded-full hover:bg-gray-600 transition-colors font-medium"
-              >
-                {tag}
-              </a>
-            ))}
-          </Flexbox>
-        )}
+            {/* Brief */}
+            {cube.brief && (
+              <Container lg disableCenter className="mb-4">
+                <div className="text-white">
+                  <SafeMarkdown markdown={cube.brief} />
+                </div>
+              </Container>
+            )}
+          </div>
+        </div>
 
         {/* Action icons */}
         <div>

@@ -61,6 +61,10 @@
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
     --hero-bg: 8 119 21;
+    --category-badge-bg: 34 139 34;
+    --category-badge-text: 255 255 255;
+    --tag-badge-bg: 108 117 125;
+    --tag-badge-text: 255 255 255;
   }
 
   :root[class~='system'],
@@ -101,6 +105,10 @@
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
     --hero-bg: 8 119 21;
+    --category-badge-bg: 34 139 34;
+    --category-badge-text: 255 255 255;
+    --tag-badge-bg: 108 117 125;
+    --tag-badge-text: 255 255 255;
   }
 
   :root[class~='dark'] {
@@ -140,6 +148,10 @@
     --card-colorless: 60 58 64;
     --card-lands: 95 58 36;
     --hero-bg: 73 95 52;
+    --category-badge-bg: 76 175 80;
+    --category-badge-text: 33 37 41;
+    --tag-badge-bg: 149 165 166;
+    --tag-badge-text: 33 37 41;
     color-scheme: dark;
   }
 
@@ -178,6 +190,13 @@
       --card-red: 95 56 68;
       --card-green: 73 95 52;
       --card-multi: 92 88 9;
+      --card-colorless: 60 58 64;
+      --card-lands: 95 58 36;
+      --hero-bg: 73 95 52;
+      --category-badge-bg: 76 175 80;
+      --category-badge-text: 33 37 41;
+      --tag-badge-bg: 149 165 166;
+      --tag-badge-text: 33 37 41;
       --card-colorless: 60 58 64;
       --card-lands: 95 58 36;
       --hero-bg: 73 95 52;
