@@ -9,6 +9,7 @@ import {
   SearchIcon,
   SortAscIcon,
   TableIcon,
+  XCircleIcon,
 } from '@primer/octicons-react';
 import { allFields, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
 
@@ -158,13 +159,15 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           )}
         </Flexbox>
         <div className="flex items-center gap-2 xl:px-2 flex-grow">
-          <button
-            onClick={() => setAdvancedOpen(true)}
-            className="text-text hover:text-text-secondary transition-colors"
-            aria-label="Open advanced filter"
-          >
-            <QuestionIcon size={20} />
-          </button>
+          <Tooltip text="Advanced Filters">
+            <button
+              onClick={() => setAdvancedOpen(true)}
+              className="text-text hover:text-text-secondary transition-colors"
+              aria-label="Open advanced filter"
+            >
+              <QuestionIcon size={20} />
+            </button>
+          </Tooltip>
           <div className="relative flex items-center flex-grow" style={{ minWidth: '150px' }}>
             <span className="absolute" style={{ left: '12px' }}>
               <SearchIcon size={16} className="text-text-secondary" />
@@ -186,6 +189,9 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 onBlur: () => setFilterInput(localFilterInput),
               }}
             />
+            <span className="absolute" style={{ right: '16px' }} onClick={() => setFilterInput('')}>
+              <XCircleIcon size={16} className="text-text-secondary cursor-pointer" />
+            </span>
           </div>
         </div>
         <div className="xl:px-2">
