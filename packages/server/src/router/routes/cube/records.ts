@@ -40,7 +40,7 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
         title: `${abbreviate(cube.name)} - Records`,
         metadata: generateMeta(
           `Cube Cobra Records: ${cube.name}`,
-          cube.description,
+          cube.brief,
           cube.image.uri,
           `${baseUrl}/cube/records/${req.params.id}`,
         ),

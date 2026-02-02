@@ -808,7 +808,7 @@ export const getDeckHandler = async (req: Request, res: Response) => {
         title: `Draft deck of ${abbreviate(cube.name)}`,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
-          cube.description,
+          cube.brief,
           cube.image.uri,
           `${baseUrl}/cube/deck/${req.params.id}`,
         ),

@@ -46,7 +46,7 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
         title: `${abbreviate(cube.name)} - Create Record`,
         metadata: generateMeta(
           `Cube Cobra Create Record: ${cube.name}`,
-          cube.description,
+          cube.brief,
           cube.image.uri,
           `${req.protocol}://${req.get('host')}/cube/records/create/${cube.id}`,
         ),

@@ -5,7 +5,7 @@ interface MetaTag {
 
 const generateMeta = (
   title: string,
-  description: string,
+  description: string | undefined,
   image: string,
   url: string,
   width?: string | number,
@@ -18,7 +18,7 @@ const generateMeta = (
     },
     {
       property: 'og:description',
-      content: description,
+      content: description || '',
     },
     {
       property: 'og:image',
@@ -46,7 +46,7 @@ const generateMeta = (
     },
     {
       property: 'twitter:description',
-      content: description,
+      content: description || '',
     },
     {
       property: 'twitter:image',
