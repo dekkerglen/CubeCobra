@@ -105,7 +105,7 @@ export const aboutHandler = async (req: Request, res: Response) => {
         title: `${abbreviate(cube.name)} - About`,
         metadata: generateMeta(
           `Cube Cobra: ${cube.name}`,
-          cube.description,
+          cube.brief,
           cube.image.uri,
           `${baseUrl}/cube/about/${req.params.id}`,
         ),

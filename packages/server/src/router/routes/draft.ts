@@ -40,7 +40,7 @@ const handler = async (req: Request, res: Response) => {
         title: `${abbreviate(cube.name)} - Draft`,
         metadata: generateMeta(
           `Cube Cobra Draft: ${cube.name}`,
-          cube.description,
+          cube.brief,
           cube.image.uri,
           `${baseUrl}/draft/${encodeURIComponent(req.params.id!)}`,
         ),
