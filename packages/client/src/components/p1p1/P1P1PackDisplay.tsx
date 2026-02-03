@@ -131,10 +131,10 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
       <CardGrid
         cards={cards}
         xs={2}
-        sm={3} 
-        md={4} 
-        lg={5} 
-        xl={6} 
+        sm={3}
+        md={4}
+        lg={5}
+        xl={6}
         xxl={8}
         onClick={user ? (_, index) => handleCardClick(index) : undefined}
         hrefFn={user ? undefined : (card) => `/tool/card/${card.cardID}`}
