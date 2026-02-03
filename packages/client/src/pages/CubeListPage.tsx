@@ -87,7 +87,9 @@ const CubeListPageRaw: React.FC = () => {
         .map(([boardname, boardcards]) => (
           <ErrorBoundary key={boardname}>
             <Flexbox direction="col" gap="2">
-              {(showAllBoards || (showMaybeboard && boardname === 'maybeboard') || (!showMaybeboard && boardname === 'mainboard')) && (
+              {(showAllBoards ||
+                (showMaybeboard && boardname === 'maybeboard') ||
+                (!showMaybeboard && boardname === 'mainboard')) && (
                 <>
                   {showAllBoards && boardcards.length > 0 && (
                     <Text semibold lg className="mt-4 text-center">

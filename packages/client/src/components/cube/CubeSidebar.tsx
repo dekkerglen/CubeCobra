@@ -18,7 +18,6 @@ import AnalysisViewContext from '../../contexts/AnalysisViewContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
-import useLocalStorage from '../../hooks/useLocalStorage';
 import { Flexbox } from '../base/Layout';
 
 interface NavigationItem {
@@ -131,14 +130,14 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-    
+
     // Calculate position relative to viewport
     const rect = element.getBoundingClientRect();
     setDropdownPosition({
       top: rect.top,
       left: rect.right + 8, // 8px gap (ml-2)
     });
-    
+
     setHoveredItem(itemKey);
     setDropdownVisible(true);
   };
@@ -174,10 +173,12 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
         )}
       >
         {/* Navigation items */}
-        <div className={classNames("sticky top-0 max-h-screen", { 
-          "overflow-y-auto": cubeSidebarExpanded,
-          "overflow-visible": !cubeSidebarExpanded
-        })}>
+        <div
+          className={classNames('sticky top-0 max-h-screen', {
+            'overflow-y-auto': cubeSidebarExpanded,
+            'overflow-visible': !cubeSidebarExpanded,
+          })}
+        >
           {!cubeSidebarExpanded ? (
             <nav className="pt-3">
               <Flexbox direction="col" gap="1" alignItems="center" className="overflow-visible">
@@ -199,8 +200,8 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                   if (!IconComponent || item.key === 'menu') return null;
 
                   return (
-                    <div 
-                      key={item.key} 
+                    <div
+                      key={item.key}
                       ref={(el) => (iconRefs.current[item.key] = el)}
                       onMouseEnter={(e) => handleItemMouseEnter(item.key, e.currentTarget)}
                       onMouseLeave={handleItemMouseLeave}
@@ -226,7 +227,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
           ) : (
             <nav>
               <Flexbox direction="col" gap="0">
-                {navigationItems.map((item, index) => {
+                {navigationItems.map((item, _index) => {
                   const isActive = activeLink === item.key;
                   const isParentOfActive = isSubItemActive(item);
                   const fullHref = item.href ? `${item.href}/${encodeURIComponent(getCubeId(cube))}` : undefined;
@@ -243,13 +244,8 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                           onClick={toggleSidebar}
                           className="flex items-center justify-between px-4 py-1.5 transition-colors relative hover:bg-bg-active cursor-pointer"
                         >
-                          <span className="text-base text-text font-bold">
-                            {item.label}
-                          </span>
-                          <div
-                            className="p-1 rounded flex-shrink-0"
-                            aria-label="Collapse sidebar"
-                          >
+                          <span className="text-base text-text font-bold">{item.label}</span>
+                          <div className="p-1 rounded flex-shrink-0" aria-label="Collapse sidebar">
                             <ChevronLeftIcon size={20} className="text-text" />
                           </div>
                         </div>
@@ -601,13 +597,10 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                         <a
                           key={subItem.key}
                           href={subHref}
-                          className={classNames(
-                            'block px-4 py-1.5 text-sm transition-colors hover:bg-bg-active',
-                            {
-                              'bg-bg-active font-bold text-text': isSubActive,
-                              'font-normal text-text': !isSubActive,
-                            },
-                          )}
+                          className={classNames('block px-4 py-1.5 text-sm transition-colors hover:bg-bg-active', {
+                            'bg-bg-active font-bold text-text': isSubActive,
+                            'font-normal text-text': !isSubActive,
+                          })}
                         >
                           {subItem.label}
                         </a>

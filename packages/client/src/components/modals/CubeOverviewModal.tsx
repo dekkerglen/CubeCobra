@@ -17,7 +17,6 @@ import RadioButtonGroup from '../base/RadioButtonGroup';
 import Text from '../base/Text';
 import LoadingButton from '../LoadingButton';
 import MtgImage from '../MtgImage';
-import TagInput from '../TagInput';
 import TextEntry from '../TextEntry';
 
 interface CubeOverviewModalProps {

@@ -10,7 +10,6 @@ import Text from 'components/base/Text';
 import TableViewCardGroup from 'components/card/TableViewCardGroup';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
-import useLocalStorage from 'hooks/useLocalStorage';
 
 interface TableViewProps {
   cards: Card[];
@@ -36,15 +35,22 @@ const TableView: React.FC<TableViewProps> = ({ cards }) => {
   const adjustBreakpoint = useMemo(() => {
     // Count how many sidebars are open (max 2: cube nav + edit/sort)
     let openSidebars = 0;
-    if (cubeSidebarExpanded) openSidebars++;
-    if (rightSidebarMode !== 'none') openSidebars++;
+    if (cubeSidebarExpanded) openSidebars += 1;
+    if (rightSidebarMode !== 'none') openSidebars += 1;
 
-    console.log('TableView: cubeSidebarExpanded=', cubeSidebarExpanded, 'rightSidebarMode=', rightSidebarMode, 'openSidebars=', openSidebars);
+    console.log(
+      'TableView: cubeSidebarExpanded=',
+      cubeSidebarExpanded,
+      'rightSidebarMode=',
+      rightSidebarMode,
+      'openSidebars=',
+      openSidebars,
+    );
 
     // Return a function that takes a breakpoint config and reduces column counts
     return (config: { md: NumCols; lg: NumCols; xl: NumCols; xxl: NumCols }) => {
       let result;
-      
+
       // Helper to clamp column count
       const clamp = (val: NumCols, max: number): NumCols => {
         return Math.min(val, max) as NumCols;

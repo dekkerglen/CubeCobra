@@ -734,48 +734,54 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
             <Alerts alerts={alerts} />
             <DndContext onDragEnd={onMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
               <div className="relative">
-              {/* Only show the pack if there are actually cards to show */}
-              {state?.seats?.[0]?.pack?.length > 0 ? (
-                draftStatus.predictionsLoading && pendingPick !== null ? (
-                  <Card className="mt-3">
-                    <CardHeader className="flex justify-between items-center">
-                      <Text semibold lg>
-                        Waiting for Bot Picks...
-                      </Text>
-                    </CardHeader>
-                    <CardBody>
-                      <div className="centered py-3">
-                        <div className="spinner" />
-                      </div>
-                    </CardBody>
-                  </Card>
+                {/* Only show the pack if there are actually cards to show */}
+                {state?.seats?.[0]?.pack?.length > 0 ? (
+                  draftStatus.predictionsLoading && pendingPick !== null ? (
+                    <Card className="mt-3">
+                      <CardHeader className="flex justify-between items-center">
+                        <Text semibold lg>
+                          Waiting for Bot Picks...
+                        </Text>
+                      </CardHeader>
+                      <CardBody>
+                        <div className="centered py-3">
+                          <div className="spinner" />
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ) : (
+                    <Pack
+                      // Just use state.seats[0].pack directly
+                      pack={state.seats[0].pack.map((index) => draft.cards[index])}
+                      loading={draftStatus.loading}
+                      title={packTitle}
+                      disabled={packDisabled || draftStatus.retryInProgress}
+                      ratings={ratings}
+                      error={draftStatus.predictError}
+                      onRetry={handleRetryPredict}
+                      retryInProgress={draftStatus.retryInProgress}
+                    />
+                  )
                 ) : (
-                  <Pack
-                    // Just use state.seats[0].pack directly
-                    pack={state.seats[0].pack.map((index) => draft.cards[index])}
-                    loading={draftStatus.loading}
-                    title={packTitle}
-                    disabled={packDisabled || draftStatus.retryInProgress}
-                    ratings={ratings}
-                    error={draftStatus.predictError}
-                    onRetry={handleRetryPredict}
-                    retryInProgress={draftStatus.retryInProgress}
+                  <></>
+                )}
+                <Card className="my-3">
+                  <DeckStacks
+                    cards={mainboardCards}
+                    title="Mainboard"
+                    subtitle={makeSubtitle(mainboard.flat(3).map((index) => draft.cards[index]))}
+                    locationType={locations.deck}
+                    xs={4}
+                    lg={8}
                   />
-                )
-              ) : (
-                <></>
-              )}
-              <Card className="my-3">
-                <DeckStacks
-                  cards={mainboardCards}
-                  title="Mainboard"
-                  subtitle={makeSubtitle(mainboard.flat(3).map((index) => draft.cards[index]))}
-                  locationType={locations.deck}
-                  xs={4}
-                  lg={8}
-                />
-                <DeckStacks cards={sideboardCards} title="Sideboard" locationType={locations.sideboard} xs={4} lg={8} />
-              </Card>
+                  <DeckStacks
+                    cards={sideboardCards}
+                    title="Sideboard"
+                    locationType={locations.sideboard}
+                    xs={4}
+                    lg={8}
+                  />
+                </Card>
               </div>
             </DndContext>
           </Container>

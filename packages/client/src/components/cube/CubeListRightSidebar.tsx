@@ -101,7 +101,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
         )}
       >
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-            <div className="w-64 max-w-full p-4 ">
+          <div className="w-64 max-w-full p-4 ">
             <CubeListSortSidebar canEdit={canEdit} />
           </div>
         </div>

@@ -40,7 +40,8 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit }) =>
     setSortQuaternary,
   } = useContext(CubeContext);
 
-  const { setRightSidebarMode, showInlineTagEmojis, toggleShowInlineTagEmojis, showAllBoards, setShowAllBoards } = useContext(DisplayContext);
+  const { setRightSidebarMode, showInlineTagEmojis, toggleShowInlineTagEmojis, showAllBoards, setShowAllBoards } =
+    useContext(DisplayContext);
   const { url: rotoURL, setUrl: setRotoURL } = useContext(RotoDraftContext);
 
   const sortsModified = useMemo(() => {

@@ -43,12 +43,8 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   // Check if there are pending edits
   const hasPendingEdits = useMemo(() => {
     return (
-      Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-        (c) => c.length > 0,
-      ) ||
-      Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-        (c) => c.length > 0,
-      )
+      Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some((c) => c.length > 0) ||
+      Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some((c) => c.length > 0)
     );
   }, [changes]);
 
@@ -286,7 +282,11 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             {canEdit && (
               <div
                 className={hasPendingEdits ? 'animate-pulse' : ''}
-                style={hasPendingEdits ? { boxShadow: '0 0 12px 1px rgb(var(--button-primary) / 0.85)', borderRadius: '0.25rem' } : {}}
+                style={
+                  hasPendingEdits
+                    ? { boxShadow: '0 0 12px 1px rgb(var(--button-primary) / 0.85)', borderRadius: '0.25rem' }
+                    : {}
+                }
               >
                 <Button
                   color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}

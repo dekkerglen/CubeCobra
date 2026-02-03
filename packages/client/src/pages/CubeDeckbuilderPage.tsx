@@ -123,57 +123,57 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
         <CubeLayout cube={cube} activeLink="playtest">
           <Container xl disableCenter>
             <DeckbuilderNavbar
-            cards={initialDeck.cards}
-            basics={basics}
-            mainboard={mainboard}
-            sideboard={sideboard}
-            cubeID={cube.id}
-            draft={initialDeck}
-            addBasics={addBasics}
-            className="mb-3"
-            setDeck={setMainboard}
-            setSideboard={setSideboard}
-            seat={seatIndex}
-          />
-          <DeckBuilderStatsPanel
-            cards={mainboard
-              .flat()
-              .flat()
-              .map((index) => initialDeck.cards[index])}
-          />
-          <DynamicFlash />
-          <Card className="my-3">
-            <DndContext onDragEnd={handleMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
-              <ErrorBoundary>
-                <DeckStacks
-                  cards={mainboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
-                  title="Deck"
-                  subtitle={makeSubtitle(
-                    mainboard
-                      .flat()
-                      .flat()
-                      .map((index) => initialDeck.cards[index]),
-                  )}
-                  locationType={locations.deck}
-                  xs={4}
-                  lg={8}
-                />
-                <DeckStacks
-                  cards={sideboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
-                  title="Sideboard"
-                  locationType={locations.sideboard}
-                  subtitle={makeSubtitle(
-                    sideboard
-                      .flat()
-                      .flat()
-                      .map((index) => initialDeck.cards[index]),
-                  )}
-                  xs={4}
-                  lg={8}
-                />
-              </ErrorBoundary>
-            </DndContext>
-          </Card>
+              cards={initialDeck.cards}
+              basics={basics}
+              mainboard={mainboard}
+              sideboard={sideboard}
+              cubeID={cube.id}
+              draft={initialDeck}
+              addBasics={addBasics}
+              className="mb-3"
+              setDeck={setMainboard}
+              setSideboard={setSideboard}
+              seat={seatIndex}
+            />
+            <DeckBuilderStatsPanel
+              cards={mainboard
+                .flat()
+                .flat()
+                .map((index) => initialDeck.cards[index])}
+            />
+            <DynamicFlash />
+            <Card className="my-3">
+              <DndContext onDragEnd={handleMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
+                <ErrorBoundary>
+                  <DeckStacks
+                    cards={mainboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
+                    title="Deck"
+                    subtitle={makeSubtitle(
+                      mainboard
+                        .flat()
+                        .flat()
+                        .map((index) => initialDeck.cards[index]),
+                    )}
+                    locationType={locations.deck}
+                    xs={4}
+                    lg={8}
+                  />
+                  <DeckStacks
+                    cards={sideboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
+                    title="Sideboard"
+                    locationType={locations.sideboard}
+                    subtitle={makeSubtitle(
+                      sideboard
+                        .flat()
+                        .flat()
+                        .map((index) => initialDeck.cards[index]),
+                    )}
+                    xs={4}
+                    lg={8}
+                  />
+                </ErrorBoundary>
+              </DndContext>
+            </Card>
           </Container>
         </CubeLayout>
       </DisplayContextProvider>

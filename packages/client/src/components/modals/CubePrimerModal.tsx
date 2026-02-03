@@ -66,12 +66,7 @@ const CubePrimerModal: React.FC<CubePrimerModalProps> = ({ isOpen, setOpen, cube
           <Text semibold md>
             Description
           </Text>
-          <TextEntry
-            name="description"
-            value={description}
-            setValue={setDescription}
-            maxLength={100000}
-          />
+          <TextEntry name="description" value={description} setValue={setDescription} maxLength={100000} />
           <TagInput
             label="Tags"
             tags={tags.map((tag) => ({ text: tag, id: tag }))}

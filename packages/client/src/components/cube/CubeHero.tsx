@@ -69,12 +69,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const baseUrl = useContext(BaseUrlContext);
   const { addAlert } = useAlerts();
   const isCubeOwner = !!user && cube.owner.id === user.id;
-  
+
   // State for collapsed hero, stored per page
-  const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>(
-    `cube-hero-collapsed-${activeLink}`,
-    false,
-  );
+  const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>(`cube-hero-collapsed-${activeLink}`, false);
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
   const [followedState, setFollowedState] = useState(!!user && cube.following && cube.following.includes(user.id));
@@ -485,13 +482,16 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 </Text>
               </div>
             </div>
-            
+
             {/* Icon column on the right */}
             <div className="flex flex-col justify-between gap-1">
               {isCubeOwner && (
                 <Dropdown
                   trigger={
-                    <button className="p-1 rounded-full bg-bg-secondary/80 hover:bg-bg-active text-text transition-colors backdrop-blur-sm flex items-center justify-center" style={{ width: '32px', height: '32px' }}>
+                    <button
+                      className="p-1 rounded-full bg-bg-secondary/80 hover:bg-bg-active text-text transition-colors backdrop-blur-sm flex items-center justify-center"
+                      style={{ width: '32px', height: '32px' }}
+                    >
                       <GearIcon size={20} />
                     </button>
                   }
@@ -539,7 +539,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   </Flexbox>
                 </Dropdown>
               )}
-              
+
               {/* Chevron control */}
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
@@ -589,342 +589,345 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         <>
           {/* Flex container for thumbnail and content on lg+ - wraps everything except action icons */}
           <div className="lg:flex lg:gap-4 mb-4">
-          {/* Cube image thumbnail - only visible on lg and up */}
-          <div className="hidden lg:block flex-shrink-0" style={{ width: 'auto', maxWidth: 'min(25%, 300px)' }}>
-            <div className="relative">
-              <img
-                src={cube.image.uri}
-                alt={`Art by ${cube.image.artist}`}
-                className="w-full rounded-lg shadow-lg"
-                style={{ maxHeight: '400px', objectFit: 'cover', display: 'block' }}
-              />
-              <em className="text-sm absolute bottom-2 right-2 text-white text-shadow">Art by {cube.image.artist}</em>
-            </div>
-          </div>
-
-          {/* Main content area */}
-          <div className="flex-1 min-w-0">
-            {/* Cube name, card count, followers */}
-            <div className="mb-4">
-              <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-                <div>
-                  <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
-                  <Text md className="text-white/80 mt-1">
-                    {getCubeCardCountSnippet(cube)} Cube •{' '}
-                    <FollowersModalLink
-                      href="#"
-                      modalprops={{ id: cube.id, type: 'cube' }}
-                      className="text-white/80 hover:text-white hover:underline"
-                    >
-                      {cube.following?.length || 0} {cube.following?.length === 1 ? 'follower' : 'followers'}
-                    </FollowersModalLink>
-                  </Text>
-                </div>
-                <Flexbox direction="row" gap="2" alignItems="center">
-                  {cube.owner.image && (
-                    <a href={`/user/view/${cube.owner.id}`}>
-                      <img
-                        className="profile-thumbnail"
-                        src={cube.owner.image.uri}
-                        alt={cube.owner.image.artist}
-                        title={cube.owner.image.artist}
-                      />
-                    </a>
-                  )}
-                  <Text md className="text-white">
-                    Designed by{' '}
-                    <a href={`/user/view/${cube.owner.id}`} className="text-white font-semibold hover:underline">
-                      {cube.owner.username}
-                    </a>
-                  </Text>
-                </Flexbox>
+            {/* Cube image thumbnail - only visible on lg and up */}
+            <div className="hidden lg:block flex-shrink-0" style={{ width: 'auto', maxWidth: 'min(25%, 300px)' }}>
+              <div className="relative">
+                <img
+                  src={cube.image.uri}
+                  alt={`Art by ${cube.image.artist}`}
+                  className="w-full rounded-lg shadow-lg"
+                  style={{ maxHeight: '400px', objectFit: 'cover', display: 'block' }}
+                />
+                <em className="text-sm absolute bottom-2 right-2 text-white text-shadow">Art by {cube.image.artist}</em>
               </div>
             </div>
 
-            {/* Category badges */}
-            {(cube.categoryOverride || (cube.categoryPrefixes && cube.categoryPrefixes.length > 0)) && (
-              <Flexbox direction="row" gap="2" wrap="wrap" className="mb-4">
-                {cube.categoryPrefixes &&
-                  cube.categoryPrefixes.map((prefix, index) => (
+            {/* Main content area */}
+            <div className="flex-1 min-w-0">
+              {/* Cube name, card count, followers */}
+              <div className="mb-4">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+                  <div>
+                    <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
+                    <Text md className="text-white/80 mt-1">
+                      {getCubeCardCountSnippet(cube)} Cube •{' '}
+                      <FollowersModalLink
+                        href="#"
+                        modalprops={{ id: cube.id, type: 'cube' }}
+                        className="text-white/80 hover:text-white hover:underline"
+                      >
+                        {cube.following?.length || 0} {cube.following?.length === 1 ? 'follower' : 'followers'}
+                      </FollowersModalLink>
+                    </Text>
+                  </div>
+                  <Flexbox direction="row" gap="2" alignItems="center">
+                    {cube.owner.image && (
+                      <a href={`/user/view/${cube.owner.id}`}>
+                        <img
+                          className="profile-thumbnail"
+                          src={cube.owner.image.uri}
+                          alt={cube.owner.image.artist}
+                          title={cube.owner.image.artist}
+                        />
+                      </a>
+                    )}
+                    <Text md className="text-white">
+                      Designed by{' '}
+                      <a href={`/user/view/${cube.owner.id}`} className="text-white font-semibold hover:underline">
+                        {cube.owner.username}
+                      </a>
+                    </Text>
+                  </Flexbox>
+                </div>
+              </div>
+
+              {/* Category badges */}
+              {(cube.categoryOverride || (cube.categoryPrefixes && cube.categoryPrefixes.length > 0)) && (
+                <Flexbox direction="row" gap="2" wrap="wrap" className="mb-4">
+                  {cube.categoryPrefixes &&
+                    cube.categoryPrefixes.map((prefix, index) => (
+                      <a
+                        key={`prefix-${index}`}
+                        href={`/search?q=category:"${encodeURIComponent(prefix)}"`}
+                        className="px-3 py-1 bg-category-badge-bg hover:bg-category-badge-bg/80 text-category-badge-text text-sm rounded-full transition-colors font-medium"
+                      >
+                        {prefix}
+                      </a>
+                    ))}
+                  {cube.categoryOverride && (
                     <a
-                      key={`prefix-${index}`}
-                      href={`/search?q=category:"${encodeURIComponent(prefix)}"`}
+                      href={`/search?q=category:"${encodeURIComponent(cube.categoryOverride)}"`}
                       className="px-3 py-1 bg-category-badge-bg hover:bg-category-badge-bg/80 text-category-badge-text text-sm rounded-full transition-colors font-medium"
                     >
-                      {prefix}
+                      {cube.categoryOverride}
                     </a>
-                  ))}
-                {cube.categoryOverride && (
-                  <a
-                    href={`/search?q=category:"${encodeURIComponent(cube.categoryOverride)}"`}
-                    className="px-3 py-1 bg-category-badge-bg hover:bg-category-badge-bg/80 text-category-badge-text text-sm rounded-full transition-colors font-medium"
-                  >
-                    {cube.categoryOverride}
-                  </a>
-                )}
-              </Flexbox>
-            )}
-
-            {/* Brief */}
-            {cube.brief && (
-              <Container lg disableCenter className="mb-4">
-                <div className="text-white">
-                  <SafeMarkdown markdown={cube.brief} />
-                </div>
-              </Container>
-            )}
-          </div>
-        </div>
-
-        {/* Action icons */}
-        <div>
-          {/* Desktop: All items in flex row with wrap */}
-          <Flexbox direction="row" gap="4" alignItems="center" wrap="wrap" className="hidden md:flex">
-            {user && !isCubeOwner && (
-              <button
-                onClick={handleFollowToggle}
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
-                aria-label={followedState ? 'Unfollow cube' : 'Follow cube'}
-              >
-                {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
-                <Text sm className="text-white">
-                  {followedState ? 'Followed' : 'Follow'}
-                </Text>
-              </button>
-            )}
-            <ShareCubeButton
-              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
-              aria-label="Share cube"
-              modalprops={{
-                shortId: cube.shortId,
-                fullID: cube.id,
-                cubeUrl: `${baseUrl}/cube/list/${cube.id}`,
-                cubeName: cube.name,
-                alert: addAlert,
-              }}
-            >
-              <LinkIcon size={20} />
-              <Text sm className="text-white">
-                Share
-              </Text>
-            </ShareCubeButton>
-            <div className="flex items-center whitespace-nowrap">
-              <Dropdown
-                trigger={
-                  <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
-                    <PackageIcon size={20} />
-                    <Text sm className="text-white">
-                      Purchase
-                    </Text>
-                  </button>
-                }
-                align="left"
-                minWidth="16rem"
-              >
-                {purchaseMenuItems}
-              </Dropdown>
-            </div>
-            <div className="flex items-center whitespace-nowrap">
-              <Dropdown
-                trigger={
-                  <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
-                    <DownloadIcon size={20} />
-                    <Text sm className="text-white">
-                      Export
-                    </Text>
-                  </button>
-                }
-                align="left"
-                minWidth="16rem"
-              >
-                {exportMenuItems}
-              </Dropdown>
-            </div>
-            <CompareModalButton
-              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
-              aria-label="Compare cubes"
-            >
-              <ArrowSwitchIcon size={20} />
-              <Text sm className="text-white">
-                Compare
-              </Text>
-            </CompareModalButton>
-            <a
-              href={`/cube/rss/${cube.id}`}
-              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
-              aria-label="RSS Feed"
-            >
-              <RssIcon size={20} />
-              <Text sm className="text-white">
-                RSS
-              </Text>
-            </a>
-            <a
-              href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
-              aria-label="View in Cube Map"
-            >
-              <GlobeIcon size={20} />
-              <Text sm className="text-white">
-                Cube Map
-              </Text>
-            </a>
-            <ReportCubeButton
-              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
-              aria-label="Report cube"
-              modalprops={{
-                title: 'Report Cube',
-                message:
-                  'Are you sure you want to report this cube? A moderator will review the report and take appropriate action.',
-                target: `/cube/report/${cube.id}`,
-                buttonText: 'Report Cube',
-              }}
-            >
-              <StopIcon size={20} />
-              <Text sm className="text-white">
-                Report
-              </Text>
-            </ReportCubeButton>
-          </Flexbox>
-
-          {/* Mobile: Purchase, Export, Compare, More with justify-between */}
-          <Flexbox direction="row" justify="between" alignItems="center" className="md:hidden w-full">
-            {user && !isCubeOwner && (
-              <button
-                onClick={handleFollowToggle}
-                className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
-                aria-label={followedState ? 'Unfollow cube' : 'Follow cube'}
-              >
-                {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
-                <Text xs className="text-white">
-                  {followedState ? 'Followed' : 'Follow'}
-                </Text>
-              </button>
-            )}
-            <div className="flex items-center whitespace-nowrap">
-              <Dropdown
-                trigger={
-                  <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
-                    <PackageIcon size={20} />
-                    <Text xs className="text-white">
-                      Purchase
-                    </Text>
-                  </button>
-                }
-                align="left"
-                minWidth="16rem"
-              >
-                {purchaseMenuItems}
-              </Dropdown>
-            </div>
-            <div className="flex items-center whitespace-nowrap">
-              <Dropdown
-                trigger={
-                  <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
-                    <DownloadIcon size={20} />
-                    <Text xs className="text-white">
-                      Export
-                    </Text>
-                  </button>
-                }
-                align="left"
-                minWidth="16rem"
-              >
-                {exportMenuItems}
-              </Dropdown>
-            </div>
-            <CompareModalButton
-              className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
-              aria-label="Compare cubes"
-            >
-              <ArrowSwitchIcon size={20} />
-              <Text xs className="text-white">
-                Compare
-              </Text>
-            </CompareModalButton>
-            <div ref={moreMenuRef} className="flex items-center whitespace-nowrap">
-              <Dropdown
-                trigger={
-                  <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
-                    <KebabHorizontalIcon size={20} />
-                    <Text xs className="text-white">
-                      More
-                    </Text>
-                  </button>
-                }
-                align={moreMenuAlign}
-                minWidth="16rem"
-              >
-                <Flexbox direction="col" gap="2" className="p-3">
-                  <ShareCubeButton
-                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium text-left"
-                    aria-label="Share cube"
-                    modalprops={{
-                      shortId: cube.shortId,
-                      fullID: cube.id,
-                      cubeUrl: `${baseUrl}/cube/list/${cube.id}`,
-                      cubeName: cube.name,
-                      alert: addAlert,
-                    }}
-                  >
-                    <Flexbox direction="row" gap="2" alignItems="center">
-                      <LinkIcon size={16} />
-                      Share
-                    </Flexbox>
-                  </ShareCubeButton>
-                  <a
-                    href={`/cube/rss/${cube.id}`}
-                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                    aria-label="RSS Feed"
-                  >
-                    <Flexbox direction="row" gap="2" alignItems="center">
-                      <RssIcon size={16} />
-                      RSS
-                    </Flexbox>
-                  </a>
-                  <a
-                    href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                    aria-label="View in Cube Map"
-                  >
-                    <Flexbox direction="row" gap="2" alignItems="center">
-                      <GlobeIcon size={16} />
-                      Cube Map
-                    </Flexbox>
-                  </a>
-                  <ReportCubeButton
-                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium text-left"
-                    aria-label="Report cube"
-                    modalprops={{
-                      title: 'Report Cube',
-                      message:
-                        'Are you sure you want to report this cube? A moderator will review the report and take appropriate action.',
-                      target: `/cube/report/${cube.id}`,
-                      buttonText: 'Report Cube',
-                    }}
-                  >
-                    <Flexbox direction="row" gap="2" alignItems="center">
-                      <StopIcon size={16} />
-                      Report
-                    </Flexbox>
-                  </ReportCubeButton>
+                  )}
                 </Flexbox>
-              </Dropdown>
+              )}
+
+              {/* Brief */}
+              {cube.brief && (
+                <Container lg disableCenter className="mb-4">
+                  <div className="text-white">
+                    <SafeMarkdown markdown={cube.brief} />
+                  </div>
+                </Container>
+              )}
             </div>
-          </Flexbox>
-        </div>
+          </div>
+
+          {/* Action icons */}
+          <div>
+            {/* Desktop: All items in flex row with wrap */}
+            <Flexbox direction="row" gap="4" alignItems="center" wrap="wrap" className="hidden md:flex">
+              {user && !isCubeOwner && (
+                <button
+                  onClick={handleFollowToggle}
+                  className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                  aria-label={followedState ? 'Unfollow cube' : 'Follow cube'}
+                >
+                  {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
+                  <Text sm className="text-white">
+                    {followedState ? 'Followed' : 'Follow'}
+                  </Text>
+                </button>
+              )}
+              <ShareCubeButton
+                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                aria-label="Share cube"
+                modalprops={{
+                  shortId: cube.shortId,
+                  fullID: cube.id,
+                  cubeUrl: `${baseUrl}/cube/list/${cube.id}`,
+                  cubeName: cube.name,
+                  alert: addAlert,
+                }}
+              >
+                <LinkIcon size={20} />
+                <Text sm className="text-white">
+                  Share
+                </Text>
+              </ShareCubeButton>
+              <div className="flex items-center whitespace-nowrap">
+                <Dropdown
+                  trigger={
+                    <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                      <PackageIcon size={20} />
+                      <Text sm className="text-white">
+                        Purchase
+                      </Text>
+                    </button>
+                  }
+                  align="left"
+                  minWidth="16rem"
+                >
+                  {purchaseMenuItems}
+                </Dropdown>
+              </div>
+              <div className="flex items-center whitespace-nowrap">
+                <Dropdown
+                  trigger={
+                    <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                      <DownloadIcon size={20} />
+                      <Text sm className="text-white">
+                        Export
+                      </Text>
+                    </button>
+                  }
+                  align="left"
+                  minWidth="16rem"
+                >
+                  {exportMenuItems}
+                </Dropdown>
+              </div>
+              <CompareModalButton
+                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                aria-label="Compare cubes"
+              >
+                <ArrowSwitchIcon size={20} />
+                <Text sm className="text-white">
+                  Compare
+                </Text>
+              </CompareModalButton>
+              <a
+                href={`/cube/rss/${cube.id}`}
+                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                aria-label="RSS Feed"
+              >
+                <RssIcon size={20} />
+                <Text sm className="text-white">
+                  RSS
+                </Text>
+              </a>
+              <a
+                href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                aria-label="View in Cube Map"
+              >
+                <GlobeIcon size={20} />
+                <Text sm className="text-white">
+                  Cube Map
+                </Text>
+              </a>
+              <ReportCubeButton
+                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                aria-label="Report cube"
+                modalprops={{
+                  title: 'Report Cube',
+                  message:
+                    'Are you sure you want to report this cube? A moderator will review the report and take appropriate action.',
+                  target: `/cube/report/${cube.id}`,
+                  buttonText: 'Report Cube',
+                }}
+              >
+                <StopIcon size={20} />
+                <Text sm className="text-white">
+                  Report
+                </Text>
+              </ReportCubeButton>
+            </Flexbox>
+
+            {/* Mobile: Purchase, Export, Compare, More with justify-between */}
+            <Flexbox direction="row" justify="between" alignItems="center" className="md:hidden w-full">
+              {user && !isCubeOwner && (
+                <button
+                  onClick={handleFollowToggle}
+                  className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                  aria-label={followedState ? 'Unfollow cube' : 'Follow cube'}
+                >
+                  {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
+                  <Text xs className="text-white">
+                    {followedState ? 'Followed' : 'Follow'}
+                  </Text>
+                </button>
+              )}
+              <div className="flex items-center whitespace-nowrap">
+                <Dropdown
+                  trigger={
+                    <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                      <PackageIcon size={20} />
+                      <Text xs className="text-white">
+                        Purchase
+                      </Text>
+                    </button>
+                  }
+                  align="left"
+                  minWidth="16rem"
+                >
+                  {purchaseMenuItems}
+                </Dropdown>
+              </div>
+              <div className="flex items-center whitespace-nowrap">
+                <Dropdown
+                  trigger={
+                    <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                      <DownloadIcon size={20} />
+                      <Text xs className="text-white">
+                        Export
+                      </Text>
+                    </button>
+                  }
+                  align="left"
+                  minWidth="16rem"
+                >
+                  {exportMenuItems}
+                </Dropdown>
+              </div>
+              <CompareModalButton
+                className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                aria-label="Compare cubes"
+              >
+                <ArrowSwitchIcon size={20} />
+                <Text xs className="text-white">
+                  Compare
+                </Text>
+              </CompareModalButton>
+              <div ref={moreMenuRef} className="flex items-center whitespace-nowrap">
+                <Dropdown
+                  trigger={
+                    <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                      <KebabHorizontalIcon size={20} />
+                      <Text xs className="text-white">
+                        More
+                      </Text>
+                    </button>
+                  }
+                  align={moreMenuAlign}
+                  minWidth="16rem"
+                >
+                  <Flexbox direction="col" gap="2" className="p-3">
+                    <ShareCubeButton
+                      className="!text-text hover:!text-link-active hover:cursor-pointer font-medium text-left"
+                      aria-label="Share cube"
+                      modalprops={{
+                        shortId: cube.shortId,
+                        fullID: cube.id,
+                        cubeUrl: `${baseUrl}/cube/list/${cube.id}`,
+                        cubeName: cube.name,
+                        alert: addAlert,
+                      }}
+                    >
+                      <Flexbox direction="row" gap="2" alignItems="center">
+                        <LinkIcon size={16} />
+                        Share
+                      </Flexbox>
+                    </ShareCubeButton>
+                    <a
+                      href={`/cube/rss/${cube.id}`}
+                      className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                      aria-label="RSS Feed"
+                    >
+                      <Flexbox direction="row" gap="2" alignItems="center">
+                        <RssIcon size={16} />
+                        RSS
+                      </Flexbox>
+                    </a>
+                    <a
+                      href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                      aria-label="View in Cube Map"
+                    >
+                      <Flexbox direction="row" gap="2" alignItems="center">
+                        <GlobeIcon size={16} />
+                        Cube Map
+                      </Flexbox>
+                    </a>
+                    <ReportCubeButton
+                      className="!text-text hover:!text-link-active hover:cursor-pointer font-medium text-left"
+                      aria-label="Report cube"
+                      modalprops={{
+                        title: 'Report Cube',
+                        message:
+                          'Are you sure you want to report this cube? A moderator will review the report and take appropriate action.',
+                        target: `/cube/report/${cube.id}`,
+                        buttonText: 'Report Cube',
+                      }}
+                    >
+                      <Flexbox direction="row" gap="2" alignItems="center">
+                        <StopIcon size={16} />
+                        Report
+                      </Flexbox>
+                    </ReportCubeButton>
+                  </Flexbox>
+                </Dropdown>
+              </div>
+            </Flexbox>
+          </div>
         </>
-        
+
         {/* Gear icon at top right */}
         {isCubeOwner && (
           <div className="absolute top-4 right-4">
             <Dropdown
               trigger={
-                <button className="p-2 rounded-full bg-bg-secondary/80 hover:bg-bg-active text-text transition-colors backdrop-blur-sm flex items-center justify-center" style={{ width: '40px', height: '40px' }}>
+                <button
+                  className="p-2 rounded-full bg-bg-secondary/80 hover:bg-bg-active text-text transition-colors backdrop-blur-sm flex items-center justify-center"
+                  style={{ width: '40px', height: '40px' }}
+                >
                   <GearIcon size={24} />
                 </button>
               }
@@ -973,7 +976,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
             </Dropdown>
           </div>
         )}
-        
+
         {/* Chevron control at bottom right */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}

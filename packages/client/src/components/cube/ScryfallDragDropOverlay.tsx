@@ -50,22 +50,25 @@ const ScryfallDragDropOverlay: React.FC = () => {
   const { setRightSidebarMode, showMaybeboard } = useContext(DisplayContext);
   const activeBoard: BoardType = showMaybeboard ? 'maybeboard' : 'mainboard';
 
-  const handleDragStart = useCallback((e: DragEvent) => {
+  const handleDragStart = useCallback((_e: DragEvent) => {
     // Mark that dragging started from within this window
     setIsDraggingFromWindow(true);
   }, []);
 
-  const handleDragEnter = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDragEnter = useCallback(
+    (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    // Check if this drag contains HTML content (likely an image)
-    // and is not from within this window
-    if (e.dataTransfer && e.dataTransfer.types.includes('text/html') && !isDraggingFromWindow) {
-      setIsDragging(true);
-      setIsValidDrag(true);
-    }
-  }, [isDraggingFromWindow]);
+      // Check if this drag contains HTML content (likely an image)
+      // and is not from within this window
+      if (e.dataTransfer && e.dataTransfer.types.includes('text/html') && !isDraggingFromWindow) {
+        setIsDragging(true);
+        setIsValidDrag(true);
+      }
+    },
+    [isDraggingFromWindow],
+  );
 
   const handleDragOver = useCallback((e: DragEvent) => {
     e.preventDefault();

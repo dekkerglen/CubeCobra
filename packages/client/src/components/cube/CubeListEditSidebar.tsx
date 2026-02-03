@@ -38,9 +38,7 @@ const CubeListEditSidebar: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
-  const { setRightSidebarMode } = useContext(
-    DisplayContext,
-  ) as DisplayContextValue;
+  const { setRightSidebarMode } = useContext(DisplayContext) as DisplayContextValue;
   const addRef = useRef<HTMLInputElement>(null);
   const removeRef = useRef<HTMLInputElement>(null);
 
