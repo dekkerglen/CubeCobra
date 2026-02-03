@@ -1,3 +1,4 @@
+import Card from '@utils/datatypes/Card';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, packageDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
@@ -45,7 +46,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const adds = req.body.cards.map((cardInput: string | any) => {
+    const adds: Card[] = req.body.cards.map((cardInput: string | any) => {
       // Handle both legacy format (string ID) and new format (custom card object)
       let baseCard: any;
       let customTags: string[] = [];
@@ -110,7 +111,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
         });
       }
 
-      const c: any = {
+      const c: Card = {
         ...baseCard,
         tags: allTags,
         ...customProperties,
