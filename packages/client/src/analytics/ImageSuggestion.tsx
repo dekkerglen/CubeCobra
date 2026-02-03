@@ -1,8 +1,7 @@
 import React from 'react';
 
-import { encodeName } from '@utils/cardutil';
+import { cardImageUrl, encodeName } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
-import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
 import AddToCubeModal from '../components/modals/AddToCubeModal';
@@ -19,19 +18,13 @@ const AutocardA = withAutocard('a');
 const AddModal = withModal(AutocardA, AddToCubeModal);
 
 const ImageSuggestion: React.FC<ImageSuggestionProps> = ({ card, cube }) => {
-  const details =
-    card.details ||
-    ({
-      name: card.cardID,
-    } as CardDetails);
-
   return (
     <AddModal
       card={card}
       href={`/tool/card/${encodeName(card.cardID)}`}
-      modalprops={{ card: details, hideAnalytics: false, cubeContext: cube.id }}
+      modalprops={{ card, hideAnalytics: false, cubeContext: cube.id }}
     >
-      <img className="card-border pr-1 w-full" src={details.image_normal} />
+      <img className="card-border pr-1 w-full" src={cardImageUrl(card)} />
     </AddModal>
   );
 };

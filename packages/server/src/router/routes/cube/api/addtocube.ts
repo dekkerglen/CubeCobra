@@ -1,3 +1,4 @@
+import Card from '@utils/datatypes/Card';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, packageDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
@@ -45,11 +46,81 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const adds = req.body.cards.map((id: string) => {
-      const c: any = newCard(cardFromId(id), tag ? [tag] : []);
+    const adds: Card[] = req.body.cards.map((cardInput: string | any) => {
+      // Handle both legacy format (string ID) and new format (custom card object)
+      let baseCard: any;
+      let customTags: string[] = [];
+      const customProperties: any = {};
+
+      if (typeof cardInput === 'string') {
+        // Legacy format: just a card ID
+        baseCard = newCard(cardFromId(cardInput), tag ? [tag] : []);
+      } else {
+        // New format: card object with custom properties
+        const cardId = cardInput.cardID || cardInput.id;
+        baseCard = newCard(cardFromId(cardId), tag ? [tag] : []);
+
+        // Collect custom tags
+        if (cardInput.tags && Array.isArray(cardInput.tags)) {
+          customTags = cardInput.tags;
+        }
+
+        // Collect other custom properties
+        if (cardInput.notes) {
+          customProperties.notes = cardInput.notes;
+        }
+        if (cardInput.finish) {
+          customProperties.finish = cardInput.finish;
+        }
+        if (cardInput.status) {
+          customProperties.status = cardInput.status;
+        }
+        if (cardInput.colors && Array.isArray(cardInput.colors)) {
+          customProperties.colors = cardInput.colors;
+        }
+        if (cardInput.type_line) {
+          customProperties.type_line = cardInput.type_line;
+        }
+        if (cardInput.rarity) {
+          customProperties.rarity = cardInput.rarity;
+        }
+        if (cardInput.cmc !== undefined) {
+          customProperties.cmc = cardInput.cmc;
+        }
+        if (cardInput.custom_name) {
+          customProperties.custom_name = cardInput.custom_name;
+        }
+        if (cardInput.imgUrl) {
+          customProperties.imgUrl = cardInput.imgUrl;
+        }
+        if (cardInput.imgBackUrl) {
+          customProperties.imgBackUrl = cardInput.imgBackUrl;
+        }
+        if (cardInput.colorCategory) {
+          customProperties.colorCategory = cardInput.colorCategory;
+        }
+      }
+
+      // Merge custom tags with base card tags and package tag
+      const allTags = [...(baseCard.tags || [])];
+      if (customTags.length > 0) {
+        customTags.forEach((customTag) => {
+          if (!allTags.includes(customTag)) {
+            allTags.push(customTag);
+          }
+        });
+      }
+
+      const c: Card = {
+        ...baseCard,
+        tags: allTags,
+        ...customProperties,
+      };
+
       if (tag) {
         c.notes = `Added from package "${tag}": ${process.env.DOMAIN}/packages/${req.body.packid}`;
       }
+
       return c;
     });
 

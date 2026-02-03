@@ -20,9 +20,9 @@ interface CubeComparePageProps {
   cards: Card[];
   cube: Cube;
   cubeB: Cube;
-  onlyA: string[];
-  onlyB: string[];
-  both: string[];
+  onlyA: number[];
+  onlyB: number[];
+  both: number[];
 }
 
 const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both }) => {
