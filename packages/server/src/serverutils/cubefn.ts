@@ -429,43 +429,36 @@ async function compareCubes(cardsA: CubeCards, cardsB: CubeCards): Promise<Compa
   const inBothCustomIndices: { a: number; b: number }[] = [];
   const onlyACustom = customCardsA.slice(0);
   const onlyBCustom = customCardsB.slice(0);
-  const onlyACustomIndices: number[] = [];
-  const onlyBCustomIndices: number[] = [];
-  const bCustomNames = customCardsB.map((card) => cardNameLower(card));
+  const matchedBIndices = new Set<number>(); // Track which indices in customCardsB have been matched
 
   for (let aIdx = 0; aIdx < customCardsA.length; aIdx++) {
     const card = customCardsA[aIdx]!;
     const customNameLower = cardNameLower(card);
-    const matchIndex = bCustomNames.findIndex((name: string) => name === customNameLower);
 
-    if (matchIndex !== -1) {
+    // Find matching card in customCardsB (not already matched)
+    let bIdx = -1;
+    for (let i = 0; i < customCardsB.length; i++) {
+      if (!matchedBIndices.has(i) && cardNameLower(customCardsB[i]!) === customNameLower) {
+        bIdx = i;
+        break;
+      }
+    }
+
+    if (bIdx !== -1) {
       inBothCustom.push(card);
-      inBothCustomIndices.push({ a: aIdx, b: matchIndex });
+      inBothCustomIndices.push({ a: aIdx, b: bIdx });
+      matchedBIndices.add(bIdx);
 
-      const originalIndex = onlyBCustom.findIndex(
-        (c) => cardNameLower(c) === customNameLower && c === customCardsB[matchIndex],
-      );
+      const matchedCard = customCardsB[bIdx]!;
+      const originalIndex = onlyBCustom.indexOf(matchedCard);
       if (originalIndex !== -1) {
         onlyBCustom.splice(originalIndex, 1);
-        bCustomNames.splice(matchIndex, 1);
       }
 
       const aIndex = onlyACustom.indexOf(card);
       if (aIndex !== -1) {
         onlyACustom.splice(aIndex, 1);
       }
-    }
-  }
-
-  // Build onlyA and onlyB custom indices
-  for (let i = 0; i < customCardsA.length; i++) {
-    if (onlyACustom.includes(customCardsA[i]!)) {
-      onlyACustomIndices.push(i);
-    }
-  }
-  for (let i = 0; i < customCardsB.length; i++) {
-    if (onlyBCustom.includes(customCardsB[i]!)) {
-      onlyBCustomIndices.push(i);
     }
   }
 

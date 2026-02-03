@@ -900,6 +900,43 @@ describe('compareCubes', () => {
       expect(result.onlyB).toHaveLength(1);
     });
 
+    it('should not include matched custom cards in onlyB (regression test for index bug)', async () => {
+      // This test specifically targets the bug where custom cards matching in both cubes
+      // were incorrectly appearing in both inBoth and onlyB due to index mismatch
+      const cardsA = {
+        mainboard: [createCustomCard('Card 1'), createCustomCard('Card 2'), createCustomCard('Card 3')],
+        maybeboard: [],
+      };
+      const cardsB = {
+        mainboard: [createCustomCard('Card 1'), createCustomCard('Card 2'), createCustomCard('Card 4')],
+        maybeboard: [],
+      };
+
+      const result = await compareCubes(cardsA, cardsB);
+
+      // Should match Card 1 and Card 2
+      expect(result.inBoth).toHaveLength(2);
+      const inBothNames = result.inBoth.map((c) => cardName(c));
+      expect(inBothNames).toContain('Card 1');
+      expect(inBothNames).toContain('Card 2');
+
+      // onlyA should have Card 3
+      expect(result.onlyA).toHaveLength(1);
+      expect(cardName(result.onlyA[0]!)).toBe('Card 3');
+
+      // onlyB should have Card 4 ONLY (not Card 1 or Card 2)
+      expect(result.onlyB).toHaveLength(1);
+      expect(cardName(result.onlyB[0]!)).toBe('Card 4');
+
+      // Verify indices are correct and don't overlap
+      expect(result.inBothIndices).toEqual(expect.arrayContaining(result.inBothIndices));
+      expect(result.onlyBIndices).toEqual(expect.arrayContaining(result.onlyBIndices));
+
+      // No card should appear in multiple categories
+      const allIndices = new Set([...result.inBothIndices, ...result.onlyAIndices, ...result.onlyBIndices]);
+      expect(allIndices.size).toBe(4); // 2 in both + 1 onlyA + 1 onlyB = 4 total
+    });
+
     it('should mix custom cards with regular cards correctly', async () => {
       const cardsA = {
         mainboard: [
