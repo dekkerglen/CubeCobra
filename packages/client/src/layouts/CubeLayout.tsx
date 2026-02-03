@@ -64,7 +64,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
           <div className="flex flex-grow pb-20 sm:pb-0">
             <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
             <div className="flex-1 flex flex-col min-w-0">
-              <CubeHero cube={cube} minified={!showFullHero} />
+              <CubeHero cube={cube} minified={!showFullHero} activeLink={activeLink} />
               <MobileSubNav cube={cube} activeLink={activeLink} />
               <Banner />
               <div className="px-2">

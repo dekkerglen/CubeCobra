@@ -44,21 +44,28 @@ const getImageUrlFromDrag = (dataTransfer: DataTransfer): string | null => {
 const ScryfallDragDropOverlay: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isValidDrag, setIsValidDrag] = useState(false);
+  const [isDraggingFromWindow, setIsDraggingFromWindow] = useState(false);
   const { csrfFetch } = useContext(CSRFContext);
   const { addCard, cube, setAlerts } = useContext(CubeContext);
   const { setRightSidebarMode, showMaybeboard } = useContext(DisplayContext);
   const activeBoard: BoardType = showMaybeboard ? 'maybeboard' : 'mainboard';
+
+  const handleDragStart = useCallback((e: DragEvent) => {
+    // Mark that dragging started from within this window
+    setIsDraggingFromWindow(true);
+  }, []);
 
   const handleDragEnter = useCallback((e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     // Check if this drag contains HTML content (likely an image)
-    if (e.dataTransfer && e.dataTransfer.types.includes('text/html')) {
+    // and is not from within this window
+    if (e.dataTransfer && e.dataTransfer.types.includes('text/html') && !isDraggingFromWindow) {
       setIsDragging(true);
       setIsValidDrag(true);
     }
-  }, []);
+  }, [isDraggingFromWindow]);
 
   const handleDragOver = useCallback((e: DragEvent) => {
     e.preventDefault();
@@ -83,6 +90,12 @@ const ScryfallDragDropOverlay: React.FC = () => {
 
       setIsDragging(false);
       setIsValidDrag(false);
+
+      // Don't add card if the drag originated from this window
+      if (isDraggingFromWindow) {
+        setIsDraggingFromWindow(false);
+        return;
+      }
 
       const imageUrl = getImageUrlFromDrag(e.dataTransfer!);
       if (!imageUrl) {
@@ -143,8 +156,10 @@ const ScryfallDragDropOverlay: React.FC = () => {
           activeBoard,
         );
 
-        // Expand the edit sidebar
-        setRightSidebarMode('edit');
+        // Expand the edit sidebar on desktop only (md breakpoint: 768px)
+        if (window.innerWidth >= 768) {
+          setRightSidebarMode('edit');
+        }
 
         setAlerts((prev) => [...prev, { color: 'success', message: `Added ${json.card.name} to ${activeBoard}.` }]);
 
@@ -162,27 +177,36 @@ const ScryfallDragDropOverlay: React.FC = () => {
         }, 5000);
       }
     },
-    [activeBoard, addCard, cube.defaultStatus, csrfFetch, setAlerts, setRightSidebarMode],
+    [activeBoard, addCard, cube.defaultStatus, csrfFetch, isDraggingFromWindow, setAlerts, setRightSidebarMode],
   );
 
   useEffect(() => {
+    const dragStart = handleDragStart as unknown as EventListener;
     const dragEnter = handleDragEnter as unknown as EventListener;
     const dragOver = handleDragOver as unknown as EventListener;
     const dragLeave = handleDragLeave as unknown as EventListener;
     const drop = handleDrop as unknown as EventListener;
+    const dragEnd = (() => {
+      // Reset the flag when dragging ends
+      setIsDraggingFromWindow(false);
+    }) as unknown as EventListener;
 
+    document.addEventListener('dragstart', dragStart);
     document.addEventListener('dragenter', dragEnter);
     document.addEventListener('dragover', dragOver);
     document.addEventListener('dragleave', dragLeave);
     document.addEventListener('drop', drop);
+    document.addEventListener('dragend', dragEnd);
 
     return () => {
+      document.removeEventListener('dragstart', dragStart);
       document.removeEventListener('dragenter', dragEnter);
       document.removeEventListener('dragover', dragOver);
       document.removeEventListener('dragleave', dragLeave);
       document.removeEventListener('drop', drop);
+      document.removeEventListener('dragend', dragEnd);
     };
-  }, [handleDragEnter, handleDragOver, handleDragLeave, handleDrop]);
+  }, [handleDragStart, handleDragEnter, handleDragOver, handleDragLeave, handleDrop]);
 
   if (!isDragging || !isValidDrag) {
     return null;

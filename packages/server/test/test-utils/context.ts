@@ -15,6 +15,10 @@ const defaultDisplayContext: DisplayContextValue = {
   toggleShowDeckBuilderStatsPanel: jest.fn(),
   rightSidebarMode: 'none',
   setRightSidebarMode: jest.fn(),
+  cubeSidebarExpanded: true,
+  toggleCubeSidebarExpanded: jest.fn(),
+  showAllBoards: false,
+  setShowAllBoards: jest.fn(),
 };
 
 export { defaultDisplayContext };

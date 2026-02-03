@@ -37,6 +37,10 @@ interface CubeSidebarProps {
 
 const navigationItems: NavigationItem[] = [
   {
+    label: 'Menu',
+    key: 'menu',
+  },
+  {
     label: 'List',
     href: '/cube/list',
     key: 'list',
@@ -98,7 +102,12 @@ const navigationItems: NavigationItem[] = [
 ];
 
 const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls }) => {
-  const [isExpanded, setIsExpanded] = useLocalStorage('cubeSidebarExpanded', true);
+  const { cubeSidebarExpanded, toggleCubeSidebarExpanded } = React.useContext(DisplayContext);
+  const [hoveredItem, setHoveredItem] = React.useState<string | null>(null);
+  const [dropdownVisible, setDropdownVisible] = React.useState(false);
+  const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0 });
+  const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const iconRefs = React.useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Check if activeLink matches any sub-item
   const isSubItemActive = (item: NavigationItem) => {
@@ -115,7 +124,41 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
   const recordsViewContext = React.useContext(RecordsViewContext);
 
   const toggleSidebar = () => {
-    setIsExpanded(!isExpanded);
+    toggleCubeSidebarExpanded();
+  };
+
+  const handleItemMouseEnter = (itemKey: string, element: HTMLDivElement) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    
+    // Calculate position relative to viewport
+    const rect = element.getBoundingClientRect();
+    setDropdownPosition({
+      top: rect.top,
+      left: rect.right + 8, // 8px gap (ml-2)
+    });
+    
+    setHoveredItem(itemKey);
+    setDropdownVisible(true);
+  };
+
+  const handleItemMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setDropdownVisible(false);
+      setHoveredItem(null);
+    }, 150);
+  };
+
+  const handleDropdownMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+  };
+
+  const handleDropdownMouseLeave = () => {
+    setDropdownVisible(false);
+    setHoveredItem(null);
   };
 
   return (
@@ -125,16 +168,19 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
         className={classNames(
           'hidden sm:block bg-bg-accent border-r border-border transition-all duration-300 flex-shrink-0',
           {
-            'w-52': isExpanded,
-            'w-16': !isExpanded,
+            'w-52': cubeSidebarExpanded,
+            'w-16': !cubeSidebarExpanded,
           },
         )}
       >
         {/* Navigation items */}
-        <div className="sticky top-0 max-h-screen overflow-y-auto">
-          {!isExpanded ? (
+        <div className={classNames("sticky top-0 max-h-screen", { 
+          "overflow-y-auto": cubeSidebarExpanded,
+          "overflow-visible": !cubeSidebarExpanded
+        })}>
+          {!cubeSidebarExpanded ? (
             <nav className="pt-3">
-              <Flexbox direction="col" gap="1" alignItems="center">
+              <Flexbox direction="col" gap="1" alignItems="center" className="overflow-visible">
                 {/* Chevron icon at the top to expand */}
                 <div
                   onClick={toggleSidebar}
@@ -150,23 +196,29 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                   const fullHref = item.href ? `${item.href}/${encodeURIComponent(getCubeId(cube))}` : undefined;
                   const IconComponent = item.icon;
 
-                  if (!IconComponent) return null;
+                  if (!IconComponent || item.key === 'menu') return null;
 
                   return (
-                    <a
-                      key={item.key}
-                      href={fullHref}
-                      className={classNames(
-                        'flex items-center justify-center p-2 transition-colors rounded w-12 h-12',
-                        {
-                          'bg-bg-active text-text': isActive || isParentOfActive,
-                          'text-text hover:bg-bg-active': !isActive && !isParentOfActive,
-                        },
-                      )}
-                      aria-label={item.label}
+                    <div 
+                      key={item.key} 
+                      ref={(el) => (iconRefs.current[item.key] = el)}
+                      onMouseEnter={(e) => handleItemMouseEnter(item.key, e.currentTarget)}
+                      onMouseLeave={handleItemMouseLeave}
                     >
-                      <IconComponent size={20} />
-                    </a>
+                      <a
+                        href={fullHref}
+                        className={classNames(
+                          'flex items-center justify-center p-2 transition-colors rounded w-12 h-12',
+                          {
+                            'bg-bg-active text-text': isActive || isParentOfActive,
+                            'text-text hover:bg-bg-active': !isActive && !isParentOfActive,
+                          },
+                        )}
+                        aria-label={item.label}
+                      >
+                        <IconComponent size={20} />
+                      </a>
+                    </div>
                   );
                 })}
               </Flexbox>
@@ -180,8 +232,30 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                   const fullHref = item.href ? `${item.href}/${encodeURIComponent(getCubeId(cube))}` : undefined;
                   // Always show sub-items
                   const shouldShowSubItems = true;
-                  const isFirstItem = index === 0;
+                  const isMenuHeader = item.key === 'menu';
                   const IconComponent = item.icon;
+
+                  // Special handling for Menu header
+                  if (isMenuHeader) {
+                    return (
+                      <div key={item.key}>
+                        <div
+                          onClick={toggleSidebar}
+                          className="flex items-center justify-between px-4 py-1.5 transition-colors relative hover:bg-bg-active cursor-pointer"
+                        >
+                          <span className="text-base text-text font-bold">
+                            {item.label}
+                          </span>
+                          <div
+                            className="p-1 rounded flex-shrink-0"
+                            aria-label="Collapse sidebar"
+                          >
+                            <ChevronLeftIcon size={20} className="text-text" />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
 
                   return (
                     <div key={item.key}>
@@ -207,19 +281,6 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                               {item.label}
                             </span>
                           </a>
-                          {isFirstItem && (
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleSidebar();
-                              }}
-                              className="hover:bg-bg-active transition-colors p-1 rounded flex-shrink-0"
-                              aria-label="Collapse sidebar"
-                            >
-                              <ChevronLeftIcon size={20} className="text-text" />
-                            </button>
-                          )}
                         </div>
                       ) : (
                         <div
@@ -248,8 +309,8 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
 
                       {/* Show sub-items only when this section is active */}
                       {item.subItems && shouldShowSubItems && (
-                        <div className="p-1">
-                          <Flexbox direction="col" gap="1">
+                        <div>
+                          <Flexbox direction="col" gap="0">
                             {item.subItems.map((subItem) => {
                               const isSubActive = activeLink === subItem.key;
                               let subFullHref: string | undefined;
@@ -282,10 +343,10 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                     href={listHref}
                                     onClick={handleClick}
                                     className={classNames(
-                                      'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded cursor-pointer',
+                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
                                       {
                                         'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text hover:bg-bg-active': !isActive,
+                                        'font-normal text-text': !isActive,
                                       },
                                     )}
                                   >
@@ -317,10 +378,10 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                     href={recordsHref}
                                     onClick={handleClick}
                                     className={classNames(
-                                      'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded cursor-pointer',
+                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
                                       {
                                         'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text hover:bg-bg-active': !isActive,
+                                        'font-normal text-text': !isActive,
                                       },
                                     )}
                                   >
@@ -351,10 +412,10 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                     href={aboutHref}
                                     onClick={handleClick}
                                     className={classNames(
-                                      'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded cursor-pointer',
+                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
                                       {
                                         'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text hover:bg-bg-active': !isActive,
+                                        'font-normal text-text': !isActive,
                                       },
                                     )}
                                   >
@@ -386,10 +447,10 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                     href={playtestHref}
                                     onClick={handleClick}
                                     className={classNames(
-                                      'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded cursor-pointer',
+                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
                                       {
                                         'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text hover:bg-bg-active': !isActive,
+                                        'font-normal text-text': !isActive,
                                       },
                                     )}
                                   >
@@ -430,10 +491,10 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                     href={analysisHref}
                                     onClick={handleClick}
                                     className={classNames(
-                                      'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded cursor-pointer',
+                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
                                       {
                                         'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text hover:bg-bg-active': !isActive,
+                                        'font-normal text-text': !isActive,
                                       },
                                     )}
                                   >
@@ -448,10 +509,10 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                     <a
                                       href={subFullHref}
                                       className={classNames(
-                                        'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded',
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm hover:bg-bg-active',
                                         {
                                           'bg-bg-active font-bold text-text': isSubActive,
-                                          'font-normal text-text hover:bg-bg-active': !isSubActive,
+                                          'font-normal text-text': !isSubActive,
                                         },
                                       )}
                                     >
@@ -460,7 +521,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                   ) : (
                                     <div
                                       className={classNames(
-                                        'flex items-center pl-8 pr-4 py-1 transition-colors text-sm rounded',
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm',
                                         {
                                           'bg-bg-active font-bold text-text': isSubActive,
                                           'font-normal text-text': !isSubActive,
@@ -491,6 +552,73 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
           )}
         </div>
       </div>
+
+      {/* Fixed dropdown menu for collapsed sidebar */}
+      {!cubeSidebarExpanded && dropdownVisible && hoveredItem && (
+        <div
+          onMouseEnter={handleDropdownMouseEnter}
+          onMouseLeave={handleDropdownMouseLeave}
+          style={{
+            position: 'fixed',
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+          }}
+          className={classNames(
+            'bg-bg-accent border border-border rounded shadow-lg z-50 min-w-48',
+            'animate-in fade-in slide-in-from-left-2 duration-150',
+          )}
+        >
+          {navigationItems
+            .filter((item) => item.key === hoveredItem)
+            .map((item) => (
+              <React.Fragment key={item.key}>
+                <div className="px-4 py-2 border-b border-border">
+                  <span className="text-sm font-bold text-text">{item.label}</span>
+                </div>
+                {item.subItems && (
+                  <div className="py-1">
+                    {item.subItems.map((subItem) => {
+                      const isSubActive = activeLink === subItem.key;
+                      let subHref: string | undefined;
+
+                      // Handle different types of sub-items
+                      if (item.key === 'list') {
+                        const isMainboard = subItem.key === 'mainboard';
+                        const boardParam = isMainboard ? 'mainboard' : 'maybeboard';
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardParam}`;
+                      } else if (
+                        item.key === 'records' ||
+                        item.key === 'about' ||
+                        item.key === 'playtest' ||
+                        item.key === 'analysis'
+                      ) {
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+                      } else if (subItem.href) {
+                        subHref = `${subItem.href}/${encodeURIComponent(getCubeId(cube))}`;
+                      }
+
+                      return (
+                        <a
+                          key={subItem.key}
+                          href={subHref}
+                          className={classNames(
+                            'block px-4 py-1.5 text-sm transition-colors hover:bg-bg-active',
+                            {
+                              'bg-bg-active font-bold text-text': isSubActive,
+                              'font-normal text-text': !isSubActive,
+                            },
+                          )}
+                        >
+                          {subItem.label}
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+        </div>
+      )}
     </>
   );
 };

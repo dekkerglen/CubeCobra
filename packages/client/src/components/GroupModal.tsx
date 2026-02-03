@@ -385,7 +385,10 @@ const GroupModal: React.FC<GroupModalProps> = ({
           color="danger"
           onClick={() => {
             removeAll();
-            setRightSidebarMode('edit');
+            // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
+            if (window.innerWidth >= 768) {
+              setRightSidebarMode('edit');
+            }
           }}
         >
           Remove all
@@ -399,7 +402,10 @@ const GroupModal: React.FC<GroupModalProps> = ({
             } else {
               bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
             }
-            setRightSidebarMode('edit');
+            // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
+            if (window.innerWidth >= 768) {
+              setRightSidebarMode('edit');
+            }
             setOpen(false);
           }}
         >
@@ -414,7 +420,10 @@ const GroupModal: React.FC<GroupModalProps> = ({
             } else {
               bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
             }
-            setRightSidebarMode('edit');
+            // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
+            if (window.innerWidth >= 768) {
+              setRightSidebarMode('edit');
+            }
             setOpen(false);
           }}
         >

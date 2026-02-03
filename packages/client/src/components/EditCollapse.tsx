@@ -236,7 +236,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           />
           <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
           <Tooltip text="The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.">
-            <QuestionIcon size={16} />
+            <QuestionIcon size={16} className="hidden md:inline" />
           </Tooltip>
         </Flexbox>
         <Collapse

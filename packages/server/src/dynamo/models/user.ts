@@ -60,6 +60,10 @@ const hydrate = (user: UnhydratedUser): User => {
     hydrated.gridTightness = DefaultGridTightnessPreference;
   }
 
+  if (typeof hydrated.disableAnimations === 'undefined') {
+    hydrated.disableAnimations = false;
+  }
+
   return hydrated;
 };
 

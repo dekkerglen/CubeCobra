@@ -9,6 +9,7 @@ import { fromEntries, toNullableInt } from '@utils/Util';
 import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftutils';
 
 import { Card } from '../components/base/Card';
+import Container from '../components/base/Container';
 import CSRFForm from '../components/CSRFForm';
 import DeckStacks from '../components/DeckStacks';
 import GridDraftPack from '../components/draft/GridDraftPack';
@@ -130,7 +131,8 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
-          <DynamicFlash />
+          <Container xl disableCenter>
+            <DynamicFlash />
           <CSRFForm
             ref={submitDeckForm}
             method="POST"
@@ -172,6 +174,7 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
               />
             </Card>
           </ErrorBoundary>
+          </Container>
         </CubeLayout>
       </DisplayContextProvider>
     </MainLayout>

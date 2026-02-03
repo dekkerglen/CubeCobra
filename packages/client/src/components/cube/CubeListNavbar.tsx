@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import {
   GraphIcon,
@@ -35,10 +35,22 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   const [filterValues, setFilterValues] = useState<Partial<FilterValues>>({});
   const [localFilterInput, setLocalFilterInput] = useState('');
 
-  const { canEdit } = useContext(CubeContext);
+  const { canEdit, changes } = useContext(CubeContext);
   const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
 
   const { rightSidebarMode, setRightSidebarMode } = useContext(DisplayContext);
+
+  // Check if there are pending edits
+  const hasPendingEdits = useMemo(() => {
+    return (
+      Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
+        (c) => c.length > 0,
+      ) ||
+      Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
+        (c) => c.length > 0,
+      )
+    );
+  }, [changes]);
 
   // Sync local filter with context filter
   useEffect(() => {
@@ -165,7 +177,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               className="text-text hover:text-text-secondary transition-colors"
               aria-label="Open advanced filter"
             >
-              <QuestionIcon size={20} />
+              <QuestionIcon size={20} className="hidden md:inline" />
             </button>
           </Tooltip>
           <div className="relative flex items-center flex-grow" style={{ minWidth: '150px' }}>
@@ -272,14 +284,19 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               <SortAscIcon size={16} />
             </Button>
             {canEdit && (
-              <Button
-                color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}
-                onClick={() => setRightSidebarMode(rightSidebarMode === 'edit' ? 'none' : 'edit')}
-                className="flex items-center gap-1 transition-colors"
+              <div
+                className={hasPendingEdits ? 'animate-pulse' : ''}
+                style={hasPendingEdits ? { boxShadow: '0 0 12px 1px rgb(var(--button-primary) / 0.85)', borderRadius: '0.25rem' } : {}}
               >
-                <span className="hidden sm:inline">Edit</span>
-                <PencilIcon size={16} />
-              </Button>
+                <Button
+                  color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}
+                  onClick={() => setRightSidebarMode(rightSidebarMode === 'edit' ? 'none' : 'edit')}
+                  className="flex items-center gap-1 transition-colors"
+                >
+                  <span className="hidden sm:inline">Edit</span>
+                  <PencilIcon size={16} />
+                </Button>
+              </div>
             )}
           </div>
         </Flexbox>
@@ -316,7 +333,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             className="text-text hover:text-text-secondary transition-colors flex-shrink-0"
             aria-label="Open advanced filter"
           >
-            <QuestionIcon size={20} />
+            <QuestionIcon size={20} className="hidden md:inline" />
           </button>
           <div className="relative flex items-center flex-grow">
             <span className="absolute" style={{ left: '12px' }}>

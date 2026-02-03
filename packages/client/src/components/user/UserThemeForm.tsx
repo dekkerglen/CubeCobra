@@ -25,6 +25,7 @@ const UserThemeForm: React.FC = () => {
     typeof user?.yourCubesSortOrder !== 'undefined' ? user.yourCubesSortOrder : DefaultYourCubesSortOrder,
   );
   const [hideFeaturedCubes, setHideFeaturedCubes] = useState(user?.hideFeatured || false);
+  const [disableAnimations, setDisableAnimations] = useState(user?.disableAnimations || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
     () => ({
@@ -34,8 +35,9 @@ const UserThemeForm: React.FC = () => {
       gridTightness,
       autoBlog: `${autoBlog}`,
       yourCubesSortOrder: `${yourCubesSortOrder}`,
+      disableAnimations: `${disableAnimations}`,
     }),
-    [selectedTheme, hideFeaturedCubes, defaultPrinting, gridTightness, autoBlog, yourCubesSortOrder],
+    [selectedTheme, hideFeaturedCubes, defaultPrinting, gridTightness, autoBlog, yourCubesSortOrder, disableAnimations],
   );
 
   return (
@@ -76,6 +78,7 @@ const UserThemeForm: React.FC = () => {
           checked={autoBlog}
           setChecked={setAutoblog}
         />
+        <Checkbox label="Disable Animations" checked={disableAnimations} setChecked={setDisableAnimations} />
         <Select
           label="Your cubes sort order"
           value={formData.yourCubesSortOrder}

@@ -68,7 +68,7 @@ const AnalysisNavbar: React.FC = () => {
             className="text-text hover:text-text-secondary transition-colors"
             aria-label="Open advanced filter"
           >
-            <QuestionIcon size={20} />
+            <QuestionIcon size={20} className="hidden md:inline" />
           </button>
           <div className="relative flex items-center" style={{ minWidth: '250px', maxWidth: '400px' }}>
             <span className="absolute" style={{ left: '12px' }}>

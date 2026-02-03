@@ -40,7 +40,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit }) =>
     setSortQuaternary,
   } = useContext(CubeContext);
 
-  const { setRightSidebarMode, showInlineTagEmojis, toggleShowInlineTagEmojis } = useContext(DisplayContext);
+  const { setRightSidebarMode, showInlineTagEmojis, toggleShowInlineTagEmojis, showAllBoards, setShowAllBoards } = useContext(DisplayContext);
   const { url: rotoURL, setUrl: setRotoURL } = useContext(RotoDraftContext);
 
   const sortsModified = useMemo(() => {
@@ -130,23 +130,29 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit }) =>
         <Flexbox direction="row" gap="2" alignItems="center">
           <Checkbox label="Show Unsorted Cards" checked={cube.showUnsorted || false} setChecked={setShowUnsorted} />
           <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
-            <QuestionIcon size={16} />
+            <QuestionIcon size={16} className="hidden md:inline" />
           </Tooltip>
         </Flexbox>
         <Flexbox direction="row" gap="2" alignItems="center">
           <Checkbox
-            label="Collapse Duplicate Cards"
+            label="Collapse Duplicates"
             checked={cube.collapseDuplicateCards || false}
             setChecked={setCollapseDuplicateCards}
           />
           <Tooltip text="Collapses duplicate cards that appear in multiple categories into a single instance.">
-            <QuestionIcon size={16} />
+            <QuestionIcon size={16} className="hidden md:inline" />
           </Tooltip>
         </Flexbox>
         <Flexbox direction="row" gap="2" alignItems="center">
           <Checkbox label="Show Inline Emojis" checked={showInlineTagEmojis} setChecked={toggleShowInlineTagEmojis} />
           <Tooltip text="Display emoji tags directly next to card names in the list view.">
-            <QuestionIcon size={16} />
+            <QuestionIcon size={16} className="hidden md:inline" />
+          </Tooltip>
+        </Flexbox>
+        <Flexbox direction="row" gap="2" alignItems="center">
+          <Checkbox label="Show All Boards" checked={showAllBoards} setChecked={setShowAllBoards} />
+          <Tooltip text="Display both mainboard and maybeboard at the same time.">
+            <QuestionIcon size={16} className="hidden md:inline" />
           </Tooltip>
         </Flexbox>
       </Flexbox>

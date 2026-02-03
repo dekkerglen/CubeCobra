@@ -36,7 +36,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
         <div
           className={classNames(
             'md:hidden bg-bg-accent border-l border-border transition-transform duration-300 ease-in-out flex-shrink-0',
-            'fixed top-0 right-0 h-full z-50 w-96 transform',
+            'fixed top-0 right-0 h-full z-50 w-64 max-w-screen transform',
             {
               'translate-x-0': rightSidebarMode === 'edit',
               'translate-x-full': rightSidebarMode !== 'edit',
@@ -44,7 +44,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
           )}
         >
           <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-            <div className="w-96 p-4 pb-64">
+            <div className="w-64 max-w-full p-4 ">
               <CubeListEditSidebar />
             </div>
           </div>
@@ -55,16 +55,16 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
       {canEdit && (
         <div
           className={classNames(
-            'hidden md:block bg-bg-accent border-l border-border transition-all duration-300 ease-in-out flex-shrink-0',
+            'hidden md:block bg-bg-accent border-l border-border transition-all duration-300 ease-in-out flex-shrink-0 max-w-screen',
             {
-              'w-96': rightSidebarMode === 'edit',
+              'w-64': rightSidebarMode === 'edit',
               'w-0': rightSidebarMode !== 'edit',
               'border-l-0': rightSidebarMode !== 'edit',
             },
           )}
         >
           <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-            <div className="w-96 p-4 pb-64">
+            <div className="w-64 max-w-full p-4 ">
               <CubeListEditSidebar />
             </div>
           </div>
@@ -75,7 +75,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
       <div
         className={classNames(
           'md:hidden bg-bg-accent border-l border-border transition-transform duration-300 ease-in-out flex-shrink-0',
-          'fixed top-0 right-0 h-full z-50 w-96 transform',
+          'fixed top-0 right-0 h-full z-50 w-64 max-w-screen transform',
           {
             'translate-x-0': rightSidebarMode === 'sort',
             'translate-x-full': rightSidebarMode !== 'sort',
@@ -83,7 +83,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
         )}
       >
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-          <div className="w-96 p-4 pb-64">
+          <div className="w-64 max-w-full p-4 ">
             <CubeListSortSidebar canEdit={canEdit} />
           </div>
         </div>
@@ -92,16 +92,16 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
       {/* Sort Sidebar - Desktop */}
       <div
         className={classNames(
-          'hidden md:block bg-bg-accent border-l border-border transition-all duration-300 ease-in-out flex-shrink-0',
+          'hidden md:block bg-bg-accent border-l border-border transition-all duration-300 ease-in-out flex-shrink-0 max-w-screen',
           {
-            'w-96': rightSidebarMode === 'sort',
+            'w-64': rightSidebarMode === 'sort',
             'w-0': rightSidebarMode !== 'sort',
             'border-l-0': rightSidebarMode !== 'sort',
           },
         )}
       >
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-          <div className="w-96 p-4 pb-64">
+            <div className="w-64 max-w-full p-4 ">
             <CubeListSortSidebar canEdit={canEdit} />
           </div>
         </div>

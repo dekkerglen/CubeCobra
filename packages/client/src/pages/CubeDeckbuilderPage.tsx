@@ -8,6 +8,7 @@ import Draft from '@utils/datatypes/Draft';
 import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
 
 import { Card } from '../components/base/Card';
+import Container from '../components/base/Container';
 import DeckbuilderNavbar from '../components/DeckbuilderNavbar';
 import DeckStacks from '../components/DeckStacks';
 import DynamicFlash from '../components/DynamicFlash';
@@ -120,7 +121,8 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
-          <DeckbuilderNavbar
+          <Container xl disableCenter>
+            <DeckbuilderNavbar
             cards={initialDeck.cards}
             basics={basics}
             mainboard={mainboard}
@@ -172,6 +174,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
               </ErrorBoundary>
             </DndContext>
           </Card>
+          </Container>
         </CubeLayout>
       </DisplayContextProvider>
     </MainLayout>

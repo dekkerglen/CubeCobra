@@ -7,6 +7,7 @@ import Draft from '@utils/datatypes/Draft';
 import { getCardDefaultRowColumn, getInitialState, setupPicks } from '@utils/draftutil';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Container from 'components/base/Container';
 import Text from 'components/base/Text';
 import DeckStacks from 'components/DeckStacks';
 import Pack from 'components/Pack';
@@ -729,9 +730,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
-          <Alerts alerts={alerts} />
-          <DndContext onDragEnd={onMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
-            <div className="relative">
+          <Container xl disableCenter>
+            <Alerts alerts={alerts} />
+            <DndContext onDragEnd={onMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
+              <div className="relative">
               {/* Only show the pack if there are actually cards to show */}
               {state?.seats?.[0]?.pack?.length > 0 ? (
                 draftStatus.predictionsLoading && pendingPick !== null ? (
@@ -774,8 +776,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
                 />
                 <DeckStacks cards={sideboardCards} title="Sideboard" locationType={locations.sideboard} xs={4} lg={8} />
               </Card>
-            </div>
-          </DndContext>
+              </div>
+            </DndContext>
+          </Container>
         </CubeLayout>
       </DisplayContextProvider>
     </MainLayout>

@@ -22,6 +22,10 @@ export interface DisplayContextValue {
   toggleShowDeckBuilderStatsPanel: () => void;
   rightSidebarMode: RightSidebarMode;
   setRightSidebarMode: React.Dispatch<React.SetStateAction<RightSidebarMode>>;
+  cubeSidebarExpanded: boolean;
+  toggleCubeSidebarExpanded: () => void;
+  showAllBoards: boolean;
+  setShowAllBoards: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const DisplayContext = React.createContext<DisplayContextValue>({
@@ -39,6 +43,10 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   toggleShowDeckBuilderStatsPanel: () => {},
   rightSidebarMode: 'none',
   setRightSidebarMode: () => {},
+  cubeSidebarExpanded: true,
+  toggleCubeSidebarExpanded: () => {},
+  showAllBoards: false,
+  setShowAllBoards: () => {},
 });
 
 interface DisplayContextProviderProps {
@@ -52,6 +60,7 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     return Query.get('f') ? 'filter' : null;
   });
   const [cardsPerRow, setCardsPerRow] = useLocalStorage<NumCols>('cardsPerRow', 6);
+  const [cubeSidebarExpanded, setCubeSidebarExpanded] = useLocalStorage<boolean>('cubeSidebarExpanded', true);
 
   const toggleShowCustomImages = useCallback(() => {
     setShowCustomImages((prev) => !prev);
@@ -93,6 +102,12 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setShowDeckBuilderStatsPanel((prev) => !prev);
   }, [showDeckBuilderStatsPanel]);
 
+  const toggleCubeSidebarExpanded = useCallback(() => {
+    setCubeSidebarExpanded((prev) => !prev);
+  }, [setCubeSidebarExpanded]);
+
+  const [showAllBoards, setShowAllBoards] = useLocalStorage<boolean>(`${cubeID}-showAllBoards`, false);
+
   const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>(() => {
     // Check if there are pending changes in local storage
     if (typeof localStorage !== 'undefined' && cubeID) {
@@ -106,7 +121,9 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
             Object.values(changes.mainboard || {}).some((c: any) => Array.isArray(c) && c.length > 0) ||
             Object.values(changes.maybeboard || {}).some((c: any) => Array.isArray(c) && c.length > 0);
 
-          if (hasPendingEdits) {
+          // Only auto-open the edit sidebar on desktop (md breakpoint: 768px)
+          // On mobile, show a visual cue on the edit button instead
+          if (hasPendingEdits && typeof window !== 'undefined' && window.innerWidth >= 768) {
             return 'edit';
           }
         }
@@ -132,6 +149,10 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     toggleShowDeckBuilderStatsPanel,
     rightSidebarMode,
     setRightSidebarMode,
+    cubeSidebarExpanded,
+    toggleCubeSidebarExpanded,
+    showAllBoards,
+    setShowAllBoards,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };

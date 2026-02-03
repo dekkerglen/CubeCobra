@@ -47,6 +47,7 @@ export const handler = async (req: Request, res: Response) => {
     user.gridTightness = req.body.gridTightness;
     user.autoBlog = req.body.autoBlog === 'true';
     user.yourCubesSortOrder = req.body.yourCubesSortOrder;
+    user.disableAnimations = req.body.disableAnimations === 'true';
 
     await userDao.update(user as any);
 

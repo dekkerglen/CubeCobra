@@ -38,7 +38,7 @@ interface CubeListPageProps {
 const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
   const { changedCards, filterResult, canEdit } = useContext(CubeContext);
-  const { showMaybeboard } = useContext(DisplayContext);
+  const { showMaybeboard, showAllBoards } = useContext(DisplayContext);
   const { filterInput } = useContext(FilterContext);
 
   const [cubeView, setCubeView] = useQueryParam('view', 'table');
@@ -87,9 +87,14 @@ const CubeListPageRaw: React.FC = () => {
         .map(([boardname, boardcards]) => (
           <ErrorBoundary key={boardname}>
             <Flexbox direction="col" gap="2">
-              {((showMaybeboard && boardname === 'maybeboard') || (!showMaybeboard && boardname === 'mainboard')) && (
+              {(showAllBoards || (showMaybeboard && boardname === 'maybeboard') || (!showMaybeboard && boardname === 'mainboard')) && (
                 <>
-                  {boardcards.length === 0 && (
+                  {showAllBoards && boardcards.length > 0 && (
+                    <Text semibold lg className="mt-4 text-center">
+                      {boardname === 'mainboard' ? 'Mainboard' : 'Maybeboard'}
+                    </Text>
+                  )}
+                  {boardcards.length === 0 && !showAllBoards && (
                     <Text semibold md className="text-center mt-4">
                       This board appears to be empty!
                     </Text>

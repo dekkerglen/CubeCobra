@@ -53,7 +53,7 @@ const CubeSearchController: React.FC<CubeSearchControllerProps> = ({
               className="text-green-600 hover:text-green-700 cursor-pointer"
               aria-label="Search syntax help"
             >
-              <QuestionIcon size={20} />
+              <QuestionIcon size={20} className="hidden md:inline" />
             </button>
             <Input
               placeholder="Search cubes..."

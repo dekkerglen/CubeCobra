@@ -440,3 +440,13 @@ img.mana-symbol-sm {
 .max-h-95\/100 {
   max-height: 95dvh;
 }
+
+/* Disable all animations and transitions when user has this preference enabled */
+.disable-animations *,
+.disable-animations *::before,
+.disable-animations *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}

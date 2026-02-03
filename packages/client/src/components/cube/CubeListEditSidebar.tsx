@@ -38,7 +38,7 @@ const CubeListEditSidebar: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
-  const { setRightSidebarMode, showMaybeboard, toggleShowMaybeboard } = useContext(
+  const { setRightSidebarMode } = useContext(
     DisplayContext,
   ) as DisplayContextValue;
   const addRef = useRef<HTMLInputElement>(null);
@@ -63,8 +63,7 @@ const CubeListEditSidebar: React.FC = () => {
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, '');
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, DEFAULT_BLOG_TITLE);
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
-
-  const boardToEdit: BoardType = showMaybeboard ? 'maybeboard' : 'mainboard';
+  const [boardToEdit, setBoardToEdit] = useLocalStorage<BoardType>(`${cube.id}-editBoard`, 'mainboard');
 
   const handleAdd = useCallback(
     async (event: React.FormEvent, match: string) => {
@@ -185,17 +184,13 @@ const CubeListEditSidebar: React.FC = () => {
       ))}
 
       <Flexbox direction="col" gap="2">
-        <Text semibold sm>
-          Import Cards
-        </Text>
         <Dropdown
           trigger={
             <Button color="secondary" block>
               Import
             </Button>
           }
-          align="left"
-          minWidth="16rem"
+          align="right"
         >
           <Flexbox direction="col" gap="2" className="p-3">
             <PasteBulkButton
@@ -222,13 +217,8 @@ const CubeListEditSidebar: React.FC = () => {
 
       <Select
         label="Board"
-        value={showMaybeboard ? 'maybeboard' : 'mainboard'}
-        setValue={(value) => {
-          const shouldShowMaybe = value === 'maybeboard';
-          if (shouldShowMaybe !== showMaybeboard) {
-            toggleShowMaybeboard();
-          }
-        }}
+        value={boardToEdit}
+        setValue={(value) => setBoardToEdit(value as BoardType)}
         options={[
           { value: 'mainboard', label: 'Mainboard' },
           { value: 'maybeboard', label: 'Maybeboard' },
@@ -291,7 +281,7 @@ const CubeListEditSidebar: React.FC = () => {
         <Flexbox direction="row" gap="2" alignItems="center">
           <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
           <Tooltip text="The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.">
-            <QuestionIcon size={16} />
+            <QuestionIcon size={16} className="hidden md:inline" />
           </Tooltip>
         </Flexbox>
       </Flexbox>

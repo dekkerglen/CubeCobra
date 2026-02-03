@@ -92,6 +92,7 @@ export const postHandler = async (req: Request, res: Response) => {
       defaultPrinting: DefaultPrintingPreference,
       gridTightness: DefaultGridTightnessPreference,
       autoBlog: false,
+      disableAnimations: false,
     };
 
     const salt = await bcrypt.genSalt(10);

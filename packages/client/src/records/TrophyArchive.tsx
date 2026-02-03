@@ -90,7 +90,7 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
               <>
                 <Text sm>Unable to find trophy winners deck</Text>&nbsp;
                 <Tooltip text="Please ensure the Player names are aligned with the Trophy winner names.">
-                  <QuestionIcon size={16} />
+                  <QuestionIcon size={16} className="hidden md:inline" />
                 </Tooltip>
               </>
             )

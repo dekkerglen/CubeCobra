@@ -156,8 +156,8 @@ const CardModal: React.FC<CardModalProps> = ({
         setImageUsed(getCardFrontImage(card));
       }
       editCard(card.index!, { ...card, [field]: value }, card.board!);
-      // Auto-expand edit sidebar on desktop when a change is made
-      if (canEdit && rightSidebarMode !== 'edit') {
+      // Auto-expand edit sidebar on desktop when a change is made (md breakpoint: 768px)
+      if (canEdit && rightSidebarMode !== 'edit' && window.innerWidth >= 768) {
         setRightSidebarMode('edit');
       }
     },
@@ -490,7 +490,10 @@ const CardModal: React.FC<CardModalProps> = ({
                 className="items-center text-sm"
                 onClick={() => {
                   removeCard(card.index!, card.board!);
-                  setRightSidebarMode('edit');
+                  // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
+                  if (window.innerWidth >= 768) {
+                    setRightSidebarMode('edit');
+                  }
                   setOpen(false);
                 }}
               >
@@ -505,7 +508,10 @@ const CardModal: React.FC<CardModalProps> = ({
                     className="items-center text-sm"
                     onClick={() => {
                       moveCard(card.index!, card.board!, 'maybeboard');
-                      setRightSidebarMode('edit');
+                      // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
+                      if (window.innerWidth >= 768) {
+                        setRightSidebarMode('edit');
+                      }
                       setOpen(false);
                     }}
                   >
@@ -521,7 +527,10 @@ const CardModal: React.FC<CardModalProps> = ({
                     className="items-center text-sm"
                     onClick={() => {
                       moveCard(card.index!, card.board!, 'mainboard');
-                      setRightSidebarMode('edit');
+                      // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
+                      if (window.innerWidth >= 768) {
+                        setRightSidebarMode('edit');
+                      }
                       setOpen(false);
                     }}
                   >
