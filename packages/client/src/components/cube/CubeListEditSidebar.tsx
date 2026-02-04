@@ -308,7 +308,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                 </Flexbox>
               )}
 
-              <Flexbox direction="row" gap="2">
+              <Flexbox direction="row" gap="2" className="mb-16">
                 <LoadingButton color="primary" block onClick={submit} loading={loading} className="flex-1">
                   Save Changes
                 </LoadingButton>
