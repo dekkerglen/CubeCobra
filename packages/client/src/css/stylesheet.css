@@ -313,7 +313,7 @@ img.mana-symbol-sm {
 
 .markdown-input {
   font-family: 'Fira Mono', monospace;
-  min-height: 20rem !important;
+  min-height: 6rem !important;
 }
 
 .no-scrollbar::-webkit-scrollbar {

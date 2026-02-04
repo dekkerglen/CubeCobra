@@ -10,6 +10,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -68,88 +69,90 @@ const CubeRestorePage: React.FC<CubeRestorePageProps> = ({ cube, versions }) => 
 
   return (
     <MainLayout useContainer={false}>
-      <CubeLayout cube={cube} activeLink="primer">
-        <Flexbox direction="col" gap="2" className="mb-2">
-          <DynamicFlash />
-          <Card>
-            <CardHeader>
-              <Text semibold xl>
-                Restore Cube
-              </Text>
-            </CardHeader>
-            <CardBody>
-              <Text>
-                This page shows all available versions of your cube stored in backup. You can restore your cube to any
-                previous version. Restoring will create a new changelog entry showing the differences between the
-                current version and the restored version.
-              </Text>
-            </CardBody>
-          </Card>
+      <DisplayContextProvider cubeID={cube.id}>
+        <CubeLayout cube={cube} activeLink="primer">
+          <Flexbox direction="col" gap="2" className="mb-2">
+            <DynamicFlash />
+            <Card>
+              <CardHeader>
+                <Text semibold xl>
+                  Restore Cube
+                </Text>
+              </CardHeader>
+              <CardBody>
+                <Text>
+                  This page shows all available versions of your cube stored in backup. You can restore your cube to any
+                  previous version. Restoring will create a new changelog entry showing the differences between the
+                  current version and the restored version.
+                </Text>
+              </CardBody>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <Text semibold lg>
-                Available Versions ({versions.length})
-              </Text>
-            </CardHeader>
-            <CardBody>
-              {versions.length === 0 ? (
-                <Text>No previous versions available.</Text>
-              ) : (
-                <Flexbox direction="col" gap="2">
-                  {versions.map((version) => (
-                    <Card key={version.versionId} className="border">
-                      <CardBody>
-                        <Row>
-                          <Col xs={12} md={8}>
-                            <Flexbox direction="col" gap="1">
-                              <Flexbox direction="row" gap="2" alignItems="center">
-                                <Text semibold md>
-                                  {formatDate(version.timestamp.toString())}
+            <Card>
+              <CardHeader>
+                <Text semibold lg>
+                  Available Versions ({versions.length})
+                </Text>
+              </CardHeader>
+              <CardBody>
+                {versions.length === 0 ? (
+                  <Text>No previous versions available.</Text>
+                ) : (
+                  <Flexbox direction="col" gap="2">
+                    {versions.map((version) => (
+                      <Card key={version.versionId} className="border">
+                        <CardBody>
+                          <Row>
+                            <Col xs={12} md={8}>
+                              <Flexbox direction="col" gap="1">
+                                <Flexbox direction="row" gap="2" alignItems="center">
+                                  <Text semibold md>
+                                    {formatDate(version.timestamp.toString())}
+                                  </Text>
+                                  {version.isLatest && (
+                                    <span className="px-2 py-1 text-xs font-semibold rounded bg-accent text-bg-accent">
+                                      Current
+                                    </span>
+                                  )}
+                                </Flexbox>
+                                <Text sm className="text-muted">
+                                  Version ID: {version.versionId.substring(0, 16)}...
                                 </Text>
-                                {version.isLatest && (
-                                  <span className="px-2 py-1 text-xs font-semibold rounded bg-accent text-bg-accent">
-                                    Current
-                                  </span>
+                              </Flexbox>
+                            </Col>
+                            <Col xs={12} md={4}>
+                              <Flexbox direction="row" justify="end" alignItems="center" className="h-full">
+                                {version.isLatest ? (
+                                  <Button color="secondary" disabled>
+                                    Current Version
+                                  </Button>
+                                ) : (
+                                  <Button color="primary" onClick={() => handleRestoreClick(version.versionId)}>
+                                    Restore This Version
+                                  </Button>
                                 )}
                               </Flexbox>
-                              <Text sm className="text-muted">
-                                Version ID: {version.versionId.substring(0, 16)}...
-                              </Text>
-                            </Flexbox>
-                          </Col>
-                          <Col xs={12} md={4}>
-                            <Flexbox direction="row" justify="end" alignItems="center" className="h-full">
-                              {version.isLatest ? (
-                                <Button color="secondary" disabled>
-                                  Current Version
-                                </Button>
-                              ) : (
-                                <Button color="primary" onClick={() => handleRestoreClick(version.versionId)}>
-                                  Restore This Version
-                                </Button>
-                              )}
-                            </Flexbox>
-                          </Col>
-                        </Row>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </Flexbox>
-              )}
-            </CardBody>
-          </Card>
-        </Flexbox>
+                            </Col>
+                          </Row>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </Flexbox>
+                )}
+              </CardBody>
+            </Card>
+          </Flexbox>
 
-        <ConfirmActionModal
-          isOpen={showModal}
-          setOpen={setShowModal}
-          title="Confirm Restore"
-          message="Are you sure you want to restore your cube to this version? This will update your cube's card list and create a new changelog entry showing the changes."
-          buttonText="Restore"
-          onClick={handleConfirmRestore}
-        />
-      </CubeLayout>
+          <ConfirmActionModal
+            isOpen={showModal}
+            setOpen={setShowModal}
+            title="Confirm Restore"
+            message="Are you sure you want to restore your cube to this version? This will update your cube's card list and create a new changelog entry showing the changes."
+            buttonText="Restore"
+            onClick={handleConfirmRestore}
+          />
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };

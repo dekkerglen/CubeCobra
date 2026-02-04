@@ -489,10 +489,10 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 <Dropdown
                   trigger={
                     <button
-                      className="p-1 rounded-full bg-bg-secondary/80 hover:bg-bg-active text-text transition-colors backdrop-blur-sm flex items-center justify-center"
+                      className="p-1 rounded-full bg-bg-secondary/80 hover:bg-bg-active transition-colors backdrop-blur-sm flex items-center justify-center"
                       style={{ width: '32px', height: '32px' }}
                     >
-                      <GearIcon size={20} />
+                      <GearIcon size={20} className="text-white" />
                     </button>
                   }
                   align="right"
@@ -543,11 +543,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               {/* Chevron control */}
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="p-1 rounded-full bg-bg-secondary/80 hover:bg-bg-active text-text transition-colors backdrop-blur-sm flex items-center justify-center"
+                className="p-1 rounded-full bg-bg-secondary/80 hover:bg-bg-active transition-colors backdrop-blur-sm flex items-center justify-center"
                 style={{ width: '32px', height: '32px' }}
                 aria-label="Expand cube hero"
               >
-                <ChevronDownIcon size={20} />
+                <ChevronDownIcon size={20} className="text-white" />
               </button>
             </div>
           </div>
@@ -919,16 +919,16 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
           </div>
         </>
 
-        {/* Gear icon at top right */}
-        {isCubeOwner && (
-          <div className="absolute top-4 right-4">
+        {/* Gear and Chevron icons at top right */}
+        <div className="absolute top-4 right-4 flex flex-col gap-2">
+          {isCubeOwner && (
             <Dropdown
               trigger={
                 <button
-                  className="p-2 rounded-full bg-bg-secondary/80 hover:bg-bg-active text-text transition-colors backdrop-blur-sm flex items-center justify-center"
+                  className="p-2 rounded-full bg-bg-secondary/80 hover:bg-bg-active transition-colors backdrop-blur-sm flex items-center justify-center"
                   style={{ width: '40px', height: '40px' }}
                 >
-                  <GearIcon size={24} />
+                  <GearIcon size={24} className="text-white" />
                 </button>
               }
               align="right"
@@ -974,18 +974,18 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 )}
               </Flexbox>
             </Dropdown>
-          </div>
-        )}
+          )}
 
-        {/* Chevron control at bottom right */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute bottom-4 right-4 p-2 rounded-full bg-bg-secondary/80 hover:bg-bg-active text-text transition-colors backdrop-blur-sm flex items-center justify-center"
-          style={{ width: '40px', height: '40px' }}
-          aria-label="Collapse cube hero"
-        >
-          <ChevronUpIcon size={24} />
-        </button>
+          {/* Chevron control */}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 rounded-full bg-bg-secondary/80 hover:bg-bg-active transition-colors backdrop-blur-sm flex items-center justify-center"
+            style={{ width: '40px', height: '40px' }}
+            aria-label="Collapse cube hero"
+          >
+            <ChevronUpIcon size={24} className="text-white" />
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -13,9 +13,10 @@ interface TextEntryProps {
   value: string;
   setValue: (value: string) => void;
   maxLength?: number;
+  rows?: number;
 }
 
-const TextEntry: React.FC<TextEntryProps> = ({ value = '', setValue, maxLength = 1000 }) => {
+const TextEntry: React.FC<TextEntryProps> = ({ value = '', setValue, maxLength = 1000, rows = 4 }) => {
   const [tab, setTab] = useState('0');
 
   return (
@@ -35,6 +36,7 @@ const TextEntry: React.FC<TextEntryProps> = ({ value = '', setValue, maxLength =
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     showCharacterLimit={true}
+                    rows={rows}
                   />
                 ),
                 onClick: () => setTab('0'),

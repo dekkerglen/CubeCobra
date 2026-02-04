@@ -8,6 +8,7 @@ import { Flexbox } from 'components/base/Layout';
 import DynamicFlash from 'components/DynamicFlash';
 import { SafeMarkdown } from 'components/Markdown';
 import RenderToRoot from 'components/RenderToRoot';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -24,18 +25,20 @@ interface CubeOverviewProps {
 const CubeOverview: React.FC<CubeOverviewProps> = ({ cards, cube }) => {
   return (
     <MainLayout useContainer={false}>
-      <CubeLayout cards={cards} cube={cube} activeLink="primer">
-        <Flexbox direction="col" gap="2" className="mb-2">
-          <DynamicFlash />
-          {cube.description && (
-            <Card>
-              <CardBody>
-                <SafeMarkdown markdown={cube.description} />
-              </CardBody>
-            </Card>
-          )}
-        </Flexbox>
-      </CubeLayout>
+      <DisplayContextProvider cubeID={cube.id}>
+        <CubeLayout cards={cards} cube={cube} activeLink="primer">
+          <Flexbox direction="col" gap="2" className="mb-2">
+            <DynamicFlash />
+            {cube.description && (
+              <Card>
+                <CardBody>
+                  <SafeMarkdown markdown={cube.description} />
+                </CardBody>
+              </Card>
+            )}
+          </Flexbox>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };
