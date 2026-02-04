@@ -80,14 +80,14 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBal
                     </Button>
                   </Flexbox>
                 </Flexbox>
-            </CardHeader>
-            <CardBody>
-              <CardGrid cards={pack} xs={3} md={5} lg={8} hrefFn={(card) => `/tool/card/${card.cardID}`} />
-            </CardBody>
-          </Card>
-        </Flexbox>
-      </CubeLayout>
-    </DisplayContextProvider>
+              </CardHeader>
+              <CardBody>
+                <CardGrid cards={pack} xs={3} md={5} lg={8} hrefFn={(card) => `/tool/card/${card.cardID}`} />
+              </CardBody>
+            </Card>
+          </Flexbox>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };
