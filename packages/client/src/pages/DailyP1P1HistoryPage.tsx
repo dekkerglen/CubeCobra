@@ -107,8 +107,7 @@ const DailyP1P1HistoryPage: React.FC<DailyP1P1HistoryPageProps> = ({
 
                       <CardGrid
                         cards={cards}
-                        xs={2}
-                        sm={3}
+                        xs={3}
                         md={4}
                         lg={5}
                         xl={6}
