@@ -2,7 +2,7 @@ import { DisplayContextValue } from '../../../client/src/contexts/DisplayContext
 
 const defaultDisplayContext: DisplayContextValue = {
   cardsPerRow: 5,
-  openCollapse: '',
+  openCollapse: null,
   setCardsPerRow: jest.fn(),
   setOpenCollapse: jest.fn(),
   showCustomImages: false,

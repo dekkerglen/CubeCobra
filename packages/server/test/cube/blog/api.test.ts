@@ -455,7 +455,7 @@ describe('Delete a Blog Post', () => {
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     const owner = createUser({ id: 'blogger' });
     const blog = createBlogPost({ owner, cube: 'cube-id' });
-    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
+    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/about/${cube.shortId}?view=blog`);
 
     (blogDao.getById as jest.Mock).mockResolvedValue(blog);
     (blogDao.delete as jest.Mock).mockResolvedValue(undefined);
@@ -463,7 +463,11 @@ describe('Delete a Blog Post', () => {
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
     expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
+    expect(render.redirect).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      `/cube/about/${cube.shortId}?view=blog`,
+    );
   });
 
   it('should delete a blog and return to the cube, even if doing so from the post itself', async () => {
@@ -479,7 +483,11 @@ describe('Delete a Blog Post', () => {
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
     expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/blog/${cube.shortId}`);
+    expect(render.redirect).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      `/cube/about/${cube.shortId}?view=blog`,
+    );
   });
 
   it('should delete a blog and go to the dashboard, if now both the cube and blog are gone', async () => {
@@ -575,7 +583,11 @@ describe('View Blog Posts', () => {
       .withParams({ id: cube.id })
       .send();
 
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
+    expect(render.redirect).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      `/cube/about/${cube.id}?view=blog`,
+    );
   });
 
   it(`should return a 404 if cube doesn't exists`, async () => {
@@ -583,7 +595,7 @@ describe('View Blog Posts', () => {
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).send();
 
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
+    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/about/cube-id?view=blog');
   });
 
   it('should handle errors gracefully', async () => {
@@ -592,7 +604,7 @@ describe('View Blog Posts', () => {
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).send();
 
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
+    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/about/cube-id?view=blog');
   });
 
   it('should retrieve and render blog posts for cube', async () => {
@@ -609,7 +621,7 @@ describe('View Blog Posts', () => {
     expect(render.redirect).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
-      `/cube/about/${cube.shortId}?view=blog`,
+      `/cube/about/${cube.id}?view=blog`,
     );
   });
 });
