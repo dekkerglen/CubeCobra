@@ -24,6 +24,20 @@ interface SamplePackPageProps {
 }
 
 const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBalanced = false, maxBotWeight }) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const randomPackUrl = `${window.location.origin}/cube/samplepack/${cube.id}/random${isBalanced ? '?balanced=true' : ''}`;
+
+  const handleCopyRandomLink = async () => {
+    try {
+      await navigator.clipboard.writeText(randomPackUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
@@ -54,6 +68,9 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBal
                     <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}?balanced=true`}>
                       Balanced Pack
                     </Button>
+                    <Button color="accent" onClick={handleCopyRandomLink}>
+                      {copied ? 'Copied!' : 'Link for Random Pack'}
+                    </Button>
                     <Button
                       type="link"
                       color="accent"
@@ -63,14 +80,14 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBal
                     </Button>
                   </Flexbox>
                 </Flexbox>
-              </CardHeader>
-              <CardBody>
-                <CardGrid cards={pack} xs={3} md={5} lg={8} hrefFn={(card) => `/tool/card/${card.cardID}`} />
-              </CardBody>
-            </Card>
-          </Flexbox>
-        </CubeLayout>
-      </DisplayContextProvider>
+            </CardHeader>
+            <CardBody>
+              <CardGrid cards={pack} xs={3} md={5} lg={8} hrefFn={(card) => `/tool/card/${card.cardID}`} />
+            </CardBody>
+          </Card>
+        </Flexbox>
+      </CubeLayout>
+    </DisplayContextProvider>
     </MainLayout>
   );
 };
