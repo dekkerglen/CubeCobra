@@ -21,7 +21,7 @@ interface CardStacksViewProps {
 const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube, setModalSelection, setModalOpen } =
     useContext(CubeContext);
-  const { rightSidebarMode, cubeSidebarExpanded } = useContext(DisplayContext);
+  const { rightSidebarMode, cubeSidebarExpanded, stacksPerRow } = useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>
@@ -35,21 +35,19 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
     [cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary],
   );
 
-  // Further sort each group's cards by tertiary then quaternary for display order
-  const sortedWithOrder = useMemo(() => {
+  // Group cards by tertiary sort within each secondary group
+  const sortedWithTertiary = useMemo(() => {
     return sorted.map(([columnLabel, groups]) => [
       columnLabel,
       groups.map(([groupLabel, groupCards]) => {
-        // Sort the cards within this group by tertiary and quaternary
-        const sortedCards = sortDeep(groupCards, false, sortQuaternary || 'Alphabetical', sortTertiary || 'CMC') as [
+        // Sort the cards within this group by tertiary
+        const tertiaryGroups = sortDeep(groupCards, false, sortQuaternary || 'Alphabetical', sortTertiary || 'CMC') as [
           string,
           Card[],
         ][];
-        // Flatten to get just the cards array
-        const flatCards = sortedCards.flatMap(([, cards]) => cards);
-        return [groupLabel, flatCards];
+        return [groupLabel, tertiaryGroups];
       }),
-    ]) as [string, [string, Card[]][]][];
+    ]) as [string, [string, [string, Card[]][]][]][];
   }, [sorted, sortTertiary, sortQuaternary]);
 
   // Helper function to adjust breakpoint based on open sidebars
@@ -98,7 +96,7 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
     xxl: NumCols;
     widthClass: string;
   } = useMemo(() => {
-    if (sortedWithOrder.length === 0) {
+    if (sortedWithTertiary.length === 0) {
       // If there are no cards, return a single column (it doesn't matter).
       return {
         ...adjustBreakpoint({
@@ -270,7 +268,7 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
       }),
       widthClass: 'w-full',
     };
-  }, [sortedWithOrder, adjustBreakpoint, sorted.length]);
+  }, [sortedWithTertiary, adjustBreakpoint, sorted.length]);
 
   const handleCardClick = (card: Card) => {
     setModalSelection({ board: card.board as BoardType, index: cardIndex(card) });
@@ -288,46 +286,57 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
           gutters={2}
           className={`${rowWidths.widthClass} mx-auto gap-4`}
         >
-          {sortedWithOrder.map(([columnLabel, column], columnIndex) => (
+          {sortedWithTertiary.map(([columnLabel, column], columnIndex) => (
             <Col xs={1} key={columnIndex}>
               <Flexbox direction="col" justify="center" alignContent="start" alignItems="center">
-                <Text semibold md>
+                <Text semibold lg>
                   {`${columnLabel}`}
                 </Text>
-                <Text semibold md>
-                  {`(${countGroup(column)})`}
+                <Text semibold lg>
+                  {`(${countGroup(column.flatMap(([, tertiaryGroups]) => tertiaryGroups.flatMap(([, cards]) => cards)))})`}
                 </Text>
                 <Flexbox direction="col" gap="4" className="w-full">
-                  {column.map(([groupLabel, groupCards], groupIndex) => (
+                  {column.map(([groupLabel, tertiaryGroups], groupIndex) => (
                     <div key={groupIndex} className="w-full">
-                      <div className="w-full text-center mb-1">
-                        <Text semibold sm>
-                          {formatLabel
-                            ? formatLabel(groupLabel, groupCards.length)
-                            : groupCards.length > 0
-                              ? groupCards.length
-                              : ''}
+                      {/* Secondary group label (e.g., "Creature") */}
+                      <div className="w-full text-center mb-3">
+                        <Text semibold>
+                          {`${groupLabel} (${countGroup(tertiaryGroups.flatMap(([, cards]) => cards))})`}
                         </Text>
                       </div>
-                      <div className="stack">
-                        {groupCards.map((card, cardIdx) => (
-                          <div className="stacked" key={cardIdx}>
-                            <div
-                              onClick={() => handleCardClick(card)}
-                              className="cursor-pointer"
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  handleCardClick(card);
-                                }
-                              }}
-                            >
-                              <FoilCardImage card={card} autocard />
+                      {/* Tertiary groups within this secondary group */}
+                      <Row md={stacksPerRow} lg={stacksPerRow} xl={stacksPerRow} xxl={stacksPerRow} gutters={2}>
+                        {tertiaryGroups.map(([tertiaryLabel, tertiaryCards], tertiaryIndex) => (
+                          <Col xs={1} key={tertiaryIndex}>
+                            <div className="w-full text-center mb-1">
+                              <Text semibold sm>
+                                {formatLabel
+                                  ? formatLabel(tertiaryLabel, tertiaryCards.length)
+                                  : `${tertiaryLabel} (${tertiaryCards.length})`}
+                              </Text>
                             </div>
-                          </div>
+                            <div className="stack">
+                              {tertiaryCards.map((card, cardIdx) => (
+                                <div className="stacked" key={cardIdx}>
+                                  <div
+                                    onClick={() => handleCardClick(card)}
+                                    className="cursor-pointer"
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        handleCardClick(card);
+                                      }
+                                    }}
+                                  >
+                                    <FoilCardImage card={card} autocard />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </Col>
                         ))}
-                      </div>
+                      </Row>
                     </div>
                   ))}
                 </Flexbox>
@@ -338,55 +347,66 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
       </ResponsiveDiv>
       <ResponsiveDiv baseVisible sm className="mobile-table-view-container">
         <Flexbox direction="row" gap="4" className="mobile-table-view-row mx-2">
-          {sortedWithOrder.map(([columnLabel, column], columnIndex) => (
+          {sortedWithTertiary.map(([columnLabel, column], columnIndex) => (
             <Flexbox
               direction="col"
               justify="start"
               className={classNames('table-view-col', {
                 'ps-2': columnIndex === 0,
-                'pe-2': columnIndex === sortedWithOrder.length - 1,
+                'pe-2': columnIndex === sortedWithTertiary.length - 1,
               })}
               alignContent="start"
               key={columnIndex}
               alignItems="center"
             >
-              <Text semibold md>
+              <Text semibold lg>
                 {`${columnLabel}`}
               </Text>
-              <Text semibold md>
-                {`(${countGroup(column)})`}
+              <Text semibold lg>
+                {`(${countGroup(column.flatMap(([, tertiaryGroups]) => tertiaryGroups.flatMap(([, cards]) => cards)))})`}
               </Text>
               <Flexbox direction="col" gap="4" className="w-full">
-                {column.map(([groupLabel, groupCards], groupIndex) => (
+                {column.map(([groupLabel, tertiaryGroups], groupIndex) => (
                   <div key={groupIndex} className="w-full">
-                    <div className="w-full text-center mb-1">
-                      <Text semibold sm>
-                        {formatLabel
-                          ? formatLabel(groupLabel, groupCards.length)
-                          : groupCards.length > 0
-                            ? groupCards.length
-                            : ''}
+                    {/* Secondary group label (e.g., "Creature") */}
+                    <div className="w-full text-center mb-3">
+                      <Text semibold>
+                        {`${groupLabel} (${countGroup(tertiaryGroups.flatMap(([, cards]) => cards))})`}
                       </Text>
                     </div>
-                    <div className="stack">
-                      {groupCards.map((card, cardIdx) => (
-                        <div className="stacked" key={cardIdx}>
-                          <div
-                            onClick={() => handleCardClick(card)}
-                            className="cursor-pointer"
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                handleCardClick(card);
-                              }
-                            }}
-                          >
-                            <FoilCardImage card={card} autocard />
+                    {/* Tertiary groups within this secondary group */}
+                    <Row xs={stacksPerRow} sm={stacksPerRow} gutters={2}>
+                      {tertiaryGroups.map(([tertiaryLabel, tertiaryCards], tertiaryIndex) => (
+                        <Col xs={1} key={tertiaryIndex}>
+                          <div className="w-full text-center mb-1">
+                            <Text semibold sm>
+                              {formatLabel
+                                ? formatLabel(tertiaryLabel, tertiaryCards.length)
+                                : `${tertiaryLabel} (${tertiaryCards.length})`}
+                            </Text>
                           </div>
-                        </div>
+                          <div className="stack">
+                            {tertiaryCards.map((card, cardIdx) => (
+                              <div className="stacked" key={cardIdx}>
+                                <div
+                                  onClick={() => handleCardClick(card)}
+                                  className="cursor-pointer"
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      handleCardClick(card);
+                                    }
+                                  }}
+                                >
+                                  <FoilCardImage card={card} autocard />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Col>
                       ))}
-                    </div>
+                    </Row>
                   </div>
                 ))}
               </Flexbox>

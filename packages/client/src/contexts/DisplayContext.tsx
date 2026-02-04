@@ -19,6 +19,8 @@ export interface DisplayContextValue {
   setOpenCollapse: React.Dispatch<React.SetStateAction<string | null>>;
   cardsPerRow: NumCols;
   setCardsPerRow: React.Dispatch<React.SetStateAction<NumCols>>;
+  stacksPerRow: NumCols;
+  setStacksPerRow: React.Dispatch<React.SetStateAction<NumCols>>;
   showDeckBuilderStatsPanel: boolean;
   toggleShowDeckBuilderStatsPanel: () => void;
   rightSidebarMode: RightSidebarMode;
@@ -42,6 +44,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   setOpenCollapse: () => {},
   cardsPerRow: 8,
   setCardsPerRow: () => {},
+  stacksPerRow: 2,
+  setStacksPerRow: () => {},
   showDeckBuilderStatsPanel: false,
   toggleShowDeckBuilderStatsPanel: () => {},
   rightSidebarMode: 'none',
@@ -65,6 +69,7 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     return Query.get('f') ? 'filter' : null;
   });
   const [cardsPerRow, setCardsPerRow] = useLocalStorage<NumCols>('cardsPerRow', 6);
+  const [stacksPerRow, setStacksPerRow] = useLocalStorage<NumCols>('stacksPerRow', 2);
   const [cubeSidebarExpanded, setCubeSidebarExpanded] = useLocalStorage<boolean>('cubeSidebarExpanded', true);
   const [rightSidebarPosition, setRightSidebarPosition] = useLocalStorage<RightSidebarPosition>(
     'rightSidebarPosition',
@@ -154,6 +159,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setOpenCollapse,
     cardsPerRow,
     setCardsPerRow,
+    stacksPerRow,
+    setStacksPerRow,
     showDeckBuilderStatsPanel,
     toggleShowDeckBuilderStatsPanel,
     rightSidebarMode,

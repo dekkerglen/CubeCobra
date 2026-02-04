@@ -2861,7 +2861,9 @@ img.mana-symbol-sm {
 
 /* Light theme hover effect (default and light themes) */
 :root[class~='light'] .list-group:has(.list-group-heading:hover) .list-group-card,
-:root:not([class~='dark']):not([class~='light']):not([class~='system']) .list-group:has(.list-group-heading:hover) .list-group-card {
+:root:not([class~='dark']):not([class~='light']):not([class~='system'])
+  .list-group:has(.list-group-heading:hover)
+  .list-group-card {
   filter: brightness(0.9);
 }
 

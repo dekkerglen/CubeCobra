@@ -31,7 +31,7 @@ interface CubeListNavbarProps {
 }
 
 const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }) => {
-  const { cardsPerRow, setCardsPerRow } = useContext(DisplayContext);
+  const { cardsPerRow, setCardsPerRow, stacksPerRow, setStacksPerRow } = useContext(DisplayContext);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [filterValues, setFilterValues] = useState<Partial<FilterValues>>({});
   const [localFilterInput, setLocalFilterInput] = useState('');
@@ -171,6 +171,22 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                   { value: '10', label: '10 Cards Per Row' },
                   { value: '11', label: '11 Cards Per Row' },
                   { value: '12', label: '12 Cards Per Row' },
+                ]}
+              />
+            </div>
+          )}
+
+          {cubeView === 'stacks' && (
+            <div className="w-36">
+              <Select
+                value={`${stacksPerRow}`}
+                setValue={(value) => setStacksPerRow(parseInt(value, 10) as NumCols)}
+                className="bg-bg-active"
+                options={[
+                  { value: '1', label: '1 Stack Per Row' },
+                  { value: '2', label: '2 Stacks Per Row' },
+                  { value: '3', label: '3 Stacks Per Row' },
+                  { value: '4', label: '4 Stacks Per Row' },
                 ]}
               />
             </div>
@@ -340,6 +356,23 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 { value: '10', label: '10 Cards Per Row' },
                 { value: '11', label: '11 Cards Per Row' },
                 { value: '12', label: '12 Cards Per Row' },
+              ]}
+            />
+          </Flexbox>
+        )}
+
+        {/* Conditional row: Stacks per row select (only in stacks view) */}
+        {cubeView === 'stacks' && (
+          <Flexbox direction="row" alignItems="center" className="w-full">
+            <Select
+              value={`${stacksPerRow}`}
+              setValue={(value) => setStacksPerRow(parseInt(value, 10) as NumCols)}
+              className="bg-bg-active w-full"
+              options={[
+                { value: '1', label: '1 Stack Per Row' },
+                { value: '2', label: '2 Stacks Per Row' },
+                { value: '3', label: '3 Stacks Per Row' },
+                { value: '4', label: '4 Stacks Per Row' },
               ]}
             />
           </Flexbox>

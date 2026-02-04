@@ -5,6 +5,8 @@ const defaultDisplayContext: DisplayContextValue = {
   openCollapse: null,
   setCardsPerRow: jest.fn(),
   setOpenCollapse: jest.fn(),
+  stacksPerRow: 2,
+  setStacksPerRow: jest.fn(),
   showCustomImages: false,
   toggleShowCustomImages: jest.fn(),
   showMaybeboard: false,
