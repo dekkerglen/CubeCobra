@@ -576,19 +576,81 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                     {item.subItems.map((subItem) => {
                       const isSubActive = activeLink === subItem.key;
                       let subHref: string | undefined;
+                      let handleClick: ((e: React.MouseEvent) => void) | undefined;
 
                       // Handle different types of sub-items
                       if (item.key === 'list') {
                         const isMainboard = subItem.key === 'mainboard';
                         const boardParam = isMainboard ? 'mainboard' : 'maybeboard';
                         subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardParam}`;
-                      } else if (
-                        item.key === 'records' ||
-                        item.key === 'about' ||
-                        item.key === 'playtest' ||
-                        item.key === 'analysis'
-                      ) {
+
+                        // If already on list page, toggle; otherwise navigate
+                        handleClick = (e: React.MouseEvent) => {
+                          if (activeLink === 'list') {
+                            e.preventDefault();
+                            toggleShowMaybeboard();
+                          }
+                        };
+                      } else if (item.key === 'records') {
                         subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+
+                        handleClick = (e: React.MouseEvent) => {
+                          if (
+                            recordsViewContext &&
+                            (activeLink === 'records' ||
+                              ['draft-reports', 'trophy-archive', 'winrate-analytics'].includes(activeLink))
+                          ) {
+                            e.preventDefault();
+                            recordsViewContext.setView(subItem.key);
+                          }
+                        };
+                      } else if (item.key === 'about') {
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+
+                        handleClick = (e: React.MouseEvent) => {
+                          if (
+                            aboutViewContext &&
+                            (activeLink === 'about' || ['primer', 'blog', 'changelog'].includes(activeLink))
+                          ) {
+                            e.preventDefault();
+                            aboutViewContext.setView(subItem.key);
+                          }
+                        };
+                      } else if (item.key === 'playtest') {
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+
+                        handleClick = (e: React.MouseEvent) => {
+                          if (
+                            playtestViewContext &&
+                            (activeLink === 'playtest' ||
+                              ['sample-pack', 'practice-draft', 'decks'].includes(activeLink))
+                          ) {
+                            e.preventDefault();
+                            playtestViewContext.setView(subItem.key);
+                          }
+                        };
+                      } else if (item.key === 'analysis') {
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+
+                        handleClick = (e: React.MouseEvent) => {
+                          if (
+                            analysisViewContext &&
+                            (activeLink === 'analysis' ||
+                              [
+                                'averages',
+                                'table',
+                                'asfans',
+                                'chart',
+                                'recommender',
+                                'playtest-data',
+                                'tokens',
+                                'combos',
+                              ].includes(activeLink))
+                          ) {
+                            e.preventDefault();
+                            analysisViewContext.setView(subItem.key);
+                          }
+                        };
                       } else if (subItem.href) {
                         subHref = `${subItem.href}/${encodeURIComponent(getCubeId(cube))}`;
                       }
@@ -597,10 +659,14 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                         <a
                           key={subItem.key}
                           href={subHref}
-                          className={classNames('block px-4 py-1.5 text-sm transition-colors hover:bg-bg-active', {
-                            'bg-bg-active font-bold text-text': isSubActive,
-                            'font-normal text-text': !isSubActive,
-                          })}
+                          onClick={handleClick}
+                          className={classNames(
+                            'block px-4 py-1.5 text-sm transition-colors hover:bg-bg-active cursor-pointer',
+                            {
+                              'bg-bg-active font-bold text-text': isSubActive,
+                              'font-normal text-text': !isSubActive,
+                            },
+                          )}
                         >
                           {subItem.label}
                         </a>

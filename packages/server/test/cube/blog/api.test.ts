@@ -172,7 +172,7 @@ describe('Create Blog Post', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       ok: 'Blog post successful, reloading...',
-      redirect: `/cube/blog/${cube.shortId}`,
+      redirect: `/cube/about/${cube.shortId}?view=blog`,
     });
   });
 
@@ -198,7 +198,7 @@ describe('Create Blog Post', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       ok: 'Blog post successful, reloading...',
-      redirect: `/cube/blog/${cube.id}`,
+      redirect: `/cube/about/${cube.id}?view=blog`,
     });
   });
 
@@ -266,7 +266,7 @@ describe('Edit Blog Post', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       ok: 'Blog update successful, reloading...',
-      redirect: `/cube/blog/${cube.shortId}`,
+      redirect: `/cube/about/${cube.shortId}?view=blog`,
     });
   });
 
@@ -575,7 +575,6 @@ describe('View Blog Posts', () => {
       .withParams({ id: cube.id })
       .send();
 
-    expect(flashMock).toHaveBeenCalledWith('danger', 'Cube not found');
     expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
   });
 
@@ -584,7 +583,6 @@ describe('View Blog Posts', () => {
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).send();
 
-    expect(flashMock).toHaveBeenCalledWith('danger', 'Cube not found');
     expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
   });
 
@@ -594,13 +592,7 @@ describe('View Blog Posts', () => {
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: 'cube-id' }).send();
 
-    expect(render.handleRouteError).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      error,
-      '/cube/list/cube-id',
-    );
-    expect(render.render).not.toHaveBeenCalled();
+    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
   });
 
   it('should retrieve and render blog posts for cube', async () => {
@@ -614,16 +606,10 @@ describe('View Blog Posts', () => {
 
     await call(getBlogPostsForCubeHandler).withFlash(flashMock).withParams({ id: cube.id }).send();
 
-    expect(render.render).toHaveBeenCalledWith(
+    expect(render.redirect).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
-      'CubeBlogPage',
-      {
-        cube,
-        posts,
-        lastKey,
-      },
-      expect.anything(),
+      `/cube/about/${cube.shortId}?view=blog`,
     );
   });
 });

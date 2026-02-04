@@ -1120,6 +1120,9 @@ video {
 .h-screen {
   height: 100vh;
 }
+.\!h-auto {
+  height: auto !important;
+}
 .max-h-0 {
   max-height: 0px;
 }
@@ -1180,6 +1183,9 @@ video {
 }
 .w-64 {
   width: 16rem;
+}
+.w-80 {
+  width: 20rem;
 }
 .w-96 {
   width: 24rem;
@@ -1672,6 +1678,10 @@ video {
 .rounded-s-md {
   border-start-start-radius: 0.375rem;
   border-end-start-radius: 0.375rem;
+}
+.rounded-t-lg {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
 }
 .rounded-t-md {
   border-top-left-radius: 0.375rem;
@@ -2701,7 +2711,7 @@ img.mana-symbol-sm {
 
 .markdown-input {
   font-family: 'Fira Mono', monospace;
-  min-height: 20rem !important;
+  min-height: 6rem !important;
 }
 
 .no-scrollbar::-webkit-scrollbar {
