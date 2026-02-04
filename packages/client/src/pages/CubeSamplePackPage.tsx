@@ -23,6 +23,20 @@ interface SamplePackPageProps {
 }
 
 const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBalanced = false, maxBotWeight }) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const randomPackUrl = `${window.location.origin}/cube/samplepack/${cube.id}/random${isBalanced ? '?balanced=true' : ''}`;
+
+  const handleCopyRandomLink = async () => {
+    try {
+      await navigator.clipboard.writeText(randomPackUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   return (
     <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="playtest">
@@ -51,6 +65,9 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBal
                   </Button>
                   <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}?balanced=true`}>
                     Balanced Pack
+                  </Button>
+                  <Button color="accent" onClick={handleCopyRandomLink}>
+                    {copied ? 'Copied!' : 'Link for Random Pack'}
                   </Button>
                   <Button
                     type="link"
