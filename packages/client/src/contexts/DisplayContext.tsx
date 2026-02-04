@@ -6,6 +6,7 @@ import useQueryParam from '../hooks/useQueryParam';
 import Query from '../utils/Query';
 
 export type RightSidebarMode = 'none' | 'edit' | 'sort';
+export type RightSidebarPosition = 'right' | 'bottom';
 
 export interface DisplayContextValue {
   showCustomImages: boolean;
@@ -22,6 +23,8 @@ export interface DisplayContextValue {
   toggleShowDeckBuilderStatsPanel: () => void;
   rightSidebarMode: RightSidebarMode;
   setRightSidebarMode: React.Dispatch<React.SetStateAction<RightSidebarMode>>;
+  rightSidebarPosition: RightSidebarPosition;
+  setRightSidebarPosition: React.Dispatch<React.SetStateAction<RightSidebarPosition>>;
   cubeSidebarExpanded: boolean;
   toggleCubeSidebarExpanded: () => void;
   showAllBoards: boolean;
@@ -43,6 +46,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   toggleShowDeckBuilderStatsPanel: () => {},
   rightSidebarMode: 'none',
   setRightSidebarMode: () => {},
+  rightSidebarPosition: 'right',
+  setRightSidebarPosition: () => {},
   cubeSidebarExpanded: true,
   toggleCubeSidebarExpanded: () => {},
   showAllBoards: false,
@@ -61,6 +66,10 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
   });
   const [cardsPerRow, setCardsPerRow] = useLocalStorage<NumCols>('cardsPerRow', 6);
   const [cubeSidebarExpanded, setCubeSidebarExpanded] = useLocalStorage<boolean>('cubeSidebarExpanded', true);
+  const [rightSidebarPosition, setRightSidebarPosition] = useLocalStorage<RightSidebarPosition>(
+    'rightSidebarPosition',
+    'right',
+  );
 
   const toggleShowCustomImages = useCallback(() => {
     setShowCustomImages((prev) => !prev);
@@ -149,6 +158,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     toggleShowDeckBuilderStatsPanel,
     rightSidebarMode,
     setRightSidebarMode,
+    rightSidebarPosition,
+    setRightSidebarPosition,
     cubeSidebarExpanded,
     toggleCubeSidebarExpanded,
     showAllBoards,

@@ -7,7 +7,7 @@ import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CubeListNavbar from 'components/cube/CubeListNavbar';
-import CubeListRightSidebar from 'components/cube/CubeListRightSidebar';
+import CubeListRightSidebar, { CubeListBottomCard } from 'components/cube/CubeListRightSidebar';
 import CurveView from 'components/cube/CurveView';
 import ListView from 'components/cube/ListView';
 import RotisserieDraftPanel from 'components/cube/RotisserieDraftPanel';
@@ -66,6 +66,7 @@ const CubeListPageRaw: React.FC = () => {
     <>
       {canEdit && <ScryfallDragDropOverlay />}
       <Container xl>
+        <CubeListBottomCard canEdit={canEdit} />
         <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
       </Container>
       {filterResult && filterInput && filterInput.length > 0 && (
