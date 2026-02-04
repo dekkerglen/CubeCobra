@@ -8,6 +8,7 @@ import {
   QuestionIcon,
   SearchIcon,
   SortAscIcon,
+  StackIcon,
   TableIcon,
   XCircleIcon,
 } from '@primer/octicons-react';
@@ -127,6 +128,15 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 aria-label="Curve View"
               >
                 <GraphIcon size={20} />
+              </button>
+            </Tooltip>
+            <Tooltip text="Card Stacks">
+              <button
+                onClick={() => setCubeView('stacks')}
+                className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                aria-label="Card Stacks"
+              >
+                <StackIcon size={20} />
               </button>
             </Tooltip>
             {canEdit && (
@@ -256,6 +266,15 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 aria-label="Curve View"
               >
                 <GraphIcon size={16} />
+              </button>
+            </Tooltip>
+            <Tooltip text="Card Stacks">
+              <button
+                onClick={() => setCubeView('stacks')}
+                className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                aria-label="Card Stacks"
+              >
+                <StackIcon size={16} />
               </button>
             </Tooltip>
             {canEdit && (

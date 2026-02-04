@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { useState } from 'react';
 
 import {
@@ -25,6 +25,7 @@ import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
+import FilterContext from '../../contexts/FilterContext';
 import UserContext from '../../contexts/UserContext';
 import useAlerts from '../../hooks/UseAlerts';
 import useLocalStorage from '../../hooks/useLocalStorage';
@@ -69,6 +70,10 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const baseUrl = useContext(BaseUrlContext);
   const { addAlert } = useAlerts();
   const isCubeOwner = !!user && cube.owner.id === user.id;
+
+  // Get current filter and sort values from contexts
+  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
+  const { filterInput } = useContext(FilterContext);
 
   // State for collapsed hero, stored per page
   const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>(`cube-hero-collapsed-${activeLink}`, false);
@@ -171,7 +176,23 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   // If full by default but user collapsed (isCollapsed = true when not minified), show minified
   const shouldShowMinified = minified ? isCollapsed : !isCollapsed;
 
-  const urlSegment = '';
+  // Build URL segment for export links with filter and sort parameters
+  const urlSegment = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (isFilterUsed && filterInput) {
+      params.set('filter', filterInput);
+    }
+
+    if (isSortUsed) {
+      if (sortPrimary) params.set('primary', sortPrimary);
+      if (sortSecondary) params.set('secondary', sortSecondary);
+      if (sortTertiary) params.set('tertiary', sortTertiary);
+      if (sortQuaternary) params.set('quaternary', sortQuaternary);
+    }
+
+    return params.toString();
+  }, [isFilterUsed, filterInput, isSortUsed, sortPrimary, sortSecondary, sortTertiary, sortQuaternary]);
 
   const exportMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">

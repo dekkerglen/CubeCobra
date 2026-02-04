@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import { ChevronRightIcon, QuestionIcon } from '@primer/octicons-react';
+import { QuestionIcon } from '@primer/octicons-react';
 import { CUBE_DEFAULT_SORTS, ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
 
 import Button from 'components/base/Button';
@@ -41,8 +41,13 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
     setSortQuaternary,
   } = useContext(CubeContext);
 
-  const { setRightSidebarMode, showInlineTagEmojis, toggleShowInlineTagEmojis, showAllBoards, setShowAllBoards } =
-    useContext(DisplayContext);
+  const {
+    setRightSidebarMode: _setRightSidebarMode,
+    showInlineTagEmojis,
+    toggleShowInlineTagEmojis,
+    showAllBoards,
+    setShowAllBoards,
+  } = useContext(DisplayContext);
   const { url: rotoURL, setUrl: setRotoURL } = useContext(RotoDraftContext);
 
   const sortsModified = useMemo(() => {
@@ -59,19 +64,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
       {!isHorizontal ? (
         // Vertical layout for right sidebar
         <Flexbox direction="col" gap="3">
-          <Flexbox direction="row" justify="start" alignItems="center">
-            <div
-              className="cursor-pointer hover:opacity-70 transition-opacity p-1"
-              onClick={() => setRightSidebarMode('none')}
-              aria-label="Close sidebar"
-            >
-              <ChevronRightIcon size={20} />
-            </div>
-            <Text semibold lg>
-              Display Options
-            </Text>
-          </Flexbox>
-
           <Select
             label="Primary Sort (columns)"
             value={sortPrimary || CUBE_DEFAULT_SORTS[0]}

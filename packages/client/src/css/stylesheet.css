@@ -450,3 +450,34 @@ img.mana-symbol-sm {
   transition-duration: 0s !important;
   transition-delay: 0s !important;
 }
+
+/* List group header hover effect - highlight all cards when hovering over header */
+.list-group:has(.list-group-heading:hover) .list-group-card {
+  cursor: pointer;
+}
+
+/* Dark theme hover effect */
+:root[class~='dark'] .list-group:has(.list-group-heading:hover) .list-group-card {
+  filter: brightness(1.25);
+}
+
+/* Light theme hover effect (default and light themes) */
+:root[class~='light'] .list-group:has(.list-group-heading:hover) .list-group-card,
+:root:not([class~='dark']):not([class~='light']):not([class~='system'])
+  .list-group:has(.list-group-heading:hover)
+  .list-group-card {
+  filter: brightness(0.9);
+}
+
+/* System theme - use media queries to detect actual color scheme */
+@media (prefers-color-scheme: light) {
+  :root[class~='system'] .list-group:has(.list-group-heading:hover) .list-group-card {
+    filter: brightness(0.9);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[class~='system'] .list-group:has(.list-group-heading:hover) .list-group-card {
+    filter: brightness(1.25);
+  }
+}

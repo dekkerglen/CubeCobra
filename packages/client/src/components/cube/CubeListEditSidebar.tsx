@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { ChevronRightIcon, QuestionIcon } from '@primer/octicons-react';
+import { QuestionIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
 import { BoardType } from '@utils/datatypes/Card';
 
@@ -169,19 +169,6 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
       {!isHorizontal ? (
         // Vertical layout for right sidebar
         <Flexbox direction="col" gap="3">
-          <Flexbox direction="row" justify="start" alignItems="center">
-            <div
-              className="cursor-pointer hover:opacity-70 transition-opacity p-1"
-              onClick={() => setRightSidebarMode('none')}
-              aria-label="Close sidebar"
-            >
-              <ChevronRightIcon size={20} />
-            </div>
-            <Text semibold lg>
-              Edit Cube
-            </Text>
-          </Flexbox>
-
           {alerts.map(({ color, message }, index) => (
             <Alert key={index} color={color}>
               {message}

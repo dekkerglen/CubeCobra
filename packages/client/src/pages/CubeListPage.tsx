@@ -6,6 +6,7 @@ import Cube from '@utils/datatypes/Cube';
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
+import CardStacksView from 'components/cube/CardStacksView';
 import CubeListNavbar from 'components/cube/CubeListNavbar';
 import CubeListRightSidebar, { CubeListBottomCard } from 'components/cube/CubeListRightSidebar';
 import CurveView from 'components/cube/CurveView';
@@ -108,6 +109,9 @@ const CubeListPageRaw: React.FC = () => {
                       spoiler: <VisualSpoiler cards={boardcards} />,
                       curve: <CurveView cards={boardcards} />,
                       list: <ListView cards={boardcards} />,
+                      stacks: (
+                        <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
+                      ),
                     }[cubeView]
                   }
                 </>
