@@ -130,8 +130,6 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
       {/* When showing bot weights, don't highlight user selection - only show top bot pick in blue */}
       <CardGrid
         cards={cards}
-        xs={2}
-        sm={3}
         md={4}
         lg={5}
         xl={6}
