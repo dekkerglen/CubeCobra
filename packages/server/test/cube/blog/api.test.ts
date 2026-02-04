@@ -463,7 +463,11 @@ describe('Delete a Blog Post', () => {
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
     expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/about/${cube.shortId}?view=blog`);
+    expect(render.redirect).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      `/cube/about/${cube.shortId}?view=blog`,
+    );
   });
 
   it('should delete a blog and return to the cube, even if doing so from the post itself', async () => {
@@ -479,7 +483,11 @@ describe('Delete a Blog Post', () => {
     await call(deleteBlogHandler).as(owner).withFlash(flashMock).withParams({ id: blog.id }).send();
 
     expect(flashMock).toHaveBeenCalledWith('success', 'Post Removed');
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/about/${cube.shortId}?view=blog`);
+    expect(render.redirect).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      `/cube/about/${cube.shortId}?view=blog`,
+    );
   });
 
   it('should delete a blog and go to the dashboard, if now both the cube and blog are gone', async () => {
@@ -575,7 +583,11 @@ describe('View Blog Posts', () => {
       .withParams({ id: cube.id })
       .send();
 
-    expect(render.redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), `/cube/about/${cube.id}?view=blog`);
+    expect(render.redirect).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      `/cube/about/${cube.id}?view=blog`,
+    );
   });
 
   it(`should return a 404 if cube doesn't exists`, async () => {
