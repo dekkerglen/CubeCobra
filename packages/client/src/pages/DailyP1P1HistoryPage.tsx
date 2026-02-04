@@ -105,7 +105,16 @@ const DailyP1P1HistoryPage: React.FC<DailyP1P1HistoryPageProps> = ({
                         )}
                       </Text>
 
-                      <CardGrid cards={cards} xs={3} md={5} lg={8} hrefFn={(card) => `/tool/card/${card.cardID}`} />
+                      <CardGrid
+                        cards={cards}
+                        xs={2}
+                        sm={3}
+                        md={4}
+                        lg={5}
+                        xl={6}
+                        xxl={8}
+                        hrefFn={(card) => `/tool/card/${card.cardID}`}
+                      />
                     </Flexbox>
                   </CardBody>
                 </Card>

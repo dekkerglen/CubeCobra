@@ -69,7 +69,7 @@ const Pack: React.FC<PackProps> = ({
                 <div className="spinner" />
               </div>
             ) : (
-              <Row className="g-0" sm={4} lg={8}>
+              <Row className="g-0" xs={2} sm={3} md={4} lg={5} xl={6} xxl={8}>
                 {pack.map((card, index) => {
                   const isHighestRated = ratings && ratings[index] === maxRating;
                   return (
