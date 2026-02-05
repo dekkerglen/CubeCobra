@@ -640,7 +640,7 @@ async function writeCatalog(basePath = PRIVATE_DIR) {
   console.info(`All JSON files saved. Duration: ${duration.toFixed(2)}s`);
 }
 
-function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number, mpPrice: number) {
+function saveCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number, mpPrice: number) {
   if (card.layout === 'transform') {
     addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
   }
@@ -727,18 +727,6 @@ const STATIC_CARDS: ScryfallCard[] = [
   },
 ];
 
-function saveStaticCard(
-  card: ScryfallCard,
-  metadata: CardMetadata | undefined,
-  ckPrice: number | undefined,
-  mpPrice: number | undefined,
-) {
-  if (card.layout === 'transform') {
-    addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
-  }
-  addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, false), false);
-}
-
 async function saveAllCards(
   metadatadict: Record<string, CardMetadata>,
   indexToOracle: string[],
@@ -747,7 +735,7 @@ async function saveAllCards(
 ) {
   console.info('Processing static cards...');
   for (const staticCard of STATIC_CARDS) {
-    saveStaticCard(staticCard, metadatadict[staticCard.oracle_id], ckPrices[staticCard.id], mpPrices[staticCard.id]);
+    saveCard(staticCard, metadatadict[staticCard.oracle_id], ckPrices[staticCard.id], mpPrices[staticCard.id]);
   }
 
   console.info(`Processed ${STATIC_CARDS.length} static cards.`);
@@ -760,7 +748,7 @@ async function saveAllCards(
       .pipe(JSONStream.parse('*'))
       .pipe(
         // @ts-expect-error idk why but this works
-        es.mapSync((item) => saveEnglishCard(item, metadatadict[item.oracle_id], ckPrices[item.id], mpPrices[item.id])),
+        es.mapSync((item) => saveCard(item, metadatadict[item.oracle_id], ckPrices[item.id], mpPrices[item.id])),
       )
       .on('close', resolve),
   );
