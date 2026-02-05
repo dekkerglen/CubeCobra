@@ -16,7 +16,6 @@ import History, { Period } from '@utils/datatypes/History';
 
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 
-const { initializeMl } = require('../../recommenderService/src/mlutils/ml');
 type CubeDict = Record<string, string[]>;
 
 const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
@@ -118,10 +117,6 @@ const mapTotalsToCardHistory = (
 
   console.log('Loading card database');
   await initializeCardDb(privateDir);
-
-  console.log('Initializing ML models');
-  const rootDir = path.join(__dirname, '..', '..', 'recommenderService');
-  await initializeMl(rootDir);
 
   // List existing files in S3 cubes_history to determine which days are already processed
   // We only check filenames, not file contents, since files are large
