@@ -39,7 +39,7 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
   ...props
 }) => {
   const user = useContext(UserContext);
-  const theme = user?.theme || 'default';
+  const theme = user?.theme || 'system';
 
   // Determine effective theme for hover effects
   const isDarkMode =

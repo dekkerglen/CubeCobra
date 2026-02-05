@@ -85,7 +85,7 @@ export const postHandler = async (req: Request, res: Response) => {
       hideTagColors: false,
       imageName: 'Ambush Viper',
       roles: [],
-      theme: 'default',
+      theme: 'system',
       emailVerified: skipVerification,
       token: uuid(),
       dateCreated: new Date().valueOf(),

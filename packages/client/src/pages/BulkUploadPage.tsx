@@ -4,6 +4,7 @@ import CardType from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
 import AutocompleteInput from 'components/base/AutocompleteInput';
+import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
@@ -136,9 +137,21 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added })
                   </Text>
                 ))}
                 <Changelist />
-                <LoadingButton loading={loading} color="primary" className="mt-3" block onClick={submit}>
-                  Save Changes
-                </LoadingButton>
+                <Flexbox direction="row" gap="2" className="mt-3">
+                  <Button
+                    color="secondary"
+                    outline
+                    block
+                    onClick={() => {
+                      window.location.href = `/cube/list/${cube.id}`;
+                    }}
+                  >
+                    Cancel Upload
+                  </Button>
+                  <LoadingButton loading={loading} color="primary" block onClick={submit}>
+                    Save Changes
+                  </LoadingButton>
+                </Flexbox>
               </Flexbox>
             </Col>
           </Row>
@@ -165,7 +178,7 @@ interface BulkUploadPageProps {
 const BulkUploadPage: React.FC<BulkUploadPageProps> = ({ cube, cards, added, missing }) => (
   <MainLayout useContainer={false}>
     <DynamicFlash />
-    <CubeLayout cube={cube} cards={cards} activeLink="list" useChangedCards>
+    <CubeLayout cube={cube} cards={cards} activeLink="bulkupload" useChangedCards>
       <BulkUploadPageRaw added={added} missing={missing} />
     </CubeLayout>
   </MainLayout>

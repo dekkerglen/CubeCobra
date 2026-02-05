@@ -17,7 +17,7 @@ import CSRFForm from '../CSRFForm';
 
 const UserThemeForm: React.FC = () => {
   const user = useContext(UserContext);
-  const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'default');
+  const [selectedTheme, setSelectedTheme] = useState(user?.theme || 'system');
   const [defaultPrinting, setDefaultPrinting] = useState(user?.defaultPrinting || DefaultPrintingPreference);
   const [gridTightness, setGridTightness] = useState(user?.gridTightness || DefaultGridTightnessPreference);
   const [autoBlog, setAutoblog] = useState(typeof user?.autoBlog !== 'undefined' ? user.autoBlog : false);
