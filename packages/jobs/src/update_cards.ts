@@ -159,6 +159,16 @@ async function downloadSets(useS3Cache?: boolean) {
   await getFileWithCache('https://api.scryfall.com/sets', `${PRIVATE_DIR}/sets.json`, useS3Cache);
 }
 
+const addToNameToIdMap = (normalizedName: string, scryFallId: string) => {
+  // only add if it doesn't exist, this makes the default the newest edition
+  if (!catalog.nameToId[normalizedName]) {
+    catalog.nameToId[normalizedName] = [];
+  }
+  if (!catalog.nameToId[normalizedName].includes(scryFallId)) {
+    catalog.nameToId[normalizedName].push(scryFallId);
+  }
+};
+
 function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
   catalog.dict[card.scryfall_id] = card;
   const normalizedFullName = cardutil.normalizeName(card.full_name);
@@ -180,13 +190,7 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
       catalog.cardimages[normalizedName] = cardImages;
     }
   }
-  // only add if it doesn't exist, this makes the default the newest edition
-  if (!catalog.nameToId[normalizedName]) {
-    catalog.nameToId[normalizedName] = [];
-  }
-  if (!catalog.nameToId[normalizedName].includes(card.scryfall_id)) {
-    catalog.nameToId[normalizedName].push(card.scryfall_id);
-  }
+  addToNameToIdMap(normalizedName, card.scryfall_id);
   if (!catalog.oracleToId[card.oracle_id]) {
     catalog.oracleToId[card.oracle_id] = [];
   }
@@ -644,7 +648,10 @@ function saveCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPric
   if (card.layout === 'transform') {
     addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
   }
-  addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, false), false);
+  const convertedCard = convertCard(card, metadata, ckPrice, mpPrice, false);
+  addCardToCatalog(convertedCard, false);
+  //card.name contains both faces name
+  addToNameToIdMap(cardutil.normalizeName(card.name), convertedCard.scryfall_id);
 }
 
 const ALL_NOT_LEGAL = Object.fromEntries(SUPPORTED_SCRYFALL_FORMATS.map((format) => [format, 'not_legal' as const]));
