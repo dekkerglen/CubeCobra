@@ -249,12 +249,13 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
 
     // Add filter condition if status is provided
     if (status) {
-      params.FilterExpression = '#status = :status';
+      params.FilterExpression = '#item.#status = :status';
       params.ExpressionAttributeValues = {
         ...params.ExpressionAttributeValues,
         ':status': status,
       };
       params.ExpressionAttributeNames = {
+        '#item': 'item',
         '#status': 'status',
       };
     }
