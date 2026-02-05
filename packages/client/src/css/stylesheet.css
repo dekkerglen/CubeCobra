@@ -340,10 +340,23 @@ img.mana-symbol-sm {
 .stacked {
   /* This is calculated relative to containing width */
   margin-top: -124%;
+  transition: all 200ms ease-out;
+  position: relative;
+}
+
+.stacked.drag-placeholder {
+  opacity: 0.5;
+  transform: translateY(5px);
 }
 
 .stack {
   padding-top: 124%;
+  position: relative;
+}
+
+.stack.drop-active {
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 0.5rem;
 }
 
 .off-screen {

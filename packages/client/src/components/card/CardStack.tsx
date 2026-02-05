@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 
 import { useDroppable } from '@dnd-kit/core';
+import classNames from 'classnames';
 
 import DraftLocation from '../../drafting/DraftLocation';
 import { Col, ColProps } from '../base/Layout';
@@ -24,7 +25,7 @@ const CardStack: React.FC<CardStackProps> = ({ location, children }) => {
             <b>{children.length > 0 ? children.length : ''}</b>
           </div>
         )}
-        <div className="stack">{children}</div>
+        <div className={classNames('stack', { 'drop-active': isOver })}>{children}</div>
       </Col>
     </div>
   );

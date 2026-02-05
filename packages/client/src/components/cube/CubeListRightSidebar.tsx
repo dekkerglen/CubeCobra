@@ -1,8 +1,9 @@
 import React, { useContext } from 'react';
 
-import { ChevronRightIcon, MoveToTopIcon, SidebarExpandIcon, XIcon } from '@primer/octicons-react';
+import { ArrowSwitchIcon, ChevronRightIcon, MoveToTopIcon, SidebarExpandIcon, XIcon } from '@primer/octicons-react';
 import classNames from 'classnames';
 
+import ScrollShadowContainer from 'components/base/ScrollShadowContainer';
 import Tooltip from 'components/base/Tooltip';
 import DisplayContext from 'contexts/DisplayContext';
 
@@ -53,30 +54,43 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
             },
           )}
         >
-          <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-            <div className="w-80 max-w-full">
-              {/* Header */}
-              <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent">
-                <button
-                  onClick={closeSidebar}
-                  className="text-text hover:text-text-secondary transition-colors cursor-pointer"
-                  aria-label="Close sidebar"
-                >
-                  <ChevronRightIcon size={20} />
-                </button>
-                <h2
-                  onClick={closeSidebar}
-                  className="text-lg font-semibold cursor-pointer hover:text-text-secondary transition-colors"
-                >
-                  Edit
-                </h2>
-                <CubeListBottomToggle />
+          <div className="sticky top-0 h-screen">
+            <ScrollShadowContainer>
+              <div className="w-80 max-w-full">
+                {/* Header */}
+                <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent">
+                  <button
+                    onClick={closeSidebar}
+                    className="text-text hover:text-text-secondary transition-colors cursor-pointer"
+                    aria-label="Close sidebar"
+                  >
+                    <ChevronRightIcon size={20} />
+                  </button>
+                  <h2
+                    onClick={closeSidebar}
+                    className="text-lg font-semibold cursor-pointer hover:text-text-secondary transition-colors"
+                  >
+                    Edit
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Tooltip text="Switch to Display" position="bottom">
+                      <button
+                        onClick={() => setRightSidebarMode('sort')}
+                        className="text-text hover:text-text-secondary transition-colors"
+                        aria-label="Switch to Display"
+                      >
+                        <ArrowSwitchIcon size={20} />
+                      </button>
+                    </Tooltip>
+                    <CubeListBottomToggle />
+                  </div>
+                </div>
+                {/* Content */}
+                <div className="p-4">
+                  <CubeListEditSidebar />
+                </div>
               </div>
-              {/* Content */}
-              <div className="p-4">
-                <CubeListEditSidebar />
-              </div>
-            </div>
+            </ScrollShadowContainer>
           </div>
         </div>
       )}
@@ -93,30 +107,43 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
             },
           )}
         >
-          <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-            <div className="w-80 max-w-full">
-              {/* Header */}
-              <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent">
-                <button
-                  onClick={closeSidebar}
-                  className="text-text hover:text-text-secondary transition-colors cursor-pointer"
-                  aria-label="Close sidebar"
-                >
-                  <ChevronRightIcon size={20} />
-                </button>
-                <h2
-                  onClick={closeSidebar}
-                  className="text-lg font-semibold cursor-pointer hover:text-text-secondary transition-colors"
-                >
-                  Edit
-                </h2>
-                <CubeListBottomToggle />
+          <div className="sticky top-0 h-screen">
+            <ScrollShadowContainer>
+              <div className="w-80 max-w-full">
+                {/* Header */}
+                <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent">
+                  <button
+                    onClick={closeSidebar}
+                    className="text-text hover:text-text-secondary transition-colors cursor-pointer"
+                    aria-label="Close sidebar"
+                  >
+                    <ChevronRightIcon size={20} />
+                  </button>
+                  <h2
+                    onClick={closeSidebar}
+                    className="text-lg font-semibold cursor-pointer hover:text-text-secondary transition-colors"
+                  >
+                    Edit
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Tooltip text="Switch to Display" position="bottom">
+                      <button
+                        onClick={() => setRightSidebarMode('sort')}
+                        className="text-text hover:text-text-secondary transition-colors"
+                        aria-label="Switch to Display"
+                      >
+                        <ArrowSwitchIcon size={20} />
+                      </button>
+                    </Tooltip>
+                    <CubeListBottomToggle />
+                  </div>
+                </div>
+                {/* Content */}
+                <div className="p-4">
+                  <CubeListEditSidebar isHorizontal={false} />
+                </div>
               </div>
-              {/* Content */}
-              <div className="p-4">
-                <CubeListEditSidebar isHorizontal={false} />
-              </div>
-            </div>
+            </ScrollShadowContainer>
           </div>
         </div>
       )}
@@ -132,30 +159,45 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
           },
         )}
       >
-        <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-          <div className="w-80 max-w-full">
-            {/* Header */}
-            <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent">
-              <button
-                onClick={closeSidebar}
-                className="text-text hover:text-text-secondary transition-colors cursor-pointer"
-                aria-label="Close sidebar"
-              >
-                <ChevronRightIcon size={20} />
-              </button>
-              <h2
-                onClick={closeSidebar}
-                className="text-lg font-semibold cursor-pointer hover:text-text-secondary transition-colors"
-              >
-                Display
-              </h2>
-              <CubeListBottomToggle />
+        <div className="sticky top-0 h-screen">
+          <ScrollShadowContainer>
+            <div className="w-80 max-w-full">
+              {/* Header */}
+              <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent">
+                <button
+                  onClick={closeSidebar}
+                  className="text-text hover:text-text-secondary transition-colors cursor-pointer"
+                  aria-label="Close sidebar"
+                >
+                  <ChevronRightIcon size={20} />
+                </button>
+                <h2
+                  onClick={closeSidebar}
+                  className="text-lg font-semibold cursor-pointer hover:text-text-secondary transition-colors"
+                >
+                  Display
+                </h2>
+                <div className="flex items-center gap-2">
+                  {canEdit && (
+                    <Tooltip text="Switch to Edit" position="bottom">
+                      <button
+                        onClick={() => setRightSidebarMode('edit')}
+                        className="text-text hover:text-text-secondary transition-colors"
+                        aria-label="Switch to Edit"
+                      >
+                        <ArrowSwitchIcon size={20} />
+                      </button>
+                    </Tooltip>
+                  )}
+                  <CubeListBottomToggle />
+                </div>
+              </div>
+              {/* Content */}
+              <div className="p-4">
+                <CubeListSortSidebar canEdit={canEdit} />
+              </div>
             </div>
-            {/* Content */}
-            <div className="p-4">
-              <CubeListSortSidebar canEdit={canEdit} />
-            </div>
-          </div>
+          </ScrollShadowContainer>
         </div>
       </div>
 
@@ -170,30 +212,45 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
           },
         )}
       >
-        <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-          <div className="w-80 max-w-full">
-            {/* Header */}
-            <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent">
-              <button
-                onClick={closeSidebar}
-                className="text-text hover:text-text-secondary transition-colors cursor-pointer"
-                aria-label="Close sidebar"
-              >
-                <ChevronRightIcon size={20} />
-              </button>
-              <h2
-                onClick={closeSidebar}
-                className="text-lg font-semibold cursor-pointer hover:text-text-secondary transition-colors"
-              >
-                Display
-              </h2>
-              <CubeListBottomToggle />
+        <div className="sticky top-0 h-screen">
+          <ScrollShadowContainer>
+            <div className="w-80 max-w-full">
+              {/* Header */}
+              <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent">
+                <button
+                  onClick={closeSidebar}
+                  className="text-text hover:text-text-secondary transition-colors cursor-pointer"
+                  aria-label="Close sidebar"
+                >
+                  <ChevronRightIcon size={20} />
+                </button>
+                <h2
+                  onClick={closeSidebar}
+                  className="text-lg font-semibold cursor-pointer hover:text-text-secondary transition-colors"
+                >
+                  Display
+                </h2>
+                <div className="flex items-center gap-2">
+                  {canEdit && (
+                    <Tooltip text="Switch to Edit" position="bottom">
+                      <button
+                        onClick={() => setRightSidebarMode('edit')}
+                        className="text-text hover:text-text-secondary transition-colors"
+                        aria-label="Switch to Edit"
+                      >
+                        <ArrowSwitchIcon size={20} />
+                      </button>
+                    </Tooltip>
+                  )}
+                  <CubeListBottomToggle />
+                </div>
+              </div>
+              {/* Content */}
+              <div className="p-4">
+                <CubeListSortSidebar canEdit={canEdit} isHorizontal={false} />
+              </div>
             </div>
-            {/* Content */}
-            <div className="p-4">
-              <CubeListSortSidebar canEdit={canEdit} isHorizontal={false} />
-            </div>
-          </div>
+          </ScrollShadowContainer>
         </div>
       </div>
     </>
@@ -252,6 +309,15 @@ export const CubeListBottomCard: React.FC<{ canEdit: boolean }> = ({ canEdit }) 
             <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent rounded-t-lg">
               <h2 className="text-lg font-semibold">Edit</h2>
               <div className="flex items-center gap-2">
+                <Tooltip text="Switch to Display" position="bottom">
+                  <button
+                    onClick={() => setRightSidebarMode('sort')}
+                    className="text-text hover:text-text-secondary transition-colors"
+                    aria-label="Switch to Display"
+                  >
+                    <ArrowSwitchIcon size={20} />
+                  </button>
+                </Tooltip>
                 <Tooltip text="Move to sidebar" position="bottom">
                   <button
                     onClick={togglePosition}
@@ -288,6 +354,17 @@ export const CubeListBottomCard: React.FC<{ canEdit: boolean }> = ({ canEdit }) 
             <div className="flex items-center justify-between w-full px-4 py-3 border-b border-border bg-bg-accent rounded-t-lg">
               <h2 className="text-lg font-semibold">Display</h2>
               <div className="flex items-center gap-2">
+                {canEdit && (
+                  <Tooltip text="Switch to Edit" position="bottom">
+                    <button
+                      onClick={() => setRightSidebarMode('edit')}
+                      className="text-text hover:text-text-secondary transition-colors"
+                      aria-label="Switch to Edit"
+                    >
+                      <ArrowSwitchIcon size={20} />
+                    </button>
+                  </Tooltip>
+                )}
                 <Tooltip text="Move to sidebar" position="bottom">
                   <button
                     onClick={togglePosition}

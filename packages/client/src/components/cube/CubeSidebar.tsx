@@ -19,6 +19,7 @@ import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
 import { Flexbox } from '../base/Layout';
+import ScrollShadowContainer from '../base/ScrollShadowContainer';
 
 interface NavigationItem {
   label: string;
@@ -173,13 +174,8 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
         )}
       >
         {/* Navigation items */}
-        <div
-          className={classNames('sticky top-0 max-h-screen', {
-            'overflow-y-auto': cubeSidebarExpanded,
-            'overflow-visible': !cubeSidebarExpanded,
-          })}
-        >
-          {!cubeSidebarExpanded ? (
+        {!cubeSidebarExpanded ? (
+          <div className="sticky top-0 max-h-screen overflow-visible">
             <nav className="pt-3">
               <Flexbox direction="col" gap="1" alignItems="center" className="overflow-visible">
                 {/* Chevron icon at the top to expand */}
@@ -224,329 +220,333 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                 })}
               </Flexbox>
             </nav>
-          ) : (
+          </div>
+        ) : (
+          <div>
             <nav>
-              <Flexbox direction="col" gap="0">
-                {navigationItems.map((item, _index) => {
-                  const isActive = activeLink === item.key;
-                  const isParentOfActive = isSubItemActive(item);
-                  const fullHref = item.href ? `${item.href}/${encodeURIComponent(getCubeId(cube))}` : undefined;
-                  // Always show sub-items
-                  const shouldShowSubItems = true;
-                  const isMenuHeader = item.key === 'menu';
-                  const IconComponent = item.icon;
+              <ScrollShadowContainer style={{ maxHeight: 'calc(100vh - 53px)' }}>
+                <Flexbox direction="col" gap="0">
+                  {navigationItems.map((item, _index) => {
+                    const isActive = activeLink === item.key;
+                    const isParentOfActive = isSubItemActive(item);
+                    const fullHref = item.href ? `${item.href}/${encodeURIComponent(getCubeId(cube))}` : undefined;
+                    // Always show sub-items
+                    const shouldShowSubItems = true;
+                    const isMenuHeader = item.key === 'menu';
+                    const IconComponent = item.icon;
 
-                  // Special handling for Menu header
-                  if (isMenuHeader) {
+                    // Special handling for Menu header
+                    if (isMenuHeader) {
+                      return (
+                        <div key={item.key}>
+                          <div
+                            onClick={toggleSidebar}
+                            className="flex items-center justify-between px-4 py-1.5 transition-colors relative hover:bg-bg-active cursor-pointer"
+                          >
+                            <span className="text-base text-text font-bold">{item.label}</span>
+                            <div className="p-1 rounded flex-shrink-0" aria-label="Collapse sidebar">
+                              <ChevronLeftIcon size={20} className="text-text" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div key={item.key}>
-                        <div
-                          onClick={toggleSidebar}
-                          className="flex items-center justify-between px-4 py-1.5 transition-colors relative hover:bg-bg-active cursor-pointer"
-                        >
-                          <span className="text-base text-text font-bold">{item.label}</span>
-                          <div className="p-1 rounded flex-shrink-0" aria-label="Collapse sidebar">
-                            <ChevronLeftIcon size={20} className="text-text" />
+                        {fullHref ? (
+                          <div
+                            className={classNames(
+                              'flex items-center justify-between px-4 py-1.5 transition-colors relative',
+                              'hover:bg-bg-active',
+                              {
+                                'bg-bg-active border-l-4 border-transparent': isActive || isParentOfActive,
+                                'border-l-4 border-transparent': !isActive && !isParentOfActive,
+                              },
+                            )}
+                          >
+                            <a href={fullHref} className="flex-1 flex items-center gap-2 text-base text-text">
+                              {IconComponent && <IconComponent size={16} />}
+                              <span
+                                className={classNames({
+                                  'font-bold': isActive || isParentOfActive,
+                                  'font-semibold': !isActive && !isParentOfActive,
+                                })}
+                              >
+                                {item.label}
+                              </span>
+                            </a>
                           </div>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={item.key}>
-                      {fullHref ? (
-                        <div
-                          className={classNames(
-                            'flex items-center justify-between px-4 py-1.5 transition-colors relative',
-                            'hover:bg-bg-active',
-                            {
-                              'bg-bg-active border-l-4 border-transparent': isActive || isParentOfActive,
-                              'border-l-4 border-transparent': !isActive && !isParentOfActive,
-                            },
-                          )}
-                        >
-                          <a href={fullHref} className="flex-1 flex items-center gap-2 text-base text-text">
-                            {IconComponent && <IconComponent size={16} />}
-                            <span
-                              className={classNames({
-                                'font-bold': isActive || isParentOfActive,
-                                'font-semibold': !isActive && !isParentOfActive,
-                              })}
-                            >
-                              {item.label}
-                            </span>
-                          </a>
-                        </div>
-                      ) : (
-                        <div
-                          className={classNames(
-                            'flex items-center justify-between px-4 py-1.5 transition-colors relative',
-                            'hover:bg-bg-active',
-                            {
-                              'bg-bg-active border-l-4 border-transparent': isParentOfActive,
-                              'border-l-4 border-transparent': !isParentOfActive,
-                            },
-                          )}
-                        >
-                          <div className="flex items-center gap-2">
-                            {IconComponent && <IconComponent size={16} />}
-                            <span
-                              className={classNames('text-base text-text', {
-                                'font-bold': isParentOfActive,
-                                'font-semibold': !isParentOfActive,
-                              })}
-                            >
-                              {item.label}
-                            </span>
+                        ) : (
+                          <div
+                            className={classNames(
+                              'flex items-center justify-between px-4 py-1.5 transition-colors relative',
+                              'hover:bg-bg-active',
+                              {
+                                'bg-bg-active border-l-4 border-transparent': isParentOfActive,
+                                'border-l-4 border-transparent': !isParentOfActive,
+                              },
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              {IconComponent && <IconComponent size={16} />}
+                              <span
+                                className={classNames('text-base text-text', {
+                                  'font-bold': isParentOfActive,
+                                  'font-semibold': !isParentOfActive,
+                                })}
+                              >
+                                {item.label}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Show sub-items only when this section is active */}
-                      {item.subItems && shouldShowSubItems && (
-                        <div>
-                          <Flexbox direction="col" gap="0">
-                            {item.subItems.map((subItem) => {
-                              const isSubActive = activeLink === subItem.key;
-                              let subFullHref: string | undefined;
+                        {/* Show sub-items only when this section is active */}
+                        {item.subItems && shouldShowSubItems && (
+                          <div>
+                            <Flexbox direction="col" gap="0">
+                              {item.subItems.map((subItem) => {
+                                const isSubActive = activeLink === subItem.key;
+                                let subFullHref: string | undefined;
 
-                              if (subItem.href) {
-                                subFullHref = `${subItem.href}/${encodeURIComponent(getCubeId(cube))}`;
-                              }
+                                if (subItem.href) {
+                                  subFullHref = `${subItem.href}/${encodeURIComponent(getCubeId(cube))}`;
+                                }
 
-                              // Special handling for List sub-items (Mainboard/Maybeboard)
-                              if (item.key === 'list' && !subItem.href) {
-                                const isMainboard = subItem.key === 'mainboard';
-                                const boardParam = isMainboard ? 'mainboard' : 'maybeboard';
-                                const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardParam}`;
+                                // Special handling for List sub-items (Mainboard/Maybeboard)
+                                if (item.key === 'list' && !subItem.href) {
+                                  const isMainboard = subItem.key === 'mainboard';
+                                  const boardParam = isMainboard ? 'mainboard' : 'maybeboard';
+                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardParam}`;
 
-                                // Only show active state when on list page
-                                const isActive =
-                                  activeLink === 'list' && (isMainboard ? !showMaybeboard : showMaybeboard);
+                                  // Only show active state when on list page
+                                  const isActive =
+                                    activeLink === 'list' && (isMainboard ? !showMaybeboard : showMaybeboard);
 
-                                // If already on list page, toggle; otherwise navigate
-                                const handleClick = (e: React.MouseEvent) => {
-                                  if (activeLink === 'list') {
-                                    e.preventDefault();
-                                    toggleShowMaybeboard();
-                                  }
-                                };
+                                  // If already on list page, toggle; otherwise navigate
+                                  const handleClick = (e: React.MouseEvent) => {
+                                    if (activeLink === 'list') {
+                                      e.preventDefault();
+                                      toggleShowMaybeboard();
+                                    }
+                                  };
 
-                                return (
-                                  <a
-                                    key={subItem.key}
-                                    href={listHref}
-                                    onClick={handleClick}
-                                    className={classNames(
-                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
-                                      {
-                                        'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text': !isActive,
-                                      },
-                                    )}
-                                  >
-                                    {subItem.label}
-                                  </a>
-                                );
-                              }
-
-                              // Special handling for Records sub-items
-                              if (item.key === 'records' && !subItem.href) {
-                                const recordsHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
-                                const isActive = activeLink === subItem.key;
-
-                                const handleClick = (e: React.MouseEvent) => {
-                                  // If already on records page, update view via context
-                                  if (
-                                    recordsViewContext &&
-                                    (activeLink === 'records' ||
-                                      ['draft-reports', 'trophy-archive', 'winrate-analytics'].includes(activeLink))
-                                  ) {
-                                    e.preventDefault();
-                                    recordsViewContext.setView(subItem.key);
-                                  }
-                                };
-
-                                return (
-                                  <a
-                                    key={subItem.key}
-                                    href={recordsHref}
-                                    onClick={handleClick}
-                                    className={classNames(
-                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
-                                      {
-                                        'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text': !isActive,
-                                      },
-                                    )}
-                                  >
-                                    {subItem.label}
-                                  </a>
-                                );
-                              }
-
-                              // Special handling for About sub-items
-                              if (item.key === 'about' && !subItem.href) {
-                                const aboutHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
-                                const isActive = activeLink === subItem.key;
-
-                                const handleClick = (e: React.MouseEvent) => {
-                                  // If already on about page, update view via context
-                                  if (
-                                    aboutViewContext &&
-                                    (activeLink === 'about' || ['primer', 'blog', 'changelog'].includes(activeLink))
-                                  ) {
-                                    e.preventDefault();
-                                    aboutViewContext.setView(subItem.key);
-                                  }
-                                };
-
-                                return (
-                                  <a
-                                    key={subItem.key}
-                                    href={aboutHref}
-                                    onClick={handleClick}
-                                    className={classNames(
-                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
-                                      {
-                                        'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text': !isActive,
-                                      },
-                                    )}
-                                  >
-                                    {subItem.label}
-                                  </a>
-                                );
-                              }
-
-                              // Special handling for Playtest sub-items
-                              if (item.key === 'playtest' && !subItem.href) {
-                                const playtestHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
-                                const isActive = activeLink === subItem.key;
-
-                                const handleClick = (e: React.MouseEvent) => {
-                                  // If already on playtest page, update view via context
-                                  if (
-                                    playtestViewContext &&
-                                    (activeLink === 'playtest' ||
-                                      ['sample-pack', 'practice-draft', 'decks'].includes(activeLink))
-                                  ) {
-                                    e.preventDefault();
-                                    playtestViewContext.setView(subItem.key);
-                                  }
-                                };
-
-                                return (
-                                  <a
-                                    key={subItem.key}
-                                    href={playtestHref}
-                                    onClick={handleClick}
-                                    className={classNames(
-                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
-                                      {
-                                        'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text': !isActive,
-                                      },
-                                    )}
-                                  >
-                                    {subItem.label}
-                                  </a>
-                                );
-                              }
-
-                              // Special handling for Analysis sub-items
-                              if (item.key === 'analysis' && !subItem.href) {
-                                const analysisHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
-                                const isActive = activeLink === subItem.key;
-
-                                const handleClick = (e: React.MouseEvent) => {
-                                  // If already on analysis page, update view via context
-                                  if (
-                                    analysisViewContext &&
-                                    (activeLink === 'analysis' ||
-                                      [
-                                        'averages',
-                                        'table',
-                                        'asfans',
-                                        'chart',
-                                        'recommender',
-                                        'playtest-data',
-                                        'tokens',
-                                        'combos',
-                                      ].includes(activeLink))
-                                  ) {
-                                    e.preventDefault();
-                                    analysisViewContext.setView(subItem.key);
-                                  }
-                                };
-
-                                return (
-                                  <a
-                                    key={subItem.key}
-                                    href={analysisHref}
-                                    onClick={handleClick}
-                                    className={classNames(
-                                      'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
-                                      {
-                                        'bg-bg-active font-bold text-text': isActive,
-                                        'font-normal text-text': !isActive,
-                                      },
-                                    )}
-                                  >
-                                    {subItem.label}
-                                  </a>
-                                );
-                              }
-
-                              return (
-                                <div key={subItem.key}>
-                                  {subFullHref ? (
+                                  return (
                                     <a
-                                      href={subFullHref}
+                                      key={subItem.key}
+                                      href={listHref}
+                                      onClick={handleClick}
                                       className={classNames(
-                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm hover:bg-bg-active',
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
                                         {
-                                          'bg-bg-active font-bold text-text': isSubActive,
-                                          'font-normal text-text': !isSubActive,
+                                          'bg-bg-active font-bold text-text': isActive,
+                                          'font-normal text-text': !isActive,
                                         },
                                       )}
                                     >
                                       {subItem.label}
                                     </a>
-                                  ) : (
-                                    <div
+                                  );
+                                }
+
+                                // Special handling for Records sub-items
+                                if (item.key === 'records' && !subItem.href) {
+                                  const recordsHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+                                  const isActive = activeLink === subItem.key;
+
+                                  const handleClick = (e: React.MouseEvent) => {
+                                    // If already on records page, update view via context
+                                    if (
+                                      recordsViewContext &&
+                                      (activeLink === 'records' ||
+                                        ['draft-reports', 'trophy-archive', 'winrate-analytics'].includes(activeLink))
+                                    ) {
+                                      e.preventDefault();
+                                      recordsViewContext.setView(subItem.key);
+                                    }
+                                  };
+
+                                  return (
+                                    <a
+                                      key={subItem.key}
+                                      href={recordsHref}
+                                      onClick={handleClick}
                                       className={classNames(
-                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm',
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
                                         {
-                                          'bg-bg-active font-bold text-text': isSubActive,
-                                          'font-normal text-text': !isSubActive,
+                                          'bg-bg-active font-bold text-text': isActive,
+                                          'font-normal text-text': !isActive,
                                         },
                                       )}
                                     >
                                       {subItem.label}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </Flexbox>
-                        </div>
-                      )}
+                                    </a>
+                                  );
+                                }
 
-                      {/* Show controls as sub-items when this page is active */}
-                      {isActive && controls && (
-                        <div className="px-1">
-                          <div className="px-4 py-1 text-sm">{controls}</div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </Flexbox>
+                                // Special handling for About sub-items
+                                if (item.key === 'about' && !subItem.href) {
+                                  const aboutHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+                                  const isActive = activeLink === subItem.key;
+
+                                  const handleClick = (e: React.MouseEvent) => {
+                                    // If already on about page, update view via context
+                                    if (
+                                      aboutViewContext &&
+                                      (activeLink === 'about' || ['primer', 'blog', 'changelog'].includes(activeLink))
+                                    ) {
+                                      e.preventDefault();
+                                      aboutViewContext.setView(subItem.key);
+                                    }
+                                  };
+
+                                  return (
+                                    <a
+                                      key={subItem.key}
+                                      href={aboutHref}
+                                      onClick={handleClick}
+                                      className={classNames(
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
+                                        {
+                                          'bg-bg-active font-bold text-text': isActive,
+                                          'font-normal text-text': !isActive,
+                                        },
+                                      )}
+                                    >
+                                      {subItem.label}
+                                    </a>
+                                  );
+                                }
+
+                                // Special handling for Playtest sub-items
+                                if (item.key === 'playtest' && !subItem.href) {
+                                  const playtestHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+                                  const isActive = activeLink === subItem.key;
+
+                                  const handleClick = (e: React.MouseEvent) => {
+                                    // If already on playtest page, update view via context
+                                    if (
+                                      playtestViewContext &&
+                                      (activeLink === 'playtest' ||
+                                        ['sample-pack', 'practice-draft', 'decks'].includes(activeLink))
+                                    ) {
+                                      e.preventDefault();
+                                      playtestViewContext.setView(subItem.key);
+                                    }
+                                  };
+
+                                  return (
+                                    <a
+                                      key={subItem.key}
+                                      href={playtestHref}
+                                      onClick={handleClick}
+                                      className={classNames(
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
+                                        {
+                                          'bg-bg-active font-bold text-text': isActive,
+                                          'font-normal text-text': !isActive,
+                                        },
+                                      )}
+                                    >
+                                      {subItem.label}
+                                    </a>
+                                  );
+                                }
+
+                                // Special handling for Analysis sub-items
+                                if (item.key === 'analysis' && !subItem.href) {
+                                  const analysisHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+                                  const isActive = activeLink === subItem.key;
+
+                                  const handleClick = (e: React.MouseEvent) => {
+                                    // If already on analysis page, update view via context
+                                    if (
+                                      analysisViewContext &&
+                                      (activeLink === 'analysis' ||
+                                        [
+                                          'averages',
+                                          'table',
+                                          'asfans',
+                                          'chart',
+                                          'recommender',
+                                          'playtest-data',
+                                          'tokens',
+                                          'combos',
+                                        ].includes(activeLink))
+                                    ) {
+                                      e.preventDefault();
+                                      analysisViewContext.setView(subItem.key);
+                                    }
+                                  };
+
+                                  return (
+                                    <a
+                                      key={subItem.key}
+                                      href={analysisHref}
+                                      onClick={handleClick}
+                                      className={classNames(
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
+                                        {
+                                          'bg-bg-active font-bold text-text': isActive,
+                                          'font-normal text-text': !isActive,
+                                        },
+                                      )}
+                                    >
+                                      {subItem.label}
+                                    </a>
+                                  );
+                                }
+
+                                return (
+                                  <div key={subItem.key}>
+                                    {subFullHref ? (
+                                      <a
+                                        href={subFullHref}
+                                        className={classNames(
+                                          'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm hover:bg-bg-active',
+                                          {
+                                            'bg-bg-active font-bold text-text': isSubActive,
+                                            'font-normal text-text': !isSubActive,
+                                          },
+                                        )}
+                                      >
+                                        {subItem.label}
+                                      </a>
+                                    ) : (
+                                      <div
+                                        className={classNames(
+                                          'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm',
+                                          {
+                                            'bg-bg-active font-bold text-text': isSubActive,
+                                            'font-normal text-text': !isSubActive,
+                                          },
+                                        )}
+                                      >
+                                        {subItem.label}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </Flexbox>
+                          </div>
+                        )}
+
+                        {/* Show controls as sub-items when this page is active */}
+                        {isActive && controls && (
+                          <div className="px-1">
+                            <div className="px-4 py-1 text-sm">{controls}</div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </Flexbox>
+              </ScrollShadowContainer>
             </nav>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Fixed dropdown menu for collapsed sidebar */}
