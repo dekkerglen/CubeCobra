@@ -18,7 +18,11 @@ const CubeCompareModal: React.FC<CubeCompareModalProps> = ({ isOpen, setOpen }) 
 
   const handleCompare = () => {
     // Extract the Cube ID from the input, accounting for possible URL formats.
-    const [ input ] = compareID.split('?')[0].trim().match(/[^/]+(?=\/$|$)/) || [];
+    const [input] =
+      compareID
+        .split('?')[0]
+        .trim()
+        .match(/[^/]+(?=\/$|$)/) || [];
     if (input) {
       window.location.href = `/cube/compare/${cube.id}/to/${input}`;
     }
