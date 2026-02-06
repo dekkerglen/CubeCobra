@@ -32,12 +32,12 @@ const runExportDataWrapper = async () => {
     // Download and initialize card database
     const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
     const bucket = process.env.DATA_BUCKET || 'cubecobra-public';
-    
+
     // Ensure directory exists
     if (!fs.existsSync(privateDir)) {
       fs.mkdirSync(privateDir, { recursive: true });
     }
-    
+
     await updateCardbase(privateDir, bucket);
     await initializeCardDb(privateDir);
 

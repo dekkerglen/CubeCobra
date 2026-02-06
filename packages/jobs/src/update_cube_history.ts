@@ -191,6 +191,12 @@ const mapTotalsToCardHistory = (
 
   console.log(`${keys.length} days need processing (${processedDays.size} already complete)`);
 
+  // If no days need processing, exit early
+  if (keys.length === 0) {
+    console.log('No new days to process, exiting');
+    process.exit();
+  }
+
   let cubes: CubeDict = {};
   let oracleToElo: Record<string, number> = {};
 

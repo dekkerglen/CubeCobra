@@ -38,6 +38,24 @@ interface CubeHistory {
 const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 (async () => {
+  // Check if we need to update metadata dict (once per week max)
+  console.log('Checking if metadata dict update is needed...');
+  const existingManifest = await downloadJson('cards/manifest.json');
+
+  if (existingManifest && existingManifest.lastMetadataDictUpdate) {
+    const lastUpdate = new Date(existingManifest.lastMetadataDictUpdate).valueOf();
+    const now = Date.now();
+    const weekInMs = 7 * 24 * 60 * 60 * 1000;
+
+    if (now - lastUpdate < weekInMs) {
+      const daysSinceUpdate = Math.floor((now - lastUpdate) / (24 * 60 * 60 * 1000));
+      console.log(`Metadata dict was last updated ${daysSinceUpdate} days ago. Skipping update (minimum 7 days).`);
+      process.exit();
+    }
+  }
+
+  console.log('Metadata dict update needed, proceeding...');
+
   if (taskId) {
     await cardUpdateTaskDao.updateStep(taskId, 'Processing Metadata');
   }
@@ -488,6 +506,17 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
 
   await uploadJson('metadatadict.json', metadatadict);
   await uploadJson('indexToOracle.json', indexToOracle);
+
+  // Update manifest with the last metadata dict update timestamp
+  console.log('Updating manifest with metadata dict timestamp...');
+  const manifest = await downloadJson('cards/manifest.json');
+  if (manifest) {
+    manifest.lastMetadataDictUpdate = new Date().toISOString();
+    await uploadJson('cards/manifest.json', manifest);
+    console.log('Manifest updated');
+  } else {
+    console.warn('Could not find manifest to update');
+  }
 
   console.log('Complete');
 

@@ -462,34 +462,39 @@ if (require.main === module) {
 
     console.log('Finished writing global draft history');
 
-    // upload the files to database
-    const allCubes = await listFiles('cube_draft_history/');
-    const batches: any[] = [];
-    const batchSize = 100;
-    for (let j = 0; j < allCubes.length; j += batchSize) {
-      batches.push(allCubes.slice(j, j + batchSize));
-    }
-
-    let processed = 0;
-
-    for (const batch of batches) {
-      console.log(`Uploading ${batch.length} / ${allCubes.length} cube draft histories`);
-      const cubeData: Record<string, CubeAnalytic> = {};
-
-      for (const cubeFile of batch) {
-        const cubeName = cubeFile.split('/').pop()?.replace('.json', '');
-        if (cubeName) {
-          cubeData[cubeName] = await loadAndProcessCubeDraftAnalytics(cubeFile.split('/').pop()!);
-        }
+    // Only upload cube analytics if we actually processed new days
+    if (keys.length > 0) {
+      // upload the files to database
+      const allCubes = await listFiles('cube_draft_history/');
+      const batches: any[] = [];
+      const batchSize = 100;
+      for (let j = 0; j < allCubes.length; j += batchSize) {
+        batches.push(allCubes.slice(j, j + batchSize));
       }
 
-      await cubeDao.batchPutAnalytics(cubeData);
+      let processed = 0;
 
-      processed += batch.length;
-      console.log(`Uploaded ${processed} / ${allCubes.length} cube draft histories`);
+      for (const batch of batches) {
+        console.log(`Uploading ${batch.length} / ${allCubes.length} cube draft histories`);
+        const cubeData: Record<string, CubeAnalytic> = {};
+
+        for (const cubeFile of batch) {
+          const cubeName = cubeFile.split('/').pop()?.replace('.json', '');
+          if (cubeName) {
+            cubeData[cubeName] = await loadAndProcessCubeDraftAnalytics(cubeFile.split('/').pop()!);
+          }
+        }
+
+        await cubeDao.batchPutAnalytics(cubeData);
+
+        processed += batch.length;
+        console.log(`Uploaded ${processed} / ${allCubes.length} cube draft histories`);
+      }
+
+      console.log(`Uploaded ${allCubes.length} / ${allCubes.length} cube draft histories`);
+    } else {
+      console.log('No new days processed, skipping cube analytics upload');
     }
-
-    console.log(`Uploaded ${allCubes.length} / ${allCubes.length} cube draft histories`);
 
     console.log('Complete');
 
