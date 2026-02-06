@@ -17,12 +17,14 @@ const CubeCompareModal: React.FC<CubeCompareModalProps> = ({ isOpen, setOpen }) 
   const [compareID, setCompareID] = useState('');
 
   const handleCompare = () => {
-    if (compareID.trim()) {
-      window.location.href = `/cube/compare/${cube.id}/to/${compareID.trim()}`;
+    // Extract the Cube ID from the input, accounting for possible URL formats.
+    const [ input ] = compareID.split('?')[0].trim().match(/[^/]+(?=\/$|$)/) || [];
+    if (input) {
+      window.location.href = `/cube/compare/${cube.id}/to/${input}`;
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && compareID.trim()) {
       handleCompare();
     }
@@ -40,7 +42,7 @@ const CubeCompareModal: React.FC<CubeCompareModalProps> = ({ isOpen, setOpen }) 
             placeholder="Enter Cube ID"
             value={compareID}
             onChange={(e) => setCompareID(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             autoCapitalize="none"
             autoComplete="off"
             spellCheck={false}
