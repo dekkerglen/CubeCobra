@@ -45,7 +45,7 @@ const runExportDataWrapper = async () => {
     await exportTaskDao.updateStep(taskId, 'Exporting cubes');
 
     // Run cube export
-    await execAsync('NODE_OPTIONS=--max_old_space-size=18192 node dist/jobs/src/export_cubes.js', {
+    await execAsync('NODE_OPTIONS=--max_old_space-size=18192 node dist/src/export_cubes.js', {
       cwd: path.join(__dirname, '..', '..'),
     });
 
@@ -53,7 +53,7 @@ const runExportDataWrapper = async () => {
     await exportTaskDao.updateStep(taskId, 'Exporting decks');
 
     // Run deck export
-    await execAsync('node dist/jobs/src/export_decks.js', {
+    await execAsync('node dist/src/export_decks.js', {
       cwd: path.join(__dirname, '..', '..'),
     });
 
@@ -61,7 +61,7 @@ const runExportDataWrapper = async () => {
     await exportTaskDao.updateStep(taskId, 'Exporting card dictionary');
 
     // Run simple card dict export
-    await execAsync('node dist/jobs/src/export_simple_card_dict.js', {
+    await execAsync('node dist/src/export_simple_card_dict.js', {
       cwd: path.join(__dirname, '..', '..'),
     });
 
