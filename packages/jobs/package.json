@@ -17,7 +17,7 @@
     "dev:update-cards": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cards.ts",
     "dev:update-combos": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_combos.ts",
     "dev:repair-cube-hashes": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairCubeHashes.ts --",
-    "update-all": "npm run init-data && npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-combos && npm run update-cards && npm run update-combos && npm run update-cards",
+    "update-all": "npm run init-data && npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-cards && npm run update-combos",
     "fix-external-paths": "npx resolve-tspaths --out dist && node scripts/fixExternalPaths.js",
     "build": "npx tsc && npm run fix-external-paths",
     "clean": "rm -rf dist/ node_modules/",
