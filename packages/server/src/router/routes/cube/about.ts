@@ -1,5 +1,5 @@
 import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
-import { blogDao, changelogDao, cubeDao } from 'dynamo/daos';
+import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getIdsFromName } from 'serverutils/carddb';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
@@ -20,12 +20,6 @@ export const aboutHandler = async (req: Request, res: Response) => {
 
     const cards = await cubeDao.getCards(cube.id);
     const { mainboard } = cards;
-
-    // Fetch blog posts
-    const blogs = await blogDao.queryByCube(cube.id, undefined, 20);
-
-    // Fetch changelog
-    const changes = await changelogDao.queryByCubeWithData(cube.id, undefined, 36);
 
     const followersCount = cube.following?.length || 0;
 
@@ -92,10 +86,6 @@ export const aboutHandler = async (req: Request, res: Response) => {
       {
         cube: { ...cube, isInFeaturedQueue: !!isInQueue },
         cards,
-        posts: blogs.items,
-        postsLastKey: blogs.lastKey,
-        changes: changes.items,
-        changesLastKey: changes.lastKey,
         followed: req.user && cube.following && cube.following.some((id: string) => req.user!.id === id),
         followersCount,
         priceOwned: cube.priceVisibility === PRICE_VISIBILITY.PUBLIC ? totalPriceOwned : null,
