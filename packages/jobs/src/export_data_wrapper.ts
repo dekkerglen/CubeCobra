@@ -8,6 +8,7 @@ dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 import { exportTaskDao } from '@server/dynamo/daos';
 import { s3 } from '@server/dynamo/s3client';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
+import { updateCardbase } from '@server/serverutils/updatecards';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -28,8 +29,16 @@ const runExportDataWrapper = async () => {
     // Update task to "Downloading card data"
     await exportTaskDao.updateStep(taskId, 'Downloading card data');
 
-    // Initialize card database
+    // Download and initialize card database
     const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+    const bucket = process.env.DATA_BUCKET || 'cubecobra-public';
+    
+    // Ensure directory exists
+    if (!fs.existsSync(privateDir)) {
+      fs.mkdirSync(privateDir, { recursive: true });
+    }
+    
+    await updateCardbase(privateDir, bucket);
     await initializeCardDb(privateDir);
 
     // Update task to "Exporting cubes"
