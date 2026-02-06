@@ -158,10 +158,11 @@ if (require.main === module) {
     }
 
     const today = new Date();
+    const yesterday = new Date(today.valueOf() - 86400000);
 
-    // Generate all date keys from firstDate to today
+    // Generate all date keys from firstDate to yesterday (don't process today as it's not complete)
     const allKeys: string[] = [];
-    for (let i = firstDate.valueOf(); i <= today.valueOf(); i += 86400000) {
+    for (let i = firstDate.valueOf(); i <= yesterday.valueOf(); i += 86400000) {
       const date = new Date(i);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       allKeys.push(key);
@@ -171,7 +172,7 @@ if (require.main === module) {
     const keys = allKeys.filter((key) => !processedDays.has(key));
 
     console.log(
-      `Processing date range from ${firstDate.toISOString().split('T')[0]} to ${today.toISOString().split('T')[0]}`,
+      `Processing date range from ${firstDate.toISOString().split('T')[0]} to ${yesterday.toISOString().split('T')[0]}`,
     );
     console.log(`${keys.length} days need processing (${processedDays.size} already complete)`);
 
