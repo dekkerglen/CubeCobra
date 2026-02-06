@@ -186,6 +186,7 @@ export class CubeCobraStack extends cdk.Stack {
       cluster: fargateCluster,
       environmentName: params.environmentName,
       environmentVariables: jobsEnvVars,
+      cpu: 4096, // 4 vCPU (required for 30 GB memory)
       memoryMiB: 30720, // 30 GB to accommodate metadata dict processing
     });
 
