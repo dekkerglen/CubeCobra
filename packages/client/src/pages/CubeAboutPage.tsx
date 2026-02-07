@@ -18,9 +18,9 @@ import MainLayout from 'layouts/MainLayout';
 interface CubeAboutPageProps {
   cube: Cube;
   cards: CubeCards;
-  posts: PostType[];
+  posts?: PostType[];
   postsLastKey: any;
-  changes: Record<string, any>[];
+  changes?: Record<string, any>[];
   changesLastKey?: string;
   followed: boolean;
   followersCount: number;

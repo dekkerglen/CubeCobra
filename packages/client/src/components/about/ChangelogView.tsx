@@ -4,7 +4,7 @@ import { Flexbox } from 'components/base/Layout';
 import CubeHistory from 'components/cube/CubeHistory';
 
 interface ChangelogViewProps {
-  changes: Record<string, any>[];
+  changes?: Record<string, any>[];
   lastKey?: string;
 }
 

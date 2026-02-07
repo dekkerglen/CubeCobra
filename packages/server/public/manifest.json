@@ -15,7 +15,7 @@
   "CreateNewRecordPage": "/js/CreateNewRecordPage.81f74863.bundle.js",
   "CreateRecordFromDraftPage": "/js/CreateRecordFromDraftPage.ba4ee7e1.bundle.js",
   "CreatorsPage": "/js/CreatorsPage.39e91f9b.bundle.js",
-  "CubeAboutPage": "/js/CubeAboutPage.4198e507.bundle.js",
+  "CubeAboutPage": "/js/CubeAboutPage.0118d437.bundle.js",
   "CubeAnalysisPage": "/js/CubeAnalysisPage.fcf4935d.bundle.js",
   "CubeBlogPage": "/js/CubeBlogPage.004983b8.bundle.js",
   "CubeComparePage": "/js/CubeComparePage.3b7d99c6.bundle.js",
@@ -74,6 +74,6 @@
   "VersionPage": "/js/VersionPage.f872489c.bundle.js",
   "VideoPage": "/js/VideoPage.25b4f3d4.bundle.js",
   "VideosPage": "/js/VideosPage.2eaf648a.bundle.js",
-  "commons": "/js/commons.fdc6d73f.bundle.js",
+  "commons": "/js/commons.a600ac56.bundle.js",
   "vendors": "/js/vendors.792ff0a5.bundle.js"
 }

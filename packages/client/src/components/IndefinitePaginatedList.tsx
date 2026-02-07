@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { CSRFContext } from '../contexts/CSRFContext';
 import { Card, CardBody, CardHeader } from './base/Card';
@@ -7,7 +7,7 @@ import Pagination from './base/Pagination';
 import Text from './base/Text';
 
 interface IndefinitePaginatedListProps<T> {
-  items: T[];
+  items?: T[];
   setItems: (items: T[]) => void;
   fetchMoreRoute: string;
   renderItem: (item: T) => React.ReactNode;
@@ -47,7 +47,8 @@ const IndefinitePaginatedList = <T,>({
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
 
-  const pageCount = Math.ceil(items.length / pageSize);
+  const safeItems = useMemo(() => items ?? [], [items]);
+  const pageCount = Math.ceil(safeItems.length / pageSize);
   const hasMore = !!lastKey;
 
   const fetchMoreData = useCallback(async () => {
@@ -67,10 +68,10 @@ const IndefinitePaginatedList = <T,>({
 
       console.log(json);
       if (json.success === 'true') {
-        const newItems = [...items, ...json.items];
+        const newItems = [...safeItems, ...json.items];
         setItems(newItems);
 
-        const numItemsShowOnLastPage = items.length % pageSize;
+        const numItemsShowOnLastPage = safeItems.length % pageSize;
         //If current page is full and we just fetched more items, then move to next page
         if (numItemsShowOnLastPage === 0 && json.items.length > 0) {
           setPage(page + 1);
@@ -79,7 +80,7 @@ const IndefinitePaginatedList = <T,>({
       }
     }
     setLoading(false);
-  }, [csrfFetch, fetchMoreRoute, lastKey, items, setItems, pageSize, setLastKey, page]);
+  }, [csrfFetch, fetchMoreRoute, lastKey, safeItems, setItems, pageSize, setLastKey, page]);
 
   const pager = (
     <Pagination
@@ -102,15 +103,15 @@ const IndefinitePaginatedList = <T,>({
       <Flexbox direction="col" gap="2">
         <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
           <Text lg semibold>
-            {header} ({items.length}
+            {header} ({safeItems.length}
             {hasMore ? '+' : ''})
           </Text>
-          {items.length > 0 && pager}
+          {safeItems.length > 0 && pager}
         </Flexbox>
-        {items.length > 0 ? (
+        {safeItems.length > 0 ? (
           <Flexbox direction="col" gap="2">
             <Row xs={12}>
-              {items.slice(page * pageSize, (page + 1) * pageSize).map((item, index) => (
+              {safeItems.slice(page * pageSize, (page + 1) * pageSize).map((item, index) => (
                 <Col key={index + page * pageSize} xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl}>
                   {renderItem(item)}
                 </Col>
@@ -134,17 +135,17 @@ const IndefinitePaginatedList = <T,>({
       <CardHeader>
         <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
           <Text lg semibold>
-            {header} ({items.length}
+            {header} ({safeItems.length}
             {hasMore ? '+' : ''})
           </Text>
-          {items.length > 0 && pager}
+          {safeItems.length > 0 && pager}
         </Flexbox>
       </CardHeader>
       <CardBody>
-        {items.length > 0 ? (
+        {safeItems.length > 0 ? (
           <Flexbox direction="col" gap="2">
             <Row xs={12}>
-              {items.slice(page * pageSize, (page + 1) * pageSize).map((item, index) => (
+              {safeItems.slice(page * pageSize, (page + 1) * pageSize).map((item, index) => (
                 <Col key={index + page * pageSize} xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl}>
                   {renderItem(item)}
                 </Col>

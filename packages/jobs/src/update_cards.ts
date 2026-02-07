@@ -742,7 +742,12 @@ async function saveAllCards(
 ) {
   console.info('Processing static cards...');
   for (const staticCard of STATIC_CARDS) {
-    saveCard(staticCard, metadatadict[staticCard.oracle_id], ckPrices[staticCard.id], mpPrices[staticCard.id]);
+    saveCard(
+      staticCard,
+      metadatadict[staticCard.oracle_id],
+      ckPrices[staticCard.id] ?? 0,
+      mpPrices[staticCard.id] ?? 0,
+    );
   }
 
   console.info(`Processed ${STATIC_CARDS.length} static cards.`);
