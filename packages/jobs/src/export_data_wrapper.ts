@@ -69,7 +69,7 @@ const runExportDataWrapper = async () => {
 
     // Run cube export
     await runCommand(
-      'NODE_OPTIONS=--max_old_space-size=18192 node jobs/src/export_cubes.js',
+      'NODE_OPTIONS=--max_old_space_size=28672 node jobs/src/export_cubes.js',
       path.join(__dirname, '..', '..'),
     );
 
@@ -78,7 +78,7 @@ const runExportDataWrapper = async () => {
     await exportTaskDao.updateStep(taskId, 'Exporting decks');
 
     // Run deck export
-    await runCommand('node jobs/src/export_decks.js', path.join(__dirname, '..', '..'));
+    await runCommand('NODE_OPTIONS=--max_old_space_size=28672 node jobs/src/export_decks.js', path.join(__dirname, '..', '..'));
 
     // Update task to "Exporting card dictionary"
     console.log('Deck export complete. Starting card dictionary export...');
