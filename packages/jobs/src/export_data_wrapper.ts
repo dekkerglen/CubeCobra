@@ -9,10 +9,32 @@ import { exportTaskDao } from '@server/dynamo/daos';
 import { s3 } from '@server/dynamo/s3client';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { updateCardbase } from '@server/serverutils/updatecards';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 
-const execAsync = promisify(exec);
+/**
+ * Run a command and pipe output to parent process in real-time
+ */
+const runCommand = (command: string, cwd: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, {
+      cwd,
+      shell: true,
+      stdio: 'inherit', // Pipe stdout/stderr to parent process
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Command failed with exit code ${code}`));
+      }
+    });
+
+    child.on('error', (error) => {
+      reject(error);
+    });
+  });
+};
 
 /**
  * Wrapper script for export data jobs that handles task status updates
@@ -42,33 +64,36 @@ const runExportDataWrapper = async () => {
     await initializeCardDb(privateDir);
 
     // Update task to "Exporting cubes"
+    console.log('Starting cube export...');
     await exportTaskDao.updateStep(taskId, 'Exporting cubes');
 
     // Run cube export
-    await execAsync('NODE_OPTIONS=--max_old_space-size=18192 node jobs/src/export_cubes.js', {
-      cwd: path.join(__dirname, '..', '..'),
-    });
+    await runCommand(
+      'NODE_OPTIONS=--max_old_space-size=18192 node jobs/src/export_cubes.js',
+      path.join(__dirname, '..', '..'),
+    );
 
     // Update task to "Exporting decks"
+    console.log('Cube export complete. Starting deck export...');
     await exportTaskDao.updateStep(taskId, 'Exporting decks');
 
     // Run deck export
-    await execAsync('node jobs/src/export_decks.js', {
-      cwd: path.join(__dirname, '..', '..'),
-    });
+    await runCommand('node jobs/src/export_decks.js', path.join(__dirname, '..', '..'));
 
     // Update task to "Exporting card dictionary"
+    console.log('Deck export complete. Starting card dictionary export...');
     await exportTaskDao.updateStep(taskId, 'Exporting card dictionary');
 
     // Run simple card dict export
-    await execAsync('node jobs/src/export_simple_card_dict.js', {
-      cwd: path.join(__dirname, '..', '..'),
-    });
+    await runCommand('node jobs/src/export_simple_card_dict.js', path.join(__dirname, '..', '..'));
+
+    console.log('Card dictionary export complete.');
 
     // Only upload to public bucket in PROD (skip in BETA)
     const stage = process.env.STAGE || 'BETA';
     if (stage === 'PROD') {
       // Update task to "Uploading to public bucket"
+      console.log('Uploading exports to public bucket...');
       await exportTaskDao.updateStep(taskId, 'Uploading to public bucket');
 
       // Copy exports to public bucket
