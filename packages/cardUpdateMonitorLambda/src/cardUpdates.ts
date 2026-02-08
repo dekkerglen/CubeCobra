@@ -108,12 +108,18 @@ export async function monitorCardUpdates(): Promise<void> {
   console.log(`Scryfall file size: ${scryfallData.size}, updated at: ${scryfallData.updatedAt}`);
 
   // Get the last successful task
-  const lastSuccessfulTask = mostRecentTask?.status === CardUpdateTaskStatus.COMPLETED ? mostRecentTask : null;
+  const lastSuccessfulTask = await cardUpdateTaskDao.getMostRecentSuccessful();
 
   // Check if the file size has changed
   if (lastSuccessfulTask && lastSuccessfulTask.scryfallFileSize === scryfallData.size) {
-    console.log('No changes detected in Scryfall data');
+    console.log(`No changes detected in Scryfall data (last successful: ${lastSuccessfulTask.id}, size: ${lastSuccessfulTask.scryfallFileSize})`);
     return;
+  }
+
+  if (lastSuccessfulTask) {
+    console.log(`Changes detected! Last successful task ${lastSuccessfulTask.id} had size ${lastSuccessfulTask.scryfallFileSize}, current size is ${scryfallData.size}`);
+  } else {
+    console.log('No previous successful task found, creating initial update task');
   }
 
   console.log('Changes detected! Creating new update task...');

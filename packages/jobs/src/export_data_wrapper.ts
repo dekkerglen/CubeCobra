@@ -14,12 +14,20 @@ import { spawn } from 'child_process';
 /**
  * Run a command and pipe output to parent process in real-time
  */
-const runCommand = (command: string, cwd: string): Promise<void> => {
+const runCommand = (command: string, cwd: string, env?: Record<string, string>): Promise<void> => {
   return new Promise((resolve, reject) => {
+    const fullEnv = { ...process.env, ...env };
+    
+    // Log NODE_OPTIONS if it's being set
+    if (env?.NODE_OPTIONS) {
+      console.log(`Setting NODE_OPTIONS=${env.NODE_OPTIONS} for command: ${command}`);
+    }
+    
     const child = spawn(command, {
       cwd,
       shell: true,
       stdio: 'inherit', // Pipe stdout/stderr to parent process
+      env: fullEnv,
     });
 
     child.on('close', (code) => {
@@ -67,25 +75,36 @@ const runExportDataWrapper = async () => {
     console.log('Starting cube export...');
     await exportTaskDao.updateStep(taskId, 'Exporting cubes');
 
-    // Run cube export
+    // Run cube export with increased memory
+    console.log('Running cube export with NODE_OPTIONS=--max_old_space_size=28672');
     await runCommand(
-      'NODE_OPTIONS=--max_old_space_size=28672 node jobs/src/export_cubes.js',
+      'node jobs/src/export_cubes.js',
       path.join(__dirname, '..', '..'),
+      { NODE_OPTIONS: '--max_old_space_size=28672' },
     );
 
     // Update task to "Exporting decks"
     console.log('Cube export complete. Starting deck export...');
     await exportTaskDao.updateStep(taskId, 'Exporting decks');
 
-    // Run deck export
-    await runCommand('NODE_OPTIONS=--max_old_space_size=28672 node jobs/src/export_decks.js', path.join(__dirname, '..', '..'));
+    // Run deck export with increased memory
+    console.log('Running deck export with NODE_OPTIONS=--max_old_space_size=28672');
+    await runCommand(
+      'node jobs/src/export_decks.js',
+      path.join(__dirname, '..', '..'),
+      { NODE_OPTIONS: '--max_old_space_size=28672' },
+    );
 
     // Update task to "Exporting card dictionary"
     console.log('Deck export complete. Starting card dictionary export...');
     await exportTaskDao.updateStep(taskId, 'Exporting card dictionary');
 
-    // Run simple card dict export
-    await runCommand('node jobs/src/export_simple_card_dict.js', path.join(__dirname, '..', '..'));
+    // Run simple card dict export with increased memory
+    await runCommand(
+      'node jobs/src/export_simple_card_dict.js',
+      path.join(__dirname, '..', '..'),
+      { NODE_OPTIONS: '--max_old_space_size=28672' },
+    );
 
     console.log('Card dictionary export complete.');
 

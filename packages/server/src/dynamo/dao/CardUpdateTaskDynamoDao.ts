@@ -231,6 +231,14 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
   }
 
   /**
+   * Gets the most recent successful task (by timestamp).
+   */
+  public async getMostRecentSuccessful(): Promise<CardUpdateTask | undefined> {
+    const result = await this.listAll(50); // Check last 50 tasks
+    return result.items.find((task) => task.status === CardUpdateTaskStatus.COMPLETED);
+  }
+
+  /**
    * Updates the step of a task.
    */
   public async updateStep(id: string, step: string): Promise<CardUpdateTask | undefined> {
