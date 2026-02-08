@@ -17,12 +17,12 @@ import { spawn } from 'child_process';
 const runCommand = (command: string, cwd: string, env?: Record<string, string>): Promise<void> => {
   return new Promise((resolve, reject) => {
     const fullEnv = { ...process.env, ...env };
-    
+
     // Log NODE_OPTIONS if it's being set
     if (env?.NODE_OPTIONS) {
       console.log(`Setting NODE_OPTIONS=${env.NODE_OPTIONS} for command: ${command}`);
     }
-    
+
     const child = spawn(command, {
       cwd,
       shell: true,
@@ -77,11 +77,9 @@ const runExportDataWrapper = async () => {
 
     // Run cube export with increased memory
     console.log('Running cube export with NODE_OPTIONS=--max_old_space_size=28672');
-    await runCommand(
-      'node jobs/src/export_cubes.js',
-      path.join(__dirname, '..', '..'),
-      { NODE_OPTIONS: '--max_old_space_size=28672' },
-    );
+    await runCommand('node jobs/src/export_cubes.js', path.join(__dirname, '..', '..'), {
+      NODE_OPTIONS: '--max_old_space_size=28672',
+    });
 
     // Update task to "Exporting decks"
     console.log('Cube export complete. Starting deck export...');
@@ -89,22 +87,18 @@ const runExportDataWrapper = async () => {
 
     // Run deck export with increased memory
     console.log('Running deck export with NODE_OPTIONS=--max_old_space_size=28672');
-    await runCommand(
-      'node jobs/src/export_decks.js',
-      path.join(__dirname, '..', '..'),
-      { NODE_OPTIONS: '--max_old_space_size=28672' },
-    );
+    await runCommand('node jobs/src/export_decks.js', path.join(__dirname, '..', '..'), {
+      NODE_OPTIONS: '--max_old_space_size=28672',
+    });
 
     // Update task to "Exporting card dictionary"
     console.log('Deck export complete. Starting card dictionary export...');
     await exportTaskDao.updateStep(taskId, 'Exporting card dictionary');
 
     // Run simple card dict export with increased memory
-    await runCommand(
-      'node jobs/src/export_simple_card_dict.js',
-      path.join(__dirname, '..', '..'),
-      { NODE_OPTIONS: '--max_old_space_size=28672' },
-    );
+    await runCommand('node jobs/src/export_simple_card_dict.js', path.join(__dirname, '..', '..'), {
+      NODE_OPTIONS: '--max_old_space_size=28672',
+    });
 
     console.log('Card dictionary export complete.');
 

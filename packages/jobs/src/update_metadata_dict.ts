@@ -56,6 +56,18 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
 
   console.log('Metadata dict update needed, proceeding...');
 
+  // Update manifest with the timestamp FIRST to claim this run
+  // This prevents duplicate runs if the process fails partway through
+  console.log('Claiming metadata dict update by updating manifest timestamp...');
+  const timestampToSave = new Date().toISOString();
+  if (existingManifest) {
+    existingManifest.lastMetadataDictUpdate = timestampToSave;
+    await uploadJson('cards/manifest.json', existingManifest);
+    console.log('Manifest timestamp claimed, proceeding with metadata dict update');
+  } else {
+    console.warn('Could not find manifest to claim timestamp - proceeding anyway but may have duplicate runs');
+  }
+
   if (taskId) {
     await cardUpdateTaskDao.updateStep(taskId, 'Processing Metadata');
   }
@@ -507,16 +519,9 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
   await uploadJson('metadatadict.json', metadatadict);
   await uploadJson('indexToOracle.json', indexToOracle);
 
-  // Update manifest with the last metadata dict update timestamp
-  console.log('Updating manifest with metadata dict timestamp...');
-  const manifest = await downloadJson('cards/manifest.json');
-  if (manifest) {
-    manifest.lastMetadataDictUpdate = new Date().toISOString();
-    await uploadJson('cards/manifest.json', manifest);
-    console.log('Manifest updated');
-  } else {
-    console.warn('Could not find manifest to update');
-  }
+  // Note: Manifest timestamp was already updated at the start of the process
+  // to claim this run and prevent duplicates
+  console.log('Metadata dict update complete!');
 
   console.log('Complete');
 

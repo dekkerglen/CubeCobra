@@ -14,17 +14,24 @@ import { associateNewDraft, associateWithExistingDraft } from './uploaddeck';
 
 export const importRecordPageHandler = async (req: Request, res: Response) => {
   try {
-    // get `cards` query parameter if it exists
-    const cards = req.query.o ? (Array.isArray(req.query.o) ? req.query.o : [req.query.o]) : [];
+    // get `o` (mainboard) and `s` (sideboard) query parameters if they exist
+    const mainboardCards = req.query.o ? (Array.isArray(req.query.o) ? req.query.o : [req.query.o]) : [];
+    const sideboardCards = req.query.s ? (Array.isArray(req.query.s) ? req.query.s : [req.query.s]) : [];
 
-    const details = cards.map((card) => getReasonableCardByOracle(card as string)).filter((card) => card);
+    const mainboardDetails = mainboardCards
+      .map((card) => getReasonableCardByOracle(card as string))
+      .filter((card) => card);
+    const sideboardDetails = sideboardCards
+      .map((card) => getReasonableCardByOracle(card as string))
+      .filter((card) => card);
 
     return render(
       req,
       res,
       'ImportRecordPage',
       {
-        cards: details,
+        cards: mainboardDetails,
+        sideboard: sideboardDetails,
       },
       {
         title: `Import Record`,
