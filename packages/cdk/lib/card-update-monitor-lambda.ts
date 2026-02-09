@@ -73,6 +73,19 @@ export class CardUpdateMonitorLambda extends Construct {
       );
     }
 
+    // Grant S3 permissions to read from DATA_BUCKET
+    if (props.environmentVariables.DATA_BUCKET) {
+      executionRole.addToPolicy(
+        new iam.PolicyStatement({
+          actions: ['s3:GetObject', 's3:ListBucket'],
+          resources: [
+            `arn:aws:s3:::${props.environmentVariables.DATA_BUCKET}`,
+            `arn:aws:s3:::${props.environmentVariables.DATA_BUCKET}/*`,
+          ],
+        }),
+      );
+    }
+
     // Grant ECS permissions to run tasks (specific to this task definition)
     // Note: Using wildcard for task definition to allow any revision of the task family
     const taskFamily = `cubecobra-jobs-${props.environmentName}`;

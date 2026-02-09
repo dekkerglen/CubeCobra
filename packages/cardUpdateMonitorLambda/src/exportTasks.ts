@@ -103,7 +103,7 @@ export async function monitorExportTasks(): Promise<void> {
   console.log(`Created export task: ${newTask.id}`);
 
   // Start the ECS task
-  const { taskArn, success } = await startEcsTask(newTask.id, ['npm', 'run', 'export-data'], 'EXPORT_TASK_ID');
+  const { taskArn, success } = await startEcsTask(newTask.id, ['npm', 'run', 'export-all'], 'EXPORT_TASK_ID');
 
   if (!success) {
     console.error('Failed to start ECS task, marking task as failed');
