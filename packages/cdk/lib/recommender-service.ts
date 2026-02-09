@@ -55,8 +55,8 @@ export class RecommenderService extends Construct {
 
     this.appVersion.addDependency(this.application);
 
-    this.environment = new CfnEnvironment(scope, 'RecommenderEnvironment', {
-      environmentName: `cubecobra-recommender-${props.environmentName}-env`,
+    this.environment = new CfnEnvironment(scope, 'RecommenderEnvironmentV2', {
+      environmentName: `cubecobra-recommender-${props.environmentName}-v2-env`,
       applicationName: this.application.ref,
       solutionStackName: '64bit Amazon Linux 2023 v6.4.0 running Node.js 20',
       optionSettings: [

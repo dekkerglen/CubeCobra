@@ -62,8 +62,8 @@ export class ElasticBeanstalk extends Construct {
 
     this.appVersion.addDependency(this.application);
 
-    this.environment = new CfnEnvironment(scope, 'Environment', {
-      environmentName: `cubecobra-${props.environmentName}-env`,
+    this.environment = new CfnEnvironment(scope, 'EnvironmentV2', {
+      environmentName: `cubecobra-${props.environmentName}-v2-env`,
       applicationName: this.application.ref,
       solutionStackName: '64bit Amazon Linux 2023 v6.4.0 running Node.js 20',
       optionSettings: [
