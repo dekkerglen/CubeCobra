@@ -90,8 +90,8 @@ export class RecommenderService extends Construct {
         },
         // Internal ALB - only accessible within VPC, no public internet exposure
         {
-          namespace: 'aws:elbv2:loadbalancer',
-          optionName: 'Scheme',
+          namespace: 'aws:ec2:vpc',
+          optionName: 'ELBScheme',
           value: 'internal',
         },
         // Use HTTP for internal VPC traffic (no SSL overhead needed)
