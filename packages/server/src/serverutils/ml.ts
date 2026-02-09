@@ -63,7 +63,9 @@ export const recommend = async (
     const filteredAdds = response.adds.filter((item) => {
       const cardIds = carddb.oracleToId[item.oracle];
       if (!cardIds || cardIds.length === 0) return false;
-      const card = cardFromId(cardIds[0]);
+      const firstCardId = cardIds[0];
+      if (!firstCardId) return false;
+      const card = cardFromId(firstCardId);
       if (!card || card.error) return false;
       if (card.isToken) return false;
       if (card.type?.includes('Basic') && card.type?.includes('Land')) return false;
