@@ -1,6 +1,7 @@
 import { ArticleDynamoDao } from './dao/ArticleDynamoDao';
 import { BlogDynamoDao } from './dao/BlogDynamoDao';
 import { CardHistoryDynamoDao } from './dao/CardHistoryDynamoDao';
+import { CardMetadataTaskDynamoDao } from './dao/CardMetadataTaskDynamoDao';
 import { CardUpdateTaskDynamoDao } from './dao/CardUpdateTaskDynamoDao';
 import { ChangelogDynamoDao } from './dao/ChangelogDynamoDao';
 import { ComboDynamoDao } from './dao/ComboDynamoDao';
@@ -54,6 +55,7 @@ export const p1p1PackDao: P1P1PackDynamoDao = new P1P1PackDynamoDao(documentClie
 export const notificationDao: NotificationDynamoDao = new NotificationDynamoDao(documentClient, tableName);
 export const feedDao: FeedDynamoDao = new FeedDynamoDao(documentClient, blogDao, tableName);
 export const cardUpdateTaskDao: CardUpdateTaskDynamoDao = new CardUpdateTaskDynamoDao(documentClient, tableName);
+export const cardMetadataTaskDao: CardMetadataTaskDynamoDao = new CardMetadataTaskDynamoDao(documentClient, tableName);
 export const exportTaskDao: ExportTaskDynamoDao = new ExportTaskDynamoDao(documentClient, tableName);
 export const migrationTaskDao: MigrationTaskDynamoDao = new MigrationTaskDynamoDao(documentClient, tableName);
 export const comboDao: ComboDynamoDao = new ComboDynamoDao(documentClient, tableName);

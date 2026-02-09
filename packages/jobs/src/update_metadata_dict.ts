@@ -7,7 +7,7 @@ import 'module-alias/register';
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
 const { DefaultElo } = require('@utils/datatypes/Card');
-import { cardUpdateTaskDao } from '@server/dynamo/daos';
+import { cardMetadataTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import carddb, { cardFromId } from '@server/serverutils/carddb';
 import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
@@ -35,7 +35,7 @@ interface CubeHistory {
   indexToOracleMap: Record<number, string>;
 }
 
-const taskId = process.env.CARD_UPDATE_TASK_ID;
+const taskId = process.env.CARD_METADATA_TASK_ID;
 
 (async () => {
   // Check if we need to update metadata dict (once per week max)
@@ -69,7 +69,7 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
   }
 
   if (taskId) {
-    await cardUpdateTaskDao.updateStep(taskId, 'Processing Metadata');
+    await cardMetadataTaskDao.updateStep(taskId, 'Processing Metadata');
   }
 
   console.log('Loading card database');
