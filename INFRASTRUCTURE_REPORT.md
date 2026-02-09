@@ -76,12 +76,12 @@ CubeCobra is a Magic: The Gathering cube management platform built on AWS using 
 
 ### Environment Configuration
 
-| Environment | Account ID | Region | Domain | Main Fleet | ML Fleet | DynamoDB Prefix |
-|-------------|------------|--------|--------|------------|----------|-----------------|
-| Local | 000000000000 | us-east-1 | localhost | 1 | 1 | LOCAL |
-| Development | 816705121310 | us-east-2 | cubecobradev.com | 1 | 1 | DEV |
-| Beta | 816705121310 | us-east-2 | cubecobradev.com | 1 | 1 | BETA |
-| **Production** | 816705121310 | us-east-2 | cubecobra.com | 3 | 2 | PROD |
+| Environment    | Account ID   | Region    | Domain           | Main Fleet | ML Fleet | DynamoDB Prefix |
+| -------------- | ------------ | --------- | ---------------- | ---------- | -------- | --------------- |
+| Local          | 000000000000 | us-east-1 | localhost        | 1          | 1        | LOCAL           |
+| Development    | 816705121310 | us-east-2 | cubecobradev.com | 1          | 1        | DEV             |
+| Beta           | 816705121310 | us-east-2 | cubecobradev.com | 1          | 1        | BETA            |
+| **Production** | 816705121310 | us-east-2 | cubecobra.com    | 3          | 2        | PROD            |
 
 ---
 
@@ -89,42 +89,42 @@ CubeCobra is a Magic: The Gathering cube management platform built on AWS using 
 
 ### Compute Resources
 
-| Component | Service | Instance Type | Count (Prod) | Configuration |
-|-----------|---------|---------------|--------------|---------------|
-| Main Server | Elastic Beanstalk | t3.large | 3-4 | 2 vCPU, 8 GB RAM |
-| ML Service | Elastic Beanstalk | t3.medium | 2-3 | 2 vCPU, 4 GB RAM |
-| Jobs Container | ECS Fargate | N/A | On-demand | 4 vCPU, 30 GB RAM |
-| Daily Jobs Lambda | Lambda | N/A | Event-driven | 1024 MB, 15 min timeout |
-| Card Monitor Lambda | Lambda | N/A | Every 5 min | 512 MB, 5 min timeout |
+| Component           | Service           | Instance Type | Count (Prod) | Configuration           |
+| ------------------- | ----------------- | ------------- | ------------ | ----------------------- |
+| Main Server         | Elastic Beanstalk | t3.large      | 3-4          | 2 vCPU, 8 GB RAM        |
+| ML Service          | Elastic Beanstalk | t3.medium     | 2-3          | 2 vCPU, 4 GB RAM        |
+| Jobs Container      | ECS Fargate       | N/A           | On-demand    | 4 vCPU, 30 GB RAM       |
+| Daily Jobs Lambda   | Lambda            | N/A           | Event-driven | 1024 MB, 15 min timeout |
+| Card Monitor Lambda | Lambda            | N/A           | Every 5 min  | 512 MB, 5 min timeout   |
 
 ### Storage Resources
 
-| Component | Service | Configuration | Purpose |
-|-----------|---------|---------------|---------|
-| Main Database | DynamoDB | Pay-per-request, 4 GSIs | User data, cubes, drafts, content |
-| Sessions Table | DynamoDB | Pay-per-request | Express session storage |
-| Data Bucket | S3 | Standard | Cube cards, drafts, ML models, card DB |
-| App Bucket | S3 | Standard | Build artifacts, Lambda code |
-| Public Bucket | S3 | Standard | Public exports (PROD only) |
+| Component      | Service  | Configuration           | Purpose                                |
+| -------------- | -------- | ----------------------- | -------------------------------------- |
+| Main Database  | DynamoDB | Pay-per-request, 4 GSIs | User data, cubes, drafts, content      |
+| Sessions Table | DynamoDB | Pay-per-request         | Express session storage                |
+| Data Bucket    | S3       | Standard                | Cube cards, drafts, ML models, card DB |
+| App Bucket     | S3       | Standard                | Build artifacts, Lambda code           |
+| Public Bucket  | S3       | Standard                | Public exports (PROD only)             |
 
 ### Networking Resources
 
-| Component | Service | Configuration |
-|-----------|---------|---------------|
-| Main ALB | Application Load Balancer | HTTPS (443), with stickiness |
-| ML ALB | Application Load Balancer | HTTPS (443), with stickiness |
-| DNS | Route 53 | cubecobra.com, ml.cubecobra.com |
-| SSL Certificates | ACM | Wildcard for domain + subdomains |
+| Component        | Service                   | Configuration                    |
+| ---------------- | ------------------------- | -------------------------------- |
+| Main ALB         | Application Load Balancer | HTTPS (443), with stickiness     |
+| ML ALB           | Application Load Balancer | HTTPS (443), with stickiness     |
+| DNS              | Route 53                  | cubecobra.com, ml.cubecobra.com  |
+| SSL Certificates | ACM                       | Wildcard for domain + subdomains |
 
 ### CI/CD Resources
 
-| Component | Service | Configuration |
-|-----------|---------|---------------|
-| Pipeline | CodePipeline | 4 stages, GitHub integration |
-| Beta Deploy | CodeBuild | MEDIUM compute, privileged mode |
-| Prod Deploy | CodeBuild | MEDIUM compute, privileged mode |
-| Integration Tests | CodeBuild | LARGE compute |
-| Container Registry | ECR | 2 repositories (main, jobs) |
+| Component          | Service      | Configuration                   |
+| ------------------ | ------------ | ------------------------------- |
+| Pipeline           | CodePipeline | 4 stages, GitHub integration    |
+| Beta Deploy        | CodeBuild    | MEDIUM compute, privileged mode |
+| Prod Deploy        | CodeBuild    | MEDIUM compute, privileged mode |
+| Integration Tests  | CodeBuild    | LARGE compute                   |
+| Container Registry | ECR          | 2 repositories (main, jobs)     |
 
 ---
 
@@ -137,6 +137,7 @@ CubeCobra is a Magic: The Gathering cube management platform built on AWS using 
 **Role**: Primary application server handling all user-facing requests
 
 **Capabilities**:
+
 - Express.js web server (Node.js 20 on Amazon Linux 2023)
 - Server-side rendering with Pug templates
 - RESTful API endpoints for all CRUD operations
@@ -151,6 +152,7 @@ CubeCobra is a Magic: The Gathering cube management platform built on AWS using 
 - Admin dashboard and moderation tools
 
 **Key Endpoints**:
+
 ```
 /cube/*        - Cube management (20+ endpoints)
 /draft/*       - Draft sessions
@@ -163,6 +165,7 @@ CubeCobra is a Magic: The Gathering cube management platform built on AWS using 
 ```
 
 **Resource Allocation (Production)**:
+
 - Instance type: t3.large (2 vCPU, 8 GB RAM)
 - Fleet size: 3-4 instances
 - Auto-scaling: Min 3, Max 4
@@ -175,6 +178,7 @@ CubeCobra is a Magic: The Gathering cube management platform built on AWS using 
 **Role**: Machine learning service for card recommendations and draft predictions
 
 **Capabilities**:
+
 - TensorFlow.js with Node.js backend
 - Card oracle text encoding to embeddings
 - Cube card recommendations (adds/cuts)
@@ -183,6 +187,7 @@ CubeCobra is a Magic: The Gathering cube management platform built on AWS using 
 - Model loading from S3 on startup
 
 **Endpoints**:
+
 ```
 GET  /healthcheck     - Health status
 POST /encode          - Encode card oracles to embeddings
@@ -192,6 +197,7 @@ POST /draft           - Predict best draft picks
 ```
 
 **Resource Allocation (Production)**:
+
 - Instance type: t3.medium (2 vCPU, 4 GB RAM)
 - Fleet size: 2-3 instances
 - Auto-scaling: Min 2, Max 3
@@ -203,11 +209,13 @@ POST /draft           - Predict best draft picks
 **Role**: Lightweight scheduled tasks that run daily
 
 **Capabilities**:
+
 - Sync podcast episodes from RSS feeds
 - Rotate daily Pick-1-Pack-1 challenges
 - Rotate featured cubes queue (weekly on Sundays)
 
 **Configuration**:
+
 - Runtime: Node.js 22.x
 - Memory: 1024 MB
 - Timeout: 15 minutes
@@ -222,6 +230,7 @@ POST /draft           - Predict best draft picks
 **Role**: Monitor external APIs and coordinate background job execution
 
 **Capabilities**:
+
 - Monitor Scryfall API for card database updates
 - Check file size changes to detect updates
 - Create task tracking records in DynamoDB
@@ -230,12 +239,14 @@ POST /draft           - Predict best draft picks
 - Handle task timeout detection (1-hour max)
 
 **Configuration**:
+
 - Runtime: Node.js 22.x
 - Memory: 512 MB
 - Timeout: 5 minutes
 - Schedule: Every 5 minutes via EventBridge
 
 **Task Types Monitored**:
+
 - Card updates (from Scryfall)
 - Metadata dictionary updates
 - Data exports
@@ -248,6 +259,7 @@ POST /draft           - Predict best draft picks
 **Role**: Heavy-duty data processing jobs
 
 **Capabilities**:
+
 - Update card database from Scryfall bulk data
 - Update card combo database from Commander Spellbook
 - Update metadata dictionaries (card correlations, synergies)
@@ -258,6 +270,7 @@ POST /draft           - Predict best draft picks
 - Export data to public S3 bucket
 
 **Configuration**:
+
 - CPU: 4 vCPU (4096 units)
 - Memory: 30 GB (30720 MiB)
 - Node.js heap: 28 GB (`--max_old_space_size=28672`)
@@ -265,6 +278,7 @@ POST /draft           - Predict best draft picks
 - Networking: Public subnets with public IP (default VPC)
 
 **Available Commands**:
+
 ```bash
 npm run update-all        # Full update pipeline
 npm run update-cards      # Scryfall card data
@@ -279,6 +293,7 @@ npm run update-draft-history  # Draft ELO and stats
 **Role**: Primary database for all application data
 
 **Table Structure**:
+
 - Table Name: `{PREFIX}_CUBECOBRA` (e.g., `PROD_CUBECOBRA`)
 - Partition Key: `PK` (String)
 - Sort Key: `SK` (String)
@@ -293,6 +308,7 @@ npm run update-draft-history  # Draft ELO and stats
 | GSI4 | GSI4PK | GSI4SK | Date-based queries |
 
 **Entity Types**:
+
 - Users (`USER#{id}`)
 - Cubes (`CUBE#{id}`)
 - Drafts (`DRAFT#{id}`)
@@ -329,6 +345,7 @@ npm run update-draft-history  # Draft ELO and stats
 ### 3.8 Application Load Balancers
 
 **Main ALB**:
+
 - HTTPS listener on port 443
 - SSL termination with ACM certificate
 - Sticky sessions enabled
@@ -336,6 +353,7 @@ npm run update-draft-history  # Draft ELO and stats
 - Target: Elastic Beanstalk instances
 
 **ML Service ALB**:
+
 - HTTPS listener on port 443
 - Same SSL certificate
 - Sticky sessions enabled
@@ -409,6 +427,7 @@ DynamoDB                              S3
 ```
 
 **Data Transfer Points**:
+
 1. **Internet → ALB**: Public internet ingress (free)
 2. **ALB → EC2**: Within AZ (free) or cross-AZ ($0.01/GB)
 3. **EC2 → DynamoDB**: Within region, same VPC ($0.00/GB for interface endpoints or ~$0.01/GB for public endpoints)
@@ -445,6 +464,7 @@ User Browser
 ```
 
 **Data Transfer Points**:
+
 1. **Main EC2 → ML ALB**: Cross-service call via public internet
    - **COST ISSUE**: This goes through public internet even though both services are in the same VPC
    - Each recommendation call involves ~1-10KB request, ~1-50KB response
@@ -480,6 +500,7 @@ Task Complete
 ```
 
 **Data Transfer Points**:
+
 1. **Lambda → Internet (Scryfall)**: Egress ($0.09/GB)
 2. **Fargate → Internet (Scryfall)**: ~500MB download per update
 3. **Fargate → S3**: Free with VPC Gateway Endpoint
@@ -506,6 +527,7 @@ Subsequent Requests
 ```
 
 **DynamoDB Read/Write Patterns**:
+
 - Session read: ~1 RCU per request
 - Session touch: ~1 WCU every 5 minutes per active user
 - Sessions table size depends on active users
@@ -563,6 +585,7 @@ Complete Draft
 ### 5.2 Application Load Balancer Costs
 
 **Pricing** (us-east-2):
+
 - ALB hour: $0.0225/hour
 - LCU (Load Capacity Unit): $0.008/LCU-hour
 
@@ -573,7 +596,7 @@ Complete Draft
 | LCU Usage | 2 × ~10 LCU × $0.008 × 730 | $116.80 |
 | **Total ALB** | | **~$150/month** |
 
-*Note: LCU usage varies with traffic. 10 LCU is an estimate for moderate traffic.*
+_Note: LCU usage varies with traffic. 10 LCU is an estimate for moderate traffic._
 
 ### 5.3 Data Transfer Costs
 
@@ -582,6 +605,7 @@ Complete Draft
 The main server communicates with the ML service via public HTTPS (through the internet), even though both are in the same AWS region/VPC.
 
 **Estimated ML Service Data Transfer**:
+
 - Average recommendation request: 5 KB
 - Average recommendation response: 20 KB
 - Requests per day: ~10,000 (estimate)
@@ -627,6 +651,7 @@ Assuming 4 runs/month × 1.5 hours average = 6 hours:
 ### 5.6 DynamoDB Costs
 
 **Pricing** (Pay-per-request):
+
 - Write: $1.25 per million WCU
 - Read: $0.25 per million RCU
 - Storage: $0.25/GB-month
@@ -642,6 +667,7 @@ Assuming 4 runs/month × 1.5 hours average = 6 hours:
 ### 5.7 S3 Costs
 
 **Pricing** (Standard):
+
 - Storage: $0.023/GB-month
 - GET requests: $0.0004/1000 requests
 - PUT requests: $0.005/1000 requests
@@ -656,30 +682,30 @@ Assuming 4 runs/month × 1.5 hours average = 6 hours:
 
 ### 5.8 Other Services
 
-| Service | Estimated Monthly Cost |
-|---------|----------------------|
-| Route 53 | ~$1 (hosted zones + queries) |
-| ACM | Free (public certificates) |
-| CloudWatch Logs | ~$5 (ingestion + storage) |
-| SES | ~$1 (email sending) |
-| ECR | ~$1 (storage) |
-| CodePipeline | ~$1 |
-| CodeBuild | ~$5 (build minutes) |
-| **Total Other** | **~$14/month** |
+| Service         | Estimated Monthly Cost       |
+| --------------- | ---------------------------- |
+| Route 53        | ~$1 (hosted zones + queries) |
+| ACM             | Free (public certificates)   |
+| CloudWatch Logs | ~$5 (ingestion + storage)    |
+| SES             | ~$1 (email sending)          |
+| ECR             | ~$1 (storage)                |
+| CodePipeline    | ~$1                          |
+| CodeBuild       | ~$5 (build minutes)          |
+| **Total Other** | **~$14/month**               |
 
 ### 5.9 Total Monthly Cost Estimate
 
-| Category | Monthly Cost |
-|----------|-------------|
-| EC2 (Main + ML) | $246.78 |
-| Application Load Balancers | $150.00 |
-| Data Transfer | $45.00 |
-| DynamoDB | $30.00 |
-| S3 | $9.00 |
-| Lambda | $0.06 |
-| Fargate | $2.00 |
-| Other Services | $14.00 |
-| **TOTAL** | **~$497/month** |
+| Category                   | Monthly Cost    |
+| -------------------------- | --------------- |
+| EC2 (Main + ML)            | $246.78         |
+| Application Load Balancers | $150.00         |
+| Data Transfer              | $45.00          |
+| DynamoDB                   | $30.00          |
+| S3                         | $9.00           |
+| Lambda                     | $0.06           |
+| Fargate                    | $2.00           |
+| Other Services             | $14.00          |
+| **TOTAL**                  | **~$497/month** |
 
 ---
 
@@ -693,11 +719,11 @@ Assuming 4 runs/month × 1.5 hours average = 6 hours:
 
 **Recommendation**: Purchase 1-year Savings Plans (Compute)
 
-| Plan Type | Discount | Annual Savings |
-|-----------|----------|----------------|
-| 1-Year All Upfront | ~36% | ~$1,065/year |
-| 1-Year No Upfront | ~28% | ~$829/year |
-| 3-Year All Upfront | ~55% | ~$1,628/year |
+| Plan Type          | Discount | Annual Savings |
+| ------------------ | -------- | -------------- |
+| 1-Year All Upfront | ~36%     | ~$1,065/year   |
+| 1-Year No Upfront  | ~28%     | ~$829/year     |
+| 3-Year All Upfront | ~55%     | ~$1,628/year   |
 
 **Recommended Action**: Purchase 1-year No Upfront Savings Plan for 5 instance baseline (3 main + 2 ML)
 
@@ -708,6 +734,7 @@ Assuming 4 runs/month × 1.5 hours average = 6 hours:
 **Current State**: ML service runs on separate Elastic Beanstalk environment with dedicated ALB
 
 **Issues**:
+
 1. Separate ALB adds ~$75/month in fixed costs
 2. Cross-service calls go through public internet
 3. Two separate auto-scaling groups to manage
@@ -717,24 +744,28 @@ Assuming 4 runs/month × 1.5 hours average = 6 hours:
 **Implementation Options**:
 
 **Option A**: Process Manager (PM2) Multi-App
+
 ```javascript
 // ecosystem.config.js
 module.exports = {
   apps: [
     { name: 'server', script: 'dist/index.js', port: 8080 },
-    { name: 'ml-service', script: 'dist/ml/index.js', port: 5002 }
-  ]
+    { name: 'ml-service', script: 'dist/ml/index.js', port: 5002 },
+  ],
 };
 ```
+
 - ML calls become `http://localhost:5002` instead of external HTTPS
 - Single ALB with path-based routing
 
 **Option B**: Keep Separate Services, Use Private Load Balancer
+
 - Convert ML ALB to internal ALB
 - Use VPC private DNS for service discovery
 - Eliminates internet data transfer
 
 **Estimated Savings**:
+
 - ALB elimination: **$75/month**
 - Data transfer: **~$1/month** (minimal current, but scales with traffic)
 - Operational simplicity: Priceless
@@ -748,10 +779,12 @@ module.exports = {
 **Analysis**: Review CloudWatch metrics for actual CPU/memory utilization
 
 **If utilization is <70%**:
+
 - Reduce to 2 vCPU / 16 GB (matches code configuration default)
 - Savings: ~50% on Fargate costs (~$1/month)
 
 **If memory-bound only**:
+
 - Consider 2 vCPU / 30 GB configuration
 - Valid Fargate configuration exists
 
@@ -762,11 +795,13 @@ module.exports = {
 **Recommendation**: Enable S3 Intelligent-Tiering for data bucket
 
 **Benefits**:
+
 - Automatic cost optimization for infrequently accessed data
 - No retrieval fees for Frequent Access tier
 - Monitoring fee: $0.0025/1000 objects
 
 **Best Candidates**:
+
 - `cube_draft_history/*` - Historical data, rarely accessed
 - `cube_analytic/*` - Analytics, accessed during cube views
 - Old content bodies
@@ -780,11 +815,13 @@ module.exports = {
 **Analysis Needed**: Review DynamoDB read patterns
 
 **If consistent read patterns exist**:
+
 - Deploy DAX cluster for caching
 - t3.small DAX node: ~$30/month
 - Potential RCU savings: 50-80%
 
 **Break-even Analysis**:
+
 - Current read cost: ~$12.50/month
 - DAX cost: ~$30/month
 - **Not recommended unless read costs exceed $50/month**
@@ -796,12 +833,14 @@ module.exports = {
 **Recommendation**: Add CloudFront distribution for static assets
 
 **Benefits**:
+
 1. Reduced EC2 load (offload static asset serving)
 2. Lower data transfer costs (CloudFront cheaper than EC2 egress)
 3. Better global performance
 4. Edge caching for card images
 
 **Implementation**:
+
 ```
 CloudFront Distribution
 ├── Origin: ALB (dynamic content)
@@ -825,11 +864,13 @@ CloudFront Distribution
 #### 6.2.3 Review Lambda Memory Allocation
 
 **Daily Jobs Lambda**: 1024 MB
+
 - If execution time is CPU-bound, more memory = faster = cheaper
 - If memory-bound, current allocation may be correct
 - **Action**: Profile and right-size
 
 **Card Monitor Lambda**: 512 MB
+
 - Likely appropriate for API calls
 - **Action**: Monitor and adjust if needed
 
@@ -838,6 +879,7 @@ CloudFront Distribution
 #### 6.3.1 Spot Instances for Non-Critical Workloads
 
 **ECS Fargate Spot**:
+
 - Up to 70% discount
 - Suitable for jobs that can be interrupted and restarted
 - **Current jobs run ~4 times/month**: Savings would be ~$1.40/month (not worth complexity)
@@ -845,6 +887,7 @@ CloudFront Distribution
 #### 6.3.2 Graviton (ARM) Instances
 
 **Future Consideration**: When upgrading Node.js or instance types
+
 - Graviton3 instances: ~20% better price/performance
 - t4g.large vs t3.large: $0.0672/hr vs $0.0832/hr (19% savings)
 - Requires: Testing application compatibility with ARM
@@ -856,6 +899,7 @@ CloudFront Distribution
 **Analysis**: Review CloudWatch metrics for consistent baseline usage
 
 If traffic is predictable:
+
 - Switch to provisioned capacity
 - Enable auto-scaling
 - Potential savings: 20-30% for predictable workloads
@@ -868,36 +912,36 @@ If traffic is predictable:
 
 ### Immediate Actions (This Month)
 
-| Priority | Action | Monthly Savings | Implementation Effort |
-|----------|--------|-----------------|----------------------|
-| 1 | Purchase 1-Year Savings Plan | $70 | Low (AWS Console) |
-| 2 | Consolidate ML Service | $75 | Medium (Code changes) |
-| **Total** | | **$145/month** | |
+| Priority  | Action                       | Monthly Savings | Implementation Effort |
+| --------- | ---------------------------- | --------------- | --------------------- |
+| 1         | Purchase 1-Year Savings Plan | $70             | Low (AWS Console)     |
+| 2         | Consolidate ML Service       | $75             | Medium (Code changes) |
+| **Total** |                              | **$145/month**  |                       |
 
 ### Short-Term Actions (Next Quarter)
 
-| Priority | Action | Monthly Savings | Implementation Effort |
-|----------|--------|-----------------|----------------------|
-| 3 | Implement CloudFront CDN | $5 | Medium |
-| 4 | Enable S3 Intelligent-Tiering | $1 | Low |
-| 5 | Right-size Fargate tasks | $1 | Low |
-| **Total** | | **$7/month** | |
+| Priority  | Action                        | Monthly Savings | Implementation Effort |
+| --------- | ----------------------------- | --------------- | --------------------- |
+| 3         | Implement CloudFront CDN      | $5              | Medium                |
+| 4         | Enable S3 Intelligent-Tiering | $1              | Low                   |
+| 5         | Right-size Fargate tasks      | $1              | Low                   |
+| **Total** |                               | **$7/month**    |                       |
 
 ### Long-Term Considerations
 
-| Action | Potential Savings | When to Consider |
-|--------|-------------------|------------------|
-| Graviton migration | $35/month | Next major upgrade |
-| DAX caching | Variable | If read costs exceed $50/month |
-| DynamoDB provisioned | $6-10/month | When traffic patterns stabilize |
+| Action               | Potential Savings | When to Consider                |
+| -------------------- | ----------------- | ------------------------------- |
+| Graviton migration   | $35/month         | Next major upgrade              |
+| DAX caching          | Variable          | If read costs exceed $50/month  |
+| DynamoDB provisioned | $6-10/month       | When traffic patterns stabilize |
 
 ### Total Potential Savings
 
-| Timeline | Monthly Savings | Annual Savings |
-|----------|-----------------|----------------|
-| Immediate | $145 | $1,740 |
-| Short-Term | $152 | $1,824 |
-| Long-Term | Up to $190 | Up to $2,280 |
+| Timeline   | Monthly Savings | Annual Savings |
+| ---------- | --------------- | -------------- |
+| Immediate  | $145            | $1,740         |
+| Short-Term | $152            | $1,824         |
+| Long-Term  | Up to $190      | Up to $2,280   |
 
 **Current Monthly Cost**: ~$497
 **Optimized Monthly Cost**: ~$345-355
@@ -909,28 +953,29 @@ If traffic is predictable:
 
 ### AWS Data Transfer Pricing (us-east-2, as of 2024)
 
-| Transfer Type | Cost |
-|---------------|------|
-| Internet → AWS (ingress) | Free |
-| AWS → Internet (first 10 TB/month) | $0.09/GB |
-| AWS → Internet (next 40 TB/month) | $0.085/GB |
-| AWS → Internet (next 100 TB/month) | $0.07/GB |
-| Same Region, Same AZ | Free |
-| Same Region, Cross-AZ | $0.01/GB (each direction) |
-| Cross-Region | $0.02/GB |
-| EC2 → S3 (same region, Gateway Endpoint) | Free |
-| EC2 → DynamoDB (same region) | Free* |
+| Transfer Type                            | Cost                      |
+| ---------------------------------------- | ------------------------- |
+| Internet → AWS (ingress)                 | Free                      |
+| AWS → Internet (first 10 TB/month)       | $0.09/GB                  |
+| AWS → Internet (next 40 TB/month)        | $0.085/GB                 |
+| AWS → Internet (next 100 TB/month)       | $0.07/GB                  |
+| Same Region, Same AZ                     | Free                      |
+| Same Region, Cross-AZ                    | $0.01/GB (each direction) |
+| Cross-Region                             | $0.02/GB                  |
+| EC2 → S3 (same region, Gateway Endpoint) | Free                      |
+| EC2 → DynamoDB (same region)             | Free\*                    |
 
-*DynamoDB data transfer is free within the same region when accessed via AWS PrivateLink or the public endpoint.
+\*DynamoDB data transfer is free within the same region when accessed via AWS PrivateLink or the public endpoint.
 
 ### Application Load Balancer Pricing
 
-| Component | Cost |
-|-----------|------|
-| ALB per hour | $0.0225/hour |
+| Component    | Cost            |
+| ------------ | --------------- |
+| ALB per hour | $0.0225/hour    |
 | LCU per hour | $0.008/LCU-hour |
 
 **LCU Calculation** (highest of):
+
 - New connections: 25/second
 - Active connections: 3,000
 - Processed bytes: 1 GB/hour
@@ -939,6 +984,7 @@ If traffic is predictable:
 ### Elastic Beanstalk Pricing
 
 Elastic Beanstalk itself is free; you pay for:
+
 - EC2 instances
 - Load balancers
 - Data transfer
@@ -953,12 +999,14 @@ Elastic Beanstalk itself is free; you pay for:
 **Decision**: Use single-table design with composite keys
 
 **Rationale**:
+
 - Reduces operational overhead
 - Enables complex queries with GSIs
 - Pay-per-request billing simplifies cost management
 - Atomic transactions across related items
 
 **Trade-offs**:
+
 - More complex data modeling
 - Requires careful key design
 - All entities share table capacity
@@ -968,12 +1016,14 @@ Elastic Beanstalk itself is free; you pay for:
 **Decision**: Store metadata in DynamoDB, large objects in S3
 
 **Rationale**:
+
 - DynamoDB item size limit: 400 KB
 - Cube card lists can exceed this limit (up to 10,000 cards)
 - S3 is more cost-effective for large objects
 - Enables direct S3 access for data exports
 
 **Implementation**:
+
 - DynamoDB stores references (S3 keys)
 - Server fetches from S3 when needed
 - S3 objects are JSON for easy processing
@@ -983,6 +1033,7 @@ Elastic Beanstalk itself is free; you pay for:
 **Decision**: Use Elastic Beanstalk for web tier
 
 **Rationale**:
+
 - Simpler operational model
 - Built-in deployment strategies
 - Managed ALB integration
@@ -990,6 +1041,7 @@ Elastic Beanstalk itself is free; you pay for:
 - Lower learning curve than EKS
 
 **Trade-offs**:
+
 - Less flexibility than ECS/EKS
 - Vendor lock-in to EB-specific features
 - Limited customization of underlying infrastructure
@@ -999,12 +1051,14 @@ Elastic Beanstalk itself is free; you pay for:
 **Decision**: Use Lambda for lightweight scheduled tasks, Fargate for data processing
 
 **Rationale**:
+
 - Lambda: Perfect for tasks under 15 minutes, low memory
 - Fargate: Required for memory-intensive jobs (30 GB needed)
 - Cost-effective: Only pay for actual execution time
 - No server management
 
 **Implementation**:
+
 - Daily Jobs Lambda: Podcasts, rotations
 - Card Monitor Lambda: API monitoring, task orchestration
 - Fargate Tasks: Card updates, analytics processing

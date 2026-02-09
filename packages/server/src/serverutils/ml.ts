@@ -6,51 +6,9 @@ import { error } from './cloudwatch';
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5002';
 
 /**
- * Filter oracles to only include cards suitable for ML recommendations
- */
-function filterOraclesForML(oracles: string[]): string[] {
-  return oracles.filter((oracle) => {
-    // Check if oracle exists in carddb
-    const cardIds = carddb.oracleToId[oracle];
-    if (!cardIds || cardIds.length === 0) {
-      return false;
-    }
-
-    // Get a reasonable card for this oracle
-    const firstCardId = cardIds[0];
-    if (!firstCardId) {
-      return false;
-    }
-
-    const card = cardFromId(firstCardId);
-    if (!card) {
-      return false;
-    }
-
-    // Filter out tokens, low-count cards, and basic lands
-    if (card.isToken) {
-      return false;
-    }
-
-    if ((card.cubeCount ?? 0) < 50) {
-      return false;
-    }
-
-    if (card.type?.includes('Basic') && card.type?.includes('Land')) {
-      return false;
-    }
-
-    return true;
-  });
-}
-
-/**
  * Make a request to the ML recommender service
  */
 async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
-  console.log(`[ML Service] Making request to ${ML_SERVICE_URL}/${endpoint}`);
-  console.log(`[ML Service] Request body:`, JSON.stringify(body).substring(0, 200));
-
   try {
     const response = await fetch(`${ML_SERVICE_URL}/${endpoint}`, {
       method: 'POST',
@@ -59,8 +17,6 @@ async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
       },
       body: JSON.stringify(body),
     });
-
-    console.log(`[ML Service] Response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       throw new Error(`ML service returned ${response.status}: ${response.statusText}`);
@@ -72,7 +28,6 @@ async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
       throw new Error(data.message || 'ML service request failed');
     }
 
-    console.log(`[ML Service] Request to ${endpoint} succeeded`);
     return data as T;
   } catch (err) {
     if (process.env?.NODE_ENV === 'development') {
@@ -97,30 +52,29 @@ export const encode = async (oracles: string[]): Promise<number[]> => {
 export const recommend = async (
   oracles: string[],
 ): Promise<{ adds: { oracle: string; rating: number }[]; cuts: { oracle: string; rating: number }[] }> => {
-  console.log(`[ML Service] recommend() called with ${oracles.length} oracles`);
-
-  // Filter oracles on the server side before sending to ML service
-  const filteredOracles = filterOraclesForML(oracles);
-  console.log(`[ML Service] Filtered to ${filteredOracles.length} oracles for ML`);
-
   try {
     const response = await mlServiceRequest<{
       success: boolean;
       adds: { oracle: string; rating: number }[];
       cuts: { oracle: string; rating: number }[];
-    }>('recommend', { oracles: filteredOracles });
+    }>('recommend', { oracles });
 
-    console.log(`[ML Service] recommend() returned ${response.adds.length} adds and ${response.cuts.length} cuts`);
+    // Filter the OUTPUT recommendations to remove tokens, basic lands, etc.
+    const filteredAdds = response.adds.filter((item) => {
+      const cardIds = carddb.oracleToId[item.oracle];
+      if (!cardIds || cardIds.length === 0) return false;
+      const card = cardFromId(cardIds[0]);
+      if (!card || card.error) return false;
+      if (card.isToken) return false;
+      if (card.type?.includes('Basic') && card.type?.includes('Land')) return false;
+      return true;
+    });
 
     return {
-      adds: response.adds,
+      adds: filteredAdds,
       cuts: response.cuts,
     };
-  } catch (err) {
-    console.error(
-      '[ML Service] Failed to get recommendations. Error:',
-      err instanceof Error ? err.message : String(err),
-    );
+  } catch (_err) {
     return {
       adds: [],
       cuts: [],
@@ -129,15 +83,11 @@ export const recommend = async (
 };
 
 export const build = async (oracles: string[]): Promise<{ oracle: string; rating: number }[]> => {
-  // Filter oracles on the server side before sending to ML service
-  const filteredOracles = filterOraclesForML(oracles);
-  console.log(`[ML Service] build() filtered to ${filteredOracles.length} of ${oracles.length} oracles`);
-
   try {
     const response = await mlServiceRequest<{
       success: boolean;
       cards: { oracle: string; rating: number }[];
-    }>('build', { oracles: filteredOracles });
+    }>('build', { oracles });
 
     return response.cards;
   } catch {
@@ -147,18 +97,11 @@ export const build = async (oracles: string[]): Promise<{ oracle: string; rating
 };
 
 export const draft = async (pack: string[], pool: string[]): Promise<{ oracle: string; rating: number }[]> => {
-  // Filter oracles on the server side before sending to ML service
-  const filteredPack = filterOraclesForML(pack);
-  const filteredPool = filterOraclesForML(pool);
-  console.log(
-    `[ML Service] draft() filtered pack: ${filteredPack.length}/${pack.length}, pool: ${filteredPool.length}/${pool.length}`,
-  );
-
   try {
     const response = await mlServiceRequest<{
       success: boolean;
       cards: { oracle: string; rating: number }[];
-    }>('draft', { pack: filteredPack, pool: filteredPool });
+    }>('draft', { pack, pool });
 
     return response.cards;
   } catch {
