@@ -125,27 +125,27 @@ export class CubeCobraStack extends cdk.Stack {
       }),
     );
 
-    // Create recommender service with smaller instances (internal ALB, not publicly accessible)
-    const recommenderFleetSize = params.environmentName === 'production' ? 2 : 1;
-    const recommenderService = new RecommenderService(this, 'RecommenderService', {
-      environmentName: params.environmentName,
-      environmentVariables: createRecommenderEnvironmentVariables(params, props),
-      fleetSize: recommenderFleetSize,
-      instanceProfile: instanceProfile,
-      appBucket: s3Buckets.appBucket,
-      appVersion: params.version,
-    });
-
-    // The ML service URL uses the internal ALB endpoint (HTTP, VPC-internal only)
-    // This eliminates public internet data transfer costs
-    const mlServiceUrl = `http://${recommenderService.environment.attrEndpointUrl}`;
+    // Determine ML subdomain based on environment
+    const mlDomain = `ml.${params.domain.replace('www.', '')}`;
 
     // Create everything we need related to ElasticBeanstalk, including the environment and the application
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
       certificate: cert.consoleCertificate,
       environmentName: params.environmentName,
-      environmentVariables: createEnvironmentVariables(params, props, dynamoTables.table.tableName, mlServiceUrl),
+      environmentVariables: createEnvironmentVariables(params, props, dynamoTables.table.tableName, mlDomain),
       fleetSize: params.fleetSize,
+      instanceProfile: instanceProfile,
+      appBucket: s3Buckets.appBucket,
+      appVersion: params.version,
+    });
+
+    // Create recommender service with smaller instances
+    const recommenderFleetSize = params.environmentName === 'production' ? 2 : 1;
+    const recommenderService = new RecommenderService(this, 'RecommenderService', {
+      certificate: cert.consoleCertificate,
+      environmentName: params.environmentName,
+      environmentVariables: createRecommenderEnvironmentVariables(params, props, mlDomain),
+      fleetSize: recommenderFleetSize,
       instanceProfile: instanceProfile,
       appBucket: s3Buckets.appBucket,
       appVersion: params.version,
@@ -157,8 +157,10 @@ export class CubeCobraStack extends cdk.Stack {
       recordSetId: 'ConsoleAliasRecord', // Keep the same ID as before to avoid resource replacement
     });
 
-    // Note: No Route53 record for recommender service - it uses internal ALB
-    // accessible only within the VPC via the internal ALB DNS name
+    new Route53(this, 'RecommenderRoute53', {
+      dnsName: recommenderService.environment.attrEndpointUrl,
+      domain: mlDomain,
+    });
 
     // Create the ECS cluster where we'll schedule jobs
     // Use default VPC for simplicity
@@ -226,7 +228,7 @@ function createEnvironmentVariables(
   params: CubeCobraStackParams,
   props: StackProps | undefined,
   dynamoTableName?: string,
-  mlServiceUrl?: string,
+  mlDomain?: string,
 ): {
   [key: string]: string;
 } {
@@ -268,9 +270,9 @@ function createEnvironmentVariables(
     envVars.DYNAMO_TABLE = dynamoTableName;
   }
 
-  // Add ML_SERVICE_URL if provided (internal ALB URL for VPC-internal communication)
-  if (mlServiceUrl) {
-    envVars.ML_SERVICE_URL = mlServiceUrl;
+  // Add ML_SERVICE_URL if mlDomain is provided
+  if (mlDomain) {
+    envVars.ML_SERVICE_URL = `https://${mlDomain}`;
   }
 
   return envVars;
@@ -308,6 +310,7 @@ function createLambdaEnvironmentVariables(
 function createRecommenderEnvironmentVariables(
   params: CubeCobraStackParams,
   props: StackProps | undefined,
+  mlDomain: string,
 ): {
   [key: string]: string;
 } {
@@ -318,6 +321,7 @@ function createRecommenderEnvironmentVariables(
     PORT: '8080',
     LOG_GROUP_NAME: `/cubecobra/${params.environmentName}/recommender/application`,
     LOG_STREAM_NAME: 'default',
+    DOMAIN: mlDomain,
   };
 
   return envVars;
