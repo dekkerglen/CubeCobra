@@ -1,4 +1,3 @@
-import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { CfnApplication, CfnApplicationVersion, CfnEnvironment } from 'aws-cdk-lib/aws-elasticbeanstalk';
 import { CfnInstanceProfile } from 'aws-cdk-lib/aws-iam';
 import { LogGroup, LogStream, RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -9,7 +8,6 @@ interface RecommenderServiceProps {
   appBucket: IBucket;
   appVersion: string;
   environmentName: string;
-  certificate: Certificate;
   fleetSize: number;
   instanceProfile: CfnInstanceProfile;
   environmentVariables: { [key: string]: string };
@@ -90,20 +88,28 @@ export class RecommenderService extends Construct {
           optionName: 'LoadBalancerType',
           value: 'application',
         },
+        // Internal ALB - only accessible within VPC, no public internet exposure
         {
-          namespace: 'aws:elbv2:listener:443',
+          namespace: 'aws:elbv2:loadbalancer',
+          optionName: 'Scheme',
+          value: 'internal',
+        },
+        // Use HTTP for internal VPC traffic (no SSL overhead needed)
+        {
+          namespace: 'aws:elbv2:listener:80',
           optionName: 'ListenerEnabled',
           value: 'true',
         },
         {
-          namespace: 'aws:elbv2:listener:443',
-          optionName: 'SSLCertificateArns',
-          value: props.certificate.certificateArn,
+          namespace: 'aws:elbv2:listener:80',
+          optionName: 'Protocol',
+          value: 'HTTP',
         },
+        // Disable the default HTTPS listener
         {
           namespace: 'aws:elbv2:listener:443',
-          optionName: 'Protocol',
-          value: 'HTTPS',
+          optionName: 'ListenerEnabled',
+          value: 'false',
         },
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',
