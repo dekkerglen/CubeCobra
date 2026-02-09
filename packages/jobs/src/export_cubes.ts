@@ -5,7 +5,7 @@ import path from 'path';
 import 'module-alias/register';
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
-import { cubeDao } from '@server/dynamo/daos';
+import { cubeDao, exportTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { getAllOracleIds } from '@server/serverutils/carddb';
 import { cardOracleId } from '@utils/cardutil';
@@ -35,17 +35,28 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
   }
 };
 
+const taskId = process.env.EXPORT_TASK_ID;
+
 (async () => {
-  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
-  await initializeCardDb(privateDir);
+  try {
+    if (taskId) {
+      await exportTaskDao.updateStep(taskId, 'Initializing');
+    }
 
-  const allOracles = getAllOracleIds();
-  const oracleToIndex = Object.fromEntries(allOracles.map((oracle, index) => [oracle, index]));
-  const indexToOracleMap = Object.fromEntries(allOracles.map((oracle, index) => [index, oracle]));
+    const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+    await initializeCardDb(privateDir);
 
-  let lastKey: any = undefined;
-  let processed = 0;
-  const cubes: any[] = [];
+    const allOracles = getAllOracleIds();
+    const oracleToIndex = Object.fromEntries(allOracles.map((oracle, index) => [oracle, index]));
+    const indexToOracleMap = Object.fromEntries(allOracles.map((oracle, index) => [index, oracle]));
+
+    if (taskId) {
+      await exportTaskDao.updateStep(taskId, 'Processing cubes');
+    }
+
+    let lastKey: any = undefined;
+    let processed = 0;
+    const cubes: any[] = [];
 
   do {
     const result = await cubeDao.queryAllCubes('popularity', false, lastKey, 100);
@@ -59,16 +70,33 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
     console.log(`Processed ${processed} cubes`);
   } while (lastKey);
 
-  // if /temp doesn't exist, create it
-  if (!fs.existsSync('./temp')) {
-    fs.mkdirSync('./temp');
-  }
+    // if /temp doesn't exist, create it
+    if (!fs.existsSync('./temp')) {
+      fs.mkdirSync('./temp');
+    }
 
-  // if /temp/export doesn't exist, create it
-  if (!fs.existsSync('./temp/export')) {
-    fs.mkdirSync('./temp/export');
-  }
+    // if /temp/export doesn't exist, create it
+    if (!fs.existsSync('./temp/export')) {
+      fs.mkdirSync('./temp/export');
+    }
 
-  fs.writeFileSync('./temp/export/cubes.json', JSON.stringify(cubes));
-  fs.writeFileSync('./temp/export/indexToOracleMap.json', JSON.stringify(indexToOracleMap));
+    if (taskId) {
+      await exportTaskDao.updateStep(taskId, 'Writing export files');
+    }
+
+    fs.writeFileSync('./temp/export/cubes.json', JSON.stringify(cubes));
+    fs.writeFileSync('./temp/export/indexToOracleMap.json', JSON.stringify(indexToOracleMap));
+
+    console.log('Export complete!');
+    process.exit(0);
+  } catch (error) {
+    console.error('Export failed:', error);
+    if (taskId) {
+      await exportTaskDao.markAsFailed(
+        taskId,
+        error instanceof Error ? error.message : 'Unknown error during cube export',
+      );
+    }
+    process.exit(1);
+  }
 })();

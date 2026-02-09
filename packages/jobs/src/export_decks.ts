@@ -4,7 +4,7 @@ import path from 'path';
 import 'module-alias/register';
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
-import { draftDao } from '@server/dynamo/daos';
+import { draftDao, exportTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
@@ -120,82 +120,109 @@ const processPicks = (
   return { picks, cubeInstance };
 };
 
+const taskId = process.env.EXPORT_TASK_ID;
+
 (async () => {
-  const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
-  await initializeCardDb(privateDir);
+  try {
+    if (taskId) {
+      await exportTaskDao.updateStep(taskId, 'Initializing');
+    }
 
-  const indexToOracleMap = JSON.parse(fs.readFileSync('./temp/export/indexToOracleMap.json', 'utf8'));
-  const oracleToIndex = Object.fromEntries(
-    Object.entries(indexToOracleMap).map(([index, oracle]) => [oracle, parseInt(index, 10)]),
-  );
+    const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+    await initializeCardDb(privateDir);
 
-  // Load all draft metadata by scanning the type index
-  // We'll use the Draft type to get all drafts efficiently
-  let draftLogs: any[] = [];
+    const indexToOracleMap = JSON.parse(fs.readFileSync('./temp/export/indexToOracleMap.json', 'utf8'));
+    const oracleToIndex = Object.fromEntries(
+      Object.entries(indexToOracleMap).map(([index, oracle]) => [oracle, parseInt(index, 10)]),
+    );
 
-  console.log('Loading draft metadata...');
+    if (!fs.existsSync('./temp/export/decks')) {
+      fs.mkdirSync('./temp/export/decks');
+    }
+    if (!fs.existsSync('./temp/export/picks')) {
+      fs.mkdirSync('./temp/export/picks');
+    }
+    if (!fs.existsSync('./temp/export/cubeInstances')) {
+      fs.mkdirSync('./temp/export/cubeInstances');
+    }
+
+    if (taskId) {
+      await exportTaskDao.updateStep(taskId, 'Processing drafts');
+    }
+
+    console.log('Starting draft export...');
 
   // Query all draft types to get all drafts
   const draftTypes = ['d', 'g', 's', 'u']; // Draft, Grid, Sealed, Upload
+  
+  let totalBatches = 0;
+  const BATCH_SIZE = 500; // Process 500 drafts at a time to reduce memory usage
 
   for (const draftType of draftTypes) {
+    console.log(`Processing draft type: ${draftType}`);
     let typeLastKey: any = null;
+    let draftLogBatch: any[] = [];
+    let totalProcessed = 0;
+
     do {
+      // Load a page of draft metadata
       const result = await draftDao.queryByTypeAndDate(draftType, typeLastKey);
-      draftLogs = draftLogs.concat(result.items);
+      draftLogBatch = draftLogBatch.concat(result.items);
       typeLastKey = result.lastKey;
 
-      console.log(`Loaded ${draftLogs.length} total draftlogs (type: ${draftType})...`);
+      // Process batches when we have enough, or when we're done with this type
+      while (draftLogBatch.length >= BATCH_SIZE || (!typeLastKey && draftLogBatch.length > 0)) {
+        const batchToProcess = draftLogBatch.splice(0, BATCH_SIZE);
+
+        const draftIds = batchToProcess.filter((item: { complete: any }) => item.complete).map((row: { id: any }) => row.id);
+        const drafts = await Promise.all(draftIds.map((id: string) => draftDao.getById(id)));
+        const validDrafts = drafts.filter((d): d is NonNullable<typeof d> => d !== null);
+
+        const processedDrafts = validDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
+        const picksResults = validDrafts.map((draft: any) => processPicks(draft, oracleToIndex));
+
+        // Collect cube instances and picks for this batch
+        const batchCubeInstances: number[][] = [];
+        const batchPicks = picksResults.flatMap((result) => {
+          // Add this cube instance to the batch array
+          const batchIndex = batchCubeInstances.length;
+          batchCubeInstances.push(result.cubeInstance);
+
+          // Update all picks to reference the batch cube instance index
+          result.picks.forEach((pick) => {
+            pick.cubeCards = batchIndex;
+          });
+
+          return result.picks;
+        });
+
+        fs.writeFileSync(`./temp/export/decks/${totalBatches}.json`, JSON.stringify(processedDrafts.flat()));
+        fs.writeFileSync(`./temp/export/picks/${totalBatches}.json`, JSON.stringify(batchPicks));
+        fs.writeFileSync(`./temp/export/cubeInstances/${totalBatches}.json`, JSON.stringify(batchCubeInstances));
+
+        totalBatches++;
+        totalProcessed += batchToProcess.length;
+
+        console.log(`Processed batch ${totalBatches} (${totalProcessed} drafts from type ${draftType}, ${validDrafts.length} complete drafts in this batch)`);
+
+        // Don't loop again if we don't have enough for another batch and we're done loading
+        if (!typeLastKey && draftLogBatch.length < BATCH_SIZE) {
+          break;
+        }
+      }
     } while (typeLastKey);
   }
 
-  console.log('Loaded all draftlogs');
-
-  const batches: any[] = [];
-
-  for (let i = 0; i < draftLogs.length; i += 1000) {
-    batches.push(draftLogs.slice(i, i + 1000));
-  }
-
-  if (!fs.existsSync('./temp/export/decks')) {
-    fs.mkdirSync('./temp/export/decks');
-  }
-  if (!fs.existsSync('./temp/export/picks')) {
-    fs.mkdirSync('./temp/export/picks');
-  }
-  if (!fs.existsSync('./temp/export/cubeInstances')) {
-    fs.mkdirSync('./temp/export/cubeInstances');
-  }
-
-  for (let i = 0; i < batches.length; i += 1) {
-    const batch = batches[i];
-
-    const draftIds = batch.filter((item: { complete: any }) => item.complete).map((row: { id: any }) => row.id);
-    const drafts = await Promise.all(draftIds.map((id: string) => draftDao.getById(id)));
-    const validDrafts = drafts.filter((d): d is NonNullable<typeof d> => d !== null);
-
-    const processedDrafts = validDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
-    const picksResults = validDrafts.map((draft: any) => processPicks(draft, oracleToIndex));
-
-    // Collect cube instances and picks for this batch
-    const batchCubeInstances: number[][] = [];
-    const batchPicks = picksResults.flatMap((result) => {
-      // Add this cube instance to the batch array
-      const batchIndex = batchCubeInstances.length;
-      batchCubeInstances.push(result.cubeInstance);
-
-      // Update all picks to reference the batch cube instance index
-      result.picks.forEach((pick) => {
-        pick.cubeCards = batchIndex;
-      });
-
-      return result.picks;
-    });
-
-    fs.writeFileSync(`./temp/export/decks/${i}.json`, JSON.stringify(processedDrafts.flat()));
-    fs.writeFileSync(`./temp/export/picks/${i}.json`, JSON.stringify(batchPicks));
-    fs.writeFileSync(`./temp/export/cubeInstances/${i}.json`, JSON.stringify(batchCubeInstances));
-
-    console.log(`Processed ${i + 1} / ${batches.length} batches (${batchCubeInstances.length} cube instances)`);
+  console.log(`Export complete! Processed ${totalBatches} total batches.`);
+  process.exit(0);
+  } catch (error) {
+    console.error('Export failed:', error);
+    if (taskId) {
+      await exportTaskDao.markAsFailed(
+        taskId,
+        error instanceof Error ? error.message : 'Unknown error during deck export',
+      );
+    }
+    process.exit(1);
   }
 })();
