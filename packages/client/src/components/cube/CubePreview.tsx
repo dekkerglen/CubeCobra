@@ -24,7 +24,7 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
             {getCubeDescription(cube)}
           </Text>
           <Text sm className="text-text-secondary truncate">
-            {cube.following.length} followers
+            {cube.following?.length || 0} followers
           </Text>
           <Text sm className="truncate">
             {'Designed by '}
