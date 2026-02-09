@@ -607,7 +607,8 @@ export function reasonableCard(card: CardDetailsType): boolean {
     card.language === 'en' &&
     card.tcgplayer_id !== undefined &&
     card.collector_number.indexOf('★') === -1 &&
-    card.layout !== 'art_series'
+    card.layout !== 'art_series' &&
+    !card?.hasFlavorName
   );
 }
 

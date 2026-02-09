@@ -1,16 +1,24 @@
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
-
-import 'dotenv/config';
+dotenv.config();
 
 const publicS3 = new S3Client({
   region: process.env.AWS_REGION || 'us-east-2',
+  // No credentials
+  credentials: { accessKeyId: '', secretAccessKey: '' },
+  // No signing of requests
+  signer: { sign: async (req) => req },
 });
 
 const authenticatedS3 = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-2',
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+  forcePathStyle: !!process.env.AWS_ENDPOINT,
+  credentials: fromNodeProviderChain(),
+  region: process.env.AWS_REGION,
 });
 
 export const downloadModelsFromS3 = async (basePath: string = '', bucket: string): Promise<void> => {

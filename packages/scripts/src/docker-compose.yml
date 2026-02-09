@@ -32,6 +32,29 @@ services:
     # Force DNS via the localstack container
     dns:
       - 10.5.0.5
+  recommender:
+    container_name: recommender
+    image: node:22.11.0
+    volumes:
+      - ../../../:/home/node/app
+    user: 'node'
+    working_dir: /home/node/app/packages/recommenderService
+    environment:
+      - NODE_ENV=development
+      - AWS_ENDPOINT=http://localstack:4566
+      - NODE_OPTIONS=--max-old-space-size=8192
+    env_file:
+      - ../../recommenderService/.env
+    command: ["npm", "run", "dev"]
+    init: true
+    networks:
+      - cubecobra
+    depends_on:
+      - localstack
+      - node
+    # Force DNS via the localstack container
+    dns:
+      - 10.5.0.5
   localstack:
     # Localstack community does not persist anything out of the box, that is available in localstack-pro.
     # This variant (https://hub.docker.com/r/gresau/localstack-persist) causes the state to be persisted on actions and reloaded when the container starts
