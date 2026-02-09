@@ -45,7 +45,7 @@ services:
       - NODE_OPTIONS=--max-old-space-size=8192
     env_file:
       - ../../recommenderService/.env
-    command: ["npm", "run", "dev"]
+    command: ['npm', 'run', 'dev']
     init: true
     networks:
       - cubecobra
