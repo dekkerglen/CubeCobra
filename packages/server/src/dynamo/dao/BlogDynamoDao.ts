@@ -218,7 +218,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       },
       ScanIndexForward: false,
       Limit: limit,
-      ExclusiveStartKey: lastKey,
+      ExclusiveStartKey: lastKey || undefined,
     };
 
     return this.query(params);
@@ -244,7 +244,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       },
       ScanIndexForward: false,
       Limit: limit,
-      ExclusiveStartKey: lastKey,
+      ExclusiveStartKey: lastKey || undefined,
     };
 
     return this.query(params);

@@ -61,6 +61,10 @@
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
     --hero-bg: 8 119 21;
+    --category-badge-bg: 34 139 34;
+    --category-badge-text: 255 255 255;
+    --tag-badge-bg: 108 117 125;
+    --tag-badge-text: 255 255 255;
   }
 
   :root[class~='system'],
@@ -101,6 +105,10 @@
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
     --hero-bg: 8 119 21;
+    --category-badge-bg: 34 139 34;
+    --category-badge-text: 255 255 255;
+    --tag-badge-bg: 108 117 125;
+    --tag-badge-text: 255 255 255;
   }
 
   :root[class~='dark'] {
@@ -140,6 +148,10 @@
     --card-colorless: 60 58 64;
     --card-lands: 95 58 36;
     --hero-bg: 73 95 52;
+    --category-badge-bg: 76 175 80;
+    --category-badge-text: 33 37 41;
+    --tag-badge-bg: 149 165 166;
+    --tag-badge-text: 33 37 41;
     color-scheme: dark;
   }
 
@@ -178,6 +190,13 @@
       --card-red: 95 56 68;
       --card-green: 73 95 52;
       --card-multi: 92 88 9;
+      --card-colorless: 60 58 64;
+      --card-lands: 95 58 36;
+      --hero-bg: 73 95 52;
+      --category-badge-bg: 76 175 80;
+      --category-badge-text: 33 37 41;
+      --tag-badge-bg: 149 165 166;
+      --tag-badge-text: 33 37 41;
       --card-colorless: 60 58 64;
       --card-lands: 95 58 36;
       --hero-bg: 73 95 52;
@@ -294,7 +313,7 @@ img.mana-symbol-sm {
 
 .markdown-input {
   font-family: 'Fira Mono', monospace;
-  min-height: 20rem !important;
+  min-height: 6rem !important;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -321,10 +340,23 @@ img.mana-symbol-sm {
 .stacked {
   /* This is calculated relative to containing width */
   margin-top: -124%;
+  transition: all 200ms ease-out;
+  position: relative;
+}
+
+.stacked.drag-placeholder {
+  opacity: 0.5;
+  transform: translateY(5px);
 }
 
 .stack {
   padding-top: 124%;
+  position: relative;
+}
+
+.stack.drop-active {
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 0.5rem;
 }
 
 .off-screen {
@@ -420,4 +452,45 @@ img.mana-symbol-sm {
 
 .max-h-95\/100 {
   max-height: 95dvh;
+}
+
+/* Disable all animations and transitions when user has this preference enabled */
+.disable-animations *,
+.disable-animations *::before,
+.disable-animations *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+/* List group header hover effect - highlight all cards when hovering over header */
+.list-group:has(.list-group-heading:hover) .list-group-card {
+  cursor: pointer;
+}
+
+/* Dark theme hover effect */
+:root[class~='dark'] .list-group:has(.list-group-heading:hover) .list-group-card {
+  filter: brightness(1.25);
+}
+
+/* Light theme hover effect (default and light themes) */
+:root[class~='light'] .list-group:has(.list-group-heading:hover) .list-group-card,
+:root:not([class~='dark']):not([class~='light']):not([class~='system'])
+  .list-group:has(.list-group-heading:hover)
+  .list-group-card {
+  filter: brightness(0.9);
+}
+
+/* System theme - use media queries to detect actual color scheme */
+@media (prefers-color-scheme: light) {
+  :root[class~='system'] .list-group:has(.list-group-heading:hover) .list-group-card {
+    filter: brightness(0.9);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[class~='system'] .list-group:has(.list-group-heading:hover) .list-group-card {
+    filter: brightness(1.25);
+  }
 }

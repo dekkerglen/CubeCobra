@@ -1,47 +1,16 @@
-As of 1.4.57
+Since 1.5.0
 
 # New Features
 
-- Overhauled Cube pages user experience
-- Added scryfall image drag and drop to add cards to your cube
-- Added a mechanism to auto +1 packages when added to a cube
-- Increased password limit to 1024 (there is no technical limitation here, some folks just wanted to be able to use longer passwords than we anticipated when we set an arbritrary limit.)
-- Add panning to card elo and play rate graphs
-- Created scheduled jobs for card updates, scryfall migrations (removing/merging cards), and exports
-- Added a new page (find it under Cards->Card Updates) to display scheduled job statuses
-- Made data exports public, added instructions under the Card Updates page on how to access them
-- Added ability to edit seats other than seat 1 for existing decks
-- Added paste text upload to records
-- Added ability to edit decks in records, and any seat in a playtest draft
-- Minor style improvements in various places in the site
-- Improved UX for users with a large number of cubes. Pagination on user cubes page, increased cube limit to 256
-- Cloned cubes now default to "Unlisted" visibility
-- Added toggles when adding packages to cube for autotagging the new cards and creating a blog post
-- Refactored mobile nav bar for a better user experience
-- Added one card per row as an option for visual spoiler
-- Added "Twobert", "Rules Modified", and "Color Restricted" to cube type prefix
-- Added "Bar" to cube types
+- New Cube view: card stacks
+- In Cube table view, Added the card item hover effect to each item in the group when hovering over the card group header
+- Added a shareable link to generate a random sample pack each time
+- allow urls in cube compare input
 
 # Bug Fixes
 
-- Fixed an issue where paginating cube search results would sometimes not go to the next page
-- Fixed a bug where updating user fields would delete password
-- Fixed a bug where seat owner names were not showing up
-- Fixed a bug with RSS feeds erroring
-- Removed video ads from banner, as those occasionally went outside the bounding box and affected site UX.
-- Fixed the "All-time" graph on elo and play rate pages
-- Fixed a bug where snapdrafter uploads would fail
-- Fixed a bug preventing users from deleting a cube
-- Fixed a bug where playtest drafts would show as colorless in error
-- Fixed a bug where Patreon linking would 404
-- Fixed display issue with card tags padding in autocard
-- Fixed a styling issue that caused certain advertisements to pop out of their bounding box
+- Fixed a bug where deck dropdowns weren't working
+- Fixed a bug where cube exports didn't use sort/filter correctly
+- Fix transforming card full name (both faces) not able to bulk import
 
 # Technical Changes
-
-- Added codepipeline with integration tests
-- Added integration tests to pull requests, split up checks to make it easier to see failures
-- Fixed docker development setup
-- Rebuilt card import pipeline to reduce max data staleness from 48 hours to less than 12
-- Created public assets bucket for first time developer setup for a faster and better setup experience
-- Extracted out ML inference into distinct microservice

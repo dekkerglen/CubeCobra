@@ -251,9 +251,10 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
 
 interface ImportRecordPageProps {
   cards: CardDetails[];
+  sideboard?: CardDetails[];
 }
 
-const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards }) => {
+const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards, sideboard = [] }) => {
   const user: User | null = useContext(UserContext);
   const [isYourCube, setIsYourCube] = React.useState(true);
   const [existingRecord, setExistingRecord] = React.useState<boolean>(false);
@@ -262,7 +263,7 @@ const ImportRecordPage: React.FC<ImportRecordPageProps> = ({ cards }) => {
   const cubes: { id: string; name: string }[] = user?.cubes ?? [];
   const [selectedCube, setSelectedCube] = useState<string>('');
   const [mainboardCards, setMainboardCards] = useState<CardDetails[]>(cards);
-  const [sideboardCards, setSideboardCards] = useState<CardDetails[]>([]);
+  const [sideboardCards, setSideboardCards] = useState<CardDetails[]>(sideboard);
 
   return (
     <MainLayout>

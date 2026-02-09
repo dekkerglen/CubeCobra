@@ -39,7 +39,7 @@ const Pack: React.FC<PackProps> = ({ pack, packNumber, pickNumber, makePick, sea
           <div />
         </Col>
         {[0, 1, 2].map((col) => (
-          <Col key={`col-btn-${col}`} xs={3} md={2}>
+          <Col key={`col-btn-${col}`} xs={3} xl={2}>
             <Button
               block
               outline
@@ -78,7 +78,7 @@ const Pack: React.FC<PackProps> = ({ pack, packNumber, pickNumber, makePick, sea
             </Button>
           </Col>
           {[0, 1, 2].map((col) => (
-            <Col key={`cell-${col}-${row}`} className="px-0" xs={3} md={2}>
+            <Col key={`cell-${col}-${row}`} className="px-0" xs={3} xl={2}>
               {pack[row * 3 + col] ? (
                 <FoilCardImage card={pack[row * 3 + col]} autocard />
               ) : (

@@ -19,7 +19,9 @@ export const cutsHandler = async (req: Request, res: Response) => {
 
     const cards = await cubeDao.getCards(cubeID);
 
-    const { cuts } = await recommend(cards.mainboard.map((card: any) => card.details.oracle_id));
+    const oracles = cards.mainboard.map((card: any) => card.details?.oracle_id).filter(Boolean);
+
+    const { cuts } = await recommend(oracles);
 
     let slice = cuts || [];
 

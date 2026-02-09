@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import { CheckCircleFillIcon, ChevronDownIcon, ChevronUpIcon, XCircleFillIcon } from '@primer/octicons-react';
+import { CardMetadataTask } from '@utils/datatypes/CardMetadataTask';
 import { CardUpdateTask } from '@utils/datatypes/CardUpdateTask';
 import { ExportTask } from '@utils/datatypes/ExportTask';
 import { MigrationTask } from '@utils/datatypes/MigrationTask';
@@ -16,6 +17,7 @@ import MainLayout from 'layouts/MainLayout';
 
 interface AdminCardUpdatesPageProps {
   cardUpdates: CardUpdateTask[];
+  cardMetadataTasks: CardMetadataTask[];
   exportTasks: ExportTask[];
   migrationTasks: MigrationTask[];
 }
@@ -149,7 +151,12 @@ const StepProgress: React.FC<{
   );
 };
 
-const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({ cardUpdates, exportTasks, migrationTasks }) => {
+const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({
+  cardUpdates,
+  cardMetadataTasks,
+  exportTasks,
+  migrationTasks,
+}) => {
   const [activeTab, setActiveTab] = useQueryParam('tab', '0');
 
   return (
@@ -157,7 +164,7 @@ const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({ cardUpdates
       <Card className="m-2">
         <CardHeader>
           <Text semibold xl>
-            Card Updates, Exports & Migrations - Admin View
+            Card Updates, Metadata, Exports & Migrations - Admin View
           </Text>
         </CardHeader>
         <TabbedView
@@ -169,13 +176,18 @@ const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({ cardUpdates
               content: <CardUpdatesTab updates={cardUpdates} />,
             },
             {
-              label: 'Export Tasks',
+              label: 'Card Metadata',
               onClick: () => setActiveTab('1'),
+              content: <CardMetadataTab tasks={cardMetadataTasks} />,
+            },
+            {
+              label: 'Export Tasks',
+              onClick: () => setActiveTab('2'),
               content: <ExportTasksTab tasks={exportTasks} />,
             },
             {
               label: 'Migrations',
-              onClick: () => setActiveTab('2'),
+              onClick: () => setActiveTab('3'),
               content: <MigrationTasksTab tasks={migrationTasks} />,
             },
           ]}
@@ -290,6 +302,85 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                       </div>
                     </>
                   )}
+                </CardBody>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </Flexbox>
+  </CardBody>
+);
+
+const CardMetadataTab: React.FC<{ tasks: CardMetadataTask[] }> = ({ tasks }) => (
+  <CardBody>
+    <Flexbox direction="col" gap="4">
+      <Text md className="text-text-secondary">
+        History of card metadata and correlation updates. This job runs weekly and calculates card statistics,
+        correlations, synergies, and combo data. It processes all cube and draft data to generate recommendations and
+        insights.
+      </Text>
+
+      {tasks.length === 0 ? (
+        <Text className="text-center py-8 text-text-secondary">No card metadata tasks found.</Text>
+      ) : (
+        <div className="space-y-4">
+          {tasks.map((task) => {
+            const statusBadge = getStatusBadge(task.status);
+            return (
+              <Card key={task.id} className="border border-border">
+                <CardBody>
+                  <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
+                    <Text semibold lg>
+                      Metadata Update on {formatDate(task.completedAt || task.timestamp)}
+                    </Text>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                      {statusBadge.text}
+                    </span>
+                  </Flexbox>
+
+                  <Flexbox direction="row" gap="4" className="mb-3">
+                    {task.status === 'IN_PROGRESS' && (
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
+                          Current Step
+                        </Text>
+                        <Text semibold md>
+                          {task.step}
+                        </Text>
+                      </Flexbox>
+                    )}
+
+                    {task.status === 'COMPLETED' && (
+                      <>
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Duration
+                          </Text>
+                          <Text semibold md>
+                            {formatDuration(task.startedAt, task.completedAt)}
+                          </Text>
+                        </Flexbox>
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Completed At
+                          </Text>
+                          <Text semibold md>
+                            {formatDate(task.completedAt || task.timestamp)}
+                          </Text>
+                        </Flexbox>
+                      </>
+                    )}
+                  </Flexbox>
+
+                  {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
+
+                  <StepProgress
+                    completedSteps={task.completedSteps || []}
+                    currentStep={task.step}
+                    status={task.status}
+                    stepTimestamps={task.stepTimestamps}
+                  />
                 </CardBody>
               </Card>
             );

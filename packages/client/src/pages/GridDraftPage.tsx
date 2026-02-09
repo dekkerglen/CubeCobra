@@ -9,6 +9,7 @@ import { fromEntries, toNullableInt } from '@utils/Util';
 import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftutils';
 
 import { Card } from '../components/base/Card';
+import Container from '../components/base/Container';
 import CSRFForm from '../components/CSRFForm';
 import DeckStacks from '../components/DeckStacks';
 import GridDraftPack from '../components/draft/GridDraftPack';
@@ -130,48 +131,50 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
-          <DynamicFlash />
-          <CSRFForm
-            ref={submitDeckForm}
-            method="POST"
-            action={`/cube/deck/submitdeck/${initialDraft.cube}`}
-            formData={{ body: initialDraft.id }}
-          >
-            {/* CSRFForm requires children, and null is a valid React node which does nothing */}
-            {null}
-          </CSRFForm>
-          <ErrorBoundary>
-            <GridDraftPack
-              pack={pack}
-              packNumber={packNum}
-              pickNumber={pickNum}
-              seatIndex={turn ? 0 : 1}
-              makePick={mutations.makePick}
-              turn={turn ? 1 : 2}
-            />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <Card className="mt-3">
-              <DeckStacks
-                cards={picked[0]}
-                title={draftType === 'bot' ? 'Picks' : "Player One's picks"}
-                subtitle={makeSubtitle(picked[0].flat(3))}
-                locationType={locations.deck}
-                xs={4}
-                md={8}
+          <Container xl disableCenter>
+            <DynamicFlash />
+            <CSRFForm
+              ref={submitDeckForm}
+              method="POST"
+              action={`/cube/deck/submitdeck/${initialDraft.cube}`}
+              formData={{ body: initialDraft.id }}
+            >
+              {/* CSRFForm requires children, and null is a valid React node which does nothing */}
+              {null}
+            </CSRFForm>
+            <ErrorBoundary>
+              <GridDraftPack
+                pack={pack}
+                packNumber={packNum}
+                pickNumber={pickNum}
+                seatIndex={turn ? 0 : 1}
+                makePick={mutations.makePick}
+                turn={turn ? 1 : 2}
               />
-            </Card>
-            <Card className="my-3">
-              <DeckStacks
-                cards={picked[1]}
-                title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
-                subtitle={makeSubtitle(picked[1].flat(3))}
-                locationType={locations.deck}
-                xs={4}
-                md={8}
-              />
-            </Card>
-          </ErrorBoundary>
+            </ErrorBoundary>
+            <ErrorBoundary>
+              <Card className="mt-3">
+                <DeckStacks
+                  cards={picked[0]}
+                  title={draftType === 'bot' ? 'Picks' : "Player One's picks"}
+                  subtitle={makeSubtitle(picked[0].flat(3))}
+                  locationType={locations.deck}
+                  xs={4}
+                  md={8}
+                />
+              </Card>
+              <Card className="my-3">
+                <DeckStacks
+                  cards={picked[1]}
+                  title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
+                  subtitle={makeSubtitle(picked[1].flat(3))}
+                  locationType={locations.deck}
+                  xs={4}
+                  md={8}
+                />
+              </Card>
+            </ErrorBoundary>
+          </Container>
         </CubeLayout>
       </DisplayContextProvider>
     </MainLayout>

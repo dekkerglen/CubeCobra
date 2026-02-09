@@ -130,9 +130,10 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
       {/* When showing bot weights, don't highlight user selection - only show top bot pick in blue */}
       <CardGrid
         cards={cards}
-        xs={3}
-        md={5}
-        lg={8}
+        md={4}
+        lg={5}
+        xl={6}
+        xxl={8}
         onClick={user ? (_, index) => handleCardClick(index) : undefined}
         hrefFn={user ? undefined : (card) => `/tool/card/${card.cardID}`}
         ratings={ratings}

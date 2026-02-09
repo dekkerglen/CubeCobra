@@ -125,7 +125,7 @@ export const listHandler = async (req: Request, res: Response) => {
         title: `${abbreviate(cube.name)} - List`,
         metadata: generateMeta(
           `Cube Cobra List: ${cube.name}`,
-          cube.description,
+          cube.brief,
           cube.image.uri,
           `${baseUrl}/cube/list/${req.params.id}`,
         ),
@@ -160,7 +160,7 @@ export const historyHandler = async (req: Request, res: Response) => {
         title: `${abbreviate(cube.name)} - List`,
         metadata: generateMeta(
           `Cube Cobra List: ${cube.name}`,
-          cube.description,
+          cube.brief,
           cube.image.uri,
           `${baseUrl}/cube/list/${req.params.id}`,
         ),

@@ -158,10 +158,11 @@ if (require.main === module) {
     }
 
     const today = new Date();
+    const yesterday = new Date(today.valueOf() - 86400000);
 
-    // Generate all date keys from firstDate to today
+    // Generate all date keys from firstDate to yesterday (don't process today as it's not complete)
     const allKeys: string[] = [];
-    for (let i = firstDate.valueOf(); i <= today.valueOf(); i += 86400000) {
+    for (let i = firstDate.valueOf(); i <= yesterday.valueOf(); i += 86400000) {
       const date = new Date(i);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       allKeys.push(key);
@@ -171,7 +172,7 @@ if (require.main === module) {
     const keys = allKeys.filter((key) => !processedDays.has(key));
 
     console.log(
-      `Processing date range from ${firstDate.toISOString().split('T')[0]} to ${today.toISOString().split('T')[0]}`,
+      `Processing date range from ${firstDate.toISOString().split('T')[0]} to ${yesterday.toISOString().split('T')[0]}`,
     );
     console.log(`${keys.length} days need processing (${processedDays.size} already complete)`);
 
@@ -461,34 +462,39 @@ if (require.main === module) {
 
     console.log('Finished writing global draft history');
 
-    // upload the files to database
-    const allCubes = await listFiles('cube_draft_history/');
-    const batches: any[] = [];
-    const batchSize = 100;
-    for (let j = 0; j < allCubes.length; j += batchSize) {
-      batches.push(allCubes.slice(j, j + batchSize));
-    }
-
-    let processed = 0;
-
-    for (const batch of batches) {
-      console.log(`Uploading ${batch.length} / ${allCubes.length} cube draft histories`);
-      const cubeData: Record<string, CubeAnalytic> = {};
-
-      for (const cubeFile of batch) {
-        const cubeName = cubeFile.split('/').pop()?.replace('.json', '');
-        if (cubeName) {
-          cubeData[cubeName] = await loadAndProcessCubeDraftAnalytics(cubeFile.split('/').pop()!);
-        }
+    // Only upload cube analytics if we actually processed new days
+    if (keys.length > 0) {
+      // upload the files to database
+      const allCubes = await listFiles('cube_draft_history/');
+      const batches: any[] = [];
+      const batchSize = 100;
+      for (let j = 0; j < allCubes.length; j += batchSize) {
+        batches.push(allCubes.slice(j, j + batchSize));
       }
 
-      await cubeDao.batchPutAnalytics(cubeData);
+      let processed = 0;
 
-      processed += batch.length;
-      console.log(`Uploaded ${processed} / ${allCubes.length} cube draft histories`);
+      for (const batch of batches) {
+        console.log(`Uploading ${batch.length} / ${allCubes.length} cube draft histories`);
+        const cubeData: Record<string, CubeAnalytic> = {};
+
+        for (const cubeFile of batch) {
+          const cubeName = cubeFile.split('/').pop()?.replace('.json', '');
+          if (cubeName) {
+            cubeData[cubeName] = await loadAndProcessCubeDraftAnalytics(cubeFile.split('/').pop()!);
+          }
+        }
+
+        await cubeDao.batchPutAnalytics(cubeData);
+
+        processed += batch.length;
+        console.log(`Uploaded ${processed} / ${allCubes.length} cube draft histories`);
+      }
+
+      console.log(`Uploaded ${allCubes.length} / ${allCubes.length} cube draft histories`);
+    } else {
+      console.log('No new days processed, skipping cube analytics upload');
     }
-
-    console.log(`Uploaded ${allCubes.length} / ${allCubes.length} cube draft histories`);
 
     console.log('Complete');
 

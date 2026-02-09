@@ -104,6 +104,7 @@ export interface CardDetails {
   pickCount?: number;
   isExtra?: boolean;
   wordCount?: number;
+  hasFlavorName?: boolean;
 }
 
 export const allFields = [

@@ -73,6 +73,9 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
               {cubeB.name} ({cubeB.cardCount} cards)
             </Link>
           </Flexbox>
+          <Text semibold sm>
+            Note: Custom cards are compared based on name
+          </Text>
         </Flexbox>
         <Flexbox direction="row" wrap="wrap" justify="end" alignItems="center">
           <ResponsiveDiv baseVisible lg>

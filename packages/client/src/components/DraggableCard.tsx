@@ -28,19 +28,24 @@ const DraggableCard: React.FC<DraggableCardProps> = ({ card, location, className
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `drop-${location.type}-${location.row}-${location.col}-${location.index}`,
     data: new DraftLocation(location.type, location.row, location.col, location.index),
-    // disabled: !canDrop,
   });
 
-  const previewClasses = classNames({ outline: isOver, transparent: isDragging }, className);
+  const previewClasses = classNames(
+    {
+      outline: isOver && !isDragging,
+      transparent: isDragging,
+    },
+    className,
+  );
+
+  const containerClasses = classNames('no-touch-action', {
+    clickable: !!onClick,
+    'ring-2 ring-blue-400 ring-offset-2': isOver && !isDragging,
+  });
 
   return (
     <>
-      <div
-        ref={setDragRef}
-        className={classNames('no-touch-action', { clickable: !!onClick })}
-        {...listeners}
-        {...attributes}
-      >
+      <div ref={setDragRef} className={containerClasses} {...listeners} {...attributes}>
         <div ref={setDropRef}>
           <FoilCardImage card={card} autocard className={previewClasses} onClick={() => onClick && onClick(card)} />
         </div>

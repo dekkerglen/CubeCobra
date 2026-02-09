@@ -47,6 +47,7 @@ export interface UnhydratedUser {
   token?: string;
   emailVerified?: boolean;
   yourCubesSortOrder?: YourCubesSortOrder;
+  disableAnimations?: boolean;
 }
 
 export interface UserWithSensitiveInformation extends UnhydratedUser {

@@ -286,7 +286,7 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
       },
       ScanIndexForward: false, // Descending order by date
       Limit: limit,
-      ExclusiveStartKey: lastKey,
+      ExclusiveStartKey: lastKey || undefined,
     };
 
     return this.query(params);

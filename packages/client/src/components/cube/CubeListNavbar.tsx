@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import {
   GraphIcon,
@@ -8,7 +8,9 @@ import {
   QuestionIcon,
   SearchIcon,
   SortAscIcon,
+  StackIcon,
   TableIcon,
+  XCircleIcon,
 } from '@primer/octicons-react';
 import { allFields, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
 
@@ -29,15 +31,23 @@ interface CubeListNavbarProps {
 }
 
 const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }) => {
-  const { cardsPerRow, setCardsPerRow } = useContext(DisplayContext);
+  const { cardsPerRow, setCardsPerRow, stacksPerRow, setStacksPerRow } = useContext(DisplayContext);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [filterValues, setFilterValues] = useState<Partial<FilterValues>>({});
   const [localFilterInput, setLocalFilterInput] = useState('');
 
-  const { canEdit } = useContext(CubeContext);
+  const { canEdit, changes } = useContext(CubeContext);
   const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
 
   const { rightSidebarMode, setRightSidebarMode } = useContext(DisplayContext);
+
+  // Check if there are pending edits
+  const hasPendingEdits = useMemo(() => {
+    return (
+      Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some((c) => c.length > 0) ||
+      Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some((c) => c.length > 0)
+    );
+  }, [changes]);
 
   // Sync local filter with context filter
   useEffect(() => {
@@ -120,6 +130,15 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 <GraphIcon size={20} />
               </button>
             </Tooltip>
+            <Tooltip text="Card Stacks">
+              <button
+                onClick={() => setCubeView('stacks')}
+                className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                aria-label="Card Stacks"
+              >
+                <StackIcon size={20} />
+              </button>
+            </Tooltip>
             {canEdit && (
               <Tooltip text="List View">
                 <button
@@ -156,15 +175,33 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               />
             </div>
           )}
+
+          {cubeView === 'stacks' && (
+            <div className="w-36">
+              <Select
+                value={`${stacksPerRow}`}
+                setValue={(value) => setStacksPerRow(parseInt(value, 10) as NumCols)}
+                className="bg-bg-active"
+                options={[
+                  { value: '1', label: '1 Stack Per Row' },
+                  { value: '2', label: '2 Stacks Per Row' },
+                  { value: '3', label: '3 Stacks Per Row' },
+                  { value: '4', label: '4 Stacks Per Row' },
+                ]}
+              />
+            </div>
+          )}
         </Flexbox>
         <div className="flex items-center gap-2 xl:px-2 flex-grow">
-          <button
-            onClick={() => setAdvancedOpen(true)}
-            className="text-text hover:text-text-secondary transition-colors"
-            aria-label="Open advanced filter"
-          >
-            <QuestionIcon size={20} />
-          </button>
+          <Tooltip text="Advanced Filters">
+            <button
+              onClick={() => setAdvancedOpen(true)}
+              className="text-text hover:text-text-secondary transition-colors"
+              aria-label="Open advanced filter"
+            >
+              <QuestionIcon size={20} className="hidden md:inline" />
+            </button>
+          </Tooltip>
           <div className="relative flex items-center flex-grow" style={{ minWidth: '150px' }}>
             <span className="absolute" style={{ left: '12px' }}>
               <SearchIcon size={16} className="text-text-secondary" />
@@ -186,6 +223,9 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 onBlur: () => setFilterInput(localFilterInput),
               }}
             />
+            <span className="absolute" style={{ right: '16px' }} onClick={() => setFilterInput('')}>
+              <XCircleIcon size={16} className="text-text-secondary cursor-pointer" />
+            </span>
           </div>
         </div>
         <div className="xl:px-2">
@@ -244,6 +284,15 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 <GraphIcon size={16} />
               </button>
             </Tooltip>
+            <Tooltip text="Card Stacks">
+              <button
+                onClick={() => setCubeView('stacks')}
+                className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                aria-label="Card Stacks"
+              >
+                <StackIcon size={16} />
+              </button>
+            </Tooltip>
             {canEdit && (
               <Tooltip text="List View">
                 <button
@@ -266,14 +315,23 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               <SortAscIcon size={16} />
             </Button>
             {canEdit && (
-              <Button
-                color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}
-                onClick={() => setRightSidebarMode(rightSidebarMode === 'edit' ? 'none' : 'edit')}
-                className="flex items-center gap-1 transition-colors"
+              <div
+                className={hasPendingEdits ? 'animate-pulse' : ''}
+                style={
+                  hasPendingEdits
+                    ? { boxShadow: '0 0 12px 1px rgb(var(--button-primary) / 0.85)', borderRadius: '0.25rem' }
+                    : {}
+                }
               >
-                <span className="hidden sm:inline">Edit</span>
-                <PencilIcon size={16} />
-              </Button>
+                <Button
+                  color={rightSidebarMode === 'edit' ? 'primary' : 'secondary'}
+                  onClick={() => setRightSidebarMode(rightSidebarMode === 'edit' ? 'none' : 'edit')}
+                  className="flex items-center gap-1 transition-colors"
+                >
+                  <span className="hidden sm:inline">Edit</span>
+                  <PencilIcon size={16} />
+                </Button>
+              </div>
             )}
           </div>
         </Flexbox>
@@ -303,6 +361,23 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           </Flexbox>
         )}
 
+        {/* Conditional row: Stacks per row select (only in stacks view) */}
+        {cubeView === 'stacks' && (
+          <Flexbox direction="row" alignItems="center" className="w-full">
+            <Select
+              value={`${stacksPerRow}`}
+              setValue={(value) => setStacksPerRow(parseInt(value, 10) as NumCols)}
+              className="bg-bg-active w-full"
+              options={[
+                { value: '1', label: '1 Stack Per Row' },
+                { value: '2', label: '2 Stacks Per Row' },
+                { value: '3', label: '3 Stacks Per Row' },
+                { value: '4', label: '4 Stacks Per Row' },
+              ]}
+            />
+          </Flexbox>
+        )}
+
         {/* Second row: Filter input */}
         <Flexbox direction="row" alignItems="center" gap="2" className="w-full">
           <button
@@ -310,7 +385,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             className="text-text hover:text-text-secondary transition-colors flex-shrink-0"
             aria-label="Open advanced filter"
           >
-            <QuestionIcon size={20} />
+            <QuestionIcon size={20} className="hidden md:inline" />
           </button>
           <div className="relative flex items-center flex-grow">
             <span className="absolute" style={{ left: '12px' }}>

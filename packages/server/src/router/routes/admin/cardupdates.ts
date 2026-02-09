@@ -1,5 +1,5 @@
 import { UserRoles } from '@utils/datatypes/User';
-import { cardUpdateTaskDao, exportTaskDao, migrationTaskDao } from 'dynamo/daos';
+import { cardMetadataTaskDao, cardUpdateTaskDao, exportTaskDao, migrationTaskDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { handleRouteError, render } from 'serverutils/render';
 
@@ -9,6 +9,9 @@ export const getCardUpdatesHandler = async (req: Request, res: Response) => {
   try {
     // Get the last 10 card updates (all statuses)
     const { items: cardUpdates } = await cardUpdateTaskDao.listAll(10);
+
+    // Get the last 10 card metadata tasks (all statuses)
+    const { items: cardMetadataTasks } = await cardMetadataTaskDao.listAll(10);
 
     // Get the last 10 export tasks (all statuses)
     const { items: exportTasks } = await exportTaskDao.listAll(10);
@@ -22,6 +25,7 @@ export const getCardUpdatesHandler = async (req: Request, res: Response) => {
       'AdminCardUpdatesPage',
       {
         cardUpdates,
+        cardMetadataTasks,
         exportTasks,
         migrationTasks,
       },

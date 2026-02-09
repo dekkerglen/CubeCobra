@@ -14,6 +14,7 @@ permissions:
 
 jobs:
   lint:
+    if: github.repository == 'dekkerglen/CubeCobra'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -37,6 +38,7 @@ jobs:
         run: npm run lint:check
 
   test:
+    if: github.repository == 'dekkerglen/CubeCobra'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

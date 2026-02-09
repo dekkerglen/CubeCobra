@@ -120,7 +120,7 @@ const CardModal: React.FC<CardModalProps> = ({
 
   const disabled = !canEdit || card.markedForDelete;
 
-  const { showCustomImages, rightSidebarMode, setRightSidebarMode } = useContext(DisplayContext);
+  const { showCustomImages, setRightSidebarMode } = useContext(DisplayContext);
 
   const getCardFrontImage = useCallback(
     (card: Card) => {
@@ -156,12 +156,12 @@ const CardModal: React.FC<CardModalProps> = ({
         setImageUsed(getCardFrontImage(card));
       }
       editCard(card.index!, { ...card, [field]: value }, card.board!);
-      // Auto-expand edit sidebar on desktop when a change is made
-      if (canEdit && rightSidebarMode !== 'edit') {
+      // Auto-expand edit sidebar on desktop when a change is made (md breakpoint: 768px)
+      if (canEdit && window.innerWidth >= 768) {
         setRightSidebarMode('edit');
       }
     },
-    [card, editCard, getCardFrontImage, isFrontImage, canEdit, rightSidebarMode, setRightSidebarMode],
+    [card, editCard, getCardFrontImage, isFrontImage, canEdit, setRightSidebarMode],
   );
 
   const doCmcValidity = useCallback((input: HTMLInputElement) => {
@@ -280,7 +280,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     block
                     outline
                     modalprops={{
-                      card: card.details,
+                      card,
                     }}
                   >
                     Add to another Cube
@@ -490,7 +490,10 @@ const CardModal: React.FC<CardModalProps> = ({
                 className="items-center text-sm"
                 onClick={() => {
                   removeCard(card.index!, card.board!);
-                  setRightSidebarMode('edit');
+                  // Auto-switch to edit sidebar on desktop (md breakpoint: 768px)
+                  if (window.innerWidth >= 768) {
+                    setRightSidebarMode('edit');
+                  }
                   setOpen(false);
                 }}
               >
@@ -505,7 +508,10 @@ const CardModal: React.FC<CardModalProps> = ({
                     className="items-center text-sm"
                     onClick={() => {
                       moveCard(card.index!, card.board!, 'maybeboard');
-                      setRightSidebarMode('edit');
+                      // Auto-switch to edit sidebar on desktop (md breakpoint: 768px)
+                      if (window.innerWidth >= 768) {
+                        setRightSidebarMode('edit');
+                      }
                       setOpen(false);
                     }}
                   >
@@ -521,7 +527,10 @@ const CardModal: React.FC<CardModalProps> = ({
                     className="items-center text-sm"
                     onClick={() => {
                       moveCard(card.index!, card.board!, 'mainboard');
-                      setRightSidebarMode('edit');
+                      // Auto-switch to edit sidebar on desktop (md breakpoint: 768px)
+                      if (window.innerWidth >= 768) {
+                        setRightSidebarMode('edit');
+                      }
                       setOpen(false);
                     }}
                   >

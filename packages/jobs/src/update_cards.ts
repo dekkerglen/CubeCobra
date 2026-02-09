@@ -159,6 +159,16 @@ async function downloadSets(useS3Cache?: boolean) {
   await getFileWithCache('https://api.scryfall.com/sets', `${PRIVATE_DIR}/sets.json`, useS3Cache);
 }
 
+const addToNameToIdMap = (normalizedName: string, scryFallId: string) => {
+  // only add if it doesn't exist, this makes the default the newest edition
+  if (!catalog.nameToId[normalizedName]) {
+    catalog.nameToId[normalizedName] = [];
+  }
+  if (!catalog.nameToId[normalizedName].includes(scryFallId)) {
+    catalog.nameToId[normalizedName].push(scryFallId);
+  }
+};
+
 function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
   catalog.dict[card.scryfall_id] = card;
   const normalizedFullName = cardutil.normalizeName(card.full_name);
@@ -180,13 +190,7 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
       catalog.cardimages[normalizedName] = cardImages;
     }
   }
-  // only add if it doesn't exist, this makes the default the newest edition
-  if (!catalog.nameToId[normalizedName]) {
-    catalog.nameToId[normalizedName] = [];
-  }
-  if (!catalog.nameToId[normalizedName].includes(card.scryfall_id)) {
-    catalog.nameToId[normalizedName].push(card.scryfall_id);
-  }
+  addToNameToIdMap(normalizedName, card.scryfall_id);
   if (!catalog.oracleToId[card.oracle_id]) {
     catalog.oracleToId[card.oracle_id] = [];
   }
@@ -466,6 +470,7 @@ function convertCard(
     newcard.cubeCount = metadata.cubes;
     newcard.pickCount = metadata.picks;
   }
+  newcard.hasFlavorName = !!card.flavor_name;
 
   const name = convertName(card, preflipped);
   newcard.color_identity = Array.from(card.color_identity);
@@ -640,11 +645,14 @@ async function writeCatalog(basePath = PRIVATE_DIR) {
   console.info(`All JSON files saved. Duration: ${duration.toFixed(2)}s`);
 }
 
-function saveEnglishCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number, mpPrice: number) {
+function saveCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number, mpPrice: number) {
   if (card.layout === 'transform') {
     addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
   }
-  addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, false), false);
+  const convertedCard = convertCard(card, metadata, ckPrice, mpPrice, false);
+  addCardToCatalog(convertedCard, false);
+  //card.name contains both faces name
+  addToNameToIdMap(cardutil.normalizeName(card.name), convertedCard.scryfall_id);
 }
 
 const ALL_NOT_LEGAL = Object.fromEntries(SUPPORTED_SCRYFALL_FORMATS.map((format) => [format, 'not_legal' as const]));
@@ -727,18 +735,6 @@ const STATIC_CARDS: ScryfallCard[] = [
   },
 ];
 
-function saveStaticCard(
-  card: ScryfallCard,
-  metadata: CardMetadata | undefined,
-  ckPrice: number | undefined,
-  mpPrice: number | undefined,
-) {
-  if (card.layout === 'transform') {
-    addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
-  }
-  addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, false), false);
-}
-
 async function saveAllCards(
   metadatadict: Record<string, CardMetadata>,
   indexToOracle: string[],
@@ -747,7 +743,12 @@ async function saveAllCards(
 ) {
   console.info('Processing static cards...');
   for (const staticCard of STATIC_CARDS) {
-    saveStaticCard(staticCard, metadatadict[staticCard.oracle_id], ckPrices[staticCard.id], mpPrices[staticCard.id]);
+    saveCard(
+      staticCard,
+      metadatadict[staticCard.oracle_id],
+      ckPrices[staticCard.id] ?? 0,
+      mpPrices[staticCard.id] ?? 0,
+    );
   }
 
   console.info(`Processed ${STATIC_CARDS.length} static cards.`);
@@ -760,7 +761,7 @@ async function saveAllCards(
       .pipe(JSONStream.parse('*'))
       .pipe(
         // @ts-expect-error idk why but this works
-        es.mapSync((item) => saveEnglishCard(item, metadatadict[item.oracle_id], ckPrices[item.id], mpPrices[item.id])),
+        es.mapSync((item) => saveCard(item, metadatadict[item.oracle_id], ckPrices[item.id], mpPrices[item.id])),
       )
       .on('close', resolve),
   );

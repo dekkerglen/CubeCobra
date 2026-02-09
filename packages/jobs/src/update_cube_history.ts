@@ -13,11 +13,9 @@ import { getCubeTypes } from '@server/serverutils/cubefn';
 import { DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
-import fs from 'fs';
 
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 
-const { encode, initializeMl } = require('../../recommenderService/src/mlutils/ml');
 type CubeDict = Record<string, string[]>;
 
 const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
@@ -120,10 +118,6 @@ const mapTotalsToCardHistory = (
   console.log('Loading card database');
   await initializeCardDb(privateDir);
 
-  console.log('Initializing ML models');
-  const rootDir = path.join(__dirname, '..', '..', 'recommenderService');
-  await initializeMl(rootDir);
-
   // List existing files in S3 cubes_history to determine which days are already processed
   // We only check filenames, not file contents, since files are large
   const existingFiles = await listFiles('cubes_history/');
@@ -153,10 +147,11 @@ const mapTotalsToCardHistory = (
   }
 
   const today = new Date();
+  const yesterday = new Date(today.valueOf() - 86400000);
 
-  // Generate all date keys from firstDate to today
+  // Generate all date keys from firstDate to yesterday (don't process today as it's not complete)
   const allKeys: string[] = [];
-  for (let i = firstDate.valueOf(); i <= today.valueOf(); i += 86400000) {
+  for (let i = firstDate.valueOf(); i <= yesterday.valueOf(); i += 86400000) {
     const date = new Date(i);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     allKeys.push(key);
@@ -166,7 +161,7 @@ const mapTotalsToCardHistory = (
   const keys = allKeys.filter((key) => !processedDays.has(key));
 
   console.log(
-    `Processing date range from ${firstDate.toISOString().split('T')[0]} to ${today.toISOString().split('T')[0]}`,
+    `Processing date range from ${firstDate.toISOString().split('T')[0]} to ${yesterday.toISOString().split('T')[0]}`,
   );
   console.log(`${keys.length} days need processing (${processedDays.size} already complete)`);
 
@@ -195,6 +190,12 @@ const mapTotalsToCardHistory = (
   });
 
   console.log(`${keys.length} days need processing (${processedDays.size} already complete)`);
+
+  // If no days need processing, exit early
+  if (keys.length === 0) {
+    console.log('No new days to process, exiting');
+    process.exit();
+  }
 
   let cubes: CubeDict = {};
   let oracleToElo: Record<string, number> = {};
@@ -476,45 +477,45 @@ const mapTotalsToCardHistory = (
     console.log(`Finished ${i + 1} / ${keys.length}: Processed ${dayChangelogs.length} logs for ${key}`);
   }
 
-  // Generate cube embeddings
-  console.log('Generating cube embeddings...');
-  if (taskId) {
-    await cardUpdateTaskDao.updateStep(taskId, 'Generating Cube Embeddings');
-  }
+  // // Generate cube embeddings
+  // console.log('Generating cube embeddings...');
+  // if (taskId) {
+  //   await cardUpdateTaskDao.updateStep(taskId, 'Generating Cube Embeddings');
+  // }
 
-  const cubeEmbeddings: Record<string, number[]> = {};
-  const cubeIds = Object.keys(cubes);
-  console.log(`Processing ${cubeIds.length} cubes for embeddings...`);
+  // const cubeEmbeddings: Record<string, number[]> = {};
+  // const cubeIds = Object.keys(cubes);
+  // console.log(`Processing ${cubeIds.length} cubes for embeddings...`);
 
-  for (let i = 0; i < cubeIds.length; i++) {
-    const cubeId = cubeIds[i];
-    if (!cubeId) continue;
+  // for (let i = 0; i < cubeIds.length; i++) {
+  //   const cubeId = cubeIds[i];
+  //   if (!cubeId) continue;
 
-    const cubeOracles = cubes[cubeId];
+  //   const cubeOracles = cubes[cubeId];
 
-    if (!cubeOracles || cubeOracles.length === 0) {
-      continue; // Skip empty cubes
-    }
+  //   if (!cubeOracles || cubeOracles.length === 0) {
+  //     continue; // Skip empty cubes
+  //   }
 
-    // Generate embedding for this cube using the ML encoder
-    const embedding = encode(cubeOracles);
+  //   // Generate embedding for this cube using the ML encoder
+  //   const embedding = encode(cubeOracles);
 
-    if (embedding && embedding.length > 0) {
-      cubeEmbeddings[cubeId] = Array.from(embedding);
-    }
+  //   if (embedding && embedding.length > 0) {
+  //     cubeEmbeddings[cubeId] = Array.from(embedding);
+  //   }
 
-    if (i % 1000 === 0 && i > 0) {
-      console.log(`  Processed ${i} / ${cubeIds.length} cubes...`);
-    }
-  }
+  //   if (i % 1000 === 0 && i > 0) {
+  //     console.log(`  Processed ${i} / ${cubeIds.length} cubes...`);
+  //   }
+  // }
 
-  console.log(`Generated embeddings for ${Object.keys(cubeEmbeddings).length} cubes`);
+  // console.log(`Generated embeddings for ${Object.keys(cubeEmbeddings).length} cubes`);
 
-  // Save cube embeddings to file
-  const cubeEmbeddingsPath = path.join(privateDir, 'cubeEmbeddings.json');
-  console.log(`Saving cube embeddings to ${cubeEmbeddingsPath}...`);
-  fs.writeFileSync(cubeEmbeddingsPath, JSON.stringify(cubeEmbeddings));
-  console.log('Cube embeddings saved to file');
+  // // Save cube embeddings to file
+  // const cubeEmbeddingsPath = path.join(privateDir, 'cubeEmbeddings.json');
+  // console.log(`Saving cube embeddings to ${cubeEmbeddingsPath}...`);
+  // fs.writeFileSync(cubeEmbeddingsPath, JSON.stringify(cubeEmbeddings));
+  // console.log('Cube embeddings saved to file');
 
   console.log('Complete');
 

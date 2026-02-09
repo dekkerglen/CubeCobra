@@ -259,14 +259,16 @@ export const podcastHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/content/browse');
   }
 
-  const episodes = await episodeDao.queryByPodcast(podcast.id, undefined, ContentStatus.PUBLISHED);
+  const episodesResult = await episodeDao.queryByPodcast(podcast.id, undefined, ContentStatus.PUBLISHED);
+
+  console.log(episodesResult);
 
   const baseUrl = getBaseUrl();
   return render(
     req,
     res,
     'PodcastPage',
-    { podcast, episodes },
+    { podcast, episodes: episodesResult.items },
     {
       title: podcast.title || 'Podcast',
       metadata: generateMeta(

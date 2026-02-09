@@ -8,6 +8,7 @@ import Draft from '@utils/datatypes/Draft';
 import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
 
 import { Card } from '../components/base/Card';
+import Container from '../components/base/Container';
 import DeckbuilderNavbar from '../components/DeckbuilderNavbar';
 import DeckStacks from '../components/DeckStacks';
 import DynamicFlash from '../components/DynamicFlash';
@@ -120,58 +121,60 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
-          <DeckbuilderNavbar
-            cards={initialDeck.cards}
-            basics={basics}
-            mainboard={mainboard}
-            sideboard={sideboard}
-            cubeID={cube.id}
-            draft={initialDeck}
-            addBasics={addBasics}
-            className="mb-3"
-            setDeck={setMainboard}
-            setSideboard={setSideboard}
-            seat={seatIndex}
-          />
-          <DeckBuilderStatsPanel
-            cards={mainboard
-              .flat()
-              .flat()
-              .map((index) => initialDeck.cards[index])}
-          />
-          <DynamicFlash />
-          <Card className="my-3">
-            <DndContext onDragEnd={handleMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
-              <ErrorBoundary>
-                <DeckStacks
-                  cards={mainboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
-                  title="Deck"
-                  subtitle={makeSubtitle(
-                    mainboard
-                      .flat()
-                      .flat()
-                      .map((index) => initialDeck.cards[index]),
-                  )}
-                  locationType={locations.deck}
-                  xs={4}
-                  lg={8}
-                />
-                <DeckStacks
-                  cards={sideboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
-                  title="Sideboard"
-                  locationType={locations.sideboard}
-                  subtitle={makeSubtitle(
-                    sideboard
-                      .flat()
-                      .flat()
-                      .map((index) => initialDeck.cards[index]),
-                  )}
-                  xs={4}
-                  lg={8}
-                />
-              </ErrorBoundary>
-            </DndContext>
-          </Card>
+          <Container xl disableCenter>
+            <DeckbuilderNavbar
+              cards={initialDeck.cards}
+              basics={basics}
+              mainboard={mainboard}
+              sideboard={sideboard}
+              cubeID={cube.id}
+              draft={initialDeck}
+              addBasics={addBasics}
+              className="mb-3"
+              setDeck={setMainboard}
+              setSideboard={setSideboard}
+              seat={seatIndex}
+            />
+            <DeckBuilderStatsPanel
+              cards={mainboard
+                .flat()
+                .flat()
+                .map((index) => initialDeck.cards[index])}
+            />
+            <DynamicFlash />
+            <Card className="my-3">
+              <DndContext onDragEnd={handleMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
+                <ErrorBoundary>
+                  <DeckStacks
+                    cards={mainboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
+                    title="Deck"
+                    subtitle={makeSubtitle(
+                      mainboard
+                        .flat()
+                        .flat()
+                        .map((index) => initialDeck.cards[index]),
+                    )}
+                    locationType={locations.deck}
+                    xs={4}
+                    lg={8}
+                  />
+                  <DeckStacks
+                    cards={sideboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
+                    title="Sideboard"
+                    locationType={locations.sideboard}
+                    subtitle={makeSubtitle(
+                      sideboard
+                        .flat()
+                        .flat()
+                        .map((index) => initialDeck.cards[index]),
+                    )}
+                    xs={4}
+                    lg={8}
+                  />
+                </ErrorBoundary>
+              </DndContext>
+            </Card>
+          </Container>
         </CubeLayout>
       </DisplayContextProvider>
     </MainLayout>

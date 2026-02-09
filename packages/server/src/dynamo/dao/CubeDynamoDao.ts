@@ -137,7 +137,7 @@ const createDeletedUserPlaceholder = (userId: string): User => {
     hideTagColors: false,
     defaultNav: [],
     roles: [],
-    theme: 'default',
+    theme: 'system',
     hideFeatured: false,
     followedCubes: [],
     followedUsers: [],

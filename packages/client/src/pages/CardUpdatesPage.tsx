@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { CardMetadataTask } from '@utils/datatypes/CardMetadataTask';
 import { CardUpdateTask } from '@utils/datatypes/CardUpdateTask';
 import { ExportTask } from '@utils/datatypes/ExportTask';
 import { MigrationTask } from '@utils/datatypes/MigrationTask';
@@ -14,6 +15,7 @@ import MainLayout from 'layouts/MainLayout';
 
 interface CardUpdatesPageProps {
   lastCardUpdate?: CardUpdateTask;
+  lastCardMetadataTask?: CardMetadataTask;
   lastExportTask?: ExportTask;
   lastMigrationTask?: MigrationTask;
 }
@@ -27,7 +29,12 @@ const formatDate = (timestamp: number): string => {
   });
 };
 
-const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastExportTask, lastMigrationTask }) => (
+const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({
+  lastCardUpdate,
+  lastCardMetadataTask,
+  lastExportTask,
+  lastMigrationTask,
+}) => (
   <MainLayout>
     <Container sm>
       <Flexbox direction="col" gap="3" className="my-4">
@@ -48,16 +55,14 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
           <CardBody>
             <Flexbox direction="col" gap="3">
               <Text md className="text-text-secondary">
-                CubeCobra automatically downloads and processes the latest Magic: The Gathering card data from{' '}
+                Every day, CubeCobra automatically downloads the latest Magic: The Gathering card data from{' '}
                 <Link href="https://scryfall.com/docs/api/bulk-data" target="_blank" rel="noopener noreferrer">
                   Scryfall's bulk data API
                 </Link>
-                . This includes all card information, images, prices, legalities, and set data. Updates run daily to
-                ensure you always have access to the newest cards and accurate information. There are a number of
-                additional data sources that enrich the data, including{' '}
-                <Link href="https://commanderspellbook.com/">Commander Spellbook</Link> for combo data, and pricing data
-                for marketplace specific pricing. We also use our recommendation engine to calculate up to date synergy
-                and cache calculations to improve draftbot performance.
+                . This includes all official card information: names, types, mana costs, oracle text, legalities, set
+                data, and images. We also pull in current market prices from multiple sources so you can track the value
+                of your cube. This update ensures you always have access to the newest cards from the latest sets and
+                accurate, up-to-date card information.
               </Text>
               {lastCardUpdate ? (
                 <>
@@ -107,6 +112,75 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
           </CardBody>
         </Card>
 
+        {/* Card Metadata Update */}
+        <Card>
+          <CardHeader>
+            <Text semibold lg>
+              Card Metadata & Correlations
+            </Text>
+          </CardHeader>
+          <CardBody>
+            <Flexbox direction="col" gap="3">
+              <Text md className="text-text-secondary">
+                Once a week, CubeCobra analyzes how cards are used across the entire platform. This process examines
+                millions of data points from all public cubes and draft logs to calculate:
+              </Text>
+              <ul className="list-disc list-inside space-y-2 text-text-secondary ml-4">
+                <li>
+                  <span className="font-semibold">Card Popularity:</span> How often each card appears in cubes across
+                  CubeCobra
+                </li>
+                <li>
+                  <span className="font-semibold">Draft Performance:</span> ELO ratings based on how often cards are
+                  picked during drafts
+                </li>
+                <li>
+                  <span className="font-semibold">Card Correlations:</span> Which cards are frequently cubed together or
+                  drafted in the same decks
+                </li>
+                <li>
+                  <span className="font-semibold">Combo Data:</span> Importing the latest infinite combos and powerful
+                  interactions from{' '}
+                  <Link href="https://commanderspellbook.com/" target="_blank" rel="noopener noreferrer">
+                    Commander Spellbook
+                  </Link>
+                </li>
+              </ul>
+              <Text md className="text-text-secondary mt-2">
+                These statistics are displayed on individual card pages, allowing you to see how popular each card is,
+                how it performs in drafts, and which cards are commonly used alongside it in other cubes. The weekly
+                cadence ensures you get fresh data without overwhelming our servers or slowing down the site.
+              </Text>
+              {lastCardMetadataTask ? (
+                <>
+                  <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Last Update
+                      </Text>
+                      <Text semibold md>
+                        {formatDate(lastCardMetadataTask.completedAt || lastCardMetadataTask.timestamp)}
+                      </Text>
+                    </Flexbox>
+                    <Flexbox direction="col" gap="2" className="flex-1">
+                      <Text sm className="text-text-secondary">
+                        Update Frequency
+                      </Text>
+                      <Text semibold md>
+                        Weekly
+                      </Text>
+                    </Flexbox>
+                  </Flexbox>
+                </>
+              ) : (
+                <Text className="text-text-secondary pt-3 border-t border-border">
+                  No completed metadata updates found.
+                </Text>
+              )}
+            </Flexbox>
+          </CardBody>
+        </Card>
+
         {/* Export Task */}
         <Card>
           <CardHeader>
@@ -117,8 +191,11 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
           <CardBody>
             <Flexbox direction="col" gap="3">
               <Text md className="text-text-secondary">
-                Periodic data exports create comprehensive snapshots of all cube data on CubeCobra. Our public S3 bucket
-                contains card definition files, ML models, and data exports for research and analysis purposes.
+                Every three months, CubeCobra creates comprehensive backup exports of all public data on the platform.
+                These exports are made freely available through our public S3 bucket for researchers, content creators,
+                and anyone interested in cube analytics. The exports include complete cube lists, draft data, and all
+                card definitions in machine-readable formats. If you're interested in analyzing cube trends, building
+                tools, or conducting research, you can download these datasets using the AWS CLI.
               </Text>
 
               {lastExportTask && (
@@ -181,10 +258,12 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({ lastCardUpdate, lastE
           <CardBody>
             <Flexbox direction="col" gap="3">
               <Text md className="text-text-secondary">
-                When Scryfall removes duplicate cards or merges card entries (usually due to corrections in their
-                database), CubeCobra automatically migrates affected cubes to use the correct card versions. This
-                ensures your cubes always reference valid, up-to-date card data and prevents broken links or missing
-                cards. The migration process runs automatically whenever Scryfall publishes card deletions or merges.
+                Occasionally, Scryfall corrects errors in their database by removing duplicate card entries or merging
+                cards that were mistakenly listed separately. When this happens, CubeCobra automatically updates all
+                affected cubes to reference the correct card versions. This maintenance happens behind the scenes to
+                ensure your cubes always use valid, current card data. You'll never see broken images or missing cards
+                due to Scryfall's database changes - we handle all the migrations automatically to keep your cubes
+                working perfectly.
               </Text>
               {lastMigrationTask ? (
                 <>

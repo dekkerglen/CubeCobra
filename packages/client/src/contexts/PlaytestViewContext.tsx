@@ -10,7 +10,7 @@ interface PlaytestViewContextValue {
 const PlaytestViewContext = React.createContext<PlaytestViewContextValue | null>(null);
 
 export const PlaytestViewContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [view, setView] = useQueryParam('view', 'sample-pack');
+  const [view, setView] = useQueryParam('view', 'practice-draft');
 
   return <PlaytestViewContext.Provider value={{ view, setView }}>{children}</PlaytestViewContext.Provider>;
 };

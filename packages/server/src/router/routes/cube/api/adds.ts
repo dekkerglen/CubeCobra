@@ -24,7 +24,9 @@ export const addsHandler = async (req: Request, res: Response) => {
 
     const cards = await cubeDao.getCards(cubeID);
 
-    const { adds } = await recommend(cards.mainboard.map((card: any) => card.details.oracle_id));
+    const oracles = cards.mainboard.map((card: any) => card.details?.oracle_id).filter(Boolean);
+
+    const { adds } = await recommend(oracles);
 
     let slice;
     let { length } = adds;

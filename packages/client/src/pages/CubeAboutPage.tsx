@@ -18,9 +18,9 @@ import MainLayout from 'layouts/MainLayout';
 interface CubeAboutPageProps {
   cube: Cube;
   cards: CubeCards;
-  posts: PostType[];
+  posts?: PostType[];
   postsLastKey: any;
-  changes: Record<string, any>[];
+  changes?: Record<string, any>[];
   changesLastKey?: string;
   followed: boolean;
   followersCount: number;
@@ -49,7 +49,7 @@ const CubeAboutPageContent: React.FC<CubeAboutPageProps> = ({
       break;
     case 'primer':
     default:
-      content = <PrimerView description={cube.description} />;
+      content = <PrimerView description={cube.description} tags={cube.tags} />;
       break;
   }
 

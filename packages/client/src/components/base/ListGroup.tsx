@@ -22,7 +22,7 @@ interface ListGroupItemProps {
 
 export const ListGroup: FC<ListGroupProps> = ({ children }) => {
   return (
-    <Flexbox direction="col" className="border border-border-secondary rounded-md">
+    <Flexbox direction="col" className="list-group border border-border-secondary rounded-md">
       {children}
     </Flexbox>
   );
@@ -39,14 +39,24 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
   ...props
 }) => {
   const user = useContext(UserContext);
-  const theme = user?.theme || 'default';
+  const theme = user?.theme || 'system';
+
+  // Determine effective theme for hover effects
+  const isDarkMode =
+    theme === 'dark' ||
+    (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const isClickable = !!(onClick || onAuxClick);
 
   const itemClasses = classNames(
     'px-1 py-[3px] transition-all duration-200 truncate text-xs',
     {
+      'list-group-heading': heading,
+      'list-group-card': !heading,
       'font-semibold centered border-b border-border-secondary rounded-t-md': heading,
-      'cursor-pointer hover:brightness-125': (onClick || onAuxClick) && theme === 'dark',
-      'cursor-pointer hover:brightness-90': (onClick || onAuxClick) && theme === 'default',
+      'cursor-pointer': isClickable,
+      'hover:brightness-125': isClickable && isDarkMode,
+      'hover:brightness-90': isClickable && !isDarkMode,
       'rounded-b-md': last,
       'rounded-t-md': first,
     },

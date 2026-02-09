@@ -10,6 +10,7 @@ import DecksView from 'components/playtest/DecksView';
 import PracticeDraftView from 'components/playtest/PracticeDraftView';
 import SamplePackView from 'components/playtest/SamplePackView';
 import RenderToRoot from 'components/RenderToRoot';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import PlaytestViewContext, { PlaytestViewContextProvider } from 'contexts/PlaytestViewContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -30,18 +31,18 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
   previousPacksLastKey,
 }) => {
   const playtestViewContext = useContext(PlaytestViewContext);
-  const view = playtestViewContext?.view || 'sample-pack';
+  const view = playtestViewContext?.view || 'practice-draft';
 
   let content;
   switch (view) {
     case 'practice-draft':
+    default:
       content = <PracticeDraftView cube={cube} />;
       break;
     case 'decks':
       content = <DecksView decks={decks} decksLastKey={decksLastKey} cubeId={cube.id} />;
       break;
     case 'sample-pack':
-    default:
       content = (
         <SamplePackView
           cubeId={cube.id}
@@ -55,13 +56,15 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
 
   return (
     <MainLayout useContainer={false}>
-      <CubeLayout cube={cube} activeLink={view}>
-        <Flexbox direction="col" gap="2">
-          <DynamicFlash />
-          <PlaytestNavbar />
-          {content}
-        </Flexbox>
-      </CubeLayout>
+      <DisplayContextProvider cubeID={cube.id}>
+        <CubeLayout cube={cube} activeLink={view}>
+          <Flexbox direction="col" gap="2">
+            <DynamicFlash />
+            <PlaytestNavbar />
+            {content}
+          </Flexbox>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };

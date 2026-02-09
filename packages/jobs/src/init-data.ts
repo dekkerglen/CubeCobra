@@ -18,7 +18,7 @@ import fs from 'fs';
     console.log('Initializing card data and ML models for jobs...');
 
     const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
-    const serverDir = path.join(__dirname, '..', '..', 'server');
+    const recommenderServiceDir = path.join(__dirname, '..', '..', 'recommenderService');
 
     // Ensure directories exist
     if (!fs.existsSync(privateDir)) {
@@ -34,7 +34,7 @@ import fs from 'fs';
 
     // Download ML models from S3
     console.log('Downloading ML models from S3...');
-    await downloadModelsFromS3(serverDir, bucket);
+    await downloadModelsFromS3(recommenderServiceDir, bucket);
     console.log('✅ ML models downloaded');
 
     console.log('✅ Initialization complete!');

@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   build-server:
+    if: github.repository == 'dekkerglen/CubeCobra'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 

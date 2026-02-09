@@ -51,7 +51,7 @@
     "uuid": "^9.0.1"
   },
   "scripts": {
-    "tailwind": "npx postcss ./src/css/stylesheet.css -o ../server/public/css/stylesheet.css --watch",
+    "tailwind": "onchange -a -i './src/css/stylesheet.css' -- npm run tailwind:build",
     "tailwind:build": "npx postcss ./src/css/stylesheet.css -o ../server/public/css/stylesheet.css && npx prettier --write ../server/public/css/stylesheet.css",
     "start": "npm run tailwind & webpack serve",
     "build": "cross-env NODE_ENV=production npm run tailwind:build && cross-env NODE_ENV=production webpack && node generate-manifest.js",
@@ -94,13 +94,14 @@
     "file-loader": "^6.2.0",
     "mini-css-extract-plugin": "^2.9.0",
     "mocha": "^10.4.0",
+    "onchange": "^7.1.0",
     "postcss-cli": "^11.0.1",
     "postcss-loader": "^8.1.1",
     "style-loader": "^4.0.0",
     "ts-jest": "^29.4.5",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
-    "webpack": "^5.91.0",
+    "webpack": "^5.105.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.0.4"
   },

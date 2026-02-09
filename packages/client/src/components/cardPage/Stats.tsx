@@ -71,7 +71,12 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card }) => {
         </Text>
         {'cubes total.'}
       </Text>
-      <AddModal color="primary" block className="mb-1 me-2" modalprops={{ card, hideAnalytics: true }}>
+      <AddModal
+        color="primary"
+        block
+        className="mb-1 me-2"
+        modalprops={{ card: detailsToCard(card), hideAnalytics: true }}
+      >
         Add to Cube
       </AddModal>
       <CardIdBadge id={card.scryfall_id} />

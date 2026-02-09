@@ -63,10 +63,6 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     cube.name = updatedCube.name;
     cube.imageName = updatedCube.imageName;
 
-    if (updatedCube.description !== null) {
-      cube.description = updatedCube.description;
-    }
-
     if (updatedCube.brief !== undefined) {
       cube.brief = updatedCube.brief;
     }
@@ -98,9 +94,6 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
     } else {
       cube.categoryPrefixes = [];
     }
-
-    // cube tags
-    cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
 
     await cubeDao.update(cube);
 

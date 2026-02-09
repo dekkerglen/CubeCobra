@@ -27,6 +27,16 @@ export const samplePackHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/cube/playtest/404');
     }
 
+    // Handle "random" seed - redirect to a new random seed
+    if (req.params.seed === 'random') {
+      const queryString = req.query.balanced === 'true' ? '?balanced=true' : '';
+      return redirect(
+        req,
+        res,
+        `/cube/samplepack/${encodeURIComponent(req.params.id!)}/${Date.now().toString()}${queryString}`,
+      );
+    }
+
     const cards = await cubeDao.getCards(cube.id);
     const isBalanced = req.query.balanced === 'true';
 

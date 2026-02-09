@@ -17,7 +17,6 @@ import RadioButtonGroup from '../base/RadioButtonGroup';
 import Text from '../base/Text';
 import LoadingButton from '../LoadingButton';
 import MtgImage from '../MtgImage';
-import TagInput from '../TagInput';
 import TextEntry from '../TextEntry';
 
 interface CubeOverviewModalProps {
@@ -88,7 +87,7 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
     <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
       <ModalHeader setOpen={setOpen}>
         <Text semibold lg>
-          Edit Primer
+          Edit Overview
         </Text>
       </ModalHeader>
       <ModalBody scrollable>
@@ -170,29 +169,6 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
             value={state.brief || ''}
             setValue={(value) => setState({ ...state, brief: value })}
             maxLength={500}
-          />
-          <Text semibold md>
-            Description
-          </Text>
-          <TextEntry
-            name="blog"
-            value={state.description}
-            setValue={(value) => setState({ ...state, description: value })}
-            maxLength={100000}
-          />
-          <TagInput
-            label="Tags"
-            tags={state.tags.map((tag) => ({ text: tag, id: tag }))}
-            addTag={(tag) => {
-              if (!state.tags.includes(tag.text)) {
-                setState({ ...state, tags: [...state.tags, tag.text] });
-              }
-            }}
-            deleteTag={(index) => {
-              const newTags = [...state.tags];
-              newTags.splice(index, 1);
-              setState({ ...state, tags: newTags });
-            }}
           />
           <Input
             label="Short ID"

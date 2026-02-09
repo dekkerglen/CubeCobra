@@ -119,6 +119,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       token: item?.token,
       emailVerified: item?.emailVerified,
       yourCubesSortOrder: item?.yourCubesSortOrder,
+      disableAnimations: item.disableAnimations,
     };
 
     // Preserve sensitive data if it exists
@@ -168,6 +169,10 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
 
     if (!hydrated.yourCubesSortOrder) {
       hydrated.yourCubesSortOrder = DefaultYourCubesSortOrder;
+    }
+
+    if (typeof hydrated.disableAnimations === 'undefined') {
+      hydrated.disableAnimations = false;
     }
 
     return hydrated;

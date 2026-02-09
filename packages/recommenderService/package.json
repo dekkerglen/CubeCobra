@@ -43,6 +43,7 @@
     "@types/archiver": "^6.0.2",
     "@types/compression": "^1.8.1",
     "@types/response-time": "^2.3.8",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
     "copyfiles": "^2.4.1",

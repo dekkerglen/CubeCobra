@@ -6,6 +6,7 @@ import useQueryParam from '../hooks/useQueryParam';
 import Query from '../utils/Query';
 
 export type RightSidebarMode = 'none' | 'edit' | 'sort';
+export type RightSidebarPosition = 'right' | 'bottom';
 
 export interface DisplayContextValue {
   showCustomImages: boolean;
@@ -18,10 +19,18 @@ export interface DisplayContextValue {
   setOpenCollapse: React.Dispatch<React.SetStateAction<string | null>>;
   cardsPerRow: NumCols;
   setCardsPerRow: React.Dispatch<React.SetStateAction<NumCols>>;
+  stacksPerRow: NumCols;
+  setStacksPerRow: React.Dispatch<React.SetStateAction<NumCols>>;
   showDeckBuilderStatsPanel: boolean;
   toggleShowDeckBuilderStatsPanel: () => void;
   rightSidebarMode: RightSidebarMode;
   setRightSidebarMode: React.Dispatch<React.SetStateAction<RightSidebarMode>>;
+  rightSidebarPosition: RightSidebarPosition;
+  setRightSidebarPosition: React.Dispatch<React.SetStateAction<RightSidebarPosition>>;
+  cubeSidebarExpanded: boolean;
+  toggleCubeSidebarExpanded: () => void;
+  showAllBoards: boolean;
+  setShowAllBoards: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const DisplayContext = React.createContext<DisplayContextValue>({
@@ -35,10 +44,18 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   setOpenCollapse: () => {},
   cardsPerRow: 8,
   setCardsPerRow: () => {},
+  stacksPerRow: 2,
+  setStacksPerRow: () => {},
   showDeckBuilderStatsPanel: false,
   toggleShowDeckBuilderStatsPanel: () => {},
   rightSidebarMode: 'none',
   setRightSidebarMode: () => {},
+  rightSidebarPosition: 'right',
+  setRightSidebarPosition: () => {},
+  cubeSidebarExpanded: true,
+  toggleCubeSidebarExpanded: () => {},
+  showAllBoards: false,
+  setShowAllBoards: () => {},
 });
 
 interface DisplayContextProviderProps {
@@ -52,6 +69,12 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     return Query.get('f') ? 'filter' : null;
   });
   const [cardsPerRow, setCardsPerRow] = useLocalStorage<NumCols>('cardsPerRow', 6);
+  const [stacksPerRow, setStacksPerRow] = useLocalStorage<NumCols>('stacksPerRow', 2);
+  const [cubeSidebarExpanded, setCubeSidebarExpanded] = useLocalStorage<boolean>('cubeSidebarExpanded', true);
+  const [rightSidebarPosition, setRightSidebarPosition] = useLocalStorage<RightSidebarPosition>(
+    'rightSidebarPosition',
+    'right',
+  );
 
   const toggleShowCustomImages = useCallback(() => {
     setShowCustomImages((prev) => !prev);
@@ -93,6 +116,12 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setShowDeckBuilderStatsPanel((prev) => !prev);
   }, [showDeckBuilderStatsPanel]);
 
+  const toggleCubeSidebarExpanded = useCallback(() => {
+    setCubeSidebarExpanded((prev) => !prev);
+  }, [setCubeSidebarExpanded]);
+
+  const [showAllBoards, setShowAllBoards] = useLocalStorage<boolean>(`${cubeID}-showAllBoards`, false);
+
   const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>(() => {
     // Check if there are pending changes in local storage
     if (typeof localStorage !== 'undefined' && cubeID) {
@@ -106,7 +135,9 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
             Object.values(changes.mainboard || {}).some((c: any) => Array.isArray(c) && c.length > 0) ||
             Object.values(changes.maybeboard || {}).some((c: any) => Array.isArray(c) && c.length > 0);
 
-          if (hasPendingEdits) {
+          // Only auto-open the edit sidebar on desktop (md breakpoint: 768px)
+          // On mobile, show a visual cue on the edit button instead
+          if (hasPendingEdits && typeof window !== 'undefined' && window.innerWidth >= 768) {
             return 'edit';
           }
         }
@@ -128,10 +159,18 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setOpenCollapse,
     cardsPerRow,
     setCardsPerRow,
+    stacksPerRow,
+    setStacksPerRow,
     showDeckBuilderStatsPanel,
     toggleShowDeckBuilderStatsPanel,
     rightSidebarMode,
     setRightSidebarMode,
+    rightSidebarPosition,
+    setRightSidebarPosition,
+    cubeSidebarExpanded,
+    toggleCubeSidebarExpanded,
+    showAllBoards,
+    setShowAllBoards,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };

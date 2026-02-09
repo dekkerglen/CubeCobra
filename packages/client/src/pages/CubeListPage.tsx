@@ -3,10 +3,12 @@ import React, { useContext } from 'react';
 import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
+import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
+import CardStacksView from 'components/cube/CardStacksView';
 import CubeListNavbar from 'components/cube/CubeListNavbar';
-import CubeListRightSidebar from 'components/cube/CubeListRightSidebar';
+import CubeListRightSidebar, { CubeListBottomCard } from 'components/cube/CubeListRightSidebar';
 import CurveView from 'components/cube/CurveView';
 import ListView from 'components/cube/ListView';
 import RotisserieDraftPanel from 'components/cube/RotisserieDraftPanel';
@@ -37,7 +39,7 @@ interface CubeListPageProps {
 const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
   const { changedCards, filterResult, canEdit } = useContext(CubeContext);
-  const { showMaybeboard } = useContext(DisplayContext);
+  const { showMaybeboard, showAllBoards } = useContext(DisplayContext);
   const { filterInput } = useContext(FilterContext);
 
   const [cubeView, setCubeView] = useQueryParam('view', 'table');
@@ -45,7 +47,9 @@ const CubeListPageRaw: React.FC = () => {
   if (versionMismatch) {
     return (
       <>
-        <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+        <Container xl>
+          <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+        </Container>
         <DynamicFlash />
         <VersionMismatch />
       </>
@@ -62,7 +66,10 @@ const CubeListPageRaw: React.FC = () => {
   return (
     <>
       {canEdit && <ScryfallDragDropOverlay />}
-      <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+      <Container xl>
+        <CubeListBottomCard canEdit={canEdit} />
+        <CubeListNavbar cubeView={cubeView} setCubeView={setCubeView} />
+      </Container>
       {filterResult && filterInput && filterInput.length > 0 && (
         <div className="text-center py-1">
           <Text italic sm>
@@ -82,9 +89,16 @@ const CubeListPageRaw: React.FC = () => {
         .map(([boardname, boardcards]) => (
           <ErrorBoundary key={boardname}>
             <Flexbox direction="col" gap="2">
-              {((showMaybeboard && boardname === 'maybeboard') || (!showMaybeboard && boardname === 'mainboard')) && (
+              {(showAllBoards ||
+                (showMaybeboard && boardname === 'maybeboard') ||
+                (!showMaybeboard && boardname === 'mainboard')) && (
                 <>
-                  {boardcards.length === 0 && (
+                  {showAllBoards && boardcards.length > 0 && (
+                    <Text semibold lg className="mt-4 text-center">
+                      {boardname === 'mainboard' ? 'Mainboard' : 'Maybeboard'}
+                    </Text>
+                  )}
+                  {boardcards.length === 0 && !showAllBoards && (
                     <Text semibold md className="text-center mt-4">
                       This board appears to be empty!
                     </Text>
@@ -95,6 +109,9 @@ const CubeListPageRaw: React.FC = () => {
                       spoiler: <VisualSpoiler cards={boardcards} />,
                       curve: <CurveView cards={boardcards} />,
                       list: <ListView cards={boardcards} />,
+                      stacks: (
+                        <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
+                      ),
                     }[cubeView]
                   }
                 </>

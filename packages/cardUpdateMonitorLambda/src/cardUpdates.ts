@@ -1,3 +1,5 @@
+import { GetObjectCommand, S3 } from '@aws-sdk/client-s3';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { CardUpdateTaskStatus } from '@utils/datatypes/CardUpdateTask';
 
@@ -11,6 +13,24 @@ interface ScryfallBulkData {
     size: number;
   }>;
 }
+
+interface CardManifest {
+  checksum: string;
+  scryfallUpdatedAt: string;
+  scryfallFileSize: number;
+  totalCards: number;
+  cardsAdded: number;
+  version?: string;
+  lastMetadataDictUpdate?: string;
+}
+
+// Initialize S3 client
+const s3 = new S3({
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+  forcePathStyle: !!process.env.AWS_ENDPOINT,
+  credentials: fromNodeProviderChain(),
+  region: process.env.AWS_REGION,
+});
 
 /**
  * Check Scryfall API for the current file size of all_cards
@@ -37,6 +57,41 @@ async function checkScryfallFileSize(): Promise<{ size: number; updatedAt: strin
     };
   } catch (error) {
     console.error('Error checking Scryfall file size:', error);
+    return null;
+  }
+}
+
+/**
+ * Download the production card manifest from S3
+ */
+async function downloadManifestFromS3(): Promise<CardManifest | null> {
+  try {
+    const bucket = process.env.DATA_BUCKET;
+    if (!bucket) {
+      console.error('DATA_BUCKET environment variable not set');
+      return null;
+    }
+
+    const response = await s3.send(
+      new GetObjectCommand({
+        Bucket: bucket,
+        Key: 'cards/manifest.json',
+      }),
+    );
+
+    if (!response.Body) {
+      console.log('No manifest found in S3');
+      return null;
+    }
+
+    const bodyContents = await response.Body.transformToString();
+    return JSON.parse(bodyContents) as CardManifest;
+  } catch (error: any) {
+    if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
+      console.log('Manifest not found in S3 (first run?)');
+      return null;
+    }
+    console.error('Error downloading manifest from S3:', error);
     return null;
   }
 }
@@ -107,13 +162,45 @@ export async function monitorCardUpdates(): Promise<void> {
 
   console.log(`Scryfall file size: ${scryfallData.size}, updated at: ${scryfallData.updatedAt}`);
 
-  // Get the last successful task
-  const lastSuccessfulTask = mostRecentTask?.status === CardUpdateTaskStatus.COMPLETED ? mostRecentTask : null;
+  // Check the production manifest first - this is the source of truth
+  // Manual updates or other processes may have already processed this Scryfall version
+  const productionManifest = await downloadManifestFromS3();
+  if (productionManifest) {
+    console.log(
+      `Production manifest found: scryfallFileSize=${productionManifest.scryfallFileSize}, totalCards=${productionManifest.totalCards}`,
+    );
 
-  // Check if the file size has changed
+    // If the production manifest already has this Scryfall file size, no update is needed
+    if (productionManifest.scryfallFileSize === scryfallData.size) {
+      console.log(`Production manifest already has this Scryfall file size (${scryfallData.size}). No update needed.`);
+      return;
+    }
+
+    console.log(
+      `Production manifest has different Scryfall file size: ${productionManifest.scryfallFileSize} vs ${scryfallData.size}`,
+    );
+  } else {
+    console.log('No production manifest found - this may be the first run');
+  }
+
+  // Get the last successful task for additional verification
+  const lastSuccessfulTask = await cardUpdateTaskDao.getMostRecentSuccessful();
+
+  // Check if the file size has changed from the last successful task
   if (lastSuccessfulTask && lastSuccessfulTask.scryfallFileSize === scryfallData.size) {
-    console.log('No changes detected in Scryfall data');
+    console.log(
+      `Last successful task ${lastSuccessfulTask.id} already processed this Scryfall file size (${lastSuccessfulTask.scryfallFileSize})`,
+    );
+    // This shouldn't happen if manifest check above passed, but double-check for safety
     return;
+  }
+
+  if (lastSuccessfulTask) {
+    console.log(
+      `Changes detected! Last successful task ${lastSuccessfulTask.id} had size ${lastSuccessfulTask.scryfallFileSize}, current size is ${scryfallData.size}`,
+    );
+  } else {
+    console.log('No previous successful task found, creating initial update task');
   }
 
   console.log('Changes detected! Creating new update task...');

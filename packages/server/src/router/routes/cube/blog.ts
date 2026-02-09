@@ -188,7 +188,7 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    if (post.cube !== 'DEVLOG') {
+    if (post.cube !== 'DEVBLOG') {
       const cube = await cubeDao.getById(post.cube);
 
       if (!isCubeViewable(cube, req.user)) {

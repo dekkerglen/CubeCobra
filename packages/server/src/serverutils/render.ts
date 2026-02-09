@@ -114,6 +114,7 @@ interface ReactProps {
     consentToHashedEmail?: boolean;
     email_token: string;
     yourCubesSortOrder?: YourCubesSortOrder;
+    disableAnimations?: boolean;
   };
   nitroPayEnabled?: boolean;
   baseUrl?: string;
@@ -151,6 +152,7 @@ const render = (
         consentToHashedEmail: req.user.consentToHashedEmail,
         email_token: req.user.consentToHashedEmail && req.user.email ? await sha256(req.user.email) : '',
         yourCubesSortOrder: req.user.yourCubesSortOrder,
+        disableAnimations: req.user.disableAnimations,
       };
     }
 
@@ -173,6 +175,8 @@ const render = (
 
     try {
       const theme = (req && req.user && req.user.theme) || 'system';
+      const disableAnimations = req && req.user && req.user.disableAnimations;
+      const htmlClasses = [theme, disableAnimations && 'disable-animations'].filter(Boolean).join(' ');
       res.render('main', {
         reactHTML: null, // TODO renable ReactDOMServer.renderToString(React.createElement(page, reactProps)),
         reactProps: serialize(reactProps),
@@ -182,6 +186,7 @@ const render = (
         patron: req.user && (req.user.roles || []).includes(UserRoles.PATRON),
         notice: process.env.NOTICE,
         theme,
+        htmlClasses,
         noindex: options.noindex || false,
         cssVersion: GIT_COMMIT,
       });

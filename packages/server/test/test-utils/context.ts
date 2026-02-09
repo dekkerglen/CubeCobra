@@ -2,9 +2,11 @@ import { DisplayContextValue } from '../../../client/src/contexts/DisplayContext
 
 const defaultDisplayContext: DisplayContextValue = {
   cardsPerRow: 5,
-  openCollapse: '',
+  openCollapse: null,
   setCardsPerRow: jest.fn(),
   setOpenCollapse: jest.fn(),
+  stacksPerRow: 2,
+  setStacksPerRow: jest.fn(),
   showCustomImages: false,
   toggleShowCustomImages: jest.fn(),
   showMaybeboard: false,
@@ -15,6 +17,12 @@ const defaultDisplayContext: DisplayContextValue = {
   toggleShowDeckBuilderStatsPanel: jest.fn(),
   rightSidebarMode: 'none',
   setRightSidebarMode: jest.fn(),
+  rightSidebarPosition: 'right',
+  setRightSidebarPosition: jest.fn(),
+  cubeSidebarExpanded: true,
+  toggleCubeSidebarExpanded: jest.fn(),
+  showAllBoards: false,
+  setShowAllBoards: jest.fn(),
 };
 
 export { defaultDisplayContext };

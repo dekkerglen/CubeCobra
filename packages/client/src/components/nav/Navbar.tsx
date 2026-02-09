@@ -7,14 +7,15 @@ import { getCubeId } from '@utils/Util';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
+import Button from '../base/Button';
 import { CardFooter, CardHeader } from '../base/Card';
+import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
 import NavButton from '../base/NavButton';
 import NavLink from '../base/NavLink';
 import NavMenu from '../base/NavMenu';
 import ResponsiveDiv from '../base/ResponsiveDiv';
-import CardSearchBar from '../card/CardSearchBar';
 import CreateCubeModal from '../modals/CreateCubeModal';
 import LoginModal from '../modals/LoginModal';
 import withModal from '../WithModal';
@@ -96,6 +97,7 @@ const Navbar: React.FC<NavbarProps> = () => {
   const user = useContext(UserContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>(user?.notifications || []);
+  const [cubeSearch, setCubeSearch] = useState('');
 
   const toggleMobileMenu = (menuId: string) => {
     setMobileMenuOpen(mobileMenuOpen === menuId ? null : menuId);
@@ -254,7 +256,23 @@ const Navbar: React.FC<NavbarProps> = () => {
               </a>
             </ResponsiveDiv>
             <ResponsiveDiv xl className="flex-grow">
-              <CardSearchBar />
+              <Flexbox direction="row" className="w-full" justify="between" gap="1">
+                <Input
+                  name="q"
+                  placeholder="Search cubes..."
+                  className="flex-grow"
+                  value={cubeSearch}
+                  onChange={(e) => setCubeSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      window.location.href = `/search?q=${encodeURIComponent(cubeSearch)}`;
+                    }
+                  }}
+                />
+                <Button color="primary" href={`/search?q=${encodeURIComponent(cubeSearch)}`}>
+                  <span className="px-4">Go</span>
+                </Button>
+              </Flexbox>
             </ResponsiveDiv>
             <ResponsiveDiv sm>
               <Flexbox alignContent="end" direction="row" gap="2" className="height-auto">
