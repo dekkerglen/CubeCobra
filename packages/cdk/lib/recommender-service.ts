@@ -1,4 +1,4 @@
-import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { CfnApplication, CfnApplicationVersion, CfnEnvironment } from 'aws-cdk-lib/aws-elasticbeanstalk';
 import { CfnInstanceProfile } from 'aws-cdk-lib/aws-iam';
 import { LogGroup, LogStream, RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -9,7 +9,7 @@ interface RecommenderServiceProps {
   appBucket: IBucket;
   appVersion: string;
   environmentName: string;
-  certificate: Certificate;
+  vpc: ec2.IVpc;
   fleetSize: number;
   instanceProfile: CfnInstanceProfile;
   environmentVariables: { [key: string]: string };
@@ -90,20 +90,44 @@ export class RecommenderService extends Construct {
           optionName: 'LoadBalancerType',
           value: 'application',
         },
+        // VPC configuration - required for internal ALB
         {
-          namespace: 'aws:elbv2:listener:443',
+          namespace: 'aws:ec2:vpc',
+          optionName: 'VPCId',
+          value: props.vpc.vpcId,
+        },
+        {
+          namespace: 'aws:ec2:vpc',
+          optionName: 'Subnets',
+          value: props.vpc.publicSubnets.map((s) => s.subnetId).join(','),
+        },
+        {
+          namespace: 'aws:ec2:vpc',
+          optionName: 'ELBSubnets',
+          value: props.vpc.publicSubnets.map((s) => s.subnetId).join(','),
+        },
+        // Internal ALB - only accessible within VPC
+        {
+          namespace: 'aws:ec2:vpc',
+          optionName: 'ELBScheme',
+          value: 'internal',
+        },
+        // HTTP listener for internal traffic (no SSL overhead needed)
+        {
+          namespace: 'aws:elbv2:listener:80',
           optionName: 'ListenerEnabled',
           value: 'true',
         },
         {
-          namespace: 'aws:elbv2:listener:443',
-          optionName: 'SSLCertificateArns',
-          value: props.certificate.certificateArn,
+          namespace: 'aws:elbv2:listener:80',
+          optionName: 'Protocol',
+          value: 'HTTP',
         },
+        // Disable HTTPS listener (not needed for internal traffic)
         {
           namespace: 'aws:elbv2:listener:443',
-          optionName: 'Protocol',
-          value: 'HTTPS',
+          optionName: 'ListenerEnabled',
+          value: 'false',
         },
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',

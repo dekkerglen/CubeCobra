@@ -1,4 +1,5 @@
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { CfnApplication, CfnApplicationVersion, CfnEnvironment } from 'aws-cdk-lib/aws-elasticbeanstalk';
 import { CfnInstanceProfile } from 'aws-cdk-lib/aws-iam';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -10,6 +11,7 @@ interface ElasticBeanstalkApplicationProps {
   appVersion: string;
   environmentName: string;
   certificate: Certificate;
+  vpc: ec2.IVpc;
   fleetSize: number;
   instanceProfile: CfnInstanceProfile;
   environmentVariables: { [key: string]: string };
@@ -94,6 +96,22 @@ export class ElasticBeanstalk extends Construct {
           namespace: 'aws:elasticbeanstalk:environment',
           optionName: 'LoadBalancerType',
           value: 'application',
+        },
+        // VPC configuration
+        {
+          namespace: 'aws:ec2:vpc',
+          optionName: 'VPCId',
+          value: props.vpc.vpcId,
+        },
+        {
+          namespace: 'aws:ec2:vpc',
+          optionName: 'Subnets',
+          value: props.vpc.publicSubnets.map((s) => s.subnetId).join(','),
+        },
+        {
+          namespace: 'aws:ec2:vpc',
+          optionName: 'ELBSubnets',
+          value: props.vpc.publicSubnets.map((s) => s.subnetId).join(','),
         },
         {
           namespace: 'aws:elbv2:listener:443',
