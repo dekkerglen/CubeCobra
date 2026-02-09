@@ -1,3 +1,4 @@
+import { monitorCardMetadataTasks } from './cardMetadataTasks';
 import { monitorCardUpdates } from './cardUpdates';
 import { monitorExportTasks } from './exportTasks';
 import { monitorMigrationTasks } from './migrationTasks';
@@ -8,6 +9,9 @@ export const handler = async (event: any) => {
   try {
     // Monitor card updates
     await monitorCardUpdates();
+
+    // Monitor card metadata tasks
+    await monitorCardMetadataTasks();
 
     // Monitor export tasks
     await monitorExportTasks();

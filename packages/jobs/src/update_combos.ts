@@ -8,7 +8,7 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { cardUpdateTaskDao, comboDao } from '@server/dynamo/daos';
+import { cardMetadataTaskDao, comboDao } from '@server/dynamo/daos';
 import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
 
 import { downloadJson, uploadJson } from './utils/s3';
@@ -136,11 +136,11 @@ const fetchBulkData = async (url: string, cacheKey: string, useS3Cache?: boolean
 
 // Use S3 for caching if DATA_BUCKET is set
 const useS3Cache = !!process.env.DATA_BUCKET;
-const taskId = process.env.CARD_UPDATE_TASK_ID;
+const taskId = process.env.CARD_METADATA_TASK_ID;
 
 (async () => {
   if (taskId) {
-    await cardUpdateTaskDao.updateStep(taskId, 'Processing Combos');
+    await cardMetadataTaskDao.updateStep(taskId, 'Processing Combos');
   }
 
   console.log('Initializing card database...');
@@ -237,7 +237,7 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
   } catch (error) {
     console.error('Error downloading combo data:', error);
     if (taskId) {
-      await cardUpdateTaskDao.markAsFailed(
+      await cardMetadataTaskDao.markAsFailed(
         taskId,
         error instanceof Error ? error.message : 'Failed to process combo data',
       );

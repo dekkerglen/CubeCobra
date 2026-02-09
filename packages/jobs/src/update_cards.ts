@@ -470,6 +470,7 @@ function convertCard(
     newcard.cubeCount = metadata.cubes;
     newcard.pickCount = metadata.picks;
   }
+  newcard.hasFlavorName = !!card.flavor_name;
 
   const name = convertName(card, preflipped);
   newcard.color_identity = Array.from(card.color_identity);
