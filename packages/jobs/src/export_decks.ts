@@ -194,7 +194,7 @@ const taskId = process.env.EXPORT_TASK_ID;
 
       do {
         // Load a page of draft metadata and process it directly (no artificial batch size limit)
-        const result = await draftDao.queryByTypeAndDate(draftType, typeLastKey);
+        const result = await draftDao.queryByTypeAndDate(draftType, typeLastKey, 2000);
         const batchToProcess = result.items;
         typeLastKey = result.lastKey;
 

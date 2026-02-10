@@ -130,10 +130,7 @@ const useS3Cache = !!process.env.DATA_BUCKET;
  * @param oracleToIndex - Map from oracle ID to index position
  * @param taskId - Optional task ID for progress updates
  */
-export const updateCombos = async (
-  oracleToIndex: Record<string, number>,
-  taskId?: string,
-): Promise<void> => {
+export const updateCombos = async (oracleToIndex: Record<string, number>, taskId?: string): Promise<void> => {
   if (taskId) {
     await cardMetadataTaskDao.updateStep(taskId, 'Processing Combos');
   }
