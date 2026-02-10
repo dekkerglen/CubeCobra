@@ -1,3 +1,4 @@
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { blogDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 
@@ -8,7 +9,6 @@ export const handler = async (req: Request, res: Response) => {
   const posts = await blogDao.queryByOwner(owner, lastKey, 10);
 
   // Filter out blog posts from private cubes unless the viewer is the owner
-  const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
   const filteredPosts = posts.items.filter((post) => {
     // DEVLOG posts are always visible
     if (post.cube === 'DEVBLOG') {

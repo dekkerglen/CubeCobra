@@ -16,8 +16,8 @@
       "dynamo/*": ["src/dynamo/*"],
       "types/*": ["src/types/*"]
     },
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "node16",
+    "moduleResolution": "node16",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
