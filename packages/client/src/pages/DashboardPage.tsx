@@ -9,7 +9,7 @@ import classNames from 'classnames';
 
 import Banner from 'components/Banner';
 import Button from 'components/base/Button';
-import { Card, CardFooter, CardHeader } from 'components/base/Card';
+import { Card, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
@@ -72,14 +72,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <Flexbox direction="col" gap="2" className="my-2 px-2">
           <Card>
             <CardHeader>
-              <Text semibold lg>
-                Your Cubes
-              </Text>
+              <Flexbox direction="row" justify="between">
+                <Text semibold lg>
+                  Your Cubes
+                </Text>
+                {cubes.length > 2 && <Link href={`/user/view/${user?.id}`}>View All</Link>}
+              </Flexbox>
             </CardHeader>
             <Row className="items-center" gutters={0}>
               {cubes.length > 0 ? (
-                cubes.slice(0, 12).map((cube) => (
-                  <Col key={cube.id} xs={12}>
+                cubes.slice(0, 4).map((cube) => (
+                  <Col key={cube.id} xs={6}>
                     <CubePreview cube={cube} />
                   </Col>
                 ))
@@ -92,11 +95,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 </Col>
               )}
             </Row>
-            {cubes.length > 2 && (
-              <CardFooter>
-                <Link href={`/user/view/${user?.id}`}>View All</Link>
-              </CardFooter>
-            )}
           </Card>
 
           {!user?.hideFeatured && (
@@ -114,27 +112,29 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             </>
           )}
 
-          <Feed items={posts} lastKey={lastKey} />
+          <RecentDraftsCard decks={decks} lastKey={lastDeckKey} pageSize={5} />
 
-          <RecentDraftsCard decks={decks} lastKey={lastDeckKey} />
-
-          <Flexbox direction="col" gap="2">
-            <Flexbox direction="row" justify="between">
-              <Text semibold lg>
-                Latest Content
-              </Text>
-              <Link href="/content/browse">View more...</Link>
-            </Flexbox>
-            <Row>
-              {content.map((item) => (
-                <Col key={item.id} className="mb-3" xs={6}>
+          <Card>
+            <CardHeader>
+              <Flexbox direction="row" justify="between">
+                <Text semibold lg>
+                  Latest Content
+                </Text>
+                <Link href="/content/browse">View more...</Link>
+              </Flexbox>
+            </CardHeader>
+            <Row gutters={0}>
+              {content.slice(0, 4).map((item) => (
+                <Col key={item.id} xs={6}>
                   {item.type === ContentType.ARTICLE && <ArticlePreview article={item} />}
                   {item.type === ContentType.VIDEO && <VideoPreview video={item} />}
                   {item.type === ContentType.EPISODE && <PodcastEpisodePreview episode={item} />}
                 </Col>
               ))}
             </Row>
-          </Flexbox>
+          </Card>
+
+          <Feed items={posts} lastKey={lastKey} />
         </Flexbox>
       </div>
 
@@ -145,9 +145,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             <Flexbox direction="col" gap="2">
               <Card>
                 <CardHeader>
-                  <Text semibold lg>
-                    Your Cubes
-                  </Text>
+                  <Flexbox direction="row" justify="between">
+                    <Text semibold lg>
+                      Your Cubes
+                    </Text>
+                    {cubes.length > 2 && <Link href={`/user/view/${user?.id}`}>View All</Link>}
+                  </Flexbox>
                 </CardHeader>
                 <Row className="items-center" gutters={0}>
                   {cubes.length > 0 ? (
@@ -165,9 +168,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     </Col>
                   )}
                 </Row>
-                {featuredPosition !== 'left' && (
-                  <CardFooter>{cubes.length > 2 && <Link href={`/user/view/${user?.id}`}>View All</Link>}</CardFooter>
-                )}
               </Card>
               {featuredPosition === 'left' && (
                 <>
@@ -205,23 +205,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               <RecentDraftsCard decks={decks} lastKey={lastDeckKey} />
             </Flexbox>
             <Col className="d-none d-md-block mt-3" md={4}>
-              <Flexbox direction="col" gap="2">
-                <Flexbox direction="row" justify="between">
-                  <Text semibold lg>
-                    Latest Content
-                  </Text>
-                  <Link href="/content/browse">View more...</Link>
-                </Flexbox>
-                <Row>
+              <Card>
+                <CardHeader>
+                  <Flexbox direction="row" justify="between">
+                    <Text semibold lg>
+                      Latest Content
+                    </Text>
+                    <Link href="/content/browse">View more...</Link>
+                  </Flexbox>
+                </CardHeader>
+                <Row gutters={0}>
                   {content.map((item) => (
-                    <Col key={item.id} className="mb-3" xs={6}>
+                    <Col key={item.id} xs={6}>
                       {item.type === ContentType.ARTICLE && <ArticlePreview article={item} />}
                       {item.type === ContentType.VIDEO && <VideoPreview video={item} />}
                       {item.type === ContentType.EPISODE && <PodcastEpisodePreview episode={item} />}
                     </Col>
                   ))}
                 </Row>
-              </Flexbox>
+              </Card>
             </Col>
           </Col>
         </Row>

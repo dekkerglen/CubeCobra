@@ -767,12 +767,31 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const hashesToDelete = oldHashes.filter((hash) => !newHashes.includes(hash));
     const hashesToAdd = newHashes.filter((hash) => !oldHashes.includes(hash));
 
+    // Check if GSI sort key data changed (follower count, name, card count)
+    // These affect the GSI sort keys but don't change which hashes exist
+    const gsiDataChanged =
+      oldCube.following.length !== item.following.length ||
+      oldCube.name !== item.name ||
+      oldCube.cardCount !== item.cardCount ||
+      (!options?.skipTimestampUpdate && oldCube.dateLastUpdated !== item.dateLastUpdated);
+
     if (hashesToDelete.length > 0) {
       await this.deleteHashesBySK(this.partitionKey(item), hashesToDelete);
     }
 
     if (hashesToAdd.length > 0) {
       await this.writeHashes(this.partitionKey(item), hashesToAdd);
+    }
+
+    // If GSI data changed, we need to update ALL existing hash rows with new sort keys
+    // This happens when follower count, name, or card count changes
+    if (gsiDataChanged && hashesToDelete.length === 0 && hashesToAdd.length === 0) {
+      // The set of hashes didn't change, but the GSI keys need updating
+      // We can just rewrite all existing hashes with the new cube data
+      const unchangedHashes = oldHashes.filter((hash) => newHashes.includes(hash));
+      if (unchangedHashes.length > 0) {
+        await this.writeHashes(this.partitionKey(item), unchangedHashes);
+      }
     }
 
     // Update metadata

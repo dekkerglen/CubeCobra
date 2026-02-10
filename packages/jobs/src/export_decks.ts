@@ -152,69 +152,73 @@ const taskId = process.env.EXPORT_TASK_ID;
 
     console.log('Starting draft export...');
 
-  // Query all draft types to get all drafts
-  const draftTypes = ['d', 'g', 's', 'u']; // Draft, Grid, Sealed, Upload
-  
-  let totalBatches = 0;
-  const BATCH_SIZE = 500; // Process 500 drafts at a time to reduce memory usage
+    // Query all draft types to get all drafts
+    const draftTypes = ['d', 'g', 's', 'u']; // Draft, Grid, Sealed, Upload
 
-  for (const draftType of draftTypes) {
-    console.log(`Processing draft type: ${draftType}`);
-    let typeLastKey: any = null;
-    let draftLogBatch: any[] = [];
-    let totalProcessed = 0;
+    let totalBatches = 0;
+    const BATCH_SIZE = 500; // Process 500 drafts at a time to reduce memory usage
 
-    do {
-      // Load a page of draft metadata
-      const result = await draftDao.queryByTypeAndDate(draftType, typeLastKey);
-      draftLogBatch = draftLogBatch.concat(result.items);
-      typeLastKey = result.lastKey;
+    for (const draftType of draftTypes) {
+      console.log(`Processing draft type: ${draftType}`);
+      let typeLastKey: any = null;
+      let draftLogBatch: any[] = [];
+      let totalProcessed = 0;
 
-      // Process batches when we have enough, or when we're done with this type
-      while (draftLogBatch.length >= BATCH_SIZE || (!typeLastKey && draftLogBatch.length > 0)) {
-        const batchToProcess = draftLogBatch.splice(0, BATCH_SIZE);
+      do {
+        // Load a page of draft metadata
+        const result = await draftDao.queryByTypeAndDate(draftType, typeLastKey);
+        draftLogBatch = draftLogBatch.concat(result.items);
+        typeLastKey = result.lastKey;
 
-        const draftIds = batchToProcess.filter((item: { complete: any }) => item.complete).map((row: { id: any }) => row.id);
-        const drafts = await Promise.all(draftIds.map((id: string) => draftDao.getById(id)));
-        const validDrafts = drafts.filter((d): d is NonNullable<typeof d> => d !== null);
+        // Process batches when we have enough, or when we're done with this type
+        while (draftLogBatch.length >= BATCH_SIZE || (!typeLastKey && draftLogBatch.length > 0)) {
+          const batchToProcess = draftLogBatch.splice(0, BATCH_SIZE);
 
-        const processedDrafts = validDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
-        const picksResults = validDrafts.map((draft: any) => processPicks(draft, oracleToIndex));
+          const draftIds = batchToProcess
+            .filter((item: { complete: any }) => item.complete)
+            .map((row: { id: any }) => row.id);
+          const drafts = await Promise.all(draftIds.map((id: string) => draftDao.getById(id)));
+          const validDrafts = drafts.filter((d): d is NonNullable<typeof d> => d !== null);
 
-        // Collect cube instances and picks for this batch
-        const batchCubeInstances: number[][] = [];
-        const batchPicks = picksResults.flatMap((result) => {
-          // Add this cube instance to the batch array
-          const batchIndex = batchCubeInstances.length;
-          batchCubeInstances.push(result.cubeInstance);
+          const processedDrafts = validDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
+          const picksResults = validDrafts.map((draft: any) => processPicks(draft, oracleToIndex));
 
-          // Update all picks to reference the batch cube instance index
-          result.picks.forEach((pick) => {
-            pick.cubeCards = batchIndex;
+          // Collect cube instances and picks for this batch
+          const batchCubeInstances: number[][] = [];
+          const batchPicks = picksResults.flatMap((result) => {
+            // Add this cube instance to the batch array
+            const batchIndex = batchCubeInstances.length;
+            batchCubeInstances.push(result.cubeInstance);
+
+            // Update all picks to reference the batch cube instance index
+            result.picks.forEach((pick) => {
+              pick.cubeCards = batchIndex;
+            });
+
+            return result.picks;
           });
 
-          return result.picks;
-        });
+          fs.writeFileSync(`./temp/export/decks/${totalBatches}.json`, JSON.stringify(processedDrafts.flat()));
+          fs.writeFileSync(`./temp/export/picks/${totalBatches}.json`, JSON.stringify(batchPicks));
+          fs.writeFileSync(`./temp/export/cubeInstances/${totalBatches}.json`, JSON.stringify(batchCubeInstances));
 
-        fs.writeFileSync(`./temp/export/decks/${totalBatches}.json`, JSON.stringify(processedDrafts.flat()));
-        fs.writeFileSync(`./temp/export/picks/${totalBatches}.json`, JSON.stringify(batchPicks));
-        fs.writeFileSync(`./temp/export/cubeInstances/${totalBatches}.json`, JSON.stringify(batchCubeInstances));
+          totalBatches += 1;
+          totalProcessed += batchToProcess.length;
 
-        totalBatches++;
-        totalProcessed += batchToProcess.length;
+          console.log(
+            `Processed batch ${totalBatches} (${totalProcessed} drafts from type ${draftType}, ${validDrafts.length} complete drafts in this batch)`,
+          );
 
-        console.log(`Processed batch ${totalBatches} (${totalProcessed} drafts from type ${draftType}, ${validDrafts.length} complete drafts in this batch)`);
-
-        // Don't loop again if we don't have enough for another batch and we're done loading
-        if (!typeLastKey && draftLogBatch.length < BATCH_SIZE) {
-          break;
+          // Don't loop again if we don't have enough for another batch and we're done loading
+          if (!typeLastKey && draftLogBatch.length < BATCH_SIZE) {
+            break;
+          }
         }
-      }
-    } while (typeLastKey);
-  }
+      } while (typeLastKey);
+    }
 
-  console.log(`Export complete! Processed ${totalBatches} total batches.`);
-  process.exit(0);
+    console.log(`Export complete! Processed ${totalBatches} total batches.`);
+    process.exit(0);
   } catch (error) {
     console.error('Export failed:', error);
     if (taskId) {

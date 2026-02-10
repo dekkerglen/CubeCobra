@@ -2,10 +2,8 @@ import React from 'react';
 
 import Cube from '@utils/datatypes/Cube';
 
-import Button from 'components/base/Button';
 import { Col, Row } from 'components/base/Layout';
 import CubesCard from 'components/cube/CubesCard';
-import CubeSearchNavBar from 'components/cube/CubeSearchNavBar';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
@@ -20,7 +18,6 @@ interface ExplorePageProps {
 const ExplorePage: React.FC<ExplorePageProps> = ({ recents, featured, drafted, popular }) => {
   return (
     <MainLayout>
-      <CubeSearchNavBar />
       <DynamicFlash />
       <Row>
         <Col lg={6} md={6} sm={12} xs={12}>
@@ -37,29 +34,29 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ recents, featured, drafted, p
             title="Recently Updated Cubes"
             className="mt-4"
             cubes={recents}
-            alternateViewFewer={
-              <Button color="primary" block type="link" href={`/search?order=date&ascending=false`}>
-                View All
-              </Button>
-            }
+            lean
+            sideLink={{ href: '/search?order=date&ascending=false', text: 'View More' }}
           />
         </Col>
       </Row>
-      <Row>
+      <Row className="mb-2">
         <Col lg={6} md={6} sm={12} xs={12}>
           <CubesCard
             title="Most Popular Cubes"
             className="mt-4"
             cubes={popular}
-            alternateViewFewer={
-              <Button color="primary" block type="link" href={`/search`}>
-                View All
-              </Button>
-            }
+            lean
+            sideLink={{ href: '/search', text: 'View More' }}
           />
         </Col>
         <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Recently Drafted Cubes" className="mt-4" cubes={drafted} />
+          <CubesCard
+            title="Recently Drafted Cubes"
+            className="mt-4"
+            cubes={drafted}
+            lean
+            sideLink={{ href: '/recentdrafts', text: 'View More' }}
+          />
         </Col>
       </Row>
     </MainLayout>

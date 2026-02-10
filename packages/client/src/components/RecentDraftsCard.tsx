@@ -14,18 +14,19 @@ import DeckPreview from './DeckPreview';
 interface CubesCardProps {
   decks: Draft[];
   lastKey: any;
+  pageSize?: number;
 }
 
 const PAGE_SIZE = 10;
 
-const RecentDraftsCard: React.FC<CubesCardProps> = ({ decks, lastKey }) => {
+const RecentDraftsCard: React.FC<CubesCardProps> = ({ decks, lastKey, pageSize = PAGE_SIZE }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState<Draft[]>(decks);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
+  const pageCount = Math.ceil(items.length / pageSize);
   const hasMore = !!currentLastKey;
 
   const fetchMoreData = useCallback(async () => {
@@ -51,7 +52,25 @@ const RecentDraftsCard: React.FC<CubesCardProps> = ({ decks, lastKey }) => {
     setLoading(false);
   }, [currentLastKey, items, page, csrfFetch]);
 
-  const pager = (
+  const pagerMobile = (
+    <Pagination
+      count={pageCount}
+      active={page}
+      hasMore={hasMore}
+      onClick={async (newPage) => {
+        console.log(newPage, pageCount);
+        if (newPage >= pageCount) {
+          await fetchMoreData();
+        } else {
+          setPage(newPage);
+        }
+      }}
+      loading={loading}
+      justifyBetween
+    />
+  );
+
+  const pagerDesktop = (
     <Pagination
       count={pageCount}
       active={page}
@@ -71,24 +90,28 @@ const RecentDraftsCard: React.FC<CubesCardProps> = ({ decks, lastKey }) => {
   return (
     <Card>
       <CardHeader>
-        <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+        {/* Mobile layout */}
+        <Flexbox direction="col" alignItems="start" gap="2" className="w-full md:hidden">
           <Text lg semibold>
             Drafts of your Cubes ({items.length}
             {hasMore ? '+' : ''})
           </Text>
-          {decks.length > 0 && pager}
+          {decks.length > 0 && <div className="w-full">{pagerMobile}</div>}
+        </Flexbox>
+        {/* Desktop layout */}
+        <Flexbox direction="row" justify="between" alignItems="center" className="w-full hidden md:flex">
+          <Text lg semibold>
+            Drafts of your Cubes ({items.length}
+            {hasMore ? '+' : ''})
+          </Text>
+          {decks.length > 0 && pagerDesktop}
         </Flexbox>
       </CardHeader>
       {decks.length > 0 ? (
         <>
-          {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((deck) => (
+          {items.slice(page * pageSize, (page + 1) * pageSize).map((deck) => (
             <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" />
           ))}
-          <CardBody>
-            <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-              {pager}
-            </Flexbox>
-          </CardBody>
         </>
       ) : (
         <CardBody>

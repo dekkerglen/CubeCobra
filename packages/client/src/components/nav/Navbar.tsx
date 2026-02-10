@@ -357,6 +357,12 @@ const Navbar: React.FC<NavbarProps> = () => {
           <div className="bg-bg-active mt-3 p-4 rounded">
             <Flexbox direction="col" gap="2">
               <NavLink href={`/user/view/${user.id}`}>Your Profile</NavLink>
+              {user.roles && user.roles.includes(UserRoles.ADMIN) && (
+                <NavLink href="/admin/dashboard">Admin Page</NavLink>
+              )}
+              {user.roles && user.roles.includes(UserRoles.CONTENT_CREATOR) && (
+                <NavLink href="/content/creators">Content Creator Dashboard</NavLink>
+              )}
               <NavLink href="/user/social">Followed and Followers</NavLink>
               <NavLink href="/user/account">Account Information</NavLink>
               <NavLink href="/user/logout">Logout</NavLink>

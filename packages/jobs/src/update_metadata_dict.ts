@@ -76,7 +76,7 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
   console.log('Loading card database');
   const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
   const bucket = process.env.DATA_BUCKET || 'cubecobra-public';
-  
+
   // Download card data from S3 if needed
   await updateCardbase(privateDir, bucket);
   await initializeCardDb(privateDir);

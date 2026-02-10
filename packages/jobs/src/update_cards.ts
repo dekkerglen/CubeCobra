@@ -275,8 +275,25 @@ function getExtraTokensForDungeons(card: ScryfallCard) {
   return extraTokens;
 }
 
+// Storm permanents create copies of themselves, so they need the Copy token
+function getExtraTokensForStorm(card: ScryfallCard) {
+  const extraTokens: string[] = [];
+
+  // Check if it's a permanent spell (not an instant or sorcery) with Storm keyword
+  if (card.keywords && card.keywords.includes('Storm')) {
+    const isPermanent = !card.type_line.includes('Instant') && !card.type_line.includes('Sorcery');
+
+    if (isPermanent) {
+      // Copy token
+      extraTokens.push('61328aec-ba26-4142-a774-96924303786d');
+    }
+  }
+
+  return extraTokens;
+}
+
 function getTokens(card: ScryfallCard) {
-  return getScryfallTokensForCard(card).concat(getExtraTokensForDungeons(card));
+  return getScryfallTokensForCard(card).concat(getExtraTokensForDungeons(card)).concat(getExtraTokensForStorm(card));
 }
 
 function convertCmc(card: ScryfallCard, preflipped: boolean, faceAttributeSource: ScryfallCardFace) {

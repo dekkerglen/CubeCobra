@@ -23,48 +23,48 @@ const taskId = process.env.EXPORT_TASK_ID;
       await exportTaskDao.updateStep(taskId, 'Processing cards');
     }
 
-  const allOracleIds = getAllOracleIds();
+    const allOracleIds = getAllOracleIds();
 
-  const result = Object.fromEntries(
-    allOracleIds.map((oracleId) => {
-      const card = getVersionsByOracleId(oracleId)[0];
+    const result = Object.fromEntries(
+      allOracleIds.map((oracleId) => {
+        const card = getVersionsByOracleId(oracleId)[0];
 
-      if (!card) {
+        if (!card) {
+          return [
+            oracleId,
+            {
+              name: 'Unknown Card',
+              image: null,
+              elo: null,
+              type: null,
+              cmc: null,
+            },
+          ];
+        }
+
+        const reasonable = getMostReasonableById(card);
+
         return [
           oracleId,
           {
-            name: 'Unknown Card',
-            image: null,
-            elo: null,
-            type: null,
-            cmc: null,
+            name: reasonable?.name,
+            image: reasonable?.image_small,
+            elo: reasonable?.elo,
+            type: reasonable?.type,
+            cmc: reasonable?.cmc,
           },
         ];
-      }
+      }),
+    );
 
-      const reasonable = getMostReasonableById(card);
+    if (taskId) {
+      await exportTaskDao.updateStep(taskId, 'Writing export file');
+    }
 
-      return [
-        oracleId,
-        {
-          name: reasonable?.name,
-          image: reasonable?.image_small,
-          elo: reasonable?.elo,
-          type: reasonable?.type,
-          cmc: reasonable?.cmc,
-        },
-      ];
-    }),
-  );
+    fs.writeFileSync('./temp/export/simpleCardDict.json', JSON.stringify(result));
 
-  if (taskId) {
-    await exportTaskDao.updateStep(taskId, 'Writing export file');
-  }
-
-  fs.writeFileSync('./temp/export/simpleCardDict.json', JSON.stringify(result));
-
-  console.log('Export complete!');
-  process.exit(0);
+    console.log('Export complete!');
+    process.exit(0);
   } catch (error) {
     console.error('Export failed:', error);
     if (taskId) {

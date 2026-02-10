@@ -2787,6 +2787,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   #autocardPopup {
     display: none !important;
   }
+  #autocardTags {
+    display: none !important;
+  }
 }
 
 /* make autocard text more obvious in comments and descriptions */

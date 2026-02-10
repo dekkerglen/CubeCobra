@@ -921,12 +921,30 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
     const hashesToDelete = oldHashes.filter((hash) => !newHashes.includes(hash));
     const hashesToAdd = newHashes.filter((hash) => !oldHashes.includes(hash));
 
+    // Check if GSI sort key data changed (vote count, date, title)
+    // These affect the GSI sort keys but don't change which hashes exist
+    const gsiDataChanged =
+      oldPackage.voteCount !== itemWithVoteCount.voteCount ||
+      oldPackage.title !== itemWithVoteCount.title ||
+      oldPackage.date !== itemWithVoteCount.date;
+
     if (hashesToDelete.length > 0) {
       await this.deleteHashesBySK(this.partitionKey(itemWithVoteCount), hashesToDelete);
     }
 
     if (hashesToAdd.length > 0) {
       await this.writeHashes(this.partitionKey(itemWithVoteCount), hashesToAdd);
+    }
+
+    // If GSI data changed, we need to update ALL existing hash rows with new sort keys
+    // This happens when vote count, title, or date changes
+    if (gsiDataChanged && hashesToDelete.length === 0 && hashesToAdd.length === 0) {
+      // The set of hashes didn't change, but the GSI keys need updating
+      // We can just rewrite all existing hashes with the new package data
+      const unchangedHashes = oldHashes.filter((hash) => newHashes.includes(hash));
+      if (unchangedHashes.length > 0) {
+        await this.writeHashes(this.partitionKey(itemWithVoteCount), unchangedHashes);
+      }
     }
 
     // Update metadata

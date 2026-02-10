@@ -47,35 +47,95 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
         })),
       };
 
-      // Calculate delta for mainboard
-      const currentMainboardIds = new Map(cards.mainboard.map((c, idx) => [c.cardID, { card: c, index: idx }]));
-      const newMainboardIds = new Set(newList.mainboard.map((c) => c.cardID));
+      // Calculate delta for mainboard - handles cubes with multiple copies of the same card
+      const currentMainboardCounts = new Map<string, number>();
+      const newMainboardCounts = new Map<string, number>();
 
-      const mainboardAdds = newList.mainboard.filter((c) => !currentMainboardIds.has(c.cardID));
-      const mainboardRemoves = cards.mainboard
-        .filter((c) => !newMainboardIds.has(c.cardID))
-        .map((c) => {
-          const info = currentMainboardIds.get(c.cardID);
-          return {
-            index: info?.index ?? 0,
-            oldCard: c,
-          };
-        });
+      cards.mainboard.forEach((c) => {
+        currentMainboardCounts.set(c.cardID, (currentMainboardCounts.get(c.cardID) || 0) + 1);
+      });
 
-      // Calculate delta for maybeboard
-      const currentMaybeIds = new Map(cards.maybeboard.map((c, idx) => [c.cardID, { card: c, index: idx }]));
-      const newMaybeIds = new Set(newList.maybeboard.map((c) => c.cardID));
+      newList.mainboard.forEach((c) => {
+        newMainboardCounts.set(c.cardID, (newMainboardCounts.get(c.cardID) || 0) + 1);
+      });
 
-      const maybeAdds = newList.maybeboard.filter((c) => !currentMaybeIds.has(c.cardID));
-      const maybeRemoves = cards.maybeboard
-        .filter((c) => !newMaybeIds.has(c.cardID))
-        .map((c) => {
-          const info = currentMaybeIds.get(c.cardID);
-          return {
-            index: info?.index ?? 0,
-            oldCard: c,
-          };
-        });
+      // Get all unique cardIDs from both lists
+      const allMainboardCardIDs = new Set([...currentMainboardCounts.keys(), ...newMainboardCounts.keys()]);
+
+      const mainboardAdds: any[] = [];
+      const mainboardRemoves: any[] = [];
+
+      allMainboardCardIDs.forEach((cardID) => {
+        const currentCount = currentMainboardCounts.get(cardID) || 0;
+        const newCount = newMainboardCounts.get(cardID) || 0;
+        const diff = newCount - currentCount;
+
+        if (diff > 0) {
+          // Need to add copies
+          const newCard = newList.mainboard.find((c) => c.cardID === cardID);
+          for (let i = 0; i < diff; i++) {
+            mainboardAdds.push(newCard);
+          }
+        } else if (diff < 0) {
+          // Need to remove copies - remove from the end to preserve earlier customizations
+          const cardsToRemove = cards.mainboard
+            .map((c, idx) => ({ card: c, index: idx }))
+            .filter((item) => item.card.cardID === cardID)
+            .slice(currentCount + diff, currentCount); // Take the last |diff| cards with this ID
+
+          cardsToRemove.forEach((item) => {
+            mainboardRemoves.push({
+              index: item.index,
+              oldCard: item.card,
+            });
+          });
+        }
+      });
+
+      // Calculate delta for maybeboard - handles cubes with multiple copies of the same card
+      const currentMaybeCounts = new Map<string, number>();
+      const newMaybeCounts = new Map<string, number>();
+
+      cards.maybeboard.forEach((c) => {
+        currentMaybeCounts.set(c.cardID, (currentMaybeCounts.get(c.cardID) || 0) + 1);
+      });
+
+      newList.maybeboard.forEach((c) => {
+        newMaybeCounts.set(c.cardID, (newMaybeCounts.get(c.cardID) || 0) + 1);
+      });
+
+      // Get all unique cardIDs from both lists
+      const allMaybeCardIDs = new Set([...currentMaybeCounts.keys(), ...newMaybeCounts.keys()]);
+
+      const maybeAdds: any[] = [];
+      const maybeRemoves: any[] = [];
+
+      allMaybeCardIDs.forEach((cardID) => {
+        const currentCount = currentMaybeCounts.get(cardID) || 0;
+        const newCount = newMaybeCounts.get(cardID) || 0;
+        const diff = newCount - currentCount;
+
+        if (diff > 0) {
+          // Need to add copies
+          const newCard = newList.maybeboard.find((c) => c.cardID === cardID);
+          for (let i = 0; i < diff; i++) {
+            maybeAdds.push(newCard);
+          }
+        } else if (diff < 0) {
+          // Need to remove copies - remove from the end to preserve earlier customizations
+          const cardsToRemove = cards.maybeboard
+            .map((c, idx) => ({ card: c, index: idx }))
+            .filter((item) => item.card.cardID === cardID)
+            .slice(currentCount + diff, currentCount); // Take the last |diff| cards with this ID
+
+          cardsToRemove.forEach((item) => {
+            maybeRemoves.push({
+              index: item.index,
+              oldCard: item.card,
+            });
+          });
+        }
+      });
 
       const changelog = {
         mainboard: {

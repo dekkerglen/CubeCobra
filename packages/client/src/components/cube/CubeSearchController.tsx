@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
 
@@ -31,6 +31,13 @@ const CubeSearchController: React.FC<CubeSearchControllerProps> = ({
   const [searchOrder, setSearchOrder] = useState<string>(order);
   const [searchAscending, setSearchAscending] = useState<string>(ascending.toString());
   const [showSyntaxModal, setShowSyntaxModal] = useState<boolean>(false);
+
+  // Sync local state with props when they change (e.g., from deeplinks)
+  useEffect(() => {
+    setQuery(query);
+    setSearchOrder(order);
+    setSearchAscending(ascending.toString());
+  }, [query, order, ascending]);
 
   const searchOptions: [string, string][] = [
     ['Sorted by Popularity', 'pop'],
@@ -66,7 +73,7 @@ const CubeSearchController: React.FC<CubeSearchControllerProps> = ({
         <Col xs={6} sm={3}>
           <Select
             options={searchOptions.map((search) => ({ value: search[1], label: search[0] }))}
-            defaultValue={searchOrder}
+            value={searchOrder}
             setValue={(value) => setSearchOrder(value)}
           />
         </Col>
@@ -76,7 +83,7 @@ const CubeSearchController: React.FC<CubeSearchControllerProps> = ({
               { value: 'true', label: 'Ascending' },
               { value: 'false', label: 'Descending' },
             ]}
-            defaultValue={searchAscending}
+            value={searchAscending}
             setValue={(value) => setSearchAscending(value)}
           />
         </Col>

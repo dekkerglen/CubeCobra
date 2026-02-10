@@ -58,17 +58,17 @@ const taskId = process.env.EXPORT_TASK_ID;
     let processed = 0;
     const cubes: any[] = [];
 
-  do {
-    const result = await cubeDao.queryAllCubes('popularity', false, lastKey, 100);
-    lastKey = result.lastKey;
-    processed += result.items.length;
+    do {
+      const result = await cubeDao.queryAllCubes('popularity', false, lastKey, 100);
+      lastKey = result.lastKey;
+      processed += result.items.length;
 
-    const processedCubes = await Promise.all(result.items.map((item: CubeType) => processCube(item, oracleToIndex)));
+      const processedCubes = await Promise.all(result.items.map((item: CubeType) => processCube(item, oracleToIndex)));
 
-    cubes.push(...processedCubes.filter((cube) => cube !== null));
+      cubes.push(...processedCubes.filter((cube) => cube !== null));
 
-    console.log(`Processed ${processed} cubes`);
-  } while (lastKey);
+      console.log(`Processed ${processed} cubes`);
+    } while (lastKey);
 
     // if /temp doesn't exist, create it
     if (!fs.existsSync('./temp')) {
