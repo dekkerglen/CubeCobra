@@ -127,12 +127,10 @@ const useS3Cache = !!process.env.DATA_BUCKET;
  * This function can be called from the metadata task with the freshly generated index,
  * ensuring the combo tree is built with the exact same mapping.
  *
- * @param indexToOracle - Array mapping index positions to oracle IDs
  * @param oracleToIndex - Map from oracle ID to index position
  * @param taskId - Optional task ID for progress updates
  */
 export const updateCombos = async (
-  indexToOracle: string[],
   oracleToIndex: Record<string, number>,
   taskId?: string,
 ): Promise<void> => {
@@ -249,7 +247,7 @@ const runStandalone = async () => {
   });
 
   try {
-    await updateCombos(indexToOracle, oracleToIndex, taskId);
+    await updateCombos(oracleToIndex, taskId);
     console.log('Complete');
     process.exit();
   } catch (error) {

@@ -533,7 +533,7 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
   // This ensures the combo tree is built with the exact same indices
   console.log('Starting combo update with fresh oracle index...');
   try {
-    await updateCombos(indexToOracle, oracleToIndex, taskId);
+    await updateCombos(oracleToIndex, taskId);
     console.log('Combo update complete!');
   } catch (error) {
     console.error('Error updating combos:', error);
