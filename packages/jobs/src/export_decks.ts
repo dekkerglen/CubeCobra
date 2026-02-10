@@ -9,6 +9,7 @@ import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 import fs from 'fs';
+
 import { uploadFile } from './utils/s3';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {

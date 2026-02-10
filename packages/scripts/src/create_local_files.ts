@@ -285,6 +285,11 @@ function createMockFiles() {
   const metadatadict = {};
   const cardtree = {};
   const comboTree = {};
+  const comboOracleToIndex = {
+    'oracle-1': 0,
+    'oracle-2': 1,
+    'oracle-3': 2,
+  };
   const cubeEmbeddings = {};
 
   // Create indexToOracleMap for ML models (maps index to oracle_id)
@@ -307,6 +312,7 @@ function createMockFiles() {
   fs.writeFileSync('../server/private/metadatadict.json', JSON.stringify(metadatadict, null, 2));
   fs.writeFileSync('../server/private/cardtree.json', JSON.stringify(cardtree, null, 2));
   fs.writeFileSync('../server/private/comboTree.json', JSON.stringify(comboTree, null, 2));
+  fs.writeFileSync('../server/private/comboOracleToIndex.json', JSON.stringify(comboOracleToIndex, null, 2));
   fs.writeFileSync('../server/private/cubeEmbeddings.json', JSON.stringify(cubeEmbeddings, null, 2));
 
   // Write ML model file

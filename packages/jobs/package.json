@@ -5,7 +5,7 @@
     "init-data": "node dist/jobs/src/init-data.js",
     "update-draft-history": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_draft_history.js",
     "update-cube-history": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_cube_history.js",
-    "update-metadata-dict": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_metadata_dict.js && NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_combos.js",
+    "update-metadata-dict": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_metadata_dict.js",
     "update-cards": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_cards.js",
     "update-combos": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_combos.js",
     "repair-cube-hashes": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/repairCubeHashes.js --",

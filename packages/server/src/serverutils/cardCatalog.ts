@@ -18,6 +18,7 @@ const catalog: Catalog = {
   oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
+  comboOracleToIndex: {}, // Combo-specific mapping saved with comboTree
 };
 
 export const fileToAttribute: Record<string, keyof Catalog> = {
@@ -33,10 +34,18 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'indexToOracle.json': 'indexToOracle',
   'metadatadict.json': 'metadatadict',
   'comboTree.json': 'comboTree',
+  'comboOracleToIndex.json': 'comboOracleToIndex',
 };
 
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {
   return new Promise<void>((resolve, reject) => {
+    // Check if file exists before trying to load it
+    if (!fs.existsSync(filename)) {
+      console.info(`File ${filename} not found, using default value for ${attribute}`);
+      resolve();
+      return;
+    }
+
     try {
       const fileStart = Date.now();
       const readStream = fs.createReadStream(filename);
@@ -52,6 +61,11 @@ async function loadJSONFile(filename: string, attribute: keyof Catalog) {
         const fileDuration = ((Date.now() - fileStart) / 1000).toFixed(2);
 
         console.info(`Loaded ${filename} into ${attribute} in ${fileDuration}s`);
+        resolve();
+      });
+
+      readStream.on('error', (e) => {
+        console.warn(`Error loading ${filename}, using default value for ${attribute}:`, e.message);
         resolve();
       });
     } catch (e) {
@@ -74,6 +88,13 @@ export async function initializeCardDb(basePath: string = 'private') {
   catalog.oracleToIndex = Object.fromEntries(
     catalog.indexToOracle.map((oracleId: string, index: number) => [oracleId, index]),
   );
+
+  // If comboOracleToIndex wasn't loaded (file doesn't exist yet), fall back to oracleToIndex
+  // This maintains backward compatibility until the metadata task runs and generates the file
+  if (Object.keys(catalog.comboOracleToIndex).length === 0) {
+    console.info('comboOracleToIndex not found, falling back to oracleToIndex for combo lookups');
+    catalog.comboOracleToIndex = catalog.oracleToIndex;
+  }
 
   console.info('Finished loading carddb.');
 }

@@ -19,7 +19,9 @@ export const getCardCombos = async (req: Request, res: Response) => {
     }
 
     // Fetch from DynamoDB by traversing comboTree
-    const oracleIndex = catalog.oracleToIndex[oracleId];
+    // Use comboOracleToIndex which is saved alongside the combo tree
+    // to ensure index consistency regardless of when cards were updated
+    const oracleIndex = catalog.comboOracleToIndex[oracleId];
 
     if (oracleIndex === undefined) {
       return res.status(200).json({ combos: [] });

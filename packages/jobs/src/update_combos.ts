@@ -13,21 +13,6 @@ import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
 
 import { downloadJson, uploadJson } from './utils/s3';
 
-const loadMetadata = async () => {
-  const indexToOracle = await downloadJson('indexToOracle.json');
-
-  if (indexToOracle) {
-    return {
-      indexToOracle,
-    };
-  }
-
-  console.log("Couldn't find indexToOracle.json in S3 (that is OK)");
-  return {
-    indexToOracle: [],
-  };
-};
-
 const fetchWithRetries = async (url: string, retries = 5, delay = 60000): Promise<any> => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -136,106 +121,139 @@ const fetchBulkData = async (url: string, cacheKey: string, useS3Cache?: boolean
 
 // Use S3 for caching if DATA_BUCKET is set
 const useS3Cache = !!process.env.DATA_BUCKET;
-const taskId = process.env.CARD_METADATA_TASK_ID;
 
-(async () => {
+/**
+ * Update combos using the provided oracle index mapping.
+ * This function can be called from the metadata task with the freshly generated index,
+ * ensuring the combo tree is built with the exact same mapping.
+ *
+ * @param indexToOracle - Array mapping index positions to oracle IDs
+ * @param oracleToIndex - Map from oracle ID to index position
+ * @param taskId - Optional task ID for progress updates
+ */
+export const updateCombos = async (
+  indexToOracle: string[],
+  oracleToIndex: Record<string, number>,
+  taskId?: string,
+): Promise<void> => {
   if (taskId) {
     await cardMetadataTaskDao.updateStep(taskId, 'Processing Combos');
   }
 
-  console.log('Initializing card database...');
+  console.log('Downloading all combos data');
+  const bulkUrl = 'https://json.commanderspellbook.com/variants.json.gz';
 
-  const { indexToOracle } = await loadMetadata();
+  // Fetch bulk data
+  const dataById = await fetchBulkData(bulkUrl, 'cache/combos.json', useS3Cache);
+
+  console.log('Retrieved combo data from cache or API');
+
+  console.log('Building combo tree...');
+  const comboTree: ComboTree = {};
+  let processed = 0;
+  const total = Object.values(dataById).length;
+
+  for (const id in dataById) {
+    processed += 1;
+    if (processed % 1000 === 0) {
+      console.log(`Processed ${processed} of ${total}`);
+    }
+    const variant = dataById[id];
+
+    if (!variant || !variant.uses) {
+      continue; // Skip if variant is undefined or has no uses
+    }
+
+    const uses = variant.uses
+      .map((use: any) => oracleToIndex[use.card.oracleId])
+      .filter((index): index is number => index !== undefined); // Filter out undefined values
+
+    let currentNode = comboTree;
+    for (const index of uses) {
+      if (!currentNode.c) {
+        currentNode.c = {};
+      }
+      if (!currentNode.c[index]) {
+        currentNode.c[index] = {};
+      }
+      currentNode = currentNode.c[index] as ComboTree;
+    }
+    if (!currentNode['$']) {
+      currentNode['$'] = [];
+    }
+    currentNode['$'].push(id);
+  }
+
+  console.log('Saving combo tree and oracle mapping to S3...');
+  const saveStart = Date.now();
+  // Save the combo tree to combos/ (primary) and cards/ (for server download)
+  await uploadJson('combos/comboTree.json', comboTree);
+  await uploadJson('cards/comboTree.json', comboTree);
+  // Save the oracle-to-index mapping that was used to build this tree
+  // This ensures combo lookups use the exact same indices as the tree
+  await uploadJson('combos/comboOracleToIndex.json', oracleToIndex);
+  await uploadJson('cards/comboOracleToIndex.json', oracleToIndex);
+  const saveDuration = (Date.now() - saveStart) / 1000;
+  console.log(`Saved combo tree and oracle mapping to S3. Duration: ${saveDuration.toFixed(2)}s`);
+
+  // Save combos to DynamoDB keyed by variant IDs
+  console.log('Saving combos to DynamoDB...');
+  const dynamoStart = Date.now();
+  const combos: Combo[] = [];
+  const now = Date.now();
+
+  for (const id in dataById) {
+    const variant = dataById[id];
+    if (!variant || !variant.uses) {
+      continue;
+    }
+
+    // Add timestamp fields if not present
+    if (!variant.dateCreated) {
+      variant.dateCreated = now;
+    }
+    variant.dateLastUpdated = now;
+
+    combos.push(variant);
+  }
+
+  console.log(`Prepared ${combos.length} combos for DynamoDB`);
+
+  // Batch write with delay to avoid overwhelming DynamoDB
+  const WRITE_DELAY_MS = 100; // 100ms delay between batches
+  await comboDao.batchPutCombos(combos, WRITE_DELAY_MS);
+
+  const dynamoDuration = (Date.now() - dynamoStart) / 1000;
+  console.log(`Saved combo data to DynamoDB. Duration: ${dynamoDuration.toFixed(2)}s`);
+
+  console.log('All combo data saved successfully');
+};
+
+// Standalone entry point - loads metadata from S3 if run directly
+const taskId = process.env.CARD_METADATA_TASK_ID;
+
+const runStandalone = async () => {
+  console.log('Running combo update in standalone mode...');
+  console.log('Loading oracle index from S3...');
+
+  const indexToOracle = await downloadJson('indexToOracle.json');
+
+  if (!indexToOracle || indexToOracle.length === 0) {
+    console.error('Could not find indexToOracle.json in S3 - cannot update combos');
+    process.exit(1);
+  }
 
   const oracleToIndex: Record<string, number> = {};
   indexToOracle.forEach((oracleId: string, index: number) => {
     oracleToIndex[oracleId] = index;
   });
 
-  console.log('Downloading all combos data');
-  const bulkUrl = 'https://json.commanderspellbook.com/variants.json.gz';
-
   try {
-    // Fetch bulk data
-    const dataById = await fetchBulkData(bulkUrl, 'cache/combos.json', useS3Cache);
-
-    console.log('Retrieved combo data from cache or API');
-
-    console.log('Building combo tree...');
-    const comboTree: ComboTree = {};
-    let processed = 0;
-    const total = Object.values(dataById).length;
-
-    for (const id in dataById) {
-      processed += 1;
-      if (processed % 1000 === 0) {
-        console.log(`Processed ${processed} of ${total}`);
-      }
-      const variant = dataById[id];
-
-      if (!variant || !variant.uses) {
-        continue; // Skip if variant is undefined or has no uses
-      }
-
-      const uses = variant.uses
-        .map((use: any) => oracleToIndex[use.card.oracleId])
-        .filter((index): index is number => index !== undefined); // Filter out undefined values
-
-      let currentNode = comboTree;
-      for (const index of uses) {
-        if (!currentNode.c) {
-          currentNode.c = {};
-        }
-        if (!currentNode.c[index]) {
-          currentNode.c[index] = {};
-        }
-        currentNode = currentNode.c[index] as ComboTree;
-      }
-      if (!currentNode['$']) {
-        currentNode['$'] = [];
-      }
-      currentNode['$'].push(id);
-    }
-
-    console.log('Saving combo tree to S3...');
-    const saveStart = Date.now();
-    await uploadJson('combos/comboTree.json', comboTree);
-    const saveDuration = (Date.now() - saveStart) / 1000;
-    console.log(`Saved combo tree to S3. Duration: ${saveDuration.toFixed(2)}s`);
-
-    // Save combos to DynamoDB keyed by variant IDs
-    console.log('Saving combos to DynamoDB...');
-    const dynamoStart = Date.now();
-    const combos: Combo[] = [];
-    const now = Date.now();
-
-    for (const id in dataById) {
-      const variant = dataById[id];
-      if (!variant || !variant.uses) {
-        continue;
-      }
-
-      // Add timestamp fields if not present
-      if (!variant.dateCreated) {
-        variant.dateCreated = now;
-      }
-      variant.dateLastUpdated = now;
-
-      combos.push(variant);
-    }
-
-    console.log(`Prepared ${combos.length} combos for DynamoDB`);
-
-    // Batch write with delay to avoid overwhelming DynamoDB
-    const WRITE_DELAY_MS = 100; // 100ms delay between batches
-    await comboDao.batchPutCombos(combos, WRITE_DELAY_MS);
-
-    const dynamoDuration = (Date.now() - dynamoStart) / 1000;
-    console.log(`Saved combo data to DynamoDB. Duration: ${dynamoDuration.toFixed(2)}s`);
-
-    console.log('All combo data saved successfully');
+    await updateCombos(indexToOracle, oracleToIndex, taskId);
+    console.log('Complete');
+    process.exit();
   } catch (error) {
-    console.error('Error downloading combo data:', error);
+    console.error('Error updating combo data:', error);
     if (taskId) {
       await cardMetadataTaskDao.markAsFailed(
         taskId,
@@ -244,7 +262,9 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
     }
     process.exit(1);
   }
+};
 
-  console.log('Complete');
-  process.exit();
-})();
+// Only run standalone if this is the main module
+if (require.main === module) {
+  runStandalone();
+}

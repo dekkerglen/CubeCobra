@@ -6,7 +6,9 @@ export const getCombos = async (req: Request, res: Response) => {
   try {
     const oracles = req.body.oracles;
 
-    const indexes = oracles.map((oracle: string) => catalog.oracleToIndex[oracle]);
+    // Use comboOracleToIndex which is saved alongside the combo tree
+    // to ensure index consistency regardless of when cards were updated
+    const indexes = oracles.map((oracle: string) => catalog.comboOracleToIndex[oracle]);
 
     // Collect variant IDs from comboTree
     const variantIds: string[] = [];

@@ -14,6 +14,7 @@ import { updateCardbase } from '@server/serverutils/updatecards';
 import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
 
 import { encode, initializeMl, oracleInData } from '../../recommenderService/src/mlutils/ml';
+import { updateCombos } from './update_combos';
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 const correlationLimit = 36;
 // import { HierarchicalNSW } from 'hnswlib-node';
@@ -527,6 +528,23 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
   // Note: Manifest timestamp was already updated at the start of the process
   // to claim this run and prevent duplicates
   console.log('Metadata dict update complete!');
+
+  // Update combos using the same oracle index mapping we just generated
+  // This ensures the combo tree is built with the exact same indices
+  console.log('Starting combo update with fresh oracle index...');
+  try {
+    await updateCombos(indexToOracle, oracleToIndex, taskId);
+    console.log('Combo update complete!');
+  } catch (error) {
+    console.error('Error updating combos:', error);
+    if (taskId) {
+      await cardMetadataTaskDao.markAsFailed(
+        taskId,
+        error instanceof Error ? error.message : 'Failed to update combos',
+      );
+    }
+    process.exit(1);
+  }
 
   console.log('Complete');
 

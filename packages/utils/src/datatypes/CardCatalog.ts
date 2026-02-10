@@ -122,4 +122,6 @@ export interface Catalog {
   printedCardList: any[];
   comboTree: ComboTree;
   oracleToIndex: Record<string, number>;
+  // Combo-specific oracle index mapping - saved alongside comboTree to ensure index consistency
+  comboOracleToIndex: Record<string, number>;
 }
