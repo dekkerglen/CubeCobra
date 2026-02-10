@@ -10,6 +10,7 @@ const { DefaultElo } = require('@utils/datatypes/Card');
 import { cardMetadataTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import carddb, { cardFromId } from '@server/serverutils/carddb';
+import { updateCardbase } from '@server/serverutils/updatecards';
 import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
 
 import { encode, initializeMl, oracleInData } from '../../recommenderService/src/mlutils/ml';
@@ -74,6 +75,10 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
 
   console.log('Loading card database');
   const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
+  const bucket = process.env.DATA_BUCKET || 'cubecobra-public';
+  
+  // Download card data from S3 if needed
+  await updateCardbase(privateDir, bucket);
   await initializeCardDb(privateDir);
 
   console.log('Initializing ML models');
