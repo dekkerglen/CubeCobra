@@ -9,6 +9,7 @@ import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 import fs from 'fs';
+import { uploadFile } from './utils/s3';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {
   const card = draftCards[cardIndex];
@@ -156,65 +157,96 @@ const taskId = process.env.EXPORT_TASK_ID;
     const draftTypes = ['d', 'g', 's', 'u']; // Draft, Grid, Sealed, Upload
 
     let totalBatches = 0;
-    const BATCH_SIZE = 500; // Process 500 drafts at a time to reduce memory usage
+    const UPLOAD_INTERVAL = 10; // Upload to S3 and cleanup every 10 batches
+
+    // Helper function to upload batch files to S3 and clean up local files
+    const uploadAndCleanup = async (startBatch: number, endBatch: number) => {
+      console.log(`Uploading batches ${startBatch} to ${endBatch - 1} to S3...`);
+
+      for (let i = startBatch; i < endBatch; i++) {
+        const decksPath = `./temp/export/decks/${i}.json`;
+        const picksPath = `./temp/export/picks/${i}.json`;
+        const cubeInstancesPath = `./temp/export/cubeInstances/${i}.json`;
+
+        // Upload to S3
+        await Promise.all([
+          uploadFile(`export/decks/${i}.json`, decksPath),
+          uploadFile(`export/picks/${i}.json`, picksPath),
+          uploadFile(`export/cubeInstances/${i}.json`, cubeInstancesPath),
+        ]);
+
+        // Clean up local files
+        fs.unlinkSync(decksPath);
+        fs.unlinkSync(picksPath);
+        fs.unlinkSync(cubeInstancesPath);
+      }
+
+      console.log(`Uploaded and cleaned up batches ${startBatch} to ${endBatch - 1}`);
+    };
+
+    let lastUploadedBatch = 0;
 
     for (const draftType of draftTypes) {
       console.log(`Processing draft type: ${draftType}`);
       let typeLastKey: any = null;
-      let draftLogBatch: any[] = [];
       let totalProcessed = 0;
 
       do {
-        // Load a page of draft metadata
+        // Load a page of draft metadata and process it directly (no artificial batch size limit)
         const result = await draftDao.queryByTypeAndDate(draftType, typeLastKey);
-        draftLogBatch = draftLogBatch.concat(result.items);
+        const batchToProcess = result.items;
         typeLastKey = result.lastKey;
 
-        // Process batches when we have enough, or when we're done with this type
-        while (draftLogBatch.length >= BATCH_SIZE || (!typeLastKey && draftLogBatch.length > 0)) {
-          const batchToProcess = draftLogBatch.splice(0, BATCH_SIZE);
+        if (batchToProcess.length === 0) {
+          continue;
+        }
 
-          const draftIds = batchToProcess
-            .filter((item: { complete: any }) => item.complete)
-            .map((row: { id: any }) => row.id);
-          const drafts = await Promise.all(draftIds.map((id: string) => draftDao.getById(id)));
-          const validDrafts = drafts.filter((d): d is NonNullable<typeof d> => d !== null);
+        const draftIds = batchToProcess
+          .filter((item: { complete: any }) => item.complete)
+          .map((row: { id: any }) => row.id);
+        const drafts = await Promise.all(draftIds.map((id: string) => draftDao.getById(id)));
+        const validDrafts = drafts.filter((d): d is NonNullable<typeof d> => d !== null);
 
-          const processedDrafts = validDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
-          const picksResults = validDrafts.map((draft: any) => processPicks(draft, oracleToIndex));
+        const processedDrafts = validDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
+        const picksResults = validDrafts.map((draft: any) => processPicks(draft, oracleToIndex));
 
-          // Collect cube instances and picks for this batch
-          const batchCubeInstances: number[][] = [];
-          const batchPicks = picksResults.flatMap((result) => {
-            // Add this cube instance to the batch array
-            const batchIndex = batchCubeInstances.length;
-            batchCubeInstances.push(result.cubeInstance);
+        // Collect cube instances and picks for this batch
+        const batchCubeInstances: number[][] = [];
+        const batchPicks = picksResults.flatMap((result) => {
+          // Add this cube instance to the batch array
+          const batchIndex = batchCubeInstances.length;
+          batchCubeInstances.push(result.cubeInstance);
 
-            // Update all picks to reference the batch cube instance index
-            result.picks.forEach((pick) => {
-              pick.cubeCards = batchIndex;
-            });
-
-            return result.picks;
+          // Update all picks to reference the batch cube instance index
+          result.picks.forEach((pick) => {
+            pick.cubeCards = batchIndex;
           });
 
-          fs.writeFileSync(`./temp/export/decks/${totalBatches}.json`, JSON.stringify(processedDrafts.flat()));
-          fs.writeFileSync(`./temp/export/picks/${totalBatches}.json`, JSON.stringify(batchPicks));
-          fs.writeFileSync(`./temp/export/cubeInstances/${totalBatches}.json`, JSON.stringify(batchCubeInstances));
+          return result.picks;
+        });
 
-          totalBatches += 1;
-          totalProcessed += batchToProcess.length;
+        fs.writeFileSync(`./temp/export/decks/${totalBatches}.json`, JSON.stringify(processedDrafts.flat()));
+        fs.writeFileSync(`./temp/export/picks/${totalBatches}.json`, JSON.stringify(batchPicks));
+        fs.writeFileSync(`./temp/export/cubeInstances/${totalBatches}.json`, JSON.stringify(batchCubeInstances));
 
-          console.log(
-            `Processed batch ${totalBatches} (${totalProcessed} drafts from type ${draftType}, ${validDrafts.length} complete drafts in this batch)`,
-          );
+        totalBatches += 1;
+        totalProcessed += batchToProcess.length;
 
-          // Don't loop again if we don't have enough for another batch and we're done loading
-          if (!typeLastKey && draftLogBatch.length < BATCH_SIZE) {
-            break;
-          }
+        console.log(
+          `Processed batch ${totalBatches} (${totalProcessed} drafts from type ${draftType}, ${validDrafts.length} complete drafts in this batch)`,
+        );
+
+        // Upload to S3 and cleanup every UPLOAD_INTERVAL batches
+        if (totalBatches - lastUploadedBatch >= UPLOAD_INTERVAL) {
+          await uploadAndCleanup(lastUploadedBatch, totalBatches);
+          lastUploadedBatch = totalBatches;
         }
       } while (typeLastKey);
+    }
+
+    // Upload any remaining batches that haven't been uploaded yet
+    if (totalBatches > lastUploadedBatch) {
+      await uploadAndCleanup(lastUploadedBatch, totalBatches);
     }
 
     console.log(`Export complete! Processed ${totalBatches} total batches.`);
