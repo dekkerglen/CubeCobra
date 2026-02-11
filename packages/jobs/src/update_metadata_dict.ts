@@ -1,5 +1,6 @@
 require('module-alias/register');
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 
 import 'module-alias/register';
@@ -13,6 +14,7 @@ import carddb, { cardFromId } from '@server/serverutils/carddb';
 import { updateCardbase } from '@server/serverutils/updatecards';
 import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
 
+import { downloadModelsFromS3 } from '../../recommenderService/src/mlutils/downloadModel';
 import { encode, initializeMl, oracleInData } from '../../recommenderService/src/mlutils/ml';
 import { updateCombos } from './update_combos';
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
@@ -83,8 +85,23 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
   await initializeCardDb(privateDir);
 
   console.log('Initializing ML models');
-  const rootDir = path.join(__dirname, '..', '..', 'recommenderService');
-  await initializeMl(rootDir);
+  // Use the same directory structure as the recommenderService
+  const mlModelDir = path.join(__dirname, '..', '..', 'ml');
+  const modelDir = path.join(mlModelDir, 'model');
+  const requiredModels = ['encoder', 'cube_decoder', 'deck_build_decoder', 'draft_decoder'];
+
+  const modelDirExists = fs.existsSync(modelDir);
+  const modelsExist =
+    modelDirExists && requiredModels.every((model) => fs.existsSync(path.join(modelDir, model, 'model.json')));
+
+  if (!modelsExist) {
+    console.log('ML models not found locally. Downloading from S3...');
+    await downloadModelsFromS3(mlModelDir, bucket);
+  } else {
+    console.log('Using existing local ML models.');
+  }
+
+  await initializeMl(mlModelDir);
 
   // load most recent cube history
   const cubeHistoryFiles = await listFiles('cubes_history/');
