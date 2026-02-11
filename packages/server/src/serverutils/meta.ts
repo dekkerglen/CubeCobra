@@ -63,8 +63,8 @@ const generateMeta = (
   ];
 };
 
-export const generateCubeMetadata = (cube: Cube, currentUrl: string) => {
-  return generateMeta(`Cube Cobra: ${cube.name}`, markdownToText(cube.brief), cube.image.uri, currentUrl);
+export const generateCubeMetadata = async (cube: Cube, currentUrl: string) => {
+  return generateMeta(`Cube Cobra: ${cube.name}`, await markdownToText(cube.brief), cube.image.uri, currentUrl);
 };
 
 export default generateMeta;

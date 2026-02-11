@@ -93,7 +93,7 @@ export const aboutHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - About`,
-        metadata: generateCubeMetadata(cube, `${baseUrl}/cube/about/${req.params.id}`),
+        metadata: await generateCubeMetadata(cube, `${baseUrl}/cube/about/${req.params.id}`),
         noindex:
           cube.visibility === CUBE_VISIBILITY.PRIVATE ||
           cube.visibility === CUBE_VISIBILITY.UNLISTED ||

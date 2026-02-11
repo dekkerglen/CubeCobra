@@ -16,8 +16,8 @@
       "dynamo/*": ["src/dynamo/*"],
       "types/*": ["src/types/*"]
     },
-    "module": "node16",
-    "moduleResolution": "node16",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
