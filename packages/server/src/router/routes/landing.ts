@@ -27,7 +27,7 @@ const landingHandler = async (req: Request, res: Response) => {
     .sort((a, b) => b.date - a.date)
     .slice(0, 36);
 
-  const recentDecks = await draftDao.queryByTypeAndDate(DRAFT_TYPES.DRAFT, undefined, 12);
+  const recentDecks = await draftDao.queryByTypeAndDate(DRAFT_TYPES.DRAFT, undefined, 50);
 
   // Get daily P1P1
   const dailyP1P1 = await getDailyP1P1(req.logger);
@@ -35,7 +35,7 @@ const landingHandler = async (req: Request, res: Response) => {
   return render(req, res, 'LandingPage', {
     featured,
     content,
-    recentDecks: recentDecks.items.filter((deck: any) => deck.complete),
+    recentDecks: recentDecks.items.filter((deck: any) => deck.complete).slice(0, 12),
     dailyP1P1,
   });
 };

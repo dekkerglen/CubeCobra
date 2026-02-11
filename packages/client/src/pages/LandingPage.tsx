@@ -16,7 +16,6 @@ import ArticlePreview from 'components/content/ArticlePreview';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import VideoPreview from 'components/content/VideoPreview';
 import CubesCard from 'components/cube/CubesCard';
-import CubeSearchNavBar from 'components/cube/CubeSearchNavBar';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import DailyP1P1Card from 'components/p1p1/DailyP1P1Card';
@@ -37,11 +36,10 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, content, dailyP1P1 }) => {
   return (
     <MainLayout>
-      <CubeSearchNavBar />
       <DynamicFlash />
       <Row className="mt-2">
         {dailyP1P1 && (
-          <Col md={7} sm={12} className="mb-4">
+          <Col md={7} sm={12}>
             <DailyP1P1Card pack={dailyP1P1.pack} cube={dailyP1P1.cube} date={dailyP1P1.date} />
           </Col>
         )}
@@ -72,44 +70,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, conten
             </Card>
           </Flexbox>
         </Col>
-        <Col md={3} sm={6} xs={12} className="mb-4">
+        {recentDecks.length > 0 && (
+          <Col md={3} sm={6} xs={12}>
+            <Card>
+              <CardHeader>
+                <Text semibold xl>
+                  Recent Drafts
+                </Text>
+              </CardHeader>
+              {recentDecks.map((deck) => (
+                <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" />
+              ))}
+            </Card>
+          </Col>
+        )}
+        <Col md={9} sm={6} xs={12}>
           <Card>
             <CardHeader>
-              <Text semibold xl>
-                Recent Drafts
-              </Text>
+              <Flexbox direction="row" justify="between">
+                <Text semibold lg>
+                  Latest Content
+                </Text>
+                <Link href="/content/browse">View more...</Link>
+              </Flexbox>
             </CardHeader>
-            {recentDecks.length > 0 ? (
-              recentDecks.map((deck) => <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" />)
-            ) : (
-              <Text md className="m-2">
-                Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
-                <Link href="https://discord.gg/YYF9x65Ane">Discord draft exchange?</Link>
-              </Text>
-            )}
-          </Card>
-        </Col>
-        <Col md={9} sm={6} xs={12} className="mb-4">
-          <Flexbox direction="col" gap="2">
-            <Flexbox direction="row" justify="between" alignItems="center">
-              <Text lg semibold>
-                Latest Content
-              </Text>
-              <Link href="/content/browse">View more content...</Link>
-            </Flexbox>
-            <Row>
+            <Row gutters={0}>
               {content.map((item: Article) => (
-                <Col key={item.id} xxl={3} lg={4} sm={6} className="mb-4">
+                <Col key={item.id} xxl={3} lg={4} sm={6}>
                   {item.type === ContentType.ARTICLE && <ArticlePreview article={item as Article} />}
                   {item.type === ContentType.VIDEO && <VideoPreview video={item as Video} />}
                   {item.type === ContentType.EPISODE && <PodcastEpisodePreview episode={item as any as Episode} />}
                 </Col>
               ))}
-              <Col xxl={3} lg={4} sm={6} className="mb-4">
-                <Link href="/content/browse">View more content...</Link>
-              </Col>
             </Row>
-          </Flexbox>
+          </Card>
         </Col>
       </Row>
     </MainLayout>

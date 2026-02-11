@@ -6,7 +6,7 @@ Since 1.5.0
 - In Cube table view, Added the card item hover effect to each item in the group when hovering over the card group header
 - Added a shareable link to generate a random sample pack each time
 - allow urls in cube compare input
-- Refactored dashboard mobile UX
+- Refactored dashboard and landing pages mobile UX
 - Added "View More" links to explore page
 
 # Bug Fixes

@@ -125,7 +125,7 @@ export const getMoreHandler = async (req: Request, res: Response) => {
 
 // GET /content/articles
 export const articlesHandler = async (req: Request, res: Response) => {
-  const content = await articleDao.queryByStatus(ContentStatus.PUBLISHED);
+  const content = await articleDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24);
 
   return render(req, res, 'ArticlesPage', { articles: content.items, lastKey: content.lastKey });
 };
@@ -133,7 +133,7 @@ export const articlesHandler = async (req: Request, res: Response) => {
 // POST /content/getmorearticles
 export const getMoreArticlesHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
-  const content = await articleDao.queryByStatus(ContentStatus.PUBLISHED, lastKey);
+  const content = await articleDao.queryByStatus(ContentStatus.PUBLISHED, lastKey, 24);
 
   return res.status(200).send({
     success: 'true',
@@ -144,7 +144,7 @@ export const getMoreArticlesHandler = async (req: Request, res: Response) => {
 
 // GET /content/videos
 export const videosHandler = async (req: Request, res: Response) => {
-  const content = await videoDao.queryByStatus(ContentStatus.PUBLISHED);
+  const content = await videoDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24);
 
   return render(req, res, 'VideosPage', { videos: content.items, lastKey: content.lastKey });
 };
@@ -152,7 +152,7 @@ export const videosHandler = async (req: Request, res: Response) => {
 // POST /content/getmorevideos
 export const getMoreVideosHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
-  const content = await videoDao.queryByStatus(ContentStatus.PUBLISHED, lastKey);
+  const content = await videoDao.queryByStatus(ContentStatus.PUBLISHED, lastKey, 24);
 
   return res.status(200).send({
     success: 'true',
@@ -164,7 +164,7 @@ export const getMoreVideosHandler = async (req: Request, res: Response) => {
 // GET /content/podcasts
 export const podcastsHandler = async (req: Request, res: Response) => {
   // Get episodes across all podcasts
-  const content = await episodeDao.queryByStatus(ContentStatus.PUBLISHED);
+  const content = await episodeDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24);
   const podcasts = await podcastDao.queryByStatus(ContentStatus.PUBLISHED);
 
   return render(req, res, 'PodcastsPage', {
@@ -178,7 +178,7 @@ export const podcastsHandler = async (req: Request, res: Response) => {
 export const getMorePodcastsHandler = async (req: Request, res: Response) => {
   const { lastKey } = req.body;
   // Get episodes across all podcasts
-  const content = await episodeDao.queryByStatus(ContentStatus.PUBLISHED, lastKey);
+  const content = await episodeDao.queryByStatus(ContentStatus.PUBLISHED, lastKey, 24);
 
   return res.status(200).send({
     success: 'true',
