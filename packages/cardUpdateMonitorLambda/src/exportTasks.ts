@@ -96,7 +96,6 @@ export async function monitorExportTasks(): Promise<void> {
     status: ExportTaskStatus.IN_PROGRESS,
     exportType: 'all_data',
     fileSize: 0,
-    totalRecords: 0,
     step: 'Initializing',
   });
 

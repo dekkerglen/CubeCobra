@@ -21,6 +21,13 @@ export const getJobsBucket = (): string => {
 };
 
 /**
+ * Get the public bucket name for exports
+ */
+export const getPublicBucket = (): string => {
+  return 'cubecobra-public';
+};
+
+/**
  * Upload a JSON object to S3
  */
 export const uploadJson = async (key: string, data: any): Promise<void> => {
@@ -42,6 +49,25 @@ export const uploadJson = async (key: string, data: any): Promise<void> => {
 export const uploadFile = async (key: string, filePath: string, contentType?: string): Promise<void> => {
   const fs = await import('fs');
   const bucket = getJobsBucket();
+  const stream = fs.createReadStream(filePath);
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: stream,
+      ContentType: contentType || 'application/json',
+    }),
+  );
+};
+
+/**
+ * Upload a file to the public bucket for exports
+ * Uses streaming to avoid loading large files into memory
+ */
+export const uploadFileToPublicBucket = async (key: string, filePath: string, contentType?: string): Promise<void> => {
+  const fs = await import('fs');
+  const bucket = getPublicBucket();
   const stream = fs.createReadStream(filePath);
 
   await s3.send(

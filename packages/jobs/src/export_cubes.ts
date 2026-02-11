@@ -12,6 +12,8 @@ import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import type CubeType from '@utils/datatypes/Cube';
 
+import { uploadFileToPublicBucket } from './utils/s3';
+
 const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>) => {
   try {
     const cards = await cubeDao.getCards(cube.id);
@@ -86,6 +88,15 @@ const taskId = process.env.EXPORT_TASK_ID;
 
     fs.writeFileSync('./temp/export/cubes.json', JSON.stringify(cubes));
     fs.writeFileSync('./temp/export/indexToOracleMap.json', JSON.stringify(indexToOracleMap));
+
+    if (taskId) {
+      await exportTaskDao.updateStep(taskId, 'Uploading cube export files');
+    }
+
+    await Promise.all([
+      uploadFileToPublicBucket('export/cubes.json', './temp/export/cubes.json'),
+      uploadFileToPublicBucket('export/indexToOracleMap.json', './temp/export/indexToOracleMap.json'),
+    ]);
 
     console.log('Export complete!');
     process.exit(0);

@@ -470,16 +470,8 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
                     stepTimestamps={task.stepTimestamps}
                   />
 
-                  {task.status === 'COMPLETED' && (
+                  {task.status === 'COMPLETED' && task.fileSize > 0 && (
                     <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Total Records
-                        </Text>
-                        <Text semibold md>
-                          {task.totalRecords.toLocaleString()}
-                        </Text>
-                      </Flexbox>
                       <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
                           Export Size

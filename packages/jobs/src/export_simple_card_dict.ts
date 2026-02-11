@@ -8,6 +8,8 @@ import path from 'path';
 
 import 'module-alias/register';
 
+import { uploadFileToPublicBucket } from './utils/s3';
+
 const taskId = process.env.EXPORT_TASK_ID;
 
 (async () => {
@@ -62,6 +64,12 @@ const taskId = process.env.EXPORT_TASK_ID;
     }
 
     fs.writeFileSync('./temp/export/simpleCardDict.json', JSON.stringify(result));
+
+    if (taskId) {
+      await exportTaskDao.updateStep(taskId, 'Uploading card dictionary');
+    }
+
+    await uploadFileToPublicBucket('export/simpleCardDict.json', './temp/export/simpleCardDict.json');
 
     console.log('Export complete!');
     process.exit(0);

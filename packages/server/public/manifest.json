@@ -1,5 +1,5 @@
 {
-  "AdminCardUpdatesPage": "/js/AdminCardUpdatesPage.9f429841.bundle.js",
+  "AdminCardUpdatesPage": "/js/AdminCardUpdatesPage.7cf7b138.bundle.js",
   "AdminDashboardPage": "/js/AdminDashboardPage.e1014506.bundle.js",
   "ApplicationPage": "/js/ApplicationPage.f31b3d62.bundle.js",
   "ArticlePage": "/js/ArticlePage.3e418504.bundle.js",
@@ -9,7 +9,7 @@
   "BulkUploadPage": "/js/BulkUploadPage.c3aca8f4.bundle.js",
   "CardPage": "/js/CardPage.fb895628.bundle.js",
   "CardSearchPage": "/js/CardSearchPage.6c9c6421.bundle.js",
-  "CardUpdatesPage": "/js/CardUpdatesPage.7840dd92.bundle.js",
+  "CardUpdatesPage": "/js/CardUpdatesPage.01eb881e.bundle.js",
   "CommentPage": "/js/CommentPage.7d3076a6.bundle.js",
   "ContactPage": "/js/ContactPage.de3bd65a.bundle.js",
   "CreateNewRecordPage": "/js/CreateNewRecordPage.81f74863.bundle.js",
@@ -39,13 +39,14 @@
   "EditVideoPage": "/js/EditVideoPage.8057d9b0.bundle.js",
   "ErrorPage": "/js/ErrorPage.6f415002.bundle.js",
   "ExplorePage": "/js/ExplorePage.6890efde.bundle.js",
+  "ExportsGuidePage": "/js/ExportsGuidePage.a2f1b3ef.bundle.js",
   "FeaturedCubesQueuePage": "/js/FeaturedCubesQueuePage.af9cc386.bundle.js",
   "FeaturedQueuePage": "/js/FeaturedQueuePage.21345bca.bundle.js",
   "FiltersPage": "/js/FiltersPage.fa2e44b4.bundle.js",
   "GridDraftPage": "/js/GridDraftPage.463818e9.bundle.js",
   "ImportRecordPage": "/js/ImportRecordPage.102863ea.bundle.js",
   "InfoPage": "/js/InfoPage.88afe4ba.bundle.js",
-  "LandingPage": "/js/LandingPage.5922074c.bundle.js",
+  "LandingPage": "/js/LandingPage.320e841e.bundle.js",
   "LeaveWarningPage": "/js/LeaveWarningPage.75750a13.bundle.js",
   "LoginPage": "/js/LoginPage.d3a2a7bd.bundle.js",
   "LostPasswordPage": "/js/LostPasswordPage.7f20d5e8.bundle.js",
@@ -75,6 +76,6 @@
   "VersionPage": "/js/VersionPage.f872489c.bundle.js",
   "VideoPage": "/js/VideoPage.25b4f3d4.bundle.js",
   "VideosPage": "/js/VideosPage.2eaf648a.bundle.js",
-  "commons": "/js/commons.3074c3fc.bundle.js",
-  "vendors": "/js/vendors.994134bf.bundle.js"
+  "commons": "/js/commons.f325eba1.bundle.js",
+  "vendors": "/js/vendors.682d6f26.bundle.js"
 }

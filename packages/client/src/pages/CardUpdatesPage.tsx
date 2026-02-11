@@ -191,34 +191,15 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({
           <CardBody>
             <Flexbox direction="col" gap="3">
               <Text md className="text-text-secondary">
-                Every three months, CubeCobra creates comprehensive backup exports of all public data on the platform.
-                These exports are made freely available through our public S3 bucket for researchers, content creators,
-                and anyone interested in cube analytics. The exports include complete cube lists, draft data, and all
-                card definitions in machine-readable formats. If you're interested in analyzing cube trends, building
-                tools, or conducting research, you can download these datasets using the AWS CLI.
+                Every three months, CubeCobra creates comprehensive exports of all public data on the platform. These
+                exports are made freely available for researchers, content creators, and anyone interested in cube
+                analytics. The exports include complete cube lists, draft picks, deck data, and card definitions in
+                machine-readable JSON formats.
               </Text>
 
-              {lastExportTask && (
-                <>
-                  <Text semibold md className="mt-3">
-                    📦 Download Latest Data Export
-                  </Text>
-                  <Text sm className="text-text-secondary">
-                    All exported data is available from our public S3 bucket. You'll need the{' '}
-                    <Link
-                      href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      AWS CLI
-                    </Link>{' '}
-                    installed to download the files:
-                  </Text>
-                  <div className="bg-bg-active text-text p-3 rounded font-mono text-sm overflow-x-auto border border-border">
-                    aws s3 sync s3://cubecobra-public/ ./data/ --no-sign-request
-                  </div>
-                </>
-              )}
+              <Link href="/tool/exports" className="text-link hover:underline font-semibold">
+                View Data Exports Guide →
+              </Link>
 
               {lastExportTask ? (
                 <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
@@ -228,14 +209,6 @@ const CardUpdatesPage: React.FC<CardUpdatesPageProps> = ({
                     </Text>
                     <Text semibold md>
                       {formatDate(lastExportTask.completedAt || lastExportTask.timestamp)}
-                    </Text>
-                  </Flexbox>
-                  <Flexbox direction="col" gap="2" className="flex-1">
-                    <Text sm className="text-text-secondary">
-                      Total Records
-                    </Text>
-                    <Text semibold md>
-                      {lastExportTask.totalRecords.toLocaleString()}
                     </Text>
                   </Flexbox>
                 </Flexbox>

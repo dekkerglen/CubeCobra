@@ -10,7 +10,7 @@ import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 import fs from 'fs';
 
-import { uploadFile } from './utils/s3';
+import { uploadFileToPublicBucket } from './utils/s3';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {
   const card = draftCards[cardIndex];
@@ -169,11 +169,11 @@ const taskId = process.env.EXPORT_TASK_ID;
         const picksPath = `./temp/export/picks/${i}.json`;
         const cubeInstancesPath = `./temp/export/cubeInstances/${i}.json`;
 
-        // Upload to S3
+        // Upload to S3 public bucket
         await Promise.all([
-          uploadFile(`export/decks/${i}.json`, decksPath),
-          uploadFile(`export/picks/${i}.json`, picksPath),
-          uploadFile(`export/cubeInstances/${i}.json`, cubeInstancesPath),
+          uploadFileToPublicBucket(`export/decks/${i}.json`, decksPath),
+          uploadFileToPublicBucket(`export/picks/${i}.json`, picksPath),
+          uploadFileToPublicBucket(`export/cubeInstances/${i}.json`, cubeInstancesPath),
         ]);
 
         // Clean up local files

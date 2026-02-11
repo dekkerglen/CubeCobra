@@ -13,7 +13,6 @@ export interface ExportTask extends BaseObject {
   timestamp: number; // Unix timestamp when the task was initiated
   exportType: string; // Type of export (e.g., 'all_cards', 'cube_data')
   fileSize: number; // File size in bytes of the generated export
-  totalRecords: number; // Total number of records exported
   step: string; // Current step in the export process (e.g., 'Downloading', 'Processing', 'Uploading')
   completedSteps: string[]; // Array of all completed steps in order
   stepTimestamps: Record<string, number>; // Map of step name to Unix timestamp when it started
@@ -29,7 +28,6 @@ export interface NewExportTask {
   status: ExportTaskStatus;
   exportType: string;
   fileSize: number;
-  totalRecords: number;
   step: string;
   errorMessage?: string;
 }
