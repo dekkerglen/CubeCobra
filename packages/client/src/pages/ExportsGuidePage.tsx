@@ -78,7 +78,34 @@ const ExportsGuidePage: React.FC = () => (
 ├── picks/
 │   └── {n}.json             # Individual draft picks (batched)
 └── cubeInstances/
-    └── {n}.json             # Draft card pools (batched)`}
+    └── {n}.json             # Draft card pools (batched)
+
+cards/
+├── manifest.json            # Version/checksum for card data
+├── carddict.json            # Complete card database
+├── indexToOracle.json       # Index → Oracle mapping
+├── metadatadict.json        # Card metadata (ELO, picks, etc.)
+├── nameToId.json            # Card name → ID lookup
+├── oracleToId.json          # Oracle ID → card ID lookup
+├── cardtree.json            # Autocomplete search tree
+├── names.json               # All card names
+├── full_names.json          # Full card names with set info
+├── imagedict.json           # Card image URLs
+├── cardimages.json          # Additional image data
+├── english.json             # English card names
+├── comboTree.json           # Combo/synergy data
+└── comboOracleToIndex.json  # Combo oracle mappings
+
+model/
+├── indexToOracleMap.json    # ML-specific oracle mapping
+├── encoder/                 # Shared encoder model
+│   └── model.json + weights
+├── cube_decoder/            # Cube recommendation model
+│   └── model.json + weights
+├── deck_build_decoder/      # Deck building model
+│   └── model.json + weights
+└── draft_decoder/           # Draft pick model
+    └── model.json + weights`}
               </CodeBlock>
             </Flexbox>
           </CardBody>
@@ -252,9 +279,9 @@ console.log(card.name);                         // "Lightning Bolt"`}
     "cube": "cube-uuid",
     "cubeCards": 0,           // Index into cubeInstances/{n}.json array
     "owner": "user-uuid",
-    "pack": [5, 12, 8, 3],    // Cards in pack (indexes into the cubeInstance)
-    "picked": 5,              // Card picked (index into the cubeInstance)
-    "pool": [2, 7]            // Cards already drafted (indexes into the cubeInstance)
+    "pack": [5, 12, 8, 3],    // Cards in pack (oracle indexes)
+    "picked": 5,              // Card picked (oracle index)
+    "pool": [2, 7]            // Cards already drafted (oracle indexes)
   },
   ...
 ]`}
@@ -295,7 +322,8 @@ console.log(card.name);                         // "Lightning Bolt"`}
                 <li>
                   <code className="bg-bg-active px-1 rounded">pack</code>,{' '}
                   <code className="bg-bg-active px-1 rounded">picked</code>, and{' '}
-                  <code className="bg-bg-active px-1 rounded">pool</code> are indexes into that cubeInstance array
+                  <code className="bg-bg-active px-1 rounded">pool</code> are oracle indexes that map directly to{' '}
+                  <code className="bg-bg-active px-1 rounded">indexToOracleMap.json</code>
                 </li>
                 <li>
                   The values in the cubeInstance are card indexes that map to{' '}
@@ -308,24 +336,139 @@ console.log(card.name);                         // "Lightning Bolt"`}
               </Text>
               <CodeBlock>
                 {`// Given a pick from picks/0.json:
-const pick = { cubeCards: 0, picked: 5, pack: [5, 12, 8], ... };
+const pick = { cubeCards: 0, picked: 42, pack: [42, 103, 256], pool: [15, 89], ... };
 
-// Step 1: Load the matching cubeInstances file (same number)
-const cubeInstances = loadJson('cubeInstances/0.json');
+// pack, picked, and pool are already oracle indexes!
+// Step 1: Convert picked card index to Oracle ID
+const oracleId = indexToOracleMap[pick.picked];
 
-// Step 2: Get the cube instance (draft's card pool)
-const cubeInstance = cubeInstances[pick.cubeCards];
-
-// Step 3: Get the card index from the cube instance
-const cardIndex = cubeInstance[pick.picked];
-
-// Step 4: Convert to Oracle ID
-const oracleId = indexToOracleMap[cardIndex];
-
-// Step 5: Get card details
+// Step 2: Get card details
 const card = simpleCardDict[oracleId];
-console.log(card.name);  // "Lightning Bolt"`}
+console.log(card.name);  // "Lightning Bolt"
+
+// The cubeInstance provides context (what cards the drafter expected to see)
+const cubeInstances = loadJson('cubeInstances/0.json');
+const cubeInstance = cubeInstances[pick.cubeCards];  // Also oracle indexes`}
               </CodeBlock>
+            </Flexbox>
+          </CardBody>
+        </Card>
+
+        {/* Card Data Files */}
+        <Card>
+          <CardHeader>
+            <Text semibold lg>
+              cards/ - Card Database Files
+            </Text>
+          </CardHeader>
+          <CardBody>
+            <Flexbox direction="col" gap="3">
+              <Text md className="text-text-secondary">
+                The <code className="bg-bg-active px-1 rounded">cards/</code> directory contains CubeCobra's complete
+                card database. These files power card search, autocomplete, and metadata display across the site.
+              </Text>
+
+              <Text semibold md className="mt-2">
+                Key Files
+              </Text>
+              <ul className="list-disc list-inside space-y-2 text-text-secondary ml-4">
+                <li>
+                  <code className="bg-bg-active px-1 rounded">carddict.json</code> - Complete card database with all
+                  card details (name, oracle text, types, colors, etc.)
+                </li>
+                <li>
+                  <code className="bg-bg-active px-1 rounded">metadatadict.json</code> - Card statistics including ELO
+                  ratings, pick counts, and cube inclusion rates
+                </li>
+                <li>
+                  <code className="bg-bg-active px-1 rounded">indexToOracle.json</code> - Maps numeric indexes to Oracle
+                  IDs (same mapping as export/indexToOracleMap.json)
+                </li>
+                <li>
+                  <code className="bg-bg-active px-1 rounded">nameToId.json</code> and{' '}
+                  <code className="bg-bg-active px-1 rounded">oracleToId.json</code> - Lookup tables for finding cards
+                </li>
+                <li>
+                  <code className="bg-bg-active px-1 rounded">cardtree.json</code> - Prefix tree for fast autocomplete
+                  search
+                </li>
+                <li>
+                  <code className="bg-bg-active px-1 rounded">comboTree.json</code> - Card combo and synergy
+                  relationships
+                </li>
+              </ul>
+
+              <Text semibold md className="mt-2">
+                Downloading
+              </Text>
+              <CodeBlock>aws s3 sync s3://cubecobra-public/cards/ ./cards/ --no-sign-request</CodeBlock>
+            </Flexbox>
+          </CardBody>
+        </Card>
+
+        {/* ML Model Files */}
+        <Card>
+          <CardHeader>
+            <Text semibold lg>
+              model/ - Machine Learning Models
+            </Text>
+          </CardHeader>
+          <CardBody>
+            <Flexbox direction="col" gap="3">
+              <Text md className="text-text-secondary">
+                The <code className="bg-bg-active px-1 rounded">model/</code> directory contains TensorFlow.js models
+                trained on CubeCobra data. These power the site's recommendation and draft bot features.
+              </Text>
+
+              <Text semibold md className="mt-2">
+                Available Models
+              </Text>
+              <ul className="list-disc list-inside space-y-2 text-text-secondary ml-4">
+                <li>
+                  <code className="bg-bg-active px-1 rounded">encoder/</code> - Shared encoder that converts a list of
+                  cards into a latent vector representation
+                </li>
+                <li>
+                  <code className="bg-bg-active px-1 rounded">cube_decoder/</code> - Given a cube's encoding, predicts
+                  which cards fit the cube (used for add/cut recommendations)
+                </li>
+                <li>
+                  <code className="bg-bg-active px-1 rounded">deck_build_decoder/</code> - Given a card pool, predicts
+                  which cards should go in the main deck vs sideboard
+                </li>
+                <li>
+                  <code className="bg-bg-active px-1 rounded">draft_decoder/</code> - Given a current pool, predicts
+                  which card to pick from a pack
+                </li>
+              </ul>
+
+              <Text semibold md className="mt-2">
+                Model Format
+              </Text>
+              <Text sm className="text-text-secondary">
+                Models are in TensorFlow.js GraphModel format. Each model directory contains a{' '}
+                <code className="bg-bg-active px-1 rounded">model.json</code> manifest and binary weight files. The{' '}
+                <code className="bg-bg-active px-1 rounded">indexToOracleMap.json</code> in the model directory maps the
+                model's input/output indices to Oracle IDs.
+              </Text>
+              <CodeBlock>
+                {`import { loadGraphModel, tensor } from '@tensorflow/tfjs';
+
+// Load the encoder
+const encoder = await loadGraphModel('file://model/encoder/model.json');
+
+// Create input: one-hot vector of card indices
+const input = new Array(numCards).fill(0);
+cardIndices.forEach(i => input[i] = 1);
+
+// Get the cube's latent representation
+const encoded = encoder.predict(tensor([input]));`}
+              </CodeBlock>
+
+              <Text semibold md className="mt-2">
+                Downloading
+              </Text>
+              <CodeBlock>aws s3 sync s3://cubecobra-public/model/ ./model/ --no-sign-request</CodeBlock>
             </Flexbox>
           </CardBody>
         </Card>
@@ -358,6 +501,19 @@ console.log(card.name);  // "Lightning Bolt"`}
                 <li>
                   <span className="font-semibold">Card Correlations:</span> Analyze which cards appear together in cubes
                   or get drafted together in decks.
+                </li>
+                <li>
+                  <span className="font-semibold">Card Database:</span> Use the{' '}
+                  <code className="bg-bg-active px-1 rounded">cards/</code> data to build your own card search,
+                  filtering, or display tools with up-to-date Oracle text and metadata.
+                </li>
+                <li>
+                  <span className="font-semibold">Custom Recommenders:</span> Use the pre-trained ML models to build
+                  your own cube recommendation tools, or fine-tune them on specific cube styles.
+                </li>
+                <li>
+                  <span className="font-semibold">Draft Bots:</span> Build custom draft bots using the draft_decoder
+                  model or train your own models on the picks data.
                 </li>
               </ul>
             </Flexbox>
