@@ -18,8 +18,8 @@ export async function markdownToText(text?: string): Promise<string> {
   const { toString } = await loadEsm<typeof import('mdast-util-to-string')>('mdast-util-to-string');
 
   const processor = unified()
-    .use(remark as any)
-    .use([math, [gfm, { singleTilde: false }]] as any);
+    .use(remark.default as any)
+    .use([math.default, [gfm.default, { singleTilde: false }]] as any);
 
   const ast = processor.parse(text);
   processor.runSync(ast);
