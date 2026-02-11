@@ -124,11 +124,11 @@ const ExportsGuidePage: React.FC = () => (
               <CodeBlock>
                 {`{
   "0000579f-7b35-4ed3-b44c-db2a538066fe": {
-    "name": "Eli, Wings of Fealty",
+    "name": "Lightning Bolt",
     "image": "https://cards.scryfall.io/small/front/...",
     "elo": 1205,
-    "type": "Legendary Creature — Angel",
-    "cmc": 4
+    "type": "Instant",
+    "cmc": 1
   },
   ...
 }`}
@@ -231,27 +231,30 @@ console.log(card.name);                         // "Lightning Bolt"`}
           <CardBody>
             <Flexbox direction="col" gap="3">
               <Text md className="text-text-secondary">
-                These two files work together to represent individual draft picks. The{' '}
-                <code className="bg-bg-active px-1 rounded">picks</code> files contain pick-by-pick draft decisions,
-                while <code className="bg-bg-active px-1 rounded">cubeInstances</code> contains the card pool for each
-                draft.
+                These files work together as parallel batches. The nth picks file (e.g.,{' '}
+                <code className="bg-bg-active px-1 rounded">picks/0.json</code>) corresponds to the nth cubeInstances
+                file (<code className="bg-bg-active px-1 rounded">cubeInstances/0.json</code>). Each picks file contains
+                many pick decisions from multiple drafts in that batch, and the corresponding cubeInstances file
+                contains the card pools for those drafts.
               </Text>
 
               <Text semibold md className="mt-2">
                 picks/{'{n}'}.json
               </Text>
               <Text sm className="text-text-secondary">
-                Each pick object represents a single pick decision during a draft:
+                Each pick object represents a single pick decision during a draft. The{' '}
+                <code className="bg-bg-active px-1 rounded">cubeCards</code> field is an index into the corresponding
+                cubeInstances file's array:
               </Text>
               <CodeBlock>
                 {`[
   {
     "cube": "cube-uuid",
-    "cubeCards": 0,           // Index into cubeInstances array
+    "cubeCards": 0,           // Index into cubeInstances/{n}.json array
     "owner": "user-uuid",
-    "pack": [5, 12, 8, 3],    // Cards in pack (cubeInstance indexes)
-    "picked": 5,              // Card picked (cubeInstance index)
-    "pool": [2, 7]            // Cards already drafted (cubeInstance indexes)
+    "pack": [5, 12, 8, 3],    // Cards in pack (indexes into the cubeInstance)
+    "picked": 5,              // Card picked (index into the cubeInstance)
+    "pool": [2, 7]            // Cards already drafted (indexes into the cubeInstance)
   },
   ...
 ]`}
@@ -261,7 +264,9 @@ console.log(card.name);                         // "Lightning Bolt"`}
                 cubeInstances/{'{n}'}.json
               </Text>
               <Text sm className="text-text-secondary">
-                An array of card pools, where each entry is the complete list of cards available in a specific draft:
+                An array of card pools, where each entry is the subset of cards from a cube that were used in a specific
+                draft. This represents the total pool of cards available in that draft—the cards the drafter expected
+                they might see:
               </Text>
               <CodeBlock>
                 {`[
@@ -275,21 +280,25 @@ console.log(card.name);                         // "Lightning Bolt"`}
                 Understanding the Relationship
               </Text>
               <Text sm className="text-text-secondary">
-                The picks file uses a two-level index system:
+                The picks and cubeInstances files form parallel arrays across files:
               </Text>
               <ol className="list-decimal list-inside space-y-2 text-text-secondary ml-4 mt-2">
                 <li>
-                  <code className="bg-bg-active px-1 rounded">cubeCards</code> points to an entry in the{' '}
-                  <code className="bg-bg-active px-1 rounded">cubeInstances</code> array (the draft's card pool)
+                  For picks in <code className="bg-bg-active px-1 rounded">picks/{'{n}'}.json</code>, look up{' '}
+                  <code className="bg-bg-active px-1 rounded">cubeCards</code> in{' '}
+                  <code className="bg-bg-active px-1 rounded">cubeInstances/{'{n}'}.json</code>
+                </li>
+                <li>
+                  The cubeInstance is the card pool for that draft—a subset of the full cube used for this draft
+                  session. This gives context for understanding the pick: what cards the drafter expected to see.
                 </li>
                 <li>
                   <code className="bg-bg-active px-1 rounded">pack</code>,{' '}
                   <code className="bg-bg-active px-1 rounded">picked</code>, and{' '}
-                  <code className="bg-bg-active px-1 rounded">pool</code> contain indexes into that specific cube
-                  instance
+                  <code className="bg-bg-active px-1 rounded">pool</code> are indexes into that cubeInstance array
                 </li>
                 <li>
-                  The values in the cube instance are card indexes that map to{' '}
+                  The values in the cubeInstance are card indexes that map to{' '}
                   <code className="bg-bg-active px-1 rounded">indexToOracleMap.json</code>
                 </li>
               </ol>
@@ -298,21 +307,24 @@ console.log(card.name);                         // "Lightning Bolt"`}
                 Example: Resolving a Pick
               </Text>
               <CodeBlock>
-                {`// Given a pick object:
+                {`// Given a pick from picks/0.json:
 const pick = { cubeCards: 0, picked: 5, pack: [5, 12, 8], ... };
 
-// Step 1: Get the cube instance (draft's card pool)
+// Step 1: Load the matching cubeInstances file (same number)
+const cubeInstances = loadJson('cubeInstances/0.json');
+
+// Step 2: Get the cube instance (draft's card pool)
 const cubeInstance = cubeInstances[pick.cubeCards];
 
-// Step 2: Get the card index from the cube instance
+// Step 3: Get the card index from the cube instance
 const cardIndex = cubeInstance[pick.picked];
 
-// Step 3: Convert to Oracle ID
+// Step 4: Convert to Oracle ID
 const oracleId = indexToOracleMap[cardIndex];
 
-// Step 4: Get card details
+// Step 5: Get card details
 const card = simpleCardDict[oracleId];
-console.log(card.name);  // "Black Lotus"`}
+console.log(card.name);  // "Lightning Bolt"`}
               </CodeBlock>
             </Flexbox>
           </CardBody>
