@@ -9,7 +9,7 @@ import {
   PlayIcon,
   TrophyIcon,
 } from '@primer/octicons-react';
-import Cube, { boardNameToKey, getEnabledBoards } from '@utils/datatypes/Cube';
+import Cube, { getViewDefinitions, viewNameToKey } from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
@@ -35,12 +35,12 @@ interface CubeSidebarProps {
   controls?: React.ReactNode;
 }
 
-// Generate navigation items dynamically based on cube's enabled boards
+// Generate navigation items dynamically based on cube's views
 const getNavigationItems = (cube: Cube): NavigationItem[] => {
-  const enabledBoards = getEnabledBoards(cube);
-  const boardSubItems = enabledBoards.map((board) => ({
-    label: board.name,
-    key: boardNameToKey(board.name),
+  const views = getViewDefinitions(cube);
+  const viewSubItems = views.map((view) => ({
+    label: view.name,
+    key: viewNameToKey(view.name),
   }));
 
   return [
@@ -53,7 +53,7 @@ const getNavigationItems = (cube: Cube): NavigationItem[] => {
       href: '/cube/list',
       key: 'list',
       icon: ListUnorderedIcon,
-      subItems: boardSubItems,
+      subItems: viewSubItems,
     },
     {
       label: 'About',
@@ -124,7 +124,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
     return false;
   };
 
-  const { activeBoard, setActiveBoard } = React.useContext(DisplayContext);
+  const { activeView, setActiveView } = React.useContext(DisplayContext);
   const aboutViewContext = React.useContext(AboutViewContext);
   const analysisViewContext = React.useContext(AnalysisViewContext);
   const playtestViewContext = React.useContext(PlaytestViewContext);
@@ -321,25 +321,25 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                   subFullHref = `${subItem.href}/${encodeURIComponent(getCubeId(cube))}`;
                                 }
 
-                                // Special handling for List sub-items (board navigation)
+                                // Special handling for List sub-items (view navigation)
                                 if (item.key === 'list' && !subItem.href) {
-                                  const boardKey = subItem.key;
-                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardKey}`;
+                                  const viewKey = subItem.key;
+                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.label}`;
 
-                                  // Board is active if activeBoard matches
-                                  const isActive = activeLink === 'list' && activeBoard === boardKey;
+                                  // View is active if activeView matches
+                                  const isActive = activeLink === 'list' && activeView === subItem.label;
 
-                                  // If already on list page, change board; otherwise navigate
+                                  // If already on list page, change view; otherwise navigate
                                   const handleClick = (e: React.MouseEvent) => {
                                     if (activeLink === 'list') {
                                       e.preventDefault();
-                                      setActiveBoard(boardKey);
+                                      setActiveView(subItem.label);
                                     }
                                   };
 
                                   return (
                                     <a
-                                      key={subItem.key}
+                                      key={viewKey}
                                       href={listHref}
                                       onClick={handleClick}
                                       className={classNames(
@@ -585,16 +585,36 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
 
                       // Handle different types of sub-items
                       if (item.key === 'list') {
-                        const boardKey = subItem.key;
-                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardKey}`;
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.label}`;
 
-                        // If already on list page, change board; otherwise navigate
+                        // View is active if activeView matches
+                        const isViewActive = activeLink === 'list' && activeView === subItem.label;
+
+                        // If already on list page, change view; otherwise navigate
                         handleClick = (e: React.MouseEvent) => {
                           if (activeLink === 'list') {
                             e.preventDefault();
-                            setActiveBoard(boardKey);
+                            setActiveView(subItem.label);
                           }
                         };
+
+                        return (
+                          <a
+                            key={subItem.key}
+                            href={subHref}
+                            onClick={handleClick}
+                            className={classNames(
+                              'block px-4 py-1.5 text-sm cursor-pointer',
+                              'hover:bg-bg-active transition-colors',
+                              {
+                                'bg-bg-active font-bold text-text': isViewActive,
+                                'font-normal text-text': !isViewActive,
+                              },
+                            )}
+                          >
+                            {subItem.label}
+                          </a>
+                        );
                       } else if (item.key === 'records') {
                         subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
 

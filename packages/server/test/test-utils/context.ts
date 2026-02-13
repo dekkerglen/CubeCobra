@@ -25,6 +25,8 @@ const defaultDisplayContext: DisplayContextValue = {
   setShowAllBoards: jest.fn(),
   activeBoard: 'mainboard',
   setActiveBoard: jest.fn(),
+  activeView: 'Mainboard',
+  setActiveView: jest.fn(),
 };
 
 export { defaultDisplayContext };

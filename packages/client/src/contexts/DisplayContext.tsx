@@ -12,8 +12,10 @@ export interface DisplayContextValue {
   showCustomImages: boolean;
   toggleShowCustomImages: () => void;
   showMaybeboard: boolean;
-  activeBoard: string;
-  setActiveBoard: (board: string) => void;
+  activeBoard: string; // Deprecated - use activeView instead
+  setActiveBoard: (board: string) => void; // Deprecated - use setActiveView instead
+  activeView: string; // The currently active view (by name)
+  setActiveView: (view: string) => void;
   showInlineTagEmojis: boolean;
   toggleShowMaybeboard: () => void;
   toggleShowInlineTagEmojis: () => void;
@@ -40,6 +42,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   showMaybeboard: false,
   activeBoard: 'mainboard',
   setActiveBoard: () => {},
+  activeView: 'Mainboard',
+  setActiveView: () => {},
   showInlineTagEmojis: false,
   toggleShowCustomImages: () => {},
   toggleShowMaybeboard: () => {},
@@ -84,6 +88,24 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setShowCustomImages((prev) => !prev);
   }, [setShowCustomImages]);
 
+  // View-based navigation (new system)
+  const [viewParam, setViewParam] = useQueryParam('view', 'Mainboard');
+  const [activeView, setActiveViewState] = useState<string>(viewParam);
+
+  // Sync activeView with URL parameter
+  useEffect(() => {
+    setActiveViewState(viewParam);
+  }, [viewParam]);
+
+  const setActiveView = useCallback(
+    (view: string) => {
+      setActiveViewState(view);
+      setViewParam(view);
+    },
+    [setViewParam],
+  );
+
+  // Legacy board-based navigation (deprecated - for backwards compatibility)
   const [boardParam, setBoardParam] = useQueryParam('board', 'mainboard');
   const [showMaybeboard, setShowMaybeboard] = useState<boolean>(boardParam === 'maybeboard');
   const [activeBoard, setActiveBoardState] = useState<string>(boardParam);
@@ -171,6 +193,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     showMaybeboard,
     activeBoard,
     setActiveBoard,
+    activeView,
+    setActiveView,
     toggleShowMaybeboard,
     showInlineTagEmojis,
     toggleShowInlineTagEmojis,

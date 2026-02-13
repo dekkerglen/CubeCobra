@@ -1193,6 +1193,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .w-2 {
   width: 0.5rem;
 }
+.w-20 {
+  width: 5rem;
+}
 .w-36 {
   width: 9rem;
 }
@@ -1845,6 +1848,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .border-red-500 {
   --tw-border-opacity: 1;
   border-color: rgb(239 68 68 / var(--tw-border-opacity));
+}
+.border-red-800 {
+  --tw-border-opacity: 1;
+  border-color: rgb(153 27 27 / var(--tw-border-opacity));
 }
 .border-transparent {
   border-color: transparent;
@@ -4341,8 +4348,18 @@ img.mana-symbol-sm {
 }
 
 @media (prefers-color-scheme: dark) {
+  .dark\:border-red-800 {
+    --tw-border-opacity: 1;
+    border-color: rgb(153 27 27 / var(--tw-border-opacity));
+  }
+
   .dark\:bg-red-900\/20 {
     background-color: rgb(127 29 29 / 0.2);
+  }
+
+  .dark\:text-red-200 {
+    --tw-text-opacity: 1;
+    color: rgb(254 202 202 / var(--tw-text-opacity));
   }
 
   .dark\:text-red-400 {

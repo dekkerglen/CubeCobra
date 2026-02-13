@@ -64,7 +64,7 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { CardStatus } from '@utils/datatypes/Card';
-import Cube, { BoardDefinition } from '@utils/datatypes/Cube';
+import Cube, { BoardDefinition, ViewDefinition } from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
@@ -110,7 +110,8 @@ export interface UnhydratedCube {
   defaultPrinting: string;
   disableAlerts: boolean;
   basics: string[];
-  boards?: BoardDefinition[]; // New: flexible board definitions
+  boards?: BoardDefinition[]; // Flexible board definitions
+  views?: ViewDefinition[]; // View configurations for displaying cube content
   tags: any[];
   keywords: string[];
   cardCount: number;
@@ -233,6 +234,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       disableAlerts: item.disableAlerts,
       basics: item.basics,
       boards: item.boards,
+      views: item.views,
       tags: item.tags,
       keywords: item.keywords,
       cardCount: item.cardCount,

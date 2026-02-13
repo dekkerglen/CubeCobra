@@ -1,6 +1,11 @@
-import React, { useContext, useState } from 'react';
-
-import { BoardDefinition, MAX_BOARDS, validateBoardDefinitions } from '@utils/datatypes/Cube';
+import React, { useContext, useMemo, useState } from 'react';
+import {
+  BoardDefinition,
+  boardNameToKey,
+  DEFAULT_BOARDS,
+  MAX_BOARDS,
+  validateBoardDefinitions,
+} from '@utils/datatypes/Cube';
 
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
@@ -8,8 +13,8 @@ import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Text from 'components/base/Text';
-import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
+import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 
 interface BoardSettingsModalProps {
@@ -17,21 +22,114 @@ interface BoardSettingsModalProps {
   setOpen: (open: boolean) => void;
 }
 
+interface BoardRowProps {
+  board: BoardDefinition;
+  index: number;
+  cardCount: number;
+  isStandardBoard: boolean;
+  onUpdate: (index: number, updates: Partial<BoardDefinition>) => void;
+  onRemove: (index: number) => void;
+  canRemove: boolean;
+}
+
+const BoardRow: React.FC<BoardRowProps> = ({
+  board,
+  index,
+  cardCount,
+  isStandardBoard,
+  onUpdate,
+  onRemove,
+  canRemove,
+}) => {
+  const canDelete = canRemove && cardCount === 0 && !isStandardBoard;
+  const deleteTooltip = isStandardBoard
+    ? 'Standard boards can be disabled but not removed'
+    : cardCount > 0
+      ? `Cannot delete board with ${cardCount} card${cardCount !== 1 ? 's' : ''}`
+      : !canRemove
+        ? 'Must have at least one board'
+        : undefined;
+
+  return (
+    <div className="rounded-md border border-border bg-bg p-3 transition-colors hover:border-border-active">
+      <Flexbox direction="row" gap="2" alignItems="center">
+        <div className="flex-1">
+          {isStandardBoard ? (
+            <Text className="font-medium">{board.name}</Text>
+          ) : (
+            <Input
+              value={board.name}
+              onChange={(e) => onUpdate(index, { name: e.target.value })}
+              placeholder="Board name"
+            />
+          )}
+        </div>
+        {cardCount > 0 && (
+          <Text xs className="text-text-secondary whitespace-nowrap">
+            {cardCount} card{cardCount !== 1 ? 's' : ''}
+          </Text>
+        )}
+        <Checkbox label="Enabled" checked={board.enabled} setChecked={(enabled) => onUpdate(index, { enabled })} />
+        <div title={deleteTooltip}>
+          <Button color="danger" onClick={() => onRemove(index)} disabled={!canDelete}>
+            Remove
+          </Button>
+        </div>
+      </Flexbox>
+    </div>
+  );
+};
+
 const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen }) => {
-  const { cube } = useContext(CubeContext);
+  const { cube, unfilteredChangedCards, setCube } = useContext(CubeContext);
+  const { csrfFetch } = useContext(CSRFContext);
+  const [loading, setLoading] = useState(false);
 
-  // Initialize with current boards or defaults
-  const initialBoards: BoardDefinition[] =
-    cube.boards && cube.boards.length > 0
-      ? cube.boards.map((b) => ({ ...b }))
-      : [
-          { name: 'Mainboard', enabled: true },
-          { name: 'Maybeboard', enabled: true },
-        ];
+  // Standard board names that are always available
+  const standardBoardNames = useMemo(() => DEFAULT_BOARDS.map((b) => b.name), []);
 
-  const [boards, setBoards] = useState<BoardDefinition[]>(initialBoards);
+  // Initialize with current boards, ensuring standard boards are available
+  const getInitialBoards = useCallback((): BoardDefinition[] => {
+    // Start with saved boards or defaults
+    const boards: BoardDefinition[] =
+      cube.boards && cube.boards.length > 0
+        ? cube.boards.map((b) => ({ ...b }))
+        : DEFAULT_BOARDS.map((b) => ({ ...b }));
+
+    // Ensure all standard boards (Basics, Tokens) are in the list
+    for (const defaultBoard of DEFAULT_BOARDS) {
+      const exists = boards.some((b) => boardNameToKey(b.name) === boardNameToKey(defaultBoard.name));
+      if (!exists) {
+        boards.push({ ...defaultBoard });
+      }
+    }
+
+    return boards;
+  }, [cube.boards]);
+
+  const [boards, setBoards] = useState<BoardDefinition[]>(getInitialBoards);
   const [error, setError] = useState<string>('');
-  const formRef = React.createRef<HTMLFormElement>();
+
+  // Calculate card counts for each board (including legacy basics)
+  const boardCardCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+
+    for (const board of boards) {
+      const key = boardNameToKey(board.name);
+      const cards = unfilteredChangedCards?.[key];
+      counts[board.name] = cards?.length || 0;
+    }
+
+    // Include legacy basics in the Basics board count
+    if (cube.basics && Array.isArray(cube.basics) && cube.basics.length > 0) {
+      const basicsBoard = boards.find((b) => boardNameToKey(b.name) === 'basics');
+      if (basicsBoard) {
+        counts[basicsBoard.name] = (counts[basicsBoard.name] || 0) + cube.basics.length;
+      }
+    }
+
+    return counts;
+  }, [boards, unfilteredChangedCards, cube.basics]);
 
   const addBoard = () => {
     if (boards.length >= MAX_BOARDS) {
@@ -43,10 +141,28 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
   };
 
   const removeBoard = (index: number) => {
+    const board = boards[index];
+
     if (boards.length <= 1) {
       setError('Must have at least one board');
       return;
     }
+
+    // Standard boards can be disabled but not removed
+    if (standardBoardNames.includes(board.name)) {
+      setError(`"${board.name}" is a standard board. You can disable it, but not remove it.`);
+      return;
+    }
+
+    // Check if board has cards
+    const cardCount = boardCardCounts[board.name] || 0;
+    if (cardCount > 0) {
+      setError(
+        `Cannot remove "${board.name}" - it contains ${cardCount} card${cardCount !== 1 ? 's' : ''}. Move all cards first.`,
+      );
+      return;
+    }
+
     const newBoards = boards.filter((_, i) => i !== index);
     setBoards(newBoards);
     setError('');
@@ -59,16 +175,46 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
     setError('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const validation = validateBoardDefinitions(boards);
     if (!validation.valid) {
       setError(validation.error || 'Invalid board configuration');
       return;
     }
 
-    // Submit the form
-    formRef.current?.submit();
+    setLoading(true);
+    try {
+      const response = await csrfFetch(`/cube/updateboards/${cube.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ boards }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update the cube context with new boards
+        setCube((prev) => ({ ...prev, boards: data.boards }));
+        setOpen(false);
+      } else {
+        const data = await response.json();
+        setError(data.message || 'Failed to save board settings');
+      }
+    } catch (err) {
+      setError('Failed to save board settings: ' + (err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Reset state when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setBoards(getInitialBoards());
+      setError('');
+    }
+  }, [isOpen, getInitialBoards]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>
@@ -78,73 +224,48 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
         </Text>
       </ModalHeader>
       <ModalBody>
-        <CSRFForm
-          ref={formRef}
-          formData={{ boards: JSON.stringify(boards) }}
-          method="POST"
-          action={`/cube/updateboards/${cube.id}`}
-        >
-          <Flexbox direction="col" gap="3">
-            <Text sm className="text-text-secondary">
-              Configure the boards for your cube. You can have up to {MAX_BOARDS} boards. Each board can be enabled or
-              disabled.
-            </Text>
+        <Flexbox direction="col" gap="3">
+          <Text sm className="text-text-secondary">
+            Configure which boards are available for your cube. Toggle to enable/disable boards.
+          </Text>
 
-            {error && (
-              <div className="rounded-md bg-red-50 p-3">
-                <Text sm className="text-red-800">
-                  {error}
-                </Text>
-              </div>
-            )}
-
-            <Flexbox direction="col" gap="2">
-              {boards.map((board, index) => (
-                <div
-                  key={index}
-                  className="rounded-md border border-border p-3 hover:border-border-active transition-colors"
-                >
-                  <Flexbox direction="row" gap="2" alignItems="center">
-                    <div className="flex-1">
-                      <Input
-                        value={board.name}
-                        onChange={(e) => updateBoard(index, { name: e.target.value })}
-                        placeholder="Board name"
-                      />
-                    </div>
-                    <Checkbox
-                      label="Enabled"
-                      checked={board.enabled}
-                      setChecked={(enabled) => updateBoard(index, { enabled })}
-                    />
-                    <Button
-                      color="danger"
-                      onClick={() => removeBoard(index)}
-                      disabled={boards.length <= 1}
-                      aria-label="Remove board"
-                    >
-                      Remove
-                    </Button>
-                  </Flexbox>
-                </div>
-              ))}
-            </Flexbox>
-
-            <Button color="accent" onClick={addBoard} disabled={boards.length >= MAX_BOARDS} block>
-              Add Board
-            </Button>
-
-            {boards.length >= MAX_BOARDS && (
-              <Text xs className="text-text-secondary text-center">
-                Maximum number of boards ({MAX_BOARDS}) reached
+          {error && (
+            <div className="rounded-md bg-danger/10 p-3 border border-danger">
+              <Text sm className="text-danger">
+                {error}
               </Text>
-            )}
+            </div>
+          )}
+
+          <Flexbox direction="col" gap="2">
+            {boards.map((board, index) => (
+              <BoardRow
+                key={board.name || `board-${index}`}
+                board={board}
+                index={index}
+                cardCount={boardCardCounts[board.name] || 0}
+                isStandardBoard={standardBoardNames.includes(board.name)}
+                onUpdate={updateBoard}
+                onRemove={removeBoard}
+                canRemove={boards.length > 1}
+              />
+            ))}
           </Flexbox>
-        </CSRFForm>
+
+          <Button color="accent" onClick={addBoard} disabled={boards.length >= MAX_BOARDS} block>
+            Add Board
+          </Button>
+
+          {boards.length >= MAX_BOARDS && (
+            <Text xs className="text-text-secondary text-center">
+              Maximum number of boards ({MAX_BOARDS}) reached
+            </Text>
+          )}
+        </Flexbox>
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" justify="between" gap="2" className="w-full">
-          <LoadingButton block color="primary" onClick={handleSave}>
+          <LoadingButton block color="primary" onClick={handleSave} loading={loading}>
             Save Changes
           </LoadingButton>
           <Button block color="secondary" onClick={() => setOpen(false)}>

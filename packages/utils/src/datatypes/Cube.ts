@@ -30,6 +30,17 @@ export interface BoardDefinition {
   enabled: boolean;
 }
 
+// Display view options for cube list pages
+export type CubeDisplayView = 'table' | 'spoiler' | 'curve' | 'stacks';
+
+export interface ViewDefinition {
+  name: string;
+  boards: string[]; // Array of board keys to display in this view
+  displayView: CubeDisplayView; // Default display mode
+  defaultSorts: string[]; // 4 sort options
+  defaultFilter?: string; // Optional default filter query
+}
+
 export interface CubeCards {
   mainboard: Card[];
   maybeboard: Card[];
@@ -102,6 +113,97 @@ export function validateBoardDefinitions(boards: BoardDefinition[]): { valid: bo
   return { valid: true };
 }
 
+// Maximum number of views allowed per cube
+export const MAX_VIEWS = 20;
+
+// Default sort options (same as CUBE_DEFAULT_SORTS in Sort.ts, duplicated to avoid circular import)
+export const VIEW_DEFAULT_SORTS = ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'] as const;
+
+// Default view definitions for cubes (reflecting current functionality)
+export const DEFAULT_VIEWS: ViewDefinition[] = [
+  {
+    name: 'Mainboard',
+    boards: ['mainboard'],
+    displayView: 'table',
+    defaultSorts: [...VIEW_DEFAULT_SORTS],
+  },
+  {
+    name: 'Maybeboard',
+    boards: ['maybeboard'],
+    displayView: 'table',
+    defaultSorts: [...VIEW_DEFAULT_SORTS],
+  },
+];
+
+/**
+ * Gets the view definitions for a cube, using defaults if not specified
+ */
+export function getViewDefinitions(cube: Cube): ViewDefinition[] {
+  return cube.views && cube.views.length > 0 ? cube.views : DEFAULT_VIEWS;
+}
+
+/**
+ * Gets a specific view by name
+ */
+export function getViewByName(cube: Cube, name: string): ViewDefinition | undefined {
+  return getViewDefinitions(cube).find((v) => v.name.toLowerCase() === name.toLowerCase());
+}
+
+/**
+ * Converts a view name to a URL-safe key
+ */
+export function viewNameToKey(viewName: string): string {
+  return viewName.toLowerCase().replace(/\s+/g, '-');
+}
+
+/**
+ * Gets the default views for a new cube
+ */
+export function getNewCubeViews(): ViewDefinition[] {
+  return DEFAULT_VIEWS.map((view) => ({
+    ...view,
+    boards: [...view.boards],
+    defaultSorts: [...view.defaultSorts],
+  }));
+}
+
+/**
+ * Validates view definitions
+ */
+export function validateViewDefinitions(views: ViewDefinition[]): { valid: boolean; error?: string } {
+  if (views.length > MAX_VIEWS) {
+    return { valid: false, error: `Cannot have more than ${MAX_VIEWS} views` };
+  }
+
+  if (views.length === 0) {
+    return { valid: false, error: 'Must have at least one view' };
+  }
+
+  // Check for duplicate view names (case-insensitive)
+  const names = views.map((v) => v.name.toLowerCase());
+  const uniqueNames = new Set(names);
+  if (names.length !== uniqueNames.size) {
+    return { valid: false, error: 'View names must be unique' };
+  }
+
+  // Check for empty names
+  if (views.some((v) => !v.name.trim())) {
+    return { valid: false, error: 'View names cannot be empty' };
+  }
+
+  // Check that each view has at least one board
+  if (views.some((v) => !v.boards || v.boards.length === 0)) {
+    return { valid: false, error: 'Each view must have at least one board' };
+  }
+
+  // Check that defaultSorts has 4 elements
+  if (views.some((v) => !v.defaultSorts || v.defaultSorts.length !== 4)) {
+    return { valid: false, error: 'Each view must have exactly 4 sort options' };
+  }
+
+  return { valid: true };
+}
+
 export const CUBE_CATEGORIES = [
   'Vintage',
   'Legacy+',
@@ -162,7 +264,8 @@ interface Cube {
   defaultPrinting: string;
   disableAlerts: boolean;
   basics: string[]; // Deprecated - kept for backwards compatibility
-  boards?: BoardDefinition[]; // New: flexible board definitions
+  boards?: BoardDefinition[]; // Flexible board definitions
+  views?: ViewDefinition[]; // View configurations for displaying cube content
   tags: any[];
   keywords: string[];
   cardCount: number;

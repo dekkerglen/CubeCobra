@@ -1,7 +1,7 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import Card from '@utils/datatypes/Card';
-import Cube from '@utils/datatypes/Cube';
+import Cube, { getViewByName } from '@utils/datatypes/Cube';
 
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
@@ -38,11 +38,17 @@ interface CubeListPageProps {
 
 const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
-  const { changedCards, filterResult, canEdit } = useContext(CubeContext);
-  const { showAllBoards, activeBoard } = useContext(DisplayContext);
+  const { changedCards, filterResult, canEdit, cube } = useContext(CubeContext);
+  const { showAllBoards, activeView } = useContext(DisplayContext);
   const { filterInput } = useContext(FilterContext);
 
-  const [cubeView, setCubeView] = useQueryParam('view', 'table');
+  // Get the current view definition
+  const currentView = useMemo(() => getViewByName(cube, activeView), [cube, activeView]);
+  const viewBoards = useMemo(() => currentView?.boards.map((b) => b.toLowerCase()) || ['mainboard'], [currentView]);
+
+  // Determine the display view (table, spoiler, etc.) from the view settings or URL param
+  const defaultDisplayView = currentView?.displayView || 'table';
+  const [cubeView, setCubeView] = useQueryParam('display', defaultDisplayView);
 
   if (versionMismatch) {
     return (
@@ -79,7 +85,8 @@ const CubeListPageRaw: React.FC = () => {
                 if (showAllBoards) {
                   return true; // showAllBoards shows all
                 }
-                return boardname.toLowerCase() === activeBoard;
+                // Check if this board is included in the current view's boards
+                return viewBoards.includes(boardname.toLowerCase());
               })
               .map(([boardname, counts]) => `Showing ${counts[0]} / ${counts[1]} cards in ${boardname}`)
               .join('. ') || 'No cards found.'}
@@ -90,9 +97,9 @@ const CubeListPageRaw: React.FC = () => {
       <RotisserieDraftPanel />
       {Object.entries(changedCards)
         .map(([boardname, boardcards]) => {
-          // Convert boardname to lowercase key for comparison with activeBoard
+          // Convert boardname to lowercase key for comparison with view's boards
           const boardKey = boardname.toLowerCase();
-          const isActive = showAllBoards || boardKey === activeBoard;
+          const isActive = showAllBoards || viewBoards.includes(boardKey);
 
           return (
             <ErrorBoundary key={boardname}>

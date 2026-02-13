@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import Cube, { boardNameToKey, getEnabledBoards } from '@utils/datatypes/Cube';
+import Cube, { getViewDefinitions, viewNameToKey } from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
@@ -22,18 +22,18 @@ interface SubNavItem {
 }
 
 const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube, activeLink }) => {
-  const { activeBoard, setActiveBoard } = useContext(DisplayContext);
+  const { activeView, setActiveView } = useContext(DisplayContext);
   const aboutViewContext = useContext(AboutViewContext);
   const analysisViewContext = useContext(AnalysisViewContext);
   const playtestViewContext = useContext(PlaytestViewContext);
   const recordsViewContext = useContext(RecordsViewContext);
 
-  // Get enabled board keys for determining if activeLink is a board
-  const enabledBoards = useMemo(() => getEnabledBoards(cube), [cube]);
-  const boardKeys = useMemo(() => enabledBoards.map((b) => boardNameToKey(b.name)), [enabledBoards]);
-  const boardSubItems = useMemo(
-    () => enabledBoards.map((board) => ({ key: boardNameToKey(board.name), label: board.name })),
-    [enabledBoards],
+  // Get view definitions for determining navigation
+  const views = useMemo(() => getViewDefinitions(cube), [cube]);
+  const viewKeys = useMemo(() => views.map((v) => viewNameToKey(v.name)), [views]);
+  const viewSubItems = useMemo(
+    () => views.map((view) => ({ key: viewNameToKey(view.name), label: view.name })),
+    [views],
   );
 
   // Determine which subitems to show based on the active link
@@ -41,9 +41,9 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube, activeLink }) => {
   let parentKey: string = '';
 
   // Define subitems for each parent category
-  if (activeLink === 'list' || boardKeys.includes(activeLink)) {
+  if (activeLink === 'list' || viewKeys.includes(activeLink)) {
     parentKey = 'list';
-    subItems = boardSubItems;
+    subItems = viewSubItems;
   } else if (['about', 'primer', 'blog', 'changelog'].includes(activeLink)) {
     parentKey = 'about';
     subItems = [
@@ -96,10 +96,10 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube, activeLink }) => {
       return;
     }
 
-    // Special handling for List sub-items (board navigation)
+    // Special handling for List sub-items (view navigation)
     if (parentKey === 'list') {
       e.preventDefault();
-      setActiveBoard(subItem.key);
+      setActiveView(subItem.label);
       return;
     }
 
@@ -158,8 +158,8 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube, activeLink }) => {
 
     switch (parentKey) {
       case 'list': {
-        // Use the board key directly for the URL param
-        return `/cube/list/${cubeId}?board=${subItem.key}`;
+        // Use the view name for the URL param
+        return `/cube/list/${cubeId}?view=${subItem.label}`;
       }
       case 'about':
         return `/cube/about/${cubeId}?view=${subItem.key}`;
@@ -177,8 +177,8 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube, activeLink }) => {
   // Determine if a subitem is active
   const isSubItemActive = (subItem: SubNavItem): boolean => {
     if (parentKey === 'list') {
-      // For list view, check if this board's key matches the current active board
-      return activeBoard === subItem.key;
+      // For list view, check if this view's name matches the current active view
+      return activeView === subItem.label;
     }
     return activeLink === subItem.key;
   };
