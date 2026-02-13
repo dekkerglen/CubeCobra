@@ -12,7 +12,7 @@ export const getDailyP1P1HistoryHandler = async (req: Request, res: Response) =>
     if (lastKey) {
       try {
         parsedLastKey = JSON.parse(lastKey as string);
-      } catch (parseError) {
+      } catch (_parseError) {
         req.logger.error('Invalid lastKey format:', lastKey);
         return res.status(400).json({ error: 'Invalid lastKey format' });
       }
