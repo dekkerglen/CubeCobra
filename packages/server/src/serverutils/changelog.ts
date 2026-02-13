@@ -21,7 +21,7 @@ export function mergeChanges(changes: Changes[]): Changes {
     const nonAddOps = new Map<number, NonAddOp>();
 
     for (const change of changes) {
-      const boardChange = change[board];
+      const boardChange = change[board] as BoardChanges | undefined;
       if (!boardChange) continue;
       const currentVersion = change.version || 0;
 
@@ -130,7 +130,7 @@ export function revertChanges(changes: Changes[]): Changes {
   const reverted: Changes = { version: merged.version };
 
   boards.forEach((board) => {
-    const mergedBoard: BoardChanges = merged[board] || {};
+    const mergedBoard: BoardChanges = (merged[board] as BoardChanges) || {};
     const revertBoard: BoardChanges = {};
 
     if (mergedBoard.adds) {
@@ -215,7 +215,7 @@ export const applyReversedChanges = (
   const reversed = revertChanges(changes);
 
   return {
-    mainboard: applyBoardReversedChanges(cube.mainboard, reversed.mainboard),
-    maybeboard: applyBoardReversedChanges(cube.maybeboard, reversed.maybeboard),
+    mainboard: applyBoardReversedChanges(cube.mainboard, reversed.mainboard as BoardChanges | undefined),
+    maybeboard: applyBoardReversedChanges(cube.maybeboard, reversed.maybeboard as BoardChanges | undefined),
   };
 };

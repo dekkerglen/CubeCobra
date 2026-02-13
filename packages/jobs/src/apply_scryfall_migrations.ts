@@ -129,16 +129,19 @@ const applyMigrations = async (taskId: string) => {
             const card = list[i];
 
             // if card is in toDelete
-            if (toDelete.includes(card.cardID)) {
+            if (card && toDelete.includes(card.cardID)) {
               // remove card from list
               list.splice(i, 1);
               changed = true;
               cardsDeleted += 1;
-            } else if (toUpdate[card.cardID]) {
+            } else if (card && toUpdate[card.cardID]) {
               // replace card.cardID with toUpdate[card.cardID]
-              card.cardID = toUpdate[card.cardID];
-              changed = true;
-              cardsMerged += 1;
+              const newCardID = toUpdate[card.cardID];
+              if (newCardID) {
+                card.cardID = newCardID;
+                changed = true;
+                cardsMerged += 1;
+              }
             }
           }
         }

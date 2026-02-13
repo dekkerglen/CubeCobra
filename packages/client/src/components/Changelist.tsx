@@ -2,7 +2,7 @@ import React, { MouseEventHandler, useContext, useEffect, useState } from 'react
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
-import CardData, { boardTypes } from '@utils/datatypes/Card';
+import CardData, { BoardChanges, BoardType, CubeCardEdit, CubeCardRemove, CubeCardSwap } from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
 
 import CubeContext from '../contexts/CubeContext';
@@ -222,7 +222,8 @@ const Changelist: React.FC = () => {
     const newCards: CardData[] = [];
 
     for (const board of ['mainboard', 'maybeboard'] as const) {
-      const { adds, swaps } = changes[board] || { adds: [], swaps: [] };
+      const boardChanges = changes[board] as BoardChanges | undefined;
+      const { adds, swaps } = boardChanges || { adds: [], swaps: [] };
 
       // Add all newly added cards
       for (let index = 0; index < (adds || []).length; index++) {
@@ -267,10 +268,10 @@ const Changelist: React.FC = () => {
   };
 
   const totalNewCards =
-    (changes.mainboard?.adds?.length || 0) +
-    (changes.maybeboard?.adds?.length || 0) +
-    (changes.mainboard?.swaps?.length || 0) +
-    (changes.maybeboard?.swaps?.length || 0);
+    ((changes.mainboard as BoardChanges | undefined)?.adds?.length || 0) +
+    ((changes.maybeboard as BoardChanges | undefined)?.adds?.length || 0) +
+    ((changes.mainboard as BoardChanges | undefined)?.swaps?.length || 0) +
+    ((changes.maybeboard as BoardChanges | undefined)?.swaps?.length || 0);
 
   return (
     <div>
@@ -287,76 +288,87 @@ const Changelist: React.FC = () => {
           </Link>
         </div>
       )}
-      {boardTypes.map((board) => {
-        const { adds, removes, swaps, edits } = changes[board] || { adds: [], removes: [], swaps: [], edits: [] };
-        if (
-          (adds || []).length === 0 &&
-          (removes || []).length === 0 &&
-          (swaps || []).length === 0 &&
-          (edits || []).length === 0
-        ) {
-          return false;
-        }
-        return (
-          <div key={board} className="mb-2">
-            <Text semibold sm>
-              <Flexbox direction="row" justify="between">
-                <Text sm semibold>
-                  {capitalizeFirstLetter(board)} Changelist
-                </Text>
-                <div className="text-secondary">
-                  +{(adds || []).length + (edits || []).length}, -{(removes || []).length + (edits || []).length},{' '}
-                  {cube.cards[board].length + (adds || []).length - (removes || []).length} Total
-                </div>
-              </Flexbox>
-            </Text>
-            <Card className="changelist-container p-2">
-              <ul className="changelist">
-                {adds &&
-                  adds.map((card, index) => (
-                    <Add key={index} card={card} revert={() => revertAdd(index, board)} index={index} board={board} />
-                  ))}
-                {removes &&
-                  removes.map((remove, index) => (
-                    <Remove
-                      key={remove.oldCard.cardID}
-                      card={{
-                        ...remove.oldCard,
-                        details: unfilteredChangedCards[board][remove.index].details,
-                      }}
-                      revert={() => revertRemove(index, board)}
-                    />
-                  ))}
-                {swaps &&
-                  swaps.map((swap, index) => (
-                    <Swap
-                      key={unfilteredChangedCards[board][swap.index].cardID}
-                      oldCard={{
-                        ...swap.oldCard,
-                        details: unfilteredChangedCards[board][swap.index].details,
-                      }}
-                      card={swap.card}
-                      revert={() => revertSwap(index, board)}
-                      index={index}
-                      board={board}
-                    />
-                  ))}
-                {edits &&
-                  edits.map((edit, index) => (
-                    <Edit
-                      key={edit.oldCard.cardID}
-                      card={{
-                        ...edit.newCard,
-                        details: unfilteredChangedCards[board][edit.index].details,
-                      }}
-                      revert={() => revertEdit(index, board)}
-                    />
-                  ))}
-              </ul>
-            </Card>
-          </div>
-        );
-      })}
+      {Object.keys(changes)
+        .filter((key) => key !== 'version')
+        .map((board) => {
+          const boardChanges = changes[board];
+          if (!boardChanges || typeof boardChanges !== 'object') return false;
+
+          const { adds, removes, swaps, edits } = boardChanges as BoardChanges;
+          if (
+            (adds || []).length === 0 &&
+            (removes || []).length === 0 &&
+            (swaps || []).length === 0 &&
+            (edits || []).length === 0
+          ) {
+            return false;
+          }
+          return (
+            <div key={board} className="mb-2">
+              <Text semibold sm>
+                <Flexbox direction="row" justify="between">
+                  <Text sm semibold>
+                    {capitalizeFirstLetter(board)} Changelist
+                  </Text>
+                  <div className="text-secondary">
+                    +{(adds || []).length + (edits || []).length}, -{(removes || []).length + (edits || []).length},{' '}
+                    {cube.cards[board].length + (adds || []).length - (removes || []).length} Total
+                  </div>
+                </Flexbox>
+              </Text>
+              <Card className="changelist-container p-2">
+                <ul className="changelist">
+                  {adds &&
+                    adds.map((card: CardData, index: number) => (
+                      <Add
+                        key={index}
+                        card={card}
+                        revert={() => revertAdd(index, board as any)}
+                        index={index}
+                        board={board as any}
+                      />
+                    ))}
+                  {removes &&
+                    removes.map((remove: CubeCardRemove, index: number) => (
+                      <Remove
+                        key={remove.oldCard.cardID}
+                        card={{
+                          ...remove.oldCard,
+                          details: unfilteredChangedCards[board][remove.index].details,
+                        }}
+                        revert={() => revertRemove(index, board as BoardType)}
+                      />
+                    ))}
+                  {swaps &&
+                    swaps.map((swap: CubeCardSwap, index: number) => (
+                      <Swap
+                        key={unfilteredChangedCards[board][swap.index].cardID}
+                        oldCard={{
+                          ...swap.oldCard,
+                          details: unfilteredChangedCards[board][swap.index].details,
+                        }}
+                        card={swap.card}
+                        revert={() => revertSwap(index, board as any)}
+                        index={index}
+                        board={board as any}
+                      />
+                    ))}
+                  {edits &&
+                    edits.map((edit: CubeCardEdit, index: number) => (
+                      <Edit
+                        key={edit.oldCard.cardID}
+                        card={{
+                          ...edit.newCard,
+                          details: unfilteredChangedCards[board][edit.index].details,
+                        }}
+                        revert={() => revertEdit(index, board as BoardType)}
+                      />
+                    ))}
+                </ul>
+              </Card>
+            </div>
+          );
+        })}
     </div>
   );
 };

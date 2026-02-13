@@ -94,10 +94,12 @@ const AnalysisNavbar: React.FC = () => {
           </div>
         </div>
       </Flexbox>
-      {filterResult && filterResult.mainboard && (
+      {filterResult && Object.keys(filterResult).length > 0 && (
         <div className="text-center py-1">
           <Text italic sm>
-            {`Calculating analytics for ${filterResult.mainboard[0]} / ${filterResult.mainboard[1]} cards in mainboard.`}
+            {Object.entries(filterResult)
+              .map(([boardname, counts]) => `Showing ${counts[0]} / ${counts[1]} cards in ${boardname}`)
+              .join('. ')}
           </Text>
         </div>
       )}

@@ -64,7 +64,7 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { CardStatus } from '@utils/datatypes/Card';
-import Cube from '@utils/datatypes/Cube';
+import Cube, { BoardDefinition, ViewDefinition } from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
@@ -110,6 +110,8 @@ export interface UnhydratedCube {
   defaultPrinting: string;
   disableAlerts: boolean;
   basics: string[];
+  boards?: BoardDefinition[]; // Flexible board definitions
+  views?: ViewDefinition[]; // View configurations for displaying cube content
   tags: any[];
   keywords: string[];
   cardCount: number;
@@ -231,6 +233,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       defaultPrinting: item.defaultPrinting,
       disableAlerts: item.disableAlerts,
       basics: item.basics,
+      boards: item.boards,
+      views: item.views,
       tags: item.tags,
       keywords: item.keywords,
       cardCount: item.cardCount,
@@ -496,7 +500,13 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         };
       }
 
-      const totalCardCount = cards.mainboard.length + cards.maybeboard.length;
+      // Count cards across all boards (including flexible boards)
+      let totalCardCount = 0;
+      for (const [board, list] of Object.entries(cards)) {
+        if (board !== 'id' && Array.isArray(list)) {
+          totalCardCount += list.length;
+        }
+      }
 
       if (totalCardCount > CARD_LIMIT) {
         throw new Error(`Cannot load cube: ${id} - too many cards: ${totalCardCount}`);
@@ -572,7 +582,13 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         };
       }
 
-      const totalCardCount = cards.mainboard.length + cards.maybeboard.length;
+      // Count cards across all boards (including flexible boards)
+      let totalCardCount = 0;
+      for (const [board, list] of Object.entries(cards)) {
+        if (board !== 'id' && Array.isArray(list)) {
+          totalCardCount += list.length;
+        }
+      }
 
       if (totalCardCount > CARD_LIMIT) {
         throw new Error(`Cannot load cube: ${id} version: ${versionId} - too many cards: ${totalCardCount}`);
@@ -609,13 +625,19 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Returns the new version number.
    */
   public async updateCards(id: string, newCards: CubeCards): Promise<number> {
-    const nullCards = this.countNullCards(newCards.mainboard) + this.countNullCards(newCards.maybeboard);
+    // Count null cards across all boards
+    let nullCards = 0;
+    let totalCards = 0;
+    for (const [board, list] of Object.entries(newCards)) {
+      if (board !== 'id' && Array.isArray(list)) {
+        nullCards += this.countNullCards(list);
+        totalCards += list.length;
+      }
+    }
 
     if (nullCards > 0) {
       throw new Error(`Cannot save cube: ${nullCards} null cards`);
     }
-
-    const totalCards = newCards.mainboard.length + newCards.maybeboard.length;
 
     if (totalCards > CARD_LIMIT) {
       throw new Error(`Cannot save cube: too many cards (${totalCards}/${CARD_LIMIT})`);

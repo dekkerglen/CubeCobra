@@ -41,12 +41,14 @@ import CubeIdModal from '../cube/CubeIdModal';
 import Form from '../Form';
 import { SafeMarkdown } from '../Markdown';
 import ArenaExportModal from '../modals/ArenaExportModal';
+import BoardSettingsModal from '../modals/BoardSettingsModal';
 import ConfirmActionModal from '../modals/ConfirmActionModal';
 import CubeCompareModal from '../modals/CubeCompareModal';
 import CubeOverviewModal from '../modals/CubeOverviewModal';
 import CubeSettingsModal from '../modals/CubeSettingsModal';
 import DeleteCubeModal from '../modals/DeleteCubeModal';
 import FollowersModal from '../modals/FollowersModal';
+import ViewSettingsModal from '../modals/ViewSettingsModal';
 import withModal from '../WithModal';
 
 const ArenaExportModalItem = withModal('button', ArenaExportModal);
@@ -55,6 +57,8 @@ const ShareCubeButton = withModal('button', CubeIdModal);
 const ReportCubeButton = withModal(Link, ConfirmActionModal);
 const CubeOverviewModalLink = withModal(Link, CubeOverviewModal);
 const CubeSettingsModalLink = withModal(Link, CubeSettingsModal);
+const BoardSettingsModalLink = withModal(Link, BoardSettingsModal);
+const ViewSettingsModalLink = withModal(Link, ViewSettingsModal);
 const DeleteCubeModalLink = withModal(Link, DeleteCubeModal);
 const FollowersModalLink = withModal(Link, FollowersModal);
 
@@ -540,6 +544,18 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     >
                       Edit Settings
                     </CubeSettingsModalLink>
+                    <BoardSettingsModalLink
+                      modalprops={{ cube, addAlert }}
+                      className="!text-text hover:!text-link-active"
+                    >
+                      Edit Boards
+                    </BoardSettingsModalLink>
+                    <ViewSettingsModalLink
+                      modalprops={{ cube, addAlert }}
+                      className="!text-text hover:!text-link-active"
+                    >
+                      Edit Views
+                    </ViewSettingsModalLink>
                     <Link
                       href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
                       className="!text-text hover:!text-link-active"
@@ -976,6 +992,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 >
                   Edit Settings
                 </CubeSettingsModalLink>
+                <BoardSettingsModalLink modalprops={{ cube, addAlert }} className="!text-text hover:!text-link-active">
+                  Edit Boards
+                </BoardSettingsModalLink>
+                <ViewSettingsModalLink modalprops={{ cube, addAlert }} className="!text-text hover:!text-link-active">
+                  Edit Views
+                </ViewSettingsModalLink>
                 <Link
                   href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
                   className="!text-text hover:!text-link-active"

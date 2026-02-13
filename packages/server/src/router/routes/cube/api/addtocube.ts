@@ -1,4 +1,5 @@
 import Card from '@utils/datatypes/Card';
+import { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, packageDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
@@ -124,26 +125,31 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       return c;
     });
 
-    const board = req.body.board as 'mainboard' | 'maybeboard';
+    const boardParam = req.body.board as string;
+    const boardKey = boardParam ? boardNameToKey(boardParam) : 'mainboard';
 
-    if (!['mainboard', 'maybeboard'].includes(board)) {
+    // Validate board against cube's boards
+    const boardDefs = getBoardDefinitions(cube);
+    const validBoardKeys = boardDefs.map((b) => boardNameToKey(b.name));
+
+    if (!validBoardKeys.includes(boardKey)) {
       return res.status(400).send({
         success: 'false',
-        message: 'Invalid board',
+        message: `Invalid board. Valid boards: ${boardDefs.map((b) => b.name).join(', ')}`,
       });
     }
 
-    if (!cubeCards[board]) {
-      cubeCards[board] = [];
+    if (!cubeCards[boardKey]) {
+      cubeCards[boardKey] = [];
     }
 
-    cubeCards[board].push(...adds);
+    cubeCards[boardKey].push(...adds);
 
     await cubeDao.updateCards(req.params.id, cubeCards);
 
     const changelist = await changelogDao.createChangelog(
       {
-        [board]: { adds },
+        [boardKey]: { adds },
       },
       req.params.id,
     );

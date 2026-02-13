@@ -185,32 +185,40 @@ const VersionMismatch: React.FC = () => {
   const clearNonAdds = useCallback(() => {
     const newChanges = { ...brokenChanges };
 
-    if (newChanges.mainboard) {
-      newChanges.mainboard.removes = [];
-      newChanges.mainboard.edits = [];
-      newChanges.mainboard.swaps = [];
+    const mainboard = newChanges.mainboard as BoardChanges | undefined;
+    if (mainboard) {
+      mainboard.removes = [];
+      mainboard.edits = [];
+      mainboard.swaps = [];
     }
 
-    if (newChanges.maybeboard) {
-      newChanges.maybeboard.removes = [];
-      newChanges.maybeboard.edits = [];
-      newChanges.maybeboard.swaps = [];
+    const maybeboard = newChanges.maybeboard as BoardChanges | undefined;
+    if (maybeboard) {
+      maybeboard.removes = [];
+      maybeboard.edits = [];
+      maybeboard.swaps = [];
     }
 
     setChanges(newChanges);
   }, [brokenChanges, setChanges]);
 
   const fixedChangesExist = fixedChanges
-    ? (fixedChanges.mainboard &&
-        ((fixedChanges.mainboard.adds || []).length > 0 ||
-          (fixedChanges.mainboard.removes || []).length > 0 ||
-          (fixedChanges.mainboard.edits || []).length > 0 ||
-          (fixedChanges.mainboard.swaps || []).length > 0)) ||
-      (fixedChanges.maybeboard &&
-        ((fixedChanges.maybeboard.adds || []).length > 0 ||
-          (fixedChanges.maybeboard.removes || []).length > 0 ||
-          (fixedChanges.maybeboard.edits || []).length > 0 ||
-          (fixedChanges.maybeboard.swaps || []).length > 0))
+    ? (() => {
+        const mainboard = fixedChanges.mainboard as BoardChanges | undefined;
+        const maybeboard = fixedChanges.maybeboard as BoardChanges | undefined;
+        return (
+          (mainboard &&
+            ((mainboard.adds || []).length > 0 ||
+              (mainboard.removes || []).length > 0 ||
+              (mainboard.edits || []).length > 0 ||
+              (mainboard.swaps || []).length > 0)) ||
+          (maybeboard &&
+            ((maybeboard.adds || []).length > 0 ||
+              (maybeboard.removes || []).length > 0 ||
+              (maybeboard.edits || []).length > 0 ||
+              (maybeboard.swaps || []).length > 0))
+        );
+      })()
     : false;
 
   return (
@@ -233,7 +241,7 @@ const VersionMismatch: React.FC = () => {
               <Card>
                 <CardBody>
                   <Text semibold>Mainboard</Text>
-                  <BoardChangeList changes={brokenChanges.mainboard} />
+                  <BoardChangeList changes={brokenChanges.mainboard as BoardChanges} />
                 </CardBody>
               </Card>
             )}
@@ -241,7 +249,7 @@ const VersionMismatch: React.FC = () => {
               <Card>
                 <CardBody>
                   <Text semibold>Maybeboard</Text>
-                  <BoardChangeList changes={brokenChanges.maybeboard} />
+                  <BoardChangeList changes={brokenChanges.maybeboard as BoardChanges} />
                 </CardBody>
               </Card>
             )}
@@ -258,7 +266,7 @@ const VersionMismatch: React.FC = () => {
                   <Card>
                     <CardBody>
                       <Text semibold>Mainboard</Text>
-                      <BoardChangeList changes={fixedChanges.mainboard} />
+                      <BoardChangeList changes={fixedChanges.mainboard as BoardChanges} />
                     </CardBody>
                   </Card>
                 )}
@@ -266,7 +274,7 @@ const VersionMismatch: React.FC = () => {
                   <Card>
                     <CardBody>
                       <Text semibold>Maybeboard</Text>
-                      <BoardChangeList changes={fixedChanges.maybeboard} />
+                      <BoardChangeList changes={fixedChanges.maybeboard as BoardChanges} />
                     </CardBody>
                   </Card>
                 )}
