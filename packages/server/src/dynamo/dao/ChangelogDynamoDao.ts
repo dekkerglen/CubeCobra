@@ -1,5 +1,5 @@
 import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
-import { Changes } from '@utils/datatypes/Card';
+import { BoardChanges, Changes } from '@utils/datatypes/Card';
 import ChangeLog, { CubeChangeLog } from '@utils/datatypes/ChangeLog';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
@@ -28,27 +28,29 @@ export interface Changelog extends ChangeLog {
  * Sanitizes a changelog by removing card details before storing in S3.
  */
 const sanitizeChangelog = (changelog: Changes): Changes => {
-  for (const [, value] of Object.entries(changelog)) {
-    if (value.adds) {
-      for (let i = 0; i < value.adds.length; i++) {
-        delete value.adds[i].details;
+  for (const [key, value] of Object.entries(changelog)) {
+    if (key === 'version') continue;
+    const boardChanges = value as BoardChanges;
+    if (boardChanges.adds) {
+      for (let i = 0; i < boardChanges.adds.length; i++) {
+        delete boardChanges.adds[i]!.details;
       }
     }
-    if (value.removes) {
-      for (let i = 0; i < value.removes.length; i++) {
-        delete value.removes[i].oldCard.details;
+    if (boardChanges.removes) {
+      for (let i = 0; i < boardChanges.removes.length; i++) {
+        delete boardChanges.removes[i]!.oldCard.details;
       }
     }
-    if (value.swaps) {
-      for (let i = 0; i < value.swaps.length; i++) {
-        delete value.swaps[i].oldCard.details;
-        delete value.swaps[i].card.details;
+    if (boardChanges.swaps) {
+      for (let i = 0; i < boardChanges.swaps.length; i++) {
+        delete boardChanges.swaps[i]!.oldCard.details;
+        delete boardChanges.swaps[i]!.card.details;
       }
     }
-    if (value.edits) {
-      for (let i = 0; i < value.edits.length; i++) {
-        delete value.edits[i].oldCard.details;
-        delete value.edits[i].newCard.details;
+    if (boardChanges.edits) {
+      for (let i = 0; i < boardChanges.edits.length; i++) {
+        delete boardChanges.edits[i]!.oldCard.details;
+        delete boardChanges.edits[i]!.newCard.details;
       }
     }
   }
@@ -61,18 +63,20 @@ const sanitizeChangelog = (changelog: Changes): Changes => {
 const hydrateChangelog = (changelog: Changes): Changes => {
   let totalCards = 0;
 
-  for (const [, value] of Object.entries(changelog)) {
-    if (value.adds) {
-      totalCards += value.adds.length;
+  for (const [key, value] of Object.entries(changelog)) {
+    if (key === 'version') continue;
+    const boardChanges = value as BoardChanges;
+    if (boardChanges.adds) {
+      totalCards += boardChanges.adds.length;
     }
-    if (value.removes) {
-      totalCards += value.removes.length;
+    if (boardChanges.removes) {
+      totalCards += boardChanges.removes.length;
     }
-    if (value.swaps) {
-      totalCards += value.swaps.length;
+    if (boardChanges.swaps) {
+      totalCards += boardChanges.swaps.length;
     }
-    if (value.edits) {
-      totalCards += value.edits.length;
+    if (boardChanges.edits) {
+      totalCards += boardChanges.edits.length;
     }
   }
 
@@ -80,38 +84,40 @@ const hydrateChangelog = (changelog: Changes): Changes => {
     throw new Error('Too many cards to load this changelog');
   }
 
-  for (const [, value] of Object.entries(changelog)) {
-    if (value.adds) {
-      for (let i = 0; i < value.adds.length; i++) {
-        value.adds[i].details = {
-          ...cardFromId(value.adds[i].cardID),
+  for (const [key, value] of Object.entries(changelog)) {
+    if (key === 'version') continue;
+    const boardChanges = value as BoardChanges;
+    if (boardChanges.adds) {
+      for (let i = 0; i < boardChanges.adds.length; i++) {
+        boardChanges.adds[i]!.details = {
+          ...cardFromId(boardChanges.adds[i]!.cardID),
         };
       }
     }
-    if (value.removes) {
-      for (let i = 0; i < value.removes.length; i++) {
-        value.removes[i].oldCard.details = {
-          ...cardFromId(value.removes[i].oldCard.cardID),
+    if (boardChanges.removes) {
+      for (let i = 0; i < boardChanges.removes.length; i++) {
+        boardChanges.removes[i]!.oldCard.details = {
+          ...cardFromId(boardChanges.removes[i]!.oldCard.cardID),
         };
       }
     }
-    if (value.swaps) {
-      for (let i = 0; i < value.swaps.length; i++) {
-        value.swaps[i].oldCard.details = {
-          ...cardFromId(value.swaps[i].oldCard.cardID),
+    if (boardChanges.swaps) {
+      for (let i = 0; i < boardChanges.swaps.length; i++) {
+        boardChanges.swaps[i]!.oldCard.details = {
+          ...cardFromId(boardChanges.swaps[i]!.oldCard.cardID),
         };
-        value.swaps[i].card.details = {
-          ...cardFromId(value.swaps[i].card.cardID),
+        boardChanges.swaps[i]!.card.details = {
+          ...cardFromId(boardChanges.swaps[i]!.card.cardID),
         };
       }
     }
-    if (value.edits) {
-      for (let i = 0; i < value.edits.length; i++) {
-        value.edits[i].oldCard.details = {
-          ...cardFromId(value.edits[i].oldCard.cardID),
+    if (boardChanges.edits) {
+      for (let i = 0; i < boardChanges.edits.length; i++) {
+        boardChanges.edits[i]!.oldCard.details = {
+          ...cardFromId(boardChanges.edits[i]!.oldCard.cardID),
         };
-        value.edits[i].newCard.details = {
-          ...cardFromId(value.edits[i].newCard.cardID),
+        boardChanges.edits[i]!.newCard.details = {
+          ...cardFromId(boardChanges.edits[i]!.newCard.cardID),
         };
       }
     }

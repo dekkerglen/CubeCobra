@@ -9,7 +9,7 @@ import {
   PlayIcon,
   TrophyIcon,
 } from '@primer/octicons-react';
-import Cube from '@utils/datatypes/Cube';
+import Cube, { boardNameToKey, getEnabledBoards } from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
@@ -35,73 +35,80 @@ interface CubeSidebarProps {
   controls?: React.ReactNode;
 }
 
-const navigationItems: NavigationItem[] = [
-  {
-    label: 'Menu',
-    key: 'menu',
-  },
-  {
-    label: 'List',
-    href: '/cube/list',
-    key: 'list',
-    icon: ListUnorderedIcon,
-    subItems: [
-      { label: 'Mainboard', key: 'mainboard' },
-      { label: 'Maybeboard', key: 'maybeboard' },
-    ],
-  },
-  {
-    label: 'About',
-    href: '/cube/about',
-    key: 'about',
-    icon: BookIcon,
-    subItems: [
-      { label: 'Primer', key: 'primer' },
-      { label: 'Blog', key: 'blog' },
-      { label: 'Changelog', key: 'changelog' },
-    ],
-  },
-  {
-    label: 'Playtest',
-    href: '/cube/playtest',
-    key: 'playtest',
-    icon: PlayIcon,
-    subItems: [
-      { label: 'Practice Draft', key: 'practice-draft' },
-      { label: 'Sample Pack', key: 'sample-pack' },
-      { label: 'Decks', key: 'decks' },
-    ],
-  },
-  {
-    label: 'Records',
-    href: '/cube/records',
-    key: 'records',
-    icon: TrophyIcon,
-    subItems: [
-      { label: 'Draft Reports', key: 'draft-reports' },
-      { label: 'Trophy Archive', key: 'trophy-archive' },
-      { label: 'Winrate Analytics', key: 'winrate-analytics' },
-    ],
-  },
-  {
-    label: 'Analysis',
-    href: '/cube/analysis',
-    key: 'analysis',
-    icon: GraphIcon,
-    subItems: [
-      { label: 'Averages', key: 'averages' },
-      { label: 'Table', key: 'table' },
-      { label: 'Asfans', key: 'asfans' },
-      { label: 'Chart', key: 'chart' },
-      { label: 'Recommender', key: 'recommender' },
-      { label: 'Playtest Data', key: 'playtest-data' },
-      { label: 'Tokens', key: 'tokens' },
-      { label: 'Combos', key: 'combos' },
-    ],
-  },
-];
+// Generate navigation items dynamically based on cube's enabled boards
+const getNavigationItems = (cube: Cube): NavigationItem[] => {
+  const enabledBoards = getEnabledBoards(cube);
+  const boardSubItems = enabledBoards.map((board) => ({
+    label: board.name,
+    key: boardNameToKey(board.name),
+  }));
+
+  return [
+    {
+      label: 'Menu',
+      key: 'menu',
+    },
+    {
+      label: 'List',
+      href: '/cube/list',
+      key: 'list',
+      icon: ListUnorderedIcon,
+      subItems: boardSubItems,
+    },
+    {
+      label: 'About',
+      href: '/cube/about',
+      key: 'about',
+      icon: BookIcon,
+      subItems: [
+        { label: 'Primer', key: 'primer' },
+        { label: 'Blog', key: 'blog' },
+        { label: 'Changelog', key: 'changelog' },
+      ],
+    },
+    {
+      label: 'Playtest',
+      href: '/cube/playtest',
+      key: 'playtest',
+      icon: PlayIcon,
+      subItems: [
+        { label: 'Practice Draft', key: 'practice-draft' },
+        { label: 'Sample Pack', key: 'sample-pack' },
+        { label: 'Decks', key: 'decks' },
+      ],
+    },
+    {
+      label: 'Records',
+      href: '/cube/records',
+      key: 'records',
+      icon: TrophyIcon,
+      subItems: [
+        { label: 'Draft Reports', key: 'draft-reports' },
+        { label: 'Trophy Archive', key: 'trophy-archive' },
+        { label: 'Winrate Analytics', key: 'winrate-analytics' },
+      ],
+    },
+    {
+      label: 'Analysis',
+      href: '/cube/analysis',
+      key: 'analysis',
+      icon: GraphIcon,
+      subItems: [
+        { label: 'Averages', key: 'averages' },
+        { label: 'Table', key: 'table' },
+        { label: 'Asfans', key: 'asfans' },
+        { label: 'Chart', key: 'chart' },
+        { label: 'Recommender', key: 'recommender' },
+        { label: 'Playtest Data', key: 'playtest-data' },
+        { label: 'Tokens', key: 'tokens' },
+        { label: 'Combos', key: 'combos' },
+      ],
+    },
+  ];
+};
 
 const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls }) => {
+  const navigationItems = React.useMemo(() => getNavigationItems(cube), [cube]);
   const { cubeSidebarExpanded, toggleCubeSidebarExpanded } = React.useContext(DisplayContext);
   const [hoveredItem, setHoveredItem] = React.useState<string | null>(null);
   const [dropdownVisible, setDropdownVisible] = React.useState(false);
@@ -117,7 +124,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
     return false;
   };
 
-  const { toggleShowMaybeboard, showMaybeboard } = React.useContext(DisplayContext);
+  const { activeBoard, setActiveBoard } = React.useContext(DisplayContext);
   const aboutViewContext = React.useContext(AboutViewContext);
   const analysisViewContext = React.useContext(AnalysisViewContext);
   const playtestViewContext = React.useContext(PlaytestViewContext);
@@ -314,21 +321,19 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                   subFullHref = `${subItem.href}/${encodeURIComponent(getCubeId(cube))}`;
                                 }
 
-                                // Special handling for List sub-items (Mainboard/Maybeboard)
+                                // Special handling for List sub-items (board navigation)
                                 if (item.key === 'list' && !subItem.href) {
-                                  const isMainboard = subItem.key === 'mainboard';
-                                  const boardParam = isMainboard ? 'mainboard' : 'maybeboard';
-                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardParam}`;
+                                  const boardKey = subItem.key;
+                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardKey}`;
 
-                                  // Only show active state when on list page
-                                  const isActive =
-                                    activeLink === 'list' && (isMainboard ? !showMaybeboard : showMaybeboard);
+                                  // Board is active if activeBoard matches
+                                  const isActive = activeLink === 'list' && activeBoard === boardKey;
 
-                                  // If already on list page, toggle; otherwise navigate
+                                  // If already on list page, change board; otherwise navigate
                                   const handleClick = (e: React.MouseEvent) => {
                                     if (activeLink === 'list') {
                                       e.preventDefault();
-                                      toggleShowMaybeboard();
+                                      setActiveBoard(boardKey);
                                     }
                                   };
 
@@ -580,15 +585,14 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
 
                       // Handle different types of sub-items
                       if (item.key === 'list') {
-                        const isMainboard = subItem.key === 'mainboard';
-                        const boardParam = isMainboard ? 'mainboard' : 'maybeboard';
-                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardParam}`;
+                        const boardKey = subItem.key;
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardKey}`;
 
-                        // If already on list page, toggle; otherwise navigate
+                        // If already on list page, change board; otherwise navigate
                         handleClick = (e: React.MouseEvent) => {
                           if (activeLink === 'list') {
                             e.preventDefault();
-                            toggleShowMaybeboard();
+                            setActiveBoard(boardKey);
                           }
                         };
                       } else if (item.key === 'records') {

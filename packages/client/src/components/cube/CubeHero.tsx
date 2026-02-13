@@ -41,6 +41,7 @@ import CubeIdModal from '../cube/CubeIdModal';
 import Form from '../Form';
 import { SafeMarkdown } from '../Markdown';
 import ArenaExportModal from '../modals/ArenaExportModal';
+import BoardSettingsModal from '../modals/BoardSettingsModal';
 import ConfirmActionModal from '../modals/ConfirmActionModal';
 import CubeCompareModal from '../modals/CubeCompareModal';
 import CubeOverviewModal from '../modals/CubeOverviewModal';
@@ -55,6 +56,7 @@ const ShareCubeButton = withModal('button', CubeIdModal);
 const ReportCubeButton = withModal(Link, ConfirmActionModal);
 const CubeOverviewModalLink = withModal(Link, CubeOverviewModal);
 const CubeSettingsModalLink = withModal(Link, CubeSettingsModal);
+const BoardSettingsModalLink = withModal(Link, BoardSettingsModal);
 const DeleteCubeModalLink = withModal(Link, DeleteCubeModal);
 const FollowersModalLink = withModal(Link, FollowersModal);
 
@@ -540,6 +542,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     >
                       Edit Settings
                     </CubeSettingsModalLink>
+                    <BoardSettingsModalLink
+                      modalprops={{ cube, addAlert }}
+                      className="!text-text hover:!text-link-active"
+                    >
+                      Edit Boards
+                    </BoardSettingsModalLink>
                     <Link
                       href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
                       className="!text-text hover:!text-link-active"
@@ -976,6 +984,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 >
                   Edit Settings
                 </CubeSettingsModalLink>
+                <BoardSettingsModalLink modalprops={{ cube, addAlert }} className="!text-text hover:!text-link-active">
+                  Edit Boards
+                </BoardSettingsModalLink>
                 <Link
                   href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
                   className="!text-text hover:!text-link-active"

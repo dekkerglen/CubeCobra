@@ -23,6 +23,8 @@ const defaultDisplayContext: DisplayContextValue = {
   toggleCubeSidebarExpanded: jest.fn(),
   showAllBoards: false,
   setShowAllBoards: jest.fn(),
+  activeBoard: 'mainboard',
+  setActiveBoard: jest.fn(),
 };
 
 export { defaultDisplayContext };

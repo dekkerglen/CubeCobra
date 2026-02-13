@@ -10,7 +10,7 @@ import { cardHistoryDao, cardUpdateTaskDao, changelogDao } from '@server/dynamo/
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
 import { getCubeTypes } from '@server/serverutils/cubefn';
-import { DefaultElo } from '@utils/datatypes/Card';
+import { BoardChanges, DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
 
@@ -277,14 +277,15 @@ const mapTotalsToCardHistory = (
           cubes[changelog.cube] = [];
         }
 
-        if (log.mainboard && log.mainboard.adds) {
-          for (const add of log.mainboard.adds) {
+        const mainboard = log.mainboard as BoardChanges | undefined;
+        if (mainboard?.adds) {
+          for (const add of mainboard.adds) {
             cubes[changelog.cube]?.push(add.cardID);
           }
         }
 
-        if (log.mainboard && log.mainboard.removes) {
-          for (const remove of log.mainboard.removes) {
+        if (mainboard?.removes) {
+          for (const remove of mainboard.removes) {
             const cubeArray = cubes[changelog.cube];
             if (cubeArray) {
               cubeArray.splice(cubeArray.indexOf(remove.oldCard.cardID), 1);
@@ -292,8 +293,8 @@ const mapTotalsToCardHistory = (
           }
         }
 
-        if (log.mainboard && log.mainboard.swaps) {
-          for (const swap of log.mainboard.swaps) {
+        if (mainboard?.swaps) {
+          for (const swap of mainboard.swaps) {
             const cubeArray = cubes[changelog.cube];
             if (cubeArray) {
               cubeArray.splice(cubeArray.indexOf(swap.oldCard.cardID), 1, swap.card.cardID);

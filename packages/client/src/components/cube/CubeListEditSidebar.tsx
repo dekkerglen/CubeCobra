@@ -1,8 +1,9 @@
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
 import { BoardType } from '@utils/datatypes/Card';
+import { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
 
 import Alert from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
@@ -66,6 +67,15 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, DEFAULT_BLOG_TITLE);
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
   const [boardToEdit, setBoardToEdit] = useLocalStorage<BoardType>(`${cube.id}-editBoard`, 'mainboard');
+
+  // Get board options from cube's board definitions
+  const boardOptions = useMemo(() => {
+    const boards = getBoardDefinitions(cube);
+    return boards.map((board) => ({
+      value: boardNameToKey(board.name),
+      label: board.name,
+    }));
+  }, [cube]);
 
   const handleAdd = useCallback(
     async (event: React.FormEvent, match: string) => {
@@ -211,10 +221,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
             label="Board"
             value={boardToEdit}
             setValue={(value) => setBoardToEdit(value as BoardType)}
-            options={[
-              { value: 'mainboard', label: 'Mainboard' },
-              { value: 'maybeboard', label: 'Maybeboard' },
-            ]}
+            options={boardOptions}
           />
 
           <Flexbox direction="col" gap="2">

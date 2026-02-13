@@ -2,7 +2,7 @@ import React from 'react';
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
-import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
+import Card, { BoardChanges, Changes, CubeCardEdit, CubeCardRemove, CubeCardSwap } from '@utils/datatypes/Card';
 
 import withAutocard from 'components/WithAutocard';
 
@@ -96,37 +96,44 @@ const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
 
   return (
     <div>
-      {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]: [string, BoardChanges]) => {
-        if (
-          (!adds || adds.length === 0) &&
-          (!removes || removes.length === 0) &&
-          (!swaps || swaps.length === 0) &&
-          (!edits || edits.length === 0)
-        ) {
-          return false;
-        }
-        return (
-          <div key={board} className="mb-2">
-            <Flexbox direction="row" justify="between">
-              <Text md semibold>
-                {capitalizeFirstLetter(board)} Changelist
-              </Text>
-              <Text sm semibold className="text-text-secondary">
-                +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
-              </Text>
-            </Flexbox>
-            <ul className="changelist">
-              {adds && adds.map((card) => <Add key={card.cardID} card={card} />)}
-              {removes && removes.map((remove) => <Remove key={remove.oldCard.cardID} oldCard={remove.oldCard} />)}
-              {swaps &&
-                swaps.map((swap) => (
-                  <Swap key={`${swap.oldCard.cardID}->${swap.card.cardID}`} oldCard={swap.oldCard} card={swap.card} />
-                ))}
-              {edits && edits.map((edit) => <Edit key={edit.oldCard.cardID} card={edit.newCard} />)}
-            </ul>
-          </div>
-        );
-      })}
+      {Object.entries(changelog)
+        .filter(([_, value]) => value && typeof value === 'object')
+        .map(([board, boardChanges]) => {
+          const typedChanges = boardChanges as BoardChanges;
+          const { adds, removes, swaps, edits } = typedChanges;
+          if (
+            (!adds || adds.length === 0) &&
+            (!removes || removes.length === 0) &&
+            (!swaps || swaps.length === 0) &&
+            (!edits || edits.length === 0)
+          ) {
+            return false;
+          }
+          return (
+            <div key={board} className="mb-2">
+              <Flexbox direction="row" justify="between">
+                <Text md semibold>
+                  {capitalizeFirstLetter(board)} Changelist
+                </Text>
+                <Text sm semibold className="text-text-secondary">
+                  +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
+                </Text>
+              </Flexbox>
+              <ul className="changelist">
+                {adds && adds.map((card: Card) => <Add key={card.cardID} card={card} />)}
+                {removes &&
+                  removes.map((remove: CubeCardRemove) => (
+                    <Remove key={remove.oldCard.cardID} oldCard={remove.oldCard} />
+                  ))}
+                {swaps &&
+                  swaps.map((swap: CubeCardSwap) => (
+                    <Swap key={`${swap.oldCard.cardID}->${swap.card.cardID}`} oldCard={swap.oldCard} card={swap.card} />
+                  ))}
+                {edits && edits.map((edit: CubeCardEdit) => <Edit key={edit.oldCard.cardID} card={edit.newCard} />)}
+              </ul>
+            </div>
+          );
+        })}
     </div>
   );
 };

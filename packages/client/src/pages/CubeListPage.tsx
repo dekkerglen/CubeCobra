@@ -39,7 +39,7 @@ interface CubeListPageProps {
 const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
   const { changedCards, filterResult, canEdit } = useContext(CubeContext);
-  const { showMaybeboard, showAllBoards } = useContext(DisplayContext);
+  const { showAllBoards, activeBoard } = useContext(DisplayContext);
   const { filterInput } = useContext(FilterContext);
 
   const [cubeView, setCubeView] = useQueryParam('view', 'table');
@@ -73,52 +73,59 @@ const CubeListPageRaw: React.FC = () => {
       {filterResult && filterInput && filterInput.length > 0 && (
         <div className="text-center py-1">
           <Text italic sm>
-            {showMaybeboard
-              ? filterResult.maybeboard
-                ? `Showing ${filterResult.maybeboard[0]} / ${filterResult.maybeboard[1]} cards in Maybeboard.`
-                : 'Showing 0 / 0 cards in Maybeboard.'
-              : filterResult.mainboard
-                ? `Showing ${filterResult.mainboard[0]} / ${filterResult.mainboard[1]} cards in Mainboard.`
-                : 'Showing 0 / 0 cards in Mainboard.'}
+            {Object.entries(filterResult)
+              .filter(([boardname]) => {
+                // Only show relevant board filter results based on view mode
+                if (showAllBoards) {
+                  return true; // showAllBoards shows all
+                }
+                return boardname.toLowerCase() === activeBoard;
+              })
+              .map(([boardname, counts]) => `Showing ${counts[0]} / ${counts[1]} cards in ${boardname}`)
+              .join('. ') || 'No cards found.'}
           </Text>
         </div>
       )}
       <DynamicFlash />
       <RotisserieDraftPanel />
       {Object.entries(changedCards)
-        .map(([boardname, boardcards]) => (
-          <ErrorBoundary key={boardname}>
-            <Flexbox direction="col" gap="2">
-              {(showAllBoards ||
-                (showMaybeboard && boardname === 'maybeboard') ||
-                (!showMaybeboard && boardname === 'mainboard')) && (
-                <>
-                  {showAllBoards && boardcards.length > 0 && (
-                    <Text semibold lg className="mt-4 text-center">
-                      {boardname === 'mainboard' ? 'Mainboard' : 'Maybeboard'}
-                    </Text>
-                  )}
-                  {boardcards.length === 0 && !showAllBoards && (
-                    <Text semibold md className="text-center mt-4">
-                      This board appears to be empty!
-                    </Text>
-                  )}
-                  {
+        .map(([boardname, boardcards]) => {
+          // Convert boardname to lowercase key for comparison with activeBoard
+          const boardKey = boardname.toLowerCase();
+          const isActive = showAllBoards || boardKey === activeBoard;
+
+          return (
+            <ErrorBoundary key={boardname}>
+              <Flexbox direction="col" gap="2">
+                {isActive && (
+                  <>
+                    {showAllBoards && boardcards.length > 0 && (
+                      <Text semibold lg className="mt-4 text-center">
+                        {boardname}
+                      </Text>
+                    )}
+                    {boardcards.length === 0 && !showAllBoards && (
+                      <Text semibold md className="text-center mt-4">
+                        This board appears to be empty!
+                      </Text>
+                    )}
                     {
-                      table: <TableView cards={boardcards} />,
-                      spoiler: <VisualSpoiler cards={boardcards} />,
-                      curve: <CurveView cards={boardcards} />,
-                      list: <ListView cards={boardcards} />,
-                      stacks: (
-                        <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
-                      ),
-                    }[cubeView]
-                  }
-                </>
-              )}
-            </Flexbox>
-          </ErrorBoundary>
-        ))
+                      {
+                        table: <TableView cards={boardcards} />,
+                        spoiler: <VisualSpoiler cards={boardcards} />,
+                        curve: <CurveView cards={boardcards} />,
+                        list: <ListView cards={boardcards} />,
+                        stacks: (
+                          <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
+                        ),
+                      }[cubeView]
+                    }
+                  </>
+                )}
+              </Flexbox>
+            </ErrorBoundary>
+          );
+        })
         .reverse()}
     </>
   );

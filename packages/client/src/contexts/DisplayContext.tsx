@@ -12,6 +12,8 @@ export interface DisplayContextValue {
   showCustomImages: boolean;
   toggleShowCustomImages: () => void;
   showMaybeboard: boolean;
+  activeBoard: string;
+  setActiveBoard: (board: string) => void;
   showInlineTagEmojis: boolean;
   toggleShowMaybeboard: () => void;
   toggleShowInlineTagEmojis: () => void;
@@ -36,6 +38,8 @@ export interface DisplayContextValue {
 const DisplayContext = React.createContext<DisplayContextValue>({
   showCustomImages: true,
   showMaybeboard: false,
+  activeBoard: 'mainboard',
+  setActiveBoard: () => {},
   showInlineTagEmojis: false,
   toggleShowCustomImages: () => {},
   toggleShowMaybeboard: () => {},
@@ -82,17 +86,30 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
 
   const [boardParam, setBoardParam] = useQueryParam('board', 'mainboard');
   const [showMaybeboard, setShowMaybeboard] = useState<boolean>(boardParam === 'maybeboard');
+  const [activeBoard, setActiveBoardState] = useState<string>(boardParam);
 
-  // Sync showMaybeboard with URL parameter
+  // Sync showMaybeboard and activeBoard with URL parameter
   useEffect(() => {
     setShowMaybeboard(boardParam === 'maybeboard');
+    setActiveBoardState(boardParam);
   }, [boardParam]);
 
   const toggleShowMaybeboard = useCallback(() => {
     const newValue = !showMaybeboard;
     setShowMaybeboard(newValue);
-    setBoardParam(newValue ? 'maybeboard' : 'mainboard');
+    const newBoard = newValue ? 'maybeboard' : 'mainboard';
+    setActiveBoardState(newBoard);
+    setBoardParam(newBoard);
   }, [showMaybeboard, setBoardParam]);
+
+  const setActiveBoard = useCallback(
+    (board: string) => {
+      setActiveBoardState(board);
+      setShowMaybeboard(board === 'maybeboard');
+      setBoardParam(board);
+    },
+    [setBoardParam],
+  );
 
   const [showInlineTagEmojis, setShowInlineTagEmojis] = useState<boolean>(() => {
     return (
@@ -152,6 +169,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     showCustomImages,
     toggleShowCustomImages,
     showMaybeboard,
+    activeBoard,
+    setActiveBoard,
     toggleShowMaybeboard,
     showInlineTagEmojis,
     toggleShowInlineTagEmojis,

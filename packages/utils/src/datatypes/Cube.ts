@@ -25,9 +25,81 @@ export interface TagColor {
   tag: string;
 }
 
+export interface BoardDefinition {
+  name: string;
+  enabled: boolean;
+}
+
 export interface CubeCards {
   mainboard: Card[];
   maybeboard: Card[];
+  [boardName: string]: Card[]; // Support flexible boards
+}
+
+// Maximum number of boards allowed per cube
+export const MAX_BOARDS = 12;
+
+// Default board definitions for cubes (reflecting current functionality)
+export const DEFAULT_BOARDS: BoardDefinition[] = [
+  { name: 'Mainboard', enabled: true },
+  { name: 'Maybeboard', enabled: true },
+  { name: 'Basics', enabled: false },
+  { name: 'Tokens', enabled: false },
+];
+
+/**
+ * Gets the board definitions for a cube, using defaults if not specified
+ */
+export function getBoardDefinitions(cube: Cube): BoardDefinition[] {
+  return cube.boards && cube.boards.length > 0 ? cube.boards : DEFAULT_BOARDS;
+}
+
+/**
+ * Gets the enabled boards for a cube
+ */
+export function getEnabledBoards(cube: Cube): BoardDefinition[] {
+  return getBoardDefinitions(cube).filter((board) => board.enabled);
+}
+
+/**
+ * Converts a board name to a storage key (lowercase for compatibility)
+ */
+export function boardNameToKey(boardName: string): string {
+  return boardName.toLowerCase().replace(/\s+/g, '');
+}
+
+/**
+ * Gets the default boards for a new cube
+ */
+export function getNewCubeBoards(): BoardDefinition[] {
+  return DEFAULT_BOARDS.map((board) => ({ ...board }));
+}
+
+/**
+ * Validates board definitions
+ */
+export function validateBoardDefinitions(boards: BoardDefinition[]): { valid: boolean; error?: string } {
+  if (boards.length > MAX_BOARDS) {
+    return { valid: false, error: `Cannot have more than ${MAX_BOARDS} boards` };
+  }
+
+  if (boards.length === 0) {
+    return { valid: false, error: 'Must have at least one board' };
+  }
+
+  // Check for duplicate board names (case-insensitive)
+  const names = boards.map((b) => b.name.toLowerCase());
+  const uniqueNames = new Set(names);
+  if (names.length !== uniqueNames.size) {
+    return { valid: false, error: 'Board names must be unique' };
+  }
+
+  // Check for empty names
+  if (boards.some((b) => !b.name.trim())) {
+    return { valid: false, error: 'Board names cannot be empty' };
+  }
+
+  return { valid: true };
 }
 
 export const CUBE_CATEGORIES = [
@@ -89,7 +161,8 @@ interface Cube {
   defaultStatus: CardStatus;
   defaultPrinting: string;
   disableAlerts: boolean;
-  basics: string[];
+  basics: string[]; // Deprecated - kept for backwards compatibility
+  boards?: BoardDefinition[]; // New: flexible board definitions
   tags: any[];
   keywords: string[];
   cardCount: number;
