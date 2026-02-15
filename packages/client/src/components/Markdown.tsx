@@ -76,6 +76,7 @@ const renderLink: React.FC<RenderLinkProps> = (node) => {
     <ExternalLink
       className="font-medium text-link hover:text-link-active"
       href={`/leave?url=${encodeURIComponent(ref)}`}
+      rel="nofollow"
       modalprops={{ link: ref }}
     >
       {node.children}
