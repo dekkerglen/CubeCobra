@@ -1,13 +1,14 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from '@utils/cardutil';
 import Card, { BoardType, CardStatus, ColorCategory } from '@utils/datatypes/Card';
-import { TagColor } from '@utils/datatypes/Cube';
+import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
 import { getLabels } from '@utils/sorting/Sort';
 
 import AutocardContext from '../contexts/AutocardContext';
+import CubeContext from '../contexts/CubeContext';
 import DisplayContext from '../contexts/DisplayContext';
 import Button from './base/Button';
 import Input from './base/Input';
@@ -19,6 +20,7 @@ import RadioButtonGroup from './base/RadioButtonGroup';
 import Select from './base/Select';
 import Text from './base/Text';
 import Tooltip from './base/Tooltip';
+import BoardMoveControl from './BoardMoveControl';
 import AutocardListItem from './card/AutocardListItem';
 import { ColorChecksAddon } from './ColorCheck';
 import CardKingdomBulkButton from './purchase/CardKingdomBulkButton';
@@ -40,8 +42,8 @@ export interface GroupModalProps {
   cards: Card[];
   canEdit?: boolean;
   bulkEditCard: (cards: Card[]) => void | Promise<void>;
-  bulkMoveCard: (cards: { board: BoardType; index: number }[], board: 'maybeboard' | 'mainboard') => void;
-  bulkMoveCards?: (cards: Card[], board: 'maybeboard' | 'mainboard') => void;
+  bulkMoveCard: (cards: { board: BoardType; index: number }[], board: BoardType) => void;
+  bulkMoveCards?: (cards: Card[], board: BoardType) => void;
   bulkRevertEdit: (cards: { board: BoardType; index: number }[]) => void;
   bulkRevertRemove: (cards: { board: BoardType; index: number }[]) => void;
   bulkRemoveCard: (cards: { board: BoardType; index: number }[]) => void;
@@ -72,8 +74,22 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const [color, setColor] = useState<('W' | 'U' | 'B' | 'R' | 'G')[]>([]);
   const [addTags, setAddTags] = useState(true);
   const [tags, setTags] = useState<{ id: string; text: string }[]>([]);
+  const [targetBoard, setTargetBoard] = useState<string>('');
   const { hideCard } = useContext(AutocardContext);
   const { setRightSidebarMode } = useContext(DisplayContext);
+  const { cube, unfilteredChangedCards } = useContext(CubeContext);
+
+  // Get available boards from cube
+  const availableBoards = useMemo(() => {
+    return getBoardDefinitions(cube, unfilteredChangedCards);
+  }, [cube, unfilteredChangedCards]);
+
+  // Set initial target board to first board
+  useEffect(() => {
+    if (availableBoards.length > 0 && !targetBoard) {
+      setTargetBoard(availableBoards[0].name.toLowerCase());
+    }
+  }, [availableBoards, targetBoard]);
 
   const filterOut = useCallback(
     (card: Card) => {
@@ -393,42 +409,28 @@ const GroupModal: React.FC<GroupModalProps> = ({
         >
           Remove all
         </Button>
-        <Button
-          color="accent"
-          block
-          onClick={() => {
-            if (bulkMoveCards) {
-              bulkMoveCards(cards, 'maybeboard');
-            } else {
-              bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
-            }
-            // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
-            if (window.innerWidth >= 768) {
-              setRightSidebarMode('edit');
-            }
-            setOpen(false);
-          }}
-        >
-          All to Maybeboard
-        </Button>
-        <Button
-          color="accent"
-          block
-          onClick={() => {
-            if (bulkMoveCards) {
-              bulkMoveCards(cards, 'mainboard');
-            } else {
-              bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
-            }
-            // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
-            if (window.innerWidth >= 768) {
-              setRightSidebarMode('edit');
-            }
-            setOpen(false);
-          }}
-        >
-          All to Mainboard
-        </Button>
+        <div className="col-span-2 sm:flex-1 w-full">
+          <BoardMoveControl
+            targetBoard={targetBoard}
+            setTargetBoard={setTargetBoard}
+            availableBoards={availableBoards}
+            buttonText="Move All"
+            onMove={() => {
+              if (targetBoard) {
+                if (bulkMoveCards) {
+                  bulkMoveCards(cards, targetBoard.toLowerCase() as BoardType);
+                } else {
+                  bulkMoveCard(cardsWithBoardAndIndex(cards), targetBoard.toLowerCase() as BoardType);
+                }
+                // Only auto-open edit sidebar on desktop (md breakpoint: 768px)
+                if (window.innerWidth >= 768) {
+                  setRightSidebarMode('edit');
+                }
+                setOpen(false);
+              }
+            }}
+          />
+        </div>
         {anyCardRemoved && (
           <>
             <Button block color="primary" onClick={revertRemoval}>

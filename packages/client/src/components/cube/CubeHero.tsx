@@ -46,6 +46,7 @@ import ConfirmActionModal from '../modals/ConfirmActionModal';
 import CubeCompareModal from '../modals/CubeCompareModal';
 import CubeOverviewModal from '../modals/CubeOverviewModal';
 import CubeSettingsModal from '../modals/CubeSettingsModal';
+import CustomSortsModal from '../modals/CustomSortsModal';
 import DeleteCubeModal from '../modals/DeleteCubeModal';
 import FollowersModal from '../modals/FollowersModal';
 import ViewSettingsModal from '../modals/ViewSettingsModal';
@@ -59,6 +60,7 @@ const CubeOverviewModalLink = withModal(Link, CubeOverviewModal);
 const CubeSettingsModalLink = withModal(Link, CubeSettingsModal);
 const BoardSettingsModalLink = withModal(Link, BoardSettingsModal);
 const ViewSettingsModalLink = withModal(Link, ViewSettingsModal);
+const CustomSortsModalLink = withModal(Link, CustomSortsModal);
 const DeleteCubeModalLink = withModal(Link, DeleteCubeModal);
 const FollowersModalLink = withModal(Link, FollowersModal);
 
@@ -790,6 +792,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     >
                       Edit Views
                     </ViewSettingsModalLink>
+                    <CustomSortsModalLink
+                      modalprops={{ cube, addAlert }}
+                      className="!text-text hover:!text-link-active"
+                    >
+                      Custom Sorts
+                    </CustomSortsModalLink>
                     <Link
                       href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
                       className="!text-text hover:!text-link-active"
@@ -1232,6 +1240,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 <ViewSettingsModalLink modalprops={{ cube, addAlert }} className="!text-text hover:!text-link-active">
                   Edit Views
                 </ViewSettingsModalLink>
+                <CustomSortsModalLink className="!text-text hover:!text-link-active">Custom Sorts</CustomSortsModalLink>
                 <Link
                   href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
                   className="!text-text hover:!text-link-active"

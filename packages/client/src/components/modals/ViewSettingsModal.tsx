@@ -11,7 +11,7 @@ import {
   VIEW_DEFAULT_SORTS,
   ViewDefinition,
 } from '@utils/datatypes/Cube';
-import { ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
+import { getAllSorts, ORDERED_SORTS } from '@utils/sorting/Sort';
 
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
@@ -40,6 +40,7 @@ interface ViewRowProps {
   view: ViewDefinition;
   index: number;
   availableBoards: { key: string; name: string }[];
+  allSorts: string[];
   onUpdate: (index: number, updates: Partial<ViewDefinition>) => void;
   onRemove: (index: number) => void;
   canRemove: boolean;
@@ -51,6 +52,7 @@ const ViewRow: React.FC<ViewRowProps> = ({
   view,
   index,
   availableBoards,
+  allSorts,
   onUpdate,
   onRemove,
   canRemove,
@@ -71,113 +73,118 @@ const ViewRow: React.FC<ViewRowProps> = ({
 
   return (
     <SortableItem id={view.name || `view-${index}`} className="no-touch-action">
-      <div className="rounded-md border border-border p-3 transition-colors hover:border-border-active">
-        <Flexbox direction="row" gap="2" alignItems="center">
-          <GrabberIcon size={16} className="cursor-grab text-text-secondary flex-shrink-0" />
-          <div className="flex-1" onPointerDown={preventDragStart}>
-            <Input
-              value={view.name}
-              onChange={(e) => onUpdate(index, { name: e.target.value })}
-              placeholder="View name"
-            />
-          </div>
-          <div onPointerDown={preventDragStart}>
-            <Button color="secondary" onClick={onToggleExpand}>
-              {isExpanded ? 'Collapse' : 'Configure'}
-            </Button>
-          </div>
-          <div title={!canRemove ? 'Must have at least one view' : undefined} onPointerDown={preventDragStart}>
-            <Button color="danger" onClick={() => onRemove(index)} disabled={!canRemove} aria-label="Remove view">
-              <TrashIcon size={16} />
-            </Button>
-          </div>
-        </Flexbox>
+      {({ handleProps }) => (
+        <div className="rounded-md border border-border p-3 transition-colors hover:border-border-active">
+          <Flexbox direction="row" gap="2" alignItems="center">
+            <div {...handleProps}>
+              <GrabberIcon size={16} className="cursor-grab text-text-secondary flex-shrink-0" />
+            </div>
+            <div className="flex-1" onPointerDown={preventDragStart}>
+              <Input
+                value={view.name}
+                onChange={(e) => onUpdate(index, { name: e.target.value })}
+                onBlur={(e) => onUpdate(index, { name: e.target.value.trim() })}
+                placeholder="View name"
+              />
+            </div>
+            <div onPointerDown={preventDragStart}>
+              <Button color="secondary" onClick={onToggleExpand}>
+                {isExpanded ? 'Collapse' : 'Configure'}
+              </Button>
+            </div>
+            <div title={!canRemove ? 'Must have at least one view' : undefined} onPointerDown={preventDragStart}>
+              <Button color="danger" onClick={() => onRemove(index)} disabled={!canRemove} aria-label="Remove view">
+                <TrashIcon size={16} />
+              </Button>
+            </div>
+          </Flexbox>
 
-        {isExpanded && (
-          <div className="mt-3 pt-3 border-t border-border" onPointerDown={preventDragStart}>
-            <Flexbox direction="col" gap="3">
-              {/* Boards selection */}
-              <div>
-                <Text sm className="font-medium mb-2">
-                  Boards to display
-                </Text>
-                <Flexbox direction="row" gap="2" wrap="wrap">
-                  {availableBoards.map((board) => (
-                    <button
-                      key={board.key}
-                      type="button"
-                      onClick={() => toggleBoard(board.key)}
-                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                        view.boards.includes(board.key)
-                          ? 'bg-bg-active text-text font-medium border border-border-active'
-                          : 'bg-bg-secondary text-text-secondary border border-border hover:border-border-active'
-                      }`}
-                    >
-                      {board.name}
-                    </button>
-                  ))}
-                </Flexbox>
-                {view.boards.length === 0 && (
-                  <Text xs className="text-red-500 mt-1">
-                    Select at least one board
+          {isExpanded && (
+            <div className="mt-3 pt-3 border-t border-border" onPointerDown={preventDragStart}>
+              <Flexbox direction="col" gap="3">
+                {/* Boards selection */}
+                <div>
+                  <Text sm className="font-medium mb-2">
+                    Boards to display
                   </Text>
-                )}
-              </div>
+                  <Flexbox direction="row" gap="2" wrap="wrap">
+                    {availableBoards.map((board) => (
+                      <button
+                        key={board.key}
+                        type="button"
+                        onClick={() => toggleBoard(board.key)}
+                        className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                          view.boards.includes(board.key)
+                            ? 'bg-bg-active text-text font-medium border border-border-active'
+                            : 'bg-bg-secondary text-text-secondary border border-border hover:border-border-active'
+                        }`}
+                      >
+                        {board.name}
+                      </button>
+                    ))}
+                  </Flexbox>
+                  {view.boards.length === 0 && (
+                    <Text xs className="text-red-500 mt-1">
+                      Select at least one board
+                    </Text>
+                  )}
+                </div>
 
-              {/* Display view */}
-              <div>
-                <Text sm className="font-medium mb-2">
-                  Default display
-                </Text>
-                <Select
-                  value={view.displayView}
-                  setValue={(val) => onUpdate(index, { displayView: val as CubeDisplayView })}
-                  options={DISPLAY_VIEW_OPTIONS}
-                />
-              </div>
+                {/* Display view */}
+                <div>
+                  <Text sm className="font-medium mb-2">
+                    Default display
+                  </Text>
+                  <Select
+                    value={view.displayView}
+                    setValue={(val) => onUpdate(index, { displayView: val as CubeDisplayView })}
+                    options={DISPLAY_VIEW_OPTIONS}
+                  />
+                </div>
 
-              {/* Default sorts */}
-              <div>
-                <Text sm className="font-medium mb-2">
-                  Default sorts
-                </Text>
-                <Flexbox direction="col" gap="1">
-                  {[0, 1, 2, 3].map((sortIndex) => (
-                    <Flexbox key={sortIndex} direction="row" gap="2" alignItems="center">
-                      <Text xs className="w-20 text-text-secondary">
-                        {['Primary', 'Secondary', 'Tertiary', 'Ordered'][sortIndex]}
-                      </Text>
-                      <div className="flex-1">
-                        <Select
-                          value={view.defaultSorts[sortIndex] || VIEW_DEFAULT_SORTS[sortIndex]}
-                          setValue={(val) => {
-                            const newSorts = [...view.defaultSorts];
-                            newSorts[sortIndex] = val;
-                            onUpdate(index, { defaultSorts: newSorts });
-                          }}
-                          options={(sortIndex < 3 ? SORTS : ORDERED_SORTS).map((s) => ({ value: s, label: s }))}
-                        />
-                      </div>
-                    </Flexbox>
-                  ))}
-                </Flexbox>
-              </div>
+                {/* Default sorts */}
+                <div>
+                  <Text sm className="font-medium mb-2">
+                    Default sorts
+                  </Text>
+                  <Flexbox direction="col" gap="1">
+                    {[0, 1, 2, 3].map((sortIndex) => (
+                      <Flexbox key={sortIndex} direction="row" gap="2" alignItems="center">
+                        <Text xs className="w-20 text-text-secondary">
+                          {['Primary', 'Secondary', 'Tertiary', 'Ordered'][sortIndex]}
+                        </Text>
+                        <div className="flex-1">
+                          <Select
+                            value={view.defaultSorts[sortIndex] || VIEW_DEFAULT_SORTS[sortIndex]}
+                            setValue={(val) => {
+                              const newSorts = [...view.defaultSorts];
+                              newSorts[sortIndex] = val;
+                              onUpdate(index, { defaultSorts: newSorts });
+                            }}
+                            options={(sortIndex < 3 ? allSorts : ORDERED_SORTS).map((s) => ({ value: s, label: s }))}
+                          />
+                        </div>
+                      </Flexbox>
+                    ))}
+                  </Flexbox>
+                </div>
 
-              {/* Default filter */}
-              <div>
-                <Text sm className="font-medium mb-2">
-                  Default filter (optional)
-                </Text>
-                <Input
-                  value={view.defaultFilter || ''}
-                  onChange={(e) => onUpdate(index, { defaultFilter: e.target.value || undefined })}
-                  placeholder="e.g., cmc<=3 or type:creature"
-                />
-              </div>
-            </Flexbox>
-          </div>
-        )}
-      </div>
+                {/* Default filter */}
+                <div>
+                  <Text sm className="font-medium mb-2">
+                    Default filter (optional)
+                  </Text>
+                  <Input
+                    value={view.defaultFilter || ''}
+                    onChange={(e) => onUpdate(index, { defaultFilter: e.target.value || undefined })}
+                    placeholder="e.g., cmc<=3 or type:creature"
+                  />
+                </div>
+              </Flexbox>
+            </div>
+          )}
+        </div>
+      )}
     </SortableItem>
   );
 };
@@ -187,6 +194,9 @@ const ViewSettingsModal: React.FC<ViewSettingsModalProps> = ({ isOpen, setOpen }
   const { csrfFetch } = useContext(CSRFContext);
   const [loading, setLoading] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  // Get all available sorts including custom sorts
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
   // Get available boards from the cube
   const availableBoards = useMemo(() => {
@@ -369,6 +379,7 @@ const ViewSettingsModal: React.FC<ViewSettingsModalProps> = ({ isOpen, setOpen }
                   view={view}
                   index={index}
                   availableBoards={availableBoards}
+                  allSorts={allSorts}
                   onUpdate={updateView}
                   onRemove={removeView}
                   canRemove={views.length > 1}

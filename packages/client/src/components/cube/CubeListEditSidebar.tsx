@@ -291,12 +291,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
 
           <Collapse
             isOpen={
-              Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-                (c) => c.length > 0,
-              ) ||
-              Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-                (c) => c.length > 0,
-              )
+              Object.keys(changes)
+                .filter((key) => key !== 'version')
+                .some((board) => {
+                  const boardChanges = changes[board];
+                  if (!boardChanges || typeof boardChanges !== 'object') return false;
+                  return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+                })
             }
           >
             <Flexbox direction="col" gap="3">
@@ -486,12 +487,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           </div>
 
           {/* Changelist and Blog - Side by Side on Wide Screens */}
-          {(Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-            (c) => c.length > 0,
-          ) ||
-            Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-              (c) => c.length > 0,
-            )) && (
+          {Object.keys(changes)
+            .filter((key) => key !== 'version')
+            .some((board) => {
+              const boardChanges = changes[board];
+              if (!boardChanges || typeof boardChanges !== 'object') return false;
+              return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+            }) && (
             <div className="mt-4 pt-4 border-t border-border">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Changelist */}
@@ -517,12 +519,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           )}
 
           {/* Action Buttons - Full Width at Bottom */}
-          {(Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-            (c) => c.length > 0,
-          ) ||
-            Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-              (c) => c.length > 0,
-            )) && (
+          {Object.keys(changes)
+            .filter((key) => key !== 'version')
+            .some((board) => {
+              const boardChanges = changes[board];
+              if (!boardChanges || typeof boardChanges !== 'object') return false;
+              return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+            }) && (
             <div className="mt-4 pt-4 border-t border-border flex gap-4">
               <LoadingButton color="primary" block onClick={submit} loading={loading} className="flex-1">
                 Save Changes

@@ -1,7 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
-import { CUBE_DEFAULT_SORTS, ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
+import { CUBE_DEFAULT_SORTS, getAllSorts, ORDERED_SORTS } from '@utils/sorting/Sort';
 
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
@@ -58,6 +58,8 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
     );
   }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
 
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
+
   return (
     <>
       {!isHorizontal ? (
@@ -67,21 +69,21 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             label="Primary Sort (columns)"
             value={sortPrimary || CUBE_DEFAULT_SORTS[0]}
             setValue={setSortPrimary}
-            options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+            options={allSorts.map((sort) => ({ value: sort, label: sort }))}
           />
 
           <Select
             label="Secondary Sort (groups within columns)"
             value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
             setValue={setSortSecondary}
-            options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+            options={allSorts.map((sort) => ({ value: sort, label: sort }))}
           />
 
           <Select
             label="Tertiary Sort (rows within groups)"
             value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
             setValue={setSortTertiary}
-            options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+            options={allSorts.map((sort) => ({ value: sort, label: sort }))}
           />
 
           <Select
@@ -164,13 +166,13 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                 label="Primary Sort"
                 value={sortPrimary || CUBE_DEFAULT_SORTS[0]}
                 setValue={setSortPrimary}
-                options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+                options={allSorts.map((sort) => ({ value: sort, label: sort }))}
               />
               <Select
                 label="Secondary Sort"
                 value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
                 setValue={setSortSecondary}
-                options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+                options={allSorts.map((sort) => ({ value: sort, label: sort }))}
               />
             </div>
 
@@ -183,7 +185,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                 label="Tertiary Sort"
                 value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
                 setValue={setSortTertiary}
-                options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+                options={allSorts.map((sort) => ({ value: sort, label: sort }))}
               />
               <Select
                 label="Ordered Sort"

@@ -1037,6 +1037,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .ml-auto {
   margin-left: auto;
 }
+.mr-1 {
+  margin-right: 0.25rem;
+}
 .mr-2 {
   margin-right: 0.5rem;
 }
@@ -1220,6 +1223,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .w-64 {
   width: 16rem;
 }
+.w-8 {
+  width: 2rem;
+}
 .w-80 {
   width: 20rem;
 }
@@ -1390,6 +1396,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .cursor-grab {
   cursor: grab;
+}
+.cursor-help {
+  cursor: help;
 }
 .cursor-not-allowed {
   cursor: not-allowed;
@@ -2099,6 +2108,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .p-4 {
   padding: 1rem;
 }
+.p-6 {
+  padding: 1.5rem;
+}
 .px-0 {
   padding-left: 0px;
   padding-right: 0px;
@@ -2197,6 +2209,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .pl-4 {
   padding-left: 1rem;
+}
+.pl-6 {
+  padding-left: 1.5rem;
 }
 .pl-8 {
   padding-left: 2rem;
@@ -3607,6 +3622,10 @@ img.mana-symbol-sm {
     max-width: 640px;
   }
 
+  .sm\:flex-1 {
+    flex: 1 1 0%;
+  }
+
   .sm\:translate-y-0 {
     --tw-translate-y: 0px;
     transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x))
@@ -3679,16 +3698,8 @@ img.mana-symbol-sm {
     flex-direction: row;
   }
 
-  .sm\:items-center {
-    align-items: center;
-  }
-
   .sm\:gap-2 {
     gap: 0.5rem;
-  }
-
-  .sm\:gap-4 {
-    gap: 1rem;
   }
 
   .sm\:pb-0 {

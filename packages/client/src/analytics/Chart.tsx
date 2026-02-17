@@ -2,7 +2,7 @@ import React, { useContext, useMemo } from 'react';
 
 import Card from '@utils/datatypes/Card';
 import { calculateAsfans } from '@utils/drafting/createdraft';
-import { sortIntoGroups, SORTS } from '@utils/sorting/Sort';
+import { getAllSorts, sortIntoGroups } from '@utils/sorting/Sort';
 import {
   BarElement,
   CategoryScale,
@@ -65,6 +65,8 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
   const [characteristic, setCharacteristic] = useQueryParam('field', 'Mana Value');
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', 'false');
   const [draftFormat, setDraftFormat] = useQueryParam('format', '-1');
+
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
   const groups = sortIntoGroups(cards, sort);
 
@@ -137,7 +139,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
         <Col xs={12} md={6}>
           <Select
             label="Group By"
-            options={SORTS.map((item) => ({ value: item, label: item }))}
+            options={allSorts.map((item) => ({ value: item, label: item }))}
             value={sort}
             setValue={setSort}
           />

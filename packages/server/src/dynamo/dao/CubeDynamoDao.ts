@@ -111,6 +111,7 @@ export interface UnhydratedCube {
   disableAlerts: boolean;
   basics: string[];
   views?: ViewDefinition[]; // View configurations for displaying cube content
+  customSorts?: any[]; // Custom sort definitions
   tags: any[];
   keywords: string[];
   cardCount: number;

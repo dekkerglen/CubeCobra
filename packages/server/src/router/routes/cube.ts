@@ -110,6 +110,9 @@ export const listHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
+    console.log('[listHandler] Cube loaded, customSorts:', cube.customSorts);
+    console.log('[listHandler] Cube keys:', Object.keys(cube).sort());
+
     const cards = await cubeDao.getCards(cube.id, cube);
 
     const baseUrl = getBaseUrl();

@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import Card from '@utils/datatypes/Card';
 import { calculateAsfans } from '@utils/drafting/createdraft';
-import { cardCanBeSorted, sortGroupsOrdered, SORTS } from '@utils/sorting/Sort';
+import { cardCanBeSorted, getAllSorts, sortGroupsOrdered } from '@utils/sorting/Sort';
 import { fromEntries } from '@utils/Util';
 
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
@@ -30,6 +30,8 @@ const AnalyticTable: React.FC = () => {
   const [percentOf, setPercentOf] = useQueryParam('percentOf', 'total');
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', 'false');
   const [draftFormat, setDraftFormat] = useQueryParam('format', '-1');
+
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
   const asfans = useMemo(() => {
     if (useAsfans !== 'true') {
@@ -104,7 +106,7 @@ const AnalyticTable: React.FC = () => {
         <Col xs={12} md={4}>
           <Select
             label="Columns"
-            options={SORTS.map((item) => ({ value: item, label: item }))}
+            options={allSorts.map((item) => ({ value: item, label: item }))}
             value={column}
             setValue={setColumn}
           />
@@ -112,7 +114,7 @@ const AnalyticTable: React.FC = () => {
         <Col xs={12} md={4}>
           <Select
             label="Rows"
-            options={SORTS.map((item) => ({ value: item, label: item }))}
+            options={allSorts.map((item) => ({ value: item, label: item }))}
             value={row}
             setValue={setRow}
           />

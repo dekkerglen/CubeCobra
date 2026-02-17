@@ -134,12 +134,16 @@ const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers }) 
       <SortableList onDragEnd={handleSortEnd} items={players.map((player) => player.name)}>
         {players.map((player, index) => (
           <SortableItem key={player.name} id={player.name} className="p-1">
-            <Card>
-              <Flexbox direction="row" justify="start" alignItems="center" className="p-2">
-                <GrabberIcon size={16} className="cursor-grab mr-2" />
-                <PlayerName player={player}>{`Seat ${index + 1}. ${player.name}`}</PlayerName>
-              </Flexbox>
-            </Card>
+            {({ handleProps }) => (
+              <Card>
+                <Flexbox direction="row" justify="start" alignItems="center" className="p-2">
+                  <div {...handleProps}>
+                    <GrabberIcon size={16} className="cursor-grab mr-2" />
+                  </div>
+                  <PlayerName player={player}>{`Seat ${index + 1}. ${player.name}`}</PlayerName>
+                </Flexbox>
+              </Card>
+            )}
           </SortableItem>
         ))}
         <Button color="danger" onClick={() => removeLastPlayer()}>

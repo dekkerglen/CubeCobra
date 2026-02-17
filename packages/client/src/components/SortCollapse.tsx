@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import { CUBE_DEFAULT_SORTS, ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
+import { CUBE_DEFAULT_SORTS, getAllSorts, ORDERED_SORTS } from '@utils/sorting/Sort';
 
 import Button from '../components/base/Button';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -40,6 +40,8 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit =
     );
   }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
 
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
+
   return (
     <Collapse isOpen={isOpen}>
       <Flexbox direction="col" gap="2" className="mt-2">
@@ -49,7 +51,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit =
               label="Primary Sort"
               value={sortPrimary || CUBE_DEFAULT_SORTS[0]}
               setValue={setSortPrimary}
-              options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+              options={allSorts.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
           <Col xs={12} sm={6}>
@@ -57,7 +59,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit =
               label="Secondary Sort"
               value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
               setValue={setSortSecondary}
-              options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+              options={allSorts.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
           <Col xs={12} sm={6}>
@@ -65,7 +67,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit =
               label="Tertiary Sort"
               value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
               setValue={setSortTertiary}
-              options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+              options={allSorts.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
           <Col xs={12} sm={6}>

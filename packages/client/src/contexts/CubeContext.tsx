@@ -539,6 +539,12 @@ export function CubeContextProvider({
         return;
       }
 
+      // Check if the board exists in cube.cards
+      if (!cube.cards[board] || !cube.cards[board][index]) {
+        console.error(`Cannot edit card: board "${board}" or index ${index} not found in cube.cards`);
+        return;
+      }
+
       const newChanges = deepCopy(changes);
 
       const boardChanges = ensureBoardChanges(newChanges, board);
@@ -906,6 +912,12 @@ export function CubeContextProvider({
     if (useChangedCards) {
       for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
         const boardChanges = changes[board];
+        
+        // Ensure the board exists in changed before processing changes
+        if (!changed[board]) {
+          changed[board] = [];
+        }
+        
         if (
           boardChanges &&
           typeof boardChanges === 'object' &&

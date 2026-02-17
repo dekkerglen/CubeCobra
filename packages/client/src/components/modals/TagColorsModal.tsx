@@ -34,21 +34,25 @@ const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChang
 
   return (
     <SortableItem id={id} className="p-2 no-touch-action">
-      <Card>
-        <Flexbox direction="row" justify="between" className="cursor-grab">
-          <Flexbox direction="row" justify="start" alignItems="center">
-            <GrabberIcon size={16} className="cursor-grab" />
-            <Tag text={tag} colorClass={tagClass} />
+      {({ handleProps }) => (
+        <Card>
+          <Flexbox direction="row" justify="between" className="cursor-grab">
+            <Flexbox direction="row" justify="start" alignItems="center">
+              <div {...handleProps}>
+                <GrabberIcon size={16} className="cursor-grab" />
+              </div>
+              <Tag text={tag} colorClass={tagClass} />
+            </Flexbox>
+            <Select
+              options={TAG_COLORS.map(([name, v]) => ({ value: v || 'none', label: name }))}
+              value={value || 'none'}
+              setValue={onChange}
+              dense
+              onPointerDown={preventDragStart}
+            />
           </Flexbox>
-          <Select
-            options={TAG_COLORS.map(([name, v]) => ({ value: v || 'none', label: name }))}
-            value={value || 'none'}
-            setValue={onChange}
-            dense
-            onPointerDown={preventDragStart}
-          />
-        </Flexbox>
-      </Card>
+        </Card>
+      )}
     </SortableItem>
   );
 };

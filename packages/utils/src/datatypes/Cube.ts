@@ -40,6 +40,19 @@ export interface ViewDefinition {
   defaultFilter?: string; // Optional default filter query
 }
 
+// Custom sort category - a tuple of [label, filter]
+export interface CustomSortCategory {
+  label: string;
+  filter: string; // Filter syntax string to match cards
+}
+
+// Custom sort definition
+export interface CustomSort {
+  name: string; // Display name/label for this sort
+  categories: CustomSortCategory[]; // Array of category tuples
+  matchFirstOnly: boolean; // If true, match cards to first category only
+}
+
 export interface CubeCards {
   mainboard: Card[];
   maybeboard: Card[];
@@ -293,6 +306,7 @@ interface Cube {
   disableAlerts: boolean;
   basics: string[]; // Deprecated - kept for backwards compatibility
   views?: ViewDefinition[]; // View configurations for displaying cube content
+  customSorts?: CustomSort[]; // User-defined custom sort configurations
   tags: any[];
   keywords: string[];
   cardCount: number;
