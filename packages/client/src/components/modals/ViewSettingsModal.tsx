@@ -11,7 +11,7 @@ import {
   VIEW_DEFAULT_SORTS,
   ViewDefinition,
 } from '@utils/datatypes/Cube';
-import { ORDERED_SORTS } from '@utils/sorting/Sort';
+import { ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
 
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
@@ -145,7 +145,7 @@ const ViewRow: React.FC<ViewRowProps> = ({
                   {[0, 1, 2, 3].map((sortIndex) => (
                     <Flexbox key={sortIndex} direction="row" gap="2" alignItems="center">
                       <Text xs className="w-20 text-text-secondary">
-                        {['Primary', 'Secondary', 'Tertiary', 'Quaternary'][sortIndex]}
+                        {['Primary', 'Secondary', 'Tertiary', 'Ordered'][sortIndex]}
                       </Text>
                       <div className="flex-1">
                         <Select
@@ -155,7 +155,7 @@ const ViewRow: React.FC<ViewRowProps> = ({
                             newSorts[sortIndex] = val;
                             onUpdate(index, { defaultSorts: newSorts });
                           }}
-                          options={ORDERED_SORTS.map((s) => ({ value: s, label: s }))}
+                          options={(sortIndex < 3 ? SORTS : ORDERED_SORTS).map((s) => ({ value: s, label: s }))}
                         />
                       </div>
                     </Flexbox>
@@ -183,30 +183,35 @@ const ViewRow: React.FC<ViewRowProps> = ({
 };
 
 const ViewSettingsModal: React.FC<ViewSettingsModalProps> = ({ isOpen, setOpen }) => {
-  const { cube, setCube } = useContext(CubeContext);
+  const { cube, unfilteredChangedCards, setCube } = useContext(CubeContext);
   const { csrfFetch } = useContext(CSRFContext);
   const [loading, setLoading] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   // Get available boards from the cube
   const availableBoards = useMemo(() => {
-    const boards = getBoardDefinitions(cube);
-    return boards
-      .filter((b) => b.enabled)
-      .map((b) => ({
-        key: boardNameToKey(b.name),
-        name: b.name,
-      }));
-  }, [cube]);
+    const boards = getBoardDefinitions(cube, unfilteredChangedCards);
+    return boards.map((b) => ({
+      key: boardNameToKey(b.name),
+      name: b.name,
+    }));
+  }, [cube, unfilteredChangedCards]);
 
   // Initialize with current views or defaults
   const getInitialViews = useCallback((): ViewDefinition[] => {
     if (cube.views && cube.views.length > 0) {
-      return cube.views.map((v) => ({
-        ...v,
-        boards: [...v.boards],
-        defaultSorts: [...v.defaultSorts],
-      }));
+      return cube.views.map((v) => {
+        // Ensure defaultSorts always has exactly 4 elements
+        const defaultSorts = [...v.defaultSorts];
+        while (defaultSorts.length < 4) {
+          defaultSorts.push(VIEW_DEFAULT_SORTS[defaultSorts.length]);
+        }
+        return {
+          ...v,
+          boards: [...v.boards],
+          defaultSorts,
+        };
+      });
     }
 
     // Create default views based on cube's defaultSorts
@@ -360,7 +365,7 @@ const ViewSettingsModal: React.FC<ViewSettingsModalProps> = ({ isOpen, setOpen }
             <Flexbox direction="col" gap="2">
               {views.map((view, index) => (
                 <ViewRow
-                  key={view.name || `view-${index}`}
+                  key={index}
                   view={view}
                   index={index}
                   availableBoards={availableBoards}

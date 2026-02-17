@@ -15,6 +15,7 @@ import classNames from 'classnames';
 
 import AboutViewContext from '../../contexts/AboutViewContext';
 import AnalysisViewContext from '../../contexts/AnalysisViewContext';
+import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
@@ -107,7 +108,9 @@ const getNavigationItems = (cube: Cube): NavigationItem[] => {
   ];
 };
 
-const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls }) => {
+const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, controls }) => {
+  // Use cube from context to pick up live updates (e.g., when views are modified)
+  const { cube } = React.useContext(CubeContext);
   const navigationItems = React.useMemo(() => getNavigationItems(cube), [cube]);
   const { cubeSidebarExpanded, toggleCubeSidebarExpanded } = React.useContext(DisplayContext);
   const [hoveredItem, setHoveredItem] = React.useState<string | null>(null);

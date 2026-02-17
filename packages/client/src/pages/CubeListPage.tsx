@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
 import Card from '@utils/datatypes/Card';
 import Cube, { getViewByName } from '@utils/datatypes/Cube';
@@ -40,7 +40,7 @@ const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
   const { changedCards, filterResult, canEdit, cube } = useContext(CubeContext);
   const { showAllBoards, activeView } = useContext(DisplayContext);
-  const { filterInput } = useContext(FilterContext);
+  const { filterInput, setFilterInput } = useContext(FilterContext);
 
   // Get the current view definition
   const currentView = useMemo(() => getViewByName(cube, activeView), [cube, activeView]);
@@ -49,6 +49,25 @@ const CubeListPageRaw: React.FC = () => {
   // Determine the display view (table, spoiler, etc.) from the view settings or URL param
   const defaultDisplayView = currentView?.displayView || 'table';
   const [cubeView, setCubeView] = useQueryParam('display', defaultDisplayView);
+
+  // Apply view defaults when view changes (but not when user manually changes display)
+  useEffect(() => {
+    if (currentView) {
+      // Update display view to match the view's displayView ONLY on initial load or view switch
+      // Don't override user's manual display changes
+      setCubeView(currentView.displayView);
+
+      // Apply filter (views don't have default filters yet, but structure is ready)
+      if (currentView.defaultFilter) {
+        setFilterInput(currentView.defaultFilter);
+      } else {
+        // Clear filter if view has no default filter
+        setFilterInput('');
+      }
+    }
+    // Only depend on activeView - when the VIEW changes, apply its defaults
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView]);
 
   if (versionMismatch) {
     return (
@@ -100,6 +119,9 @@ const CubeListPageRaw: React.FC = () => {
           // Convert boardname to lowercase key for comparison with view's boards
           const boardKey = boardname.toLowerCase();
           const isActive = showAllBoards || viewBoards.includes(boardKey);
+          console.log(
+            `[DEBUG] Board: ${boardname}, boardKey: ${boardKey}, isActive: ${isActive}, cardCount: ${boardcards.length}`,
+          );
 
           return (
             <ErrorBoundary key={boardname}>

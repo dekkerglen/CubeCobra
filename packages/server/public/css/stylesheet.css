@@ -1202,6 +1202,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .w-4 {
   width: 1rem;
 }
+.w-40 {
+  width: 10rem;
+}
 .w-5 {
   width: 1.25rem;
 }

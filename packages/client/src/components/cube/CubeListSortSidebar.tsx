@@ -29,7 +29,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
     cube,
     setShowUnsorted,
     setCollapseDuplicateCards,
-    saveSorts,
     resetSorts,
     sortPrimary,
     sortSecondary,
@@ -101,12 +100,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             <Button color="danger" onClick={resetSorts} disabled={!sortsModified} block>
               Reset Sort
             </Button>
-
-            {canEdit && (
-              <Button color="accent" onClick={saveSorts} disabled={!sortsModified} block>
-                Save as Default Sort
-              </Button>
-            )}
 
             <TagColorsModalButton color="secondary" block>
               {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
@@ -247,11 +240,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               <Button color="danger" onClick={resetSorts} disabled={!sortsModified} block>
                 Reset Sort
               </Button>
-              {canEdit && (
-                <Button color="accent" onClick={saveSorts} disabled={!sortsModified} block>
-                  Save as Default
-                </Button>
-              )}
               <TagColorsModalButton color="secondary" block>
                 {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
               </TagColorsModalButton>

@@ -58,7 +58,8 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
         { value: 'maybeboard', label: 'Maybeboard' },
       ];
     }
-    const boards = getBoardDefinitions(cube);
+    // Cards not available in this context, getBoardDefinitions will use defaults
+    const boards = getBoardDefinitions(cube, undefined);
     return boards.map((board) => ({
       value: boardNameToKey(board.name),
       label: board.name,

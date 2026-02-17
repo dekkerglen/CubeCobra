@@ -15,12 +15,11 @@ interface SortCollapseProps {
   canEdit?: boolean;
 }
 
-const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) => {
+const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit = false }) => {
   const {
     cube,
     setShowUnsorted,
     setCollapseDuplicateCards,
-    saveSorts,
     resetSorts,
     sortPrimary,
     sortSecondary,
@@ -71,7 +70,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
           </Col>
           <Col xs={12} sm={6}>
             <Select
-              label="Quaternary Sort"
+              label="Ordered"
               value={sortQuaternary || CUBE_DEFAULT_SORTS[3]}
               setValue={setSortQuaternary}
               options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
@@ -86,11 +85,6 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
           <Button color="danger" onClick={resetSorts} disabled={!sortsModified}>
             Reset Sort
           </Button>
-          {canEdit && (
-            <Button color="accent" onClick={saveSorts} disabled={!sortsModified}>
-              Save as Default Sort
-            </Button>
-          )}
           <Button color={cube.showUnsorted ? 'danger' : 'primary'} onClick={() => setShowUnsorted(!cube.showUnsorted)}>
             <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
               {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards

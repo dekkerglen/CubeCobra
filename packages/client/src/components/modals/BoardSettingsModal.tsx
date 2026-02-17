@@ -1,4 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
+
 import {
   BoardDefinition,
   boardNameToKey,
@@ -8,7 +9,6 @@ import {
 } from '@utils/datatypes/Cube';
 
 import Button from 'components/base/Button';
-import Checkbox from 'components/base/Checkbox';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
@@ -41,10 +41,9 @@ const BoardRow: React.FC<BoardRowProps> = ({
   onRemove,
   canRemove,
 }) => {
-  const canDelete = canRemove && cardCount === 0 && !isStandardBoard;
-  const deleteTooltip = isStandardBoard
-    ? 'Standard boards can be disabled but not removed'
-    : cardCount > 0
+  const canDelete = canRemove && cardCount === 0;
+  const deleteTooltip =
+    cardCount > 0
       ? `Cannot delete board with ${cardCount} card${cardCount !== 1 ? 's' : ''}`
       : !canRemove
         ? 'Must have at least one board'
@@ -69,7 +68,6 @@ const BoardRow: React.FC<BoardRowProps> = ({
             {cardCount} card{cardCount !== 1 ? 's' : ''}
           </Text>
         )}
-        <Checkbox label="Enabled" checked={board.enabled} setChecked={(enabled) => onUpdate(index, { enabled })} />
         <div title={deleteTooltip}>
           <Button color="danger" onClick={() => onRemove(index)} disabled={!canDelete}>
             Remove
@@ -81,36 +79,58 @@ const BoardRow: React.FC<BoardRowProps> = ({
 };
 
 const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen }) => {
-  const { cube, unfilteredChangedCards, setCube } = useContext(CubeContext);
+  const { cube, unfilteredChangedCards, setCube: _setCube } = useContext(CubeContext);
   const { csrfFetch } = useContext(CSRFContext);
   const [loading, setLoading] = useState(false);
 
   // Standard board names that are always available
   const standardBoardNames = useMemo(() => DEFAULT_BOARDS.map((b) => b.name), []);
 
-  // Initialize with current boards, ensuring standard boards are available
-  const getInitialBoards = useCallback((): BoardDefinition[] => {
-    // Start with saved boards or defaults
-    const boards: BoardDefinition[] =
-      cube.boards && cube.boards.length > 0
-        ? cube.boards.map((b) => ({ ...b }))
-        : DEFAULT_BOARDS.map((b) => ({ ...b }));
-
-    // Ensure all standard boards (Basics, Tokens) are in the list
-    for (const defaultBoard of DEFAULT_BOARDS) {
-      const exists = boards.some((b) => boardNameToKey(b.name) === boardNameToKey(defaultBoard.name));
-      if (!exists) {
-        boards.push({ ...defaultBoard });
-      }
+  // Initialize with current boards derived from cards structure
+  const getInitialBoards = (): BoardDefinition[] => {
+    if (!unfilteredChangedCards) {
+      return DEFAULT_BOARDS.map((b) => ({ ...b }));
     }
 
-    return boards;
-  }, [cube.boards]);
+    // Derive boards from cards object keys
+    const boardKeys = Object.keys(unfilteredChangedCards).filter((key) => key !== 'id');
+
+    if (boardKeys.length === 0) {
+      return DEFAULT_BOARDS.map((b) => ({ ...b }));
+    }
+
+    // Sort board keys to ensure consistent ordering
+    // Standard boards first (mainboard, maybeboard, basics), then custom boards alphabetically
+    const standardKeys = ['mainboard', 'maybeboard', 'basics'];
+    const sortedKeys = boardKeys.sort((a, b) => {
+      const aIsStandard = standardKeys.indexOf(a.toLowerCase());
+      const bIsStandard = standardKeys.indexOf(b.toLowerCase());
+
+      if (aIsStandard !== -1 && bIsStandard !== -1) {
+        // Both are standard - use their standard order
+        return aIsStandard - bIsStandard;
+      } else if (aIsStandard !== -1) {
+        // a is standard, b is custom - a comes first
+        return -1;
+      } else if (bIsStandard !== -1) {
+        // b is standard, a is custom - b comes first
+        return 1;
+      } else {
+        // Both are custom - alphabetical order
+        return a.localeCompare(b);
+      }
+    });
+
+    // Convert board keys to proper names (capitalize first letter)
+    return sortedKeys.map((key) => ({
+      name: key.charAt(0).toUpperCase() + key.slice(1),
+    }));
+  };
 
   const [boards, setBoards] = useState<BoardDefinition[]>(getInitialBoards);
   const [error, setError] = useState<string>('');
 
-  // Calculate card counts for each board (including legacy basics)
+  // Calculate card counts for each board
   const boardCardCounts = useMemo(() => {
     const counts: Record<string, number> = {};
 
@@ -120,23 +140,15 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
       counts[board.name] = cards?.length || 0;
     }
 
-    // Include legacy basics in the Basics board count
-    if (cube.basics && Array.isArray(cube.basics) && cube.basics.length > 0) {
-      const basicsBoard = boards.find((b) => boardNameToKey(b.name) === 'basics');
-      if (basicsBoard) {
-        counts[basicsBoard.name] = (counts[basicsBoard.name] || 0) + cube.basics.length;
-      }
-    }
-
     return counts;
-  }, [boards, unfilteredChangedCards, cube.basics]);
+  }, [boards, unfilteredChangedCards]);
 
   const addBoard = () => {
     if (boards.length >= MAX_BOARDS) {
       setError(`Cannot add more than ${MAX_BOARDS} boards`);
       return;
     }
-    setBoards([...boards, { name: '', enabled: true }]);
+    setBoards([...boards, { name: '' }]);
     setError('');
   };
 
@@ -148,17 +160,22 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
       return;
     }
 
-    // Standard boards can be disabled but not removed
-    if (standardBoardNames.includes(board.name)) {
-      setError(`"${board.name}" is a standard board. You can disable it, but not remove it.`);
-      return;
-    }
-
     // Check if board has cards
     const cardCount = boardCardCounts[board.name] || 0;
     if (cardCount > 0) {
       setError(
         `Cannot remove "${board.name}" - it contains ${cardCount} card${cardCount !== 1 ? 's' : ''}. Move all cards first.`,
+      );
+      return;
+    }
+
+    // Check if board is referenced by any views
+    const boardKey = boardNameToKey(board.name);
+    const referencingViews = (cube.views || []).filter((view) => view.boards.includes(boardKey));
+
+    if (referencingViews.length > 0) {
+      setError(
+        `Cannot remove "${board.name}" - it is referenced by view${referencingViews.length !== 1 ? 's' : ''}: ${referencingViews.map((v) => v.name).join(', ')}. Update or remove the view${referencingViews.length !== 1 ? 's' : ''} first.`,
       );
       return;
     }
@@ -194,9 +211,14 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
 
       if (response.ok) {
         const data = await response.json();
-        // Update the cube context with new boards
-        setCube((prev) => ({ ...prev, boards: data.boards }));
-        setOpen(false);
+        // The backend will return the updated cards structure
+        // We don't need to update cube.boards anymore - boards are derived from cards
+        if (data.success) {
+          // Force page reload to get fresh cards structure from server
+          window.location.reload();
+        } else {
+          setError(data.message || 'Failed to save board settings');
+        }
       } else {
         const data = await response.json();
         setError(data.message || 'Failed to save board settings');
@@ -214,7 +236,8 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
       setBoards(getInitialBoards());
       setError('');
     }
-  }, [isOpen, getInitialBoards]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>
@@ -226,7 +249,7 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
       <ModalBody>
         <Flexbox direction="col" gap="3">
           <Text sm className="text-text-secondary">
-            Configure which boards are available for your cube. Toggle to enable/disable boards.
+            Configure which boards are available for your cube. Create custom boards to organize your cards.
           </Text>
 
           {error && (
@@ -240,7 +263,7 @@ const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ isOpen, setOpen
           <Flexbox direction="col" gap="2">
             {boards.map((board, index) => (
               <BoardRow
-                key={board.name || `board-${index}`}
+                key={index}
                 board={board}
                 index={index}
                 cardCount={boardCardCounts[board.name] || 0}

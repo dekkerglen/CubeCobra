@@ -129,7 +129,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
     const boardKey = boardParam ? boardNameToKey(boardParam) : 'mainboard';
 
     // Validate board against cube's boards
-    const boardDefs = getBoardDefinitions(cube);
+    const boardDefs = getBoardDefinitions(cube, cubeCards);
     const validBoardKeys = boardDefs.map((b) => boardNameToKey(b.name));
 
     if (!validBoardKeys.includes(boardKey)) {

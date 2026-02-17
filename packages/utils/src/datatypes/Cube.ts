@@ -27,7 +27,6 @@ export interface TagColor {
 
 export interface BoardDefinition {
   name: string;
-  enabled: boolean;
 }
 
 // Display view options for cube list pages
@@ -50,26 +49,34 @@ export interface CubeCards {
 // Maximum number of boards allowed per cube
 export const MAX_BOARDS = 12;
 
-// Default board definitions for cubes (reflecting current functionality)
-export const DEFAULT_BOARDS: BoardDefinition[] = [
-  { name: 'Mainboard', enabled: true },
-  { name: 'Maybeboard', enabled: true },
-  { name: 'Basics', enabled: false },
-  { name: 'Tokens', enabled: false },
-];
+// Default board definitions for cubes
+export const DEFAULT_BOARDS: BoardDefinition[] = [{ name: 'Mainboard' }, { name: 'Maybeboard' }, { name: 'Basics' }];
 
 /**
- * Gets the board definitions for a cube, using defaults if not specified
+ * Gets the board definitions for a cube by deriving them from the cards structure.
+ * If cards are not provided, returns DEFAULT_BOARDS.
+ *
+ * @param _cube - The cube object (unused now, kept for backwards compatibility)
+ * @param cards - Optional cards structure to derive boards from (can be partial)
+ * @returns Array of board definitions
  */
-export function getBoardDefinitions(cube: Cube): BoardDefinition[] {
-  return cube.boards && cube.boards.length > 0 ? cube.boards : DEFAULT_BOARDS;
-}
+export function getBoardDefinitions(_cube: Cube, cards?: Record<string, Card[]> | CubeCards): BoardDefinition[] {
+  if (!cards) {
+    // No cards provided, return defaults
+    return DEFAULT_BOARDS;
+  }
 
-/**
- * Gets the enabled boards for a cube
- */
-export function getEnabledBoards(cube: Cube): BoardDefinition[] {
-  return getBoardDefinitions(cube).filter((board) => board.enabled);
+  // Derive boards from cards object keys (excluding 'id' which might be present)
+  const boardNames = Object.keys(cards).filter((key) => key !== 'id');
+
+  if (boardNames.length === 0) {
+    return DEFAULT_BOARDS;
+  }
+
+  // Convert board keys back to proper names (capitalize first letter)
+  return boardNames.map((key) => ({
+    name: key.charAt(0).toUpperCase() + key.slice(1),
+  }));
 }
 
 /**
@@ -119,7 +126,7 @@ export const MAX_VIEWS = 20;
 // Default sort options (same as CUBE_DEFAULT_SORTS in Sort.ts, duplicated to avoid circular import)
 export const VIEW_DEFAULT_SORTS = ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'] as const;
 
-// Default view definitions for cubes (reflecting current functionality)
+// Default view definitions for cubes
 export const DEFAULT_VIEWS: ViewDefinition[] = [
   {
     name: 'Mainboard',
@@ -133,13 +140,29 @@ export const DEFAULT_VIEWS: ViewDefinition[] = [
     displayView: 'table',
     defaultSorts: [...VIEW_DEFAULT_SORTS],
   },
+  {
+    name: 'Basics',
+    boards: ['basics'],
+    displayView: 'spoiler',
+    defaultSorts: [...VIEW_DEFAULT_SORTS],
+  },
 ];
 
 /**
  * Gets the view definitions for a cube, using defaults if not specified
  */
 export function getViewDefinitions(cube: Cube): ViewDefinition[] {
-  return cube.views && cube.views.length > 0 ? cube.views : DEFAULT_VIEWS;
+  if (cube.views && cube.views.length > 0) {
+    return cube.views;
+  }
+
+  // Generate default views using cube's defaultSorts
+  const cubeSorts = cube.defaultSorts && cube.defaultSorts.length === 4 ? cube.defaultSorts : [...VIEW_DEFAULT_SORTS];
+  return DEFAULT_VIEWS.map((view) => ({
+    ...view,
+    boards: [...view.boards],
+    defaultSorts: [...cubeSorts],
+  }));
 }
 
 /**
@@ -159,11 +182,12 @@ export function viewNameToKey(viewName: string): string {
 /**
  * Gets the default views for a new cube
  */
-export function getNewCubeViews(): ViewDefinition[] {
+export function getNewCubeViews(defaultSorts?: string[]): ViewDefinition[] {
+  const sorts = defaultSorts && defaultSorts.length === 4 ? defaultSorts : [...VIEW_DEFAULT_SORTS];
   return DEFAULT_VIEWS.map((view) => ({
     ...view,
     boards: [...view.boards],
-    defaultSorts: [...view.defaultSorts],
+    defaultSorts: [...sorts],
   }));
 }
 
@@ -197,8 +221,12 @@ export function validateViewDefinitions(views: ViewDefinition[]): { valid: boole
   }
 
   // Check that defaultSorts has 4 elements
-  if (views.some((v) => !v.defaultSorts || v.defaultSorts.length !== 4)) {
-    return { valid: false, error: 'Each view must have exactly 4 sort options' };
+  const invalidSortView = views.find((v) => !v.defaultSorts || v.defaultSorts.length !== 4);
+  if (invalidSortView) {
+    return {
+      valid: false,
+      error: `View "${invalidSortView.name}" must have exactly 4 sort options (has ${invalidSortView.defaultSorts?.length || 0})`,
+    };
   }
 
   return { valid: true };
@@ -264,7 +292,6 @@ interface Cube {
   defaultPrinting: string;
   disableAlerts: boolean;
   basics: string[]; // Deprecated - kept for backwards compatibility
-  boards?: BoardDefinition[]; // Flexible board definitions
   views?: ViewDefinition[]; // View configurations for displaying cube content
   tags: any[];
   keywords: string[];

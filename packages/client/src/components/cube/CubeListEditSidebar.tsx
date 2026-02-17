@@ -70,12 +70,12 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
 
   // Get board options from cube's board definitions
   const boardOptions = useMemo(() => {
-    const boards = getBoardDefinitions(cube);
+    const boards = getBoardDefinitions(cube, changedCards);
     return boards.map((board) => ({
       value: boardNameToKey(board.name),
       label: board.name,
     }));
-  }, [cube]);
+  }, [cube, changedCards]);
 
   const handleAdd = useCallback(
     async (event: React.FormEvent, match: string) => {

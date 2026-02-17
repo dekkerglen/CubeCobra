@@ -1,50 +1,28 @@
-import { boardNameToKey, validateBoardDefinitions } from '@utils/datatypes/Cube';
+import { BoardDefinition, boardNameToKey, validateBoardDefinitions } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
+import cloudwatch from 'serverutils/cloudwatch';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../types/express';
 
-/**
- * Convert legacy basics (array of card IDs on cube) to cards in the "basics" board.
- * This is called when the user enables the Basics board and legacy basics exist.
- */
-const migrateLegacyBasicsToBoard = async (cubeId: string, legacyBasics: string[]): Promise<void> => {
-  const cubeCards = await cubeDao.getCards(cubeId);
-
-  // Check if basics board already has cards
-  const basicsKey = boardNameToKey('Basics');
-  if (cubeCards[basicsKey] && cubeCards[basicsKey].length > 0) {
-    // Already has cards, no need to migrate
-    return;
-  }
-
-  // Convert legacy basics to card objects
-  // Match the format used elsewhere (BulkUploadPage, EditCollapse, etc.)
-  const basicsCards = legacyBasics.map((cardId) => ({
-    cardID: cardId,
-    tags: [] as string[],
-    finish: 'Non-foil' as const,
-    status: 'Owned' as const,
-    addedTmsp: new Date().valueOf().toString(),
-    notes: '',
-  }));
-
-  // Add basics board to the cards object
-  cubeCards[basicsKey] = basicsCards;
-
-  // Save the updated cards
-  await cubeDao.updateCards(cubeId, cubeCards);
-};
-
 export const updateBoardsHandler = async (req: Request, res: Response) => {
   try {
-    const { boards } = req.body;
+    const { boards } = req.body as { boards: BoardDefinition[] };
 
     // Validate boards
     const validation = validateBoardDefinitions(boards);
     if (!validation.valid) {
       return res.status(400).json({ success: false, message: validation.error || 'Invalid board configuration' });
+    }
+
+    // Ensure mainboard always exists
+    const hasMainboard = boards.some((b) => boardNameToKey(b.name) === 'mainboard');
+    if (!hasMainboard) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mainboard is required and cannot be removed.',
+      });
     }
 
     const cube = await cubeDao.getById(req.params.id!);
@@ -57,23 +35,83 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
-    // Check if Basics board is being enabled and there are legacy basics to migrate
-    const basicsBoard = boards.find((b: { name: string; enabled: boolean }) => boardNameToKey(b.name) === 'basics');
-    const oldBasicsBoard = cube.boards?.find((b) => boardNameToKey(b.name) === 'basics');
+    // Check if any boards are referenced by views
+    const boardKeys = boards.map((b) => boardNameToKey(b.name));
+    const boardKeysSet = new Set(boardKeys);
+    const views = cube.views || [];
 
-    // If Basics board is being enabled (wasn't enabled before or didn't exist) and we have legacy basics
-    const basicsBeingEnabled = basicsBoard?.enabled && (!oldBasicsBoard || !oldBasicsBoard.enabled);
-    if (basicsBeingEnabled && cube.basics && cube.basics.length > 0) {
-      await migrateLegacyBasicsToBoard(cube.id, cube.basics);
-      // Clear legacy basics after migration
-      cube.basics = [];
+    for (const view of views) {
+      for (const viewBoard of view.boards) {
+        if (!boardKeysSet.has(viewBoard)) {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot remove board referenced by view "${view.name}". Update or remove the view first.`,
+          });
+        }
+      }
     }
 
-    // Update the cube's boards
-    cube.boards = boards;
+    // Get current cards to reorganize boards
+    const currentCards = await cubeDao.getCards(cube.id);
 
-    await cubeDao.update(cube);
-    return res.status(200).json({ success: true, message: 'Boards updated successfully.', boards: cube.boards });
+    // Build new cards structure based on the requested boards
+    const newCards: any = {};
+
+    for (const board of boards) {
+      const key = boardNameToKey(board.name);
+      // Keep existing cards for this board, or initialize empty array
+      newCards[key] = currentCards[key] || [];
+    }
+
+    // Handle cards from removed boards - move them to mainboard
+    const newBoardKeys = new Set(boards.map((b: BoardDefinition) => boardNameToKey(b.name)));
+    for (const [oldKey, cards] of Object.entries(currentCards)) {
+      if (oldKey !== 'id' && !newBoardKeys.has(oldKey) && Array.isArray(cards) && cards.length > 0) {
+        // This board was removed and has cards - move to mainboard
+        cloudwatch.info(`Moving ${cards.length} cards from removed board '${oldKey}' to mainboard`);
+        newCards.mainboard = [...(newCards.mainboard || []), ...cards];
+      }
+    }
+
+    // Update indices for all cards in all boards
+    for (const [boardKey, boardCards] of Object.entries(newCards)) {
+      if (Array.isArray(boardCards)) {
+        boardCards.forEach((card: any, index: number) => {
+          card.board = boardKey;
+          card.index = index;
+        });
+      }
+    }
+
+    // Safety check: ensure we're not accidentally wiping all cards
+    const oldCardCount = Object.values(currentCards)
+      .filter((val) => Array.isArray(val))
+      .reduce((sum, arr) => sum + arr.length, 0);
+    const newCardCount = Object.values(newCards)
+      .filter((val) => Array.isArray(val))
+      .reduce((sum, arr) => sum + arr.length, 0);
+
+    if (oldCardCount > 0 && newCardCount === 0) {
+      cloudwatch.error(
+        `Prevented data loss: Board update would have deleted all ${oldCardCount} cards for cube ${cube.id}`,
+      );
+      return res.status(500).json({
+        success: false,
+        message: 'Internal error: Board update would result in data loss. Please try again or contact support.',
+      });
+    }
+
+    if (newCardCount !== oldCardCount) {
+      cloudwatch.info(`Board update for cube ${cube.id}: card count changed from ${oldCardCount} to ${newCardCount}`);
+    }
+
+    // Save the reorganized cards structure
+    await cubeDao.updateCards(cube.id, newCards);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Boards updated successfully.',
+    });
   } catch (err) {
     req.logger.error('Error updating boards:', err);
     return res.status(500).json({ success: false, message: 'Error updating boards: ' + (err as Error).message });

@@ -233,12 +233,6 @@ export const createCube = (overrides?: Partial<Cube>): Cube => ({
   defaultPrinting: '',
   disableAlerts: false,
   basics: [],
-  boards: [
-    { name: 'Mainboard', enabled: true },
-    { name: 'Maybeboard', enabled: true },
-    { name: 'Basics', enabled: true },
-    { name: 'Tokens', enabled: true },
-  ],
   tags: [],
   keywords: [],
   cardCount: 360,

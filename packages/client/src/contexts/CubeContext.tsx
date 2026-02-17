@@ -228,13 +228,10 @@ export function CubeContextProvider({
   const { changes, setChanges, clearChanges, version, setVersion } = useContext(ChangesContext);
   const { filterInput, cardFilter } = useContext(FilterContext)!;
 
-  const { setOpenCollapse } = useContext(DisplayContext);
+  const { setOpenCollapse, activeView } = useContext(DisplayContext);
   const [cube, setCube] = useState<CubeWithCards>({
     ...initialCube,
-    cards: {
-      mainboard: cards.mainboard,
-      maybeboard: cards.maybeboard,
-    },
+    cards,
   });
   const defaultSorts = useMemo(() => getCubeSorts(cube), [cube]);
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
@@ -378,14 +375,25 @@ export function CubeContextProvider({
     typeof user?.autoBlog !== 'undefined' ? user.autoBlog : false,
   );
 
+  // Apply view's default sorts when view changes
+  useEffect(() => {
+    const { getViewByName } = require('@utils/datatypes/Cube');
+    const currentView = getViewByName(cube, activeView);
+    if (currentView?.defaultSorts && currentView.defaultSorts.length === 4) {
+      setSortPrimary(currentView.defaultSorts[0]);
+      setSortSecondary(currentView.defaultSorts[1]);
+      setSortTertiary(currentView.defaultSorts[2]);
+      setSortQuaternary(currentView.defaultSorts[3]);
+    }
+  }, [activeView, cube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
+
   const getAllTags = (cubeCards: CubeCards) => {
     const tags = new Set<string>();
 
     //Use cube.cards instead of cards to get the most up-to-date tags, as "cards" is only the initial state
-    const mainboard = cubeCards?.mainboard || [];
-    const maybeboard = cubeCards?.maybeboard || [];
+    const allCards = Object.values(cubeCards || {}).flat();
 
-    for (const card of [...mainboard, ...maybeboard]) {
+    for (const card of allCards) {
       for (const tag of card.tags || []) {
         tags.add(tag);
       }
@@ -431,10 +439,7 @@ export function CubeContextProvider({
 
   useMount(() => {
     // if there are changes
-    if (
-      Object.values(changes.mainboard || {}).some((c) => c.length > 0) ||
-      Object.values(changes.maybeboard || {}).some((c) => c.length > 0)
-    ) {
+    if (Object.values(changes).some((board) => Object.values(board || {}).some((c) => c.length > 0))) {
       setOpenCollapse('edit');
     }
   });
@@ -949,7 +954,9 @@ export function CubeContextProvider({
 
     const result: Record<string, Card[]> = {};
     for (const board of Object.keys(changed)) {
-      result[board] = changed[board].filter(cardFilter.filter);
+      if (Array.isArray(changed[board])) {
+        result[board] = changed[board].filter(cardFilter.filter);
+      }
     }
 
     return [result, changed];
@@ -1264,8 +1271,9 @@ export function CubeContextProvider({
 
   const hasCustomImages = useMemo(
     () =>
-      [changedCards.mainboard, changedCards.maybeboard].some((list) => {
-        return list.some(
+      changedCards &&
+      Object.values(changedCards).some((list) => {
+        return list?.some(
           (card) => (card.imgUrl && card.imgUrl.length > 0) || (card.imgBackUrl && card.imgBackUrl.length > 0),
         );
       }),

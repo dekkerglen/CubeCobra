@@ -6,6 +6,7 @@ import classNames from 'classnames';
 
 import AboutViewContext from '../../contexts/AboutViewContext';
 import AnalysisViewContext from '../../contexts/AnalysisViewContext';
+import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
@@ -21,7 +22,9 @@ interface SubNavItem {
   href?: string;
 }
 
-const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube, activeLink }) => {
+const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink }) => {
+  // Use cube from context to pick up live updates (e.g., when views are modified)
+  const { cube } = useContext(CubeContext);
   const { activeView, setActiveView } = useContext(DisplayContext);
   const aboutViewContext = useContext(AboutViewContext);
   const analysisViewContext = useContext(AnalysisViewContext);

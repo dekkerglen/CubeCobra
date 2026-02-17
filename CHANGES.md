@@ -9,6 +9,7 @@ Since 1.5.0
 - allow urls in cube compare input
 - Refactored dashboard and landing pages mobile UX
 - Added "View More" links to explore page
+- Added user level display option to show text over icons where possible
 
 # Bug Fixes
 

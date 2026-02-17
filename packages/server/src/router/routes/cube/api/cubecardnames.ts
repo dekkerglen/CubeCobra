@@ -33,7 +33,7 @@ export const cubecardnamesHandler = async (req: Request, res: Response) => {
     // Validate board exists in cube's cards
     if (!cubeCards[boardKey]) {
       // Check if it's a valid board name from cube's boards
-      const boardDefs = getBoardDefinitions(cube);
+      const boardDefs = getBoardDefinitions(cube, cubeCards);
       const validBoardNames = boardDefs.map((b) => b.name);
       const validBoardKeys = boardDefs.map((b) => boardNameToKey(b.name));
 
