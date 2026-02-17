@@ -43,7 +43,9 @@ const DailyP1P1HistoryPage: React.FC<DailyP1P1HistoryPageProps> = ({
 
     setLoading(true);
     try {
-      const response = await fetch('/tool/api/p1p1History/history' + (lastKey ? `?lastKey=${lastKey}` : ''));
+      const response = await fetch(
+        '/tool/api/p1p1History/history' + (lastKey ? `?lastKey=${encodeURIComponent(lastKey)}` : ''),
+      );
       const data = await response.json();
 
       if (data.success) {

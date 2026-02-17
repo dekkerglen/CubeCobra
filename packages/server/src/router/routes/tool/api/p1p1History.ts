@@ -7,8 +7,19 @@ export const getDailyP1P1HistoryHandler = async (req: Request, res: Response) =>
     const { lastKey } = req.query;
     const limit = 10;
 
+    // Parse lastKey if provided
+    let parsedLastKey: Record<string, any> | undefined;
+    if (lastKey) {
+      try {
+        parsedLastKey = JSON.parse(lastKey as string);
+      } catch (_parseError) {
+        req.logger.error('Invalid lastKey format:', lastKey);
+        return res.status(400).json({ error: 'Invalid lastKey format' });
+      }
+    }
+
     // Get daily P1P1 history
-    const result = await dailyP1P1Dao.getDailyP1P1History(lastKey ? JSON.parse(lastKey as string) : undefined, limit);
+    const result = await dailyP1P1Dao.getDailyP1P1History(parsedLastKey, limit);
 
     if (!result.items || result.items.length === 0) {
       return res.status(200).json({
