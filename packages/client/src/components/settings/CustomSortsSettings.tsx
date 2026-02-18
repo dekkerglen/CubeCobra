@@ -3,22 +3,18 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { GrabberIcon, PlusIcon, TrashIcon } from '@primer/octicons-react';
 import { CustomSort, CustomSortCategory } from '@utils/datatypes/Cube';
 
+import Alert from 'components/base/Alert';
 import Button from 'components/base/Button';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Checkbox from 'components/base/Checkbox';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Text from 'components/base/Text';
 import { SortableItem, SortableList } from 'components/DND';
 import LoadingButton from 'components/LoadingButton';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
-
-interface CustomSortsModalProps {
-  isOpen: boolean;
-  setOpen: (open: boolean) => void;
-}
 
 interface CategoryRowProps {
   category: CustomSortCategory;
@@ -37,7 +33,6 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   onRemove,
   canRemove,
 }) => {
-  /* Prevent drag from starting when interacting with form elements */
   const preventDragStart = (event: React.PointerEvent) => {
     event.stopPropagation();
   };
@@ -108,7 +103,6 @@ const SortRow: React.FC<SortRowProps> = ({
   onCategoryAdd,
   onCategoryReorder,
 }) => {
-  /* Prevent drag from starting when interacting with form elements */
   const preventDragStart = (event: React.PointerEvent) => {
     event.stopPropagation();
   };
@@ -158,7 +152,6 @@ const SortRow: React.FC<SortRowProps> = ({
           {isExpanded && (
             <div className="mt-3 pl-6" onPointerDown={preventDragStart}>
               <Flexbox direction="col" gap="3">
-                {/* Match first only checkbox */}
                 <div>
                   <Checkbox
                     label="Match cards to first category only"
@@ -171,7 +164,6 @@ const SortRow: React.FC<SortRowProps> = ({
                   </Text>
                 </div>
 
-                {/* Categories */}
                 <div>
                   <Flexbox direction="row" justify="between" alignItems="center" className="mb-2">
                     <Text semibold sm>
@@ -184,7 +176,7 @@ const SortRow: React.FC<SortRowProps> = ({
 
                   <Flexbox direction="col" gap="2" className="mb-2">
                     <Flexbox direction="row" gap="2" alignItems="center" className="px-2">
-                      <div className="w-4" /> {/* Spacer for drag handle */}
+                      <div className="w-4" />
                       <div className="flex-1">
                         <Text xs className="text-text-secondary">
                           Category Label
@@ -200,7 +192,7 @@ const SortRow: React.FC<SortRowProps> = ({
                           </Link>
                         </Flexbox>
                       </div>
-                      <div className="w-8" /> {/* Spacer for remove button */}
+                      <div className="w-8" />
                     </Flexbox>
                   </Flexbox>
 
@@ -237,18 +229,14 @@ const SortRow: React.FC<SortRowProps> = ({
   );
 };
 
-const CustomSortsModal: React.FC<CustomSortsModalProps> = ({ isOpen, setOpen }) => {
-  const { cube, setCube } = useContext(CubeContext);
+const CustomSortsSettings: React.FC = () => {
+  const { cube } = useContext(CubeContext);
   const { csrfFetch } = useContext(CSRFContext);
   const [loading, setLoading] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [error, setError] = useState<string>('');
+  const [hasChanges, setHasChanges] = useState(false);
 
-  // Debug: Log initial cube customSorts
-  useEffect(() => {
-    console.log('[CustomSortsModal] Component mounted, cube.customSorts:', cube.customSorts);
-  }, [cube.customSorts]);
-
-  // Initialize with current custom sorts or empty array
   const getInitialSorts = useCallback((): CustomSort[] => {
     if (cube.customSorts && cube.customSorts.length > 0) {
       return cube.customSorts.map((s) => ({
@@ -260,7 +248,12 @@ const CustomSortsModal: React.FC<CustomSortsModalProps> = ({ isOpen, setOpen }) 
   }, [cube.customSorts]);
 
   const [customSorts, setCustomSorts] = useState<CustomSort[]>(getInitialSorts);
-  const [error, setError] = useState<string>('');
+
+  // Detect changes
+  useEffect(() => {
+    const changed = JSON.stringify(customSorts) !== JSON.stringify(getInitialSorts());
+    setHasChanges(changed);
+  }, [customSorts, getInitialSorts]);
 
   const addSort = () => {
     const newSort: CustomSort = {
@@ -269,7 +262,7 @@ const CustomSortsModal: React.FC<CustomSortsModalProps> = ({ isOpen, setOpen }) 
       matchFirstOnly: false,
     };
     setCustomSorts([...customSorts, newSort]);
-    setExpandedIndex(customSorts.length); // Expand the new sort
+    setExpandedIndex(customSorts.length);
     setError('');
   };
 
@@ -335,7 +328,6 @@ const CustomSortsModal: React.FC<CustomSortsModalProps> = ({ isOpen, setOpen }) 
         newSorts.splice(newIndex, 0, moved);
         setCustomSorts(newSorts);
 
-        // Update expanded index if needed
         if (expandedIndex === oldIndex) {
           setExpandedIndex(newIndex);
         } else if (expandedIndex !== null) {
@@ -351,20 +343,17 @@ const CustomSortsModal: React.FC<CustomSortsModalProps> = ({ isOpen, setOpen }) 
   );
 
   const validateSorts = (): string | null => {
-    // Check for empty sort names
     const emptyNameSort = customSorts.find((s) => !s.name.trim());
     if (emptyNameSort) {
       return 'All sorts must have a name';
     }
 
-    // Check for duplicate sort names
     const names = customSorts.map((s) => s.name.trim().toLowerCase());
     const uniqueNames = new Set(names);
     if (names.length !== uniqueNames.size) {
       return 'Sort names must be unique';
     }
 
-    // Check for empty category labels
     for (const sort of customSorts) {
       const emptyLabel = sort.categories.find((c) => !c.label.trim());
       if (emptyLabel) {
@@ -376,23 +365,16 @@ const CustomSortsModal: React.FC<CustomSortsModalProps> = ({ isOpen, setOpen }) 
   };
 
   const handleSave = async () => {
-    console.log('[CustomSortsModal] handleSave called, customSorts:', customSorts);
-
     const validationError = validateSorts();
     if (validationError) {
-      console.log('[CustomSortsModal] Validation error:', validationError);
       setError(validationError);
       return;
     }
 
-    console.log('[CustomSortsModal] Validation passed, saving...');
     setLoading(true);
     setError('');
 
     try {
-      console.log('[CustomSortsModal] Sending fetch request to:', `/cube/api/customsorts/${cube.id}`);
-      console.log('[CustomSortsModal] Request body:', { customSorts });
-
       const response = await csrfFetch(`/cube/api/customsorts/${cube.id}`, {
         method: 'POST',
         headers: {
@@ -403,96 +385,92 @@ const CustomSortsModal: React.FC<CustomSortsModalProps> = ({ isOpen, setOpen }) 
         }),
       });
 
-      console.log('[CustomSortsModal] Response status:', response.status, response.statusText);
       const data = await response.json();
-      console.log('[CustomSortsModal] Response data:', data);
 
       if (response.ok) {
-        console.log('[CustomSortsModal] Save successful, updating cube context');
-        setCube({ ...cube, customSorts });
-        setOpen(false);
+        // Reload page to reflect changes
+        window.location.href = `/cube/settings/${cube.id}?view=custom-sorts`;
       } else {
-        console.error('[CustomSortsModal] Server error:', data);
         setError(data.message || 'Failed to save custom sorts');
       }
     } catch (err) {
-      console.error('[CustomSortsModal] Save error:', err);
       setError(`An error occurred while saving: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
-      console.log('[CustomSortsModal] Save complete, setting loading to false');
       setLoading(false);
     }
   };
 
+  const resetChanges = () => {
+    setCustomSorts(getInitialSorts());
+    setError('');
+    setExpandedIndex(null);
+  };
+
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen} lg scrollable>
-      <ModalHeader setOpen={setOpen}>
-        <Text semibold lg>
-          Manage Custom Sorts
-        </Text>
-      </ModalHeader>
-      <ModalBody scrollable>
-        <Flexbox direction="col" gap="3">
-          <Text sm className="text-text-secondary">
-            Create custom sorts to organize your cube cards into categories. Each sort can have multiple categories with
-            filter syntax to match cards. Use these custom sorts anywhere you can select a sort option.
-          </Text>
+    <Flexbox direction="col" gap="3">
+      {error && <Alert color="danger">{error}</Alert>}
 
-          {error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-3 border border-red-200 dark:border-red-800">
-              <Text sm className="text-red-800 dark:text-red-200">
-                {error}
-              </Text>
-            </div>
-          )}
+      <Card>
+        <CardHeader>
+          <Flexbox direction="row" justify="between" alignItems="center">
+            <Text semibold lg>
+              Custom Sorts
+            </Text>
+            <Flexbox direction="row" gap="2">
+              <Button color="secondary" onClick={resetChanges} disabled={!hasChanges}>
+                Reset
+              </Button>
+              <LoadingButton color="primary" onClick={handleSave} disabled={!hasChanges} loading={loading}>
+                Save Changes
+              </LoadingButton>
+            </Flexbox>
+          </Flexbox>
+        </CardHeader>
+        <CardBody>
+          <Flexbox direction="col" gap="3">
+            <Text sm className="text-text-secondary">
+              Create custom sorts to organize your cube cards into categories. Each sort can have multiple categories
+              with filter syntax to match cards. Use these custom sorts anywhere you can select a sort option.
+            </Text>
 
-          {customSorts.length > 0 ? (
-            <SortableList onDragEnd={handleSortEnd} items={customSorts.map((_, i) => `sort-${i}`)}>
-              <Flexbox direction="col" gap="2">
-                {customSorts.map((sort, index) => (
-                  <SortRow
-                    key={index}
-                    sort={sort}
-                    index={index}
-                    onUpdate={updateSort}
-                    onRemove={removeSort}
-                    canRemove={customSorts.length > 0}
-                    isExpanded={expandedIndex === index}
-                    onToggleExpand={() => setExpandedIndex(expandedIndex === index ? null : index)}
-                    onCategoryUpdate={updateCategory}
-                    onCategoryRemove={removeCategory}
-                    onCategoryAdd={addCategory}
-                    onCategoryReorder={reorderCategories}
-                  />
-                ))}
-              </Flexbox>
-            </SortableList>
-          ) : (
-            <div className="rounded-md bg-bg-active p-6 text-center">
-              <Text sm className="text-text-secondary">
-                No custom sorts yet. Click "Add Sort" to create your first custom sort.
-              </Text>
-            </div>
-          )}
+            {customSorts.length > 0 ? (
+              <SortableList onDragEnd={handleSortEnd} items={customSorts.map((_, i) => `sort-${i}`)}>
+                <Flexbox direction="col" gap="2">
+                  {customSorts.map((sort, index) => (
+                    <SortRow
+                      key={index}
+                      sort={sort}
+                      index={index}
+                      onUpdate={updateSort}
+                      onRemove={removeSort}
+                      canRemove={customSorts.length > 0}
+                      isExpanded={expandedIndex === index}
+                      onToggleExpand={() => setExpandedIndex(expandedIndex === index ? null : index)}
+                      onCategoryUpdate={updateCategory}
+                      onCategoryRemove={removeCategory}
+                      onCategoryAdd={addCategory}
+                      onCategoryReorder={reorderCategories}
+                    />
+                  ))}
+                </Flexbox>
+              </SortableList>
+            ) : (
+              <div className="rounded-md bg-bg-active p-6 text-center">
+                <Text sm className="text-text-secondary">
+                  No custom sorts yet. Click "Add Sort" to create your first custom sort.
+                </Text>
+              </div>
+            )}
 
-          <Button color="secondary" onClick={addSort} block>
-            <PlusIcon size={16} className="inline mr-1" />
-            Add Sort
-          </Button>
-        </Flexbox>
-      </ModalBody>
-      <ModalFooter>
-        <Flexbox direction="row" justify="between" gap="2" className="w-full">
-          <LoadingButton block color="primary" onClick={handleSave} loading={loading}>
-            Save Changes
-          </LoadingButton>
-          <Button block color="secondary" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-        </Flexbox>
-      </ModalFooter>
-    </Modal>
+            <Button color="secondary" onClick={addSort} block>
+              <PlusIcon size={16} className="inline mr-1" />
+              Add Sort
+            </Button>
+          </Flexbox>
+        </CardBody>
+      </Card>
+    </Flexbox>
   );
 };
 
-export default CustomSortsModal;
+export default CustomSortsSettings;

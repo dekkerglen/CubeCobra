@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import Card from '@utils/datatypes/Card';
+import Cube from '@utils/datatypes/Cube';
 import { calculateAsfans } from '@utils/drafting/createdraft';
 import { cardCanBeSorted, getAllSorts, sortGroupsOrdered } from '@utils/sorting/Sort';
 import { fromEntries } from '@utils/Util';
@@ -16,8 +17,12 @@ import useQueryParam from '../hooks/useQueryParam';
 
 type SortWithTotalResult = [string, number][];
 
-const sortWithTotal: (pool: Card[], sort: string) => SortWithTotalResult = (pool: Card[], sort: string) =>
-  [...sortGroupsOrdered(pool, sort, true), ['Total', pool]].map(([label, cards]) => [
+const sortWithTotal: (pool: Card[], sort: string, cubeObj?: Cube | null) => SortWithTotalResult = (
+  pool,
+  sort,
+  cubeObj,
+) =>
+  [...sortGroupsOrdered(pool, sort, true, cubeObj), ['Total', pool]].map(([label, cards]) => [
     label as string,
     (cards as Card[]).reduce((acc, card) => acc + card.asfan!, 0),
   ]);
@@ -49,25 +54,27 @@ const AnalyticTable: React.FC = () => {
   const cardsWithAsfan = useMemo(
     () =>
       cards
-        .filter((card) => cardCanBeSorted(card, column) && cardCanBeSorted(card, row))
+        .filter((card) => cardCanBeSorted(card, column, cube) && cardCanBeSorted(card, row, cube))
         .map((card) => ({ ...card, asfan: asfans[card.cardID] || 1 })),
-    [asfans, cards, column, row],
+    [asfans, cards, column, row, cube],
   );
 
   const [columnCounts, columnLabels] = useMemo(() => {
-    const counts = sortWithTotal(cardsWithAsfan, column).filter(([label, count]) => label === 'Total' || count > 0);
+    const counts = sortWithTotal(cardsWithAsfan, column, cube).filter(
+      ([label, count]) => label === 'Total' || count > 0,
+    );
     return [fromEntries(counts), counts.map(([label]) => label)];
-  }, [cardsWithAsfan, column]);
+  }, [cardsWithAsfan, column, cube]);
 
   const rows = useMemo(
     () =>
-      [...sortGroupsOrdered(cardsWithAsfan, row, true), ['Total', cardsWithAsfan]]
-        .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards as Card[], column))])
+      [...sortGroupsOrdered(cardsWithAsfan, row, true, cube), ['Total', cardsWithAsfan]]
+        .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards as Card[], column, cube))])
         .map(([rowLabel, columnValues]) => ({
           rowLabel,
           ...fromEntries(columnLabels.map((label) => [label, (columnValues as Record<string, number>)[label] ?? 0])),
         })),
-    [cardsWithAsfan, column, row, columnLabels],
+    [cardsWithAsfan, column, row, columnLabels, cube],
   );
 
   const entryRenderer = useCallback(

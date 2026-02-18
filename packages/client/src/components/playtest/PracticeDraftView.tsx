@@ -40,7 +40,7 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
     const tiles = [];
 
     // Add standard draft card at the beginning if it's default, otherwise at the end
-    if (defaultFormat === -1) {
+    if (defaultFormat === -1 && !cube.disableDraft) {
       tiles.push({ type: 'standard', key: 'standard' });
     }
 
@@ -50,17 +50,23 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
     });
 
     // Add standard draft card at the end if it's not default
-    if (defaultFormat !== -1) {
+    if (defaultFormat !== -1 && !cube.disableDraft) {
       tiles.push({ type: 'standard', key: 'standard' });
     }
 
-    // Add fixed cards
-    tiles.push({ type: 'multiplayer', key: 'multiplayer' });
-    tiles.push({ type: 'sealed', key: 'sealed' });
-    tiles.push({ type: 'grid', key: 'grid' });
+    // Add fixed cards (only if not disabled)
+    if (!cube.disableMultiplayer) {
+      tiles.push({ type: 'multiplayer', key: 'multiplayer' });
+    }
+    if (!cube.disableSealed) {
+      tiles.push({ type: 'sealed', key: 'sealed' });
+    }
+    if (!cube.disableGrid) {
+      tiles.push({ type: 'grid', key: 'grid' });
+    }
 
     return tiles;
-  }, [defaultFormat, formatsSorted]);
+  }, [defaultFormat, formatsSorted, cube.disableDraft, cube.disableMultiplayer, cube.disableSealed, cube.disableGrid]);
 
   // Split tiles into two columns using evens and odds for balanced distribution
   const leftColumnTiles = useMemo(() => allTiles.filter((_, index) => index % 2 === 0), [allTiles]);

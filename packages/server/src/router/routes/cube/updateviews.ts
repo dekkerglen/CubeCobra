@@ -34,7 +34,12 @@ export const updateViewsHandler = async (req: Request, res: Response) => {
     );
     await cubeDao.update(cube);
     console.log(`[UPDATE VIEWS] Successfully saved views for cube ${cube.id}`);
-    return res.status(200).json({ success: true, message: 'Views updated successfully.', views: cube.views });
+    return res.status(200).json({
+      success: true,
+      message: 'Views updated successfully.',
+      views: cube.views,
+      redirect: `/cube/settings/${cube.id}?view=boards-and-views`,
+    });
   } catch (err) {
     req.logger.error('Error updating views:', err);
     return res.status(500).json({ success: false, message: 'Error updating views: ' + (err as Error).message });

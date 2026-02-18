@@ -41,7 +41,7 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
 
   const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
-  const groups = useMemo(() => sortIntoGroups(cards, sort || DEFAULT_SORT), [cards, sort]);
+  const groups = useMemo(() => sortIntoGroups(cards, sort || DEFAULT_SORT, false, cube), [cards, sort, cube]);
 
   const asfans = useMemo(() => {
     if (useAsfans !== 'true') {

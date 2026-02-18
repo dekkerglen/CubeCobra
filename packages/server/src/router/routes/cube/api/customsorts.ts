@@ -87,6 +87,7 @@ export const customsortsHandler = async (req: Request, res: Response) => {
         id: cube.id,
         customSorts: cube.customSorts,
       },
+      redirect: `/cube/settings/${cube.id}?view=custom-sorts`,
     });
   } catch (err) {
     const error = err as Error;

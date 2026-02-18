@@ -912,12 +912,12 @@ export function CubeContextProvider({
     if (useChangedCards) {
       for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
         const boardChanges = changes[board];
-        
+
         // Ensure the board exists in changed before processing changes
         if (!changed[board]) {
           changed[board] = [];
         }
-        
+
         if (
           boardChanges &&
           typeof boardChanges === 'object' &&

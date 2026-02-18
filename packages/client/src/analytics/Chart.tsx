@@ -68,7 +68,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
 
   const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
-  const groups = sortIntoGroups(cards, sort);
+  const groups = sortIntoGroups(cards, sort, false, cube);
 
   const options = {
     responsive: true,

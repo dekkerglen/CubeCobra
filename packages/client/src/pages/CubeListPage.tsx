@@ -114,48 +114,61 @@ const CubeListPageRaw: React.FC = () => {
       )}
       <DynamicFlash />
       <RotisserieDraftPanel />
-      {Object.entries(changedCards)
-        .map(([boardname, boardcards]) => {
-          // Convert boardname to lowercase key for comparison with view's boards
+      {(() => {
+        // Calculate how many boards are active
+        const activeBoards = Object.entries(changedCards).filter(([boardname, boardcards]) => {
           const boardKey = boardname.toLowerCase();
           const isActive = showAllBoards || viewBoards.includes(boardKey);
-          console.log(
-            `[DEBUG] Board: ${boardname}, boardKey: ${boardKey}, isActive: ${isActive}, cardCount: ${boardcards.length}`,
-          );
+          return isActive && boardcards.length > 0;
+        });
+        const showBoardHeaders = activeBoards.length > 1;
 
-          return (
-            <ErrorBoundary key={boardname}>
-              <Flexbox direction="col" gap="2">
-                {isActive && (
-                  <>
-                    {showAllBoards && boardcards.length > 0 && (
-                      <Text semibold lg className="mt-4 text-center">
-                        {boardname}
-                      </Text>
-                    )}
-                    {boardcards.length === 0 && !showAllBoards && (
-                      <Text semibold md className="text-center mt-4">
-                        This board appears to be empty!
-                      </Text>
-                    )}
-                    {
+        return Object.entries(changedCards)
+          .map(([boardname, boardcards]) => {
+            // Convert boardname to lowercase key for comparison with view's boards
+            const boardKey = boardname.toLowerCase();
+            const isActive = showAllBoards || viewBoards.includes(boardKey);
+            // Capitalize board name for display
+            const displayBoardName = boardname.charAt(0).toUpperCase() + boardname.slice(1);
+            console.log(
+              `[DEBUG] Board: ${boardname}, boardKey: ${boardKey}, isActive: ${isActive}, cardCount: ${boardcards.length}`,
+            );
+
+            return (
+              <ErrorBoundary key={boardname}>
+                <Flexbox direction="col" gap="2">
+                  {isActive && (
+                    <>
+                      {showBoardHeaders && boardcards.length > 0 && (
+                        <div className="mt-6 mb-4">
+                          <h2 className="text-3xl font-bold text-center mb-3">{displayBoardName}</h2>
+                          <hr className="border-t border-border w-full" />
+                        </div>
+                      )}
+                      {boardcards.length === 0 && !showAllBoards && (
+                        <Text semibold md className="text-center mt-4">
+                          This board appears to be empty!
+                        </Text>
+                      )}
                       {
-                        table: <TableView cards={boardcards} />,
-                        spoiler: <VisualSpoiler cards={boardcards} />,
-                        curve: <CurveView cards={boardcards} />,
-                        list: <ListView cards={boardcards} />,
-                        stacks: (
-                          <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
-                        ),
-                      }[cubeView]
-                    }
-                  </>
-                )}
-              </Flexbox>
-            </ErrorBoundary>
-          );
-        })
-        .reverse()}
+                        {
+                          table: <TableView cards={boardcards} />,
+                          spoiler: <VisualSpoiler cards={boardcards} />,
+                          curve: <CurveView cards={boardcards} />,
+                          list: <ListView cards={boardcards} />,
+                          stacks: (
+                            <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
+                          ),
+                        }[cubeView]
+                      }
+                    </>
+                  )}
+                </Flexbox>
+              </ErrorBoundary>
+            );
+          })
+          .reverse();
+      })()}
     </>
   );
 };

@@ -37,11 +37,11 @@ const Asfans: React.FC = () => {
 
   const asfans = useMemo(
     () =>
-      Object.entries(sortIntoGroups(cardsWithAsfan, sort)).map(([label, cardsInGroup]) => ({
+      Object.entries(sortIntoGroups(cardsWithAsfan, sort, false, cube)).map(([label, cardsInGroup]) => ({
         label,
         asfan: (cardsInGroup as Card[]).reduce((acc, { asfan }) => acc + (asfan || 0), 0),
       })),
-    [cardsWithAsfan, sort],
+    [cardsWithAsfan, sort, cube],
   );
 
   return (

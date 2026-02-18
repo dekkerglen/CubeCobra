@@ -6,7 +6,6 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   DownloadIcon,
-  GearIcon,
   GlobeIcon,
   HeartFillIcon,
   HeartIcon,
@@ -19,7 +18,7 @@ import {
 } from '@primer/octicons-react';
 import { cardIsToken, cardName, cardPrice, cardPriceCardKingdom, cardPriceManaPool } from '@utils/cardutil';
 import Cube from '@utils/datatypes/Cube';
-import { getCubeCardCountSnippet, getCubeId } from '@utils/Util';
+import { getCubeCardCountSnippet } from '@utils/Util';
 
 import BaseUrlContext from '../../contexts/BaseUrlContext';
 import { CSRFContext } from '../../contexts/CSRFContext';
@@ -41,27 +40,15 @@ import CubeIdModal from '../cube/CubeIdModal';
 import Form from '../Form';
 import { SafeMarkdown } from '../Markdown';
 import ArenaExportModal from '../modals/ArenaExportModal';
-import BoardSettingsModal from '../modals/BoardSettingsModal';
 import ConfirmActionModal from '../modals/ConfirmActionModal';
 import CubeCompareModal from '../modals/CubeCompareModal';
-import CubeOverviewModal from '../modals/CubeOverviewModal';
-import CubeSettingsModal from '../modals/CubeSettingsModal';
-import CustomSortsModal from '../modals/CustomSortsModal';
-import DeleteCubeModal from '../modals/DeleteCubeModal';
 import FollowersModal from '../modals/FollowersModal';
-import ViewSettingsModal from '../modals/ViewSettingsModal';
 import withModal from '../WithModal';
 
 const ArenaExportModalItem = withModal('button', ArenaExportModal);
 const CompareModalButton = withModal('button', CubeCompareModal);
 const ShareCubeButton = withModal('button', CubeIdModal);
 const ReportCubeButton = withModal(Link, ConfirmActionModal);
-const CubeOverviewModalLink = withModal(Link, CubeOverviewModal);
-const CubeSettingsModalLink = withModal(Link, CubeSettingsModal);
-const BoardSettingsModalLink = withModal(Link, BoardSettingsModal);
-const ViewSettingsModalLink = withModal(Link, ViewSettingsModal);
-const CustomSortsModalLink = withModal(Link, CustomSortsModal);
-const DeleteCubeModalLink = withModal(Link, DeleteCubeModal);
 const FollowersModalLink = withModal(Link, FollowersModal);
 
 interface CubeHeroProps {
@@ -100,9 +87,10 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const [moreMenuAlign, setMoreMenuAlign] = React.useState<'left' | 'right'>('left');
 
-  const { showCustomImages, toggleShowCustomImages } = useContext(DisplayContext);
+  const { showCustomImages: _showCustomImages, toggleShowCustomImages: _toggleShowCustomImages } =
+    useContext(DisplayContext);
 
-  const { hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
+  const { hasCustomImages: _hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
 
   // Update More menu alignment based on position
   React.useEffect(() => {
@@ -746,79 +734,6 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
 
             {/* Icon column on the right */}
             <div className="flex flex-col gap-1">
-              {isCubeOwner && (
-                <Dropdown
-                  trigger={
-                    <button
-                      className="p-1 rounded-full bg-bg-secondary/80 hover:bg-bg-active transition-colors backdrop-blur-sm flex items-center justify-center"
-                      style={{ width: '32px', height: '32px' }}
-                    >
-                      <GearIcon size={20} className="text-white" />
-                    </button>
-                  }
-                  align="right"
-                  minWidth="16rem"
-                >
-                  <Flexbox direction="col" gap="2" className="p-3">
-                    {cube.cardCount > 0 ? (
-                      <CubeOverviewModalLink
-                        modalprops={{
-                          cube: cube,
-                        }}
-                        className="!text-text hover:!text-link-active"
-                      >
-                        Edit Overview
-                      </CubeOverviewModalLink>
-                    ) : (
-                      <Tooltip text="Please add at least one card to the cube in order to edit the overview. This is a spam prevention mechanism.">
-                        <span className="!text-text opacity-50 cursor-not-allowed">Edit Overview</span>
-                      </Tooltip>
-                    )}
-                    <CubeSettingsModalLink
-                      modalprops={{ addAlert, onCubeUpdate: () => {} }}
-                      className="!text-text hover:!text-link-active"
-                    >
-                      Edit Settings
-                    </CubeSettingsModalLink>
-                    <BoardSettingsModalLink
-                      modalprops={{ cube, addAlert }}
-                      className="!text-text hover:!text-link-active"
-                    >
-                      Edit Boards
-                    </BoardSettingsModalLink>
-                    <ViewSettingsModalLink
-                      modalprops={{ cube, addAlert }}
-                      className="!text-text hover:!text-link-active"
-                    >
-                      Edit Views
-                    </ViewSettingsModalLink>
-                    <CustomSortsModalLink
-                      modalprops={{ cube, addAlert }}
-                      className="!text-text hover:!text-link-active"
-                    >
-                      Custom Sorts
-                    </CustomSortsModalLink>
-                    <Link
-                      href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
-                      className="!text-text hover:!text-link-active"
-                    >
-                      Restore
-                    </Link>
-                    <DeleteCubeModalLink modalprops={{ cube }} className="!text-text hover:!text-link-active">
-                      Delete Cube
-                    </DeleteCubeModalLink>
-                    {hasCustomImages && (
-                      <>
-                        <div className="border-t border-border my-1"></div>
-                        <Link onClick={toggleShowCustomImages} className="!text-text hover:!text-link-active">
-                          {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
-                        </Link>
-                      </>
-                    )}
-                  </Flexbox>
-                </Dropdown>
-              )}
-
               {/* Chevron control */}
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
@@ -1198,70 +1113,8 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
           </div>
         </>
 
-        {/* Gear and Chevron icons at top right */}
+        {/* Chevron icon at top right */}
         <div className="absolute top-4 right-4 flex flex-col gap-2">
-          {isCubeOwner && (
-            <Dropdown
-              trigger={
-                <button
-                  className="p-2 rounded-full bg-bg-secondary/80 hover:bg-bg-active transition-colors backdrop-blur-sm flex items-center justify-center"
-                  style={{ width: '40px', height: '40px' }}
-                >
-                  <GearIcon size={24} className="text-white" />
-                </button>
-              }
-              align="right"
-              minWidth="16rem"
-            >
-              <Flexbox direction="col" gap="2" className="p-3">
-                {cube.cardCount > 0 ? (
-                  <CubeOverviewModalLink
-                    modalprops={{
-                      cube: cube,
-                    }}
-                    className="!text-text hover:!text-link-active"
-                  >
-                    Edit Overview
-                  </CubeOverviewModalLink>
-                ) : (
-                  <Tooltip text="Please add at least one card to the cube in order to edit the overview. This is a spam prevention mechanism.">
-                    <span className="!text-text opacity-50 cursor-not-allowed">Edit Overview</span>
-                  </Tooltip>
-                )}
-                <CubeSettingsModalLink
-                  modalprops={{ addAlert, onCubeUpdate: () => {} }}
-                  className="!text-text hover:!text-link-active"
-                >
-                  Edit Settings
-                </CubeSettingsModalLink>
-                <BoardSettingsModalLink modalprops={{ cube, addAlert }} className="!text-text hover:!text-link-active">
-                  Edit Boards
-                </BoardSettingsModalLink>
-                <ViewSettingsModalLink modalprops={{ cube, addAlert }} className="!text-text hover:!text-link-active">
-                  Edit Views
-                </ViewSettingsModalLink>
-                <CustomSortsModalLink className="!text-text hover:!text-link-active">Custom Sorts</CustomSortsModalLink>
-                <Link
-                  href={`/cube/restore/${encodeURIComponent(getCubeId(cube))}`}
-                  className="!text-text hover:!text-link-active"
-                >
-                  Restore
-                </Link>
-                <DeleteCubeModalLink modalprops={{ cube }} className="!text-text hover:!text-link-active">
-                  Delete Cube
-                </DeleteCubeModalLink>
-                {hasCustomImages && (
-                  <>
-                    <div className="border-t border-border my-1"></div>
-                    <Link onClick={toggleShowCustomImages} className="!text-text hover:!text-link-active">
-                      {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
-                    </Link>
-                  </>
-                )}
-              </Flexbox>
-            </Dropdown>
-          )}
-
           {/* Chevron control */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}

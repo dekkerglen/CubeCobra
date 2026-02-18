@@ -494,11 +494,11 @@ const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
     .concat(['Other']);
 };
 
-export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): string[] {
+export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean, cubeObj?: Cube | null): string[] {
   let ret: string[] = [];
 
-  // Check if this is a custom sort first
-  const customSort = getCustomSort(cube, sort);
+  // Check if this is a custom sort first (prefer cubeObj which has customSorts)
+  const customSort = getCustomSort(cubeObj ?? cube, sort);
   if (customSort) {
     return customSort.categories.map((cat) => cat.label);
   }
@@ -979,15 +979,20 @@ export function formatLabel(label: string | undefined): string {
 }
 
 // Get labels in string form.
-export function getLabels(cube: Card[] | null, sort: string, showOther = false): string[] {
-  return getLabelsRaw(cube, sort, showOther).map(formatLabel);
+export function getLabels(cube: Card[] | null, sort: string, showOther = false, cubeObj?: Cube | null): string[] {
+  return getLabelsRaw(cube, sort, showOther, cubeObj).map(formatLabel);
 }
 
-export function sortGroupsOrdered(cards: Card[], sort: string, showOther: boolean): [string, Card[]][] {
-  const labels = getLabelsRaw(cards, sort, showOther);
+export function sortGroupsOrdered(
+  cards: Card[],
+  sort: string,
+  showOther: boolean,
+  cubeObj?: Cube | null,
+): [string, Card[]][] {
+  const labels = getLabelsRaw(cards, sort, showOther, cubeObj);
   const allCardLabels: [Card, string[]][] = cards.map((card) => [
     card,
-    cardGetLabels(card, sort, showOther, cards).map((label) => {
+    cardGetLabels(card, sort, showOther, cubeObj ?? cards).map((label) => {
       if (labels.includes(label)) {
         return label;
       }
@@ -1010,27 +1015,56 @@ export function sortGroupsOrdered(cards: Card[], sort: string, showOther: boolea
   return labels.filter((label) => byLabel[label]).map((label) => [formatLabel(label), byLabel[label]!]);
 }
 
-export function sortIntoGroups(cards: Card[], sort: string, showOther = false): Record<string, Card[]> {
-  return fromEntries(sortGroupsOrdered(cards, sort, showOther));
+export function sortIntoGroups(
+  cards: Card[],
+  sort: string,
+  showOther = false,
+  cubeObj?: Cube | null,
+): Record<string, Card[]> {
+  return fromEntries(sortGroupsOrdered(cards, sort, showOther, cubeObj));
 }
 
 type DeepSorted = Card[] | [string, DeepSorted][];
 
-export function sortDeep(cards: Card[], showOther: boolean, last: string, ...sorts: string[]): DeepSorted {
+function sortDeepImpl(
+  cards: Card[],
+  showOther: boolean,
+  last: string,
+  sorts: string[],
+  cubeObj?: Cube | null,
+): DeepSorted {
   if (sorts.length === 0) {
     return [...cards].sort(SortFunctions[last]);
   }
   const [first, ...rest] = sorts;
-  const nextSort = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther);
+  const nextSort = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther, cubeObj);
   const result: [string, DeepSorted][] = [];
   for (const [label, group] of nextSort) {
     if (rest.length > 0) {
-      result.push([label, sortDeep(group, showOther, last, ...rest)]);
+      result.push([label, sortDeepImpl(group, showOther, last, rest, cubeObj)]);
     } else {
       result.push([label, group.sort(SortFunctions[last])]);
     }
   }
   return result;
+}
+
+export function sortDeep(cards: Card[], showOther: boolean, last: string, ...sorts: string[]): DeepSorted;
+export function sortDeep(
+  cards: Card[],
+  showOther: boolean,
+  last: string,
+  sorts: string[],
+  cubeObj?: Cube | null,
+): DeepSorted;
+export function sortDeep(cards: Card[], showOther: boolean, last: string, ...args: any[]): DeepSorted {
+  // Detect whether called with array-of-sorts + cubeObj, or with ...rest string sorts
+  if (args.length > 0 && Array.isArray(args[0])) {
+    // Called as sortDeep(cards, showOther, last, sorts[], cubeObj?)
+    return sortDeepImpl(cards, showOther, last, args[0] as string[], args[1] as Cube | null | undefined);
+  }
+  // Called as sortDeep(cards, showOther, last, ...sorts)
+  return sortDeepImpl(cards, showOther, last, args as string[]);
 }
 
 function isSimpleGroup(groups: DeepSorted): groups is Card[] {
@@ -1069,8 +1103,9 @@ export function sortForDownload(
   tertiary: string = 'Mana Value',
   quaternary: string = 'Alphabetical',
   showOther: boolean = false,
+  cubeObj?: Cube | null,
 ): Card[] {
-  const groups = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
+  const groups = sortDeep(cards, showOther, quaternary, [primary, secondary, tertiary], cubeObj);
   return sortedCards(groups);
 }
 

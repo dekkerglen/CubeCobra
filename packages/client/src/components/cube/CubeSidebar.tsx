@@ -4,6 +4,7 @@ import {
   BookIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  GearIcon,
   GraphIcon,
   ListUnorderedIcon,
   PlayIcon,
@@ -19,6 +20,8 @@ import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
+import SettingsViewContext from '../../contexts/SettingsViewContext';
+import UserContext from '../../contexts/UserContext';
 import { Flexbox } from '../base/Layout';
 import ScrollShadowContainer from '../base/ScrollShadowContainer';
 
@@ -37,14 +40,14 @@ interface CubeSidebarProps {
 }
 
 // Generate navigation items dynamically based on cube's views
-const getNavigationItems = (cube: Cube): NavigationItem[] => {
+const getNavigationItems = (cube: Cube, isCubeOwner: boolean): NavigationItem[] => {
   const views = getViewDefinitions(cube);
   const viewSubItems = views.map((view) => ({
     label: view.name,
     key: viewNameToKey(view.name),
   }));
 
-  return [
+  const baseItems: NavigationItem[] = [
     {
       label: 'Menu',
       key: 'menu',
@@ -106,12 +109,34 @@ const getNavigationItems = (cube: Cube): NavigationItem[] => {
       ],
     },
   ];
+
+  // Add Settings section only for cube owners
+  if (isCubeOwner) {
+    baseItems.push({
+      label: 'Settings',
+      href: '/cube/settings',
+      key: 'settings',
+      icon: GearIcon,
+      subItems: [
+        { label: 'Overview', key: 'overview' },
+        { label: 'Options', key: 'options' },
+        { label: 'Boards and Views', key: 'boards-and-views' },
+        { label: 'Custom Sorts', key: 'custom-sorts' },
+        { label: 'Draft Formats', key: 'draft-formats' },
+        { label: 'Restore', key: 'restore' },
+      ],
+    });
+  }
+
+  return baseItems;
 };
 
 const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, controls }) => {
   // Use cube from context to pick up live updates (e.g., when views are modified)
   const { cube } = React.useContext(CubeContext);
-  const navigationItems = React.useMemo(() => getNavigationItems(cube), [cube]);
+  const user = React.useContext(UserContext);
+  const isCubeOwner = !!user && cube.owner?.id === user.id;
+  const navigationItems = React.useMemo(() => getNavigationItems(cube, isCubeOwner), [cube, isCubeOwner]);
   const { cubeSidebarExpanded, toggleCubeSidebarExpanded } = React.useContext(DisplayContext);
   const [hoveredItem, setHoveredItem] = React.useState<string | null>(null);
   const [dropdownVisible, setDropdownVisible] = React.useState(false);
@@ -132,6 +157,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
   const analysisViewContext = React.useContext(AnalysisViewContext);
   const playtestViewContext = React.useContext(PlaytestViewContext);
   const recordsViewContext = React.useContext(RecordsViewContext);
+  const settingsViewContext = React.useContext(SettingsViewContext);
 
   const toggleSidebar = () => {
     toggleCubeSidebarExpanded();
@@ -506,6 +532,43 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                   );
                                 }
 
+                                // Special handling for Settings sub-items
+                                if (item.key === 'settings' && !subItem.href) {
+                                  const settingsHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+                                  const isActive = activeLink === subItem.key;
+
+                                  const handleClick = (e: React.MouseEvent) => {
+                                    // If already on settings page, update view via context
+                                    if (
+                                      settingsViewContext &&
+                                      (activeLink === 'settings' ||
+                                        ['overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(
+                                          activeLink,
+                                        ))
+                                    ) {
+                                      e.preventDefault();
+                                      settingsViewContext.setView(subItem.key);
+                                    }
+                                  };
+
+                                  return (
+                                    <a
+                                      key={subItem.key}
+                                      href={settingsHref}
+                                      onClick={handleClick}
+                                      className={classNames(
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
+                                        {
+                                          'bg-bg-active font-bold text-text': isActive,
+                                          'font-normal text-text': !isActive,
+                                        },
+                                      )}
+                                    >
+                                      {subItem.label}
+                                    </a>
+                                  );
+                                }
+
                                 return (
                                   <div key={subItem.key}>
                                     {subFullHref ? (
@@ -676,6 +739,21 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                           ) {
                             e.preventDefault();
                             analysisViewContext.setView(subItem.key);
+                          }
+                        };
+                      } else if (item.key === 'settings') {
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+
+                        handleClick = (e: React.MouseEvent) => {
+                          if (
+                            settingsViewContext &&
+                            (activeLink === 'settings' ||
+                              ['overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(
+                                activeLink,
+                              ))
+                          ) {
+                            e.preventDefault();
+                            settingsViewContext.setView(subItem.key);
                           }
                         };
                       } else if (subItem.href) {

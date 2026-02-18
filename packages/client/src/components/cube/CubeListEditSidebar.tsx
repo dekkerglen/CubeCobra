@@ -290,15 +290,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           </Flexbox>
 
           <Collapse
-            isOpen={
-              Object.keys(changes)
-                .filter((key) => key !== 'version')
-                .some((board) => {
-                  const boardChanges = changes[board];
-                  if (!boardChanges || typeof boardChanges !== 'object') return false;
-                  return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
-                })
-            }
+            isOpen={Object.keys(changes)
+              .filter((key) => key !== 'version')
+              .some((board) => {
+                const boardChanges = changes[board];
+                if (!boardChanges || typeof boardChanges !== 'object') return false;
+                return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+              })}
           >
             <Flexbox direction="col" gap="3">
               <Changelist />

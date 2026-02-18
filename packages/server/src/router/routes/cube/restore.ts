@@ -64,7 +64,7 @@ export const restoreHandler = async (req: Request, res: Response) => {
 
     if (!versionId) {
       req.flash('danger', 'Version ID is required');
-      return redirect(req, res, `/cube/restore/${cubeId}`);
+      return redirect(req, res, `/cube/settings/${cubeId}?view=restore`);
     }
 
     const cube = await cubeDao.getById(cubeId);
@@ -116,7 +116,7 @@ export const restoreHandler = async (req: Request, res: Response) => {
     await changelogDao.createChangelog(changelog, cube.id);
 
     req.flash('success', 'Cube successfully restored to the selected version');
-    return redirect(req, res, `/cube/list/${cubeId}`);
+    return redirect(req, res, `/cube/settings/${cubeId}?view=restore`);
   } catch (err) {
     req.flash('danger', `Failed to restore cube: ${(err as Error).message}`);
     return handleRouteError(req, res, err as Error, `/cube/restore/${req.params.id}`);

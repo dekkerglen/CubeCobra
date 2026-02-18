@@ -1,52 +1,79 @@
-import { BoardDefinition, boardNameToKey, validateBoardDefinitions } from '@utils/datatypes/Cube';
+import {
+  BoardDefinition,
+  boardNameToKey,
+  validateBoardDefinitions,
+  validateViewDefinitions,
+} from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import cloudwatch from 'serverutils/cloudwatch';
 import { isCubeViewable } from 'serverutils/cubefn';
+import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 
-export const updateBoardsHandler = async (req: Request, res: Response) => {
+export const updateBoardsAndViewsHandler = async (req: Request, res: Response) => {
   try {
-    const { boards } = req.body as { boards: BoardDefinition[] };
+    // Parse JSON from form fields
+    const boardsJson = req.body.boards;
+    const viewsJson = req.body.views;
+
+    let boards: BoardDefinition[];
+    let views: any[];
+
+    try {
+      boards = JSON.parse(boardsJson);
+      views = JSON.parse(viewsJson);
+    } catch (_err) {
+      req.flash('danger', 'Invalid data format');
+      return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
+    }
 
     // Validate boards
-    const validation = validateBoardDefinitions(boards);
-    if (!validation.valid) {
-      return res.status(400).json({ success: false, message: validation.error || 'Invalid board configuration' });
+    const boardValidation = validateBoardDefinitions(boards);
+    if (!boardValidation.valid) {
+      req.flash('danger', boardValidation.error || 'Invalid board configuration');
+      return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
     }
 
     // Ensure mainboard always exists
     const hasMainboard = boards.some((b) => boardNameToKey(b.name) === 'mainboard');
     if (!hasMainboard) {
-      return res.status(400).json({
-        success: false,
-        message: 'Mainboard is required and cannot be removed.',
-      });
+      req.flash('danger', 'Mainboard is required and cannot be removed.');
+      return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
+    }
+
+    // Validate views
+    const viewValidation = validateViewDefinitions(views);
+    if (!viewValidation.valid) {
+      req.flash('danger', viewValidation.error || 'Invalid view configuration');
+      return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
     }
 
     const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user)) {
-      return res.status(404).json({ success: false, message: 'Cube not found.' });
+      req.flash('danger', 'Cube not found.');
+      return redirect(req, res, '/404');
     }
 
     if (!cube || cube.owner.id !== req.user!.id) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
+      req.flash('danger', 'Unauthorized');
+      return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
     }
 
     // Check if any boards are referenced by views
     const boardKeys = boards.map((b) => boardNameToKey(b.name));
     const boardKeysSet = new Set(boardKeys);
-    const views = cube.views || [];
 
     for (const view of views) {
       for (const viewBoard of view.boards) {
         if (!boardKeysSet.has(viewBoard)) {
-          return res.status(400).json({
-            success: false,
-            message: `Cannot remove board referenced by view "${view.name}". Update or remove the view first.`,
-          });
+          req.flash(
+            'danger',
+            `Cannot remove board referenced by view "${view.name}". Update or remove the view first.`,
+          );
+          return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
         }
       }
     }
@@ -95,10 +122,11 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
       cloudwatch.error(
         `Prevented data loss: Board update would have deleted all ${oldCardCount} cards for cube ${cube.id}`,
       );
-      return res.status(500).json({
-        success: false,
-        message: 'Internal error: Board update would result in data loss. Please try again or contact support.',
-      });
+      req.flash(
+        'danger',
+        'Internal error: Board update would result in data loss. Please try again or contact support.',
+      );
+      return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
     }
 
     if (newCardCount !== oldCardCount) {
@@ -108,14 +136,16 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
     // Save the reorganized cards structure
     await cubeDao.updateCards(cube.id, newCards);
 
-    return res.status(200).json({
-      success: true,
-      message: 'Boards updated successfully.',
-      redirect: `/cube/settings/${cube.id}?view=boards-and-views`,
-    });
+    // Update the cube's views
+    cube.views = views;
+    await cubeDao.update(cube);
+
+    req.flash('success', 'Boards and views updated successfully.');
+    return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
   } catch (err) {
-    req.logger.error('Error updating boards:', err);
-    return res.status(500).json({ success: false, message: 'Error updating boards: ' + (err as Error).message });
+    req.logger.error('Error updating boards and views:', err);
+    req.flash('danger', 'Error updating boards and views: ' + (err as Error).message);
+    return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
   }
 };
 
@@ -123,6 +153,6 @@ export const routes = [
   {
     path: '/:id',
     method: 'post',
-    handler: [csrfProtection, ensureAuth, updateBoardsHandler],
+    handler: [csrfProtection, ensureAuth, updateBoardsAndViewsHandler],
   },
 ];

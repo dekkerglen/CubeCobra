@@ -271,11 +271,7 @@ const Changelist: React.FC = () => {
     .filter((key) => key !== 'version')
     .reduce((total, board) => {
       const boardChanges = changes[board] as BoardChanges | undefined;
-      return (
-        total +
-        (boardChanges?.adds?.length || 0) +
-        (boardChanges?.swaps?.length || 0)
-      );
+      return total + (boardChanges?.adds?.length || 0) + (boardChanges?.swaps?.length || 0);
     }, 0);
 
   return (
@@ -313,7 +309,7 @@ const Changelist: React.FC = () => {
             console.log(`Changelist - board: ${board}, no changes, returning null`);
             return null;
           }
-          
+
           console.log(`Changelist - board: ${board}, rendering JSX`);
           return (
             <div key={board} className="mb-2">

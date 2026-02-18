@@ -10,6 +10,7 @@ import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
+import SettingsViewContext from '../../contexts/SettingsViewContext';
 
 interface MobileSubNavProps {
   cube: Cube;
@@ -30,6 +31,7 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
   const analysisViewContext = useContext(AnalysisViewContext);
   const playtestViewContext = useContext(PlaytestViewContext);
   const recordsViewContext = useContext(RecordsViewContext);
+  const settingsViewContext = useContext(SettingsViewContext);
 
   // Get view definitions for determining navigation
   const views = useMemo(() => getViewDefinitions(cube), [cube]);
@@ -83,6 +85,15 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       { key: 'playtest-data', label: 'Playtest Data' },
       { key: 'tokens', label: 'Tokens' },
       { key: 'combos', label: 'Combos' },
+    ];
+  } else if (['settings', 'overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(activeLink)) {
+    parentKey = 'settings';
+    subItems = [
+      { key: 'overview', label: 'Overview' },
+      { key: 'options', label: 'Options' },
+      { key: 'boards-and-views', label: 'Boards and Views' },
+      { key: 'custom-sorts', label: 'Custom Sorts' },
+      { key: 'restore', label: 'Restore' },
     ];
   }
 
@@ -153,6 +164,15 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       }
       return;
     }
+
+    // Special handling for Settings sub-items
+    if (parentKey === 'settings' && settingsViewContext) {
+      if (['settings', 'overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(activeLink)) {
+        e.preventDefault();
+        settingsViewContext.setView(subItem.key);
+      }
+      return;
+    }
   };
 
   // Generate href for each subitem
@@ -172,6 +192,8 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
         return `/cube/records/${cubeId}?view=${subItem.key}`;
       case 'analysis':
         return `/cube/analysis/${cubeId}?view=${subItem.key}`;
+      case 'settings':
+        return `/cube/settings/${cubeId}?view=${subItem.key}`;
       default:
         return '#';
     }

@@ -112,6 +112,11 @@ export interface UnhydratedCube {
   basics: string[];
   views?: ViewDefinition[]; // View configurations for displaying cube content
   customSorts?: any[]; // Custom sort definitions
+  disableDraft?: boolean; // Disable standard draft format
+  disableSealed?: boolean; // Disable sealed format
+  disableGrid?: boolean; // Disable grid draft format
+  disableMultiplayer?: boolean; // Disable multiplayer draft format
+  basicsBoard?: string; // Board to use for basics in draft (default: 'Basics', or 'None' for no basics)
   tags: any[];
   keywords: string[];
   cardCount: number;
@@ -234,6 +239,12 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       disableAlerts: item.disableAlerts,
       basics: item.basics,
       views: item.views,
+      customSorts: item.customSorts,
+      disableDraft: item.disableDraft,
+      disableSealed: item.disableSealed,
+      disableGrid: item.disableGrid,
+      disableMultiplayer: item.disableMultiplayer,
+      basicsBoard: item.basicsBoard,
       tags: item.tags,
       keywords: item.keywords,
       cardCount: item.cardCount,
@@ -655,7 +666,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       // Add details to cards (after saving to S3)
       for (const [board, list] of Object.entries(cards)) {
         if (board !== 'id') {
-          cloudwatch.info(`[CARDS] Adding details to board: ${board}, count: ${(list as any[]).length}`);
           this.addDetails(list as any[]);
           for (let i = 0; i < (list as any[]).length; i++) {
             (list as any[])[i].index = i;
@@ -664,7 +674,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         }
       }
 
-      cloudwatch.info(`[CARDS] Returning cards for cube ${id} with boards: ${Object.keys(cards).join(', ')}`);
       return cards;
     } catch (e: any) {
       // If the error is NoSuchKey (file doesn't exist), return empty default
