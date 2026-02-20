@@ -1,3 +1,7 @@
+import Cube from '@utils/datatypes/Cube';
+
+import { markdownToText } from './markdown';
+
 interface MetaTag {
   property: string;
   content: string;
@@ -57,6 +61,10 @@ const generateMeta = (
       content: url,
     },
   ];
+};
+
+export const generateCubeMetadata = async (cube: Cube, currentUrl: string) => {
+  return generateMeta(`Cube Cobra: ${cube.name}`, await markdownToText(cube.brief), cube.image.uri, currentUrl);
 };
 
 export default generateMeta;

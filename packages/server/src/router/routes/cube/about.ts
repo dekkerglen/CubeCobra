@@ -3,7 +3,7 @@ import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getIdsFromName } from 'serverutils/carddb';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
-import generateMeta from 'serverutils/meta';
+import { generateCubeMetadata } from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
 
@@ -93,12 +93,7 @@ export const aboutHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - About`,
-        metadata: generateMeta(
-          `Cube Cobra: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/about/${req.params.id}`,
-        ),
+        metadata: await generateCubeMetadata(cube, `${baseUrl}/cube/about/${req.params.id}`),
         noindex:
           cube.visibility === CUBE_VISIBILITY.PRIVATE ||
           cube.visibility === CUBE_VISIBILITY.UNLISTED ||
