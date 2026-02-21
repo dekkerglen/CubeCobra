@@ -147,7 +147,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             </Flexbox>
             <Flexbox direction="row" gap="2" alignItems="center">
               <Checkbox label="Show All Boards" checked={showAllBoards} setChecked={setShowAllBoards} />
-              <Tooltip text="Display both mainboard and maybeboard at the same time.">
+              <Tooltip text="Display all boards at the same time, regardless of the current view's board selection.">
                 <QuestionIcon size={16} className="hidden md:inline" />
               </Tooltip>
             </Flexbox>
@@ -228,7 +228,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               </Flexbox>
               <Flexbox direction="row" gap="2" alignItems="center">
                 <Checkbox label="Show All Boards" checked={showAllBoards} setChecked={setShowAllBoards} />
-                <Tooltip text="Display both mainboard and maybeboard at the same time.">
+                <Tooltip text="Display all boards at the same time, regardless of the current view's board selection.">
                   <QuestionIcon size={16} />
                 </Tooltip>
               </Flexbox>

@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
-import { EyeIcon, PencilIcon, ZapIcon } from '@primer/octicons-react';
+import { EyeIcon, FileMediaIcon, PencilIcon, ZapIcon } from '@primer/octicons-react';
 import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
@@ -50,7 +50,6 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
     useContext(DisplayContext);
   const formRef = useRef<HTMLFormElement>(null);
-  const [buildDropdownOpen, setBuildDropdownOpen] = React.useState(false);
   const [displayDropdownOpen, setDisplayDropdownOpen] = React.useState(false);
   const formData = useMemo<Record<string, string>>(
     () => ({
@@ -124,43 +123,26 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
 
   return (
     <Flexbox direction="row" gap="2" justify="start" alignItems="center" className="w-full mt-2 px-2" wrap="wrap">
-      <Dropdown
-        trigger={
-          <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
-            <ZapIcon size={16} />
-            Build
-          </Link>
-        }
-        align="left"
-        minWidth="16rem"
-        isOpen={buildDropdownOpen}
-        setIsOpen={setBuildDropdownOpen}
+      <BasicsModalLink
+        href="#"
+        modalprops={{
+          basics: basics,
+          addBasics,
+          deck: mainboard.flat(2),
+          cards: cards,
+        }}
+        className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
       >
-        <Flexbox direction="col" gap="2" className="p-3">
-          <BasicsModalLink
-            href="#"
-            modalprops={{
-              basics: basics,
-              addBasics,
-              deck: mainboard.flat(2),
-              cards: cards,
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-            onClick={() => setBuildDropdownOpen(false)}
-          >
-            Add Basic Lands
-          </BasicsModalLink>
-          <Link
-            onClick={() => {
-              autoBuildDeck();
-              setBuildDropdownOpen(false);
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-          >
-            Build for Me
-          </Link>
-        </Flexbox>
-      </Dropdown>
+        <FileMediaIcon size={16} />
+        Add Basics
+      </BasicsModalLink>
+      <Link
+        onClick={() => autoBuildDeck()}
+        className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+      >
+        <ZapIcon size={16} />
+        Autobuild
+      </Link>
       <Dropdown
         trigger={
           <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">

@@ -392,12 +392,11 @@ const GroupModal: React.FC<GroupModalProps> = ({
           </Col>
         </Row>
       </ModalBody>
-      <ModalFooter className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-2">
-        <Button block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
+      <ModalFooter className="flex flex-col gap-2 sm:flex-row">
+        <Button color="primary" disabled={!fieldsChanged} onClick={applyChanges} className="sm:whitespace-nowrap">
           Apply all
         </Button>
         <Button
-          block
           color="danger"
           onClick={() => {
             removeAll();
@@ -406,10 +405,11 @@ const GroupModal: React.FC<GroupModalProps> = ({
               setRightSidebarMode('edit');
             }
           }}
+          className="sm:whitespace-nowrap"
         >
           Remove all
         </Button>
-        <div className="col-span-2 sm:flex-1 w-full">
+        <div className="flex-1 min-w-0">
           <BoardMoveControl
             targetBoard={targetBoard}
             setTargetBoard={setTargetBoard}
@@ -433,14 +433,14 @@ const GroupModal: React.FC<GroupModalProps> = ({
         </div>
         {anyCardRemoved && (
           <>
-            <Button block color="primary" onClick={revertRemoval}>
+            <Button color="primary" onClick={revertRemoval} className="sm:whitespace-nowrap">
               Revert removal
             </Button>
           </>
         )}
         {anyCardChanged && (
           <>
-            <Button block color="primary" onClick={bulkRevertEditAll}>
+            <Button color="primary" onClick={bulkRevertEditAll} className="sm:whitespace-nowrap">
               Revert edits
             </Button>
           </>

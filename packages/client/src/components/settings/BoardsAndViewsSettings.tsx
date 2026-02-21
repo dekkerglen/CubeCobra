@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { ChevronDownIcon, ChevronUpIcon, GrabberIcon, PlusIcon, TrashIcon } from '@primer/octicons-react';
+import { GrabberIcon, PencilIcon, PlusIcon, TrashIcon } from '@primer/octicons-react';
 import {
   BoardDefinition,
   boardNameToKey,
@@ -21,6 +21,7 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Checkbox from 'components/base/Checkbox';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
@@ -80,7 +81,8 @@ const BoardsAndViewsSettings: React.FC = () => {
 
   const [boards, setBoards] = useState<BoardDefinition[]>(getInitialBoards);
   const [views, setViews] = useState<ViewDefinition[]>(getInitialViews);
-  const [collapsedViews, setCollapsedViews] = useState<Set<number>>(new Set());
+  const [editingViewIndex, setEditingViewIndex] = useState<number | null>(null);
+  const [editingViewDraft, setEditingViewDraft] = useState<ViewDefinition | null>(null);
 
   const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
@@ -188,12 +190,58 @@ const BoardsAndViewsSettings: React.FC = () => {
     setError('');
   };
 
-  const toggleBoardInView = (viewIndex: number, boardKey: string) => {
-    const view = views[viewIndex];
-    const newBoards = view.boards.includes(boardKey)
-      ? view.boards.filter((b) => b !== boardKey)
-      : [...view.boards, boardKey];
-    updateView(viewIndex, { boards: newBoards });
+  const openEditModal = (index: number) => {
+    setEditingViewIndex(index);
+    setEditingViewDraft({
+      ...views[index],
+      defaultSorts: [...views[index].defaultSorts],
+      boards: [...views[index].boards],
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditingViewIndex(null);
+    setEditingViewDraft(null);
+  };
+
+  const applyEditModal = () => {
+    if (editingViewIndex !== null && editingViewDraft) {
+      const newViews = [...views];
+      newViews[editingViewIndex] = editingViewDraft;
+      setViews(newViews);
+      setError('');
+    }
+    closeEditModal();
+  };
+
+  const updateDraft = (updates: Partial<ViewDefinition>) => {
+    if (editingViewDraft) {
+      setEditingViewDraft({ ...editingViewDraft, ...updates });
+    }
+  };
+
+  const toggleBoardInDraft = (boardKey: string) => {
+    if (!editingViewDraft) return;
+    const newBoards = editingViewDraft.boards.includes(boardKey)
+      ? editingViewDraft.boards.filter((b) => b !== boardKey)
+      : [...editingViewDraft.boards, boardKey];
+    setEditingViewDraft({ ...editingViewDraft, boards: newBoards });
+  };
+
+  const handleDraftBoardsSortEnd = (event: any) => {
+    if (!editingViewDraft) return;
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = editingViewDraft.boards.findIndex((key) => key === active.id);
+    const newIndex = editingViewDraft.boards.findIndex((key) => key === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const newBoards = [...editingViewDraft.boards];
+      const [removed] = newBoards.splice(oldIndex, 1);
+      newBoards.splice(newIndex, 0, removed);
+      setEditingViewDraft({ ...editingViewDraft, boards: newBoards });
+    }
   };
 
   const handleViewsSortEnd = useCallback(
@@ -214,38 +262,6 @@ const BoardsAndViewsSettings: React.FC = () => {
     },
     [views],
   );
-
-  const handleBoardsSortEnd = useCallback(
-    (viewIndex: number) => (event: any) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-
-      const view = views[viewIndex];
-      const oldIndex = view.boards.findIndex((key) => key === active.id);
-      const newIndex = view.boards.findIndex((key) => key === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newBoards = [...view.boards];
-        const [removed] = newBoards.splice(oldIndex, 1);
-        newBoards.splice(newIndex, 0, removed);
-        const newViews = [...views];
-        newViews[viewIndex] = { ...newViews[viewIndex], boards: newBoards };
-        setViews(newViews);
-        setError('');
-      }
-    },
-    [views],
-  );
-
-  const toggleViewCollapse = (index: number) => {
-    const newCollapsed = new Set(collapsedViews);
-    if (newCollapsed.has(index)) {
-      newCollapsed.delete(index);
-    } else {
-      newCollapsed.add(index);
-    }
-    setCollapsedViews(newCollapsed);
-  };
 
   const handleSave = () => {
     // Validate boards
@@ -371,19 +387,14 @@ const BoardsAndViewsSettings: React.FC = () => {
               <SortableList onDragEnd={handleViewsSortEnd} items={views.map((_, idx) => `view-${idx}`)}>
                 <Flexbox direction="col" gap="3">
                   {views.map((view, index) => {
-                    const isCollapsed = collapsedViews.has(index);
-                    const selectedBoardsMap = new Set(view.boards);
-
                     return (
                       <SortableItem key={`view-${index}`} id={`view-${index}`}>
                         {({ handleProps }) => (
                           <div className="rounded-md border border-border bg-bg transition-colors hover:border-border-active">
                             {/* View Header */}
-                            <div className="p-3 flex items-center gap-2">
-                              <div {...handleProps}>
-                                <GrabberIcon size={16} className="cursor-grab text-text-secondary" />
-                              </div>
-                              <div className="flex-1">
+                            <div {...handleProps} className="p-3 flex items-center gap-2 cursor-grab select-none">
+                              <GrabberIcon size={16} className="text-text-secondary flex-shrink-0" />
+                              <div className="flex-1" onPointerDown={(e) => e.stopPropagation()}>
                                 <Input
                                   value={view.name}
                                   onChange={(e) => updateView(index, { name: e.target.value })}
@@ -391,120 +402,17 @@ const BoardsAndViewsSettings: React.FC = () => {
                                   onClick={(e) => e.stopPropagation()}
                                 />
                               </div>
-                              <Button color="secondary" onClick={() => toggleViewCollapse(index)} className="p-2">
-                                {isCollapsed ? <ChevronDownIcon size={16} /> : <ChevronUpIcon size={16} />}
-                              </Button>
-                              <Button color="danger" onClick={() => removeView(index)} disabled={views.length <= 1}>
-                                <TrashIcon size={16} />
-                              </Button>
-                            </div>
-
-                            {/* View Content - Collapsible */}
-                            {!isCollapsed && (
-                              <div className="px-3 pb-3 border-t border-border pt-3">
-                                <Flexbox direction="col" gap="4">
-                                  {/* Board Selection with Checkboxes */}
-                                  <div>
-                                    <Text sm className="font-medium mb-2">
-                                      Boards to display
-                                    </Text>
-                                    <div className="grid grid-cols-1 gap-2">
-                                      {availableBoards.map((board) => (
-                                        <Checkbox
-                                          key={board.key}
-                                          label={board.name}
-                                          checked={selectedBoardsMap.has(board.key)}
-                                          setChecked={() => toggleBoardInView(index, board.key)}
-                                        />
-                                      ))}
-                                    </div>
-                                    {view.boards.length === 0 && (
-                                      <Text xs className="text-red-500 mt-1">
-                                        Select at least one board
-                                      </Text>
-                                    )}
-                                  </div>
-
-                                  {/* Board Order */}
-                                  {view.boards.length > 1 && (
-                                    <div>
-                                      <Text sm className="font-medium mb-2">
-                                        Board display order
-                                      </Text>
-                                      <Text xs className="text-text-secondary mb-2">
-                                        Drag to reorder how boards appear in this view
-                                      </Text>
-                                      <SortableList onDragEnd={handleBoardsSortEnd(index)} items={view.boards}>
-                                        <Flexbox direction="col" gap="2">
-                                          {view.boards.map((boardKey, _boardIndex) => {
-                                            const boardName =
-                                              availableBoards.find((b) => b.key === boardKey)?.name || boardKey;
-                                            return (
-                                              <SortableItem key={boardKey} id={boardKey}>
-                                                {({ handleProps }) => (
-                                                  <div className="flex items-center gap-2 p-2 bg-bg-secondary rounded border border-border">
-                                                    <div {...handleProps}>
-                                                      <GrabberIcon
-                                                        size={16}
-                                                        className="cursor-grab text-text-secondary"
-                                                      />
-                                                    </div>
-                                                    <Text sm>{boardName}</Text>
-                                                  </div>
-                                                )}
-                                              </SortableItem>
-                                            );
-                                          })}
-                                        </Flexbox>
-                                      </SortableList>
-                                    </div>
-                                  )}
-
-                                  <Select
-                                    label="Default display"
-                                    value={view.displayView}
-                                    setValue={(val) => updateView(index, { displayView: val as CubeDisplayView })}
-                                    options={DISPLAY_VIEW_OPTIONS}
-                                  />
-
-                                  <div>
-                                    <Text sm className="font-medium mb-2">
-                                      Default sorts
-                                    </Text>
-                                    <Flexbox direction="col" gap="2">
-                                      {[0, 1, 2, 3].map((sortIndex) => (
-                                        <Flexbox key={sortIndex} direction="row" gap="2" alignItems="center">
-                                          <Text xs className="w-20 text-text-secondary">
-                                            {['Primary', 'Secondary', 'Tertiary', 'Ordered'][sortIndex]}
-                                          </Text>
-                                          <div className="flex-1">
-                                            <Select
-                                              value={view.defaultSorts[sortIndex] || VIEW_DEFAULT_SORTS[sortIndex]}
-                                              setValue={(val) => {
-                                                const newSorts = [...view.defaultSorts];
-                                                newSorts[sortIndex] = val;
-                                                updateView(index, { defaultSorts: newSorts });
-                                              }}
-                                              options={(sortIndex < 3 ? allSorts : ORDERED_SORTS).map((s) => ({
-                                                value: s,
-                                                label: s,
-                                              }))}
-                                            />
-                                          </div>
-                                        </Flexbox>
-                                      ))}
-                                    </Flexbox>
-                                  </div>
-
-                                  <Input
-                                    label="Default filter (optional)"
-                                    value={view.defaultFilter || ''}
-                                    onChange={(e) => updateView(index, { defaultFilter: e.target.value || undefined })}
-                                    placeholder="e.g., cmc<=3 or type:creature"
-                                  />
-                                </Flexbox>
+                              <div onPointerDown={(e) => e.stopPropagation()}>
+                                <Button color="secondary" onClick={() => openEditModal(index)} className="p-2">
+                                  <PencilIcon size={16} className="mr-1" /> Edit
+                                </Button>
                               </div>
-                            )}
+                              <div onPointerDown={(e) => e.stopPropagation()}>
+                                <Button color="danger" onClick={() => removeView(index)} disabled={views.length <= 1}>
+                                  <TrashIcon size={16} />
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </SortableItem>
@@ -523,6 +431,137 @@ const BoardsAndViewsSettings: React.FC = () => {
         onAdd={handleAddBoard}
         existingBoardNames={boards.map((b) => b.name)}
       />
+
+      {/* Edit View Modal */}
+      <Modal
+        isOpen={editingViewIndex !== null}
+        setOpen={(open) => {
+          if (!open) closeEditModal();
+        }}
+        lg
+      >
+        <ModalHeader
+          setOpen={(open) => {
+            if (!open) closeEditModal();
+          }}
+        >
+          Edit View{editingViewDraft ? `: ${editingViewDraft.name || '(unnamed)'}` : ''}
+        </ModalHeader>
+        {editingViewDraft && (
+          <ModalBody>
+            <Flexbox direction="col" gap="4">
+              {/* Board Selection with Checkboxes */}
+              <div>
+                <Text sm className="font-medium mb-2">
+                  Boards to display
+                </Text>
+                <div className="grid grid-cols-1 gap-2">
+                  {availableBoards.map((board) => (
+                    <Checkbox
+                      key={board.key}
+                      label={board.name}
+                      checked={editingViewDraft.boards.includes(board.key)}
+                      setChecked={() => toggleBoardInDraft(board.key)}
+                    />
+                  ))}
+                </div>
+                {editingViewDraft.boards.length === 0 && (
+                  <Text xs className="text-red-500 mt-1">
+                    Select at least one board
+                  </Text>
+                )}
+              </div>
+
+              {/* Board Order */}
+              {editingViewDraft.boards.length > 1 && (
+                <div>
+                  <Flexbox direction="col" gap="1" className="mb-2">
+                    <Text sm className="font-medium">
+                      Board display order
+                    </Text>
+                    <Text xs className="text-text-secondary">
+                      Drag to reorder how boards appear in this view
+                    </Text>
+                  </Flexbox>
+                  <SortableList onDragEnd={handleDraftBoardsSortEnd} items={editingViewDraft.boards}>
+                    <Flexbox direction="col" gap="2">
+                      {editingViewDraft.boards.map((boardKey) => {
+                        const boardName = availableBoards.find((b) => b.key === boardKey)?.name || boardKey;
+                        return (
+                          <SortableItem key={boardKey} id={boardKey}>
+                            {({ handleProps }) => (
+                              <div
+                                {...handleProps}
+                                className="flex items-center gap-2 p-2 bg-bg-accent rounded border border-border cursor-grab select-none"
+                              >
+                                <GrabberIcon size={16} className="text-text-secondary" />
+                                <Text sm>{boardName}</Text>
+                              </div>
+                            )}
+                          </SortableItem>
+                        );
+                      })}
+                    </Flexbox>
+                  </SortableList>
+                </div>
+              )}
+
+              <Select
+                label="Default display"
+                value={editingViewDraft.displayView}
+                setValue={(val) => updateDraft({ displayView: val as CubeDisplayView })}
+                options={DISPLAY_VIEW_OPTIONS}
+              />
+
+              <div>
+                <Text sm className="font-medium mb-2">
+                  Default sorts
+                </Text>
+                <Flexbox direction="col" gap="2">
+                  {[0, 1, 2, 3].map((sortIndex) => (
+                    <Flexbox key={sortIndex} direction="row" gap="2" alignItems="center">
+                      <Text xs className="w-20 text-text-secondary">
+                        {['Primary', 'Secondary', 'Tertiary', 'Ordered'][sortIndex]}
+                      </Text>
+                      <div className="flex-1">
+                        <Select
+                          value={editingViewDraft.defaultSorts[sortIndex] || VIEW_DEFAULT_SORTS[sortIndex]}
+                          setValue={(val) => {
+                            const newSorts = [...editingViewDraft.defaultSorts];
+                            newSorts[sortIndex] = val;
+                            updateDraft({ defaultSorts: newSorts });
+                          }}
+                          options={(sortIndex < 3 ? allSorts : ORDERED_SORTS).map((s) => ({
+                            value: s,
+                            label: s,
+                          }))}
+                        />
+                      </div>
+                    </Flexbox>
+                  ))}
+                </Flexbox>
+              </div>
+
+              <Input
+                label="Default filter (optional)"
+                value={editingViewDraft.defaultFilter || ''}
+                onChange={(e) => updateDraft({ defaultFilter: e.target.value || undefined })}
+                placeholder="e.g., cmc<=3 or type:creature"
+              />
+            </Flexbox>
+          </ModalBody>
+        )}
+        <ModalFooter>
+          <Flexbox direction="row" gap="2" justify="end">
+            <Button color="secondary" onClick={closeEditModal}>
+              Cancel
+            </Button>
+            <Button color="primary" onClick={applyEditModal} disabled={editingViewDraft?.boards.length === 0}>
+              Apply Changes
+            </Button>
+          </Flexbox>
+        </ModalFooter>
+      </Modal>
 
       {/* Hidden form for submission */}
       <div className="hidden">

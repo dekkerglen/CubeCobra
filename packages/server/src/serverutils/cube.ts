@@ -327,8 +327,12 @@ const getBasicsFromCube = (
   legacyBasics?: string[],
 ): string[] => {
   // If a basicsBoard is specified and exists in the cube, use cards from that board
-  if (basicsBoard && cubeCards[basicsBoard]) {
-    return cubeCards[basicsBoard].map((card) => card.cardID);
+  // Normalize to lowercase since cubeCards keys are lowercase board names
+  if (basicsBoard) {
+    const boardKey = basicsBoard.toLowerCase();
+    if (cubeCards[boardKey]) {
+      return cubeCards[boardKey].map((card) => card.cardID);
+    }
   }
 
   // Fall back to legacy basics array for backwards compatibility

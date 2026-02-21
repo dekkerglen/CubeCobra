@@ -12,6 +12,7 @@ jobs/export/
 /scripts/convert_tsx.json
 /coverage
 /src/client/generated/
+/.copilot
 
 # package specific ignores
 /packages/jobs/temp/

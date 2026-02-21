@@ -258,9 +258,9 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
             </nav>
           </div>
         ) : (
-          <div>
-            <nav>
-              <ScrollShadowContainer style={{ maxHeight: 'calc(100vh - 53px)' }}>
+          <div className="sticky top-0 h-screen">
+            <nav className="h-full">
+              <ScrollShadowContainer>
                 <Flexbox direction="col" gap="0">
                   {navigationItems.map((item, _index) => {
                     const isActive = activeLink === item.key;

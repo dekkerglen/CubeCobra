@@ -27,9 +27,9 @@ const BoardMoveControl: React.FC<BoardMoveControlProps> = ({
     .map((b) => ({ value: b.name.toLowerCase(), label: b.name }));
 
   return (
-    <div className="flex w-full">
-      <div className="flex-1">
-        <Select options={options} value={targetBoard} setValue={setTargetBoard} dense />
+    <div className="flex w-full items-center">
+      <div className="flex-1 min-w-0">
+        <Select options={options} value={targetBoard} setValue={setTargetBoard} />
       </div>
       <Button color="accent" className="ml-2 whitespace-nowrap" onClick={onMove} disabled={disabled || !targetBoard}>
         {buttonText}
