@@ -3600,20 +3600,12 @@ img.mana-symbol-sm {
     display: inline;
   }
 
-  .sm\:flex {
-    display: flex;
-  }
-
   .sm\:hidden {
     display: none;
   }
 
   .sm\:max-w-screen-sm {
     max-width: 640px;
-  }
-
-  .sm\:flex-1 {
-    flex: 1 1 0%;
   }
 
   .sm\:translate-y-0 {
@@ -3686,10 +3678,6 @@ img.mana-symbol-sm {
 
   .sm\:flex-row {
     flex-direction: row;
-  }
-
-  .sm\:gap-2 {
-    gap: 0.5rem;
   }
 
   .sm\:whitespace-nowrap {
