@@ -1,12 +1,12 @@
 import React from 'react';
 
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 interface SortableItemProps {
   id: string;
-  children: React.ReactNode;
+  children: (props: { handleProps: any }) => React.ReactNode;
   className?: string;
 }
 
@@ -19,8 +19,8 @@ export const SortableItem: React.FC<SortableItemProps> = ({ id, children, classN
   };
 
   return (
-    <div ref={setNodeRef} {...attributes} {...listeners} style={style} className={className}>
-      {children}
+    <div ref={setNodeRef} {...attributes} style={style} className={className}>
+      {children({ handleProps: listeners })}
     </div>
   );
 };
@@ -32,8 +32,23 @@ interface SortableListProps {
 }
 
 export const SortableList: React.FC<SortableListProps> = ({ items, children, onDragEnd }) => {
+  // Only use pointer sensors (mouse/touch), not keyboard sensor which would capture space key
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before drag starts
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200, // 200ms delay before drag starts on touch
+        tolerance: 5,
+      },
+    }),
+  );
+
   return (
-    <DndContext onDragEnd={onDragEnd}>
+    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
       <SortableContext strategy={verticalListSortingStrategy} items={items}>
         {children}
       </SortableContext>

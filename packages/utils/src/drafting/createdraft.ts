@@ -341,7 +341,8 @@ export const createDraft = (
     seed,
     cube: cube.id,
     InitialState: result.initialState,
-    basics: [],
+    basics: [], // Deprecated - for backwards compatibility
+    basicsBoard: format.basicsBoard || 'Basics', // New: which board to pull basics from
     id: '',
     type: 'd',
     owner: user?.id,

@@ -25,10 +25,10 @@ const TableView: React.FC<TableViewProps> = ({ cards }) => {
         cards,
         cube.showUnsorted || false,
         sortQuaternary || 'Alphabetical',
-        sortPrimary || 'Color Category',
-        sortSecondary || 'Types-Multicolor',
+        [sortPrimary || 'Color Category', sortSecondary || 'Types-Multicolor'],
+        cube,
       ) as unknown as [string, [string, Card[]][]][],
-    [cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary],
+    [cards, cube, sortQuaternary, sortPrimary, sortSecondary],
   );
 
   // Helper function to adjust breakpoint based on open sidebars

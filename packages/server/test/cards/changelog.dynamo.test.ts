@@ -1,4 +1,4 @@
-import Card, { Changes } from '@utils/datatypes/Card';
+import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
 import { v4 as UUID } from 'uuid';
 
 import { changelogDao } from '../../src/dynamo/daos';
@@ -32,21 +32,22 @@ jest.mock('../../src/dynamo/daos', () => ({
 
 const createHydratedChangelog = (initialChanges: Changes, hydratedCard: Card): Changes => {
   const mockHydratedChanges = { ...initialChanges };
-  if (mockHydratedChanges.mainboard?.adds && mockHydratedChanges.mainboard.adds[0]) {
-    mockHydratedChanges.mainboard.adds[0].details = hydratedCard.details;
+  const mainboard = mockHydratedChanges.mainboard as BoardChanges | undefined;
+  if (mainboard?.adds && mainboard.adds[0]) {
+    mainboard.adds[0].details = hydratedCard.details;
   }
-  if (mockHydratedChanges.mainboard?.removes && mockHydratedChanges.mainboard.removes[0]) {
-    mockHydratedChanges.mainboard.removes[0].oldCard.details = hydratedCard.details;
-  }
-
-  if (mockHydratedChanges.mainboard?.edits && mockHydratedChanges.mainboard.edits[0]) {
-    mockHydratedChanges.mainboard.edits[0].oldCard.details = hydratedCard.details;
-    mockHydratedChanges.mainboard.edits[0].newCard.details = hydratedCard.details;
+  if (mainboard?.removes && mainboard.removes[0]) {
+    mainboard.removes[0].oldCard.details = hydratedCard.details;
   }
 
-  if (mockHydratedChanges.mainboard?.swaps && mockHydratedChanges.mainboard.swaps[0]) {
-    mockHydratedChanges.mainboard.swaps[0].oldCard.details = hydratedCard.details;
-    mockHydratedChanges.mainboard.swaps[0].card.details = hydratedCard.details;
+  if (mainboard?.edits && mainboard.edits[0]) {
+    mainboard.edits[0].oldCard.details = hydratedCard.details;
+    mainboard.edits[0].newCard.details = hydratedCard.details;
+  }
+
+  if (mainboard?.swaps && mainboard.swaps[0]) {
+    mainboard.swaps[0].oldCard.details = hydratedCard.details;
+    mainboard.swaps[0].card.details = hydratedCard.details;
   }
 
   return mockHydratedChanges;

@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import { CUBE_DEFAULT_SORTS, ORDERED_SORTS, SORTS } from '@utils/sorting/Sort';
+import { CUBE_DEFAULT_SORTS, getAllSorts, ORDERED_SORTS } from '@utils/sorting/Sort';
 
 import Button from '../components/base/Button';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -15,12 +15,11 @@ interface SortCollapseProps {
   canEdit?: boolean;
 }
 
-const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) => {
+const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit = false }) => {
   const {
     cube,
     setShowUnsorted,
     setCollapseDuplicateCards,
-    saveSorts,
     resetSorts,
     sortPrimary,
     sortSecondary,
@@ -41,6 +40,8 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
     );
   }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
 
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
+
   return (
     <Collapse isOpen={isOpen}>
       <Flexbox direction="col" gap="2" className="mt-2">
@@ -50,7 +51,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
               label="Primary Sort"
               value={sortPrimary || CUBE_DEFAULT_SORTS[0]}
               setValue={setSortPrimary}
-              options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+              options={allSorts.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
           <Col xs={12} sm={6}>
@@ -58,7 +59,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
               label="Secondary Sort"
               value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
               setValue={setSortSecondary}
-              options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+              options={allSorts.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
           <Col xs={12} sm={6}>
@@ -66,12 +67,12 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
               label="Tertiary Sort"
               value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
               setValue={setSortTertiary}
-              options={SORTS.map((sort) => ({ value: sort, label: sort }))}
+              options={allSorts.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
           <Col xs={12} sm={6}>
             <Select
-              label="Quaternary Sort"
+              label="Ordered"
               value={sortQuaternary || CUBE_DEFAULT_SORTS[3]}
               setValue={setSortQuaternary}
               options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
@@ -86,11 +87,6 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) 
           <Button color="danger" onClick={resetSorts} disabled={!sortsModified}>
             Reset Sort
           </Button>
-          {canEdit && (
-            <Button color="accent" onClick={saveSorts} disabled={!sortsModified}>
-              Save as Default Sort
-            </Button>
-          )}
           <Button color={cube.showUnsorted ? 'danger' : 'primary'} onClick={() => setShowUnsorted(!cube.showUnsorted)}>
             <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
               {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards

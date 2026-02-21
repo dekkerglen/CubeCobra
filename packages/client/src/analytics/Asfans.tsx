@@ -2,7 +2,7 @@ import React, { useContext, useMemo } from 'react';
 
 import Card from '@utils/datatypes/Card';
 import { calculateAsfans } from '@utils/drafting/createdraft';
-import { sortIntoGroups, SORTS } from '@utils/sorting/Sort';
+import { getAllSorts, sortIntoGroups } from '@utils/sorting/Sort';
 
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -18,6 +18,8 @@ const Asfans: React.FC = () => {
   const cards = changedCards.mainboard;
   const [sort, setSort] = useQueryParam('sort', 'Color');
   const [draftFormat, setDraftFormat] = useQueryParam('format', '-1');
+
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
   const cardAsfans = useMemo(() => {
     try {
@@ -35,11 +37,11 @@ const Asfans: React.FC = () => {
 
   const asfans = useMemo(
     () =>
-      Object.entries(sortIntoGroups(cardsWithAsfan, sort)).map(([label, cardsInGroup]) => ({
+      Object.entries(sortIntoGroups(cardsWithAsfan, sort, false, cube)).map(([label, cardsInGroup]) => ({
         label,
         asfan: (cardsInGroup as Card[]).reduce((acc, { asfan }) => acc + (asfan || 0), 0),
       })),
-    [cardsWithAsfan, sort],
+    [cardsWithAsfan, sort, cube],
   );
 
   return (
@@ -66,7 +68,7 @@ const Asfans: React.FC = () => {
         <Col xs={12} md={6}>
           <Select
             label="Order By"
-            options={SORTS.map((item) => ({ value: item, label: item }))}
+            options={allSorts.map((item) => ({ value: item, label: item }))}
             value={sort}
             setValue={setSort}
           />

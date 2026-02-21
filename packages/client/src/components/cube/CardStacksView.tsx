@@ -29,10 +29,10 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
         cards,
         cube.showUnsorted || false,
         sortQuaternary || 'Alphabetical',
-        sortPrimary || 'Color Category',
-        sortSecondary || 'Types-Multicolor',
+        [sortPrimary || 'Color Category', sortSecondary || 'Types-Multicolor'],
+        cube,
       ) as unknown as [string, [string, Card[]][]][],
-    [cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary],
+    [cards, cube, sortQuaternary, sortPrimary, sortSecondary],
   );
 
   // Group cards by tertiary sort within each secondary group
@@ -41,14 +41,17 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
       columnLabel,
       groups.map(([groupLabel, groupCards]) => {
         // Sort the cards within this group by tertiary
-        const tertiaryGroups = sortDeep(groupCards, false, sortQuaternary || 'Alphabetical', sortTertiary || 'CMC') as [
-          string,
-          Card[],
-        ][];
+        const tertiaryGroups = sortDeep(
+          groupCards,
+          false,
+          sortQuaternary || 'Alphabetical',
+          [sortTertiary || 'CMC'],
+          cube,
+        ) as [string, Card[]][];
         return [groupLabel, tertiaryGroups];
       }),
     ]) as [string, [string, [string, Card[]][]][]][];
-  }, [sorted, sortTertiary, sortQuaternary]);
+  }, [sorted, sortTertiary, sortQuaternary, cube]);
 
   // Helper function to adjust breakpoint based on open sidebars
   const adjustBreakpoint = useMemo(() => {

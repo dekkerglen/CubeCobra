@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 import {
@@ -21,7 +21,7 @@ import {
   normalizeName,
 } from '@utils/cardutil';
 import Card, { BoardType } from '@utils/datatypes/Card';
-import { TagColor } from '@utils/datatypes/Cube';
+import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
 import { getLabels } from '@utils/sorting/Sort';
 import { getTagColorClass } from '@utils/Util';
@@ -35,6 +35,7 @@ import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
 import withModal from 'components/WithModal';
 
 import { cardImageBackUrl, cardImageUrl } from '../../../../utils/src/cardutil';
+import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import Badge from '../base/Badge';
 import Button from '../base/Button';
@@ -47,6 +48,7 @@ import Tag from '../base/Tag';
 import Text from '../base/Text';
 import TextArea from '../base/TextArea';
 import Tooltip from '../base/Tooltip';
+import BoardMoveControl from '../BoardMoveControl';
 import { ColorChecksAddon } from '../ColorCheck';
 import FoilOverlay, { FoilOverlayProps } from '../FoilOverlay';
 import TagInput from '../TagInput';
@@ -94,7 +96,25 @@ const CardModal: React.FC<CardModalProps> = ({
 }) => {
   const [versions, setVersions] = useState<Record<string, CardDetails> | null>(null);
   const [versionsLoading, setVersionsLoading] = useState(false);
+  const [targetBoard, setTargetBoard] = useState<string>('');
   const fetchedCardsRef = React.useRef<Set<string>>(new Set());
+  const { cube, unfilteredChangedCards } = useContext(CubeContext);
+  const { setRightSidebarMode } = useContext(DisplayContext);
+
+  // Get available boards from cube
+  const availableBoards = useMemo(() => {
+    return getBoardDefinitions(cube, unfilteredChangedCards);
+  }, [cube, unfilteredChangedCards]);
+
+  // Set initial target board to first board that isn't the current board
+  useEffect(() => {
+    if (card.board && availableBoards.length > 0) {
+      const otherBoard = availableBoards.find((b) => b.name.toLowerCase() !== card.board);
+      if (otherBoard && !targetBoard) {
+        setTargetBoard(otherBoard.name.toLowerCase());
+      }
+    }
+  }, [card.board, availableBoards, targetBoard]);
 
   useEffect(() => {
     const cardNorm = normalizeName(cardName(card));
@@ -120,7 +140,7 @@ const CardModal: React.FC<CardModalProps> = ({
 
   const disabled = !canEdit || card.markedForDelete;
 
-  const { showCustomImages, setRightSidebarMode } = useContext(DisplayContext);
+  const { showCustomImages } = useContext(DisplayContext);
 
   const getCardFrontImage = useCallback(
     (card: Card) => {
@@ -500,44 +520,24 @@ const CardModal: React.FC<CardModalProps> = ({
                 Remove
               </Button>
               &nbsp;
-              {card.board === 'mainboard' ? (
-                <>
-                  <Button
-                    color="accent"
-                    block
-                    className="items-center text-sm"
-                    onClick={() => {
-                      moveCard(card.index!, card.board!, 'maybeboard');
+              {availableBoards.length > 1 && (
+                <BoardMoveControl
+                  currentBoard={card.board}
+                  targetBoard={targetBoard}
+                  setTargetBoard={setTargetBoard}
+                  availableBoards={availableBoards}
+                  buttonText="Move To"
+                  onMove={() => {
+                    if (targetBoard) {
+                      moveCard(card.index!, card.board!, targetBoard as BoardType);
                       // Auto-switch to edit sidebar on desktop (md breakpoint: 768px)
                       if (window.innerWidth >= 768) {
                         setRightSidebarMode('edit');
                       }
                       setOpen(false);
-                    }}
-                  >
-                    To Maybeboard
-                  </Button>
-                  &nbsp;
-                </>
-              ) : (
-                <>
-                  <Button
-                    color="accent"
-                    block
-                    className="items-center text-sm"
-                    onClick={() => {
-                      moveCard(card.index!, card.board!, 'mainboard');
-                      // Auto-switch to edit sidebar on desktop (md breakpoint: 768px)
-                      if (window.innerWidth >= 768) {
-                        setRightSidebarMode('edit');
-                      }
-                      setOpen(false);
-                    }}
-                  >
-                    To Mainboard
-                  </Button>
-                  &nbsp;
-                </>
+                    }
+                  }}
+                />
               )}
             </>
           )}

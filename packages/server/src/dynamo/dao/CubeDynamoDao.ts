@@ -64,7 +64,7 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { CardStatus } from '@utils/datatypes/Card';
-import Cube from '@utils/datatypes/Cube';
+import Cube, { ViewDefinition } from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
@@ -110,6 +110,13 @@ export interface UnhydratedCube {
   defaultPrinting: string;
   disableAlerts: boolean;
   basics: string[];
+  views?: ViewDefinition[]; // View configurations for displaying cube content
+  customSorts?: any[]; // Custom sort definitions
+  disableDraft?: boolean; // Disable standard draft format
+  disableSealed?: boolean; // Disable sealed format
+  disableGrid?: boolean; // Disable grid draft format
+  disableMultiplayer?: boolean; // Disable multiplayer draft format
+  basicsBoard?: string; // Board to use for basics in draft (default: 'Basics', or 'None' for no basics)
   tags: any[];
   keywords: string[];
   cardCount: number;
@@ -231,6 +238,13 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       defaultPrinting: item.defaultPrinting,
       disableAlerts: item.disableAlerts,
       basics: item.basics,
+      views: item.views,
+      customSorts: item.customSorts,
+      disableDraft: item.disableDraft,
+      disableSealed: item.disableSealed,
+      disableGrid: item.disableGrid,
+      disableMultiplayer: item.disableMultiplayer,
+      basicsBoard: item.basicsBoard,
       tags: item.tags,
       keywords: item.keywords,
       cardCount: item.cardCount,
@@ -240,6 +254,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
   /**
    * Hydrates a single UnhydratedCube to Cube.
+   * Handles backwards compatibility for legacy basics by migrating them to the basics board.
    */
   protected async hydrateItem(item: UnhydratedCube): Promise<Cube> {
     // Handle cubes with invalid owner
@@ -253,10 +268,32 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         format = normalizeDraftFormatSteps(format);
       }
 
+      // Ensure views are properly initialized
+      let views = item.views;
+
+      if (!views || views.length === 0) {
+        const { getNewCubeViews } = await import('@utils/datatypes/Cube');
+        views = getNewCubeViews(item.defaultSorts);
+      } else {
+        const { VIEW_DEFAULT_SORTS } = await import('@utils/datatypes/Cube');
+        views = views.map((view) => {
+          if (!view.defaultSorts || view.defaultSorts.length !== 4) {
+            const defaultSorts = [...(view.defaultSorts || [])];
+            while (defaultSorts.length < 4) {
+              defaultSorts.push(VIEW_DEFAULT_SORTS[defaultSorts.length] || 'Alphabetical');
+            }
+            return { ...view, defaultSorts: defaultSorts.slice(0, 4) };
+          }
+          return view;
+        });
+        // Don't auto-add deleted views - respect user's configuration
+      }
+
       return {
         ...item,
         owner: deletedUser,
         image,
+        views,
       } as Cube;
     }
 
@@ -275,10 +312,32 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         format = normalizeDraftFormatSteps(format);
       }
 
+      // Ensure views are properly initialized
+      let views = item.views;
+
+      if (!views || views.length === 0) {
+        const { getNewCubeViews } = await import('@utils/datatypes/Cube');
+        views = getNewCubeViews(item.defaultSorts);
+      } else {
+        const { VIEW_DEFAULT_SORTS } = await import('@utils/datatypes/Cube');
+        views = views.map((view) => {
+          if (!view.defaultSorts || view.defaultSorts.length !== 4) {
+            const defaultSorts = [...(view.defaultSorts || [])];
+            while (defaultSorts.length < 4) {
+              defaultSorts.push(VIEW_DEFAULT_SORTS[defaultSorts.length] || 'Alphabetical');
+            }
+            return { ...view, defaultSorts: defaultSorts.slice(0, 4) };
+          }
+          return view;
+        });
+        // Don't auto-add deleted views - respect user's configuration
+      }
+
       return {
         ...item,
         owner: deletedUser,
         image,
+        views,
       } as Cube;
     }
 
@@ -290,10 +349,38 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       format = normalizeDraftFormatSteps(format);
     }
 
+    // Ensure views are properly initialized with defaultSorts
+    let views = item.views;
+
+    if (!views || views.length === 0) {
+      // No views configured - create defaults
+      const { getNewCubeViews } = await import('@utils/datatypes/Cube');
+      views = getNewCubeViews(item.defaultSorts);
+    } else {
+      // Views exist - ensure each has exactly 4 defaultSorts
+      const { VIEW_DEFAULT_SORTS } = await import('@utils/datatypes/Cube');
+      views = views.map((view) => {
+        if (!view.defaultSorts || view.defaultSorts.length !== 4) {
+          // Missing or incomplete defaultSorts - fill with defaults
+          const defaultSorts = [...(view.defaultSorts || [])];
+          while (defaultSorts.length < 4) {
+            defaultSorts.push(VIEW_DEFAULT_SORTS[defaultSorts.length] || 'Alphabetical');
+          }
+          return {
+            ...view,
+            defaultSorts: defaultSorts.slice(0, 4),
+          };
+        }
+        return view;
+      });
+      // Don't auto-add deleted views - respect user's configuration
+    }
+
     return {
       ...item,
       owner: owner,
       image,
+      views,
     } as Cube;
   }
 
@@ -482,13 +569,23 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
   /**
    * Gets cube cards from S3.
+   * Automatically handles backwards compatibility by migrating legacy basics.
+   * Loads cube metadata if not provided to access board configuration and legacy basics.
+   *
+   * @param id - The cube ID
+   * @param cube - Optional cube object (will be loaded if not provided)
    */
-  public async getCards(id: string): Promise<CubeCards> {
+  public async getCards(id: string, cube?: Cube): Promise<CubeCards> {
     try {
+      // Load cube metadata if not provided (needed for board config and legacy basics migration)
+      if (!cube) {
+        cube = (await this.getById(id)) || undefined;
+      }
+
       const cards = await getObject(process.env.DATA_BUCKET!, `cube/${id}.json`);
 
-      // If cards is null or doesn't have the expected structure, return default empty cards
-      if (!cards || !cards.mainboard || !cards.maybeboard) {
+      // If cards is null or doesn't have mainboard (required), return default empty cards
+      if (!cards || !cards.mainboard) {
         cloudwatch.info(`No cards found for cube: ${id}, returning empty default`);
         return {
           mainboard: [],
@@ -496,13 +593,77 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         };
       }
 
-      const totalCardCount = cards.mainboard.length + cards.maybeboard.length;
+      // Track if we migrated legacy basics (need to save to S3)
+      let didMigration = false;
+
+      // Migrate legacy basics to the basics board if needed
+      if (cube && cube.basics && Array.isArray(cube.basics) && cube.basics.length > 0) {
+        // Only migrate if the basics board is empty or doesn't exist
+        if (!cards.basics || cards.basics.length === 0) {
+          cloudwatch.info(`[BASICS MIGRATION] Migrating ${cube.basics.length} legacy basics for cube: ${id}`);
+          cloudwatch.info(`[BASICS MIGRATION] Legacy basics IDs: ${JSON.stringify(cube.basics)}`);
+
+          cards.basics = cube.basics.map((cardId: string, index: number) => ({
+            cardID: cardId,
+            status: cube!.defaultStatus || 'Not Owned',
+            finish: cube!.defaultPrinting || 'Non-foil',
+            board: 'basics',
+            index,
+          }));
+
+          cloudwatch.info(`[BASICS MIGRATION] Created ${cards.basics.length} basics cards`);
+          didMigration = true;
+
+          // Persist the migration: clear legacy basics and save to DynamoDB and S3
+          try {
+            // Clear the legacy basics array
+            await this.update({
+              ...cube,
+              basics: [],
+            });
+
+            cloudwatch.info(`[BASICS MIGRATION] Cleared legacy basics array in DynamoDB for cube: ${id}`);
+          } catch (err) {
+            cloudwatch.error(`[BASICS MIGRATION] Failed to clear legacy basics in DynamoDB for cube: ${id}`, err);
+            // Continue anyway - migration will happen again next time
+          }
+        } else {
+          cloudwatch.info(
+            `[BASICS MIGRATION] Skipping migration for cube ${id} - cards.basics already has ${cards.basics.length} cards`,
+          );
+        }
+      }
+
+      // Count cards across all boards (including flexible boards)
+      let totalCardCount = 0;
+      for (const [board, list] of Object.entries(cards)) {
+        if (board !== 'id' && Array.isArray(list)) {
+          totalCardCount += list.length;
+        }
+      }
 
       if (totalCardCount > CARD_LIMIT) {
         throw new Error(`Cannot load cube: ${id} - too many cards: ${totalCardCount}`);
       }
 
-      // Add details to cards
+      // If we migrated legacy basics, save the updated cards to S3 BEFORE adding details
+      if (didMigration) {
+        try {
+          cloudwatch.info(`[BASICS MIGRATION] Saving migrated cards to S3 for cube: ${id}`);
+          cloudwatch.info(`[BASICS MIGRATION] Cards object keys before save: ${Object.keys(cards).join(', ')}`);
+          cloudwatch.info(`[BASICS MIGRATION] Basics board length: ${cards.basics?.length || 0}`);
+
+          // Cards don't have details yet, so we can save directly
+          await putObject(process.env.DATA_BUCKET!, `cube/${id}.json`, cards);
+
+          cloudwatch.info(`[BASICS MIGRATION] Successfully saved migrated cards to S3 for cube: ${id}`);
+        } catch (err) {
+          cloudwatch.error(`[BASICS MIGRATION] Failed to save migrated cards to S3 for cube: ${id}`, err);
+          // Continue anyway - migration will happen again next time
+        }
+      }
+
+      // Add details to cards (after saving to S3)
       for (const [board, list] of Object.entries(cards)) {
         if (board !== 'id') {
           this.addDetails(list as any[]);
@@ -512,6 +673,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
           }
         }
       }
+
       return cards;
     } catch (e: any) {
       // If the error is NoSuchKey (file doesn't exist), return empty default
@@ -572,7 +734,13 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         };
       }
 
-      const totalCardCount = cards.mainboard.length + cards.maybeboard.length;
+      // Count cards across all boards (including flexible boards)
+      let totalCardCount = 0;
+      for (const [board, list] of Object.entries(cards)) {
+        if (board !== 'id' && Array.isArray(list)) {
+          totalCardCount += list.length;
+        }
+      }
 
       if (totalCardCount > CARD_LIMIT) {
         throw new Error(`Cannot load cube: ${id} version: ${versionId} - too many cards: ${totalCardCount}`);
@@ -609,13 +777,19 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Returns the new version number.
    */
   public async updateCards(id: string, newCards: CubeCards): Promise<number> {
-    const nullCards = this.countNullCards(newCards.mainboard) + this.countNullCards(newCards.maybeboard);
+    // Count null cards across all boards
+    let nullCards = 0;
+    let totalCards = 0;
+    for (const [board, list] of Object.entries(newCards)) {
+      if (board !== 'id' && Array.isArray(list)) {
+        nullCards += this.countNullCards(list);
+        totalCards += list.length;
+      }
+    }
 
     if (nullCards > 0) {
       throw new Error(`Cannot save cube: ${nullCards} null cards`);
     }
-
-    const totalCards = newCards.mainboard.length + newCards.maybeboard.length;
 
     if (totalCards > CARD_LIMIT) {
       throw new Error(`Cannot save cube: too many cards (${totalCards}/${CARD_LIMIT})`);

@@ -26,6 +26,7 @@ const UserThemeForm: React.FC = () => {
   );
   const [hideFeaturedCubes, setHideFeaturedCubes] = useState(user?.hideFeatured || false);
   const [disableAnimations, setDisableAnimations] = useState(user?.disableAnimations || false);
+  const [useTextOverIcons, setUseTextOverIcons] = useState(user?.useTextOverIcons || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
     () => ({
@@ -36,8 +37,18 @@ const UserThemeForm: React.FC = () => {
       autoBlog: `${autoBlog}`,
       yourCubesSortOrder: `${yourCubesSortOrder}`,
       disableAnimations: `${disableAnimations}`,
+      useTextOverIcons: `${useTextOverIcons}`,
     }),
-    [selectedTheme, hideFeaturedCubes, defaultPrinting, gridTightness, autoBlog, yourCubesSortOrder, disableAnimations],
+    [
+      selectedTheme,
+      hideFeaturedCubes,
+      defaultPrinting,
+      gridTightness,
+      autoBlog,
+      yourCubesSortOrder,
+      disableAnimations,
+      useTextOverIcons,
+    ],
   );
 
   return (
@@ -79,6 +90,11 @@ const UserThemeForm: React.FC = () => {
           setChecked={setAutoblog}
         />
         <Checkbox label="Disable Animations" checked={disableAnimations} setChecked={setDisableAnimations} />
+        <Checkbox
+          label="Use text over icons where possible"
+          checked={useTextOverIcons}
+          setChecked={setUseTextOverIcons}
+        />
         <Select
           label="Your cubes sort order"
           value={formData.yourCubesSortOrder}

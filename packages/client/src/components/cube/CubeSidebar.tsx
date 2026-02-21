@@ -4,20 +4,24 @@ import {
   BookIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  GearIcon,
   GraphIcon,
   ListUnorderedIcon,
   PlayIcon,
   TrophyIcon,
 } from '@primer/octicons-react';
-import Cube from '@utils/datatypes/Cube';
+import Cube, { getViewDefinitions, viewNameToKey } from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
 import AboutViewContext from '../../contexts/AboutViewContext';
 import AnalysisViewContext from '../../contexts/AnalysisViewContext';
+import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
+import SettingsViewContext from '../../contexts/SettingsViewContext';
+import UserContext from '../../contexts/UserContext';
 import { Flexbox } from '../base/Layout';
 import ScrollShadowContainer from '../base/ScrollShadowContainer';
 
@@ -35,73 +39,104 @@ interface CubeSidebarProps {
   controls?: React.ReactNode;
 }
 
-const navigationItems: NavigationItem[] = [
-  {
-    label: 'Menu',
-    key: 'menu',
-  },
-  {
-    label: 'List',
-    href: '/cube/list',
-    key: 'list',
-    icon: ListUnorderedIcon,
-    subItems: [
-      { label: 'Mainboard', key: 'mainboard' },
-      { label: 'Maybeboard', key: 'maybeboard' },
-    ],
-  },
-  {
-    label: 'About',
-    href: '/cube/about',
-    key: 'about',
-    icon: BookIcon,
-    subItems: [
-      { label: 'Primer', key: 'primer' },
-      { label: 'Blog', key: 'blog' },
-      { label: 'Changelog', key: 'changelog' },
-    ],
-  },
-  {
-    label: 'Playtest',
-    href: '/cube/playtest',
-    key: 'playtest',
-    icon: PlayIcon,
-    subItems: [
-      { label: 'Practice Draft', key: 'practice-draft' },
-      { label: 'Sample Pack', key: 'sample-pack' },
-      { label: 'Decks', key: 'decks' },
-    ],
-  },
-  {
-    label: 'Records',
-    href: '/cube/records',
-    key: 'records',
-    icon: TrophyIcon,
-    subItems: [
-      { label: 'Draft Reports', key: 'draft-reports' },
-      { label: 'Trophy Archive', key: 'trophy-archive' },
-      { label: 'Winrate Analytics', key: 'winrate-analytics' },
-    ],
-  },
-  {
-    label: 'Analysis',
-    href: '/cube/analysis',
-    key: 'analysis',
-    icon: GraphIcon,
-    subItems: [
-      { label: 'Averages', key: 'averages' },
-      { label: 'Table', key: 'table' },
-      { label: 'Asfans', key: 'asfans' },
-      { label: 'Chart', key: 'chart' },
-      { label: 'Recommender', key: 'recommender' },
-      { label: 'Playtest Data', key: 'playtest-data' },
-      { label: 'Tokens', key: 'tokens' },
-      { label: 'Combos', key: 'combos' },
-    ],
-  },
-];
+// Generate navigation items dynamically based on cube's views
+const getNavigationItems = (cube: Cube, isCubeOwner: boolean): NavigationItem[] => {
+  const views = getViewDefinitions(cube);
+  const viewSubItems = views.map((view) => ({
+    label: view.name,
+    key: viewNameToKey(view.name),
+  }));
 
-const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls }) => {
+  const baseItems: NavigationItem[] = [
+    {
+      label: 'Menu',
+      key: 'menu',
+    },
+    {
+      label: 'List',
+      href: '/cube/list',
+      key: 'list',
+      icon: ListUnorderedIcon,
+      subItems: viewSubItems,
+    },
+    {
+      label: 'About',
+      href: '/cube/about',
+      key: 'about',
+      icon: BookIcon,
+      subItems: [
+        { label: 'Primer', key: 'primer' },
+        { label: 'Blog', key: 'blog' },
+        { label: 'Changelog', key: 'changelog' },
+      ],
+    },
+    {
+      label: 'Playtest',
+      href: '/cube/playtest',
+      key: 'playtest',
+      icon: PlayIcon,
+      subItems: [
+        { label: 'Practice Draft', key: 'practice-draft' },
+        { label: 'Sample Pack', key: 'sample-pack' },
+        { label: 'Decks', key: 'decks' },
+      ],
+    },
+    {
+      label: 'Records',
+      href: '/cube/records',
+      key: 'records',
+      icon: TrophyIcon,
+      subItems: [
+        { label: 'Draft Reports', key: 'draft-reports' },
+        { label: 'Trophy Archive', key: 'trophy-archive' },
+        { label: 'Winrate Analytics', key: 'winrate-analytics' },
+      ],
+    },
+    {
+      label: 'Analysis',
+      href: '/cube/analysis',
+      key: 'analysis',
+      icon: GraphIcon,
+      subItems: [
+        { label: 'Averages', key: 'averages' },
+        { label: 'Table', key: 'table' },
+        { label: 'Asfans', key: 'asfans' },
+        { label: 'Chart', key: 'chart' },
+        { label: 'Recommender', key: 'recommender' },
+        { label: 'Playtest Data', key: 'playtest-data' },
+        { label: 'Tokens', key: 'tokens' },
+        { label: 'Combos', key: 'combos' },
+      ],
+    },
+  ];
+
+  // Add Settings section only for cube owners
+  if (isCubeOwner) {
+    baseItems.push({
+      label: 'Settings',
+      href: '/cube/settings',
+      key: 'settings',
+      icon: GearIcon,
+      subItems: [
+        { label: 'Overview', key: 'overview' },
+        { label: 'Options', key: 'options' },
+        { label: 'Boards and Views', key: 'boards-and-views' },
+        { label: 'Custom Sorts', key: 'custom-sorts' },
+        { label: 'Draft Formats', key: 'draft-formats' },
+        { label: 'Restore', key: 'restore' },
+      ],
+    });
+  }
+
+  return baseItems;
+};
+
+const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, controls }) => {
+  // Use cube from context to pick up live updates (e.g., when views are modified)
+  const { cube } = React.useContext(CubeContext);
+  const user = React.useContext(UserContext);
+  const isCubeOwner = !!user && cube.owner?.id === user.id;
+  const navigationItems = React.useMemo(() => getNavigationItems(cube, isCubeOwner), [cube, isCubeOwner]);
   const { cubeSidebarExpanded, toggleCubeSidebarExpanded } = React.useContext(DisplayContext);
   const [hoveredItem, setHoveredItem] = React.useState<string | null>(null);
   const [dropdownVisible, setDropdownVisible] = React.useState(false);
@@ -117,11 +152,12 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
     return false;
   };
 
-  const { toggleShowMaybeboard, showMaybeboard } = React.useContext(DisplayContext);
+  const { activeView, setActiveView } = React.useContext(DisplayContext);
   const aboutViewContext = React.useContext(AboutViewContext);
   const analysisViewContext = React.useContext(AnalysisViewContext);
   const playtestViewContext = React.useContext(PlaytestViewContext);
   const recordsViewContext = React.useContext(RecordsViewContext);
+  const settingsViewContext = React.useContext(SettingsViewContext);
 
   const toggleSidebar = () => {
     toggleCubeSidebarExpanded();
@@ -222,9 +258,9 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
             </nav>
           </div>
         ) : (
-          <div>
-            <nav>
-              <ScrollShadowContainer style={{ maxHeight: 'calc(100vh - 53px)' }}>
+          <div className="sticky top-0 h-screen">
+            <nav className="h-full">
+              <ScrollShadowContainer>
                 <Flexbox direction="col" gap="0">
                   {navigationItems.map((item, _index) => {
                     const isActive = activeLink === item.key;
@@ -314,27 +350,25 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                   subFullHref = `${subItem.href}/${encodeURIComponent(getCubeId(cube))}`;
                                 }
 
-                                // Special handling for List sub-items (Mainboard/Maybeboard)
+                                // Special handling for List sub-items (view navigation)
                                 if (item.key === 'list' && !subItem.href) {
-                                  const isMainboard = subItem.key === 'mainboard';
-                                  const boardParam = isMainboard ? 'mainboard' : 'maybeboard';
-                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardParam}`;
+                                  const viewKey = subItem.key;
+                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.label}`;
 
-                                  // Only show active state when on list page
-                                  const isActive =
-                                    activeLink === 'list' && (isMainboard ? !showMaybeboard : showMaybeboard);
+                                  // View is active if activeView matches
+                                  const isActive = activeLink === 'list' && activeView === subItem.label;
 
-                                  // If already on list page, toggle; otherwise navigate
+                                  // If already on list page, change view; otherwise navigate
                                   const handleClick = (e: React.MouseEvent) => {
                                     if (activeLink === 'list') {
                                       e.preventDefault();
-                                      toggleShowMaybeboard();
+                                      setActiveView(subItem.label);
                                     }
                                   };
 
                                   return (
                                     <a
-                                      key={subItem.key}
+                                      key={viewKey}
                                       href={listHref}
                                       onClick={handleClick}
                                       className={classNames(
@@ -498,6 +532,43 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                                   );
                                 }
 
+                                // Special handling for Settings sub-items
+                                if (item.key === 'settings' && !subItem.href) {
+                                  const settingsHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+                                  const isActive = activeLink === subItem.key;
+
+                                  const handleClick = (e: React.MouseEvent) => {
+                                    // If already on settings page, update view via context
+                                    if (
+                                      settingsViewContext &&
+                                      (activeLink === 'settings' ||
+                                        ['overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(
+                                          activeLink,
+                                        ))
+                                    ) {
+                                      e.preventDefault();
+                                      settingsViewContext.setView(subItem.key);
+                                    }
+                                  };
+
+                                  return (
+                                    <a
+                                      key={subItem.key}
+                                      href={settingsHref}
+                                      onClick={handleClick}
+                                      className={classNames(
+                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
+                                        {
+                                          'bg-bg-active font-bold text-text': isActive,
+                                          'font-normal text-text': !isActive,
+                                        },
+                                      )}
+                                    >
+                                      {subItem.label}
+                                    </a>
+                                  );
+                                }
+
                                 return (
                                   <div key={subItem.key}>
                                     {subFullHref ? (
@@ -580,17 +651,36 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
 
                       // Handle different types of sub-items
                       if (item.key === 'list') {
-                        const isMainboard = subItem.key === 'mainboard';
-                        const boardParam = isMainboard ? 'mainboard' : 'maybeboard';
-                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?board=${boardParam}`;
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.label}`;
 
-                        // If already on list page, toggle; otherwise navigate
+                        // View is active if activeView matches
+                        const isViewActive = activeLink === 'list' && activeView === subItem.label;
+
+                        // If already on list page, change view; otherwise navigate
                         handleClick = (e: React.MouseEvent) => {
                           if (activeLink === 'list') {
                             e.preventDefault();
-                            toggleShowMaybeboard();
+                            setActiveView(subItem.label);
                           }
                         };
+
+                        return (
+                          <a
+                            key={subItem.key}
+                            href={subHref}
+                            onClick={handleClick}
+                            className={classNames(
+                              'block px-4 py-1.5 text-sm cursor-pointer',
+                              'hover:bg-bg-active transition-colors',
+                              {
+                                'bg-bg-active font-bold text-text': isViewActive,
+                                'font-normal text-text': !isViewActive,
+                              },
+                            )}
+                          >
+                            {subItem.label}
+                          </a>
+                        );
                       } else if (item.key === 'records') {
                         subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
 
@@ -649,6 +739,21 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube, activeLink, controls })
                           ) {
                             e.preventDefault();
                             analysisViewContext.setView(subItem.key);
+                          }
+                        };
+                      } else if (item.key === 'settings') {
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
+
+                        handleClick = (e: React.MouseEvent) => {
+                          if (
+                            settingsViewContext &&
+                            (activeLink === 'settings' ||
+                              ['overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(
+                                activeLink,
+                              ))
+                          ) {
+                            e.preventDefault();
+                            settingsViewContext.setView(subItem.key);
                           }
                         };
                       } else if (subItem.href) {

@@ -1,8 +1,9 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import Card from '@utils/datatypes/Card';
+import Cube from '@utils/datatypes/Cube';
 import { calculateAsfans } from '@utils/drafting/createdraft';
-import { cardCanBeSorted, sortGroupsOrdered, SORTS } from '@utils/sorting/Sort';
+import { cardCanBeSorted, getAllSorts, sortGroupsOrdered } from '@utils/sorting/Sort';
 import { fromEntries } from '@utils/Util';
 
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
@@ -16,8 +17,12 @@ import useQueryParam from '../hooks/useQueryParam';
 
 type SortWithTotalResult = [string, number][];
 
-const sortWithTotal: (pool: Card[], sort: string) => SortWithTotalResult = (pool: Card[], sort: string) =>
-  [...sortGroupsOrdered(pool, sort, true), ['Total', pool]].map(([label, cards]) => [
+const sortWithTotal: (pool: Card[], sort: string, cubeObj?: Cube | null) => SortWithTotalResult = (
+  pool,
+  sort,
+  cubeObj,
+) =>
+  [...sortGroupsOrdered(pool, sort, true, cubeObj), ['Total', pool]].map(([label, cards]) => [
     label as string,
     (cards as Card[]).reduce((acc, card) => acc + card.asfan!, 0),
   ]);
@@ -30,6 +35,8 @@ const AnalyticTable: React.FC = () => {
   const [percentOf, setPercentOf] = useQueryParam('percentOf', 'total');
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', 'false');
   const [draftFormat, setDraftFormat] = useQueryParam('format', '-1');
+
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
   const asfans = useMemo(() => {
     if (useAsfans !== 'true') {
@@ -47,25 +54,27 @@ const AnalyticTable: React.FC = () => {
   const cardsWithAsfan = useMemo(
     () =>
       cards
-        .filter((card) => cardCanBeSorted(card, column) && cardCanBeSorted(card, row))
+        .filter((card) => cardCanBeSorted(card, column, cube) && cardCanBeSorted(card, row, cube))
         .map((card) => ({ ...card, asfan: asfans[card.cardID] || 1 })),
-    [asfans, cards, column, row],
+    [asfans, cards, column, row, cube],
   );
 
   const [columnCounts, columnLabels] = useMemo(() => {
-    const counts = sortWithTotal(cardsWithAsfan, column).filter(([label, count]) => label === 'Total' || count > 0);
+    const counts = sortWithTotal(cardsWithAsfan, column, cube).filter(
+      ([label, count]) => label === 'Total' || count > 0,
+    );
     return [fromEntries(counts), counts.map(([label]) => label)];
-  }, [cardsWithAsfan, column]);
+  }, [cardsWithAsfan, column, cube]);
 
   const rows = useMemo(
     () =>
-      [...sortGroupsOrdered(cardsWithAsfan, row, true), ['Total', cardsWithAsfan]]
-        .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards as Card[], column))])
+      [...sortGroupsOrdered(cardsWithAsfan, row, true, cube), ['Total', cardsWithAsfan]]
+        .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards as Card[], column, cube))])
         .map(([rowLabel, columnValues]) => ({
           rowLabel,
           ...fromEntries(columnLabels.map((label) => [label, (columnValues as Record<string, number>)[label] ?? 0])),
         })),
-    [cardsWithAsfan, column, row, columnLabels],
+    [cardsWithAsfan, column, row, columnLabels, cube],
   );
 
   const entryRenderer = useCallback(
@@ -104,7 +113,7 @@ const AnalyticTable: React.FC = () => {
         <Col xs={12} md={4}>
           <Select
             label="Columns"
-            options={SORTS.map((item) => ({ value: item, label: item }))}
+            options={allSorts.map((item) => ({ value: item, label: item }))}
             value={column}
             setValue={setColumn}
           />
@@ -112,7 +121,7 @@ const AnalyticTable: React.FC = () => {
         <Col xs={12} md={4}>
           <Select
             label="Rows"
-            options={SORTS.map((item) => ({ value: item, label: item }))}
+            options={allSorts.map((item) => ({ value: item, label: item }))}
             value={row}
             setValue={setRow}
           />

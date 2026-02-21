@@ -1,7 +1,8 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 
 import { cardId, cardImageUrl, cardName } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
+import Cube, { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
@@ -37,7 +38,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const user: User | null = useContext(UserContext);
-  const cubes: { id: string; name: string }[] = user?.cubes ?? [];
+  const cubes: Cube[] = useMemo(() => user?.cubes ?? [], [user?.cubes]);
 
   let def = cubeContext;
   if (cubes.length > 0) {
@@ -47,6 +48,23 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   const [selectedBoard, setSelectedBoard] = useLocalStorage<string>('selectedBoardForATCModal', 'mainboard');
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Get board options for the selected cube
+  const boardOptions = useMemo(() => {
+    const cube = cubes.find((c) => c.id === selectedCube);
+    if (!cube) {
+      return [
+        { value: 'mainboard', label: 'Mainboard' },
+        { value: 'maybeboard', label: 'Maybeboard' },
+      ];
+    }
+    // Cards not available in this context, getBoardDefinitions will use defaults
+    const boards = getBoardDefinitions(cube, undefined);
+    return boards.map((board) => ({
+      value: boardNameToKey(board.name),
+      label: board.name,
+    }));
+  }, [cubes, selectedCube]);
 
   const add = async (): Promise<void> => {
     setLoading(true);
@@ -170,10 +188,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
           />
           <Select
             label="Board"
-            options={[
-              { value: 'mainboard', label: 'Mainboard' },
-              { value: 'maybeboard', label: 'Maybeboard' },
-            ]}
+            options={boardOptions}
             value={selectedBoard}
             setValue={(val) => setSelectedBoard(val)}
           />

@@ -19,6 +19,7 @@ export interface DraftFormat {
   markdown?: string;
   html?: string;
   defaultSeats: number;
+  basicsBoard?: string; // New: which board to pull basics from (e.g., "Basics")
 }
 
 export type DraftState = {
@@ -57,7 +58,8 @@ export default interface Draft {
   cube: string;
   InitialState?: DraftState;
   DraftmancerLog?: DraftmancerLog;
-  basics: number[];
+  basics: number[]; // Deprecated - kept for backwards compatibility with old cubes
+  basicsBoard?: string; // New: which board basics are pulled from
   id: string;
   seed?: string;
   // g: grid, d: draft, u: upload, s: sealed

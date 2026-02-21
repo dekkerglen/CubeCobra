@@ -13,7 +13,7 @@ interface StandardDraftCardProps {
 }
 
 const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultFormat: defaultFormat }) => {
-  const { cube, canEdit } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   const [packs, setPacks] = useState('3');
   const [cards, setCards] = useState('15');
   const [seats, setSeats] = useState('8');
@@ -51,22 +51,9 @@ const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultFormat: de
           </Flexbox>
         </CardBody>
         <CardFooter>
-          <Flexbox justify="between" direction="row" className="w-full" gap="2">
-            <Button block color="primary" onClick={() => formRef.current?.submit()}>
-              Start Draft
-            </Button>
-            {canEdit && defaultFormat !== -1 && (
-              <Button
-                block
-                color="accent"
-                className="me-3"
-                type="link"
-                href={`/cube/${cube.id}/defaultdraftformat/${encodeURIComponent(-1)}`}
-              >
-                Make Default
-              </Button>
-            )}
-          </Flexbox>
+          <Button block color="primary" onClick={() => formRef.current?.submit()}>
+            Start Draft
+          </Button>
         </CardFooter>
       </CSRFForm>
     </Card>

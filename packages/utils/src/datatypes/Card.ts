@@ -173,8 +173,7 @@ export type FilterValues = {
   [K in `${AllField}Op`]: ':' | '=' | '!=' | '<>' | '<' | '<=' | '>' | '>=';
 };
 
-export const boardTypes = ['mainboard', 'maybeboard'] as const;
-export type BoardType = (typeof boardTypes)[number];
+export type BoardType = string; // Board names are now fully dynamic
 
 export type CubeCardChange = { index: number; oldCard: Card };
 export type CubeCardRemove = CubeCardChange;
@@ -189,9 +188,12 @@ export type BoardChanges = {
 };
 
 export interface Changes {
-  mainboard?: BoardChanges;
-  maybeboard?: BoardChanges;
   version?: number;
+  [boardName: string]: BoardChanges | number | undefined; // Support flexible boards
+}
+
+export function isBoardChanges(value: unknown): value is BoardChanges {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export const BasicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Waste'] as const;

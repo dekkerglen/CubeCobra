@@ -1,5 +1,6 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
+import { getBoardDefinitions } from '@utils/datatypes/Cube';
 import { DraftFormat } from '@utils/datatypes/Draft';
 import { createDefaultDraftFormat, DEFAULT_PACK, getErrorsInFormat } from '@utils/draftutil';
 
@@ -23,12 +24,32 @@ interface CustomDraftFormatModalProps {
 }
 
 const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen, formatIndex, setOpen }) => {
-  const { cube } = useContext(CubeContext);
+  const { cube, unfilteredChangedCards } = useContext(CubeContext);
   const [format, setFormat] = useState<DraftFormat>(
     formatIndex === -1 ? createDefaultDraftFormat(3, 15) : cube.formats[formatIndex],
   );
   const formRef = React.createRef<HTMLFormElement>();
   const errorsInFormat = useMemo(() => getErrorsInFormat(format), [format]);
+
+  // Get available boards
+  const availableBoards = useMemo(() => {
+    // Use unfilteredChangedCards if it has keys, otherwise fall back to cube.cards
+    const cards =
+      unfilteredChangedCards && Object.keys(unfilteredChangedCards).length > 0
+        ? unfilteredChangedCards
+        : (cube as any).cards;
+    return getBoardDefinitions(cube, cards);
+  }, [cube, unfilteredChangedCards]);
+
+  // Initialize basicsBoard default if not set
+  useEffect(() => {
+    if (!format.basicsBoard) {
+      const hasBasics = availableBoards.some((b) => b.name.toLowerCase() === 'basics');
+      if (hasBasics) {
+        setFormat((f) => ({ ...f, basicsBoard: 'basics' }));
+      }
+    }
+  }, [format.basicsBoard, availableBoards]);
 
   const formdata: Record<string, string> = useMemo(() => {
     return {
@@ -60,6 +81,15 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
               value={`${format.defaultSeats ?? 8}`}
               options={Array.from({ length: 15 }, (_, i) => i + 2).map((i) => ({ value: `${i}`, label: `${i}` }))}
               setValue={(value) => setFormat({ ...format, defaultSeats: parseInt(value, 10) })}
+            />
+            <Select
+              label="Basics board"
+              value={format.basicsBoard || 'none'}
+              options={[
+                { value: 'none', label: 'None' },
+                ...availableBoards.map((b) => ({ value: b.name.toLowerCase(), label: b.name })),
+              ]}
+              setValue={(value) => setFormat({ ...format, basicsBoard: value === 'none' ? undefined : value })}
             />
             <RadioButtonGroup
               label="Multiples"

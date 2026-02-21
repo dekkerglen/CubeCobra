@@ -1,8 +1,9 @@
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
 import { BoardType } from '@utils/datatypes/Card';
+import { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
 
 import Alert from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
@@ -66,6 +67,15 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, DEFAULT_BLOG_TITLE);
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
   const [boardToEdit, setBoardToEdit] = useLocalStorage<BoardType>(`${cube.id}-editBoard`, 'mainboard');
+
+  // Get board options from cube's board definitions
+  const boardOptions = useMemo(() => {
+    const boards = getBoardDefinitions(cube, changedCards);
+    return boards.map((board) => ({
+      value: boardNameToKey(board.name),
+      label: board.name,
+    }));
+  }, [cube, changedCards]);
 
   const handleAdd = useCallback(
     async (event: React.FormEvent, match: string) => {
@@ -211,10 +221,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
             label="Board"
             value={boardToEdit}
             setValue={(value) => setBoardToEdit(value as BoardType)}
-            options={[
-              { value: 'mainboard', label: 'Mainboard' },
-              { value: 'maybeboard', label: 'Maybeboard' },
-            ]}
+            options={boardOptions}
           />
 
           <Flexbox direction="col" gap="2">
@@ -283,14 +290,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           </Flexbox>
 
           <Collapse
-            isOpen={
-              Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-                (c) => c.length > 0,
-              ) ||
-              Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-                (c) => c.length > 0,
-              )
-            }
+            isOpen={Object.keys(changes)
+              .filter((key) => key !== 'version')
+              .some((board) => {
+                const boardChanges = changes[board];
+                if (!boardChanges || typeof boardChanges !== 'object') return false;
+                return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+              })}
           >
             <Flexbox direction="col" gap="3">
               <Changelist />
@@ -479,12 +485,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           </div>
 
           {/* Changelist and Blog - Side by Side on Wide Screens */}
-          {(Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-            (c) => c.length > 0,
-          ) ||
-            Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-              (c) => c.length > 0,
-            )) && (
+          {Object.keys(changes)
+            .filter((key) => key !== 'version')
+            .some((board) => {
+              const boardChanges = changes[board];
+              if (!boardChanges || typeof boardChanges !== 'object') return false;
+              return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+            }) && (
             <div className="mt-4 pt-4 border-t border-border">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Changelist */}
@@ -510,12 +517,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           )}
 
           {/* Action Buttons - Full Width at Bottom */}
-          {(Object.values(changes.mainboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-            (c) => c.length > 0,
-          ) ||
-            Object.values(changes.maybeboard || { adds: [], removes: [], swaps: [], edits: [] }).some(
-              (c) => c.length > 0,
-            )) && (
+          {Object.keys(changes)
+            .filter((key) => key !== 'version')
+            .some((board) => {
+              const boardChanges = changes[board];
+              if (!boardChanges || typeof boardChanges !== 'object') return false;
+              return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+            }) && (
             <div className="mt-4 pt-4 border-t border-border flex gap-4">
               <LoadingButton color="primary" block onClick={submit} loading={loading} className="flex-1">
                 Save Changes
