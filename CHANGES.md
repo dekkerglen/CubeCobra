@@ -27,8 +27,3 @@ Since 1.5.0
 # Technical Changes
 
 - Service now runs in a VPC
-
-todo:
-cube map
-save all sets and first set to card object, add filter support
-add analysis landing page with similar analysis to griselbrand.com

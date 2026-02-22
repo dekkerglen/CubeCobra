@@ -125,6 +125,13 @@ export function validateBoardDefinitions(boards: BoardDefinition[]): { valid: bo
     return { valid: false, error: 'Board names must be unique' };
   }
 
+  // Check for duplicate board keys (e.g. "A B" and "AB" both map to "ab")
+  const keys = boards.map((b) => boardNameToKey(b.name));
+  const uniqueKeys = new Set(keys);
+  if (keys.length !== uniqueKeys.size) {
+    return { valid: false, error: 'Board names resolve to the same key (check for differences in spacing only)' };
+  }
+
   // Check for empty names
   if (boards.some((b) => !b.name.trim())) {
     return { valid: false, error: 'Board names cannot be empty' };

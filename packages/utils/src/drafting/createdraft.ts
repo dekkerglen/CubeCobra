@@ -342,7 +342,9 @@ export const createDraft = (
     cube: cube.id,
     InitialState: result.initialState,
     basics: [], // Deprecated - for backwards compatibility
-    basicsBoard: format.basicsBoard || 'Basics', // New: which board to pull basics from
+    // basicsBoard stores a display name (e.g. "Basics"); it is normalized
+    // via boardNameToKey() at lookup time in getBasicsFromCube()
+    basicsBoard: format.basicsBoard || 'Basics',
     id: '',
     type: 'd',
     owner: user?.id,

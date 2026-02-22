@@ -77,9 +77,7 @@ export const customsortsHandler = async (req: Request, res: Response) => {
     }
 
     cube.customSorts = customSorts || [];
-    console.log('[customsorts] Before update, cube.customSorts:', cube.customSorts);
     await cubeDao.update(cube);
-    console.log('[customsorts] After update, saved successfully');
 
     return res.status(200).send({
       success: 'true',

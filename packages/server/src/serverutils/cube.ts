@@ -1,5 +1,6 @@
 import * as cardutil from '@utils/cardutil';
 import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
+import { boardNameToKey, CubeCards } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao } from 'dynamo/daos';
 
@@ -15,11 +16,6 @@ const CARD_WIDTH = 488;
 const CSV_HEADER =
   'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom';
 
-interface Cards {
-  mainboard: Card[];
-  maybeboard: Card[];
-}
-
 interface Cube {
   id: string;
   shortId?: string;
@@ -32,8 +28,8 @@ async function updateCubeAndBlog(
   req: Request,
   res: Response,
   cube: Cube,
-  cards: Cards,
-  cardsToWrite: Cards,
+  cards: CubeCards,
+  cardsToWrite: CubeCards,
   changelog: Changes,
   added: Card[],
   missing: string[],
@@ -89,7 +85,7 @@ async function updateCubeAndBlog(
     }
 
     if (Object.keys(changelog).length > 0) {
-      await cubeDao.updateCards(cube.id, cardsToWrite as any);
+      await cubeDao.updateCards(cube.id, cardsToWrite);
 
       const changelist = await changelogDao.createChangelog(changelog, cube.id);
 
@@ -134,7 +130,7 @@ async function updateCubeAndBlog(
 
 async function bulkUpload(req: Request, res: Response, list: string, cube: Cube) {
   const cards = await cubeDao.getCards(cube.id);
-  const cardsToWrite: Cards = JSON.parse(JSON.stringify(cards));
+  const cardsToWrite: CubeCards = JSON.parse(JSON.stringify(cards));
   const { mainboard } = cardsToWrite;
   const { maybeboard } = cardsToWrite;
 
@@ -327,9 +323,9 @@ const getBasicsFromCube = (
   legacyBasics?: string[],
 ): string[] => {
   // If a basicsBoard is specified and exists in the cube, use cards from that board
-  // Normalize to lowercase since cubeCards keys are lowercase board names
+  // basicsBoard may be a display name (e.g. "Basics") - normalize via boardNameToKey
   if (basicsBoard) {
-    const boardKey = basicsBoard.toLowerCase();
+    const boardKey = boardNameToKey(basicsBoard);
     if (cubeCards[boardKey]) {
       return cubeCards[boardKey].map((card) => card.cardID);
     }

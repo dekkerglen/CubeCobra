@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "npx playwright test",
-    "test:local": "cross-env BASE_URL=http://localhost:5000 npx playwright test",
+    "test:local": "cross-env BASE_URL=http://localhost:8080 npx playwright test",
     "test:beta": "cross-env BASE_URL=https://beta.cubecobra.com npx playwright test",
     "test:prod": "cross-env BASE_URL=https://cubecobra.com npx playwright test",
     "test:headed": "cross-env HEADED=true npx playwright test --headed",

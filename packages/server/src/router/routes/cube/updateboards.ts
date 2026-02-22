@@ -1,4 +1,5 @@
-import { BoardDefinition, boardNameToKey, validateBoardDefinitions } from '@utils/datatypes/Cube';
+import Card from '@utils/datatypes/Card';
+import { BoardDefinition, boardNameToKey, CubeCards, validateBoardDefinitions } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import cloudwatch from 'serverutils/cloudwatch';
@@ -27,11 +28,11 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
 
     const cube = await cubeDao.getById(req.params.id!);
 
-    if (!isCubeViewable(cube, req.user)) {
+    if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).json({ success: false, message: 'Cube not found.' });
     }
 
-    if (!cube || cube.owner.id !== req.user!.id) {
+    if (cube.owner.id !== req.user!.id) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
@@ -55,7 +56,7 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
     const currentCards = await cubeDao.getCards(cube.id);
 
     // Build new cards structure based on the requested boards
-    const newCards: any = {};
+    const newCards: Record<string, Card[]> = {};
 
     for (const board of boards) {
       const key = boardNameToKey(board.name);
@@ -76,7 +77,7 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
     // Update indices for all cards in all boards
     for (const [boardKey, boardCards] of Object.entries(newCards)) {
       if (Array.isArray(boardCards)) {
-        boardCards.forEach((card: any, index: number) => {
+        boardCards.forEach((card: Card, index: number) => {
           card.board = boardKey;
           card.index = index;
         });
@@ -105,8 +106,8 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
       cloudwatch.info(`Board update for cube ${cube.id}: card count changed from ${oldCardCount} to ${newCardCount}`);
     }
 
-    // Save the reorganized cards structure
-    await cubeDao.updateCards(cube.id, newCards);
+    // Save the reorganized cards structure (mainboard is guaranteed to exist by validation above)
+    await cubeDao.updateCards(cube.id, newCards as CubeCards);
 
     return res.status(200).json({
       success: true,

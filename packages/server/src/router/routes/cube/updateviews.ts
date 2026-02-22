@@ -17,23 +17,18 @@ export const updateViewsHandler = async (req: Request, res: Response) => {
 
     const cube = await cubeDao.getById(req.params.id!);
 
-    if (!isCubeViewable(cube, req.user)) {
+    if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).json({ success: false, message: 'Cube not found.' });
     }
 
-    if (!cube || cube.owner.id !== req.user!.id) {
+    if (cube.owner.id !== req.user!.id) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
     // Update the cube's views
     cube.views = views;
 
-    console.log(
-      `[UPDATE VIEWS] Saving ${views.length} views for cube ${cube.id}:`,
-      JSON.stringify(views.map((v: any) => v.name)),
-    );
     await cubeDao.update(cube);
-    console.log(`[UPDATE VIEWS] Successfully saved views for cube ${cube.id}`);
     return res.status(200).json({
       success: true,
       message: 'Views updated successfully.',

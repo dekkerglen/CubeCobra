@@ -130,9 +130,6 @@ const CubeListPageRaw: React.FC = () => {
             const isActive = showAllBoards || viewBoards.includes(boardKey);
             // Capitalize board name for display
             const displayBoardName = boardname.charAt(0).toUpperCase() + boardname.slice(1);
-            console.log(
-              `[DEBUG] Board: ${boardname}, boardKey: ${boardKey}, isActive: ${isActive}, cardCount: ${boardcards.length}`,
-            );
 
             return (
               <ErrorBoundary key={boardname}>

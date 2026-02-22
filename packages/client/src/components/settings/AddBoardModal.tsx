@@ -61,7 +61,10 @@ const AddBoardModal: React.FC<AddBoardModalProps> = ({ isOpen, setOpen, onAdd, e
       </ModalHeader>
       <ModalBody>
         <Flexbox direction="col" gap="3">
-          <Text sm>Enter the name for your new board. Board names cannot be changed after creation.</Text>
+          <Text sm>
+            Enter the name for your new board. Board names cannot be changed after creation. Boards cannot be deleted if
+            they have cards or are included in a view.
+          </Text>
           {error && (
             <div className="rounded-md bg-danger/10 p-2 border border-danger">
               <Text sm className="text-danger">

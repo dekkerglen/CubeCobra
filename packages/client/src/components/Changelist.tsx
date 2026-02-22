@@ -41,7 +41,7 @@ const Add = ({
   card: CardData;
   revert: () => void;
   index: number;
-  board: 'mainboard' | 'maybeboard';
+  board: BoardType;
 }) => {
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState<CardDetails | null>(null);
@@ -130,7 +130,7 @@ const Swap = ({
   oldCard: CardData;
   revert: () => void;
   index: number;
-  board: 'mainboard' | 'maybeboard';
+  board: BoardType;
 }) => {
   const [loading, setLoading] = useState(true);
   const [newCardDetails, setNewCardDetails] = useState<CardDetails | null>();
@@ -293,24 +293,17 @@ const Changelist: React.FC = () => {
         .filter((key) => key !== 'version')
         .map((board) => {
           const boardChanges = changes[board];
-          console.log(`Changelist - board: ${board}, boardChanges:`, boardChanges);
           if (!boardChanges || typeof boardChanges !== 'object') return false;
 
           const { adds, removes, swaps, edits } = boardChanges as BoardChanges;
-          console.log(`Changelist - board: ${board}, edits:`, edits);
-          console.log(`Changelist - unfilteredChangedCards[${board}]:`, unfilteredChangedCards[board]);
-          console.log(`Changelist - cube.cards[${board}]:`, cube.cards[board]);
           if (
             (adds || []).length === 0 &&
             (removes || []).length === 0 &&
             (swaps || []).length === 0 &&
             (edits || []).length === 0
           ) {
-            console.log(`Changelist - board: ${board}, no changes, returning null`);
             return null;
           }
-
-          console.log(`Changelist - board: ${board}, rendering JSX`);
           return (
             <div key={board} className="mb-2">
               <Text semibold sm>
@@ -328,13 +321,7 @@ const Changelist: React.FC = () => {
                 <ul className="changelist">
                   {adds &&
                     adds.map((card: CardData, index: number) => (
-                      <Add
-                        key={index}
-                        card={card}
-                        revert={() => revertAdd(index, board as any)}
-                        index={index}
-                        board={board as any}
-                      />
+                      <Add key={index} card={card} revert={() => revertAdd(index, board)} index={index} board={board} />
                     ))}
                   {removes &&
                     removes.map((remove: CubeCardRemove, index: number) => (
@@ -356,9 +343,9 @@ const Changelist: React.FC = () => {
                           details: unfilteredChangedCards[board]?.[swap.index]?.details,
                         }}
                         card={swap.card}
-                        revert={() => revertSwap(index, board as any)}
+                        revert={() => revertSwap(index, board)}
                         index={index}
-                        board={board as any}
+                        board={board}
                       />
                     ))}
                   {edits &&
