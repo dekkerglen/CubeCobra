@@ -253,6 +253,13 @@ function createMockFiles() {
       id: 'test-card-3',
       imageName: 'llanowar elves [tst-3]',
     },
+    // Default fallback image used by getImageData when imageName is not found
+    'doubling cube [10e-321]': {
+      uri: 'https://img.scryfall.com/cards/normal/front/test/default.jpg',
+      artist: 'Ron Spencer',
+      id: 'default-image',
+      imageName: 'doubling cube [10e-321]',
+    },
   };
 
   const cardimages = {
