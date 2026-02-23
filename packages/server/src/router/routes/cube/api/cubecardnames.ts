@@ -1,3 +1,4 @@
+import { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -25,18 +26,34 @@ export const cubecardnamesHandler = async (req: Request, res: Response) => {
 
     const cubeCards = await cubeDao.getCards(cube.id);
 
-    const board = req.params.board as 'mainboard' | 'maybeboard';
+    const boardParam = req.params.board;
+    // Convert board name to storage key (handles both display names and keys)
+    const boardKey = boardNameToKey(boardParam);
 
-    if (!['mainboard', 'maybeboard'].includes(board)) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Invalid board',
+    // Validate board exists in cube's cards
+    if (!cubeCards[boardKey]) {
+      // Check if it's a valid board name from cube's boards
+      const boardDefs = getBoardDefinitions(cube, cubeCards);
+      const validBoardNames = boardDefs.map((b) => b.name);
+      const validBoardKeys = boardDefs.map((b) => boardNameToKey(b.name));
+
+      if (!validBoardKeys.includes(boardKey)) {
+        return res.status(400).send({
+          success: 'false',
+          message: `Invalid board. Valid boards: ${validBoardNames.join(', ')}`,
+        });
+      }
+
+      // Board is valid but empty
+      return res.status(200).send({
+        success: 'true',
+        cardnames: {},
       });
     }
 
     const cardnames: string[] = [];
 
-    for (const card of cubeCards[board]) {
+    for (const card of cubeCards[boardKey]) {
       binaryInsert(cardFromId(card.cardID).name, cardnames);
     }
 

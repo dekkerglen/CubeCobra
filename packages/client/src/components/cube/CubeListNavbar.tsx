@@ -21,6 +21,7 @@ import AdvancedFilterModal from 'components/modals/AdvancedFilterModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
+import UserContext from 'contexts/UserContext';
 
 import Select from '../base/Select';
 import Tooltip from '../base/Tooltip';
@@ -38,6 +39,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
 
   const { canEdit, changes } = useContext(CubeContext);
   const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
+  const user = useContext(UserContext);
 
   const { rightSidebarMode, setRightSidebarMode } = useContext(DisplayContext);
 
@@ -102,55 +104,72 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
         wrap="wrap"
       >
         <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="xl:px-2">
-          <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 self-stretch items-center">
-            <Tooltip text="Table View">
-              <button
-                onClick={() => setCubeView('table')}
-                className={`px-2 py-1 rounded transition-colors ${cubeView === 'table' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                aria-label="Table View"
-              >
-                <TableIcon size={20} />
-              </button>
-            </Tooltip>
-            <Tooltip text="Visual Spoiler">
-              <button
-                onClick={() => setCubeView('spoiler')}
-                className={`px-2 py-1 rounded transition-colors ${cubeView === 'spoiler' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                aria-label="Visual Spoiler"
-              >
-                <ImageIcon size={20} />
-              </button>
-            </Tooltip>
-            <Tooltip text="Curve View">
-              <button
-                onClick={() => setCubeView('curve')}
-                className={`px-2 py-1 rounded transition-colors ${cubeView === 'curve' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                aria-label="Curve View"
-              >
-                <GraphIcon size={20} />
-              </button>
-            </Tooltip>
-            <Tooltip text="Card Stacks">
-              <button
-                onClick={() => setCubeView('stacks')}
-                className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                aria-label="Card Stacks"
-              >
-                <StackIcon size={20} />
-              </button>
-            </Tooltip>
-            {canEdit && (
-              <Tooltip text="List View">
+          {user?.useTextOverIcons ? (
+            <div className="w-40">
+              <Select
+                value={cubeView}
+                setValue={setCubeView}
+                className="bg-bg-active"
+                options={[
+                  { value: 'table', label: 'Table' },
+                  { value: 'spoiler', label: 'Visual Spoiler' },
+                  { value: 'curve', label: 'Curve' },
+                  { value: 'stacks', label: 'Stacks' },
+                  ...(canEdit ? [{ value: 'list', label: 'List' }] : []),
+                ]}
+              />
+            </div>
+          ) : (
+            <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 self-stretch items-center">
+              <Tooltip text="Table View">
                 <button
-                  onClick={() => setCubeView('list')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'list' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="List View"
+                  onClick={() => setCubeView('table')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'table' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="Table View"
                 >
-                  <ListUnorderedIcon size={20} />
+                  <TableIcon size={20} />
                 </button>
               </Tooltip>
-            )}
-          </div>
+              <Tooltip text="Visual Spoiler">
+                <button
+                  onClick={() => setCubeView('spoiler')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'spoiler' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="Visual Spoiler"
+                >
+                  <ImageIcon size={20} />
+                </button>
+              </Tooltip>
+              <Tooltip text="Curve View">
+                <button
+                  onClick={() => setCubeView('curve')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'curve' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="Curve View"
+                >
+                  <GraphIcon size={20} />
+                </button>
+              </Tooltip>
+              <Tooltip text="Card Stacks">
+                <button
+                  onClick={() => setCubeView('stacks')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="Card Stacks"
+                >
+                  <StackIcon size={20} />
+                </button>
+              </Tooltip>
+              {canEdit && (
+                <Tooltip text="List View">
+                  <button
+                    onClick={() => setCubeView('list')}
+                    className={`px-2 py-1 rounded transition-colors ${cubeView === 'list' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                    aria-label="List View"
+                  >
+                    <ListUnorderedIcon size={20} />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+          )}
 
           {cubeView === 'spoiler' && (
             <div className="w-36">
@@ -256,55 +275,72 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
       <Flexbox direction="col" gap="2" className="lg:hidden mt-2">
         {/* First row: View select and action buttons */}
         <Flexbox direction="row" alignItems="center" justify="between" className="w-full">
-          <div className="flex gap-0 bg-bg-active rounded py-0.5 items-center">
-            <Tooltip text="Table View">
-              <button
-                onClick={() => setCubeView('table')}
-                className={`px-2 py-1 rounded transition-colors ${cubeView === 'table' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                aria-label="Table View"
-              >
-                <TableIcon size={16} />
-              </button>
-            </Tooltip>
-            <Tooltip text="Visual Spoiler">
-              <button
-                onClick={() => setCubeView('spoiler')}
-                className={`px-2 py-1 rounded transition-colors ${cubeView === 'spoiler' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                aria-label="Visual Spoiler"
-              >
-                <ImageIcon size={16} />
-              </button>
-            </Tooltip>
-            <Tooltip text="Curve View">
-              <button
-                onClick={() => setCubeView('curve')}
-                className={`px-2 py-1 rounded transition-colors ${cubeView === 'curve' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                aria-label="Curve View"
-              >
-                <GraphIcon size={16} />
-              </button>
-            </Tooltip>
-            <Tooltip text="Card Stacks">
-              <button
-                onClick={() => setCubeView('stacks')}
-                className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                aria-label="Card Stacks"
-              >
-                <StackIcon size={16} />
-              </button>
-            </Tooltip>
-            {canEdit && (
-              <Tooltip text="List View">
+          {user?.useTextOverIcons ? (
+            <div className="flex-1 min-w-0">
+              <Select
+                value={cubeView}
+                setValue={setCubeView}
+                className="bg-bg-active"
+                options={[
+                  { value: 'table', label: 'Table' },
+                  { value: 'spoiler', label: 'Visual Spoiler' },
+                  { value: 'curve', label: 'Curve' },
+                  { value: 'stacks', label: 'Stacks' },
+                  ...(canEdit ? [{ value: 'list', label: 'List' }] : []),
+                ]}
+              />
+            </div>
+          ) : (
+            <div className="flex gap-0 bg-bg-active rounded py-0.5 items-center">
+              <Tooltip text="Table View">
                 <button
-                  onClick={() => setCubeView('list')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'list' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="List View"
+                  onClick={() => setCubeView('table')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'table' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="Table View"
                 >
-                  <ListUnorderedIcon size={16} />
+                  <TableIcon size={16} />
                 </button>
               </Tooltip>
-            )}
-          </div>
+              <Tooltip text="Visual Spoiler">
+                <button
+                  onClick={() => setCubeView('spoiler')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'spoiler' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="Visual Spoiler"
+                >
+                  <ImageIcon size={16} />
+                </button>
+              </Tooltip>
+              <Tooltip text="Curve View">
+                <button
+                  onClick={() => setCubeView('curve')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'curve' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="Curve View"
+                >
+                  <GraphIcon size={16} />
+                </button>
+              </Tooltip>
+              <Tooltip text="Card Stacks">
+                <button
+                  onClick={() => setCubeView('stacks')}
+                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                  aria-label="Card Stacks"
+                >
+                  <StackIcon size={16} />
+                </button>
+              </Tooltip>
+              {canEdit && (
+                <Tooltip text="List View">
+                  <button
+                    onClick={() => setCubeView('list')}
+                    className={`px-2 py-1 rounded transition-colors ${cubeView === 'list' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
+                    aria-label="List View"
+                  >
+                    <ListUnorderedIcon size={16} />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+          )}
           <div className="flex gap-2 items-center">
             <Button
               color={rightSidebarMode === 'sort' ? 'primary' : 'secondary'}

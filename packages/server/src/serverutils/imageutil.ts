@@ -8,9 +8,19 @@ import carddb, { cardFromId, getIdsFromName } from './carddb';
 // uri
 // artist
 // id
+
+const FALLBACK_IMAGE: Image = {
+  uri: '',
+  artist: 'Unknown',
+  id: 'default',
+  imageName: 'default',
+};
+
 export function getImageData(imagename: string | undefined): Image {
+  const defaultImage = carddb.imagedict['doubling cube [10e-321]'] ?? FALLBACK_IMAGE;
+
   if (!imagename) {
-    return carddb.imagedict['doubling cube [10e-321]'];
+    return defaultImage;
   }
 
   const exact = carddb.imagedict[imagename.toLowerCase()];
@@ -34,5 +44,5 @@ export function getImageData(imagename: string | undefined): Image {
     }
   }
 
-  return carddb.imagedict['doubling cube [10e-321]'];
+  return defaultImage;
 }

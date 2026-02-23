@@ -5,7 +5,7 @@ import { createCard } from '../test-utils/data';
 
 describe('mergeChanges', () => {
   it('should merge changelogs', () => {
-    expect(mergeChanges([])).toEqual({ mainboard: {}, maybeboard: {}, version: 0 });
+    expect(mergeChanges([])).toEqual({ version: 0 });
   });
 
   it('should merge changelogs with only adds', () => {
@@ -22,7 +22,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { adds: [card1, card2, card3, card4] },
-      maybeboard: {},
       version: 3,
     });
   });
@@ -39,7 +38,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { adds: [card2], removes: [{ index: 2, oldCard: card3 }] },
-      maybeboard: {},
       version: 2,
     });
   });
@@ -58,7 +56,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { adds: [card1Edited, card2, card3] },
-      maybeboard: {},
       version: 3,
     });
   });
@@ -75,7 +72,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { adds: [card2], edits: [{ index: 0, oldCard: card1, newCard: card1Edited }] },
-      maybeboard: {},
       version: 2,
     });
   });
@@ -91,7 +87,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { adds: [card2] },
-      maybeboard: {},
       version: 2,
     });
   });
@@ -107,7 +102,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { adds: [card2] },
-      maybeboard: {},
       version: 2,
     });
   });
@@ -123,7 +117,6 @@ describe('mergeChanges', () => {
         { maybeboard: { adds: [card2, card3] }, version: 2 },
       ]),
     ).toEqual({
-      mainboard: {},
       maybeboard: { adds: [card1, card2, card3] },
       version: 2,
     });
@@ -137,7 +130,6 @@ describe('mergeChanges', () => {
       mergeChanges([{ mainboard: { swaps: [{ index: 0, oldCard: card1, card: card1Swapped }] }, version: 1 }]),
     ).toEqual({
       mainboard: { swaps: [{ index: 0, oldCard: card1, card: card1Swapped }] },
-      maybeboard: {},
       version: 1,
     });
   });
@@ -164,7 +156,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { edits: [{ index: 0, oldCard: card1Swapped, newCard: card1Edited }] },
-      maybeboard: {},
       version: 2,
     });
   });
@@ -191,7 +182,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { swaps: [{ index: 0, oldCard: card1Edited, card: card1Swapped }] },
-      maybeboard: {},
       version: 2,
     });
   });
@@ -208,8 +198,6 @@ describe('mergeChanges', () => {
         { mainboard: { removes: [{ index: 0, oldCard: card1Edited }] }, version: 4 },
       ]),
     ).toEqual({
-      mainboard: {},
-      maybeboard: {},
       version: 4,
     });
   });
@@ -225,7 +213,6 @@ describe('mergeChanges', () => {
       ]),
     ).toEqual({
       mainboard: { adds: [card1Edited] },
-      maybeboard: {},
       version: 1,
     });
   });
@@ -264,7 +251,6 @@ describe('mergeChanges', () => {
         { maybeboard: { removes: [{ index: 0, oldCard: card1 }] }, version: 2 },
       ]),
     ).toEqual({
-      mainboard: {},
       maybeboard: { adds: [card2] },
       version: 2,
     });
@@ -278,7 +264,6 @@ describe('mergeChanges', () => {
       mergeChanges([{ mainboard: { edits: [{ index: 0, oldCard: card1, newCard: card1Edited }] }, version: 1 }]),
     ).toEqual({
       mainboard: { edits: [{ index: 0, oldCard: card1, newCard: card1Edited }] },
-      maybeboard: {},
       version: 1,
     });
   });
@@ -286,7 +271,7 @@ describe('mergeChanges', () => {
 
 describe('revertChanges', () => {
   it('should revert an empty changes array', () => {
-    expect(revertChanges([])).toEqual({ mainboard: {}, maybeboard: {}, version: 0 });
+    expect(revertChanges([])).toEqual({ version: 0 });
   });
 
   it('should revert mainboard adds into removals', () => {
@@ -301,7 +286,6 @@ describe('revertChanges', () => {
           { index: card2.index!, oldCard: card2 },
         ],
       },
-      maybeboard: {},
       version: 1,
     });
   });
@@ -312,7 +296,6 @@ describe('revertChanges', () => {
 
     expect(revertChanges(changes)).toEqual({
       mainboard: { adds: [card1] },
-      maybeboard: {},
       version: 2,
     });
   });
@@ -329,7 +312,6 @@ describe('revertChanges', () => {
         adds: [card1],
         removes: [{ index: card1.index!, oldCard: card1Swapped }],
       },
-      maybeboard: {},
       version: 3,
     });
   });
@@ -345,7 +327,6 @@ describe('revertChanges', () => {
       mainboard: {
         edits: [{ index: card1.index!, oldCard: card1Edited, newCard: card1 }],
       },
-      maybeboard: {},
       version: 4,
     });
   });
@@ -366,7 +347,6 @@ describe('revertChanges', () => {
     ];
 
     expect(revertChanges(changes)).toEqual({
-      mainboard: {},
       maybeboard: {
         removes: [
           { index: card1.index!, oldCard: card1 },

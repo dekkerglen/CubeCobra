@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 
-import { BellFillIcon, FileMediaIcon, InfoIcon, PackageIcon, PersonIcon, SearchIcon } from '@primer/octicons-react';
+import { BellFillIcon, InfoIcon, MegaphoneIcon, PackageIcon, PersonIcon, SearchIcon } from '@primer/octicons-react';
 import Notification from '@utils/datatypes/Notification';
 import { UserRoles } from '@utils/datatypes/User';
 import { getCubeId } from '@utils/Util';
@@ -28,8 +28,9 @@ const navItems = [
   {
     id: 'content',
     title: 'Content',
-    icon: FileMediaIcon,
+    icon: MegaphoneIcon,
     items: [
+      { label: 'Dev Blog', href: '/dev/blog' },
       { label: 'Browse Content', href: '/content/browse' },
       { label: 'Articles', href: '/content/articles' },
       { label: 'Podcasts', href: '/content/podcasts' },
@@ -54,7 +55,6 @@ const navItems = [
     title: 'About',
     icon: InfoIcon,
     items: [
-      { label: 'Dev Blog', href: '/dev/blog' },
       { label: 'Contact', href: '/contact' },
       // {
       //   label: 'Merchandise',

@@ -110,7 +110,7 @@ export const listHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const cards = await cubeDao.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id, cube);
 
     const baseUrl = getBaseUrl();
     return render(
@@ -364,7 +364,7 @@ export const samplePackImageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/cube/playtest/404');
     }
 
-    const cards = await cubeDao.getCards(cube.id);
+    const cards = await cubeDao.getCards(cube.id, cube);
     const isBalanced = req.query.balanced === 'true';
 
     const cacheKey = `/samplepack/${req.params.id}/${req.params.seed}${isBalanced ? '?balanced=true' : ''}`;

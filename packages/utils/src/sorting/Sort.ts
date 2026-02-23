@@ -1,4 +1,4 @@
-import Cube from '@utils/datatypes/Cube';
+import Cube, { CustomSort } from '@utils/datatypes/Cube';
 
 import {
   cardAddedTime,
@@ -28,6 +28,8 @@ import {
   convertFromLegacyCardColorCategory,
 } from '../cardutil';
 import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES, SUPPORTED_FORMATS } from '../datatypes/Card';
+// Import filter utilities - we'll need this for custom sorts
+import filterutil from '../filtering/FilterCards';
 import { arrayIsSubset, fromEntries } from '../Util';
 
 //"as const" so Typescript knows will always be these 4 values
@@ -344,6 +346,37 @@ function getPriceBucket(price: number, prefix: string): string {
   return priceBucketLabel(priceBucketIndex(price), prefix);
 }
 
+/**
+ * Helper function to find a custom sort by name from a cube
+ */
+function getCustomSort(cube: Cube | Card[] | null, sortName: string): CustomSort | null {
+  // Handle both Cube objects and arrays of Cards
+  const customSorts = cube && !Array.isArray(cube) ? (cube as Cube).customSorts : null;
+  if (!customSorts || customSorts.length === 0) {
+    return null;
+  }
+  return customSorts.find((cs) => cs.name === sortName) || null;
+}
+
+/**
+ * Check if a card matches a custom sort category using filter syntax.
+ * Used by cardGetLabels to evaluate custom sort categories.
+ */
+function cardMatchesCustomCategory(card: Card, filterString: string): boolean {
+  if (!filterString || filterString.trim() === '') {
+    return false;
+  }
+  try {
+    const { filter, err } = filterutil.makeFilter(filterString);
+    if (err || !filter) {
+      return false;
+    }
+    return filter(card);
+  } catch {
+    return false;
+  }
+}
+
 const wordCountBuckets = [0, 1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
 
 function wordCountBucket(wordCount: number): string {
@@ -461,8 +494,14 @@ const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
     .concat(['Other']);
 };
 
-export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): string[] {
+export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean, cubeObj?: Cube | null): string[] {
   let ret: string[] = [];
+
+  // Check if this is a custom sort first (prefer cubeObj which has customSorts)
+  const customSort = getCustomSort(cubeObj ?? cube, sort);
+  if (customSort) {
+    return customSort.categories.map((cat) => cat.label);
+  }
 
   /* Start of sort Options */
   if (sort === 'Color Category') {
@@ -686,8 +725,31 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
   return showOther ? [...ret, ' Other '] : ret;
 }
 
-export function cardGetLabels(card: Card, sort: string, showOther = false): string[] {
+export function cardGetLabels(
+  card: Card,
+  sort: string,
+  showOther = false,
+  cube: Cube | Card[] | null = null,
+): string[] {
   let ret: string[] = [];
+
+  // Check if this is a custom sort first
+  const customSort = getCustomSort(cube, sort);
+  if (customSort) {
+    const labels: string[] = [];
+    for (let i = 0; i < customSort.categories.length; i++) {
+      const category = customSort.categories[i]!;
+      if (cardMatchesCustomCategory(card, category.filter)) {
+        labels.push(category.label);
+        // If matchFirstOnly is true, stop after first match
+        if (customSort.matchFirstOnly) {
+          break;
+        }
+      }
+    }
+    return labels;
+  }
+
   /* Start of sort options */
   if (sort === 'Color Category') {
     const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string);
@@ -904,12 +966,12 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
   return ret;
 }
 
-export function cardCanBeSorted(card: any, sort: string): boolean {
-  return cardGetLabels(card, sort, false).length !== 0;
+export function cardCanBeSorted(card: any, sort: string, cube: Cube | Card[] | null = null): boolean {
+  return cardGetLabels(card, sort, false, cube).length !== 0;
 }
 
-export function cardIsLabel(card: any, label: string, sort: string): boolean {
-  return cardGetLabels(card, sort, false).includes(label);
+export function cardIsLabel(card: any, label: string, sort: string, cube: Cube | Card[] | null = null): boolean {
+  return cardGetLabels(card, sort, false, cube).includes(label);
 }
 
 export function formatLabel(label: string | undefined): string {
@@ -917,15 +979,20 @@ export function formatLabel(label: string | undefined): string {
 }
 
 // Get labels in string form.
-export function getLabels(cube: Card[] | null, sort: string, showOther = false): string[] {
-  return getLabelsRaw(cube, sort, showOther).map(formatLabel);
+export function getLabels(cube: Card[] | null, sort: string, showOther = false, cubeObj?: Cube | null): string[] {
+  return getLabelsRaw(cube, sort, showOther, cubeObj).map(formatLabel);
 }
 
-export function sortGroupsOrdered(cards: Card[], sort: string, showOther: boolean): [string, Card[]][] {
-  const labels = getLabelsRaw(cards, sort, showOther);
+export function sortGroupsOrdered(
+  cards: Card[],
+  sort: string,
+  showOther: boolean,
+  cubeObj?: Cube | null,
+): [string, Card[]][] {
+  const labels = getLabelsRaw(cards, sort, showOther, cubeObj);
   const allCardLabels: [Card, string[]][] = cards.map((card) => [
     card,
-    cardGetLabels(card, sort, showOther).map((label) => {
+    cardGetLabels(card, sort, showOther, cubeObj ?? cards).map((label) => {
       if (labels.includes(label)) {
         return label;
       }
@@ -948,27 +1015,56 @@ export function sortGroupsOrdered(cards: Card[], sort: string, showOther: boolea
   return labels.filter((label) => byLabel[label]).map((label) => [formatLabel(label), byLabel[label]!]);
 }
 
-export function sortIntoGroups(cards: Card[], sort: string, showOther = false): Record<string, Card[]> {
-  return fromEntries(sortGroupsOrdered(cards, sort, showOther));
+export function sortIntoGroups(
+  cards: Card[],
+  sort: string,
+  showOther = false,
+  cubeObj?: Cube | null,
+): Record<string, Card[]> {
+  return fromEntries(sortGroupsOrdered(cards, sort, showOther, cubeObj));
 }
 
 type DeepSorted = Card[] | [string, DeepSorted][];
 
-export function sortDeep(cards: Card[], showOther: boolean, last: string, ...sorts: string[]): DeepSorted {
+function sortDeepImpl(
+  cards: Card[],
+  showOther: boolean,
+  last: string,
+  sorts: string[],
+  cubeObj?: Cube | null,
+): DeepSorted {
   if (sorts.length === 0) {
     return [...cards].sort(SortFunctions[last]);
   }
   const [first, ...rest] = sorts;
-  const nextSort = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther);
+  const nextSort = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther, cubeObj);
   const result: [string, DeepSorted][] = [];
   for (const [label, group] of nextSort) {
     if (rest.length > 0) {
-      result.push([label, sortDeep(group, showOther, last, ...rest)]);
+      result.push([label, sortDeepImpl(group, showOther, last, rest, cubeObj)]);
     } else {
       result.push([label, group.sort(SortFunctions[last])]);
     }
   }
   return result;
+}
+
+export function sortDeep(cards: Card[], showOther: boolean, last: string, ...sorts: string[]): DeepSorted;
+export function sortDeep(
+  cards: Card[],
+  showOther: boolean,
+  last: string,
+  sorts: string[],
+  cubeObj?: Cube | null,
+): DeepSorted;
+export function sortDeep(cards: Card[], showOther: boolean, last: string, ...args: any[]): DeepSorted {
+  // Detect whether called with array-of-sorts + cubeObj, or with ...rest string sorts
+  if (args.length > 0 && Array.isArray(args[0])) {
+    // Called as sortDeep(cards, showOther, last, sorts[], cubeObj?)
+    return sortDeepImpl(cards, showOther, last, args[0] as string[], args[1] as Cube | null | undefined);
+  }
+  // Called as sortDeep(cards, showOther, last, ...sorts)
+  return sortDeepImpl(cards, showOther, last, args as string[]);
 }
 
 function isSimpleGroup(groups: DeepSorted): groups is Card[] {
@@ -1007,8 +1103,9 @@ export function sortForDownload(
   tertiary: string = 'Mana Value',
   quaternary: string = 'Alphabetical',
   showOther: boolean = false,
+  cubeObj?: Cube | null,
 ): Card[] {
-  const groups = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
+  const groups = sortDeep(cards, showOther, quaternary, [primary, secondary, tertiary], cubeObj);
   return sortedCards(groups);
 }
 
@@ -1019,4 +1116,19 @@ export function getCubeSorts(cube: Cube): string[] {
     cube.defaultSorts?.[2] ?? CUBE_DEFAULT_SORTS[2],
     cube.defaultSorts?.[3] ?? CUBE_DEFAULT_SORTS[3],
   ];
+}
+
+/**
+ * Get all available sort options for a cube, including custom sorts
+ */
+export function getAllSorts(cube: Cube | null): string[] {
+  const customSortNames = cube?.customSorts?.map((cs) => cs.name) || [];
+  return [...SORTS, ...customSortNames];
+}
+
+/**
+ * Get all available ordered sort options (these don't include custom sorts as they can't be ordered)
+ */
+export function getAllOrderedSorts(): string[] {
+  return ORDERED_SORTS;
 }

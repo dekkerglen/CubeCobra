@@ -54,10 +54,13 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
       break;
   }
 
+  // Extract cards from cube object for CubeLayout
+  const { cards, ...cubeWithoutCards } = cube as any;
+
   return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} activeLink={view}>
+        <CubeLayout cube={cubeWithoutCards} cards={cards} activeLink={view}>
           <Flexbox direction="col" gap="2">
             <DynamicFlash />
             <PlaytestNavbar />

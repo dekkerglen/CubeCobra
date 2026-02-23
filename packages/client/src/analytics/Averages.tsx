@@ -4,7 +4,7 @@ import { weightedAverage, weightedMedian, weightedStdDev } from '@utils/analytic
 import { cardType } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import { calculateAsfans } from '@utils/drafting/createdraft';
-import { sortIntoGroups, SORTS } from '@utils/sorting/Sort';
+import { getAllSorts, sortIntoGroups } from '@utils/sorting/Sort';
 
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -39,7 +39,9 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', DEFAULT_USE_ASFANS);
   const [draftFormat, setDraftFormat] = useQueryParam('format', DEFAULT_DRAFT_FORMAT);
 
-  const groups = useMemo(() => sortIntoGroups(cards, sort || DEFAULT_SORT), [cards, sort]);
+  const allSorts = useMemo(() => getAllSorts(cube), [cube]);
+
+  const groups = useMemo(() => sortIntoGroups(cards, sort || DEFAULT_SORT, false, cube), [cards, sort, cube]);
 
   const asfans = useMemo(() => {
     if (useAsfans !== 'true') {
@@ -100,7 +102,7 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
         <Col xs={12} md={6}>
           <Select
             label="Order By"
-            options={SORTS.map((item) => ({ value: item, label: item }))}
+            options={allSorts.map((item) => ({ value: item, label: item }))}
             value={sort || DEFAULT_SORT}
             setValue={setSort}
           />

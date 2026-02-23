@@ -6,7 +6,20 @@ interface NonAddOp {
   data: any;
 }
 
-const boards: (keyof Pick<Changes, 'mainboard' | 'maybeboard'>)[] = ['mainboard', 'maybeboard'];
+/**
+ * Derive unique board keys from an array of Changes objects (all keys except 'version').
+ */
+function getBoardKeysFromChanges(changes: Changes[]): string[] {
+  const keys = new Set<string>();
+  for (const change of changes) {
+    for (const key of Object.keys(change)) {
+      if (key !== 'version') {
+        keys.add(key);
+      }
+    }
+  }
+  return Array.from(keys);
+}
 
 export function mergeChanges(changes: Changes[]): Changes {
   const mergedVersion = changes.reduce(
@@ -15,13 +28,14 @@ export function mergeChanges(changes: Changes[]): Changes {
   );
 
   const merged: Changes = { version: mergedVersion };
+  const boards = getBoardKeysFromChanges(changes);
 
   boards.forEach((board) => {
     const addOps: { version: number; card: Card }[] = [];
     const nonAddOps = new Map<number, NonAddOp>();
 
     for (const change of changes) {
-      const boardChange = change[board];
+      const boardChange = change[board] as BoardChanges | undefined;
       if (!boardChange) continue;
       const currentVersion = change.version || 0;
 
@@ -119,7 +133,10 @@ export function mergeChanges(changes: Changes[]): Changes {
       }
     });
 
-    merged[board] = mergedBoard;
+    // Only include the board if it has actual operations
+    if (Object.keys(mergedBoard).length > 0) {
+      merged[board] = mergedBoard;
+    }
   });
 
   return merged;
@@ -128,9 +145,10 @@ export function mergeChanges(changes: Changes[]): Changes {
 export function revertChanges(changes: Changes[]): Changes {
   const merged = mergeChanges(changes);
   const reverted: Changes = { version: merged.version };
+  const boards = Object.keys(merged).filter((key) => key !== 'version');
 
   boards.forEach((board) => {
-    const mergedBoard: BoardChanges = merged[board] || {};
+    const mergedBoard: BoardChanges = (merged[board] as BoardChanges) || {};
     const revertBoard: BoardChanges = {};
 
     if (mergedBoard.adds) {
@@ -205,17 +223,16 @@ const applyBoardReversedChanges = (cards: Card[], boardOps?: BoardChanges): Card
   return board;
 };
 
-export const applyReversedChanges = (
-  cube: { mainboard: Card[]; maybeboard: Card[] },
-  changes: Changes[],
-): {
-  mainboard: Card[];
-  maybeboard: Card[];
-} => {
+export const applyReversedChanges = (cube: Record<string, Card[]>, changes: Changes[]): Record<string, Card[]> => {
   const reversed = revertChanges(changes);
 
-  return {
-    mainboard: applyBoardReversedChanges(cube.mainboard, reversed.mainboard),
-    maybeboard: applyBoardReversedChanges(cube.maybeboard, reversed.maybeboard),
-  };
+  // Process all boards that exist in either the cube or the reversed changes
+  const allBoards = new Set([...Object.keys(cube), ...Object.keys(reversed).filter((k) => k !== 'version')]);
+  const result: Record<string, Card[]> = {};
+
+  for (const board of allBoards) {
+    result[board] = applyBoardReversedChanges(cube[board] || [], reversed[board] as BoardChanges | undefined);
+  }
+
+  return result;
 };

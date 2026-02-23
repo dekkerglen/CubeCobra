@@ -129,7 +129,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
         <Text sm>
           Having trouble using filter syntax? Check out our <Link href="/filters">syntax guide</Link>.
         </Text>
-        {filterResult && filterResult.mainboard && filterTextFn && (
+        {filterResult && Object.keys(filterResult).length > 0 && filterTextFn && (
           <Text italic sm>
             {filterTextFn(filterResult)}
           </Text>

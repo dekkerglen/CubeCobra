@@ -54,10 +54,10 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
 
   return (
     <FilterContextProvider>
-      <ChangesContextProvider cube={cube} cards={cards}>
+      <ChangesContextProvider cube={cube} cards={cards as any}>
         <CubeContextProvider
           initialCube={cube}
-          cards={cards}
+          cards={cards as any}
           loadVersionDict={loadVersionDict}
           useChangedCards={useChangedCards}
         >

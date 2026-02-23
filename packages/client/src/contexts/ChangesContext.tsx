@@ -1,7 +1,14 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import { cardsAreEquivalent } from '@utils/cardutil';
-import Card, { BoardType, Changes } from '@utils/datatypes/Card';
+import Card, {
+  BoardChanges,
+  BoardType,
+  Changes,
+  CubeCardEdit,
+  CubeCardRemove,
+  CubeCardSwap,
+} from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
 import useLocalStorage from 'hooks/useLocalStorage';
@@ -71,20 +78,22 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       // if the local changes are only adds, this is actually fine, and we can just bump the version
       let onlyAdds = true;
 
+      const mainboard = changes.mainboard as BoardChanges | undefined;
       if (
-        changes.mainboard &&
-        ((changes.mainboard.removes || []).length > 0 ||
-          (changes.mainboard.swaps || []).length > 0 ||
-          (changes.mainboard.edits || []).length > 0)
+        mainboard &&
+        ((mainboard.removes || []).length > 0 ||
+          (mainboard.swaps || []).length > 0 ||
+          (mainboard.edits || []).length > 0)
       ) {
         onlyAdds = false;
       }
 
+      const maybeboard = changes.maybeboard as BoardChanges | undefined;
       if (
-        changes.maybeboard &&
-        ((changes.maybeboard.removes || []).length > 0 ||
-          (changes.maybeboard.swaps || []).length > 0 ||
-          (changes.maybeboard.edits || []).length > 0)
+        maybeboard &&
+        ((maybeboard.removes || []).length > 0 ||
+          (maybeboard.swaps || []).length > 0 ||
+          (maybeboard.edits || []).length > 0)
       ) {
         onlyAdds = false;
       }
@@ -102,48 +111,50 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       // attempt to create a fixedChanges object
       const fixedChanges: Changes = {};
 
-      if (changes.mainboard) {
+      const mainboard = changes.mainboard as BoardChanges | undefined;
+      if (mainboard) {
         fixedChanges.mainboard = {
-          adds: changes.mainboard.adds,
+          adds: mainboard.adds,
           removes: [],
           edits: [],
           swaps: [],
         };
 
-        if (cards && (changes.mainboard.removes || []).length > 0) {
+        if (cards && (mainboard.removes || []).length > 0) {
           // we go through and see if the index matches the oldCard
-          fixedChanges.mainboard.removes = (changes.mainboard.removes || []).filter((remove) => {
+          fixedChanges.mainboard.removes = (mainboard.removes || []).filter((remove: CubeCardRemove) => {
             return cardsAreEquivalent(remove.oldCard, cards.mainboard[remove.index]);
           });
 
-          fixedChanges.mainboard.edits = (changes.mainboard.edits || []).filter((edit) => {
+          fixedChanges.mainboard.edits = (mainboard.edits || []).filter((edit: CubeCardEdit) => {
             return cardsAreEquivalent(edit.oldCard, cards.mainboard[edit.index]);
           });
 
-          fixedChanges.mainboard.swaps = (changes.mainboard.swaps || []).filter((swap) => {
+          fixedChanges.mainboard.swaps = (mainboard.swaps || []).filter((swap: CubeCardSwap) => {
             return cardsAreEquivalent(swap.oldCard, cards.mainboard[swap.index]);
           });
         }
       }
-      if (changes.maybeboard) {
+      const maybeboard = changes.maybeboard as BoardChanges | undefined;
+      if (maybeboard) {
         fixedChanges.maybeboard = {
-          adds: changes.maybeboard.adds,
+          adds: maybeboard.adds,
           removes: [],
           edits: [],
           swaps: [],
         };
 
-        if (cards && (changes.maybeboard.removes || []).length > 0) {
+        if (cards && (maybeboard.removes || []).length > 0) {
           // we go through and see if the index matches the oldCard
-          fixedChanges.maybeboard.removes = (changes.maybeboard.removes || []).filter((remove) => {
+          fixedChanges.maybeboard.removes = (maybeboard.removes || []).filter((remove: CubeCardRemove) => {
             return cardsAreEquivalent(remove.oldCard, cards.maybeboard[remove.index]);
           });
 
-          fixedChanges.maybeboard.edits = (changes.maybeboard.edits || []).filter((edit) => {
+          fixedChanges.maybeboard.edits = (maybeboard.edits || []).filter((edit: CubeCardEdit) => {
             return cardsAreEquivalent(edit.oldCard, cards.maybeboard[edit.index]);
           });
 
-          fixedChanges.maybeboard.swaps = (changes.maybeboard.swaps || []).filter((swap) => {
+          fixedChanges.maybeboard.swaps = (maybeboard.swaps || []).filter((swap: CubeCardSwap) => {
             return cardsAreEquivalent(swap.oldCard, cards.maybeboard[swap.index]);
           });
         }
@@ -152,21 +163,25 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       // if all the lists are the same length, just update the version
       let equal = true;
 
-      if (changes.mainboard && fixedChanges.mainboard) {
+      const changesMainboard = changes.mainboard as BoardChanges | undefined;
+      const fixedMainboard = fixedChanges.mainboard as BoardChanges | undefined;
+      if (changesMainboard && fixedMainboard) {
         if (
-          (fixedChanges.mainboard.removes || []).length !== (changes.mainboard.removes || []).length ||
-          (fixedChanges.mainboard.edits || []).length !== (changes.mainboard.edits || []).length ||
-          (fixedChanges.mainboard.swaps || []).length !== (changes.mainboard.swaps || []).length
+          (fixedMainboard.removes || []).length !== (changesMainboard.removes || []).length ||
+          (fixedMainboard.edits || []).length !== (changesMainboard.edits || []).length ||
+          (fixedMainboard.swaps || []).length !== (changesMainboard.swaps || []).length
         ) {
           equal = false;
         }
       }
 
-      if (changes.maybeboard && fixedChanges.maybeboard) {
+      const changesMaybeboard = changes.maybeboard as BoardChanges | undefined;
+      const fixedMaybeboard = fixedChanges.maybeboard as BoardChanges | undefined;
+      if (changesMaybeboard && fixedMaybeboard) {
         if (
-          (fixedChanges.maybeboard.removes || []).length !== (changes.maybeboard.removes || []).length ||
-          (fixedChanges.maybeboard.edits || []).length !== (changes.maybeboard.edits || []).length ||
-          (fixedChanges.maybeboard.swaps || []).length !== (changes.maybeboard.swaps || []).length
+          (fixedMaybeboard.removes || []).length !== (changesMaybeboard.removes || []).length ||
+          (fixedMaybeboard.edits || []).length !== (changesMaybeboard.edits || []).length ||
+          (fixedMaybeboard.swaps || []).length !== (changesMaybeboard.swaps || []).length
         ) {
           equal = false;
         }

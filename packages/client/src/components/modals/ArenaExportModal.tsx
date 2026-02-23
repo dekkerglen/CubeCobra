@@ -52,6 +52,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
           sortTertiary ?? undefined,
           sortQuaternary ?? undefined,
           cube.showUnsorted,
+          cube,
         );
       }
 
@@ -96,6 +97,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
     sortTertiary,
     sortQuaternary,
     cube.showUnsorted,
+    cube,
   ]);
 
   async function copyToClipboard() {

@@ -71,7 +71,7 @@ const CurveView: React.FC<CurveViewProps> = ({ cards }) => {
   const { sortPrimary, cube } = useContext(CubeContext);
 
   const sorted = fromEntries(
-    sortDeep(cards, cube.showUnsorted || false, 'Alphabetical', sortPrimary || 'Color Category') as [
+    sortDeep(cards, cube.showUnsorted || false, 'Alphabetical', [sortPrimary || 'Color Category'], cube) as [
       string,
       CardType[],
     ][],

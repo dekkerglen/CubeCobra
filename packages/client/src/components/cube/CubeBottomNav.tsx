@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 
-import { BookIcon, GraphIcon, ListUnorderedIcon, PlayIcon, TrophyIcon } from '@primer/octicons-react';
+import { BookIcon, GearIcon, GraphIcon, ListUnorderedIcon, PlayIcon, TrophyIcon } from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
 import { UserRoles } from '@utils/datatypes/User';
 import { getCubeId } from '@utils/Util';
@@ -22,6 +22,7 @@ interface CubeBottomNavProps {
 
 const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
   const user = useContext(UserContext);
+  const isCubeOwner = !!user && cube.owner?.id === user.id;
 
   const navItems: NavItem[] = [
     {
@@ -56,6 +57,16 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
     },
   ];
 
+  // Add Settings for cube owners
+  if (isCubeOwner) {
+    navItems.push({
+      key: 'settings',
+      label: 'Settings',
+      href: `/cube/settings/${encodeURIComponent(getCubeId(cube))}`,
+      icon: GearIcon,
+    });
+  }
+
   // Check if activeLink matches any parent category
   const isActiveCategory = (key: string) => {
     if (key === 'about') {
@@ -79,6 +90,9 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
         'tokens',
         'combos',
       ].includes(activeLink);
+    }
+    if (key === 'settings') {
+      return ['settings', 'overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(activeLink);
     }
     return activeLink === key;
   };

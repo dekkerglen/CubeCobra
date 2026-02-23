@@ -11,7 +11,14 @@ import React, {
 } from 'react';
 
 import { cardName, normalizeName } from '@utils/cardutil';
-import Card, { BoardType, boardTypes, Changes, CubeCardChange } from '@utils/datatypes/Card';
+import Card, {
+  BoardChanges,
+  BoardType,
+  Changes,
+  CubeCardChange,
+  CubeCardEdit,
+  CubeCardRemove,
+} from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube, { CubeCards, TagColor } from '@utils/datatypes/Cube';
 import { getCubeSorts } from '@utils/sorting/Sort';
@@ -30,10 +37,7 @@ import FilterContext from './FilterContext';
 import UserContext from './UserContext';
 
 export interface CubeWithCards extends Cube {
-  cards: {
-    mainboard: Card[];
-    maybeboard: Card[];
-  };
+  cards: Record<string, Card[]>;
   isInFeaturedQueue?: boolean;
 }
 
@@ -105,10 +109,7 @@ export interface CubeContextValue {
   setSortSecondary: Dispatch<SetStateAction<string>>;
   setSortTertiary: Dispatch<SetStateAction<string>>;
   setSortQuaternary: Dispatch<SetStateAction<string>>;
-  filterResult: {
-    mainboard?: [number, number];
-    maybeboard?: [number, number];
-  };
+  filterResult: Record<string, [number, number]>;
   unfilteredChangedCards: Record<string, Card[]>;
   useBlog: boolean;
   setUseBlog: Dispatch<SetStateAction<boolean>>;
@@ -202,6 +203,13 @@ const getDetails = async (csrfFetch: any, cardId: string): Promise<CardDetails |
   return json.card;
 };
 
+const ensureBoardChanges = (changes: Changes, board: BoardType): BoardChanges => {
+  if (!changes[board] || typeof changes[board] !== 'object') {
+    changes[board] = { adds: [], removes: [], swaps: [], edits: [] };
+  }
+  return changes[board] as BoardChanges;
+};
+
 export function CubeContextProvider({
   initialCube,
   cards,
@@ -210,10 +218,7 @@ export function CubeContextProvider({
   useChangedCards = false,
 }: {
   initialCube: Cube;
-  cards: {
-    mainboard: Card[];
-    maybeboard: Card[];
-  };
+  cards: Record<string, Card[]>;
   children: ReactNode;
   loadVersionDict?: boolean;
   useChangedCards?: boolean;
@@ -223,13 +228,10 @@ export function CubeContextProvider({
   const { changes, setChanges, clearChanges, version, setVersion } = useContext(ChangesContext);
   const { filterInput, cardFilter } = useContext(FilterContext)!;
 
-  const { setOpenCollapse } = useContext(DisplayContext);
+  const { setOpenCollapse, activeView } = useContext(DisplayContext);
   const [cube, setCube] = useState<CubeWithCards>({
     ...initialCube,
-    cards: {
-      mainboard: cards.mainboard,
-      maybeboard: cards.maybeboard,
-    },
+    cards,
   });
   const defaultSorts = useMemo(() => getCubeSorts(cube), [cube]);
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
@@ -333,7 +335,9 @@ export function CubeContextProvider({
         Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
         (modalSelection as any).isNewlyAdded
       ) {
-        const card = changes[modalSelection.board]?.adds?.[(modalSelection as any).addIndex];
+        const card = (changes[modalSelection.board] as BoardChanges | undefined)?.adds?.[
+          (modalSelection as any).addIndex
+        ];
         if (card) {
           getDetails(csrfFetch, card.cardID).then((details) => {
             setAddedCardDetails(details);
@@ -343,7 +347,9 @@ export function CubeContextProvider({
         Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
         (modalSelection as any).isSwapped
       ) {
-        const card = changes[modalSelection.board]?.swaps?.[(modalSelection as any).swapIndex]?.card;
+        const card = (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[
+          (modalSelection as any).swapIndex
+        ]?.card;
         if (card) {
           getDetails(csrfFetch, card.cardID).then((details) => {
             setAddedCardDetails(details);
@@ -369,14 +375,25 @@ export function CubeContextProvider({
     typeof user?.autoBlog !== 'undefined' ? user.autoBlog : false,
   );
 
+  // Apply view's default sorts when view changes
+  useEffect(() => {
+    const { getViewByName } = require('@utils/datatypes/Cube');
+    const currentView = getViewByName(cube, activeView);
+    if (currentView?.defaultSorts && currentView.defaultSorts.length === 4) {
+      setSortPrimary(currentView.defaultSorts[0]);
+      setSortSecondary(currentView.defaultSorts[1]);
+      setSortTertiary(currentView.defaultSorts[2]);
+      setSortQuaternary(currentView.defaultSorts[3]);
+    }
+  }, [activeView, cube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
+
   const getAllTags = (cubeCards: CubeCards) => {
     const tags = new Set<string>();
 
     //Use cube.cards instead of cards to get the most up-to-date tags, as "cards" is only the initial state
-    const mainboard = cubeCards?.mainboard || [];
-    const maybeboard = cubeCards?.maybeboard || [];
+    const allCards = Object.values(cubeCards || {}).flat();
 
-    for (const card of [...mainboard, ...maybeboard]) {
+    for (const card of allCards) {
       for (const tag of card.tags || []) {
         tags.add(tag);
       }
@@ -386,7 +403,7 @@ export function CubeContextProvider({
   };
 
   const allTags = useMemo(() => {
-    return getAllTags(cube.cards);
+    return getAllTags(cube.cards as any);
   }, [cube.cards]);
 
   const computeTagColors = (tagColors: TagColor[], allTags: string[]) => {
@@ -422,10 +439,7 @@ export function CubeContextProvider({
 
   useMount(() => {
     // if there are changes
-    if (
-      Object.values(changes.mainboard || {}).some((c) => c.length > 0) ||
-      Object.values(changes.maybeboard || {}).some((c) => c.length > 0)
-    ) {
+    if (Object.values(changes).some((board) => Object.values(board || {}).some((c) => c.length > 0))) {
       setOpenCollapse('edit');
     }
   });
@@ -453,13 +467,8 @@ export function CubeContextProvider({
   const addCard = useCallback(
     async (card: Card, board: BoardType) => {
       const newChanges = deepCopy(changes);
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[board].adds) {
-        newChanges[board].adds = [];
-      }
-      newChanges[board].adds.push(card);
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      boardChanges.adds!.push(card);
       setChanges(newChanges);
     },
     [changes, setChanges],
@@ -468,13 +477,8 @@ export function CubeContextProvider({
   const bulkAddCard = useCallback(
     async (newCards: Card[], board: BoardType) => {
       const newChanges = deepCopy(changes);
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[board].adds) {
-        newChanges[board].adds = [];
-      }
-      newChanges[board].adds.push(...newCards);
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      boardChanges.adds!.push(...newCards);
       setChanges(newChanges);
     },
     [changes, setChanges],
@@ -483,13 +487,8 @@ export function CubeContextProvider({
   const revertAdd = useCallback(
     (index: number, board: BoardType) => {
       const newChanges = deepCopy(changes);
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[board].adds) {
-        newChanges[board].adds = [];
-      }
-      newChanges[board].adds.splice(index, 1);
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      boardChanges.adds!.splice(index, 1);
       setChanges(newChanges);
     },
     [changes, setChanges],
@@ -504,13 +503,8 @@ export function CubeContextProvider({
       delete oldCard.index;
       delete oldCard.board;
 
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[board].swaps) {
-        newChanges[board].swaps = [];
-      }
-      newChanges[board].swaps.push({ index, card: { ...card, index }, oldCard });
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      boardChanges.swaps!.push({ index, card: { ...card, index }, oldCard });
       setChanges(newChanges);
     },
     [changes, cube.cards, setChanges],
@@ -523,11 +517,10 @@ export function CubeContextProvider({
       if (!newChanges[board]) {
         return;
       }
-      const swaps = newChanges[board].swaps || [];
-      swaps.splice(index, 1);
-      newChanges[board].swaps = swaps;
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      boardChanges.swaps!.splice(index, 1);
 
-      if (Object.keys(newChanges[board]).length === 0) {
+      if (Object.keys(newChanges[board]!).length === 0) {
         delete newChanges[board];
       }
 
@@ -540,13 +533,22 @@ export function CubeContextProvider({
     (index: number, card: Card, board: BoardType) => {
       // don't push an edit if this card is marked for delete
 
-      if (changes[board]?.removes?.some((remove) => remove.index === index)) {
+      if (
+        (changes[board] as BoardChanges | undefined)?.removes?.some((remove: CubeCardRemove) => remove.index === index)
+      ) {
+        return;
+      }
+
+      // Check if the board exists in cube.cards
+      if (!cube.cards[board] || !cube.cards[board][index]) {
+        console.error(`Cannot edit card: board "${board}" or index ${index} not found in cube.cards`);
         return;
       }
 
       const newChanges = deepCopy(changes);
 
-      const edits = newChanges[board]?.edits || [];
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      const edits = boardChanges.edits || [];
 
       const oldCard = deepCopy(cube.cards[board][index]);
       delete oldCard.details;
@@ -555,17 +557,14 @@ export function CubeContextProvider({
       delete newCardData.details;
 
       // if this card has already been edited, overwrite the edit
-      const editIndex = edits.findIndex((e) => e.index === index);
+      const editIndex = edits.findIndex((e: CubeCardEdit) => e.index === index);
       if (editIndex !== -1) {
         edits[editIndex] = { index, newCard: newCardData, oldCard };
       } else {
         edits.push({ index, newCard: newCardData, oldCard });
       }
 
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      newChanges[board].edits = edits;
+      boardChanges.edits = edits;
       setChanges(newChanges);
       setOpenCollapse('edit');
     },
@@ -576,13 +575,8 @@ export function CubeContextProvider({
     (index: number, board: BoardType) => {
       const newChanges = deepCopy(changes);
 
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[board].edits) {
-        newChanges[board].edits = [];
-      }
-      newChanges[board].edits.splice(index, 1);
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      boardChanges.edits!.splice(index, 1);
 
       setChanges(newChanges);
     },
@@ -594,12 +588,13 @@ export function CubeContextProvider({
       console.log('editAddedCard called:', { addIndex, board, cardTags: card.tags, cardID: card.cardID });
       const newChanges = deepCopy(changes);
 
-      if (!newChanges[board]?.adds) {
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      if (!boardChanges.adds || addIndex >= boardChanges.adds.length) {
         console.log('No adds array found for board:', board);
         return;
       }
 
-      const originalCard = newChanges[board].adds[addIndex];
+      const originalCard = boardChanges.adds[addIndex];
       console.log('Original card tags:', originalCard.tags);
 
       const newCardData = deepCopy(card);
@@ -620,9 +615,9 @@ export function CubeContextProvider({
       delete newCardData.board;
 
       console.log('About to set new card data with tags:', newCardData.tags);
-      newChanges[board].adds[addIndex] = newCardData;
+      boardChanges.adds[addIndex] = newCardData;
       setChanges(newChanges);
-      console.log('Changes set, new adds array:', newChanges[board].adds);
+      console.log('Changes set, new adds array:', boardChanges.adds);
     },
     [changes, setChanges, csrfFetch],
   );
@@ -632,12 +627,13 @@ export function CubeContextProvider({
       console.log('editSwappedCard called:', { swapIndex, board, cardTags: card.tags, cardID: card.cardID });
       const newChanges = deepCopy(changes);
 
-      if (!newChanges[board]?.swaps) {
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      if (!boardChanges.swaps || swapIndex >= boardChanges.swaps.length) {
         console.log('No swaps array found for board:', board);
         return;
       }
 
-      const originalCard = newChanges[board].swaps[swapIndex].card;
+      const originalCard = boardChanges.swaps[swapIndex].card;
       console.log('Original swap card tags:', originalCard.tags);
 
       const newCardData = deepCopy(card);
@@ -658,9 +654,9 @@ export function CubeContextProvider({
       delete newCardData.board;
 
       console.log('About to set new swap card data with tags:', newCardData.tags);
-      newChanges[board].swaps[swapIndex].card = newCardData;
+      boardChanges.swaps[swapIndex].card = newCardData;
       setChanges(newChanges);
-      console.log('Changes set, new swaps array:', newChanges[board].swaps);
+      console.log('Changes set, new swaps array:', boardChanges.swaps);
     },
     [changes, setChanges, csrfFetch],
   );
@@ -669,37 +665,28 @@ export function CubeContextProvider({
     (index: number, board: BoardType, newBoard: BoardType) => {
       const newChanges = deepCopy(changes);
 
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[board].removes) {
-        newChanges[board].removes = [];
-      }
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      const newBoardChanges = ensureBoardChanges(newChanges, newBoard);
+
       // if this card has already been removed, don't remove it again
-      if (newChanges[board].removes.some((remove) => remove.index === index)) {
+      if (boardChanges.removes!.some((remove) => remove.index === index)) {
         return;
       }
 
       const oldCard = deepCopy(cube.cards[board][index]);
       delete oldCard.details;
 
-      newChanges[board].removes.push({ index, oldCard });
+      boardChanges.removes!.push({ index, oldCard });
 
       // remove swaps and edits that refer to this card
-      const newSwaps = newChanges[board].swaps?.filter((s) => s.index !== index);
-      const newEdits = newChanges[board].edits?.filter((e) => e.index !== index);
+      const newSwaps = boardChanges.swaps?.filter((s) => s.index !== index);
+      const newEdits = boardChanges.edits?.filter((e) => e.index !== index);
 
-      newChanges[board].swaps = newSwaps;
-      newChanges[board].edits = newEdits;
+      boardChanges.swaps = newSwaps;
+      boardChanges.edits = newEdits;
 
-      if (!newChanges[newBoard]) {
-        newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[newBoard].adds) {
-        newChanges[newBoard].adds = [];
-      }
       // now we add
-      newChanges[newBoard].adds.push(oldCard);
+      newBoardChanges.adds!.push(oldCard);
 
       setChanges(newChanges);
       setOpenCollapse('edit');
@@ -715,27 +702,21 @@ export function CubeContextProvider({
 
       const newChanges = deepCopy(changes);
 
-      if (!newChanges[board]?.adds || !newChanges[board].adds[addIndex]) {
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      if (!boardChanges.adds || !boardChanges.adds[addIndex]) {
         console.error('Card not found in adds array:', { addIndex, board });
         return;
       }
 
       // Get the card from the current board's adds array
-      const cardToMove = deepCopy(newChanges[board].adds[addIndex]);
+      const cardToMove = deepCopy(boardChanges.adds[addIndex]);
 
       // Remove it from the current board's adds array
-      newChanges[board].adds.splice(addIndex, 1);
-
-      // Ensure the new board has the proper structure
-      if (!newChanges[newBoard]) {
-        newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[newBoard].adds) {
-        newChanges[newBoard].adds = [];
-      }
+      boardChanges.adds.splice(addIndex, 1);
 
       // Add it to the new board's adds array
-      newChanges[newBoard].adds.push(cardToMove);
+      const newBoardChanges = ensureBoardChanges(newChanges, newBoard);
+      newBoardChanges.adds!.push(cardToMove);
 
       setChanges(newChanges);
       setOpenCollapse('edit');
@@ -751,29 +732,23 @@ export function CubeContextProvider({
 
       const newChanges = deepCopy(changes);
 
-      if (!newChanges[board]?.swaps || !newChanges[board].swaps[swapIndex]) {
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      if (!boardChanges.swaps || !boardChanges.swaps[swapIndex]) {
         console.error('Card not found in swaps array:', { swapIndex, board });
         return;
       }
 
       // Get the swap entry from the current board's swaps array
-      const swapEntry = deepCopy(newChanges[board].swaps[swapIndex]);
+      const swapEntry = deepCopy(boardChanges.swaps[swapIndex]);
       const cardToMove = swapEntry.card;
 
       // Remove the swap from the current board since we're moving the card
-      newChanges[board].swaps.splice(swapIndex, 1);
-
-      // Ensure the new board has the proper structure
-      if (!newChanges[newBoard]) {
-        newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[newBoard].adds) {
-        newChanges[newBoard].adds = [];
-      }
+      boardChanges.swaps.splice(swapIndex, 1);
 
       // Add the card to the new board's adds array
       // (it's now being added to a different board, not swapped)
-      newChanges[newBoard].adds.push(cardToMove);
+      const newBoardChanges = ensureBoardChanges(newChanges, newBoard);
+      newBoardChanges.adds!.push(cardToMove);
 
       setChanges(newChanges);
       setOpenCollapse('edit');
@@ -787,32 +762,19 @@ export function CubeContextProvider({
 
       for (const card of cardList) {
         if (card.board !== undefined && card.index !== undefined && card.board !== newBoard) {
-          if (!newChanges[card.board]) {
-            newChanges[card.board] = { adds: [], removes: [], swaps: [], edits: [] };
-          }
-          // @ts-expect-error ts is incorrectly erroring here
-          if (!newChanges[card.board].removes) {
-            // @ts-expect-error ts is incorrectly erroring here
-            newChanges[card.board].removes = [];
-          }
+          const boardChanges = ensureBoardChanges(newChanges, card.board);
 
-          removeCardByIndexFromChangeset(newChanges[card.board]?.edits, card.index);
+          removeCardByIndexFromChangeset(boardChanges.edits, card.index);
 
-          // @ts-expect-error ts is incorrectly erroring here
-          newChanges[card.board]?.removes.push({
+          boardChanges.removes!.push({
             index: card.index,
             oldCard: cube.cards[card.board][card.index],
           });
         }
       }
 
-      if (!newChanges[newBoard]) {
-        newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      if (!newChanges[newBoard].adds) {
-        newChanges[newBoard].adds = [];
-      }
-      newChanges[newBoard].adds.push(
+      const newBoardChanges = ensureBoardChanges(newChanges, newBoard);
+      newBoardChanges.adds!.push(
         ...cardList.filter((card) => card.board !== newBoard).map(({ index, board }) => cube.cards[board][index]),
       );
 
@@ -833,10 +795,12 @@ export function CubeContextProvider({
         const newChanges = deepCopy(changes);
 
         // Group cards by their board and type (adds vs swaps)
-        const cardsByBoard: Record<BoardType, { adds: Card[]; swaps: Card[] }> = {
-          mainboard: { adds: [], swaps: [] },
-          maybeboard: { adds: [], swaps: [] },
-        };
+        const cardsByBoard: Record<BoardType, { adds: Card[]; swaps: Card[] }> = {};
+
+        // Initialize with all boards in changes
+        for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
+          cardsByBoard[board] = { adds: [], swaps: [] };
+        }
 
         for (const card of cards) {
           if (card.board && card.board !== newBoard) {
@@ -849,7 +813,7 @@ export function CubeContextProvider({
         }
 
         // Process adds
-        for (const board of boardTypes) {
+        for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
           const addsToMove = cardsByBoard[board].adds;
           if (addsToMove.length > 0) {
             // Sort by addIndex in descending order to avoid index shifting issues
@@ -857,19 +821,13 @@ export function CubeContextProvider({
 
             for (const card of sortedAdds) {
               const addIndex = (card as any).addIndex;
-              if (newChanges[board]?.adds && newChanges[board].adds[addIndex]) {
-                const cardToMove = deepCopy(newChanges[board].adds[addIndex]);
-                newChanges[board].adds.splice(addIndex, 1);
+              const boardChanges = ensureBoardChanges(newChanges, board);
+              if (boardChanges.adds && boardChanges.adds[addIndex]) {
+                const cardToMove = deepCopy(boardChanges.adds[addIndex]);
+                boardChanges.adds.splice(addIndex, 1);
 
-                // Ensure the new board has the proper structure
-                if (!newChanges[newBoard]) {
-                  newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
-                }
-                if (!newChanges[newBoard].adds) {
-                  newChanges[newBoard].adds = [];
-                }
-
-                newChanges[newBoard].adds.push(cardToMove);
+                const newBoardChanges = ensureBoardChanges(newChanges, newBoard);
+                newBoardChanges.adds!.push(cardToMove);
               }
             }
           }
@@ -882,20 +840,14 @@ export function CubeContextProvider({
 
             for (const card of sortedSwaps) {
               const swapIndex = (card as any).swapIndex;
-              if (newChanges[board]?.swaps && newChanges[board].swaps[swapIndex]) {
-                const swapEntry = deepCopy(newChanges[board].swaps[swapIndex]);
+              const boardChanges = ensureBoardChanges(newChanges, board);
+              if (boardChanges.swaps && boardChanges.swaps[swapIndex]) {
+                const swapEntry = deepCopy(boardChanges.swaps[swapIndex]);
                 const cardToMove = swapEntry.card;
-                newChanges[board].swaps.splice(swapIndex, 1);
+                boardChanges.swaps.splice(swapIndex, 1);
 
-                // Ensure the new board has the proper structure
-                if (!newChanges[newBoard]) {
-                  newChanges[newBoard] = { adds: [], removes: [], swaps: [], edits: [] };
-                }
-                if (!newChanges[newBoard].adds) {
-                  newChanges[newBoard].adds = [];
-                }
-
-                newChanges[newBoard].adds.push(cardToMove);
+                const newBoardChanges = ensureBoardChanges(newChanges, newBoard);
+                newBoardChanges.adds!.push(cardToMove);
               }
             }
           }
@@ -918,29 +870,23 @@ export function CubeContextProvider({
     (index: number, board: BoardType) => {
       const newChanges = deepCopy(changes);
 
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
+      const boardChanges = ensureBoardChanges(newChanges, board);
       // if this card has already been removed, don't remove it again
-      if (newChanges[board].removes?.some((remove) => remove.index === index)) {
+      if (boardChanges.removes?.some((remove) => remove.index === index)) {
         return;
       }
 
       const oldCard = deepCopy(cube.cards[board][index]);
       delete oldCard.details;
 
-      if (!newChanges[board].removes) {
-        newChanges[board].removes = [];
-      }
-
-      newChanges[board].removes.push({ index, oldCard });
+      boardChanges.removes!.push({ index, oldCard });
 
       // remove swaps and edits that refer to this card
-      const newSwaps = newChanges[board].swaps?.filter((s) => s.index !== index);
-      const newEdits = newChanges[board].edits?.filter((e) => e.index !== index);
+      const newSwaps = boardChanges.swaps?.filter((s) => s.index !== index);
+      const newEdits = boardChanges.edits?.filter((e) => e.index !== index);
 
-      newChanges[board].swaps = newSwaps;
-      newChanges[board].edits = newEdits;
+      boardChanges.swaps = newSwaps;
+      boardChanges.edits = newEdits;
 
       setChanges(newChanges);
       setOpenCollapse('edit');
@@ -952,10 +898,8 @@ export function CubeContextProvider({
     (index: number, board: BoardType) => {
       const newChanges = deepCopy(changes);
 
-      if (!newChanges[board]) {
-        newChanges[board] = { adds: [], removes: [], swaps: [], edits: [] };
-      }
-      newChanges[board].removes?.splice(index, 1);
+      const boardChanges = ensureBoardChanges(newChanges, board);
+      boardChanges.removes?.splice(index, 1);
 
       setChanges(newChanges);
     },
@@ -966,10 +910,22 @@ export function CubeContextProvider({
     const changed = deepCopy(cube.cards);
 
     if (useChangedCards) {
-      for (const board of boardTypes) {
-        if (changes[board]?.edits) {
-          for (let i = 0; i < changes[board].edits.length; i++) {
-            const edit = changes[board].edits[i];
+      for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
+        const boardChanges = changes[board];
+
+        // Ensure the board exists in changed before processing changes
+        if (!changed[board]) {
+          changed[board] = [];
+        }
+
+        if (
+          boardChanges &&
+          typeof boardChanges === 'object' &&
+          Object.prototype.hasOwnProperty.call(boardChanges, 'edits') &&
+          boardChanges.edits
+        ) {
+          for (let i = 0; i < boardChanges.edits.length; i++) {
+            const edit = boardChanges.edits[i];
             let card = changed[board][edit.index];
             changed[board][edit.index] = {
               ...card,
@@ -992,9 +948,14 @@ export function CubeContextProvider({
             }
           }
         }
-        if (changes[board]?.removes) {
-          for (let i = changes[board].removes.length - 1; i >= 0; i--) {
-            const remove = changes[board].removes[i];
+        if (
+          boardChanges &&
+          typeof boardChanges === 'object' &&
+          Object.prototype.hasOwnProperty.call(boardChanges, 'removes') &&
+          boardChanges.removes
+        ) {
+          for (let i = boardChanges.removes.length - 1; i >= 0; i--) {
+            const remove = boardChanges.removes[i];
             changed[board][remove.index].markedForDelete = true;
             changed[board][remove.index].removeIndex = i;
             delete changed[board][remove.index].editIndex;
@@ -1003,10 +964,12 @@ export function CubeContextProvider({
       }
     }
 
-    const result = {
-      mainboard: changed.mainboard.filter(cardFilter.filter),
-      maybeboard: changed.maybeboard.filter(cardFilter.filter),
-    };
+    const result: Record<string, Card[]> = {};
+    for (const board of Object.keys(changed)) {
+      if (Array.isArray(changed[board])) {
+        result[board] = changed[board].filter(cardFilter.filter);
+      }
+    }
 
     return [result, changed];
   }, [cube.cards, useChangedCards, cardFilter, changes, versionDict]);
@@ -1014,16 +977,14 @@ export function CubeContextProvider({
   // Update filter result when cards or filter changes
   useEffect(() => {
     if (filterInput !== '') {
-      if (unfilteredChangedCards.maybeboard.length > 0) {
-        setFilterResult({
-          mainboard: [changedCards.mainboard.length, unfilteredChangedCards.mainboard.length],
-          maybeboard: [changedCards.maybeboard.length, unfilteredChangedCards.maybeboard.length],
-        });
-      } else {
-        setFilterResult({
-          mainboard: [changedCards.mainboard.length, unfilteredChangedCards.mainboard.length],
-        });
+      // Dynamically build filter result for all boards
+      const result: Record<string, [number, number]> = {};
+      for (const board of Object.keys(unfilteredChangedCards)) {
+        if (unfilteredChangedCards[board] && changedCards[board]) {
+          result[board] = [changedCards[board].length, unfilteredChangedCards[board].length];
+        }
       }
+      setFilterResult(result);
     } else {
       setFilterResult({});
     }
@@ -1057,10 +1018,11 @@ export function CubeContextProvider({
           const newCards = deepCopy(unfilteredChangedCards);
 
           const newCardsToFetchVersions = [];
-          for (const board of boardTypes) {
+          for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
+            const boardChanges = changes[board] as BoardChanges | undefined;
             // swaps
-            if (changes[board]?.swaps) {
-              for (const swap of changes[board].swaps) {
+            if (boardChanges?.swaps) {
+              for (const swap of boardChanges.swaps) {
                 newCards[board][swap.index] = swap.card;
                 const newDetails = await getDetails(csrfFetch, swap.card.cardID);
                 if (newDetails !== null) {
@@ -1069,16 +1031,16 @@ export function CubeContextProvider({
               }
             }
             // removes
-            if (changes[board]?.removes) {
+            if (boardChanges?.removes) {
               // sort removals desc
-              const sorted = changes[board].removes.sort((a, b) => b.index - a.index);
+              const sorted = boardChanges.removes.sort((a: CubeCardRemove, b: CubeCardRemove) => b.index - a.index);
               for (const remove of sorted) {
                 newCards[board].splice(remove.index, 1);
               }
             }
             // adds
-            if (changes[board]?.adds) {
-              for (const add of changes[board].adds) {
+            if (boardChanges?.adds) {
+              for (const add of boardChanges.adds) {
                 newCards[board].push({
                   ...add,
                 });
@@ -1097,7 +1059,7 @@ export function CubeContextProvider({
           }
 
           // strip editIndex
-          for (const board of boardTypes) {
+          for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
             for (const card of newCards[board]) {
               delete card.markedForDelete;
               delete card.editIndex;
@@ -1115,7 +1077,7 @@ export function CubeContextProvider({
             cards: newCards,
             version: newVersion, // Update cube version too
           });
-          const newTags = getAllTags(newCards);
+          const newTags = getAllTags(newCards as any);
           //Make sure to use tagColors instead of cube.tagColors so any previous edits apply
           setTagColors(computeTagColors(tagColors, newTags));
         }
@@ -1134,34 +1096,37 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const edit of list) {
-        if (!newChanges[edit.board]) {
-          newChanges[edit.board] = { adds: [], removes: [], swaps: [], edits: [] };
+        // don't push an edit if this card is marked for delete
+        if (
+          (changes[edit.board] as BoardChanges | undefined)?.removes?.some(
+            (remove: CubeCardRemove) => remove.index === edit.index,
+          )
+        ) {
+          continue;
         }
 
-        // don't push an edit if this card is marked for delete
-        if (!changes[edit.board]?.removes?.some((remove) => remove.index === edit.index)) {
-          const card = cube.cards[edit.board][edit.index];
+        const boardChanges = ensureBoardChanges(newChanges, edit.board);
+        const card = cube.cards[edit.board][edit.index];
 
-          const oldCard = deepCopy(cube.cards[edit.board][edit.index]);
-          delete oldCard.details;
+        const oldCard = deepCopy(cube.cards[edit.board][edit.index]);
+        delete oldCard.details;
 
-          const newCard = {
-            ...card,
-            ...edit,
-            markedForDelete: false,
-            editIndex: newChanges[edit.board]?.edits?.length,
-          };
-          delete newCard.details;
+        const newCard = {
+          ...card,
+          ...edit,
+          markedForDelete: false,
+          editIndex: boardChanges.edits?.length,
+        };
+        delete newCard.details;
 
-          const edits = newChanges[edit.board]?.edits || [];
+        const edits = boardChanges.edits || [];
 
-          // if this card has already been edited, overwrite the edit
-          const index = edits.findIndex((e) => e.index === edit.index);
-          if (index !== -1 && edits) {
-            edits[index].newCard = newCard;
-          } else {
-            newChanges[edit.board]?.edits?.push({ index: edit.index, newCard, oldCard });
-          }
+        // if this card has already been edited, overwrite the edit
+        const index = edits.findIndex((e: CubeCardEdit) => e.index === edit.index);
+        if (index !== -1 && edits) {
+          edits[index].newCard = newCard;
+        } else {
+          boardChanges.edits?.push({ index: edit.index, newCard, oldCard });
         }
       }
       setChanges(newChanges);
@@ -1175,7 +1140,8 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const edit of list) {
-        removeCardByIndexFromChangeset(newChanges[edit.board]?.edits, edit.index);
+        const boardChanges = newChanges[edit.board] as BoardChanges | undefined;
+        removeCardByIndexFromChangeset(boardChanges?.edits, edit.index);
       }
 
       setChanges(newChanges);
@@ -1188,25 +1154,23 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const remove of list) {
+        const boardChanges = ensureBoardChanges(newChanges, remove.board);
+
         // if this card has been edited, remove the edit
-        if (newChanges[remove.board]?.edits) {
-          removeCardByIndexFromChangeset(newChanges[remove.board]?.edits, remove.index);
+        if (boardChanges.edits) {
+          removeCardByIndexFromChangeset(boardChanges.edits, remove.index);
         }
 
         // if this card has been swapped, remove the swap
-        if (newChanges[remove.board]?.swaps) {
-          removeCardByIndexFromChangeset(newChanges[remove.board]?.swaps, remove.index);
+        if (boardChanges.swaps) {
+          removeCardByIndexFromChangeset(boardChanges.swaps, remove.index);
         }
 
-        if (!newChanges[remove.board]) {
-          newChanges[remove.board] = { adds: [], removes: [], swaps: [], edits: [] };
-        }
-
-        const removes = newChanges[remove.board]?.removes || [];
-        const removeIndex = removes.findIndex((e) => e.index === remove.index);
+        const removes = boardChanges.removes || [];
+        const removeIndex = removes.findIndex((e: CubeCardRemove) => e.index === remove.index);
         //Don't add the same card to the removals list
         if (removeIndex === -1 && removes) {
-          newChanges[remove.board]?.removes?.push({
+          boardChanges.removes?.push({
             index: remove.index,
             oldCard: cube.cards[remove.board][remove.index],
           });
@@ -1224,7 +1188,8 @@ export function CubeContextProvider({
       const newChanges = deepCopy(changes);
 
       for (const remove of list) {
-        removeCardByIndexFromChangeset(newChanges[remove.board]?.removes, remove.index);
+        const boardChanges = newChanges[remove.board] as BoardChanges | undefined;
+        removeCardByIndexFromChangeset(boardChanges?.removes, remove.index);
       }
 
       setChanges(newChanges);
@@ -1251,8 +1216,9 @@ export function CubeContextProvider({
         if (board && addIndex !== undefined) {
           // Update added card
           console.log('Updating added card at index:', addIndex);
-          if (newChanges[board]?.adds?.[addIndex]) {
-            const originalCard = newChanges[board].adds[addIndex];
+          const boardChanges = ensureBoardChanges(newChanges, board);
+          if (boardChanges.adds?.[addIndex]) {
+            const originalCard = boardChanges.adds[addIndex];
             const newCardData = deepCopy(card);
 
             // If the cardID changed, fetch new details
@@ -1272,13 +1238,14 @@ export function CubeContextProvider({
             delete (newCardData as any).swapIndex;
 
             console.log('Setting added card with tags:', newCardData.tags);
-            newChanges[board].adds[addIndex] = newCardData;
+            boardChanges.adds[addIndex] = newCardData;
           }
         } else if (board && swapIndex !== undefined) {
           // Update swapped card
           console.log('Updating swapped card at index:', swapIndex);
-          if (newChanges[board]?.swaps?.[swapIndex]) {
-            const originalCard = newChanges[board].swaps[swapIndex].card;
+          const boardChanges = ensureBoardChanges(newChanges, board);
+          if (boardChanges.swaps?.[swapIndex]) {
+            const originalCard = boardChanges.swaps[swapIndex].card;
             const newCardData = deepCopy(card);
 
             // If the cardID changed, fetch new details
@@ -1298,7 +1265,7 @@ export function CubeContextProvider({
             delete (newCardData as any).swapIndex;
 
             console.log('Setting swapped card with tags:', newCardData.tags);
-            newChanges[board].swaps[swapIndex].card = newCardData;
+            boardChanges.swaps[swapIndex].card = newCardData;
           }
         } else {
           console.log('Card does not match added or swapped criteria');
@@ -1316,8 +1283,9 @@ export function CubeContextProvider({
 
   const hasCustomImages = useMemo(
     () =>
-      [changedCards.mainboard, changedCards.maybeboard].some((list) => {
-        return list.some(
+      changedCards &&
+      Object.values(changedCards).some((list) => {
+        return list?.some(
           (card) => (card.imgUrl && card.imgUrl.length > 0) || (card.imgBackUrl && card.imgBackUrl.length > 0),
         );
       }),
@@ -1526,10 +1494,10 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
           (modalSelection as any).isNewlyAdded &&
-          changes[modalSelection.board]?.adds?.[(modalSelection as any).addIndex] && (
+          (changes[modalSelection.board] as BoardChanges | undefined)?.adds?.[(modalSelection as any).addIndex] && (
             <CardModal
               card={{
-                ...changes[modalSelection.board]!.adds![(modalSelection as any).addIndex],
+                ...(changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex],
                 board: modalSelection.board,
                 index: -1, // Use -1 as a sentinel value for newly added cards
                 details: addedCardDetails || undefined,
@@ -1552,10 +1520,10 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           (modalSelection as any).isSwapped &&
-          changes[modalSelection.board]?.swaps?.[(modalSelection as any).swapIndex] && (
+          (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] && (
             <CardModal
               card={{
-                ...changes[modalSelection.board]!.swaps![(modalSelection as any).swapIndex].card,
+                ...(changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
                 board: modalSelection.board,
                 index: -1, // Use -1 as a sentinel value for swapped cards
                 details: addedCardDetails || undefined,

@@ -44,6 +44,7 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
       sorts[2],
       sorts[3],
       cube.showUnsorted || false,
+      cube,
     );
     cubeCards.mainboard = sortedMainboard;
 
@@ -54,6 +55,7 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
       sorts[2],
       sorts[3],
       cube.showUnsorted || false,
+      cube,
     );
     cubeCards.maybeboard = sortedMaybeboard;
 

@@ -15,7 +15,10 @@ export const playtestHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    // Use unhydrated query to avoid loading cards/seats from S3 for better performance
+    // Load cards to get board definitions for draft format options
+    const cards = await cubeDao.getCards(cube.id, cube);
+
+    // Use unhydrated query to avoid loading draft cards/seats from S3 for better performance
     const decks = await draftDao.queryByCubeUnhydrated(cube.id);
 
     // Get previous P1P1 packs for this cube
@@ -36,7 +39,7 @@ export const playtestHandler = async (req: Request, res: Response) => {
       res,
       'CubePlaytestPage',
       {
-        cube,
+        cube: { ...cube, cards },
         decks: decks.items,
         decksLastKey: (decks as any).lastKey || null,
         previousPacks,

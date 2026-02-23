@@ -1,5 +1,6 @@
 import * as cardutil from '@utils/cardutil';
-import Card, { Changes } from '@utils/datatypes/Card';
+import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
+import { boardNameToKey, CubeCards } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao } from 'dynamo/daos';
 
@@ -15,11 +16,6 @@ const CARD_WIDTH = 488;
 const CSV_HEADER =
   'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom';
 
-interface Cards {
-  mainboard: Card[];
-  maybeboard: Card[];
-}
-
 interface Cube {
   id: string;
   shortId?: string;
@@ -32,8 +28,8 @@ async function updateCubeAndBlog(
   req: Request,
   res: Response,
   cube: Cube,
-  cards: Cards,
-  cardsToWrite: Cards,
+  cards: CubeCards,
+  cardsToWrite: CubeCards,
   changelog: Changes,
   added: Card[],
   missing: string[],
@@ -51,37 +47,39 @@ async function updateCubeAndBlog(
     }
 
     if (changelog.mainboard) {
-      if (changelog.mainboard.adds && changelog.mainboard.adds.length === 0) {
-        delete changelog.mainboard.adds;
+      const mainboard = changelog.mainboard as BoardChanges;
+      if (mainboard.adds && mainboard.adds.length === 0) {
+        delete mainboard.adds;
       }
-      if (changelog.mainboard.removes && changelog.mainboard.removes.length === 0) {
-        delete changelog.mainboard.removes;
+      if (mainboard.removes && mainboard.removes.length === 0) {
+        delete mainboard.removes;
       }
-      if (changelog.mainboard.swaps && changelog.mainboard.swaps.length === 0) {
-        delete changelog.mainboard.swaps;
+      if (mainboard.swaps && mainboard.swaps.length === 0) {
+        delete mainboard.swaps;
       }
-      if (changelog.mainboard.edits && changelog.mainboard.edits.length === 0) {
-        delete changelog.mainboard.edits;
+      if (mainboard.edits && mainboard.edits.length === 0) {
+        delete mainboard.edits;
       }
-      if (Object.keys(changelog.mainboard).length === 0) {
+      if (Object.keys(mainboard).length === 0) {
         delete changelog.mainboard;
       }
     }
 
     if (changelog.maybeboard) {
-      if (changelog.maybeboard.adds && changelog.maybeboard.adds.length === 0) {
-        delete changelog.maybeboard.adds;
+      const maybeboard = changelog.maybeboard as BoardChanges;
+      if (maybeboard.adds && maybeboard.adds.length === 0) {
+        delete maybeboard.adds;
       }
-      if (changelog.maybeboard.removes && changelog.maybeboard.removes.length === 0) {
-        delete changelog.maybeboard.removes;
+      if (maybeboard.removes && maybeboard.removes.length === 0) {
+        delete maybeboard.removes;
       }
-      if (changelog.maybeboard.swaps && changelog.maybeboard.swaps.length === 0) {
-        delete changelog.maybeboard.swaps;
+      if (maybeboard.swaps && maybeboard.swaps.length === 0) {
+        delete maybeboard.swaps;
       }
-      if (changelog.maybeboard.edits && changelog.maybeboard.edits.length === 0) {
-        delete changelog.maybeboard.edits;
+      if (maybeboard.edits && maybeboard.edits.length === 0) {
+        delete maybeboard.edits;
       }
-      if (Object.keys(changelog.maybeboard).length === 0) {
+      if (Object.keys(maybeboard).length === 0) {
         delete changelog.maybeboard;
       }
     }
@@ -132,7 +130,7 @@ async function updateCubeAndBlog(
 
 async function bulkUpload(req: Request, res: Response, list: string, cube: Cube) {
   const cards = await cubeDao.getCards(cube.id);
-  const cardsToWrite: Cards = JSON.parse(JSON.stringify(cards));
+  const cardsToWrite: CubeCards = JSON.parse(JSON.stringify(cards));
   const { mainboard } = cardsToWrite;
   const { maybeboard } = cardsToWrite;
 
@@ -312,6 +310,31 @@ interface DraftDocument {
   basics?: number[];
 }
 
+/**
+ * Get basics from a cube - either from a specific board or from the legacy cube.basics array
+ * @param cubeCards - The cube's card data (all boards)
+ * @param basicsBoard - Optional board name to pull basics from (e.g., "Basics")
+ * @param legacyBasics - Legacy basics array (card IDs) as fallback
+ * @returns Array of basic land card IDs
+ */
+const getBasicsFromCube = (
+  cubeCards: Record<string, Array<{ cardID: string }>>,
+  basicsBoard?: string,
+  legacyBasics?: string[],
+): string[] => {
+  // If a basicsBoard is specified and exists in the cube, use cards from that board
+  // basicsBoard may be a display name (e.g. "Basics") - normalize via boardNameToKey
+  if (basicsBoard) {
+    const boardKey = boardNameToKey(basicsBoard);
+    if (cubeCards[boardKey]) {
+      return cubeCards[boardKey].map((card) => card.cardID);
+    }
+  }
+
+  // Fall back to legacy basics array for backwards compatibility
+  return legacyBasics || [];
+};
+
 const addBasics = (document: DraftDocument, basics: string[]) => {
   if (!document.cards) {
     throw new Error('Document must contains cards to add basics');
@@ -371,6 +394,7 @@ export {
   createPool,
   CSV_HEADER,
   exportToMtgo,
+  getBasicsFromCube,
   reverseArray,
   rotateArrayLeft,
   rotateArrayRight,

@@ -101,8 +101,9 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         sortTertiary || 'CMC',
         sortQuaternary || 'Alphabetical',
         cube.showUnsorted || false,
+        cube,
       ),
-    [cards, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube.showUnsorted],
+    [cards, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube],
   );
 
   const handleCheck = useCallback(

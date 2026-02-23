@@ -147,7 +147,7 @@ export interface CompareViewProps {
 const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) => {
   const { sortPrimary, sortSecondary, cube } = useContext(CubeContext) ?? {};
 
-  const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', !!cube?.showUnsorted);
+  const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', !!cube?.showUnsorted, cube);
   const columnsSecondary: Record<string, Record<string, CardType[]>> = {};
   const columnCounts: Record<string, number> = {};
   const bothCounts: Record<string, number> = { total: 0 };
@@ -188,6 +188,7 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
       columnsPrimary[columnLabel],
       sortSecondary ?? 'Unsorted',
       !!cube?.showUnsorted,
+      cube,
     );
   }
   const bothCopy = both.slice(0);
@@ -201,7 +202,7 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
           <SummaryCard label="All Cards" both={both.length} onlyA={onlyA.length} onlyB={onlyB.length} />
         </CardBody>
       </Card>
-      {getLabels(cards, sortPrimary ?? 'Unsorted', cube?.showUnsorted)
+      {getLabels(cards, sortPrimary ?? 'Unsorted', cube?.showUnsorted, cube)
         .filter((columnLabel) => columnsPrimary[columnLabel])
         .map((columnLabel) => {
           const column = columnsSecondary[columnLabel];
@@ -217,7 +218,7 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
                   />
                 </CardBody>
               </Card>
-              {getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', cube?.showUnsorted)
+              {getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', cube?.showUnsorted, cube)
                 .filter((label) => column[label])
                 .map((label) => {
                   const group = column[label];

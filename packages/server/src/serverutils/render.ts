@@ -115,6 +115,7 @@ interface ReactProps {
     email_token: string;
     yourCubesSortOrder?: YourCubesSortOrder;
     disableAnimations?: boolean;
+    useTextOverIcons?: boolean;
   };
   nitroPayEnabled?: boolean;
   baseUrl?: string;
@@ -153,6 +154,7 @@ const render = (
         email_token: req.user.consentToHashedEmail && req.user.email ? await sha256(req.user.email) : '',
         yourCubesSortOrder: req.user.yourCubesSortOrder,
         disableAnimations: req.user.disableAnimations,
+        useTextOverIcons: req.user.useTextOverIcons,
       };
     }
 
