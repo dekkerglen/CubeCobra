@@ -1,310 +1,354 @@
 import fs from 'fs';
 
+interface MockCardSpec {
+  name: string;
+  oracle_text: string;
+  cmc: number;
+  type: string;
+  colors: string[];
+  color_identity: string[];
+  parsed_cost: string[];
+  colorcategory: string;
+  rarity: string;
+  power?: string;
+  toughness?: string;
+  produced_mana?: string[];
+  reserved?: boolean;
+  keywords?: string[];
+  artist?: string;
+}
+
 function createMockFiles() {
   // Ensure directories exist
   fs.mkdirSync('../server/private/', { recursive: true });
   fs.mkdirSync('../server/model/', { recursive: true });
 
-  const mockCard1 = {
-    scryfall_id: 'test-card-1',
-    oracle_id: 'oracle-1',
-    name: 'Black Lotus',
-    set: 'tst',
-    setIndex: 0,
-    collector_number: '1',
-    released_at: '2020-01-01',
-    promo: false,
-    reprint: false,
-    digital: false,
-    isToken: false,
-    full_name: 'Black Lotus [tst-1]',
-    name_lower: 'black lotus',
-    artist: 'Christopher Rush',
-    scryfall_uri: 'https://scryfall.com/card/test/1',
-    rarity: 'rare',
-    legalities: {
-      standard: 'not_legal',
-      future: 'not_legal',
-      historic: 'not_legal',
-      timeless: 'not_legal',
-      gladiator: 'not_legal',
-      pioneer: 'not_legal',
-      explorer: 'not_legal',
-      modern: 'not_legal',
-      legacy: 'legal',
-      pauper: 'not_legal',
-      vintage: 'legal',
-      penny: 'not_legal',
-      commander: 'legal',
-      oathbreaker: 'legal',
-      standardbrawl: 'not_legal',
-      brawl: 'not_legal',
-      alchemy: 'not_legal',
-      paupercommander: 'not_legal',
-      duel: 'legal',
-      oldschool: 'legal',
-      premodern: 'not_legal',
-      predh: 'legal',
+  // Card specifications — each card gets test-card-N IDs and oracle-N oracle IDs
+  const cardSpecs: MockCardSpec[] = [
+    {
+      name: 'Black Lotus',
+      oracle_text: '{T}: Add three mana of any one color.',
+      cmc: 0,
+      type: 'Artifact',
+      colors: [],
+      color_identity: [],
+      parsed_cost: [],
+      colorcategory: 'Colorless',
+      rarity: 'rare',
+      reserved: true,
     },
-    oracle_text: '{T}: Add three mana of any one color.',
-    image_normal: 'https://img.scryfall.com/cards/normal/front/test/1.jpg',
-    cmc: 0,
-    type: 'Artifact',
-    colors: [],
-    color_identity: [],
-    parsed_cost: [],
-    colorcategory: 'Colorless',
-    border_color: 'black',
-    language: 'en',
-    mtgo_id: 1,
-    layout: 'normal',
-    full_art: false,
-    error: false,
-    games: ['paper'],
-    reserved: true,
-    prices: {},
-    tokens: [],
-    keywords: [],
-    set_name: 'Test Set',
-    produced_mana: [],
-    finishes: ['nonfoil'],
-  };
-
-  const mockCard2 = {
-    scryfall_id: 'test-card-2',
-    oracle_id: 'oracle-2',
-    released_at: '2024-01-01',
-    isToken: false,
-    finishes: ['nonfoil'],
-    set: 'tst',
-    setIndex: 0,
-    collector_number: '2',
-    promo: false,
-    reprint: false,
-    digital: false,
-    full_name: 'Lightning Bolt [tst-2]',
-    name: 'Lightning Bolt',
-    name_lower: 'lightning bolt',
-    artist: 'Christopher Rush',
-    scryfall_uri: 'https://scryfall.com/card/test/2',
-    rarity: 'common',
-    legalities: {
-      standard: 'not_legal',
-      future: 'not_legal',
-      historic: 'not_legal',
-      gladiator: 'not_legal',
-      pioneer: 'not_legal',
-      explorer: 'not_legal',
-      modern: 'legal',
-      legacy: 'legal',
-      pauper: 'legal',
-      vintage: 'legal',
-      penny: 'not_legal',
-      commander: 'legal',
-      oathbreaker: 'legal',
-      brawl: 'not_legal',
-      standardbrawl: 'not_legal',
-      alchemy: 'not_legal',
-      paupercommander: 'legal',
-      duel: 'legal',
-      oldschool: 'not_legal',
-      premodern: 'legal',
-      predh: 'legal',
-      timeless: 'not_legal',
+    {
+      name: 'Lightning Bolt',
+      oracle_text: 'Lightning Bolt deals 3 damage to any target.',
+      cmc: 1,
+      type: 'Instant',
+      colors: ['R'],
+      color_identity: ['R'],
+      parsed_cost: ['r'],
+      colorcategory: 'Red',
+      rarity: 'common',
     },
-    oracle_text: 'Lightning Bolt deals 3 damage to any target.',
-    image_normal: 'https://img.scryfall.com/cards/normal/front/test/2.jpg',
-    cmc: 1,
-    type: 'Instant',
-    colors: ['R'],
-    color_identity: ['R'],
-    parsed_cost: ['r'],
-    colorcategory: 'Red',
-    border_color: 'black',
-    language: 'en',
-    mtgo_id: 0,
-    layout: 'normal',
-    tcgplayer_id: '',
-    power: '',
-    toughness: '',
-    loyalty: '',
-    error: false,
-    full_art: false,
-    prices: {
-      usd: 0.5,
+    {
+      name: 'Llanowar Elves',
+      oracle_text: '{T}: Add {G}.',
+      cmc: 1,
+      type: 'Creature — Elf Druid',
+      colors: ['G'],
+      color_identity: ['G'],
+      parsed_cost: ['g'],
+      colorcategory: 'Green',
+      rarity: 'common',
+      power: '1',
+      toughness: '1',
+      produced_mana: ['G'],
     },
-    tokens: [],
-    set_name: 'Test Set',
-    produced_mana: [],
-    keywords: [],
-    games: ['paper'],
-    reserved: false,
-  };
-
-  const mockCard3 = {
-    scryfall_id: 'test-card-3',
-    oracle_id: 'oracle-3',
-    released_at: '2023-01-01',
-    isToken: false,
-    finishes: ['nonfoil'],
-    set: 'tst',
-    setIndex: 0,
-    collector_number: '3',
-    promo: false,
-    reprint: false,
-    digital: false,
-    full_name: 'Llanowar Elves [tst-3]',
-    name: 'Llanowar Elves',
-    name_lower: 'llanowar elves',
-    artist: 'Kev Walker',
-    scryfall_uri: 'https://scryfall.com/card/test/3',
-    rarity: 'common',
-    legalities: {
-      standard: 'not_legal',
-      future: 'not_legal',
-      historic: 'legal',
-      gladiator: 'legal',
-      pioneer: 'legal',
-      explorer: 'legal',
-      modern: 'legal',
-      legacy: 'legal',
-      pauper: 'legal',
-      vintage: 'legal',
-      penny: 'not_legal',
-      commander: 'legal',
-      oathbreaker: 'legal',
-      brawl: 'not_legal',
-      standardbrawl: 'not_legal',
-      alchemy: 'not_legal',
-      paupercommander: 'legal',
-      duel: 'legal',
-      oldschool: 'legal',
-      premodern: 'legal',
-      predh: 'legal',
-      timeless: 'legal',
+    {
+      name: 'Counterspell',
+      oracle_text: 'Counter target spell.',
+      cmc: 2,
+      type: 'Instant',
+      colors: ['U'],
+      color_identity: ['U'],
+      parsed_cost: ['u', 'u'],
+      colorcategory: 'Blue',
+      rarity: 'common',
     },
-    oracle_text: '{T}: Add {G}.',
-    image_normal: 'https://img.scryfall.com/cards/normal/front/test/3.jpg',
-    cmc: 1,
-    type: 'Creature — Elf Druid',
-    colors: ['G'],
-    color_identity: ['G'],
-    parsed_cost: ['g'],
-    colorcategory: 'Green',
-    border_color: 'black',
-    language: 'en',
-    mtgo_id: 0,
-    layout: 'normal',
-    tcgplayer_id: '',
-    power: '1',
-    toughness: '1',
-    loyalty: '',
-    error: false,
-    full_art: false,
-    prices: {},
-    tokens: [],
-    set_name: 'Test Set',
-    produced_mana: ['G'],
-    keywords: [],
-    games: ['paper'],
-    reserved: false,
-  };
-
-  const carddict = {
-    'test-card-1': mockCard1,
-    'test-card-2': mockCard2,
-    'test-card-3': mockCard3,
-  };
-
-  const nameToId = {
-    'black lotus': ['test-card-1'],
-    'lightning bolt': ['test-card-2'],
-    'llanowar elves': ['test-card-3'],
-  };
-
-  const oracleToId = {
-    'oracle-1': ['test-card-1'],
-    'oracle-2': ['test-card-2'],
-    'oracle-3': ['test-card-3'],
-  };
-
-  const indexToOracle = ['oracle-1', 'oracle-2', 'oracle-3'];
-
-  const cardnames = ['Black Lotus', 'Lightning Bolt', 'Llanowar Elves'];
-
-  const fullNames = ['Black Lotus [tst-1]', 'Lightning Bolt [tst-2]', 'Llanowar Elves [tst-3]'];
-
-  const imagedict = {
-    'black lotus [tst-1]': {
-      uri: 'https://img.scryfall.com/cards/normal/front/test/1.jpg',
-      artist: 'Christopher Rush',
-      id: 'test-card-1',
-      imageName: 'black lotus [tst-1]',
+    {
+      name: 'Swords to Plowshares',
+      oracle_text: 'Exile target creature. Its controller gains life equal to its power.',
+      cmc: 1,
+      type: 'Instant',
+      colors: ['W'],
+      color_identity: ['W'],
+      parsed_cost: ['w'],
+      colorcategory: 'White',
+      rarity: 'uncommon',
     },
-    'lightning bolt [tst-2]': {
-      uri: 'https://img.scryfall.com/cards/normal/front/test/2.jpg',
-      artist: 'Christopher Rush',
-      id: 'test-card-2',
-      imageName: 'lightning bolt [tst-2]',
+    {
+      name: 'Dark Ritual',
+      oracle_text: 'Add {B}{B}{B}.',
+      cmc: 1,
+      type: 'Instant',
+      colors: ['B'],
+      color_identity: ['B'],
+      parsed_cost: ['b'],
+      colorcategory: 'Black',
+      rarity: 'common',
+      produced_mana: ['B'],
     },
-    'llanowar elves [tst-3]': {
-      uri: 'https://img.scryfall.com/cards/normal/front/test/3.jpg',
-      artist: 'Kev Walker',
-      id: 'test-card-3',
-      imageName: 'llanowar elves [tst-3]',
+    {
+      name: 'Giant Growth',
+      oracle_text: 'Target creature gets +3/+3 until end of turn.',
+      cmc: 1,
+      type: 'Instant',
+      colors: ['G'],
+      color_identity: ['G'],
+      parsed_cost: ['g'],
+      colorcategory: 'Green',
+      rarity: 'common',
     },
-    // Default fallback image used by getImageData when imageName is not found
-    'doubling cube [10e-321]': {
-      uri: 'https://img.scryfall.com/cards/normal/front/test/default.jpg',
-      artist: 'Ron Spencer',
-      id: 'default-image',
-      imageName: 'doubling cube [10e-321]',
+    {
+      name: 'Birds of Paradise',
+      oracle_text: 'Flying\n{T}: Add one mana of any color.',
+      cmc: 1,
+      type: 'Creature — Bird',
+      colors: ['G'],
+      color_identity: ['G'],
+      parsed_cost: ['g'],
+      colorcategory: 'Green',
+      rarity: 'rare',
+      power: '0',
+      toughness: '1',
+      produced_mana: ['W', 'U', 'B', 'R', 'G'],
+      keywords: ['flying'],
     },
-  };
+    {
+      name: 'Sol Ring',
+      oracle_text: '{T}: Add {C}{C}.',
+      cmc: 1,
+      type: 'Artifact',
+      colors: [],
+      color_identity: [],
+      parsed_cost: ['1'],
+      colorcategory: 'Colorless',
+      rarity: 'uncommon',
+      produced_mana: ['C'],
+    },
+    {
+      name: 'Brainstorm',
+      oracle_text: 'Draw three cards, then put two cards from your hand on top of your library in any order.',
+      cmc: 1,
+      type: 'Instant',
+      colors: ['U'],
+      color_identity: ['U'],
+      parsed_cost: ['u'],
+      colorcategory: 'Blue',
+      rarity: 'common',
+    },
+    {
+      name: 'Path to Exile',
+      oracle_text:
+        'Exile target creature. Its controller may search their library for a basic land card, put that card onto the battlefield tapped, then shuffle.',
+      cmc: 1,
+      type: 'Instant',
+      colors: ['W'],
+      color_identity: ['W'],
+      parsed_cost: ['w'],
+      colorcategory: 'White',
+      rarity: 'uncommon',
+    },
+    {
+      name: 'Thoughtseize',
+      oracle_text:
+        'Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life.',
+      cmc: 1,
+      type: 'Sorcery',
+      colors: ['B'],
+      color_identity: ['B'],
+      parsed_cost: ['b'],
+      colorcategory: 'Black',
+      rarity: 'rare',
+    },
+    {
+      name: 'Fatal Push',
+      oracle_text:
+        'Destroy target creature if it has mana value 2 or less. Revolt — Destroy that creature if it has mana value 4 or less instead if a permanent you controlled left the battlefield this turn.',
+      cmc: 1,
+      type: 'Instant',
+      colors: ['B'],
+      color_identity: ['B'],
+      parsed_cost: ['b'],
+      colorcategory: 'Black',
+      rarity: 'uncommon',
+      keywords: ['revolt'],
+    },
+    {
+      name: 'Mana Leak',
+      oracle_text: 'Counter target spell unless its controller pays {3}.',
+      cmc: 2,
+      type: 'Instant',
+      colors: ['U'],
+      color_identity: ['U'],
+      parsed_cost: ['1', 'u'],
+      colorcategory: 'Blue',
+      rarity: 'common',
+    },
+    {
+      name: 'Doom Blade',
+      oracle_text: 'Destroy target nonblack creature.',
+      cmc: 2,
+      type: 'Instant',
+      colors: ['B'],
+      color_identity: ['B'],
+      parsed_cost: ['1', 'b'],
+      colorcategory: 'Black',
+      rarity: 'common',
+    },
+    {
+      name: 'Rampant Growth',
+      oracle_text:
+        'Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.',
+      cmc: 2,
+      type: 'Sorcery',
+      colors: ['G'],
+      color_identity: ['G'],
+      parsed_cost: ['1', 'g'],
+      colorcategory: 'Green',
+      rarity: 'common',
+    },
+  ];
 
-  const cardimages = {
-    'test-card-1': {
-      uri: 'https://img.scryfall.com/cards/normal/front/test/1.jpg',
-      artist: 'Christopher Rush',
-      id: 'test-card-1',
-      imageName: 'black lotus [tst-1]',
-    },
-    'test-card-2': {
-      uri: 'https://img.scryfall.com/cards/normal/front/test/2.jpg',
-      artist: 'Christopher Rush',
-      id: 'test-card-2',
-      imageName: 'lightning bolt [tst-2]',
-    },
-    'test-card-3': {
-      uri: 'https://img.scryfall.com/cards/normal/front/test/3.jpg',
-      artist: 'Kev Walker',
-      id: 'test-card-3',
-      imageName: 'llanowar elves [tst-3]',
-    },
-  };
+  // Generate all data structures from the card specs
+  const carddict: Record<string, any> = {};
+  const nameToId: Record<string, string[]> = {};
+  const oracleToId: Record<string, string[]> = {};
+  const indexToOracle: string[] = [];
+  const cardnames: string[] = [];
+  const fullNames: string[] = [];
+  const imagedict: Record<string, any> = {};
+  const cardimages: Record<string, any> = {};
+  const english: Record<string, string> = {};
+  const comboOracleToIndex: Record<string, number> = {};
+  const indexToOracleMap: Record<string, string> = {};
 
-  const english = {
-    'test-card-1': 'test-card-1',
-    'test-card-2': 'test-card-2',
-    'test-card-3': 'test-card-3',
+  const defaultArtists = ['Christopher Rush', 'Kev Walker', 'Ron Spencer', 'Terese Nielsen', 'Mark Poole'];
+
+  cardSpecs.forEach((spec, index) => {
+    const num = index + 1;
+    const scryfallId = `test-card-${num}`;
+    const oracleId = `oracle-${num}`;
+    const fullName = `${spec.name} [tst-${num}]`;
+    const nameLower = spec.name.toLowerCase();
+    const artist = spec.artist || defaultArtists[index % defaultArtists.length];
+    const imageUri = `https://img.scryfall.com/cards/normal/front/test/${num}.jpg`;
+
+    carddict[scryfallId] = {
+      scryfall_id: scryfallId,
+      oracle_id: oracleId,
+      name: spec.name,
+      set: 'tst',
+      setIndex: 0,
+      collector_number: String(num),
+      released_at: '2024-01-01',
+      promo: false,
+      reprint: false,
+      digital: false,
+      isToken: false,
+      full_name: fullName,
+      name_lower: nameLower,
+      artist,
+      scryfall_uri: `https://scryfall.com/card/test/${num}`,
+      rarity: spec.rarity,
+      legalities: {
+        standard: 'not_legal',
+        future: 'not_legal',
+        historic: 'legal',
+        timeless: 'legal',
+        gladiator: 'legal',
+        pioneer: 'legal',
+        explorer: 'legal',
+        modern: 'legal',
+        legacy: 'legal',
+        pauper: spec.rarity === 'common' ? 'legal' : 'not_legal',
+        vintage: 'legal',
+        penny: 'not_legal',
+        commander: 'legal',
+        oathbreaker: 'legal',
+        standardbrawl: 'not_legal',
+        brawl: 'not_legal',
+        alchemy: 'not_legal',
+        paupercommander: spec.rarity === 'common' ? 'legal' : 'not_legal',
+        duel: 'legal',
+        oldschool: 'not_legal',
+        premodern: 'legal',
+        predh: 'legal',
+      },
+      oracle_text: spec.oracle_text,
+      image_normal: imageUri,
+      art_crop: imageUri,
+      cmc: spec.cmc,
+      type: spec.type,
+      colors: spec.colors,
+      color_identity: spec.color_identity,
+      parsed_cost: spec.parsed_cost,
+      colorcategory: spec.colorcategory,
+      border_color: 'black',
+      language: 'en',
+      mtgo_id: 0,
+      layout: 'normal',
+      tcgplayer_id: '',
+      power: spec.power || '',
+      toughness: spec.toughness || '',
+      loyalty: '',
+      error: false,
+      full_art: false,
+      prices: {},
+      tokens: [],
+      set_name: 'Test Set',
+      produced_mana: spec.produced_mana || [],
+      keywords: spec.keywords || [],
+      games: ['paper'],
+      reserved: spec.reserved || false,
+      finishes: ['nonfoil'],
+    };
+
+    nameToId[nameLower] = [scryfallId];
+    oracleToId[oracleId] = [scryfallId];
+    indexToOracle.push(oracleId);
+    cardnames.push(spec.name);
+    fullNames.push(fullName);
+
+    imagedict[fullName.toLowerCase()] = {
+      uri: imageUri,
+      artist,
+      id: scryfallId,
+      imageName: fullName.toLowerCase(),
+    };
+
+    cardimages[scryfallId] = {
+      uri: imageUri,
+      artist,
+      id: scryfallId,
+      imageName: fullName.toLowerCase(),
+    };
+
+    english[scryfallId] = scryfallId;
+    comboOracleToIndex[oracleId] = index;
+    indexToOracleMap[String(index)] = oracleId;
+  });
+
+  // Default fallback image used by getImageData when imageName is not found
+  imagedict['doubling cube [10e-321]'] = {
+    uri: 'https://img.scryfall.com/cards/normal/front/test/default.jpg',
+    artist: 'Ron Spencer',
+    id: 'default-image',
+    imageName: 'doubling cube [10e-321]',
   };
 
   const metadatadict = {};
   const cardtree = {};
   const comboTree = {};
-  const comboOracleToIndex = {
-    'oracle-1': 0,
-    'oracle-2': 1,
-    'oracle-3': 2,
-  };
   const cubeEmbeddings = {};
-
-  // Create indexToOracleMap for ML models (maps index to oracle_id)
-  const indexToOracleMap: Record<string, string> = {
-    '0': 'oracle-1',
-    '1': 'oracle-2',
-    '2': 'oracle-3',
-  };
 
   // Write all files
   fs.writeFileSync('../server/private/carddict.json', JSON.stringify(carddict, null, 2));
@@ -325,7 +369,7 @@ function createMockFiles() {
   // Write ML model file
   fs.writeFileSync('../server/model/indexToOracleMap.json', JSON.stringify(indexToOracleMap, null, 2));
 
-  console.log('Created mock card catalog files with 3 test cards');
+  console.log(`Created mock card catalog files with ${cardSpecs.length} test cards`);
 }
 
 createMockFiles();
