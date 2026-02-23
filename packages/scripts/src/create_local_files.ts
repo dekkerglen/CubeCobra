@@ -233,10 +233,16 @@ function createMockFiles() {
 
   const defaultArtists = ['Christopher Rush', 'Kev Walker', 'Ron Spencer', 'Terese Nielsen', 'Mark Poole'];
 
+  // Helper to generate deterministic UUIDs from an index (needed for batchpredict Joi validation)
+  const toUUID = (n: number): string => {
+    const hex = n.toString(16).padStart(12, '0');
+    return `00000000-0000-4000-8000-${hex}`;
+  };
+
   cardSpecs.forEach((spec, index) => {
     const num = index + 1;
     const scryfallId = `test-card-${num}`;
-    const oracleId = `oracle-${num}`;
+    const oracleId = toUUID(num);
     const fullName = `${spec.name} [tst-${num}]`;
     const nameLower = spec.name.toLowerCase();
     const artist = spec.artist || defaultArtists[index % defaultArtists.length];
