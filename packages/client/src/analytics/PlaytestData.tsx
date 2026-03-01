@@ -2,6 +2,7 @@ import React, { useContext, useMemo } from 'react';
 
 import { cardName, cardNameLower, cardOracleId, encodeName, mainboardRate, pickRate } from '@utils/cardutil';
 import Card, { DefaultElo } from '@utils/datatypes/Card';
+import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import { fromEntries } from '@utils/Util';
 
 import { Flexbox } from '../components/base/Layout';
@@ -10,18 +11,8 @@ import { SortableTable } from '../components/SortableTable';
 import withAutocard from '../components/WithAutocard';
 import CubeContext from '../contexts/CubeContext';
 
-interface CubeAnalytics {
-  [oracle_id: string]: {
-    elo: number;
-    mainboards: number;
-    sideboards: number;
-    picks: number;
-    passes: number;
-  };
-}
-
 interface PlaytestDataProps {
-  cubeAnalytics: CubeAnalytics;
+  cubeAnalytics: CubeAnalytic;
 }
 
 const AutocardItem = withAutocard('div');
@@ -53,12 +44,12 @@ const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
 
   const data = useMemo(
     () =>
-      Object.entries(cubeAnalytics)
-        .filter(([oracle]) => cardDict[oracle])
-        .map(([oracle, { elo, mainboards, sideboards, picks, passes }]) => ({
+      cubeAnalytics.cards
+        .filter(({ cardName: oracle }) => cardDict[oracle!])
+        .map(({ cardName: oracle, elo, mainboards, sideboards, picks, passes }) => ({
           card: {
-            exportValue: cardName(cardDict[oracle]),
-            ...cardDict[oracle],
+            exportValue: cardName(cardDict[oracle!]),
+            ...cardDict[oracle!],
           },
           elo: Math.round(elo || DefaultElo),
           mainboard: mainboardRate({ mainboards: mainboards || 0, sideboards: sideboards || 0 }),
