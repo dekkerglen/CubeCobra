@@ -4,7 +4,6 @@
 
 @layer base {
   /* Temporary fix: Force inline elements to display inline */
-  span,
   strong,
   em,
   b,
