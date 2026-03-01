@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { makeSubtitle } from '@utils/cardutil';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
@@ -18,7 +19,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
 import { CSRFContext } from '../contexts/CSRFContext';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
-import DraftLocation, { addCard, locations } from '../drafting/DraftLocation';
+import DraftLocation, { addCard, locations, moveCard } from '../drafting/DraftLocation';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 
@@ -89,16 +90,54 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
   const doneDrafting = packNum >= numPacks;
   const pack = useMemo(() => cardsInPack.map((cardIndex: number) => cards[cardIndex]), [cardsInPack, cards]);
 
+  const [playerOneMainboard, setPlayerOneMainboard] = useState<number[][][]>(gridDraft.seats[0]?.mainboard || []);
+  const [playerTwoMainboard, setPlayerTwoMainboard] = useState<number[][][]>(gridDraft.seats[1]?.mainboard || []);
+
+  // Sync mainboard state with gridDraft when picks are made
+  useEffect(() => {
+    setPlayerOneMainboard(gridDraft.seats[0]?.mainboard || []);
+    setPlayerTwoMainboard(gridDraft.seats[1]?.mainboard || []);
+  }, [gridDraft]);
+
   // picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picked = useMemo(
-    () =>
-      gridDraft.seats.map(({ mainboard }) =>
-        mainboard.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
-      ),
-    [gridDraft, cards],
+    () => [
+      playerOneMainboard.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
+      playerTwoMainboard.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
+    ],
+    [playerOneMainboard, playerTwoMainboard, cards],
   );
   const botIndex = (seatNum + 1) % 2;
   const botDrafterState = drafterStates[botIndex];
+
+  const handleMoveCard = useCallback(
+    (event: DragEndEvent, seatIndex: number) => {
+      const { active, over } = event;
+
+      // If drag and drop ends without a collision, eg outside the drag/drop area, do nothing
+      if (!over) {
+        return;
+      }
+
+      const source = active.data.current as DraftLocation;
+      const target = over.data.current as DraftLocation;
+
+      // Only allow moving within the mainboard
+      if (source.type !== 'deck' || target.type !== 'deck') {
+        return;
+      }
+
+      if (source.equals(target)) {
+        return;
+      }
+
+      const mainboard = seatIndex === 0 ? playerOneMainboard : playerTwoMainboard;
+      const setMainboard = seatIndex === 0 ? setPlayerOneMainboard : setPlayerTwoMainboard;
+
+      setMainboard(moveCard(mainboard, source, target));
+    },
+    [playerOneMainboard, playerTwoMainboard, setPlayerOneMainboard, setPlayerTwoMainboard],
+  );
 
   // The finish callback.
   useEffect(() => {
@@ -154,24 +193,28 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
             </ErrorBoundary>
             <ErrorBoundary>
               <Card className="mt-3">
-                <DeckStacks
-                  cards={picked[0]}
-                  title={draftType === 'bot' ? 'Picks' : "Player One's picks"}
-                  subtitle={makeSubtitle(picked[0].flat(3))}
-                  locationType={locations.deck}
-                  xs={4}
-                  md={8}
-                />
+                <DndContext onDragEnd={(event) => handleMoveCard(event, 0)}>
+                  <DeckStacks
+                    cards={picked[0]}
+                    title={draftType === 'bot' ? 'Picks' : "Player One's picks"}
+                    subtitle={makeSubtitle(picked[0].flat(3))}
+                    locationType={locations.deck}
+                    xs={4}
+                    md={8}
+                  />
+                </DndContext>
               </Card>
               <Card className="my-3">
-                <DeckStacks
-                  cards={picked[1]}
-                  title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
-                  subtitle={makeSubtitle(picked[1].flat(3))}
-                  locationType={locations.deck}
-                  xs={4}
-                  md={8}
-                />
+                <DndContext onDragEnd={(event) => handleMoveCard(event, 1)}>
+                  <DeckStacks
+                    cards={picked[1]}
+                    title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
+                    subtitle={makeSubtitle(picked[1].flat(3))}
+                    locationType={locations.deck}
+                    xs={4}
+                    md={8}
+                  />
+                </DndContext>
               </Card>
             </ErrorBoundary>
           </Container>
