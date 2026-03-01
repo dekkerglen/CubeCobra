@@ -93,37 +93,8 @@ colorIdentityOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { 
   | ("=" | ":") "m"i {% ([op]) => { return (fieldValue) => normalizeCombination(fieldValue).length > 1; } %}
   | ("!=" | "<>") "m"i {% ([op]) => { return (fieldValue) => normalizeCombination(fieldValue).length < 2; } %}
 
-# At each step it wraps the previous in another array layer
-# so we have to unwrap them as we step back up.
-comb1[A] -> null {% () => [] %}
-  | $A {% ([comb]) => comb %}
-
-comb2[A, B] -> null {% () => [] %}
-  | ( $A comb1[$B]
-    | $B comb1[$A]
-    ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
-
-comb3[A, B, C] -> null {% () => [] %}
-  | ( $A comb2[$B, $C]
-    | $B comb2[$A, $C]
-    | $C comb2[$B, $C]
-    ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
-
-comb4[A, B, C, D] -> null {% () => [] %}
-  | ( $A comb3[$B, $C, $D]
-    | $B comb3[$A, $C, $D]
-    | $C comb3[$A, $B, $D]
-    | $D comb3[$A, $B, $C]
-    ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
-
-comb5NonEmpty[A, B, C, D, E] -> (
-    $A comb4[$B, $C, $D, $E]
-  | $B comb4[$A, $C, $D, $E]
-  | $C comb4[$A, $B, $D, $E]
-  | $D comb4[$A, $B, $C, $E]
-  | $E comb4[$A, $B, $C, $D]
-) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
-
+# Macro based handling of 4/5 colors had ordering issues. Generated all combinations using Copilot,
+# from 1 to 5 of the colors used
 colorCombinationValue ->
     ("c"i | "brown"i | "colorless"i) {% () => [] %}
   | "white"i {% () => ['w'] %}
@@ -152,7 +123,331 @@ colorCombinationValue ->
   | "jeskai"i {% () => ['w', 'u', 'r'] %}
   | "sultai"i {% () => ['u', 'b', 'g'] %}
   | ("rainbow"i | "fivecolor"i) {% () => ['w', 'u', 'b', 'r', 'g'] %}
-  | comb5NonEmpty["w"i, "u"i, "b"i, "r"i, "g"i] {% ([comb]) => comb.map((c) => c.toLowerCase()) %}
+  | "w"i {% () => ['w'] %}
+  | "u"i {% () => ['u'] %}
+  | "b"i {% () => ['b'] %}
+  | "r"i {% () => ['r'] %}
+  | "g"i {% () => ['g'] %}
+  | "w"i "u"i {% () => ['w', 'u'] %}
+  | "u"i "w"i {% () => ['u', 'w'] %}
+  | "w"i "b"i {% () => ['w', 'b'] %}
+  | "b"i "w"i {% () => ['b', 'w'] %}
+  | "w"i "r"i {% () => ['w', 'r'] %}
+  | "r"i "w"i {% () => ['r', 'w'] %}
+  | "w"i "g"i {% () => ['w', 'g'] %}
+  | "g"i "w"i {% () => ['g', 'w'] %}
+  | "u"i "b"i {% () => ['u', 'b'] %}
+  | "b"i "u"i {% () => ['b', 'u'] %}
+  | "u"i "r"i {% () => ['u', 'r'] %}
+  | "r"i "u"i {% () => ['r', 'u'] %}
+  | "u"i "g"i {% () => ['u', 'g'] %}
+  | "g"i "u"i {% () => ['g', 'u'] %}
+  | "b"i "r"i {% () => ['b', 'r'] %}
+  | "r"i "b"i {% () => ['r', 'b'] %}
+  | "b"i "g"i {% () => ['b', 'g'] %}
+  | "g"i "b"i {% () => ['g', 'b'] %}
+  | "r"i "g"i {% () => ['r', 'g'] %}
+  | "g"i "r"i {% () => ['g', 'r'] %}
+  | "w"i "u"i "b"i {% () => ['w', 'u', 'b'] %}
+  | "w"i "b"i "u"i {% () => ['w', 'b', 'u'] %}
+  | "u"i "w"i "b"i {% () => ['u', 'w', 'b'] %}
+  | "u"i "b"i "w"i {% () => ['u', 'b', 'w'] %}
+  | "b"i "w"i "u"i {% () => ['b', 'w', 'u'] %}
+  | "b"i "u"i "w"i {% () => ['b', 'u', 'w'] %}
+  | "w"i "u"i "r"i {% () => ['w', 'u', 'r'] %}
+  | "w"i "r"i "u"i {% () => ['w', 'r', 'u'] %}
+  | "u"i "w"i "r"i {% () => ['u', 'w', 'r'] %}
+  | "u"i "r"i "w"i {% () => ['u', 'r', 'w'] %}
+  | "r"i "w"i "u"i {% () => ['r', 'w', 'u'] %}
+  | "r"i "u"i "w"i {% () => ['r', 'u', 'w'] %}
+  | "w"i "u"i "g"i {% () => ['w', 'u', 'g'] %}
+  | "w"i "g"i "u"i {% () => ['w', 'g', 'u'] %}
+  | "u"i "w"i "g"i {% () => ['u', 'w', 'g'] %}
+  | "u"i "g"i "w"i {% () => ['u', 'g', 'w'] %}
+  | "g"i "w"i "u"i {% () => ['g', 'w', 'u'] %}
+  | "g"i "u"i "w"i {% () => ['g', 'u', 'w'] %}
+  | "w"i "b"i "r"i {% () => ['w', 'b', 'r'] %}
+  | "w"i "r"i "b"i {% () => ['w', 'r', 'b'] %}
+  | "b"i "w"i "r"i {% () => ['b', 'w', 'r'] %}
+  | "b"i "r"i "w"i {% () => ['b', 'r', 'w'] %}
+  | "r"i "w"i "b"i {% () => ['r', 'w', 'b'] %}
+  | "r"i "b"i "w"i {% () => ['r', 'b', 'w'] %}
+  | "w"i "b"i "g"i {% () => ['w', 'b', 'g'] %}
+  | "w"i "g"i "b"i {% () => ['w', 'g', 'b'] %}
+  | "b"i "w"i "g"i {% () => ['b', 'w', 'g'] %}
+  | "b"i "g"i "w"i {% () => ['b', 'g', 'w'] %}
+  | "g"i "w"i "b"i {% () => ['g', 'w', 'b'] %}
+  | "g"i "b"i "w"i {% () => ['g', 'b', 'w'] %}
+  | "w"i "r"i "g"i {% () => ['w', 'r', 'g'] %}
+  | "w"i "g"i "r"i {% () => ['w', 'g', 'r'] %}
+  | "r"i "w"i "g"i {% () => ['r', 'w', 'g'] %}
+  | "r"i "g"i "w"i {% () => ['r', 'g', 'w'] %}
+  | "g"i "w"i "r"i {% () => ['g', 'w', 'r'] %}
+  | "g"i "r"i "w"i {% () => ['g', 'r', 'w'] %}
+  | "u"i "b"i "r"i {% () => ['u', 'b', 'r'] %}
+  | "u"i "r"i "b"i {% () => ['u', 'r', 'b'] %}
+  | "b"i "u"i "r"i {% () => ['b', 'u', 'r'] %}
+  | "b"i "r"i "u"i {% () => ['b', 'r', 'u'] %}
+  | "r"i "u"i "b"i {% () => ['r', 'u', 'b'] %}
+  | "r"i "b"i "u"i {% () => ['r', 'b', 'u'] %}
+  | "u"i "b"i "g"i {% () => ['u', 'b', 'g'] %}
+  | "u"i "g"i "b"i {% () => ['u', 'g', 'b'] %}
+  | "b"i "u"i "g"i {% () => ['b', 'u', 'g'] %}
+  | "b"i "g"i "u"i {% () => ['b', 'g', 'u'] %}
+  | "g"i "u"i "b"i {% () => ['g', 'u', 'b'] %}
+  | "g"i "b"i "u"i {% () => ['g', 'b', 'u'] %}
+  | "u"i "r"i "g"i {% () => ['u', 'r', 'g'] %}
+  | "u"i "g"i "r"i {% () => ['u', 'g', 'r'] %}
+  | "r"i "u"i "g"i {% () => ['r', 'u', 'g'] %}
+  | "r"i "g"i "u"i {% () => ['r', 'g', 'u'] %}
+  | "g"i "u"i "r"i {% () => ['g', 'u', 'r'] %}
+  | "g"i "r"i "u"i {% () => ['g', 'r', 'u'] %}
+  | "b"i "r"i "g"i {% () => ['b', 'r', 'g'] %}
+  | "b"i "g"i "r"i {% () => ['b', 'g', 'r'] %}
+  | "r"i "b"i "g"i {% () => ['r', 'b', 'g'] %}
+  | "r"i "g"i "b"i {% () => ['r', 'g', 'b'] %}
+  | "g"i "b"i "r"i {% () => ['g', 'b', 'r'] %}
+  | "g"i "r"i "b"i {% () => ['g', 'r', 'b'] %}
+  | "w"i "u"i "b"i "r"i {% () => ['w', 'u', 'b', 'r'] %}
+  | "w"i "u"i "r"i "b"i {% () => ['w', 'u', 'r', 'b'] %}
+  | "w"i "b"i "u"i "r"i {% () => ['w', 'b', 'u', 'r'] %}
+  | "w"i "b"i "r"i "u"i {% () => ['w', 'b', 'r', 'u'] %}
+  | "w"i "r"i "u"i "b"i {% () => ['w', 'r', 'u', 'b'] %}
+  | "w"i "r"i "b"i "u"i {% () => ['w', 'r', 'b', 'u'] %}
+  | "u"i "w"i "b"i "r"i {% () => ['u', 'w', 'b', 'r'] %}
+  | "u"i "w"i "r"i "b"i {% () => ['u', 'w', 'r', 'b'] %}
+  | "u"i "b"i "w"i "r"i {% () => ['u', 'b', 'w', 'r'] %}
+  | "u"i "b"i "r"i "w"i {% () => ['u', 'b', 'r', 'w'] %}
+  | "u"i "r"i "w"i "b"i {% () => ['u', 'r', 'w', 'b'] %}
+  | "u"i "r"i "b"i "w"i {% () => ['u', 'r', 'b', 'w'] %}
+  | "b"i "w"i "u"i "r"i {% () => ['b', 'w', 'u', 'r'] %}
+  | "b"i "w"i "r"i "u"i {% () => ['b', 'w', 'r', 'u'] %}
+  | "b"i "u"i "w"i "r"i {% () => ['b', 'u', 'w', 'r'] %}
+  | "b"i "u"i "r"i "w"i {% () => ['b', 'u', 'r', 'w'] %}
+  | "b"i "r"i "w"i "u"i {% () => ['b', 'r', 'w', 'u'] %}
+  | "b"i "r"i "u"i "w"i {% () => ['b', 'r', 'u', 'w'] %}
+  | "r"i "w"i "u"i "b"i {% () => ['r', 'w', 'u', 'b'] %}
+  | "r"i "w"i "b"i "u"i {% () => ['r', 'w', 'b', 'u'] %}
+  | "r"i "u"i "w"i "b"i {% () => ['r', 'u', 'w', 'b'] %}
+  | "r"i "u"i "b"i "w"i {% () => ['r', 'u', 'b', 'w'] %}
+  | "r"i "b"i "w"i "u"i {% () => ['r', 'b', 'w', 'u'] %}
+  | "r"i "b"i "u"i "w"i {% () => ['r', 'b', 'u', 'w'] %}
+  | "w"i "u"i "b"i "g"i {% () => ['w', 'u', 'b', 'g'] %}
+  | "w"i "u"i "g"i "b"i {% () => ['w', 'u', 'g', 'b'] %}
+  | "w"i "b"i "u"i "g"i {% () => ['w', 'b', 'u', 'g'] %}
+  | "w"i "b"i "g"i "u"i {% () => ['w', 'b', 'g', 'u'] %}
+  | "w"i "g"i "u"i "b"i {% () => ['w', 'g', 'u', 'b'] %}
+  | "w"i "g"i "b"i "u"i {% () => ['w', 'g', 'b', 'u'] %}
+  | "u"i "w"i "b"i "g"i {% () => ['u', 'w', 'b', 'g'] %}
+  | "u"i "w"i "g"i "b"i {% () => ['u', 'w', 'g', 'b'] %}
+  | "u"i "b"i "w"i "g"i {% () => ['u', 'b', 'w', 'g'] %}
+  | "u"i "b"i "g"i "w"i {% () => ['u', 'b', 'g', 'w'] %}
+  | "u"i "g"i "w"i "b"i {% () => ['u', 'g', 'w', 'b'] %}
+  | "u"i "g"i "b"i "w"i {% () => ['u', 'g', 'b', 'w'] %}
+  | "b"i "w"i "u"i "g"i {% () => ['b', 'w', 'u', 'g'] %}
+  | "b"i "w"i "g"i "u"i {% () => ['b', 'w', 'g', 'u'] %}
+  | "b"i "u"i "w"i "g"i {% () => ['b', 'u', 'w', 'g'] %}
+  | "b"i "u"i "g"i "w"i {% () => ['b', 'u', 'g', 'w'] %}
+  | "b"i "g"i "w"i "u"i {% () => ['b', 'g', 'w', 'u'] %}
+  | "b"i "g"i "u"i "w"i {% () => ['b', 'g', 'u', 'w'] %}
+  | "g"i "w"i "u"i "b"i {% () => ['g', 'w', 'u', 'b'] %}
+  | "g"i "w"i "b"i "u"i {% () => ['g', 'w', 'b', 'u'] %}
+  | "g"i "u"i "w"i "b"i {% () => ['g', 'u', 'w', 'b'] %}
+  | "g"i "u"i "b"i "w"i {% () => ['g', 'u', 'b', 'w'] %}
+  | "g"i "b"i "w"i "u"i {% () => ['g', 'b', 'w', 'u'] %}
+  | "g"i "b"i "u"i "w"i {% () => ['g', 'b', 'u', 'w'] %}
+  | "w"i "u"i "r"i "g"i {% () => ['w', 'u', 'r', 'g'] %}
+  | "w"i "u"i "g"i "r"i {% () => ['w', 'u', 'g', 'r'] %}
+  | "w"i "r"i "u"i "g"i {% () => ['w', 'r', 'u', 'g'] %}
+  | "w"i "r"i "g"i "u"i {% () => ['w', 'r', 'g', 'u'] %}
+  | "w"i "g"i "u"i "r"i {% () => ['w', 'g', 'u', 'r'] %}
+  | "w"i "g"i "r"i "u"i {% () => ['w', 'g', 'r', 'u'] %}
+  | "u"i "w"i "r"i "g"i {% () => ['u', 'w', 'r', 'g'] %}
+  | "u"i "w"i "g"i "r"i {% () => ['u', 'w', 'g', 'r'] %}
+  | "u"i "r"i "w"i "g"i {% () => ['u', 'r', 'w', 'g'] %}
+  | "u"i "r"i "g"i "w"i {% () => ['u', 'r', 'g', 'w'] %}
+  | "u"i "g"i "w"i "r"i {% () => ['u', 'g', 'w', 'r'] %}
+  | "u"i "g"i "r"i "w"i {% () => ['u', 'g', 'r', 'w'] %}
+  | "r"i "w"i "u"i "g"i {% () => ['r', 'w', 'u', 'g'] %}
+  | "r"i "w"i "g"i "u"i {% () => ['r', 'w', 'g', 'u'] %}
+  | "r"i "u"i "w"i "g"i {% () => ['r', 'u', 'w', 'g'] %}
+  | "r"i "u"i "g"i "w"i {% () => ['r', 'u', 'g', 'w'] %}
+  | "r"i "g"i "w"i "u"i {% () => ['r', 'g', 'w', 'u'] %}
+  | "r"i "g"i "u"i "w"i {% () => ['r', 'g', 'u', 'w'] %}
+  | "g"i "w"i "u"i "r"i {% () => ['g', 'w', 'u', 'r'] %}
+  | "g"i "w"i "r"i "u"i {% () => ['g', 'w', 'r', 'u'] %}
+  | "g"i "u"i "w"i "r"i {% () => ['g', 'u', 'w', 'r'] %}
+  | "g"i "u"i "r"i "w"i {% () => ['g', 'u', 'r', 'w'] %}
+  | "g"i "r"i "w"i "u"i {% () => ['g', 'r', 'w', 'u'] %}
+  | "g"i "r"i "u"i "w"i {% () => ['g', 'r', 'u', 'w'] %}
+  | "w"i "b"i "r"i "g"i {% () => ['w', 'b', 'r', 'g'] %}
+  | "w"i "b"i "g"i "r"i {% () => ['w', 'b', 'g', 'r'] %}
+  | "w"i "r"i "b"i "g"i {% () => ['w', 'r', 'b', 'g'] %}
+  | "w"i "r"i "g"i "b"i {% () => ['w', 'r', 'g', 'b'] %}
+  | "w"i "g"i "b"i "r"i {% () => ['w', 'g', 'b', 'r'] %}
+  | "w"i "g"i "r"i "b"i {% () => ['w', 'g', 'r', 'b'] %}
+  | "b"i "w"i "r"i "g"i {% () => ['b', 'w', 'r', 'g'] %}
+  | "b"i "w"i "g"i "r"i {% () => ['b', 'w', 'g', 'r'] %}
+  | "b"i "r"i "w"i "g"i {% () => ['b', 'r', 'w', 'g'] %}
+  | "b"i "r"i "g"i "w"i {% () => ['b', 'r', 'g', 'w'] %}
+  | "b"i "g"i "w"i "r"i {% () => ['b', 'g', 'w', 'r'] %}
+  | "b"i "g"i "r"i "w"i {% () => ['b', 'g', 'r', 'w'] %}
+  | "r"i "w"i "b"i "g"i {% () => ['r', 'w', 'b', 'g'] %}
+  | "r"i "w"i "g"i "b"i {% () => ['r', 'w', 'g', 'b'] %}
+  | "r"i "b"i "w"i "g"i {% () => ['r', 'b', 'w', 'g'] %}
+  | "r"i "b"i "g"i "w"i {% () => ['r', 'b', 'g', 'w'] %}
+  | "r"i "g"i "w"i "b"i {% () => ['r', 'g', 'w', 'b'] %}
+  | "r"i "g"i "b"i "w"i {% () => ['r', 'g', 'b', 'w'] %}
+  | "g"i "w"i "b"i "r"i {% () => ['g', 'w', 'b', 'r'] %}
+  | "g"i "w"i "r"i "b"i {% () => ['g', 'w', 'r', 'b'] %}
+  | "g"i "b"i "w"i "r"i {% () => ['g', 'b', 'w', 'r'] %}
+  | "g"i "b"i "r"i "w"i {% () => ['g', 'b', 'r', 'w'] %}
+  | "g"i "r"i "w"i "b"i {% () => ['g', 'r', 'w', 'b'] %}
+  | "g"i "r"i "b"i "w"i {% () => ['g', 'r', 'b', 'w'] %}
+  | "u"i "b"i "r"i "g"i {% () => ['u', 'b', 'r', 'g'] %}
+  | "u"i "b"i "g"i "r"i {% () => ['u', 'b', 'g', 'r'] %}
+  | "u"i "r"i "b"i "g"i {% () => ['u', 'r', 'b', 'g'] %}
+  | "u"i "r"i "g"i "b"i {% () => ['u', 'r', 'g', 'b'] %}
+  | "u"i "g"i "b"i "r"i {% () => ['u', 'g', 'b', 'r'] %}
+  | "u"i "g"i "r"i "b"i {% () => ['u', 'g', 'r', 'b'] %}
+  | "b"i "u"i "r"i "g"i {% () => ['b', 'u', 'r', 'g'] %}
+  | "b"i "u"i "g"i "r"i {% () => ['b', 'u', 'g', 'r'] %}
+  | "b"i "r"i "u"i "g"i {% () => ['b', 'r', 'u', 'g'] %}
+  | "b"i "r"i "g"i "u"i {% () => ['b', 'r', 'g', 'u'] %}
+  | "b"i "g"i "u"i "r"i {% () => ['b', 'g', 'u', 'r'] %}
+  | "b"i "g"i "r"i "u"i {% () => ['b', 'g', 'r', 'u'] %}
+  | "r"i "u"i "b"i "g"i {% () => ['r', 'u', 'b', 'g'] %}
+  | "r"i "u"i "g"i "b"i {% () => ['r', 'u', 'g', 'b'] %}
+  | "r"i "b"i "u"i "g"i {% () => ['r', 'b', 'u', 'g'] %}
+  | "r"i "b"i "g"i "u"i {% () => ['r', 'b', 'g', 'u'] %}
+  | "r"i "g"i "u"i "b"i {% () => ['r', 'g', 'u', 'b'] %}
+  | "r"i "g"i "b"i "u"i {% () => ['r', 'g', 'b', 'u'] %}
+  | "g"i "u"i "b"i "r"i {% () => ['g', 'u', 'b', 'r'] %}
+  | "g"i "u"i "r"i "b"i {% () => ['g', 'u', 'r', 'b'] %}
+  | "g"i "b"i "u"i "r"i {% () => ['g', 'b', 'u', 'r'] %}
+  | "g"i "b"i "r"i "u"i {% () => ['g', 'b', 'r', 'u'] %}
+  | "g"i "r"i "u"i "b"i {% () => ['g', 'r', 'u', 'b'] %}
+  | "g"i "r"i "b"i "u"i {% () => ['g', 'r', 'b', 'u'] %}
+  | "w"i "u"i "b"i "r"i "g"i {% () => ['w', 'u', 'b', 'r', 'g'] %}
+  | "w"i "u"i "b"i "g"i "r"i {% () => ['w', 'u', 'b', 'g', 'r'] %}
+  | "w"i "u"i "r"i "b"i "g"i {% () => ['w', 'u', 'r', 'b', 'g'] %}
+  | "w"i "u"i "r"i "g"i "b"i {% () => ['w', 'u', 'r', 'g', 'b'] %}
+  | "w"i "u"i "g"i "b"i "r"i {% () => ['w', 'u', 'g', 'b', 'r'] %}
+  | "w"i "u"i "g"i "r"i "b"i {% () => ['w', 'u', 'g', 'r', 'b'] %}
+  | "w"i "b"i "u"i "r"i "g"i {% () => ['w', 'b', 'u', 'r', 'g'] %}
+  | "w"i "b"i "u"i "g"i "r"i {% () => ['w', 'b', 'u', 'g', 'r'] %}
+  | "w"i "b"i "r"i "u"i "g"i {% () => ['w', 'b', 'r', 'u', 'g'] %}
+  | "w"i "b"i "r"i "g"i "u"i {% () => ['w', 'b', 'r', 'g', 'u'] %}
+  | "w"i "b"i "g"i "u"i "r"i {% () => ['w', 'b', 'g', 'u', 'r'] %}
+  | "w"i "b"i "g"i "r"i "u"i {% () => ['w', 'b', 'g', 'r', 'u'] %}
+  | "w"i "r"i "u"i "b"i "g"i {% () => ['w', 'r', 'u', 'b', 'g'] %}
+  | "w"i "r"i "u"i "g"i "b"i {% () => ['w', 'r', 'u', 'g', 'b'] %}
+  | "w"i "r"i "b"i "u"i "g"i {% () => ['w', 'r', 'b', 'u', 'g'] %}
+  | "w"i "r"i "b"i "g"i "u"i {% () => ['w', 'r', 'b', 'g', 'u'] %}
+  | "w"i "r"i "g"i "u"i "b"i {% () => ['w', 'r', 'g', 'u', 'b'] %}
+  | "w"i "r"i "g"i "b"i "u"i {% () => ['w', 'r', 'g', 'b', 'u'] %}
+  | "w"i "g"i "u"i "b"i "r"i {% () => ['w', 'g', 'u', 'b', 'r'] %}
+  | "w"i "g"i "u"i "r"i "b"i {% () => ['w', 'g', 'u', 'r', 'b'] %}
+  | "w"i "g"i "b"i "u"i "r"i {% () => ['w', 'g', 'b', 'u', 'r'] %}
+  | "w"i "g"i "b"i "r"i "u"i {% () => ['w', 'g', 'b', 'r', 'u'] %}
+  | "w"i "g"i "r"i "u"i "b"i {% () => ['w', 'g', 'r', 'u', 'b'] %}
+  | "w"i "g"i "r"i "b"i "u"i {% () => ['w', 'g', 'r', 'b', 'u'] %}
+  | "u"i "w"i "b"i "r"i "g"i {% () => ['u', 'w', 'b', 'r', 'g'] %}
+  | "u"i "w"i "b"i "g"i "r"i {% () => ['u', 'w', 'b', 'g', 'r'] %}
+  | "u"i "w"i "r"i "b"i "g"i {% () => ['u', 'w', 'r', 'b', 'g'] %}
+  | "u"i "w"i "r"i "g"i "b"i {% () => ['u', 'w', 'r', 'g', 'b'] %}
+  | "u"i "w"i "g"i "b"i "r"i {% () => ['u', 'w', 'g', 'b', 'r'] %}
+  | "u"i "w"i "g"i "r"i "b"i {% () => ['u', 'w', 'g', 'r', 'b'] %}
+  | "u"i "b"i "w"i "r"i "g"i {% () => ['u', 'b', 'w', 'r', 'g'] %}
+  | "u"i "b"i "w"i "g"i "r"i {% () => ['u', 'b', 'w', 'g', 'r'] %}
+  | "u"i "b"i "r"i "w"i "g"i {% () => ['u', 'b', 'r', 'w', 'g'] %}
+  | "u"i "b"i "r"i "g"i "w"i {% () => ['u', 'b', 'r', 'g', 'w'] %}
+  | "u"i "b"i "g"i "w"i "r"i {% () => ['u', 'b', 'g', 'w', 'r'] %}
+  | "u"i "b"i "g"i "r"i "w"i {% () => ['u', 'b', 'g', 'r', 'w'] %}
+  | "u"i "r"i "w"i "b"i "g"i {% () => ['u', 'r', 'w', 'b', 'g'] %}
+  | "u"i "r"i "w"i "g"i "b"i {% () => ['u', 'r', 'w', 'g', 'b'] %}
+  | "u"i "r"i "b"i "w"i "g"i {% () => ['u', 'r', 'b', 'w', 'g'] %}
+  | "u"i "r"i "b"i "g"i "w"i {% () => ['u', 'r', 'b', 'g', 'w'] %}
+  | "u"i "r"i "g"i "w"i "b"i {% () => ['u', 'r', 'g', 'w', 'b'] %}
+  | "u"i "r"i "g"i "b"i "w"i {% () => ['u', 'r', 'g', 'b', 'w'] %}
+  | "u"i "g"i "w"i "b"i "r"i {% () => ['u', 'g', 'w', 'b', 'r'] %}
+  | "u"i "g"i "w"i "r"i "b"i {% () => ['u', 'g', 'w', 'r', 'b'] %}
+  | "u"i "g"i "b"i "w"i "r"i {% () => ['u', 'g', 'b', 'w', 'r'] %}
+  | "u"i "g"i "b"i "r"i "w"i {% () => ['u', 'g', 'b', 'r', 'w'] %}
+  | "u"i "g"i "r"i "w"i "b"i {% () => ['u', 'g', 'r', 'w', 'b'] %}
+  | "u"i "g"i "r"i "b"i "w"i {% () => ['u', 'g', 'r', 'b', 'w'] %}
+  | "b"i "w"i "u"i "r"i "g"i {% () => ['b', 'w', 'u', 'r', 'g'] %}
+  | "b"i "w"i "u"i "g"i "r"i {% () => ['b', 'w', 'u', 'g', 'r'] %}
+  | "b"i "w"i "r"i "u"i "g"i {% () => ['b', 'w', 'r', 'u', 'g'] %}
+  | "b"i "w"i "r"i "g"i "u"i {% () => ['b', 'w', 'r', 'g', 'u'] %}
+  | "b"i "w"i "g"i "u"i "r"i {% () => ['b', 'w', 'g', 'u', 'r'] %}
+  | "b"i "w"i "g"i "r"i "u"i {% () => ['b', 'w', 'g', 'r', 'u'] %}
+  | "b"i "u"i "w"i "r"i "g"i {% () => ['b', 'u', 'w', 'r', 'g'] %}
+  | "b"i "u"i "w"i "g"i "r"i {% () => ['b', 'u', 'w', 'g', 'r'] %}
+  | "b"i "u"i "r"i "w"i "g"i {% () => ['b', 'u', 'r', 'w', 'g'] %}
+  | "b"i "u"i "r"i "g"i "w"i {% () => ['b', 'u', 'r', 'g', 'w'] %}
+  | "b"i "u"i "g"i "w"i "r"i {% () => ['b', 'u', 'g', 'w', 'r'] %}
+  | "b"i "u"i "g"i "r"i "w"i {% () => ['b', 'u', 'g', 'r', 'w'] %}
+  | "b"i "r"i "w"i "u"i "g"i {% () => ['b', 'r', 'w', 'u', 'g'] %}
+  | "b"i "r"i "w"i "g"i "u"i {% () => ['b', 'r', 'w', 'g', 'u'] %}
+  | "b"i "r"i "u"i "w"i "g"i {% () => ['b', 'r', 'u', 'w', 'g'] %}
+  | "b"i "r"i "u"i "g"i "w"i {% () => ['b', 'r', 'u', 'g', 'w'] %}
+  | "b"i "r"i "g"i "w"i "u"i {% () => ['b', 'r', 'g', 'w', 'u'] %}
+  | "b"i "r"i "g"i "u"i "w"i {% () => ['b', 'r', 'g', 'u', 'w'] %}
+  | "b"i "g"i "w"i "u"i "r"i {% () => ['b', 'g', 'w', 'u', 'r'] %}
+  | "b"i "g"i "w"i "r"i "u"i {% () => ['b', 'g', 'w', 'r', 'u'] %}
+  | "b"i "g"i "u"i "w"i "r"i {% () => ['b', 'g', 'u', 'w', 'r'] %}
+  | "b"i "g"i "u"i "r"i "w"i {% () => ['b', 'g', 'u', 'r', 'w'] %}
+  | "b"i "g"i "r"i "w"i "u"i {% () => ['b', 'g', 'r', 'w', 'u'] %}
+  | "b"i "g"i "r"i "u"i "w"i {% () => ['b', 'g', 'r', 'u', 'w'] %}
+  | "r"i "w"i "u"i "b"i "g"i {% () => ['r', 'w', 'u', 'b', 'g'] %}
+  | "r"i "w"i "u"i "g"i "b"i {% () => ['r', 'w', 'u', 'g', 'b'] %}
+  | "r"i "w"i "b"i "u"i "g"i {% () => ['r', 'w', 'b', 'u', 'g'] %}
+  | "r"i "w"i "b"i "g"i "u"i {% () => ['r', 'w', 'b', 'g', 'u'] %}
+  | "r"i "w"i "g"i "u"i "b"i {% () => ['r', 'w', 'g', 'u', 'b'] %}
+  | "r"i "w"i "g"i "b"i "u"i {% () => ['r', 'w', 'g', 'b', 'u'] %}
+  | "r"i "u"i "w"i "b"i "g"i {% () => ['r', 'u', 'w', 'b', 'g'] %}
+  | "r"i "u"i "w"i "g"i "b"i {% () => ['r', 'u', 'w', 'g', 'b'] %}
+  | "r"i "u"i "b"i "w"i "g"i {% () => ['r', 'u', 'b', 'w', 'g'] %}
+  | "r"i "u"i "b"i "g"i "w"i {% () => ['r', 'u', 'b', 'g', 'w'] %}
+  | "r"i "u"i "g"i "w"i "b"i {% () => ['r', 'u', 'g', 'w', 'b'] %}
+  | "r"i "u"i "g"i "b"i "w"i {% () => ['r', 'u', 'g', 'b', 'w'] %}
+  | "r"i "b"i "w"i "u"i "g"i {% () => ['r', 'b', 'w', 'u', 'g'] %}
+  | "r"i "b"i "w"i "g"i "u"i {% () => ['r', 'b', 'w', 'g', 'u'] %}
+  | "r"i "b"i "u"i "w"i "g"i {% () => ['r', 'b', 'u', 'w', 'g'] %}
+  | "r"i "b"i "u"i "g"i "w"i {% () => ['r', 'b', 'u', 'g', 'w'] %}
+  | "r"i "b"i "g"i "w"i "u"i {% () => ['r', 'b', 'g', 'w', 'u'] %}
+  | "r"i "b"i "g"i "u"i "w"i {% () => ['r', 'b', 'g', 'u', 'w'] %}
+  | "r"i "g"i "w"i "u"i "b"i {% () => ['r', 'g', 'w', 'u', 'b'] %}
+  | "r"i "g"i "w"i "b"i "u"i {% () => ['r', 'g', 'w', 'b', 'u'] %}
+  | "r"i "g"i "u"i "w"i "b"i {% () => ['r', 'g', 'u', 'w', 'b'] %}
+  | "r"i "g"i "u"i "b"i "w"i {% () => ['r', 'g', 'u', 'b', 'w'] %}
+  | "r"i "g"i "b"i "w"i "u"i {% () => ['r', 'g', 'b', 'w', 'u'] %}
+  | "r"i "g"i "b"i "u"i "w"i {% () => ['r', 'g', 'b', 'u', 'w'] %}
+  | "g"i "w"i "u"i "b"i "r"i {% () => ['g', 'w', 'u', 'b', 'r'] %}
+  | "g"i "w"i "u"i "r"i "b"i {% () => ['g', 'w', 'u', 'r', 'b'] %}
+  | "g"i "w"i "b"i "u"i "r"i {% () => ['g', 'w', 'b', 'u', 'r'] %}
+  | "g"i "w"i "b"i "r"i "u"i {% () => ['g', 'w', 'b', 'r', 'u'] %}
+  | "g"i "w"i "r"i "u"i "b"i {% () => ['g', 'w', 'r', 'u', 'b'] %}
+  | "g"i "w"i "r"i "b"i "u"i {% () => ['g', 'w', 'r', 'b', 'u'] %}
+  | "g"i "u"i "w"i "b"i "r"i {% () => ['g', 'u', 'w', 'b', 'r'] %}
+  | "g"i "u"i "w"i "r"i "b"i {% () => ['g', 'u', 'w', 'r', 'b'] %}
+  | "g"i "u"i "b"i "w"i "r"i {% () => ['g', 'u', 'b', 'w', 'r'] %}
+  | "g"i "u"i "b"i "r"i "w"i {% () => ['g', 'u', 'b', 'r', 'w'] %}
+  | "g"i "u"i "r"i "w"i "b"i {% () => ['g', 'u', 'r', 'w', 'b'] %}
+  | "g"i "u"i "r"i "b"i "w"i {% () => ['g', 'u', 'r', 'b', 'w'] %}
+  | "g"i "b"i "w"i "u"i "r"i {% () => ['g', 'b', 'w', 'u', 'r'] %}
+  | "g"i "b"i "w"i "r"i "u"i {% () => ['g', 'b', 'w', 'r', 'u'] %}
+  | "g"i "b"i "u"i "w"i "r"i {% () => ['g', 'b', 'u', 'w', 'r'] %}
+  | "g"i "b"i "u"i "r"i "w"i {% () => ['g', 'b', 'u', 'r', 'w'] %}
+  | "g"i "b"i "r"i "w"i "u"i {% () => ['g', 'b', 'r', 'w', 'u'] %}
+  | "g"i "b"i "r"i "u"i "w"i {% () => ['g', 'b', 'r', 'u', 'w'] %}
+  | "g"i "r"i "w"i "u"i "b"i {% () => ['g', 'r', 'w', 'u', 'b'] %}
+  | "g"i "r"i "w"i "b"i "u"i {% () => ['g', 'r', 'w', 'b', 'u'] %}
+  | "g"i "r"i "u"i "w"i "b"i {% () => ['g', 'r', 'u', 'w', 'b'] %}
+  | "g"i "r"i "u"i "b"i "w"i {% () => ['g', 'r', 'u', 'b', 'w'] %}
+  | "g"i "r"i "b"i "w"i "u"i {% () => ['g', 'r', 'b', 'w', 'u'] %}
+  | "g"i "r"i "b"i "u"i "w"i {% () => ['g', 'r', 'b', 'u', 'w'] %}
 
 @builtin "string.ne"
 
