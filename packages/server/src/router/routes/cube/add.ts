@@ -78,6 +78,7 @@ export const addHandler = async (req: Request, res: Response) => {
       collapseDuplicateCards: false,
       formats: [],
       following: [],
+      collaborators: [],
       defaultStatus: 'Not Owned',
       defaultPrinting: 'recent',
       disableAlerts: false,

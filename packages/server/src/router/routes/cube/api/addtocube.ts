@@ -4,7 +4,7 @@ import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, packageDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { newCard } from 'serverutils/util';
 
 import { Request, Response } from '../../../../types/express';
@@ -27,7 +27,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (!req.user || cube.owner.id !== req.user.id) {
+    if (!req.user || !isCubeEditable(cube, req.user)) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',

@@ -1,7 +1,7 @@
 import { Changes } from '@utils/datatypes/Card';
 import { changelogDao, cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
-import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
+import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
@@ -21,7 +21,7 @@ export const restorePageHandler = async (req: Request, res: Response) => {
     }
 
     // Only cube owner can restore
-    if (!req.user || cube.owner.id !== req.user.id) {
+    if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'You do not have permission to restore this cube');
       return redirect(req, res, `/cube/list/${req.params.id}`);
     }
@@ -75,7 +75,7 @@ export const restoreHandler = async (req: Request, res: Response) => {
     }
 
     // Only cube owner can restore
-    if (!req.user || cube.owner.id !== req.user.id) {
+    if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'You do not have permission to restore this cube');
       return redirect(req, res, `/cube/list/${cubeId}`);
     }

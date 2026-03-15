@@ -58,6 +58,7 @@ export interface CubeContextValue {
   cube: CubeWithCards;
   changedCards: Record<string, Card[]>;
   canEdit: boolean;
+  isOwner: boolean;
   hasCustomImages: boolean;
   setCube: Dispatch<SetStateAction<CubeWithCards>>;
   addCard: (card: Card, board: BoardType) => Promise<void>;
@@ -124,6 +125,7 @@ const CubeContext = createContext<CubeContextValue>({
   cube: {} as CubeWithCards,
   changedCards: {} as Record<string, Card[]>,
   canEdit: false,
+  isOwner: false,
   hasCustomImages: false,
   setCube: defaultFn,
   addCard: defaultFn,
@@ -1279,7 +1281,8 @@ export function CubeContextProvider({
     [changes, setChanges, csrfFetch],
   );
 
-  const canEdit = !!user && cube.owner?.id === user.id;
+  const isOwner = !!user && cube.owner?.id === user.id;
+  const canEdit = isOwner || (!!user && (cube.collaborators ?? []).includes(user.id));
 
   const hasCustomImages = useMemo(
     () =>
@@ -1380,6 +1383,7 @@ export function CubeContextProvider({
       cube,
       changedCards,
       canEdit,
+      isOwner,
       hasCustomImages,
       setCube,
       addCard,
@@ -1434,6 +1438,7 @@ export function CubeContextProvider({
       cube,
       changedCards,
       canEdit,
+      isOwner,
       hasCustomImages,
       setCube,
       addCard,

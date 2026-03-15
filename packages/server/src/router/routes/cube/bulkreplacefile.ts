@@ -2,7 +2,7 @@ import { cubeDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { updateCubeAndBlog } from 'serverutils/cube';
-import { CSVtoCards, isCubeViewable } from 'serverutils/cubefn';
+import { CSVtoCards, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -25,7 +25,7 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
     // use this to maintain customized fields
     const cards = await cubeDao.getCards(cube.id);
 
-    if (cube.owner.id !== req.user!.id) {
+    if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'Not Authorized');
       return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id!)}`);
     }

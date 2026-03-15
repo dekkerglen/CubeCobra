@@ -1,6 +1,6 @@
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -13,7 +13,7 @@ export const formatAddHandler = async (req: Request, res: Response) => {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/cube/list/404');
     }
-    if (!cube || cube.owner.id !== req.user!.id) {
+    if (!cube || !isCubeEditable(cube, req.user)) {
       req.flash('danger', 'Formats can only be changed by cube owner.');
       return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id!)}`);
     }
@@ -59,7 +59,7 @@ export const formatRemoveHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    if (!cube || cube.owner.id !== req.user!.id) {
+    if (!cube || !isCubeEditable(cube, req.user)) {
       req.flash('danger', 'Not Authorized');
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(cubeid!)}`);
     }

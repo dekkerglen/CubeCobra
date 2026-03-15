@@ -308,6 +308,7 @@ interface Cube {
   collapseDuplicateCards?: boolean;
   formats: DraftFormat[];
   following: string[];
+  collaborators: string[]; // User IDs of users who can edit this cube (besides the owner)
   defaultStatus: CardStatus;
   defaultPrinting: string;
   disableAlerts: boolean;

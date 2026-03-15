@@ -6,12 +6,14 @@ import { Flexbox } from 'components/base/Layout';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import BoardsAndViewsSettings from 'components/settings/BoardsAndViewsSettings';
+import CollaboratorsSettings from 'components/settings/CollaboratorsSettings';
 import CustomSortsSettings from 'components/settings/CustomSortsSettings';
 import DraftFormatsSettings from 'components/settings/DraftFormatsSettings';
 import OptionsSettings from 'components/settings/OptionsSettings';
 import OverviewSettings from 'components/settings/OverviewSettings';
 import RestoreSettings from 'components/settings/RestoreSettings';
 import SettingsNavbar from 'components/settings/SettingsNavbar';
+import CubeContext from 'contexts/CubeContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import SettingsViewContext, { SettingsViewContextProvider } from 'contexts/SettingsViewContext';
 import CubeLayout from 'layouts/CubeLayout';
@@ -33,9 +35,14 @@ interface CubeSettingsPageProps {
   pricePurchase: number | null;
 }
 
+const OWNER_ONLY_VIEWS = new Set(['overview', 'options', 'collaborators']);
+
 const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards, versions }) => {
   const settingsViewContext = useContext(SettingsViewContext);
-  const view = settingsViewContext?.view || 'overview';
+  const { isOwner } = useContext(CubeContext);
+  const rawView = settingsViewContext?.view || 'overview';
+  // Redirect collaborators away from owner-only views
+  const view = !isOwner && OWNER_ONLY_VIEWS.has(rawView) ? 'draft-formats' : rawView;
 
   let content;
   switch (view) {
@@ -50,6 +57,9 @@ const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards,
       break;
     case 'draft-formats':
       content = <DraftFormatsSettings />;
+      break;
+    case 'collaborators':
+      content = <CollaboratorsSettings />;
       break;
     case 'restore':
       content = <RestoreSettings versions={versions || []} />;

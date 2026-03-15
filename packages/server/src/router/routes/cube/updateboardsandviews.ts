@@ -7,7 +7,7 @@ import {
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import cloudwatch from 'serverutils/cloudwatch';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -57,7 +57,7 @@ export const updateBoardsAndViewsHandler = async (req: Request, res: Response) =
       return redirect(req, res, '/404');
     }
 
-    if (!cube || cube.owner.id !== req.user!.id) {
+    if (!cube || !isCubeEditable(cube, req.user)) {
       req.flash('danger', 'Unauthorized');
       return redirect(req, res, `/cube/settings/${req.params.id}?view=boards-and-views`);
     }

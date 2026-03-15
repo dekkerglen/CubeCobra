@@ -106,6 +106,7 @@ export interface UnhydratedCube {
   collapseDuplicateCards?: boolean;
   formats: any[];
   following: string[];
+  collaborators: string[]; // User IDs of users who can edit this cube (besides the owner)
   defaultStatus: CardStatus;
   defaultPrinting: string;
   disableAlerts: boolean;
@@ -234,6 +235,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       collapseDuplicateCards: item.collapseDuplicateCards,
       formats: item.formats,
       following: item.following,
+      collaborators: item.collaborators ?? [],
       defaultStatus: item.defaultStatus,
       defaultPrinting: item.defaultPrinting,
       disableAlerts: item.disableAlerts,
@@ -292,6 +294,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       return {
         ...item,
         owner: deletedUser,
+        collaborators: item.collaborators ?? [],
         image,
         views,
       } as Cube;
@@ -336,6 +339,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       return {
         ...item,
         owner: deletedUser,
+        collaborators: item.collaborators ?? [],
         image,
         views,
       } as Cube;
@@ -379,6 +383,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     return {
       ...item,
       owner: owner,
+      collaborators: item.collaborators ?? [],
       image,
       views,
     } as Cube;

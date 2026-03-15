@@ -513,7 +513,10 @@ function isCubeViewable(cube: any, user: any): boolean {
     return true;
   }
 
-  return user && (cube.owner.id === user.id || util.isAdmin(user));
+  if (!user) return false;
+  if (cube.owner.id === user.id || util.isAdmin(user)) return true;
+  if (Array.isArray(cube.collaborators) && cube.collaborators.includes(user.id)) return true;
+  return false;
 }
 
 function isCubeEditable(cube: any, user: any): boolean {
@@ -521,7 +524,15 @@ function isCubeEditable(cube: any, user: any): boolean {
     return false;
   }
 
-  if (user && (cube.owner.id === user.id || util.isAdmin(user))) {
+  if (!user) {
+    return false;
+  }
+
+  if (cube.owner.id === user.id || util.isAdmin(user)) {
+    return true;
+  }
+
+  if (Array.isArray(cube.collaborators) && cube.collaborators.includes(user.id)) {
     return true;
   }
 

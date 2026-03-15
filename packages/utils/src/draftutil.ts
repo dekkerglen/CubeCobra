@@ -328,6 +328,7 @@ export const setupPicks: (rows: number, cols: number) => any[][][] = (rows: numb
 };
 
 export const normalizeDraftFormatSteps = (format: DraftFormat): DraftFormat => {
+  if (!Array.isArray((format as any).packs)) return format;
   for (let packNum = 0; packNum < format.packs.length; packNum++) {
     const pack = format.packs[packNum];
     if (!pack) continue;

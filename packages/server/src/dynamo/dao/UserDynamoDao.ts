@@ -103,6 +103,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       about: item.about,
       hideTagColors: item.hideTagColors,
       followedCubes: item.followedCubes,
+      collaboratingCubes: item.collaboratingCubes,
       followedUsers: item.followedUsers,
       following: item.following,
       imageName: item.imageName,

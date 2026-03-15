@@ -59,6 +59,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
       collapseDuplicateCards: source.collapseDuplicateCards,
       formats: source.formats,
       following: [],
+      collaborators: [],
       defaultStatus: source.defaultStatus,
       defaultPrinting: source.defaultPrinting,
       disableAlerts: false,

@@ -33,6 +33,7 @@ interface DashboardPageProps {
   decks: Draft[];
   content: any[];
   featured?: Cube[];
+  collaboratingCubes?: Cube[];
   dailyP1P1?: {
     pack: P1P1Pack;
     cube: Cube;
@@ -51,6 +52,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   decks,
   content,
   featured = [],
+  collaboratingCubes = [],
   dailyP1P1,
 }) => {
   const user = useContext(UserContext);
@@ -96,6 +98,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               )}
             </Row>
           </Card>
+
+          {collaboratingCubes.length > 0 && <CubesCard title="Collaborating On" cubes={collaboratingCubes} lean />}
 
           {!user?.hideFeatured && (
             <>
@@ -169,6 +173,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   )}
                 </Row>
               </Card>
+              {collaboratingCubes.length > 0 && <CubesCard title="Collaborating On" cubes={collaboratingCubes} lean />}
               {featuredPosition === 'left' && (
                 <>
                   <CubesCard
