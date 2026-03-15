@@ -1,6 +1,6 @@
 import { ContentStatus } from '@utils/datatypes/Content';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
-import { cubeDao, feedDao } from 'dynamo/daos';
+import { collaboratorIndexDao, cubeDao, feedDao } from 'dynamo/daos';
 import { articleDao, draftDao, episodeDao, videoDao } from 'dynamo/daos';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
@@ -62,7 +62,7 @@ const dashboardHandler = async (req: Request, res: Response) => {
     const dailyP1P1 = await getDailyP1P1(req.logger);
 
     // Fetch cubes the user is collaborating on
-    const collaboratingCubeIds = req.user.collaboratingCubes ?? [];
+    const collaboratingCubeIds = await collaboratorIndexDao.getCubeIdsForUser(req.user.id);
     const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
 
     return render(req, res, 'DashboardPage', {

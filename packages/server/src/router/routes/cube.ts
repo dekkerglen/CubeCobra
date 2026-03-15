@@ -1,6 +1,15 @@
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { NoticeType } from '@utils/datatypes/Notice';
-import { changelogDao, cubeDao, draftDao, featuredQueueDao, noticeDao, p1p1PackDao, userDao } from 'dynamo/daos';
+import {
+  changelogDao,
+  collaboratorIndexDao,
+  cubeDao,
+  draftDao,
+  featuredQueueDao,
+  noticeDao,
+  p1p1PackDao,
+  userDao,
+} from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import {
   abbreviate,
@@ -70,17 +79,7 @@ export const removeHandler = async (req: Request, res: Response) => {
     }
 
     await cubeDao.deleteById(cubeId);
-
-    // Clean up collaboratingCubes on each collaborator's user doc (best-effort)
-    if (cube.collaborators?.length) {
-      const collaboratorUsers = await userDao.batchGet(cube.collaborators);
-      await Promise.allSettled(
-        collaboratorUsers.map((u) => {
-          u.collaboratingCubes = (u.collaboratingCubes ?? []).filter((id) => id !== cubeId);
-          return userDao.update(u);
-        }),
-      );
-    }
+    await collaboratorIndexDao.removeAllForCube(cubeId, cube.collaborators ?? []);
 
     req.flash('success', 'Cube Removed');
     return redirect(req, res, '/dashboard');

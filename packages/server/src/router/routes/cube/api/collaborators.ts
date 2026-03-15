@@ -1,4 +1,4 @@
-import { cubeDao, userDao } from 'dynamo/daos';
+import { collaboratorIndexDao, cubeDao, userDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 
@@ -84,16 +84,7 @@ export const addCollaboratorHandler = async (req: Request, res: Response) => {
 
     cube.collaborators = [...cube.collaborators, targetUser.id];
     await cubeDao.update(cube);
-
-    // Best-effort: sync collaboratingCubes on the user doc for dashboard display.
-    // If this fails the user still has edit access (cube.collaborators is authoritative).
-    try {
-      targetUser.collaboratingCubes = [...(targetUser.collaboratingCubes ?? []), cube.id];
-      await userDao.update(targetUser);
-    } catch (syncErr) {
-      const e = syncErr as Error;
-      req.logger.error(`Failed to sync collaboratingCubes for user ${targetUser.id}: ${e.message}`);
-    }
+    await collaboratorIndexDao.add(targetUser.id, cube.id);
 
     return res.status(200).json({
       success: 'true',
@@ -138,18 +129,7 @@ export const removeCollaboratorHandler = async (req: Request, res: Response) => 
 
     cube.collaborators = cube.collaborators.filter((id) => id !== userId);
     await cubeDao.update(cube);
-
-    // Best-effort: sync collaboratingCubes on the user doc.
-    try {
-      const removedUser = await userDao.getById(userId);
-      if (removedUser) {
-        removedUser.collaboratingCubes = (removedUser.collaboratingCubes ?? []).filter((id) => id !== cube.id);
-        await userDao.update(removedUser);
-      }
-    } catch (syncErr) {
-      const e = syncErr as Error;
-      req.logger.error(`Failed to sync collaboratingCubes for user ${userId}: ${e.message}`);
-    }
+    await collaboratorIndexDao.remove(userId, cube.id);
 
     return res.status(200).json({ success: 'true' });
   } catch (err) {

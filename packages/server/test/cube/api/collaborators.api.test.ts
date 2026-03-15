@@ -12,13 +12,16 @@ jest.mock('../../../src/dynamo/daos', () => ({
   userDao: {
     getByUsername: jest.fn(),
     getById: jest.fn(),
-    update: jest.fn(),
+  },
+  collaboratorIndexDao: {
+    add: jest.fn(),
+    remove: jest.fn(),
   },
 }));
 
 jest.mock('serverutils/cubefn');
 
-import { cubeDao, userDao } from '../../../src/dynamo/daos';
+import { collaboratorIndexDao, cubeDao, userDao } from '../../../src/dynamo/daos';
 
 describe('POST /cube/api/collaborators/:id/add', () => {
   afterEach(() => {
@@ -143,7 +146,7 @@ describe('POST /cube/api/collaborators/:id/add', () => {
     expect(res.body.message).toMatch(/owner/i);
   });
 
-  it('adds the user and saves the cube on success', async () => {
+  it('adds the user, saves the cube, and writes the index row on success', async () => {
     const owner = createUser({ id: 'owner-1' });
     const target = createUser({ id: 'collab-new', username: 'newcollab' });
     const cube = createCube({ owner, collaborators: [] });
@@ -152,7 +155,7 @@ describe('POST /cube/api/collaborators/:id/add', () => {
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (userDao.getByUsername as jest.Mock).mockResolvedValue(target);
     (cubeDao.update as jest.Mock).mockResolvedValue(undefined);
-    (userDao.update as jest.Mock).mockResolvedValue(undefined);
+    (collaboratorIndexDao.add as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(addCollaboratorHandler)
       .as(owner)
@@ -162,8 +165,7 @@ describe('POST /cube/api/collaborators/:id/add', () => {
 
     expect(res.status).toBe(200);
     expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ collaborators: ['collab-new'] }));
-    // collaboratingCubes synced on the user doc
-    expect(userDao.update).toHaveBeenCalledWith(expect.objectContaining({ collaboratingCubes: [cube.id] }));
+    expect(collaboratorIndexDao.add).toHaveBeenCalledWith('collab-new', cube.id);
   });
 
   it('returns 400 when collaborator cap is reached', async () => {
@@ -236,35 +238,31 @@ describe('DELETE /cube/api/collaborators/:id/:userId', () => {
     expect(res.body.message).toMatch(/not a collaborator/i);
   });
 
-  it('removes the collaborator and saves the cube on success', async () => {
+  it('removes the collaborator, saves the cube, and deletes the index row on success', async () => {
     const owner = createUser({ id: 'owner-1' });
-    const removedUser = createUser({ id: 'collab-1', collaboratingCubes: ['cube-id-1'] });
     const cube = createCube({ id: 'cube-id-1', owner, collaborators: ['collab-1', 'collab-2'] });
 
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (cubeDao.update as jest.Mock).mockResolvedValue(undefined);
-    (userDao.getById as jest.Mock).mockResolvedValue(removedUser);
-    (userDao.update as jest.Mock).mockResolvedValue(undefined);
+    (collaboratorIndexDao.remove as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(removeCollaboratorHandler).as(owner).withParams({ id: cube.id, userId: 'collab-1' }).send();
 
     expect(res.status).toBe(200);
     expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ collaborators: ['collab-2'] }));
-    // collaboratingCubes synced on the removed user's doc
-    expect(userDao.update).toHaveBeenCalledWith(expect.objectContaining({ collaboratingCubes: [] }));
+    expect(collaboratorIndexDao.remove).toHaveBeenCalledWith('collab-1', 'cube-id-1');
   });
 
   it('allows a collaborator to remove themselves', async () => {
     const owner = createUser({ id: 'owner-1' });
-    const collaborator = createUser({ id: 'collab-1', collaboratingCubes: ['cube-id-1'] });
+    const collaborator = createUser({ id: 'collab-1' });
     const cube = createCube({ id: 'cube-id-1', owner, collaborators: ['collab-1'] });
 
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (cubeDao.update as jest.Mock).mockResolvedValue(undefined);
-    (userDao.getById as jest.Mock).mockResolvedValue(collaborator);
-    (userDao.update as jest.Mock).mockResolvedValue(undefined);
+    (collaboratorIndexDao.remove as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(removeCollaboratorHandler)
       .as(collaborator)
@@ -273,6 +271,6 @@ describe('DELETE /cube/api/collaborators/:id/:userId', () => {
 
     expect(res.status).toBe(200);
     expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ collaborators: [] }));
-    expect(userDao.update).toHaveBeenCalledWith(expect.objectContaining({ collaboratingCubes: [] }));
+    expect(collaboratorIndexDao.remove).toHaveBeenCalledWith('collab-1', 'cube-id-1');
   });
 });

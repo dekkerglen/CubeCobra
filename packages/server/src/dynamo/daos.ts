@@ -1,4 +1,5 @@
 import { ArticleDynamoDao } from './dao/ArticleDynamoDao';
+import { CollaboratorIndexDynamoDao } from './dao/CollaboratorIndexDynamoDao';
 import { BlogDynamoDao } from './dao/BlogDynamoDao';
 import { CardHistoryDynamoDao } from './dao/CardHistoryDynamoDao';
 import { CardMetadataTaskDynamoDao } from './dao/CardMetadataTaskDynamoDao';
@@ -59,3 +60,7 @@ export const cardMetadataTaskDao: CardMetadataTaskDynamoDao = new CardMetadataTa
 export const exportTaskDao: ExportTaskDynamoDao = new ExportTaskDynamoDao(documentClient, tableName);
 export const migrationTaskDao: MigrationTaskDynamoDao = new MigrationTaskDynamoDao(documentClient, tableName);
 export const comboDao: ComboDynamoDao = new ComboDynamoDao(documentClient, tableName);
+export const collaboratorIndexDao: CollaboratorIndexDynamoDao = new CollaboratorIndexDynamoDao(
+  documentClient,
+  tableName,
+);

@@ -29,7 +29,6 @@ export interface UnhydratedUser {
   about?: string;
   hideTagColors?: boolean;
   followedCubes?: string[];
-  collaboratingCubes?: string[];
   followedUsers?: string[]; //Who this user is following
   following?: string[]; //Who is following this user
   imageName?: string;
