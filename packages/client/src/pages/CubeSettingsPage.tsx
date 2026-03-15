@@ -13,7 +13,7 @@ import OptionsSettings from 'components/settings/OptionsSettings';
 import OverviewSettings from 'components/settings/OverviewSettings';
 import RestoreSettings from 'components/settings/RestoreSettings';
 import SettingsNavbar from 'components/settings/SettingsNavbar';
-import CubeContext from 'contexts/CubeContext';
+import UserContext from 'contexts/UserContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import SettingsViewContext, { SettingsViewContextProvider } from 'contexts/SettingsViewContext';
 import CubeLayout from 'layouts/CubeLayout';
@@ -39,7 +39,8 @@ const OWNER_ONLY_VIEWS = new Set(['overview', 'options', 'collaborators']);
 
 const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards, versions }) => {
   const settingsViewContext = useContext(SettingsViewContext);
-  const { isOwner } = useContext(CubeContext);
+  const user = useContext(UserContext);
+  const isOwner = !!user && cube.owner?.id === user.id;
   const rawView = settingsViewContext?.view || 'overview';
   // Redirect collaborators away from owner-only views
   const view = !isOwner && OWNER_ONLY_VIEWS.has(rawView) ? 'draft-formats' : rawView;
