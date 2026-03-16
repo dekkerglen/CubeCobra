@@ -18,7 +18,7 @@ export const settingsHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    // Only cube owners can access settings
+    // Only cube owners or collaborators can access settings
     if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'You do not have permission to access this page');
       return redirect(req, res, `/cube/list/${req.params.id}`);

@@ -20,7 +20,7 @@ export const restorePageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    // Only cube owner can restore
+    // Only cube owner or collaborators can restore
     if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'You do not have permission to restore this cube');
       return redirect(req, res, `/cube/list/${req.params.id}`);
@@ -74,7 +74,7 @@ export const restoreHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    // Only cube owner can restore
+    // Only cube owner or collaborators can restore
     if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'You do not have permission to restore this cube');
       return redirect(req, res, `/cube/list/${cubeId}`);
