@@ -13,9 +13,9 @@ import OptionsSettings from 'components/settings/OptionsSettings';
 import OverviewSettings from 'components/settings/OverviewSettings';
 import RestoreSettings from 'components/settings/RestoreSettings';
 import SettingsNavbar from 'components/settings/SettingsNavbar';
-import UserContext from 'contexts/UserContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import SettingsViewContext, { SettingsViewContextProvider } from 'contexts/SettingsViewContext';
+import UserContext from 'contexts/UserContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 

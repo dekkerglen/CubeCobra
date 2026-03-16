@@ -1,10 +1,10 @@
 import { ArticleDynamoDao } from './dao/ArticleDynamoDao';
-import { CollaboratorIndexDynamoDao } from './dao/CollaboratorIndexDynamoDao';
 import { BlogDynamoDao } from './dao/BlogDynamoDao';
 import { CardHistoryDynamoDao } from './dao/CardHistoryDynamoDao';
 import { CardMetadataTaskDynamoDao } from './dao/CardMetadataTaskDynamoDao';
 import { CardUpdateTaskDynamoDao } from './dao/CardUpdateTaskDynamoDao';
 import { ChangelogDynamoDao } from './dao/ChangelogDynamoDao';
+import { CollaboratorIndexDynamoDao } from './dao/CollaboratorIndexDynamoDao';
 import { ComboDynamoDao } from './dao/ComboDynamoDao';
 import { CommentDynamoDao } from './dao/CommentDynamoDao';
 import { CubeDynamoDao } from './dao/CubeDynamoDao';
