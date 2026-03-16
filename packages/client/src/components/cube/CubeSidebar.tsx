@@ -116,7 +116,6 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
       ? [
           { label: 'Overview', key: 'overview' },
           { label: 'Options', key: 'options' },
-          { label: 'Collaborators', key: 'collaborators' },
         ]
       : [];
     baseItems.push({
@@ -126,6 +125,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
       icon: GearIcon,
       subItems: [
         ...ownerOnlySubItems,
+        { label: 'Collaborators', key: 'collaborators' },
         { label: 'Boards and Views', key: 'boards-and-views' },
         { label: 'Custom Sorts', key: 'custom-sorts' },
         { label: 'Draft Formats', key: 'draft-formats' },

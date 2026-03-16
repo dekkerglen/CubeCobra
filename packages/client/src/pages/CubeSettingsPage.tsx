@@ -35,7 +35,7 @@ interface CubeSettingsPageProps {
   pricePurchase: number | null;
 }
 
-const OWNER_ONLY_VIEWS = new Set(['overview', 'options', 'collaborators']);
+const OWNER_ONLY_VIEWS = new Set(['overview', 'options']);
 
 const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards, versions }) => {
   const settingsViewContext = useContext(SettingsViewContext);

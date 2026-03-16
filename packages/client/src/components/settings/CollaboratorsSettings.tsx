@@ -10,6 +10,7 @@ import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
+import UserContext from 'contexts/UserContext';
 
 interface CollaboratorEntry {
   id: string;
@@ -20,6 +21,7 @@ interface CollaboratorEntry {
 const CollaboratorsSettings: React.FC = () => {
   const { cube, setCube, isOwner } = useContext(CubeContext);
   const { csrfToken } = useContext(CSRFContext);
+  const user = useContext(UserContext);
 
   const [usernameInput, setUsernameInput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +112,8 @@ const CollaboratorsSettings: React.FC = () => {
       <CardBody>
         <Flexbox direction="col" gap="4">
           <Text sm className="text-text-secondary">
-            Collaborators can add, remove, and edit cards in this cube. Only the owner can manage collaborators.
+            Collaborators can add, remove, and edit cards in this cube. Only the owner can add or remove others;
+            collaborators can remove themselves.
           </Text>
 
           {error && <Alert color="danger">{error}</Alert>}
@@ -137,7 +140,7 @@ const CollaboratorsSettings: React.FC = () => {
                   <Text sm className="flex-1">
                     {c.username}
                   </Text>
-                  {isOwner &&
+                  {(isOwner || user?.id === c.id) &&
                     (confirmRemoveId === c.id ? (
                       <Flexbox direction="row" gap="2" alignItems="center">
                         <Text sm className="text-text-secondary">
