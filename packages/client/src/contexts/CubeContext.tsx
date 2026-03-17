@@ -22,7 +22,7 @@ import Card, {
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube, { CubeCards, TagColor } from '@utils/datatypes/Cube';
 import { getCubeSorts } from '@utils/sorting/Sort';
-import { deepCopy } from '@utils/Util';
+import { deepCopy, isCubeOwner } from '@utils/Util';
 
 import { UncontrolledAlertProps } from '../components/base/Alert';
 import CardModal from '../components/card/CardModal';
@@ -1281,7 +1281,7 @@ export function CubeContextProvider({
     [changes, setChanges, csrfFetch],
   );
 
-  const isOwner = !!user && cube.owner?.id === user.id;
+  const isOwner = isCubeOwner(cube, user);
   const canEdit = isOwner || (!!user && (cube.collaborators ?? []).includes(user.id));
 
   const hasCustomImages = useMemo(

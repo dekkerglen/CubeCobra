@@ -128,6 +128,10 @@ export function getCubeId(cube: { shortId?: string; id: string }): string {
   return cube.shortId || cube.id;
 }
 
+export function isCubeOwner(cube: { owner: { id: string } }, user: { id: string } | null | undefined): boolean {
+  return !!user && cube.owner.id === user.id;
+}
+
 export function getCubeCardCountSnippet(
   cube: { categoryPrefixes?: string[]; categoryOverride?: string; cardCount?: number },
   changedCards?: { mainboard?: any[] },
