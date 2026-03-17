@@ -513,9 +513,18 @@ function isCubeViewable(cube: any, user: any): boolean {
     return true;
   }
 
-  if (!user) return false;
-  if (cube.owner.id === user.id || util.isAdmin(user)) return true;
-  if (Array.isArray(cube.collaborators) && cube.collaborators.includes(user.id)) return true;
+  if (!user) {
+    return false;
+  }
+
+  if (cube.owner.id === user.id || util.isAdmin(user)) {
+    return true;
+  }
+
+  if (Array.isArray(cube.collaborators) && cube.collaborators.includes(user.id)) {
+    return true;
+  }
+
   return false;
 }
 

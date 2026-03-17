@@ -22,11 +22,9 @@ export const listCollaboratorsHandler = async (req: Request, res: Response) => {
     }
 
     const collaboratorIds = cube.collaborators ?? [];
-    const users = await Promise.all(collaboratorIds.map((id) => userDao.getById(id)));
+    const users = await userDao.batchGet(collaboratorIds);
 
-    const collaborators = users
-      .filter((u): u is NonNullable<typeof u> => u !== null && u !== undefined)
-      .map((u) => ({ id: u.id, username: u.username, imageUri: u.image?.uri ?? null }));
+    const collaborators = users.map((u) => ({ id: u.id, username: u.username, imageUri: u.image?.uri ?? null }));
 
     return res.status(200).json({ success: 'true', collaborators });
   } catch (err) {
@@ -120,11 +118,11 @@ export const removeCollaboratorHandler = async (req: Request, res: Response) => 
 
     // Owner can remove anyone; a collaborator can only remove themselves
     if (!isOwner && !isSelf) {
-      return res.status(403).json({ success: 'false', message: 'Only the cube owner can remove collaborators' });
+      return res.status(403).json({ success: 'false', message: 'Only the cube owner can remove other collaborators' });
     }
 
     if (!cube.collaborators.includes(userId)) {
-      return res.status(400).json({ success: 'false', message: `User ${userId} is not a collaborator on this cube` });
+      return res.status(200).json({ success: 'true' });
     }
 
     cube.collaborators = cube.collaborators.filter((id) => id !== userId);

@@ -20,7 +20,7 @@ interface CollaboratorEntry {
 
 const CollaboratorsSettings: React.FC = () => {
   const { cube, setCube, isOwner } = useContext(CubeContext);
-  const { csrfToken } = useContext(CSRFContext);
+  const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
 
   const [usernameInput, setUsernameInput] = useState('');
@@ -34,15 +34,20 @@ const CollaboratorsSettings: React.FC = () => {
   // Fetch collaborator details from server on mount
   useEffect(() => {
     if (!cube.id) return;
-    setFetchLoading(true);
-    fetch(`/cube/api/collaborators/${cube.id}`)
-      .then((r) => r.json())
-      .then((data) => {
+    const load = async () => {
+      setFetchLoading(true);
+      try {
+        const r = await csrfFetch(`/cube/api/collaborators/${cube.id}`);
+        const data = await r.json();
         if (data.success === 'true') setCollaborators(data.collaborators);
-      })
-      .catch(() => {})
-      .finally(() => setFetchLoading(false));
-  }, [cube.id]);
+      } catch {
+        // silently ignore fetch errors
+      } finally {
+        setFetchLoading(false);
+      }
+    };
+    load();
+  }, [cube.id, csrfFetch]);
 
   const handleAdd = useCallback(async () => {
     const username = usernameInput.trim();
@@ -53,9 +58,9 @@ const CollaboratorsSettings: React.FC = () => {
     setSuccess(null);
 
     try {
-      const res = await fetch(`/cube/api/collaborators/${cube.id}/add`, {
+      const res = await csrfFetch(`/cube/api/collaborators/${cube.id}/add`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'CSRF-Token': csrfToken },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username }),
       });
       const data = await res.json();
@@ -73,7 +78,7 @@ const CollaboratorsSettings: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [usernameInput, cube.id, setCube, csrfToken]);
+  }, [usernameInput, cube.id, setCube, csrfFetch]);
 
   const handleRemove = useCallback(
     async (userId: string) => {
@@ -82,9 +87,8 @@ const CollaboratorsSettings: React.FC = () => {
       setConfirmRemoveId(null);
 
       try {
-        const res = await fetch(`/cube/api/collaborators/${cube.id}/${userId}`, {
+        const res = await csrfFetch(`/cube/api/collaborators/${cube.id}/${userId}`, {
           method: 'DELETE',
-          headers: { 'CSRF-Token': csrfToken },
         });
         const data = await res.json();
 
@@ -99,7 +103,7 @@ const CollaboratorsSettings: React.FC = () => {
         setError('Failed to remove collaborator');
       }
     },
-    [cube.id, setCube, csrfToken],
+    [cube.id, setCube, csrfFetch],
   );
 
   return (

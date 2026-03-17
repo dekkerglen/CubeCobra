@@ -222,7 +222,7 @@ describe('DELETE /cube/api/collaborators/:id/:userId', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 400 when the user is not a collaborator', async () => {
+  it('returns 200 when the user is not a collaborator (idempotent)', async () => {
     const owner = createUser({ id: 'owner-1' });
     const cube = createCube({ owner, collaborators: ['collab-1'] });
 
@@ -234,8 +234,7 @@ describe('DELETE /cube/api/collaborators/:id/:userId', () => {
       .withParams({ id: cube.id, userId: 'not-a-collab' })
       .send();
 
-    expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/not a collaborator/i);
+    expect(res.status).toBe(200);
   });
 
   it('removes the collaborator, saves the cube, and deletes the index row on success', async () => {
