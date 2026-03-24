@@ -80,6 +80,9 @@ export class DeploymentPipeline extends Construct {
         phases: {
           pre_build: {
             commands: [
+              'echo Installing Node.js 22...',
+              '. ~/.nvm/nvm.sh && nvm install 22 && nvm use 22 && nvm alias default 22',
+              'node --version',
               'echo Installing dependencies...',
               'npm install',
               'echo Building application...',
@@ -226,7 +229,13 @@ export class DeploymentPipeline extends Construct {
         version: '0.2',
         phases: {
           install: {
-            commands: ['echo Installing Node.js dependencies...', 'npm install'],
+            commands: [
+              'echo Installing Node.js 22...',
+              '. ~/.nvm/nvm.sh && nvm install 22 && nvm use 22 && nvm alias default 22',
+              'node --version',
+              'echo Installing Node.js dependencies...',
+              'npm install',
+            ],
           },
           build: {
             commands: [
@@ -288,6 +297,9 @@ export class DeploymentPipeline extends Construct {
         phases: {
           pre_build: {
             commands: [
+              'echo Installing Node.js 22...',
+              '. ~/.nvm/nvm.sh && nvm install 22 && nvm use 22 && nvm alias default 22',
+              'node --version',
               'echo Installing dependencies...',
               'npm install',
               'echo Building application...',
