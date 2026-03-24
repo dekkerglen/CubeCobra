@@ -43,9 +43,11 @@ import ArenaExportModal from '../modals/ArenaExportModal';
 import ConfirmActionModal from '../modals/ConfirmActionModal';
 import CubeCompareModal from '../modals/CubeCompareModal';
 import FollowersModal from '../modals/FollowersModal';
+import PrintAndPlayExportModal from '../modals/PrintAndPlayExportModal';
 import withModal from '../WithModal';
 
 const ArenaExportModalItem = withModal('button', ArenaExportModal);
+const PrintAndPlayExportModalItem = withModal('button', PrintAndPlayExportModal);
 const CompareModalButton = withModal('button', CubeCompareModal);
 const ShareCubeButton = withModal('button', CubeIdModal);
 const ReportCubeButton = withModal(Link, ConfirmActionModal);
@@ -231,6 +233,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
       >
         Arena (.txt)
       </ArenaExportModalItem>
+      <PrintAndPlayExportModalItem
+        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed }}
+        className="!text-text hover:!text-link-active font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
+      >
+        Print and Play (.pdf)
+      </PrintAndPlayExportModalItem>
       <Flexbox direction="row" justify="between" onClick={() => setIsSortUsed((is) => !is)} className="cursor-pointer">
         <div onClick={(e) => e.stopPropagation()}>
           <Checkbox label="Use Sort" checked={isSortUsed} setChecked={setIsSortUsed} />

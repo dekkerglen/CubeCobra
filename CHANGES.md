@@ -15,6 +15,7 @@ Since 1.5.0
 - Added "View More" links to explore page
 - Added user level display option to show text over icons where possible
 - Edit Primer now moved out of a modal, into an in-place editing of primer and cube tags
+- New Cube export type: "Print and Play"
 
 # Bug Fixes
 

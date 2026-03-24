@@ -26,6 +26,7 @@
     "emoji-regex": "^10.6.0",
     "github-slugger": "^2.0.0",
     "jest-environment-jsdom": "^30.2.0",
+    "jspdf": "^4.2.0",
     "nearley": "^2.20.1",
     "papaparse": "^5.5.3",
     "react-audio-player": "^0.17.0",
