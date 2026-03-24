@@ -1361,6 +1361,31 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
+   * Applies a card count filter to an array of cubes.
+   * Returns filtered cubes (or all cubes if no filter provided).
+   * Used internally by query methods to support card count filtering.
+   */
+  private filterByCardCount(cubes: Cube[], filter?: { operator: 'eq' | 'gt' | 'lt'; value: number }): Cube[] {
+    if (!filter) {
+      return cubes;
+    }
+
+    return cubes.filter((cube) => {
+      const count = cube.cardCount || 0;
+      switch (filter.operator) {
+        case 'eq':
+          return count === filter.value;
+        case 'gt':
+          return count > filter.value;
+        case 'lt':
+          return count < filter.value;
+        default:
+          return true;
+      }
+    });
+  }
+
+  /**
    * Queries featured cubes with sorting.
    * Note: Only featured cubes have hash rows, so this only returns featured=true cubes.
    */
@@ -1369,10 +1394,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     ascending: boolean = false,
     lastKey?: Record<string, any>,
     limit?: number,
+    cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'featured', value: 'true' });
 
-    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
+    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit, cardCountFilter);
   }
 
   /**
@@ -1384,10 +1410,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     ascending: boolean = false,
     lastKey?: Record<string, any>,
     limit?: number,
+    cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'category', value: category });
 
-    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
+    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit, cardCountFilter);
   }
 
   /**
@@ -1399,10 +1426,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     ascending: boolean = false,
     lastKey?: Record<string, any>,
     limit?: number,
+    cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'tag', value: tag.toLowerCase() });
 
-    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
+    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit, cardCountFilter);
   }
 
   /**
@@ -1415,6 +1443,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     ascending: boolean = false,
     lastKey?: Record<string, any>,
     limit?: number,
+    cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
   ): Promise<QueryResult> {
     // Normalize keywords the same way we normalize cube names when storing hashes
     const normalizedKeywords = keywords
@@ -1424,7 +1453,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     const hashString = await this.hash({ type: 'keywords', value: normalizedKeywords });
 
-    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
+    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit, cardCountFilter);
   }
 
   /**
@@ -1436,10 +1465,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     ascending: boolean = false,
     lastKey?: Record<string, any>,
     limit?: number,
+    cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'oracle', value: oracleId });
 
-    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
+    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit, cardCountFilter);
   }
 
   /**
@@ -1451,9 +1481,10 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     ascending: boolean = false,
     lastKey?: Record<string, any>,
     limit?: number,
+    cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
   ): Promise<QueryResult> {
     const hashString = await this.hash({ type: 'cube', value: 'all' });
-    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit);
+    return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey, limit, cardCountFilter);
   }
 
   /**
@@ -1568,23 +1599,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         // Found matches! Hydrate cubes
         const cubes = await this.batchGet(matchingIds);
 
-        // Apply card count filter in memory if provided
-        let filteredCubes = cubes;
-        if (cardCountFilter) {
-          filteredCubes = cubes.filter((cube) => {
-            const count = cube.cardCount || 0;
-            switch (cardCountFilter.operator) {
-              case 'eq':
-                return count === cardCountFilter.value;
-              case 'gt':
-                return count > cardCountFilter.value;
-              case 'lt':
-                return count < cardCountFilter.value;
-              default:
-                return true;
-            }
-          });
-        }
+        // Apply card count filter using shared helper
+        const filteredCubes = this.filterByCardCount(cubes, cardCountFilter);
 
         matchingCubes.push(...filteredCubes);
 
@@ -1665,6 +1681,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     ascending: boolean,
     lastKey?: Record<string, any>,
     limit?: number,
+    cardCountFilter?: { operator: 'eq' | 'gt' | 'lt'; value: number },
   ): Promise<QueryResult> {
     let indexName: string;
     let gsiPK: string;
@@ -1721,8 +1738,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Fetch cubes
     const cubes = await this.batchGet(cubeIds);
 
+    // Apply card count filter if provided
+    const filteredCubes = this.filterByCardCount(cubes, cardCountFilter);
+
     return {
-      items: cubes,
+      items: filteredCubes,
       lastKey: queryResult.LastEvaluatedKey || undefined,
     };
   }

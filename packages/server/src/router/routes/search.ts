@@ -384,30 +384,64 @@ const performSearch = async (
       if (hash.startsWith('oracle:')) {
         const oracleId = hash.substring('oracle:'.length);
         console.log('[Search] Using queryByOracleId', { oracleId });
-        result = await cubeDao.queryByOracleId(oracleId, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        result = await cubeDao.queryByOracleId(
+          oracleId,
+          mapSortOrder(order),
+          ascending,
+          lastKey || undefined,
+          36,
+          cardCountFilter,
+        );
         console.log(`[Search] queryByOracleId returned ${result.items.length} cubes`);
       } else if (hash.startsWith('tag:')) {
         const tag = hash.substring('tag:'.length);
         console.log('[Search] Using queryByTag', { tag });
-        result = await cubeDao.queryByTag(tag, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        result = await cubeDao.queryByTag(
+          tag,
+          mapSortOrder(order),
+          ascending,
+          lastKey || undefined,
+          36,
+          cardCountFilter,
+        );
         console.log(`[Search] queryByTag returned ${result.items.length} cubes`);
       } else if (hash.startsWith('keywords:')) {
         const keywords = hash.substring('keywords:'.length);
         console.log('[Search] Using queryByKeyword', { keywords });
-        result = await cubeDao.queryByKeyword(keywords, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        result = await cubeDao.queryByKeyword(
+          keywords,
+          mapSortOrder(order),
+          ascending,
+          lastKey || undefined,
+          36,
+          cardCountFilter,
+        );
         console.log(`[Search] queryByKeyword returned ${result.items.length} cubes`);
       } else if (hash.startsWith('category:')) {
         const category = hash.substring('category:'.length);
         console.log('[Search] Using queryByCategory', { category });
-        result = await cubeDao.queryByCategory(category, mapSortOrder(order), ascending, lastKey || undefined, 36);
+        result = await cubeDao.queryByCategory(
+          category,
+          mapSortOrder(order),
+          ascending,
+          lastKey || undefined,
+          36,
+          cardCountFilter,
+        );
         console.log(`[Search] queryByCategory returned ${result.items.length} cubes`);
       } else if (hash === 'featured:true') {
         console.log('[Search] Using queryByFeatured');
-        result = await cubeDao.queryByFeatured(mapSortOrder(order), ascending, lastKey || undefined, 36);
+        result = await cubeDao.queryByFeatured(
+          mapSortOrder(order),
+          ascending,
+          lastKey || undefined,
+          36,
+          cardCountFilter,
+        );
         console.log(`[Search] queryByFeatured returned ${result.items.length} cubes`);
       } else if (hash === 'cube:all') {
         console.log('[Search] Using queryAllCubes to query all cubes');
-        result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, lastKey || undefined, 36);
+        result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, lastKey || undefined, 36, cardCountFilter);
         console.log(`[Search] queryAllCubes returned ${result.items.length} cubes`);
       } else {
         console.log('[Search] Unknown hash type, skipping', { hash });
