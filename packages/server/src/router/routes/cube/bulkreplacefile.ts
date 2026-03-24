@@ -1,11 +1,62 @@
+import Card from '@utils/datatypes/Card';
 import { cubeDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
-import { updateCubeAndBlog } from 'serverutils/cube';
 import { CSVtoCards, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
-import { handleRouteError, redirect } from 'serverutils/render';
+import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
+
+/**
+ * Compute adds/removes delta between current and new card lists for a single board.
+ * Handles multiple copies of the same card correctly.
+ */
+function computeBoardDelta(
+  currentCards: Card[],
+  newCards: Card[],
+): { adds: any[]; removes: any[] } {
+  const currentCounts = new Map<string, number>();
+  const newCounts = new Map<string, number>();
+
+  currentCards.forEach((c) => {
+    currentCounts.set(c.cardID, (currentCounts.get(c.cardID) || 0) + 1);
+  });
+
+  newCards.forEach((c) => {
+    newCounts.set(c.cardID, (newCounts.get(c.cardID) || 0) + 1);
+  });
+
+  const allCardIDs = new Set([...currentCounts.keys(), ...newCounts.keys()]);
+  const adds: any[] = [];
+  const removes: any[] = [];
+
+  allCardIDs.forEach((cardID) => {
+    const currentCount = currentCounts.get(cardID) || 0;
+    const newCount = newCounts.get(cardID) || 0;
+    const diff = newCount - currentCount;
+
+    if (diff > 0) {
+      const newCard = newCards.find((c) => c.cardID === cardID);
+      for (let i = 0; i < diff; i++) {
+        adds.push(newCard);
+      }
+    } else if (diff < 0) {
+      const cardsToRemove = currentCards
+        .map((c, idx) => ({ card: c, index: idx }))
+        .filter((item) => item.card.cardID === cardID)
+        .slice(currentCount + diff, currentCount);
+
+      cardsToRemove.forEach((item) => {
+        removes.push({
+          index: item.index,
+          oldCard: item.card,
+        });
+      });
+    }
+  });
+
+  return { adds, removes };
+}
 
 export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
   try {
@@ -33,124 +84,49 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
     const lines = items.match(/[^\r\n]+/g);
 
     if (lines && (lines[0].match(/,/g) || []).length > 3) {
-      const added: any[] = [];
-      const { newCards, newMaybe, missing } = CSVtoCards(items);
+      const { cardsByBoard, missing } = CSVtoCards(items);
 
-      const newList = {
-        mainboard: newCards.map((card: any) => ({
+      // Build the new card list from cardsByBoard, adding details
+      const newList: Record<string, Card[]> = {};
+      for (const [boardName, boardCards] of Object.entries(cardsByBoard)) {
+        newList[boardName] = boardCards.map((card: any) => ({
           details: cardFromId(card.cardID),
           ...card,
-        })),
-        maybeboard: newMaybe.map((card: any) => ({
-          details: cardFromId(card.cardID),
-          ...card,
-        })),
-      };
+        }));
+      }
 
-      // Calculate delta for mainboard - handles cubes with multiple copies of the same card
-      const currentMainboardCounts = new Map<string, number>();
-      const newMainboardCounts = new Map<string, number>();
-
-      cards.mainboard.forEach((c) => {
-        currentMainboardCounts.set(c.cardID, (currentMainboardCounts.get(c.cardID) || 0) + 1);
-      });
-
-      newList.mainboard.forEach((c) => {
-        newMainboardCounts.set(c.cardID, (newMainboardCounts.get(c.cardID) || 0) + 1);
-      });
-
-      // Get all unique cardIDs from both lists
-      const allMainboardCardIDs = new Set([...currentMainboardCounts.keys(), ...newMainboardCounts.keys()]);
-
-      const mainboardAdds: any[] = [];
-      const mainboardRemoves: any[] = [];
-
-      allMainboardCardIDs.forEach((cardID) => {
-        const currentCount = currentMainboardCounts.get(cardID) || 0;
-        const newCount = newMainboardCounts.get(cardID) || 0;
-        const diff = newCount - currentCount;
-
-        if (diff > 0) {
-          // Need to add copies
-          const newCard = newList.mainboard.find((c) => c.cardID === cardID);
-          for (let i = 0; i < diff; i++) {
-            mainboardAdds.push(newCard);
-          }
-        } else if (diff < 0) {
-          // Need to remove copies - remove from the end to preserve earlier customizations
-          const cardsToRemove = cards.mainboard
-            .map((c, idx) => ({ card: c, index: idx }))
-            .filter((item) => item.card.cardID === cardID)
-            .slice(currentCount + diff, currentCount); // Take the last |diff| cards with this ID
-
-          cardsToRemove.forEach((item) => {
-            mainboardRemoves.push({
-              index: item.index,
-              oldCard: item.card,
-            });
-          });
+      // Collect all board names from both current cards and new cards
+      const allBoardNames = new Set<string>();
+      for (const [key, val] of Object.entries(cards)) {
+        if (key !== 'id' && Array.isArray(val)) {
+          allBoardNames.add(key);
         }
-      });
+      }
+      for (const key of Object.keys(newList)) {
+        allBoardNames.add(key);
+      }
 
-      // Calculate delta for maybeboard - handles cubes with multiple copies of the same card
-      const currentMaybeCounts = new Map<string, number>();
-      const newMaybeCounts = new Map<string, number>();
+      // Compute delta for each board
+      const changelog: Record<string, any> = {};
+      let hasChanges = false;
 
-      cards.maybeboard.forEach((c) => {
-        currentMaybeCounts.set(c.cardID, (currentMaybeCounts.get(c.cardID) || 0) + 1);
-      });
+      for (const boardName of allBoardNames) {
+        const currentBoardCards = (cards as any)[boardName] || [];
+        const newBoardCards = newList[boardName] || [];
 
-      newList.maybeboard.forEach((c) => {
-        newMaybeCounts.set(c.cardID, (newMaybeCounts.get(c.cardID) || 0) + 1);
-      });
+        const { adds, removes } = computeBoardDelta(
+          Array.isArray(currentBoardCards) ? currentBoardCards : [],
+          newBoardCards,
+        );
 
-      // Get all unique cardIDs from both lists
-      const allMaybeCardIDs = new Set([...currentMaybeCounts.keys(), ...newMaybeCounts.keys()]);
-
-      const maybeAdds: any[] = [];
-      const maybeRemoves: any[] = [];
-
-      allMaybeCardIDs.forEach((cardID) => {
-        const currentCount = currentMaybeCounts.get(cardID) || 0;
-        const newCount = newMaybeCounts.get(cardID) || 0;
-        const diff = newCount - currentCount;
-
-        if (diff > 0) {
-          // Need to add copies
-          const newCard = newList.maybeboard.find((c) => c.cardID === cardID);
-          for (let i = 0; i < diff; i++) {
-            maybeAdds.push(newCard);
-          }
-        } else if (diff < 0) {
-          // Need to remove copies - remove from the end to preserve earlier customizations
-          const cardsToRemove = cards.maybeboard
-            .map((c, idx) => ({ card: c, index: idx }))
-            .filter((item) => item.card.cardID === cardID)
-            .slice(currentCount + diff, currentCount); // Take the last |diff| cards with this ID
-
-          cardsToRemove.forEach((item) => {
-            maybeRemoves.push({
-              index: item.index,
-              oldCard: item.card,
-            });
-          });
+        if (adds.length > 0 || removes.length > 0) {
+          hasChanges = true;
+          changelog[boardName] = {
+            adds: adds.length > 0 ? adds : undefined,
+            removes: removes.length > 0 ? removes : undefined,
+          };
         }
-      });
-
-      const changelog = {
-        mainboard: {
-          adds: mainboardAdds.length > 0 ? mainboardAdds : undefined,
-          removes: mainboardRemoves.length > 0 ? mainboardRemoves : undefined,
-        },
-        maybeboard: {
-          adds: maybeAdds.length > 0 ? maybeAdds : undefined,
-          removes: maybeRemoves.length > 0 ? maybeRemoves : undefined,
-        },
-      };
-
-      // Check if there are any changes
-      const hasChanges =
-        mainboardAdds.length > 0 || mainboardRemoves.length > 0 || maybeAdds.length > 0 || maybeRemoves.length > 0;
+      }
 
       if (!hasChanges) {
         req.flash(
@@ -160,9 +136,17 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
         return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id!)}`);
       }
 
-      added.push(...mainboardAdds);
-
-      return updateCubeAndBlog(req, res, cube, cards, newList as any, changelog as any, added, missing);
+      // Route to the confirmation page so the user can review adds AND removes
+      return render(req, res, 'BulkUploadPage', {
+        cube,
+        cards,
+        canEdit: true,
+        cubeID: req.params.id,
+        missing,
+        added: [],
+        addedByBoard: {},
+        changelog,
+      });
     }
 
     throw new Error('Received empty file');

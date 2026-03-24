@@ -66,6 +66,14 @@ export const commitHandler = async (req: Request, res: Response) => {
     const cards = await cubeDao.getCards(cube.id);
 
     for (const [board] of Object.entries(changes)) {
+      // Skip non-board keys like 'version'
+      if (typeof (changes as any)[board] !== 'object' || (changes as any)[board] === null) continue;
+
+      // Ensure the board array exists (e.g., when adding cards to a new board like 'basics')
+      if (!(cards as any)[board]) {
+        (cards as any)[board] = [];
+      }
+
       // swaps
       if ((changes as any)[board].swaps) {
         for (const swap of (changes as any)[board].swaps) {

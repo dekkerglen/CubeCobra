@@ -37,9 +37,50 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onerror = (err) => {
+        console.error('Image load error:', err);
+        reject(err);
+      };
       img.src = url;
     });
+  };
+
+  const getImageDataUrl = async (url: string): Promise<string> => {
+    try {
+      // Use server proxy to avoid CORS issues
+      const proxyUrl = `/tool/imageproxy?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      
+      // Create object URL and load into image
+      const objectUrl = URL.createObjectURL(blob);
+      const img = new Image();
+      
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+        img.src = objectUrl;
+      });
+      
+      // Convert to canvas and get data URL
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+      ctx.drawImage(img, 0, 0);
+      
+      // Clean up object URL
+      URL.revokeObjectURL(objectUrl);
+      
+      return canvas.toDataURL('image/jpeg', 0.95);
+    } catch (error) {
+      console.error('Failed to convert image:', error);
+      throw error;
+    }
   };
 
   const generatePrintAndPlayPDF = async () => {
@@ -113,8 +154,8 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
         if (!imageUrl) continue;
 
         try {
-          // Load image
-          const img = await loadImage(imageUrl);
+          // Load image and convert to data URL to avoid CORS issues
+          const imageDataUrl = await getImageDataUrl(imageUrl);
           setProgress({ current: i + 1, total: cardsWithImages.length });
 
           // Calculate position
@@ -126,7 +167,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
           const y = marginTop + row * cardHeight;
 
           // Add image to PDF
-          pdf.addImage(img, 'JPEG', x, y, cardWidth, cardHeight);
+          pdf.addImage(imageDataUrl, 'JPEG', x, y, cardWidth, cardHeight);
 
           cardIndex++;
 

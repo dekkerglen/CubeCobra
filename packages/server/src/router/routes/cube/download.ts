@@ -83,26 +83,35 @@ export const csvHandler = async (req: Request, res: Response) => {
     }
 
     const cards = await cubeDao.getCards(cube.id);
-    let { mainboard } = cards;
-    const { maybeboard } = cards;
 
-    for (const card of [...mainboard, ...maybeboard]) {
-      const details = cardFromId(card.cardID);
-      card.details = details;
+    // Ensure all cards have details populated
+    for (const [boardKey, boardCards] of Object.entries(cards)) {
+      if (boardKey === 'id' || !Array.isArray(boardCards)) continue;
+      for (const card of boardCards as Card[]) {
+        if (!card.details) {
+          card.details = cardFromId(card.cardID);
+        }
+      }
     }
-
-    mainboard = sortCardsByQuery(req, mainboard);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
 
-    for (const card of mainboard) {
-      writeCard(res, card, false);
+    // Write mainboard first
+    if (cards.mainboard) {
+      for (const card of cards.mainboard) {
+        writeCard(res, card, 'mainboard');
+      }
     }
-    for (const card of maybeboard) {
-      writeCard(res, card, true);
+
+    // Write all other boards
+    for (const [boardName, boardCards] of Object.entries(cards)) {
+      if (boardName === 'id' || boardName === 'mainboard' || !Array.isArray(boardCards)) continue;
+      for (const card of boardCards as Card[]) {
+        writeCard(res, card, boardName);
+      }
     }
 
     return res.end();

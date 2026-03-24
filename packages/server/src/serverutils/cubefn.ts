@@ -266,15 +266,21 @@ function camelizeDataRows(data: any[]): any[] {
 interface CSVResult {
   newCards: CubeCard[];
   newMaybe: CubeCard[];
+  cardsByBoard: Record<string, CubeCard[]>;
   missing: string[];
 }
 
 function CSVtoCards(csvString: string): CSVResult {
   const { data } = Papa.parse(csvString.trim(), { header: true });
   const camelizedRows = camelizeDataRows(data);
-  const missing = [];
-  const newCards = [];
-  const newMaybe = [];
+  const missing: string[] = [];
+  const newCards: CubeCard[] = [];
+  const newMaybe: CubeCard[] = [];
+  const cardsByBoard: Record<string, CubeCard[]> = {};
+
+  // Check if the CSV has a "board" column by inspecting the first row
+  const hasBoardColumn = camelizedRows.length > 0 && 'board' in camelizedRows[0];
+
   for (const {
     name,
     cmc,
@@ -284,6 +290,7 @@ function CSVtoCards(csvString: string): CSVResult {
     collectorNumber,
     status,
     finish,
+    board,
     maybeboard,
     imageUrl,
     imageBackUrl,
@@ -336,7 +343,25 @@ function CSVtoCards(csvString: string): CSVResult {
         const nonPromo = potentialIds.find(reasonableId);
         const first = potentialIds[0];
         card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
-        if (typeof maybeboard === 'string' && maybeboard.toLowerCase() === 'true') {
+
+        // Determine which board this card belongs to
+        let boardName = 'mainboard';
+        if (hasBoardColumn && typeof board === 'string' && board.trim().length > 0) {
+          // Use the "board" column value (normalize to lowercase, strip spaces)
+          boardName = board.trim().toLowerCase().replace(/\s+/g, '');
+        } else if (typeof maybeboard === 'string' && maybeboard.toLowerCase() === 'true') {
+          // Legacy fallback: use "maybeboard" column only if "board" column is absent
+          boardName = 'maybeboard';
+        }
+
+        // Populate cardsByBoard
+        if (!cardsByBoard[boardName]) {
+          cardsByBoard[boardName] = [];
+        }
+        cardsByBoard[boardName]!.push(card);
+
+        // Legacy support: also populate newCards/newMaybe for backwards compat
+        if (boardName === 'maybeboard') {
           newMaybe.push(card);
         } else {
           newCards.push(card);
@@ -346,7 +371,7 @@ function CSVtoCards(csvString: string): CSVResult {
       }
     }
   }
-  return { newCards, newMaybe, missing };
+  return { newCards, newMaybe, cardsByBoard, missing };
 }
 
 export interface ComparedCubes {

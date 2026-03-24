@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
+import Select from '../base/Select';
 import Text from '../base/Text';
 import TextArea from '../base/TextArea';
 import CSRFForm from '../CSRFForm';
@@ -11,12 +12,20 @@ interface PasteBulkModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
   cubeID: string;
+  boardOptions?: { value: string; label: string }[];
 }
 
-const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID }) => {
+const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID, boardOptions }) => {
   const [bulkText, setBulkText] = useState('');
+  const [targetBoard, setTargetBoard] = useState('mainboard');
   const formRef = React.createRef<HTMLFormElement>();
-  const formData = { body: bulkText };
+  const formData = { body: bulkText, board: targetBoard };
+
+  const defaultBoardOptions = [
+    { value: 'mainboard', label: 'Mainboard' },
+    { value: 'maybeboard', label: 'Maybeboard' },
+  ];
+  const options = boardOptions && boardOptions.length > 0 ? boardOptions : defaultBoardOptions;
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} md>
@@ -24,6 +33,16 @@ const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID
         <ModalHeader setOpen={setOpen}>Bulk Upload</ModalHeader>
         <ModalBody>
           <Text>Paste a list of card names to add to the cube, one per line.</Text>
+          <Text sm className="mt-1 text-text-secondary">
+            For CSV data with a &quot;board&quot; column, the board specified in the file takes precedence.
+          </Text>
+          <Select
+            label="Default Board"
+            value={targetBoard}
+            setValue={setTargetBoard}
+            options={options}
+            className="mt-2"
+          />
           <TextArea
             name="body"
             value={bulkText}

@@ -9,12 +9,11 @@ import { cardFromId, getIdsFromName, getMostReasonable } from './carddb';
 import cloudwatch from './cloudwatch';
 import { CSVtoCards } from './cubefn';
 import { handleRouteError, redirect, render } from './render';
-import * as util from './util';
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom';
 
 interface Cube {
   id: string;
@@ -43,6 +42,9 @@ async function updateCubeAndBlog(
         cubeID: req.params.id,
         missing,
         added: added.map((add) => add.cardID || (add as any).scryfall_id),
+        addedByBoard: {
+          mainboard: added.map((add) => add.cardID || (add as any).scryfall_id),
+        },
       });
     }
 
@@ -65,22 +67,25 @@ async function updateCubeAndBlog(
       }
     }
 
-    if (changelog.maybeboard) {
-      const maybeboard = changelog.maybeboard as BoardChanges;
-      if (maybeboard.adds && maybeboard.adds.length === 0) {
-        delete maybeboard.adds;
+    // Clean up empty changelog entries for all boards
+    for (const boardKey of Object.keys(changelog)) {
+      if (boardKey === 'mainboard' || boardKey === 'version') continue;
+      const boardChanges = changelog[boardKey] as BoardChanges;
+      if (!boardChanges || typeof boardChanges !== 'object') continue;
+      if (boardChanges.adds && boardChanges.adds.length === 0) {
+        delete boardChanges.adds;
       }
-      if (maybeboard.removes && maybeboard.removes.length === 0) {
-        delete maybeboard.removes;
+      if (boardChanges.removes && boardChanges.removes.length === 0) {
+        delete boardChanges.removes;
       }
-      if (maybeboard.swaps && maybeboard.swaps.length === 0) {
-        delete maybeboard.swaps;
+      if (boardChanges.swaps && boardChanges.swaps.length === 0) {
+        delete boardChanges.swaps;
       }
-      if (maybeboard.edits && maybeboard.edits.length === 0) {
-        delete maybeboard.edits;
+      if (boardChanges.edits && boardChanges.edits.length === 0) {
+        delete boardChanges.edits;
       }
-      if (Object.keys(maybeboard).length === 0) {
-        delete changelog.maybeboard;
+      if (Object.keys(boardChanges).length === 0) {
+        delete changelog[boardKey];
       }
     }
 
@@ -130,29 +135,32 @@ async function updateCubeAndBlog(
 
 async function bulkUpload(req: Request, res: Response, list: string, cube: Cube) {
   const cards = await cubeDao.getCards(cube.id);
-  const cardsToWrite: CubeCards = JSON.parse(JSON.stringify(cards));
-  const { mainboard } = cardsToWrite;
-  const { maybeboard } = cardsToWrite;
+
+  // The default board for plain text imports comes from the request body
+  const defaultBoard = req.body.board || 'mainboard';
 
   const lines = list.match(/[^\r\n]+/g);
   let missing: string[] = [];
   const added: (Card | any)[] = [];
-  const changelog: Array<{ addedID: string; removedID: null }> = [];
+  const addedByBoard: Record<string, string[]> = {};
+
   if (lines) {
     if ((lines[0].match(/,/g) || []).length > 3) {
-      // upload is in CSV format
-      let newCards: any[];
-      let newMaybe: any[];
-      ({ newCards, newMaybe, missing } = CSVtoCards(list));
-      changelog.push(...newCards.map((card: any) => ({ addedID: card.cardID, removedID: null })));
+      // upload is in CSV format - CSVtoCards handles board assignment via "board" / "maybeboard" columns
+      const { cardsByBoard, missing: csvMissing } = CSVtoCards(list);
+      missing = csvMissing;
 
-      mainboard.push(...(newCards as Card[]));
-      maybeboard.push(...(newMaybe as Card[]));
-
-      //Replaced concat with push b/c concat returns new array, and added is const so can't reassign
-      added.push(...newCards, ...newMaybe);
+      for (const [boardName, boardCards] of Object.entries(cardsByBoard)) {
+        if (!addedByBoard[boardName]) {
+          addedByBoard[boardName] = [];
+        }
+        for (const card of boardCards) {
+          added.push(card);
+          addedByBoard[boardName].push(card.cardID);
+        }
+      }
     } else {
-      // upload is in TXT format
+      // upload is in TXT format - all cards go to the selected default board
       for (const itemUntrimmed of lines) {
         const item = itemUntrimmed.trim();
         // separate counts and sets from the name
@@ -190,10 +198,12 @@ async function bulkUpload(req: Request, res: Response, list: string, cube: Cube)
         if (selectedId) {
           const details = cardFromId(selectedId);
           if (!details.error) {
+            if (!addedByBoard[defaultBoard]) {
+              addedByBoard[defaultBoard] = [];
+            }
             for (let i = 0; i < count; i++) {
-              util.addCardToBoard(mainboard, cube, details, []);
               added.push(details);
-              changelog.push({ addedID: selectedId, removedID: null });
+              addedByBoard[defaultBoard].push(selectedId);
             }
           }
         } else {
@@ -203,16 +213,19 @@ async function bulkUpload(req: Request, res: Response, list: string, cube: Cube)
     }
   }
 
-  const changelist: Changes = {
-    mainboard: {
-      adds: changelog.map((change) => ({ cardID: change.addedID }) as Card),
-    },
-  };
-
-  await updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelist, added, missing);
+  // Always go to the confirmation page so the user can review before committing
+  return render(req, res, 'BulkUploadPage', {
+    cube,
+    cards,
+    canEdit: true,
+    cubeID: req.params.id,
+    missing,
+    added: added.map((add) => add.cardID || (add as any).scryfall_id),
+    addedByBoard,
+  });
 }
 
-function writeCard(res: Response, card: Card, maybe: boolean) {
+function writeCard(res: Response, card: Card, boardName: string) {
   if (!card.type_line) {
     card.type_line = cardFromId(card.cardID).type;
   }
@@ -243,7 +256,8 @@ function writeCard(res: Response, card: Card, maybe: boolean) {
   res.write(`${colorCategory},`);
   res.write(`${cardutil.cardStatus(card) || ''},`);
   res.write(`${cardutil.cardFinish(card)},`);
-  res.write(`${maybe},`);
+  res.write(`${boardName},`);
+  res.write(`${boardName === 'maybeboard'},`);
   res.write(`${imgUrl},`);
   res.write(`${imgBackUrl},"`);
   cardutil.cardTags(card).forEach((tag, tagIndex) => {

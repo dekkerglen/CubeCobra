@@ -3,7 +3,6 @@ import * as carddb from 'serverutils/carddb';
 import { bulkUpload } from 'serverutils/cube';
 import * as cubefn from 'serverutils/cubefn';
 import * as render from 'serverutils/render';
-import * as util from 'serverutils/util';
 
 import { blogDao, changelogDao, cubeDao, feedDao } from '../../../src/dynamo/daos';
 import { createCardDetails, createCube, createUser } from '../../test-utils/data';
@@ -27,10 +26,6 @@ jest.mock('../../../src/dynamo/daos', () => ({
 jest.mock('serverutils/carddb');
 jest.mock('serverutils/cubefn');
 jest.mock('serverutils/render');
-jest.mock('serverutils/util', () => ({
-  addCardToCube: jest.fn(),
-  addCardToBoard: jest.fn(),
-}));
 jest.mock('serverutils/cube', () => ({
   ...jest.requireActual('serverutils/cube'),
 }));
@@ -57,44 +52,12 @@ describe('Bulk Upload', () => {
     finish: 'Non-foil',
   });
 
-  const expectSuccessfulUpload = (owner: any, cube: any) => {
-    expect(blogDao.createBlog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        owner: owner.id,
-        cube: cube.id,
-        title: expect.stringContaining('Cube Bulk Import'),
-        changelist: 'changelog-id',
-      }),
-    );
-
-    if (owner.following?.length) {
-      expect(feedDao.batchPutUnhydrated).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: 'blog-id',
-            to: owner.following[0],
-            type: FeedTypes.BLOG,
-          }),
-        ]),
-      );
-    }
-
-    expect(flashMock).toHaveBeenCalledWith('success', 'All cards successfully added.');
-  };
-
-  const mockCardDBResponses = (cardDetails: any[]) => {
-    cardDetails.forEach((details) => {
-      (carddb.getMostReasonable as jest.Mock).mockReturnValueOnce(details);
-      (carddb.cardFromId as jest.Mock).mockReturnValueOnce(details);
-    });
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('CSV Upload', () => {
-    it('should handle CSV upload with valid cards. Minimum 4 commas in the first line to detect as CSV', async () => {
+    it('should handle CSV upload with valid cards and render confirmation page', async () => {
       const owner = createUser({ following: ['user1'] });
       const cube = createCube({ owner });
 
@@ -108,57 +71,70 @@ describe('Bulk Upload', () => {
       );
 
       setupBasicMocks();
-      (cubefn.CSVtoCards as jest.Mock).mockReturnValue({ newCards: [mockCard], newMaybe: [], missing: [] });
-
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, csvContent, cube);
-
-      expect(cubeDao.updateCards).toHaveBeenCalledWith(cube.id, {
-        mainboard: [mockCard],
-        maybeboard: [],
+      (cubefn.CSVtoCards as jest.Mock).mockReturnValue({
+        newCards: [mockCard],
+        newMaybe: [],
+        cardsByBoard: { mainboard: [mockCard] },
+        missing: [],
       });
-      expectSuccessfulUpload(owner, cube);
+
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: {} } as any,
+        {} as any,
+        csvContent,
+        cube,
+      );
+
+      // bulkUpload now always renders the confirmation page
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          added: ['abcdefg-hijklmn'],
+          addedByBoard: { mainboard: ['abcdefg-hijklmn'] },
+          missing: [],
+        }),
+      );
     });
 
-    it('should add valid cards in the CSV to existing cards in the cube', async () => {
+    it('should handle CSV upload with board column grouping cards by board', async () => {
       const owner = createUser({ following: ['user1'] });
       const cube = createCube({ owner });
 
-      const csvContent = 'name,CMC,Type,Color,Rarity\nLightning Bolt,1,Instant,R,C';
+      const csvContent = 'name,CMC,Type,Color,board,Rarity\nLightning Bolt,1,Instant,R,mainboard,C\nHealingSalve,1,Instant,W,maybeboard,C';
 
-      const mockCard = createMockCardFromCSV(
-        createCardDetails({
-          name: 'Lightning Bolt',
-          scryfall_id: 'abcdefg-hijklmn',
-        }),
+      const mockCard1 = createMockCardFromCSV(
+        createCardDetails({ name: 'Lightning Bolt', scryfall_id: 'bolt-id' }),
+      );
+      const mockCard2 = createMockCardFromCSV(
+        createCardDetails({ name: 'Healing Salve', scryfall_id: 'salve-id' }),
       );
 
-      const mockMainboardCard = createMockCardFromCSV(
-        createCardDetails({
-          name: 'Ancestral Recall',
-          scryfall_id: 'red-blue',
-        }),
-      );
-
-      const mockMaybeboardCard = createMockCardFromCSV(
-        createCardDetails({
-          name: 'Healing Salve',
-          scryfall_id: 'bad-boy',
-        }),
-      );
-
-      setupBasicMocks({
-        mainboard: [mockMainboardCard],
-        maybeboard: [mockMaybeboardCard],
+      setupBasicMocks();
+      (cubefn.CSVtoCards as jest.Mock).mockReturnValue({
+        newCards: [mockCard1],
+        newMaybe: [mockCard2],
+        cardsByBoard: { mainboard: [mockCard1], maybeboard: [mockCard2] },
+        missing: [],
       });
-      (cubefn.CSVtoCards as jest.Mock).mockReturnValue({ newCards: [mockCard], newMaybe: [], missing: [] });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, csvContent, cube);
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: {} } as any,
+        {} as any,
+        csvContent,
+        cube,
+      );
 
-      expect(cubeDao.updateCards).toHaveBeenCalledWith(cube.id, {
-        mainboard: [mockMainboardCard, mockCard],
-        maybeboard: [mockMaybeboardCard],
-      });
-      expectSuccessfulUpload(owner, cube);
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          addedByBoard: { mainboard: ['bolt-id'], maybeboard: ['salve-id'] },
+          missing: [],
+        }),
+      );
     });
 
     it('should handle CSV upload with missing cards', async () => {
@@ -170,10 +146,16 @@ describe('Bulk Upload', () => {
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({
         newCards: [],
         newMaybe: [],
+        cardsByBoard: {},
         missing: ['NotARealCard'],
       });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, csvContent, cube);
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: {} } as any,
+        {} as any,
+        csvContent,
+        cube,
+      );
 
       expect(render.render).toHaveBeenCalledWith(
         expect.anything(),
@@ -202,10 +184,16 @@ describe('Bulk Upload', () => {
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({
         newCards: [mockCard],
         newMaybe: [],
+        cardsByBoard: { mainboard: [mockCard] },
         missing: ['NotARealCard'],
       });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, csvContent, cube);
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: {} } as any,
+        {} as any,
+        csvContent,
+        cube,
+      );
 
       expect(render.render).toHaveBeenCalledWith(
         expect.anything(),
@@ -220,14 +208,7 @@ describe('Bulk Upload', () => {
   });
 
   describe('Text Upload', () => {
-    const mockAddCardToBoardImpl = (idToCardMap: Map<string, any>) => {
-      return (board: any[], _cube: any, cardDetails: any) => {
-        const card = idToCardMap.get(cardDetails.scryfall_id);
-        if (card) board.push(card);
-      };
-    };
-
-    it('should handle text upload with valid cards', async () => {
+    it('should handle text upload with valid cards and render confirmation page', async () => {
       const owner = createUser({ following: ['user1'] });
       const cube = createCube({ owner });
       const textContent = '2x Lightning Bolt\nDark Ritual';
@@ -237,17 +218,38 @@ describe('Bulk Upload', () => {
       );
 
       setupBasicMocks();
-      mockCardDBResponses(cards);
 
-      const mockCards = new Map(cards.map((card) => [card.scryfall_id, createMockCardFromCSV(card)]));
+      // Mock getMostReasonable for each card
+      (carddb.getMostReasonable as jest.Mock)
+        .mockReturnValueOnce(cards[0])
+        .mockReturnValueOnce(cards[1]);
 
-      ((util as any).addCardToBoard as jest.Mock).mockImplementation(mockAddCardToBoardImpl(mockCards));
+      // Mock cardFromId for detail lookups
+      (carddb.cardFromId as jest.Mock)
+        .mockReturnValueOnce(cards[0])
+        .mockReturnValueOnce(cards[0])
+        .mockReturnValueOnce(cards[1]);
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, textContent, cube);
-      expectSuccessfulUpload(owner, cube);
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: { board: 'mainboard' } } as any,
+        {} as any,
+        textContent,
+        cube,
+      );
+
+      // bulkUpload now always renders the confirmation page
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          addedByBoard: expect.objectContaining({
+            mainboard: expect.any(Array),
+          }),
+        }),
+      );
     });
 
-    //TODO: Expand cases for multiple matches, none that match the set, etc
     it('should handle text upload with set specifications', async () => {
       const owner = createUser({ following: ['user1'] });
       const cube = createCube({ owner });
@@ -259,12 +261,26 @@ describe('Bulk Upload', () => {
         set: 'lea',
         collector_number: '123',
         name: 'Lightning Bolt',
+        scryfall_id: 'bolt-id',
       });
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, textContent, cube);
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: { board: 'mainboard' } } as any,
+        {} as any,
+        textContent,
+        cube,
+      );
 
-      expect(cubeDao.updateCards).toHaveBeenCalled();
-      expect(flashMock).toHaveBeenCalledWith('success', 'All cards successfully added.');
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          addedByBoard: expect.objectContaining({
+            mainboard: ['bolt-id'],
+          }),
+        }),
+      );
     });
 
     it('should handle text upload with missing cards', async () => {
@@ -275,7 +291,12 @@ describe('Bulk Upload', () => {
       setupBasicMocks();
       (carddb.getMostReasonable as jest.Mock).mockReturnValue(null);
 
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, textContent, cube);
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: {} } as any,
+        {} as any,
+        textContent,
+        cube,
+      );
 
       expect(render.render).toHaveBeenCalledWith(
         expect.anything(),
@@ -298,8 +319,6 @@ describe('Bulk Upload', () => {
         error: false,
       });
 
-      const mockHsCard = createMockCardFromCSV(hsDetails);
-
       setupBasicMocks();
 
       // Mock getMostReasonable to return hsDetails for 'Healing Salve' and null for 'AlsoNotReal'
@@ -308,11 +327,12 @@ describe('Bulk Upload', () => {
       // Mock cardFromId to always return hsDetails when called (since only healing-salve will be looked up)
       (carddb.cardFromId as jest.Mock).mockReturnValue(hsDetails);
 
-      ((util as any).addCardToBoard as jest.Mock).mockImplementation(
-        mockAddCardToBoardImpl(new Map([[hsDetails.scryfall_id, mockHsCard]])),
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: { board: 'mainboard' } } as any,
+        {} as any,
+        textContent,
+        cube,
       );
-
-      await bulkUpload({ user: owner, flash: flashMock, params: { id: cube.id } } as any, {} as any, textContent, cube);
 
       expect(render.render).toHaveBeenCalledWith(
         expect.anything(),
@@ -320,7 +340,40 @@ describe('Bulk Upload', () => {
         'BulkUploadPage',
         expect.objectContaining({
           added: ['healing-salve'],
+          addedByBoard: { mainboard: ['healing-salve'] },
           missing: expect.arrayContaining(['AlsoNotReal']),
+        }),
+      );
+    });
+
+    it('should use custom board from request body for text upload', async () => {
+      const owner = createUser({ following: ['user1'] });
+      const cube = createCube({ owner });
+      const textContent = 'Lightning Bolt';
+
+      const boltDetails = createCardDetails({
+        name: 'Lightning Bolt',
+        scryfall_id: 'bolt-id',
+        error: false,
+      });
+
+      setupBasicMocks();
+      (carddb.getMostReasonable as jest.Mock).mockReturnValue(boltDetails);
+      (carddb.cardFromId as jest.Mock).mockReturnValue(boltDetails);
+
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: { board: 'maybeboard' } } as any,
+        {} as any,
+        textContent,
+        cube,
+      );
+
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          addedByBoard: { maybeboard: ['bolt-id'] },
         }),
       );
     });

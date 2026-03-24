@@ -196,13 +196,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
             >
               <Flexbox direction="col" gap="2" className="p-3">
                 <PasteBulkButton
-                  modalprops={{ cubeID: cube.id }}
+                  modalprops={{ cubeID: cube.id, boardOptions }}
                   className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
                 >
                   Paste Text
                 </PasteBulkButton>
                 <UploadBulkButton
-                  modalprops={{ cubeID: cube.id }}
+                  modalprops={{ cubeID: cube.id, boardOptions }}
                   className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
                 >
                   Upload File
@@ -352,10 +352,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
             <Select
               value={boardToEdit}
               setValue={(value) => setBoardToEdit(value as BoardType)}
-              options={[
-                { value: 'mainboard', label: 'Mainboard' },
-                { value: 'maybeboard', label: 'Maybeboard' },
-              ]}
+              options={boardOptions}
             />
           </div>
 
@@ -369,10 +366,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               <Select
                 value={boardToEdit}
                 setValue={(value) => setBoardToEdit(value as BoardType)}
-                options={[
-                  { value: 'mainboard', label: 'Mainboard' },
-                  { value: 'maybeboard', label: 'Maybeboard' },
-                ]}
+                options={boardOptions}
               />
             </div>
 
@@ -462,13 +456,13 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               >
                 <Flexbox direction="col" gap="2" className="p-3">
                   <PasteBulkButton
-                    modalprops={{ cubeID: cube.id }}
+                    modalprops={{ cubeID: cube.id, boardOptions }}
                     className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
                   >
                     Paste Text
                   </PasteBulkButton>
                   <UploadBulkButton
-                    modalprops={{ cubeID: cube.id }}
+                    modalprops={{ cubeID: cube.id, boardOptions }}
                     className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
                   >
                     Upload File
