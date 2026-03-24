@@ -3,7 +3,10 @@ Since 1.5.0
 # New Features
 
 - Add comprehensive board customization and management
+- Imports can now specify which board to import cards into
 - Add custom sorts
+- Add tokens csv export
+- Add tokens Manapool purchase button
 - New Cube view: card stacks
 - Added support for multiple collaborators working on the same cube list
 - Removed Gear Icon menu from cube hero in favor of a Settings section

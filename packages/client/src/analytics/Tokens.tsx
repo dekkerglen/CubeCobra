@@ -1,10 +1,24 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
+import { CopyIcon, DownloadIcon } from '@primer/octicons-react';
 import CardType from '@utils/datatypes/Card';
+import {
+  cardCmc,
+  cardCollectorNumber,
+  cardColorCategory,
+  cardColors,
+  cardFinish,
+  cardMtgoId,
+  cardName,
+  cardRarity,
+  cardSet,
+  cardStatus,
+  cardType,
+  isCustomCard,
+} from '@utils/cardutil';
 
 import { getTCGLink } from 'utils/Affiliate';
 
-import { cardCollectorNumber, cardName, cardSet } from '../../../utils/src/cardutil';
 import Button from '../components/base/Button';
 import { Card, CardBody } from '../components/base/Card';
 import { Flexbox } from '../components/base/Layout';
@@ -12,9 +26,41 @@ import { Col, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Text from '../components/base/Text';
 import Markdown from '../components/Markdown';
+import ManaPoolBulkButton from '../components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
 import CubeContext from '../contexts/CubeContext';
 import useAlerts, { Alerts } from '../hooks/UseAlerts';
+
+const CSV_HEADER =
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom';
+
+function escapeCSV(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+function tokenToCSVRow(token: CardType, creatorNames: string[]): string {
+  const cols: string[] = [
+    escapeCSV(cardName(token)),
+    String(cardCmc(token)),
+    escapeCSV(cardType(token).replace('—', '-')),
+    cardColors(token).join(''),
+    escapeCSV(cardSet(token)),
+    escapeCSV(cardCollectorNumber(token)),
+    cardRarity(token),
+    cardColorCategory(token),
+    cardStatus(token) || '',
+    cardFinish(token),
+    'Tokens',
+    'false',
+    '', // image URL (no custom override)
+    '', // image Back URL
+    escapeCSV(creatorNames.join(';')),
+    '""', // Notes
+    String(cardMtgoId(token)),
+    isCustomCard(token) ? 'true' : 'false',
+  ];
+  return cols.join(',');
+}
 
 const compareCards = (x: CardType, y: CardType) => x.details?.name.localeCompare(y.details?.name || '') || 0;
 const sortCards = (cards: CardType[]) => [...cards].sort(compareCards);
@@ -40,12 +86,13 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
   const { alerts, addAlert, dismissAlerts } = useAlerts();
   const cards = changedCards.mainboard;
 
-  const { data, exportTokens } = useMemo((): {
+  const { data, exportTokens, exportCSVRows } = useMemo((): {
     data: {
       card: CardType;
       cardDescription: string;
     }[];
     exportTokens: string[];
+    exportCSVRows: string[];
   } => {
     const positioned = cards.map((card, index) => ({ ...card, position: index }));
     const byOracleId: { [key: string]: { token: CardType; cards: PositionedCard[] } } = {};
@@ -92,9 +139,24 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
         })
         .join('\n\n'),
     }));
+
+    // Build CSV rows: one row per creator card, each tagged with that creator's name
+    const exportCSVRows = sorted
+      .filter(([, tokenData]) => typeof tokenData.token.details !== 'undefined')
+      .flatMap(([, tokenData]) => {
+        const creators = sortCards(dedupeCards(tokenData.cards))
+          .map((c) => {
+            const position = (c as PositionedCard).position;
+            return cards[position].details?.name || '';
+          })
+          .filter(Boolean);
+        return creators.map((creatorName) => tokenToCSVRow(tokenData.token, [creatorName]));
+      });
+
     return {
       data,
       exportTokens,
+      exportCSVRows,
     };
   }, [cards, tokenMap]);
 
@@ -105,16 +167,39 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
     setTimeout(dismissAlerts, 3000);
   }, [addAlert, dismissAlerts, exportTokens]);
 
+  const downloadCSV = useCallback(() => {
+    const csvContent = [CSV_HEADER, ...exportCSVRows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${cube?.name ? cube.name.replace(/\W/g, '') : 'tokens'}_tokens.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [cube?.name, exportCSVRows]);
+
   return (
     <Flexbox direction="col" gap="2" className="m-2">
       <Text semibold lg>
         Tokens
       </Text>
       <Text>All the tokens and emblems your cube uses and what cards require each of them.</Text>
-      <TCGPlayerBulkButton cards={data.map(({ card }) => card)} />
-      <Button color="primary" block onClick={copyToClipboard}>
-        Copy to clipboard
-      </Button>
+      <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">
+        <TCGPlayerBulkButton cards={data.map(({ card }) => card)} block={false} />
+        <ManaPoolBulkButton cards={data.map(({ card }) => card)} block={false} />
+        <Button color="primary" onClick={copyToClipboard}>
+          <Flexbox direction="row" gap="2" alignItems="center">
+            <CopyIcon size={16} />
+            <Text semibold>Copy to clipboard</Text>
+          </Flexbox>
+        </Button>
+        <Button color="primary" onClick={downloadCSV}>
+          <Flexbox direction="row" gap="2" alignItems="center">
+            <DownloadIcon size={16} />
+            <Text semibold>Export as CSV</Text>
+          </Flexbox>
+        </Button>
+      </Flexbox>
       <Alerts alerts={alerts} />
       <Row>
         {data.map(({ card, cardDescription }, index) => (

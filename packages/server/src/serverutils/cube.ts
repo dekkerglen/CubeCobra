@@ -142,7 +142,7 @@ async function bulkUpload(req: Request, res: Response, list: string, cube: Cube)
   const lines = list.match(/[^\r\n]+/g);
   let missing: string[] = [];
   const added: (Card | any)[] = [];
-  const addedByBoard: Record<string, string[]> = {};
+  const addedByBoard: Record<string, any[]> = {};
 
   if (lines) {
     if ((lines[0].match(/,/g) || []).length > 3) {
@@ -156,7 +156,8 @@ async function bulkUpload(req: Request, res: Response, list: string, cube: Cube)
         }
         for (const card of boardCards) {
           added.push(card);
-          addedByBoard[boardName].push(card.cardID);
+          // Push full card objects so metadata (tags, notes, finish, etc.) is preserved
+          addedByBoard[boardName].push(card);
         }
       }
     } else {

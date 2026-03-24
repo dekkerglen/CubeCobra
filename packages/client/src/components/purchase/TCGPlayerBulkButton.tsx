@@ -12,6 +12,7 @@ import Form from '../Form';
 
 interface MassBuyButtonProps {
   cards: Card[];
+  block?: boolean;
 }
 
 const getEntry = (card: Card): string | null => {
@@ -24,7 +25,7 @@ const getEntry = (card: Card): string | null => {
   return `1 ${cardName(card)}`;
 };
 
-const TCGPlayerBulkButton: React.FC<MassBuyButtonProps> = ({ cards }) => {
+const TCGPlayerBulkButton: React.FC<MassBuyButtonProps> = ({ cards, block = true }) => {
   const formRef = React.useRef<HTMLFormElement>(null);
 
   const formData = {
@@ -39,8 +40,8 @@ const TCGPlayerBulkButton: React.FC<MassBuyButtonProps> = ({ cards }) => {
 
   return (
     <Form method="POST" action={tcgMassEntryUrl} formData={formData} ref={formRef}>
-      <Button block outline color="accent" onClick={() => formRef.current?.submit()}>
-        <Flexbox direction="row" justify="between" className="w-full">
+      <Button block={block} outline color="accent" onClick={() => formRef.current?.submit()}>
+        <Flexbox direction="row" justify="between" gap="2" className="w-full">
           <Text semibold>TCGPlayer</Text>
           {price > 0 && <Text semibold>{`$${price.toFixed(2)}`}</Text>}
         </Flexbox>

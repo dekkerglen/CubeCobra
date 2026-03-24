@@ -26,7 +26,7 @@ const DEFAULT_BLOG_TITLE = 'Cube Updated - Automatic Post';
 interface BulkUploadPageRawProps {
   missing: string[];
   added: string[];
-  addedByBoard: Record<string, string[]>;
+  addedByBoard: Record<string, any[]>;
   changelog?: Changes;
 }
 
@@ -50,16 +50,27 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added, a
     } else if (Object.keys(addedByBoard).length > 0) {
       // Add flow: build a single changes object with all boards at once
       const newChanges: Changes = { ...changes };
-      for (const [boardName, cardIds] of Object.entries(addedByBoard)) {
+      for (const [boardName, cardEntries] of Object.entries(addedByBoard)) {
         const existingAdds = (newChanges[boardName] as any)?.adds || [];
         newChanges[boardName] = {
           adds: [
             ...existingAdds,
-            ...cardIds.map((cardid) => ({
-              cardID: cardid,
-              addedTmsp: new Date().valueOf().toString(),
-              status: cube.defaultStatus,
-            })),
+            ...cardEntries.map((entry) => {
+              // entry may be a string (cardID from TXT upload) or an object (full card from CSV upload)
+              if (typeof entry === 'string') {
+                return {
+                  cardID: entry,
+                  addedTmsp: new Date().valueOf().toString(),
+                  status: cube.defaultStatus,
+                };
+              }
+              // CSV path: spread full card data to preserve tags, notes, finish, etc.
+              return {
+                ...entry,
+                addedTmsp: entry.addedTmsp || new Date().valueOf().toString(),
+                status: entry.status || cube.defaultStatus,
+              };
+            }),
           ],
           removes: (newChanges[boardName] as any)?.removes || [],
           swaps: (newChanges[boardName] as any)?.swaps || [],
@@ -103,9 +114,9 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added, a
   const hasMissing = missing.length > 0;
 
   // Build a summary of cards per board for display
-  const boardSummary = Object.entries(addedByBoard).map(([boardName, cardIds]) => ({
+  const boardSummary = Object.entries(addedByBoard).map(([boardName, entries]) => ({
     boardName: boardName.charAt(0).toUpperCase() + boardName.slice(1),
-    count: cardIds.length,
+    count: entries.length,
   }));
 
   return (
@@ -225,7 +236,7 @@ interface BulkUploadPageProps {
     maybeboard: CardType[];
   };
   added: string[];
-  addedByBoard: Record<string, string[]>;
+  addedByBoard: Record<string, any[]>;
   changelog?: Changes;
   blogpost: {
     title: string;
