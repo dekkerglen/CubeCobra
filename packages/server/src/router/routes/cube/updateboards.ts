@@ -3,7 +3,7 @@ import { BoardDefinition, boardNameToKey, CubeCards, validateBoardDefinitions } 
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import cloudwatch from 'serverutils/cloudwatch';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../types/express';
 
@@ -32,7 +32,7 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Cube not found.' });
     }
 
-    if (cube.owner.id !== req.user!.id) {
+    if (!isCubeEditable(cube, req.user)) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 

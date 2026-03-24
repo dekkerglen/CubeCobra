@@ -1,4 +1,5 @@
 import { cubeDao } from 'dynamo/daos';
+import { isCubeEditable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -20,7 +21,7 @@ export const updatebasicsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (!req.user || cube.owner.id !== req.user.id) {
+    if (!isCubeEditable(cube, req.user)) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',

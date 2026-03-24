@@ -3,7 +3,7 @@ import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
 import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getSafeReferrer } from 'serverutils/util';
 
@@ -197,10 +197,10 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
         return redirect(req, res, '/404');
       }
 
-      // Additional check for private cubes - only owner can view
+      // Private cubes: only owner or collaborators can view blog posts
       const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
       if (cube && cube.visibility === CUBE_VISIBILITY.PRIVATE) {
-        if (!req.user || cube.owner.id !== req.user.id) {
+        if (!isCubeEditable(cube, req.user)) {
           req.flash('danger', 'Blog post not found');
           return redirect(req, res, '/404');
         }

@@ -1,6 +1,6 @@
 import { cubeDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -23,7 +23,7 @@ export const savesortsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (!req.user || cube.owner.id !== req.user.id) {
+    if (!isCubeEditable(cube, req.user)) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',

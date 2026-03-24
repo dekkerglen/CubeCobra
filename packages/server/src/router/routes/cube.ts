@@ -1,8 +1,24 @@
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { NoticeType } from '@utils/datatypes/Notice';
-import { changelogDao, cubeDao, draftDao, featuredQueueDao, noticeDao, p1p1PackDao, userDao } from 'dynamo/daos';
+import {
+  changelogDao,
+  collaboratorIndexDao,
+  cubeDao,
+  draftDao,
+  featuredQueueDao,
+  noticeDao,
+  p1p1PackDao,
+  userDao,
+} from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
-import { abbreviate, cachePromise, generateBalancedPack, generatePack, isCubeViewable } from 'serverutils/cubefn';
+import {
+  abbreviate,
+  cachePromise,
+  generateBalancedPack,
+  generatePack,
+  isCubeEditable,
+  isCubeViewable,
+} from 'serverutils/cubefn';
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
 import { generatePackImage } from 'serverutils/imageUtils';
 import generateMeta from 'serverutils/meta';
@@ -63,6 +79,7 @@ export const removeHandler = async (req: Request, res: Response) => {
     }
 
     await cubeDao.deleteById(cubeId);
+    await collaboratorIndexDao.removeAllForCube(cubeId, cube.collaborators ?? []);
 
     req.flash('success', 'Cube Removed');
     return redirect(req, res, '/dashboard');
@@ -87,7 +104,7 @@ export const defaultDraftFormatHandler = async (req: Request, res: Response) => 
   if (
     !isCubeViewable(cube, req.user) ||
     !cube ||
-    cube.owner.id !== req.user!.id ||
+    !isCubeEditable(cube, req.user) ||
     !Number.isInteger(formatId) ||
     formatId >= cube.formats.length ||
     formatId < -1

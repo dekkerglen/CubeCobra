@@ -1,7 +1,7 @@
 import { PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getIdsFromName } from 'serverutils/carddb';
-import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
+import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -18,8 +18,8 @@ export const settingsHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    // Only cube owners can access settings
-    if (!req.user || cube.owner.id !== req.user.id) {
+    // Only cube owners or collaborators can access settings
+    if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'You do not have permission to access this page');
       return redirect(req, res, `/cube/list/${req.params.id}`);
     }

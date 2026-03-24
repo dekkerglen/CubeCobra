@@ -229,6 +229,7 @@ export const createCube = (overrides?: Partial<Cube>): Cube => ({
   defaultSorts: [],
   formats: [],
   following: [],
+  collaborators: [],
   defaultStatus: 'Not Owned',
   defaultPrinting: '',
   disableAlerts: false,

@@ -1,7 +1,7 @@
 import { cubeDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { bulkUpload } from 'serverutils/cube';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -21,7 +21,7 @@ export const bulkUploadFileHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    if (cube.owner.id !== req.user!.id) {
+    if (!isCubeEditable(cube, req.user)) {
       req.flash('danger', 'Not Authorized');
       return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id!)}`);
     }

@@ -40,7 +40,7 @@ interface CubeSidebarProps {
 }
 
 // Generate navigation items dynamically based on cube's views
-const getNavigationItems = (cube: Cube, isCubeOwner: boolean): NavigationItem[] => {
+const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean): NavigationItem[] => {
   const views = getViewDefinitions(cube);
   const viewSubItems = views.map((view) => ({
     label: view.name,
@@ -110,16 +110,22 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean): NavigationItem[] 
     },
   ];
 
-  // Add Settings section only for cube owners
-  if (isCubeOwner) {
+  // Add Settings section for owners and collaborators
+  if (canEdit) {
+    const ownerOnlySubItems = isCubeOwner
+      ? [
+          { label: 'Overview', key: 'overview' },
+          { label: 'Options', key: 'options' },
+        ]
+      : [];
     baseItems.push({
       label: 'Settings',
       href: '/cube/settings',
       key: 'settings',
       icon: GearIcon,
       subItems: [
-        { label: 'Overview', key: 'overview' },
-        { label: 'Options', key: 'options' },
+        ...ownerOnlySubItems,
+        { label: 'Collaborators', key: 'collaborators' },
         { label: 'Boards and Views', key: 'boards-and-views' },
         { label: 'Custom Sorts', key: 'custom-sorts' },
         { label: 'Draft Formats', key: 'draft-formats' },
@@ -133,10 +139,13 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean): NavigationItem[] 
 
 const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, controls }) => {
   // Use cube from context to pick up live updates (e.g., when views are modified)
-  const { cube } = React.useContext(CubeContext);
+  const { cube, canEdit } = React.useContext(CubeContext);
   const user = React.useContext(UserContext);
   const isCubeOwner = !!user && cube.owner?.id === user.id;
-  const navigationItems = React.useMemo(() => getNavigationItems(cube, isCubeOwner), [cube, isCubeOwner]);
+  const navigationItems = React.useMemo(
+    () => getNavigationItems(cube, isCubeOwner, canEdit),
+    [cube, isCubeOwner, canEdit],
+  );
   const { cubeSidebarExpanded, toggleCubeSidebarExpanded } = React.useContext(DisplayContext);
   const [hoveredItem, setHoveredItem] = React.useState<string | null>(null);
   const [dropdownVisible, setDropdownVisible] = React.useState(false);
@@ -542,9 +551,15 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                     if (
                                       settingsViewContext &&
                                       (activeLink === 'settings' ||
-                                        ['overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(
-                                          activeLink,
-                                        ))
+                                        [
+                                          'overview',
+                                          'options',
+                                          'boards-and-views',
+                                          'custom-sorts',
+                                          'collaborators',
+                                          'draft-formats',
+                                          'restore',
+                                        ].includes(activeLink))
                                     ) {
                                       e.preventDefault();
                                       settingsViewContext.setView(subItem.key);
@@ -748,9 +763,15 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                           if (
                             settingsViewContext &&
                             (activeLink === 'settings' ||
-                              ['overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(
-                                activeLink,
-                              ))
+                              [
+                                'overview',
+                                'options',
+                                'boards-and-views',
+                                'custom-sorts',
+                                'collaborators',
+                                'draft-formats',
+                                'restore',
+                              ].includes(activeLink))
                           ) {
                             e.preventDefault();
                             settingsViewContext.setView(subItem.key);

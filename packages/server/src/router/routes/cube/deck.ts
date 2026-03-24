@@ -6,7 +6,7 @@ import { body } from 'express-validator';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
 import { addBasics, createPool, exportToMtgo, getBasicsFromCube } from 'serverutils/cube';
-import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
+import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl } from 'serverutils/util';
@@ -647,7 +647,7 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    if (!req.user || cube.owner.id !== req.user.id) {
+    if (!req.user || !isCubeEditable(cube, req.user)) {
       req.flash('danger', 'Not Authorized');
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
