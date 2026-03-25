@@ -1,10 +1,9 @@
-import { FeedTypes } from '@utils/datatypes/Feed';
 import * as carddb from 'serverutils/carddb';
 import { bulkUpload } from 'serverutils/cube';
 import * as cubefn from 'serverutils/cubefn';
 import * as render from 'serverutils/render';
 
-import { blogDao, changelogDao, cubeDao, feedDao } from '../../../src/dynamo/daos';
+import { blogDao, changelogDao, cubeDao } from '../../../src/dynamo/daos';
 import { createCardDetails, createCube, createUser } from '../../test-utils/data';
 
 jest.mock('../../../src/dynamo/models/cube');
