@@ -78,10 +78,13 @@ export class DeploymentPipeline extends Construct {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
+          install: {
+            'runtime-versions': {
+              nodejs: 22,
+            },
+          },
           pre_build: {
             commands: [
-              'echo Installing Node.js 22...',
-              '. ~/.nvm/nvm.sh && nvm install 22 && nvm use 22 && nvm alias default 22',
               'node --version',
               'echo Installing dependencies...',
               'npm install',
@@ -229,9 +232,10 @@ export class DeploymentPipeline extends Construct {
         version: '0.2',
         phases: {
           install: {
+            'runtime-versions': {
+              nodejs: 22,
+            },
             commands: [
-              'echo Installing Node.js 22...',
-              '. ~/.nvm/nvm.sh && nvm install 22 && nvm use 22 && nvm alias default 22',
               'node --version',
               'echo Installing Node.js dependencies...',
               'npm install',
@@ -295,10 +299,13 @@ export class DeploymentPipeline extends Construct {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
+          install: {
+            'runtime-versions': {
+              nodejs: 22,
+            },
+          },
           pre_build: {
             commands: [
-              'echo Installing Node.js 22...',
-              '. ~/.nvm/nvm.sh && nvm install 22 && nvm use 22 && nvm alias default 22',
               'node --version',
               'echo Installing dependencies...',
               'npm install',
