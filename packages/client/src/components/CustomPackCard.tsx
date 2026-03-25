@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
-import { DraftAction, Pack } from '@utils/datatypes/Draft';
+import { BoardDefinition } from '@utils/datatypes/Cube';
+import { CardSlot, DraftAction, Pack } from '@utils/datatypes/Draft';
 import { buildDefaultSteps, DEFAULT_STEPS } from '@utils/draftutil';
 
 import useToggle from '../hooks/UseToggle';
@@ -20,6 +21,7 @@ interface CustomPackCardProps {
   setPack: (pack: Pack) => void;
   removePack: () => void;
   copyPack: () => void;
+  availableBoards?: BoardDefinition[];
 }
 
 const ACTION_LABELS: Record<string, string> = Object.freeze({
@@ -46,10 +48,21 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
   setPack,
   removePack,
   copyPack,
+  availableBoards,
 }) => {
   const [slotsOpen, toggleSlotsOpen] = useToggle(true);
   const [stepsOpen, toggleStepsOpen] = useToggle(false);
   const steps = useMemo(() => pack.steps ?? buildDefaultSteps(pack.slots.length), [pack]);
+
+  const boardOptions = useMemo(() => {
+    if (!availableBoards || availableBoards.length === 0) {
+      return [{ value: 'mainboard', label: 'Mainboard' }];
+    }
+    return availableBoards.map((b) => ({
+      value: b.name.toLowerCase().replace(/\s+/g, ''),
+      label: b.name,
+    }));
+  }, [availableBoards]);
   return (
     <Card key={packIndex} className="mb-4 pack-outline">
       <CardHeader className="px-2">
@@ -72,17 +85,27 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
           <Collapse isOpen={slotsOpen}>
             <div className="p-2">
               <Flexbox direction="col" gap="2">
-                {pack.slots.map((filter, slotIndex) => (
+                {pack.slots.map((slot, slotIndex) => (
                   <Flexbox direction="row" gap="2" className="w-full" key={slotIndex} alignItems="center">
                     <Text semibold md>
                       {slotIndex + 1}
                     </Text>
+                    <Select
+                      dense
+                      value={slot.board || 'mainboard'}
+                      options={boardOptions}
+                      setValue={(value) => {
+                        const newSlots = [...pack.slots];
+                        newSlots[slotIndex] = { ...slot, board: value === 'mainboard' ? undefined : value };
+                        setPack({ ...pack, slots: newSlots });
+                      }}
+                    />
                     <Input
                       type="text"
-                      value={filter}
+                      value={slot.filter}
                       onChange={(e) => {
                         const newSlots = [...pack.slots];
-                        newSlots[slotIndex] = e.target.value;
+                        newSlots[slotIndex] = { ...slot, filter: e.target.value };
                         setPack({ ...pack, slots: newSlots });
                       }}
                     />
@@ -108,7 +131,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
                 className="me-2"
                 color="accent"
                 onClick={() => {
-                  setPack({ ...pack, slots: [...pack.slots, '*'] });
+                  setPack({ ...pack, slots: [...pack.slots, { filter: '*' }] });
                 }}
                 data-pack-index={packIndex}
               >

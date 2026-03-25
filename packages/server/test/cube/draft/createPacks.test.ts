@@ -1,4 +1,4 @@
-import { DraftFormat, DraftState, Pack } from '@utils/datatypes/Draft';
+import { DraftFormat, DraftState, CardSlot, Pack } from '@utils/datatypes/Draft';
 import { createPacks, CreatePacksResult, DraftResult, NextCardFn } from '@utils/drafting/createdraft';
 import { buildDefaultSteps, createDefaultDraftFormat } from '@utils/draftutil';
 import seedrandom from 'seedrandom';
@@ -163,11 +163,20 @@ describe('createPacks', () => {
         title: 'Custom',
         packs: [
           {
-            slots: ['rarity:mythic', 'rarity:rare', 'set:inv'],
+            slots: [
+              { filter: 'rarity:mythic' },
+              { filter: 'rarity:rare' },
+              { filter: 'set:inv' },
+            ],
             steps: buildDefaultSteps(3),
           },
           {
-            slots: ['tag:alpha', 'tag:beta', 'tag:delta', 'tag:kappa'],
+            slots: [
+              { filter: 'tag:alpha' },
+              { filter: 'tag:beta' },
+              { filter: 'tag:delta' },
+              { filter: 'tag:kappa' },
+            ],
             steps: buildDefaultSteps(3),
           },
         ],
@@ -341,14 +350,14 @@ const getRandomizedCardGenerator = (expectedCardCount: number): (() => DraftResu
 
 const createUnfilteredPackOfSize = (numberOfCards: number): Pack => {
   return {
-    slots: Array.from({ length: numberOfCards }, () => '*'),
+    slots: Array.from({ length: numberOfCards }, (): CardSlot => ({ filter: '*' })),
     steps: buildDefaultSteps(numberOfCards),
   };
 };
 
 const createFilteredPackOfSize = (numberOfCards: number, filter: string): Pack => {
   return {
-    slots: Array.from({ length: numberOfCards }, () => filter),
+    slots: Array.from({ length: numberOfCards }, (): CardSlot => ({ filter })),
     steps: buildDefaultSteps(numberOfCards),
   };
 };
@@ -370,11 +379,23 @@ const mockFilteredDraftState = {
     title: 'Custom',
     packs: [
       {
-        slots: ['rarity:mythic', 'rarity:rare', 'rarity:uncommon', 'rarity:uncommon', '*'],
+        slots: [
+          { filter: 'rarity:mythic' },
+          { filter: 'rarity:rare' },
+          { filter: 'rarity:uncommon' },
+          { filter: 'rarity:uncommon' },
+          { filter: '*' },
+        ],
         steps: buildDefaultSteps(5),
       },
       {
-        slots: ['rarity:mythic', '', 'rarity:rare', 'rarity:uncommon', 'rarity:uncommon'],
+        slots: [
+          { filter: 'rarity:mythic' },
+          { filter: '' },
+          { filter: 'rarity:rare' },
+          { filter: 'rarity:uncommon' },
+          { filter: 'rarity:uncommon' },
+        ],
         steps: buildDefaultSteps(5),
       },
     ],

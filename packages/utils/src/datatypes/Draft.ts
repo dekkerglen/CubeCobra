@@ -8,8 +8,14 @@ export type DraftStep = {
   action: DraftAction;
   amount: number | null;
 };
+
+export interface CardSlot {
+  filter: string;
+  board?: string; // Board to pull card from. Defaults to 'mainboard' if undefined.
+}
+
 export interface Pack {
-  slots: string[];
+  slots: CardSlot[];
   steps: DraftStep[] | null;
 }
 export interface DraftFormat {

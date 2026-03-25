@@ -1,5 +1,5 @@
 import Card from '@utils/datatypes/Card';
-import Draft, { DraftAction, DraftFormat, DraftStep } from '@utils/datatypes/Draft';
+import Draft, { CardSlot, DraftAction, DraftFormat, DraftStep } from '@utils/datatypes/Draft';
 import {
   buildDefaultSteps,
   createDefaultDraftFormat,
@@ -8,16 +8,19 @@ import {
   getInitialState,
   normalizeDraftFormatSteps,
   normalizeDraftSteps,
+  normalizePackSlots,
 } from '@utils/draftutil';
 
 import { createCard } from '../../test-utils/data';
+
+const s = (filter: string): CardSlot => ({ filter });
 
 const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat => {
   return {
     title: 'Custom Draft',
     packs: [
       {
-        slots: ['*', '*'],
+        slots: [s('*'), s('*')],
         steps: [
           { action: 'pick', amount: 1 },
           { action: 'pass', amount: null },
@@ -25,7 +28,7 @@ const createMockDraftFormat = (overrides?: Partial<DraftFormat>): DraftFormat =>
         ],
       },
       {
-        slots: ['*', '*'],
+        slots: [s('*'), s('*')],
         steps: [
           { action: 'pick', amount: 1 },
           { action: 'pass', amount: null },
@@ -89,16 +92,51 @@ describe('normalizeDraftSteps', () => {
   });
 });
 
+describe('normalizePackSlots', () => {
+  it('Converts legacy string[] slots to CardSlot[] for backwards compatibility', () => {
+    const legacyPack = {
+      slots: ['*', 'rarity:rare', ''] as any,
+      steps: null,
+    };
+
+    const normalized = normalizePackSlots(legacyPack);
+    expect(normalized.slots).toEqual([
+      { filter: '*' },
+      { filter: 'rarity:rare' },
+      { filter: '' },
+    ]);
+  });
+
+  it('Does not modify already-normalized CardSlot[] slots', () => {
+    const pack = {
+      slots: [{ filter: '*' }, { filter: 'rarity:rare', board: 'maybeboard' }],
+      steps: null,
+    };
+
+    const normalized = normalizePackSlots(pack);
+    expect(normalized.slots).toEqual([
+      { filter: '*' },
+      { filter: 'rarity:rare', board: 'maybeboard' },
+    ]);
+  });
+
+  it('Handles empty slots array', () => {
+    const pack = { slots: [] as CardSlot[], steps: null };
+    const normalized = normalizePackSlots(pack);
+    expect(normalized.slots).toEqual([]);
+  });
+});
+
 describe('normalizeDraftFormatSteps', () => {
   it('Does nothing when steps are null', () => {
     const format = createMockDraftFormat({
       packs: [
         {
-          slots: ['*', '*'],
+          slots: [s('*'), s('*')],
           steps: null,
         },
         {
-          slots: ['*'],
+          slots: [s('*')],
           steps: null,
         },
       ],
@@ -112,14 +150,14 @@ describe('normalizeDraftFormatSteps', () => {
     const format = createMockDraftFormat({
       packs: [
         {
-          slots: ['*'],
+          slots: [s('*')],
           steps: [
             { action: 'pick', amount: 1 },
             { action: 'pass', amount: null },
           ],
         },
         {
-          slots: ['*', '*'],
+          slots: [s('*'), s('*')],
           steps: [
             { action: 'pick', amount: 1 },
             { action: 'pass', amount: null },
@@ -127,7 +165,7 @@ describe('normalizeDraftFormatSteps', () => {
           ],
         },
         {
-          slots: ['*'],
+          slots: [s('*')],
           steps: [
             { action: 'pick', amount: 1 },
             { action: 'pass', amount: null },
@@ -194,7 +232,7 @@ describe('getErrorsInFormat', () => {
     const format = createMockDraftFormat({
       packs: [
         {
-          slots: ['*'],
+          slots: [s('*')],
           steps: null,
         },
       ],
@@ -207,7 +245,7 @@ describe('getErrorsInFormat', () => {
     const format = createMockDraftFormat({
       packs: [
         {
-          slots: ['*', '*', '*'],
+          slots: [s('*'), s('*'), s('*')],
           steps: [
             { action: 'pick', amount: 1 },
             { action: 'pass', amount: null },
@@ -224,7 +262,7 @@ describe('getErrorsInFormat', () => {
     const format = createMockDraftFormat({
       packs: [
         {
-          slots: ['*'],
+          slots: [s('*')],
           steps: [
             { action: 'pick', amount: 1 },
             { action: 'pass', amount: null },
@@ -242,7 +280,7 @@ describe('getErrorsInFormat', () => {
       defaultSeats: 1,
       packs: [
         {
-          slots: ['*', '*'],
+          slots: [s('*'), s('*')],
           steps: [{ action: 'pick', amount: 1 }],
         },
       ],
@@ -260,7 +298,7 @@ describe('getErrorsInFormat', () => {
       defaultSeats: 4,
       packs: [
         {
-          slots: ['*', '*'],
+          slots: [s('*'), s('*')],
           steps: [
             { action: 'pick', amount: 2 },
             { action: 'pass', amount: null },
@@ -280,7 +318,7 @@ describe('getErrorsInFormat', () => {
       defaultSeats: 4,
       packs: [
         {
-          slots: ['*', '*', '*'],
+          slots: [s('*'), s('*'), s('*')],
           steps: [
             { action: 'pick', amount: 1 },
             { action: 'pass', amount: null },
@@ -288,7 +326,7 @@ describe('getErrorsInFormat', () => {
           ],
         },
         {
-          slots: ['*', '*'],
+          slots: [s('*'), s('*')],
           //@ts-expect-error -- Steps can be an array or null, the array shouldn't contain null. But this cases gets to full coverage
           steps: [null, null, null],
         },

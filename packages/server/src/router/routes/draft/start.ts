@@ -73,9 +73,17 @@ const handler = async (req: Request, res: Response) => {
       cube,
     );
 
+    // Build board cards map for multi-board draft support
+    const boardCards: Record<string, any[]> = {};
+    for (const [boardKey, cards] of Object.entries(cubeCards)) {
+      if (boardKey !== 'id' && Array.isArray(cards)) {
+        boardCards[boardKey] = cards;
+      }
+    }
+
     let populated: DraftType;
     try {
-      populated = createDraft(cube, format, mainboard, parseInt(req.body.seats), req.user);
+      populated = createDraft(cube, format, boardCards, parseInt(req.body.seats), req.user);
     } catch (err) {
       // This is a 4XX error, not a 5XX error
       req.flash('danger', (err as Error).message);

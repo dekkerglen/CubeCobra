@@ -2,7 +2,7 @@ import seedrandom from 'seedrandom';
 
 import Card from '../datatypes/Card';
 import Cube from '../datatypes/Cube';
-import Draft, { DraftFormat, DraftState } from '../datatypes/Draft';
+import Draft, { CardSlot, DraftFormat, DraftState } from '../datatypes/Draft';
 import User from '../datatypes/User';
 import { buildDefaultSteps, createDefaultDraftFormat } from '../draftutil';
 import { arraysEqual, fromEntries } from '../Util';
@@ -22,14 +22,14 @@ export interface DraftResult {
   messages: string[];
 }
 
-export type NextCardFn = (cardFilters: string[]) => DraftResult;
+export type NextCardFn = (cardFilters: string[], board?: string) => DraftResult;
 
 interface AsfanResult {
   card: boolean;
   messages: string[];
 }
 
-type AsfanFn = (cardFilters: string[]) => AsfanResult;
+type AsfanFn = (cardFilters: string[], board?: string) => AsfanResult;
 
 export interface CreatePacksResult {
   ok: boolean;
@@ -42,17 +42,24 @@ interface CheckResult {
   ok: boolean;
   messages: string[];
 }
-type CheckFn = (cardFilters: string[]) => CheckResult;
+type CheckFn = (cardFilters: string[], board?: string) => CheckResult;
 
 const matchingCards = (cards: Card[], filter: Filter): Card[] => {
   // Implement the matchingCards function
   return cards.filter(filter.fn);
 };
 
-const createNextCardFn = (cards: Card[], duplicates: boolean = false, rng: RNGFunction): NextCardFn => {
-  return (cardFilters: string[]): DraftResult => {
-    if (cards.length === 0) {
-      throw new Error('Unable to create draft: not enough cards.');
+const createNextCardFn = (boardCards: Record<string, Card[]>, duplicates: boolean = false, rng: RNGFunction): NextCardFn => {
+  // Create mutable copies of each board's cards
+  const pools: Record<string, Card[]> = {};
+  for (const [board, cards] of Object.entries(boardCards)) {
+    pools[board] = [...cards];
+  }
+
+  return (cardFilters: string[], board: string = 'mainboard'): DraftResult => {
+    const cards = pools[board];
+    if (!cards || cards.length === 0) {
+      throw new Error(`Unable to create draft: no cards in board "${board}".`);
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
@@ -91,19 +98,30 @@ const createNextCardFn = (cards: Card[], duplicates: boolean = false, rng: RNGFu
     }
 
     if (!duplicates) {
-      // remove from cards
-      index = cards.indexOf(card);
-      cards.splice(index, 1);
+      // remove from this board's pool
+      const cardIdx = cards.indexOf(card);
+      cards.splice(cardIdx, 1);
+
+      // Global uniqueness: also remove from other boards' pools
+      for (const [otherBoard, otherCards] of Object.entries(pools)) {
+        if (otherBoard !== board) {
+          const otherIdx = otherCards.indexOf(card);
+          if (otherIdx >= 0) {
+            otherCards.splice(otherIdx, 1);
+          }
+        }
+      }
     }
 
     return { card, messages };
   };
 };
 
-const createAsfanFn = (cards: Card[], duplicates: boolean = false): AsfanFn => {
-  return (cardFilters: string[]): AsfanResult => {
-    if (cards.length === 0) {
-      throw new Error('Unable to create draft asfan: not enough cards.');
+const createAsfanFn = (boardCards: Record<string, Card[]>, duplicates: boolean = false): AsfanFn => {
+  return (cardFilters: string[], board: string = 'mainboard'): AsfanResult => {
+    const cards = boardCards[board];
+    if (!cards || cards.length === 0) {
+      throw new Error(`Unable to create draft asfan: no cards in board "${board}".`);
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
@@ -168,6 +186,7 @@ type PackCreationCardSlot = {
   packNum: number;
   cardNum: number;
   slotFilter: string[];
+  board: string;
 };
 
 //Exporting for testing purposes
@@ -205,17 +224,20 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
 
       result.initialState[seat]?.push({ steps: [], cards: [] });
       for (let cardNum = 0; cardNum < currentPack.slots.length; cardNum++) {
-        const slotValue = currentPack.slots[cardNum] || '';
+        const slotValue = currentPack.slots[cardNum];
         if (slotValue === undefined) {
           continue;
         }
-        const slotFilter = slotValue.split(',');
+        const filterStr = typeof slotValue === 'string' ? slotValue : (slotValue as CardSlot).filter || '';
+        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : ((slotValue as CardSlot).board || 'mainboard');
+        const slotFilter = filterStr.split(',');
 
-        const slot = {
+        const slot: PackCreationCardSlot = {
           seat,
           packNum,
           cardNum,
           slotFilter,
+          board: slotBoard,
         };
 
         const hasFilter = !(arraysEqual(slotFilter, ['']) || arraysEqual(slotFilter, ['*']));
@@ -251,9 +273,9 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
 
   let sumCardIndices = 0;
   for (const slot of [...filteredCardSlots, ...unfilteredCardSlots]) {
-    const { seat, packNum, cardNum, slotFilter } = slot;
+    const { seat, packNum, cardNum, slotFilter, board } = slot;
 
-    const cardResult = nextCardFn(slotFilter);
+    const cardResult = nextCardFn(slotFilter, board);
     //FYI - The primary nextCardFn throws an Error if it cannot find a card for the filter, so result.messages won't matter
     if (cardResult.messages && cardResult.messages.length > 0) {
       result.messages = result.messages.concat(cardResult.messages);
@@ -311,7 +333,7 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
 export const createDraft = (
   cube: Cube,
   format: DraftFormat,
-  cubeCards: Card[],
+  cubeCards: Card[] | Record<string, Card[]>,
   seats: number,
   user?: User,
   seed: string | false = false,
@@ -321,12 +343,20 @@ export const createDraft = (
   }
   const rng = seedrandom(seed);
 
-  let nextCardFn: NextCardFn | null = null;
-  if (cubeCards.length === 0) {
+  // Normalize cubeCards to Record<string, Card[]> for multi-board support
+  // If passed as Card[] (backwards compat), treat as mainboard
+  const boardCards: Record<string, Card[]> = Array.isArray(cubeCards)
+    ? { mainboard: cubeCards }
+    : cubeCards;
+
+  // Check that at least one board has cards
+  const totalCards = Object.values(boardCards).reduce((sum, cards) => sum + cards.length, 0);
+  if (totalCards === 0) {
     throw new Error('Unable to create draft: no cards.');
   }
 
-  nextCardFn = createNextCardFn(cubeCards, format.multiples, rng);
+  let nextCardFn: NextCardFn | null = null;
+  nextCardFn = createNextCardFn(boardCards, format.multiples, rng);
 
   //TODO: Add the endpack steps here instead of in frontend
   const result: CreatePacksResult = createPacks(format, seats, nextCardFn);
@@ -386,7 +416,9 @@ const checkPacks = (format: DraftFormat, seats: number, checkFn: CheckFn): Check
         if (!slotValue) {
           continue;
         }
-        const result = checkFn(slotValue.split(','));
+        const filterStr = typeof slotValue === 'string' ? slotValue : (slotValue as CardSlot).filter || '';
+        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : ((slotValue as CardSlot).board || 'mainboard');
+        const result = checkFn(filterStr.split(','), slotBoard);
         if (result.messages && result.messages.length > 0) {
           messages = messages.concat(result.messages);
         }
@@ -448,7 +480,9 @@ const asfanPacks = (format: DraftFormat, seats: number, asfanFn: AsfanFn) => {
         if (!slotValue) {
           continue;
         }
-        asfanFn(slotValue.split(','));
+        const filterStr = typeof slotValue === 'string' ? slotValue : (slotValue as CardSlot).filter || '';
+        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : ((slotValue as CardSlot).board || 'mainboard');
+        asfanFn(filterStr.split(','), slotBoard);
       }
     }
   }
@@ -462,7 +496,8 @@ export const calculateAsfans = (cube: Cube, cards: Card[], draftFormat: number):
     throw new Error('Unable to create draft: no cards.');
   }
 
-  const asfanFn = createAsfanFn(cardsWithAsfan, format.multiples);
+  const boardCards: Record<string, Card[]> = { mainboard: cardsWithAsfan };
+  const asfanFn = createAsfanFn(boardCards, format.multiples);
 
   asfanPacks(format, 1, asfanFn);
 

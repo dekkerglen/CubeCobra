@@ -149,6 +149,7 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
                 }
                 canRemove={format.packs.length > 1}
                 pack={pack}
+                availableBoards={availableBoards}
               />
             ))}
             <Button

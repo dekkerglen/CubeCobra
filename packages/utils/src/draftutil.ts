@@ -1,6 +1,6 @@
 import { cardCmc, cardType, cmcColumn } from './cardutil';
 import Card from './datatypes/Card';
-import Draft, { DraftFormat, DraftStep, Pack } from './datatypes/Draft';
+import Draft, { CardSlot, DraftFormat, DraftStep, Pack } from './datatypes/Draft';
 import type { State } from './datatypes/DraftState';
 
 interface Step {
@@ -327,11 +327,28 @@ export const setupPicks: (rows: number, cols: number) => any[][][] = (rows: numb
   return res;
 };
 
+/**
+ * Normalizes pack slots from legacy string[] format to CardSlot[] format.
+ * This provides backwards compatibility with old format data stored as string arrays.
+ */
+export const normalizePackSlots = (pack: Pack): Pack => {
+  if (!Array.isArray(pack.slots)) return pack;
+  if (pack.slots.length === 0) return pack;
+  // Check if slots are already CardSlot objects (have a 'filter' property)
+  if (typeof pack.slots[0] === 'object' && 'filter' in (pack.slots[0] as any)) return pack;
+  // Convert string[] to CardSlot[] (backwards compat)
+  pack.slots = (pack.slots as any as string[]).map((filter: string) => ({ filter }));
+  return pack;
+};
+
 export const normalizeDraftFormatSteps = (format: DraftFormat): DraftFormat => {
   if (!Array.isArray((format as any).packs)) return format;
   for (let packNum = 0; packNum < format.packs.length; packNum++) {
     const pack = format.packs[packNum];
     if (!pack) continue;
+
+    // Normalize slots (backwards compat: string[] -> CardSlot[])
+    normalizePackSlots(pack);
 
     const steps = pack.steps;
 
@@ -407,8 +424,9 @@ export const getErrorsInFormat = (format: DraftFormat) => {
       }
     }
 
-    if (amount !== pack.slots.length) {
-      errors.push(`Pack ${i + 1} has ${pack.slots.length} slots but has steps to pick or trash ${amount} cards.`);
+    const slotCount = pack.slots.length;
+    if (amount !== slotCount) {
+      errors.push(`Pack ${i + 1} has ${slotCount} slots but has steps to pick or trash ${amount} cards.`);
     }
   }
   return errors.length === 0 ? null : errors;
@@ -419,7 +437,7 @@ export const DEFAULT_STEPS: DraftStep[] = [
   { action: 'pass', amount: null },
 ];
 
-export const DEFAULT_PACK: Pack = Object.freeze({ slots: [''], steps: DEFAULT_STEPS });
+export const DEFAULT_PACK: Pack = Object.freeze({ slots: [{ filter: '' }], steps: DEFAULT_STEPS });
 
 export const buildDefaultSteps: (cards: number) => DraftStep[] = (cards) => {
   const steps: DraftStep[] = new Array(cards).fill(DEFAULT_STEPS).flat();
@@ -431,7 +449,7 @@ export const createDefaultDraftFormat = (packsPerPlayer: number, cardsPerPack: n
   return {
     title: `Standard Draft`,
     packs: Array.from({ length: packsPerPlayer }, () => ({
-      slots: Array.from({ length: cardsPerPack }, () => '*'),
+      slots: Array.from({ length: cardsPerPack }, (): CardSlot => ({ filter: '*' })),
       steps: buildDefaultSteps(cardsPerPack),
     })),
     multiples: false,

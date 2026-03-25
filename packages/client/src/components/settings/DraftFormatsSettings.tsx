@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 
 import { PlusIcon, StarFillIcon, StarIcon, TrashIcon } from '@primer/octicons-react';
 import { getBoardDefinitions } from '@utils/datatypes/Cube';
-import { DraftFormat, Pack } from '@utils/datatypes/Draft';
+import { CardSlot, DraftFormat, Pack } from '@utils/datatypes/Draft';
 import { createDefaultDraftFormat, getErrorsInFormat } from '@utils/draftutil';
 
 import Alert from 'components/base/Alert';
@@ -59,7 +59,7 @@ const DraftFormatsSettings: React.FC = () => {
     if (cube.formats && cube.formats.length > 0) {
       return cube.formats.map((f) => ({
         ...f,
-        packs: f.packs.map((p) => ({ ...p, slots: [...p.slots], steps: p.steps ? [...p.steps] : null })),
+        packs: f.packs.map((p) => ({ ...p, slots: p.slots.map((s: CardSlot) => ({ ...s })), steps: p.steps ? [...p.steps] : null })),
       }));
     }
     return [];
@@ -415,11 +415,12 @@ const DraftFormatsSettings: React.FC = () => {
                                       canRemove={true}
                                       setPack={(newPack: Pack) => updatePack(index, packIndex, newPack)}
                                       removePack={() => removePackFromFormat(index, packIndex)}
+                                      availableBoards={availableBoards}
                                       copyPack={() => {
                                         const newFormats = [...formats];
                                         newFormats[index].packs.splice(packIndex + 1, 0, {
                                           ...pack,
-                                          slots: [...pack.slots],
+                                          slots: pack.slots.map((s: CardSlot) => ({ ...s })),
                                           steps: pack.steps ? [...pack.steps] : null,
                                         });
                                         setFormats(newFormats);
