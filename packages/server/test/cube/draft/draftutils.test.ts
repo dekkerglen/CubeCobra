@@ -375,7 +375,7 @@ describe('createDefaultDraftFormat', () => {
     const format = createDefaultDraftFormat(3, 15);
     format.packs.forEach((pack) => {
       expect(pack.slots).toHaveLength(15);
-      expect(pack.slots.every((slot) => slot === '*')).toBeTruthy();
+      expect(pack.slots.every((slot) => slot.filter === '*')).toBeTruthy();
     });
   });
 
