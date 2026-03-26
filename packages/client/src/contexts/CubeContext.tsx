@@ -20,7 +20,7 @@ import Card, {
   CubeCardRemove,
 } from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
-import Cube, { CubeCards, TagColor } from '@utils/datatypes/Cube';
+import Cube, { CubeCards, TagColor, getViewByName } from '@utils/datatypes/Cube';
 import { getCubeSorts } from '@utils/sorting/Sort';
 import { deepCopy, isCubeOwner } from '@utils/Util';
 
@@ -102,6 +102,7 @@ export interface CubeContextValue {
   setCollapseDuplicateCards: (value: boolean) => Promise<void>;
   saveSorts: () => Promise<void>;
   resetSorts: () => void;
+  effectiveDefaultSorts: string[];
   sortPrimary: string | null;
   sortSecondary: string | null;
   sortTertiary: string | null;
@@ -162,6 +163,7 @@ const CubeContext = createContext<CubeContextValue>({
   setCollapseDuplicateCards: defaultFn,
   saveSorts: defaultFn,
   resetSorts: defaultFn,
+  effectiveDefaultSorts: [],
   sortPrimary: null,
   sortSecondary: null,
   sortTertiary: null,
@@ -377,17 +379,29 @@ export function CubeContextProvider({
     typeof user?.autoBlog !== 'undefined' ? user.autoBlog : false,
   );
 
-  // Apply view's default sorts when view changes
-  useEffect(() => {
-    const { getViewByName } = require('@utils/datatypes/Cube');
+  // Effective default sorts for the current view (falls back to cube defaults)
+  const effectiveDefaultSorts = useMemo(() => {
     const currentView = getViewByName(cube, activeView);
+    if (currentView?.defaultSorts && currentView.defaultSorts.length === 4) {
+      return currentView.defaultSorts;
+    }
+    return getCubeSorts(cube);
+  }, [cube, activeView]);
+
+  // Keep a ref to cube so the view-switch effect can read it without re-firing on every cube change
+  const cubeRef = React.useRef(cube);
+  cubeRef.current = cube;
+
+  // Apply view's default sorts only when the active view changes
+  useEffect(() => {
+    const currentView = getViewByName(cubeRef.current, activeView);
     if (currentView?.defaultSorts && currentView.defaultSorts.length === 4) {
       setSortPrimary(currentView.defaultSorts[0]);
       setSortSecondary(currentView.defaultSorts[1]);
       setSortTertiary(currentView.defaultSorts[2]);
       setSortQuaternary(currentView.defaultSorts[3]);
     }
-  }, [activeView, cube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
+  }, [activeView, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
 
   const getAllTags = (cubeCards: CubeCards) => {
     const tags = new Set<string>();
@@ -1371,12 +1385,11 @@ export function CubeContextProvider({
   }, [sortPrimary, defaultSorts, sortSecondary, sortTertiary, sortQuaternary, cube, csrfFetch]);
 
   const resetSorts = useCallback(() => {
-    const defaultSorts = getCubeSorts(cube);
-    setSortPrimary(defaultSorts[0]);
-    setSortSecondary(defaultSorts[1]);
-    setSortTertiary(defaultSorts[2]);
-    setSortQuaternary(defaultSorts[3]);
-  }, [cube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
+    setSortPrimary(effectiveDefaultSorts[0]);
+    setSortSecondary(effectiveDefaultSorts[1]);
+    setSortTertiary(effectiveDefaultSorts[2]);
+    setSortQuaternary(effectiveDefaultSorts[3]);
+  }, [effectiveDefaultSorts, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
 
   const value = useMemo(
     () => ({
@@ -1420,6 +1433,7 @@ export function CubeContextProvider({
       setCollapseDuplicateCards,
       saveSorts,
       resetSorts,
+      effectiveDefaultSorts,
       sortPrimary,
       sortSecondary,
       sortTertiary,
@@ -1475,6 +1489,7 @@ export function CubeContextProvider({
       setCollapseDuplicateCards,
       saveSorts,
       resetSorts,
+      effectiveDefaultSorts,
       sortPrimary,
       sortSecondary,
       sortTertiary,

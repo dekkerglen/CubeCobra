@@ -98,7 +98,7 @@ const CardModal: React.FC<CardModalProps> = ({
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [targetBoard, setTargetBoard] = useState<string>('');
   const fetchedCardsRef = React.useRef<Set<string>>(new Set());
-  const { cube, unfilteredChangedCards } = useContext(CubeContext);
+  const { cube, unfilteredChangedCards, addCard } = useContext(CubeContext);
   const { setRightSidebarMode } = useContext(DisplayContext);
 
   // Get available boards from cube
@@ -305,6 +305,23 @@ const CardModal: React.FC<CardModalProps> = ({
                   >
                     Add to another Cube
                   </AddToCubeButton>
+                )}
+                {canEdit && card.board && (
+                  <Button
+                    color="accent"
+                    block
+                    outline
+                    onClick={() => {
+                      const { index: _index, board: _board, details: _details, editIndex: _ei, removeIndex: _ri, markedForDelete: _md, ...copy } = card;
+                      addCard(copy as Card, card.board!);
+                      if (window.innerWidth >= 768) {
+                        setRightSidebarMode('edit');
+                      }
+                      setOpen(false);
+                    }}
+                  >
+                    Add a Copy
+                  </Button>
                 )}
                 {card.details && (
                   <>

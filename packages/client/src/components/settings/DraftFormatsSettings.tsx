@@ -455,6 +455,18 @@ const DraftFormatsSettings: React.FC = () => {
         </CardBody>
       </Card>
 
+      {/* Bottom save button for convenience */}
+      {hasChanges && (
+        <Flexbox direction="row" gap="2" justify="end">
+          <Button color="secondary" onClick={resetChanges}>
+            Reset
+          </Button>
+          <LoadingButton color="primary" onClick={handleSave}>
+            Save Changes
+          </LoadingButton>
+        </Flexbox>
+      )}
+
       {/* Hidden form for submission */}
       <div className="hidden">
         <CSRFForm

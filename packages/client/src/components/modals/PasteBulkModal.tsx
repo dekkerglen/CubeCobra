@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
+import { AlertIcon } from '@primer/octicons-react';
+
+import ChangesContext from '../../contexts/ChangesContext';
+import Alert from '../base/Alert';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
@@ -20,6 +24,15 @@ const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID
   const [targetBoard, setTargetBoard] = useState('mainboard');
   const formRef = React.createRef<HTMLFormElement>();
   const formData = { body: bulkText, board: targetBoard };
+  const { changes } = useContext(ChangesContext);
+
+  const hasPendingChanges = Object.keys(changes)
+    .filter((key) => key !== 'version')
+    .some((board) => {
+      const boardChanges = changes[board];
+      if (!boardChanges || typeof boardChanges !== 'object') return false;
+      return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+    });
 
   const defaultBoardOptions = [
     { value: 'mainboard', label: 'Mainboard' },
@@ -32,6 +45,14 @@ const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID
       <CSRFForm method="POST" action={`/cube/bulkupload/${cubeID}`} ref={formRef} formData={formData}>
         <ModalHeader setOpen={setOpen}>Bulk Upload</ModalHeader>
         <ModalBody>
+          {hasPendingChanges && (
+            <Alert color="warning" className="mb-2">
+              <Flexbox direction="row" gap="2" alignItems="center">
+                <AlertIcon size={16} />
+                <Text sm>You have unsaved changes. Importing will merge into your current changelist. Consider saving your pending changes first.</Text>
+              </Flexbox>
+            </Alert>
+          )}
           <Text>Paste a list of card names to add to the cube, one per line.</Text>
           <Text sm className="mt-1 text-text-secondary">
             For CSV data with a &quot;board&quot; column, the board specified in the file takes precedence.

@@ -65,7 +65,7 @@ const SettingsContent: React.FC<{ versions?: Version[] }> = ({ versions }) => {
       content = <CollaboratorsSettings />;
       break;
     case 'restore':
-      content = <RestoreSettings versions={versions || []} />;
+      content = <RestoreSettings versions={versions} />;
       break;
     case 'overview':
     default:
@@ -83,11 +83,22 @@ const SettingsContent: React.FC<{ versions?: Version[] }> = ({ versions }) => {
 };
 
 const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards, versions }) => {
+<<<<<<< HEAD
   return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cards={cards} cube={cube} activeLink="overview">
           <SettingsContent versions={versions} />
+=======
+  const settingsViewContext = useContext(SettingsViewContext);
+  const rawView = settingsViewContext?.view || 'overview';
+
+  return (
+    <MainLayout useContainer={false}>
+      <DisplayContextProvider cubeID={cube.id}>
+        <CubeLayout cards={cards} cube={cube} activeLink={rawView}>
+          <SettingsContent versions={versions || []} />
+>>>>>>> 52f38947 (bulk upload and draft format qol changes)
         </CubeLayout>
       </DisplayContextProvider>
     </MainLayout>

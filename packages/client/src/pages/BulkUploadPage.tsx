@@ -34,7 +34,7 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added, a
   const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
 
-  const { alerts, setAlerts, cube, loading, addCard, commitChanges } = useContext(CubeContext);
+  const { alerts, setAlerts, cube, loading, addCard, commitChanges, clearChanges } = useContext(CubeContext);
   const { changes, setChanges } = useContext(ChangesContext);
 
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, DEFAULT_BLOG_TITLE);
@@ -211,6 +211,7 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added, a
                     outline
                     block
                     onClick={() => {
+                      clearChanges();
                       window.location.href = `/cube/list/${cube.id}`;
                     }}
                   >

@@ -1,5 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
+import { AlertIcon } from '@primer/octicons-react';
+
+import ChangesContext from '../../contexts/ChangesContext';
+import Alert from '../base/Alert';
 import Button from '../base/Button';
 import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
@@ -20,6 +24,15 @@ const UploadBulkModal: React.FC<UploadBulkModalProps> = ({ isOpen, setOpen, cube
   const [fileContent, setFileContent] = useState<string>('');
   const [targetBoard, setTargetBoard] = useState('mainboard');
   const formRef = React.createRef<HTMLFormElement>();
+  const { changes } = useContext(ChangesContext);
+
+  const hasPendingChanges = Object.keys(changes)
+    .filter((key) => key !== 'version')
+    .some((board) => {
+      const boardChanges = changes[board];
+      if (!boardChanges || typeof boardChanges !== 'object') return false;
+      return Object.values(boardChanges).some((c: any) => Array.isArray(c) && c.length > 0);
+    });
 
   useEffect(() => {
     if (file) {
@@ -56,6 +69,14 @@ const UploadBulkModal: React.FC<UploadBulkModalProps> = ({ isOpen, setOpen, cube
       <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cubeID}`} ref={formRef} formData={formData}>
         <ModalHeader setOpen={setOpen}>Upload Bulk Add</ModalHeader>
         <ModalBody>
+          {hasPendingChanges && (
+            <Alert color="warning" className="mb-2">
+              <Flexbox direction="row" gap="2" alignItems="center">
+                <AlertIcon size={16} />
+                <Text sm>You have unsaved changes. Importing will merge into your current changelist. Consider saving your pending changes first.</Text>
+              </Flexbox>
+            </Alert>
+          )}
           <Text>Upload a CSV file to add cards to the cube.</Text>
           <Text sm className="mt-1 text-text-secondary">
             If the CSV has a &quot;board&quot; column, it will take precedence over the selection below.

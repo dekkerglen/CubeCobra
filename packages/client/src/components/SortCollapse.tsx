@@ -21,6 +21,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit =
     setShowUnsorted,
     setCollapseDuplicateCards,
     resetSorts,
+    effectiveDefaultSorts,
     sortPrimary,
     sortSecondary,
     sortTertiary,
@@ -33,12 +34,12 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit =
 
   const sortsModified = useMemo(() => {
     return (
-      sortPrimary !== ((cube.defaultSorts && cube.defaultSorts[0]) || CUBE_DEFAULT_SORTS[0]) ||
-      sortSecondary !== ((cube.defaultSorts && cube.defaultSorts[1]) || CUBE_DEFAULT_SORTS[1]) ||
-      sortTertiary !== ((cube.defaultSorts && cube.defaultSorts[2]) || CUBE_DEFAULT_SORTS[2]) ||
-      sortQuaternary !== ((cube.defaultSorts && cube.defaultSorts[3]) || CUBE_DEFAULT_SORTS[3])
+      sortPrimary !== (effectiveDefaultSorts[0] || CUBE_DEFAULT_SORTS[0]) ||
+      sortSecondary !== (effectiveDefaultSorts[1] || CUBE_DEFAULT_SORTS[1]) ||
+      sortTertiary !== (effectiveDefaultSorts[2] || CUBE_DEFAULT_SORTS[2]) ||
+      sortQuaternary !== (effectiveDefaultSorts[3] || CUBE_DEFAULT_SORTS[3])
     );
-  }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
+  }, [sortPrimary, effectiveDefaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
 
   const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
