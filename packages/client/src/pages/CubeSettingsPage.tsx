@@ -37,9 +37,12 @@ interface CubeSettingsPageProps {
 
 const OWNER_ONLY_VIEWS = new Set(['overview', 'options']);
 
-const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards, versions }) => {
+// Inner component that renders INSIDE CubeLayout (where CubeContextProvider is available)
+// If CubeContextProvider is defined below, then isOwner would be a default value instead of actual computed boolean
+const SettingsContent: React.FC<{ versions?: Version[] }> = ({ versions }) => {
   const settingsViewContext = useContext(SettingsViewContext);
   const { isOwner } = useContext(CubeContext);
+
   const rawView = settingsViewContext?.view || 'overview';
   // Redirect collaborators away from owner-only views
   const view = !isOwner && OWNER_ONLY_VIEWS.has(rawView) ? 'draft-formats' : rawView;
@@ -71,14 +74,20 @@ const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards,
   }
 
   return (
+    <Flexbox direction="col" gap="2" className="my-2">
+      <DynamicFlash />
+      <SettingsNavbar />
+      {content}
+    </Flexbox>
+  );
+};
+
+const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards, versions }) => {
+  return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cards={cards} cube={cube} activeLink={view}>
-          <Flexbox direction="col" gap="2" className="my-2">
-            <DynamicFlash />
-            <SettingsNavbar />
-            {content}
-          </Flexbox>
+        <CubeLayout cards={cards} cube={cube} activeLink="overview">
+          <SettingsContent versions={versions} />
         </CubeLayout>
       </DisplayContextProvider>
     </MainLayout>
