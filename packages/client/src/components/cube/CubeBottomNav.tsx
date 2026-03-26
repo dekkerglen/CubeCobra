@@ -6,6 +6,7 @@ import { UserRoles } from '@utils/datatypes/User';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
+import CubeContext from '../../contexts/CubeContext';
 import UserContext from '../../contexts/UserContext';
 
 interface NavItem {
@@ -22,7 +23,7 @@ interface CubeBottomNavProps {
 
 const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
   const user = useContext(UserContext);
-  const isCubeOwner = !!user && cube.owner?.id === user.id;
+  const { canEdit } = useContext(CubeContext);
 
   const navItems: NavItem[] = [
     {
@@ -57,8 +58,8 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
     },
   ];
 
-  // Add Settings for cube owners
-  if (isCubeOwner) {
+  // Add Settings for cube owners and collaborators
+  if (canEdit) {
     navItems.push({
       key: 'settings',
       label: 'Settings',
@@ -92,7 +93,7 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
       ].includes(activeLink);
     }
     if (key === 'settings') {
-      return ['settings', 'overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(activeLink);
+      return ['settings', 'overview', 'options', 'collaborators', 'boards-and-views', 'custom-sorts', 'draft-formats', 'restore'].includes(activeLink);
     }
     return activeLink === key;
   };
