@@ -392,15 +392,40 @@ export function CubeContextProvider({
   const cubeRef = React.useRef(cube);
   cubeRef.current = cube;
 
-  // Apply view's default sorts only when the active view changes
+  // Refs to track current sort values and previous view for conditional view switching
+  const sortPrimaryRef = React.useRef(sortPrimary);
+  sortPrimaryRef.current = sortPrimary;
+  const sortSecondaryRef = React.useRef(sortSecondary);
+  sortSecondaryRef.current = sortSecondary;
+  const sortTertiaryRef = React.useRef(sortTertiary);
+  sortTertiaryRef.current = sortTertiary;
+  const sortQuaternaryRef = React.useRef(sortQuaternary);
+  sortQuaternaryRef.current = sortQuaternary;
+  const prevActiveViewForSortsRef = React.useRef(activeView);
+
+  // Apply view's default sorts only when the active view changes,
+  // and only if the current sorts match the previous view's defaults.
+  // This preserves user-customized sorts when switching views.
   useEffect(() => {
-    const currentView = getViewByName(cubeRef.current, activeView);
-    if (currentView?.defaultSorts && currentView.defaultSorts.length === 4) {
-      setSortPrimary(currentView.defaultSorts[0]);
-      setSortSecondary(currentView.defaultSorts[1]);
-      setSortTertiary(currentView.defaultSorts[2]);
-      setSortQuaternary(currentView.defaultSorts[3]);
+    const prevView = getViewByName(cubeRef.current, prevActiveViewForSortsRef.current);
+    const prevDefaults = prevView?.defaultSorts?.length === 4 ? prevView.defaultSorts : getCubeSorts(cubeRef.current);
+
+    const sortsMatchPrevDefaults =
+      sortPrimaryRef.current === prevDefaults[0] &&
+      sortSecondaryRef.current === prevDefaults[1] &&
+      sortTertiaryRef.current === prevDefaults[2] &&
+      sortQuaternaryRef.current === prevDefaults[3];
+
+    const newView = getViewByName(cubeRef.current, activeView);
+
+    if (sortsMatchPrevDefaults && newView?.defaultSorts?.length === 4) {
+      setSortPrimary(newView.defaultSorts[0]);
+      setSortSecondary(newView.defaultSorts[1]);
+      setSortTertiary(newView.defaultSorts[2]);
+      setSortQuaternary(newView.defaultSorts[3]);
     }
+
+    prevActiveViewForSortsRef.current = activeView;
   }, [activeView, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
 
   const getAllTags = (cubeCards: CubeCards) => {

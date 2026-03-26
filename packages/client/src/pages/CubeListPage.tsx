@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo, useRef } from 'react';
 
 import Card from '@utils/datatypes/Card';
 import Cube, { getViewByName } from '@utils/datatypes/Cube';
@@ -50,22 +50,39 @@ const CubeListPageRaw: React.FC = () => {
   const defaultDisplayView = currentView?.displayView || 'table';
   const [cubeView, setCubeView] = useQueryParam('display', defaultDisplayView);
 
-  // Apply view defaults when view changes (but not when user manually changes display)
+  // Refs to track current values and previous view for conditional view switching.
+  // Only apply new view defaults if current settings match the previous view's defaults.
+  // This preserves user customizations (e.g. a filter or display change) when switching views.
+  const prevActiveViewRef = useRef(activeView);
+  const cubeViewRef = useRef(cubeView);
+  cubeViewRef.current = cubeView;
+  const filterInputRef = useRef(filterInput);
+  filterInputRef.current = filterInput;
+
   useEffect(() => {
     if (currentView) {
-      // Update display view to match the view's displayView ONLY on initial load or view switch
-      // Don't override user's manual display changes
-      setCubeView(currentView.displayView);
+      const prevView = getViewByName(cube, prevActiveViewRef.current);
+      const prevDefaultDisplay = prevView?.displayView || 'table';
+      const prevDefaultFilter = prevView?.defaultFilter || '';
 
-      // Apply filter (views don't have default filters yet, but structure is ready)
-      if (currentView.defaultFilter) {
-        setFilterInput(currentView.defaultFilter);
-      } else {
-        // Clear filter if view has no default filter
-        setFilterInput('');
+      // Only switch display if current display matches the previous view's default
+      if (cubeViewRef.current === prevDefaultDisplay) {
+        setCubeView(currentView.displayView);
+      }
+
+      // Only switch filter if current filter matches the previous view's default
+      const currentFilter = filterInputRef.current || '';
+      if (currentFilter === prevDefaultFilter) {
+        if (currentView.defaultFilter) {
+          setFilterInput(currentView.defaultFilter);
+        } else {
+          setFilterInput('');
+        }
       }
     }
-    // Only depend on activeView - when the VIEW changes, apply its defaults
+
+    prevActiveViewRef.current = activeView;
+    // Only depend on activeView - when the VIEW changes, conditionally apply its defaults
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeView]);
 
