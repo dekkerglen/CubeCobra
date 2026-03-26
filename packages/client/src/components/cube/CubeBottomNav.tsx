@@ -93,7 +93,16 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
       ].includes(activeLink);
     }
     if (key === 'settings') {
-      return ['settings', 'overview', 'options', 'collaborators', 'boards-and-views', 'custom-sorts', 'draft-formats', 'restore'].includes(activeLink);
+      return [
+        'settings',
+        'overview',
+        'options',
+        'collaborators',
+        'boards-and-views',
+        'custom-sorts',
+        'draft-formats',
+        'restore',
+      ].includes(activeLink);
     }
     return activeLink === key;
   };

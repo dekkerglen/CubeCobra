@@ -87,7 +87,16 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       { key: 'combos', label: 'Combos' },
     ];
   } else if (
-    ['settings', 'overview', 'options', 'collaborators', 'boards-and-views', 'custom-sorts', 'draft-formats', 'restore'].includes(activeLink)
+    [
+      'settings',
+      'overview',
+      'options',
+      'collaborators',
+      'boards-and-views',
+      'custom-sorts',
+      'draft-formats',
+      'restore',
+    ].includes(activeLink)
   ) {
     parentKey = 'settings';
     subItems = [
@@ -172,7 +181,16 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
     // Special handling for Settings sub-items
     if (parentKey === 'settings' && settingsViewContext) {
       if (
-        ['settings', 'overview', 'options', 'collaborators', 'boards-and-views', 'custom-sorts', 'draft-formats', 'restore'].includes(activeLink)
+        [
+          'settings',
+          'overview',
+          'options',
+          'collaborators',
+          'boards-and-views',
+          'custom-sorts',
+          'draft-formats',
+          'restore',
+        ].includes(activeLink)
       ) {
         e.preventDefault();
         settingsViewContext.setView(subItem.key);
