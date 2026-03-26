@@ -70,7 +70,7 @@ test.describe('Cube Lifecycle', () => {
 
     // Navigate to dashboard via logo click and verify the cube is gone
     await navigateToDashboard(page);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // The cube name should no longer be visible
     const cubeElement = page.locator(`text=${cubeName}`);

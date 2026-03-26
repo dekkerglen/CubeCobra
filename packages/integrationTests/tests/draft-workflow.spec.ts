@@ -62,7 +62,6 @@ test.describe('Draft Workflow', () => {
 
     // Follow the redirect to the draft page
     await page.goto(draftPath, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
 
     // Verify the draft page loaded with pack info
     await page.waitForSelector('.no-touch-action', { timeout: 30000 });
@@ -84,7 +83,6 @@ test.describe('Draft Workflow', () => {
     // Start draft directly via API (more reliable than navigating through UI)
     const draftPath = await startDraft(page, cubeId, { seats: 2, packs: 1, cards: 5 });
     await page.goto(draftPath, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
 
     // Wait for first card to appear
     await page.waitForSelector('.no-touch-action', { timeout: 30000 });
@@ -95,7 +93,7 @@ test.describe('Draft Workflow', () => {
     // Verify deckbuilder page has expected elements
     expect(page.url()).toContain('/draft/deckbuilder/');
 
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const bodyText = await page.locator('body').textContent();
     expect(bodyText?.length).toBeGreaterThan(0);
   });
@@ -107,7 +105,7 @@ test.describe('Draft Workflow', () => {
     await navigateToCubeFromNav(page, cubeName);
     await navigateToCubePlaytest(page);
 
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // The page should have loaded successfully with the cube
     await expect(page.locator(`text=${cubeName}`).first()).toBeVisible({ timeout: 15000 });

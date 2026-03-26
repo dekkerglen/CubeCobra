@@ -48,9 +48,10 @@ export async function login(page: Page, username: string, password: string): Pro
   await navigateToLogin(page);
   await fillLoginForm(page, username, password);
 
-  // Click login and wait for URL to change (either to dashboard or back to login on error)
+  // Click login and wait for URL to change (use domcontentloaded to avoid
+  // waiting for slow ad scripts that block the load event).
   await Promise.all([
-    page.waitForURL(/.*/, { timeout: 15000 }), // Wait for any URL change
+    page.waitForURL(/.*/, { timeout: 15000, waitUntil: 'domcontentloaded' }),
     clickButtonWithText(page, 'Login'),
   ]);
 }

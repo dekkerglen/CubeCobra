@@ -54,7 +54,7 @@ integrationTests/
 ### Against Different Environments
 
 ```bash
-# Test against local development server (default: http://localhost:5000)
+# Test against local development server (default: http://localhost:8080)
 npm run test:local
 
 # Test against beta environment

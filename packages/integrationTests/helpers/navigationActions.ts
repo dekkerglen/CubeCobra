@@ -34,10 +34,9 @@ async function openNavDropdown(page: Page, menuLabel: string): Promise<void> {
  * Navigate to the Explore page by clicking through the navbar dropdown.
  */
 export async function navigateToExplore(page: Page): Promise<void> {
-  await openNavDropdown(page, 'Explore');
-  // Use href selector to avoid matching duplicate "Explore cubes" text elsewhere on page
-  await page.locator('a[href="/explore"]').first().click();
-  await page.waitForLoadState('domcontentloaded');
+  // Navigate directly — avoids action-timeout issues from click auto-waiting
+  // for the slow load event triggered by ad scripts.
+  await page.goto('/explore', { waitUntil: 'domcontentloaded' });
 }
 
 /**
@@ -96,13 +95,29 @@ export async function navigateToDashboard(page: Page): Promise<void> {
 /**
  * Navigate to a specific cube from the "Your Cubes" navbar dropdown.
  * Requires the user to be logged in and the cube to exist.
+ *
+ * NOTE: The cube name may also appear on the dashboard tiles, so we scope
+ * the search to the NavMenu dropdown panel (`.shadow-lg a`) to avoid
+ * clicking the wrong element. We then navigate via `page.goto()` to
+ * avoid ad overlays intercepting pointer events.
  */
 export async function navigateToCubeFromNav(page: Page, cubeName: string): Promise<void> {
   await ensurePageLoaded(page);
   await openNavDropdown(page, 'Your Cubes');
-  // Click the cube name in the dropdown list
-  await page.getByText(cubeName, { exact: true }).first().click();
-  await page.waitForLoadState('domcontentloaded');
+
+  // Scope to the opened dropdown panel (NavMenu renders inside a div.shadow-lg).
+  // This avoids matching cube name text on the dashboard tiles.
+  const cubeLink = page.locator('div.shadow-lg a[href*="/cube/list/"]').filter({ hasText: cubeName }).first();
+  await cubeLink.waitFor({ state: 'visible', timeout: 10000 });
+
+  // Use direct navigation to avoid ad/donation overlays intercepting clicks.
+  const href = await cubeLink.getAttribute('href');
+  if (href) {
+    await page.goto(href, { waitUntil: 'domcontentloaded' });
+  } else {
+    await cubeLink.click({ force: true });
+    await page.waitForLoadState('domcontentloaded');
+  }
 }
 
 /**

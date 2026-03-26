@@ -91,7 +91,7 @@ describe('Bulk Upload', () => {
         'BulkUploadPage',
         expect.objectContaining({
           added: ['abcdefg-hijklmn'],
-          addedByBoard: { mainboard: ['abcdefg-hijklmn'] },
+          addedByBoard: { mainboard: [mockCard] },
           missing: [],
         }),
       );
@@ -130,7 +130,7 @@ describe('Bulk Upload', () => {
         expect.anything(),
         'BulkUploadPage',
         expect.objectContaining({
-          addedByBoard: { mainboard: ['bolt-id'], maybeboard: ['salve-id'] },
+          addedByBoard: { mainboard: [mockCard1], maybeboard: [mockCard2] },
           missing: [],
         }),
       );

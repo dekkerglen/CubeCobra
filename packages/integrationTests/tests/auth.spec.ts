@@ -60,7 +60,7 @@ test.describe('Authentication', () => {
 
     // Navigate to different pages and verify session is maintained
     await page.goto('/explore');
-    await verifyUserLoggedIn(page, testUser.username, 5000);
+    await verifyUserLoggedIn(page, testUser.username, 15000);
 
     // Navigate to account page
     await page.goto('/user/account');

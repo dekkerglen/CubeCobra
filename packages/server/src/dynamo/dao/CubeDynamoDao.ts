@@ -605,8 +605,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       if (cube && cube.basics && Array.isArray(cube.basics) && cube.basics.length > 0) {
         // Only migrate if the basics board is empty or doesn't exist
         if (!cards.basics || cards.basics.length === 0) {
-          cloudwatch.info(`[BASICS MIGRATION] Migrating ${cube.basics.length} legacy basics for cube: ${id}`);
-          cloudwatch.info(`[BASICS MIGRATION] Legacy basics IDs: ${JSON.stringify(cube.basics)}`);
 
           cards.basics = cube.basics.map((cardId: string, index: number) => ({
             cardID: cardId,
@@ -616,7 +614,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
             index,
           }));
 
-          cloudwatch.info(`[BASICS MIGRATION] Created ${cards.basics.length} basics cards`);
           didMigration = true;
 
           // Persist the migration: clear legacy basics and save to DynamoDB and S3
@@ -627,15 +624,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
               basics: [],
             });
 
-            cloudwatch.info(`[BASICS MIGRATION] Cleared legacy basics array in DynamoDB for cube: ${id}`);
           } catch (err) {
-            cloudwatch.error(`[BASICS MIGRATION] Failed to clear legacy basics in DynamoDB for cube: ${id}`, err);
             // Continue anyway - migration will happen again next time
           }
-        } else {
-          cloudwatch.info(
-            `[BASICS MIGRATION] Skipping migration for cube ${id} - cards.basics already has ${cards.basics.length} cards`,
-          );
         }
       }
 
@@ -654,16 +645,10 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       // If we migrated legacy basics, save the updated cards to S3 BEFORE adding details
       if (didMigration) {
         try {
-          cloudwatch.info(`[BASICS MIGRATION] Saving migrated cards to S3 for cube: ${id}`);
-          cloudwatch.info(`[BASICS MIGRATION] Cards object keys before save: ${Object.keys(cards).join(', ')}`);
-          cloudwatch.info(`[BASICS MIGRATION] Basics board length: ${cards.basics?.length || 0}`);
-
           // Cards don't have details yet, so we can save directly
           await putObject(process.env.DATA_BUCKET!, `cube/${id}.json`, cards);
 
-          cloudwatch.info(`[BASICS MIGRATION] Successfully saved migrated cards to S3 for cube: ${id}`);
         } catch (err) {
-          cloudwatch.error(`[BASICS MIGRATION] Failed to save migrated cards to S3 for cube: ${id}`, err);
           // Continue anyway - migration will happen again next time
         }
       }

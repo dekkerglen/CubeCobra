@@ -18,6 +18,7 @@ test.describe('Deck Export', () => {
   });
 
   test.beforeAll(async ({ browser }) => {
+    test.setTimeout(120000);
     const page = await browser.newPage();
     page.setDefaultTimeout(60000);
     await login(page, testUser.username, testUser.password);
@@ -28,7 +29,6 @@ test.describe('Deck Export', () => {
     try {
       const draftPath = await startDraft(page, cubeId, { seats: 2, packs: 1, cards: 5 });
       await page.goto(draftPath, { waitUntil: 'domcontentloaded' });
-      await page.waitForLoadState('networkidle');
       await page.waitForSelector('.no-touch-action', { timeout: 30000 });
       await pickAllCards(page);
 
@@ -60,7 +60,7 @@ test.describe('Deck Export', () => {
     await page.goto(`/cube/deck/${draftId}`, { waitUntil: 'domcontentloaded' });
 
     // The deck page should load with content
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const bodyText = await page.locator('body').textContent();
     expect(bodyText?.length).toBeGreaterThan(0);
   });

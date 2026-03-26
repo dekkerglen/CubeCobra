@@ -29,6 +29,10 @@ describe('Upload Decklist Handler', () => {
   const DRAFT_ID = 'addbaa49-69c3-42a0-bf50-c3eda4f84271';
   const PLAYTEST_REDIRECT_URL = `/cube/playtest/${CUBE_ID}`;
 
+  beforeEach(() => {
+    (cubefn.isCubeEditable as jest.Mock).mockReturnValue(true);
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
     jest.resetAllMocks();
@@ -105,6 +109,7 @@ describe('Upload Decklist Handler', () => {
 
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (cubefn.isCubeViewable as jest.Mock).mockReturnValue(true);
+    (cubefn.isCubeEditable as jest.Mock).mockReturnValue(false);
 
     await call(uploadDecklistHandler)
       .withFlash(flashMock)
