@@ -68,10 +68,11 @@ const DisplayContext = React.createContext<DisplayContextValue>({
 
 interface DisplayContextProviderProps {
   cubeID: string;
+  defaultView?: string;
   children: ReactNode;
 }
 
-export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ cubeID, ...props }) => {
+export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ cubeID, defaultView, ...props }) => {
   const [showCustomImages, setShowCustomImages] = useLocalStorage<boolean>('showcustomimages', true);
   const [openCollapse, setOpenCollapse] = useState<string | null>(() => {
     return Query.get('f') ? 'filter' : null;
@@ -89,7 +90,7 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
   }, [setShowCustomImages]);
 
   // View-based navigation (new system)
-  const [viewParam, setViewParam] = useQueryParam('view', 'Mainboard');
+  const [viewParam, setViewParam] = useQueryParam('view', defaultView || 'Mainboard');
   const [activeView, setActiveViewState] = useState<string>(viewParam);
 
   // Sync activeView with URL parameter

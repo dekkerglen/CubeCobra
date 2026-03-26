@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  /* Prevent text overflow from causing horizontal scroll on mobile */
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  * {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
   /* Temporary fix: Force inline elements to display inline */
   strong,
   em,

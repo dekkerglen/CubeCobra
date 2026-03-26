@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef } from 'react';
 
 import Card from '@utils/datatypes/Card';
-import Cube, { getViewByName } from '@utils/datatypes/Cube';
+import Cube, { getViewByName, getViewDefinitions } from '@utils/datatypes/Cube';
 
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
@@ -188,9 +188,11 @@ const CubeListPageRaw: React.FC = () => {
 };
 
 const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
+  const defaultView = getViewDefinitions(cube)[0]?.name || 'Mainboard';
+
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
+      <DisplayContextProvider cubeID={cube.id} defaultView={defaultView}>
         <RotoDraftContextProvider>
           <CubeLayout
             cube={cube}

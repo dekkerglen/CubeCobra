@@ -71,7 +71,16 @@ const OverviewSettings: React.FC = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        cube: state,
+        cube: {
+          id: state.id,
+          name: state.name,
+          shortId: state.shortId,
+          imageName: state.imageName,
+          image: state.image,
+          brief: state.brief,
+          categoryOverride: state.categoryOverride,
+          categoryPrefixes: state.categoryPrefixes,
+        },
       }),
     });
 
