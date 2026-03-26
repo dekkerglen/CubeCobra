@@ -86,13 +86,26 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       { key: 'tokens', label: 'Tokens' },
       { key: 'combos', label: 'Combos' },
     ];
-  } else if (['settings', 'overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(activeLink)) {
+  } else if (
+    [
+      'settings',
+      'overview',
+      'options',
+      'collaborators',
+      'boards-and-views',
+      'custom-sorts',
+      'draft-formats',
+      'restore',
+    ].includes(activeLink)
+  ) {
     parentKey = 'settings';
     subItems = [
       { key: 'overview', label: 'Overview' },
       { key: 'options', label: 'Options' },
+      { key: 'collaborators', label: 'Collaborators' },
       { key: 'boards-and-views', label: 'Boards and Views' },
       { key: 'custom-sorts', label: 'Custom Sorts' },
+      { key: 'draft-formats', label: 'Draft Formats' },
       { key: 'restore', label: 'Restore' },
     ];
   }
@@ -167,7 +180,18 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
 
     // Special handling for Settings sub-items
     if (parentKey === 'settings' && settingsViewContext) {
-      if (['settings', 'overview', 'options', 'boards-and-views', 'custom-sorts', 'restore'].includes(activeLink)) {
+      if (
+        [
+          'settings',
+          'overview',
+          'options',
+          'collaborators',
+          'boards-and-views',
+          'custom-sorts',
+          'draft-formats',
+          'restore',
+        ].includes(activeLink)
+      ) {
         e.preventDefault();
         settingsViewContext.setView(subItem.key);
       }
