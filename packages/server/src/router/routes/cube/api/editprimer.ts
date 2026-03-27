@@ -1,6 +1,6 @@
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
-import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
+import { getCubeId, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -16,7 +16,7 @@ export const editPrimerHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    if (cube.owner.id !== user?.id) {
+    if (!isCubeEditable(cube, user)) {
       res.status(403).json({ error: 'Unauthorized' });
       return;
     }

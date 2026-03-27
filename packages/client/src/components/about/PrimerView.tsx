@@ -13,7 +13,6 @@ import TagInput from 'components/TagInput';
 import TextEntry from 'components/TextEntry';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
-import UserContext from 'contexts/UserContext';
 
 interface PrimerViewProps {
   description: string | null;
@@ -26,8 +25,7 @@ interface AlertProps {
 }
 
 const PrimerView: React.FC<PrimerViewProps> = ({ description, tags }) => {
-  const user = useContext(UserContext);
-  const { cube } = useContext(CubeContext);
+  const { cube, canEdit } = useContext(CubeContext);
   const { csrfFetch } = useContext(CSRFContext);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -35,7 +33,6 @@ const PrimerView: React.FC<PrimerViewProps> = ({ description, tags }) => {
   const [editTags, setEditTags] = useState<string[]>(tags || []);
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
 
-  const isOwner = user && cube && user.id === cube.owner.id;
   const hasCards = cube?.cardCount > 0;
 
   const saveChanges = useCallback(async () => {
@@ -72,7 +69,7 @@ const PrimerView: React.FC<PrimerViewProps> = ({ description, tags }) => {
     <Container lg disableCenter className="flex justify-start">
       <Flexbox direction="col" gap="2" className="mb-2 w-full">
         {/* Edit Primer / Save Changes Button */}
-        {isOwner && (
+        {canEdit && (
           <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
             {hasCards ? (
               isEditing ? (
