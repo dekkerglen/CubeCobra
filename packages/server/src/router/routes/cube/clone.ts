@@ -63,6 +63,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
       defaultStatus: source.defaultStatus,
       defaultPrinting: source.defaultPrinting,
       disableAlerts: false,
+      disableCloneAlerts: false,
       basics: source.basics,
       tags: source.tags,
       keywords: source.keywords || [],
@@ -72,7 +73,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
 
     await cubeDao.putNewCube(cube, sourceCards);
 
-    if (!source.disableAlerts && source.owner) {
+    if (!source.disableCloneAlerts && source.owner) {
       await addNotification(
         source.owner,
         req.user,

@@ -1,9 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import { CardDetails } from '@utils/datatypes/Card';
+import Card, { CardDetails } from '@utils/datatypes/Card';
+import { getViewByName } from '@utils/datatypes/Cube';
 import { sortForDownload } from '@utils/sorting/Sort';
 
 import CubeContext from '../../contexts/CubeContext';
+import DisplayContext from '../../contexts/DisplayContext';
 import FilterContext from '../../contexts/FilterContext';
 import useAlerts, { Alerts } from '../../hooks/UseAlerts';
 import Button from '../base/Button';
@@ -17,13 +19,21 @@ interface ArenaExportModalProps {
   setOpen: (open: boolean) => void;
   isSortUsed: boolean;
   isFilterUsed: boolean;
+  exportAllBoards?: boolean;
 }
 
-const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, isSortUsed, isFilterUsed }) => {
+const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, isSortUsed, isFilterUsed, exportAllBoards = false }) => {
   const { alerts, addAlert, dismissAlerts } = useAlerts();
   const [text, setText] = useState('');
   const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
+  const { activeView } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext)!;
+
+  // Derive boards to export
+  const currentViewBoards = useMemo(() => {
+    const view = getViewByName(cube, activeView);
+    return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
+  }, [cube, activeView]);
 
   //Generate the export text for the current cube cards, tracking all the cards, filters and sorts to ensure it only
   //generates when things change
@@ -37,7 +47,22 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
      * 2) Meld back sides will fail to find in Arena. Don't see any information from Scryfall to distinguish from the meld front sides
      */
     const generateArenaExport = () => {
-      let cards = cube.cards.mainboard;
+      // Determine which boards to export
+      let boardKeys: string[];
+      if (exportAllBoards) {
+        boardKeys = Object.keys(cube.cards).filter((k) => k !== 'id');
+      } else {
+        boardKeys = currentViewBoards;
+      }
+
+      let cards: Card[] = [];
+      for (const key of boardKeys) {
+        const boardCards = cube.cards[key];
+        if (Array.isArray(boardCards)) {
+          cards = cards.concat(boardCards);
+        }
+      }
+
       if (isFilterUsed) {
         cards = cards.filter(cardFilter.filter);
       }
@@ -88,7 +113,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
 
     generateArenaExport();
   }, [
-    cube.cards.mainboard,
+    cube.cards,
     isFilterUsed,
     isSortUsed,
     cardFilter,
@@ -98,6 +123,8 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
     sortQuaternary,
     cube.showUnsorted,
     cube,
+    exportAllBoards,
+    currentViewBoards,
   ]);
 
   async function copyToClipboard() {

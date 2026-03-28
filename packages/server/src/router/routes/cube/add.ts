@@ -82,6 +82,7 @@ export const addHandler = async (req: Request, res: Response) => {
       defaultStatus: 'Not Owned',
       defaultPrinting: 'recent',
       disableAlerts: false,
+      disableCloneAlerts: false,
       basics: [
         '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
         '42232ea6-e31d-46a6-9f94-b2ad2416d79b',

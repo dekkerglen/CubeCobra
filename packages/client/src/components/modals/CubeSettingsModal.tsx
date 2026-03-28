@@ -32,6 +32,7 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
   const [formData, setFormData] = useState<Record<string, string>>({
     priceVisibility: `${cube.priceVisibility === 'pu'}`,
     disableAlerts: `${cube.disableAlerts}`,
+    disableCloneAlerts: `${cube.disableCloneAlerts ?? false}`,
     visibility: cube.visibility,
     defaultStatus: cube.defaultStatus,
     defaultPrinting: cube.defaultPrinting,
@@ -57,6 +58,11 @@ const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({ isOpen, setOpen }
               label="Disable Draft Notifications"
               checked={formData.disableAlerts === 'true'}
               setChecked={(checked) => setFormData({ ...formData, disableAlerts: `${checked}` })}
+            />
+            <Checkbox
+              label="Disable Clone Notifications"
+              checked={formData.disableCloneAlerts === 'true'}
+              setChecked={(checked) => setFormData({ ...formData, disableCloneAlerts: `${checked}` })}
             />
             <Select
               label="Cube Visibility"

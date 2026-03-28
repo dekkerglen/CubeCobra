@@ -25,6 +25,7 @@ const OptionsSettings: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, string>>({
     priceVisibility: `${cube.priceVisibility === 'pu'}`,
     disableAlerts: `${cube.disableAlerts}`,
+    disableCloneAlerts: `${cube.disableCloneAlerts ?? false}`,
     visibility: cube.visibility,
     defaultStatus: cube.defaultStatus,
     defaultPrinting: cube.defaultPrinting,
@@ -41,6 +42,7 @@ const OptionsSettings: React.FC = () => {
     const initialData = {
       priceVisibility: `${cube.priceVisibility === 'pu'}`,
       disableAlerts: `${cube.disableAlerts}`,
+      disableCloneAlerts: `${cube.disableCloneAlerts ?? false}`,
       visibility: cube.visibility,
       defaultStatus: cube.defaultStatus,
       defaultPrinting: cube.defaultPrinting,
@@ -48,6 +50,7 @@ const OptionsSettings: React.FC = () => {
     const currentData = {
       priceVisibility: formData.priceVisibility,
       disableAlerts: formData.disableAlerts,
+      disableCloneAlerts: formData.disableCloneAlerts,
       visibility: formData.visibility,
       defaultStatus: formData.defaultStatus,
       defaultPrinting: formData.defaultPrinting,
@@ -60,6 +63,7 @@ const OptionsSettings: React.FC = () => {
     setFormData({
       priceVisibility: `${cube.priceVisibility === 'pu'}`,
       disableAlerts: `${cube.disableAlerts}`,
+      disableCloneAlerts: `${cube.disableCloneAlerts ?? false}`,
       visibility: cube.visibility,
       defaultStatus: cube.defaultStatus,
       defaultPrinting: cube.defaultPrinting,
@@ -100,6 +104,11 @@ const OptionsSettings: React.FC = () => {
                 label="Disable Draft Notifications"
                 checked={formData.disableAlerts === 'true'}
                 setChecked={(checked) => setFormData({ ...formData, disableAlerts: `${checked}` })}
+              />
+              <Checkbox
+                label="Disable Clone Notifications"
+                checked={formData.disableCloneAlerts === 'true'}
+                setChecked={(checked) => setFormData({ ...formData, disableCloneAlerts: `${checked}` })}
               />
               <div>
                 <Select

@@ -1,6 +1,6 @@
 import type Comment from '@utils/datatypes/Comment';
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@utils/datatypes/Comment';
-import { NoticeType } from '@utils/datatypes/Notice';
+import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
 import {
   articleDao,
@@ -46,6 +46,28 @@ export const getHandler = async (req: Request, res: Response) => {
 export const reportHandler = async (req: Request, res: Response) => {
   try {
     const { commentid, info, reason } = req.body;
+
+    // Only allow valid UUID or MongoID
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const MONGO_ID_RE = /^[0-9a-f]{24}$/i;
+    function isValidId(id: string) {
+      return UUID_RE.test(id) || MONGO_ID_RE.test(id);
+    }
+    if (!isValidId(commentid)) {
+      // Silently ignore invalid IDs
+      req.flash('success', 'Thank you for the report! Our moderators will review the report can decide whether to take action.');
+      return redirect(req, res, `/comment/${commentid}`);
+    }
+
+    // Prevent duplicate active reports for this comment by this user
+    const existing = await noticeDao.getByStatus(NoticeStatus.ACTIVE);
+    const alreadyReported = (existing.items || []).some(
+      (n) => n.type === NoticeType.COMMENT_REPORT && n.subject === commentid && String(n.user?.id || n.user) === String(req.user?.id || null)
+    );
+    if (alreadyReported) {
+      req.flash('success', 'Thank you for the report! Our moderators will review the report can decide whether to take action.');
+      return redirect(req, res, `/comment/${commentid}`);
+    }
 
     const report = {
       subject: commentid,

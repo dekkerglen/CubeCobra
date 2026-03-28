@@ -9,7 +9,7 @@ import { Request, Response } from '../../../types/express';
 
 export const updateSettingsHandler = async (req: Request, res: Response) => {
   try {
-    const { priceVisibility, disableAlerts, defaultStatus, defaultPrinting, visibility } = req.body;
+    const { priceVisibility, disableAlerts, disableCloneAlerts, defaultStatus, defaultPrinting, visibility } = req.body;
 
     const errors = [];
     if (priceVisibility !== 'true' && priceVisibility !== 'false') {
@@ -17,6 +17,9 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
     }
     if (disableAlerts !== 'true' && disableAlerts !== 'false') {
       errors.push({ msg: 'Invalid value for disableAlerts' });
+    }
+    if (disableCloneAlerts !== 'true' && disableCloneAlerts !== 'false') {
+      errors.push({ msg: 'Invalid value for disableCloneAlerts' });
     }
     if (!CARD_STATUSES.includes(defaultStatus)) {
       errors.push({ msg: 'Status must be valid.' });
@@ -52,6 +55,7 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
       }
     }
     cube.disableAlerts = update.disableAlerts === 'true';
+    cube.disableCloneAlerts = update.disableCloneAlerts === 'true';
     cube.priceVisibility = update.priceVisibility === 'true' ? PRICE_VISIBILITY.PUBLIC : PRICE_VISIBILITY.PRIVATE;
 
     await cubeDao.update(cube);

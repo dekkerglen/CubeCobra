@@ -1,5 +1,5 @@
 import { ContentStatus } from '@utils/datatypes/Content';
-import { NoticeType } from '@utils/datatypes/Notice';
+import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { articleDao, episodeDao, noticeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
@@ -29,6 +29,17 @@ export const submitApplicationHandler = async (req: Request, res: Response) => {
       req.flash('danger', 'Please log in to apply to be a content creator partner.');
       return render(req, res, 'ContactPage');
     }
+
+    // Prevent duplicate active applications by this user
+    const existing = await noticeDao.getByStatus(NoticeStatus.ACTIVE);
+    const alreadyReported = (existing.items || []).some(
+      (n) => n.type === NoticeType.APPLICATION && String(n.user?.id || n.user) === String(req.user?.id || null)
+    );
+    if (alreadyReported) {
+      req.flash('success', 'Your application has been submitted. We will reach out via email when a decision is made.');
+      return render(req, res, 'ApplicationPage');
+    }
+
     const application = {
       user: req.user.id,
       body: req.body.info,

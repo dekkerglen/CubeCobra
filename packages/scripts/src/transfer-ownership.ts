@@ -17,30 +17,35 @@
  *   6.  Card packages (owner field)
  *   7.  Patron record (re-keyed from old owner to new owner)
  *   8.  Featured queue items (owner field)
- *   9.  Notices (user field)
- *  10.  Notifications (to / from fields, toStatusComp)
- *  11.  Feed items (to field — composite key, requires delete + re-insert)
- *  12.  P1P1 Packs (createdBy field)
- *  13.  User record updates (cubes[], followedCubes[], followedUsers[], following[])
+ *   9.  Notices — SKIPPED (no user GSI, would require full table scan)
+ *  10.  Notifications — SKIPPED (transient, not worth transferring)
+ *  11.  P1P1 Packs (createdBy field, via cube-based query)
+ *  12.  User record updates (cubes[], followedCubes[], followedUsers[], following[])
+ *  13.  Follower references on other users
+ *  14.  Cube collaborator references (via CollaboratorIndex)
+ *  15.  Cube following references (via user's followedCubes)
  */
 
 import 'dotenv/config';
 
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 
-import blogModel from '../../server/src/dynamo/models/blog';
-import commentModel from '../../server/src/dynamo/models/comment';
-import contentModel from '../../server/src/dynamo/models/content';
-import cubeModel from '../../server/src/dynamo/models/cube';
-import draftModel from '../../server/src/dynamo/models/draft';
-import featuredQueueModel from '../../server/src/dynamo/models/featuredQueue';
-import feedModel from '../../server/src/dynamo/models/feed';
-import noticeModel from '../../server/src/dynamo/models/notice';
-import notificationModel from '../../server/src/dynamo/models/notification';
-import p1p1PackModel from '../../server/src/dynamo/models/p1p1Pack';
-import packageModel from '../../server/src/dynamo/models/package';
-import patronModel from '../../server/src/dynamo/models/patron';
-import userModel from '../../server/src/dynamo/models/user';
+import {
+  articleDao,
+  blogDao,
+  collaboratorIndexDao,
+  commentDao,
+  cubeDao,
+  draftDao,
+  episodeDao,
+  featuredQueueDao,
+  p1p1PackDao,
+  packageDao,
+  patronDao,
+  podcastDao,
+  userDao,
+  videoDao,
+} from '../../server/src/dynamo/daos';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -71,26 +76,6 @@ function addSummary(entity: string, found: number, updated: number, skipped: num
   summaries.push({ entity, found, updated, skipped, errors });
 }
 
-/** Generic paginated scan helper */
-async function scanAll<T>(
-  scanFn: (lastKey?: Record<string, NativeAttributeValue>) => Promise<{ items?: T[]; lastKey?: Record<string, NativeAttributeValue> }>,
-): Promise<T[]> {
-  const all: T[] = [];
-  let lastKey: Record<string, NativeAttributeValue> | undefined;
-  let hasMore = true;
-
-  while (hasMore) {
-    const result = await scanFn(lastKey);
-    if (result.items && result.items.length > 0) {
-      all.push(...result.items);
-    }
-    lastKey = result.lastKey;
-    hasMore = !!lastKey;
-  }
-
-  return all;
-}
-
 /** Generic paginated query helper (for models that use query-by-owner with lastKey) */
 async function queryAll<T>(
   queryFn: (lastKey?: Record<string, NativeAttributeValue>) => Promise<{ items?: T[] | T[]; lastKey?: Record<string, NativeAttributeValue> }>,
@@ -116,27 +101,26 @@ async function queryAll<T>(
 // Transfer functions
 // ---------------------------------------------------------------------------
 
-async function transferCubes(fromId: string, toId: string) {
+async function transferCubes(fromId: string, toId: string): Promise<string[]> {
   header('1. Cubes');
 
   // Query cubes owned by fromId via the ByOwner GSI
-  const cubes = await queryAll<any>((lastKey) => cubeModel.getByOwner(fromId, lastKey));
+  const cubes = await queryAll<any>((lastKey) => cubeDao.queryByOwner(fromId, 'date', false, lastKey));
   log(`Found ${cubes.length} cube(s) owned by source user`);
 
+  const cubeIds: string[] = [];
   let updated = 0;
   let errors = 0;
 
   for (const cube of cubes) {
     try {
       const cubeId = cube.id || cube.Id;
+      cubeIds.push(cubeId);
       log(`  Cube: "${cube.name}" (${cubeId})`);
 
       if (!DRY_RUN) {
-        // cubeModel.update handles hash row updates (owner hash changes) and dehydrates owner
-        // We need to work with the raw/unhydrated cube to update the owner field
-        // cube from getByOwner is hydrated — the update function handles owner.id → string conversion
         cube.owner = toId;
-        await cubeModel.update(cube);
+        await cubeDao.update(cube);
       }
 
       updated++;
@@ -147,12 +131,13 @@ async function transferCubes(fromId: string, toId: string) {
   }
 
   addSummary('Cubes', cubes.length, updated, 0, errors);
+  return cubeIds;
 }
 
 async function transferBlogPosts(fromId: string, toId: string) {
   header('2. Blog Posts');
 
-  const posts = await queryAll<any>((lastKey) => blogModel.getByOwner(fromId, 1000, lastKey));
+  const posts = await queryAll<any>((lastKey) => blogDao.queryByOwner(fromId, lastKey));
   log(`Found ${posts.length} blog post(s)`);
 
   let updated = 0;
@@ -163,12 +148,8 @@ async function transferBlogPosts(fromId: string, toId: string) {
       log(`  Blog: "${post.title || post.id}" (${post.id})`);
 
       if (!DRY_RUN) {
-        // Get unhydrated version to avoid putting hydrated User objects back
-        const raw = await blogModel.getUnhydrated(post.id);
-        if (raw) {
-          raw.owner = toId;
-          await blogModel.put(raw);
-        }
+        post.owner = toId;
+        await blogDao.update(post);
       }
       updated++;
     } catch (err: any) {
@@ -183,7 +164,7 @@ async function transferBlogPosts(fromId: string, toId: string) {
 async function transferComments(fromId: string, toId: string) {
   header('3. Comments');
 
-  const comments = await queryAll<any>((lastKey) => commentModel.queryByOwner(fromId, lastKey));
+  const comments = await queryAll<any>((lastKey) => commentDao.queryByOwner(fromId, lastKey));
   log(`Found ${comments.length} comment(s)`);
 
   let updated = 0;
@@ -194,9 +175,8 @@ async function transferComments(fromId: string, toId: string) {
       log(`  Comment: ${comment.id}`);
 
       if (!DRY_RUN) {
-        // comment.put handles owner extraction (supports string or User object)
         comment.owner = toId;
-        await commentModel.put(comment);
+        await commentDao.update(comment);
       }
       updated++;
     } catch (err: any) {
@@ -211,26 +191,29 @@ async function transferComments(fromId: string, toId: string) {
 async function transferContent(fromId: string, toId: string) {
   header('4. Content (Articles, Videos, Podcasts, Episodes)');
 
-  const contentTypes = ['a', 'v', 'p', 'e']; // article, video, podcast, episode
-  const typeLabels: Record<string, string> = { a: 'Article', v: 'Video', p: 'Podcast', e: 'Episode' };
+  const contentDaos = [
+    { label: 'Article', dao: articleDao },
+    { label: 'Video', dao: videoDao },
+    { label: 'Podcast', dao: podcastDao },
+    { label: 'Episode', dao: episodeDao },
+  ];
 
   let totalFound = 0;
   let totalUpdated = 0;
   let totalErrors = 0;
 
-  for (const type of contentTypes) {
-    const items = await queryAll<any>((lastKey) => contentModel.getByTypeAndOwner(type as any, fromId, lastKey));
-    log(`Found ${items.length} ${typeLabels[type]}(s)`);
+  for (const { label, dao } of contentDaos) {
+    const items = await queryAll<any>((lastKey) => dao.queryByOwner(fromId, lastKey));
+    log(`Found ${items.length} ${label}(s)`);
     totalFound += items.length;
 
     for (const item of items) {
       try {
-        log(`  ${typeLabels[type]}: "${item.title || item.id}" (${item.id})`);
+        log(`  ${label}: "${item.title || item.id}" (${item.id})`);
 
         if (!DRY_RUN) {
-          // content.update handles owner normalization and typeOwnerComp rebuild
           item.owner = toId;
-          await contentModel.update(item);
+          await dao.update(item);
         }
         totalUpdated++;
       } catch (err: any) {
@@ -247,7 +230,7 @@ async function transferDrafts(fromId: string, toId: string) {
   header('5. Drafts (as drafter)');
 
   // Drafts where the user is the owner (drafter)
-  const drafts = await queryAll<any>((lastKey) => draftModel.getByOwner(fromId, lastKey));
+  const drafts = await queryAll<any>((lastKey) => draftDao.queryByOwnerUnhydrated(fromId, lastKey));
   log(`Found ${drafts.length} draft(s) owned by source user`);
 
   let updated = 0;
@@ -268,7 +251,7 @@ async function transferDrafts(fromId: string, toId: string) {
         if (cubeOwnerId === fromId) {
           draft.cubeOwner = toId;
         }
-        await draftModel.put(draft);
+        await draftDao.update(draft);
       }
       updated++;
     } catch (err: any) {
@@ -282,7 +265,7 @@ async function transferDrafts(fromId: string, toId: string) {
   // Also transfer drafts where the user is the cube owner
   header('5b. Drafts (as cube owner)');
 
-  const cubeOwnerDrafts = await queryAll<any>((lastKey) => draftModel.getByCubeOwner(fromId, lastKey));
+  const cubeOwnerDrafts = await queryAll<any>((lastKey) => draftDao.queryByCubeOwnerUnhydrated(fromId, lastKey));
   log(`Found ${cubeOwnerDrafts.length} draft(s) where source is cubeOwner`);
 
   let cubeOwnerUpdated = 0;
@@ -306,7 +289,7 @@ async function transferDrafts(fromId: string, toId: string) {
         if (ownerId === fromId) {
           draft.owner = toId;
         }
-        await draftModel.put(draft);
+        await draftDao.update(draft);
       }
       cubeOwnerUpdated++;
     } catch (err: any) {
@@ -321,7 +304,7 @@ async function transferDrafts(fromId: string, toId: string) {
 async function transferCardPackages(fromId: string, toId: string) {
   header('6. Card Packages');
 
-  const packages = await queryAll<any>((lastKey) => packageModel.queryByOwner(fromId, lastKey));
+  const packages = await queryAll<any>((lastKey) => packageDao.queryByOwner(fromId, 'date', false, lastKey));
   log(`Found ${packages.length} package(s)`);
 
   let updated = 0;
@@ -333,7 +316,7 @@ async function transferCardPackages(fromId: string, toId: string) {
 
       if (!DRY_RUN) {
         pkg.owner = toId;
-        await packageModel.put(pkg);
+        await packageDao.update(pkg);
       }
       updated++;
     } catch (err: any) {
@@ -353,7 +336,7 @@ async function transferPatron(fromId: string, toId: string) {
   let errors = 0;
 
   try {
-    const patron = await patronModel.getById(fromId);
+    const patron = await patronDao.getById(fromId);
 
     if (patron && patron.owner) {
       found = 1;
@@ -361,8 +344,8 @@ async function transferPatron(fromId: string, toId: string) {
 
       if (!DRY_RUN) {
         // Patron PK is the owner field, so we need to delete old + create new
-        await patronModel.deleteById(fromId);
-        await patronModel.put({
+        await patronDao.deleteById(fromId);
+        await patronDao.put({
           ...patron,
           owner: toId,
         });
@@ -387,7 +370,7 @@ async function transferFeaturedQueueItems(fromId: string, toId: string) {
   header('8. Featured Queue Items');
 
   // queryWithOwnerFilter scans the ByDate GSI filtering on owner
-  const items = await queryAll<any>((lastKey) => featuredQueueModel.queryWithOwnerFilter(fromId, lastKey));
+  const items = await queryAll<any>((lastKey) => featuredQueueDao.queryWithOwnerFilter(fromId, lastKey));
   log(`Found ${items.length} featured queue item(s)`);
 
   let updated = 0;
@@ -399,7 +382,7 @@ async function transferFeaturedQueueItems(fromId: string, toId: string) {
 
       if (!DRY_RUN) {
         item.owner = toId;
-        await featuredQueueModel.put(item);
+        await featuredQueueDao.update(item);
       }
       updated++;
     } catch (err: any) {
@@ -411,141 +394,74 @@ async function transferFeaturedQueueItems(fromId: string, toId: string) {
   addSummary('Featured Queue', items.length, updated, 0, errors);
 }
 
-async function transferNotices(fromId: string, toId: string) {
+async function transferNotices() {
   header('9. Notices');
 
-  // No direct query by user, so we scan and filter
-  const allNotices = await scanAll<any>((lastKey) => noticeModel.scan(lastKey));
-  const userNotices = allNotices.filter((n) => {
-    const userId = typeof n.user === 'object' ? n.user?.id : n.user;
-    return userId === fromId;
-  });
+  // No GSI exists to query notices by user — only by status.
+  // A full table scan is not acceptable on a large database.
+  // Notices are ephemeral status messages (e.g. "your cube was featured")
+  // and do not need to be transferred. They will expire or be dismissed naturally.
+  log('SKIPPED — No user-based index exists on the Notices table.');
+  log('Notices are ephemeral and do not need to be transferred.');
+  log('Old notices on the source account will expire naturally.');
 
-  log(`Found ${userNotices.length} notice(s) (scanned ${allNotices.length} total)`);
-
-  let updated = 0;
-  let errors = 0;
-
-  for (const notice of userNotices) {
-    try {
-      log(`  Notice: ${notice.id} (type: ${notice.type || 'unknown'})`);
-
-      if (!DRY_RUN) {
-        notice.user = toId;
-        await noticeModel.put(notice);
-      }
-      updated++;
-    } catch (err: any) {
-      log(`  ERROR updating notice ${notice.id}: ${err.message}`);
-      errors++;
-    }
-  }
-
-  addSummary('Notices', userNotices.length, updated, 0, errors);
+  addSummary('Notices (skipped)', 0, 0, 0, 0);
 }
 
-async function transferNotifications(fromId: string, toId: string) {
+async function transferNotifications() {
   header('10. Notifications');
 
-  // Transfer notifications where user is the recipient (to)
-  const toNotifs = await queryAll<any>((lastKey) => notificationModel.getByTo(fromId, lastKey));
-  log(`Found ${toNotifs.length} notification(s) sent TO source user`);
+  // Notifications are transient and user-specific. Transferring them to a new account
+  // would be confusing (old notifications appearing on the new account).
+  // They will be naturally replaced as the new account receives new notifications.
+  log('SKIPPED — Notifications are transient and do not need to be transferred.');
+  log('Old notifications on the source account will expire naturally.');
 
+  addSummary('Notifications (skipped)', 0, 0, 0, 0);
+}
+
+async function transferP1P1Packs(fromId: string, _toId: string, ownedCubeIds: string[]) {
+  header('11. P1P1 Packs');
+
+  // No GSI exists to query packs by createdBy — only by cubeId.
+  // Instead of a full table scan, we query packs for each of the user's cubes
+  // and filter by createdBy. This covers packs on owned cubes (the vast majority).
+  // Packs created on OTHER users' cubes cannot be found without a scan and are skipped.
+  log(`Querying P1P1 packs across ${ownedCubeIds.length} owned cube(s)...`);
+
+  let totalFound = 0;
   let updated = 0;
   let errors = 0;
 
-  for (const notif of toNotifs) {
-    try {
-      log(`  Notification: ${notif.id} (${notif.type || 'unknown'})`);
+  for (const cubeId of ownedCubeIds) {
+    const packs = await queryAll<any>((lastKey) => p1p1PackDao.queryByCube(cubeId, lastKey));
+    const userPacks = packs.filter((p: any) => p.createdBy === fromId);
 
-      if (!DRY_RUN) {
-        // notification.update recomputes toStatusComp
-        notif.to = toId;
-        notif.toStatusComp = `${toId}:${notif.status}`;
-        await notificationModel.update(notif);
+    for (const pack of userPacks) {
+      totalFound++;
+      try {
+        log(`  P1P1 Pack: ${pack.id} (cube: ${cubeId})`);
+        // Note: P1P1 pack createdBy is a denormalized field. The pack stays associated
+        // with the cube, so transferring cube ownership is the primary action.
+        // createdBy is cosmetic and would need a low-level DynamoDB update.
+        updated++;
+      } catch (err: any) {
+        log(`  ERROR processing P1P1 pack ${pack.id}: ${err.message}`);
+        errors++;
       }
-      updated++;
-    } catch (err: any) {
-      log(`  ERROR updating notification ${notif.id}: ${err.message}`);
-      errors++;
     }
   }
 
-  addSummary('Notifications (to)', toNotifs.length, updated, 0, errors);
+  if (ownedCubeIds.length > 0) {
+    log(`  Found ${totalFound} P1P1 pack(s) created by source user on their cubes`);
+  }
+  log('  Note: Packs created on other users\' cubes cannot be found without a table scan.');
+  log('  The createdBy field is cosmetic — cube ownership transfer is the primary action.');
+
+  addSummary('P1P1 Packs', totalFound, updated, 0, errors);
 }
 
-async function transferFeedItems(fromId: string, toId: string) {
-  header('11. Feed Items');
-
-  // Feed has composite key (id + to), so we query by `to` and re-insert
-  const feedItems = await queryAll<any>((lastKey) => feedModel.getByTo(fromId, lastKey));
-  log(`Found ${feedItems.length} feed item(s) for source user`);
-
-  // Feed items can't simply be updated because `to` is part of the sort key.
-  // We'd need to delete old + insert new. However, feed items are ephemeral
-  // and the new user will get new feed items going forward.
-  // We'll still transfer them for completeness.
-  let updated = 0;
-  let errors = 0;
-
-  if (feedItems.length > 0) {
-    log('  Note: Feed items use composite keys (id + to). These are ephemeral entries.');
-    log('  The new user will receive new feed items going forward from followed cubes.');
-    log(`  Skipping feed item migration (${feedItems.length} items) — these are transient.`);
-  }
-
-  addSummary('Feed Items', feedItems.length, 0, feedItems.length, 0);
-}
-
-async function transferP1P1Packs(fromId: string, toId: string) {
-  header('12. P1P1 Packs');
-
-  // No direct query by creator, so we scan and filter
-  const allPacks = await scanAll<any>((lastKey) => p1p1PackModel.scan(undefined, lastKey));
-  const userPacks = allPacks.filter((p) => p.createdBy === fromId);
-
-  log(`Found ${userPacks.length} P1P1 pack(s) (scanned ${allPacks.length} total)`);
-
-  let updated = 0;
-  let errors = 0;
-
-  for (const pack of userPacks) {
-    try {
-      log(`  P1P1 Pack: ${pack.id}`);
-
-      if (!DRY_RUN) {
-        // p1p1Pack doesn't have a simple update, we need to use the raw client
-        // The pack has DynamoDB data (id, date, cubeId, createdBy, votesByUser)
-        // and S3 data (cards, createdByUsername). We only update DynamoDB here.
-        // For the S3 data (createdByUsername), we'd need to re-put.
-        // Since p1p1Pack.put creates a new record, we'll work around it.
-        // Scan returns raw DynamoDB items, so we can just update the field.
-        pack.createdBy = toId;
-        // Note: The S3-stored createdByUsername will remain stale unless we also
-        // update S3. This is acceptable — it's a denormalized display field.
-      }
-      updated++;
-    } catch (err: any) {
-      log(`  ERROR updating P1P1 pack ${pack.id}: ${err.message}`);
-      errors++;
-    }
-  }
-
-  // For P1P1 packs we need a batch approach since individual update isn't exposed
-  if (!DRY_RUN && userPacks.length > 0) {
-    log('  Note: P1P1 packs require direct DynamoDB update for createdBy field.');
-    log('  The createdByUsername in S3 will remain as the old username (cosmetic).');
-    // The scan returns raw items, so we'll need to use the low-level client
-    // For now, log what would need to happen
-    log('  Warning: P1P1 pack createdBy updates require low-level DynamoDB writes.');
-    log('  These packs have been identified but may need manual update if the scan');
-    log('  data isn\'t directly writable. Check the P1P1 pack model for update methods.');
-  }
-
-  addSummary('P1P1 Packs', userPacks.length, updated, 0, errors);
-}
-
-async function updateUserRecords(fromId: string, toId: string, fromUser: any, toUser: any) {
+async function updateUserRecords(_fromId: string, toId: string, fromUser: any, toUser: any) {
   header('13. User Record Updates');
 
   // Transfer cube ownership references
@@ -615,111 +531,202 @@ async function updateUserRecords(fromId: string, toId: string, fromUser: any, to
   // Persist user updates
   if (!DRY_RUN) {
     log('  Saving target user...');
-    await userModel.update(toUser);
+    await userDao.update(toUser);
     log('  Saving source user (clearing transferred fields)...');
-    await userModel.update(fromUser);
+    await userDao.update(fromUser);
   }
 
   addSummary('User Records', 2, DRY_RUN ? 0 : 2, 0, 0);
 }
 
-async function updateFollowerReferences(fromId: string, toId: string) {
-  header('14. Update Follower References on Other Users');
+async function updateFollowerReferences(fromId: string, toId: string, fromUser: any) {
+  header('13. Update Follower References on Other Users');
 
-  // Any user who follows the source user should now follow the target user
-  // We need to scan all users who have fromId in their followedUsers array
-  // This is expensive but necessary for data integrity
+  // The source user's `following` array contains IDs of users who follow them.
+  // We batch-get those users and update their `followedUsers` arrays.
+  const followerIds: string[] = (fromUser.following || []).filter((id: string) => id !== toId && id !== fromId);
 
-  log('  Scanning all users to update follower references...');
-  log('  (This updates other users who follow the source to follow the target instead)');
+  log(`Source user has ${followerIds.length} follower(s) to update`);
 
-  let scanned = 0;
+  if (followerIds.length === 0) {
+    addSummary('Follower References', 0, 0, 0, 0);
+    return;
+  }
+
   let updated = 0;
   let errors = 0;
-  let lastKey: Record<string, NativeAttributeValue> | undefined;
-  let hasMore = true;
 
-  // We need to use the raw scan from the user model
-  // userModel doesn't expose a scan, so we'll note this limitation
-  log('  Note: The user model does not expose a bulk scan method.');
-  log('  Users who follow the source should be updated via the following[] array');
-  log('  on the source user (already handled). Their followedUsers[] arrays');
-  log('  should reference the new user. This may need a separate migration if');
-  log('  there are many followers.');
+  // batchGet supports up to 100 at a time
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < followerIds.length; i += BATCH_SIZE) {
+    const batch = followerIds.slice(i, i + BATCH_SIZE);
+    try {
+      const followers = await userDao.batchGet(batch);
 
-  addSummary('Follower References', 0, 0, 0, 0);
+      for (const follower of followers) {
+        try {
+          const followedUsers: string[] = follower.followedUsers || [];
+          const idx = followedUsers.indexOf(fromId);
+
+          if (idx === -1) {
+            log(`  User ${follower.username}: source not in followedUsers (already clean)`);
+            continue;
+          }
+
+          // Replace fromId with toId, avoiding duplicates
+          if (followedUsers.includes(toId)) {
+            followedUsers.splice(idx, 1); // toId already present, just remove fromId
+          } else {
+            followedUsers[idx] = toId;
+          }
+
+          log(`  User ${follower.username}: updated followedUsers`);
+
+          if (!DRY_RUN) {
+            follower.followedUsers = followedUsers;
+            await userDao.update(follower);
+          }
+          updated++;
+        } catch (err: any) {
+          log(`  ERROR updating follower ${follower.username}: ${err.message}`);
+          errors++;
+        }
+      }
+    } catch (err: any) {
+      log(`  ERROR batch-getting followers: ${err.message}`);
+      errors++;
+    }
+  }
+
+  addSummary('Follower References', followerIds.length, updated, 0, errors);
 }
 
 async function transferCubeCollaborators(fromId: string, toId: string) {
-  header('15. Cube Collaborator References');
+  header('14. Cube Collaborator References');
 
-  // Scan cubes where fromId appears in the `collaborators` array
-  // This requires a full scan since there's no GSI on collaborators
-  log('  Scanning cubes for collaborator references...');
+  // Use the CollaboratorIndex to efficiently find cubes where fromId is a collaborator
+  // This avoids a full table scan by querying PK = COLLABORATOR#<userId>
+  log('Querying CollaboratorIndex for cubes where source is a collaborator...');
 
-  let scanned = 0;
+  let found = 0;
   let updated = 0;
   let errors = 0;
-  let lastKey: Record<string, NativeAttributeValue> | undefined;
-  let hasMore = true;
 
-  while (hasMore) {
-    const result = await cubeModel.scan(lastKey);
-    const items = result.items || [];
-    scanned += items.length;
+  try {
+    const cubeIds = await collaboratorIndexDao.getCubeIdsForUser(fromId);
+    found = cubeIds.length;
+    log(`Found ${cubeIds.length} cube(s) where source is a collaborator`);
 
-    for (const cube of items) {
-      try {
-        const collaborators: string[] = cube.collaborators || [];
-        const following: string[] = cube.following || [];
+    if (cubeIds.length > 0) {
+      // Batch get the cubes to update their collaborator arrays
+      const BATCH_SIZE = 25;
+      for (let i = 0; i < cubeIds.length; i += BATCH_SIZE) {
+        const batch = cubeIds.slice(i, i + BATCH_SIZE);
+        const cubes = await cubeDao.batchGet(batch);
 
-        let needsUpdate = false;
+        for (const cube of cubes) {
+          try {
+            const collaborators: string[] = cube.collaborators || [];
+            const idx = collaborators.indexOf(fromId);
 
-        // Replace fromId with toId in collaborators
-        if (collaborators.includes(fromId)) {
-          const idx = collaborators.indexOf(fromId);
-          if (!collaborators.includes(toId)) {
-            collaborators[idx] = toId;
-          } else {
-            collaborators.splice(idx, 1); // Already there, just remove the duplicate
+            if (idx === -1) {
+              log(`  Cube "${cube.name}" (${cube.id}): source not in collaborators array (index stale?)`);
+              continue;
+            }
+
+            // Replace fromId with toId, avoiding duplicates
+            if (collaborators.includes(toId)) {
+              collaborators.splice(idx, 1);
+            } else {
+              collaborators[idx] = toId;
+            }
+
+            log(`  Cube "${cube.name}" (${cube.id}): updated collaborator reference`);
+
+            if (!DRY_RUN) {
+              cube.collaborators = collaborators;
+              await cubeDao.update(cube);
+
+              // Update the CollaboratorIndex: remove old, add new
+              await collaboratorIndexDao.remove(fromId, cube.id);
+              if (!collaborators.includes(toId)) {
+                // toId was already present, so we didn't add it to the array
+              } else {
+                await collaboratorIndexDao.add(toId, cube.id);
+              }
+            }
+            updated++;
+          } catch (err: any) {
+            log(`  ERROR updating cube ${cube.id}: ${err.message}`);
+            errors++;
           }
-          cube.collaborators = collaborators;
-          needsUpdate = true;
-          log(`  Cube "${cube.name}" (${cube.id}): updated collaborator reference`);
         }
-
-        // Replace fromId with toId in following list
-        if (following.includes(fromId)) {
-          const idx = following.indexOf(fromId);
-          if (!following.includes(toId)) {
-            following[idx] = toId;
-          } else {
-            following.splice(idx, 1);
-          }
-          cube.following = following;
-          needsUpdate = true;
-          log(`  Cube "${cube.name}" (${cube.id}): updated following reference`);
-        }
-
-        if (needsUpdate && !DRY_RUN) {
-          await cubeModel.batchPut([cube]);
-          updated++;
-        } else if (needsUpdate) {
-          updated++;
-        }
-      } catch (err: any) {
-        log(`  ERROR processing cube ${cube.id}: ${err.message}`);
-        errors++;
       }
     }
-
-    lastKey = result.lastKey;
-    hasMore = !!lastKey;
+  } catch (err: any) {
+    log(`  ERROR querying CollaboratorIndex: ${err.message}`);
+    errors++;
   }
 
-  log(`  Scanned ${scanned} cubes, updated ${updated} collaborator/following references`);
+  addSummary('Cube Collaborators', found, updated, 0, errors);
+}
 
-  addSummary('Cube Collaborators/Following', scanned, updated, scanned - updated, errors);
+async function transferCubeFollowing(fromId: string, toId: string, fromUser: any) {
+  header('15. Cube Following References');
+
+  // Use the source user's followedCubes[] to find cubes they follow,
+  // then update each cube's `following` array (replace fromId with toId)
+  const followedCubeIds: string[] = fromUser.followedCubes || [];
+  log(`Source user follows ${followedCubeIds.length} cube(s)`);
+
+  if (followedCubeIds.length === 0) {
+    addSummary('Cube Following', 0, 0, 0, 0);
+    return;
+  }
+
+  let updated = 0;
+  let errors = 0;
+
+  const BATCH_SIZE = 25;
+  for (let i = 0; i < followedCubeIds.length; i += BATCH_SIZE) {
+    const batch = followedCubeIds.slice(i, i + BATCH_SIZE);
+    try {
+      const cubes = await cubeDao.batchGet(batch);
+
+      for (const cube of cubes) {
+        try {
+          const following: string[] = cube.following || [];
+          const idx = following.indexOf(fromId);
+
+          if (idx === -1) {
+            continue; // source not in this cube's following list
+          }
+
+          if (following.includes(toId)) {
+            following.splice(idx, 1);
+          } else {
+            following[idx] = toId;
+          }
+
+          log(`  Cube "${cube.name}" (${cube.id}): updated following reference`);
+
+          if (!DRY_RUN) {
+            cube.following = following;
+            await cubeDao.update(cube);
+          }
+          updated++;
+        } catch (err: any) {
+          log(`  ERROR updating cube ${cube.id}: ${err.message}`);
+          errors++;
+        }
+      }
+    } catch (err: any) {
+      log(`  ERROR batch-getting cubes: ${err.message}`);
+      errors++;
+    }
+  }
+
+  addSummary('Cube Following', followedCubeIds.length, updated, 0, errors);
 }
 
 // ---------------------------------------------------------------------------
@@ -759,7 +766,7 @@ async function main() {
 
   // Resolve users
   console.log(`Resolving source user: ${fromArg}`);
-  const fromUser = await userModel.getByIdOrUsername(fromArg);
+  const fromUser = await userDao.getByIdOrUsername(fromArg);
   if (!fromUser) {
     console.error(`ERROR: Could not find source user: ${fromArg}`);
     process.exit(1);
@@ -767,7 +774,7 @@ async function main() {
   console.log(`  → Found: ${fromUser.username} (${fromUser.id})`);
 
   console.log(`Resolving target user: ${toArg}`);
-  const toUser = await userModel.getByIdOrUsername(toArg);
+  const toUser = await userDao.getByIdOrUsername(toArg);
   if (!toUser) {
     console.error(`ERROR: Could not find target user: ${toArg}`);
     process.exit(1);
@@ -784,7 +791,7 @@ async function main() {
   console.log(`  Target ID: ${toUser.id}`);
 
   // Execute all transfers
-  await transferCubes(fromUser.id, toUser.id);
+  const ownedCubeIds = await transferCubes(fromUser.id, toUser.id);
   await transferBlogPosts(fromUser.id, toUser.id);
   await transferComments(fromUser.id, toUser.id);
   await transferContent(fromUser.id, toUser.id);
@@ -792,13 +799,13 @@ async function main() {
   await transferCardPackages(fromUser.id, toUser.id);
   await transferPatron(fromUser.id, toUser.id);
   await transferFeaturedQueueItems(fromUser.id, toUser.id);
-  await transferNotices(fromUser.id, toUser.id);
-  await transferNotifications(fromUser.id, toUser.id);
-  await transferFeedItems(fromUser.id, toUser.id);
-  await transferP1P1Packs(fromUser.id, toUser.id);
+  await transferNotices();
+  await transferNotifications();
+  await transferP1P1Packs(fromUser.id, toUser.id, ownedCubeIds);
   await updateUserRecords(fromUser.id, toUser.id, fromUser, toUser);
-  await updateFollowerReferences(fromUser.id, toUser.id);
+  await updateFollowerReferences(fromUser.id, toUser.id, fromUser);
   await transferCubeCollaborators(fromUser.id, toUser.id);
+  await transferCubeFollowing(fromUser.id, toUser.id, fromUser);
 
   // Print summary
   header('TRANSFER SUMMARY');

@@ -1,10 +1,13 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { jsPDF } from 'jspdf';
 
+import Card from '@utils/datatypes/Card';
 import { cardImageNormal } from '@utils/cardutil';
+import { getViewByName } from '@utils/datatypes/Cube';
 import { sortForDownload } from '@utils/sorting/Sort';
 
 import CubeContext from '../../contexts/CubeContext';
+import DisplayContext from '../../contexts/DisplayContext';
 import FilterContext from '../../contexts/FilterContext';
 import useAlerts from '../../hooks/UseAlerts';
 import Button from '../base/Button';
@@ -18,6 +21,7 @@ interface PrintAndPlayExportModalProps {
   setOpen: (open: boolean) => void;
   isSortUsed: boolean;
   isFilterUsed: boolean;
+  exportAllBoards?: boolean;
 }
 
 const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
@@ -25,12 +29,20 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
   setOpen,
   isSortUsed,
   isFilterUsed,
+  exportAllBoards = false,
 }) => {
   const { addAlert } = useAlerts();
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
+  const { activeView } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext)!;
+
+  // Derive boards to export
+  const currentViewBoards = useMemo(() => {
+    const view = getViewByName(cube, activeView);
+    return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
+  }, [cube, activeView]);
 
   const loadImage = (url: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
@@ -88,8 +100,22 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
     setProgress({ current: 0, total: 0 });
 
     try {
-      // Get and filter cards
-      let cards = cube.cards.mainboard;
+      // Get cards from the appropriate boards
+      let boardKeys: string[];
+      if (exportAllBoards) {
+        boardKeys = Object.keys(cube.cards).filter((k) => k !== 'id');
+      } else {
+        boardKeys = currentViewBoards;
+      }
+
+      let cards: Card[] = [];
+      for (const key of boardKeys) {
+        const boardCards = cube.cards[key];
+        if (Array.isArray(boardCards)) {
+          cards = cards.concat(boardCards);
+        }
+      }
+
       if (isFilterUsed) {
         cards = cards.filter(cardFilter.filter);
       }

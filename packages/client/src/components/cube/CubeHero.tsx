@@ -17,7 +17,7 @@ import {
   StopIcon,
 } from '@primer/octicons-react';
 import { cardIsToken, cardName, cardPrice, cardPriceCardKingdom, cardPriceManaPool } from '@utils/cardutil';
-import Cube from '@utils/datatypes/Cube';
+import Cube, { getViewByName } from '@utils/datatypes/Cube';
 import { getCubeCardCountSnippet } from '@utils/Util';
 
 import BaseUrlContext from '../../contexts/BaseUrlContext';
@@ -74,6 +74,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>(`cube-hero-collapsed-${activeLink}`, false);
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
+  const [exportAllBoards, setExportAllBoards] = useState(false);
   const [followedState, setFollowedState] = useState(!!user && cube.following && cube.following.includes(user.id));
   const [maskGradient, setMaskGradient] = useState('linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%)');
   const [mobileMaskGradient, setMobileMaskGradient] = useState(
@@ -89,7 +90,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const [moreMenuAlign, setMoreMenuAlign] = React.useState<'left' | 'right'>('left');
 
-  const { showCustomImages: _showCustomImages, toggleShowCustomImages: _toggleShowCustomImages } =
+  const { showCustomImages: _showCustomImages, toggleShowCustomImages: _toggleShowCustomImages, activeView } =
     useContext(DisplayContext);
 
   const { hasCustomImages: _hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
@@ -172,7 +173,13 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   // If full by default but user collapsed (isCollapsed = true when not minified), show minified
   const shouldShowMinified = minified ? isCollapsed : !isCollapsed;
 
-  // Build URL segment for export links with filter and sort parameters
+  // Derive the boards visible in the current view
+  const currentViewBoards = useMemo(() => {
+    const view = getViewByName(cube, activeView);
+    return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
+  }, [cube, activeView]);
+
+  // Build URL segment for export links with filter, sort, and board parameters
   const urlSegment = useMemo(() => {
     const params = new URLSearchParams();
 
@@ -187,8 +194,14 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
       if (sortQuaternary) params.set('quaternary', sortQuaternary);
     }
 
+    if (exportAllBoards) {
+      params.set('allBoards', '1');
+    } else {
+      params.set('boards', currentViewBoards.join(','));
+    }
+
     return params.toString();
-  }, [isFilterUsed, filterInput, isSortUsed, sortPrimary, sortSecondary, sortTertiary, sortQuaternary]);
+  }, [isFilterUsed, filterInput, isSortUsed, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, exportAllBoards, currentViewBoards]);
 
   const exportMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">
@@ -228,17 +241,23 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         XMage (.dck)
       </a>
       <ArenaExportModalItem
-        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed }}
+        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed, exportAllBoards }}
         className="!text-text hover:!text-link-active font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
       >
         Arena (.txt)
       </ArenaExportModalItem>
       <PrintAndPlayExportModalItem
-        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed }}
+        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed, exportAllBoards }}
         className="!text-text hover:!text-link-active font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
       >
         Print and Play (.pdf)
       </PrintAndPlayExportModalItem>
+      <Flexbox direction="row" justify="between" alignItems="center" className="cursor-pointer">
+        <Checkbox label="Export ALL boards" checked={exportAllBoards} setChecked={setExportAllBoards} />
+        <Tooltip text="If enabled, exports all cards from all boards. If disabled, only exports cards in boards visible in the current view." wrapperTag="span" className="ms-auto me-0">
+          <QuestionIcon size={16} className="hidden md:inline" />
+        </Tooltip>
+      </Flexbox>
       <Flexbox direction="row" justify="between" onClick={() => setIsSortUsed((is) => !is)} className="cursor-pointer">
         <div onClick={(e) => e.stopPropagation()}>
           <Checkbox label="Use Sort" checked={isSortUsed} setChecked={setIsSortUsed} />
