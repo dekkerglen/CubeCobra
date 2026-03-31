@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
@@ -129,8 +130,15 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
       </Flexbox>
       <div className="block sm:hidden">
         {safeItems.length > 0 ? (
-          safeItems.map((changelog) => (
+          safeItems.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((changelog) => (
             <Card className="mb-2" key={changelog.date}>
+              <CardHeader>
+                <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
+                  <Text semibold sm>
+                    {formatDateTime(new Date(changelog.date))}
+                  </Text>
+                </Link>
+              </CardHeader>
               <div style={{ overflow: 'auto', maxHeight: '20vh' }}>
                 <CardBody>
                   <BlogPostChangelog changelog={changelog.changelog} />
@@ -149,9 +157,11 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
               evens.map((changelog) => (
                 <Card className="my-2" key={changelog.date}>
                   <CardHeader className="text-right">
-                    <Text semibold sm>
-                      {formatDateTime(new Date(changelog.date))}
-                    </Text>
+                    <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
+                      <Text semibold sm>
+                        {formatDateTime(new Date(changelog.date))}
+                      </Text>
+                    </Link>
                   </CardHeader>
                   <div style={{ overflow: 'auto', height: '15vh' }}>
                     <CardBody>
@@ -169,9 +179,11 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
             {odds.map((changelog) => (
               <Card className="my-2" key={changelog.date}>
                 <CardHeader>
-                  <Text semibold sm>
-                    {formatDateTime(new Date(changelog.date))}
-                  </Text>
+                  <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
+                    <Text semibold sm>
+                      {formatDateTime(new Date(changelog.date))}
+                    </Text>
+                  </Link>
                 </CardHeader>
                 <div style={{ overflow: 'auto', height: '15vh' }}>
                   <CardBody>

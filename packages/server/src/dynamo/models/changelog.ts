@@ -151,6 +151,7 @@ const Changelog = {
 
     const items: CubeChangeLog[] = await Promise.all(
       ((result.Items as ChangelogType[]) || []).map(async (item) => ({
+        id: item.id,
         cubeId,
         date: item.date,
         changelog: await getChangelog(cubeId, item.id),

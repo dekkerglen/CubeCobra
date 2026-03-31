@@ -23,9 +23,11 @@ interface CubeComparePageProps {
   onlyA: number[];
   onlyB: number[];
   both: number[];
+  pitDate?: string;
+  changelogId?: string;
 }
 
-const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both }) => {
+const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both, pitDate }) => {
   const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
   const { cardFilter } = useContext(FilterContext);
 
@@ -40,6 +42,11 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cub
         cubeBID={cubeB.id}
         openCollapse={openCollapse}
         setOpenCollapse={setOpenCollapse}
+        cards={filteredCards}
+        both={both}
+        onlyA={onlyA}
+        onlyB={onlyB}
+        pitDate={pitDate}
       />
       <DynamicFlash />
       <ErrorBoundary>
@@ -49,14 +56,14 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cub
   );
 };
 
-const CubeComparePage: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both }) => {
+const CubeComparePage: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both, pitDate, changelogId }) => {
   return (
     <FilterContextProvider>
       <MainLayout>
         <DisplayContextProvider cubeID={cube.id}>
           <ChangesContextProvider cube={cube}>
             <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>
-              <CubeComparePageInner cards={cards} cube={cube} cubeB={cubeB} onlyA={onlyA} onlyB={onlyB} both={both} />
+              <CubeComparePageInner cards={cards} cube={cube} cubeB={cubeB} onlyA={onlyA} onlyB={onlyB} both={both} pitDate={pitDate} />
             </CubeContextProvider>
           </ChangesContextProvider>
         </DisplayContextProvider>

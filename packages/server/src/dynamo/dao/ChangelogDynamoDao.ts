@@ -248,11 +248,13 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
    * Gets a changelog by ID and loads the changelog data from S3.
    */
   public async getChangelogWithData(cubeId: string, id: string): Promise<CubeChangeLog> {
+    const item = await this.getById(id);
     const changelog = await getChangelogFromS3(cubeId, id);
 
     return {
+      id,
       cubeId,
-      date: 0, // We would need to fetch from DynamoDB to get the date
+      date: item?.date ?? 0,
       changelog,
     };
   }
@@ -313,6 +315,7 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
 
     const items: CubeChangeLog[] = await Promise.all(
       result.items.map(async (item) => ({
+        id: item.id,
         cubeId: item.cube,
         date: item.date,
         changelog: await this.loadChangelogData(item),

@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import { cardName } from '@utils/cardutil';
+import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
 import Button from 'components/base/Button';
@@ -26,6 +28,11 @@ interface CubeCompareNavbarProps {
   cubeBID: string;
   openCollapse: string | null;
   setOpenCollapse: (collapse: string | ((prevCollapse: string | null) => string | null)) => void;
+  cards: Card[];
+  both: number[];
+  onlyA: number[];
+  onlyB: number[];
+  pitDate?: string;
 }
 
 const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
@@ -35,6 +42,11 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
   cubeBID,
   openCollapse,
   setOpenCollapse,
+  cards,
+  both,
+  onlyA,
+  onlyB,
+  pitDate,
 }) => {
   const [expanded, toggleExpanded] = useToggle(false);
   const handleOpenCollapse = useCallback(
@@ -44,11 +56,48 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
     [setOpenCollapse],
   );
 
+  const handleExport = useCallback(() => {
+    const bothCards = both.map((i) => cards[i]).filter(Boolean);
+    const onlyACards = onlyA.map((i) => cards[i]).filter(Boolean);
+    const onlyBCards = onlyB.map((i) => cards[i]).filter(Boolean);
+
+    const lines: string[] = [];
+
+    const baseLabel = pitDate ? `Point in Time (${pitDate})` : cubeA.name;
+    const compLabel = pitDate ? 'Present' : cubeB.name;
+
+    lines.push(`=== In Both (${bothCards.length}) ===`);
+    for (const card of bothCards) {
+      lines.push(cardName(card));
+    }
+    lines.push('');
+    lines.push(`=== Only in ${baseLabel} (${onlyACards.length}) ===`);
+    for (const card of onlyACards) {
+      lines.push(cardName(card));
+    }
+    lines.push('');
+    lines.push(`=== Only in ${compLabel} (${onlyBCards.length}) ===`);
+    for (const card of onlyBCards) {
+      lines.push(cardName(card));
+    }
+
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pitDate
+      ? `${cubeA.name.replace(/\W/g, '')}_pit_compare.txt`
+      : `${cubeA.name.replace(/\W/g, '')}_vs_${cubeB.name.replace(/\W/g, '')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [cards, both, onlyA, onlyB, cubeA, cubeB, pitDate]);
+
   const controls = (
     <>
       <Link onClick={() => handleOpenCollapse('sort')}>Sort</Link>
       <Link onClick={() => handleOpenCollapse('filter')}>Filter</Link>
       <TagColorsModalItem>View Tag Colors</TagColorsModalItem>
+      <Link onClick={handleExport}>Export</Link>
     </>
   );
 

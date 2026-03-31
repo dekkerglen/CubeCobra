@@ -1,6 +1,6 @@
 import { cardNameLower, cardOracleId, convertFromLegacyCardColorCategory, isCustomCard } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
-import Card from '@utils/datatypes/Card';
+import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY, type CubeCards, type TagColor } from '@utils/datatypes/Cube';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import _ from 'lodash';
@@ -688,6 +688,133 @@ async function generatePack(cube: any, cards: any, seed?: string): Promise<Gener
   };
 }
 
+/**
+ * Reverse-applies a single changelog to the cube cards, undoing the changes.
+ * This mutates the cards object in place.
+ */
+function reverseApplyChangelog(cards: CubeCards, changelog: Changes): void {
+  for (const [boardName, value] of Object.entries(changelog)) {
+    if (boardName === 'version' || !value || typeof value !== 'object') continue;
+    const boardChanges = value as BoardChanges;
+    const board = cards[boardName] || [];
+
+    // Undo adds: remove cards that were added
+    if (boardChanges.adds && boardChanges.adds.length > 0) {
+      const addedCardIDs = new Set(boardChanges.adds.map((c) => c.cardID));
+      cards[boardName] = board.filter((c) => !addedCardIDs.has(c.cardID));
+    }
+
+    // Undo removes: re-add cards that were removed
+    if (boardChanges.removes && boardChanges.removes.length > 0) {
+      for (const remove of boardChanges.removes) {
+        const card = { ...remove.oldCard };
+        if (!card.details) {
+          card.details = cardFromId(card.cardID);
+        }
+        (cards[boardName] || []).push(card);
+      }
+    }
+
+    // Undo swaps: swap back to old card
+    if (boardChanges.swaps && boardChanges.swaps.length > 0) {
+      const currentBoard = cards[boardName] || [];
+      for (const swap of boardChanges.swaps) {
+        const idx = currentBoard.findIndex((c) => c.cardID === swap.card.cardID);
+        if (idx !== -1) {
+          const oldCard = { ...swap.oldCard };
+          if (!oldCard.details) {
+            oldCard.details = cardFromId(oldCard.cardID);
+          }
+          currentBoard[idx] = oldCard;
+        }
+      }
+    }
+
+    // Undo edits: revert to old card
+    if (boardChanges.edits && boardChanges.edits.length > 0) {
+      const currentBoard = cards[boardName] || [];
+      for (const edit of boardChanges.edits) {
+        const idx = currentBoard.findIndex((c) => c.cardID === edit.newCard.cardID);
+        if (idx !== -1) {
+          const oldCard = { ...edit.oldCard };
+          if (!oldCard.details) {
+            oldCard.details = cardFromId(oldCard.cardID);
+          }
+          currentBoard[idx] = oldCard;
+        }
+      }
+    }
+  }
+
+  // Reindex all boards
+  for (const [boardName, list] of Object.entries(cards)) {
+    if (boardName !== 'id' && Array.isArray(list)) {
+      for (let i = 0; i < list.length; i++) {
+        const card = list[i];
+        if (card) {
+          card.index = i;
+          card.board = boardName;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Reconstructs the cube cards as they were at a specific changelog point in time.
+ * Takes the current cards and reverse-applies all changelogs that happened after the target.
+ *
+ * @param cubeId - The cube ID
+ * @param targetDate - The date of the target changelog
+ * @param currentCards - The current cube cards
+ * @param changelogDao - The changelog DAO instance
+ * @returns The reconstructed cube cards at the point in time
+ */
+async function reconstructCubeAtChangelog(
+  cubeId: string,
+  targetDate: number,
+  currentCards: CubeCards,
+  changelogDao: { queryByCubeWithData: (cubeId: string, lastKey?: any, limit?: number) => Promise<{ items: Array<{ date: number; changelog: Changes }>; lastKey?: any }> },
+): Promise<CubeCards> {
+  // Deep clone the current cards so we don't mutate the original
+  const cards: CubeCards = JSON.parse(JSON.stringify(currentCards));
+
+  // Re-add details after clone (details have functions that don't survive JSON serialization)
+  for (const [boardName, list] of Object.entries(cards)) {
+    if (boardName !== 'id' && Array.isArray(list)) {
+      for (const card of list) {
+        card.details = cardFromId(card.cardID);
+      }
+    }
+  }
+
+  // Fetch all changelogs newer than the target (they come newest-first)
+  let lastKey: any = undefined;
+  let hasMore = true;
+
+  while (hasMore) {
+    const result = await changelogDao.queryByCubeWithData(cubeId, lastKey, 100);
+
+    for (const item of result.items) {
+      // Only reverse-apply changelogs that happened AFTER the target
+      if (item.date > targetDate) {
+        reverseApplyChangelog(cards, item.changelog);
+      }
+    }
+
+    // If we've reached changelogs at or before our target date, we can stop
+    const oldestInBatch = result.items[result.items.length - 1];
+    if (!oldestInBatch || oldestInBatch.date <= targetDate) {
+      hasMore = false;
+    } else {
+      lastKey = result.lastKey;
+      hasMore = !!lastKey;
+    }
+  }
+
+  return cards;
+}
+
 const methods = {
   setCubeType,
   cardsAreEquivalent,
@@ -710,6 +837,7 @@ const methods = {
   isCubeListed,
   getCubeTypes,
   isCubeEditable,
+  reconstructCubeAtChangelog,
 };
 
 export default methods;
@@ -721,6 +849,7 @@ export {
   cardsAreEquivalent,
   compareCubes,
   CSVtoCards,
+  reconstructCubeAtChangelog,
   cubeCardTags,
   generateBalancedPack,
   generatePack,

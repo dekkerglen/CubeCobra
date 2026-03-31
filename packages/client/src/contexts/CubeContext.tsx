@@ -237,7 +237,13 @@ export function CubeContextProvider({
     ...initialCube,
     cards,
   });
-  const defaultSorts = useMemo(() => getCubeSorts(cube), [cube]);
+  const defaultSorts = useMemo(() => {
+    const currentView = getViewByName(cube, activeView);
+    if (currentView?.defaultSorts && currentView.defaultSorts.length === 4) {
+      return currentView.defaultSorts;
+    }
+    return getCubeSorts(cube);
+  }, [cube, activeView]);
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
   // These were only used in the removed fetchVersionDict function
   // const [versionDictLoaded, setVersionDictLoaded] = useState(false);
