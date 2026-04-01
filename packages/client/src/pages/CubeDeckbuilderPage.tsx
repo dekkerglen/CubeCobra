@@ -117,6 +117,10 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
     [mainboard, basics],
   );
 
+  // Resolve deckbuild settings from cube
+  const maxSpells = cube.deckbuildSpells ?? 23;
+  const maxLands = cube.deckbuildLands ?? 17;
+
   return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
@@ -134,6 +138,8 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
               setDeck={setMainboard}
               setSideboard={setSideboard}
               seat={seatIndex}
+              maxSpells={maxSpells}
+              maxLands={maxLands}
             />
             <DeckBuilderStatsPanel
               cards={mainboard

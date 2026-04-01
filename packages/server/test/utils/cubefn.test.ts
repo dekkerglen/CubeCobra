@@ -2,16 +2,16 @@ import { cardName, cardOracleId } from '@utils/cardutil';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cardFromId } from 'serverutils/carddb';
 import { compareCubes, generateBalancedPack, generatePack } from 'serverutils/cubefn';
-import { getBotPrediction } from 'serverutils/userUtil';
+import { batchDraft } from 'serverutils/ml';
 
 import { createCardDetails, createCube, createCustomCard } from '../test-utils/data';
 
 // Mock dependencies
-jest.mock('serverutils/userUtil');
+jest.mock('serverutils/ml');
 jest.mock('@utils/drafting/createdraft');
 jest.mock('serverutils/carddb');
 
-const mockGetBotPrediction = getBotPrediction as jest.MockedFunction<typeof getBotPrediction>;
+const mockBatchDraft = batchDraft as jest.MockedFunction<typeof batchDraft>;
 const mockGetDraftFormat = getDraftFormat as jest.MockedFunction<typeof getDraftFormat>;
 const mockCreateDraft = createDraft as jest.MockedFunction<typeof createDraft>;
 const mockCardFromId = cardFromId as jest.MockedFunction<typeof cardFromId>;
@@ -93,10 +93,12 @@ describe('generateBalancedPack', () => {
     it('should generate a balanced pack with default parameters', async () => {
       // Mock bot prediction with normalized weights for 15 cards
       const normalizedWeights = createRealistic15CardWeights();
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: normalizedWeights,
-        botPickIndex: 0, // Should pick the rare (highest weight)
-      });
+      mockBatchDraft.mockResolvedValue(
+        Array(10).fill(
+          normalizedWeights.map((w, i) => ({ oracle: `oracle_card${i + 1}`, rating: w }))
+            .sort((a, b) => b.rating - a.rating)
+        )
+      );
 
       const result = (await generateBalancedPack(mockCube, mockCards, 'test-seed')) as BalancedPackResult;
 
@@ -112,12 +114,11 @@ describe('generateBalancedPack', () => {
     });
 
     it('should use custom candidate count', async () => {
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: [0.5],
-        botPickIndex: 0,
-      });
-
       const candidateCount = 5;
+      mockBatchDraft.mockResolvedValue(
+        Array(candidateCount).fill([{ oracle: 'oracle_card1', rating: 0.5 }])
+      );
+
       const result = (await generateBalancedPack(
         mockCube,
         mockCards,
@@ -130,10 +131,9 @@ describe('generateBalancedPack', () => {
     });
 
     it('should use deterministic seed when provided', async () => {
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: [0.5],
-        botPickIndex: 0,
-      });
+      mockBatchDraft.mockResolvedValue(
+        Array(3).fill([{ oracle: 'oracle_card1', rating: 0.5 }])
+      );
 
       const deterministicSeed = 12345;
       await generateBalancedPack(mockCube, mockCards, 'test-seed', 3, deterministicSeed as any);
@@ -150,10 +150,9 @@ describe('generateBalancedPack', () => {
     });
 
     it('should use Date.now() when deterministicSeed is null', async () => {
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: [0.5],
-        botPickIndex: 0,
-      });
+      mockBatchDraft.mockResolvedValue(
+        Array(3).fill([{ oracle: 'oracle_card1', rating: 0.5 }])
+      );
 
       const spy = jest.spyOn(Date, 'now').mockReturnValue(67890);
 
@@ -175,36 +174,24 @@ describe('generateBalancedPack', () => {
   describe('pack selection logic', () => {
     it('should select pack with lowest maximum bot weight', async () => {
       // Create mock candidates with different max bot weights for 15-card packs
-      const candidates = [
-        {
-          // Pack 1: Bomb rare dominates (max = 0.3913043478)
-          botWeights: createNormalizedWeights([
-            0.9, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-          ]),
-          botPickIndex: 0,
-        },
-        {
-          // Pack 2: More balanced distribution (max = 0.1142857143, should be selected)
-          botWeights: createNormalizedWeights([
-            0.4, 0.4, 0.3, 0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1,
-          ]),
-          botPickIndex: 0,
-        },
-        {
-          // Pack 3: Two strong cards (max = 0.2592592593)
-          botWeights: createNormalizedWeights([
-            0.7, 0.7, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-          ]),
-          botPickIndex: 0,
-        },
+      // Create batchDraft results for 3 candidates with different max bot weights
+      const candidateRawWeights = [
+        // Pack 1: Bomb rare dominates (max = 0.3913043478)
+        [0.9, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        // Pack 2: More balanced distribution (max = 0.1142857143, should be selected)
+        [0.4, 0.4, 0.3, 0.3, 0.3, 0.3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1],
+        // Pack 3: Two strong cards (max = 0.2592592593)
+        [0.7, 0.7, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
       ];
 
-      let callCount = 0;
-      mockGetBotPrediction.mockImplementation(async () => {
-        const candidate = candidates[callCount % candidates.length]!;
-        callCount += 1;
-        return candidate;
-      });
+      mockBatchDraft.mockResolvedValue(
+        candidateRawWeights.map((rawWeights) => {
+          const normalized = createNormalizedWeights(rawWeights);
+          return normalized
+            .map((w, i) => ({ oracle: `oracle_card${i + 1}`, rating: w }))
+            .sort((a, b) => b.rating - a.rating);
+        }),
+      );
 
       const result = (await generateBalancedPack(mockCube, mockCards, 'test-seed', 3)) as BalancedPackResult;
 
@@ -223,10 +210,7 @@ describe('generateBalancedPack', () => {
     });
 
     it('should handle empty bot weights', async () => {
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: [],
-        botPickIndex: null,
-      });
+      mockBatchDraft.mockResolvedValue([[]]);
 
       const result = (await generateBalancedPack(mockCube, mockCards, 'test-seed', 1)) as BalancedPackResult;
 
@@ -234,10 +218,7 @@ describe('generateBalancedPack', () => {
     });
 
     it('should handle single bot weight', async () => {
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: [1.0], // Single card gets all probability
-        botPickIndex: 0,
-      });
+      mockBatchDraft.mockResolvedValue([[{ oracle: 'oracle_card1', rating: 1.0 }]]);
 
       const result = (await generateBalancedPack(mockCube, mockCards, 'test-seed', 1)) as BalancedPackResult;
 
@@ -248,10 +229,10 @@ describe('generateBalancedPack', () => {
   describe('pack generation', () => {
     it('should generate pack with correct card details', async () => {
       const normalizedWeights = createRealistic15CardWeights();
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: normalizedWeights,
-        botPickIndex: 0,
-      });
+      mockBatchDraft.mockResolvedValue([
+        normalizedWeights.map((w, i) => ({ oracle: `oracle_card${i + 1}`, rating: w }))
+          .sort((a, b) => b.rating - a.rating),
+      ]);
 
       const result = (await generateBalancedPack(mockCube, mockCards, 'test-seed', 1)) as BalancedPackResult;
 
@@ -265,10 +246,7 @@ describe('generateBalancedPack', () => {
     });
 
     it('should call getDraftFormat with correct parameters', async () => {
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: [0.5],
-        botPickIndex: 0,
-      });
+      mockBatchDraft.mockResolvedValue([[{ oracle: 'oracle_card1', rating: 0.5 }]]);
 
       const cubeWithFormat = { ...mockCube, defaultFormat: 5 };
       await generateBalancedPack(cubeWithFormat, mockCards, 'test-seed', 1);
@@ -277,10 +255,7 @@ describe('generateBalancedPack', () => {
     });
 
     it('should handle cube without defaultFormat', async () => {
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: [0.5],
-        botPickIndex: 0,
-      });
+      mockBatchDraft.mockResolvedValue([[{ oracle: 'oracle_card1', rating: 0.5 }]]);
 
       const cubeWithoutFormat = { ...mockCube, defaultFormat: undefined };
       await generateBalancedPack(cubeWithoutFormat, mockCards, 'test-seed', 1);
@@ -299,29 +274,34 @@ describe('generateBalancedPack', () => {
       });
 
       const normalizedWeights = createRealistic15CardWeights();
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: normalizedWeights,
-        botPickIndex: 0,
-      });
+      mockBatchDraft.mockResolvedValue([
+        normalizedWeights.map((w, i) => ({ oracle: `oracle${i + 1}`, rating: w }))
+          .sort((a, b) => b.rating - a.rating),
+      ]);
 
       await generateBalancedPack(mockCube, mockCards, 'test-seed', 1);
 
-      expect(mockGetBotPrediction).toHaveBeenCalledWith([
-        'oracle1',
-        'oracle2',
-        'oracle3',
-        'oracle4',
-        'oracle5',
-        'oracle6',
-        'oracle7',
-        'oracle8',
-        'oracle9',
-        'oracle10',
-        'oracle11',
-        'oracle12',
-        'oracle13',
-        'oracle14',
-        'oracle15',
+      expect(mockBatchDraft).toHaveBeenCalledWith([
+        {
+          pack: [
+            'oracle1',
+            'oracle2',
+            'oracle3',
+            'oracle4',
+            'oracle5',
+            'oracle6',
+            'oracle7',
+            'oracle8',
+            'oracle9',
+            'oracle10',
+            'oracle11',
+            'oracle12',
+            'oracle13',
+            'oracle14',
+            'oracle15',
+          ],
+          pool: [],
+        },
       ]);
     });
 
@@ -334,28 +314,38 @@ describe('generateBalancedPack', () => {
       });
 
       // Create normalized weights for 12 cards (15 - 3 filtered out)
+      const filteredOracleIds = [
+        'oracle_card1', 'oracle_card3', 'oracle_card4', 'oracle_card6', 'oracle_card7',
+        'oracle_card8', 'oracle_card9', 'oracle_card11', 'oracle_card12', 'oracle_card13',
+        'oracle_card14', 'oracle_card15',
+      ];
       const normalizedWeights = createNormalizedWeights([0.5, 0.8, 0.3, 0.6, 0.4, 0.7, 0.2, 0.9, 0.1, 0.5, 0.8, 0.3]);
-      mockGetBotPrediction.mockResolvedValue({
-        botWeights: normalizedWeights,
-        botPickIndex: 7, // Should pick index 7 (highest weight of 0.9 normalized)
-      });
+      mockBatchDraft.mockResolvedValue([
+        normalizedWeights.map((w, i) => ({ oracle: filteredOracleIds[i], rating: w }))
+          .sort((a, b) => b.rating - a.rating),
+      ]);
 
       await generateBalancedPack(mockCube, mockCards, 'test-seed', 1);
 
       // Should exclude card2, card5, and card10 (no oracle_id)
-      expect(mockGetBotPrediction).toHaveBeenCalledWith([
-        'oracle_card1',
-        'oracle_card3',
-        'oracle_card4',
-        'oracle_card6',
-        'oracle_card7',
-        'oracle_card8',
-        'oracle_card9',
-        'oracle_card11',
-        'oracle_card12',
-        'oracle_card13',
-        'oracle_card14',
-        'oracle_card15',
+      expect(mockBatchDraft).toHaveBeenCalledWith([
+        {
+          pack: [
+            'oracle_card1',
+            'oracle_card3',
+            'oracle_card4',
+            'oracle_card6',
+            'oracle_card7',
+            'oracle_card8',
+            'oracle_card9',
+            'oracle_card11',
+            'oracle_card12',
+            'oracle_card13',
+            'oracle_card14',
+            'oracle_card15',
+          ],
+          pool: [],
+        },
       ]);
     });
   });

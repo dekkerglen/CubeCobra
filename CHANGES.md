@@ -15,6 +15,8 @@ Since 1.6.0
 - New `kw:`, `keyword:`, and `keywords:` filter for filtering cards by keyword (e.g. `kw:flying`, `keywords>3`)
 - New `is:standard` filter for cards that were first printed in a standard expansion set
 - New `is:supplemental` filter for cards that were first printed in supplemental products
+- Improved bot deckbuilding algorithm — cards are now added one at a time using ML scores with a cumulative 10% duplicate penalty per copy, preventing bots from stacking too many copies of the same card
+- Configurable deckbuild limits — cube owners can set the target number of spells (default 23) and lands (default 17) for bot-built decks in the Draft Formats settings page, supporting non-standard deck sizes
 
 # Bug Fixes
 - Fixed default sorts saved in views not being applied on page load — view-level `defaultSorts` are now used instead of only cube-level sorts

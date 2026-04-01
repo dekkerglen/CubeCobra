@@ -4,7 +4,7 @@ import User from '@utils/datatypes/User';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import Joi from 'joi';
-import { deckbuild } from 'serverutils/draftbots';
+import { batchDeckbuild } from 'serverutils/draftbots';
 import { addNotification } from 'serverutils/util';
 
 import { NextFunction, Request, Response } from '../../../types/express';
@@ -100,23 +100,40 @@ export const handler = async (req: Request, res: Response) => {
     draft.complete = true;
 
     // we need to build the bot decks
+    // Collect all bot seat inputs for a single batched ML call
+    const botSeats: { seatIndex: number; picks: number[] }[] = [];
     for (let i = 1; i < draft.seats.length; i += 1) {
       const stateSeat = body.state.seats[i];
       if (!stateSeat) continue;
+      botSeats.push({ seatIndex: i, picks: stateSeat.picks });
+    }
 
-      const picks = stateSeat.picks;
+    const basicsCards = draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean);
 
-      const { mainboard } = await deckbuild(
-        picks.map((index) => draft.cards[index]?.details).filter(Boolean),
-        draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean),
-      );
+    // Look up deckbuild settings from the cube
+    const cube = await cubeDao.getById(draft.cube);
+    const maxSpells = cube?.deckbuildSpells ?? 23;
+    const maxLands = cube?.deckbuildLands ?? 17;
+
+    const batchEntries = botSeats.map((bot) => ({
+      pool: bot.picks.map((index) => draft.cards[index]?.details).filter(Boolean),
+      basics: basicsCards,
+      maxSpells,
+      maxLands,
+    }));
+
+    const batchResults = await batchDeckbuild(batchEntries);
+
+    for (let b = 0; b < botSeats.length; b++) {
+      const { seatIndex, picks } = botSeats[b]!;
+      const { mainboard } = batchResults[b]!;
 
       const pool = picks.slice();
 
       const newMainboard = [];
 
       for (const oracle of mainboard) {
-        const poolIndex = pool.findIndex((cardindex) => {
+        const poolIndex = pool.findIndex((cardindex: number) => {
           const card = draft.cards[cardindex];
           return card ? cardOracleId(card) === oracle : false;
         });
@@ -165,7 +182,7 @@ export const handler = async (req: Request, res: Response) => {
         }
       }
 
-      const seat = draft.seats[i];
+      const seat = draft.seats[seatIndex];
       if (seat) {
         seat.mainboard = formattedMainboard;
         seat.sideboard = formattedSideboard;

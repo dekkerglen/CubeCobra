@@ -9,6 +9,7 @@ import { cubeDao, draftDao, notificationDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
+import { getBasicsFromCube } from 'serverutils/cube';
 import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 
 import { Request, Response } from '../../../../types/express';
@@ -64,15 +65,24 @@ export const handler = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Cube not found' });
     }
 
-    // start with basics, we add the rest of the cards after
-    const cards: CardDetails[] = [...cube.basics.map((card) => cardFromId(card))];
-    const basics: number[] = [...Array(cube.basics.length).keys()];
+    // Fetch cube cards to resolve basics from the designated board
+    const cubeCards = await cubeDao.getCards(publishDraftBody.cubeID);
+    const basicsBoard = cube.basicsBoard || 'Basics';
+    const basicsCardIds = getBasicsFromCube(cubeCards, basicsBoard, cube.basics);
+
+    // Pre-populate cards with basics so buildBotDeck can reference them by index
+    const cards: CardDetails[] = [...basicsCardIds.map((cardID) => cardFromId(cardID))];
+    const basics: number[] = [...Array(basicsCardIds.length).keys()];
 
     const seats: DraftSeatType[] = [];
     const draftmancerLog: DraftmancerLog = {
       sessionID: publishDraftBody.sessionID,
       players: [],
     };
+
+    // Look up deckbuild settings from the cube
+    const maxSpells = cube.deckbuildSpells ?? 23;
+    const maxLands = cube.deckbuildLands ?? 17;
 
     let drafterName: string = '';
     for (const player of publishDraftBody.players) {
@@ -83,7 +93,7 @@ export const handler = async (req: Request, res: Response) => {
 
       // we need to build the bot decks
       if (player.isBot) {
-        const result = await buildBotDeck(pickorder, basics, cards);
+        const result = await buildBotDeck(pickorder, basics, cards, maxSpells, maxLands);
         mainboard = result.mainboard;
         sideboard = result.sideboard;
       } else {
@@ -119,6 +129,7 @@ export const handler = async (req: Request, res: Response) => {
       cube: cube.id,
       InitialState: undefined, // we cannot calculate the initial state
       basics,
+      basicsBoard,
       seed: undefined, // we don't have a seed
       type: 'd', // we only support regular drafts for now
       owner: undefined, // anonymous, since we don't have a user

@@ -22,14 +22,9 @@ export const rssHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const items = [];
-    let lastKey = undefined;
-
-    do {
-      const queryResult = await blogDao.queryByCube(cube.id, lastKey, 128);
-      items.push(...queryResult.items);
-      lastKey = queryResult.lastKey;
-    } while (lastKey);
+    // Fetch only the most recent 50 blog posts — RSS feeds don't need the full history
+    const queryResult = await blogDao.queryByCube(cube.id, undefined, 50);
+    const items = queryResult.items;
 
     const baseUrl = getBaseUrl();
     const feed = new RSS({

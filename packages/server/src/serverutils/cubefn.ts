@@ -9,7 +9,7 @@ import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
 import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
-import { getBotPrediction } from './userUtil';
+import { batchDraft } from './ml';
 import * as util from './util';
 
 interface CubeCard {
@@ -612,6 +612,8 @@ async function generateBalancedPack(
   const baseSeed = deterministicSeed || Date.now();
   const packCandidates: BalancedPackCandidate[] = [];
 
+  // Generate all candidate packs first
+  const candidates: { packResult: any; oracleIds: string[] }[] = [];
   for (let i = 0; i < candidateCount; i++) {
     const seed = `${seedPrefix}-${baseSeed}-${i}`;
     const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
@@ -629,20 +631,44 @@ async function generateBalancedPack(
         }) ?? [],
     };
 
-    // Extract oracle IDs for bot prediction
     const oracleIds = packResult.pack.map((card: any) => card.details?.oracle_id).filter(Boolean);
+    candidates.push({ packResult, oracleIds });
+  }
 
-    // Get bot prediction
-    const botResult = await getBotPrediction(oracleIds);
+  // Single batched ML call for all candidates (P1P1: pack=oracleIds, pool=[])
+  const batchInputs = candidates.map((c) => ({ pack: c.oracleIds, pool: [] as string[] }));
+  const batchResults = await batchDraft(batchInputs);
 
-    // Calculate the maximum bot weight for this pack
+  for (let i = 0; i < candidates.length; i++) {
+    const { packResult, oracleIds } = candidates[i]!;
+    const predictions = batchResults[i] || [];
+
+    // Convert predictions to BotResult format
+    const botWeights = new Array(oracleIds.length).fill(0);
+    predictions.forEach((prediction: { oracle: string; rating: number }) => {
+      const cardIndex = oracleIds.findIndex((oracleId: string) => oracleId === prediction.oracle);
+      if (cardIndex >= 0) {
+        botWeights[cardIndex] = prediction.rating;
+      }
+    });
+
+    const topPick = predictions[0];
+    const botPickIndex = topPick
+      ? oracleIds.findIndex((oracleId: string) => oracleId === topPick.oracle)
+      : -1;
+
+    const botResult = {
+      botPickIndex: botPickIndex >= 0 ? botPickIndex : null,
+      botWeights,
+    };
+
     const maxBotWeight = Math.max(...(botResult.botWeights.length > 0 ? botResult.botWeights : [0]));
 
     packCandidates.push({
       packResult,
       botResult,
       maxBotWeight,
-      seed: seedPrefix, // Use original seedPrefix for consistency
+      seed: seedPrefix,
     });
   }
 

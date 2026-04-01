@@ -4,7 +4,7 @@ import { Request, Response } from '../../../../types/express';
 
 export const deckbuildHandler = async (req: Request, res: Response) => {
   try {
-    const { pool, basics } = req.body;
+    const { pool, basics, maxSpells, maxLands } = req.body;
 
     if (!pool || !basics) {
       return res.status(400).send({
@@ -13,7 +13,12 @@ export const deckbuildHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const { mainboard, sideboard } = await deckbuild(pool, basics);
+    const { mainboard, sideboard } = await deckbuild(
+      pool,
+      basics,
+      maxSpells ?? 23,
+      maxLands ?? 17,
+    );
 
     return res.status(200).send({
       success: 'true',

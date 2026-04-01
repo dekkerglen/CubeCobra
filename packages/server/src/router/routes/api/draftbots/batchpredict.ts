@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { draft } from 'serverutils/ml';
+import { batchDraft } from 'serverutils/ml';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -45,16 +45,20 @@ const handler = async (req: Request, res: Response) => {
   const predictBody = req.body as PredictBody;
 
   try {
-    // Pre-allocate array to avoid reallocation during map
     const inputs = predictBody.inputs;
-    const prediction = new Array(inputs.length);
+
+    // Validate all inputs up front
     for (let i = 0; i < inputs.length; i++) {
       const input = inputs[i];
       if (!input || !input.pack || !input.picks) {
         throw new Error(`Invalid input at index ${i}`);
       }
-      prediction[i] = await draft(input.pack, input.picks);
     }
+
+    // Single batched ML call — the model processes all inputs in one tensor forward pass
+    const prediction = await batchDraft(
+      inputs.map((input) => ({ pack: input.pack, pool: input.picks })),
+    );
 
     const result: PredictResponse = {
       prediction,

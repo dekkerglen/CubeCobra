@@ -55,6 +55,10 @@ const DraftFormatsSettings: React.FC = () => {
 
   const [basicsBoard, setBasicsBoard] = useState(defaultBasicsBoard);
 
+  // Deckbuild limits
+  const [deckbuildSpells, setDeckbuildSpells] = useState<number>(cube.deckbuildSpells ?? 23);
+  const [deckbuildLands, setDeckbuildLands] = useState<number>(cube.deckbuildLands ?? 17);
+
   const getInitialFormats = useCallback((): DraftFormat[] => {
     if (cube.formats && cube.formats.length > 0) {
       return cube.formats.map((f) => ({
@@ -79,6 +83,8 @@ const DraftFormatsSettings: React.FC = () => {
       enableMultiplayer,
       basicsBoard,
       defaultFormat,
+      deckbuildSpells,
+      deckbuildLands,
     });
     const initialState = JSON.stringify({
       formats: getInitialFormats(),
@@ -88,6 +94,8 @@ const DraftFormatsSettings: React.FC = () => {
       enableMultiplayer: !cube.disableMultiplayer,
       basicsBoard: defaultBasicsBoard,
       defaultFormat: cube.defaultFormat ?? -1,
+      deckbuildSpells: cube.deckbuildSpells ?? 23,
+      deckbuildLands: cube.deckbuildLands ?? 17,
     });
     setHasChanges(currentState !== initialState);
   }, [
@@ -98,6 +106,8 @@ const DraftFormatsSettings: React.FC = () => {
     enableMultiplayer,
     basicsBoard,
     defaultFormat,
+    deckbuildSpells,
+    deckbuildLands,
     getInitialFormats,
     cube.disableDraft,
     cube.disableSealed,
@@ -105,6 +115,8 @@ const DraftFormatsSettings: React.FC = () => {
     cube.disableMultiplayer,
     defaultBasicsBoard,
     cube.defaultFormat,
+    cube.deckbuildSpells,
+    cube.deckbuildLands,
   ]);
 
   const addFormat = () => {
@@ -202,6 +214,8 @@ const DraftFormatsSettings: React.FC = () => {
     setEnableMultiplayer(!cube.disableMultiplayer);
     setBasicsBoard(defaultBasicsBoard);
     setDefaultFormat(cube.defaultFormat ?? -1);
+    setDeckbuildSpells(cube.deckbuildSpells ?? 23);
+    setDeckbuildLands(cube.deckbuildLands ?? 17);
     setError('');
   };
 
@@ -265,6 +279,37 @@ const DraftFormatsSettings: React.FC = () => {
                 value={basicsBoard}
                 setValue={setBasicsBoard}
               />
+            </Flexbox>
+
+            {/* Deckbuild Limits */}
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
+                Deckbuild Limits
+              </Text>
+              <Text sm className="text-text-secondary">
+                Configure the target number of spells and lands (including basics) for bot-built decks.
+              </Text>
+              <Flexbox direction="row" gap="4" alignItems="end" className="max-w-md">
+                <div className="w-28">
+                  <Input
+                    label="Max spells"
+                    type="number"
+                    value={`${deckbuildSpells}`}
+                    onChange={(e) => setDeckbuildSpells(parseInt(e.target.value, 10) || 23)}
+                  />
+                </div>
+                <div className="w-28">
+                  <Input
+                    label="Max lands"
+                    type="number"
+                    value={`${deckbuildLands}`}
+                    onChange={(e) => setDeckbuildLands(parseInt(e.target.value, 10) || 17)}
+                  />
+                </div>
+                <Text sm className="text-text-secondary pb-2 whitespace-nowrap">
+                  = {deckbuildSpells + deckbuildLands} card deck
+                </Text>
+              </Flexbox>
             </Flexbox>
 
             {/* Default Format */}
@@ -480,6 +525,8 @@ const DraftFormatsSettings: React.FC = () => {
             enableGrid: enableGrid.toString(),
             basicsBoard,
             defaultFormat: defaultFormat.toString(),
+            deckbuildSpells: deckbuildSpells.toString(),
+            deckbuildLands: deckbuildLands.toString(),
           }}
           ref={formRef}
         />

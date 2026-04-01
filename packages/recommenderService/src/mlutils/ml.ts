@@ -312,6 +312,95 @@ export const draft = (pack: string[], pool: string[]) => {
   return res.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 };
 
+export const batchDraft = (inputs: { pack: string[]; pool: string[] }[]): { oracle: string; rating: number }[][] => {
+  if (!encoder || !draftDecoder || inputs.length === 0) {
+    return inputs.map(() => []);
+  }
+
+  // Build a batched input tensor [N, numOracles] for all pools at once
+  const vectors = inputs.map((input) =>
+    encodeIndeces(
+      input.pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
+    ),
+  );
+
+  // Single forward pass through encoder + decoder for all inputs
+  const batchedArray = tidy(() => {
+    const inputTensor = tensor(vectors);
+    const encoded = encoder.predict(inputTensor) as any;
+    const result = draftDecoder.predict([encoded]) as any;
+    return result.arraySync();
+  });
+
+  const allOracles = getAllOracleIds();
+
+  // Post-process each result individually (pack masking + softmax)
+  return inputs.map((input, batchIdx) => {
+    const array = batchedArray[batchIdx];
+
+    const packVector = encodeIndeces(
+      input.pack
+        .map((oracle) => oracleIdToMlIndex(oracle))
+        .filter((index): index is number => index !== null && index !== undefined),
+    );
+    const mask = packVector.map((x) => 1e9 * (1 - x));
+
+    const softmaxed = softmax(array.map((x: number, i: number) => x * packVector[i] - (mask[i] ?? 0)));
+
+    const res = [];
+    for (const oracle of allOracles) {
+      const index = oracleIdToMlIndex(oracle);
+      if (index === null || index === undefined) continue;
+      if (input.pack.includes(oracle)) {
+        res.push({ oracle, rating: softmaxed[index] ?? 0 });
+      }
+    }
+    return res.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  });
+};
+
+export const batchBuild = (inputs: string[][]): { oracle: string; rating: number }[][] => {
+  if (!encoder || !deckbuilderDecoder || inputs.length === 0) {
+    return inputs.map(() => []);
+  }
+
+  const allOracles = getAllOracleIds();
+
+  // Build a batched input tensor [N, numOracles] for all pools at once
+  const vectors = inputs.map((oracles) =>
+    encodeIndeces(
+      oracles
+        .map((oracle) => oracleIdToMlIndex(oracle))
+        .filter((index): index is number => index !== null && index !== undefined),
+    ),
+  );
+
+  // Single forward pass through encoder + decoder for all inputs
+  const batchedArray: number[][] = tidy(() => {
+    const inputTensor = tensor(vectors);
+    const encoded = encoder.predict(inputTensor) as any;
+    const result = deckbuilderDecoder.predict([encoded]) as any;
+    return result.arraySync();
+  });
+
+  // Post-process each result: filter to only oracles present in the input pool
+  return inputs.map((oracles, batchIdx) => {
+    const array = batchedArray[batchIdx];
+    if (!array) return [];
+    const res: { oracle: string; rating: number }[] = [];
+
+    for (const oracle of allOracles) {
+      const index = oracleIdToMlIndex(oracle);
+      if (index === null || index === undefined) continue;
+      if (oracles.includes(oracle)) {
+        res.push({ oracle, rating: array[index] ?? 0 });
+      }
+    }
+
+    return res.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  });
+};
+
 export const oracleInData = (oracle: string): boolean => {
   return oracleToIndex[oracle] !== undefined;
 };

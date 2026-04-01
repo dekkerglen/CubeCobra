@@ -4,11 +4,15 @@ import carddb, { cardFromId } from './carddb';
 import { error } from './cloudwatch';
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5002';
+const ML_TIMEOUT_MS = 10_000; // 10 second timeout for ML service calls
 
 /**
  * Make a request to the ML recommender service
  */
 async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ML_TIMEOUT_MS);
+
   try {
     const response = await fetch(`${ML_SERVICE_URL}/${endpoint}`, {
       method: 'POST',
@@ -16,6 +20,7 @@ async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -36,6 +41,8 @@ async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
       error(`ML service request to ${endpoint} failed`, err instanceof Error ? err.stack : String(err));
     }
     throw err;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -109,5 +116,37 @@ export const draft = async (pack: string[], pool: string[]): Promise<{ oracle: s
   } catch {
     console.warn('Failed to draft, returning empty array');
     return [];
+  }
+};
+
+export const batchDraft = async (
+  inputs: { pack: string[]; pool: string[] }[],
+): Promise<{ oracle: string; rating: number }[][]> => {
+  try {
+    const response = await mlServiceRequest<{
+      success: boolean;
+      results: { oracle: string; rating: number }[][];
+    }>('batchdraft', { inputs });
+
+    return response.results;
+  } catch {
+    console.warn('Failed to batch draft, returning empty arrays');
+    return inputs.map(() => []);
+  }
+};
+
+export const batchBuild = async (
+  inputs: string[][],
+): Promise<{ oracle: string; rating: number }[][]> => {
+  try {
+    const response = await mlServiceRequest<{
+      success: boolean;
+      results: { oracle: string; rating: number }[][];
+    }>('batchbuild', { inputs });
+
+    return response.results;
+  } catch {
+    console.warn('Failed to batch build, returning empty arrays');
+    return inputs.map(() => []);
   }
 };

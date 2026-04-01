@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import { EyeIcon, FileMediaIcon, PencilIcon, ZapIcon } from '@primer/octicons-react';
 import { cardOracleId } from '@utils/cardutil';
@@ -12,6 +12,7 @@ import { CSRFContext } from '../contexts/CSRFContext';
 import Dropdown from './base/Dropdown';
 import { Flexbox } from './base/Layout';
 import Link from './base/Link';
+import Spinner from './base/Spinner';
 import CSRFForm from './CSRFForm';
 import BasicsModal from './modals/BasicsModal';
 import withModal from './WithModal';
@@ -32,6 +33,8 @@ interface DeckbuilderNavbarProps {
   setDeck: (deck: any) => void;
   setSideboard: (sideboard: any) => void;
   seat: number;
+  maxSpells?: number;
+  maxLands?: number;
 }
 
 const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
@@ -45,12 +48,15 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   setSideboard,
   setDeck,
   seat,
+  maxSpells = 23,
+  maxLands = 17,
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
     useContext(DisplayContext);
   const formRef = useRef<HTMLFormElement>(null);
   const [displayDropdownOpen, setDisplayDropdownOpen] = React.useState(false);
+  const [autobuilding, setAutobuilding] = useState(false);
   const formData = useMemo<Record<string, string>>(
     () => ({
       main: JSON.stringify(mainboard),
@@ -61,6 +67,8 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   );
 
   const autoBuildDeck = useCallback(async () => {
+    setAutobuilding(true);
+    try {
     const response = await csrfFetch('/cube/api/deckbuild', {
       method: 'POST',
       headers: {
@@ -69,6 +77,8 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
       body: JSON.stringify({
         pool: [...mainboard.flat(3), ...sideboard.flat(3)].map((index) => cards[index].details),
         basics: basics.map((index) => cards[index].details),
+        maxSpells,
+        maxLands,
       }),
     });
 
@@ -119,6 +129,9 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
     } else {
       console.error(json);
     }
+    } finally {
+      setAutobuilding(false);
+    }
   }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard]);
 
   return (
@@ -137,10 +150,15 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         Add Basics
       </BasicsModalLink>
       <Link
-        onClick={() => autoBuildDeck()}
-        className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+        onClick={() => !autobuilding && autoBuildDeck()}
+        className={`flex items-center gap-2 transition-colors font-medium px-2 ${
+          autobuilding
+            ? '!text-text-secondary !cursor-not-allowed pointer-events-none opacity-60'
+            : '!text-link hover:!text-link-active !cursor-pointer'
+        }`}
+        aria-disabled={autobuilding}
       >
-        <ZapIcon size={16} />
+        {autobuilding ? <Spinner sm /> : <ZapIcon size={16} />}
         Autobuild
       </Link>
       <Dropdown
