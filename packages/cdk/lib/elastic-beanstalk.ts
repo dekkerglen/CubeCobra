@@ -168,6 +168,33 @@ export class ElasticBeanstalk extends Construct {
           optionName: 'StickinessEnabled',
           value: 'true',
         },
+        // Enhanced health reporting (required for managed actions)
+        {
+          namespace: 'aws:elasticbeanstalk:healthreporting:system',
+          optionName: 'SystemType',
+          value: 'enhanced',
+        },
+        // Managed actions - periodic instance refresh to mitigate memory leak
+        {
+          namespace: 'aws:elasticbeanstalk:managedactions',
+          optionName: 'ManagedActionsEnabled',
+          value: 'true',
+        },
+        {
+          namespace: 'aws:elasticbeanstalk:managedactions',
+          optionName: 'PreferredStartTime',
+          value: 'Sun:06:00',
+        },
+        {
+          namespace: 'aws:elasticbeanstalk:managedactions',
+          optionName: 'ServiceRoleForManagedUpdates',
+          value: 'AWSServiceRoleForElasticBeanstalkManagedUpdates',
+        },
+        {
+          namespace: 'aws:elasticbeanstalk:managedactions:platformupdate',
+          optionName: 'InstanceRefreshEnabled',
+          value: 'true',
+        },
         ...Object.keys(props.environmentVariables).map((key) => ({
           namespace: 'aws:elasticbeanstalk:application:environment',
           optionName: key,

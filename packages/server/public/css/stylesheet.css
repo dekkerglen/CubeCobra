@@ -1442,6 +1442,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .cursor-grab {
   cursor: grab;
 }
+.cursor-help {
+  cursor: help;
+}
 .cursor-not-allowed {
   cursor: not-allowed;
 }
@@ -2513,6 +2516,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .text-text-secondary-active {
   --tw-text-opacity: 1;
   color: rgb(var(--text-secondary-active) / var(--tw-text-opacity));
+}
+.text-text-secondary\/50 {
+  color: rgb(var(--text-secondary) / 0.5);
 }
 .text-white {
   --tw-text-opacity: 1;

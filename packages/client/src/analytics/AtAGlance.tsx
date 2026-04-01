@@ -8,7 +8,7 @@ import {
   Chart as ChartJS,
   Legend,
   LinearScale,
-  Tooltip,
+  Tooltip as ChartTooltip,
 } from 'chart.js';
 
 import {
@@ -31,12 +31,13 @@ import type Card from '@utils/datatypes/Card';
 import { Card as CardUI, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Text from '../components/base/Text';
+import Tooltip from '../components/base/Tooltip';
 import CardKingdomBulkButton from '../components/purchase/CardKingdomBulkButton';
 import ManaPoolBulkButton from '../components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
 import CubeContext from '../contexts/CubeContext';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, ChartTooltip, Legend);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -141,31 +142,18 @@ const getMajorType = (card: Card): string => {
   return 'Other';
 };
 
-const rarityValue = (r: string): number => {
-  switch (r?.toLowerCase()) {
-    case 'mythic':
-      return 1;
-    case 'rare':
-      return 2 / 3;
-    case 'uncommon':
-      return 1 / 3;
-    default:
-      return 0;
-  }
-};
-
 
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const StatRow: React.FC<{ label: string; value: string; tooltip?: string }> = ({ label, value, tooltip }) => (
-  <div className="flex justify-between py-1 border-b border-border last:border-b-0 px-2" title={tooltip}>
+  <div className="flex justify-between py-1 border-b border-border last:border-b-0 px-2">
     <Text xs className="text-text-secondary">
       {label}
       {tooltip && (
-        <span className="ml-1 text-text-secondary/50 cursor-help" title={tooltip}>
-          ⓘ
-        </span>
+        <Tooltip text={tooltip} wrapperTag="span" position="bottom">
+          <span className="ml-1 text-text-secondary/50">ⓘ</span>
+        </Tooltip>
       )}
     </Text>
     <Text xs semibold>
@@ -174,15 +162,21 @@ const StatRow: React.FC<{ label: string; value: string; tooltip?: string }> = ({
   </div>
 );
 
-const ChartCard: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({
+const ChartCard: React.FC<{ title: string; children: React.ReactNode; className?: string; tooltip?: string }> = ({
   title,
   children,
   className,
+  tooltip,
 }) => (
   <CardUI className={className}>
     <CardHeader>
       <Text semibold md>
         {title}
+        {tooltip && (
+          <Tooltip text={tooltip} wrapperTag="span" position="bottom">
+            <span className="ml-1 text-text-secondary/50">ⓘ</span>
+          </Tooltip>
+        )}
       </Text>
     </CardHeader>
     <CardBody>{children}</CardBody>
@@ -266,7 +260,6 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
     const avgCmc = nonLandCards.length > 0 ? nonLandCards.reduce((s, c) => s + cardCmc(c), 0) / nonLandCards.length : 0;
     const avgElo = total > 0 ? cards.reduce((s, c) => s + cardElo(c), 0) / total : 0;
     const avgPopularity = total > 0 ? cards.reduce((s, c) => s + cardPopularity(c), 0) / total : 0;
-    const rarityScore = total > 0 ? cards.reduce((s, c) => s + rarityValue(cardRarity(c)), 0) / total : 0;
 
     // Release year stats
     const years = cards.map((c) => cardFirstPrintYear(c)).filter((y) => y > 0);
@@ -295,7 +288,6 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
       avgCmc,
       avgElo,
       avgPopularity,
-      rarityScore,
       avgYear,
       yearStd,
       medYear,
@@ -310,21 +302,28 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
   // ── Lazy-loaded min pricing (server-side cheapest oracle) ──────────────
 
   const [minPrice, setMinPrice] = useState<number | null>(null);
-  const [minPriceLoading, setMinPriceLoading] = useState(false);
+  const [serverActualPrice, setServerActualPrice] = useState<number | null>(null);
+  const [pricesLoading, setPricesLoading] = useState(false);
 
   useEffect(() => {
     if (cube.priceVisibility !== 'pu') return;
-    setMinPriceLoading(true);
+    setPricesLoading(true);
     fetch(`/cube/api/minprices/${cube.id}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success === 'true') {
           setMinPrice(data.totalMinPrice);
+          if (typeof data.totalActualPrice === 'number') {
+            setServerActualPrice(data.totalActualPrice);
+          }
         }
       })
       .catch(() => {})
-      .finally(() => setMinPriceLoading(false));
+      .finally(() => setPricesLoading(false));
   }, [cube.id, cube.priceVisibility]);
+
+  // Use server-computed actual price (includes fallback for unpriced printings) when available
+  const displayActualPrice = serverActualPrice ?? stats.totalActualPrice;
 
   // ── Chart Data ────────────────────────────────────────────────────────────
 
@@ -509,6 +508,59 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
     };
   }, [cards]);
 
+  // Popularity Distribution (histogram, dynamic buckets)
+  const popularityHistogramData = useMemo(() => {
+    const pops = cards.map((c) => cardPopularity(c));
+    if (pops.length === 0) return { labels: [] as string[], datasets: [] };
+
+    const maxPop = Math.max(...pops);
+    const bucketSize = Math.max(1, Math.ceil(maxPop / 15));
+    const labels: string[] = [];
+    const counts: number[] = [];
+    for (let b = 0; b <= maxPop; b += bucketSize) {
+      labels.push(bucketSize === 1 ? `${b}%` : `${b}-${b + bucketSize - 1}%`);
+      counts.push(pops.filter((p) => p >= b && p < b + bucketSize).length);
+    }
+
+    return {
+      labels,
+      datasets: [{ data: counts, backgroundColor: '#B87BD6', borderRadius: 2 }],
+    };
+  }, [cards]);
+
+  // Price Distribution (histogram, dynamic buckets)
+  const priceHistogramData = useMemo(() => {
+    const prices = cards.map((c) => cardPrice(c)).filter((p): p is number => p !== undefined && p > 0);
+    if (prices.length === 0) return { labels: [] as string[], datasets: [] };
+
+    const bucketEdges = [0, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
+    // Find the last bucket that has cards
+    const maxPrice = Math.max(...prices);
+    const lastIdx = bucketEdges.findIndex((e) => e > maxPrice);
+    const edges = lastIdx === -1 ? bucketEdges : bucketEdges.slice(0, lastIdx + 1);
+
+    const labels: string[] = [];
+    const counts: number[] = [];
+    for (let i = 0; i < edges.length - 1; i++) {
+      const lo = edges[i];
+      const hi = edges[i + 1];
+      labels.push(`$${lo}-${hi}`);
+      counts.push(prices.filter((p) => p >= lo && p < hi).length);
+    }
+    // Last bucket: captures anything >= last edge
+    const lastEdge = edges[edges.length - 1];
+    const lastCount = prices.filter((p) => p >= lastEdge).length;
+    if (lastCount > 0) {
+      labels.push(`$${lastEdge}+`);
+      counts.push(lastCount);
+    }
+
+    return {
+      labels,
+      datasets: [{ data: counts, backgroundColor: '#5DAE68', borderRadius: 2 }],
+    };
+  }, [cards]);
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -543,8 +595,7 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
             <div>
               <StatRow label="Avg. Mana Value" value={fmt(stats.avgCmc)} />
               <StatRow label="Avg. Card Elo" value={fmt(stats.avgElo)} />
-              <StatRow label="Avg. Card Popularity" value={fmt(stats.avgPopularity)} />
-              <StatRow label="Rarity Score" value={fmt(stats.rarityScore)} />
+              <StatRow label="Avg. Card Popularity" value={`${fmt(stats.avgPopularity)}%`} tooltip="Average percentage of cubes on Cube Cobra that include each card in this cube" />
               <StatRow
                 label="Avg. Release Year"
                 value={stats.avgYear > 0 ? `${Math.round(stats.avgYear)} (±${fmt(stats.yearStd, 1)})` : 'N/A'}
@@ -566,13 +617,13 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
               </Text>
             </CardHeader>
             <div>
-              {cube.priceVisibility === 'pu' && minPriceLoading && (
+              {cube.priceVisibility === 'pu' && pricesLoading && (
                 <StatRow label="Min Price (USD)" value="Loading..." tooltip="Total cost using the cheapest available printing of each card across all sets" />
               )}
               {cube.priceVisibility === 'pu' && minPrice !== null && (
                 <StatRow label="Min Price (USD)" value={`$${minPrice.toFixed(2)}`} tooltip="Total cost using the cheapest available printing of each card across all sets" />
               )}
-              <StatRow label="Actual Price (USD)" value={`$${stats.totalActualPrice.toFixed(2)}`} tooltip="Total cost using the specific printings currently in your cube" />
+              <StatRow label="Actual Price (USD)" value={pricesLoading ? 'Loading...' : `$${displayActualPrice.toFixed(2)}`} tooltip="Total cost using the specific printings in your cube (falls back to cheapest version for unpriced printings)" />
               {stats.totalTix > 0 && <StatRow label="MTGO" value={`${stats.totalTix.toFixed(2)} TIX`} tooltip="Total cost in Magic Online event tickets" />}
             </div>
             <Flexbox direction="col" gap="2" className="p-2">
@@ -632,6 +683,20 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
         <Col xs={12} lg={6}>
           <ChartCard title="Word Count Distribution">
             <Bar data={wordCountHistogramData} options={histogramOptions} />
+          </ChartCard>
+        </Col>
+      </Row>
+
+      {/* ─── Row 5: Histograms (Popularity + Price) ──────────────────── */}
+      <Row className="g-3">
+        <Col xs={12} lg={6}>
+          <ChartCard title="Popularity Distribution" tooltip="Percentage of cubes on Cube Cobra that include each card — shows how niche or ubiquitous your card choices are">
+            <Bar data={popularityHistogramData} options={histogramOptions} />
+          </ChartCard>
+        </Col>
+        <Col xs={12} lg={6}>
+          <ChartCard title="Price Distribution">
+            <Bar data={priceHistogramData} options={histogramOptions} />
           </ChartCard>
         </Col>
       </Row>

@@ -1,3 +1,4 @@
+import { cardPrice } from '@utils/cardutil';
 import { PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getIdsFromName } from 'serverutils/carddb';
@@ -33,7 +34,7 @@ export const minPricesHandler = async (req: Request, res: Response) => {
       }
     }
 
-    // Find the cheapest printing for each card name
+    // Find the cheapest printing for each card name (checking usd, usd_foil, AND usd_etched)
     const cheapestDict: Record<string, number> = {};
     for (const name of Object.keys(nameToCards)) {
       const versions = nameToCards[name] || [];
@@ -45,23 +46,41 @@ export const minPricesHandler = async (req: Request, res: Response) => {
         if (version.prices?.usd_foil && version.prices.usd_foil < cheapest) {
           cheapest = version.prices.usd_foil;
         }
+        if (version.prices?.usd_etched && version.prices.usd_etched < cheapest) {
+          cheapest = version.prices.usd_etched;
+        }
       }
       if (cheapest < Infinity) {
         cheapestDict[name] = cheapest;
       }
     }
 
-    // Sum up the cheapest price for each card in the mainboard
+    // For each card, determine its actual price and the cheapest alternative.
+    // If the specific printing has no price, fall back to the cheapest available version.
     let totalMinPrice = 0;
+    let totalActualPrice = 0;
     for (const card of mainboard) {
       if (card.details) {
-        totalMinPrice += cheapestDict[card.details.name] || 0;
+        const ownPrice = cardPrice(card);
+        const cheapest = cheapestDict[card.details.name];
+
+        if (ownPrice !== undefined && ownPrice > 0) {
+          // Card's specific printing is priced
+          totalActualPrice += ownPrice;
+          totalMinPrice += cheapest !== undefined ? Math.min(cheapest, ownPrice) : ownPrice;
+        } else if (cheapest !== undefined) {
+          // Specific printing has no price — fall back to cheapest version
+          totalActualPrice += cheapest;
+          totalMinPrice += cheapest;
+        }
+        // else: no price anywhere, contributes $0 to both totals
       }
     }
 
     return res.status(200).send({
       success: 'true',
       totalMinPrice,
+      totalActualPrice,
     });
   } catch (err) {
     const error = err as Error;
