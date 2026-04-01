@@ -517,6 +517,8 @@ export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 
 export const cardReleaseDate = (card: Card): string => card.details?.released_at ?? '';
 
+export const cardFirstPrintYear = (card: Card): number => card.details?.firstPrintYear ?? 0;
+
 export const cardWordCount = (card: Card): number => {
   if (!card.details?.oracle_text) {
     return 0;
@@ -528,6 +530,8 @@ export const cardWordCount = (card: Card): number => {
 };
 
 export const cardGames = (card: Card): Game[] => card.details?.games ?? [];
+
+export const cardKeywords = (card: Card): string[] => card.details?.keywords ?? [];
 
 export const cardIsReserved = (card: Card): boolean => card.details?.reserved ?? false;
 
@@ -682,6 +686,8 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   universesbeyond: isUniversesBeyond,
   ub: isUniversesBeyond,
   reserved: (details) => details.reserved,
+  standard: (details) => details.printedInExpansion === true,
+  supplemental: (details) => details.printedInExpansion === false,
 
   // Others from Scryfall:
   //   reserved, new, old, hires,
@@ -840,6 +846,8 @@ export default {
   cardTokens,
   cardDevotion,
   cardWordCount,
+  cardKeywords,
+  cardFirstPrintYear,
   cardLayout,
   cardIsSpecialZoneType,
   cardElo,

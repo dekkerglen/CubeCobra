@@ -47,10 +47,14 @@ interface Catalog {
 interface SetRelease {
   code: string;
   released_at: Date;
+  set_type: string;
 }
 
 const sets: SetRelease[] = [];
 let orderedSetCodes: string[] = [];
+
+// Lookup set_type by set code (populated during processSets)
+const setTypeByCode: Record<string, string> = {};
 
 const catalog: Catalog = {
   dict: {},
@@ -64,6 +68,12 @@ const catalog: Catalog = {
   metadatadict: {},
   indexToOracleId: [],
 };
+
+// Track the earliest released_at per oracle_id to compute firstPrintYear
+const earliestReleaseByOracle: Record<string, string> = {};
+
+// Track which oracle_ids have appeared in an expansion set
+const oracleInExpansion: Set<string> = new Set();
 
 const PRIVATE_DIR = path.resolve(__dirname, '..', '..', 'server', 'private');
 
@@ -170,6 +180,20 @@ const addToNameToIdMap = (normalizedName: string, scryFallId: string) => {
 
 function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
   catalog.dict[card.scryfall_id] = card;
+
+  // Track earliest release date per oracle_id
+  if (card.oracle_id && card.released_at) {
+    const existing = earliestReleaseByOracle[card.oracle_id];
+    if (!existing || card.released_at < existing) {
+      earliestReleaseByOracle[card.oracle_id] = card.released_at;
+    }
+  }
+
+  // Track if this oracle has ever appeared in an expansion set
+  if (card.oracle_id && card.set_type === 'expansion') {
+    oracleInExpansion.add(card.oracle_id);
+  }
+
   const normalizedFullName = cardutil.normalizeName(card.full_name);
   const normalizedName = cardutil.normalizeName(card.name);
   catalog.imagedict[normalizedFullName] = {
@@ -492,6 +516,7 @@ function convertCard(
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
   newcard.set_name = card.set_name;
+  newcard.set_type = setTypeByCode[card.set] || undefined;
   newcard.setIndex = orderedSetCodes.indexOf(newcard.set);
   newcard.finishes = card.finishes;
   newcard.collector_number = card.collector_number;
@@ -806,6 +831,20 @@ async function saveAllCards(
 
   catalog.indexToOracleId = indexToOracle;
   catalog.metadatadict = metadatadict;
+
+  // Set firstPrintYear and printedInExpansion on all cards based on oracle_id data
+  console.info('Computing firstPrintYear and printedInExpansion for all cards...');
+  for (const card of Object.values(catalog.dict)) {
+    const earliest = earliestReleaseByOracle[card.oracle_id];
+    if (earliest) {
+      const year = parseInt(earliest.substring(0, 4), 10);
+      if (!isNaN(year)) {
+        card.firstPrintYear = year;
+      }
+    }
+    card.printedInExpansion = oracleInExpansion.has(card.oracle_id);
+  }
+  console.info('Finished computing firstPrintYear and printedInExpansion.');
 }
 
 async function saveSet(set: ScryfallSet) {
@@ -818,6 +857,7 @@ async function saveSet(set: ScryfallSet) {
     code: set.code,
     //Set Pacific time offset based on Scryfalls API. Even though JS dates suck at timezones
     released_at: new Date(`${set.released_at!}T00:00:00-08:00`),
+    set_type: set.set_type,
   });
 }
 
@@ -844,6 +884,11 @@ const sortSets = async () => {
   });
 
   orderedSetCodes = sets.map((set) => set.code);
+
+  // Build set_type lookup by set code
+  for (const set of sets) {
+    setTypeByCode[set.code] = set.set_type;
+  }
 };
 
 const downloadFromScryfall = async (

@@ -314,6 +314,48 @@ const FiltersPage: React.FC = () => (
                 ]}
               />
             </Accordion>
+            <Accordion title="Keywords">
+              <p>
+                You can use <code>kw:</code>, <code>keyword:</code>, or <code>keywords:</code> to search for cards with
+                specific keywords (e.g. Flying, Trample, Deathtouch).
+              </p>
+              <p>
+                Operators supported: <code>:</code>, <code>=</code> for matching keyword text, and <code>=</code>,{' '}
+                <code>{'<'}</code>, <code>{'>'}</code>, <code>{'<='}</code>, <code>{'>='}</code>, <code>!=</code>,{' '}
+                <code>{'<>'}</code> for comparing keyword count.
+              </p>
+              <p>
+                Use <code>:</code> for partial matching (contains) and <code>=</code> with a string for an exact keyword
+                match. Use numeric comparisons to filter by the number of keywords a card has.
+              </p>
+              <p>
+                <Text semibold>Examples:</Text>
+              </p>
+              <Table
+                rows={[
+                  {
+                    query: <code>kw:flying</code>,
+                    description: 'cards that have the Flying keyword.',
+                  },
+                  {
+                    query: <code>keyword=trample</code>,
+                    description: 'cards that have exactly the keyword "Trample".',
+                  },
+                  {
+                    query: <code>kw:death</code>,
+                    description: 'cards with a keyword containing "death" (e.g. Deathtouch).',
+                  },
+                  {
+                    query: <code>{'keywords>3'}</code>,
+                    description: 'cards with more than 3 keywords.',
+                  },
+                  {
+                    query: <code>keywords=0</code>,
+                    description: 'cards with no keywords.',
+                  },
+                ]}
+              />
+            </Accordion>
             <Accordion title="Mana Costs">
               <p>
                 You can use <code>m:</code> or <code>mana:</code> to search for cards with specific mana costs.
@@ -717,6 +759,14 @@ const FiltersPage: React.FC = () => (
                     query: <code>is:universesbeyond</code>,
                     description: 'All cards that are Universes Beyond. Also works with is:ub.',
                   },
+                  {
+                    query: <code>is:standard</code>,
+                    description: 'All cards that were printed in a standard expansion set.',
+                  },
+                  {
+                    query: <code>is:supplemental</code>,
+                    description: 'All cards that were only printed in supplemental products (never in a standard expansion).',
+                  },
                 ]}
               />
             </Accordion>
@@ -728,6 +778,39 @@ const FiltersPage: React.FC = () => (
                   Primary: <code>is:{primary}</code>,
                   Alternatives: alternates ? alternates.map((a) => `is:${a}`).join(' or ') : '',
                 }))}
+              />
+            </Accordion>
+            <Accordion title="First Print Year">
+              <p>
+                You can use <code>year:</code>, <code>firstyear:</code>, or <code>fy:</code> to search for cards by the
+                year they were first printed.
+              </p>
+              <p>
+                Operators supported: <code>:</code>, <code>=</code>, <code>{'<'}</code>, <code>{'>'}</code>,{' '}
+                <code>{'<='}</code>, <code>{'>='}</code>.
+              </p>
+              <p>
+                <Text semibold>Examples:</Text>
+              </p>
+              <Table
+                rows={[
+                  {
+                    query: <code>{'year>2020'}</code>,
+                    description: 'cards first printed after 2020.',
+                  },
+                  {
+                    query: <code>fy=1993</code>,
+                    description: 'cards first printed in 1993 (Alpha/Beta era).',
+                  },
+                  {
+                    query: <code>{'firstyear<=2000'}</code>,
+                    description: 'cards first printed in 2000 or earlier.',
+                  },
+                  {
+                    query: <code>{'year>=2015 year<=2020'}</code>,
+                    description: 'cards first printed between 2015 and 2020.',
+                  },
+                ]}
               />
             </Accordion>
             <Accordion title="Miscellaneous">

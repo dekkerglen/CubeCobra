@@ -23,6 +23,8 @@ import {
   cardStatus,
   cardTix,
   cardType,
+  cardFirstPrintYear,
+  cardKeywords,
   cardWordCount,
   COLOR_COMBINATIONS,
   convertFromLegacyCardColorCategory,
@@ -206,6 +208,7 @@ export const SORTS: string[] = [
   'Subtype',
   'Supertype',
   'Tags',
+  'Keywords',
   'Toughness',
   'Type',
   'Types-Multicolor',
@@ -215,6 +218,7 @@ export const SORTS: string[] = [
   'Devotion to Red',
   'Devotion to Green',
   'Unsorted',
+  'First Year',
 ];
 
 export const ORDERED_SORTS: string[] = [
@@ -549,6 +553,16 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
       }
     }
     ret = tags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  } else if (sort === 'Keywords') {
+    const kws: string[] = [];
+    for (const card of cube || []) {
+      for (const kw of cardKeywords(card)) {
+        if (kw.length > 0 && !kws.includes(kw)) {
+          kws.push(kw);
+        }
+      }
+    }
+    ret = kws.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   } else if (sort === 'Date Added') {
     //Convert addedTmsp from a number (or sometimes a string) into Date objects, then to locale string for the labelling and grouping
     const days = (cube ?? [])
@@ -718,6 +732,18 @@ export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boole
       }
     }
     ret = labels;
+  } else if (sort === 'First Year') {
+    const years = new Set<number>();
+    for (const card of cube || []) {
+      const year = cardFirstPrintYear(card);
+      if (year > 0) {
+        years.add(year);
+      }
+    }
+    ret = [...years].sort((a, b) => a - b).map(String);
+    if ((cube || []).some((c) => cardFirstPrintYear(c) === 0)) {
+      ret.push('Unknown');
+    }
   }
   /* End of sort options */
 
@@ -819,6 +845,8 @@ export function cardGetLabels(
     }
   } else if (sort === 'Tags') {
     ret = card.tags || [];
+  } else if (sort === 'Keywords') {
+    ret = cardKeywords(card);
   } else if (sort === 'Status') {
     ret = [cardStatus(card)];
   } else if (sort === 'Finish') {
@@ -956,6 +984,9 @@ export function cardGetLabels(
   } else if (sort === 'Approximate Word Count') {
     const wordCount = cardWordCount(card);
     ret = [wordCountBucket(wordCount)];
+  } else if (sort === 'First Year') {
+    const year = cardFirstPrintYear(card);
+    ret = year > 0 ? [year.toString()] : ['Unknown'];
   }
   /* End of sort options */
 

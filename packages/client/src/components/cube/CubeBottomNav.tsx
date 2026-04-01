@@ -82,6 +82,7 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
     if (key === 'analysis') {
       return [
         'analysis',
+        'at-a-glance',
         'averages',
         'table',
         'asfans',

@@ -71,12 +71,13 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       { key: 'winrate-analytics', label: 'Winrate Analytics' },
     ];
   } else if (
-    ['analysis', 'averages', 'table', 'asfans', 'chart', 'recommender', 'playtest-data', 'tokens', 'combos'].includes(
+    ['analysis', 'at-a-glance', 'averages', 'table', 'asfans', 'chart', 'recommender', 'playtest-data', 'tokens', 'combos'].includes(
       activeLink,
     )
   ) {
     parentKey = 'analysis';
     subItems = [
+      { key: 'at-a-glance', label: 'At a Glance' },
       { key: 'averages', label: 'Averages' },
       { key: 'table', label: 'Table' },
       { key: 'asfans', label: 'Asfans' },

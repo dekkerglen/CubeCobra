@@ -2,7 +2,7 @@ import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import Cube from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, recaptcha } from 'router/middleware';
-import { getImageData } from 'serverutils/imageutil';
+import { getRandomNewCubeImage } from 'serverutils/imageutil';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { hasProfanity } from 'serverutils/util';
 import { v4 as uuidv4 } from 'uuid';
@@ -54,14 +54,14 @@ export const addHandler = async (req: Request, res: Response) => {
     }
 
     const now = Date.now().valueOf();
-    const imageName = 'doubling cube [10e-321]';
+    const { imageName, image } = getRandomNewCubeImage();
     const cube: Cube = {
       id: uuidv4(),
       shortId: '',
       name: name,
       owner: user!,
       imageName: imageName,
-      image: getImageData(imageName),
+      image: image,
       description: 'This is a brand new cube!',
       date: now,
       dateCreated: now,

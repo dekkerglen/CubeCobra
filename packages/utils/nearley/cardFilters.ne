@@ -58,6 +58,8 @@ import {
   cardBannedIn,
   cardRestrictedIn,
   cardGames,
+  cardFirstPrintYear,
+  cardKeywords,
 } from '../../cardutil';
 %} # %}
 
@@ -114,6 +116,8 @@ condition -> (
   | collectorNumberCondition
   | notesCondition
   | gameCondition
+  | firstYearCondition
+  | keywordCondition
 ) {% ([[condition]]) => condition %}
 
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
@@ -192,6 +196,10 @@ notesCondition -> "notes"i stringOpValue {% ([, valuePred]) => genericCondition(
 
 gameCondition -> "game"i gameOpValue {% ([, valuePred]) => genericCondition('game', cardGames, valuePred) %}
 
+firstYearCondition -> ("year"i | "firstyear"i | "fy"i) integerOpValue {% ([, valuePred]) => genericCondition('firstPrintYear', cardFirstPrintYear, valuePred) %}
+
+keywordCondition -> ("kw"i | "keyword"i | "keywords"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('keywords', cardKeywords, valuePred) %}
+
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 
 notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred)) %}
@@ -208,6 +216,7 @@ isValue -> (
   | "shockland"i | "storageland"i | "creatureland"i | "manland"i | "triland"i | "tangoland"i | "battleland"i | "surveilland"i
   | "universesbeyond"i | "ub"i
   | "reserved"i
+  | "standard"i | "supplemental"i
 ) {% ([[category]]) => category.toLowerCase() %}
 
 powerWords -> ("pow"i | "power"i)

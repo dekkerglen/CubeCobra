@@ -27,6 +27,7 @@ import Combos from '../analytics/Combos';
 import Playtest from '../analytics/PlaytestData';
 import Suggestions from '../analytics/Suggestions';
 import Tokens from '../analytics/Tokens';
+import AtAGlance from '../analytics/AtAGlance';
 import { Card } from '../components/base/Card';
 import { Flexbox } from '../components/base/Layout';
 import Text from '../components/base/Text';
@@ -158,6 +159,9 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
 
   let content;
   switch (view) {
+    case 'at-a-glance':
+      content = <AtAGlance tokenMap={tokenMap} cubeAnalytics={cubeAnalytics} />;
+      break;
     case 'table':
       content = <AnalyticTable />;
       break;
@@ -191,6 +195,8 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
       <AnalysisNavbar />
       {cube.cards.mainboard.length === 0 ? (
         <Text lg>This cube doesn't have any cards. Add cards to see analytics.</Text>
+      ) : view === 'at-a-glance' ? (
+        content
       ) : (
         <Card>{content}</Card>
       )}

@@ -98,6 +98,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
       key: 'analysis',
       icon: GraphIcon,
       subItems: [
+        { label: 'At a Glance', key: 'at-a-glance' },
         { label: 'Averages', key: 'averages' },
         { label: 'Table', key: 'table' },
         { label: 'Asfans', key: 'asfans' },
@@ -508,6 +509,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                       analysisViewContext &&
                                       (activeLink === 'analysis' ||
                                         [
+                                          'at-a-glance',
                                           'averages',
                                           'table',
                                           'asfans',

@@ -1439,9 +1439,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
-.cursor-default {
-  cursor: default;
-}
 .cursor-grab {
   cursor: grab;
 }
@@ -3356,6 +3353,10 @@ img.mana-symbol-sm {
       max-width: 3200px;
     }
   }
+}
+
+.last\:border-b-0:last-child {
+  border-bottom-width: 0px;
 }
 
 .hover\:cursor-pointer:hover {

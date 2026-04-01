@@ -96,6 +96,9 @@ export interface CardDetails {
   };
   tokens: string[];
   set_name: string;
+  set_type?: string;
+  firstPrintYear?: number;
+  printedInExpansion?: boolean;
 
   // Computed values
   elo?: number;
