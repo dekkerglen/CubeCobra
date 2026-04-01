@@ -192,6 +192,11 @@ export class ElasticBeanstalk extends Construct {
         },
         {
           namespace: 'aws:elasticbeanstalk:managedactions:platformupdate',
+          optionName: 'UpdateLevel',
+          value: 'minor',
+        },
+        {
+          namespace: 'aws:elasticbeanstalk:managedactions:platformupdate',
           optionName: 'InstanceRefreshEnabled',
           value: 'true',
         },
