@@ -1244,6 +1244,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .w-20 {
   width: 5rem;
 }
+.w-28 {
+  width: 7rem;
+}
 .w-36 {
   width: 9rem;
 }
@@ -1438,6 +1441,12 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+.\!cursor-not-allowed {
+  cursor: not-allowed !important;
+}
+.\!cursor-pointer {
+  cursor: pointer !important;
 }
 .cursor-grab {
   cursor: grab;
@@ -2382,6 +2391,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-text-opacity: 1 !important;
   color: rgb(var(--text) / var(--tw-text-opacity)) !important;
 }
+.\!text-text-secondary {
+  --tw-text-opacity: 1 !important;
+  color: rgb(var(--text-secondary) / var(--tw-text-opacity)) !important;
+}
 .text-bg {
   --tw-text-opacity: 1;
   color: rgb(var(--bg) / var(--tw-text-opacity));
@@ -2562,6 +2575,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .opacity-50 {
   opacity: 0.5;
+}
+.opacity-60 {
+  opacity: 0.6;
 }
 .opacity-75 {
   opacity: 0.75;

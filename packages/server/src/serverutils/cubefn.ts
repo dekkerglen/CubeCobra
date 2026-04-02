@@ -8,7 +8,7 @@ import NodeCache from 'node-cache';
 import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
-import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
+import { cardFromId, getAllVersionIds, getOracleForMl, reasonableId } from './carddb';
 import { batchDraft } from './ml';
 import * as util from './util';
 
@@ -635,13 +635,32 @@ async function generateBalancedPack(
     candidates.push({ packResult, oracleIds });
   }
 
+  // Build ML substitution maps
+  const allOracleIds = candidates.flatMap((c) => c.oracleIds);
+  const toMl: Record<string, string> = {};
+  const fromMl: Record<string, string> = {};
+  for (const oracle of allOracleIds) {
+    if (toMl[oracle] !== undefined) continue;
+    const mlOracle = getOracleForMl(oracle, null);
+    toMl[oracle] = mlOracle;
+    if (!fromMl[mlOracle]) fromMl[mlOracle] = oracle;
+  }
+
   // Single batched ML call for all candidates (P1P1: pack=oracleIds, pool=[])
-  const batchInputs = candidates.map((c) => ({ pack: c.oracleIds, pool: [] as string[] }));
+  const batchInputs = candidates.map((c) => ({
+    pack: c.oracleIds.map((o: string) => toMl[o] ?? o),
+    pool: [] as string[],
+  }));
   const batchResults = await batchDraft(batchInputs);
 
   for (let i = 0; i < candidates.length; i++) {
     const { packResult, oracleIds } = candidates[i]!;
-    const predictions = batchResults[i] || [];
+    // Map ML oracles back to originals
+    const rawPredictions = batchResults[i] || [];
+    const predictions = rawPredictions.map((p: { oracle: string; rating: number }) => ({
+      oracle: fromMl[p.oracle] ?? p.oracle,
+      rating: p.rating,
+    }));
 
     // Convert predictions to BotResult format
     const botWeights = new Array(oracleIds.length).fill(0);

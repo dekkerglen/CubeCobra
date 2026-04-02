@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { getOracleForMl } from 'serverutils/carddb';
 import { draft } from 'serverutils/ml';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
@@ -29,7 +30,26 @@ const handler = async (req: Request, res: Response) => {
   const predictBody = req.body as PredictBody;
 
   try {
-    const prediction = await draft(predictBody.pack, predictBody.picks);
+    // Map oracle IDs to ML-known oracles
+    const toMl: Record<string, string> = {};
+    const fromMl: Record<string, string> = {};
+    for (const oracle of [...predictBody.pack, ...predictBody.picks]) {
+      if (toMl[oracle] !== undefined) continue;
+      const mlOracle = getOracleForMl(oracle, null);
+      toMl[oracle] = mlOracle;
+      if (!fromMl[mlOracle]) fromMl[mlOracle] = oracle;
+    }
+
+    const mlPack = predictBody.pack.map((o) => toMl[o] ?? o);
+    const mlPicks = predictBody.picks.map((o) => toMl[o] ?? o);
+
+    const mlPrediction = await draft(mlPack, mlPicks);
+
+    // Map ML oracles back to original oracle IDs
+    const prediction = mlPrediction.map((item) => ({
+      oracle: fromMl[item.oracle] ?? item.oracle,
+      rating: item.rating,
+    }));
 
     return res.status(200).send({
       prediction,

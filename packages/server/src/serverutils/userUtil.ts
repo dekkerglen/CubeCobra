@@ -1,3 +1,4 @@
+import { getOracleForMl } from 'serverutils/carddb';
 import { draft } from 'serverutils/ml';
 
 /**
@@ -25,8 +26,26 @@ export const getBotPrediction = async (oracleIds: string[]): Promise<BotResult> 
       return { botPickIndex: null, botWeights: [] };
     }
 
+    // Map oracle IDs to ML-known oracles
+    const toMl: Record<string, string> = {};
+    const fromMl: Record<string, string> = {};
+    for (const oracle of validOracleIds) {
+      if (toMl[oracle] !== undefined) continue;
+      const mlOracle = getOracleForMl(oracle, null);
+      toMl[oracle] = mlOracle;
+      if (!fromMl[mlOracle]) fromMl[mlOracle] = oracle;
+    }
+
+    const mlOracleIds = validOracleIds.map((o) => toMl[o] ?? o);
+
     // Call the draft function directly instead of making HTTP request
-    const predictions: BotPrediction[] = await draft(validOracleIds, []); // Empty picks for P1P1
+    const mlPredictions: BotPrediction[] = await draft(mlOracleIds, []); // Empty picks for P1P1
+
+    // Map ML oracles back to originals
+    const predictions = mlPredictions.map((p) => ({
+      oracle: fromMl[p.oracle] ?? p.oracle,
+      rating: p.rating,
+    }));
 
     if (!predictions || predictions.length === 0) {
       return { botPickIndex: null, botWeights: [] };

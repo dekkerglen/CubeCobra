@@ -1,4 +1,4 @@
-import carddb, { cardFromId, getReasonableCardByOracle } from './carddb';
+import carddb, { cardFromId, getOracleForMl, getReasonableCardByOracle } from './carddb';
 import { batchBuild, batchDraft, build, draft as draftbotPick } from './ml';
 
 /*
@@ -110,11 +110,25 @@ export const deckbuild = async (
     return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
   };
 
+  // Build ML substitution maps: original oracle <-> ML oracle
+  // Multiple originals can map to the same ML oracle
+  const toMl: Record<string, string> = {};
+  const fromMl: Record<string, string[]> = {};
+  for (const oracle of poolOracles) {
+    if (toMl[oracle] !== undefined) continue;
+    const mlOracle = getOracleForMl(oracle, null);
+    toMl[oracle] = mlOracle;
+    if (!fromMl[mlOracle]) fromMl[mlOracle] = [];
+    if (!fromMl[mlOracle].includes(oracle)) fromMl[mlOracle].push(oracle);
+  }
+
+  const poolMlOracles = poolOracles.map((o) => toMl[o] ?? o);
+
   // Phase 1: Use deckbuild model to seed the first 10 cards
-  const buildResult = await build(poolOracles);
+  const buildResult = await build(poolMlOracles);
 
   const mainboard: string[] = [];
-  const remainingPool = [...poolOracles]; // tracks available copies
+  const remainingPool = [...poolOracles]; // tracks available copies (original oracles)
   let spellCount = 0;
   let landCount = 0;
 
@@ -129,7 +143,12 @@ export const deckbuild = async (
   for (const item of buildResult) {
     if (mainboard.length >= 10) break;
 
-    const oracle = item.oracle;
+    const mlOracle = item.oracle;
+    // Map back to original oracle(s) - find one that's still in the remaining pool
+    const originals = fromMl[mlOracle] ?? [mlOracle];
+    const oracle = originals.find((o) => remainingPool.includes(o));
+    if (!oracle) continue;
+
     const land = oracleIsLand(oracle);
 
     if (land && landCount >= maxLands) continue;
@@ -164,21 +183,28 @@ export const deckbuild = async (
 
     if (candidates.length === 0) break;
 
-    // Deduplicate candidates for the draft call (it expects unique oracle IDs in pack)
-    const uniqueCandidates = [...new Set(candidates)];
+    // Deduplicate ML oracles for the draft call
+    const uniqueMlCandidates = [...new Set(candidates.map((o) => toMl[o] ?? o))];
+    const mlMainboard = mainboard.map((o) => toMl[o] ?? o);
 
-    const draftResult = await draftbotPick(uniqueCandidates, mainboard);
+    const draftResult = await draftbotPick(uniqueMlCandidates, mlMainboard);
 
-    // Apply duplicate penalty and pick the best
+    // Apply duplicate penalty and pick the best, mapping back to originals
     let bestOracle: string | null = null;
     let bestScore = -Infinity;
 
     for (const item of draftResult) {
-      const existing = deckCopies[item.oracle] ?? 0;
+      const mlOracle = item.oracle;
+      const originals = fromMl[mlOracle] ?? [mlOracle];
+      // Find an original that's still a candidate
+      const oracle = originals.find((o) => candidates.includes(o));
+      if (!oracle) continue;
+
+      const existing = deckCopies[oracle] ?? 0;
       const adjustedRating = item.rating * Math.pow(0.9, existing);
       if (adjustedRating > bestScore) {
         bestScore = adjustedRating;
-        bestOracle = item.oracle;
+        bestOracle = oracle;
       }
     }
 
@@ -229,6 +255,26 @@ export const batchDeckbuild = async (
 
   const allPoolOracles = entries.map((entry) => entry.pool.map((card: any) => card.oracle_id));
 
+  // Build ML substitution maps per seat
+  const seatMaps = allPoolOracles.map((poolOracles) => {
+    const toMl: Record<string, string> = {};
+    const fromMl: Record<string, string[]> = {};
+    for (const oracle of poolOracles) {
+      if (toMl[oracle] !== undefined) continue;
+      const mlOracle = getOracleForMl(oracle, null);
+      toMl[oracle] = mlOracle;
+      if (!fromMl[mlOracle]) fromMl[mlOracle] = [];
+      if (!fromMl[mlOracle].includes(oracle)) fromMl[mlOracle].push(oracle);
+    }
+    return { toMl, fromMl };
+  });
+
+  // ML-substituted pool oracles for the batch build call
+  const allPoolMlOracles = allPoolOracles.map((poolOracles, idx) => {
+    const { toMl } = seatMaps[idx]!;
+    return poolOracles.map((o) => toMl[o] ?? o);
+  });
+
   // Per-seat state
   const seats = entries.map((entry, idx) => {
     const poolOracles = allPoolOracles[idx] || [];
@@ -248,16 +294,21 @@ export const batchDeckbuild = async (
   });
 
   // Phase 1: Batch deckbuild model to seed first 10 cards per seat
-  const allBuildResults = await batchBuild(allPoolOracles);
+  const allBuildResults = await batchBuild(allPoolMlOracles);
 
   for (let s = 0; s < seats.length; s++) {
     const seat = seats[s]!;
+    const { fromMl } = seatMaps[s]!;
     const buildResult = allBuildResults[s] || [];
 
     for (const item of buildResult) {
       if (seat.mainboard.length >= 10) break;
 
-      const oracle = item.oracle;
+      const mlOracle = item.oracle;
+      const originals = fromMl[mlOracle] ?? [mlOracle];
+      const oracle = originals.find((o) => seat.remainingPool.includes(o));
+      if (!oracle) continue;
+
       const land = oracleIsLand(oracle);
 
       if (land && seat.landCount >= seat.maxLands) continue;
@@ -291,6 +342,7 @@ export const batchDeckbuild = async (
 
     for (let s = 0; s < seats.length; s++) {
       const seat = seats[s]!;
+      const { toMl } = seatMaps[s]!;
       if (seat.mainboard.length >= seat.deckSize || seat.remainingPool.length === 0) continue;
 
       // Filter candidates that fit under limits
@@ -305,8 +357,8 @@ export const batchDeckbuild = async (
 
       activeIndices.push(s);
       batchInputs.push({
-        pack: [...new Set(candidates)], // unique oracles for the draft model
-        pool: seat.mainboard,
+        pack: [...new Set(candidates.map((o) => toMl[o] ?? o))], // unique ML oracles
+        pool: seat.mainboard.map((o) => toMl[o] ?? o), // ML oracles for mainboard
       });
     }
 
@@ -317,18 +369,24 @@ export const batchDeckbuild = async (
     for (let i = 0; i < activeIndices.length; i++) {
       const s = activeIndices[i]!;
       const seat = seats[s]!;
+      const { fromMl } = seatMaps[s]!;
       const draftResult = batchResults[i] || [];
 
-      // Apply duplicate penalty and pick the best
+      // Apply duplicate penalty and pick the best, mapping back to originals
       let bestOracle: string | null = null;
       let bestScore = -Infinity;
 
       for (const item of draftResult) {
-        const existing = seat.deckCopies[item.oracle] ?? 0;
+        const mlOracle = item.oracle;
+        const originals = fromMl[mlOracle] ?? [mlOracle];
+        const oracle = originals.find((o) => seat.remainingPool.includes(o));
+        if (!oracle) continue;
+
+        const existing = seat.deckCopies[oracle] ?? 0;
         const adjustedRating = item.rating * Math.pow(0.9, existing);
         if (adjustedRating > bestScore) {
           bestScore = adjustedRating;
-          bestOracle = item.oracle;
+          bestOracle = oracle;
         }
       }
 
