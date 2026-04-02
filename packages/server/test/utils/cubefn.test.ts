@@ -321,7 +321,7 @@ describe('generateBalancedPack', () => {
       ];
       const normalizedWeights = createNormalizedWeights([0.5, 0.8, 0.3, 0.6, 0.4, 0.7, 0.2, 0.9, 0.1, 0.5, 0.8, 0.3]);
       mockBatchDraft.mockResolvedValue([
-        normalizedWeights.map((w, i) => ({ oracle: filteredOracleIds[i], rating: w }))
+        normalizedWeights.map((w, i) => ({ oracle: filteredOracleIds[i]!, rating: w }))
           .sort((a, b) => b.rating - a.rating),
       ]);
 
