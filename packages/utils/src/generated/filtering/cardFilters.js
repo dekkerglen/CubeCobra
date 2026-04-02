@@ -2791,6 +2791,8 @@ var grammar = {
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$57"]},
     {"name": "isValue$subexpression$1$subexpression$58", "symbols": [/[sS]/, /[uU]/, /[pP]/, /[pP]/, /[lL]/, /[eE]/, /[mM]/, /[eE]/, /[nN]/, /[tT]/, /[aA]/, /[lL]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$58"]},
+    {"name": "isValue$subexpression$1$subexpression$59", "symbols": [/[vV]/, /[oO]/, /[uU]/, /[cC]/, /[hH]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$59"]},
     {"name": "isValue", "symbols": ["isValue$subexpression$1"], "postprocess": ([[category]]) => category.toLowerCase()},
     {"name": "powerWords$subexpression$1$subexpression$1", "symbols": [/[pP]/, /[oO]/, /[wW]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "powerWords$subexpression$1", "symbols": ["powerWords$subexpression$1$subexpression$1"]},

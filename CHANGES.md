@@ -1,6 +1,7 @@
 Since 1.6.0
 
 # New Features
+- New "Voucher" card type — a special card that contains a list of other cards; when drafted, the voucher expands into its contained cards instead of being picked directly. Supports custom names, `is:voucher` filter, and CSV import/export.
 - New "At a Glance" analysis page — a quick dashboard with key stats, pricing, mana curve, and distribution charts for your cube
 - New cubes now get a random art crop from a curated set of cards instead of always using Doubling Cube
 - Changelog entries are now clickable — each links to a dedicated detail page showing the full changelog

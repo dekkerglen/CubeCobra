@@ -13,6 +13,7 @@ import Card, {
   CubeCardEdit,
   CubeCardRemove,
   CubeCardSwap,
+  Game,
   Legality,
   LegalityFormats,
   SUPPORTED_FORMATS,
@@ -123,6 +124,15 @@ export const createCustomCard = (customName: string, overrides?: Partial<Card>):
   ...overrides,
 });
 
+export const createVoucherCard = (customName: string, voucherCards?: Card['voucher_cards'], overrides?: Partial<Card>): Card => ({
+  index: generateRandomNumber(1, 3),
+  cardID: 'voucher',
+  custom_name: customName,
+  voucher_cards: voucherCards || [],
+  details: createVoucherCardDetails(),
+  ...overrides,
+});
+
 export const createCustomCardDetails = (overrides?: Partial<CardDetails>): CardDetails => {
   //See custom-card in update_cards.ts
   const customSettings = {
@@ -207,6 +217,62 @@ export const createCustomCardDetails = (overrides?: Partial<CardDetails>): CardD
     object: 'card',
   };
   return createCardDetails({ ...customSettings, ...overrides });
+};
+
+export const createVoucherCardDetails = (overrides?: Partial<CardDetails>): CardDetails => {
+  const voucherSettings = {
+    scryfall_id: 'voucher',
+    oracle_id: 'voucher',
+    name: 'Voucher',
+    full_name: 'Voucher [-]',
+    name_lower: 'voucher',
+    set: '',
+    set_name: '',
+    collector_number: '',
+    released_at: '',
+    reprint: false,
+    border_color: 'black' as 'black' | 'white' | 'silver' | 'gold',
+    promo: false,
+    digital: false,
+    finishes: [],
+    prices: {
+      usd: undefined,
+      usd_foil: undefined,
+      usd_etched: undefined,
+      eur: undefined,
+      tix: undefined,
+    },
+    image_small: '',
+    image_normal: '/content/custom_card.png',
+    image_flip: '',
+    type: '',
+    oracle_text: '',
+    cmc: 0,
+    colors: [] as string[],
+    color_identity: [] as string[],
+    keywords: [] as string[],
+    legalities: {
+      standard: 'not_legal',
+      historic: 'not_legal',
+      pioneer: 'not_legal',
+      modern: 'not_legal',
+      legacy: 'not_legal',
+      pauper: 'not_legal',
+      vintage: 'not_legal',
+      penny: 'not_legal',
+      commander: 'not_legal',
+      brawl: 'not_legal',
+    } as Record<LegalityFormats, Legality>,
+    layout: 'normal',
+    rarity: 'common',
+    artist: '',
+    scryfall_uri: '',
+    mtgo_id: 0,
+    full_art: false,
+    games: [] as Game[],
+    reserved: false,
+  };
+  return createCardDetails({ ...voucherSettings, ...overrides });
 };
 
 export const createCube = (overrides?: Partial<Cube>): Cube => ({

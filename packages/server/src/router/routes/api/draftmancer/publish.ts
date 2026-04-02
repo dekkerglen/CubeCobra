@@ -10,7 +10,7 @@ import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
-import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import { batchBuildBotDecks, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -80,29 +80,49 @@ export const handler = async (req: Request, res: Response) => {
       players: [],
     };
 
-    // Look up deckbuild settings from the cube
+    let drafterName: string = '';
+
+    // First pass: parse picks for all players, collect bot inputs
+    const playerData: {
+      player: (typeof publishDraftBody.players)[number];
+      draftmancerPicks: any;
+      pickorder: number[];
+      trashorder: number[];
+    }[] = [];
+    const botIndices: number[] = [];
+    const botInputs: { pickorder: number[]; basics: number[] }[] = [];
+
+    for (let i = 0; i < publishDraftBody.players.length; i++) {
+      const player = publishDraftBody.players[i]!;
+      const { draftmancerPicks, pickorder, trashorder } = getPicksFromPlayer(player.picks, cards);
+      playerData.push({ player, draftmancerPicks, pickorder, trashorder });
+
+      if (player.isBot) {
+        botIndices.push(i);
+        botInputs.push({ pickorder, basics });
+      } else if (!drafterName) {
+        drafterName = player.userName || 'Unknown Drafter';
+      }
+    }
+
+    // Single batched ML call for all bot decks
     const maxSpells = cube.deckbuildSpells ?? 23;
     const maxLands = cube.deckbuildLands ?? 17;
+    const botResults = await batchBuildBotDecks(botInputs, cards, maxSpells, maxLands);
 
-    let drafterName: string = '';
-    for (const player of publishDraftBody.players) {
+    // Second pass: assemble seats
+    let botResultIdx = 0;
+    for (const { player, draftmancerPicks, pickorder, trashorder } of playerData) {
       let mainboard: number[][][] = setupPicks(2, 8);
       let sideboard: number[][][] = setupPicks(1, 8);
 
-      const { draftmancerPicks, pickorder, trashorder } = getPicksFromPlayer(player.picks, cards);
-
-      // we need to build the bot decks
       if (player.isBot) {
-        const result = await buildBotDeck(pickorder, basics, cards, maxSpells, maxLands);
+        const result = botResults[botResultIdx++]!;
         mainboard = result.mainboard;
         sideboard = result.sideboard;
       } else {
         mainboard = formatMainboard(player.decklist, cards);
         sideboard = formatSideboard(player.decklist, cards);
-
-        if (!drafterName) {
-          drafterName = player.userName || 'Unknown Drafter';
-        }
       }
 
       const seat: DraftSeatType = {

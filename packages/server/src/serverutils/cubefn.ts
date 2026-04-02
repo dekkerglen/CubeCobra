@@ -1,4 +1,4 @@
-import { cardNameLower, cardOracleId, convertFromLegacyCardColorCategory, isCustomCard } from '@utils/cardutil';
+import { cardNameLower, cardOracleId, convertFromLegacyCardColorCategory, isCustomOrVoucher } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
 import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY, type CubeCards, type TagColor } from '@utils/datatypes/Cube';
@@ -8,7 +8,7 @@ import NodeCache from 'node-cache';
 import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
-import { cardFromId, getAllVersionIds, getOracleForMl, reasonableId } from './carddb';
+import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
 import { batchDraft } from './ml';
 import * as util from './util';
 
@@ -299,6 +299,7 @@ function CSVtoCards(csvString: string): CSVResult {
     colorCategory,
     rarity,
     custom,
+    voucher,
   } of camelizedRows) {
     if (name) {
       const upperSet = (set || '').toUpperCase();
@@ -327,6 +328,10 @@ function CSVtoCards(csvString: string): CSVResult {
         potentialIds = ['custom-card'];
         card.custom_name = name;
         card.name = 'custom-card';
+      } else if (voucher?.toLowerCase() === 'true') {
+        potentialIds = ['voucher'];
+        card.custom_name = name;
+        card.name = 'voucher';
       } else {
         potentialIds = getAllVersionIds(card);
       }
@@ -385,11 +390,11 @@ export interface ComparedCubes {
 }
 
 async function compareCubes(cardsA: CubeCards, cardsB: CubeCards): Promise<ComparedCubes> {
-  // Separate custom and regular cards in a single pass
+  // Separate custom/voucher and regular cards in a single pass
   const customCardsA: Card[] = [];
   const regularCardsA: Card[] = [];
   for (const card of cardsA.mainboard) {
-    if (isCustomCard(card)) {
+    if (isCustomOrVoucher(card)) {
       customCardsA.push(card);
     } else {
       regularCardsA.push(card);
@@ -399,7 +404,7 @@ async function compareCubes(cardsA: CubeCards, cardsB: CubeCards): Promise<Compa
   const customCardsB: Card[] = [];
   const regularCardsB: Card[] = [];
   for (const card of cardsB.mainboard) {
-    if (isCustomCard(card)) {
+    if (isCustomOrVoucher(card)) {
       customCardsB.push(card);
     } else {
       regularCardsB.push(card);
@@ -635,32 +640,13 @@ async function generateBalancedPack(
     candidates.push({ packResult, oracleIds });
   }
 
-  // Build ML substitution maps
-  const allOracleIds = candidates.flatMap((c) => c.oracleIds);
-  const toMl: Record<string, string> = {};
-  const fromMl: Record<string, string> = {};
-  for (const oracle of allOracleIds) {
-    if (toMl[oracle] !== undefined) continue;
-    const mlOracle = getOracleForMl(oracle, null);
-    toMl[oracle] = mlOracle;
-    if (!fromMl[mlOracle]) fromMl[mlOracle] = oracle;
-  }
-
   // Single batched ML call for all candidates (P1P1: pack=oracleIds, pool=[])
-  const batchInputs = candidates.map((c) => ({
-    pack: c.oracleIds.map((o: string) => toMl[o] ?? o),
-    pool: [] as string[],
-  }));
+  const batchInputs = candidates.map((c) => ({ pack: c.oracleIds, pool: [] as string[] }));
   const batchResults = await batchDraft(batchInputs);
 
   for (let i = 0; i < candidates.length; i++) {
     const { packResult, oracleIds } = candidates[i]!;
-    // Map ML oracles back to originals
-    const rawPredictions = batchResults[i] || [];
-    const predictions = rawPredictions.map((p: { oracle: string; rating: number }) => ({
-      oracle: fromMl[p.oracle] ?? p.oracle,
-      rating: p.rating,
-    }));
+    const predictions = batchResults[i] || [];
 
     // Convert predictions to BotResult format
     const botWeights = new Array(oracleIds.length).fill(0);

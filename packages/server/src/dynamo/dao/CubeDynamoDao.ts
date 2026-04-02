@@ -1306,6 +1306,15 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
           ...cardFromId(cards[i].cardID),
         };
         cards[i].index = i;
+
+        // Resolve details for voucher card contents
+        if (cards[i].voucher_cards && Array.isArray(cards[i].voucher_cards)) {
+          for (const vc of cards[i].voucher_cards) {
+            if (vc.cardID) {
+              vc.details = { ...cardFromId(vc.cardID) };
+            }
+          }
+        }
       } else {
         cards[i] = {
           details: getPlaceholderCard(''),
@@ -1331,6 +1340,13 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
             return tag.text;
           }
           return tag;
+        });
+      }
+
+      // Strip details from voucher cards (they are resolved at runtime)
+      if (card.voucher_cards && Array.isArray(card.voucher_cards)) {
+        card.voucher_cards.forEach((vc: any) => {
+          delete vc.details;
         });
       }
     });

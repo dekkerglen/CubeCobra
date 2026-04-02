@@ -516,8 +516,8 @@ const FiltersPage: React.FC = () => (
             <Accordion title="Artist">
               <p>
                 You can use <code>a:</code>, <code>art:</code>, or <code>artist:</code> to search for cards illustrated
-                by a specific artist. Also <code>is:reprint</code>, <code>is:firstprint</code>, , <code>is:promo</code>,
-                and <code>is:digital</code>
+                by a specific artist. Also <code>is:reprint</code>, <code>is:firstprint</code>, <code>is:promo</code>,
+                <code>is:digital</code>, and <code>is:voucher</code>
               </p>
               <Text semibold>Examples:</Text>
               <Table

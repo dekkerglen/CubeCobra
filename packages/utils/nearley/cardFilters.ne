@@ -217,6 +217,7 @@ isValue -> (
   | "universesbeyond"i | "ub"i
   | "reserved"i
   | "standard"i | "supplemental"i
+  | "voucher"i
 ) {% ([[category]]) => category.toLowerCase() %}
 
 powerWords -> ("pow"i | "power"i)

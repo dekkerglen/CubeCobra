@@ -1,4 +1,4 @@
-import { cardOracleId } from '@utils/cardutil';
+import { cardOracleId, isVoucher } from '@utils/cardutil';
 import { State } from '@utils/datatypes/DraftState';
 import User from '@utils/datatypes/User';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
@@ -99,24 +99,41 @@ export const handler = async (req: Request, res: Response) => {
     }
     draft.complete = true;
 
-    // we need to build the bot decks
-    // Collect all bot seat inputs for a single batched ML call
-    const botSeats: { seatIndex: number; picks: number[] }[] = [];
-    for (let i = 1; i < draft.seats.length; i += 1) {
-      const stateSeat = body.state.seats[i];
-      if (!stateSeat) continue;
-      botSeats.push({ seatIndex: i, picks: stateSeat.picks });
-    }
+    // Voucher sub-cards are pre-expanded at draft creation time, so we just need to use
+    // the voucher_card_indices to get the expanded picks for bot deckbuilding
 
-    const basicsCards = draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean);
-
-    // Look up deckbuild settings from the cube
+    // Get cube config for deckbuilding parameters
     const cube = await cubeDao.getById(draft.cube);
     const maxSpells = cube?.deckbuildSpells ?? 23;
     const maxLands = cube?.deckbuildLands ?? 17;
 
+    // Helper to expand picks - returns voucher sub-card indices for vouchers, or the pick itself
+    const expandPicks = (picks: number[]): number[] => {
+      const expanded: number[] = [];
+      for (const pickIndex of picks) {
+        const card = draft.cards[pickIndex];
+        if (card && isVoucher(card) && card.voucher_card_indices && card.voucher_card_indices.length > 0) {
+          // Use pre-expanded sub-card indices
+          expanded.push(...card.voucher_card_indices);
+        } else {
+          expanded.push(pickIndex);
+        }
+      }
+      return expanded;
+    };
+
+    // we need to build the bot decks
+    // Collect all bot seat inputs for a single batched ML call
+    const botSeats: { seatIndex: number; picks: number[]; expandedPicks: number[] }[] = [];
+    for (let i = 1; i < draft.seats.length; i += 1) {
+      const stateSeat = body.state.seats[i];
+      if (!stateSeat) continue;
+      botSeats.push({ seatIndex: i, picks: stateSeat.picks, expandedPicks: expandPicks(stateSeat.picks) });
+    }
+
+    const basicsCards = draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean);
     const batchEntries = botSeats.map((bot) => ({
-      pool: bot.picks.map((index) => draft.cards[index]?.details).filter(Boolean),
+      pool: bot.expandedPicks.map((index) => draft.cards[index]?.details).filter(Boolean),
       basics: basicsCards,
       maxSpells,
       maxLands,
@@ -125,10 +142,10 @@ export const handler = async (req: Request, res: Response) => {
     const batchResults = await batchDeckbuild(batchEntries);
 
     for (let b = 0; b < botSeats.length; b++) {
-      const { seatIndex, picks } = botSeats[b]!;
+      const { seatIndex, expandedPicks } = botSeats[b]!;
       const { mainboard } = batchResults[b]!;
 
-      const pool = picks.slice();
+      const pool = expandedPicks.slice();
 
       const newMainboard = [];
 

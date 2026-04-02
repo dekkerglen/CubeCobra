@@ -10,7 +10,7 @@ import React, {
   useState,
 } from 'react';
 
-import { cardName, normalizeName } from '@utils/cardutil';
+import { cardName, isVoucher, normalizeName } from '@utils/cardutil';
 import Card, {
   BoardChanges,
   BoardType,
@@ -26,6 +26,7 @@ import { deepCopy, isCubeOwner } from '@utils/Util';
 
 import { UncontrolledAlertProps } from '../components/base/Alert';
 import CardModal from '../components/card/CardModal';
+import VoucherCardModal from '../components/card/VoucherCardModal';
 import GroupModal from '../components/GroupModal';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useMount from '../hooks/UseMount';
@@ -1545,7 +1546,35 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
           (modalSelection as any).isNewlyAdded &&
-          (changes[modalSelection.board] as BoardChanges | undefined)?.adds?.[(modalSelection as any).addIndex] && (
+          (changes[modalSelection.board] as BoardChanges | undefined)?.adds?.[(modalSelection as any).addIndex] &&
+          isVoucher((changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex]) && (
+            <VoucherCardModal
+              card={{
+                ...(changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex],
+                board: modalSelection.board,
+                index: -1,
+                details: addedCardDetails || undefined,
+              }}
+              isOpen={modalOpen}
+              setOpen={setModalOpen}
+              canEdit={canEdit}
+              versionDict={versionDict}
+              fetchVersionsForCard={fetchVersionsForCard}
+              editCard={(_, card, board) => editAddedCard((modalSelection as any).addIndex, card, board)}
+              revertEdit={() => {}}
+              revertRemove={() => {}}
+              removeCard={() => {}}
+              tagColors={tagColors}
+              moveCard={(_, board, newBoard) => moveAddedCard((modalSelection as any).addIndex, board, newBoard)}
+              allTags={allTags}
+            />
+          )}
+        {modalSelection &&
+          !Array.isArray(modalSelection) &&
+          Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
+          (modalSelection as any).isNewlyAdded &&
+          (changes[modalSelection.board] as BoardChanges | undefined)?.adds?.[(modalSelection as any).addIndex] &&
+          !isVoucher((changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex]) && (
             <CardModal
               card={{
                 ...(changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex],
@@ -1571,7 +1600,35 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           (modalSelection as any).isSwapped &&
-          (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] && (
+          (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] &&
+          isVoucher((changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card) && (
+            <VoucherCardModal
+              card={{
+                ...(changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
+                board: modalSelection.board,
+                index: -1,
+                details: addedCardDetails || undefined,
+              }}
+              isOpen={modalOpen}
+              setOpen={setModalOpen}
+              canEdit={canEdit}
+              versionDict={versionDict}
+              fetchVersionsForCard={fetchVersionsForCard}
+              editCard={(_, card, board) => editSwappedCard((modalSelection as any).swapIndex, card, board)}
+              revertEdit={() => {}}
+              revertRemove={() => {}}
+              removeCard={() => {}}
+              tagColors={tagColors}
+              moveCard={(_, board, newBoard) => moveSwappedCard((modalSelection as any).swapIndex, board, newBoard)}
+              allTags={allTags}
+            />
+          )}
+        {modalSelection &&
+          !Array.isArray(modalSelection) &&
+          Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
+          (modalSelection as any).isSwapped &&
+          (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] &&
+          !isVoucher((changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card) && (
             <CardModal
               card={{
                 ...(changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
@@ -1597,7 +1654,30 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           !Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
           !Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
-          unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
+          unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) &&
+          isVoucher(unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!) && (
+            <VoucherCardModal
+              card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
+              isOpen={modalOpen}
+              setOpen={setModalOpen}
+              canEdit={canEdit}
+              versionDict={versionDict}
+              fetchVersionsForCard={fetchVersionsForCard}
+              editCard={editCard}
+              revertEdit={revertEdit}
+              revertRemove={revertRemove}
+              removeCard={removeCard}
+              tagColors={tagColors}
+              moveCard={moveCard}
+              allTags={allTags}
+            />
+          )}
+        {modalSelection &&
+          !Array.isArray(modalSelection) &&
+          !Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
+          !Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
+          unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) &&
+          !isVoucher(unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!) && (
             <CardModal
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}
