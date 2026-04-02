@@ -409,11 +409,21 @@ export function CubeContextProvider({
   const sortQuaternaryRef = React.useRef(sortQuaternary);
   sortQuaternaryRef.current = sortQuaternary;
   const prevActiveViewForSortsRef = React.useRef(activeView);
+  const isInitialSortMountRef = React.useRef(true);
 
   // Apply view's default sorts only when the active view changes,
   // and only if the current sorts match the previous view's defaults.
   // This preserves user-customized sorts when switching views.
   useEffect(() => {
+    // Skip on initial mount so URL query params (from bookmarks) are respected.
+    // useQueryParam handles reading URL params on mount; this effect should only
+    // apply view defaults when the user actively switches between views.
+    if (isInitialSortMountRef.current) {
+      isInitialSortMountRef.current = false;
+      prevActiveViewForSortsRef.current = activeView;
+      return;
+    }
+
     const prevView = getViewByName(cubeRef.current, prevActiveViewForSortsRef.current);
     const prevDefaults = prevView?.defaultSorts?.length === 4 ? prevView.defaultSorts : getCubeSorts(cubeRef.current);
 

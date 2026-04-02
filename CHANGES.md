@@ -21,5 +21,6 @@ Since 1.6.0
 
 # Bug Fixes
 - Fixed default sorts saved in views not being applied on page load — view-level `defaultSorts` are now used instead of only cube-level sorts
+- Fixed bookmarked URLs with query parameters (display view, sort order, filters) not being applied on page load — an effect that applies view defaults when switching views was also firing on initial mount, overwriting URL-sourced values before they could be read
 
 # Technical Changes
