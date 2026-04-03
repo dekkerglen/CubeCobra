@@ -1,12 +1,12 @@
 import { cubeDao } from 'dynamo/daos';
-import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
+import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
 
-const healthreportHandler = async (req: Request, res: Response) => {
+const draftsimulatorHandler = async (req: Request, res: Response) => {
   try {
     if (!req.params.id) {
       req.flash('danger', 'Cube not found');
@@ -24,15 +24,15 @@ const healthreportHandler = async (req: Request, res: Response) => {
     return render(
       req,
       res,
-      'CubeHealthReportPage',
-      { cube },
+      'CubeDraftSimulatorPage',
+      { cube, canRun: !!req.user && isCubeEditable(cube, req.user) },
       {
-        title: `${abbreviate(cube.name)} - Health Report`,
+        title: `${abbreviate(cube.name)} - Draft Simulator`,
         metadata: generateMeta(
-          `Cube Cobra Health Report: ${cube.name}`,
-          `Draft simulation health report for ${cube.name}`,
+          `Cube Cobra Draft Simulator: ${cube.name}`,
+          `Bot draft simulation and analysis for ${cube.name}`,
           cube.image.uri,
-          `${baseUrl}/cube/healthreport/${req.params.id}`,
+          `${baseUrl}/cube/draftsimulator/${req.params.id}`,
         ),
       },
     );
@@ -45,6 +45,6 @@ export const routes = [
   {
     method: 'get',
     path: '/:id',
-    handler: [healthreportHandler],
+    handler: [draftsimulatorHandler],
   },
 ];

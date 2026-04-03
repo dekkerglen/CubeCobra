@@ -91,7 +91,7 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
         'playtest-data',
         'tokens',
         'combos',
-        'health-report',
+        'draft-simulator',
       ].includes(activeLink);
     }
     if (key === 'settings') {
