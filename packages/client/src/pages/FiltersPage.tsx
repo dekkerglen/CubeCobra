@@ -684,11 +684,18 @@ const FiltersPage: React.FC = () => (
                   },
                   {
                     query: <code>game:paper</code>,
-                    description: 'All cards that are available in paper.',
+                    description:
+                      'All cards that have any version available in paper (checks across all printings).',
                   },
                   {
                     query: <code>game!=arena</code>,
-                    description: 'All cards that are not available on arena.',
+                    description:
+                      'All cards that have no version available on arena (checks across all printings).',
+                  },
+                  {
+                    query: <code>game:is-arena</code>,
+                    description:
+                      'All cards whose current printing is available on arena (checks only the specific version).',
                   },
                 ]}
               />

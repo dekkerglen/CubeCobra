@@ -571,6 +571,7 @@ function convertCard(
   newcard.cmc = convertCmc(card, preflipped, faceAttributeSource);
   newcard.legalities = convertLegalities(card, preflipped);
   newcard.games = convertGames(card);
+  newcard.gamesEverAvailable = newcard.games || [];
   newcard.parsed_cost = convertParsedCost(card, preflipped);
   newcard.colors = convertColors(card, preflipped);
   newcard.type = convertType(card, preflipped, faceAttributeSource);
@@ -918,6 +919,24 @@ async function saveAllCards(
     card.printedInExpansion = oracleInExpansion.has(card.oracle_id);
   }
   console.info('Finished computing firstPrintYear and printedInExpansion.');
+
+  // Compute gamesEverAvailable: union of games across all versions sharing the same oracle_id
+  console.info('Computing gamesEverAvailable for all cards...');
+  const gamesByOracle: Record<string, Set<Game>> = {};
+  for (const card of Object.values(catalog.dict)) {
+    if (!card.oracle_id) continue;
+    if (!gamesByOracle[card.oracle_id]) {
+      gamesByOracle[card.oracle_id] = new Set();
+    }
+    for (const game of card.games || []) {
+      gamesByOracle[card.oracle_id]!.add(game);
+    }
+  }
+  for (const card of Object.values(catalog.dict)) {
+    const oracleGames = gamesByOracle[card.oracle_id];
+    card.gamesEverAvailable = oracleGames ? Array.from(oracleGames) : card.games || [];
+  }
+  console.info('Finished computing gamesEverAvailable.');
 }
 
 async function saveSet(set: ScryfallSet) {

@@ -189,6 +189,7 @@ export const CardDetails = (card: Card): CardDetailsType =>
     finishes: [],
     promo_types: [],
     games: [],
+    gamesEverAvailable: [],
     reserved: false,
   };
 
@@ -535,6 +536,8 @@ export const cardWordCount = (card: Card): number => {
 };
 
 export const cardGames = (card: Card): Game[] => card.details?.games ?? [];
+
+export const cardGamesEverAvailable = (card: Card): Game[] => card.details?.gamesEverAvailable ?? card.details?.games ?? [];
 
 export const cardKeywords = (card: Card): string[] => card.details?.keywords ?? [];
 

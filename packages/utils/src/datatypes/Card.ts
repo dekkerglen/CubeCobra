@@ -84,6 +84,7 @@ export interface CardDetails {
   full_art: boolean;
   error: boolean;
   games: Game[];
+  gamesEverAvailable: Game[];
   reserved: boolean;
   prices: {
     usd?: number;
