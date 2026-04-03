@@ -265,6 +265,52 @@ export const build = (oracles: string[]) => {
   return res.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 };
 
+/**
+ * Batched version of draft() — encodes all N seat pools in one TF forward pass
+ * instead of N sequential passes. Returns rated pack cards per seat.
+ */
+export const draftBatch = (packs: string[][], pools: string[][]): { oracle: string; rating: number }[][] => {
+  if (!encoder || !draftDecoder || packs.length === 0) return packs.map(() => []);
+
+  const allOracles = getAllOracleIds();
+
+  const batchVector = pools.map((pool) =>
+    encodeIndeces(
+      pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
+    ),
+  );
+
+  // Single batched forward pass: [N, numOracles] → encoder → draftDecoder → [N, numOracles]
+  const flatResult: number[] = tidy(() => {
+    const inputTensor = tensor(batchVector); // [N, numOracles]
+    const encoded = encoder.predict(inputTensor) as any; // [N, encodingDim]
+    const result = draftDecoder.predict([encoded]) as any; // [N, numOracles]
+    return Array.from(result.dataSync() as Float32Array);
+  });
+
+  return packs.map((pack, i) => {
+    const ratings = flatResult.slice(i * numOracles, (i + 1) * numOracles);
+
+    const packVector = encodeIndeces(
+      pack
+        .map((oracle) => oracleIdToMlIndex(oracle))
+        .filter((index): index is number => index !== null && index !== undefined),
+    );
+    const mask = packVector.map((x) => 1e9 * (1 - x));
+    const softmaxed = softmax(ratings.map((x, j) => x * packVector[j] - (mask[j] ?? 0)));
+
+    const res: { oracle: string; rating: number }[] = [];
+    for (const oracle of allOracles) {
+      const index = oracleIdToMlIndex(oracle);
+      if (index === null || index === undefined) continue;
+      if (pack.includes(oracle)) {
+        res.push({ oracle, rating: softmaxed[index] ?? 0 });
+      }
+    }
+    return res.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  });
+};
+
 export const draft = (pack: string[], pool: string[]) => {
   if (!encoder || !draftDecoder) {
     return [];

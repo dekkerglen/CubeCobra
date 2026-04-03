@@ -107,7 +107,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
         { label: 'Playtest Data', key: 'playtest-data' },
         { label: 'Tokens', key: 'tokens' },
         { label: 'Combos', key: 'combos' },
-        { label: 'Health Report', key: 'health-report', href: '/cube/healthreport' },
+        { label: 'Draft Simulator', key: 'draft-simulator', href: '/cube/draftsimulator' },
       ],
     },
   ];

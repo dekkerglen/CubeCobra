@@ -51,7 +51,6 @@ export const encode = async (oracles: string[]): Promise<number[]> => {
     const response = await mlServiceRequest<{ success: boolean; encoding: number[] }>('encode', { oracles });
     return response.encoding;
   } catch {
-    console.warn('Failed to encode oracles, returning empty array');
     return [];
   }
 };
@@ -100,9 +99,40 @@ export const build = async (oracles: string[]): Promise<{ oracle: string; rating
 
     return response.cards;
   } catch {
-    console.warn('Failed to build deck, returning empty array');
     return [];
   }
+};
+
+export const simulateDecks = async (
+  pools: string[][],
+): Promise<{ oracle: string; rating: number }[][]> => {
+  try {
+    const response = await mlServiceRequest<{
+      success: boolean;
+      results: { oracle: string; rating: number }[][];
+    }>('simulatedecks', { pools });
+    return response.results;
+  } catch {
+    return pools.map(() => []);
+  }
+};
+
+type DraftStep = { action: string; amount?: number | null };
+
+/**
+ * Run an entire draft in one call to the ML service, eliminating per-pick round-trips.
+ * Returns seatPicks[seat] = oracle IDs picked in order.
+ * Falls back to empty arrays if the ML service is unavailable.
+ */
+export const simulateDraft = async (
+  initialPacks: string[][][],
+  packSteps: DraftStep[][],
+): Promise<string[][]> => {
+  const response = await mlServiceRequest<{ success: boolean; seatPicks: string[][] }>(
+    'simulatedraft',
+    { initialPacks, packSteps },
+  );
+  return response.seatPicks;
 };
 
 export const draft = async (pack: string[], pool: string[]): Promise<{ oracle: string; rating: number }[]> => {
@@ -114,7 +144,6 @@ export const draft = async (pack: string[], pool: string[]): Promise<{ oracle: s
 
     return response.cards;
   } catch {
-    console.warn('Failed to draft, returning empty array');
     return [];
   }
 };
