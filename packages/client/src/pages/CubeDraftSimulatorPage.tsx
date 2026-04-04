@@ -22,9 +22,11 @@ import {
   Chart as ChartJS,
   Legend,
   LinearScale,
+  PointElement,
+  ScatterController,
   Tooltip,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Scatter } from 'react-chartjs-2';
 
 import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Input from '../components/base/Input';
@@ -37,7 +39,7 @@ import { DisplayContextProvider } from '../contexts/DisplayContext';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
 
 const MTG_COLORS: Record<string, { bg: string; label: string }> = {
   W: { bg: 'rgba(248, 231, 185, 0.8)', label: 'White' },
@@ -279,7 +281,13 @@ async function runClientSimulation(
 // ---------------------------------------------------------------------------
 
 const SummaryCard: React.FC<{ label: string; value: string | number; sub?: string }> = ({ label, value, sub }) => (
-  <Card className="flex-1 min-w-[140px]"><CardBody className="text-center"><Text lg semibold>{value}</Text><Text sm className="text-text-secondary mt-1">{label}</Text>{sub && <Text xs className="text-text-secondary mt-0.5">{sub}</Text>}</CardBody></Card>
+  <Card className="flex-1 min-w-[180px]">
+    <CardBody className="text-center py-5">
+      <div className="text-4xl font-bold mb-2">{value}</div>
+      <div><Text md semibold>{label}</Text></div>
+      {sub && <div className="mt-1"><Text xs className="text-text-secondary">{sub}</Text></div>}
+    </CardBody>
+  </Card>
 );
 
 const ColorDemandChart: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
@@ -287,6 +295,69 @@ const ColorDemandChart: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) =
   const sums: Record<string, { rateSum: number; count: number }> = Object.fromEntries(colorKeys.map((k) => [k, { rateSum: 0, count: 0 }]));
   for (const card of cardStats) { if (card.timesSeen === 0) continue; for (const color of card.colorIdentity) if (color in sums) { sums[color]!.rateSum += card.pickRate; sums[color]!.count++; } }
   return <Bar data={{ labels: colorKeys.map((k) => MTG_COLORS[k]!.label), datasets: [{ label: 'Avg Pick Rate (%)', data: colorKeys.map((k) => { const s = sums[k]!; return s.count > 0 ? Math.round((s.rateSum / s.count) * 1000) / 10 : 0; }), backgroundColor: colorKeys.map((k) => MTG_COLORS[k]!.bg), borderWidth: 1 }] }} options={{ responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Avg Pick Rate (%)' } } } }} />;
+};
+
+const PickRateHistogram: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
+  const buckets = Array(10).fill(0) as number[];
+  for (const c of cardStats) {
+    if (c.timesSeen === 0) continue;
+    const idx = Math.min(9, Math.floor(c.pickRate * 10));
+    buckets[idx]++;
+  }
+  const labels = ['0–10%', '10–20%', '20–30%', '30–40%', '40–50%', '50–60%', '60–70%', '70–80%', '80–90%', '90–100%'];
+  const bgColors = buckets.map((_, i) =>
+    i === 0 ? 'rgba(220,50,50,0.7)' : i >= 8 ? 'rgba(50,180,80,0.7)' : 'rgba(100,140,220,0.7)',
+  );
+  return (
+    <Bar
+      data={{ labels, datasets: [{ label: 'Cards', data: buckets, backgroundColor: bgColors, borderWidth: 1 }] }}
+      options={{
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => ` ${ctx.raw as number} cards` } },
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Number of Cards' } },
+          x: { title: { display: true, text: 'Pick Rate' } },
+        },
+      }}
+    />
+  );
+};
+
+const EloVsPickRateScatter: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
+  const picked = cardStats.filter((c) => c.timesSeen > 0);
+  const pointData = picked.map((c) => ({ x: Math.round(c.elo), y: Math.round(c.pickRate * 1000) / 10, label: c.name }));
+  const pointColors = picked.map((c) => {
+    const colors = c.colorIdentity.filter((x) => x in MTG_COLORS);
+    if (colors.length === 0) return MTG_COLORS.C!.bg;
+    if (colors.length === 1) return MTG_COLORS[colors[0]!]!.bg;
+    return MTG_COLORS.M!.bg;
+  });
+  return (
+    <Scatter
+      data={{ datasets: [{ label: 'Cards', data: pointData, backgroundColor: pointColors, pointRadius: 4, pointHoverRadius: 6 }] }}
+      options={{
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const pt = ctx.raw as { x: number; y: number; label: string };
+                return `${pt.label}: Elo ${pt.x}, Pick Rate ${pt.y}%`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { title: { display: true, text: 'Elo' } },
+          y: { beginAtZero: true, max: 100, title: { display: true, text: 'Pick Rate (%)' } },
+        },
+      }}
+    />
+  );
 };
 
 const ArchetypeChart: React.FC<{
@@ -383,7 +454,7 @@ const CardPoolView: React.FC<{ card: CardStats; pools: SimulatedPool[] }> = ({ c
   const [expandedPool, setExpandedPool] = useState<number | null>(pools[0]?.poolIndex ?? null);
   return (
     <Card>
-      <CardHeader><Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2"><div><Text semibold>{card.name}</Text><Text xs className="text-text-secondary mt-0.5">In {pools.length} draft pools</Text></div><Text xs className="text-text-secondary">Pick rate {(card.pickRate * 100).toFixed(1)}%, avg position {card.avgPickPosition > 0 ? card.avgPickPosition.toFixed(1) : '—'}</Text></Flexbox></CardHeader>
+      <CardHeader><Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2"><div><div><Text semibold>{card.name}</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">In {pools.length} draft pools</Text></div></div><Text xs className="text-text-secondary">Pick rate {(card.pickRate * 100).toFixed(1)}%, avg position {card.avgPickPosition > 0 ? card.avgPickPosition.toFixed(1) : '—'}</Text></Flexbox></CardHeader>
       <CardBody>
         {pools.length === 0 ? <Text sm className="text-text-secondary">Not picked in any simulated draft.</Text> : (
           <Flexbox direction="col" gap="3">{pools.map((pool) => {
@@ -407,6 +478,34 @@ const CardPoolView: React.FC<{ card: CardStats; pools: SimulatedPool[] }> = ({ c
   );
 };
 
+const ArchetypePoolList: React.FC<{ archetype: string; pools: SimulatedPool[] }> = ({ archetype, pools }) => {
+  const [expandedPool, setExpandedPool] = useState<number | null>(null);
+  return (
+    <Card>
+      <CardHeader>
+        <div><Text semibold>{archetypeFullName(archetype)} Drafts</Text><Text xs className="text-text-secondary mt-0.5">{pools.length} pools</Text></div>
+      </CardHeader>
+      <CardBody>
+        <Flexbox direction="col" gap="3">
+          {pools.map((pool) => {
+            const isExpanded = expandedPool === pool.poolIndex;
+            const orderedPicks = [...pool.picks].sort((a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber);
+            return (
+              <div key={pool.poolIndex} className="border border-border rounded overflow-hidden">
+                <button type="button" className="w-full flex items-center justify-between px-3 py-2 bg-bg-accent hover:bg-bg-active text-left" onClick={() => setExpandedPool(isExpanded ? null : pool.poolIndex)}>
+                  <Flexbox direction="row" gap="3" alignItems="center"><Text sm semibold>Draft {pool.draftIndex + 1}, Seat {pool.seatIndex + 1}</Text><span className="text-xs bg-bg text-text-secondary rounded px-1.5 py-0.5 border border-border">{pool.archetype}</span></Flexbox>
+                  <Text xs className="text-text-secondary">{isExpanded ? '▲' : '▼'} {pool.picks.length} picks</Text>
+                </button>
+                {isExpanded && <div className="p-3 overflow-x-auto"><Flexbox direction="col" gap="2">{[0, 1, 2].map((packNum) => { const packPicks = orderedPicks.filter((p) => p.packNumber === packNum); if (packPicks.length === 0) return null; return (<div key={packNum}><Text xs className="text-text-secondary mb-1 font-semibold uppercase tracking-wider">Pack {packNum + 1}</Text><div className="flex flex-row gap-1.5 flex-wrap">{packPicks.map((pick) => <PickCard key={`${pick.packNumber}-${pick.pickNumber}`} pick={pick} isSelected={false} />)}</div></div>); })}</Flexbox></div>}
+              </div>
+            );
+          })}
+        </Flexbox>
+      </CardBody>
+    </Card>
+  );
+};
+
 const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
   const picked = cardStats.filter((c) => c.timesPicked > 0 && c.avgPickPosition > 0);
   const eloRankMap = new Map([...picked].sort((a, b) => b.elo - a.elo).map((c, i) => [c.oracle_id, i + 1]));
@@ -419,8 +518,8 @@ const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) =>
   const DR: React.FC<{ row: typeof rows[0] }> = ({ row }) => <tr className="hover:bg-bg-active"><td className="px-3 py-1.5 font-medium">{row.name}</td><td className="px-3 py-1.5 text-text-secondary">{row.elo}</td><td className="px-3 py-1.5 text-text-secondary">#{row.eloRank}</td><td className="px-3 py-1.5 text-text-secondary">#{row.draftRank}</td><td className="px-3 py-1.5"><span className={row.delta > 0 ? 'text-green-400 font-medium' : row.delta < 0 ? 'text-red-400 font-medium' : ''}>{row.delta > 0 ? `+${row.delta}` : row.delta}</span></td><td className="px-3 py-1.5 text-text-secondary">{row.avgPickPosition.toFixed(1)}</td><td className="px-3 py-1.5 text-text-secondary">{(row.pickRate * 100).toFixed(1)}%</td></tr>;
   return (
     <Row className="gap-4">
-      {[{ title: 'Draft Context Gainers (Top 20)', sub: 'Picked higher than Elo suggests — synergy overperformers', data: gainers }, { title: 'Draft Context Losers (Top 20)', sub: 'High Elo but drafted lower — situational or win-more', data: losers }].map(({ title, sub, data }) => (
-        <Col key={title} xs={12} md={6}><Card><CardHeader><div><Text semibold>{title}</Text><Text xs className="text-text-secondary mt-0.5">{sub}</Text></div></CardHeader><CardBody><div className="overflow-x-auto rounded border border-border"><table className="min-w-full divide-y divide-border text-sm"><TH /><tbody className="divide-y divide-border">{data.map((row) => <DR key={row.oracle_id} row={row} />)}</tbody></table></div></CardBody></Card></Col>
+      {[{ title: 'Draft Context Gainers (Top 20)', sub: 'Picked higher than Elo suggests — overperformers in the context of this cube', data: gainers }, { title: 'Draft Context Losers (Top 20)', sub: 'High Elo but drafted lower — situational or win-more', data: losers }].map(({ title, sub, data }) => (
+        <Col key={title} xs={12} md={6}><Card><CardHeader><div><div><Text semibold>{title}</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">{sub}</Text></div></div></CardHeader><CardBody><div className="overflow-x-auto rounded border border-border"><table className="min-w-full divide-y divide-border text-sm"><TH /><tbody className="divide-y divide-border">{data.map((row) => <DR key={row.oracle_id} row={row} />)}</tbody></table></div></CardBody></Card></Col>
       ))}
     </Row>
   );
@@ -530,6 +629,21 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const cooldownActive = false; // TODO: re-enable before production
   const hoursUntilNext = 0;
 
+  const archetypePoolIndexSet = useMemo(() => {
+    if (!selectedArchetype) return null;
+    const s = new Set<number>();
+    for (const pool of simulatedPools) {
+      if (pool.archetype === selectedArchetype) s.add(pool.poolIndex);
+    }
+    return s;
+  }, [selectedArchetype, simulatedPools]);
+
+  const visibleCardStats = useMemo(() => {
+    if (!displayRunData) return [];
+    if (!archetypePoolIndexSet) return displayRunData.cardStats;
+    return displayRunData.cardStats.filter((c) => c.poolIndices.some((i) => archetypePoolIndexSet.has(i)));
+  }, [displayRunData, archetypePoolIndexSet]);
+
   const selectedCard = displayRunData && selectedCardOracle ? displayRunData.cardStats.find((c) => c.oracle_id === selectedCardOracle) ?? null : null;
   const selectedPools = selectedCard
     ? selectedCard.poolIndices
@@ -548,19 +662,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
             <Card>
               <CardHeader><Text lg semibold>Draft Simulator</Text></CardHeader>
               <CardBody>
-                <Text className="text-text-secondary mb-4">Simulate bot-only drafts to analyze pick rates, color demand, and archetype distribution. Runs in your browser — results are saved once per day.</Text>
-                {!canRun && <Text sm className="text-yellow-400 mb-3">Only cube owners and collaborators can run the draft simulator.</Text>}
-                {lastRunTs && <Text xs className="text-text-secondary mb-3">Last run: {new Date(lastRunTs).toLocaleString()}{cooldownActive && ` — next run available in ${hoursUntilNext}h`}</Text>}
-                <Row className="gap-4 flex-wrap items-end">
-                  <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><Input type="number" min={1} max={100} value={String(numDrafts)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNumDrafts(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))} disabled={isRunning} /></Col>
-                  <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Seats</label><Input type="number" min={2} max={16} value={String(numSeats)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNumSeats(Math.max(2, Math.min(16, parseInt(e.target.value) || 8)))} disabled={isRunning} /></Col>
-                  <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Dead Card Threshold (%)</label><Input type="number" min={1} max={100} value={String(deadCardThresholdPct)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeadCardThresholdPct(Math.max(1, Math.min(100, parseInt(e.target.value) || 5)))} disabled={isRunning} /></Col>
-                  <Col xs={12} sm={12} md={2}>
-                    <button onClick={handleStart} disabled={isRunning || cooldownActive || !canRun} className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium">
-                      {isRunning ? 'Simulating…' : cooldownActive ? `Available in ${hoursUntilNext}h` : !canRun ? 'Owner/collaborator only' : 'Run Simulation'}
-                    </button>
-                  </Col>
-                </Row>
+                <div className="mb-4"><Text className="text-text-secondary">Simulate bot-only drafts to analyze pick rates, color demand, and archetype distribution. Runs in your browser — results are saved for anyone to view.</Text></div>
+                {lastRunTs && <div className="mb-3"><Text xs className="text-text-secondary">Last run: {new Date(lastRunTs).toLocaleString()}{cooldownActive && ` — next run available in ${hoursUntilNext}h`}</Text></div>}
+                {canRun && (
+                  <Row className="gap-4 flex-wrap items-end">
+                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><Input type="number" min={1} max={100} value={String(numDrafts)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNumDrafts(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))} disabled={isRunning} /></Col>
+                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Seats</label><Input type="number" min={2} max={16} value={String(numSeats)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNumSeats(Math.max(2, Math.min(16, parseInt(e.target.value) || 8)))} disabled={isRunning} /></Col>
+                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Dead Card Threshold (%)</label><Input type="number" min={1} max={100} value={String(deadCardThresholdPct)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeadCardThresholdPct(Math.max(1, Math.min(100, parseInt(e.target.value) || 5)))} disabled={isRunning} /></Col>
+                    <Col xs={12} sm={12} md={2}>
+                      <button onClick={handleStart} disabled={isRunning || cooldownActive} className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium">
+                        {isRunning ? 'Simulating…' : cooldownActive ? `Available in ${hoursUntilNext}h` : 'Run Simulation'}
+                      </button>
+                    </Col>
+                  </Row>
+                )}
               </CardBody>
             </Card>
 
@@ -626,14 +741,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
             {/* Results */}
             {displayRunData && (
               <Flexbox direction="col" gap="4">
-                <Flexbox direction="row" gap="3" className="flex-wrap">
+                <Flexbox direction="row" gap="4" className="flex-wrap">
                   <SummaryCard label="Drafts Simulated" value={displayRunData.numDrafts} sub={`${displayRunData.numSeats} seats each`} />
                   <SummaryCard label="Dead Cards" value={displayRunData.deadCards.length} sub={`< ${(displayRunData.deadCardThreshold * 100).toFixed(0)}% pick rate`} />
-                  <SummaryCard label="Convergence Score" value={displayRunData.convergenceScore.toFixed(3)} sub="stdev of pick rates" />
+                  <SummaryCard label="Pick Rate Spread" value={displayRunData.convergenceScore.toFixed(3)} sub="stdev of pick rates" />
                   <SummaryCard label="Cards Tracked" value={displayRunData.cardStats.length} />
                 </Flexbox>
                 <Row className="gap-4">
-                  <Col xs={12} md={4}><Card><CardHeader><div><Text semibold>Color Demand</Text><Text xs className="text-text-secondary mt-0.5">Avg pick rate per color</Text></div></CardHeader><CardBody><ColorDemandChart cardStats={displayRunData.cardStats} /></CardBody></Card></Col>
+                  <Col xs={12} md={4}><Card><CardHeader><div><div><Text semibold>Color Demand</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Avg pick rate per color</Text></div></div></CardHeader><CardBody><ColorDemandChart cardStats={displayRunData.cardStats} /></CardBody></Card></Col>
                   <Col xs={12} md={8}>
                     <Card>
                       <CardHeader>
@@ -653,18 +768,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                           selectedArchetype={selectedArchetype}
                           onSelect={setSelectedArchetype}
                         />
-                        {selectedArchetype && (
-                          <Text xs className="text-text-secondary mt-2">
-                            Showing {simulatedPools.filter((p) => p.archetype === selectedArchetype).length} of {simulatedPools.length} pools — click a card below to explore them
-                          </Text>
-                        )}
                       </CardBody>
                     </Card>
                   </Col>
                 </Row>
+                <Row className="gap-4">
+                  <Col xs={12} md={5}><Card><CardHeader><div><div><Text semibold>Pick Rate Distribution</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">How many cards fall in each pick rate bucket</Text></div></div></CardHeader><CardBody><PickRateHistogram cardStats={displayRunData.cardStats} /></CardBody></Card></Col>
+                  <Col xs={12} md={7}><Card><CardHeader><div><div><Text semibold>Elo vs. Pick Rate</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Each dot is a card — colored by color identity</Text></div></div></CardHeader><CardBody><EloVsPickRateScatter cardStats={displayRunData.cardStats} /></CardBody></Card></Col>
+                </Row>
                 <Card><CardHeader><Text semibold>P1P1 Frequency (Top 20)</Text></CardHeader><CardBody><div className="overflow-x-auto rounded border border-border"><table className="min-w-full divide-y divide-border text-sm"><thead className="bg-bg-accent"><tr>{['Card', 'Times P1P1', '% of Seats'].map((h) => <th key={h} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">{h}</th>)}</tr></thead><tbody className="divide-y divide-border">{displayRunData.p1p1Frequency.map((e) => <tr key={e.oracle_id} className="hover:bg-bg-active"><td className="px-3 py-1.5 font-medium">{e.name}</td><td className="px-3 py-1.5 text-text-secondary">{e.count}</td><td className="px-3 py-1.5 text-text-secondary">{(e.percentage * 100).toFixed(1)}%</td></tr>)}</tbody></table></div></CardBody></Card>
-                <DraftVsEloTable cardStats={displayRunData.cardStats} />
-                <Card><CardHeader><Flexbox direction="row" justify="between" alignItems="center"><Text semibold>All Card Stats</Text><Text xs className="text-text-secondary">Sorted by avg pick position</Text></Flexbox></CardHeader><CardBody><CardStatsTable cardStats={displayRunData.cardStats} deadCardThreshold={displayRunData.deadCardThreshold} onSelectCard={setSelectedCardOracle} selectedCardOracle={selectedCardOracle} /></CardBody></Card>
+                <DraftVsEloTable cardStats={visibleCardStats} />
+                <Card><CardHeader><Flexbox direction="row" justify="between" alignItems="center"><div><Text semibold>All Card Stats</Text>{selectedArchetype && <Text xs className="text-text-secondary ml-2">— filtered to {archetypeFullName(selectedArchetype)}</Text>}</div><Text xs className="text-text-secondary">Sorted by avg pick position</Text></Flexbox></CardHeader><CardBody><CardStatsTable cardStats={visibleCardStats} deadCardThreshold={displayRunData.deadCardThreshold} onSelectCard={setSelectedCardOracle} selectedCardOracle={selectedCardOracle} /></CardBody></Card>
+                {selectedArchetype && !selectedCard && (
+                  <ArchetypePoolList archetype={selectedArchetype} pools={simulatedPools.filter((p) => p.archetype === selectedArchetype)} />
+                )}
                 {selectedCard && <CardPoolView card={selectedCard} pools={selectedPools} />}
                 <Text xs className="text-text-secondary text-right">Generated {new Date(displayRunData.generatedAt).toLocaleString()}</Text>
               </Flexbox>
