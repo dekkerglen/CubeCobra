@@ -1742,6 +1742,69 @@ const DraftMapScatter: React.FC<{
   );
 };
 
+const PickRateHistogram: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
+  const buckets = Array(10).fill(0) as number[];
+  for (const c of cardStats) {
+    if (c.timesSeen === 0) continue;
+    const idx = Math.min(9, Math.floor(c.pickRate * 10));
+    buckets[idx]++;
+  }
+  const labels = ['0–10%', '10–20%', '20–30%', '30–40%', '40–50%', '50–60%', '60–70%', '70–80%', '80–90%', '90–100%'];
+  const bgColors = buckets.map((_, i) =>
+    i === 0 ? 'rgba(220,50,50,0.7)' : i >= 8 ? 'rgba(50,180,80,0.7)' : 'rgba(100,140,220,0.7)',
+  );
+  return (
+    <Bar
+      data={{ labels, datasets: [{ label: 'Cards', data: buckets, backgroundColor: bgColors, borderWidth: 1 }] }}
+      options={{
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => ` ${ctx.raw as number} cards` } },
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Number of Cards' } },
+          x: { title: { display: true, text: 'Pick Rate' } },
+        },
+      }}
+    />
+  );
+};
+
+const EloVsPickRateScatter: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
+  const picked = cardStats.filter((c) => c.timesSeen > 0);
+  const pointData = picked.map((c) => ({ x: Math.round(c.elo), y: Math.round(c.pickRate * 1000) / 10, label: c.name }));
+  const pointColors = picked.map((c) => {
+    const colors = c.colorIdentity.filter((x) => x in MTG_COLORS);
+    if (colors.length === 0) return MTG_COLORS.C!.bg;
+    if (colors.length === 1) return MTG_COLORS[colors[0]!]!.bg;
+    return MTG_COLORS.M!.bg;
+  });
+  return (
+    <Scatter
+      data={{ datasets: [{ label: 'Cards', data: pointData, backgroundColor: pointColors, pointRadius: 4, pointHoverRadius: 6 }] }}
+      options={{
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const pt = ctx.raw as { x: number; y: number; label: string };
+                return `${pt.label}: Elo ${pt.x}, Pick Rate ${pt.y}%`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { title: { display: true, text: 'Elo' } },
+          y: { beginAtZero: true, max: 100, title: { display: true, text: 'Pick Rate (%)' } },
+        },
+      }}
+    />
+  );
+};
+
 const ArchetypeChart: React.FC<{
   archetypeDistribution: ArchetypeEntry[];
   selectedArchetype: string | null;
