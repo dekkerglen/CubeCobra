@@ -420,6 +420,10 @@ async function runClientSimulation(
               throw new Error((body as { message?: string }).message ?? `Simulation failed: ${mlRes.status}`);
             }
             picks = ((await mlRes.json()) as { picks: string[] }).picks;
+            const expectedPicks = numDrafts * numSeats;
+            if (!Array.isArray(picks) || picks.length !== expectedPicks) {
+              throw new Error(`ML service returned ${picks?.length ?? 0} picks, expected ${expectedPicks}`);
+            }
           } else {
             // pickrandom — choose a random card from each pack, no ML call needed
             picks = allCurrentPacks.flatMap((draftPacks) =>
@@ -444,7 +448,7 @@ async function runClientSimulation(
           }
 
           donePicks++;
-          onProgress(Math.round((donePicks / totalPicks) * 100));
+          onProgress(totalPicks > 0 ? Math.round((donePicks / totalPicks) * 100) : 100);
           pickNumInPack++;
         }
       } else if (step.action === 'trash' || step.action === 'trashrandom') {
@@ -585,8 +589,13 @@ function kMeans(vecs: number[][], k: number): number[] {
 function computeSkeletons(slimPools: SlimPool[], cardMeta: Record<string, CardMeta>, k: number, coreThresholdPct: number = 60, deckBuilds?: BuiltDeck[] | null): ArchetypeSkeleton[] {
   const n = slimPools.length;
   if (n === 0) return [];
+  k = Math.min(k, n); // can't have more clusters than data points
 
-  const oracleIds = Object.keys(cardMeta);
+  // Exclude basic lands — they appear in almost every deck and distort clustering
+  const oracleIds = Object.keys(cardMeta).filter((id) => {
+    const t = (cardMeta[id]?.type ?? '').toLowerCase();
+    return !(t.includes('basic') && t.includes('land'));
+  });
   const oracleIndex = new Map(oracleIds.map((id, i) => [id, i]));
   const dim = oracleIds.length;
 
@@ -1058,9 +1067,15 @@ const SimDeckView: React.FC<{
     Array.from({ length: CMC_COLS }, () => [] as SimulatedPickCard[]),
   );
   for (const oracle_id of deck.mainboard) {
-    const pick = picksByOracle[oracle_id];
-    if (!pick) continue;
     const meta = cardMeta[oracle_id];
+    // Fall back to a synthetic entry for basics/cards added by the deckbuilder (not in pool picks)
+    const pick: SimulatedPickCard = picksByOracle[oracle_id] ?? {
+      oracle_id,
+      name: meta?.name ?? oracle_id,
+      imageUrl: meta?.imageUrl ?? '',
+      packNumber: 0,
+      pickNumber: 0,
+    };
     const typeLower = (meta?.type ?? '').toLowerCase();
     const isLand = typeLower.includes('land');
     const isCreature = typeLower.includes('creature');
@@ -1069,7 +1084,10 @@ const SimDeckView: React.FC<{
     grid[row]![col]!.push(pick);
   }
 
-  const sideboardPicks = deck.sideboard.map((id) => picksByOracle[id]).filter((p): p is SimulatedPickCard => !!p);
+  const sideboardPicks = deck.sideboard.map((id) => {
+    const meta = cardMeta[id];
+    return picksByOracle[id] ?? { oracle_id: id, name: meta?.name ?? id, imageUrl: meta?.imageUrl ?? '', packNumber: 0, pickNumber: 0 };
+  });
 
   const rowLabels = ['Creatures', 'Non-Creatures', 'Lands'];
 
@@ -1159,7 +1177,7 @@ const PoolExpansionContent: React.FC<{
 
 const CardPoolView: React.FC<{ card: CardStats; pools: SimulatedPool[]; deckBuilds: BuiltDeck[] | null; deckLoading: boolean; cardMeta: Record<string, CardMeta>; onClose: () => void }> = ({ card, pools, deckBuilds, deckLoading, cardMeta, onClose }) => {
   const [expandedPool, setExpandedPool] = useState<number | null>(pools[0]?.poolIndex ?? null);
-  const [viewMode, setViewMode] = useState<'pool' | 'deck'>('pool');
+  const [viewMode, setViewMode] = useState<'pool' | 'deck'>('deck');
   const [poolLocationFilter, setPoolLocationFilter] = useState<DeckLocationFilter>('all');
   const hasDeck = !!deckBuilds && deckBuilds.length > 0;
 
@@ -1521,11 +1539,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     [displayRunData],
   );
 
-  // Build decks in batches; returns the results (does not set state)
-  const buildAllDecks = useCallback(async (slimPools: SlimPool[]): Promise<BuiltDeck[] | null> => {
-    if (slimPools.length === 0) return [];
+  // Build decks in batches; returns decks + any basic land metadata from the server
+  const buildAllDecks = useCallback(async (slimPools: SlimPool[]): Promise<{ decks: BuiltDeck[]; basicCardMeta: Record<string, CardMeta> } | null> => {
+    if (slimPools.length === 0) return { decks: [], basicCardMeta: {} };
     const BATCH_SIZE = 10;
     const allResults: BuiltDeck[] = [];
+    const basicCardMeta: Record<string, CardMeta> = {};
     try {
       for (let i = 0; i < slimPools.length; i += BATCH_SIZE) {
         const batch = slimPools.slice(i, i + BATCH_SIZE);
@@ -1538,12 +1557,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
         const json = await res.json();
         if (json.success && Array.isArray(json.results)) {
           allResults.push(...json.results);
+          Object.assign(basicCardMeta, json.basicCardMeta ?? {});
         } else {
           console.error('simulatedeckbuild batch failed:', json);
           return null;
         }
       }
-      return allResults;
+      return { decks: allResults, basicCardMeta };
     } catch (err) {
       console.error('simulatedeckbuild fetch error:', err);
       return null;
@@ -1564,12 +1584,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
           }
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to load simulation history:', err);
+      });
   }, [cubeId]);
+
+  const [loadRunError, setLoadRunError] = useState<string | null>(null);
+  const loadRunInFlight = useRef(false);
 
   const handleLoadRun = useCallback(async (ts: number) => {
     if (ts === selectedTs && displayRunData) return;
+    if (loadRunInFlight.current) return;
+    loadRunInFlight.current = true;
     setLoadingRun(true);
+    setLoadRunError(null);
     setSelectedCardOracle(null);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
@@ -1580,27 +1608,36 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
         setDisplayRunData(json.runData);
         setCurrentRunSetup(json.runData.setupData ?? null);
         setSelectedTs(ts);
+      } else {
+        setLoadRunError(json.message ?? 'Failed to load run');
       }
+    } catch (err) {
+      setLoadRunError(err instanceof Error ? err.message : 'Failed to load run');
     } finally {
       setLoadingRun(false);
+      loadRunInFlight.current = false;
     }
   }, [cubeId, selectedTs, displayRunData]);
 
   const handleDeleteRun = useCallback(async (ts: number) => {
-    const res = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`, { method: 'DELETE' });
-    const json = await res.json();
-    if (!json.success) return;
+    try {
+      const res = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json.success) return;
 
-    const nextRuns = json.runs ?? [];
-    setRuns(nextRuns);
-    setSelectedCardOracle(null);
-    setSelectedArchetype(null);
-    setSelectedSkeletonId(null);
+      const nextRuns = json.runs ?? [];
+      setRuns(nextRuns);
+      setSelectedCardOracle(null);
+      setSelectedArchetype(null);
+      setSelectedSkeletonId(null);
 
-    if (selectedTs === ts) {
-      setDisplayRunData(json.latestRunData ?? null);
-      setCurrentRunSetup(json.latestRunData?.setupData ?? null);
-      setSelectedTs(nextRuns[0]?.ts ?? null);
+      if (selectedTs === ts) {
+        setDisplayRunData(json.latestRunData ?? null);
+        setCurrentRunSetup(json.latestRunData?.setupData ?? null);
+        setSelectedTs(nextRuns[0]?.ts ?? null);
+      }
+    } catch (err) {
+      console.error('Failed to delete run:', err);
     }
   }, [csrfFetch, cubeId, selectedTs]);
 
@@ -1617,14 +1654,25 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
       // Build decks for all pools before saving
       setDeckBuildsLoading(true);
-      const deckBuilds = await buildAllDecks(report.slimPools);
+      const deckResult = await buildAllDecks(report.slimPools);
       setDeckBuildsLoading(false);
+      if (!deckResult) {
+        setStatus('failed');
+        setErrorMsg('Deck building failed. The simulation ran successfully but decks could not be built.');
+        return;
+      }
 
-      // Assemble run data and save to S3
+      // Assemble run data and save to S3; merge basic land metadata into cardMeta
       const { simulatedPools: _derived, ...runDataBase } = report;
-      const runData = { ...runDataBase, deckBuilds: deckBuilds ?? [], setupData: report.setupData, randomTrashByPool: report.randomTrashByPool };
+      const mergedCardMeta = { ...runDataBase.cardMeta, ...deckResult.basicCardMeta };
+      const runData = { ...runDataBase, cardMeta: mergedCardMeta, deckBuilds: deckResult.decks, setupData: report.setupData, randomTrashByPool: report.randomTrashByPool };
       const saveRes = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(runData) });
       const saveJson = await saveRes.json();
+      if (!saveJson.success) {
+        setStatus('failed');
+        setErrorMsg(saveJson.message ?? 'Failed to save simulation results');
+        return;
+      }
 
       setStatus('completed');
       setDisplayRunData(runData);
@@ -1633,7 +1681,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`)
         .then((r) => r.json())
         .then((data) => { if (data.success) setRuns(data.runs ?? []); })
-        .catch(() => {});
+        .catch((err) => { console.error('Failed to refresh run history:', err); });
     } catch (err) {
       setSimulating(false);
       setDeckBuildsLoading(false);
@@ -1901,6 +1949,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
             {/* Error */}
             {status === 'failed' && errorMsg && <Card className="border-red-700"><CardBody><Text sm className="text-red-400">Error: {errorMsg}</Text></CardBody></Card>}
+            {loadRunError && <Card className="border-red-700"><CardBody><Text sm className="text-red-400">Failed to load run: {loadRunError}</Text></CardBody></Card>}
 
             {/* Results */}
             {displayRunData && (
@@ -2015,14 +2064,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                           {selectedCard ? (
                             <Flexbox direction="row" gap="3" alignItems="start" className="min-w-0">
                               {displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl && (
-                                <div className="w-20 h-14 rounded border border-border/40 overflow-hidden flex-shrink-0 bg-bg">
-                                  <img
-                                    src={displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl}
-                                    alt={selectedCard.name}
-                                    className="w-full h-full object-cover scale-150"
-                                    style={{ objectPosition: 'center 18%' }}
-                                  />
-                                </div>
+                                <img
+                                  src={displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl}
+                                  alt={selectedCard.name}
+                                  className="w-20 rounded border border-border/40 flex-shrink-0 shadow-sm"
+                                />
                               )}
                               <div className="min-w-0 flex-1">
                                 <Text semibold className="text-lg leading-snug">{detailedViewTitle}</Text>
@@ -2063,6 +2109,40 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                           </div>
                         )}
                       </div>
+                      {/* Zero-intersection warning */}
+                      {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
+                        <div className="rounded-lg border border-yellow-700 bg-yellow-900/20 px-4 py-3 flex items-center justify-between gap-3">
+                          <Text sm className="text-yellow-300">No draft pools match the current combination of filters.</Text>
+                          <button type="button" className="text-xs text-yellow-300 border border-yellow-700 rounded px-2 py-0.5 hover:bg-yellow-900/40 flex-shrink-0" onClick={clearActiveFilter}>Clear filters</button>
+                        </div>
+                      )}
+                      {/* Cluster card preview — shown whenever a cluster is selected */}
+                      {selectedSkeletonId !== null && (() => {
+                        const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+                        if (!sk || (sk.coreCards.length === 0 && sk.occasionalCards.length === 0)) return null;
+                        return (
+                          <div className="rounded-lg bg-bg-accent/30 border border-border/50 px-4 py-3">
+                            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.14em] mb-2.5">Cluster defining cards</Text>
+                            <div className="overflow-x-auto">
+                              <div className="flex flex-row gap-2 pb-1" style={{ minWidth: 'max-content' }}>
+                                {sk.coreCards.map((card) => (
+                                  <SkeletonCardImage key={card.oracle_id} card={card} size={90} />
+                                ))}
+                                {sk.occasionalCards.length > 0 && (
+                                  <>
+                                    <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
+                                    {sk.occasionalCards.map((card) => (
+                                      <div key={card.oracle_id} className="opacity-60">
+                                        <SkeletonCardImage card={card} size={72} />
+                                      </div>
+                                    ))}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {/* Mini chart row — lighter surface than the stats table below */}
                       <Row className="gap-3">
                         <Col xs={12} md={6}><Card className="border-border/50 bg-bg-accent/30"><CardHeader><div><div><Text semibold>Deck Color Share</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Each maindeck card contributes to its colors. Multicolor cards split evenly.{activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}</Text></div></div></CardHeader><CardBody><DeckColorShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} /></CardBody></Card></Col>
@@ -2204,17 +2284,12 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
           highest-rated card. Because the model learned directly from human draft data, it naturally
           prioritizes synergy and deck cohesion over raw individual card power.
         </p>
-        <p>Two pick types exist depending on the cube's format:</p>
-        <ul className="list-disc list-inside space-y-1 ml-2">
-          <li><span className="font-medium text-text">pick</span> — the ML model decides</li>
-          <li><span className="font-medium text-text">pickrandom</span> — a random card is chosen (used in some custom formats)</li>
-        </ul>
         <p>The simulation tracks pick rate, average pick position within the pack, wheel count (drafted after the pack has gone all the way around the table), and P1P1 frequency per card.</p>
       </div>
     ),
   },
   {
-    q: 'How does clustering work?',
+    q: 'How does archetype clustering work?',
     answer: (
       <div className="space-y-3 text-sm text-text-secondary leading-relaxed">
         <p>
