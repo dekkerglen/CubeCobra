@@ -2,39 +2,33 @@ import { batchEncode } from 'mlutils/ml';
 
 import { Request, Response } from '../../types/express';
 
+/**
+ * POST /batchencode
+ *
+ * Encodes a batch of draft pools through the encoder in a single forward pass.
+ * Body:  { pools: string[][] }  — one array of oracle IDs per pool
+ * Response: { success: true, embeddings: number[][] }  — one embedding vector per pool
+ */
 const handler = async (req: Request, res: Response) => {
   try {
-    const { inputs } = req.body;
+    const { pools } = req.body;
 
-    if (!Array.isArray(inputs)) {
-      return res.status(400).json({
-        success: false,
-        message: 'inputs must be an array',
-      });
+    if (!Array.isArray(pools)) {
+      return res.status(400).json({ success: false, message: 'pools must be an array' });
     }
 
-    for (let i = 0; i < inputs.length; i++) {
-      const input = inputs[i];
-      if (!Array.isArray(input)) {
-        return res.status(400).json({
-          success: false,
-          message: `inputs[${i}] must be an array of oracle IDs`,
-        });
+    for (let i = 0; i < pools.length; i++) {
+      if (!Array.isArray(pools[i])) {
+        return res.status(400).json({ success: false, message: `pools[${i}] must be an array of oracle IDs` });
       }
     }
 
-    const results = batchEncode(inputs);
+    const embeddings = batchEncode(pools as string[][]);
 
-    return res.status(200).json({
-      success: true,
-      results,
-    });
+    return res.status(200).json({ success: true, embeddings });
   } catch (err) {
     req.logger.error(`Error in batchencode: ${err}`, err instanceof Error ? err.stack : '');
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 

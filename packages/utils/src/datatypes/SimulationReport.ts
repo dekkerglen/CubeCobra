@@ -32,7 +32,7 @@ export interface P1P1Entry {
   oracle_id: string;
   name: string;
   count: number;
-  percentage: number; // count / (numDrafts * numSeats)
+  percentage: number; // count / times the card appeared in a P1P1 pack
 }
 
 export interface SimulatedPickCard {
@@ -56,6 +56,8 @@ export interface CardMeta {
   imageUrl: string;
   colorIdentity: string[];
   elo: number;
+  cmc: number;
+  type: string;
 }
 
 /**
@@ -102,11 +104,13 @@ export interface SimulationSummary {
 
 /**
  * Full run data stored at each S3 run key — extends SimulationSummary with
- * card metadata (for pool image reconstruction) and slim pool pick sequences.
+ * card metadata (for pool image reconstruction), slim pool pick sequences,
+ * and pre-built deck builds for every pool.
  */
 export interface SimulationRunData extends SimulationSummary {
   cardMeta: Record<string, CardMeta>;
   slimPools: SlimPool[];
+  deckBuilds?: BuiltDeck[]; // one per slim pool, in order; absent on old runs
 }
 
 /**
@@ -115,6 +119,41 @@ export interface SimulationRunData extends SimulationSummary {
  */
 export interface SimulationReport extends SimulationRunData {
   simulatedPools: SimulatedPool[];
+}
+
+/** Built deck for a simulated pool (oracle IDs). */
+export interface BuiltDeck {
+  mainboard: string[];
+  sideboard: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Archetype skeleton clustering (client-side only, not persisted)
+// ---------------------------------------------------------------------------
+
+export interface SkeletonCard {
+  oracle_id: string;
+  name: string;
+  imageUrl: string;
+  fraction: number; // 0–1: fraction of pools in this cluster that drafted this card
+}
+
+export interface LockPair {
+  oracle_id_a: string;
+  oracle_id_b: string;
+  nameA: string;
+  nameB: string;
+  coOccurrenceRate: number; // 0–1
+}
+
+export interface ArchetypeSkeleton {
+  clusterId: number;
+  colorProfile: string; // e.g. "UR", "BGW", "C"
+  poolCount: number;
+  poolIndices: number[]; // indices into slimPools
+  coreCards: SkeletonCard[]; // fraction >= 0.4
+  occasionalCards: SkeletonCard[]; // fraction 0.2–0.4
+  lockPairs: LockPair[]; // pairs co-occurring > 85% and well above independence baseline
 }
 
 /**
