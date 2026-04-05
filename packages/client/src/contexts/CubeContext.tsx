@@ -77,7 +77,7 @@ export interface CubeContextValue {
   revertEdit: (index: number, board: BoardType) => void;
   versionDict: Record<string, CardVersion[]>;
   fetchVersionsForCard: (cardId: string) => Promise<boolean>;
-  commitChanges: (title: string, blog: string) => Promise<void>;
+  commitChanges: (title: string, blog: string) => Promise<boolean>;
   setModalSelection: Dispatch<
     SetStateAction<
       | { index: number; board: BoardType }
@@ -1049,7 +1049,7 @@ export function CubeContextProvider({
   }, [changedCards, unfilteredChangedCards, filterInput]);
 
   const commitChanges = useCallback(
-    async (title: string, blog: string) => {
+    async (title: string, blog: string): Promise<boolean> => {
       setLoading(true);
 
       try {
@@ -1072,6 +1072,9 @@ export function CubeContextProvider({
 
         if (json.success !== 'true') {
           setAlerts([{ color: 'danger', message: json.message }]);
+          setModalSelection([]);
+          setLoading(false);
+          return false;
         } else {
           const newCards = deepCopy(unfilteredChangedCards);
 
@@ -1141,10 +1144,14 @@ export function CubeContextProvider({
         }
       } catch {
         setAlerts([{ color: 'danger', message: 'Operation timed out' }]);
+        setModalSelection([]);
+        setLoading(false);
+        return false;
       }
 
       setModalSelection([]);
       setLoading(false);
+      return true;
     },
     [csrfFetch, changes, cube, useBlog, unfilteredChangedCards, clearChanges, setVersion, version, tagColors],
   );

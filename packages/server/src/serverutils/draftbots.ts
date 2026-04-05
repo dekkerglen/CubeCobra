@@ -1,5 +1,5 @@
-import carddb, { cardFromId, getReasonableCardByOracle } from './carddb';
-import { batchBuild, build, draft as draftbotPick } from './ml';
+import carddb, { cardFromId, getOracleForMl, getReasonableCardByOracle } from './carddb';
+import { batchBuild, batchDraft, build, draft as draftbotPick } from './ml';
 
 /*
   drafterState = {
@@ -11,52 +11,6 @@ import { batchBuild, build, draft as draftbotPick } from './ml';
     numPacks: number, // How many packs will this player open
   };
   */
-
-const assessColors = (oracles: string[]): string[] => {
-  const colors: Record<string, number> = {
-    W: 0,
-    U: 0,
-    B: 0,
-    R: 0,
-    G: 0,
-  };
-
-  let count = 0;
-  for (const oracle of oracles) {
-    const oracleIds = carddb.oracleToId[oracle];
-    if (!oracleIds || oracleIds.length === 0) continue;
-
-    const details = cardFromId(oracleIds[0]!);
-
-    if (!details.type.includes('Land')) {
-      count += 1;
-      for (const color of details.color_identity) {
-        if (colors[color] !== undefined) {
-          colors[color] += 1;
-        }
-      }
-    }
-  }
-
-  const threshold = 0.25;
-
-  const colorKeysFiltered = Object.keys(colors).filter((color) => (colors[color] ?? 0) / count > threshold);
-
-  if (colorKeysFiltered.length === 0) {
-    return ['C'];
-  }
-
-  return colorKeysFiltered;
-};
-
-const listOverlaps = (lista: string[], listb: string[]): boolean => {
-  if (lista.length === 0 || listb.length === 0) {
-    return true;
-  }
-
-  const setb = new Set(listb);
-  return lista.filter((x: string) => setb.has(x)).length > 0;
-};
 
 const pipsPerSource = (cards: any[]): Record<string, number> => {
   const pips: Record<string, number> = {
@@ -101,14 +55,14 @@ const pipsPerSource = (cards: any[]): Record<string, number> => {
   };
 };
 
-const calculateBasics = (mainboard: any[], basics: any[]): any[] => {
+const calculateBasics = (mainboard: any[], basics: any[], deckSize: number = 40): any[] => {
   if (basics.length === 0) {
     return [];
   }
 
   const result = [];
 
-  const basicsNeeded = 40 - mainboard.length;
+  const basicsNeeded = deckSize - mainboard.length;
 
   const basicLands = basics.filter((card: any) => card.type.includes('Land'));
   //Cube basics don't have to be actual land cards (could be land art cards or just regular cards).
@@ -148,98 +102,322 @@ export const deckbuild = async (
   maxLands: number = 17,
 ): Promise<{ mainboard: string[]; sideboard: string[] }> => {
   const poolOracles = pool.map((card: any) => card.oracle_id);
+  const deckSize = maxSpells + maxLands;
 
-  const result = await build(poolOracles);
+  // Helper: check if an oracle is a land
+  const oracleIsLand = (oracle: string): boolean => {
+    const oracleIds = carddb.oracleToId[oracle];
+    return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
+  };
 
-  const nonlands = result.filter((item) => {
-    const oracleIds = carddb.oracleToId[item.oracle];
-    return oracleIds && oracleIds[0] && !cardFromId(oracleIds[0]).type.includes('Land');
-  });
-  const lands = result.filter((item) => {
-    const oracleIds = carddb.oracleToId[item.oracle];
-    return oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land');
-  });
-
-  const mainboard = nonlands.map((item) => item.oracle).slice(0, maxSpells);
-  const sideboard = [];
-  if (nonlands.length > maxSpells) {
-    sideboard.push(...nonlands.map((item) => item.oracle).slice(maxSpells + 1));
+  // Build ML substitution maps: original oracle <-> ML oracle
+  // Multiple originals can map to the same ML oracle
+  const toMl: Record<string, string> = {};
+  const fromMl: Record<string, string[]> = {};
+  for (const oracle of poolOracles) {
+    if (toMl[oracle] !== undefined) continue;
+    const mlOracle = getOracleForMl(oracle, null);
+    toMl[oracle] = mlOracle;
+    if (!fromMl[mlOracle]) fromMl[mlOracle] = [];
+    if (!fromMl[mlOracle].includes(oracle)) fromMl[mlOracle].push(oracle);
   }
 
-  const colors = assessColors(mainboard).filter((color) => color !== 'C');
+  const poolMlOracles = poolOracles.map((o) => toMl[o] ?? o);
 
-  const landsInColors = lands.filter((item) =>
-    listOverlaps(colors, getReasonableCardByOracle(item.oracle).color_identity),
+  // Phase 1: Use deckbuild model to seed the first 10 cards
+  const buildResult = await build(poolMlOracles);
+
+  const mainboard: string[] = [];
+  const remainingPool = [...poolOracles]; // tracks available copies (original oracles)
+  let spellCount = 0;
+  let landCount = 0;
+
+  // Count copies in pool per oracle for duplicate tracking
+  const poolCopies: Record<string, number> = {};
+  for (const oracle of poolOracles) {
+    poolCopies[oracle] = (poolCopies[oracle] ?? 0) + 1;
+  }
+  const deckCopies: Record<string, number> = {};
+
+  // Seed from build model — take up to 10 cards respecting limits
+  for (const item of buildResult) {
+    if (mainboard.length >= 10) break;
+
+    const mlOracle = item.oracle;
+    // Map back to original oracle(s) - find one that's still in the remaining pool
+    const originals = fromMl[mlOracle] ?? [mlOracle];
+    const oracle = originals.find((o) => remainingPool.includes(o));
+    if (!oracle) continue;
+
+    const land = oracleIsLand(oracle);
+
+    if (land && landCount >= maxLands) continue;
+    if (!land && spellCount >= maxSpells) continue;
+
+    // Check we actually have a copy in the remaining pool
+    const poolIdx = remainingPool.indexOf(oracle);
+    if (poolIdx === -1) continue;
+
+    // Apply duplicate penalty — 10% per existing copy
+    const existing = deckCopies[oracle] ?? 0;
+    const adjustedRating = item.rating * Math.pow(0.9, existing);
+    if (adjustedRating <= 0) continue;
+
+    mainboard.push(oracle);
+    deckCopies[oracle] = existing + 1;
+    remainingPool.splice(poolIdx, 1);
+
+    if (land) landCount++;
+    else spellCount++;
+  }
+
+  // Phase 2: Use draft model to pick from remaining pool one at a time
+  while (mainboard.length < deckSize && remainingPool.length > 0) {
+    // Filter remaining pool to only cards that fit under the limits
+    const candidates = remainingPool.filter((oracle) => {
+      const land = oracleIsLand(oracle);
+      if (land && landCount >= maxLands) return false;
+      if (!land && spellCount >= maxSpells) return false;
+      return true;
+    });
+
+    if (candidates.length === 0) break;
+
+    // Deduplicate ML oracles for the draft call
+    const uniqueMlCandidates = [...new Set(candidates.map((o) => toMl[o] ?? o))];
+    const mlMainboard = mainboard.map((o) => toMl[o] ?? o);
+
+    const draftResult = await draftbotPick(uniqueMlCandidates, mlMainboard);
+
+    // Apply duplicate penalty and pick the best, mapping back to originals
+    let bestOracle: string | null = null;
+    let bestScore = -Infinity;
+
+    for (const item of draftResult) {
+      const mlOracle = item.oracle;
+      const originals = fromMl[mlOracle] ?? [mlOracle];
+      // Find an original that's still a candidate
+      const oracle = originals.find((o) => candidates.includes(o));
+      if (!oracle) continue;
+
+      const existing = deckCopies[oracle] ?? 0;
+      const adjustedRating = item.rating * Math.pow(0.9, existing);
+      if (adjustedRating > bestScore) {
+        bestScore = adjustedRating;
+        bestOracle = oracle;
+      }
+    }
+
+    if (!bestOracle || bestScore <= 0) break;
+
+    // Remove one copy from remaining pool
+    const poolIdx = remainingPool.indexOf(bestOracle);
+    if (poolIdx === -1) break;
+
+    mainboard.push(bestOracle);
+    deckCopies[bestOracle] = (deckCopies[bestOracle] ?? 0) + 1;
+    remainingPool.splice(poolIdx, 1);
+
+    const land = oracleIsLand(bestOracle);
+    if (land) landCount++;
+    else spellCount++;
+  }
+
+  // Fill remaining slots with basics
+  mainboard.push(
+    ...calculateBasics(mainboard.map(getReasonableCardByOracle), basics, deckSize).map((card) => card.oracle_id),
   );
 
-  mainboard.push(...landsInColors.slice(0, maxLands).map((item) => item.oracle));
-
-  if (landsInColors.length >= maxLands) {
-    sideboard.push(...landsInColors.slice(maxLands).map((item) => item.oracle));
-  }
-
-  mainboard.push(...calculateBasics(mainboard.map(getReasonableCardByOracle), basics).map((card) => card.oracle_id));
+  // Everything left in the pool is sideboard
+  const sideboard = remainingPool.slice().sort();
 
   return {
     mainboard: mainboard.sort(),
-    sideboard: sideboard.sort(),
+    sideboard,
   };
 };
 
 /**
  * Build multiple bot decks in a single batched ML call.
- * Each entry is { pool, basics, maxSpells?, maxLands? } matching deckbuild's signature.
+ * Phase 1: batch deckbuild model to seed 10 cards per seat.
+ * Phase 2: iteratively batch draft model to pick one card per seat per round.
  */
 export const batchDeckbuild = async (
   entries: { pool: any[]; basics: any[]; maxSpells?: number; maxLands?: number }[],
 ): Promise<{ mainboard: string[]; sideboard: string[] }[]> => {
   if (entries.length === 0) return [];
 
+  // Helper: check if an oracle is a land
+  const oracleIsLand = (oracle: string): boolean => {
+    const oracleIds = carddb.oracleToId[oracle];
+    return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
+  };
+
   const allPoolOracles = entries.map((entry) => entry.pool.map((card: any) => card.oracle_id));
 
-  // Single batched ML call
-  const allResults = await batchBuild(allPoolOracles);
+  // Build ML substitution maps per seat
+  const seatMaps = allPoolOracles.map((poolOracles) => {
+    const toMl: Record<string, string> = {};
+    const fromMl: Record<string, string[]> = {};
+    for (const oracle of poolOracles) {
+      if (toMl[oracle] !== undefined) continue;
+      const mlOracle = getOracleForMl(oracle, null);
+      toMl[oracle] = mlOracle;
+      if (!fromMl[mlOracle]) fromMl[mlOracle] = [];
+      if (!fromMl[mlOracle].includes(oracle)) fromMl[mlOracle].push(oracle);
+    }
+    return { toMl, fromMl };
+  });
 
-  // Post-process each result identically to deckbuild
-  return entries.map((entry, idx) => {
+  // ML-substituted pool oracles for the batch build call
+  const allPoolMlOracles = allPoolOracles.map((poolOracles, idx) => {
+    const { toMl } = seatMaps[idx]!;
+    return poolOracles.map((o) => toMl[o] ?? o);
+  });
+
+  // Per-seat state
+  const seats = entries.map((entry, idx) => {
+    const poolOracles = allPoolOracles[idx] || [];
     const maxSpells = entry.maxSpells ?? 23;
     const maxLands = entry.maxLands ?? 17;
-    const result = allResults[idx] || [];
+    return {
+      maxSpells,
+      maxLands,
+      deckSize: maxSpells + maxLands,
+      mainboard: [] as string[],
+      remainingPool: [...poolOracles],
+      deckCopies: {} as Record<string, number>,
+      spellCount: 0,
+      landCount: 0,
+      basics: entry.basics,
+    };
+  });
 
-    const nonlands = result.filter((item) => {
-      const oracleIds = carddb.oracleToId[item.oracle];
-      return oracleIds && oracleIds[0] && !cardFromId(oracleIds[0]).type.includes('Land');
-    });
-    const lands = result.filter((item) => {
-      const oracleIds = carddb.oracleToId[item.oracle];
-      return oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land');
-    });
+  // Phase 1: Batch deckbuild model to seed first 10 cards per seat
+  const allBuildResults = await batchBuild(allPoolMlOracles);
 
-    const mainboard = nonlands.map((item) => item.oracle).slice(0, maxSpells);
-    const sideboard: string[] = [];
-    if (nonlands.length > maxSpells) {
-      sideboard.push(...nonlands.map((item) => item.oracle).slice(maxSpells + 1));
+  for (let s = 0; s < seats.length; s++) {
+    const seat = seats[s]!;
+    const { fromMl } = seatMaps[s]!;
+    const buildResult = allBuildResults[s] || [];
+
+    for (const item of buildResult) {
+      if (seat.mainboard.length >= 10) break;
+
+      const mlOracle = item.oracle;
+      const originals = fromMl[mlOracle] ?? [mlOracle];
+      const oracle = originals.find((o) => seat.remainingPool.includes(o));
+      if (!oracle) continue;
+
+      const land = oracleIsLand(oracle);
+
+      if (land && seat.landCount >= seat.maxLands) continue;
+      if (!land && seat.spellCount >= seat.maxSpells) continue;
+
+      const poolIdx = seat.remainingPool.indexOf(oracle);
+      if (poolIdx === -1) continue;
+
+      const existing = seat.deckCopies[oracle] ?? 0;
+      const adjustedRating = item.rating * Math.pow(0.9, existing);
+      if (adjustedRating <= 0) continue;
+
+      seat.mainboard.push(oracle);
+      seat.deckCopies[oracle] = existing + 1;
+      seat.remainingPool.splice(poolIdx, 1);
+
+      if (land) seat.landCount++;
+      else seat.spellCount++;
+    }
+  }
+
+  // Phase 2: Iteratively use draft model, batched across seats
+  // Keep going until all seats are full or stuck
+  let anyProgress = true;
+  while (anyProgress) {
+    anyProgress = false;
+
+    // Build batch inputs for seats that still need cards
+    const activeIndices: number[] = [];
+    const batchInputs: { pack: string[]; pool: string[] }[] = [];
+
+    for (let s = 0; s < seats.length; s++) {
+      const seat = seats[s]!;
+      const { toMl } = seatMaps[s]!;
+      if (seat.mainboard.length >= seat.deckSize || seat.remainingPool.length === 0) continue;
+
+      // Filter candidates that fit under limits
+      const candidates = seat.remainingPool.filter((oracle) => {
+        const land = oracleIsLand(oracle);
+        if (land && seat.landCount >= seat.maxLands) return false;
+        if (!land && seat.spellCount >= seat.maxSpells) return false;
+        return true;
+      });
+
+      if (candidates.length === 0) continue;
+
+      activeIndices.push(s);
+      batchInputs.push({
+        pack: [...new Set(candidates.map((o) => toMl[o] ?? o))], // unique ML oracles
+        pool: seat.mainboard.map((o) => toMl[o] ?? o), // ML oracles for mainboard
+      });
     }
 
-    const colors = assessColors(mainboard).filter((color) => color !== 'C');
+    if (batchInputs.length === 0) break;
 
-    const landsInColors = lands.filter((item) =>
-      listOverlaps(colors, getReasonableCardByOracle(item.oracle).color_identity),
-    );
+    const batchResults = await batchDraft(batchInputs);
 
-    mainboard.push(...landsInColors.slice(0, maxLands).map((item) => item.oracle));
+    for (let i = 0; i < activeIndices.length; i++) {
+      const s = activeIndices[i]!;
+      const seat = seats[s]!;
+      const { fromMl } = seatMaps[s]!;
+      const draftResult = batchResults[i] || [];
 
-    if (landsInColors.length >= maxLands) {
-      sideboard.push(...landsInColors.slice(maxLands).map((item) => item.oracle));
+      // Apply duplicate penalty and pick the best, mapping back to originals
+      let bestOracle: string | null = null;
+      let bestScore = -Infinity;
+
+      for (const item of draftResult) {
+        const mlOracle = item.oracle;
+        const originals = fromMl[mlOracle] ?? [mlOracle];
+        const oracle = originals.find((o) => seat.remainingPool.includes(o));
+        if (!oracle) continue;
+
+        const existing = seat.deckCopies[oracle] ?? 0;
+        const adjustedRating = item.rating * Math.pow(0.9, existing);
+        if (adjustedRating > bestScore) {
+          bestScore = adjustedRating;
+          bestOracle = oracle;
+        }
+      }
+
+      if (!bestOracle || bestScore <= 0) continue;
+
+      const poolIdx = seat.remainingPool.indexOf(bestOracle);
+      if (poolIdx === -1) continue;
+
+      seat.mainboard.push(bestOracle);
+      seat.deckCopies[bestOracle] = (seat.deckCopies[bestOracle] ?? 0) + 1;
+      seat.remainingPool.splice(poolIdx, 1);
+
+      const land = oracleIsLand(bestOracle);
+      if (land) seat.landCount++;
+      else seat.spellCount++;
+
+      anyProgress = true;
     }
+  }
 
-    mainboard.push(
-      ...calculateBasics(mainboard.map(getReasonableCardByOracle), entry.basics).map((card) => card.oracle_id),
+  // Fill basics and build final results
+  return seats.map((seat) => {
+    seat.mainboard.push(
+      ...calculateBasics(seat.mainboard.map(getReasonableCardByOracle), seat.basics, seat.deckSize).map(
+        (card) => card.oracle_id,
+      ),
     );
 
     return {
-      mainboard: mainboard.sort(),
-      sideboard: sideboard.sort(),
+      mainboard: seat.mainboard.sort(),
+      sideboard: seat.remainingPool.slice().sort(),
     };
   });
 };
