@@ -167,6 +167,10 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       basics,
     };
 
+    // TODO: re-enable cooldown before production
+    // Only stamp the run time once setup succeeded.
+    await cubeDao.update({ ...cube, lastDraftSimulation: Date.now() }, { skipTimestampUpdate: true });
+
     return res.status(200).json({ success: true, ...response });
   } catch (err) {
     req.logger.error(`Error in simulatesetup: ${err}`, err instanceof Error ? err.stack : '');

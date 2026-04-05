@@ -460,6 +460,48 @@ const NumericInput: React.FC<{
   );
 };
 
+/** Number input that lets the user type freely; commits/clamps only on blur or Enter. */
+const NumericInput: React.FC<{
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+  className?: string;
+}> = ({ value, min, max, onChange, disabled, className }) => {
+  const [draft, setDraft] = useState(String(value));
+  // Keep draft in sync when the parent value changes externally
+  const prevValueRef = useRef(value);
+  useEffect(() => {
+    if (prevValueRef.current !== value) {
+      prevValueRef.current = value;
+      setDraft(String(value));
+    }
+  }, [value]);
+
+  const commit = () => {
+    const parsed = parseInt(draft, 10);
+    const clamped = isNaN(parsed) ? value : Math.max(min, Math.min(max, parsed));
+    prevValueRef.current = clamped;
+    setDraft(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  };
+
+  return (
+    <Input
+      type="number"
+      min={min}
+      max={max}
+      value={draft}
+      disabled={disabled}
+      className={className}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } }}
+    />
+  );
+};
+
 const MTG_COLORS: Record<string, { bg: string; label: string }> = {
   W: { bg: '#D8CEAB', label: 'White' },
   U: { bg: '#67A6D3', label: 'Blue' },
@@ -477,6 +519,16 @@ const COLOR_FULL_NAMES: Record<string, string> = {
   R: 'Red',
   G: 'Green',
   C: 'Colorless',
+};
+
+const MTG_COLOR_SOLIDS: Record<string, string> = {
+  W: '#D8CEAB',
+  U: '#67A6D3',
+  B: '#8C7A91',
+  R: '#D85F69',
+  G: '#6AB572',
+  C: '#ADADAD',
+  M: '#DBC467',
 };
 
 function archetypeFullName(colorPair: string): string {
@@ -498,6 +550,13 @@ function getColorProfileGradient(colorPair: string): string {
   if (colors.length === 1) return colors[0]!;
   return `linear-gradient(90deg, ${colors.map((color, index) => `${color} ${(index / (colors.length - 1)) * 100}%`).join(', ')})`;
 }
+
+function getColorProfileGradient(colorPair: string): string {
+  const colors = getColorProfileCodes(colorPair).map((code) => MTG_COLOR_SOLIDS[code] ?? MTG_COLOR_SOLIDS.C);
+  if (colors.length === 1) return colors[0]!;
+  return `linear-gradient(90deg, ${colors.map((color, index) => `${color} ${(index / (colors.length - 1)) * 100}%`).join(', ')})`;
+}
+
 
 interface RawStats {
   name: string;
@@ -1170,6 +1229,137 @@ async function runClientSimulation(
 }
 
 // ---------------------------------------------------------------------------
+// Archetype skeleton clustering (k-means on binary card-overlap vectors)
+// ---------------------------------------------------------------------------
+
+function euclidSq(a: number[], b: number[]): number {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += ((a[i] ?? 0) - (b[i] ?? 0)) ** 2;
+  return s;
+}
+
+function kMeans(vecs: number[][], k: number): number[] {
+  const n = vecs.length;
+  if (n === 0) return [];
+  k = Math.min(k, n);
+  const dim = vecs[0]?.length ?? 0;
+
+  // K-means++ init
+  const seedIdxs: number[] = [Math.floor(Math.random() * n)];
+  while (seedIdxs.length < k) {
+    const dists = vecs.map((v) => Math.min(...seedIdxs.map((si) => euclidSq(v, vecs[si]!))));
+    const total = dists.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total, chosen = n - 1;
+    for (let i = 0; i < n; i++) { r -= dists[i]!; if (r <= 0) { chosen = i; break; } }
+    seedIdxs.push(chosen);
+  }
+
+  let centroids: number[][] = seedIdxs.map((i) => [...vecs[i]!]);
+  const assignments = new Array<number>(n).fill(0);
+
+  for (let iter = 0; iter < 25; iter++) {
+    let changed = false;
+    for (let i = 0; i < n; i++) {
+      let best = 0, bestD = Infinity;
+      for (let c = 0; c < k; c++) { const d = euclidSq(vecs[i]!, centroids[c]!); if (d < bestD) { bestD = d; best = c; } }
+      if (assignments[i] !== best) { assignments[i] = best; changed = true; }
+    }
+    if (!changed) break;
+
+    centroids = Array.from({ length: k }, () => new Array(dim).fill(0));
+    const counts = new Array<number>(k).fill(0);
+    for (let i = 0; i < n; i++) { const c = assignments[i]!; counts[c]++; for (let j = 0; j < dim; j++) centroids[c]![j]! += vecs[i]![j]!; }
+    for (let c = 0; c < k; c++) { const cnt = counts[c]; if (cnt > 0) centroids[c] = centroids[c]!.map((v) => v / cnt); }
+  }
+
+  return assignments;
+}
+
+function computeSkeletons(slimPools: SlimPool[], cardMeta: Record<string, CardMeta>, k: number, coreThresholdPct: number = 60, deckBuilds?: BuiltDeck[] | null): ArchetypeSkeleton[] {
+  const n = slimPools.length;
+  if (n === 0) return [];
+
+  const oracleIds = Object.keys(cardMeta);
+  const oracleIndex = new Map(oracleIds.map((id, i) => [id, i]));
+  const dim = oracleIds.length;
+
+  // Use mainboard decks when available, fall back to draft picks
+  const hasDecks = deckBuilds && deckBuilds.length === n;
+  const vecs: Uint8Array[] = slimPools.map((pool, i) => {
+    const v = new Uint8Array(dim);
+    const cards = hasDecks ? deckBuilds![i]!.mainboard : pool.picks.map((p) => p.oracle_id);
+    for (const oracle_id of cards) { const idx = oracleIndex.get(oracle_id); if (idx !== undefined) v[idx] = 1; }
+    return v;
+  });
+
+  // IDF: cards drafted in most pools get low weight, distinguishing cards get high weight
+  const df = new Float32Array(dim);
+  for (const v of vecs) for (let j = 0; j < dim; j++) if (v[j]) df[j]++;
+  const idf = Float32Array.from({ length: dim }, (_, j) => Math.log((n + 1) / (df[j]! + 1)));
+
+  // TF-IDF vectors, L2-normalised → cosine similarity via Euclidean k-means
+  const tfidfVecs: number[][] = vecs.map((v) => {
+    const vec = Array.from({ length: dim }, (_, j) => v[j]! * idf[j]!);
+    const norm = Math.sqrt(vec.reduce((s, x) => s + x * x, 0));
+    return norm > 0 ? vec.map((x) => x / norm) : vec;
+  });
+  const assignments = kMeans(tfidfVecs, k);
+
+  const skeletons: ArchetypeSkeleton[] = [];
+  for (let clusterId = 0; clusterId < k; clusterId++) {
+    const poolIndices = assignments.map((a, i) => (a === clusterId ? i : -1)).filter((i) => i >= 0);
+    const poolCount = poolIndices.length;
+    if (poolCount === 0) continue;
+
+    // Centroid card fractions: for each card, what fraction of pools in this cluster drafted it
+    const fracs = new Float32Array(dim);
+    for (const pi of poolIndices) { const v = vecs[pi]!; for (let j = 0; j < dim; j++) fracs[j] += v[j]!; }
+    for (let j = 0; j < dim; j++) fracs[j] /= poolCount;
+
+    const allCards: SkeletonCard[] = oracleIds
+      .map((oracle_id, j) => ({ oracle_id, name: cardMeta[oracle_id]?.name ?? oracle_id, imageUrl: cardMeta[oracle_id]?.imageUrl ?? '', fraction: fracs[j]! }))
+      .filter((c) => c.fraction >= coreThresholdPct / 2 / 100)
+      .sort((a, b) => b.fraction - a.fraction);
+
+    const coreThresholdFrac = coreThresholdPct / 100;
+    const coreCards = allCards.filter((c) => c.fraction >= coreThresholdFrac).slice(0, 24);
+    const occasionalCards = allCards.filter((c) => c.fraction < coreThresholdFrac).slice(0, 12);
+
+    // Color profile
+    const colorWeight: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+    let totalWeight = 0;
+    for (const { oracle_id, fraction } of coreCards) {
+      const colors = cardMeta[oracle_id]?.colorIdentity ?? [];
+      if (colors.length === 0) continue;
+      totalWeight += fraction;
+      for (const c of colors) if (c in colorWeight) colorWeight[c] += fraction;
+    }
+    const colorProfile = Object.entries(colorWeight).filter(([, v]) => totalWeight > 0 && v / totalWeight > 0.2).sort((a, b) => b[1] - a[1]).map(([key]) => key).join('') || 'C';
+
+    // Lock pairs
+    const lockPairs: LockPair[] = [];
+    const lockCandidates = allCards.filter((c) => c.fraction >= Math.max(0.25, coreThresholdFrac / 2)).slice(0, 24);
+    for (let ai = 0; ai < lockCandidates.length; ai++) {
+      for (let bi = ai + 1; bi < lockCandidates.length; bi++) {
+        const a = lockCandidates[ai]!, b = lockCandidates[bi]!;
+        const aIdx = oracleIndex.get(a.oracle_id)!, bIdx = oracleIndex.get(b.oracle_id)!;
+        let both = 0;
+        for (const pi of poolIndices) if (vecs[pi]![aIdx] && vecs[pi]![bIdx]) both++;
+        const rate = both / poolCount;
+        if (rate > 0.60 && rate > a.fraction * b.fraction + 0.05) {
+          lockPairs.push({ oracle_id_a: a.oracle_id, oracle_id_b: b.oracle_id, nameA: a.name, nameB: b.name, coOccurrenceRate: rate });
+        }
+      }
+    }
+    lockPairs.sort((a, b) => b.coOccurrenceRate - a.coOccurrenceRate);
+
+    skeletons.push({ clusterId, colorProfile, poolCount, poolIndices, coreCards, occasionalCards, lockPairs: lockPairs.slice(0, 5) });
+  }
+
+  return skeletons.sort((a, b) => b.poolCount - a.poolCount);
+}
+
+// ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
@@ -1742,32 +1932,58 @@ const DraftMapScatter: React.FC<{
   );
 };
 
-const PickRateHistogram: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
-  const buckets = Array(10).fill(0) as number[];
-  for (const c of cardStats) {
-    if (c.timesSeen === 0) continue;
-    const idx = Math.min(9, Math.floor(c.pickRate * 10));
-    buckets[idx]++;
+function getDeckShareColors(oracle: string, cardMeta: Record<string, CardMeta>): string[] {
+  const identity = (cardMeta[oracle]?.colorIdentity ?? []).filter((color) => MTG_COLORS[color]);
+  if (identity.length > 0) return identity;
+
+  const lower = oracle.toLowerCase();
+  if (lower.includes('plains')) return ['W'];
+  if (lower.includes('island')) return ['U'];
+  if (lower.includes('swamp')) return ['B'];
+  if (lower.includes('mountain')) return ['R'];
+  if (lower.includes('forest')) return ['G'];
+  return [];
+}
+
+const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({ deckBuilds, cardMeta }) => {
+  if (!deckBuilds || deckBuilds.length === 0) {
+    return <Text sm className="text-text-secondary">Unavailable for this run. Sign in to load simulated deck builds.</Text>;
   }
-  const labels = ['0–10%', '10–20%', '20–30%', '30–40%', '40–50%', '50–60%', '60–70%', '70–80%', '80–90%', '90–100%'];
-  const bgColors = buckets.map((_, i) =>
-    i === 0 ? 'rgba(220,50,50,0.7)' : i >= 8 ? 'rgba(50,180,80,0.7)' : 'rgba(100,140,220,0.7)',
-  );
+
+  const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS.map((key) => [key, 0]));
+  for (const deck of deckBuilds) {
+    for (const oracle of deck.mainboard) {
+      const cardColors = getDeckShareColors(oracle, cardMeta);
+      if (cardColors.length === 0) continue;
+      const share = 1 / cardColors.length;
+      for (const color of cardColors) shares[color] = (shares[color] ?? 0) + share;
+    }
+  }
+
+  const totalShare = Object.values(shares).reduce((sum, value) => sum + value, 0);
+
+  const rows = COLOR_KEYS.map((key) => ({
+    key,
+    label: MTG_COLORS[key]!.label,
+    bg: MTG_COLORS[key]!.bg,
+    pct: totalShare > 0 ? (shares[key] ?? 0) / totalShare : 0,
+  })).filter((r) => r.pct > 0);
+
   return (
-    <Bar
-      data={{ labels, datasets: [{ label: 'Cards', data: buckets, backgroundColor: bgColors, borderWidth: 1 }] }}
-      options={{
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: (ctx) => ` ${ctx.raw as number} cards` } },
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Number of Cards' } },
-          x: { title: { display: true, text: 'Pick Rate' } },
-        },
-      }}
-    />
+    <div className="flex flex-col gap-1.5">
+      {rows.map((r) => (
+        <div key={r.key} className="flex items-center gap-2">
+          <span className="w-16 text-xs text-text-secondary text-right flex-shrink-0">{r.label}</span>
+          <div className="flex-1 rounded overflow-hidden h-5" style={{ background: 'var(--color-bg-accent)' }}>
+            <div
+              className="h-full rounded"
+              style={{ width: `${(r.pct * 100).toFixed(1)}%`, background: r.bg }}
+            />
+          </div>
+          <span className="w-10 text-xs text-text-secondary flex-shrink-0">{(r.pct * 100).toFixed(1)}%</span>
+        </div>
+      ))}
+    </div>
   );
 };
 
@@ -5289,6 +5505,26 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     : `${draftMapScopeSeatCount} total seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`;
 
 
+  const hasPoolView = !!(selectedCard || (selectedArchetype && !selectedCard && !selectedSkeletonId) || (selectedSkeletonId !== null && !selectedCard && !selectedArchetype));
+
+  // Scroll pool view into view whenever a new selection is made
+  useEffect(() => {
+    if (hasPoolView && poolViewRef.current) {
+      poolViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedCardOracle, selectedArchetype, selectedSkeletonId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Derived filter label for showing active archetype/cluster filter in tables
+  const cardStatsTitle = useMemo(() => {
+    if (selectedSkeletonId !== null) {
+      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+      const skIdx = skeletons.indexOf(sk!);
+      return sk ? `Card Stats for Cluster ${skIdx + 1} Drafters` : 'All Card Stats';
+    }
+    if (selectedArchetype) return `Card Stats for ${archetypeFullName(selectedArchetype)} Drafters`;
+    return 'All Card Stats';
+  }, [selectedSkeletonId, selectedArchetype, skeletons]);
+
   return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cubeId}>
@@ -5432,6 +5668,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                       )}
                     </div>
                   </div>
+                )}
+                {!canRun && (
+                  <Text xs className="text-text-secondary">Only the cube owner and collaborators can start a new simulation from this page.</Text>
                 )}
               </CardBody>
             </Card>
