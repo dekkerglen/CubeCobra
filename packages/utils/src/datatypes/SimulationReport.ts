@@ -111,6 +111,8 @@ export interface SimulationRunData extends SimulationSummary {
   cardMeta: Record<string, CardMeta>;
   slimPools: SlimPool[];
   deckBuilds?: BuiltDeck[]; // one per slim pool, in order; absent on old runs
+  setupData?: Pick<SimulationSetupResponse, 'initialPacks' | 'packSteps' | 'numSeats'>; // enables exact filtered stat recomputation after reload
+  randomTrashByPool?: string[][]; // ordered random-trash removals per pool; absent on old runs
 }
 
 /**
