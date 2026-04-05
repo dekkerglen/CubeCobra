@@ -495,7 +495,16 @@ const NumericInput: React.FC<{
       value={draft}
       disabled={disabled}
       className={className}
-      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraft(e.target.value)}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+        const nextDraft = e.target.value;
+        setDraft(nextDraft);
+        const parsed = parseInt(nextDraft, 10);
+        if (!isNaN(parsed)) {
+          const clamped = Math.max(min, Math.min(max, parsed));
+          prevValueRef.current = clamped;
+          if (clamped !== value) onChange(clamped);
+        }
+      }}
       onBlur={commit}
       onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } }}
     />
@@ -519,16 +528,6 @@ const COLOR_FULL_NAMES: Record<string, string> = {
   R: 'Red',
   G: 'Green',
   C: 'Colorless',
-};
-
-const MTG_COLOR_SOLIDS: Record<string, string> = {
-  W: '#D8CEAB',
-  U: '#67A6D3',
-  B: '#8C7A91',
-  R: '#D85F69',
-  G: '#6AB572',
-  C: '#ADADAD',
-  M: '#DBC467',
 };
 
 function archetypeFullName(colorPair: string): string {
@@ -1987,9 +1986,64 @@ const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: 
   );
 };
 
+const MANA_CURVE_BUCKETS = [
+  { key: '0', label: '0' },
+  { key: '1', label: '1' },
+  { key: '2', label: '2' },
+  { key: '3', label: '3' },
+  { key: '4', label: '4' },
+  { key: '5', label: '5' },
+  { key: '6', label: '6' },
+  { key: '7+', label: '7+' },
+] as const;
+
+const ManaCurveShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({ deckBuilds, cardMeta }) => {
+  if (!deckBuilds || deckBuilds.length === 0) {
+    return <Text sm className="text-text-secondary">Unavailable for this run. Sign in to load simulated deck builds.</Text>;
+  }
+
+  const counts: Record<string, number> = Object.fromEntries(MANA_CURVE_BUCKETS.map((bucket) => [bucket.key, 0]));
+  let totalCards = 0;
+
+  for (const deck of deckBuilds) {
+    for (const oracle of deck.mainboard) {
+      const meta = cardMeta[oracle];
+      const typeLower = (meta?.type ?? '').toLowerCase();
+      if (typeLower.includes('land')) continue;
+      const cmc = Math.max(0, Math.floor(meta?.cmc ?? 0));
+      const bucketKey = cmc >= 7 ? '7+' : String(cmc);
+      counts[bucketKey] = (counts[bucketKey] ?? 0) + 1;
+      totalCards++;
+    }
+  }
+
+  const rows = MANA_CURVE_BUCKETS.map((bucket) => ({
+    ...bucket,
+    pct: totalCards > 0 ? (counts[bucket.key] ?? 0) / totalCards : 0,
+  })).filter((row) => row.pct > 0);
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {rows.map((row) => (
+        <div key={row.key} className="flex items-center gap-2">
+          <span className="w-10 text-xs text-text-secondary text-right flex-shrink-0">{row.label}</span>
+          <div className="flex-1 rounded overflow-hidden h-5" style={{ background: 'var(--color-bg-accent)' }}>
+            <div
+              className="h-full rounded"
+              style={{ width: `${(row.pct * 100).toFixed(1)}%`, background: 'linear-gradient(90deg, #475569 0%, #64748b 100%)' }}
+            />
+          </div>
+          <span className="w-10 text-xs text-text-secondary flex-shrink-0">{(row.pct * 100).toFixed(1)}%</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const EloVsPickRateScatter: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
-  const picked = cardStats.filter((c) => c.timesSeen > 0);
-  const pointData = picked.map((c) => ({ x: Math.round(c.elo), y: Math.round(c.pickRate * 1000) / 10, label: c.name }));
+  const picked = cardStats.filter((c) => c.timesPicked > 0 && c.avgPickPosition > 0);
+  const maxAvgPick = Math.max(...picked.map((c) => c.avgPickPosition), 1);
+  const pointData = picked.map((c) => ({ x: Math.round(c.elo), y: Math.round(c.avgPickPosition * 10) / 10, label: c.name }));
   const pointColors = picked.map((c) => {
     const colors = c.colorIdentity.filter((x) => x in MTG_COLORS);
     if (colors.length === 0) return MTG_COLORS.C!.bg;
@@ -2007,14 +2061,14 @@ const EloVsPickRateScatter: React.FC<{ cardStats: CardStats[] }> = ({ cardStats 
             callbacks: {
               label: (ctx) => {
                 const pt = ctx.raw as { x: number; y: number; label: string };
-                return `${pt.label}: Elo ${pt.x}, Pick Rate ${pt.y}%`;
+                return `${pt.label}: Elo ${pt.x}, Avg Pick Position ${pt.y}`;
               },
             },
           },
         },
         scales: {
           x: { title: { display: true, text: 'Elo' } },
-          y: { beginAtZero: true, max: 100, title: { display: true, text: 'Pick Rate (%)' } },
+          y: { reverse: true, beginAtZero: false, suggestedMin: 1, suggestedMax: Math.max(15, Math.ceil(maxAvgPick)), title: { display: true, text: 'Average Pick Position' } },
         },
       }}
     />
@@ -4398,6 +4452,139 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   );
 };
 
+const ArchetypeSkeletonSectionInner: React.FC<{
+  skeletons: ArchetypeSkeleton[];
+  k: number;
+  onSetK: (k: number) => void;
+  coreThreshold: number;
+  onSetCoreThreshold: (v: number) => void;
+  onRecluster: () => void;
+  totalPools: number;
+  selectedSkeletonId: number | null;
+  onSelectSkeleton: (id: number | null) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}> = ({ skeletons, k, onSetK, coreThreshold, onSetCoreThreshold, onRecluster, totalPools, selectedSkeletonId, onSelectSkeleton, isOpen, onToggle }) => {
+  const [showAllClusters, setShowAllClusters] = useState(false);
+  const [reclusterFlash, setReclusterFlash] = useState(false);
+  const handleRecluster = () => {
+    onRecluster();
+    setReclusterFlash(true);
+    setTimeout(() => setReclusterFlash(false), 1200);
+  };
+  const visibleSkeletons = skeletons.slice(0, 2);
+  const hiddenSkeletons = skeletons.slice(2);
+
+  const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => (
+    <div key={skeleton.clusterId} className={['rounded-lg overflow-hidden border bg-bg shadow-sm', selectedSkeletonId === skeleton.clusterId ? 'border-link-active ring-1 ring-link-active' : 'border-border/80'].join(' ')}>
+      <button
+        type="button"
+        className="w-full px-4 py-3 bg-bg-accent/60 hover:bg-bg-active flex items-center gap-2.5 flex-wrap text-left border-b border-border/70"
+        onClick={() => onSelectSkeleton(selectedSkeletonId === skeleton.clusterId ? null : skeleton.clusterId)}
+      >
+        <span className="text-base font-semibold tracking-tight">Cluster {skIdx + 1}</span>
+        <span className="text-[11px] bg-bg border border-border/80 rounded px-2 py-0.5 text-text-secondary">
+          {skeleton.poolCount} seats ({((skeleton.poolCount / totalPools) * 100).toFixed(1)}% of {totalPools})
+        </span>
+        {skeleton.lockPairs.length > 0 && (
+          <span className="text-xs bg-yellow-900/40 text-yellow-300 border border-yellow-700 rounded px-2 py-0.5">
+            <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-yellow-500 text-black font-bold mr-1" style={{ fontSize: 9 }}>!</span>
+            {skeleton.lockPairs.length} lock pair{skeleton.lockPairs.length > 1 ? 's' : ''}
+          </span>
+        )}
+        {selectedSkeletonId === skeleton.clusterId && (
+          <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5 ml-auto">Filtering ✕</span>
+        )}
+      </button>
+      <div className="p-4 md:p-5">
+        {skeleton.coreCards.length > 0 && (
+          <div className="mb-5">
+            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2.5">Core (&gt;={coreThreshold}% of pools)</Text>
+            <div className="flex flex-row flex-wrap gap-2">
+              {skeleton.coreCards.map((card) => <SkeletonCardImage key={card.oracle_id} card={card} size={140} />)}
+            </div>
+          </div>
+        )}
+        {skeleton.occasionalCards.length > 0 && (
+          <div className="mb-4">
+            <Text xs className="text-text-secondary/80 font-medium uppercase tracking-[0.14em] mb-1.5">Support ({Math.round(coreThreshold / 2)}-{coreThreshold - 1}% of pools)</Text>
+            <div className="flex flex-row flex-wrap gap-1.5">
+              {skeleton.occasionalCards.map((card) => <SkeletonCardImage key={card.oracle_id} card={card} size={110} />)}
+            </div>
+          </div>
+        )}
+        {skeleton.lockPairs.length > 0 && (
+          <div className="pt-1">
+            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2">Lock pairs</Text>
+            <Flexbox direction="col" gap="1">
+              {skeleton.lockPairs.map((pair) => (
+                <div key={`${pair.oracle_id_a}-${pair.oracle_id_b}`} className="flex items-center gap-2 text-sm">
+                  <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-yellow-500 text-black font-bold flex-shrink-0" style={{ fontSize: 9 }}>!</span>
+                  <span className="font-medium">{pair.nameA}</span>
+                  <span className="text-text-secondary">+</span>
+                  <span className="font-medium">{pair.nameB}</span>
+                  <span className="text-text-secondary ml-1">{(pair.coOccurrenceRate * 100).toFixed(0)}% co-occurrence</span>
+                </div>
+              ))}
+            </Flexbox>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
+          <button type="button" className="flex-1 text-left" onClick={onToggle}>
+            <Flexbox direction="row" gap="2" alignItems="center">
+              <Text semibold>Archetypes</Text>
+              {!isOpen && <span className="text-xs text-text-secondary font-normal">{skeletons.length} clusters</span>}
+            </Flexbox>
+            <Text xs className="text-text-secondary mt-0.5">Decks clustered by card-overlap similarity</Text>
+          </button>
+          <div className="flex flex-row items-center gap-2 flex-shrink-0">
+            {isOpen && (
+              <>
+                <label className="text-xs font-medium text-text-secondary whitespace-nowrap">Clusters</label>
+                <NumericInput min={2} max={16} value={k} onChange={onSetK} className="w-14" />
+                <label className="text-xs font-medium text-text-secondary whitespace-nowrap">Core %</label>
+                <NumericInput min={10} max={95} value={coreThreshold} onChange={onSetCoreThreshold} className="w-14" />
+                <button type="button" onClick={handleRecluster} className={['whitespace-nowrap px-2 py-1 rounded text-xs font-medium border transition-colors', reclusterFlash ? 'bg-green-700 text-white border-green-600' : 'bg-bg-accent border-border hover:bg-bg-active'].join(' ')}>{reclusterFlash ? '✓ Done' : 'Re-cluster'}</button>
+              </>
+            )}
+            <button type="button" onClick={onToggle} className="whitespace-nowrap px-2 py-1 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active">
+              {isOpen ? '▲ Hide' : '▼ Show'}
+            </button>
+          </div>
+        </Flexbox>
+      </CardHeader>
+      <Collapse isOpen={isOpen}>
+        <CardBody>
+          <Flexbox direction="col" gap="6">
+            {visibleSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx))}
+            {hiddenSkeletons.length > 0 && (
+              <>
+                <Collapse isOpen={showAllClusters} className="flex flex-col gap-6">
+                  {hiddenSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx + 2))}
+                </Collapse>
+                <button
+                  type="button"
+                  onClick={() => setShowAllClusters((open) => !open)}
+                  className="self-start px-2 py-1 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                >
+                  {showAllClusters ? 'Show fewer clusters' : `Show ${hiddenSkeletons.length} more cluster${hiddenSkeletons.length === 1 ? '' : 's'}`}
+                </button>
+              </>
+            )}
+          </Flexbox>
+        </CardBody>
+      </Collapse>
+    </Card>
+  );
+};
+
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
@@ -4433,6 +4620,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   > | null>(null);
   const [selectedTs, setSelectedTs] = useState<number | null>(null);
   const [loadingRun, setLoadingRun] = useState(false);
+  const [deleteRunModalOpen, setDeleteRunModalOpen] = useState(false);
+  const [runPendingDelete, setRunPendingDelete] = useState<SimulationRunEntry | null>(null);
 
   // Session-level cache — avoids recomputing embeddings when switching between runs
   const embeddingsCache = useRef<Map<string, number[][] | Record<string, number[]> | null>>(new Map());
@@ -4708,6 +4897,24 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     simAbortRef.current?.abort();
     window.location.assign(pendingNavigationHref);
   }, [pendingNavigationHref]);
+
+  const handleDeleteRun = useCallback(async (ts: number) => {
+    const res = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`, { method: 'DELETE' });
+    const json = await res.json();
+    if (!json.success) return;
+
+    const nextRuns = json.runs ?? [];
+    setRuns(nextRuns);
+    setSelectedCardOracle(null);
+    setSelectedArchetype(null);
+    setSelectedSkeletonId(null);
+
+    if (selectedTs === ts) {
+      setDisplayRunData(json.latestRunData ?? null);
+      setCurrentRunSetup(json.latestRunData?.setupData ?? null);
+      setSelectedTs(nextRuns[0]?.ts ?? null);
+    }
+  }, [csrfFetch, cubeId, selectedTs]);
 
   const handleStart = useCallback(async () => {
     const controller = new AbortController();
@@ -5507,15 +5714,81 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const hasPoolView = !!(selectedCard || (selectedArchetype && !selectedCard && !selectedSkeletonId) || (selectedSkeletonId !== null && !selectedCard && !selectedArchetype));
 
-  // Scroll pool view into view whenever a new selection is made
+  // Scroll to Detailed View whenever a new selection is made
   useEffect(() => {
-    if (hasPoolView && poolViewRef.current) {
-      poolViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if ((selectedCardOracle || selectedArchetype || selectedSkeletonId !== null) && detailedViewRef.current) {
+      detailedViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [selectedCardOracle, selectedArchetype, selectedSkeletonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Derived filter label for showing active archetype/cluster filter in tables
+  const activeFilterChips = useMemo(() => {
+    const chips: string[] = [];
+    if (selectedSkeletonId !== null) {
+      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+      const skIdx = skeletons.indexOf(sk!);
+      if (sk) chips.push(`Cluster: ${skIdx + 1}`);
+    }
+    if (selectedArchetype) chips.push(`Deck Color: ${archetypeFullName(selectedArchetype)}`);
+    if (selectedCard) chips.push(`Decks Containing: ${selectedCard.name}`);
+    return chips;
+  }, [selectedSkeletonId, selectedArchetype, selectedCard, skeletons]);
+
+  const activeFilterSummary = useMemo(() => {
+    if (activeFilterChips.length === 0) return null;
+    return activeFilterChips.join(' · ');
+  }, [activeFilterChips]);
+
+  const detailedViewScopeChips = useMemo(() => {
+    const chips: string[] = [];
+    if (selectedCard) chips.push(selectedCard.name);
+    if (selectedSkeletonId !== null) {
+      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+      const skIdx = skeletons.indexOf(sk!);
+      if (sk) chips.push(`Cluster ${skIdx + 1}`);
+    }
+    if (selectedArchetype) chips.push(archetypeFullName(selectedArchetype));
+    return chips;
+  }, [selectedCard, selectedSkeletonId, selectedArchetype, skeletons]);
+
+  const selectedCardScopeLabel = useMemo(() => {
+    if (!selectedCard) return null;
+    const scopeParts: string[] = [];
+    if (selectedSkeletonId !== null) {
+      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+      const skIdx = skeletons.indexOf(sk!);
+      if (sk) scopeParts.push(`Cluster ${skIdx + 1}`);
+    }
+    if (selectedArchetype) scopeParts.push(archetypeFullName(selectedArchetype));
+    return scopeParts.length > 0 ? scopeParts.join(' · ') : null;
+  }, [selectedCard, selectedSkeletonId, selectedArchetype, skeletons]);
+
+  const detailedViewTitle = useMemo(() => {
+    if (selectedCard) return `${selectedCard.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
+    if (selectedSkeletonId !== null) {
+      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+      const skIdx = skeletons.indexOf(sk!);
+      return sk ? `Cluster ${skIdx + 1}` : 'Detailed View';
+    }
+    if (selectedArchetype) return archetypeFullName(selectedArchetype);
+    return 'Detailed View';
+  }, [selectedCard, selectedCardScopeLabel, selectedSkeletonId, selectedArchetype, skeletons]);
+
+  const detailedViewSubtitle = useMemo(() => {
+    const matchingPools = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
+    if (selectedCard) return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
+    if (selectedSkeletonId !== null || selectedArchetype) return `${matchingPools} matching draft pool${matchingPools !== 1 ? 's' : ''}`;
+    return 'Choose a color profile, cluster, or card filter to narrow the detailed view.';
+  }, [activeFilterPoolIndexSet, displayRunData, selectedCard, selectedPools.length, selectedSkeletonId, selectedArchetype]);
+
+  const clearActiveFilter = useCallback(() => {
+    setSelectedCardOracle(null);
+    setSelectedArchetype(null);
+    setSelectedSkeletonId(null);
+  }, []);
+
+  // Derived filter label for showing active filter in tables
   const cardStatsTitle = useMemo(() => {
+    if (selectedCard) return 'Card Stats';
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       const skIdx = skeletons.indexOf(sk!);
@@ -5523,7 +5796,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }
     if (selectedArchetype) return `Card Stats for ${archetypeFullName(selectedArchetype)} Drafters`;
     return 'All Card Stats';
-  }, [selectedSkeletonId, selectedArchetype, skeletons]);
+  }, [selectedSkeletonId, selectedArchetype, selectedCard, skeletons]);
 
   return (
     <MainLayout useContainer={false}>

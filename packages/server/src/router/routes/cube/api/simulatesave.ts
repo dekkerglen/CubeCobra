@@ -130,8 +130,58 @@ const getRunHandler = async (req: Request, res: Response) => {
   }
 };
 
+// DELETE /:id/:ts — delete a specific historical run by its Unix-ms timestamp
+const deleteRunHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Must be logged in' });
+    }
+
+    const cubeId = req.params.id;
+    const ts = parseInt(req.params.ts ?? '', 10);
+
+    if (!cubeId) {
+      return res.status(400).json({ success: false, message: 'Cube ID required' });
+    }
+    if (isNaN(ts)) {
+      return res.status(400).json({ success: false, message: 'Invalid run timestamp' });
+    }
+
+    const cube = await cubeDao.getById(cubeId);
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      return res.status(404).json({ success: false, message: 'Cube not found' });
+    }
+    if (!isCubeEditable(cube, req.user)) {
+      return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can delete simulation results' });
+    }
+
+    const bucket = getBucketName();
+    const runs: SimulationRunEntry[] = (await getObject(bucket, indexKey(cube.id))) ?? [];
+    const runExists = runs.some((run) => run.ts === ts);
+
+    if (!runExists) {
+      return res.status(404).json({ success: false, message: 'Run not found' });
+    }
+
+    const updatedRuns = runs.filter((run) => run.ts !== ts);
+
+    await Promise.all([
+      putObject(bucket, indexKey(cube.id), updatedRuns),
+      deleteObject(bucket, runKey(cube.id, ts)),
+    ]);
+
+    const latestRunData = updatedRuns.length > 0 ? await getObject(bucket, runKey(cube.id, updatedRuns[0]!.ts)) : null;
+
+    return res.status(200).json({ success: true, runs: updatedRuns, latestRunData });
+  } catch (err) {
+    req.logger.error(`Error in simulatesave DELETE run: ${err}`, err instanceof Error ? err.stack : '');
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 export const routes = [
   { method: 'post', path: '/:id', handler: [saveHandler] },
   { method: 'get', path: '/:id', handler: [getIndexHandler] },
   { method: 'get', path: '/:id/:ts', handler: [getRunHandler] },
+  { method: 'delete', path: '/:id/:ts', handler: [deleteRunHandler] },
 ];
