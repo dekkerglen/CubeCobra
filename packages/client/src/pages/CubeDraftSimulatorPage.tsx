@@ -1277,8 +1277,13 @@ function kMeans(vecs: number[][], k: number): number[] {
 function computeSkeletons(slimPools: SlimPool[], cardMeta: Record<string, CardMeta>, k: number, coreThresholdPct: number = 60, deckBuilds?: BuiltDeck[] | null): ArchetypeSkeleton[] {
   const n = slimPools.length;
   if (n === 0) return [];
+  k = Math.min(k, n); // can't have more clusters than data points
 
-  const oracleIds = Object.keys(cardMeta);
+  // Exclude basic lands — they appear in almost every deck and distort clustering
+  const oracleIds = Object.keys(cardMeta).filter((id) => {
+    const t = (cardMeta[id]?.type ?? '').toLowerCase();
+    return !(t.includes('basic') && t.includes('land'));
+  });
   const oracleIndex = new Map(oracleIds.map((id, i) => [id, i]));
   const dim = oracleIds.length;
 
@@ -4899,20 +4904,24 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   }, [pendingNavigationHref]);
 
   const handleDeleteRun = useCallback(async (ts: number) => {
-    const res = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`, { method: 'DELETE' });
-    const json = await res.json();
-    if (!json.success) return;
+    try {
+      const res = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json.success) return;
 
-    const nextRuns = json.runs ?? [];
-    setRuns(nextRuns);
-    setSelectedCardOracle(null);
-    setSelectedArchetype(null);
-    setSelectedSkeletonId(null);
+      const nextRuns = json.runs ?? [];
+      setRuns(nextRuns);
+      setSelectedCardOracle(null);
+      setSelectedArchetype(null);
+      setSelectedSkeletonId(null);
 
-    if (selectedTs === ts) {
-      setDisplayRunData(json.latestRunData ?? null);
-      setCurrentRunSetup(json.latestRunData?.setupData ?? null);
-      setSelectedTs(nextRuns[0]?.ts ?? null);
+      if (selectedTs === ts) {
+        setDisplayRunData(json.latestRunData ?? null);
+        setCurrentRunSetup(json.latestRunData?.setupData ?? null);
+        setSelectedTs(nextRuns[0]?.ts ?? null);
+      }
+    } catch (err) {
+      console.error('Failed to delete run:', err);
     }
   }, [csrfFetch, cubeId, selectedTs]);
 
