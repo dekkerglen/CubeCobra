@@ -447,6 +447,28 @@ export const batchBuild = (inputs: string[][]): { oracle: string; rating: number
   });
 };
 
+/**
+ * Encode a batch of pools in a single forward pass through the encoder.
+ * Returns one embedding vector per pool as a plain number[][].
+ */
+export const batchEncode = (inputs: string[][]): number[][] => {
+  if (!encoder || inputs.length === 0) return inputs.map(() => []);
+
+  const vectors = inputs.map((oracles) =>
+    encodeIndeces(
+      oracles
+        .map((oracle) => oracleIdToMlIndex(oracle))
+        .filter((index): index is number => index !== null && index !== undefined),
+    ),
+  );
+
+  return tidy(() => {
+    const inputTensor = tensor(vectors);
+    const result = encoder.predict(inputTensor) as any;
+    return result.arraySync() as number[][];
+  });
+};
+
 export const oracleInData = (oracle: string): boolean => {
   return oracleToIndex[oracle] !== undefined;
 };

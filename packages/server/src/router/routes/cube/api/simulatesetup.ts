@@ -35,10 +35,6 @@ const handler = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can run the draft simulator' });
     }
 
-    // TODO: re-enable cooldown before production
-    // Stamp cooldown so history still tracks last run time
-    await cubeDao.update({ ...cube, lastDraftSimulation: Date.now() }, { skipTimestampUpdate: true });
-
     const { error, value } = SetupSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ success: false, message: error.message });
@@ -104,6 +100,8 @@ const handler = async (req: Request, res: Response) => {
           imageUrl: details.image_normal || details.image_small || '',
           colorIdentity: details.color_identity ?? [],
           elo: details.elo ?? 1200,
+          cmc: details.cmc ?? 0,
+          type: details.type ?? '',
         };
       }
     }
@@ -115,6 +113,10 @@ const handler = async (req: Request, res: Response) => {
       cubeName: cube.name,
       numSeats,
     };
+
+    // TODO: re-enable cooldown before production
+    // Only stamp the run time once setup succeeded.
+    await cubeDao.update({ ...cube, lastDraftSimulation: Date.now() }, { skipTimestampUpdate: true });
 
     return res.status(200).json({ success: true, ...response });
   } catch (err) {
