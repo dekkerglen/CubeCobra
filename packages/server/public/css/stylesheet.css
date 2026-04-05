@@ -1009,11 +1009,17 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .mb-1 {
   margin-bottom: 0.25rem;
 }
+.mb-1\.5 {
+  margin-bottom: 0.375rem;
+}
 .mb-16 {
   margin-bottom: 4rem;
 }
 .mb-2 {
   margin-bottom: 0.5rem;
+}
+.mb-2\.5 {
+  margin-bottom: 0.625rem;
 }
 .mb-3 {
   margin-bottom: 0.75rem;
@@ -1650,6 +1656,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .gap-2 {
   gap: 0.5rem;
 }
+.gap-2\.5 {
+  gap: 0.625rem;
+}
 .gap-20 {
   gap: 5rem;
 }
@@ -1764,6 +1773,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .divide-border > :not([hidden]) ~ :not([hidden]) {
   --tw-divide-opacity: 1;
   border-color: rgb(var(--border) / var(--tw-divide-opacity));
+}
+.self-start {
+  align-self: flex-start;
 }
 .self-center {
   align-self: center;
@@ -1920,6 +1932,12 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-border-opacity: 1;
   border-color: rgb(var(--border-secondary) / var(--tw-border-opacity));
 }
+.border-border\/70 {
+  border-color: rgb(var(--border) / 0.7);
+}
+.border-border\/80 {
+  border-color: rgb(var(--border) / 0.8);
+}
 .border-button-accent {
   --tw-border-opacity: 1;
   border-color: rgb(var(--button-accent) / var(--tw-border-opacity));
@@ -2038,6 +2056,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--bg-accent) / var(--tw-bg-opacity));
 }
+.bg-bg-accent\/60 {
+  background-color: rgb(var(--bg-accent) / 0.6);
+}
 .bg-bg-active {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--bg-active) / var(--tw-bg-opacity));
@@ -2052,6 +2073,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .bg-black {
   --tw-bg-opacity: 1;
   background-color: rgb(0 0 0 / var(--tw-bg-opacity));
+}
+.bg-black\/70 {
+  background-color: rgb(0 0 0 / 0.7);
 }
 .bg-black\/80 {
   background-color: rgb(0 0 0 / 0.8);
@@ -2279,10 +2303,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   padding-left: 0px;
   padding-right: 0px;
 }
-.px-0\.5 {
-  padding-left: 0.125rem;
-  padding-right: 0.125rem;
-}
 .px-1 {
   padding-left: 0.25rem;
   padding-right: 0.25rem;
@@ -2322,6 +2342,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .py-2 {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+.py-2\.5 {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
 }
 .py-3 {
   padding-top: 0.75rem;
@@ -2460,6 +2484,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .text-\[10px\] {
   font-size: 10px;
 }
+.text-\[11px\] {
+  font-size: 11px;
+}
 .text-base {
   font-size: 1rem;
   line-height: 1.5rem;
@@ -2512,6 +2539,11 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   font-variant-numeric: var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing)
     var(--tw-numeric-fraction);
 }
+.tabular-nums {
+  --tw-numeric-spacing: tabular-nums;
+  font-variant-numeric: var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing)
+    var(--tw-numeric-fraction);
+}
 .leading-none {
   line-height: 1;
 }
@@ -2521,8 +2553,17 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .leading-tight {
   line-height: 1.25;
 }
+.tracking-\[0\.14em\] {
+  letter-spacing: 0.14em;
+}
+.tracking-\[0\.16em\] {
+  letter-spacing: 0.16em;
+}
 .tracking-tight {
   letter-spacing: -0.025em;
+}
+.tracking-wide {
+  letter-spacing: 0.025em;
 }
 .tracking-wider {
   letter-spacing: 0.05em;
@@ -2689,6 +2730,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .text-text-secondary\/50 {
   color: rgb(var(--text-secondary) / 0.5);
+}
+.text-text-secondary\/80 {
+  color: rgb(var(--text-secondary) / 0.8);
 }
 .text-white {
   --tw-text-opacity: 1;
@@ -3561,6 +3605,11 @@ img.mana-symbol-sm {
   cursor: pointer;
 }
 
+.hover\:border-border:hover {
+  --tw-border-opacity: 1;
+  border-color: rgb(var(--border) / var(--tw-border-opacity));
+}
+
 .hover\:border-border-active:hover {
   --tw-border-opacity: 1;
   border-color: rgb(var(--border-active) / var(--tw-border-opacity));
@@ -3584,6 +3633,11 @@ img.mana-symbol-sm {
 .hover\:bg-bg:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--bg) / var(--tw-bg-opacity));
+}
+
+.hover\:bg-bg-accent:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(var(--bg-accent) / var(--tw-bg-opacity));
 }
 
 .hover\:bg-bg-active:hover {
@@ -4105,6 +4159,10 @@ img.mana-symbol-sm {
 
   .md\:border-b {
     border-bottom-width: 1px;
+  }
+
+  .md\:p-5 {
+    padding: 1.25rem;
   }
 
   .md\:px-4 {

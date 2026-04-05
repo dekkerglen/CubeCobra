@@ -272,8 +272,6 @@ export const build = (oracles: string[]) => {
 export const draftBatch = (packs: string[][], pools: string[][]): { oracle: string; rating: number }[][] => {
   if (!encoder || !draftDecoder || packs.length === 0) return packs.map(() => []);
 
-  const allOracles = getAllOracleIds();
-
   const batchVector = pools.map((pool) =>
     encodeIndeces(
       pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
@@ -289,25 +287,21 @@ export const draftBatch = (packs: string[][], pools: string[][]): { oracle: stri
   });
 
   return packs.map((pack, i) => {
-    const ratings = flatResult.slice(i * numOracles, (i + 1) * numOracles);
+    const rowOffset = i * numOracles;
+    const packEntries = pack
+      .map((oracle) => {
+        const index = oracleIdToMlIndex(oracle);
+        return index === null || index === undefined ? null : { oracle, index, raw: flatResult[rowOffset + index] ?? 0 };
+      })
+      .filter((entry): entry is { oracle: string; index: number; raw: number } => entry !== null);
 
-    const packVector = encodeIndeces(
-      pack
-        .map((oracle) => oracleIdToMlIndex(oracle))
-        .filter((index): index is number => index !== null && index !== undefined),
-    );
-    const mask = packVector.map((x) => 1e9 * (1 - x));
-    const softmaxed = softmax(ratings.map((x, j) => x * packVector[j] - (mask[j] ?? 0)));
+    if (packEntries.length === 0) return [];
 
-    const res: { oracle: string; rating: number }[] = [];
-    for (const oracle of allOracles) {
-      const index = oracleIdToMlIndex(oracle);
-      if (index === null || index === undefined) continue;
-      if (pack.includes(oracle)) {
-        res.push({ oracle, rating: softmaxed[index] ?? 0 });
-      }
-    }
-    return res.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    const softmaxed = softmax(packEntries.map((entry) => entry.raw));
+
+    return packEntries
+      .map((entry, idx) => ({ oracle: entry.oracle, rating: softmaxed[idx] ?? 0 }))
+      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
   });
 };
 
