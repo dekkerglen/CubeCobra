@@ -1,8 +1,9 @@
-import { cardFromId } from 'serverutils/carddb';
+import { cardFromId, getReasonableCardByOracle, isOracleBasic } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { getBasicsFromCube } from 'serverutils/cube';
 import { batchDeckbuild } from 'serverutils/draftbots';
 import { cubeDao } from 'dynamo/daos';
+import { CardMeta } from '@utils/datatypes/SimulationReport';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -54,7 +55,30 @@ const handler = async (req: Request, res: Response) => {
 
     const results = await batchDeckbuild(entries);
 
-    return res.status(200).json({ success: true, results });
+    // Return metadata for basic lands so the client can display them in deck view.
+    // batchDeckbuild outputs oracle IDs into mainboard; use those directly since
+    // cardFromId(scryfallId).oracle_id may be empty on some CardDetails objects.
+    const basicOracleIds = new Set<string>();
+    for (const result of results) {
+      for (const oracleId of result.mainboard) {
+        if (isOracleBasic(oracleId)) basicOracleIds.add(oracleId);
+      }
+    }
+    const basicCardMeta: Record<string, CardMeta> = {};
+    for (const oracleId of basicOracleIds) {
+      const card = getReasonableCardByOracle(oracleId);
+      if (!card) continue;
+      basicCardMeta[oracleId] = {
+        name: card.name ?? oracleId,
+        imageUrl: (card as any).image_normal || (card as any).image_small || '',
+        colorIdentity: (card as any).color_identity ?? [],
+        elo: (card as any).elo ?? 1200,
+        cmc: (card as any).cmc ?? 0,
+        type: (card as any).type ?? '',
+      };
+    }
+
+    return res.status(200).json({ success: true, results, basicCardMeta });
   } catch (err) {
     req.logger.error(`Error in simulatedeckbuild: ${err}`, err instanceof Error ? err.stack : '');
     return res.status(500).json({ success: false, message: 'Internal server error' });
