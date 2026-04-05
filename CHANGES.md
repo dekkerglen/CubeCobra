@@ -19,6 +19,7 @@ Since 1.6.0
 - Improved bot deckbuilding algorithm — cards are now added one at a time using ML scores with a cumulative 10% duplicate penalty per copy, preventing bots from stacking too many copies of the same card
 - New `game:arena` / `game:paper` / `game:mtgo` filter now checks across all printings of a card (any version ever available in that game), instead of only the current printing's availability
 - New `game:is-arena` / `game:is-paper` / `game:is-mtgo` filter for checking whether the specific printing is available in that game (the previous strict behavior)
+- Adding a user as a collaborator now creates a notification to that user
 
 # Bug Fixes
 - Fixed default sorts saved in views not being applied on page load — view-level `defaultSorts` are now used instead of only cube-level sorts
