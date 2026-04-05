@@ -1,10 +1,10 @@
 import { cardName, cardOracleId } from '@utils/cardutil';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cardFromId } from 'serverutils/carddb';
-import { compareCubes, generateBalancedPack, generatePack } from 'serverutils/cubefn';
+import { compareCubes, generateBalancedPack, generatePack, reconstructCubeAtChangelog } from 'serverutils/cubefn';
 import { batchDraft } from 'serverutils/ml';
 
-import { createCardDetails, createCube, createCustomCard } from '../test-utils/data';
+import { createCardDetails, createChangelogCardAdd, createCube, createCustomCard } from '../test-utils/data';
 
 // Mock dependencies
 jest.mock('serverutils/ml');
@@ -1000,5 +1000,133 @@ describe('compareCubes', () => {
       expect(result.onlyB).toHaveLength(1);
       expect(cardName(result.onlyB[0]!)).toBe('Only in B');
     });
+  });
+});
+
+describe('reconstructCubeAtChangelog', () => {
+  const mockChangelogDao = {
+    queryByCubeWithData: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCardFromId.mockImplementation((cardID) => createCardDetails({ oracle_id: `oracle_${cardID}` }));
+  });
+
+  it('should only remove added copies, not all copies with the same cardID', async () => {
+    // Current cube has 4 copies of "bolt" (cardID = "bolt123")
+    const currentCards = {
+      mainboard: [
+        { cardID: 'bolt123', index: 0, board: 'mainboard' },
+        { cardID: 'bolt123', index: 1, board: 'mainboard' },
+        { cardID: 'bolt123', index: 2, board: 'mainboard' },
+        { cardID: 'bolt123', index: 3, board: 'mainboard' },
+        { cardID: 'other1', index: 4, board: 'mainboard' },
+      ],
+    };
+
+    // Changelog: 2 copies of bolt were added (after the target date)
+    const changelog = {
+      mainboard: {
+        adds: [
+          createChangelogCardAdd({ cardID: 'bolt123' }),
+          createChangelogCardAdd({ cardID: 'bolt123' }),
+        ],
+        removes: [],
+        edits: [],
+        swaps: [],
+      },
+    };
+
+    mockChangelogDao.queryByCubeWithData.mockResolvedValue({
+      items: [{ date: 200, changelog }],
+      lastKey: undefined,
+    });
+
+    const result = await reconstructCubeAtChangelog('cube1', 100, currentCards as any, mockChangelogDao);
+
+    // Should have 2 copies of bolt remaining (4 - 2 added = 2) plus the other card
+    const boltCopies = result.mainboard.filter((c: any) => c.cardID === 'bolt123');
+    expect(boltCopies).toHaveLength(2);
+    expect(result.mainboard).toHaveLength(3); // 2 bolts + 1 other
+  });
+
+  it('should remove all copies if all were added', async () => {
+    // Current cube has 3 copies of "bolt" (all were added)
+    const currentCards = {
+      mainboard: [
+        { cardID: 'bolt123', index: 0, board: 'mainboard' },
+        { cardID: 'bolt123', index: 1, board: 'mainboard' },
+        { cardID: 'bolt123', index: 2, board: 'mainboard' },
+      ],
+    };
+
+    // Changelog: all 3 copies were added
+    const changelog = {
+      mainboard: {
+        adds: [
+          createChangelogCardAdd({ cardID: 'bolt123' }),
+          createChangelogCardAdd({ cardID: 'bolt123' }),
+          createChangelogCardAdd({ cardID: 'bolt123' }),
+        ],
+        removes: [],
+        edits: [],
+        swaps: [],
+      },
+    };
+
+    mockChangelogDao.queryByCubeWithData.mockResolvedValue({
+      items: [{ date: 200, changelog }],
+      lastKey: undefined,
+    });
+
+    const result = await reconstructCubeAtChangelog('cube1', 100, currentCards as any, mockChangelogDao);
+
+    // All 3 copies were added, so PIT should have 0
+    const boltCopies = result.mainboard.filter((c: any) => c.cardID === 'bolt123');
+    expect(boltCopies).toHaveLength(0);
+  });
+
+  it('should handle multiple different cards with duplicates being added', async () => {
+    // Current cube: 3 bolts, 2 recalls, 1 unique
+    const currentCards = {
+      mainboard: [
+        { cardID: 'bolt123', index: 0, board: 'mainboard' },
+        { cardID: 'bolt123', index: 1, board: 'mainboard' },
+        { cardID: 'bolt123', index: 2, board: 'mainboard' },
+        { cardID: 'recall456', index: 3, board: 'mainboard' },
+        { cardID: 'recall456', index: 4, board: 'mainboard' },
+        { cardID: 'unique789', index: 5, board: 'mainboard' },
+      ],
+    };
+
+    // Changelog: added 1 bolt and 1 recall
+    const changelog = {
+      mainboard: {
+        adds: [
+          createChangelogCardAdd({ cardID: 'bolt123' }),
+          createChangelogCardAdd({ cardID: 'recall456' }),
+        ],
+        removes: [],
+        edits: [],
+        swaps: [],
+      },
+    };
+
+    mockChangelogDao.queryByCubeWithData.mockResolvedValue({
+      items: [{ date: 200, changelog }],
+      lastKey: undefined,
+    });
+
+    const result = await reconstructCubeAtChangelog('cube1', 100, currentCards as any, mockChangelogDao);
+
+    // PIT: 2 bolts (3-1), 1 recall (2-1), 1 unique
+    const boltCopies = result.mainboard.filter((c: any) => c.cardID === 'bolt123');
+    const recallCopies = result.mainboard.filter((c: any) => c.cardID === 'recall456');
+    const uniqueCopies = result.mainboard.filter((c: any) => c.cardID === 'unique789');
+    expect(boltCopies).toHaveLength(2);
+    expect(recallCopies).toHaveLength(1);
+    expect(uniqueCopies).toHaveLength(1);
+    expect(result.mainboard).toHaveLength(4);
   });
 });

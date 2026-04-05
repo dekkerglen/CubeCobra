@@ -729,10 +729,22 @@ function reverseApplyChangelog(cards: CubeCards, changelog: Changes): void {
     const boardChanges = value as BoardChanges;
     const board = cards[boardName] || [];
 
-    // Undo adds: remove cards that were added
+    // Undo adds: remove cards that were added (respecting duplicate counts)
     if (boardChanges.adds && boardChanges.adds.length > 0) {
-      const addedCardIDs = new Set(boardChanges.adds.map((c) => c.cardID));
-      cards[boardName] = board.filter((c) => !addedCardIDs.has(c.cardID));
+      const addedCardCounts = new Map<string, number>();
+      for (const c of boardChanges.adds) {
+        addedCardCounts.set(c.cardID, (addedCardCounts.get(c.cardID) || 0) + 1);
+      }
+      const removedCounts = new Map<string, number>();
+      cards[boardName] = board.filter((c) => {
+        const toRemove = addedCardCounts.get(c.cardID) || 0;
+        const alreadyRemoved = removedCounts.get(c.cardID) || 0;
+        if (alreadyRemoved < toRemove) {
+          removedCounts.set(c.cardID, alreadyRemoved + 1);
+          return false; // Remove this copy
+        }
+        return true; // Keep this copy
+      });
     }
 
     // Undo removes: re-add cards that were removed
