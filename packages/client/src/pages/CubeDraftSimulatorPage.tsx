@@ -1523,6 +1523,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const [selectedSkeletonId, setSelectedSkeletonId] = useState<number | null>(null);
   const poolViewRef = useRef<HTMLDivElement>(null);
   const detailedViewRef = useRef<HTMLDivElement>(null);
+  const cardStatsRef = useRef<HTMLDivElement>(null);
 
   // Section collapse state (default collapsed)
   const [archetypesOpen, setArchetypesOpen] = useState(true);
@@ -1973,7 +1974,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         label="Dead Cards"
                         value={displayRunData.deadCards.length}
                         sub={`< ${(displayRunData.deadCardThreshold * 100).toFixed(0)}% pick rate`}
-                        onClick={() => { setCardStatsOpen(true); }}
+                        onClick={() => { setCardStatsOpen(true); setTimeout(() => cardStatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
                         badge={displayRunData.deadCards.length > 0 ? <span className="text-xs text-link">Click to view in card stats</span> : undefined}
                       />
                       {(() => {
@@ -2161,7 +2162,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         <Col xs={12} md={6}><Card className="border-border/50 bg-bg-accent/30"><CardHeader><div><div><Text semibold>Deck Color Share</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Each maindeck card contributes to its colors. Multicolor cards split evenly.{activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}</Text></div></div></CardHeader><CardBody><DeckColorShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} /></CardBody></Card></Col>
                         <Col xs={12} md={6}><Card className="border-border/50 bg-bg-accent/30"><CardHeader><div><div><Text semibold>Mana Curve Share</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Nonland maindeck cards by mana value.{activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}</Text></div></div></CardHeader><CardBody><ManaCurveShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} /></CardBody></Card></Col>
                       </Row>
-                      <div className="simCardDiagBlock simCardDiagTable flex flex-col gap-5">
+                      <div ref={cardStatsRef} className="simCardDiagBlock simCardDiagTable flex flex-col gap-5">
                       <Card className="border-border">
                         <CardHeader>
                           <Flexbox direction="row" justify="between" alignItems="center">
