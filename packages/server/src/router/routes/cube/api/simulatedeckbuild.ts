@@ -1,5 +1,5 @@
 import { cardFromId, getReasonableCardByOracle, isOracleBasic } from 'serverutils/carddb';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { getBasicsFromCube } from 'serverutils/cube';
 import { batchDeckbuild } from 'serverutils/draftbots';
 import { cubeDao } from 'dynamo/daos';
@@ -16,7 +16,7 @@ import { Request, Response } from '../../../../types/express';
  * Body:   { inputs: string[][] }  — one oracle-ID array per pool
  * Response: { success: true, results: { mainboard: string[]; sideboard: string[] }[] }
  */
-const handler = async (req: Request, res: Response) => {
+export const simulatedeckbuildHandler = async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ success: false, message: 'Must be logged in' });
   }
@@ -30,11 +30,18 @@ const handler = async (req: Request, res: Response) => {
   if (!Array.isArray(inputs)) {
     return res.status(400).json({ success: false, message: 'inputs must be an array' });
   }
+  const MAX_INPUTS = 50 * 16; // max drafts × max seats
+  if (inputs.length > MAX_INPUTS) {
+    return res.status(400).json({ success: false, message: 'Too many inputs' });
+  }
 
   try {
     const cube = await cubeDao.getById(cubeId);
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).json({ success: false, message: 'Cube not found' });
+    }
+    if (!isCubeEditable(cube, req.user)) {
+      return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can run the draft simulator' });
     }
 
     const cubeCards = await cubeDao.getCards(cube.id);
@@ -89,6 +96,6 @@ export const routes = [
   {
     method: 'post',
     path: '/:id',
-    handler: [handler],
+    handler: [simulatedeckbuildHandler],
   },
 ];

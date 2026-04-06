@@ -7,9 +7,7 @@ import {
   BuiltDeck,
   CardMeta,
   CardStats,
-  ColorBalance,
   LockPair,
-  P1P1Entry,
   SimulatedPickCard,
   SimulatedPool,
   SimulationReport,
@@ -19,6 +17,7 @@ import {
   SkeletonCard,
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
+import { computeSkeletons } from '../utils/draftSimulatorClustering';
 import { getCubeId } from '@utils/Util';
 import {
   BarElement,
@@ -300,6 +299,9 @@ function computeFilteredCardStats(
             for (let s = 0; s < numSeats; s++) {
               const poolIndex = d * numSeats + s;
               const pack = allCurrentPacks[d]![s]!;
+              if (activePoolIndexSet.has(poolIndex)) {
+                for (const oracle of pack) getStats(oracle).timesSeen++;
+              }
               if (pack.length === 0) continue;
               if (step.action === 'trashrandom') {
                 const trashed = runData.randomTrashByPool?.[poolIndex]?.[randomTrashPointers[poolIndex] ?? 0];
@@ -350,6 +352,7 @@ async function runClientSimulation(
   numDrafts: number,
   deadCardThreshold: number,
   onProgress: (pct: number) => void,
+  signal?: AbortSignal,
 ): Promise<SimulationReport> {
   const { initialPacks, packSteps, cardMeta, cubeName, numSeats } = setup;
   const statsMap = new Map<string, RawStats>();
@@ -413,7 +416,8 @@ async function runClientSimulation(
             const mlRes = await fetch('/cube/api/simulateall', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ packs: flatPacks, pools: flatPools }),
+              body: JSON.stringify({ cubeId: setup.cubeId, packs: flatPacks, pools: flatPools }),
+              signal,
             });
             if (!mlRes.ok) {
               const body = await mlRes.json().catch(() => ({}));
@@ -500,180 +504,31 @@ async function runClientSimulation(
   }
   cardStats.sort((a, b) => a.avgPickPosition - b.avgPickPosition);
 
-  const colorBalance: ColorBalance = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
-  for (const c of cardStats) {
-    if (c.colorIdentity.length === 0) colorBalance.C += c.timesPicked;
-    else for (const color of c.colorIdentity) if (color in colorBalance) colorBalance[color] = (colorBalance[color] ?? 0) + c.timesPicked;
-  }
-
   const rates = cardStats.map((c) => c.pickRate);
   const mean = rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
   const variance = rates.length > 0 ? rates.reduce((sum, r) => sum + (r - mean) ** 2, 0) / rates.length : 0;
   const totalSeats = numDrafts * numSeats;
   const archetypeDistribution: ArchetypeEntry[] = [...archetypeCounts.entries()].map(([colorPair, count]) => ({ colorPair, count, percentage: count / totalSeats })).sort((a, b) => b.count - a.count);
-  const p1p1Frequency: P1P1Entry[] = cardStats.filter((c) => c.p1p1Count > 0).sort((a, b) => b.p1p1Count - a.p1p1Count).slice(0, 20).map((c) => {
-    const seen = statsMap.get(c.oracle_id)?.p1p1Seen ?? 0;
-    return { oracle_id: c.oracle_id, name: c.name, count: c.p1p1Count, percentage: seen > 0 ? c.p1p1Count / seen : 0 };
-  });
   const deadCards = cardStats.filter((c) => c.pickRate < deadCardThreshold);
 
   const simulatedPools = reconstructSimulatedPools(slimPools, cardMeta);
 
   return {
-    cubeId: '',
+    cubeId: setup.cubeId,
     cubeName,
     numDrafts,
     numSeats,
     deadCardThreshold,
     cardStats,
     deadCards,
-    colorBalance,
     archetypeDistribution,
-    p1p1Frequency,
     convergenceScore: Math.sqrt(variance),
     generatedAt: new Date().toISOString(),
     cardMeta,
     slimPools,
     simulatedPools,
     setupData: { initialPacks, packSteps, numSeats },
-    randomTrashByPool,
   };
-}
-
-// ---------------------------------------------------------------------------
-// Archetype skeleton clustering (k-means on binary card-overlap vectors)
-// ---------------------------------------------------------------------------
-
-function euclidSq(a: number[], b: number[]): number {
-  let s = 0;
-  for (let i = 0; i < a.length; i++) s += ((a[i] ?? 0) - (b[i] ?? 0)) ** 2;
-  return s;
-}
-
-function kMeans(vecs: number[][], k: number): number[] {
-  const n = vecs.length;
-  if (n === 0) return [];
-  k = Math.min(k, n);
-  const dim = vecs[0]?.length ?? 0;
-
-  // K-means++ init
-  const seedIdxs: number[] = [Math.floor(Math.random() * n)];
-  while (seedIdxs.length < k) {
-    const dists = vecs.map((v) => Math.min(...seedIdxs.map((si) => euclidSq(v, vecs[si]!))));
-    const total = dists.reduce((a, b) => a + b, 0);
-    let r = Math.random() * total, chosen = n - 1;
-    for (let i = 0; i < n; i++) { r -= dists[i]!; if (r <= 0) { chosen = i; break; } }
-    seedIdxs.push(chosen);
-  }
-
-  let centroids: number[][] = seedIdxs.map((i) => [...vecs[i]!]);
-  const assignments = new Array<number>(n).fill(0);
-
-  for (let iter = 0; iter < 25; iter++) {
-    let changed = false;
-    for (let i = 0; i < n; i++) {
-      let best = 0, bestD = Infinity;
-      for (let c = 0; c < k; c++) { const d = euclidSq(vecs[i]!, centroids[c]!); if (d < bestD) { bestD = d; best = c; } }
-      if (assignments[i] !== best) { assignments[i] = best; changed = true; }
-    }
-    if (!changed) break;
-
-    centroids = Array.from({ length: k }, () => new Array(dim).fill(0));
-    const counts = new Array<number>(k).fill(0);
-    for (let i = 0; i < n; i++) { const c = assignments[i]!; counts[c]++; for (let j = 0; j < dim; j++) centroids[c]![j]! += vecs[i]![j]!; }
-    for (let c = 0; c < k; c++) { const cnt = counts[c]; if (cnt > 0) centroids[c] = centroids[c]!.map((v) => v / cnt); }
-  }
-
-  return assignments;
-}
-
-function computeSkeletons(slimPools: SlimPool[], cardMeta: Record<string, CardMeta>, k: number, coreThresholdPct: number = 60, deckBuilds?: BuiltDeck[] | null): ArchetypeSkeleton[] {
-  const n = slimPools.length;
-  if (n === 0) return [];
-  k = Math.min(k, n); // can't have more clusters than data points
-
-  // Exclude basic lands — they appear in almost every deck and distort clustering
-  const oracleIds = Object.keys(cardMeta).filter((id) => {
-    const t = (cardMeta[id]?.type ?? '').toLowerCase();
-    return !(t.includes('basic') && t.includes('land'));
-  });
-  const oracleIndex = new Map(oracleIds.map((id, i) => [id, i]));
-  const dim = oracleIds.length;
-
-  // Use mainboard decks when available, fall back to draft picks
-  const hasDecks = deckBuilds && deckBuilds.length === n;
-  const vecs: Uint8Array[] = slimPools.map((pool, i) => {
-    const v = new Uint8Array(dim);
-    const cards = hasDecks ? deckBuilds![i]!.mainboard : pool.picks.map((p) => p.oracle_id);
-    for (const oracle_id of cards) { const idx = oracleIndex.get(oracle_id); if (idx !== undefined) v[idx] = 1; }
-    return v;
-  });
-
-  // IDF: cards drafted in most pools get low weight, distinguishing cards get high weight
-  const df = new Float32Array(dim);
-  for (const v of vecs) for (let j = 0; j < dim; j++) if (v[j]) df[j]++;
-  const idf = Float32Array.from({ length: dim }, (_, j) => Math.log((n + 1) / (df[j]! + 1)));
-
-  // TF-IDF vectors, L2-normalised → cosine similarity via Euclidean k-means
-  const tfidfVecs: number[][] = vecs.map((v) => {
-    const vec = Array.from({ length: dim }, (_, j) => v[j]! * idf[j]!);
-    const norm = Math.sqrt(vec.reduce((s, x) => s + x * x, 0));
-    return norm > 0 ? vec.map((x) => x / norm) : vec;
-  });
-  const assignments = kMeans(tfidfVecs, k);
-
-  const skeletons: ArchetypeSkeleton[] = [];
-  for (let clusterId = 0; clusterId < k; clusterId++) {
-    const poolIndices = assignments.map((a, i) => (a === clusterId ? i : -1)).filter((i) => i >= 0);
-    const poolCount = poolIndices.length;
-    if (poolCount === 0) continue;
-
-    // Centroid card fractions: for each card, what fraction of pools in this cluster drafted it
-    const fracs = new Float32Array(dim);
-    for (const pi of poolIndices) { const v = vecs[pi]!; for (let j = 0; j < dim; j++) fracs[j] += v[j]!; }
-    for (let j = 0; j < dim; j++) fracs[j] /= poolCount;
-
-    const allCards: SkeletonCard[] = oracleIds
-      .map((oracle_id, j) => ({ oracle_id, name: cardMeta[oracle_id]?.name ?? oracle_id, imageUrl: cardMeta[oracle_id]?.imageUrl ?? '', fraction: fracs[j]! }))
-      .filter((c) => c.fraction >= coreThresholdPct / 2 / 100)
-      .sort((a, b) => b.fraction - a.fraction);
-
-    const coreThresholdFrac = coreThresholdPct / 100;
-    const coreCards = allCards.filter((c) => c.fraction >= coreThresholdFrac).slice(0, 24);
-    const occasionalCards = allCards.filter((c) => c.fraction < coreThresholdFrac).slice(0, 12);
-
-    // Color profile
-    const colorWeight: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-    let totalWeight = 0;
-    for (const { oracle_id, fraction } of coreCards) {
-      const colors = cardMeta[oracle_id]?.colorIdentity ?? [];
-      if (colors.length === 0) continue;
-      totalWeight += fraction;
-      for (const c of colors) if (c in colorWeight) colorWeight[c] += fraction;
-    }
-    const colorProfile = Object.entries(colorWeight).filter(([, v]) => totalWeight > 0 && v / totalWeight > 0.2).sort((a, b) => b[1] - a[1]).map(([key]) => key).join('') || 'C';
-
-    // Lock pairs
-    const lockPairs: LockPair[] = [];
-    const lockCandidates = allCards.filter((c) => c.fraction >= Math.max(0.25, coreThresholdFrac / 2)).slice(0, 24);
-    for (let ai = 0; ai < lockCandidates.length; ai++) {
-      for (let bi = ai + 1; bi < lockCandidates.length; bi++) {
-        const a = lockCandidates[ai]!, b = lockCandidates[bi]!;
-        const aIdx = oracleIndex.get(a.oracle_id)!, bIdx = oracleIndex.get(b.oracle_id)!;
-        let both = 0;
-        for (const pi of poolIndices) if (vecs[pi]![aIdx] && vecs[pi]![bIdx]) both++;
-        const rate = both / poolCount;
-        if (rate > 0.60 && rate > a.fraction * b.fraction + 0.05) {
-          lockPairs.push({ oracle_id_a: a.oracle_id, oracle_id_b: b.oracle_id, nameA: a.name, nameB: b.name, coOccurrenceRate: rate });
-        }
-      }
-    }
-    lockPairs.sort((a, b) => b.coOccurrenceRate - a.coOccurrenceRate);
-
-    skeletons.push({ clusterId, colorProfile, poolCount, poolIndices, coreCards, occasionalCards, lockPairs: lockPairs.slice(0, 5) });
-  }
-
-  return skeletons.sort((a, b) => b.poolCount - a.poolCount);
 }
 
 // ---------------------------------------------------------------------------
@@ -1176,10 +1031,13 @@ const PoolExpansionContent: React.FC<{
   );
 };
 
+const POOL_PAGE_SIZE = 20;
+
 const CardPoolView: React.FC<{ card: CardStats; pools: SimulatedPool[]; deckBuilds: BuiltDeck[] | null; deckLoading: boolean; cardMeta: Record<string, CardMeta>; onClose: () => void }> = ({ card, pools, deckBuilds, deckLoading, cardMeta, onClose }) => {
   const [expandedPool, setExpandedPool] = useState<number | null>(pools[0]?.poolIndex ?? null);
   const [viewMode, setViewMode] = useState<'pool' | 'deck'>('deck');
   const [poolLocationFilter, setPoolLocationFilter] = useState<DeckLocationFilter>('all');
+  const [poolPage, setPoolPage] = useState(1);
   const hasDeck = !!deckBuilds && deckBuilds.length > 0;
 
   const visiblePools = pools.filter((pool) => {
@@ -1190,6 +1048,12 @@ const CardPoolView: React.FC<{ card: CardStats; pools: SimulatedPool[]; deckBuil
     if (poolLocationFilter === 'sideboard') return d.sideboard.includes(card.oracle_id);
     return true;
   });
+
+  const totalPoolPages = Math.max(1, Math.ceil(visiblePools.length / POOL_PAGE_SIZE));
+  const pagedPools = visiblePools.slice((poolPage - 1) * POOL_PAGE_SIZE, poolPage * POOL_PAGE_SIZE);
+
+  // Reset page when filter changes
+  useEffect(() => { setPoolPage(1); }, [poolLocationFilter]);
 
   return (
     <Card className="border-border">
@@ -1226,25 +1090,36 @@ const CardPoolView: React.FC<{ card: CardStats; pools: SimulatedPool[]; deckBuil
       </CardHeader>
       <CardBody className="pt-3">
         {visiblePools.length === 0 ? <Text sm className="text-text-secondary">No pools match the current filter.</Text> : (
-          <Flexbox direction="col" gap="4">{visiblePools.map((pool) => {
-            const isExpanded = expandedPool === pool.poolIndex;
-            const orderedPicks = [...pool.picks].sort((a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber);
-            const thisCardPick = orderedPicks.find((p) => p.oracle_id === card.oracle_id);
-            const pickLabel = thisCardPick ? `P${thisCardPick.packNumber + 1}P${thisCardPick.pickNumber}` : '';
-            return (
-              <div key={pool.poolIndex} className="rounded-lg border border-border/80 overflow-hidden bg-bg shadow-sm">
-                <button type="button" className="w-full flex items-center justify-between gap-3 px-3 py-3 bg-bg-accent/60 hover:bg-bg-active text-left border-b border-border/70" onClick={() => setExpandedPool(isExpanded ? null : pool.poolIndex)}>
-                  <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap min-w-0">
-                    <Text sm semibold>Draft {pool.draftIndex + 1} · Seat {pool.seatIndex + 1}</Text>
-                    <span className="text-[11px] bg-bg text-text-secondary rounded px-1.5 py-0.5 border border-border/80">{pool.archetype}</span>
-                    {pickLabel && <span className="text-[11px] bg-link/15 text-link rounded px-1.5 py-0.5 font-semibold border border-link/20">{card.name} @ {pickLabel}</span>}
-                  </Flexbox>
-                  <Text xs className="text-text-secondary flex-shrink-0">{isExpanded ? '▲' : '▼'} {pool.picks.length} picks</Text>
-                </button>
-                {isExpanded && <PoolExpansionContent pool={pool} mode={viewMode} deck={deckBuilds?.[pool.poolIndex] ?? null} cardMeta={cardMeta} highlightOracle={card.oracle_id} />}
-              </div>
-            );
-          })}</Flexbox>
+          <Flexbox direction="col" gap="4">
+            {pagedPools.map((pool) => {
+              const isExpanded = expandedPool === pool.poolIndex;
+              const orderedPicks = [...pool.picks].sort((a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber);
+              const thisCardPick = orderedPicks.find((p) => p.oracle_id === card.oracle_id);
+              const pickLabel = thisCardPick ? `P${thisCardPick.packNumber + 1}P${thisCardPick.pickNumber}` : '';
+              return (
+                <div key={pool.poolIndex} className="rounded-lg border border-border/80 overflow-hidden bg-bg shadow-sm">
+                  <button type="button" className="w-full flex items-center justify-between gap-3 px-3 py-3 bg-bg-accent/60 hover:bg-bg-active text-left border-b border-border/70" onClick={() => setExpandedPool(isExpanded ? null : pool.poolIndex)}>
+                    <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap min-w-0">
+                      <Text sm semibold>Draft {pool.draftIndex + 1} · Seat {pool.seatIndex + 1}</Text>
+                      <span className="text-[11px] bg-bg text-text-secondary rounded px-1.5 py-0.5 border border-border/80">{pool.archetype}</span>
+                      {pickLabel && <span className="text-[11px] bg-link/15 text-link rounded px-1.5 py-0.5 font-semibold border border-link/20">{card.name} @ {pickLabel}</span>}
+                    </Flexbox>
+                    <Text xs className="text-text-secondary flex-shrink-0">{isExpanded ? '▲' : '▼'} {pool.picks.length} picks</Text>
+                  </button>
+                  {isExpanded && <PoolExpansionContent pool={pool} mode={viewMode} deck={deckBuilds?.[pool.poolIndex] ?? null} cardMeta={cardMeta} highlightOracle={card.oracle_id} />}
+                </div>
+              );
+            })}
+            {totalPoolPages > 1 && (
+              <Flexbox direction="row" justify="between" alignItems="center" className="pt-1">
+                <Text xs className="text-text-secondary">Page {poolPage} / {totalPoolPages} · {visiblePools.length} pools</Text>
+                <Flexbox direction="row" gap="2">
+                  <button type="button" onClick={() => setPoolPage((p) => Math.max(1, p - 1))} disabled={poolPage === 1} className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                  <button type="button" onClick={() => setPoolPage((p) => Math.min(totalPoolPages, p + 1))} disabled={poolPage === totalPoolPages} className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                </Flexbox>
+              </Flexbox>
+            )}
+          </Flexbox>
         )}
       </CardBody>
     </Card>
@@ -1524,6 +1399,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const poolViewRef = useRef<HTMLDivElement>(null);
   const detailedViewRef = useRef<HTMLDivElement>(null);
   const cardStatsRef = useRef<HTMLDivElement>(null);
+  const simAbortRef = useRef<AbortController | null>(null);
 
   // Section collapse state (default collapsed)
   const [archetypesOpen, setArchetypesOpen] = useState(true);
@@ -1572,6 +1448,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     }
   }, [csrfFetch, cubeId]);
 
+  const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
+
   // Load run history on mount
   useEffect(() => {
     fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`)
@@ -1584,10 +1462,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
             setCurrentRunSetup(data.latestRunData.setupData ?? null);
             setSelectedTs(data.runs?.[0]?.ts ?? null);
           }
+        } else {
+          setHistoryLoadError(data.message ?? 'Failed to load simulation history');
         }
       })
       .catch((err) => {
-        console.error('Failed to load simulation history:', err);
+        setHistoryLoadError(err instanceof Error ? err.message : 'Failed to load simulation history');
       });
   }, [cubeId]);
 
@@ -1643,14 +1523,26 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     }
   }, [csrfFetch, cubeId, selectedTs]);
 
+  const handleCancel = useCallback(() => {
+    simAbortRef.current?.abort();
+    simAbortRef.current = null;
+    setStatus('idle');
+    setSimulating(false);
+    setDeckBuildsLoading(false);
+    setSimProgress(0);
+    setErrorMsg(null);
+  }, []);
+
   const handleStart = useCallback(async () => {
+    const controller = new AbortController();
+    simAbortRef.current = controller;
     setStatus('running'); setSimulating(true); setSimProgress(0); setErrorMsg(null); setSelectedCardOracle(null); setSelectedArchetype(null); setSelectedSkeletonId(null);
     try {
       const setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numDrafts, numSeats }) });
       const setupData = await setupRes.json();
       if (!setupData.success) { setStatus('failed'); setErrorMsg(setupData.message ?? 'Failed to set up simulation'); setSimulating(false); if (setupData.hoursRemaining) setRuns((r) => r); return; }
 
-      const report = await runClientSimulation(setupData as SimulationSetupResponse, numDrafts, deadCardThresholdPct / 100, setSimProgress);
+      const report = await runClientSimulation(setupData as SimulationSetupResponse, numDrafts, deadCardThresholdPct / 100, setSimProgress, controller.signal);
       setCurrentRunSetup(setupData as SimulationSetupResponse);
       setSimulating(false);
 
@@ -1667,7 +1559,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       // Assemble run data and save to S3; merge basic land metadata into cardMeta
       const { simulatedPools: _derived, ...runDataBase } = report;
       const mergedCardMeta = { ...runDataBase.cardMeta, ...deckResult.basicCardMeta };
-      const runData = { ...runDataBase, cardMeta: mergedCardMeta, deckBuilds: deckResult.decks, setupData: report.setupData, randomTrashByPool: report.randomTrashByPool };
+      const runData = { ...runDataBase, cardMeta: mergedCardMeta, deckBuilds: deckResult.decks, setupData: report.setupData };
       const saveRes = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(runData) });
       const saveJson = await saveRes.json();
       if (!saveJson.success) {
@@ -1679,12 +1571,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       setStatus('completed');
       setDisplayRunData(runData);
       setSelectedTs(saveJson.ts ?? null);
+      simAbortRef.current = null;
 
       fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`)
         .then((r) => r.json())
         .then((data) => { if (data.success) setRuns(data.runs ?? []); })
         .catch((err) => { console.error('Failed to refresh run history:', err); });
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return; // user cancelled — state already reset by handleCancel
       setSimulating(false);
       setDeckBuildsLoading(false);
       setStatus('failed');
@@ -1695,8 +1589,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const COOLDOWN_MS = 24 * 60 * 60 * 1000;
   const isRunning = status === 'running';
   const lastRunTs = runs[0]?.ts ?? null;
-  const cooldownActive = !!lastRunTs && (Date.now() - lastRunTs) < COOLDOWN_MS;
-  const hoursUntilNext = lastRunTs ? Math.ceil((COOLDOWN_MS - (Date.now() - lastRunTs)) / 3600000) : 0;
+
+  // Tick every minute so the cooldown display stays current without a page reload
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!lastRunTs) return;
+    const interval = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(interval);
+  }, [lastRunTs]);
+
+  const cooldownRemaining = lastRunTs ? Math.max(0, COOLDOWN_MS - (Date.now() - lastRunTs)) : 0;
+  const cooldownActive = cooldownRemaining > 0;
+  const hoursUntilNext = Math.ceil(cooldownRemaining / 3600000);
 
   const activeDecks = displayRunData?.deckBuilds ?? null;
   const displayedPools = useMemo(() => {
@@ -1922,11 +1826,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                   <Row className="gap-4 flex-wrap items-end">
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><NumericInput min={1} max={50} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} /></Col>
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Seats</label><NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} /></Col>
-                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Dead Card Threshold</label><NumericInput min={1} max={100} value={deadCardThresholdPct} onChange={setDeadCardThresholdPct} disabled={isRunning} /></Col>
-                    <Col xs={12} sm={12} md={2}>
+                    <Col xs={12} sm={4} md={2}>
+                      <label className="block text-sm font-medium mb-1">Dead Card Threshold</label>
+                      <NumericInput min={1} max={100} value={deadCardThresholdPct} onChange={setDeadCardThresholdPct} disabled={isRunning} />
+                      <div className="mt-1"><Text xs className="text-text-secondary">Cards picked less than {deadCardThresholdPct}% of the time</Text></div>
+                    </Col>
+                    <Col xs={12} sm={12} md={2} className="flex flex-col gap-1">
                       <button onClick={handleStart} disabled={isRunning || cooldownActive} className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium">
                         {isRunning ? 'Simulating…' : cooldownActive ? `Available in ${hoursUntilNext}h` : 'Run Simulation'}
                       </button>
+                      {isRunning && (
+                        <button type="button" onClick={handleCancel} className="w-full px-4 py-1.5 rounded border border-border text-sm text-text-secondary hover:bg-bg-active">
+                          Cancel
+                        </button>
+                      )}
                     </Col>
                   </Row>
                 )}
@@ -1959,6 +1872,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
             {/* Error */}
             {status === 'failed' && errorMsg && <Card className="border-red-700"><CardBody><Text sm className="text-red-400">Error: {errorMsg}</Text></CardBody></Card>}
             {loadRunError && <Card className="border-red-700"><CardBody><Text sm className="text-red-400">Failed to load run: {loadRunError}</Text></CardBody></Card>}
+            {historyLoadError && <Card className="border-red-700"><CardBody><Text sm className="text-red-400">Failed to load simulation history: {historyLoadError}</Text></CardBody></Card>}
 
             {/* Results */}
             {displayRunData && (
@@ -2225,7 +2139,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         <table className="min-w-full divide-y divide-border text-sm">
                           <thead className="bg-bg-accent">
                             <tr>
-                              {['Date', 'Drafts', ''].map((h) => (
+                              {['Date', 'Drafts', 'Dead Cards', ''].map((h) => (
                                 <th key={h} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider">{h}</th>
                               ))}
                             </tr>
@@ -2242,6 +2156,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                               >
                             <td className="px-3 py-2">{new Date(run.generatedAt).toLocaleString()}</td>
                             <td className="px-3 py-2 text-text-secondary">{run.numDrafts} × {run.numSeats} seats</td>
+                            <td className="px-3 py-2 text-text-secondary">{run.deadCardCount > 0 ? <span className="text-red-400">{run.deadCardCount}</span> : '—'}</td>
                             <td className="px-3 py-2 text-right">
                               <button
                                 type="button"
