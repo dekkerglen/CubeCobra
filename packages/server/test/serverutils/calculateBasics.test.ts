@@ -4,7 +4,7 @@ const makeSpell = (color_identity: string[]) => ({
   type: 'Creature',
   color_identity,
   produced_mana: [],
-  parsed_cost: color_identity.map((c: string) => c.toLowerCase()),
+  parsed_cost: color_identity.map((c) => c.toLowerCase()),
 });
 
 const makeBasic = (color: string) => ({
@@ -15,6 +15,34 @@ const makeBasic = (color: string) => ({
 });
 
 describe('calculateBasics', () => {
+  it('returns empty when no land basics provided (only non-land cards in basics)', () => {
+    const spells = Array(10).fill(null).map(() => makeSpell(['U']));
+    const nonLandBasic = { type: 'Instant', color_identity: ['U'], produced_mana: ['U'], oracle_id: 'oracle-U' };
+    expect(calculateBasics(spells, [nonLandBasic], 20)).toHaveLength(0);
+  });
+
+  it('skews heavily toward blue for a 10U / 1R split', () => {
+    const spells = [
+      ...Array(10).fill(null).map(() => makeSpell(['U'])),
+      makeSpell(['R']),
+    ];
+    const basics = [makeBasic('U'), makeBasic('R')];
+    const result = calculateBasics(spells, basics, 20); // 11 spells → 9 basics needed
+    const counts: Record<string, number> = { U: 0, R: 0 };
+    for (const card of result) {
+      const key = card.oracle_id.replace('oracle-', '');
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    expect(counts['U']).toBeGreaterThan(counts['R']!);
+  });
+
+  it('handles a colorless/all-land deck without crashing', () => {
+    const spells = Array(5).fill(null).map(() => makeSpell([]));
+    const basics = [makeBasic('W'), makeBasic('U')];
+    // No colored demand — should not crash; result length may be 0 or any split
+    expect(() => calculateBasics(spells, basics, 10)).not.toThrow();
+  });
+
   it('produces an even split for an equal thirds U/B/R deck', () => {
     // 9 spells: 3 blue, 3 black, 3 red
     const spells = [

@@ -16,7 +16,7 @@ const SetupSchema = Joi.object({
   numSeats: Joi.number().integer().min(2).max(16).default(8),
 });
 
-const handler = async (req: Request, res: Response) => {
+export const simulatesetupHandler = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Must be logged in' });
@@ -114,15 +114,13 @@ const handler = async (req: Request, res: Response) => {
     }
 
     const response: SimulationSetupResponse = {
+      cubeId: cube.id,
       initialPacks,
       packSteps: packSteps ?? [],
       cardMeta,
       cubeName: cube.name,
       numSeats,
     };
-
-    // Stamp the run time once setup succeeded so the cooldown starts from here.
-    await cubeDao.update({ ...cube, lastDraftSimulation: Date.now() }, { skipTimestampUpdate: true });
 
     return res.status(200).json({ success: true, ...response });
   } catch (err) {
@@ -135,6 +133,6 @@ export const routes = [
   {
     method: 'post',
     path: '/:id',
-    handler: [handler],
+    handler: [simulatesetupHandler],
   },
 ];
