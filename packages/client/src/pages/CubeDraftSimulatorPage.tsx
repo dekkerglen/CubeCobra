@@ -5425,6 +5425,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     () => displayedPools.filter((p) => !activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex)),
     [displayedPools, activeFilterPoolIndexSet],
   );
+  const visiblePoolCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const cardStat of visibleCardStats) counts.set(cardStat.oracle_id, cardStat.poolIndices.length);
+    return counts;
+  }, [visibleCardStats]);
+  const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
 
   const activeFilterChips = useMemo(() => {
     const chips: string[] = [];

@@ -45,9 +45,12 @@ const saveHandler = async (req: Request, res: Response) => {
     await putObject(bucket, runKey(cube.id, ts), runData);
 
     const existingIndex: SimulationRunEntry[] = (await getObject(bucket, indexKey(cube.id))) ?? [];
+    // Always use the server-generated timestamp — don't trust the client's generatedAt
+    runData.generatedAt = new Date(ts).toISOString();
+
     const entry: SimulationRunEntry = {
       ts,
-      generatedAt: runData.generatedAt ?? new Date().toISOString(),
+      generatedAt: runData.generatedAt,
       numDrafts: runData.numDrafts,
       numSeats: runData.numSeats,
       deadCardCount: Array.isArray(runData.deadCards) ? runData.deadCards.length : 0,

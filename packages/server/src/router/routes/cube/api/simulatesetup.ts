@@ -167,8 +167,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       basics,
     };
 
-    // TODO: re-enable cooldown before production
-    // Only stamp the run time once setup succeeded.
+    // Stamp the run time once setup succeeded so the cooldown starts from here.
     await cubeDao.update({ ...cube, lastDraftSimulation: Date.now() }, { skipTimestampUpdate: true });
 
     return res.status(200).json({ success: true, ...response });
