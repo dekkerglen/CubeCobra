@@ -4480,6 +4480,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [modelLoadProgress, setModelLoadProgress] = useState(0);
   const [simProgress, setSimProgress] = useState(0); // 0–100
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const simTokenRef = useRef<string | null>(null); // HMAC token from setup; passed to per-pick calls
 
   // Run history & display
   const [runs, setRuns] = useState<SimulationRunEntry[]>([]);
@@ -4580,8 +4581,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
               producedMana: basic.producedMana,
             };
           }
-        } else {
-          setHistoryLoadError(data.message ?? 'Failed to load simulation history');
         }
         return { decks, basicCardMeta };
       } catch (err) {
@@ -4795,7 +4794,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const handleCancel = useCallback(() => {
     simAbortRef.current?.abort();
     simAbortRef.current = null;
+    simTokenRef.current = null;
     setStatus('idle');
+    setSimPhase(null);
     setSimulating(false);
     setDeckBuildsLoading(false);
     setSimProgress(0);
@@ -5895,6 +5896,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   </Text>
                 </CardBody>
               </Card>
+            )}
+
+            {/* Save success */}
+            {status === 'completed' && !isRunning && (
+              <Card className="border-green-700"><CardBody>
+                <Text sm className="text-green-400">Simulation complete — results saved and displayed below.</Text>
+              </CardBody></Card>
             )}
 
             {/* Error */}
