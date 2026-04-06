@@ -6,6 +6,7 @@ import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { Request, Response } from '../../../../types/express';
 
 const MAX_HISTORY = 5;
+const DELETE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 const indexKey = (cubeId: string) => `cube/${cubeId}/draftsimulator/index.json`;
 const runKey = (cubeId: string, ts: number) => `cube/${cubeId}/draftsimulator/${ts}.json`;
@@ -156,6 +157,10 @@ const deleteRunHandler = async (req: Request, res: Response) => {
     }
     if (!isCubeEditable(cube, req.user)) {
       return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can delete simulation results' });
+    }
+
+    if (Date.now() - ts < DELETE_COOLDOWN_MS) {
+      return res.status(403).json({ success: false, message: 'Cannot delete a run from the last 24 hours' });
     }
 
     const bucket = getBucketName();

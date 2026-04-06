@@ -1919,7 +1919,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                 {lastRunTs && <div className="mb-3"><Text xs className="text-text-secondary">Last run: {new Date(lastRunTs).toLocaleString()}{cooldownActive && ` — next run available in ${hoursUntilNext}h`}</Text></div>}
                 {canRun && (
                   <Row className="gap-4 flex-wrap items-end">
-                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><NumericInput min={1} max={100} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} /></Col>
+                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><NumericInput min={1} max={50} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} /></Col>
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Seats</label><NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} /></Col>
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Dead Card Threshold (%)</label><NumericInput min={1} max={100} value={deadCardThresholdPct} onChange={setDeadCardThresholdPct} disabled={isRunning} /></Col>
                     <Col xs={12} sm={12} md={2}>
@@ -2244,7 +2244,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                             <td className="px-3 py-2 text-right">
                               <button
                                 type="button"
-                                className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                                disabled={Date.now() - run.ts < COOLDOWN_MS}
+                                title={Date.now() - run.ts < COOLDOWN_MS ? 'Cannot delete a run from the last 24 hours' : undefined}
+                                className="px-2 py-0.5 rounded text-xs font-medium border bg-bg border-border disabled:opacity-40 disabled:cursor-not-allowed text-text-secondary hover:bg-bg-active disabled:hover:bg-bg"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setRunPendingDelete(run);
