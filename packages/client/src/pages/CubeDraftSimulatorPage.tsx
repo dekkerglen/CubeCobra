@@ -4492,7 +4492,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
           {skeleton.poolCount} seats ({((skeleton.poolCount / totalPools) * 100).toFixed(1)}% of {totalPools})
         </span>
         {skeleton.lockPairs.length > 0 && (
-          <span className="text-xs bg-yellow-900/40 text-yellow-300 border border-yellow-700 rounded px-2 py-0.5">
+          <span className="text-xs bg-yellow-500/15 text-text border border-yellow-500/60 rounded px-2 py-0.5">
             <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-yellow-500 text-black font-bold mr-1" style={{ fontSize: 9 }}>!</span>
             {skeleton.lockPairs.length} lock pair{skeleton.lockPairs.length > 1 ? 's' : ''}
           </span>
