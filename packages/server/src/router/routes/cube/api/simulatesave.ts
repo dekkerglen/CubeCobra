@@ -12,7 +12,7 @@ const indexKey = (cubeId: string) => `cube/${cubeId}/draftsimulator/index.json`;
 const runKey = (cubeId: string, ts: number) => `cube/${cubeId}/draftsimulator/${ts}.json`;
 
 // POST /:id — save a new run (summary + slim pools + card meta)
-const saveHandler = async (req: Request, res: Response) => {
+export const saveHandler = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Must be logged in' });
@@ -36,18 +36,23 @@ const saveHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid simulation data' });
     }
 
+    // Guard against oversized payloads — max drafts × max seats
+    const MAX_POOLS = 50 * 16;
+    if (runData.slimPools.length > MAX_POOLS) {
+      return res.status(400).json({ success: false, message: 'Simulation data too large' });
+    }
+
     // Override server-controlled fields — don't trust client
     runData.cubeId = cube.id;
     runData.cubeName = cube.name;
 
     const ts = Date.now();
+    runData.generatedAt = new Date(ts).toISOString();
     const bucket = getBucketName();
 
     await putObject(bucket, runKey(cube.id, ts), runData);
 
     const existingIndex: SimulationRunEntry[] = (await getObject(bucket, indexKey(cube.id))) ?? [];
-    // Always use the server-generated timestamp — don't trust the client's generatedAt
-    runData.generatedAt = new Date(ts).toISOString();
 
     const entry: SimulationRunEntry = {
       ts,
@@ -58,9 +63,12 @@ const saveHandler = async (req: Request, res: Response) => {
       convergenceScore: runData.convergenceScore ?? 0,
     };
     const updatedIndex = [entry, ...existingIndex].slice(0, MAX_HISTORY);
-    const droppedEntries = existingIndex.slice(MAX_HISTORY - 1); // entries trimmed by the new addition
+    // existingIndex doesn't yet include the new entry, so slice at MAX_HISTORY-1 to find
+    // entries that fall off the end after inserting the new one
+    const droppedEntries = existingIndex.slice(MAX_HISTORY - 1);
 
     await putObject(bucket, indexKey(cube.id), updatedIndex);
+    await cubeDao.update({ ...cube, lastDraftSimulation: ts }, { skipTimestampUpdate: true });
 
     // Best-effort cleanup of orphaned run files — don't block the response on this
     for (const dropped of droppedEntries) {
@@ -75,7 +83,7 @@ const saveHandler = async (req: Request, res: Response) => {
 };
 
 // GET /:id — load run history index + full data for the latest run
-const getIndexHandler = async (req: Request, res: Response) => {
+export const getIndexHandler = async (req: Request, res: Response) => {
   try {
     const cubeId = req.params.id;
     if (!cubeId) {
@@ -103,7 +111,7 @@ const getIndexHandler = async (req: Request, res: Response) => {
 };
 
 // GET /:id/:ts — load a specific historical run by its Unix-ms timestamp
-const getRunHandler = async (req: Request, res: Response) => {
+export const getRunHandler = async (req: Request, res: Response) => {
   try {
     const cubeId = req.params.id;
     const ts = parseInt(req.params.ts ?? '', 10);
@@ -135,7 +143,7 @@ const getRunHandler = async (req: Request, res: Response) => {
 };
 
 // DELETE /:id/:ts — delete a specific historical run by its Unix-ms timestamp
-const deleteRunHandler = async (req: Request, res: Response) => {
+export const deleteRunHandler = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Must be logged in' });
