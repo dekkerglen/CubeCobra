@@ -1,13 +1,13 @@
 import { calculateBasics } from 'serverutils/draftbots';
 
-const makeSpell = (color_identity) => ({
+const makeSpell = (color_identity: string[]) => ({
   type: 'Creature',
   color_identity,
   produced_mana: [],
-  parsed_cost: color_identity.map((c) => c.toLowerCase()),
+  parsed_cost: color_identity.map((c: string) => c.toLowerCase()),
 });
 
-const makeBasic = (color) => ({
+const makeBasic = (color: string) => ({
   type: 'Basic Land',
   color_identity: [color],
   produced_mana: [color],
@@ -30,9 +30,10 @@ describe('calculateBasics', () => {
 
     expect(result).toHaveLength(11);
 
-    const counts = { U: 0, B: 0, R: 0 };
+    const counts: Record<string, number> = { U: 0, B: 0, R: 0 };
     for (const card of result) {
-      counts[card.oracle_id.replace('oracle-', '')]++;
+      const key = card.oracle_id.replace('oracle-', '');
+      counts[key] = (counts[key] ?? 0) + 1;
     }
 
     console.log('Basic counts:', counts);

@@ -292,7 +292,12 @@ export const batchDeckbuild = async (
   });
 
   // Phase 1: Batch deckbuild model to seed first 10 cards per seat
-  const allBuildResults = await batchBuild(allPoolMlOracles);
+  let allBuildResults: Awaited<ReturnType<typeof batchBuild>>;
+  try {
+    allBuildResults = await batchBuild(allPoolMlOracles);
+  } catch (err) {
+    throw new Error(`Batch deckbuild (phase 1) failed: ${err instanceof Error ? err.message : err}`);
+  }
 
   for (let s = 0; s < seats.length; s++) {
     const seat = seats[s]!;
@@ -362,7 +367,12 @@ export const batchDeckbuild = async (
 
     if (batchInputs.length === 0) break;
 
-    const batchResults = await batchDraft(batchInputs);
+    let batchResults: Awaited<ReturnType<typeof batchDraft>>;
+    try {
+      batchResults = await batchDraft(batchInputs);
+    } catch (err) {
+      throw new Error(`Batch deckbuild (phase 2) failed: ${err instanceof Error ? err.message : err}`);
+    }
 
     for (let i = 0; i < activeIndices.length; i++) {
       const s = activeIndices[i]!;

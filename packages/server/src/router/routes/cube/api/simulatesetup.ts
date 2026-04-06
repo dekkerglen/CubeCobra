@@ -9,6 +9,7 @@ import { Request, Response } from '../../../../types/express';
 
 
 const MAX_DRAFTS = 100;
+const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 const SetupSchema = Joi.object({
   numDrafts: Joi.number().integer().min(1).max(MAX_DRAFTS).default(50),
@@ -33,6 +34,12 @@ const handler = async (req: Request, res: Response) => {
 
     if (!isCubeEditable(cube, req.user)) {
       return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can run the draft simulator' });
+    }
+
+    if (cube.lastDraftSimulation && Date.now() - cube.lastDraftSimulation < COOLDOWN_MS) {
+      const msRemaining = COOLDOWN_MS - (Date.now() - cube.lastDraftSimulation);
+      const hoursRemaining = Math.ceil(msRemaining / 3600000);
+      return res.status(429).json({ success: false, message: `Simulation cooldown active — next run available in ${hoursRemaining}h`, hoursRemaining });
     }
 
     const { error, value } = SetupSchema.validate(req.body);
@@ -114,8 +121,7 @@ const handler = async (req: Request, res: Response) => {
       numSeats,
     };
 
-    // TODO: re-enable cooldown before production
-    // Only stamp the run time once setup succeeded.
+    // Stamp the run time once setup succeeded so the cooldown starts from here.
     await cubeDao.update({ ...cube, lastDraftSimulation: Date.now() }, { skipTimestampUpdate: true });
 
     return res.status(200).json({ success: true, ...response });

@@ -435,6 +435,7 @@ async function runClientSimulation(
           for (let d = 0; d < numDrafts; d++) for (let s = 0; s < numSeats; s++) {
             const oracle = picks[idx++] ?? '';
             const pack = allCurrentPacks[d]![s]!;
+            if (pack.length === 0) continue; // empty pack — skip without recording a pick
             const removeIdx = pack.indexOf(oracle);
             if (removeIdx >= 0) pack.splice(removeIdx, 1);
             allPools[d]![s]!.push(oracle);
@@ -931,7 +932,7 @@ const ArchetypeChart: React.FC<{
 
 type SortKey = keyof CardStats | 'deckInclusion';
 type DeckLocationFilter = 'all' | 'deck' | 'sideboard';
-const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: number; onSelectCard: (id: string) => void; selectedCardOracle: string | null; inDeckOracles: Set<string> | null; inSideboardOracles: Set<string> | null; deckInclusionPct: Map<string, number>; onPageChange?: () => void }> = ({ cardStats, deadCardThreshold, onSelectCard, selectedCardOracle, inDeckOracles, inSideboardOracles, deckInclusionPct, onPageChange }) => {
+const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: number; onSelectCard: (id: string) => void; selectedCardOracle: string | null; inDeckOracles: Set<string> | null; inSideboardOracles: Set<string> | null; deckInclusionPct: Map<string, number>; visiblePoolCounts: Map<string, number>; onPageChange?: () => void }> = ({ cardStats, deadCardThreshold, onSelectCard, selectedCardOracle, inDeckOracles, inSideboardOracles, deckInclusionPct, visiblePoolCounts, onPageChange }) => {
   const PAGE_SIZE = 25;
   const defaultSortDir = (key: SortKey): 'asc' | 'desc' => (key === 'name' || key === 'avgPickPosition' ? 'asc' : 'desc');
   const [sortKey, setSortKey] = useState<SortKey>('avgPickPosition');
@@ -1011,7 +1012,7 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
       <div className="overflow-x-auto rounded border border-border bg-bg">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-bg-accent"><tr><SH label="Card" col="name" /><SH label="Elo" col="elo" /><SH label="Seen" col="timesSeen" /><SH label="Picked" col="timesPicked" /><SH label="Pick Rate" col="pickRate" /><SH label="Avg Position" col="avgPickPosition" /><SH label="Wheels" col="wheelCount" tooltip="Times this card was drafted after the pack went all the way around the table (position > seats)" /><SH label="P1P1" col="p1p1Count" tooltip="Times this card was taken as the very first pick of pack 1" /><SH label="Deck %" col="deckInclusion" tooltip="Of decks that drafted this card, how often it made the maindeck vs. sideboard" /><th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">View</th></tr></thead>
-          <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = c.oracle_id === selectedCardOracle; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}{isDead && <span className="ml-2 text-xs bg-red-800 text-white rounded px-1">dead</span>}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-bg text-text-secondary border-border hover:bg-bg-active', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? `Filtered (${c.poolIndices.length})` : `View Drafts (${c.poolIndices.length})`}</button></td></tr>); })}</tbody>
+          <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = c.oracle_id === selectedCardOracle; const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}{isDead && <span className="ml-2 text-xs bg-red-800 text-white rounded px-1">dead</span>}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-bg text-text-secondary border-border hover:bg-bg-active', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? `Filtered (${visiblePoolCount})` : `View Drafts (${visiblePoolCount})`}</button></td></tr>); })}</tbody>
         </table>
       </div>
       <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2 pt-1">
@@ -1646,7 +1647,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     try {
       const setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numDrafts, numSeats }) });
       const setupData = await setupRes.json();
-      if (!setupData.success) { setStatus('failed'); setErrorMsg(setupData.message ?? 'Failed to set up simulation'); setSimulating(false); return; }
+      if (!setupData.success) { setStatus('failed'); setErrorMsg(setupData.message ?? 'Failed to set up simulation'); setSimulating(false); if (setupData.hoursRemaining) setRuns((r) => r); return; }
 
       const report = await runClientSimulation(setupData as SimulationSetupResponse, numDrafts, deadCardThresholdPct / 100, setSimProgress);
       setCurrentRunSetup(setupData as SimulationSetupResponse);
@@ -1690,10 +1691,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     }
   }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, buildAllDecks]);
 
+  const COOLDOWN_MS = 24 * 60 * 60 * 1000;
   const isRunning = status === 'running';
   const lastRunTs = runs[0]?.ts ?? null;
-  const cooldownActive = false; // TODO: re-enable before production
-  const hoursUntilNext = 0;
+  const cooldownActive = !!lastRunTs && (Date.now() - lastRunTs) < COOLDOWN_MS;
+  const hoursUntilNext = lastRunTs ? Math.ceil((COOLDOWN_MS - (Date.now() - lastRunTs)) / 3600000) : 0;
 
   const activeDecks = displayRunData?.deckBuilds ?? null;
   const displayedPools = useMemo(() => {
@@ -1800,6 +1802,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     () => (selectedCardOracle ? visibleCardStats.find((c) => c.oracle_id === selectedCardOracle) ?? null : null),
     [visibleCardStats, selectedCardOracle],
   );
+  const visiblePoolCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const cardStat of visibleCardStats) counts.set(cardStat.oracle_id, cardStat.poolIndices.length);
+    return counts;
+  }, [visibleCardStats]);
+  const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
 
   const selectedPools = selectedCard
     ? (selectedCardStats?.poolIndices ?? selectedCard.poolIndices)
@@ -2116,6 +2124,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                           <button type="button" className="text-xs text-yellow-300 border border-yellow-700 rounded px-2 py-0.5 hover:bg-yellow-900/40 flex-shrink-0" onClick={clearActiveFilter}>Clear filters</button>
                         </div>
                       )}
+                      {hasApproximateFilteredStats && (
+                        <div className="rounded-lg border border-yellow-800/80 bg-yellow-900/15 px-4 py-3">
+                          <Text sm className="text-yellow-200">This saved run does not include the full setup data needed for exact scoped card stats. Matching decks and draft breakdowns are filtered correctly, but some card-stat values may still reflect the full run.</Text>
+                        </div>
+                      )}
                       {/* Cluster card preview — shown whenever a cluster is selected */}
                       {selectedSkeletonId !== null && (() => {
                         const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
@@ -2168,7 +2181,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         </CardHeader>
                         <Collapse isOpen={cardStatsOpen}>
                           <CardBody>
-                            <CardStatsTable cardStats={visibleCardStats} deadCardThreshold={displayRunData.deadCardThreshold} onSelectCard={setSelectedCardOracle} selectedCardOracle={selectedCardOracle} inDeckOracles={inDeckOracles} inSideboardOracles={inSideboardOracles} deckInclusionPct={deckInclusionPct} onPageChange={() => detailedViewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+                            <CardStatsTable cardStats={visibleCardStats} deadCardThreshold={displayRunData.deadCardThreshold} onSelectCard={setSelectedCardOracle} selectedCardOracle={selectedCardOracle} inDeckOracles={inDeckOracles} inSideboardOracles={inSideboardOracles} deckInclusionPct={deckInclusionPct} visiblePoolCounts={visiblePoolCounts} onPageChange={() => detailedViewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
                           </CardBody>
                         </Collapse>
                       </Card>
