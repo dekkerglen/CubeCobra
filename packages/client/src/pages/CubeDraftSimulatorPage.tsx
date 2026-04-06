@@ -1011,7 +1011,7 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
       </Flexbox>
       <div className="overflow-x-auto rounded border border-border bg-bg">
         <table className="min-w-full divide-y divide-border text-sm">
-          <thead className="bg-bg-accent"><tr><SH label="Card" col="name" /><SH label="Elo" col="elo" /><SH label="Seen" col="timesSeen" /><SH label="Picked" col="timesPicked" /><SH label="Pick Rate" col="pickRate" /><SH label="Avg Position" col="avgPickPosition" /><SH label="Wheels" col="wheelCount" tooltip="Times this card was drafted after the pack went all the way around the table (position > seats)" /><SH label="P1P1" col="p1p1Count" tooltip="Times this card was taken as the very first pick of pack 1" /><SH label="Deck %" col="deckInclusion" tooltip="Of decks that drafted this card, how often it made the maindeck vs. sideboard" /><th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">View</th></tr></thead>
+          <thead className="bg-bg-accent"><tr><SH label="Card" col="name" /><SH label="Elo" col="elo" /><SH label="Seen" col="timesSeen" /><SH label="Picked" col="timesPicked" /><SH label="Pick Rate" col="pickRate" /><SH label="Avg Pick" col="avgPickPosition" /><SH label="Wheels" col="wheelCount" tooltip="Times this card was drafted after the pack went all the way around the table (position > seats)" /><SH label="P1P1" col="p1p1Count" tooltip="Times this card was taken as the very first pick of pack 1" /><SH label="Deck %" col="deckInclusion" tooltip="Of decks that drafted this card, how often it made the maindeck vs. sideboard" /><th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">View</th></tr></thead>
           <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = c.oracle_id === selectedCardOracle; const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}{isDead && <span className="ml-2 text-xs bg-red-800 text-white rounded px-1">dead</span>}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-bg text-text-secondary border-border hover:bg-bg-active', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? `Filtered (${visiblePoolCount})` : `View Drafts (${visiblePoolCount})`}</button></td></tr>); })}</tbody>
         </table>
       </div>
@@ -1235,7 +1235,7 @@ const CardPoolView: React.FC<{ card: CardStats; pools: SimulatedPool[]; deckBuil
               <div key={pool.poolIndex} className="rounded-lg border border-border/80 overflow-hidden bg-bg shadow-sm">
                 <button type="button" className="w-full flex items-center justify-between gap-3 px-3 py-3 bg-bg-accent/60 hover:bg-bg-active text-left border-b border-border/70" onClick={() => setExpandedPool(isExpanded ? null : pool.poolIndex)}>
                   <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap min-w-0">
-                    <Text sm semibold>Sim {pool.draftIndex + 1} · Player {pool.seatIndex + 1}</Text>
+                    <Text sm semibold>Draft {pool.draftIndex + 1} · Seat {pool.seatIndex + 1}</Text>
                     <span className="text-[11px] bg-bg text-text-secondary rounded px-1.5 py-0.5 border border-border/80">{pool.archetype}</span>
                     {pickLabel && <span className="text-[11px] bg-link/15 text-link rounded px-1.5 py-0.5 font-semibold border border-link/20">{card.name} @ {pickLabel}</span>}
                   </Flexbox>
@@ -1280,7 +1280,7 @@ const ArchetypePoolList: React.FC<{ archetype: string; title?: string; pools: Si
               <div key={pool.poolIndex} className="rounded-lg border border-border/80 overflow-hidden bg-bg shadow-sm">
                 <button type="button" className="w-full flex items-center justify-between gap-3 px-3 py-2.5 bg-bg-accent/60 hover:bg-bg-active text-left border-b border-border/70" onClick={() => setExpandedPool(isExpanded ? null : pool.poolIndex)}>
                   <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap min-w-0">
-                    <Text sm semibold>Sim {pool.draftIndex + 1} · Player {pool.seatIndex + 1}</Text>
+                    <Text sm semibold>Draft {pool.draftIndex + 1} · Seat {pool.seatIndex + 1}</Text>
                     <span className="text-[11px] bg-bg text-text-secondary rounded px-1.5 py-0.5 border border-border/80">{pool.archetype}</span>
                   </Flexbox>
                   <Text xs className="text-text-secondary flex-shrink-0">{isExpanded ? '▲' : '▼'} {pool.picks.length} picks</Text>
@@ -1307,7 +1307,7 @@ const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) =>
   const DR: React.FC<{ row: typeof rows[0] }> = ({ row }) => <tr className="hover:bg-bg-active"><td className="px-3 py-2 font-medium">{row.name}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{row.elo}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">#{row.eloRank}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">#{row.draftRank}</td><td className="px-3 py-2 text-right tabular-nums"><span className={row.delta > 0 ? 'text-green-400 font-medium' : row.delta < 0 ? 'text-red-400 font-medium' : ''}>{row.delta > 0 ? `+${row.delta}` : row.delta}</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{row.avgPickPosition.toFixed(1)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{(row.pickRate * 100).toFixed(1)}%</td></tr>;
   return (
     <Row className="gap-4">
-      {[{ title: 'Context Overperformers (Top 20)', sub: 'Picked higher than Elo suggests — cards that outperform their rating in this cube', data: gainers }, { title: 'Context Underperformers (Top 20)', sub: 'High Elo but drafted lower — situational or power level mismatch', data: losers }].map(({ title, sub, data }) => (
+      {[{ title: 'Overperformers', sub: 'Picked higher than Elo suggests — stronger in this cube than their global rating implies', data: gainers }, { title: 'Underperformers', sub: 'High Elo but drafted later — may be situational or a poor fit for this cube', data: losers }].map(({ title, sub, data }) => (
         <Col key={title} xs={12} md={6}><Card className="h-full"><CardHeader><div><div><Text semibold>{title}</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">{sub}</Text></div></div></CardHeader><CardBody><div className="overflow-x-auto rounded border border-border bg-bg"><table className="min-w-full divide-y divide-border text-sm"><TH /><tbody className="divide-y divide-border">{data.map((row) => <DR key={row.oracle_id} row={row} />)}</tbody></table></div></CardBody></Card></Col>
       ))}
     </Row>
@@ -1417,7 +1417,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
         )}
         {skeleton.lockPairs.length > 0 && (
           <div className="pt-1">
-            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2">Lock pairs</Text>
+            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2">Lock Pairs</Text>
             <Flexbox direction="col" gap="1">
               {skeleton.lockPairs.map((pair) => (
                 <div key={`${pair.oracle_id_a}-${pair.oracle_id_b}`} className="flex items-center gap-2 text-sm">
@@ -1444,7 +1444,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
               <Text semibold>Archetypes</Text>
               {!isOpen && <span className="text-xs text-text-secondary font-normal">{skeletons.length} clusters</span>}
             </Flexbox>
-            <Text xs className="text-text-secondary mt-0.5">Decks clustered by card-overlap similarity</Text>
+            <Text xs className="text-text-secondary mt-0.5">Grouped by shared cards</Text>
           </button>
           <div className="flex flex-row items-center gap-2 flex-shrink-0">
             {isOpen && (
@@ -1880,7 +1880,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     const matchingPools = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
     if (selectedCard) return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
     if (selectedSkeletonId !== null || selectedArchetype) return `${matchingPools} matching draft pool${matchingPools !== 1 ? 's' : ''}`;
-    return 'Choose a color profile, cluster, or card filter to narrow the detailed view.';
+    return 'Select a color profile, archetype cluster, or card above to narrow the view.';
   }, [activeFilterPoolIndexSet, displayRunData, selectedCard, selectedPools.length, selectedSkeletonId, selectedArchetype]);
 
   const clearActiveFilter = useCallback(() => {
@@ -1921,7 +1921,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                   <Row className="gap-4 flex-wrap items-end">
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><NumericInput min={1} max={50} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} /></Col>
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Seats</label><NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} /></Col>
-                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Dead Card Threshold (%)</label><NumericInput min={1} max={100} value={deadCardThresholdPct} onChange={setDeadCardThresholdPct} disabled={isRunning} /></Col>
+                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Dead Card Threshold</label><NumericInput min={1} max={100} value={deadCardThresholdPct} onChange={setDeadCardThresholdPct} disabled={isRunning} /></Col>
                     <Col xs={12} sm={12} md={2}>
                       <button onClick={handleStart} disabled={isRunning || cooldownActive} className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium">
                         {isRunning ? 'Simulating…' : cooldownActive ? `Available in ${hoursUntilNext}h` : 'Run Simulation'}
@@ -1994,7 +1994,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                           />
                         );
                       })()}
-                      <SummaryCard label="Cards Tracked" value={displayRunData.cardStats.length} sub="distinct oracle IDs seen" />
+                      <SummaryCard label="Cards Tracked" value={displayRunData.cardStats.length} sub="unique cards seen across all packs" />
                     </Flexbox>
                   </Flexbox>
                 </div>
@@ -2050,7 +2050,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                 </div>
                 <div className="simSection simSectionCards flex flex-col gap-5 pt-2">
                   <div className="simSectionHeading">
-                    <Text semibold className="tracking-wide">General Analysis</Text>
+                    <Text semibold className="tracking-wide">Card Analysis</Text>
                   </div>
                   <Flexbox direction="col" gap="4">
                     <div className="simCardDiagBlock simCardDiagSummary flex flex-col gap-4">
@@ -2126,7 +2126,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                       )}
                       {hasApproximateFilteredStats && (
                         <div className="rounded-lg border border-yellow-800/80 bg-yellow-900/15 px-4 py-3">
-                          <Text sm className="text-yellow-200">This saved run does not include the full setup data needed for exact scoped card stats. Matching decks and draft breakdowns are filtered correctly, but some card-stat values may still reflect the full run.</Text>
+                          <Text sm className="text-yellow-200">Exact card-stat filtering requires pack sequence data that wasn't stored for this run. Deck and draft breakdowns are filtered correctly; card-level stats approximate the full run.</Text>
                         </div>
                       )}
                       {/* Cluster card preview — shown whenever a cluster is selected */}
@@ -2159,7 +2159,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                       {/* Mini chart row — lighter surface than the stats table below */}
                       <Row className="gap-3">
                         <Col xs={12} md={6}><Card className="border-border/50 bg-bg-accent/30"><CardHeader><div><div><Text semibold>Deck Color Share</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Each maindeck card contributes to its colors. Multicolor cards split evenly.{activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}</Text></div></div></CardHeader><CardBody><DeckColorShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} /></CardBody></Card></Col>
-                        <Col xs={12} md={6}><Card className="border-border/50 bg-bg-accent/30"><CardHeader><div><div><Text semibold>Mana Curve Share</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Share of nonland maindeck cards by mana value.{activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}</Text></div></div></CardHeader><CardBody><ManaCurveShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} /></CardBody></Card></Col>
+                        <Col xs={12} md={6}><Card className="border-border/50 bg-bg-accent/30"><CardHeader><div><div><Text semibold>Mana Curve Share</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Nonland maindeck cards by mana value.{activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}</Text></div></div></CardHeader><CardBody><ManaCurveShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} /></CardBody></Card></Col>
                       </Row>
                       <div className="simCardDiagBlock simCardDiagTable flex flex-col gap-5">
                       <Card className="border-border">
@@ -2282,7 +2282,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
 const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
   {
-    q: 'How does drafting work?',
+    q: 'How does the simulation work?',
     answer: (
       <div className="space-y-3 text-sm text-text-secondary leading-relaxed">
         <p>
