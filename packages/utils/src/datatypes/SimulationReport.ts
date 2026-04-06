@@ -95,9 +95,9 @@ export interface SimulationSummary {
   deadCardThreshold: number; // 0.0 - 1.0
   cardStats: CardStats[];
   deadCards: CardStats[];
-  colorBalance: ColorBalance;
+  colorBalance?: ColorBalance;
   archetypeDistribution: ArchetypeEntry[];
-  p1p1Frequency: P1P1Entry[]; // top 20
+  p1p1Frequency?: P1P1Entry[]; // top 20 — computed but not currently displayed
   convergenceScore: number; // stdev of pickRates
   generatedAt: string; // ISO timestamp
 }
@@ -162,6 +162,7 @@ export interface ArchetypeSkeleton {
  * Response from POST /cube/api/simulate/setup/:id
  */
 export interface SimulationSetupResponse {
+  cubeId: string;
   // Initial pack contents per draft: [draftIndex][seatIndex][packIndex] = oracle IDs
   initialPacks: string[][][][];
   // Pack step sequence (same for all drafts, derived from format)
