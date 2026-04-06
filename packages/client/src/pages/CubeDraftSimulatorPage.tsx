@@ -1389,7 +1389,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
           {skeleton.poolCount} seats ({((skeleton.poolCount / totalPools) * 100).toFixed(1)}% of {totalPools})
         </span>
         {skeleton.lockPairs.length > 0 && (
-          <span className="text-xs bg-yellow-900/40 text-yellow-300 border border-yellow-700 rounded px-2 py-0.5">
+          <span className="text-xs bg-yellow-500/15 text-text border border-yellow-500/60 rounded px-2 py-0.5">
             <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-yellow-500 text-black font-bold mr-1" style={{ fontSize: 9 }}>!</span>
             {skeleton.lockPairs.length} lock pair{skeleton.lockPairs.length > 1 ? 's' : ''}
           </span>
@@ -1983,7 +1983,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         const spread = p90 - p10;
                         const [badgeClass, badgeLabel] =
                           spread < 0.30 ? ['bg-green-900/40 text-green-300', 'Well balanced']
-                          : spread < 0.55 ? ['bg-yellow-900/40 text-yellow-300', 'Some variance']
+                          : spread < 0.55 ? ['bg-yellow-500/15 text-text border border-yellow-500/60', 'Some variance']
                           : ['bg-red-900/40 text-red-300', 'High variance'];
                         return (
                           <SummaryCard
@@ -2119,14 +2119,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                       </div>
                       {/* Zero-intersection warning */}
                       {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
-                        <div className="rounded-lg border border-yellow-700 bg-yellow-900/20 px-4 py-3 flex items-center justify-between gap-3">
-                          <Text sm className="text-yellow-300">No draft pools match the current combination of filters.</Text>
-                          <button type="button" className="text-xs text-yellow-300 border border-yellow-700 rounded px-2 py-0.5 hover:bg-yellow-900/40 flex-shrink-0" onClick={clearActiveFilter}>Clear filters</button>
+                        <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 flex items-center justify-between gap-3">
+                          <Text sm className="text-text">No draft pools match the current combination of filters.</Text>
+                          <button type="button" className="text-xs text-text border border-yellow-500 rounded px-2 py-0.5 hover:bg-yellow-500/20 flex-shrink-0" onClick={clearActiveFilter}>Clear filters</button>
                         </div>
                       )}
                       {hasApproximateFilteredStats && (
-                        <div className="rounded-lg border border-yellow-800/80 bg-yellow-900/15 px-4 py-3">
-                          <Text sm className="text-yellow-200">Exact card-stat filtering requires pack sequence data that wasn't stored for this run. Deck and draft breakdowns are filtered correctly; card-level stats approximate the full run.</Text>
+                        <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3">
+                          <Text sm className="text-text">Exact card-stat filtering requires pack sequence data that wasn't stored for this run. Deck and draft breakdowns are filtered correctly; card-level stats approximate the full run.</Text>
                         </div>
                       )}
                       {/* Cluster card preview — shown whenever a cluster is selected */}
