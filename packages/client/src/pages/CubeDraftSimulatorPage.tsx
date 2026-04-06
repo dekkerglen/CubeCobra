@@ -710,7 +710,7 @@ function getDeckShareColors(oracle: string, cardMeta: Record<string, CardMeta>):
 
 const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({ deckBuilds, cardMeta }) => {
   if (!deckBuilds || deckBuilds.length === 0) {
-    return <Text sm className="text-text-secondary">Unavailable for this run. Sign in to load simulated deck builds.</Text>;
+    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
 
   const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS.map((key) => [key, 0]));
@@ -763,7 +763,7 @@ const MANA_CURVE_BUCKETS = [
 
 const ManaCurveShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({ deckBuilds, cardMeta }) => {
   if (!deckBuilds || deckBuilds.length === 0) {
-    return <Text sm className="text-text-secondary">Unavailable for this run. Sign in to load simulated deck builds.</Text>;
+    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
 
   const counts: Record<string, number> = Object.fromEntries(MANA_CURVE_BUCKETS.map((bucket) => [bucket.key, 0]));
