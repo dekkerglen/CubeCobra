@@ -8,7 +8,7 @@ import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { Request, Response } from '../../../../types/express';
 
 
-const MAX_DRAFTS = 100;
+const MAX_DRAFTS = 50;
 const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 const SetupSchema = Joi.object({
