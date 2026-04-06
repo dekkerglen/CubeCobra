@@ -2,10 +2,25 @@ import Card from '@utils/datatypes/Card';
 import { CardMeta, SimulationSetupResponse } from '@utils/datatypes/SimulationReport';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cubeDao } from 'dynamo/daos';
+import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { createSimToken } from 'serverutils/simToken';
 
-import { Request, Response } from '../../../../types/express';
+import { NextFunction, Request, Response } from '../../../../types/express';
+
+// 8 setup calls per 30 minutes per user — allows retries but prevents hammering
+// the CPU-expensive pack generation step.
+const setupLimiter = rateLimit({
+  windowMs: 30 * 60 * 1000,
+  max: 8,
+  keyGenerator: (req: Request) => (req as any).user?.id?.toString() ?? req.ip ?? 'anon',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response, _next: NextFunction) => {
+    res.status(429).json({ success: false, message: 'Too many simulation requests. Please wait before starting another simulation.' });
+  },
+});
 
 
 const MAX_DRAFTS = 50;
@@ -113,6 +128,8 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       }
     }
 
+    const simToken = createSimToken(req.user.id.toString(), cube.id);
+
     const response: SimulationSetupResponse = {
       cubeId: cube.id,
       initialPacks,
@@ -120,6 +137,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       cardMeta,
       cubeName: cube.name,
       numSeats,
+      simToken,
     };
 
     return res.status(200).json({ success: true, ...response });
@@ -133,6 +151,6 @@ export const routes = [
   {
     method: 'post',
     path: '/:id',
-    handler: [simulatesetupHandler],
+    handler: [setupLimiter, simulatesetupHandler],
   },
 ];
