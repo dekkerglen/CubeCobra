@@ -173,4 +173,6 @@ export interface SimulationSetupResponse {
   cubeName: string;
   // Number of seats
   numSeats: number;
+  // Short-lived HMAC token for authenticating per-pick ML calls without per-pick DB lookups
+  simToken: string;
 }
