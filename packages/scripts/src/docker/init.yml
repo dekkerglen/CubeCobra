@@ -4,3 +4,6 @@ services:
     environment:
       # Set dev so npm install will install dev dependencies
       - NODE_ENV=dev
+  recommender:
+    # During init, wait for the node container to finish installing dependencies
+    entrypoint: ['/bin/sh', '-c', 'echo "Waiting for init..." && sleep infinity']
