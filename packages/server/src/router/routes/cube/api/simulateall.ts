@@ -1,44 +1,54 @@
-import { cubeDao } from 'dynamo/daos';
-import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import rateLimit from 'express-rate-limit';
+import { verifySimToken } from 'serverutils/simToken';
 
-import { Request, Response } from '../../../../types/express';
+import { NextFunction, Request, Response } from '../../../../types/express';
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5002';
 const ML_TIMEOUT_MS = 15_000;
+
+// Max packs/pools elements per call — numDrafts × numSeats = 50 × 16
+const MAX_SEATS = 800;
+
+// 100 req/min per user — generous for one sim (45 calls) but blocks rapid multi-sim abuse
+const pickLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  keyGenerator: (req: Request) => (req as any).user?.id?.toString() ?? req.ip ?? 'anon',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response, _next: NextFunction) => {
+    res.status(429).json({ success: false, message: 'Too many simulation pick requests. Please wait before starting another simulation.' });
+  },
+});
 
 /**
  * POST /cube/api/simulateall
  *
  * Proxy for one pick round of the draft simulation.
- * Body:  { packs: string[][], pools: string[][] }
+ * Body:  { cubeId, simToken, packs: string[][], pools: string[][] }
  * Returns: { success: true, picks: string[] }
  *
- * The client drives the full simulation loop (45 rounds), calling this once per pick.
- * Each call completes in a few seconds — well within the global timeout.
- *
- * Requires authentication — the ML service is a shared resource.
+ * simToken is issued by simulatesetup and verified here with HMAC — avoids a
+ * DynamoDB lookup on every one of the ~45 pick calls per simulation.
  */
 export const simulateallHandler = async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ success: false, message: 'Must be logged in' });
   }
 
-  const cubeId = req.body?.cubeId;
+  const { cubeId, simToken, packs, pools } = req.body ?? {};
+
   if (!cubeId) {
     return res.status(400).json({ success: false, message: 'Cube ID required' });
   }
-
-  const cube = await cubeDao.getById(cubeId);
-  if (!cube || !isCubeViewable(cube, req.user)) {
-    return res.status(404).json({ success: false, message: 'Cube not found' });
+  if (!simToken || !verifySimToken(simToken, req.user.id.toString(), cubeId)) {
+    return res.status(403).json({ success: false, message: 'Invalid or expired simulation session. Please start a new simulation.' });
   }
-  if (!isCubeEditable(cube, req.user)) {
-    return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can run the draft simulator' });
-  }
-
-  const { packs, pools } = req.body ?? {};
   if (!Array.isArray(packs) || !Array.isArray(pools)) {
     return res.status(400).json({ success: false, message: 'packs and pools must be arrays' });
+  }
+  if (packs.length > MAX_SEATS || pools.length > MAX_SEATS) {
+    return res.status(400).json({ success: false, message: `Too many seats — maximum ${MAX_SEATS}` });
   }
 
   const controller = new AbortController();
@@ -69,6 +79,6 @@ export const routes = [
   {
     method: 'post',
     path: '',
-    handler: [simulateallHandler],
+    handler: [pickLimiter, simulateallHandler],
   },
 ];

@@ -32,14 +32,26 @@ export const saveHandler = async (req: Request, res: Response) => {
     }
 
     const runData: SimulationRunData = req.body;
-    if (!runData || typeof runData.numDrafts !== 'number' || !Array.isArray(runData.cardStats) || !Array.isArray(runData.slimPools)) {
+    const MAX_POOLS = 50 * 16;
+    if (
+      !runData ||
+      typeof runData.numDrafts !== 'number' ||
+      typeof runData.numSeats !== 'number' ||
+      runData.numDrafts < 1 || runData.numDrafts > 50 ||
+      runData.numSeats < 2 || runData.numSeats > 16 ||
+      !Array.isArray(runData.cardStats) ||
+      !Array.isArray(runData.slimPools)
+    ) {
       return res.status(400).json({ success: false, message: 'Invalid simulation data' });
     }
-
-    // Guard against oversized payloads — max drafts × max seats
-    const MAX_POOLS = 50 * 16;
     if (runData.slimPools.length > MAX_POOLS) {
       return res.status(400).json({ success: false, message: 'Simulation data too large' });
+    }
+    // Validate each slim pool has the expected shape
+    for (const pool of runData.slimPools) {
+      if (!Array.isArray(pool.picks) || typeof pool.draftIndex !== 'number' || typeof pool.seatIndex !== 'number') {
+        return res.status(400).json({ success: false, message: 'Invalid pool data' });
+      }
     }
 
     // Override server-controlled fields — don't trust client
@@ -97,13 +109,7 @@ export const getIndexHandler = async (req: Request, res: Response) => {
 
     const bucket = getBucketName();
     const runs: SimulationRunEntry[] = (await getObject(bucket, indexKey(cube.id))) ?? [];
-
-    if (runs.length === 0) {
-      return res.status(200).json({ success: true, runs: [], latestRunData: null });
-    }
-
-    const latestRunData = await getObject(bucket, runKey(cube.id, runs[0]!.ts));
-    return res.status(200).json({ success: true, runs, latestRunData: latestRunData ?? null });
+    return res.status(200).json({ success: true, runs });
   } catch (err) {
     req.logger.error(`Error in simulatesave GET index: ${err}`, err instanceof Error ? err.stack : '');
     return res.status(500).json({ success: false, message: 'Internal server error' });

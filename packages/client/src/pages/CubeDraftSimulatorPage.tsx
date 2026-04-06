@@ -416,7 +416,7 @@ async function runClientSimulation(
             const mlRes = await fetch('/cube/api/simulateall', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ cubeId: setup.cubeId, packs: flatPacks, pools: flatPools }),
+              body: JSON.stringify({ cubeId: setup.cubeId, simToken: setup.simToken, packs: flatPacks, pools: flatPools }),
               signal,
             });
             if (!mlRes.ok) {
@@ -1379,9 +1379,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
   // Simulation state
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
+  const [simPhase, setSimPhase] = useState<'setup' | 'sim' | 'deckbuild' | 'save' | null>(null);
   const [simulating, setSimulating] = useState(false); // true while ML call is in flight
   const [simProgress, setSimProgress] = useState(0); // 0–100
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const simTokenRef = useRef<string | null>(null); // HMAC token from setup; passed to per-pick calls
 
   // Run history & display
   const [runs, setRuns] = useState<SimulationRunEntry[]>([]);
@@ -1450,20 +1452,29 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
   const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
 
-  // Load run history on mount
+  // Load run history on mount — fetch the index first (lightweight), then the latest run data separately
   useEffect(() => {
     fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`)
       .then((r) => r.json())
-      .then((data) => {
-        if (data.success) {
-          setRuns(data.runs ?? []);
-          if (data.latestRunData) {
-            setDisplayRunData(data.latestRunData);
-            setCurrentRunSetup(data.latestRunData.setupData ?? null);
-            setSelectedTs(data.runs?.[0]?.ts ?? null);
+      .then(async (data) => {
+        if (!data.success) { setHistoryLoadError(data.message ?? 'Failed to load simulation history'); return; }
+        const runs: SimulationRunEntry[] = data.runs ?? [];
+        setRuns(runs);
+        if (runs[0]) {
+          setLoadingRun(true);
+          try {
+            const runRes = await fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${runs[0].ts}`);
+            const runJson = await runRes.json();
+            if (runJson.success && runJson.runData) {
+              setDisplayRunData(runJson.runData);
+              setCurrentRunSetup(runJson.runData.setupData ?? null);
+              setSelectedTs(runs[0].ts);
+            }
+          } catch {
+            // Non-fatal — history list still shows
+          } finally {
+            setLoadingRun(false);
           }
-        } else {
-          setHistoryLoadError(data.message ?? 'Failed to load simulation history');
         }
       })
       .catch((err) => {
@@ -1526,7 +1537,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const handleCancel = useCallback(() => {
     simAbortRef.current?.abort();
     simAbortRef.current = null;
+    simTokenRef.current = null;
     setStatus('idle');
+    setSimPhase(null);
     setSimulating(false);
     setDeckBuildsLoading(false);
     setSimProgress(0);
@@ -1536,42 +1549,45 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const handleStart = useCallback(async () => {
     const controller = new AbortController();
     simAbortRef.current = controller;
-    setStatus('running'); setSimulating(true); setSimProgress(0); setErrorMsg(null); setSelectedCardOracle(null); setSelectedArchetype(null); setSelectedSkeletonId(null);
+    setStatus('running'); setSimPhase('setup'); setSimulating(false); setSimProgress(0); setErrorMsg(null); setSelectedCardOracle(null); setSelectedArchetype(null); setSelectedSkeletonId(null);
     try {
       const setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numDrafts, numSeats }) });
       const setupData = await setupRes.json();
-      if (!setupData.success) { setStatus('failed'); setErrorMsg(setupData.message ?? 'Failed to set up simulation'); setSimulating(false); if (setupData.hoursRemaining) setRuns((r) => r); return; }
+      if (!setupData.success) { setStatus('failed'); setSimPhase(null); setErrorMsg(setupData.message ?? 'Failed to set up simulation'); if (setupData.hoursRemaining) setRuns((r) => r); return; }
 
+      simTokenRef.current = (setupData as SimulationSetupResponse).simToken ?? null;
+      setSimPhase('sim'); setSimulating(true);
       const report = await runClientSimulation(setupData as SimulationSetupResponse, numDrafts, deadCardThresholdPct / 100, setSimProgress, controller.signal);
       setCurrentRunSetup(setupData as SimulationSetupResponse);
       setSimulating(false);
 
       // Build decks for all pools before saving
-      setDeckBuildsLoading(true);
+      setSimPhase('deckbuild'); setDeckBuildsLoading(true);
       const deckResult = await buildAllDecks(report.slimPools);
       setDeckBuildsLoading(false);
       if (!deckResult) {
-        setStatus('failed');
+        setStatus('failed'); setSimPhase(null);
         setErrorMsg('Deck building failed. The simulation ran successfully but decks could not be built.');
         return;
       }
 
       // Assemble run data and save to S3; merge basic land metadata into cardMeta
+      setSimPhase('save');
       const { simulatedPools: _derived, ...runDataBase } = report;
       const mergedCardMeta = { ...runDataBase.cardMeta, ...deckResult.basicCardMeta };
       const runData = { ...runDataBase, cardMeta: mergedCardMeta, deckBuilds: deckResult.decks, setupData: report.setupData };
       const saveRes = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(runData) });
       const saveJson = await saveRes.json();
       if (!saveJson.success) {
-        setStatus('failed');
+        setStatus('failed'); setSimPhase(null);
         setErrorMsg(saveJson.message ?? 'Failed to save simulation results');
         return;
       }
 
-      setStatus('completed');
+      setStatus('completed'); setSimPhase(null);
       setDisplayRunData(runData);
       setSelectedTs(saveJson.ts ?? null);
-      simAbortRef.current = null;
+      simAbortRef.current = null; simTokenRef.current = null;
 
       fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`)
         .then((r) => r.json())
@@ -1581,7 +1597,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       if (err instanceof Error && err.name === 'AbortError') return; // user cancelled — state already reset by handleCancel
       setSimulating(false);
       setDeckBuildsLoading(false);
-      setStatus('failed');
+      setStatus('failed'); setSimPhase(null);
       setErrorMsg(err instanceof Error ? err.message : 'Simulation failed');
     }
   }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, buildAllDecks]);
@@ -1621,14 +1637,16 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       .map(([colorPair, count]) => ({ colorPair, count, percentage: count / totalPools }))
       .sort((a, b) => b.count - a.count);
   }, [displayRunData, activeDecks, simulatedPools.length, displayedPools]);
-  const skeletons = useMemo(
-    () =>
-      displayRunData && displayRunData.slimPools.length > 0
-        ? computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, clusterK, coreThreshold, activeDecks)
-        : [],
+  const [skeletons, setSkeletons] = useState<ArchetypeSkeleton[]>([]);
+  useEffect(() => {
+    if (!displayRunData || displayRunData.slimPools.length === 0) { setSkeletons([]); return; }
+    // startTransition defers the k-means computation so user interactions aren't blocked
+    React.startTransition(() => {
+      setSkeletons(computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, clusterK, coreThreshold, activeDecks));
+    });
+    // clusterSeed intentionally triggers re-cluster without being a real dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [displayRunData, clusterK, clusterSeed, coreThreshold, activeDecks],
-  );
+  }, [displayRunData, clusterK, clusterSeed, coreThreshold, activeDecks]);
 
   const selectedCard = displayRunData && selectedCardOracle ? displayRunData.cardStats.find((c) => c.oracle_id === selectedCardOracle) ?? null : null;
   const activeFilterPoolIndexSet = useMemo(() => {
@@ -1827,9 +1845,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><NumericInput min={1} max={50} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} /></Col>
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Seats</label><NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} /></Col>
                     <Col xs={12} sm={4} md={2}>
-                      <label className="block text-sm font-medium mb-1">Dead Card Threshold</label>
+                      <label className="block text-sm font-medium mb-1">Dead Card Threshold <Text xs className="text-text-secondary font-normal">(&lt;{deadCardThresholdPct}% pick rate)</Text></label>
                       <NumericInput min={1} max={100} value={deadCardThresholdPct} onChange={setDeadCardThresholdPct} disabled={isRunning} />
-                      <div className="mt-1"><Text xs className="text-text-secondary">Cards picked less than {deadCardThresholdPct}% of the time</Text></div>
                     </Col>
                     <Col xs={12} sm={12} md={2} className="flex flex-col gap-1">
                       <button onClick={handleStart} disabled={isRunning || cooldownActive} className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium">
@@ -1854,18 +1871,29 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
               <Card><CardBody>
                 <Flexbox direction="col" gap="2">
                   <Flexbox direction="row" justify="between">
-                    <Text sm>{simulating ? 'Running draft simulation…' : deckBuildsLoading ? 'Building decks…' : 'Saving results…'}</Text>
-                    {simulating && <Text sm className="text-text-secondary">{simProgress}%</Text>}
+                    <Text sm>
+                      {simPhase === 'setup' ? 'Preparing packs…'
+                       : simPhase === 'sim' ? 'Running draft simulation…'
+                       : simPhase === 'deckbuild' ? 'Building decks…'
+                       : 'Saving results…'}
+                    </Text>
+                    {simPhase === 'sim' && <Text sm className="text-text-secondary">{simProgress}%</Text>}
                   </Flexbox>
                   <div className="w-full bg-bg rounded-full h-2.5 overflow-hidden">
-                    {simulating ? (
+                    {simPhase === 'sim' ? (
                       <div className="bg-green-600 h-2.5 rounded-full transition-all duration-500" style={{ width: `${Math.max(2, simProgress)}%` }} />
                     ) : (
-                      /* Indeterminate stripe animation for deckbuild / save phases */
                       <div className="h-2.5 rounded-full bg-green-600 animate-pulse" style={{ width: '100%', opacity: 0.7 }} />
                     )}
                   </div>
                 </Flexbox>
+              </CardBody></Card>
+            )}
+
+            {/* Save success */}
+            {status === 'completed' && !isRunning && (
+              <Card className="border-green-700"><CardBody>
+                <Text sm className="text-green-400">Simulation complete — results saved and displayed below.</Text>
               </CardBody></Card>
             )}
 
