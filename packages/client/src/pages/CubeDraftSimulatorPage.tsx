@@ -4520,7 +4520,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
         )}
         {skeleton.lockPairs.length > 0 && (
           <div className="pt-1">
-            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2">Lock pairs</Text>
+            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2">Lock Pairs</Text>
             <Flexbox direction="col" gap="1">
               {skeleton.lockPairs.map((pair) => (
                 <div key={`${pair.oracle_id_a}-${pair.oracle_id_b}`} className="flex items-center gap-2 text-sm">
@@ -4547,7 +4547,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
               <Text semibold>Archetypes</Text>
               {!isOpen && <span className="text-xs text-text-secondary font-normal">{skeletons.length} clusters</span>}
             </Flexbox>
-            <Text xs className="text-text-secondary mt-0.5">Decks clustered by card-overlap similarity</Text>
+            <Text xs className="text-text-secondary mt-0.5">Grouped by shared cards</Text>
           </button>
           <div className="flex flex-row items-center gap-2 flex-shrink-0">
             {isOpen && (
@@ -5792,7 +5792,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     const matchingPools = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
     if (selectedCard) return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
     if (selectedSkeletonId !== null || selectedArchetype) return `${matchingPools} matching draft pool${matchingPools !== 1 ? 's' : ''}`;
-    return 'Choose a color profile, cluster, or card filter to narrow the detailed view.';
+    return 'Select a color profile, archetype cluster, or card above to narrow the view.';
   }, [activeFilterPoolIndexSet, displayRunData, selectedCard, selectedPools.length, selectedSkeletonId, selectedArchetype]);
 
   const clearActiveFilter = useCallback(() => {
