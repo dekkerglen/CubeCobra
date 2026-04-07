@@ -43,7 +43,9 @@ const DraftBreakdownDisplay: React.FC<DraftBreakdownDisplayProps> = ({
 }) => {
   return (
     <div className="draft-breakdown-display" role="region" aria-label="Draft picks and recommendations">
-      <p className="text-xs lg:text-sm italic text-text-secondary text-center mb-2">(Use arrow keys ← → to navigate picks)</p>
+      <p className="text-xs lg:text-sm italic text-text-secondary text-center mb-2">
+        (Use arrow keys ← → to navigate picks)
+      </p>
       {showRatings && (
         <p className="text-xs lg:text-sm italic text-text-secondary text-center mb-4">
           These values are generated using the CubeCobra machine learning engine; the highest value indicates what a

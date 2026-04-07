@@ -12,8 +12,8 @@ import Changelist from 'components/Changelist';
 import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
-import { CSRFContext } from 'contexts/CSRFContext';
 import ChangesContext from 'contexts/ChangesContext';
+import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 import useLocalStorage from 'hooks/useLocalStorage';
 import useMount from 'hooks/UseMount';
@@ -30,7 +30,7 @@ interface BulkUploadPageRawProps {
   changelog?: Changes;
 }
 
-const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added, addedByBoard, changelog }) => {
+const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, addedByBoard, changelog }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
 
@@ -144,7 +144,9 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added, a
 
           {boardSummary.length > 0 && (
             <Flexbox direction="col" gap="1" className="mt-2 mb-2">
-              <Text semibold sm>Cards to be imported:</Text>
+              <Text semibold sm>
+                Cards to be imported:
+              </Text>
               {boardSummary.map(({ boardName, count }) => (
                 <Text key={boardName} sm>
                   {boardName}: {count} card{count !== 1 ? 's' : ''}
@@ -252,7 +254,12 @@ const BulkUploadPage: React.FC<BulkUploadPageProps> = ({ cube, cards, added, add
   <MainLayout useContainer={false}>
     <DynamicFlash />
     <CubeLayout cube={cube} cards={cards} activeLink="bulkupload" useChangedCards>
-      <BulkUploadPageRaw added={added} addedByBoard={addedByBoard || { mainboard: added }} changelog={changelog} missing={missing} />
+      <BulkUploadPageRaw
+        added={added}
+        addedByBoard={addedByBoard || { mainboard: added }}
+        changelog={changelog}
+        missing={missing}
+      />
     </CubeLayout>
   </MainLayout>
 );

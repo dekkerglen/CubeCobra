@@ -7,7 +7,9 @@ import { batchDraft } from 'serverutils/ml';
 import { createCardDetails, createChangelogCardAdd, createCube, createCustomCard } from '../test-utils/data';
 
 // Mock dependencies
-jest.mock('serverutils/ml');
+jest.mock('serverutils/ml', () => ({
+  batchDraft: jest.fn(),
+}));
 jest.mock('@utils/drafting/createdraft');
 jest.mock('serverutils/carddb');
 
@@ -95,9 +97,10 @@ describe('generateBalancedPack', () => {
       const normalizedWeights = createRealistic15CardWeights();
       mockBatchDraft.mockResolvedValue(
         Array(10).fill(
-          normalizedWeights.map((w, i) => ({ oracle: `oracle_card${i + 1}`, rating: w }))
-            .sort((a, b) => b.rating - a.rating)
-        )
+          normalizedWeights
+            .map((w, i) => ({ oracle: `oracle_card${i + 1}`, rating: w }))
+            .sort((a, b) => b.rating - a.rating),
+        ),
       );
 
       const result = (await generateBalancedPack(mockCube, mockCards, 'test-seed')) as BalancedPackResult;
@@ -115,9 +118,7 @@ describe('generateBalancedPack', () => {
 
     it('should use custom candidate count', async () => {
       const candidateCount = 5;
-      mockBatchDraft.mockResolvedValue(
-        Array(candidateCount).fill([{ oracle: 'oracle_card1', rating: 0.5 }])
-      );
+      mockBatchDraft.mockResolvedValue(Array(candidateCount).fill([{ oracle: 'oracle_card1', rating: 0.5 }]));
 
       const result = (await generateBalancedPack(
         mockCube,
@@ -131,9 +132,7 @@ describe('generateBalancedPack', () => {
     });
 
     it('should use deterministic seed when provided', async () => {
-      mockBatchDraft.mockResolvedValue(
-        Array(3).fill([{ oracle: 'oracle_card1', rating: 0.5 }])
-      );
+      mockBatchDraft.mockResolvedValue(Array(3).fill([{ oracle: 'oracle_card1', rating: 0.5 }]));
 
       const deterministicSeed = 12345;
       await generateBalancedPack(mockCube, mockCards, 'test-seed', 3, deterministicSeed as any);
@@ -142,7 +141,7 @@ describe('generateBalancedPack', () => {
       expect(mockCreateDraft).toHaveBeenCalledWith(
         mockCube,
         mockFormat,
-        mockCards.mainboard,
+        { mainboard: mockCards.mainboard },
         1,
         { username: 'Anonymous' },
         expect.stringContaining(`test-seed-${deterministicSeed}`),
@@ -150,9 +149,7 @@ describe('generateBalancedPack', () => {
     });
 
     it('should use Date.now() when deterministicSeed is null', async () => {
-      mockBatchDraft.mockResolvedValue(
-        Array(3).fill([{ oracle: 'oracle_card1', rating: 0.5 }])
-      );
+      mockBatchDraft.mockResolvedValue(Array(3).fill([{ oracle: 'oracle_card1', rating: 0.5 }]));
 
       const spy = jest.spyOn(Date, 'now').mockReturnValue(67890);
 
@@ -161,7 +158,7 @@ describe('generateBalancedPack', () => {
       expect(mockCreateDraft).toHaveBeenCalledWith(
         mockCube,
         mockFormat,
-        mockCards.mainboard,
+        { mainboard: mockCards.mainboard },
         1,
         { username: 'Anonymous' },
         expect.stringContaining('test-seed-67890'),
@@ -230,7 +227,8 @@ describe('generateBalancedPack', () => {
     it('should generate pack with correct card details', async () => {
       const normalizedWeights = createRealistic15CardWeights();
       mockBatchDraft.mockResolvedValue([
-        normalizedWeights.map((w, i) => ({ oracle: `oracle_card${i + 1}`, rating: w }))
+        normalizedWeights
+          .map((w, i) => ({ oracle: `oracle_card${i + 1}`, rating: w }))
           .sort((a, b) => b.rating - a.rating),
       ]);
 
@@ -275,8 +273,7 @@ describe('generateBalancedPack', () => {
 
       const normalizedWeights = createRealistic15CardWeights();
       mockBatchDraft.mockResolvedValue([
-        normalizedWeights.map((w, i) => ({ oracle: `oracle${i + 1}`, rating: w }))
-          .sort((a, b) => b.rating - a.rating),
+        normalizedWeights.map((w, i) => ({ oracle: `oracle${i + 1}`, rating: w })).sort((a, b) => b.rating - a.rating),
       ]);
 
       await generateBalancedPack(mockCube, mockCards, 'test-seed', 1);
@@ -315,13 +312,23 @@ describe('generateBalancedPack', () => {
 
       // Create normalized weights for 12 cards (15 - 3 filtered out)
       const filteredOracleIds = [
-        'oracle_card1', 'oracle_card3', 'oracle_card4', 'oracle_card6', 'oracle_card7',
-        'oracle_card8', 'oracle_card9', 'oracle_card11', 'oracle_card12', 'oracle_card13',
-        'oracle_card14', 'oracle_card15',
+        'oracle_card1',
+        'oracle_card3',
+        'oracle_card4',
+        'oracle_card6',
+        'oracle_card7',
+        'oracle_card8',
+        'oracle_card9',
+        'oracle_card11',
+        'oracle_card12',
+        'oracle_card13',
+        'oracle_card14',
+        'oracle_card15',
       ];
       const normalizedWeights = createNormalizedWeights([0.5, 0.8, 0.3, 0.6, 0.4, 0.7, 0.2, 0.9, 0.1, 0.5, 0.8, 0.3]);
       mockBatchDraft.mockResolvedValue([
-        normalizedWeights.map((w, i) => ({ oracle: filteredOracleIds[i]!, rating: w }))
+        normalizedWeights
+          .map((w, i) => ({ oracle: filteredOracleIds[i]!, rating: w }))
           .sort((a, b) => b.rating - a.rating),
       ]);
 
@@ -428,7 +435,7 @@ describe('generatePack', () => {
       expect(mockCreateDraft).toHaveBeenCalledWith(
         mockCube,
         mockFormat,
-        mockCards.mainboard,
+        { mainboard: mockCards.mainboard },
         1,
         { username: 'Anonymous' },
         'test-seed',
@@ -1028,10 +1035,7 @@ describe('reconstructCubeAtChangelog', () => {
     // Changelog: 2 copies of bolt were added (after the target date)
     const changelog = {
       mainboard: {
-        adds: [
-          createChangelogCardAdd({ cardID: 'bolt123' }),
-          createChangelogCardAdd({ cardID: 'bolt123' }),
-        ],
+        adds: [createChangelogCardAdd({ cardID: 'bolt123' }), createChangelogCardAdd({ cardID: 'bolt123' })],
         removes: [],
         edits: [],
         swaps: [],
@@ -1103,10 +1107,7 @@ describe('reconstructCubeAtChangelog', () => {
     // Changelog: added 1 bolt and 1 recall
     const changelog = {
       mainboard: {
-        adds: [
-          createChangelogCardAdd({ cardID: 'bolt123' }),
-          createChangelogCardAdd({ cardID: 'recall456' }),
-        ],
+        adds: [createChangelogCardAdd({ cardID: 'bolt123' }), createChangelogCardAdd({ cardID: 'recall456' })],
         removes: [],
         edits: [],
         swaps: [],

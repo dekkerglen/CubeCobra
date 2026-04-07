@@ -167,8 +167,8 @@ export const deckbuild = async (
     deckCopies[oracle] = existing + 1;
     remainingPool.splice(poolIdx, 1);
 
-    if (land) landCount++;
-    else spellCount++;
+    if (land) landCount += 1;
+    else spellCount += 1;
   }
 
   // Phase 2: Use draft model to pick from remaining pool one at a time
@@ -219,8 +219,8 @@ export const deckbuild = async (
     remainingPool.splice(poolIdx, 1);
 
     const land = oracleIsLand(bestOracle);
-    if (land) landCount++;
-    else spellCount++;
+    if (land) landCount += 1;
+    else spellCount += 1;
   }
 
   // Fill remaining slots with basics
@@ -325,8 +325,8 @@ export const batchDeckbuild = async (
       seat.deckCopies[oracle] = existing + 1;
       seat.remainingPool.splice(poolIdx, 1);
 
-      if (land) seat.landCount++;
-      else seat.spellCount++;
+      if (land) seat.landCount += 1;
+      else seat.spellCount += 1;
     }
   }
 
@@ -400,8 +400,8 @@ export const batchDeckbuild = async (
       seat.remainingPool.splice(poolIdx, 1);
 
       const land = oracleIsLand(bestOracle);
-      if (land) seat.landCount++;
-      else seat.spellCount++;
+      if (land) seat.landCount += 1;
+      else seat.spellCount += 1;
 
       anyProgress = true;
     }

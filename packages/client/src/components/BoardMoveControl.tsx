@@ -31,7 +31,12 @@ const BoardMoveControl: React.FC<BoardMoveControlProps> = ({
       <div className="flex-1 min-w-0">
         <Select options={options} value={targetBoard} setValue={setTargetBoard} />
       </div>
-      <Button color="accent" className="ml-2 whitespace-nowrap text-sm" onClick={onMove} disabled={disabled || !targetBoard}>
+      <Button
+        color="accent"
+        className="ml-2 whitespace-nowrap text-sm"
+        onClick={onMove}
+        disabled={disabled || !targetBoard}
+      >
         {buttonText}
       </Button>
     </div>

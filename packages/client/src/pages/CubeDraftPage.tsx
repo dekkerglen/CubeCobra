@@ -2,7 +2,6 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 
 import { DndContext } from '@dnd-kit/core';
 import { isVoucher, makeSubtitle } from '@utils/cardutil';
-import CardType from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import { getCardDefaultRowColumn, getInitialState, setupPicks } from '@utils/draftutil';
@@ -71,10 +70,7 @@ const processPredictions = (json: PredictResponse, packCards: any[]): number[] =
     if (card.voucherOracleIds && card.voucherOracleIds.length > 0) {
       // Use Set to deduplicate oracle_ids - ML returns one rating per unique oracle
       const uniqueOracleIds = [...new Set<string>(card.voucherOracleIds as string[])];
-      return uniqueOracleIds.reduce(
-        (acc: number, oracleId: string) => acc + (predictionsMap.get(oracleId) || 0),
-        0,
-      );
+      return uniqueOracleIds.reduce((acc: number, oracleId: string) => acc + (predictionsMap.get(oracleId) || 0), 0);
     }
     return predictionsMap.get(card.oracle_id) || 0;
   });
@@ -198,9 +194,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
             .filter((id): id is string => Boolean(id));
         }
         if (card.voucher_cards && card.voucher_cards.length > 0) {
-          return card.voucher_cards
-            .map((vc) => vc.details?.oracle_id)
-            .filter((id): id is string => Boolean(id));
+          return card.voucher_cards.map((vc) => vc.details?.oracle_id).filter((id): id is string => Boolean(id));
         }
       }
 
@@ -230,7 +224,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         setDraftStatus((prev) => ({ ...prev, predictionsLoading: false }));
       }
     },
-    [draft.cards],
+    [getCardOracleIds],
   );
 
   const handleRetryPredict = useCallback(async () => {
@@ -426,8 +420,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
                 };
               })
               .filter(
-                (card) =>
-                  Boolean(card.oracle_id) || Boolean(card.voucherOracleIds && card.voucherOracleIds.length > 0),
+                (card) => Boolean(card.oracle_id) || Boolean(card.voucherOracleIds && card.voucherOracleIds.length > 0),
               ),
           };
 

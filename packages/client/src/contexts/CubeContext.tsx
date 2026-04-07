@@ -20,7 +20,7 @@ import Card, {
   CubeCardRemove,
 } from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
-import Cube, { CubeCards, TagColor, getViewByName } from '@utils/datatypes/Cube';
+import Cube, { CubeCards, getViewByName, TagColor } from '@utils/datatypes/Cube';
 import { getCubeSorts } from '@utils/sorting/Sort';
 import { deepCopy, isCubeOwner } from '@utils/Util';
 
@@ -1618,7 +1618,9 @@ export function CubeContextProvider({
           Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           (modalSelection as any).isSwapped &&
           (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] &&
-          isVoucher((changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card) && (
+          isVoucher(
+            (changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
+          ) && (
             <VoucherCardModal
               card={{
                 ...(changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
@@ -1645,7 +1647,9 @@ export function CubeContextProvider({
           Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           (modalSelection as any).isSwapped &&
           (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] &&
-          !isVoucher((changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card) && (
+          !isVoucher(
+            (changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
+          ) && (
             <CardModal
               card={{
                 ...(changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
@@ -1672,7 +1676,9 @@ export function CubeContextProvider({
           !Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
           !Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) &&
-          isVoucher(unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!) && (
+          isVoucher(
+            unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!,
+          ) && (
             <VoucherCardModal
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}
@@ -1694,7 +1700,9 @@ export function CubeContextProvider({
           !Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
           !Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) &&
-          !isVoucher(unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!) && (
+          !isVoucher(
+            unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!,
+          ) && (
             <CardModal
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}

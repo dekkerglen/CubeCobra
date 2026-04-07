@@ -6,7 +6,8 @@ import type DraftSeatType from '@utils/datatypes/DraftSeat';
 import * as draftutil from '@utils/draftutil';
 import express, { Application } from 'express';
 import { cardFromId } from 'serverutils/carddb';
-import { buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import { getBasicsFromCube } from 'serverutils/cube';
+import { batchBuildBotDecks, buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 import request from 'supertest';
 
 import { bodyValidation } from '../../src/router/middleware';
@@ -25,6 +26,7 @@ jest.mock('serverutils/draftbots', () => ({
 jest.mock('../../src/dynamo/daos', () => ({
   cubeDao: {
     getById: jest.fn(),
+    getCards: jest.fn(),
   },
   draftDao: {
     createDraft: jest.fn(),
@@ -41,7 +43,12 @@ jest.mock('serverutils/carddb', () => ({
   cardFromId: jest.fn(),
 }));
 
+jest.mock('serverutils/cube', () => ({
+  getBasicsFromCube: jest.fn(),
+}));
+
 jest.mock('serverutils/draftmancerUtil', () => ({
+  batchBuildBotDecks: jest.fn(),
   buildBotDeck: jest.fn(),
   formatMainboard: jest.fn(),
   formatSideboard: jest.fn(),
@@ -216,6 +223,8 @@ describe('Publish', () => {
     const cardDetails = createCardDetails();
 
     (cubeDao.getById as jest.Mock).mockResolvedValue(mockCube);
+    (cubeDao.getCards as jest.Mock).mockResolvedValue({});
+    (getBasicsFromCube as jest.Mock).mockReturnValue(mockCube.basics);
 
     (cardFromId as jest.Mock).mockImplementation((cardID: string) => {
       if (!mockCards.has(cardID)) {
@@ -258,17 +267,19 @@ describe('Publish', () => {
         description: 'This deck was drafted on Draftmancer by human1',
         owner: undefined,
         bot: false,
+        playerName: 'human1',
       }),
     );
     validateCommonDraftSeat(seat, seatInfo);
   };
 
-  const validateBotDraftSeat = (seat: Record<string, any>, seatInfo: DraftSeatPicks) => {
+  const validateBotDraftSeat = (seat: Record<string, any>, seatInfo: DraftSeatPicks, playerName?: string) => {
     expect(seat).toEqual(
       expect.objectContaining({
         description: 'This deck was drafted by a bot on Draftmancer',
         owner: undefined,
         bot: true,
+        playerName,
       }),
     );
     validateCommonDraftSeat(seat, seatInfo);
@@ -386,10 +397,10 @@ describe('Publish', () => {
     );
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat);
-    (buildBotDeck as jest.Mock).mockReturnValueOnce({
+    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([{
       mainboard: playerTwoDraftSeat.mainboard,
       sideboard: playerTwoDraftSeat.sideboard,
-    });
+    }]);
 
     const response = await call(handler)
       .withBody(
@@ -407,7 +418,7 @@ describe('Publish', () => {
 
     const putCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
     validateHumanDraftSeat(putCall.seats[0], playerOneDraftSeat);
-    validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat);
+    validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat, 'bot2');
 
     expect(putCall.DraftmancerLog.players[0]).toEqual(playerOneDraftSeat.draftmancerPicks);
     expect(putCall.DraftmancerLog.players[1]).toEqual(playerTwoDraftSeat.draftmancerPicks);
@@ -436,10 +447,10 @@ describe('Publish', () => {
     );
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerOneDraftSeat);
-    (buildBotDeck as jest.Mock).mockReturnValueOnce({
+    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([{
       mainboard: playerOneDraftSeat.mainboard,
       sideboard: playerOneDraftSeat.sideboard,
-    });
+    }]);
 
     // Player 2 (human) setup
     const playerTwoDraftSeat = createDraftSeatPicks(16, [
@@ -466,7 +477,7 @@ describe('Publish', () => {
     expect(response.status).toBe(200);
 
     const putCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
-    validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat);
+    validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat, 'bot1');
     validateHumanDraftSeat(putCall.seats[1], playerTwoDraftSeat);
 
     expect(putCall.DraftmancerLog.players[0]).toEqual(playerOneDraftSeat.draftmancerPicks);
@@ -496,10 +507,6 @@ describe('Publish', () => {
     ]);
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerOneDraftSeat);
-    (buildBotDeck as jest.Mock).mockReturnValueOnce({
-      mainboard: playerOneDraftSeat.mainboard,
-      sideboard: playerOneDraftSeat.sideboard,
-    });
 
     // Player 2 (also bot) setup
     const playerTwoDraftSeat = createDraftSeatPicks(16, [
@@ -508,10 +515,10 @@ describe('Publish', () => {
     ]);
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat);
-    (buildBotDeck as jest.Mock).mockReturnValueOnce({
-      mainboard: playerTwoDraftSeat.mainboard,
-      sideboard: playerTwoDraftSeat.sideboard,
-    });
+    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([
+      { mainboard: playerOneDraftSeat.mainboard, sideboard: playerOneDraftSeat.sideboard },
+      { mainboard: playerTwoDraftSeat.mainboard, sideboard: playerTwoDraftSeat.sideboard },
+    ]);
 
     const response = await call(handler)
       .withBody(
@@ -528,8 +535,8 @@ describe('Publish', () => {
     expect(response.status).toBe(200);
 
     const putCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
-    validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat);
-    validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat);
+    validateBotDraftSeat(putCall.seats[0], playerOneDraftSeat, 'bot1');
+    validateBotDraftSeat(putCall.seats[1], playerTwoDraftSeat, 'bot2');
 
     expect(putCall.DraftmancerLog.players[0]).toEqual(playerOneDraftSeat.draftmancerPicks);
     expect(putCall.DraftmancerLog.players[1]).toEqual(playerTwoDraftSeat.draftmancerPicks);

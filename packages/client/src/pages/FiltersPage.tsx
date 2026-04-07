@@ -684,13 +684,11 @@ const FiltersPage: React.FC = () => (
                   },
                   {
                     query: <code>game:paper</code>,
-                    description:
-                      'All cards that have any version available in paper (checks across all printings).',
+                    description: 'All cards that have any version available in paper (checks across all printings).',
                   },
                   {
                     query: <code>game!=arena</code>,
-                    description:
-                      'All cards that have no version available on arena (checks across all printings).',
+                    description: 'All cards that have no version available on arena (checks across all printings).',
                   },
                   {
                     query: <code>game:is-arena</code>,
@@ -772,7 +770,8 @@ const FiltersPage: React.FC = () => (
                   },
                   {
                     query: <code>is:supplemental</code>,
-                    description: 'All cards that were only printed in supplemental products (never in a standard expansion).',
+                    description:
+                      'All cards that were only printed in supplemental products (never in a standard expansion).',
                   },
                 ]}
               />

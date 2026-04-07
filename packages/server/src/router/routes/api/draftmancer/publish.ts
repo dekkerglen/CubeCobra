@@ -117,7 +117,8 @@ export const handler = async (req: Request, res: Response) => {
       let sideboard: number[][][] = setupPicks(1, 8);
 
       if (player.isBot) {
-        const result = botResults[botResultIdx++]!;
+        const result = botResults[botResultIdx]!;
+        botResultIdx += 1;
         mainboard = result.mainboard;
         sideboard = result.sideboard;
       } else {
@@ -136,6 +137,7 @@ export const handler = async (req: Request, res: Response) => {
         owner: undefined,
         bot: player.isBot,
         name: '', // this will get set by the draft dao
+        playerName: player.userName || undefined,
       };
 
       seats.push(seat);

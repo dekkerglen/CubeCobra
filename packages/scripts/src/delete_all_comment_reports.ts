@@ -8,11 +8,11 @@
  *     src/delete_all_comment_reports.ts [--dry-run]
  */
 
-import 'dotenv/config';
-
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
 import { noticeDao } from 'dynamo/daos';
-import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
+
+import 'dotenv/config';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
@@ -21,7 +21,6 @@ async function main() {
   if (dryRun) {
     console.log('*** DRY RUN — no changes will be written ***\n');
   }
-
 
   let totalFound = 0;
   let totalDeleted = 0;
@@ -37,12 +36,10 @@ async function main() {
     const items = result.items || [];
     scanned += items.length;
 
-    const commentReports = items.filter(
-      (item: any) => item.type === NoticeType.COMMENT_REPORT
-    );
+    const commentReports = items.filter((item: any) => item.type === NoticeType.COMMENT_REPORT);
 
     for (const notice of commentReports) {
-      totalFound++;
+      totalFound += 1;
       const subject = (notice as any).subject ?? '(none)';
       const truncated = subject.length > 80 ? subject.slice(0, 80) + '...' : subject;
       console.log(`  ${notice.id}  subject: ${truncated}`);
@@ -50,10 +47,10 @@ async function main() {
       if (!dryRun) {
         try {
           await noticeDao.delete(notice);
-          totalDeleted++;
+          totalDeleted += 1;
         } catch (err: any) {
           console.error(`  ERROR deleting ${notice.id}: ${err.message}`);
-          totalErrors++;
+          totalErrors += 1;
         }
       }
     }

@@ -5,14 +5,14 @@ import {
   cardColorCategory,
   cardColorIdentity,
   cardFinish,
+  cardImageBackUrl,
+  cardImageUrl,
   cardName,
   cardRarity,
   cardStatus,
   cardTags,
   cardType,
   isCardCmcValid,
-  cardImageUrl,
-  cardImageBackUrl,
   normalizeName,
 } from '@utils/cardutil';
 import Card, { BoardType, CARD_STATUSES, FINISHES, VoucherCard } from '@utils/datatypes/Card';
@@ -22,11 +22,11 @@ import { getLabels } from '@utils/sorting/Sort';
 import { getTagColorClass } from '@utils/Util';
 
 import ImageFallback from 'components/ImageFallback';
-import { getCard } from '../../utils/cards/getCard';
 
-import CubeContext from '../../contexts/CubeContext';
 import { CSRFContext } from '../../contexts/CSRFContext';
+import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
+import { getCard } from '../../utils/cards/getCard';
 import AutocompleteInput from '../base/AutocompleteInput';
 import Badge from '../base/Badge';
 import Button from '../base/Button';
@@ -34,7 +34,6 @@ import Input from '../base/Input';
 import { Col, Flexbox, Row } from '../base/Layout';
 import Link from '../base/Link';
 import { ListGroup, ListGroupItem } from '../base/ListGroup';
-import AutocardListItem from './AutocardListItem';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Select from '../base/Select';
 import Tag from '../base/Tag';
@@ -42,10 +41,8 @@ import Text from '../base/Text';
 import TextArea from '../base/TextArea';
 import BoardMoveControl from '../BoardMoveControl';
 import { ColorChecksAddon } from '../ColorCheck';
-import FoilOverlay from '../FoilOverlay';
 import TagInput from '../TagInput';
-
-const FoilCardImage = FoilOverlay(ImageFallback);
+import AutocardListItem from './AutocardListItem';
 
 export interface VoucherCardModalProps {
   isOpen: boolean;
@@ -107,7 +104,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
   useEffect(() => {
     if (card.board && availableBoards.length > 0) {
       const otherBoard = availableBoards.find((b) => b.name.toLowerCase() !== card.board);
-      if (otherBoard && !targetBoard) {
+      if (otherBoard && (!targetBoard || targetBoard === card.board)) {
         setTargetBoard(otherBoard.name.toLowerCase());
       }
     }
@@ -294,8 +291,12 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
           <Col xs={12} sm={5}>
             <Flexbox direction="col" gap="2">
               <Flexbox direction="row" justify="between" alignItems="center">
-                <Text md semibold>Voucher Contents</Text>
-                <Text sm className="text-text-secondary">{voucherCards.length} card{voucherCards.length !== 1 ? 's' : ''}</Text>
+                <Text md semibold>
+                  Voucher Contents
+                </Text>
+                <Text sm className="text-text-secondary">
+                  {voucherCards.length} card{voucherCards.length !== 1 ? 's' : ''}
+                </Text>
               </Flexbox>
 
               {canEdit && (
@@ -381,7 +382,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                 <ImageFallback
                   src={getSelectedImage()}
                   fallbackSrc="/content/default_card.png"
-                  alt={selection === 'voucher' ? cardName(card) : (selectedSubCard?.details?.name || 'Card')}
+                  alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
                   className="w-full rounded"
                 />
               </div>
@@ -398,7 +399,9 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
               // EDITING VOUCHER
               <Flexbox direction="col" gap="2">
                 <div className="bg-bg-accent rounded-md px-2 py-1 mb-2">
-                  <Text sm semibold>Editing: Voucher</Text>
+                  <Text sm semibold>
+                    Editing: Voucher
+                  </Text>
                 </div>
 
                 {getCardBackImage(card) && (
@@ -586,7 +589,9 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
               // EDITING SUB-CARD
               <Flexbox direction="col" gap="2">
                 <div className="bg-bg-activeOption rounded-md px-2 py-1 mb-2">
-                  <Text sm semibold>Editing: {selectedSubCard.details?.name || 'Sub-card'}</Text>
+                  <Text sm semibold>
+                    Editing: {selectedSubCard.details?.name || 'Sub-card'}
+                  </Text>
                 </div>
 
                 <Select
@@ -617,18 +622,14 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                 <Select
                   label="Status"
                   value={selectedSubCard.status || 'Not Owned'}
-                  setValue={(v) =>
-                    handleUpdateVoucherCard(selection as number, { ...selectedSubCard, status: v })
-                  }
+                  setValue={(v) => handleUpdateVoucherCard(selection as number, { ...selectedSubCard, status: v })}
                   options={CARD_STATUSES.map((s) => ({ value: s, label: s }))}
                   disabled={!canEdit}
                 />
                 <Select
                   label="Finish"
                   value={selectedSubCard.finish?.toString() || 'Non-foil'}
-                  setValue={(v) =>
-                    handleUpdateVoucherCard(selection as number, { ...selectedSubCard, finish: v })
-                  }
+                  setValue={(v) => handleUpdateVoucherCard(selection as number, { ...selectedSubCard, finish: v })}
                   options={FINISHES.map((f) => ({ value: f, label: f }))}
                   disabled={!canEdit}
                 />

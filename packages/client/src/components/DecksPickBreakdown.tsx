@@ -118,9 +118,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
             .filter((id): id is string => Boolean(id));
         }
         if (card.voucher_cards && card.voucher_cards.length > 0) {
-          return card.voucher_cards
-            .map((vc) => vc.details?.oracle_id)
-            .filter((id): id is string => Boolean(id));
+          return card.voucher_cards.map((vc) => vc.details?.oracle_id).filter((id): id is string => Boolean(id));
         }
       }
 

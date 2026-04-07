@@ -279,7 +279,7 @@ function CSVtoCards(csvString: string): CSVResult {
   const cardsByBoard: Record<string, CubeCard[]> = {};
 
   // Check if the CSV has a "board" column by inspecting the first row
-  const hasBoardColumn = camelizedRows.length > 0 && 'board' in camelizedRows[0];
+  const hasBoardColumn = camelizedRows.length > 0 && Object.prototype.hasOwnProperty.call(camelizedRows[0], 'board');
 
   for (const {
     name,
@@ -623,7 +623,16 @@ async function generateBalancedPack(
     const seed = `${seedPrefix}-${baseSeed}-${i}`;
     const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
-    const draft = createDraft(cube, format, [...cards.mainboard], 1, { username: 'Anonymous' } as any, seed);
+
+    // Build board cards map for multi-board support (custom draft formats may reference non-mainboard boards)
+    const boardCards: Record<string, any[]> = {};
+    for (const [boardKey, boardList] of Object.entries(cards)) {
+      if (boardKey !== 'id' && Array.isArray(boardList)) {
+        boardCards[boardKey] = [...boardList];
+      }
+    }
+
+    const draft = createDraft(cube, format, boardCards, 1, { username: 'Anonymous' } as any, seed);
     const packResult = {
       seed: seedPrefix,
       pack:
@@ -658,9 +667,7 @@ async function generateBalancedPack(
     });
 
     const topPick = predictions[0];
-    const botPickIndex = topPick
-      ? oracleIds.findIndex((oracleId: string) => oracleId === topPick.oracle)
-      : -1;
+    const botPickIndex = topPick ? oracleIds.findIndex((oracleId: string) => oracleId === topPick.oracle) : -1;
 
     const botResult = {
       botPickIndex: botPickIndex >= 0 ? botPickIndex : null,
@@ -705,7 +712,16 @@ async function generatePack(cube: any, cards: any, seed?: string): Promise<Gener
   }
   const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
   const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
-  const draft = createDraft(cube, format, cards.mainboard, 1, { username: 'Anonymous' } as any, seed);
+
+  // Build board cards map for multi-board support (custom draft formats may reference non-mainboard boards)
+  const boardCards: Record<string, any[]> = {};
+  for (const [boardKey, boardList] of Object.entries(cards)) {
+    if (boardKey !== 'id' && Array.isArray(boardList)) {
+      boardCards[boardKey] = boardList;
+    }
+  }
+
+  const draft = createDraft(cube, format, boardCards, 1, { username: 'Anonymous' } as any, seed);
   return {
     seed,
     pack:
@@ -817,7 +833,13 @@ async function reconstructCubeAtChangelog(
   cubeId: string,
   targetDate: number,
   currentCards: CubeCards,
-  changelogDao: { queryByCubeWithData: (cubeId: string, lastKey?: any, limit?: number) => Promise<{ items: Array<{ date: number; changelog: Changes }>; lastKey?: any }> },
+  changelogDao: {
+    queryByCubeWithData: (
+      cubeId: string,
+      lastKey?: any,
+      limit?: number,
+    ) => Promise<{ items: Array<{ date: number; changelog: Changes }>; lastKey?: any }>;
+  },
 ): Promise<CubeCards> {
   // Deep clone the current cards so we don't mutate the original
   const cards: CubeCards = JSON.parse(JSON.stringify(currentCards));
@@ -892,7 +914,6 @@ export {
   cardsAreEquivalent,
   compareCubes,
   CSVtoCards,
-  reconstructCubeAtChangelog,
   cubeCardTags,
   generateBalancedPack,
   generatePack,
@@ -903,6 +924,7 @@ export {
   isCubeListed,
   isCubeViewable,
   legalityToInt,
+  reconstructCubeAtChangelog,
   removeCardHtml,
   replaceCardHtml,
   sanitize,

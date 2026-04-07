@@ -112,7 +112,8 @@ const processPicks = (
         );
 
         const poolLands = drafterState.picked.filter((i: any) => {
-          const c = draft.cards[i]; return c && (c.type_line ?? c.details?.type ?? '').includes('Land');
+          const c = draft.cards[i];
+          return c && (c.type_line ?? c.details?.type ?? '').includes('Land');
         }).length;
 
         picks.push({

@@ -8,12 +8,12 @@
  *     src/delete_reports_for_banned_users.ts [--dry-run]
  */
 
-import 'dotenv/config';
-
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { noticeDao, userDao } from 'dynamo/daos';
-import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
+
+import 'dotenv/config';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
@@ -26,7 +26,7 @@ async function main() {
   let totalFound = 0;
   let totalDeleted = 0;
   let totalErrors = 0;
-  let bannedCache = new Map<string, boolean>();
+  const bannedCache = new Map<string, boolean>();
 
   console.log(`\nScanning ACTIVE notices...`);
   let lastKey: Record<string, NativeAttributeValue> | undefined;
@@ -38,9 +38,7 @@ async function main() {
     const items = result.items || [];
     scanned += items.length;
 
-    const userReports = items.filter(
-      (item: any) => item.type === NoticeType.CUBE_REPORT && item.subject
-    );
+    const userReports = items.filter((item: any) => item.type === NoticeType.CUBE_REPORT && item.subject);
 
     for (const notice of userReports) {
       const userId = String(notice.subject);
@@ -54,21 +52,21 @@ async function main() {
           bannedCache.set(userId, isBanned);
         } catch (err: any) {
           console.error(`  ERROR fetching user ${userId}: ${err.message}`);
-          totalErrors++;
+          totalErrors += 1;
           continue;
         }
       }
       if (!isBanned) continue;
 
-      totalFound++;
+      totalFound += 1;
       console.log(`  Deleting report ${notice.id} for banned user ${userId}`);
       if (!dryRun) {
         try {
           await noticeDao.delete(notice);
-          totalDeleted++;
+          totalDeleted += 1;
         } catch (err: any) {
           console.error(`  ERROR deleting ${notice.id}: ${err.message}`);
-          totalErrors++;
+          totalErrors += 1;
         }
       }
     }

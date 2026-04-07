@@ -57,9 +57,7 @@ const handler = async (req: Request, res: Response) => {
     }
 
     // Single batched ML call — the model processes all inputs in one tensor forward pass
-    const prediction = await batchDraft(
-      inputs.map((input) => ({ pack: input.pack, pool: input.picks })),
-    );
+    const prediction = await batchDraft(inputs.map((input) => ({ pack: input.pack, pool: input.picks })));
 
     const result: PredictResponse = {
       prediction,

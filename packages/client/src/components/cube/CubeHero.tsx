@@ -90,8 +90,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const [moreMenuAlign, setMoreMenuAlign] = React.useState<'left' | 'right'>('left');
 
-  const { showCustomImages: _showCustomImages, toggleShowCustomImages: _toggleShowCustomImages, activeView } =
-    useContext(DisplayContext);
+  const {
+    showCustomImages: _showCustomImages,
+    toggleShowCustomImages: _toggleShowCustomImages,
+    activeView,
+  } = useContext(DisplayContext);
 
   const { hasCustomImages: _hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
 
@@ -201,7 +204,17 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
     }
 
     return params.toString();
-  }, [isFilterUsed, filterInput, isSortUsed, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, exportAllBoards, currentViewBoards]);
+  }, [
+    isFilterUsed,
+    filterInput,
+    isSortUsed,
+    sortPrimary,
+    sortSecondary,
+    sortTertiary,
+    sortQuaternary,
+    exportAllBoards,
+    currentViewBoards,
+  ]);
 
   const exportMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">
@@ -254,7 +267,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
       </PrintAndPlayExportModalItem>
       <Flexbox direction="row" justify="between" alignItems="center" className="cursor-pointer">
         <Checkbox label="Export ALL boards" checked={exportAllBoards} setChecked={setExportAllBoards} />
-        <Tooltip text="If enabled, exports all cards from all boards. If disabled, only exports cards in boards visible in the current view." wrapperTag="span" className="ms-auto me-0">
+        <Tooltip
+          text="If enabled, exports all cards from all boards. If disabled, only exports cards in boards visible in the current view."
+          wrapperTag="span"
+          className="ms-auto me-0"
+        >
           <QuestionIcon size={16} className="hidden md:inline" />
         </Tooltip>
       </Flexbox>

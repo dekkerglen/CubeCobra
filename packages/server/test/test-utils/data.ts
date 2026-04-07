@@ -125,7 +125,11 @@ export const createCustomCard = (customName: string, overrides?: Partial<Card>):
   ...overrides,
 });
 
-export const createVoucherCard = (customName: string, voucherCards?: Card['voucher_cards'], overrides?: Partial<Card>): Card => ({
+export const createVoucherCard = (
+  customName: string,
+  voucherCards?: Card['voucher_cards'],
+  overrides?: Partial<Card>,
+): Card => ({
   index: generateRandomNumber(1, 3),
   cardID: 'voucher',
   custom_name: customName,
