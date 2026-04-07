@@ -866,8 +866,8 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
       </Flexbox>
       <div className="overflow-x-auto rounded border border-border bg-bg">
         <table className="min-w-full divide-y divide-border text-sm">
-          <thead className="bg-bg-accent"><tr><SH label="Card" col="name" /><SH label="Elo" col="elo" /><SH label="Seen" col="timesSeen" /><SH label="Picked" col="timesPicked" /><SH label="Pick Rate" col="pickRate" /><SH label="Avg Pick" col="avgPickPosition" /><SH label="Wheels" col="wheelCount" tooltip="Times this card was drafted after the pack went all the way around the table (position > seats)" /><SH label="P1P1" col="p1p1Count" tooltip="Times this card was taken as the very first pick of pack 1" /><SH label="Deck %" col="deckInclusion" tooltip="Of decks that drafted this card, how often it made the maindeck vs. sideboard" /><th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">View</th></tr></thead>
-          <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = c.oracle_id === selectedCardOracle; const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}{isDead && <span className="ml-2 text-xs bg-red-800 text-white rounded px-1">dead</span>}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-bg text-text-secondary border-border hover:bg-bg-active', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? `Filtered (${visiblePoolCount})` : `View Drafts (${visiblePoolCount})`}</button></td></tr>); })}</tbody>
+          <thead className="bg-bg-accent"><tr><SH label="Card" col="name" /><SH label="Elo" col="elo" /><SH label="Seen" col="timesSeen" /><SH label="Picked" col="timesPicked" /><SH label="Pick Rate" col="pickRate" /><SH label="Avg Pick" col="avgPickPosition" /><SH label="Wheels" col="wheelCount" tooltip="Times this card was drafted after the pack went all the way around the table (position > seats)" /><SH label="P1P1" col="p1p1Count" tooltip="Times this card was taken as the very first pick of pack 1" /><SH label="Deck %" col="deckInclusion" tooltip="Of decks that drafted this card, how often it made the maindeck vs. sideboard" /><th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Filter</th></tr></thead>
+          <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = c.oracle_id === selectedCardOracle; const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}{isDead && <span className="ml-2 text-xs bg-red-800 text-white rounded px-1">dead</span>}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-bg text-text-secondary border-border hover:bg-bg-active', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? `Filtered (${visiblePoolCount})` : `Filter (${visiblePoolCount})`}</button></td></tr>); })}</tbody>
         </table>
       </div>
       <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2 pt-1">
@@ -1405,6 +1405,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
   // Section collapse state (default collapsed)
   const [archetypesOpen, setArchetypesOpen] = useState(true);
+  const [deckColorOpen, setDeckColorOpen] = useState(true);
   const [cardStatsOpen, setCardStatsOpen] = useState(true);
 
   // Archetype skeleton clustering
@@ -1765,14 +1766,32 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   }, [activeFilterChips]);
 
   const detailedViewScopeChips = useMemo(() => {
-    const chips: string[] = [];
-    if (selectedCard) chips.push(selectedCard.name);
+    const chips: { key: string; label: string; onClear: () => void }[] = [];
+    if (selectedCard) {
+      chips.push({
+        key: `card-${selectedCard.oracle_id}`,
+        label: selectedCard.name,
+        onClear: () => setSelectedCardOracle(null),
+      });
+    }
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       const skIdx = skeletons.indexOf(sk!);
-      if (sk) chips.push(`Cluster ${skIdx + 1}`);
+      if (sk) {
+        chips.push({
+          key: `cluster-${sk.clusterId}`,
+          label: `Cluster ${skIdx + 1}`,
+          onClear: () => setSelectedSkeletonId(null),
+        });
+      }
     }
-    if (selectedArchetype) chips.push(archetypeFullName(selectedArchetype));
+    if (selectedArchetype) {
+      chips.push({
+        key: `archetype-${selectedArchetype}`,
+        label: archetypeFullName(selectedArchetype),
+        onClear: () => setSelectedArchetype(null),
+      });
+    }
     return chips;
   }, [selectedCard, selectedSkeletonId, selectedArchetype, skeletons]);
 
@@ -1941,56 +1960,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                     </Flexbox>
                   </Flexbox>
                 </div>
-                <div className="simSection simSectionArchetypes flex flex-col gap-5 pt-2">
-                  <div className="simSectionHeading">
-                    <Text semibold className="tracking-wide">Draft Patterns</Text>
-                  </div>
-                  <Row className="gap-4">
-                    <Col xs={12}>
-                      <Card>
-                        <CardHeader>
-                          <Flexbox direction="row" justify="between" alignItems="center">
-                            <div>
-                              <div><Text semibold>Deck Color Distribution</Text></div>
-                              <div className="mt-0.5"><Text xs className="text-text-secondary">Click a row to filter stats by color profile</Text></div>
-                            </div>
-                            {selectedArchetype && (
-                              <Flexbox direction="row" gap="2" alignItems="center">
-                                <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">{archetypeFullName(selectedArchetype)}</span>
-                                <button type="button" className="text-xs text-text-secondary hover:text-text border border-border rounded px-2 py-0.5 hover:bg-bg-active" onClick={() => setSelectedArchetype(null)}>✕ Clear</button>
-                              </Flexbox>
-                            )}
-                          </Flexbox>
-                        </CardHeader>
-                        <CardBody>
-                          <ArchetypeChart
-                            archetypeDistribution={displayedArchetypeDistribution}
-                            selectedArchetype={selectedArchetype}
-                            onSelect={(cp) => { setSelectedArchetype(cp); setSelectedSkeletonId(null); }}
-                          />
-                        </CardBody>
-                      </Card>
-                    </Col>
-                  </Row>
-                  {skeletons.length > 0 && (
-                    <ArchetypeSkeletonSection
-                      skeletons={skeletons}
-                      k={clusterK}
-                      onSetK={setClusterK}
-                      coreThreshold={coreThreshold}
-                      onSetCoreThreshold={setCoreThreshold}
-                      onRecluster={() => {
-                        setSelectedSkeletonId(null);
-                        setClusterSeed((s) => s + 1);
-                      }}
-                      totalPools={displayRunData.slimPools.length}
-                      selectedSkeletonId={selectedSkeletonId}
-                      onSelectSkeleton={(id) => { setSelectedSkeletonId(id); setSelectedArchetype(null); }}
-                      isOpen={archetypesOpen}
-                      onToggle={() => setArchetypesOpen((o) => !o)}
-                    />
-                  )}
-                </div>
                 <div className="simSection simSectionCards flex flex-col gap-5 pt-2">
                   <div className="simSectionHeading">
                     <Text semibold className="tracking-wide">Card Analysis</Text>
@@ -2003,6 +1972,67 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                       <div className="simCardDiagBlock simCardDiagContext">
                         <DraftVsEloTable cardStats={displayRunData.cardStats} />
                       </div>
+                    </div>
+                    <div className="simSection simSectionArchetypes flex flex-col gap-5 pt-2">
+                      <div className="simSectionHeading">
+                        <Text semibold className="tracking-wide">Draft Patterns</Text>
+                      </div>
+                      <Row className="gap-4">
+                        <Col xs={12}>
+                          <Card>
+                            <CardHeader>
+                              <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
+                                <div>
+                                  <div><Text semibold>Deck Color Distribution</Text></div>
+                                  <div className="mt-0.5"><Text xs className="text-text-secondary">Click a row to filter stats by color profile</Text></div>
+                                </div>
+                                <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
+                                  {selectedArchetype && (
+                                    <Flexbox direction="row" gap="2" alignItems="center">
+                                      <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">{archetypeFullName(selectedArchetype)}</span>
+                                      <button type="button" className="text-xs text-text-secondary hover:text-text border border-border rounded px-2 py-0.5 hover:bg-bg-active" onClick={() => setSelectedArchetype(null)}>✕ Clear</button>
+                                    </Flexbox>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeckColorOpen((o) => !o)}
+                                    className="whitespace-nowrap px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                                  >
+                                    {deckColorOpen ? '▲ Hide' : '▼ Show'}
+                                  </button>
+                                </Flexbox>
+                              </Flexbox>
+                            </CardHeader>
+                            <Collapse isOpen={deckColorOpen}>
+                              <CardBody>
+                                <ArchetypeChart
+                                  archetypeDistribution={displayedArchetypeDistribution}
+                                  selectedArchetype={selectedArchetype}
+                                  onSelect={(cp) => { setSelectedArchetype(cp); setSelectedSkeletonId(null); }}
+                                />
+                              </CardBody>
+                            </Collapse>
+                          </Card>
+                        </Col>
+                      </Row>
+                      {skeletons.length > 0 && (
+                        <ArchetypeSkeletonSection
+                          skeletons={skeletons}
+                          k={clusterK}
+                          onSetK={setClusterK}
+                          coreThreshold={coreThreshold}
+                          onSetCoreThreshold={setCoreThreshold}
+                          onRecluster={() => {
+                            setSelectedSkeletonId(null);
+                            setClusterSeed((s) => s + 1);
+                          }}
+                          totalPools={displayRunData.slimPools.length}
+                          selectedSkeletonId={selectedSkeletonId}
+                          onSelectSkeleton={(id) => { setSelectedSkeletonId(id); setSelectedArchetype(null); }}
+                          isOpen={archetypesOpen}
+                          onToggle={() => setArchetypesOpen((o) => !o)}
+                        />
+                      )}
                     </div>
                     <div ref={detailedViewRef} className="simCardDiagBlock simCardDiagDetailArea flex flex-col gap-5 pt-2">
                       <div className="simSectionHeading">
@@ -2050,11 +2080,19 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                           <div className="md:w-56 flex-shrink-0 rounded-lg bg-bg-accent/25 px-4 py-3">
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <span className="text-xs font-medium text-text-secondary/60 uppercase tracking-wider">Scope</span>
-                              <button type="button" className="text-xs text-text-secondary/60 hover:text-text-secondary" onClick={clearActiveFilter}>Clear</button>
                             </div>
                             <Flexbox direction="row" gap="1" alignItems="center" className="flex-wrap gap-1.5">
                               {detailedViewScopeChips.map((chip) => (
-                                <span key={chip} className="text-xs bg-bg-accent text-text-secondary/80 rounded px-2 py-0.5">{chip}</span>
+                                <button
+                                  key={chip.key}
+                                  type="button"
+                                  className="inline-flex items-center gap-1 text-xs bg-bg-accent text-text-secondary/80 rounded px-2 py-0.5 hover:bg-bg-active"
+                                  onClick={chip.onClear}
+                                  title={`Clear ${chip.label} filter`}
+                                >
+                                  <span>{chip.label}</span>
+                                  <span className="text-text-secondary/60">✕</span>
+                                </button>
                               ))}
                             </Flexbox>
                           </div>
