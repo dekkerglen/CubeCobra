@@ -5632,14 +5632,32 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   }, [activeFilterChips]);
 
   const detailedViewScopeChips = useMemo(() => {
-    const chips: string[] = [];
-    if (selectedCard) chips.push(selectedCard.name);
+    const chips: { key: string; label: string; onClear: () => void }[] = [];
+    if (selectedCard) {
+      chips.push({
+        key: `card-${selectedCard.oracle_id}`,
+        label: selectedCard.name,
+        onClear: () => setSelectedCardOracle(null),
+      });
+    }
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       const skIdx = skeletons.indexOf(sk!);
-      if (sk) chips.push(`Cluster ${skIdx + 1}`);
+      if (sk) {
+        chips.push({
+          key: `cluster-${sk.clusterId}`,
+          label: `Cluster ${skIdx + 1}`,
+          onClear: () => setSelectedSkeletonId(null),
+        });
+      }
     }
-    if (selectedArchetype) chips.push(archetypeFullName(selectedArchetype));
+    if (selectedArchetype) {
+      chips.push({
+        key: `archetype-${selectedArchetype}`,
+        label: archetypeFullName(selectedArchetype),
+        onClear: () => setSelectedArchetype(null),
+      });
+    }
     return chips;
   }, [selectedCard, selectedSkeletonId, selectedArchetype, skeletons]);
 
