@@ -1,7 +1,7 @@
 import React from 'react';
 
 import NotificationType from '@utils/datatypes/Notification';
-import TimeAgo from 'react-timeago';
+import Datetime from 'components/base/Datetime';
 
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
@@ -24,7 +24,7 @@ const Notification: React.FC<NotificationProps> = ({ notification }) => {
           )}
           <Link href={`/user/notification/${notification.id}`}>{texts[1]}</Link>
           {' - '}
-          <TimeAgo date={notification.date} />
+          <Datetime date={notification.date} />
         </Text>
       </div>
     </a>

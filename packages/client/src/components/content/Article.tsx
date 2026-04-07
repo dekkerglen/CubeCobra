@@ -1,7 +1,7 @@
 import React from 'react';
 
 import ArticleData from '@utils/datatypes/Article';
-import TimeAgo from 'react-timeago';
+import Datetime from 'components/base/Datetime';
 
 import CommentsSection from 'components/comments/CommentsSection';
 import Markdown from 'components/Markdown';
@@ -26,7 +26,7 @@ const Article: React.FC<ArticleProps> = ({ article }) => {
           <Text md>
             By <Username user={article.owner} />
             {' | '}
-            <TimeAgo date={article.date} />
+            <Datetime date={article.date} />
           </Text>
         </Flexbox>
       </CardHeader>
