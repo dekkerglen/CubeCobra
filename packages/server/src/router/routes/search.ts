@@ -306,7 +306,6 @@ const performSearch = async (
   user: any,
   lastKey?: any,
 ): Promise<SearchResult> => {
-
   // Check for unsupported combinations
   if (cardQueries.length > 10) {
     return {

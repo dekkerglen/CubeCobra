@@ -7,7 +7,7 @@ import * as draftutil from '@utils/draftutil';
 import express, { Application } from 'express';
 import { cardFromId } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
-import { batchBuildBotDecks, buildBotDeck, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import { batchBuildBotDecks, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 import request from 'supertest';
 
 import { bodyValidation } from '../../src/router/middleware';
@@ -397,10 +397,12 @@ describe('Publish', () => {
     );
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat);
-    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([{
-      mainboard: playerTwoDraftSeat.mainboard,
-      sideboard: playerTwoDraftSeat.sideboard,
-    }]);
+    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([
+      {
+        mainboard: playerTwoDraftSeat.mainboard,
+        sideboard: playerTwoDraftSeat.sideboard,
+      },
+    ]);
 
     const response = await call(handler)
       .withBody(
@@ -447,10 +449,12 @@ describe('Publish', () => {
     );
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerOneDraftSeat);
-    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([{
-      mainboard: playerOneDraftSeat.mainboard,
-      sideboard: playerOneDraftSeat.sideboard,
-    }]);
+    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([
+      {
+        mainboard: playerOneDraftSeat.mainboard,
+        sideboard: playerOneDraftSeat.sideboard,
+      },
+    ]);
 
     // Player 2 (human) setup
     const playerTwoDraftSeat = createDraftSeatPicks(16, [
