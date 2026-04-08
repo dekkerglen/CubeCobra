@@ -22,6 +22,7 @@ Since 1.6.0
 - New `game:arena` / `game:paper` / `game:mtgo` filter now checks across all printings of a card (any version ever available in that game), instead of only the current printing's availability
 - New `game:is-arena` / `game:is-paper` / `game:is-mtgo` filter for checking whether the specific printing is available in that game (the previous strict behavior)
 - Adding a user as a collaborator now creates a notification to that user
+- Add `date_last_updated` to cube exports.
 
 # Bug Fixes
 
@@ -36,4 +37,5 @@ Since 1.6.0
 - Improved draft creation error messages — instead of the generic "no cards in board" message, errors now distinguish between a board having no cards at all, running out of cards mid-draft (with the original count and a suggestion to add more cards or reduce players/packs), and having remaining cards that don't match a slot filter (with the filter text and card counts)
 
 # Technical Changes
+
 - Replaced `react-timeago` dependency with a native `Datetime` component using `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` — dates within the last 7 days show relative time (e.g. "3 hours ago"), older dates show absolute format (e.g. "Feb 7, 2026")
