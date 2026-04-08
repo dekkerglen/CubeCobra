@@ -520,7 +520,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               <div className="flex flex-row items-baseline gap-2 flex-wrap mb-2">
                 <h1 className="text-white font-semibold text-xl">{cube.name}</h1>
                 <Text sm className="text-white/80">
-                  {getCubeCardCountSnippet(cube)} Cube
+                  {getCubeCardCountSnippet(cube, unfilteredChangedCards)} Cube
                 </Text>
                 <Text sm className="text-white/80">
                   •
@@ -848,7 +848,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   <div>
                     <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
                     <Text md className="text-white/80 mt-1">
-                      {getCubeCardCountSnippet(cube)} Cube •{' '}
+                      {getCubeCardCountSnippet(cube, unfilteredChangedCards)} Cube •{' '}
                       <FollowersModalLink
                         href="#"
                         modalprops={{ id: cube.id, type: 'cube' }}
