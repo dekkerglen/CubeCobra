@@ -10,7 +10,7 @@ import React, {
   useState,
 } from 'react';
 
-import { cardName, isVoucher, normalizeName } from '@utils/cardutil';
+import { cardName, normalizeName } from '@utils/cardutil';
 import Card, {
   BoardChanges,
   BoardType,
@@ -20,13 +20,12 @@ import Card, {
   CubeCardRemove,
 } from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
-import Cube, { CubeCards, getViewByName, TagColor } from '@utils/datatypes/Cube';
+import Cube, { CubeCards, TagColor, getViewByName } from '@utils/datatypes/Cube';
 import { getCubeSorts } from '@utils/sorting/Sort';
 import { deepCopy, isCubeOwner } from '@utils/Util';
 
 import { UncontrolledAlertProps } from '../components/base/Alert';
 import CardModal from '../components/card/CardModal';
-import VoucherCardModal from '../components/card/VoucherCardModal';
 import GroupModal from '../components/GroupModal';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useMount from '../hooks/UseMount';
@@ -77,7 +76,7 @@ export interface CubeContextValue {
   revertEdit: (index: number, board: BoardType) => void;
   versionDict: Record<string, CardVersion[]>;
   fetchVersionsForCard: (cardId: string) => Promise<boolean>;
-  commitChanges: (title: string, blog: string) => Promise<boolean>;
+  commitChanges: (title: string, blog: string) => Promise<void>;
   setModalSelection: Dispatch<
     SetStateAction<
       | { index: number; board: BoardType }
@@ -409,21 +408,11 @@ export function CubeContextProvider({
   const sortQuaternaryRef = React.useRef(sortQuaternary);
   sortQuaternaryRef.current = sortQuaternary;
   const prevActiveViewForSortsRef = React.useRef(activeView);
-  const isInitialSortMountRef = React.useRef(true);
 
   // Apply view's default sorts only when the active view changes,
   // and only if the current sorts match the previous view's defaults.
   // This preserves user-customized sorts when switching views.
   useEffect(() => {
-    // Skip on initial mount so URL query params (from bookmarks) are respected.
-    // useQueryParam handles reading URL params on mount; this effect should only
-    // apply view defaults when the user actively switches between views.
-    if (isInitialSortMountRef.current) {
-      isInitialSortMountRef.current = false;
-      prevActiveViewForSortsRef.current = activeView;
-      return;
-    }
-
     const prevView = getViewByName(cubeRef.current, prevActiveViewForSortsRef.current);
     const prevDefaults = prevView?.defaultSorts?.length === 4 ? prevView.defaultSorts : getCubeSorts(cubeRef.current);
 
@@ -1049,7 +1038,7 @@ export function CubeContextProvider({
   }, [changedCards, unfilteredChangedCards, filterInput]);
 
   const commitChanges = useCallback(
-    async (title: string, blog: string): Promise<boolean> => {
+    async (title: string, blog: string) => {
       setLoading(true);
 
       try {
@@ -1072,9 +1061,6 @@ export function CubeContextProvider({
 
         if (json.success !== 'true') {
           setAlerts([{ color: 'danger', message: json.message }]);
-          setModalSelection([]);
-          setLoading(false);
-          return false;
         } else {
           const newCards = deepCopy(unfilteredChangedCards);
 
@@ -1144,14 +1130,10 @@ export function CubeContextProvider({
         }
       } catch {
         setAlerts([{ color: 'danger', message: 'Operation timed out' }]);
-        setModalSelection([]);
-        setLoading(false);
-        return false;
       }
 
       setModalSelection([]);
       setLoading(false);
-      return true;
     },
     [csrfFetch, changes, cube, useBlog, unfilteredChangedCards, clearChanges, setVersion, version, tagColors],
   );
@@ -1563,35 +1545,7 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
           (modalSelection as any).isNewlyAdded &&
-          (changes[modalSelection.board] as BoardChanges | undefined)?.adds?.[(modalSelection as any).addIndex] &&
-          isVoucher((changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex]) && (
-            <VoucherCardModal
-              card={{
-                ...(changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex],
-                board: modalSelection.board,
-                index: -1,
-                details: addedCardDetails || undefined,
-              }}
-              isOpen={modalOpen}
-              setOpen={setModalOpen}
-              canEdit={canEdit}
-              versionDict={versionDict}
-              fetchVersionsForCard={fetchVersionsForCard}
-              editCard={(_, card, board) => editAddedCard((modalSelection as any).addIndex, card, board)}
-              revertEdit={() => {}}
-              revertRemove={() => {}}
-              removeCard={() => {}}
-              tagColors={tagColors}
-              moveCard={(_, board, newBoard) => moveAddedCard((modalSelection as any).addIndex, board, newBoard)}
-              allTags={allTags}
-            />
-          )}
-        {modalSelection &&
-          !Array.isArray(modalSelection) &&
-          Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
-          (modalSelection as any).isNewlyAdded &&
-          (changes[modalSelection.board] as BoardChanges | undefined)?.adds?.[(modalSelection as any).addIndex] &&
-          !isVoucher((changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex]) && (
+          (changes[modalSelection.board] as BoardChanges | undefined)?.adds?.[(modalSelection as any).addIndex] && (
             <CardModal
               card={{
                 ...(changes[modalSelection.board] as BoardChanges)!.adds![(modalSelection as any).addIndex],
@@ -1617,39 +1571,7 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
           (modalSelection as any).isSwapped &&
-          (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] &&
-          isVoucher(
-            (changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
-          ) && (
-            <VoucherCardModal
-              card={{
-                ...(changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
-                board: modalSelection.board,
-                index: -1,
-                details: addedCardDetails || undefined,
-              }}
-              isOpen={modalOpen}
-              setOpen={setModalOpen}
-              canEdit={canEdit}
-              versionDict={versionDict}
-              fetchVersionsForCard={fetchVersionsForCard}
-              editCard={(_, card, board) => editSwappedCard((modalSelection as any).swapIndex, card, board)}
-              revertEdit={() => {}}
-              revertRemove={() => {}}
-              removeCard={() => {}}
-              tagColors={tagColors}
-              moveCard={(_, board, newBoard) => moveSwappedCard((modalSelection as any).swapIndex, board, newBoard)}
-              allTags={allTags}
-            />
-          )}
-        {modalSelection &&
-          !Array.isArray(modalSelection) &&
-          Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
-          (modalSelection as any).isSwapped &&
-          (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] &&
-          !isVoucher(
-            (changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
-          ) && (
+          (changes[modalSelection.board] as BoardChanges | undefined)?.swaps?.[(modalSelection as any).swapIndex] && (
             <CardModal
               card={{
                 ...(changes[modalSelection.board] as BoardChanges)!.swaps![(modalSelection as any).swapIndex].card,
@@ -1675,34 +1597,7 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           !Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
           !Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
-          unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) &&
-          isVoucher(
-            unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!,
-          ) && (
-            <VoucherCardModal
-              card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
-              isOpen={modalOpen}
-              setOpen={setModalOpen}
-              canEdit={canEdit}
-              versionDict={versionDict}
-              fetchVersionsForCard={fetchVersionsForCard}
-              editCard={editCard}
-              revertEdit={revertEdit}
-              revertRemove={revertRemove}
-              removeCard={removeCard}
-              tagColors={tagColors}
-              moveCard={moveCard}
-              allTags={allTags}
-            />
-          )}
-        {modalSelection &&
-          !Array.isArray(modalSelection) &&
-          !Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&
-          !Object.prototype.hasOwnProperty.call(modalSelection, 'isSwapped') &&
-          unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) &&
-          !isVoucher(
-            unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!,
-          ) && (
+          unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
             <CardModal
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}

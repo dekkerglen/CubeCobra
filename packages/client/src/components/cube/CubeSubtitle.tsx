@@ -1,0 +1,34 @@
+import React, { useContext, useMemo } from 'react';
+
+import { getCubeCardCountSnippet, getCubeDescription } from '@utils/Util';
+
+import { Flexbox } from 'components/base/Layout';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
+import Text from 'components/base/Text';
+import CubeContext from 'contexts/CubeContext';
+
+const CubeSubtitle: React.FC = () => {
+  const { cube, unfilteredChangedCards } = useContext(CubeContext);
+
+  const subtitle = useMemo(() => getCubeDescription(cube, unfilteredChangedCards), [cube, unfilteredChangedCards]);
+  const mobileSubtitle = useMemo(
+    () => getCubeCardCountSnippet(cube, unfilteredChangedCards),
+    [cube, unfilteredChangedCards],
+  );
+
+  return (
+    <Flexbox direction="row" gap="2" alignItems="end" className="py-2">
+      <Text semibold md>
+        {cube.name}
+      </Text>
+      <ResponsiveDiv md>
+        <Text md>({subtitle})</Text>
+      </ResponsiveDiv>
+      <ResponsiveDiv md baseVisible={true}>
+        <Text md>({mobileSubtitle} Cube)</Text>
+      </ResponsiveDiv>
+    </Flexbox>
+  );
+};
+
+export default CubeSubtitle;

@@ -63,11 +63,7 @@ const DraftFormatsSettings: React.FC = () => {
     if (cube.formats && cube.formats.length > 0) {
       return cube.formats.map((f) => ({
         ...f,
-        packs: f.packs.map((p) => ({
-          ...p,
-          slots: p.slots.map((s: CardSlot) => ({ ...s })),
-          steps: p.steps ? [...p.steps] : null,
-        })),
+        packs: f.packs.map((p) => ({ ...p, slots: p.slots.map((s: CardSlot) => ({ ...s })), steps: p.steps ? [...p.steps] : null })),
       }));
     }
     return [];

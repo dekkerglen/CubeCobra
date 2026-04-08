@@ -33,7 +33,7 @@ export const submitApplicationHandler = async (req: Request, res: Response) => {
     // Prevent duplicate active applications by this user
     const existing = await noticeDao.getByStatus(NoticeStatus.ACTIVE);
     const alreadyReported = (existing.items || []).some(
-      (n) => n.type === NoticeType.APPLICATION && String(n.user?.id || n.user) === String(req.user?.id || null),
+      (n) => n.type === NoticeType.APPLICATION && String(n.user?.id || n.user) === String(req.user?.id || null)
     );
     if (alreadyReported) {
       req.flash('success', 'Your application has been submitted. We will reach out via email when a decision is made.');

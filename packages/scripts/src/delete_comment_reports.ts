@@ -9,11 +9,11 @@
  *     src/delete_comment_reports.ts --comment <commentId> [--dry-run]
  */
 
-import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
+import 'dotenv/config';
+
 import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
 import { noticeDao } from 'dynamo/daos';
-
-import 'dotenv/config';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -21,10 +21,10 @@ async function main() {
   let commentId: string | undefined;
   let dryRun = false;
 
-  for (let i = 0; i < args.length; i += 1) {
+  for (let i = 0; i < args.length; i++) {
     if (args[i] === '--comment' && args[i + 1]) {
       commentId = args[i + 1];
-      i += 1;
+      i++;
     } else if (args[i] === '--dry-run') {
       dryRun = true;
     }
@@ -62,18 +62,16 @@ async function main() {
       );
 
       for (const notice of matches) {
-        totalFound += 1;
-        console.log(
-          `  Found report: ${notice.id} (date: ${new Date(notice.date).toISOString()}, user: ${typeof notice.user === 'object' ? notice.user?.username || notice.user?.id : notice.user})`,
-        );
+        totalFound++;
+        console.log(`  Found report: ${notice.id} (date: ${new Date(notice.date).toISOString()}, user: ${typeof notice.user === 'object' ? notice.user?.username || notice.user?.id : notice.user})`);
 
         if (!dryRun) {
           try {
             await noticeDao.delete(notice);
-            totalDeleted += 1;
+            totalDeleted++;
           } catch (err: any) {
             console.error(`  ERROR deleting ${notice.id}: ${err.message}`);
-            totalErrors += 1;
+            totalErrors++;
           }
         }
       }

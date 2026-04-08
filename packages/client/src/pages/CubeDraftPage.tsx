@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DndContext } from '@dnd-kit/core';
-import { isVoucher, makeSubtitle } from '@utils/cardutil';
+import { makeSubtitle } from '@utils/cardutil';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import { getCardDefaultRowColumn, getInitialState, setupPicks } from '@utils/draftutil';
@@ -61,49 +61,14 @@ const fetchBatchPredict = async (inputs: BatchPredictRequest[]): Promise<Predict
   return response.json();
 };
 
-const processPredictions = (json: PredictResponse, packCards: any[]): number[] => {
+const processPredictions = (json: PredictResponse, packCards: any[]) => {
   // Create a map of oracle IDs to ratings
   const predictionsMap = new Map(json.prediction[0].map((p) => [p.oracle, p.rating]));
   // Then add ratings to packCards while maintaining pack order
-  // For vouchers, sum the ratings of their unique sub-cards (picking a voucher gives you ALL sub-cards)
-  const rawRatings = packCards.map((card): number => {
-    if (card.voucherOracleIds && card.voucherOracleIds.length > 0) {
-      // Use Set to deduplicate oracle_ids - ML returns one rating per unique oracle
-      const uniqueOracleIds = [...new Set<string>(card.voucherOracleIds as string[])];
-      return uniqueOracleIds.reduce((acc: number, oracleId: string) => acc + (predictionsMap.get(oracleId) || 0), 0);
-    }
-    return predictionsMap.get(card.oracle_id) || 0;
-  });
-
-  // Normalize: duplicates get the same rating, then normalize so total = 100%
-  const total = rawRatings.reduce((acc, r) => acc + r, 0);
-  return total > 0 ? rawRatings.map((r) => r / total) : rawRatings;
+  return packCards.map((card) => predictionsMap.get(card.oracle_id) || 0);
 };
 
 const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
-  /**
-   * Expand a picked card index into board entries. For normal cards, returns [{ cardIndex, row, col }].
-   * For vouchers, returns entries for each of the voucher's sub-cards (using pre-expanded indices).
-   * The voucher itself is NOT added to the player's board.
-   */
-  const expandPickForBoard = useCallback(
-    (cardIndex: number): { cardIndex: number; row: number; col: number }[] => {
-      const card = draft.cards[cardIndex];
-      if (!card) return [{ cardIndex, ...getCardDefaultRowColumn(card) }];
-
-      if (isVoucher(card) && card.voucher_card_indices && card.voucher_card_indices.length > 0) {
-        // Use pre-expanded sub-card indices from draft creation
-        return card.voucher_card_indices.map((subCardIndex) => {
-          const subCard = draft.cards[subCardIndex];
-          return { cardIndex: subCardIndex, ...getCardDefaultRowColumn(subCard) };
-        });
-      }
-
-      return [{ cardIndex, ...getCardDefaultRowColumn(card) }];
-    },
-    [draft.cards],
-  );
-
   // Draft State
   // These reflect the current state of the draft objects, including the cards in the pack, the picks made, and the ratings for each card.
   const [state, setState] = useLocalStorage(`draftstate-${draft.id}`, getInitialState(draft));
@@ -180,36 +145,17 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     }
   }, [csrfFetch, draft.id, mainboard, userPicksInOrder, sideboard, state, setDraftStatus, trashboard, addAlert]);
 
-  // Helper to get oracle_ids from a card, expanding vouchers to sub-card oracle_ids
-  const getCardOracleIds = useCallback(
-    (index: number): string[] => {
-      const card = draft.cards[index];
-      if (!card) return [];
-
-      if (isVoucher(card)) {
-        // Prefer voucher_card_indices (pre-expanded at draft creation), fallback to voucher_cards
-        if (card.voucher_card_indices && card.voucher_card_indices.length > 0) {
-          return card.voucher_card_indices
-            .map((idx) => draft.cards[idx]?.details?.oracle_id)
-            .filter((id): id is string => Boolean(id));
-        }
-        if (card.voucher_cards && card.voucher_cards.length > 0) {
-          return card.voucher_cards.map((vc) => vc.details?.oracle_id).filter((id): id is string => Boolean(id));
-        }
-      }
-
-      return card.details?.oracle_id ? [card.details.oracle_id] : [];
-    },
-    [draft.cards],
-  );
-
   const getPredictions = useCallback(
-    async (request: { state: any; packCards: { index: number; oracle_id: string; voucherOracleIds?: string[] }[] }) => {
+    async (request: { state: any; packCards: { index: number; oracle_id: string }[] }) => {
       setDraftStatus((prev) => ({ ...prev, predictionsLoading: true, predictError: false }));
       try {
         const inputs = request.state.seats.map((seat: any) => ({
-          pack: seat.pack.flatMap((index: number) => getCardOracleIds(index)),
-          picks: seat.picks.flatMap((index: number) => getCardOracleIds(index)),
+          pack: seat.pack
+            .map((index: number) => draft.cards[index]?.details?.oracle_id)
+            .filter((id: string | undefined): id is string => Boolean(id)),
+          picks: seat.picks
+            .map((index: number) => draft.cards[index]?.details?.oracle_id)
+            .filter((id: string | undefined): id is string => Boolean(id)),
         }));
 
         const json = await fetchBatchPredict(inputs);
@@ -224,7 +170,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         setDraftStatus((prev) => ({ ...prev, predictionsLoading: false }));
       }
     },
-    [getCardOracleIds],
+    [draft.cards],
   );
 
   const handleRetryPredict = useCallback(async () => {
@@ -235,18 +181,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     setDraftStatus((prev) => ({ ...prev, retryInProgress: true }));
     try {
       const currentState = state;
-      const packCards = currentState.seats[0].pack.map((index) => {
-        const card = draft.cards[index];
-        const voucherOracleIds =
-          isVoucher(card) && card?.voucher_cards
-            ? card.voucher_cards.map((vc) => vc.details?.oracle_id).filter((id): id is string => Boolean(id))
-            : undefined;
-        return {
-          index,
-          oracle_id: card?.details?.oracle_id || '',
-          voucherOracleIds,
-        };
-      });
+      const packCards = currentState.seats[0].pack.map((index) => ({
+        index,
+        oracle_id: draft.cards[index]?.details?.oracle_id || '',
+      }));
       await getPredictions({ state: currentState, packCards });
     } finally {
       setDraftStatus((prev) => ({ ...prev, retryInProgress: false }));
@@ -407,21 +345,11 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
           const request = {
             state: newState,
             packCards: newState.seats[0].pack
-              .map((index) => {
-                const card = draft.cards[index];
-                const voucherOracleIds =
-                  isVoucher(card) && card?.voucher_cards
-                    ? card.voucher_cards.map((vc) => vc.details?.oracle_id).filter((id): id is string => Boolean(id))
-                    : undefined;
-                return {
-                  index,
-                  oracle_id: card?.details?.oracle_id || '',
-                  voucherOracleIds,
-                };
-              })
-              .filter(
-                (card) => Boolean(card.oracle_id) || Boolean(card.voucherOracleIds && card.voucherOracleIds.length > 0),
-              ),
+              .map((index) => ({
+                index,
+                oracle_id: draft.cards[index]?.details?.oracle_id || '',
+              }))
+              .filter((card): card is { index: number; oracle_id: string } => Boolean(card.oracle_id)),
           };
 
           await getPredictions(request);
@@ -457,9 +385,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       const cardIndex = state.seats[0].pack[source.index];
       if (cardIndex === undefined || !draft.cards[cardIndex]) return;
 
-      // For vouchers, expand into their contained cards instead of placing the voucher itself
-      const boardEntries = expandPickForBoard(cardIndex);
-
       // Update the board immediately
       if (draftStatus.predictionsLoading) {
         setPendingPick(source.index);
@@ -467,14 +392,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         const setter = target.type === locations.deck ? setMainboard : setSideboard;
         setter((prev) => {
           const newBoard = prev.map((r) => r.map((c) => [...c]));
-          for (const entry of boardEntries) {
-            // Use drag target's row/col for the first card, default placement for the rest
-            if (entry === boardEntries[0]) {
-              newBoard[target.row][target.col].push(entry.cardIndex);
-            } else {
-              newBoard[entry.row][entry.col].push(entry.cardIndex);
-            }
-          }
+          newBoard[target.row][target.col].push(cardIndex);
           return newBoard;
         });
       } else {
@@ -482,13 +400,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         const setter = target.type === locations.deck ? setMainboard : setSideboard;
         setter((prev) => {
           const newBoard = prev.map((r) => r.map((c) => [...c]));
-          for (const entry of boardEntries) {
-            if (entry === boardEntries[0]) {
-              newBoard[target.row][target.col].push(entry.cardIndex);
-            } else {
-              newBoard[entry.row][entry.col].push(entry.cardIndex);
-            }
-          }
+          newBoard[target.row][target.col].push(cardIndex);
           return newBoard;
         });
 
@@ -505,7 +417,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       setMainboard,
       setSideboard,
       state.seats,
-      expandPickForBoard,
       setUserPicksInOrder,
     ],
   );
@@ -546,15 +457,12 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         return;
       }
 
-      // For vouchers, expand into their contained cards instead of placing the voucher itself
-      const boardEntries = expandPickForBoard(cardIndex);
+      const { row, col } = getCardDefaultRowColumn(card);
 
       if (draftStatus.predictionsLoading) {
         setMainboard((prev) => {
           const newBoard = prev.map((r) => r.map((c) => [...c]));
-          for (const entry of boardEntries) {
-            newBoard[entry.row][entry.col].push(entry.cardIndex);
-          }
+          newBoard[row][col].push(cardIndex);
           return newBoard;
         });
         setPendingPick(packIndex);
@@ -562,9 +470,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         setMainboard((prev) => {
           setUserPicksInOrder((prev) => [cardIndex, ...prev]);
           const newBoard = prev.map((r) => r.map((c) => [...c]));
-          for (const entry of boardEntries) {
-            newBoard[entry.row][entry.col].push(entry.cardIndex);
-          }
+          newBoard[row][col].push(cardIndex);
           return newBoard;
         });
 
@@ -579,7 +485,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       setMainboard,
       setPendingPick,
       setUserPicksInOrder,
-      expandPickForBoard,
     ],
   );
 
@@ -777,18 +682,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       if (state?.seats?.[0]?.pack?.length > 0) {
         const request = {
           state,
-          packCards: state.seats[0].pack.map((index) => {
-            const card = draft.cards[index];
-            const voucherOracleIds =
-              isVoucher(card) && card?.voucher_cards
-                ? card.voucher_cards.map((vc) => vc.details?.oracle_id).filter((id): id is string => Boolean(id))
-                : undefined;
-            return {
-              index,
-              oracle_id: card?.details?.oracle_id || '',
-              voucherOracleIds,
-            };
-          }),
+          packCards: state.seats[0].pack.map((index) => ({
+            index,
+            oracle_id: draft.cards[index]?.details?.oracle_id || '',
+          })),
         };
         await getPredictions(request);
       }

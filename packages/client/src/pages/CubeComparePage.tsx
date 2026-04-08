@@ -56,31 +56,14 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cub
   );
 };
 
-const CubeComparePage: React.FC<CubeComparePageProps> = ({
-  cards,
-  cube,
-  cubeB,
-  onlyA,
-  onlyB,
-  both,
-  pitDate,
-  changelogId: _changelogId,
-}) => {
+const CubeComparePage: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both, pitDate, changelogId }) => {
   return (
     <FilterContextProvider>
       <MainLayout>
         <DisplayContextProvider cubeID={cube.id}>
           <ChangesContextProvider cube={cube}>
             <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>
-              <CubeComparePageInner
-                cards={cards}
-                cube={cube}
-                cubeB={cubeB}
-                onlyA={onlyA}
-                onlyB={onlyB}
-                both={both}
-                pitDate={pitDate}
-              />
+              <CubeComparePageInner cards={cards} cube={cube} cubeB={cubeB} onlyA={onlyA} onlyB={onlyB} both={both} pitDate={pitDate} />
             </CubeContextProvider>
           </ChangesContextProvider>
         </DisplayContextProvider>

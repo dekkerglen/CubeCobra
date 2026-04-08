@@ -100,7 +100,11 @@ describe('normalizePackSlots', () => {
     };
 
     const normalized = normalizePackSlots(legacyPack);
-    expect(normalized.slots).toEqual([{ filter: '*' }, { filter: 'rarity:rare' }, { filter: '' }]);
+    expect(normalized.slots).toEqual([
+      { filter: '*' },
+      { filter: 'rarity:rare' },
+      { filter: '' },
+    ]);
   });
 
   it('Does not modify already-normalized CardSlot[] slots', () => {
@@ -110,7 +114,10 @@ describe('normalizePackSlots', () => {
     };
 
     const normalized = normalizePackSlots(pack);
-    expect(normalized.slots).toEqual([{ filter: '*' }, { filter: 'rarity:rare', board: 'maybeboard' }]);
+    expect(normalized.slots).toEqual([
+      { filter: '*' },
+      { filter: 'rarity:rare', board: 'maybeboard' },
+    ]);
   });
 
   it('Handles empty slots array', () => {

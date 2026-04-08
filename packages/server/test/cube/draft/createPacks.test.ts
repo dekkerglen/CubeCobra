@@ -1,4 +1,4 @@
-import { CardSlot, DraftFormat, DraftState, Pack } from '@utils/datatypes/Draft';
+import { DraftFormat, DraftState, CardSlot, Pack } from '@utils/datatypes/Draft';
 import { createPacks, CreatePacksResult, DraftResult, NextCardFn } from '@utils/drafting/createdraft';
 import { buildDefaultSteps, createDefaultDraftFormat } from '@utils/draftutil';
 import seedrandom from 'seedrandom';
@@ -163,11 +163,20 @@ describe('createPacks', () => {
         title: 'Custom',
         packs: [
           {
-            slots: [{ filter: 'rarity:mythic' }, { filter: 'rarity:rare' }, { filter: 'set:inv' }],
+            slots: [
+              { filter: 'rarity:mythic' },
+              { filter: 'rarity:rare' },
+              { filter: 'set:inv' },
+            ],
             steps: buildDefaultSteps(3),
           },
           {
-            slots: [{ filter: 'tag:alpha' }, { filter: 'tag:beta' }, { filter: 'tag:delta' }, { filter: 'tag:kappa' }],
+            slots: [
+              { filter: 'tag:alpha' },
+              { filter: 'tag:beta' },
+              { filter: 'tag:delta' },
+              { filter: 'tag:kappa' },
+            ],
             steps: buildDefaultSteps(3),
           },
         ],

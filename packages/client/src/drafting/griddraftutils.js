@@ -1,5 +1,3 @@
-import { isVoucher } from '@utils/cardutil';
-
 export const getGridDrafterState = ({ gridDraft, seatNumber }) => {
   const { cards, InitialState } = gridDraft;
   const numPacks = gridDraft.InitialState.length;
@@ -81,26 +79,7 @@ const GRID_DRAFT_OPTIONS = [0, 1, 2]
 export const calculateGridBotPick = (drafterState) => {
   const { cardsInPack, cards } = drafterState;
 
-  // Get elo for each card slot, summing voucher sub-cards' elos
-  const getCardElo = (index) => {
-    if (!index && index !== 0) return 0;
-    const card = cards[index];
-    if (!card) return 0;
-
-    if (isVoucher(card)) {
-      // Prefer voucher_card_indices (pre-expanded), fallback to voucher_cards
-      if (card.voucher_card_indices && card.voucher_card_indices.length > 0) {
-        return card.voucher_card_indices.reduce((sum, idx) => sum + (cards[idx]?.details?.elo || 0), 0);
-      }
-      if (card.voucher_cards && card.voucher_cards.length > 0) {
-        return card.voucher_cards.reduce((sum, vc) => sum + (vc.details?.elo || 0), 0);
-      }
-    }
-
-    return card.details?.elo || 0;
-  };
-
-  const elos = cardsInPack.map((index) => getCardElo(index));
+  const elos = cardsInPack.map((index) => (index ? cards[index].details.elo : 0));
 
   // get the index with the highest sum elo
   const optionElos = GRID_DRAFT_OPTIONS.map((option) => option.map((index) => elos[index]).reduce((a, b) => a + b, 0));

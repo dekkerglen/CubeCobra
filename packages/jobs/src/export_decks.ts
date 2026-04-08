@@ -4,7 +4,7 @@ import path from 'path';
 import 'module-alias/register';
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
-import { cubeDao, draftDao, exportTaskDao } from '@server/dynamo/daos';
+import { draftDao, exportTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
@@ -68,8 +68,6 @@ const processPicks = (
     cube: any;
   },
   oracleToIndex: any,
-  landCapacity: number = 17,
-  nonlandCapacity: number = 23,
 ) => {
   const picks: {
     cube: any;
@@ -78,8 +76,6 @@ const processPicks = (
     pack: any[];
     picked: any;
     pool: any[];
-    landCount: number;
-    nonlandCount: number;
   }[] = [];
 
   if (!draft.seats) {
@@ -111,11 +107,6 @@ const processPicks = (
           draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex),
         );
 
-        const poolLands = drafterState.picked.filter((i: any) => {
-          const c = draft.cards[i];
-          return c && (c.type_line ?? c.details?.type ?? '').includes('Land');
-        }).length;
-
         picks.push({
           cube: draft.cube,
           cubeCards: 0,
@@ -123,8 +114,6 @@ const processPicks = (
           pack,
           picked,
           pool,
-          landCount: Math.min(1, poolLands / landCapacity),
-          nonlandCount: Math.min(1, (pool.length - poolLands) / nonlandCapacity),
         });
       }
     }
@@ -196,7 +185,6 @@ const taskId = process.env.EXPORT_TASK_ID;
       console.log(`Uploaded and cleaned up batches ${startBatch} to ${endBatch - 1}`);
     };
 
-    const cubeCache: Record<string, any> = {};
     let lastUploadedBatch = 0;
 
     for (const draftType of draftTypes) {
@@ -220,15 +208,8 @@ const taskId = process.env.EXPORT_TASK_ID;
         const drafts = await Promise.all(draftIds.map((id: string) => draftDao.getById(id)));
         const validDrafts = drafts.filter((d): d is NonNullable<typeof d> => d !== null);
 
-        for (const d of validDrafts) {
-          if (d.cube && !cubeCache[d.cube]) cubeCache[d.cube] = await cubeDao.getById(d.cube);
-        }
-
         const processedDrafts = validDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
-        const picksResults = validDrafts.map((draft: any) => {
-          const cube = cubeCache[draft.cube];
-          return processPicks(draft, oracleToIndex, cube?.deckbuildLands, cube?.deckbuildSpells);
-        });
+        const picksResults = validDrafts.map((draft: any) => processPicks(draft, oracleToIndex));
 
         // Collect cube instances and picks for this batch
         const batchCubeInstances: number[][] = [];

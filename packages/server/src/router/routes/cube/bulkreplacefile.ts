@@ -11,7 +11,10 @@ import { Request, Response } from '../../../types/express';
  * Compute adds/removes delta between current and new card lists for a single board.
  * Handles multiple copies of the same card correctly.
  */
-function computeBoardDelta(currentCards: Card[], newCards: Card[]): { adds: any[]; removes: any[] } {
+function computeBoardDelta(
+  currentCards: Card[],
+  newCards: Card[],
+): { adds: any[]; removes: any[] } {
   const currentCounts = new Map<string, number>();
   const newCounts = new Map<string, number>();
 

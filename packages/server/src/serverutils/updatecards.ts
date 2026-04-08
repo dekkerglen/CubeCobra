@@ -66,12 +66,6 @@ const shouldUpdateCards = (localManifest: CardManifest | null, remoteManifest: C
     return true;
   }
 
-  // If checksums are missing, treat as needing update
-  if (!localManifest.checksum || !remoteManifest.checksum) {
-    console.log('Missing checksum in manifest, will update cards');
-    return true;
-  }
-
   // Check if checksum changed
   if (localManifest.checksum !== remoteManifest.checksum) {
     console.log(
@@ -128,12 +122,6 @@ export async function updateCardbase(basePath: string = 'private', bucket: strin
  * This should be called periodically (e.g., every 30 minutes).
  */
 export async function checkAndUpdateCardbase(basePath: string = 'private', bucket: string): Promise<boolean> {
-  // Skip cardbase updates in development mode
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Skipping cardbase update check in development mode');
-    return false;
-  }
-
   // Prevent concurrent updates
   if (isUpdating) {
     console.log('Card database update already in progress, skipping this check');

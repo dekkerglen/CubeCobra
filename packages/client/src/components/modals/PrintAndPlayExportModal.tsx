@@ -1,10 +1,10 @@
 import React, { useContext, useMemo, useState } from 'react';
+import { jsPDF } from 'jspdf';
 
-import { cardImageNormal } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
+import { cardImageNormal } from '@utils/cardutil';
 import { getViewByName } from '@utils/datatypes/Cube';
 import { sortForDownload } from '@utils/sorting/Sort';
-import { jsPDF } from 'jspdf';
 
 import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
@@ -44,6 +44,19 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
     return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
   }, [cube, activeView]);
 
+  const loadImage = (url: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = (err) => {
+        console.error('Image load error:', err);
+        reject(err);
+      };
+      img.src = url;
+    });
+  };
+
   const getImageDataUrl = async (url: string): Promise<string> => {
     try {
       // Use server proxy to avoid CORS issues
@@ -53,17 +66,17 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
         throw new Error(`Failed to fetch image: ${response.statusText}`);
       }
       const blob = await response.blob();
-
+      
       // Create object URL and load into image
       const objectUrl = URL.createObjectURL(blob);
       const img = new Image();
-
+      
       await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve();
         img.onerror = reject;
         img.src = objectUrl;
       });
-
+      
       // Convert to canvas and get data URL
       const canvas = document.createElement('canvas');
       canvas.width = img.naturalWidth;
@@ -71,10 +84,10 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Could not get canvas context');
       ctx.drawImage(img, 0, 0);
-
+      
       // Clean up object URL
       URL.revokeObjectURL(objectUrl);
-
+      
       return canvas.toDataURL('image/jpeg', 0.95);
     } catch (error) {
       console.error('Failed to convert image:', error);
@@ -151,7 +164,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
       const cardsPerRow = 3;
       const rowsPerPage = 3;
       const cardsPerPage = cardsPerRow * rowsPerPage;
-
+      
       // Center the grid on the page (no spacing between cards, only outer margins)
       const totalGridWidth = cardWidth * cardsPerRow;
       const totalGridHeight = cardHeight * rowsPerPage;
@@ -182,7 +195,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
           // Add image to PDF
           pdf.addImage(imageDataUrl, 'JPEG', x, y, cardWidth, cardHeight);
 
-          cardIndex += 1;
+          cardIndex++;
 
           // Add new page if needed
           if (cardIndex % cardsPerPage === 0 && i < cardsWithImages.length - 1) {

@@ -30,7 +30,7 @@ jest.mock('../../../src/dynamo/daos', () => ({
 import { cubeDao, draftDao } from '../../../src/dynamo/daos';
 
 jest.mock('serverutils/draftbots', () => ({
-  batchDeckbuild: jest.fn(),
+  deckbuild: jest.fn(),
 }));
 
 jest.mock('@utils/cardutil', () => ({
@@ -350,16 +350,14 @@ describe('Finish Draft', () => {
       disableAlerts: false,
     });
 
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValue([
-      {
-        mainboard: [
-          draft.cards[9]!.details?.oracle_id,
-          draft.cards[8]!.details?.oracle_id,
-          draft.cards[10]!.details?.oracle_id,
-        ],
-        sideboard: [],
-      },
-    ]);
+    (draftbots.deckbuild as jest.Mock).mockReturnValue({
+      mainboard: [
+        draft.cards[9]!.details?.oracle_id,
+        draft.cards[8]!.details?.oracle_id,
+        draft.cards[10]!.details?.oracle_id,
+      ],
+      sideboard: [],
+    });
 
     setupSuccessReturns(draft);
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
@@ -369,14 +367,10 @@ describe('Finish Draft', () => {
 
     await verifySuccessfulDraft(draftOwner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
 
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
+    expect(draftbots.deckbuild).toHaveBeenCalledWith(
+      getCardDetails(draft.cards, [8, 9, 10]),
+      getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
+    );
 
     // Verify notification was sent
     expect(util.addNotification).toHaveBeenCalledWith(
@@ -397,16 +391,14 @@ describe('Finish Draft', () => {
       disableAlerts: true,
     });
 
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValue([
-      {
-        mainboard: [
-          draft.cards[9]!.details?.oracle_id,
-          draft.cards[8]!.details?.oracle_id,
-          draft.cards[10]!.details?.oracle_id,
-        ],
-        sideboard: [],
-      },
-    ]);
+    (draftbots.deckbuild as jest.Mock).mockReturnValue({
+      mainboard: [
+        draft.cards[9]!.details?.oracle_id,
+        draft.cards[8]!.details?.oracle_id,
+        draft.cards[10]!.details?.oracle_id,
+      ],
+      sideboard: [],
+    });
 
     setupSuccessReturns(draft);
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
@@ -416,14 +408,10 @@ describe('Finish Draft', () => {
 
     await verifySuccessfulDraft(draftOwner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
 
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
+    expect(draftbots.deckbuild).toHaveBeenCalledWith(
+      getCardDetails(draft.cards, [8, 9, 10]),
+      getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
+    );
 
     // Verify notification was sent
     expect(util.addNotification).not.toHaveBeenCalled();
@@ -434,16 +422,14 @@ describe('Finish Draft', () => {
     draft.cubeOwner = cubeOwner;
     draft.owner = cubeOwner;
 
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValue([
-      {
-        mainboard: [
-          draft.cards[9]!.details?.oracle_id,
-          draft.cards[8]!.details?.oracle_id,
-          draft.cards[10]!.details?.oracle_id,
-        ],
-        sideboard: [],
-      },
-    ]);
+    (draftbots.deckbuild as jest.Mock).mockReturnValue({
+      mainboard: [
+        draft.cards[9]!.details?.oracle_id,
+        draft.cards[8]!.details?.oracle_id,
+        draft.cards[10]!.details?.oracle_id,
+      ],
+      sideboard: [],
+    });
 
     setupSuccessReturns(draft);
 
@@ -452,33 +438,28 @@ describe('Finish Draft', () => {
 
     await verifySuccessfulDraft(draft.owner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
 
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
+    expect(draftbots.deckbuild).toHaveBeenCalledWith(
+      getCardDetails(draft.cards, [8, 9, 10]),
+      getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
+    );
 
+    expect(cubeDao.getById).not.toHaveBeenCalled();
     expect(util.addNotification).not.toHaveBeenCalled();
   });
 
   it('should successfully finish a draft with bot decks complete with basics', async () => {
     //Only the bots have to be deck built.
     //Aligned with validBody but returning in different order because of ML preferences
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValueOnce([
-      {
-        mainboard: [
-          draft.cards[9]!.details?.oracle_id,
-          draft.cards[draft.basics[3]!]!.details?.oracle_id,
-          draft.cards[8]!.details?.oracle_id,
-          draft.cards[10]!.details?.oracle_id,
-          draft.cards[draft.basics[1]!]!.details?.oracle_id,
-        ],
-        sideboard: [],
-      },
-    ]);
+    (draftbots.deckbuild as jest.Mock).mockReturnValueOnce({
+      mainboard: [
+        draft.cards[9]!.details?.oracle_id,
+        draft.cards[draft.basics[3]!]!.details?.oracle_id,
+        draft.cards[8]!.details?.oracle_id,
+        draft.cards[10]!.details?.oracle_id,
+        draft.cards[draft.basics[1]!]!.details?.oracle_id,
+      ],
+      sideboard: [],
+    });
 
     setupSuccessReturns(draft);
 
@@ -493,25 +474,19 @@ describe('Finish Draft', () => {
 
     await verifySuccessfulDraft(owner, draft, expectedBotMainboard, draftutil.setupPicks(1, 8));
 
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
+    expect(draftbots.deckbuild).toHaveBeenCalledWith(
+      getCardDetails(draft.cards, [8, 9, 10]),
+      getCardDetails(draft.cards, [30, 31, 32, 33, 34]), // basics array
+    );
   });
 
   it('should successfully finish a draft with cards in the sideboard', async () => {
     //Only the bots have to be deck built.
     //Aligned with validBody but returning in different order because of ML preferences
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValueOnce([
-      {
-        mainboard: [draft.cards[9]!.details?.oracle_id, draft.cards[10]!.details?.oracle_id],
-        sideboard: [draft.cards[8]!.details?.oracle_id],
-      },
-    ]);
+    (draftbots.deckbuild as jest.Mock).mockReturnValueOnce({
+      mainboard: [draft.cards[9]!.details?.oracle_id, draft.cards[10]!.details?.oracle_id],
+      sideboard: [draft.cards[8]!.details?.oracle_id],
+    });
 
     const expectedBotMainboard: number[][][] = draftutil.setupPicks(2, 8);
     expectedBotMainboard[0]![1]!.push(9);
@@ -522,14 +497,10 @@ describe('Finish Draft', () => {
 
     await verifySuccessfulDraft(owner, draft, expectedBotMainboard, expectedSideBoard);
 
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
+    expect(draftbots.deckbuild).toHaveBeenCalledWith(
+      getCardDetails(draft.cards, [8, 9, 10]),
+      getCardDetails(draft.cards, [30, 31, 32, 33, 34]), // basics array
+    );
   });
 
   it('should handle server errors gracefully', async () => {

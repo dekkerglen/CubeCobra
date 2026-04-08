@@ -281,9 +281,7 @@ console.log(card.name);                         // "Lightning Bolt"`}
     "owner": "user-uuid",
     "pack": [5, 12, 8, 3],    // Cards in pack (oracle indexes)
     "picked": 5,              // Card picked (oracle index)
-    "pool": [2, 7],           // Cards already drafted (oracle indexes)
-    "landCount": 0.12,        // Fraction of lands picked (0-1 scale, 1 = 17 lands)
-    "nonlandCount": 0.09      // Fraction of nonlands picked (0-1 scale, 1 = 23 nonlands)
+    "pool": [2, 7]            // Cards already drafted (oracle indexes)
   },
   ...
 ]`}
@@ -330,11 +328,6 @@ console.log(card.name);                         // "Lightning Bolt"`}
                 <li>
                   The values in the cubeInstance are card indexes that map to{' '}
                   <code className="bg-bg-active px-1 rounded">indexToOracleMap.json</code>
-                </li>
-                <li>
-                  <code className="bg-bg-active px-1 rounded">landCount</code> and{' '}
-                  <code className="bg-bg-active px-1 rounded">nonlandCount</code> indicate how full the drafter's land
-                  and nonland slots are on a 0–1 scale (1.0 = 17 lands or 23 nonlands respectively)
                 </li>
               </ol>
 

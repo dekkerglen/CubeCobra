@@ -605,6 +605,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       if (cube && cube.basics && Array.isArray(cube.basics) && cube.basics.length > 0) {
         // Only migrate if the basics board is empty or doesn't exist
         if (!cards.basics || cards.basics.length === 0) {
+
           cards.basics = cube.basics.map((cardId: string, index: number) => ({
             cardID: cardId,
             status: cube!.defaultStatus || 'Not Owned',
@@ -622,7 +623,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
               ...cube,
               basics: [],
             });
-          } catch (_err) {
+
+          } catch (err) {
             // Continue anyway - migration will happen again next time
           }
         }
@@ -645,7 +647,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         try {
           // Cards don't have details yet, so we can save directly
           await putObject(process.env.DATA_BUCKET!, `cube/${id}.json`, cards);
-        } catch (_err) {
+
+        } catch (err) {
           // Continue anyway - migration will happen again next time
         }
       }
@@ -1303,15 +1306,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
           ...cardFromId(cards[i].cardID),
         };
         cards[i].index = i;
-
-        // Resolve details for voucher card contents
-        if (cards[i].voucher_cards && Array.isArray(cards[i].voucher_cards)) {
-          for (const vc of cards[i].voucher_cards) {
-            if (vc.cardID) {
-              vc.details = { ...cardFromId(vc.cardID) };
-            }
-          }
-        }
       } else {
         cards[i] = {
           details: getPlaceholderCard(''),
@@ -1337,13 +1331,6 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
             return tag.text;
           }
           return tag;
-        });
-      }
-
-      // Strip details from voucher cards (they are resolved at runtime)
-      if (card.voucher_cards && Array.isArray(card.voucher_cards)) {
-        card.voucher_cards.forEach((vc: any) => {
-          delete vc.details;
         });
       }
     });

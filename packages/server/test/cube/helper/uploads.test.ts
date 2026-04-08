@@ -101,11 +101,14 @@ describe('Bulk Upload', () => {
       const owner = createUser({ following: ['user1'] });
       const cube = createCube({ owner });
 
-      const csvContent =
-        'name,CMC,Type,Color,board,Rarity\nLightning Bolt,1,Instant,R,mainboard,C\nHealingSalve,1,Instant,W,maybeboard,C';
+      const csvContent = 'name,CMC,Type,Color,board,Rarity\nLightning Bolt,1,Instant,R,mainboard,C\nHealingSalve,1,Instant,W,maybeboard,C';
 
-      const mockCard1 = createMockCardFromCSV(createCardDetails({ name: 'Lightning Bolt', scryfall_id: 'bolt-id' }));
-      const mockCard2 = createMockCardFromCSV(createCardDetails({ name: 'Healing Salve', scryfall_id: 'salve-id' }));
+      const mockCard1 = createMockCardFromCSV(
+        createCardDetails({ name: 'Lightning Bolt', scryfall_id: 'bolt-id' }),
+      );
+      const mockCard2 = createMockCardFromCSV(
+        createCardDetails({ name: 'Healing Salve', scryfall_id: 'salve-id' }),
+      );
 
       setupBasicMocks();
       (cubefn.CSVtoCards as jest.Mock).mockReturnValue({
@@ -216,7 +219,9 @@ describe('Bulk Upload', () => {
       setupBasicMocks();
 
       // Mock getMostReasonable for each card
-      (carddb.getMostReasonable as jest.Mock).mockReturnValueOnce(cards[0]).mockReturnValueOnce(cards[1]);
+      (carddb.getMostReasonable as jest.Mock)
+        .mockReturnValueOnce(cards[0])
+        .mockReturnValueOnce(cards[1]);
 
       // Mock cardFromId for detail lookups
       (carddb.cardFromId as jest.Mock)

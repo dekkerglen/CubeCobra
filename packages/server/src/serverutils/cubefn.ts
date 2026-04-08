@@ -1,4 +1,4 @@
-import { cardNameLower, cardOracleId, convertFromLegacyCardColorCategory, isCustomOrVoucher } from '@utils/cardutil';
+import { cardNameLower, cardOracleId, convertFromLegacyCardColorCategory, isCustomCard } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
 import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY, type CubeCards, type TagColor } from '@utils/datatypes/Cube';
@@ -8,7 +8,7 @@ import NodeCache from 'node-cache';
 import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
-import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
+import { cardFromId, getAllVersionIds, getOracleForMl, reasonableId } from './carddb';
 import { batchDraft } from './ml';
 import * as util from './util';
 
@@ -279,7 +279,7 @@ function CSVtoCards(csvString: string): CSVResult {
   const cardsByBoard: Record<string, CubeCard[]> = {};
 
   // Check if the CSV has a "board" column by inspecting the first row
-  const hasBoardColumn = camelizedRows.length > 0 && Object.prototype.hasOwnProperty.call(camelizedRows[0], 'board');
+  const hasBoardColumn = camelizedRows.length > 0 && 'board' in camelizedRows[0];
 
   for (const {
     name,
@@ -299,7 +299,6 @@ function CSVtoCards(csvString: string): CSVResult {
     colorCategory,
     rarity,
     custom,
-    voucher,
   } of camelizedRows) {
     if (name) {
       const upperSet = (set || '').toUpperCase();
@@ -328,10 +327,6 @@ function CSVtoCards(csvString: string): CSVResult {
         potentialIds = ['custom-card'];
         card.custom_name = name;
         card.name = 'custom-card';
-      } else if (voucher?.toLowerCase() === 'true') {
-        potentialIds = ['voucher'];
-        card.custom_name = name;
-        card.name = 'voucher';
       } else {
         potentialIds = getAllVersionIds(card);
       }
@@ -390,11 +385,11 @@ export interface ComparedCubes {
 }
 
 async function compareCubes(cardsA: CubeCards, cardsB: CubeCards): Promise<ComparedCubes> {
-  // Separate custom/voucher and regular cards in a single pass
+  // Separate custom and regular cards in a single pass
   const customCardsA: Card[] = [];
   const regularCardsA: Card[] = [];
   for (const card of cardsA.mainboard) {
-    if (isCustomOrVoucher(card)) {
+    if (isCustomCard(card)) {
       customCardsA.push(card);
     } else {
       regularCardsA.push(card);
@@ -404,7 +399,7 @@ async function compareCubes(cardsA: CubeCards, cardsB: CubeCards): Promise<Compa
   const customCardsB: Card[] = [];
   const regularCardsB: Card[] = [];
   for (const card of cardsB.mainboard) {
-    if (isCustomOrVoucher(card)) {
+    if (isCustomCard(card)) {
       customCardsB.push(card);
     } else {
       regularCardsB.push(card);
@@ -623,16 +618,7 @@ async function generateBalancedPack(
     const seed = `${seedPrefix}-${baseSeed}-${i}`;
     const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
-
-    // Build board cards map for multi-board support (custom draft formats may reference non-mainboard boards)
-    const boardCards: Record<string, any[]> = {};
-    for (const [boardKey, boardList] of Object.entries(cards)) {
-      if (boardKey !== 'id' && Array.isArray(boardList)) {
-        boardCards[boardKey] = [...boardList];
-      }
-    }
-
-    const draft = createDraft(cube, format, boardCards, 1, { username: 'Anonymous' } as any, seed);
+    const draft = createDraft(cube, format, [...cards.mainboard], 1, { username: 'Anonymous' } as any, seed);
     const packResult = {
       seed: seedPrefix,
       pack:
@@ -649,13 +635,32 @@ async function generateBalancedPack(
     candidates.push({ packResult, oracleIds });
   }
 
+  // Build ML substitution maps
+  const allOracleIds = candidates.flatMap((c) => c.oracleIds);
+  const toMl: Record<string, string> = {};
+  const fromMl: Record<string, string> = {};
+  for (const oracle of allOracleIds) {
+    if (toMl[oracle] !== undefined) continue;
+    const mlOracle = getOracleForMl(oracle, null);
+    toMl[oracle] = mlOracle;
+    if (!fromMl[mlOracle]) fromMl[mlOracle] = oracle;
+  }
+
   // Single batched ML call for all candidates (P1P1: pack=oracleIds, pool=[])
-  const batchInputs = candidates.map((c) => ({ pack: c.oracleIds, pool: [] as string[] }));
+  const batchInputs = candidates.map((c) => ({
+    pack: c.oracleIds.map((o: string) => toMl[o] ?? o),
+    pool: [] as string[],
+  }));
   const batchResults = await batchDraft(batchInputs);
 
   for (let i = 0; i < candidates.length; i++) {
     const { packResult, oracleIds } = candidates[i]!;
-    const predictions = batchResults[i] || [];
+    // Map ML oracles back to originals
+    const rawPredictions = batchResults[i] || [];
+    const predictions = rawPredictions.map((p: { oracle: string; rating: number }) => ({
+      oracle: fromMl[p.oracle] ?? p.oracle,
+      rating: p.rating,
+    }));
 
     // Convert predictions to BotResult format
     const botWeights = new Array(oracleIds.length).fill(0);
@@ -667,7 +672,9 @@ async function generateBalancedPack(
     });
 
     const topPick = predictions[0];
-    const botPickIndex = topPick ? oracleIds.findIndex((oracleId: string) => oracleId === topPick.oracle) : -1;
+    const botPickIndex = topPick
+      ? oracleIds.findIndex((oracleId: string) => oracleId === topPick.oracle)
+      : -1;
 
     const botResult = {
       botPickIndex: botPickIndex >= 0 ? botPickIndex : null,
@@ -712,16 +719,7 @@ async function generatePack(cube: any, cards: any, seed?: string): Promise<Gener
   }
   const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
   const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
-
-  // Build board cards map for multi-board support (custom draft formats may reference non-mainboard boards)
-  const boardCards: Record<string, any[]> = {};
-  for (const [boardKey, boardList] of Object.entries(cards)) {
-    if (boardKey !== 'id' && Array.isArray(boardList)) {
-      boardCards[boardKey] = boardList;
-    }
-  }
-
-  const draft = createDraft(cube, format, boardCards, 1, { username: 'Anonymous' } as any, seed);
+  const draft = createDraft(cube, format, cards.mainboard, 1, { username: 'Anonymous' } as any, seed);
   return {
     seed,
     pack:
@@ -745,22 +743,10 @@ function reverseApplyChangelog(cards: CubeCards, changelog: Changes): void {
     const boardChanges = value as BoardChanges;
     const board = cards[boardName] || [];
 
-    // Undo adds: remove cards that were added (respecting duplicate counts)
+    // Undo adds: remove cards that were added
     if (boardChanges.adds && boardChanges.adds.length > 0) {
-      const addedCardCounts = new Map<string, number>();
-      for (const c of boardChanges.adds) {
-        addedCardCounts.set(c.cardID, (addedCardCounts.get(c.cardID) || 0) + 1);
-      }
-      const removedCounts = new Map<string, number>();
-      cards[boardName] = board.filter((c) => {
-        const toRemove = addedCardCounts.get(c.cardID) || 0;
-        const alreadyRemoved = removedCounts.get(c.cardID) || 0;
-        if (alreadyRemoved < toRemove) {
-          removedCounts.set(c.cardID, alreadyRemoved + 1);
-          return false; // Remove this copy
-        }
-        return true; // Keep this copy
-      });
+      const addedCardIDs = new Set(boardChanges.adds.map((c) => c.cardID));
+      cards[boardName] = board.filter((c) => !addedCardIDs.has(c.cardID));
     }
 
     // Undo removes: re-add cards that were removed
@@ -833,13 +819,7 @@ async function reconstructCubeAtChangelog(
   cubeId: string,
   targetDate: number,
   currentCards: CubeCards,
-  changelogDao: {
-    queryByCubeWithData: (
-      cubeId: string,
-      lastKey?: any,
-      limit?: number,
-    ) => Promise<{ items: Array<{ date: number; changelog: Changes }>; lastKey?: any }>;
-  },
+  changelogDao: { queryByCubeWithData: (cubeId: string, lastKey?: any, limit?: number) => Promise<{ items: Array<{ date: number; changelog: Changes }>; lastKey?: any }> },
 ): Promise<CubeCards> {
   // Deep clone the current cards so we don't mutate the original
   const cards: CubeCards = JSON.parse(JSON.stringify(currentCards));
@@ -914,6 +894,7 @@ export {
   cardsAreEquivalent,
   compareCubes,
   CSVtoCards,
+  reconstructCubeAtChangelog,
   cubeCardTags,
   generateBalancedPack,
   generatePack,
@@ -924,7 +905,6 @@ export {
   isCubeListed,
   isCubeViewable,
   legalityToInt,
-  reconstructCubeAtChangelog,
   removeCardHtml,
   replaceCardHtml,
   sanitize,

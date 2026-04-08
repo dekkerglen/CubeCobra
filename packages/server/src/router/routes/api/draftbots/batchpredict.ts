@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { getOracleForMl } from 'serverutils/carddb';
 import { batchDraft } from 'serverutils/ml';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
@@ -19,14 +20,13 @@ export interface PredictResponse {
 
 const OracleIDSchema = Joi.string().uuid();
 const CustomCard = Joi.string().valid('custom-card');
-const VoucherCard = Joi.string().valid('voucher');
 
 const PredictBodySchema = Joi.object({
   inputs: Joi.array()
     .items(
       Joi.object({
-        pack: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
-        picks: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
+        pack: Joi.array().items(OracleIDSchema, CustomCard).required(),
+        picks: Joi.array().items(OracleIDSchema, CustomCard).required(),
       }),
     )
     .required()
@@ -56,8 +56,38 @@ const handler = async (req: Request, res: Response) => {
       }
     }
 
+    // Build ML substitution maps per input
+    const seatMaps = inputs.map((input) => {
+      const toMl: Record<string, string> = {};
+      const fromMl: Record<string, string> = {};
+      for (const oracle of [...input.pack, ...input.picks]) {
+        if (toMl[oracle] !== undefined) continue;
+        const mlOracle = getOracleForMl(oracle, null);
+        toMl[oracle] = mlOracle;
+        if (!fromMl[mlOracle]) fromMl[mlOracle] = oracle;
+      }
+      return { toMl, fromMl };
+    });
+
     // Single batched ML call — the model processes all inputs in one tensor forward pass
-    const prediction = await batchDraft(inputs.map((input) => ({ pack: input.pack, pool: input.picks })));
+    const mlPrediction = await batchDraft(
+      inputs.map((input, idx) => {
+        const { toMl } = seatMaps[idx]!;
+        return {
+          pack: input.pack.map((o) => toMl[o] ?? o),
+          pool: input.picks.map((o) => toMl[o] ?? o),
+        };
+      }),
+    );
+
+    // Map ML oracles back to originals
+    const prediction = mlPrediction.map((seatResult, idx) => {
+      const { fromMl } = seatMaps[idx]!;
+      return seatResult.map((item) => ({
+        oracle: fromMl[item.oracle] ?? item.oracle,
+        rating: item.rating,
+      }));
+    });
 
     const result: PredictResponse = {
       prediction,

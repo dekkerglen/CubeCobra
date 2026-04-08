@@ -58,7 +58,6 @@ import {
   cardBannedIn,
   cardRestrictedIn,
   cardGames,
-  cardGamesEverAvailable,
   cardFirstPrintYear,
   cardKeywords,
 } from '../../cardutil';
@@ -195,8 +194,7 @@ collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valueP
 
 notesCondition -> "notes"i stringOpValue {% ([, valuePred]) => genericCondition('notes', cardNotes, valuePred) %}
 
-gameCondition -> "game"i gameOpValue {% ([, valuePred]) => genericCondition('game', cardGamesEverAvailable, valuePred) %}
-  | "game"i exactGameOpValue {% ([, valuePred]) => genericCondition('game', cardGames, valuePred) %}
+gameCondition -> "game"i gameOpValue {% ([, valuePred]) => genericCondition('game', cardGames, valuePred) %}
 
 firstYearCondition -> ("year"i | "firstyear"i | "fy"i) integerOpValue {% ([, valuePred]) => genericCondition('firstPrintYear', cardFirstPrintYear, valuePred) %}
 
@@ -219,7 +217,6 @@ isValue -> (
   | "universesbeyond"i | "ub"i
   | "reserved"i
   | "standard"i | "supplemental"i
-  | "voucher"i
 ) {% ([[category]]) => category.toLowerCase() %}
 
 powerWords -> ("pow"i | "power"i)

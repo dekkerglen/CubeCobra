@@ -335,7 +335,7 @@ export const normalizePackSlots = (pack: Pack): Pack => {
   if (!Array.isArray(pack.slots)) return pack;
   if (pack.slots.length === 0) return pack;
   // Check if slots are already CardSlot objects (have a 'filter' property)
-  if (typeof pack.slots[0] === 'object' && Object.prototype.hasOwnProperty.call(pack.slots[0], 'filter')) return pack;
+  if (typeof pack.slots[0] === 'object' && 'filter' in (pack.slots[0] as any)) return pack;
   // Convert string[] to CardSlot[] (backwards compat)
   pack.slots = (pack.slots as any as string[]).map((filter: string) => ({ filter }));
   return pack;

@@ -107,33 +107,6 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       }
     }
 
-    // Even if versions match, check that changes don't reference out-of-bounds card indices.
-    // This can happen when localStorage has stale changes from a previous session.
-    if (!versionMismatch && cards && Object.keys(changes).length > 0) {
-      const hasInvalidIndices = (boardChanges: BoardChanges | undefined, boardCards: Card[] | undefined): boolean => {
-        if (!boardChanges || !boardCards) return false;
-        for (const remove of boardChanges.removes || []) {
-          if (remove.index < 0 || remove.index >= boardCards.length || !boardCards[remove.index]) return true;
-        }
-        for (const edit of boardChanges.edits || []) {
-          if (edit.index < 0 || edit.index >= boardCards.length || !boardCards[edit.index]) return true;
-        }
-        for (const swap of boardChanges.swaps || []) {
-          if (swap.index < 0 || swap.index >= boardCards.length || !boardCards[swap.index]) return true;
-        }
-        return false;
-      };
-
-      for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
-        const boardChanges = changes[board] as BoardChanges | undefined;
-        const boardCards = cards[board as BoardType];
-        if (hasInvalidIndices(boardChanges, boardCards)) {
-          versionMismatch = true;
-          break;
-        }
-      }
-    }
-
     if (versionMismatch) {
       // attempt to create a fixedChanges object
       const fixedChanges: Changes = {};
