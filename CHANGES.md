@@ -41,5 +41,6 @@ Since 1.6.0
 - Improved date display — dates within the last 7 days now show relative time (e.g. "3 hours ago"), while older dates show an absolute format (e.g. "Feb 7, 2026")
 - Fixed Cube card count not updating in the hero as mainboard changes were saved
 - Fixed problem selecting cards with accented charcters (eg Lórien) when adding to a draft record for cards in the cube
+- Fixed deckbuild limits not saving
 
 # Technical Changes
