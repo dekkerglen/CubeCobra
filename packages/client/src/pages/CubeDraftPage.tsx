@@ -176,7 +176,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       }
     } catch (err) {
       console.error('endDraft error caught:', err);
-      addAlert('danger', 'Error finishing draft, please reach out to the Discord');
+      addAlert(
+        'danger',
+        'Error finishing draft, please reach out to the Discord linking the cube, draft, and a screenshot',
+      );
       setDraftStatus((prev) => ({ ...prev, loading: false, draftCompleted: false }));
     }
   }, [csrfFetch, draft.id, mainboard, userPicksInOrder, sideboard, state, setDraftStatus, trashboard, addAlert]);
