@@ -1,4 +1,4 @@
-import { cardOracleId } from '@utils/cardutil';
+import { cardOracleId, isVoucher } from '@utils/cardutil';
 import { State } from '@utils/datatypes/DraftState';
 import User from '@utils/datatypes/User';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
@@ -99,84 +99,116 @@ export const handler = async (req: Request, res: Response) => {
     }
     draft.complete = true;
 
-    // we need to build the bot decks
-    // Collect all bot seat inputs for a single batched ML call
-    const botSeats: { seatIndex: number; picks: number[] }[] = [];
-    for (let i = 1; i < draft.seats.length; i += 1) {
-      const stateSeat = body.state.seats[i];
-      if (!stateSeat) continue;
-      botSeats.push({ seatIndex: i, picks: stateSeat.picks });
-    }
+    // Voucher sub-cards are pre-expanded at draft creation time, so we just need to use
+    // the voucher_card_indices to get the expanded picks for bot deckbuilding
 
-    const basicsCards = draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean);
-
-    // Look up deckbuild settings from the cube
+    // Get cube config for deckbuilding parameters
     const cube = await cubeDao.getById(draft.cube);
     const maxSpells = cube?.deckbuildSpells ?? 23;
     const maxLands = cube?.deckbuildLands ?? 17;
 
+    // Helper to expand picks - returns voucher sub-card indices for vouchers, or the pick itself
+    const expandPicks = (picks: number[]): number[] => {
+      const expanded: number[] = [];
+      for (const pickIndex of picks) {
+        const card = draft.cards[pickIndex];
+        if (card && isVoucher(card) && card.voucher_card_indices && card.voucher_card_indices.length > 0) {
+          // Use pre-expanded sub-card indices
+          expanded.push(...card.voucher_card_indices);
+        } else {
+          expanded.push(pickIndex);
+        }
+      }
+      return expanded;
+    };
+
+    // we need to build the bot decks
+    // Collect all bot seat inputs for a single batched ML call
+    const botSeats: { seatIndex: number; picks: number[]; expandedPicks: number[] }[] = [];
+    for (let i = 1; i < draft.seats.length; i += 1) {
+      const stateSeat = body.state.seats[i];
+      if (!stateSeat) continue;
+      botSeats.push({ seatIndex: i, picks: stateSeat.picks, expandedPicks: expandPicks(stateSeat.picks) });
+    }
+
+    const basicsCards = draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean);
     const batchEntries = botSeats.map((bot) => ({
-      pool: bot.picks.map((index) => draft.cards[index]?.details).filter(Boolean),
+      pool: bot.expandedPicks.map((index) => draft.cards[index]?.details).filter(Boolean),
       basics: basicsCards,
       maxSpells,
       maxLands,
     }));
 
-    const batchResults = await batchDeckbuild(batchEntries);
+    let batchResults: { mainboard: string[]; sideboard: string[] }[] | null = null;
+    try {
+      batchResults = await batchDeckbuild(batchEntries);
+    } catch (err) {
+      req.logger.error('ML deckbuilding failed, falling back to naive layout for bot seats', err);
+    }
 
     for (let b = 0; b < botSeats.length; b++) {
-      const { seatIndex, picks } = botSeats[b]!;
-      const { mainboard } = batchResults[b]!;
+      const { seatIndex, expandedPicks } = botSeats[b]!;
+      const mlResult = batchResults?.[b];
 
-      const pool = picks.slice();
-
-      const newMainboard = [];
-
-      for (const oracle of mainboard) {
-        const poolIndex = pool.findIndex((cardindex: number) => {
-          const card = draft.cards[cardindex];
-          return card ? cardOracleId(card) === oracle : false;
-        });
-        if (poolIndex === -1) {
-          // try basics
-          const basicsIndex = draft.basics.findIndex((cardindex) => {
-            const card = draft.cards[cardindex];
-            return card ? cardOracleId(card) === oracle : false;
-          });
-          if (basicsIndex !== -1) {
-            newMainboard.push(draft.basics[basicsIndex]);
-          }
-        } else {
-          newMainboard.push(pool[poolIndex]);
-          pool.splice(poolIndex, 1);
-        }
-      }
-
-      // format mainboard
       const formattedMainboard = setupPicks(2, 8);
       const formattedSideboard = setupPicks(1, 8);
 
-      for (const index of newMainboard) {
-        if (typeof index === 'number') {
-          const card = draft.cards[index];
-          if (card) {
-            const { row, col } = getCardDefaultRowColumn(card);
+      if (mlResult) {
+        const { mainboard } = mlResult;
+        const pool = expandedPicks.slice();
+        const newMainboard = [];
 
-            if (formattedMainboard[row] && formattedMainboard[row][col]) {
-              formattedMainboard[row][col].push(index);
+        for (const oracle of mainboard) {
+          const poolIndex = pool.findIndex((cardindex: number) => {
+            const card = draft.cards[cardindex];
+            return card ? cardOracleId(card) === oracle : false;
+          });
+          if (poolIndex === -1) {
+            // try basics
+            const basicsIndex = draft.basics.findIndex((cardindex) => {
+              const card = draft.cards[cardindex];
+              return card ? cardOracleId(card) === oracle : false;
+            });
+            if (basicsIndex !== -1) {
+              newMainboard.push(draft.basics[basicsIndex]);
+            }
+          } else {
+            newMainboard.push(pool[poolIndex]);
+            pool.splice(poolIndex, 1);
+          }
+        }
+
+        for (const index of newMainboard) {
+          if (typeof index === 'number') {
+            const card = draft.cards[index];
+            if (card) {
+              const { row, col } = getCardDefaultRowColumn(card);
+              if (formattedMainboard[row] && formattedMainboard[row][col]) {
+                formattedMainboard[row][col].push(index);
+              }
             }
           }
         }
-      }
 
-      for (const index of pool) {
-        if (!draft.basics.includes(index) && typeof index === 'number') {
+        for (const index of pool) {
+          if (!draft.basics.includes(index) && typeof index === 'number') {
+            const card = draft.cards[index];
+            if (card) {
+              const { col } = getCardDefaultRowColumn(card);
+              if (formattedSideboard[0] && formattedSideboard[0][col]) {
+                formattedSideboard[0][col].push(index);
+              }
+            }
+          }
+        }
+      } else {
+        // Fallback: put all picks into mainboard by default row/col
+        for (const index of expandedPicks) {
           const card = draft.cards[index];
           if (card) {
-            const { col } = getCardDefaultRowColumn(card);
-
-            if (formattedSideboard[0] && formattedSideboard[0][col]) {
-              formattedSideboard[0][col].push(index);
+            const { row, col } = getCardDefaultRowColumn(card);
+            if (formattedMainboard[row] && formattedMainboard[row][col]) {
+              formattedMainboard[row][col].push(index);
             }
           }
         }

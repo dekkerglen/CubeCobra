@@ -189,6 +189,7 @@ export const CardDetails = (card: Card): CardDetailsType =>
     finishes: [],
     promo_types: [],
     games: [],
+    gamesEverAvailable: [],
     reserved: false,
   };
 
@@ -223,6 +224,11 @@ export const cardCmc = (card: Card): number => {
 export const cardId = (card: Card): string => card.cardID ?? card.details?.scryfall_id;
 
 export const isCustomCard = (card: Card): boolean => cardId(card) === 'custom-card';
+
+export const isVoucher = (card: Card): boolean => cardId(card) === 'voucher';
+
+/** Returns true for either custom cards or vouchers — both support custom_name and override fields */
+export const isCustomOrVoucher = (card: Card): boolean => isCustomCard(card) || isVoucher(card);
 
 export const cardType = (card: Partial<Card>): string => {
   if (!card) return ''; // Defensive check for undefined card
@@ -399,21 +405,21 @@ export const cardIsToken = (card: Card): boolean => card.details?.isToken ?? fal
 export const cardBorderColor = (card: Card): string => card.details?.border_color ?? 'black';
 
 export const cardName = (card: Card): string => {
-  if (isCustomCard(card)) {
+  if (isCustomOrVoucher(card)) {
     return (card.custom_name || card.details?.name) ?? '';
   }
   return card.details?.name ?? '';
 };
 
 export const cardNameLower = (card: Card): string => {
-  if (isCustomCard(card)) {
+  if (isCustomOrVoucher(card)) {
     return (card.custom_name?.toLowerCase() || card.details?.name_lower) ?? '';
   }
   return card.details?.name_lower ?? '';
 };
 
 export const cardFullName = (card: Card): string => {
-  if (isCustomCard(card)) {
+  if (isCustomOrVoucher(card)) {
     const customFullName = card.custom_name
       ? `${card.custom_name} [${cardSet(card)}-${cardCollectorNumber(card)}]`
       : '';
@@ -530,6 +536,9 @@ export const cardWordCount = (card: Card): number => {
 };
 
 export const cardGames = (card: Card): Game[] => card.details?.games ?? [];
+
+export const cardGamesEverAvailable = (card: Card): Game[] =>
+  card.details?.gamesEverAvailable ?? card.details?.games ?? [];
 
 export const cardKeywords = (card: Card): string[] => card.details?.keywords ?? [];
 
@@ -688,6 +697,7 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   reserved: (details) => details.reserved,
   standard: (details) => details.printedInExpansion === true,
   supplemental: (details) => details.printedInExpansion === false,
+  voucher: (_details, card) => !!(card && isVoucher(card)),
 
   // Others from Scryfall:
   //   reserved, new, old, hires,

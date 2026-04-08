@@ -571,6 +571,7 @@ function convertCard(
   newcard.cmc = convertCmc(card, preflipped, faceAttributeSource);
   newcard.legalities = convertLegalities(card, preflipped);
   newcard.games = convertGames(card);
+  newcard.gamesEverAvailable = newcard.games || [];
   newcard.parsed_cost = convertParsedCost(card, preflipped);
   newcard.colors = convertColors(card, preflipped);
   newcard.type = convertType(card, preflipped, faceAttributeSource);
@@ -774,6 +775,79 @@ const STATIC_CARDS: ScryfallCard[] = [
     all_parts: [],
     object: 'card',
   },
+  {
+    id: 'voucher',
+    oracle_id: 'voucher',
+    name: 'Voucher',
+    printed_name: undefined,
+    lang: 'en',
+    set: '',
+    set_name: '',
+    collector_number: '',
+    released_at: '',
+    reprint: false,
+    border_color: 'black',
+    promo: false,
+    promo_types: [],
+    digital: false,
+    finishes: [],
+    prices: {
+      usd: null,
+      usd_foil: null,
+      usd_etched: null,
+      eur: null,
+      tix: null,
+    },
+    image_uris: {
+      small: '',
+      normal: '/content/custom_card.png',
+      art_crop: '/content/custom_card_art_crop.png',
+    },
+    card_faces: undefined,
+    loyalty: undefined,
+    power: undefined,
+    toughness: undefined,
+    type_line: '',
+    oracle_text: '',
+    mana_cost: '',
+    cmc: 0,
+    colors: [],
+    color_identity: [],
+    keywords: [],
+    produced_mana: [],
+    legalities: { ...ALL_NOT_LEGAL },
+    layout: 'normal',
+    rarity: 'common',
+    artist: '',
+    scryfall_uri: '',
+    mtgo_id: 0,
+    textless: false,
+    tcgplayer_id: '',
+    full_art: false,
+    flavor_text: '',
+    frame_effects: [],
+    frame: '',
+    card_back_id: '',
+    artist_id: '',
+    illustration_id: '',
+    content_warning: false,
+    variation: false,
+    games: [],
+    reserved: false,
+    preview: {
+      source: '',
+      source_uri: '',
+      previewed_at: '',
+    },
+    related_uris: {
+      gatherer: '',
+      tcgplayer_decks: '',
+      edhrec: '',
+      mtgtop8: '',
+    },
+    all_parts: [],
+    object: 'card',
+  },
 ];
 
 async function saveAllCards(
@@ -845,6 +919,24 @@ async function saveAllCards(
     card.printedInExpansion = oracleInExpansion.has(card.oracle_id);
   }
   console.info('Finished computing firstPrintYear and printedInExpansion.');
+
+  // Compute gamesEverAvailable: union of games across all versions sharing the same oracle_id
+  console.info('Computing gamesEverAvailable for all cards...');
+  const gamesByOracle: Record<string, Set<Game>> = {};
+  for (const card of Object.values(catalog.dict)) {
+    if (!card.oracle_id) continue;
+    if (!gamesByOracle[card.oracle_id]) {
+      gamesByOracle[card.oracle_id] = new Set();
+    }
+    for (const game of card.games || []) {
+      gamesByOracle[card.oracle_id]!.add(game);
+    }
+  }
+  for (const card of Object.values(catalog.dict)) {
+    const oracleGames = gamesByOracle[card.oracle_id];
+    card.gamesEverAvailable = oracleGames ? Array.from(oracleGames) : card.games || [];
+  }
+  console.info('Finished computing gamesEverAvailable.');
 }
 
 async function saveSet(set: ScryfallSet) {

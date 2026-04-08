@@ -19,9 +19,9 @@ import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
+import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import useQueryParam from 'hooks/useQueryParam';
 
 interface CubePITListPageProps {
   cube: Cube;
@@ -46,13 +46,18 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
 
   return (
     <CubeContext.Provider value={readOnlyContext}>
-      <div className="bg-bg-accent border-y border-border py-3 px-4 text-center" style={{ marginLeft: '-0.5rem', marginRight: '-0.5rem', width: 'calc(100% + 1rem)' }}>
+      <div
+        className="bg-bg-accent border-y border-border py-3 px-4 text-center"
+        style={{ marginLeft: '-0.5rem', marginRight: '-0.5rem', width: 'calc(100% + 1rem)' }}
+      >
         <Flexbox direction="row" alignItems="center" justify="center" gap="2" className="flex-wrap">
           <Text semibold md className="text-text">
             You are viewing a point-in-time snapshot of {cube.name} ({date})
           </Text>
           <Link href={`/cube/changelog/${cube.id}/${changelogId}`}>
-            <Text sm className="text-link underline">Back to changelog entry &rarr;</Text>
+            <Text sm className="text-link underline">
+              Back to changelog entry &rarr;
+            </Text>
           </Link>
         </Flexbox>
       </div>
@@ -102,16 +107,14 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
                           This board appears to be empty!
                         </Text>
                       )}
-                      {
-                        {
-                          table: <TableView cards={boardcards} />,
-                          spoiler: <VisualSpoiler cards={boardcards} />,
-                          curve: <CurveView cards={boardcards} />,
-                          stacks: (
-                            <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
-                          ),
-                        }[cubeView] || <TableView cards={boardcards} />
-                      }
+                      {{
+                        table: <TableView cards={boardcards} />,
+                        spoiler: <VisualSpoiler cards={boardcards} />,
+                        curve: <CurveView cards={boardcards} />,
+                        stacks: (
+                          <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
+                        ),
+                      }[cubeView] || <TableView cards={boardcards} />}
                     </>
                   )}
                 </Flexbox>

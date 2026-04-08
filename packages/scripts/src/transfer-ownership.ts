@@ -26,9 +26,9 @@
  *  15.  Cube following references (via user's followedCubes)
  */
 
-import 'dotenv/config';
-
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
+
+import 'dotenv/config';
 
 import {
   articleDao,
@@ -78,7 +78,9 @@ function addSummary(entity: string, found: number, updated: number, skipped: num
 
 /** Generic paginated query helper (for models that use query-by-owner with lastKey) */
 async function queryAll<T>(
-  queryFn: (lastKey?: Record<string, NativeAttributeValue>) => Promise<{ items?: T[] | T[]; lastKey?: Record<string, NativeAttributeValue> }>,
+  queryFn: (
+    lastKey?: Record<string, NativeAttributeValue>,
+  ) => Promise<{ items?: T[] | T[]; lastKey?: Record<string, NativeAttributeValue> }>,
 ): Promise<T[]> {
   const all: T[] = [];
   let lastKey: Record<string, NativeAttributeValue> | undefined;
@@ -123,10 +125,10 @@ async function transferCubes(fromId: string, toId: string): Promise<string[]> {
         await cubeDao.update(cube);
       }
 
-      updated++;
+      updated += 1;
     } catch (err: any) {
       log(`  ERROR updating cube ${cube.id}: ${err.message}`);
-      errors++;
+      errors += 1;
     }
   }
 
@@ -151,10 +153,10 @@ async function transferBlogPosts(fromId: string, toId: string) {
         post.owner = toId;
         await blogDao.update(post);
       }
-      updated++;
+      updated += 1;
     } catch (err: any) {
       log(`  ERROR updating blog ${post.id}: ${err.message}`);
-      errors++;
+      errors += 1;
     }
   }
 
@@ -178,10 +180,10 @@ async function transferComments(fromId: string, toId: string) {
         comment.owner = toId;
         await commentDao.update(comment);
       }
-      updated++;
+      updated += 1;
     } catch (err: any) {
       log(`  ERROR updating comment ${comment.id}: ${err.message}`);
-      errors++;
+      errors += 1;
     }
   }
 
@@ -215,10 +217,10 @@ async function transferContent(fromId: string, toId: string) {
           item.owner = toId;
           await dao.update(item);
         }
-        totalUpdated++;
+        totalUpdated += 1;
       } catch (err: any) {
         log(`  ERROR updating content ${item.id}: ${err.message}`);
-        totalErrors++;
+        totalErrors += 1;
       }
     }
   }
@@ -253,10 +255,10 @@ async function transferDrafts(fromId: string, toId: string) {
         }
         await draftDao.update(draft);
       }
-      updated++;
+      updated += 1;
     } catch (err: any) {
       log(`  ERROR updating draft ${draft.id}: ${err.message}`);
-      errors++;
+      errors += 1;
     }
   }
 
@@ -291,10 +293,10 @@ async function transferDrafts(fromId: string, toId: string) {
         }
         await draftDao.update(draft);
       }
-      cubeOwnerUpdated++;
+      cubeOwnerUpdated += 1;
     } catch (err: any) {
       log(`  ERROR updating draft ${draft.id}: ${err.message}`);
-      cubeOwnerErrors++;
+      cubeOwnerErrors += 1;
     }
   }
 
@@ -318,10 +320,10 @@ async function transferCardPackages(fromId: string, toId: string) {
         pkg.owner = toId;
         await packageDao.update(pkg);
       }
-      updated++;
+      updated += 1;
     } catch (err: any) {
       log(`  ERROR updating package ${pkg.id}: ${err.message}`);
-      errors++;
+      errors += 1;
     }
   }
 
@@ -384,10 +386,10 @@ async function transferFeaturedQueueItems(fromId: string, toId: string) {
         item.owner = toId;
         await featuredQueueDao.update(item);
       }
-      updated++;
+      updated += 1;
     } catch (err: any) {
       log(`  ERROR updating featured queue item ${item.cube}: ${err.message}`);
-      errors++;
+      errors += 1;
     }
   }
 
@@ -438,16 +440,16 @@ async function transferP1P1Packs(fromId: string, _toId: string, ownedCubeIds: st
     const userPacks = packs.filter((p: any) => p.createdBy === fromId);
 
     for (const pack of userPacks) {
-      totalFound++;
+      totalFound += 1;
       try {
         log(`  P1P1 Pack: ${pack.id} (cube: ${cubeId})`);
         // Note: P1P1 pack createdBy is a denormalized field. The pack stays associated
         // with the cube, so transferring cube ownership is the primary action.
         // createdBy is cosmetic and would need a low-level DynamoDB update.
-        updated++;
+        updated += 1;
       } catch (err: any) {
         log(`  ERROR processing P1P1 pack ${pack.id}: ${err.message}`);
-        errors++;
+        errors += 1;
       }
     }
   }
@@ -455,7 +457,7 @@ async function transferP1P1Packs(fromId: string, _toId: string, ownedCubeIds: st
   if (ownedCubeIds.length > 0) {
     log(`  Found ${totalFound} P1P1 pack(s) created by source user on their cubes`);
   }
-  log('  Note: Packs created on other users\' cubes cannot be found without a table scan.');
+  log("  Note: Packs created on other users' cubes cannot be found without a table scan.");
   log('  The createdBy field is cosmetic — cube ownership transfer is the primary action.');
 
   addSummary('P1P1 Packs', totalFound, updated, 0, errors);
@@ -586,15 +588,15 @@ async function updateFollowerReferences(fromId: string, toId: string, fromUser: 
             follower.followedUsers = followedUsers;
             await userDao.update(follower);
           }
-          updated++;
+          updated += 1;
         } catch (err: any) {
           log(`  ERROR updating follower ${follower.username}: ${err.message}`);
-          errors++;
+          errors += 1;
         }
       }
     } catch (err: any) {
       log(`  ERROR batch-getting followers: ${err.message}`);
-      errors++;
+      errors += 1;
     }
   }
 
@@ -655,17 +657,17 @@ async function transferCubeCollaborators(fromId: string, toId: string) {
                 await collaboratorIndexDao.add(toId, cube.id);
               }
             }
-            updated++;
+            updated += 1;
           } catch (err: any) {
             log(`  ERROR updating cube ${cube.id}: ${err.message}`);
-            errors++;
+            errors += 1;
           }
         }
       }
     }
   } catch (err: any) {
     log(`  ERROR querying CollaboratorIndex: ${err.message}`);
-    errors++;
+    errors += 1;
   }
 
   addSummary('Cube Collaborators', found, updated, 0, errors);
@@ -714,15 +716,15 @@ async function transferCubeFollowing(fromId: string, toId: string, fromUser: any
             cube.following = following;
             await cubeDao.update(cube);
           }
-          updated++;
+          updated += 1;
         } catch (err: any) {
           log(`  ERROR updating cube ${cube.id}: ${err.message}`);
-          errors++;
+          errors += 1;
         }
       }
     } catch (err: any) {
       log(`  ERROR batch-getting cubes: ${err.message}`);
-      errors++;
+      errors += 1;
     }
   }
 
@@ -739,13 +741,13 @@ async function main() {
   let fromArg: string | undefined;
   let toArg: string | undefined;
 
-  for (let i = 0; i < args.length; i++) {
+  for (let i = 0; i < args.length; i += 1) {
     if (args[i] === '--from' && args[i + 1]) {
       fromArg = args[i + 1];
-      i++;
+      i += 1;
     } else if (args[i] === '--to' && args[i + 1]) {
       toArg = args[i + 1];
-      i++;
+      i += 1;
     } else if (args[i] === '--dry-run') {
       DRY_RUN = true;
     }

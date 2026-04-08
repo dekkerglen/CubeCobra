@@ -58,6 +58,7 @@ export interface UserWithSensitiveInformation extends UnhydratedUser {
 
 export default interface User extends Omit<UnhydratedUser, 'cubes'> {
   cubes?: Cube[];
+  collaboratingCubes?: Cube[];
   image?: Image;
   notifications?: Notification[];
 }

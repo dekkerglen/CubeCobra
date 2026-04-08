@@ -58,8 +58,18 @@ const CubeListPageRaw: React.FC = () => {
   cubeViewRef.current = cubeView;
   const filterInputRef = useRef(filterInput);
   filterInputRef.current = filterInput;
+  const isInitialMountRef = useRef(true);
 
   useEffect(() => {
+    // Skip on initial mount so URL query params (from bookmarks) are respected.
+    // useQueryParam handles reading URL params on mount; this effect should only
+    // apply view defaults when the user actively switches between views.
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      prevActiveViewRef.current = activeView;
+      return;
+    }
+
     if (currentView) {
       const prevView = getViewByName(cube, prevActiveViewRef.current);
       const prevDefaultDisplay = prevView?.displayView || 'table';

@@ -9,7 +9,7 @@ import serialize from 'serialize-javascript';
 import 'dotenv/config';
 
 import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
-import { cubeDao, notificationDao } from '../dynamo/daos';
+import { collaboratorIndexDao, cubeDao, notificationDao } from '../dynamo/daos';
 import { Request, Response } from '../types/express';
 import { GIT_COMMIT } from './git';
 import { getBaseUrl } from './util';
@@ -107,6 +107,7 @@ interface ReactProps {
     hideFeatured?: boolean;
     hideTagColors?: boolean;
     cubes: CubeType[];
+    collaboratingCubes?: CubeType[];
     notifications?: any[];
     defaultPrinting?: string;
     gridTightness?: string;
@@ -133,7 +134,11 @@ const render = (
 ): void => {
   getCubes(req, async (cubes) => {
     if (req.user) {
-      const notifications = await notificationDao.getByToAndStatus(req.user.id, NotificationStatus.UNREAD);
+      const [notifications, collaboratingCubeIds] = await Promise.all([
+        notificationDao.getByToAndStatus(req.user.id, NotificationStatus.UNREAD),
+        collaboratorIndexDao.getCubeIdsForUser(req.user.id),
+      ]);
+      const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
 
       reactProps.user = {
         id: req.user.id,
@@ -146,6 +151,7 @@ const render = (
         hideFeatured: req.user.hideFeatured,
         hideTagColors: req.user.hideTagColors,
         cubes,
+        collaboratingCubes,
         notifications: notifications.items,
         defaultPrinting: req.user.defaultPrinting,
         gridTightness: req.user.gridTightness,
