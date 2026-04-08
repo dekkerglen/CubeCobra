@@ -11,6 +11,7 @@ function formatRelative(diffMs: number): string {
     const diffHours = Math.round(diffMs / (60 * 60 * 1000));
     if (Math.abs(diffHours) < 1) {
       const diffMinutes = Math.round(diffMs / (60 * 1000));
+      if (diffMinutes === 0) return 'less than a minute ago';
       return relativeFormatter.format(diffMinutes, 'minute');
     }
     return relativeFormatter.format(diffHours, 'hour');
