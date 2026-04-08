@@ -4383,6 +4383,19 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </div>
           </div>
         )}
+        {skeleton.sideboardCards.length > 0 && (
+          <div className="mb-4">
+            <Text xs className="text-text-secondary/80 font-medium uppercase tracking-[0.14em] mb-2">Common Sideboard Cards</Text>
+            <div className="flex flex-col gap-1.5 rounded-md bg-bg-accent/40 px-3 py-2">
+              {skeleton.sideboardCards.map((card) => (
+                <div key={card.oracle_id} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium">{card.name}</span>
+                  <span className="text-text-secondary tabular-nums">{(card.fraction * 100).toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {skeleton.lockPairs.length > 0 && (
           <div className="pt-1">
             <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2">Lock Pairs</Text>
@@ -4777,7 +4790,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
       const nextRuns = json.runs ?? [];
       setRuns(nextRuns);
-      setSelectedCardOracle(null);
+      setSelectedCardOracles([]);
       setSelectedArchetype(null);
       setSelectedSkeletonId(null);
 
@@ -5605,14 +5618,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     : `${draftMapScopeSeatCount} total seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`;
 
 
-  const hasPoolView = !!(selectedCard || (selectedArchetype && !selectedCard && !selectedSkeletonId) || (selectedSkeletonId !== null && !selectedCard && !selectedArchetype));
+  const hasPoolView = !!(selectedCard || (selectedArchetype && selectedCards.length === 0 && !selectedSkeletonId) || (selectedSkeletonId !== null && selectedCards.length === 0 && !selectedArchetype));
 
   // Scroll to Detailed View whenever a new selection is made
   useEffect(() => {
-    if ((selectedCardOracle || selectedArchetype || selectedSkeletonId !== null) && detailedViewRef.current) {
+    if ((selectedCardOracles.length > 0 || selectedArchetype || selectedSkeletonId !== null) && detailedViewRef.current) {
       detailedViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [selectedCardOracle, selectedArchetype, selectedSkeletonId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedCardOracles, selectedArchetype, selectedSkeletonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeFilterChips = useMemo(() => {
     const chips: string[] = [];
@@ -5622,22 +5635,88 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       if (sk) chips.push(`Cluster: ${skIdx + 1}`);
     }
     if (selectedArchetype) chips.push(`Deck Color: ${archetypeFullName(selectedArchetype)}`);
-    if (selectedCard) chips.push(`Decks Containing: ${selectedCard.name}`);
+    for (const selectedCardEntry of selectedCards) chips.push(`Decks Containing: ${selectedCardEntry.name}`);
     return chips;
-  }, [selectedSkeletonId, selectedArchetype, selectedCard, skeletons]);
+  }, [selectedSkeletonId, selectedArchetype, selectedCards, skeletons]);
 
   const activeFilterSummary = useMemo(() => {
     if (activeFilterChips.length === 0) return null;
     return activeFilterChips.join(' · ');
   }, [activeFilterChips]);
 
+  const selectedArchetypePreview = useMemo(() => {
+    if (!displayRunData || !selectedArchetype) return null;
+    const isBasicLand = (oracleId: string) => {
+      const typeLower = (displayRunData.cardMeta[oracleId]?.type ?? '').toLowerCase();
+      return typeLower.includes('basic land');
+    };
+
+    const matchingPoolIndices = scopedPools
+      .filter((pool) => pool.archetype === selectedArchetype)
+      .map((pool) => pool.poolIndex);
+    if (matchingPoolIndices.length === 0) return null;
+
+    const mainboardCounts = new Map<string, number>();
+    const sideboardOnlyCounts = new Map<string, number>();
+    const hasDeckData = !!activeDecks && activeDecks.length === displayedPools.length;
+
+    for (const poolIndex of matchingPoolIndices) {
+      if (hasDeckData) {
+        const deck = activeDecks?.[poolIndex];
+        if (!deck) continue;
+        for (const oracleId of new Set(deck.mainboard)) {
+          if (!oracleId || isBasicLand(oracleId)) continue;
+          mainboardCounts.set(oracleId, (mainboardCounts.get(oracleId) ?? 0) + 1);
+        }
+        for (const oracleId of new Set(deck.sideboard)) {
+          if (!oracleId || isBasicLand(oracleId)) continue;
+          if (!deck.mainboard.includes(oracleId)) {
+            sideboardOnlyCounts.set(oracleId, (sideboardOnlyCounts.get(oracleId) ?? 0) + 1);
+          }
+        }
+      } else {
+        const pool = displayedPools[poolIndex];
+        if (!pool) continue;
+        for (const oracleId of new Set(pool.picks.map((pick) => pick.oracle_id))) {
+          if (!oracleId || isBasicLand(oracleId)) continue;
+          mainboardCounts.set(oracleId, (mainboardCounts.get(oracleId) ?? 0) + 1);
+        }
+      }
+    }
+
+    const toSkeletonCard = ([oracleId, count]: [string, number]): SkeletonCard => ({
+      oracle_id: oracleId,
+      name: displayRunData.cardMeta[oracleId]?.name || oracleId,
+      imageUrl: displayRunData.cardMeta[oracleId]?.imageUrl ?? '',
+      fraction: count / matchingPoolIndices.length,
+    });
+
+    const commonCards = [...mainboardCounts.entries()]
+      .map(toSkeletonCard)
+      .sort((a, b) => b.fraction - a.fraction)
+      .slice(0, 8);
+
+    const supportCards = [...mainboardCounts.entries()]
+      .map(toSkeletonCard)
+      .sort((a, b) => b.fraction - a.fraction)
+      .slice(8, 16);
+
+    const sideboardCards = [...sideboardOnlyCounts.entries()]
+      .map(toSkeletonCard)
+      .filter((card) => card.fraction >= 0.15)
+      .sort((a, b) => b.fraction - a.fraction)
+      .slice(0, 5);
+
+    return { commonCards, supportCards, sideboardCards };
+  }, [displayRunData, selectedArchetype, scopedPools, activeDecks, displayedPools]);
+
   const detailedViewScopeChips = useMemo(() => {
     const chips: { key: string; label: string; onClear: () => void }[] = [];
-    if (selectedCard) {
+    for (const selectedCardEntry of selectedCards) {
       chips.push({
-        key: `card-${selectedCard.oracle_id}`,
-        label: selectedCard.name,
-        onClear: () => setSelectedCardOracle(null),
+        key: `card-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        onClear: () => setSelectedCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
       });
     }
     if (selectedSkeletonId !== null) {
@@ -5659,10 +5738,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       });
     }
     return chips;
-  }, [selectedCard, selectedSkeletonId, selectedArchetype, skeletons]);
+  }, [selectedCards, selectedSkeletonId, selectedArchetype, skeletons]);
 
   const selectedCardScopeLabel = useMemo(() => {
-    if (!selectedCard) return null;
+    if (selectedCards.length === 0) return null;
     const scopeParts: string[] = [];
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
@@ -5671,10 +5750,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }
     if (selectedArchetype) scopeParts.push(archetypeFullName(selectedArchetype));
     return scopeParts.length > 0 ? scopeParts.join(' · ') : null;
-  }, [selectedCard, selectedSkeletonId, selectedArchetype, skeletons]);
+  }, [selectedCards.length, selectedSkeletonId, selectedArchetype, skeletons]);
 
   const detailedViewTitle = useMemo(() => {
-    if (selectedCard) return `${selectedCard.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
+    if (selectedCards.length === 1 && selectedCard) return `${selectedCard.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
+    if (selectedCards.length === 2) return `${selectedCards[0]!.name} + ${selectedCards[1]!.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
+    if (selectedCards.length > 2) return `${selectedCards.length} cards`;
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       const skIdx = skeletons.indexOf(sk!);
@@ -5682,24 +5763,32 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }
     if (selectedArchetype) return archetypeFullName(selectedArchetype);
     return 'Detailed View';
-  }, [selectedCard, selectedCardScopeLabel, selectedSkeletonId, selectedArchetype, skeletons]);
+  }, [selectedCard, selectedCards, selectedCardScopeLabel, selectedSkeletonId, selectedArchetype, skeletons]);
 
   const detailedViewSubtitle = useMemo(() => {
     const matchingPools = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
-    if (selectedCard) return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
+    if (selectedCards.length > 0) return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
     if (selectedSkeletonId !== null || selectedArchetype) return `${matchingPools} matching draft pool${matchingPools !== 1 ? 's' : ''}`;
     return 'Select a color profile, archetype cluster, or card above to narrow the view.';
-  }, [activeFilterPoolIndexSet, displayRunData, selectedCard, selectedPools.length, selectedSkeletonId, selectedArchetype]);
+  }, [activeFilterPoolIndexSet, displayRunData, selectedCards.length, selectedPools.length, selectedSkeletonId, selectedArchetype]);
 
   const clearActiveFilter = useCallback(() => {
-    setSelectedCardOracle(null);
+    setSelectedCardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
   }, []);
 
+  const handleToggleSelectedCard = useCallback((oracleId: string) => {
+    setSelectedCardOracles((current) => {
+      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
+      if (current.length < 2) return [...current, oracleId];
+      return [current[1]!, oracleId];
+    });
+  }, []);
+
   // Derived filter label for showing active filter in tables
   const cardStatsTitle = useMemo(() => {
-    if (selectedCard) return 'Card Stats';
+    if (selectedCards.length > 0) return 'Card Stats';
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       const skIdx = skeletons.indexOf(sk!);
@@ -5707,7 +5796,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }
     if (selectedArchetype) return `Card Stats for ${archetypeFullName(selectedArchetype)} Drafters`;
     return 'All Card Stats';
-  }, [selectedSkeletonId, selectedArchetype, selectedCard, skeletons]);
+  }, [selectedSkeletonId, selectedArchetype, selectedCards.length, skeletons]);
 
   return (
     <MainLayout useContainer={false}>
