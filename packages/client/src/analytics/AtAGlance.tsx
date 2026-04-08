@@ -246,7 +246,14 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
     const landCount = cards.filter((c) => cardIsLand(c)).length;
     const creatureCount = cards.filter((c) => cardType(c).includes('Creature')).length;
     const tokensCardCount = cards.filter(makesTokens).length;
-    const uniqueTokenCount = Object.keys(tokenMap).length;
+    const uniqueTokenOracleIds = new Set<string>();
+    for (const card of cards) {
+      for (const tokenId of (card.details as any)?.tokens || []) {
+        const oracleId = tokenMap[tokenId]?.details?.oracle_id;
+        if (oracleId) uniqueTokenOracleIds.add(oracleId);
+      }
+    }
+    const uniqueTokenCount = uniqueTokenOracleIds.size;
     const ubCount = cards.filter(isUniversesBeyond).length;
     const suppCount = cards.filter(isSupplemental).length;
 
