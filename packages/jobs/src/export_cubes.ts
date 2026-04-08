@@ -11,6 +11,7 @@ import { getAllOracleIds } from '@server/serverutils/carddb';
 import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import type CubeType from '@utils/datatypes/Cube';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 
 import { uploadFileToPublicBucket } from './utils/s3';
 
@@ -65,7 +66,9 @@ const taskId = process.env.EXPORT_TASK_ID;
       lastKey = result.lastKey;
       processed += result.items.length;
 
-      const processedCubes = await Promise.all(result.items.map((item: CubeType) => processCube(item, oracleToIndex)));
+      // Only export public cubes - exclude private and unlisted
+      const publicItems = result.items.filter((item: CubeType) => item.visibility === CUBE_VISIBILITY.PUBLIC);
+      const processedCubes = await Promise.all(publicItems.map((item: CubeType) => processCube(item, oracleToIndex)));
 
       cubes.push(...processedCubes.filter((cube) => cube !== null));
 
