@@ -4,7 +4,7 @@ import type CubeType from '@utils/datatypes/Cube';
 import DraftType, { DraftmancerLog } from '@utils/datatypes/Draft';
 import { PublishDraftBody } from '@utils/datatypes/Draftmancer';
 import type DraftSeatType from '@utils/datatypes/DraftSeat';
-import { setupPicks } from '@utils/draftutil';
+import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao, notificationDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
@@ -108,7 +108,12 @@ export const handler = async (req: Request, res: Response) => {
     // Single batched ML call for all bot decks
     const maxSpells = cube.deckbuildSpells ?? 23;
     const maxLands = cube.deckbuildLands ?? 17;
-    const botResults = await batchBuildBotDecks(botInputs, cards, maxSpells, maxLands);
+    let botResults: { mainboard: number[][][]; sideboard: number[][][] }[] | null = null;
+    try {
+      botResults = await batchBuildBotDecks(botInputs, cards, maxSpells, maxLands);
+    } catch (err) {
+      req.logger?.error('ML deckbuilding failed, falling back to naive layout for bot seats', err);
+    }
 
     // Second pass: assemble seats
     let botResultIdx = 0;
@@ -117,10 +122,23 @@ export const handler = async (req: Request, res: Response) => {
       let sideboard: number[][][] = setupPicks(1, 8);
 
       if (player.isBot) {
-        const result = botResults[botResultIdx]!;
+        const result = botResults?.[botResultIdx] ?? null;
         botResultIdx += 1;
-        mainboard = result.mainboard;
-        sideboard = result.sideboard;
+        if (result) {
+          mainboard = result.mainboard;
+          sideboard = result.sideboard;
+        } else {
+          // Fallback: put all picks into mainboard by default row/col
+          for (const index of pickorder) {
+            const card = cards[index];
+            if (card) {
+              const { row, col } = getCardDefaultRowColumn(detailsToCard(card));
+              if (mainboard[row]?.[col]) {
+                mainboard[row][col].push(index);
+              }
+            }
+          }
+        }
       } else {
         mainboard = formatMainboard(player.decklist, cards);
         sideboard = formatSideboard(player.decklist, cards);

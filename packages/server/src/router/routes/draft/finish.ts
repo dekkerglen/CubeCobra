@@ -139,61 +139,76 @@ export const handler = async (req: Request, res: Response) => {
       maxLands,
     }));
 
-    const batchResults = await batchDeckbuild(batchEntries);
+    let batchResults: { mainboard: string[]; sideboard: string[] }[] | null = null;
+    try {
+      batchResults = await batchDeckbuild(batchEntries);
+    } catch (err) {
+      req.logger.error('ML deckbuilding failed, falling back to naive layout for bot seats', err);
+    }
 
     for (let b = 0; b < botSeats.length; b++) {
       const { seatIndex, expandedPicks } = botSeats[b]!;
-      const { mainboard } = batchResults[b]!;
+      const mlResult = batchResults?.[b];
 
-      const pool = expandedPicks.slice();
-
-      const newMainboard = [];
-
-      for (const oracle of mainboard) {
-        const poolIndex = pool.findIndex((cardindex: number) => {
-          const card = draft.cards[cardindex];
-          return card ? cardOracleId(card) === oracle : false;
-        });
-        if (poolIndex === -1) {
-          // try basics
-          const basicsIndex = draft.basics.findIndex((cardindex) => {
-            const card = draft.cards[cardindex];
-            return card ? cardOracleId(card) === oracle : false;
-          });
-          if (basicsIndex !== -1) {
-            newMainboard.push(draft.basics[basicsIndex]);
-          }
-        } else {
-          newMainboard.push(pool[poolIndex]);
-          pool.splice(poolIndex, 1);
-        }
-      }
-
-      // format mainboard
       const formattedMainboard = setupPicks(2, 8);
       const formattedSideboard = setupPicks(1, 8);
 
-      for (const index of newMainboard) {
-        if (typeof index === 'number') {
-          const card = draft.cards[index];
-          if (card) {
-            const { row, col } = getCardDefaultRowColumn(card);
+      if (mlResult) {
+        const { mainboard } = mlResult;
+        const pool = expandedPicks.slice();
+        const newMainboard = [];
 
-            if (formattedMainboard[row] && formattedMainboard[row][col]) {
-              formattedMainboard[row][col].push(index);
+        for (const oracle of mainboard) {
+          const poolIndex = pool.findIndex((cardindex: number) => {
+            const card = draft.cards[cardindex];
+            return card ? cardOracleId(card) === oracle : false;
+          });
+          if (poolIndex === -1) {
+            // try basics
+            const basicsIndex = draft.basics.findIndex((cardindex) => {
+              const card = draft.cards[cardindex];
+              return card ? cardOracleId(card) === oracle : false;
+            });
+            if (basicsIndex !== -1) {
+              newMainboard.push(draft.basics[basicsIndex]);
+            }
+          } else {
+            newMainboard.push(pool[poolIndex]);
+            pool.splice(poolIndex, 1);
+          }
+        }
+
+        for (const index of newMainboard) {
+          if (typeof index === 'number') {
+            const card = draft.cards[index];
+            if (card) {
+              const { row, col } = getCardDefaultRowColumn(card);
+              if (formattedMainboard[row] && formattedMainboard[row][col]) {
+                formattedMainboard[row][col].push(index);
+              }
             }
           }
         }
-      }
 
-      for (const index of pool) {
-        if (!draft.basics.includes(index) && typeof index === 'number') {
+        for (const index of pool) {
+          if (!draft.basics.includes(index) && typeof index === 'number') {
+            const card = draft.cards[index];
+            if (card) {
+              const { col } = getCardDefaultRowColumn(card);
+              if (formattedSideboard[0] && formattedSideboard[0][col]) {
+                formattedSideboard[0][col].push(index);
+              }
+            }
+          }
+        }
+      } else {
+        // Fallback: put all picks into mainboard by default row/col
+        for (const index of expandedPicks) {
           const card = draft.cards[index];
           if (card) {
-            const { col } = getCardDefaultRowColumn(card);
-
-            if (formattedSideboard[0] && formattedSideboard[0][col]) {
-              formattedSideboard[0][col].push(index);
+            const { row, col } = getCardDefaultRowColumn(card);
+            if (formattedMainboard[row] && formattedMainboard[row][col]) {
+              formattedMainboard[row][col].push(index);
             }
           }
         }
