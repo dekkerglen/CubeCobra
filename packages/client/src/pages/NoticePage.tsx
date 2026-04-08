@@ -2,10 +2,10 @@ import React from 'react';
 
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
-import Datetime from 'components/base/Datetime';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Datetime from 'components/base/Datetime';
 import { Col, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';

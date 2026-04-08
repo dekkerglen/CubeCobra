@@ -25,6 +25,10 @@ Since 1.6.0
 
 # Bug Fixes
 
+- Fixed quarterly data exports including private and unlisted cubes — the cube export and deck export jobs now only export data from public cubes
+- Fixed blog posts from private and unlisted cubes leaking into follower feeds — blog posts, cube commits, package additions, and bulk imports for non-public cubes no longer publish feed items to followers
+- Fixed blog posts from unlisted cubes being visible on user blog pages and in dashboard feeds — display-side filtering now excludes both private and unlisted cube blogs (previously only private was filtered)
+- Fixed blog post pagination endpoint (`getmoreblogsbycube`) missing a cube visibility check — it now verifies the cube exists and is viewable before returning posts
 - Fixed cube JSON API (`/cube/api/cubeJSON/:id`) using stale `cube.defaultSorts` (which moved to views) — the API now returns all boards and applies the standard default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical) instead of relying on sorts that are no longer set on the cube object
 - Fixed moving cards between boards (e.g. maybeboard → mainboard) incorrectly keeping the card on the same board — the target board selector was not resetting when switching between cards on different boards
 - Fixed "Cannot set properties of undefined (setting 'markedForDelete')" crash caused by stale pending changes in localStorage referencing card indices that no longer exist — now detected as a version mismatch and handled by the existing stale changes recovery flow
@@ -34,6 +38,6 @@ Since 1.6.0
 - Fixed Scunthorpe problem in profanity filter — words like "senft" no longer falsely trigger on substring matches (e.g. "nft"). Spam/marketing terms now use word-boundary matching while slurs use substring matching to prevent evasion.
 - Fixed list view selections persisting incorrectly after removing cards — when cards were removed via "Edit Selected" → "Remove all" → "Save Changes," the checked state used stale card indices, causing a different card to appear selected after the commit
 - Improved draft creation error messages — instead of the generic "no cards in board" message, errors now distinguish between a board having no cards at all, running out of cards mid-draft (with the original count and a suggestion to add more cards or reduce players/packs), and having remaining cards that don't match a slot filter (with the filter text and card counts)
+- Improved date display — dates within the last 7 days now show relative time (e.g. "3 hours ago"), while older dates show an absolute format (e.g. "Feb 7, 2026")
 
 # Technical Changes
-- Replaced `react-timeago` dependency with a native `Datetime` component using `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` — dates within the last 7 days show relative time (e.g. "3 hours ago"), older dates show absolute format (e.g. "Feb 7, 2026")

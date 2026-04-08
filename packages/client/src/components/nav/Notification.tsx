@@ -1,8 +1,8 @@
 import React from 'react';
 
 import NotificationType from '@utils/datatypes/Notification';
-import Datetime from 'components/base/Datetime';
 
+import Datetime from 'components/base/Datetime';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 

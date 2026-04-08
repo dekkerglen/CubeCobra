@@ -2,9 +2,9 @@ import React from 'react';
 
 import VideoType from '@utils/datatypes/Video';
 import ReactPlayer from 'react-player';
-import Datetime from 'components/base/Datetime';
 
 import { CardBody, CardHeader } from 'components/base/Card';
+import Datetime from 'components/base/Datetime';
 import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import Markdown from 'components/Markdown';

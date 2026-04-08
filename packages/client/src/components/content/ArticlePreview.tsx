@@ -2,9 +2,9 @@ import React from 'react';
 
 import Article from '@utils/datatypes/Article';
 import { ContentStatus, ContentStatusEnglish } from '@utils/datatypes/Content';
-import Datetime from 'components/base/Datetime';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Datetime from 'components/base/Datetime';
 import MtgImage from 'components/MtgImage';
 
 import { Flexbox } from '../base/Layout';
