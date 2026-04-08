@@ -25,9 +25,10 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
       owner: cube.owner.username,
       owner_id: cube.owner.id,
       image_uri: cube.image.uri,
-      iamge_artist: cube.image.artist,
+      image_artist: cube.image.artist,
       card_count: cards.mainboard.length,
       following: cube.following,
+      date_last_updated: cube.dateLastUpdated,
     };
   } catch (err) {
     console.error(err);
