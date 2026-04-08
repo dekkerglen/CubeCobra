@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { CopyIcon, DownloadIcon } from '@primer/octicons-react';
+import CardType from '@utils/datatypes/Card';
 import {
   cardCmc,
   cardCollectorNumber,
@@ -15,7 +16,6 @@ import {
   cardType,
   isCustomCard,
 } from '@utils/cardutil';
-import CardType from '@utils/datatypes/Card';
 
 import { getTCGLink } from 'utils/Affiliate';
 

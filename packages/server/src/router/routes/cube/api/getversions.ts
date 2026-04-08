@@ -105,12 +105,12 @@ export const routes = [
       body('', 'body must be an array.').isArray(),
       body('*')
         .custom((value) => {
-          if (!(isValidUUID(value) || value === 'custom-card' || value === 'voucher')) {
-            throw new Error('body must contain uuids, custom-card, or voucher');
+          if (!(isValidUUID(value) || value === 'custom-card')) {
+            throw new Error('body must contain uuids or custom-card');
           }
           return true;
         })
-        .withMessage('Each ID must be a valid UUID, custom-card, or voucher.'),
+        .withMessage('Each ID must be a valid UUID or custom-card.'),
       jsonValidationErrors,
       getversionsBodyHandler,
     ],

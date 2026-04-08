@@ -46,7 +46,6 @@ import {
   cardFinish,
   cardFoilPrice,
   cardGames,
-  cardGamesEverAvailable,
   cardLayout,
   cardLegalIn,
   cardLoyalty,
@@ -899,18 +898,6 @@ var grammar = {
     },
     { name: 'gameValue$subexpression$1', symbols: ['gameValue$subexpression$1$subexpression$3'] },
     { name: 'gameValue', symbols: ['gameValue$subexpression$1'], postprocess: ([[game]]) => game.toLowerCase() },
-    {
-      name: 'exactGameOpValue$subexpression$1',
-      symbols: [/[iI]/, /[sS]/, { literal: '-' }],
-      postprocess: function (d) {
-        return d.join('');
-      },
-    },
-    {
-      name: 'exactGameOpValue',
-      symbols: ['equalityOperator', 'exactGameOpValue$subexpression$1', 'gameValue'],
-      postprocess: ([op, , value]) => setContainsOperation(op, value),
-    },
     {
       name: 'colorCombinationOpValue',
       symbols: ['anyOperator', 'colorCombinationValue'],
@@ -9213,18 +9200,6 @@ var grammar = {
     {
       name: 'gameCondition',
       symbols: ['gameCondition$subexpression$1', 'gameOpValue'],
-      postprocess: ([, valuePred]) => genericCondition('game', cardGamesEverAvailable, valuePred),
-    },
-    {
-      name: 'gameCondition$subexpression$2',
-      symbols: [/[gG]/, /[aA]/, /[mM]/, /[eE]/],
-      postprocess: function (d) {
-        return d.join('');
-      },
-    },
-    {
-      name: 'gameCondition',
-      symbols: ['gameCondition$subexpression$2', 'exactGameOpValue'],
       postprocess: ([, valuePred]) => genericCondition('game', cardGames, valuePred),
     },
     {

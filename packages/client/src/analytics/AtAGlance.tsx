@@ -1,5 +1,16 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
+import { Bar, Doughnut } from 'react-chartjs-2';
+import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Tooltip as ChartTooltip,
+} from 'chart.js';
+
 import {
   cardCmc,
   cardColorCategory,
@@ -16,16 +27,6 @@ import {
   cardWordCount,
 } from '@utils/cardutil';
 import type Card from '@utils/datatypes/Card';
-import {
-  ArcElement,
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  Tooltip as ChartTooltip,
-} from 'chart.js';
-import { Bar, Doughnut } from 'react-chartjs-2';
 
 import { Card as CardUI, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -88,6 +89,8 @@ const COLOR_CATEGORIES_ORDER = ['White', 'Blue', 'Black', 'Red', 'Green', 'Multi
 
 const MAJOR_TYPES = ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land', 'Battle'];
 
+
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const pct = (count: number, total: number): string =>
@@ -138,6 +141,8 @@ const getMajorType = (card: Card): string => {
   }
   return 'Other';
 };
+
+
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -232,7 +237,7 @@ interface AtAGlanceProps {
 
 const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
   const { cube, changedCards } = useContext(CubeContext);
-  const cards = useMemo(() => changedCards.mainboard || [], [changedCards.mainboard]);
+  const cards = changedCards.mainboard || [];
   const total = cards.length;
 
   // ── Computed Stats ────────────────────────────────────────────────────────
@@ -597,11 +602,7 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
             <div>
               <StatRow label="Avg. Mana Value" value={fmt(stats.avgCmc)} />
               <StatRow label="Avg. Card Elo" value={fmt(stats.avgElo)} />
-              <StatRow
-                label="Avg. Card Popularity"
-                value={`${fmt(stats.avgPopularity)}%`}
-                tooltip="Average percentage of cubes on Cube Cobra that include each card in this cube"
-              />
+              <StatRow label="Avg. Card Popularity" value={`${fmt(stats.avgPopularity)}%`} tooltip="Average percentage of cubes on Cube Cobra that include each card in this cube" />
               <StatRow
                 label="Avg. Release Year"
                 value={stats.avgYear > 0 ? `${Math.round(stats.avgYear)} (±${fmt(stats.yearStd, 1)})` : 'N/A'}
@@ -624,31 +625,13 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
             </CardHeader>
             <div>
               {cube.priceVisibility === 'pu' && pricesLoading && (
-                <StatRow
-                  label="Min Price (USD)"
-                  value="Loading..."
-                  tooltip="Total cost using the cheapest available printing of each card across all sets"
-                />
+                <StatRow label="Min Price (USD)" value="Loading..." tooltip="Total cost using the cheapest available printing of each card across all sets" />
               )}
               {cube.priceVisibility === 'pu' && minPrice !== null && (
-                <StatRow
-                  label="Min Price (USD)"
-                  value={`$${minPrice.toFixed(2)}`}
-                  tooltip="Total cost using the cheapest available printing of each card across all sets"
-                />
+                <StatRow label="Min Price (USD)" value={`$${minPrice.toFixed(2)}`} tooltip="Total cost using the cheapest available printing of each card across all sets" />
               )}
-              <StatRow
-                label="Actual Price (USD)"
-                value={pricesLoading ? 'Loading...' : `$${displayActualPrice.toFixed(2)}`}
-                tooltip="Total cost using the specific printings in your cube (falls back to cheapest version for unpriced printings)"
-              />
-              {stats.totalTix > 0 && (
-                <StatRow
-                  label="MTGO"
-                  value={`${stats.totalTix.toFixed(2)} TIX`}
-                  tooltip="Total cost in Magic Online event tickets"
-                />
-              )}
+              <StatRow label="Actual Price (USD)" value={pricesLoading ? 'Loading...' : `$${displayActualPrice.toFixed(2)}`} tooltip="Total cost using the specific printings in your cube (falls back to cheapest version for unpriced printings)" />
+              {stats.totalTix > 0 && <StatRow label="MTGO" value={`${stats.totalTix.toFixed(2)} TIX`} tooltip="Total cost in Magic Online event tickets" />}
             </div>
             <Flexbox direction="col" gap="2" className="p-2">
               <TCGPlayerBulkButton cards={cards} />
@@ -714,10 +697,7 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
       {/* ─── Row 5: Histograms (Popularity + Price) ──────────────────── */}
       <Row className="g-3">
         <Col xs={12} lg={6}>
-          <ChartCard
-            title="Popularity Distribution"
-            tooltip="Percentage of cubes on Cube Cobra that include each card — shows how niche or ubiquitous your card choices are"
-          >
+          <ChartCard title="Popularity Distribution" tooltip="Percentage of cubes on Cube Cobra that include each card — shows how niche or ubiquitous your card choices are">
             <Bar data={popularityHistogramData} options={histogramOptions} />
           </ChartCard>
         </Col>

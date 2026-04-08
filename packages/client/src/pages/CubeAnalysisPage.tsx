@@ -21,13 +21,13 @@ import { cardIsLabel, getLabels } from '@utils/sorting/Sort';
 
 import AnalyticTable from '../analytics/AnalyticTable';
 import Asfans from '../analytics/Asfans';
-import AtAGlance from '../analytics/AtAGlance';
 import Averages from '../analytics/Averages';
 import ChartComponent from '../analytics/Chart';
 import Combos from '../analytics/Combos';
 import Playtest from '../analytics/PlaytestData';
 import Suggestions from '../analytics/Suggestions';
 import Tokens from '../analytics/Tokens';
+import AtAGlance from '../analytics/AtAGlance';
 import { Card } from '../components/base/Card';
 import { Flexbox } from '../components/base/Layout';
 import Text from '../components/base/Text';

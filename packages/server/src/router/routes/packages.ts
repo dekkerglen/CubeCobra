@@ -206,7 +206,8 @@ const performSearch = async (
         packages: result.items || [],
         lastKey: result.lastKey,
       };
-    } catch (_error) {
+    } catch (error) {
+      console.error('[performSearch] Error querying by user:', error);
       return {
         error: 'An error occurred while searching packages by user',
         packages: [],
@@ -264,7 +265,8 @@ const performSearch = async (
       packages,
       lastKey: resultLastKey,
     };
-  } catch (_error) {
+  } catch (error) {
+    console.error('[performSearch] Error performing search:', error);
     return {
       error: 'An error occurred while searching packages',
       packages: [],

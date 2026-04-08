@@ -39,7 +39,7 @@ describe('POST /cube/api/getversions', () => {
     const res = await request(app).post('/cube/api/getversions').send(['not-a-uuid']);
 
     expect(res.status).toBe(400);
-    expect(res.body.errors[0]).toMatch(/Each ID must be a valid UUID, custom-card, or voucher/);
+    expect(res.body.errors[0]).toMatch(/Each ID must be a valid UUID or custom-card/);
   });
 
   it('should handle custom-card in the input', async () => {

@@ -170,11 +170,9 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
   );
 
   const submit = useCallback(async () => {
-    const success = await commitChanges(postTitle, postContent);
-    if (success) {
-      setPostTitle(DEFAULT_BLOG_TITLE);
-      setPostContent('');
-    }
+    commitChanges(postTitle, postContent);
+    setPostTitle(DEFAULT_BLOG_TITLE);
+    setPostContent('');
   }, [commitChanges, postContent, postTitle, setPostContent, setPostTitle]);
 
   return (

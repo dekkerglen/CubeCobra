@@ -12,8 +12,6 @@ import {
   cardDevotion,
   cardElo,
   cardFinish,
-  cardFirstPrintYear,
-  cardKeywords,
   cardName,
   cardOracleTags,
   cardPickCount,

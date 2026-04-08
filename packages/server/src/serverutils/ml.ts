@@ -164,7 +164,9 @@ export const batchDraft = async (
   }
 };
 
-export const batchBuild = async (inputs: string[][]): Promise<{ oracle: string; rating: number }[][]> => {
+export const batchBuild = async (
+  inputs: string[][],
+): Promise<{ oracle: string; rating: number }[][]> => {
   try {
     const response = await mlServiceRequest<{
       success: boolean;

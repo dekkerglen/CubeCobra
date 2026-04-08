@@ -69,70 +69,70 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   const autoBuildDeck = useCallback(async () => {
     setAutobuilding(true);
     try {
-      const response = await csrfFetch('/cube/api/deckbuild', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          pool: [...mainboard.flat(3), ...sideboard.flat(3)].map((index) => cards[index].details),
-          basics: basics.map((index) => cards[index].details),
-          maxSpells,
-          maxLands,
-        }),
-      });
+    const response = await csrfFetch('/cube/api/deckbuild', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        pool: [...mainboard.flat(3), ...sideboard.flat(3)].map((index) => cards[index].details),
+        basics: basics.map((index) => cards[index].details),
+        maxSpells,
+        maxLands,
+      }),
+    });
 
-      const json = await response.json();
+    const json = await response.json();
 
-      if (json.success === 'true') {
-        const pool = [...mainboard.flat(3), ...sideboard.flat(3)];
-        const newMainboard = [];
+    if (json.success === 'true') {
+      const pool = [...mainboard.flat(3), ...sideboard.flat(3)];
+      const newMainboard = [];
 
-        for (const oracle of json.mainboard) {
-          const poolIndex = pool.findIndex((cardindex) => cardOracleId(cards[cardindex]) === oracle);
-          if (poolIndex === -1) {
-            // try basics
-            const basicsIndex = basics.findIndex((cardindex) => cardOracleId(cards[cardindex]) === oracle);
-            if (basicsIndex !== -1) {
-              newMainboard.push(basics[basicsIndex]);
-            } else {
-              console.error(`Could not find card ${oracle} in pool or basics`);
-            }
+      for (const oracle of json.mainboard) {
+        const poolIndex = pool.findIndex((cardindex) => cardOracleId(cards[cardindex]) === oracle);
+        if (poolIndex === -1) {
+          // try basics
+          const basicsIndex = basics.findIndex((cardindex) => cardOracleId(cards[cardindex]) === oracle);
+          if (basicsIndex !== -1) {
+            newMainboard.push(basics[basicsIndex]);
           } else {
-            newMainboard.push(pool[poolIndex]);
-            pool.splice(poolIndex, 1);
+            console.error(`Could not find card ${oracle} in pool or basics`);
           }
+        } else {
+          newMainboard.push(pool[poolIndex]);
+          pool.splice(poolIndex, 1);
         }
-
-        // format mainboard
-        const formattedMainboard = setupPicks(2, 8);
-        const formattedSideboard = setupPicks(1, 8);
-
-        for (const index of newMainboard) {
-          const card = cards[index];
-          const { row, col } = getCardDefaultRowColumn(card);
-
-          formattedMainboard[row][col].push(index);
-        }
-
-        for (const index of pool) {
-          if (!basics.includes(index)) {
-            const card = cards[index];
-            const { col } = getCardDefaultRowColumn(card);
-
-            formattedSideboard[0][col].push(index);
-          }
-        }
-
-        setDeck(formattedMainboard);
-        setSideboard(formattedSideboard);
-      } else {
-        console.error(json);
       }
+
+      // format mainboard
+      const formattedMainboard = setupPicks(2, 8);
+      const formattedSideboard = setupPicks(1, 8);
+
+      for (const index of newMainboard) {
+        const card = cards[index];
+        const { row, col } = getCardDefaultRowColumn(card);
+
+        formattedMainboard[row][col].push(index);
+      }
+
+      for (const index of pool) {
+        if (!basics.includes(index)) {
+          const card = cards[index];
+          const { col } = getCardDefaultRowColumn(card);
+
+          formattedSideboard[0][col].push(index);
+        }
+      }
+
+      setDeck(formattedMainboard);
+      setSideboard(formattedSideboard);
+    } else {
+      console.error(json);
+    }
     } finally {
       setAutobuilding(false);
     }
-  }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard, maxLands, maxSpells]);
+  }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard]);
 
   return (
     <Flexbox direction="row" gap="2" justify="start" alignItems="center" className="w-full mt-2 px-2" wrap="wrap">

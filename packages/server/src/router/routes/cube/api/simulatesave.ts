@@ -2,10 +2,10 @@ import { SimulationRunData, SimulationRunEntry } from '@utils/datatypes/Simulati
 import { cubeDao } from 'dynamo/daos';
 import { deleteObject, getBucketName, getObject, putObject } from 'dynamo/s3client';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { MAX_DRAFTS, MAX_HISTORY, MAX_SEATS, MAX_TOTAL_SEATS } from 'serverutils/simulatorConstants';
 
 import { Request, Response } from '../../../../types/express';
 
-const MAX_HISTORY = 5;
 const DELETE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 const indexKey = (cubeId: string) => `cube/${cubeId}/draftsimulator/index.json`;
@@ -32,19 +32,18 @@ export const saveHandler = async (req: Request, res: Response) => {
     }
 
     const runData: SimulationRunData = req.body;
-    const MAX_POOLS = 50 * 16;
     if (
       !runData ||
       typeof runData.numDrafts !== 'number' ||
       typeof runData.numSeats !== 'number' ||
-      runData.numDrafts < 1 || runData.numDrafts > 50 ||
-      runData.numSeats < 2 || runData.numSeats > 16 ||
+      runData.numDrafts < 1 || runData.numDrafts > MAX_DRAFTS ||
+      runData.numSeats < 2 || runData.numSeats > MAX_SEATS ||
       !Array.isArray(runData.cardStats) ||
       !Array.isArray(runData.slimPools)
     ) {
       return res.status(400).json({ success: false, message: 'Invalid simulation data' });
     }
-    if (runData.slimPools.length > MAX_POOLS) {
+    if (runData.slimPools.length > MAX_TOTAL_SEATS) {
       return res.status(400).json({ success: false, message: 'Simulation data too large' });
     }
     // Validate each slim pool has the expected shape

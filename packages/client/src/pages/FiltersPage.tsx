@@ -516,8 +516,8 @@ const FiltersPage: React.FC = () => (
             <Accordion title="Artist">
               <p>
                 You can use <code>a:</code>, <code>art:</code>, or <code>artist:</code> to search for cards illustrated
-                by a specific artist. Also <code>is:reprint</code>, <code>is:firstprint</code>, <code>is:promo</code>,
-                <code>is:digital</code>, and <code>is:voucher</code>
+                by a specific artist. Also <code>is:reprint</code>, <code>is:firstprint</code>, , <code>is:promo</code>,
+                and <code>is:digital</code>
               </p>
               <Text semibold>Examples:</Text>
               <Table
@@ -684,16 +684,11 @@ const FiltersPage: React.FC = () => (
                   },
                   {
                     query: <code>game:paper</code>,
-                    description: 'All cards that have any version available in paper (checks across all printings).',
+                    description: 'All cards that are available in paper.',
                   },
                   {
                     query: <code>game!=arena</code>,
-                    description: 'All cards that have no version available on arena (checks across all printings).',
-                  },
-                  {
-                    query: <code>game:is-arena</code>,
-                    description:
-                      'All cards whose current printing is available on arena (checks only the specific version).',
+                    description: 'All cards that are not available on arena.',
                   },
                 ]}
               />
@@ -770,8 +765,7 @@ const FiltersPage: React.FC = () => (
                   },
                   {
                     query: <code>is:supplemental</code>,
-                    description:
-                      'All cards that were only printed in supplemental products (never in a standard expansion).',
+                    description: 'All cards that were only printed in supplemental products (never in a standard expansion).',
                   },
                 ]}
               />

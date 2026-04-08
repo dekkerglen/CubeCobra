@@ -2336,7 +2336,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         </div>
                       )}
                       </div>
-                      {(selectedSkeletonId !== null || selectedArchetype) && !selectedCard && (
+                      {selectedCards.length > 1 && (
+                        <div ref={poolViewRef}>
+                          <ArchetypePoolList
+                            archetype={selectedArchetype ?? ''}
+                            title={detailedViewTitle}
+                            pools={selectedPools}
+                            deckBuilds={activeDecks}
+                            deckLoading={deckBuildsLoading}
+                            cardMeta={displayRunData.cardMeta}
+                            onClose={() => setSelectedCardOracles([])}
+                          />
+                        </div>
+                      )}
+                      {(selectedSkeletonId !== null || selectedArchetype) && !selectedCard && selectedCards.length <= 1 && (
                         <div ref={poolViewRef}>
                           {selectedSkeletonId !== null && !selectedArchetype && (() => {
                             const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
