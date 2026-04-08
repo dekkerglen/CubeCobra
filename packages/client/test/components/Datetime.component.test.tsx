@@ -50,4 +50,10 @@ describe('Datetime component', () => {
     render(<Datetime date={new RealDate('2024-06-14T12:00:00Z')} />);
     expect(screen.getByRole('time').textContent).toMatch(/yesterday/i);
   });
+
+  it('shows "less than a minute ago" for a date less than 30 seconds ago', () => {
+    mockNow('2024-06-15T12:00:30Z');
+    render(<Datetime date={new RealDate('2024-06-15T12:00:00Z')} />);
+    expect(screen.getByRole('time').textContent).toBe('less than a minute ago');
+  });
 });

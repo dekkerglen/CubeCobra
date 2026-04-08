@@ -15,6 +15,7 @@ jobs/export/
 /.copilot
 CLAUDE.md
 docs/sessions/
+communications/
 
 # package specific ignores
 /packages/jobs/temp/
