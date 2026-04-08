@@ -13,6 +13,9 @@ jobs/export/
 /coverage
 /src/client/generated/
 /.copilot
+CLAUDE.md
+docs/sessions/
+communications/
 
 # package specific ignores
 /packages/jobs/temp/

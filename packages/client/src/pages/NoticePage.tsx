@@ -2,7 +2,7 @@ import React from 'react';
 
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
-import TimeAgo from 'react-timeago';
+import Datetime from 'components/base/Datetime';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -63,7 +63,7 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
                 <Link href={`/user/view/${application.user.id}`} target="_blank" rel="noopener noreferrer">
                   {application.user.username}
                 </Link>
-                - <TimeAgo date={application.date} />
+                - <Datetime date={application.date} />
               </p>
               <Row>
                 <Col xs={12} sm={6}>
@@ -114,7 +114,7 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
                 <Link href={`/user/view/${report.user.id}`} target="_blank" rel="noopener noreferrer">
                   {report.user.username}
                 </Link>
-                - <TimeAgo date={report.date} />
+                - <Datetime date={report.date} />
               </p>
               <Row>
                 <Col xs={12} sm={6}>
@@ -153,7 +153,7 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
                 <Link href={`/user/view/${report.user.id}`} target="_blank" rel="noopener noreferrer">
                   {report.user.username}
                 </Link>
-                - <TimeAgo date={report.date} />
+                - <Datetime date={report.date} />
               </p>
               <Row>
                 <Col xs={12} sm={6}>

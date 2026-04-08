@@ -2,7 +2,7 @@ import React from 'react';
 
 import VideoType from '@utils/datatypes/Video';
 import ReactPlayer from 'react-player';
-import TimeAgo from 'react-timeago';
+import Datetime from 'components/base/Datetime';
 
 import { CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
@@ -24,7 +24,7 @@ const Video: React.FC<VideoProps> = ({ video }) => {
         <Text semibold sm>
           By <Username user={video.owner} />
           {' | '}
-          <TimeAgo date={video.date} />
+          <Datetime date={video.date} />
         </Text>
       </CardHeader>
       <CardBody>

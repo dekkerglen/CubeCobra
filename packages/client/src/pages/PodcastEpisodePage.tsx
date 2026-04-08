@@ -2,7 +2,7 @@ import React from 'react';
 
 import Episode from '@utils/datatypes/Episode';
 import ReactAudioPlayer from 'react-audio-player';
-import TimeAgo from 'react-timeago';
+import Datetime from 'components/base/Datetime';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -31,7 +31,7 @@ const PodcastEpisodePage: React.FC<PodcastEpisodePageProps> = ({ episode }) => {
             <Text semibold sm>
               from <Link href={`/content/podcast/${episode.podcast}`}>{episode.podcastName}</Link>
               {' - '}
-              <TimeAgo date={episode.date} />
+              <Datetime date={episode.date} />
             </Text>
           </Flexbox>
         </CardHeader>

@@ -21,6 +21,8 @@ npm run build --workspace=packages/server
 npm run create-mock-files --workspace=packages/scripts
 echo "Creating local aws resources"
 npm run cdk:local --workspace=packages/cdk
+echo "Building jobs"
+npm run build --workspace=packages/jobs
 echo "Updating combo data"
 npm run update-combos --workspace=packages/jobs
 echo "Updating card data"
