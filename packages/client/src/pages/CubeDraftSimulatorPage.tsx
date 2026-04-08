@@ -536,14 +536,30 @@ async function runClientSimulation(
 // ---------------------------------------------------------------------------
 
 const SummaryCard: React.FC<{ label: string; value: string | number; sub?: string; onClick?: () => void; badge?: React.ReactNode }> = ({ label, value, sub, onClick, badge }) => (
-  <div className={['flex-1 min-w-[180px]', onClick ? 'cursor-pointer' : ''].join(' ')} onClick={onClick} role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined}>
-    <Card className={onClick ? 'hover:bg-bg-active transition-colors h-full' : 'h-full'}>
-      <CardBody className="text-center py-5">
-        <div className="text-4xl font-bold mb-2">{value}</div>
-        <div><Text md semibold>{label}</Text></div>
-        {sub && <div className="mt-1"><Text xs className="text-text-secondary">{sub}</Text></div>}
-        {badge && <div className="mt-2">{badge}</div>}
-      </CardBody>
+  <div className="flex-1 min-w-[180px]">
+    <Card className={onClick ? 'h-full transition-colors hover:bg-bg-active' : 'h-full'}>
+      {onClick ? (
+        <button
+          type="button"
+          onClick={onClick}
+          className="block h-full w-full text-inherit text-left focus:outline-none focus:ring-2 focus:ring-link focus:ring-inset rounded"
+          aria-label={`${label}: ${value}. ${sub ?? 'Open details.'}`}
+        >
+          <CardBody className="text-center py-5">
+            <div className="text-4xl font-bold mb-2">{value}</div>
+            <div><Text md semibold>{label}</Text></div>
+            {sub && <div className="mt-1"><Text xs className="text-text-secondary">{sub}</Text></div>}
+            {badge && <div className="mt-2">{badge}</div>}
+          </CardBody>
+        </button>
+      ) : (
+        <CardBody className="text-center py-5">
+          <div className="text-4xl font-bold mb-2">{value}</div>
+          <div><Text md semibold>{label}</Text></div>
+          {sub && <div className="mt-1"><Text xs className="text-text-secondary">{sub}</Text></div>}
+          {badge && <div className="mt-2">{badge}</div>}
+        </CardBody>
+      )}
     </Card>
   </div>
 );
@@ -787,7 +803,7 @@ const ArchetypeChart: React.FC<{
 
 type SortKey = keyof CardStats | 'deckInclusion';
 type DeckLocationFilter = 'all' | 'deck' | 'sideboard';
-const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: number; onSelectCard: (id: string) => void; selectedCardOracle: string | null; inDeckOracles: Set<string> | null; inSideboardOracles: Set<string> | null; deckInclusionPct: Map<string, number>; visiblePoolCounts: Map<string, number>; onPageChange?: () => void }> = ({ cardStats, deadCardThreshold, onSelectCard, selectedCardOracle, inDeckOracles, inSideboardOracles, deckInclusionPct, visiblePoolCounts, onPageChange }) => {
+const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: number; onSelectCard: (id: string) => void; selectedCardOracles: string[]; inDeckOracles: Set<string> | null; inSideboardOracles: Set<string> | null; deckInclusionPct: Map<string, number>; visiblePoolCounts: Map<string, number>; onPageChange?: () => void }> = ({ cardStats, deadCardThreshold, onSelectCard, selectedCardOracles, inDeckOracles, inSideboardOracles, deckInclusionPct, visiblePoolCounts, onPageChange }) => {
   const PAGE_SIZE = 25;
   const defaultSortDir = (key: SortKey): 'asc' | 'desc' => (key === 'name' || key === 'avgPickPosition' ? 'asc' : 'desc');
   const [sortKey, setSortKey] = useState<SortKey>('avgPickPosition');
@@ -828,13 +844,24 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
   const SH: React.FC<{ label: string; col: SortKey; tooltip?: string }> = ({ label, col, tooltip }) => (
     <th
       className={[
-        'px-3 py-2 text-xs font-medium uppercase tracking-wider cursor-pointer select-none hover:bg-bg-active whitespace-nowrap',
+        'px-3 py-2 text-xs font-medium uppercase tracking-wider whitespace-nowrap',
         numericSortCols.has(col) ? 'text-right' : 'text-left',
       ].join(' ')}
-      title={tooltip}
-      onClick={() => handleSort(col)}
+      aria-sort={sortKey === col ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+      scope="col"
     >
-      {label}{tooltip ? ' ?' : ''}{sortKey === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+      <button
+        type="button"
+        className={[
+          'w-full select-none rounded px-1 py-0.5 hover:bg-bg-active focus:outline-none focus:ring-2 focus:ring-link',
+          numericSortCols.has(col) ? 'text-right' : 'text-left',
+        ].join(' ')}
+        title={tooltip}
+        aria-label={tooltip ? `${label}. ${tooltip}` : `Sort by ${label}`}
+        onClick={() => handleSort(col)}
+      >
+        {label}{tooltip ? ' ?' : ''}{sortKey === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+      </button>
     </th>
   );
   return (
@@ -843,7 +870,7 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
         <div className="relative max-w-xs flex items-center">
           <Input type="text" placeholder="Filter by card name…" value={filter} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.target.value)} className="w-full pr-7" />
           {filter && (
-            <button type="button" onClick={() => setFilter('')} className="absolute right-2 text-text-secondary hover:text-text text-sm leading-none">✕</button>
+            <button type="button" onClick={() => setFilter('')} aria-label="Clear card name filter" className="absolute right-2 text-text-secondary hover:text-text text-sm leading-none">✕</button>
           )}
         </div>
         {inDeckOracles && (
@@ -867,7 +894,7 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
       <div className="overflow-x-auto rounded border border-border bg-bg">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead className="bg-bg-accent"><tr><SH label="Card" col="name" /><SH label="Elo" col="elo" /><SH label="Seen" col="timesSeen" /><SH label="Picked" col="timesPicked" /><SH label="Pick Rate" col="pickRate" /><SH label="Avg Pick" col="avgPickPosition" /><SH label="Wheels" col="wheelCount" tooltip="Times this card was drafted after the pack went all the way around the table (position > seats)" /><SH label="P1P1" col="p1p1Count" tooltip="Times this card was taken as the very first pick of pack 1" /><SH label="Deck %" col="deckInclusion" tooltip="Of decks that drafted this card, how often it made the maindeck vs. sideboard" /><th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Filter</th></tr></thead>
-          <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = c.oracle_id === selectedCardOracle; const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}{isDead && <span className="ml-2 text-xs bg-red-800 text-white rounded px-1">dead</span>}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-bg text-text-secondary border-border hover:bg-bg-active', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? `Filtered (${visiblePoolCount})` : `Filter (${visiblePoolCount})`}</button></td></tr>); })}</tbody>
+          <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = selectedCardOracles.includes(c.oracle_id); const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? <>✕ <span className="tabular-nums">{visiblePoolCount}</span></> : <span className="tabular-nums">{visiblePoolCount}</span>}</button></td></tr>); })}</tbody>
         </table>
       </div>
       <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2 pt-1">
@@ -1084,7 +1111,7 @@ const CardPoolView: React.FC<{ card: CardStats; pools: SimulatedPool[]; deckBuil
             <Flexbox direction="row" gap="1" className="flex-wrap rounded border border-border bg-bg-accent/70 px-2 py-1">
               <ViewToggle mode={viewMode} onChange={setViewMode} hasDeck={hasDeck} deckLoading={deckLoading} />
             </Flexbox>
-            <button type="button" onClick={onClose} className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active" title="Close">✕</button>
+            <button type="button" onClick={onClose} aria-label="Close draft breakdown" className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active" title="Close">✕</button>
           </Flexbox>
         </Flexbox>
       </CardHeader>
@@ -1143,7 +1170,7 @@ const ArchetypePoolList: React.FC<{ archetype: string; title?: string; pools: Si
           </div>
           <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap rounded border border-border bg-bg-accent/60 px-2 py-1">
             <ViewToggle mode={viewMode} onChange={setViewMode} hasDeck={hasDeck} deckLoading={deckLoading} />
-            <button type="button" onClick={onClose} className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active" title="Close">✕</button>
+            <button type="button" onClick={onClose} aria-label="Close archetype draft breakdown" className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active" title="Close">✕</button>
           </Flexbox>
         </Flexbox>
       </CardHeader>
@@ -1290,6 +1317,19 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </div>
           </div>
         )}
+        {skeleton.sideboardCards.length > 0 && (
+          <div className="mb-4">
+            <Text xs className="text-text-secondary/80 font-medium uppercase tracking-[0.14em] mb-2">Common Sideboard Cards</Text>
+            <div className="flex flex-col gap-1.5 rounded-md bg-bg-accent/40 px-3 py-2">
+              {skeleton.sideboardCards.map((card) => (
+                <div key={card.oracle_id} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium">{card.name}</span>
+                  <span className="text-text-secondary tabular-nums">{(card.fraction * 100).toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {skeleton.lockPairs.length > 0 && (
           <div className="pt-1">
             <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2">Lock Pairs</Text>
@@ -1395,7 +1435,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const [runPendingDelete, setRunPendingDelete] = useState<SimulationRunEntry | null>(null);
 
   // Card pool view
-  const [selectedCardOracle, setSelectedCardOracle] = useState<string | null>(null);
+  const [selectedCardOracles, setSelectedCardOracles] = useState<string[]>([]);
   const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
   const [selectedSkeletonId, setSelectedSkeletonId] = useState<number | null>(null);
   const poolViewRef = useRef<HTMLDivElement>(null);
@@ -1492,7 +1532,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     loadRunInFlight.current = true;
     setLoadingRun(true);
     setLoadRunError(null);
-    setSelectedCardOracle(null);
+    setSelectedCardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     try {
@@ -1521,7 +1561,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
       const nextRuns = json.runs ?? [];
       setRuns(nextRuns);
-      setSelectedCardOracle(null);
+      setSelectedCardOracles([]);
       setSelectedArchetype(null);
       setSelectedSkeletonId(null);
 
@@ -1550,7 +1590,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const handleStart = useCallback(async () => {
     const controller = new AbortController();
     simAbortRef.current = controller;
-    setStatus('running'); setSimPhase('setup'); setSimulating(false); setSimProgress(0); setErrorMsg(null); setSelectedCardOracle(null); setSelectedArchetype(null); setSelectedSkeletonId(null);
+    setStatus('running'); setSimPhase('setup'); setSimulating(false); setSimProgress(0); setErrorMsg(null); setSelectedCardOracles([]); setSelectedArchetype(null); setSelectedSkeletonId(null);
     try {
       const setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numDrafts, numSeats }) });
       const setupData = await setupRes.json();
@@ -1649,7 +1689,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayRunData, clusterK, clusterSeed, coreThreshold, activeDecks]);
 
-  const selectedCard = displayRunData && selectedCardOracle ? displayRunData.cardStats.find((c) => c.oracle_id === selectedCardOracle) ?? null : null;
+  const selectedCards = useMemo(
+    () => displayRunData ? selectedCardOracles.map((oracle) => displayRunData.cardStats.find((c) => c.oracle_id === oracle) ?? null).filter((c): c is CardStats => !!c) : [],
+    [displayRunData, selectedCardOracles],
+  );
+  const selectedCard = selectedCards.length === 1 ? selectedCards[0] ?? null : null;
   const activeFilterPoolIndexSet = useMemo(() => {
     const filterSets: Set<number>[] = [];
 
@@ -1666,8 +1710,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       filterSets.push(colorSet);
     }
 
-    if (selectedCard) {
-      filterSets.push(new Set<number>(selectedCard.poolIndices));
+    for (const selectedCardEntry of selectedCards) {
+      filterSets.push(new Set<number>(selectedCardEntry.poolIndices));
     }
 
     if (filterSets.length === 0) return null;
@@ -1678,7 +1722,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       if (!rest.every((set) => set.has(value))) intersection.delete(value);
     }
     return intersection;
-  }, [selectedArchetype, selectedSkeletonId, selectedCard, skeletons, displayedPools]);
+  }, [selectedArchetype, selectedSkeletonId, selectedCards, skeletons, displayedPools]);
 
   const filteredDecks = useMemo(() => {
     if (!activeDecks) return null;
@@ -1723,8 +1767,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     return displayRunData.cardStats.filter((c) => c.poolIndices.some((i) => activeFilterPoolIndexSet.has(i)));
   }, [displayRunData, activeFilterPoolIndexSet, currentRunSetup]);
   const selectedCardStats = useMemo(
-    () => (selectedCardOracle ? visibleCardStats.find((c) => c.oracle_id === selectedCardOracle) ?? null : null),
-    [visibleCardStats, selectedCardOracle],
+    () => (selectedCard ? visibleCardStats.find((c) => c.oracle_id === selectedCard.oracle_id) ?? null : null),
+    [visibleCardStats, selectedCard],
   );
   const visiblePoolCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -1733,20 +1777,22 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   }, [visibleCardStats]);
   const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
 
-  const selectedPools = selectedCard
-    ? (selectedCardStats?.poolIndices ?? selectedCard.poolIndices)
-        .map((i) => displayedPools[i])
-        .filter((p): p is SimulatedPool => Boolean(p) && (!activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex)))
+  const selectedPools = selectedCards.length > 0
+    ? displayedPools.filter((p) => !activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex))
     : [];
+  const scopedPools = useMemo(
+    () => displayedPools.filter((p) => !activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex)),
+    [displayedPools, activeFilterPoolIndexSet],
+  );
 
-  const hasPoolView = !!(selectedCard || (selectedArchetype && !selectedCard && !selectedSkeletonId) || (selectedSkeletonId !== null && !selectedCard && !selectedArchetype));
+  const hasPoolView = !!(selectedCard || (selectedArchetype && selectedCards.length === 0 && !selectedSkeletonId) || (selectedSkeletonId !== null && selectedCards.length === 0 && !selectedArchetype));
 
   // Scroll to Detailed View whenever a new selection is made
   useEffect(() => {
-    if ((selectedCardOracle || selectedArchetype || selectedSkeletonId !== null) && detailedViewRef.current) {
+    if ((selectedCardOracles.length > 0 || selectedArchetype || selectedSkeletonId !== null) && detailedViewRef.current) {
       detailedViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [selectedCardOracle, selectedArchetype, selectedSkeletonId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedCardOracles, selectedArchetype, selectedSkeletonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeFilterChips = useMemo(() => {
     const chips: string[] = [];
@@ -1756,22 +1802,88 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       if (sk) chips.push(`Cluster: ${skIdx + 1}`);
     }
     if (selectedArchetype) chips.push(`Deck Color: ${archetypeFullName(selectedArchetype)}`);
-    if (selectedCard) chips.push(`Decks Containing: ${selectedCard.name}`);
+    for (const selectedCardEntry of selectedCards) chips.push(`Decks Containing: ${selectedCardEntry.name}`);
     return chips;
-  }, [selectedSkeletonId, selectedArchetype, selectedCard, skeletons]);
+  }, [selectedSkeletonId, selectedArchetype, selectedCards, skeletons]);
 
   const activeFilterSummary = useMemo(() => {
     if (activeFilterChips.length === 0) return null;
     return activeFilterChips.join(' · ');
   }, [activeFilterChips]);
 
+  const selectedArchetypePreview = useMemo(() => {
+    if (!displayRunData || !selectedArchetype) return null;
+    const isBasicLand = (oracleId: string) => {
+      const typeLower = (displayRunData.cardMeta[oracleId]?.type ?? '').toLowerCase();
+      return typeLower.includes('basic land');
+    };
+
+    const matchingPoolIndices = scopedPools
+      .filter((pool) => pool.archetype === selectedArchetype)
+      .map((pool) => pool.poolIndex);
+    if (matchingPoolIndices.length === 0) return null;
+
+    const mainboardCounts = new Map<string, number>();
+    const sideboardOnlyCounts = new Map<string, number>();
+    const hasDeckData = !!activeDecks && activeDecks.length === displayedPools.length;
+
+    for (const poolIndex of matchingPoolIndices) {
+      if (hasDeckData) {
+        const deck = activeDecks?.[poolIndex];
+        if (!deck) continue;
+        for (const oracleId of new Set(deck.mainboard)) {
+          if (!oracleId || isBasicLand(oracleId)) continue;
+          mainboardCounts.set(oracleId, (mainboardCounts.get(oracleId) ?? 0) + 1);
+        }
+        for (const oracleId of new Set(deck.sideboard)) {
+          if (!oracleId || isBasicLand(oracleId)) continue;
+          if (!deck.mainboard.includes(oracleId)) {
+            sideboardOnlyCounts.set(oracleId, (sideboardOnlyCounts.get(oracleId) ?? 0) + 1);
+          }
+        }
+      } else {
+        const pool = displayedPools[poolIndex];
+        if (!pool) continue;
+        for (const oracleId of new Set(pool.picks.map((pick) => pick.oracle_id))) {
+          if (!oracleId || isBasicLand(oracleId)) continue;
+          mainboardCounts.set(oracleId, (mainboardCounts.get(oracleId) ?? 0) + 1);
+        }
+      }
+    }
+
+    const toSkeletonCard = ([oracleId, count]: [string, number]): SkeletonCard => ({
+      oracle_id: oracleId,
+      name: displayRunData.cardMeta[oracleId]?.name || oracleId,
+      imageUrl: displayRunData.cardMeta[oracleId]?.imageUrl ?? '',
+      fraction: count / matchingPoolIndices.length,
+    });
+
+    const commonCards = [...mainboardCounts.entries()]
+      .map(toSkeletonCard)
+      .sort((a, b) => b.fraction - a.fraction)
+      .slice(0, 8);
+
+    const supportCards = [...mainboardCounts.entries()]
+      .map(toSkeletonCard)
+      .sort((a, b) => b.fraction - a.fraction)
+      .slice(8, 16);
+
+    const sideboardCards = [...sideboardOnlyCounts.entries()]
+      .map(toSkeletonCard)
+      .filter((card) => card.fraction >= 0.15)
+      .sort((a, b) => b.fraction - a.fraction)
+      .slice(0, 5);
+
+    return { commonCards, supportCards, sideboardCards };
+  }, [displayRunData, selectedArchetype, scopedPools, activeDecks, displayedPools]);
+
   const detailedViewScopeChips = useMemo(() => {
     const chips: { key: string; label: string; onClear: () => void }[] = [];
-    if (selectedCard) {
+    for (const selectedCardEntry of selectedCards) {
       chips.push({
-        key: `card-${selectedCard.oracle_id}`,
-        label: selectedCard.name,
-        onClear: () => setSelectedCardOracle(null),
+        key: `card-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        onClear: () => setSelectedCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
       });
     }
     if (selectedSkeletonId !== null) {
@@ -1793,10 +1905,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       });
     }
     return chips;
-  }, [selectedCard, selectedSkeletonId, selectedArchetype, skeletons]);
+  }, [selectedCards, selectedSkeletonId, selectedArchetype, skeletons]);
 
   const selectedCardScopeLabel = useMemo(() => {
-    if (!selectedCard) return null;
+    if (selectedCards.length === 0) return null;
     const scopeParts: string[] = [];
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
@@ -1805,10 +1917,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     }
     if (selectedArchetype) scopeParts.push(archetypeFullName(selectedArchetype));
     return scopeParts.length > 0 ? scopeParts.join(' · ') : null;
-  }, [selectedCard, selectedSkeletonId, selectedArchetype, skeletons]);
+  }, [selectedCards.length, selectedSkeletonId, selectedArchetype, skeletons]);
 
   const detailedViewTitle = useMemo(() => {
-    if (selectedCard) return `${selectedCard.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
+    if (selectedCards.length === 1 && selectedCard) return `${selectedCard.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
+    if (selectedCards.length === 2) return `${selectedCards[0]!.name} + ${selectedCards[1]!.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
+    if (selectedCards.length > 2) return `${selectedCards.length} cards`;
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       const skIdx = skeletons.indexOf(sk!);
@@ -1816,24 +1930,32 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     }
     if (selectedArchetype) return archetypeFullName(selectedArchetype);
     return 'Detailed View';
-  }, [selectedCard, selectedCardScopeLabel, selectedSkeletonId, selectedArchetype, skeletons]);
+  }, [selectedCard, selectedCards, selectedCardScopeLabel, selectedSkeletonId, selectedArchetype, skeletons]);
 
   const detailedViewSubtitle = useMemo(() => {
     const matchingPools = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
-    if (selectedCard) return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
+    if (selectedCards.length > 0) return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
     if (selectedSkeletonId !== null || selectedArchetype) return `${matchingPools} matching draft pool${matchingPools !== 1 ? 's' : ''}`;
     return 'Select a color profile, archetype cluster, or card above to narrow the view.';
-  }, [activeFilterPoolIndexSet, displayRunData, selectedCard, selectedPools.length, selectedSkeletonId, selectedArchetype]);
+  }, [activeFilterPoolIndexSet, displayRunData, selectedCards.length, selectedPools.length, selectedSkeletonId, selectedArchetype]);
 
   const clearActiveFilter = useCallback(() => {
-    setSelectedCardOracle(null);
+    setSelectedCardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
   }, []);
 
+  const handleToggleSelectedCard = useCallback((oracleId: string) => {
+    setSelectedCardOracles((current) => {
+      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
+      if (current.length < 2) return [...current, oracleId];
+      return [current[1]!, oracleId];
+    });
+  }, []);
+
   // Derived filter label for showing active filter in tables
   const cardStatsTitle = useMemo(() => {
-    if (selectedCard) return 'Card Stats';
+    if (selectedCards.length > 0) return 'Card Stats';
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       const skIdx = skeletons.indexOf(sk!);
@@ -1841,7 +1963,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     }
     if (selectedArchetype) return `Card Stats for ${archetypeFullName(selectedArchetype)} Drafters`;
     return 'All Card Stats';
-  }, [selectedSkeletonId, selectedArchetype, selectedCard, skeletons]);
+  }, [selectedSkeletonId, selectedArchetype, selectedCards.length, skeletons]);
 
   return (
     <MainLayout>
@@ -1938,24 +2060,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         onClick={() => { setCardStatsOpen(true); setTimeout(() => cardStatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
                         badge={displayRunData.deadCards.length > 0 ? <span className="text-xs text-link">Click to view in card stats</span> : undefined}
                       />
-                      {(() => {
-                        const rates = [...displayRunData.cardStats].map((c) => c.pickRate).sort((a, b) => a - b);
-                        const p10 = rates[Math.floor(rates.length * 0.10)] ?? 0;
-                        const p90 = rates[Math.floor(rates.length * 0.90)] ?? 0;
-                        const spread = p90 - p10;
-                        const [badgeClass, badgeLabel] =
-                          spread < 0.30 ? ['bg-green-900/40 text-green-300', 'Well balanced']
-                          : spread < 0.55 ? ['bg-yellow-500/15 text-text border border-yellow-500/60', 'Some variance']
-                          : ['bg-red-900/40 text-red-300', 'High variance'];
-                        return (
-                          <SummaryCard
-                            label="Draft Balance"
-                            value={`${(p10 * 100).toFixed(0)}%–${(p90 * 100).toFixed(0)}%`}
-                            sub="pick rate range across the middle 80% of cards"
-                            badge={<span className={`text-xs font-medium px-2 py-0.5 rounded ${badgeClass}`}>{badgeLabel}</span>}
-                          />
-                        );
-                      })()}
                       <SummaryCard label="Cards Tracked" value={displayRunData.cardStats.length} sub="unique cards seen across all packs" />
                     </Flexbox>
                   </Flexbox>
@@ -2042,30 +2146,38 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                       <div className="flex flex-col md:flex-row gap-3 items-stretch">
                         {/* Left: selected card / default state */}
                         <div className="flex-1 min-w-0 rounded-lg bg-bg-accent/40 px-4 py-3">
-                          {selectedCard ? (
+                          {selectedCards.length > 0 ? (
                             <Flexbox direction="row" gap="3" alignItems="start" className="min-w-0">
-                              {displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl && (
-                                <img
-                                  src={displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl}
-                                  alt={selectedCard.name}
-                                  className="w-20 rounded border border-border/40 flex-shrink-0 shadow-sm"
-                                />
-                              )}
+                              <div className="flex flex-row gap-2 flex-shrink-0">
+                                {selectedCards.map((card) => {
+                                  const imageUrl = displayRunData.cardMeta[card.oracle_id]?.imageUrl;
+                                  return imageUrl ? (
+                                    <img
+                                      key={card.oracle_id}
+                                      src={imageUrl}
+                                      alt={card.name}
+                                      className="w-20 rounded border border-border/40 shadow-sm"
+                                    />
+                                  ) : null;
+                                })}
+                              </div>
                               <div className="min-w-0 flex-1">
                                 <Text semibold className="text-lg leading-snug">{detailedViewTitle}</Text>
                                 <div className="mt-0.5"><Text xs className="text-text-secondary/60">{detailedViewSubtitle}</Text></div>
-                                <Flexbox direction="row" gap="4" alignItems="center" className="flex-wrap mt-2">
-                                  {(() => {
-                                    // When a filter is active, use only filtered stats (null → card not seen in scope)
-                                    const statsForScope = activeFilterPoolIndexSet ? selectedCardStats : (selectedCardStats ?? selectedCard);
-                                    return (
-                                      <>
-                                        <span className="text-xs text-text-secondary/50 font-medium">Pick rate <span className="text-text-secondary/80">{statsForScope ? `${(statsForScope.pickRate * 100).toFixed(1)}%` : '0%'}</span></span>
-                                        <span className="text-xs text-text-secondary/50 font-medium">Avg position <span className="text-text-secondary/80">{statsForScope && statsForScope.avgPickPosition > 0 ? statsForScope.avgPickPosition.toFixed(1) : '—'}</span></span>
-                                      </>
-                                    );
-                                  })()}
-                                </Flexbox>
+                                {selectedCard && (
+                                  <Flexbox direction="row" gap="4" alignItems="center" className="flex-wrap mt-2">
+                                    {(() => {
+                                      // When a filter is active, use only filtered stats (null → card not seen in scope)
+                                      const statsForScope = activeFilterPoolIndexSet ? selectedCardStats : (selectedCardStats ?? selectedCard);
+                                      return (
+                                        <>
+                                          <span className="text-xs text-text-secondary/50 font-medium">Pick rate <span className="text-text-secondary/80">{statsForScope ? `${(statsForScope.pickRate * 100).toFixed(1)}%` : '0%'}</span></span>
+                                          <span className="text-xs text-text-secondary/50 font-medium">Avg position <span className="text-text-secondary/80">{statsForScope && statsForScope.avgPickPosition > 0 ? statsForScope.avgPickPosition.toFixed(1) : '—'}</span></span>
+                                        </>
+                                      );
+                                    })()}
+                                  </Flexbox>
+                                )}
                               </div>
                             </Flexbox>
                           ) : (
@@ -2077,11 +2189,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         </div>
                         {/* Right: scope panel — only when filters active */}
                         {activeFilterChips.length > 0 && (
-                          <div className="md:w-56 flex-shrink-0 rounded-lg bg-bg-accent/25 px-4 py-3">
+                          <div className="md:w-56 min-w-0 flex-shrink-0 rounded-lg bg-bg-accent/25 px-4 py-3">
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <span className="text-xs font-medium text-text-secondary/60 uppercase tracking-wider">Scope</span>
                             </div>
-                            <Flexbox direction="row" gap="1" alignItems="center" className="flex-wrap gap-1.5">
+                            <div className="flex flex-wrap items-center gap-1.5">
                               {detailedViewScopeChips.map((chip) => (
                                 <button
                                   key={chip.key}
@@ -2089,12 +2201,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                                   className="inline-flex items-center gap-1 text-xs bg-bg-accent text-text-secondary/80 rounded px-2 py-0.5 hover:bg-bg-active"
                                   onClick={chip.onClear}
                                   title={`Clear ${chip.label} filter`}
+                                  aria-label={`Clear ${chip.label} filter`}
                                 >
                                   <span>{chip.label}</span>
                                   <span className="text-text-secondary/60">✕</span>
                                 </button>
                               ))}
-                            </Flexbox>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -2113,7 +2226,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                       {/* Cluster card preview — shown whenever a cluster is selected */}
                       {selectedSkeletonId !== null && (() => {
                         const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-                        if (!sk || (sk.coreCards.length === 0 && sk.occasionalCards.length === 0)) return null;
+                        if (!sk || (sk.coreCards.length === 0 && sk.occasionalCards.length === 0 && sk.sideboardCards.length === 0)) return null;
                         return (
                           <div className="rounded-lg bg-bg-accent/30 border border-border/50 px-4 py-3">
                             <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.14em] mb-2.5">Cluster defining cards</Text>
@@ -2134,9 +2247,60 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                                 )}
                               </div>
                             </div>
+                            {sk.sideboardCards.length > 0 && (
+                              <div className="pt-4 mt-3 border-t border-border/60">
+                                <Text xs className="text-text-secondary/70 font-medium uppercase tracking-[0.14em] mb-2">Common Sideboard Cards for the Cluster</Text>
+                                <div className="flex flex-col gap-1.5 rounded-md bg-bg/60 px-3 py-2">
+                                  {sk.sideboardCards.map((card) => (
+                                    <div key={card.oracle_id} className="flex items-baseline justify-between gap-3 text-sm">
+                                      <span className="font-medium">{card.name}</span>
+                                      <span className="text-text-secondary tabular-nums">{(card.fraction * 100).toFixed(0)}%</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })()}
+                      {selectedArchetype && selectedArchetypePreview && !selectedSkeletonId && (
+                        <div className="rounded-lg bg-bg-accent/30 border border-border/50 px-4 py-3">
+                          <div className="mb-2.5">
+                            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.14em]">Most common cards in {archetypeFullName(selectedArchetype)}</Text>
+                          </div>
+                          <Text xs className="text-text-secondary/70 font-medium uppercase tracking-[0.14em] mb-2">Most Common Main Deck Cards</Text>
+                          <div className="overflow-x-auto">
+                            <div className="flex flex-row gap-2 pb-3" style={{ minWidth: 'max-content' }}>
+                              {selectedArchetypePreview.commonCards.map((card) => (
+                                <SkeletonCardImage key={card.oracle_id} card={card} size={90} />
+                              ))}
+                              {selectedArchetypePreview.supportCards.length > 0 && (
+                                <>
+                                  <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
+                                  {selectedArchetypePreview.supportCards.map((card) => (
+                                    <div key={card.oracle_id} className="opacity-60">
+                                      <SkeletonCardImage card={card} size={72} />
+                                    </div>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          {selectedArchetypePreview.sideboardCards.length > 0 && (
+                            <div className="pt-4 mt-1 border-t border-border/60">
+                              <Text xs className="text-text-secondary/70 font-medium uppercase tracking-[0.14em] mb-2">Most Common Sideboard Cards</Text>
+                              <div className="flex flex-col gap-1.5 rounded-md bg-bg/60 px-3 py-2">
+                                {selectedArchetypePreview.sideboardCards.map((card) => (
+                                  <div key={card.oracle_id} className="flex items-baseline justify-between gap-3 text-sm">
+                                    <span className="font-medium">{card.name}</span>
+                                    <span className="text-text-secondary tabular-nums">{(card.fraction * 100).toFixed(0)}%</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {/* Mini chart row — lighter surface than the stats table below */}
                       <Row className="gap-3">
                         <Col xs={12} md={6}><Card className="border-border/50 bg-bg-accent/30"><CardHeader><div><div><Text semibold>Deck Color Share</Text></div><div className="mt-0.5"><Text xs className="text-text-secondary">Each maindeck card contributes to its colors. Multicolor cards split evenly.{activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}</Text></div></div></CardHeader><CardBody><DeckColorShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} /></CardBody></Card></Col>
@@ -2162,13 +2326,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         </CardHeader>
                         <Collapse isOpen={cardStatsOpen}>
                           <CardBody>
-                            <CardStatsTable cardStats={visibleCardStats} deadCardThreshold={displayRunData.deadCardThreshold} onSelectCard={setSelectedCardOracle} selectedCardOracle={selectedCardOracle} inDeckOracles={inDeckOracles} inSideboardOracles={inSideboardOracles} deckInclusionPct={deckInclusionPct} visiblePoolCounts={visiblePoolCounts} onPageChange={() => detailedViewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+                            <CardStatsTable cardStats={visibleCardStats} deadCardThreshold={displayRunData.deadCardThreshold} onSelectCard={handleToggleSelectedCard} selectedCardOracles={selectedCardOracles} inDeckOracles={inDeckOracles} inSideboardOracles={inSideboardOracles} deckInclusionPct={deckInclusionPct} visiblePoolCounts={visiblePoolCounts} onPageChange={() => detailedViewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
                           </CardBody>
                         </Collapse>
                       </Card>
                       {selectedCard && (
                         <div ref={poolViewRef} className="simCardDiagBlock simCardDiagDetail pt-2 border-t border-border">
-                          <CardPoolView card={selectedCard} pools={selectedPools} deckBuilds={activeDecks} deckLoading={deckBuildsLoading} cardMeta={displayRunData.cardMeta} onClose={() => setSelectedCardOracle(null)} />
+                          <CardPoolView card={selectedCard} pools={selectedPools} deckBuilds={activeDecks} deckLoading={deckBuildsLoading} cardMeta={displayRunData.cardMeta} onClose={() => setSelectedCardOracles([])} />
                         </div>
                       )}
                       </div>
@@ -2177,10 +2341,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                           {selectedSkeletonId !== null && !selectedArchetype && (() => {
                             const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
                             const skIdx = skeletons.indexOf(sk!);
-                            return sk ? <ArchetypePoolList archetype={sk.colorProfile} title={`Cluster ${skIdx + 1}`} pools={sk.poolIndices.map((i) => displayedPools[i]).filter((p): p is SimulatedPool => !!p)} deckBuilds={activeDecks} deckLoading={deckBuildsLoading} cardMeta={displayRunData.cardMeta} onClose={() => setSelectedSkeletonId(null)} /> : null;
+                            return sk ? <ArchetypePoolList archetype={sk.colorProfile} title={`Cluster ${skIdx + 1}`} pools={scopedPools} deckBuilds={activeDecks} deckLoading={deckBuildsLoading} cardMeta={displayRunData.cardMeta} onClose={() => setSelectedSkeletonId(null)} /> : null;
                           })()}
                           {selectedArchetype && !selectedSkeletonId && (
-                            <ArchetypePoolList archetype={selectedArchetype} title={activeFilterSummary ?? archetypeFullName(selectedArchetype)} pools={displayedPools.filter((p) => !activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex))} deckBuilds={activeDecks} deckLoading={deckBuildsLoading} cardMeta={displayRunData.cardMeta} onClose={() => setSelectedArchetype(null)} />
+                            <ArchetypePoolList archetype={selectedArchetype} title={activeFilterSummary ?? archetypeFullName(selectedArchetype)} pools={scopedPools} deckBuilds={activeDecks} deckLoading={deckBuildsLoading} cardMeta={displayRunData.cardMeta} onClose={() => setSelectedArchetype(null)} />
                           )}
                         </div>
                       )}
@@ -2270,8 +2434,7 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         <p>
           The simulator runs N complete drafts with M bot seats each. At every pick, CubeCobra's ML draft
           model evaluates the current pack alongside each bot's accumulated pool and selects the card it
-          scores highest. Packs rotate after each pick — left for pack 1, right for pack 2 — just like a
-          real draft. Once all packs are exhausted, each seat's picks form a pool.
+          scores highest.
         </p>
         <p>
           Each bot uses a machine learning model trained on hundreds of thousands of real human draft picks.
@@ -2314,6 +2477,7 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li><span className="font-medium text-text">Core cards</span> — cards found in at least Core% of decks in the cluster</li>
           <li><span className="font-medium text-text">Support cards</span> — cards found in roughly half Core% up to Core% of decks in the cluster</li>
+          <li><span className="font-medium text-text">Common sideboard cards</span> — cards that show up in sideboards for a meaningful share of decks in the cluster without commonly making the main deck</li>
           <li>
             <span className="font-medium text-text">Lock pairs</span> — card pairs that appear together much more often than their individual rates would predict
             (&gt;60% co-occurrence and &gt;5% above the independence baseline). These often signal tight synergies or linear plans.
