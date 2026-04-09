@@ -2,8 +2,8 @@ import React, { useContext, useState } from 'react';
 
 import CommentData from '@utils/datatypes/Comment';
 import classNames from 'classnames';
-import Datetime from 'components/base/Datetime';
 
+import Datetime from 'components/base/Datetime';
 import Link from 'components/base/Link';
 import CommentEntry from 'components/comments/CommentEntry';
 import Markdown from 'components/Markdown';

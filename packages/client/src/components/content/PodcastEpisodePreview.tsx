@@ -1,9 +1,9 @@
 import React from 'react';
 
 import Episode from '@utils/datatypes/Episode';
-import Datetime from 'components/base/Datetime';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Datetime from 'components/base/Datetime';
 
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
