@@ -86,42 +86,40 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
         });
         const showBoardHeaders = activeBoards.length > 1;
 
-        return Object.entries(changedCards)
-          .map(([boardname, boardcards]) => {
-            const isActive = showAllBoards || boardname.toLowerCase() === 'mainboard';
-            const displayBoardName = boardname.charAt(0).toUpperCase() + boardname.slice(1);
+        return Object.entries(changedCards).map(([boardname, boardcards]) => {
+          const isActive = showAllBoards || boardname.toLowerCase() === 'mainboard';
+          const displayBoardName = boardname.charAt(0).toUpperCase() + boardname.slice(1);
 
-            return (
-              <ErrorBoundary key={boardname}>
-                <Flexbox direction="col" gap="2">
-                  {isActive && (
-                    <>
-                      {showBoardHeaders && boardcards.length > 0 && (
-                        <div className="mt-6 mb-4">
-                          <h2 className="text-3xl font-bold text-center mb-3">{displayBoardName}</h2>
-                          <hr className="border-t border-border w-full" />
-                        </div>
-                      )}
-                      {boardcards.length === 0 && !showAllBoards && (
-                        <Text semibold md className="text-center mt-4">
-                          This board appears to be empty!
-                        </Text>
-                      )}
-                      {{
-                        table: <TableView cards={boardcards} />,
-                        spoiler: <VisualSpoiler cards={boardcards} />,
-                        curve: <CurveView cards={boardcards} />,
-                        stacks: (
-                          <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
-                        ),
-                      }[cubeView] || <TableView cards={boardcards} />}
-                    </>
-                  )}
-                </Flexbox>
-              </ErrorBoundary>
-            );
-          })
-          .reverse();
+          return (
+            <ErrorBoundary key={boardname}>
+              <Flexbox direction="col" gap="2">
+                {isActive && (
+                  <>
+                    {showBoardHeaders && boardcards.length > 0 && (
+                      <div className="mt-6 mb-4">
+                        <h2 className="text-3xl font-bold text-center mb-3">{displayBoardName}</h2>
+                        <hr className="border-t border-border w-full" />
+                      </div>
+                    )}
+                    {boardcards.length === 0 && !showAllBoards && (
+                      <Text semibold md className="text-center mt-4">
+                        This board appears to be empty!
+                      </Text>
+                    )}
+                    {{
+                      table: <TableView cards={boardcards} />,
+                      spoiler: <VisualSpoiler cards={boardcards} />,
+                      curve: <CurveView cards={boardcards} />,
+                      stacks: (
+                        <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
+                      ),
+                    }[cubeView] || <TableView cards={boardcards} />}
+                  </>
+                )}
+              </Flexbox>
+            </ErrorBoundary>
+          );
+        });
       })()}
     </CubeContext.Provider>
   );

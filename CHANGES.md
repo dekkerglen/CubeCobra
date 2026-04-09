@@ -39,5 +39,9 @@ Since 1.6.0
 - Fixed list view selections persisting incorrectly after removing cards — when cards were removed via "Edit Selected" → "Remove all" → "Save Changes," the checked state used stale card indices, causing a different card to appear selected after the commit
 - Improved draft creation error messages — instead of the generic "no cards in board" message, errors now distinguish between a board having no cards at all, running out of cards mid-draft (with the original count and a suggestion to add more cards or reduce players/packs), and having remaining cards that don't match a slot filter (with the filter text and card counts)
 - Improved date display — dates within the last 7 days now show relative time (e.g. "3 hours ago"), while older dates show an absolute format (e.g. "Feb 7, 2026")
+- Fixed deckbuild land count and non-land count settings not being saved
+- Added a loading indicator when a draft finishes while bot decks are being built
+- Fixed pick-by-pick breakdown collapsing duplicate cards in packs when "collapse duplicates" is enabled for the cube
+- Fixed board display order in cube list views not respecting the order configured in view settings
 
 # Technical Changes

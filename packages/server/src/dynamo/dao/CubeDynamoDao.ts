@@ -118,6 +118,8 @@ export interface UnhydratedCube {
   disableGrid?: boolean; // Disable grid draft format
   disableMultiplayer?: boolean; // Disable multiplayer draft format
   basicsBoard?: string; // Board to use for basics in draft (default: 'Basics', or 'None' for no basics)
+  deckbuildSpells?: number; // Max non-land cards in bot-built decks (default 23)
+  deckbuildLands?: number; // Max land cards in bot-built decks (default 17)
   tags: any[];
   keywords: string[];
   cardCount: number;
@@ -247,6 +249,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       disableGrid: item.disableGrid,
       disableMultiplayer: item.disableMultiplayer,
       basicsBoard: item.basicsBoard,
+      deckbuildSpells: item.deckbuildSpells,
+      deckbuildLands: item.deckbuildLands,
       tags: item.tags,
       keywords: item.keywords,
       cardCount: item.cardCount,

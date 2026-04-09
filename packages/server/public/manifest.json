@@ -23,11 +23,11 @@
   "CubeComparePage": "/js/CubeComparePage.64b6ac0f.bundle.js",
   "CubeDeckPage": "/js/CubeDeckPage.3de3f475.bundle.js",
   "CubeDeckbuilderPage": "/js/CubeDeckbuilderPage.d111d233.bundle.js",
-  "CubeDraftPage": "/js/CubeDraftPage.de2ca800.bundle.js",
+  "CubeDraftPage": "/js/CubeDraftPage.d9304de6.bundle.js",
   "CubeHistoryPage": "/js/CubeHistoryPage.558b30b9.bundle.js",
-  "CubeListPage": "/js/CubeListPage.1fe700b3.bundle.js",
+  "CubeListPage": "/js/CubeListPage.2064d6ec.bundle.js",
   "CubeOverviewPage": "/js/CubeOverviewPage.6cd41eef.bundle.js",
-  "CubePITListPage": "/js/CubePITListPage.d7c729da.bundle.js",
+  "CubePITListPage": "/js/CubePITListPage.dbd444e4.bundle.js",
   "CubePlaytestPage": "/js/CubePlaytestPage.d61dd852.bundle.js",
   "CubeRecordsPage": "/js/CubeRecordsPage.0a18610f.bundle.js",
   "CubeRestorePage": "/js/CubeRestorePage.9f47fb36.bundle.js",
@@ -80,6 +80,6 @@
   "VersionPage": "/js/VersionPage.f872489c.bundle.js",
   "VideoPage": "/js/VideoPage.25b4f3d4.bundle.js",
   "VideosPage": "/js/VideosPage.2eaf648a.bundle.js",
-  "commons": "/js/commons.75f68bf8.bundle.js",
+  "commons": "/js/commons.56926ed4.bundle.js",
   "vendors": "/js/vendors.97ee44dd.bundle.js"
 }
