@@ -2,9 +2,9 @@ import React from 'react';
 
 import { ContentStatus } from '@utils/datatypes/Content';
 import Video from '@utils/datatypes/Video';
-import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Datetime from 'components/base/Datetime';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
 
@@ -36,7 +36,7 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
             By <Username user={video.owner} />
           </Text>
           <Text sm className="text-text-secondary">
-            <TimeAgo date={video.date} />
+            <Datetime date={video.date} />
           </Text>
         </Flexbox>
         <div className="flex-grow">

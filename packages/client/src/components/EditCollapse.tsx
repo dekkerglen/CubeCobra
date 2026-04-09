@@ -44,6 +44,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
     removeCard,
     swapCard,
     changedCards,
+    unfilteredChangedCards,
     clearChanges,
     commitChanges,
     alerts,
@@ -90,7 +91,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
       const replace = addValue.length > 0;
       try {
         let removeIndex = -1;
-        const board = changedCards[boardToEdit];
+        const board = unfilteredChangedCards[boardToEdit];
         for (let i = 0; i < board.length; i++) {
           const card = board[i];
           if (
@@ -140,7 +141,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
     },
     [
       addValue,
-      changedCards,
+      unfilteredChangedCards,
       boardToEdit,
       setAlerts,
       csrfFetch,

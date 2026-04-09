@@ -21,7 +21,7 @@ interface CardStacksViewProps {
 const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube, setModalSelection, setModalOpen } =
     useContext(CubeContext);
-  const { rightSidebarMode, cubeSidebarExpanded, stacksPerRow } = useContext(DisplayContext);
+  const { rightSidebarMode, rightSidebarPosition, cubeSidebarExpanded, stacksPerRow, useBaseCardData } = useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>
@@ -31,8 +31,9 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
         sortQuaternary || 'Alphabetical',
         [sortPrimary || 'Color Category', sortSecondary || 'Types-Multicolor'],
         cube,
+        useBaseCardData,
       ) as unknown as [string, [string, Card[]][]][],
-    [cards, cube, sortQuaternary, sortPrimary, sortSecondary],
+    [cards, cube, sortQuaternary, sortPrimary, sortSecondary, useBaseCardData],
   );
 
   // Group cards by tertiary sort within each secondary group
@@ -47,18 +48,19 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
           sortQuaternary || 'Alphabetical',
           [sortTertiary || 'CMC'],
           cube,
+          useBaseCardData,
         ) as [string, Card[]][];
         return [groupLabel, tertiaryGroups];
       }),
     ]) as [string, [string, [string, Card[]][]][]][];
-  }, [sorted, sortTertiary, sortQuaternary, cube]);
+  }, [sorted, sortTertiary, sortQuaternary, cube, useBaseCardData]);
 
   // Helper function to adjust breakpoint based on open sidebars
   const adjustBreakpoint = useMemo(() => {
     // Count how many sidebars are open (max 2: cube nav + edit/sort)
     let openSidebars = 0;
     if (cubeSidebarExpanded) openSidebars += 1;
-    if (rightSidebarMode !== 'none') openSidebars += 1;
+    if (rightSidebarMode !== 'none' && rightSidebarPosition === 'right') openSidebars += 1;
 
     // Return a function that takes a breakpoint config and reduces column counts
     return (config: { md: NumCols; lg: NumCols; xl: NumCols; xxl: NumCols }) => {
@@ -90,7 +92,7 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
       }
       return result;
     };
-  }, [cubeSidebarExpanded, rightSidebarMode]);
+  }, [cubeSidebarExpanded, rightSidebarMode, rightSidebarPosition]);
 
   const rowWidths: {
     md: NumCols;

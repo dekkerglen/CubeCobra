@@ -1204,6 +1204,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .h-2\.5 {
   height: 0.625rem;
 }
+.h-3 {
+  height: 0.75rem;
+}
 .h-3\.5 {
   height: 0.875rem;
 }

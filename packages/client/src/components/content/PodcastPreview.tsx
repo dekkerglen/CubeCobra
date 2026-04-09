@@ -1,9 +1,9 @@
 import React from 'react';
 
 import Podcast from '@utils/datatypes/Podcast';
-import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Datetime from 'components/base/Datetime';
 
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
@@ -31,7 +31,7 @@ const PodcastPreview: React.FC<PodcastPreviewProps> = ({ podcast }) => {
             By {podcast.owner.username}
           </Text>
           <Text sm className="text-text-secondary">
-            <TimeAgo date={podcast.date} />
+            <Datetime date={podcast.date} />
           </Text>
         </Flexbox>
       </Flexbox>

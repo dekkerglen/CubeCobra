@@ -3,10 +3,10 @@ import React, { useContext, useMemo } from 'react';
 import { XIcon } from '@primer/octicons-react';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
-import TimeAgo from 'react-timeago';
 
 import UserContext from '../contexts/UserContext';
 import Button from './base/Button';
+import Datetime from './base/Datetime';
 import { Flexbox } from './base/Layout';
 import Link from './base/Link';
 import Text from './base/Text';
@@ -48,7 +48,7 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
           </Text>
           <Text sm className="truncate flex-grow text-text-secondary">
             {'Drafted by '}
-            <Link href={`/user/view/${ownerId}`}>{owner}</Link> <TimeAgo date={date} />
+            <Link href={`/user/view/${ownerId}`}>{owner}</Link> <Datetime date={date} />
           </Text>
         </Flexbox>
         {canEdit && (

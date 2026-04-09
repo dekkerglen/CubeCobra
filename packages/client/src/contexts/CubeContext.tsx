@@ -10,7 +10,7 @@ import React, {
   useState,
 } from 'react';
 
-import { cardName, isVoucher, normalizeName } from '@utils/cardutil';
+import { cardName, cardWithBaseAttributes, isVoucher, normalizeName } from '@utils/cardutil';
 import Card, {
   BoardChanges,
   BoardType,
@@ -233,7 +233,7 @@ export function CubeContextProvider({
   const { changes, setChanges, clearChanges, version, setVersion } = useContext(ChangesContext);
   const { filterInput, cardFilter } = useContext(FilterContext)!;
 
-  const { setOpenCollapse, activeView } = useContext(DisplayContext);
+  const { setOpenCollapse, activeView, useBaseCardData } = useContext(DisplayContext);
   const [cube, setCube] = useState<CubeWithCards>({
     ...initialCube,
     cards,
@@ -1023,14 +1023,18 @@ export function CubeContextProvider({
     }
 
     const result: Record<string, Card[]> = {};
+    // When using base card data, apply the filter against base attributes
+    const effectiveFilter = useBaseCardData
+      ? (card: Card) => cardFilter.filter(cardWithBaseAttributes(card))
+      : cardFilter.filter;
     for (const board of Object.keys(changed)) {
       if (Array.isArray(changed[board])) {
-        result[board] = changed[board].filter(cardFilter.filter);
+        result[board] = changed[board].filter(effectiveFilter);
       }
     }
 
     return [result, changed];
-  }, [cube.cards, useChangedCards, cardFilter, changes, versionDict]);
+  }, [cube.cards, useChangedCards, cardFilter, changes, versionDict, useBaseCardData]);
 
   // Update filter result when cards or filter changes
   useEffect(() => {

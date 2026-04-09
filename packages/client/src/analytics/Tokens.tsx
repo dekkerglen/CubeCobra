@@ -181,7 +181,7 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
   return (
     <Flexbox direction="col" gap="2" className="m-2">
       <Text semibold lg>
-        Tokens
+        Tokens ({data.length})
       </Text>
       <Text>All the tokens and emblems your cube uses and what cards require each of them.</Text>
       <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">

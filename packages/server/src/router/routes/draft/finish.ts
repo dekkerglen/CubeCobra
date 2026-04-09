@@ -9,10 +9,17 @@ import { addNotification } from 'serverutils/util';
 
 import { NextFunction, Request, Response } from '../../../types/express';
 
+interface BotDeck {
+  seatIndex: number;
+  mainboard: string[];
+  sideboard: string[];
+}
+
 interface FinishDraftBody {
   state: State;
   mainboard: number[][][];
   sideboard: number[][][];
+  botDecks?: BotDeck[];
 }
 
 const FinishDraftBodySchema = Joi.object({
@@ -37,6 +44,15 @@ const FinishDraftBodySchema = Joi.object({
   sideboard: Joi.array()
     .items(Joi.array().items(Joi.array().items(Joi.number())))
     .required(),
+  botDecks: Joi.array()
+    .items(
+      Joi.object({
+        seatIndex: Joi.number().required(),
+        mainboard: Joi.array().items(Joi.string()).required(),
+        sideboard: Joi.array().items(Joi.string()).required(),
+      }),
+    )
+    .optional(),
 }).unknown(true); // allow additional fields
 
 export const validateBody = (req: Request, res: Response, next: NextFunction) => {
@@ -131,19 +147,31 @@ export const handler = async (req: Request, res: Response) => {
       botSeats.push({ seatIndex: i, picks: stateSeat.picks, expandedPicks: expandPicks(stateSeat.picks) });
     }
 
-    const basicsCards = draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean);
-    const batchEntries = botSeats.map((bot) => ({
-      pool: bot.expandedPicks.map((index) => draft.cards[index]?.details).filter(Boolean),
-      basics: basicsCards,
-      maxSpells,
-      maxLands,
-    }));
-
     let batchResults: { mainboard: string[]; sideboard: string[] }[] | null = null;
-    try {
-      batchResults = await batchDeckbuild(batchEntries);
-    } catch (err) {
-      req.logger.error('ML deckbuilding failed, falling back to naive layout for bot seats', err);
+
+    if (body.botDecks && body.botDecks.length > 0) {
+      // Use pre-built bot decks from client-side iterative deckbuilding (no ML calls needed)
+      batchResults = botSeats.map((bot) => {
+        const prebuilt = body.botDecks!.find((bd) => bd.seatIndex === bot.seatIndex);
+        return prebuilt
+          ? { mainboard: prebuilt.mainboard, sideboard: prebuilt.sideboard }
+          : { mainboard: [] as string[], sideboard: [] as string[] };
+      });
+    } else {
+      // Fallback: run full batchDeckbuild on the server (original behavior)
+      const basicsCards = draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean);
+      const batchEntries = botSeats.map((bot) => ({
+        pool: bot.expandedPicks.map((index) => draft.cards[index]?.details).filter(Boolean),
+        basics: basicsCards,
+        maxSpells,
+        maxLands,
+      }));
+
+      try {
+        batchResults = await batchDeckbuild(batchEntries);
+      } catch (err) {
+        req.logger.error('ML deckbuilding failed, falling back to naive layout for bot seats', err);
+      }
     }
 
     for (let b = 0; b < botSeats.length; b++) {

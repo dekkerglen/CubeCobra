@@ -19,18 +19,18 @@ export const handler = async (req: Request, res: Response) => {
 
     const posts = await blogDao.queryByOwner(req.params.userid, undefined, 10);
 
-    // Filter out blog posts from private cubes unless the viewer is the owner
+    // Filter out blog posts from private/unlisted cubes unless the viewer is the owner
     const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
     const filteredPosts = posts.items.filter((post) => {
       // DEVLOG posts are always visible
       if (post.cube === 'DEVBLOG') {
         return true;
       }
-      // If the cube is private, only show to the owner
-      if (post.cubeVisibility === CUBE_VISIBILITY.PRIVATE) {
+      // Only show blog posts from public cubes on user blog pages
+      // Private and unlisted cube blogs should not be discoverable here
+      if (post.cubeVisibility !== CUBE_VISIBILITY.PUBLIC) {
         return req.user && (req.user.id === user.id || req.user.id === post.owner.id);
       }
-      // All other cubes (public, unlisted) are visible
       return true;
     });
 

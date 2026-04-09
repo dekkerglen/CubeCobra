@@ -54,6 +54,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
     removeCard,
     swapCard,
     changedCards,
+    unfilteredChangedCards,
     clearChanges,
     commitChanges,
     alerts,
@@ -107,7 +108,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
       const replace = addValue.length > 0;
       try {
         let removeIndex = -1;
-        const board = changedCards[boardToEdit];
+        const board = unfilteredChangedCards[boardToEdit];
         for (let i = 0; i < board.length; i++) {
           const card = board[i];
           if (
@@ -157,7 +158,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
     },
     [
       addValue,
-      changedCards,
+      unfilteredChangedCards,
       boardToEdit,
       setAlerts,
       csrfFetch,

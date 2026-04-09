@@ -35,6 +35,8 @@ export interface DisplayContextValue {
   toggleCubeSidebarExpanded: () => void;
   showAllBoards: boolean;
   setShowAllBoards: React.Dispatch<React.SetStateAction<boolean>>;
+  useBaseCardData: boolean;
+  toggleUseBaseCardData: () => void;
 }
 
 const DisplayContext = React.createContext<DisplayContextValue>({
@@ -64,6 +66,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   toggleCubeSidebarExpanded: () => {},
   showAllBoards: false,
   setShowAllBoards: () => {},
+  useBaseCardData: false,
+  toggleUseBaseCardData: () => {},
 });
 
 interface DisplayContextProviderProps {
@@ -162,6 +166,11 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
 
   const [showAllBoards, setShowAllBoards] = useLocalStorage<boolean>(`${cubeID}-showAllBoards`, false);
 
+  const [useBaseCardData, setUseBaseCardData] = useLocalStorage<boolean>('useBaseCardData', false);
+  const toggleUseBaseCardData = useCallback(() => {
+    setUseBaseCardData((prev) => !prev);
+  }, [setUseBaseCardData]);
+
   const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>(() => {
     // Check if there are pending changes in local storage
     if (typeof localStorage !== 'undefined' && cubeID) {
@@ -215,6 +224,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     toggleCubeSidebarExpanded,
     showAllBoards,
     setShowAllBoards,
+    useBaseCardData,
+    toggleUseBaseCardData,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };

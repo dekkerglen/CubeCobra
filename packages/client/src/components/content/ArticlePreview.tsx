@@ -2,9 +2,9 @@ import React from 'react';
 
 import Article from '@utils/datatypes/Article';
 import { ContentStatus, ContentStatusEnglish } from '@utils/datatypes/Content';
-import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Datetime from 'components/base/Datetime';
 import MtgImage from 'components/MtgImage';
 
 import { Flexbox } from '../base/Layout';
@@ -41,7 +41,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = f
             Written by {article.owner.username}
           </Text>
           <Text sm className="text-text-secondary">
-            <TimeAgo date={article.date} />
+            <Datetime date={article.date} />
           </Text>
         </Flexbox>
         <div className="flex-grow">

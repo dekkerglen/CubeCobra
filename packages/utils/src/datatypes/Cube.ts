@@ -313,6 +313,7 @@ interface Cube {
   defaultPrinting: string;
   disableAlerts: boolean;
   disableCloneAlerts?: boolean;
+  disableFollowAlerts?: boolean;
   basics: string[]; // Deprecated - kept for backwards compatibility
   views?: ViewDefinition[]; // View configurations for displaying cube content
   customSorts?: CustomSort[]; // User-defined custom sort configurations

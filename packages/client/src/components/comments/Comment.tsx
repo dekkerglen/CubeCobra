@@ -2,8 +2,8 @@ import React, { useContext, useState } from 'react';
 
 import CommentData from '@utils/datatypes/Comment';
 import classNames from 'classnames';
-import TimeAgo from 'react-timeago';
 
+import Datetime from 'components/base/Datetime';
 import Link from 'components/base/Link';
 import CommentEntry from 'components/comments/CommentEntry';
 import Markdown from 'components/Markdown';
@@ -104,7 +104,7 @@ const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies 
               {comment.date && (
                 <>
                   {' - '}
-                  <TimeAgo date={comment.date} />
+                  <Datetime date={comment.date} />
                 </>
               )}
             </Text>
