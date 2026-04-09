@@ -58,6 +58,17 @@ export interface CardMeta {
   elo: number;
   cmc: number;
   type: string;
+  producedMana?: string[];
+}
+
+/** Basic land entry included in SimulationSetupResponse for client-side deckbuilding. */
+export interface BasicLandInfo {
+  oracleId: string;
+  name: string;
+  imageUrl: string;
+  colorIdentity: string[];
+  producedMana: string[];
+  type: string;
 }
 
 /**
@@ -155,6 +166,7 @@ export interface ArchetypeSkeleton {
   poolIndices: number[]; // indices into slimPools
   coreCards: SkeletonCard[]; // fraction >= 0.4
   occasionalCards: SkeletonCard[]; // fraction 0.2–0.4
+  sideboardCards: SkeletonCard[]; // most common sideboard-only cards across decks in this cluster
   lockPairs: LockPair[]; // pairs co-occurring > 85% and well above independence baseline
 }
 
@@ -175,4 +187,6 @@ export interface SimulationSetupResponse {
   numSeats: number;
   // Short-lived HMAC token for authenticating per-pick ML calls without per-pick DB lookups
   simToken: string;
+  // Cube's basic land options for client-side deckbuilding
+  basics: BasicLandInfo[];
 }

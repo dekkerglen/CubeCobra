@@ -1,9 +1,11 @@
 import Card from '@utils/datatypes/Card';
-import { CardMeta, SimulationSetupResponse } from '@utils/datatypes/SimulationReport';
+import { BasicLandInfo, CardMeta, SimulationSetupResponse } from '@utils/datatypes/SimulationReport';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
+import { cardFromId } from 'serverutils/carddb';
+import { getBasicsFromCube } from 'serverutils/cube';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { MAX_DRAFTS, MAX_SEATS } from 'serverutils/simulatorConstants';
@@ -23,8 +25,6 @@ const setupLimiter = rateLimit({
     res.status(429).json({ success: false, message: 'Too many simulation requests. Please wait before starting another simulation.' });
   },
 });
-
-const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 const SetupSchema = Joi.object({
   numDrafts: Joi.number().integer().min(1).max(MAX_DRAFTS).default(MAX_DRAFTS),
@@ -49,12 +49,6 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
 
     if (!isCubeEditable(cube, req.user)) {
       return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can run the draft simulator' });
-    }
-
-    if (cube.lastDraftSimulation && Date.now() - cube.lastDraftSimulation < COOLDOWN_MS) {
-      const msRemaining = COOLDOWN_MS - (Date.now() - cube.lastDraftSimulation);
-      const hoursRemaining = Math.ceil(msRemaining / 3600000);
-      return res.status(429).json({ success: false, message: `Simulation cooldown active — next run available in ${hoursRemaining}h`, hoursRemaining });
     }
 
     const { error, value } = SetupSchema.validate(req.body);
@@ -124,8 +118,26 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
           elo: details.elo ?? 1200,
           cmc: details.cmc ?? 0,
           type: details.type ?? '',
+          producedMana: details.produced_mana ?? [],
         };
       }
+    }
+
+    // Build basics list for client-side deckbuilding
+    const basicsBoard = cube.basicsBoard || 'Basics';
+    const basicCardIds = getBasicsFromCube(cubeCards, basicsBoard, cube.basics);
+    const basics: BasicLandInfo[] = [];
+    for (const id of basicCardIds) {
+      const details = cardFromId(id);
+      if (!details || !details.oracle_id) continue;
+      basics.push({
+        oracleId: details.oracle_id,
+        name: details.name ?? details.oracle_id,
+        imageUrl: (details as any).image_normal || (details as any).image_small || '',
+        colorIdentity: details.color_identity ?? [],
+        producedMana: (details as any).produced_mana ?? [],
+        type: details.type ?? '',
+      });
     }
 
     const simToken = createSimToken(req.user.id.toString(), cube.id);
@@ -138,6 +150,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       cubeName: cube.name,
       numSeats,
       simToken,
+      basics,
     };
 
     return res.status(200).json({ success: true, ...response });
