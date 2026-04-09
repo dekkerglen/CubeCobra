@@ -22,6 +22,7 @@ Since 1.6.0
 - New `game:arena` / `game:paper` / `game:mtgo` filter now checks across all printings of a card (any version ever available in that game), instead of only the current printing's availability
 - New `game:is-arena` / `game:is-paper` / `game:is-mtgo` filter for checking whether the specific printing is available in that game (the previous strict behavior)
 - Adding a user as a collaborator now creates a notification to that user
+- Add `date_last_updated` to cube exports.
 - New "Use Base Card Data" display option — when enabled, sorts and filters use a card's original printed attributes (CMC, colors, color category, type, rarity, name) instead of any user-set overrides, so you can see how your cube looks by the cards' base data
 - New "Disable Follow Notifications" setting — suppress notifications when users follow your cube (cube-level, in Options settings) or follow you (user-level, in Display Preferences)
 
