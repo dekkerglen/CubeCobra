@@ -4,6 +4,7 @@
   "description": "",
   "proxy": "http://localhost:5001",
   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@headlessui/react": "^2.2.9",
