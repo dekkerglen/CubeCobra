@@ -9,6 +9,7 @@ import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import TableViewCardGroup from 'components/card/TableViewCardGroup';
 import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 const cmc2Labels = getLabels(null, 'Mana Value 2');
 
@@ -69,12 +70,17 @@ interface CurveViewProps {
 
 const CurveView: React.FC<CurveViewProps> = ({ cards }) => {
   const { sortPrimary, cube } = useContext(CubeContext);
+  const { useBaseCardData } = useContext(DisplayContext);
 
   const sorted = fromEntries(
-    sortDeep(cards, cube.showUnsorted || false, 'Alphabetical', [sortPrimary || 'Color Category'], cube) as [
-      string,
-      CardType[],
-    ][],
+    sortDeep(
+      cards,
+      cube.showUnsorted || false,
+      'Alphabetical',
+      [sortPrimary || 'Color Category'],
+      cube,
+      useBaseCardData,
+    ) as [string, CardType[]][],
   );
 
   return (

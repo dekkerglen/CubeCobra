@@ -17,7 +17,7 @@ interface TableViewProps {
 
 const TableView: React.FC<TableViewProps> = ({ cards }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
-  const { rightSidebarMode, cubeSidebarExpanded } = useContext(DisplayContext);
+  const { rightSidebarMode, cubeSidebarExpanded, useBaseCardData } = useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>
@@ -27,8 +27,9 @@ const TableView: React.FC<TableViewProps> = ({ cards }) => {
         sortQuaternary || 'Alphabetical',
         [sortPrimary || 'Color Category', sortSecondary || 'Types-Multicolor'],
         cube,
+        useBaseCardData,
       ) as unknown as [string, [string, Card[]][]][],
-    [cards, cube, sortQuaternary, sortPrimary, sortSecondary],
+    [cards, cube, sortQuaternary, sortPrimary, sortSecondary, useBaseCardData],
   );
 
   // Helper function to adjust breakpoint based on open sidebars

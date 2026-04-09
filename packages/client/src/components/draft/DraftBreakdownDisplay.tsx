@@ -85,6 +85,7 @@ const DraftBreakdownDisplay: React.FC<DraftBreakdownDisplayProps> = ({
                       heading={`Pack ${listindex + 1}`} // Add 1 for display
                       selectedIndex={listindex === packNumber ? pickNumber - 1 : undefined}
                       onClick={(index) => onPickClick(listindex, index)}
+                      collapseDuplicates={false}
                     />
                   ),
                 )}

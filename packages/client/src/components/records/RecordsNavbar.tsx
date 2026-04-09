@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 
-import { GraphIcon, PlusIcon } from '@primer/octicons-react';
+import { GraphIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
 import { getCubeId } from '@utils/Util';
 
 import { Flexbox } from 'components/base/Layout';
@@ -40,6 +40,16 @@ const RecordsNavbar: React.FC = () => {
           From Draft
         </ResponsiveDiv>
         <ResponsiveDiv md>Create from Draft</ResponsiveDiv>
+      </Link>
+      <Link
+        href={`/cube/records/hedron/${getCubeId(cube)}`}
+        className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+      >
+        <UploadIcon size={16} />
+        <ResponsiveDiv baseVisible md>
+          Hedron
+        </ResponsiveDiv>
+        <ResponsiveDiv md>Import from Hedron Network</ResponsiveDiv>
       </Link>
       <Link
         href={`/cube/records/analytics/${getCubeId(cube)}`}
