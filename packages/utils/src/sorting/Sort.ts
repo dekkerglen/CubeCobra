@@ -25,6 +25,7 @@ import {
   cardStatus,
   cardTix,
   cardType,
+  cardWithBaseAttributes,
   cardWordCount,
   COLOR_COMBINATIONS,
   convertFromLegacyCardColorCategory,
@@ -498,7 +499,18 @@ const getTypesMulticolorLabels = (cube: Card[] | null): string[] => {
     .concat(['Other']);
 };
 
-export function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean, cubeObj?: Cube | null): string[] {
+export function getLabelsRaw(
+  cube: Card[] | null,
+  sort: string,
+  showOther: boolean,
+  cubeObj?: Cube | null,
+  useBaseAttributes?: boolean,
+): string[] {
+  // When using base attributes, transform cards so label computation uses base card data
+  if (useBaseAttributes && cube) {
+    cube = cube.map(cardWithBaseAttributes);
+  }
+
   let ret: string[] = [];
 
   // Check if this is a custom sort first (prefer cubeObj which has customSorts)
@@ -756,7 +768,11 @@ export function cardGetLabels(
   sort: string,
   showOther = false,
   cube: Cube | Card[] | null = null,
+  useBaseAttributes = false,
 ): string[] {
+  // When using base attributes, compute labels from base card data
+  const effectiveCard = useBaseAttributes ? cardWithBaseAttributes(card) : card;
+
   let ret: string[] = [];
 
   // Check if this is a custom sort first
@@ -765,7 +781,7 @@ export function cardGetLabels(
     const labels: string[] = [];
     for (let i = 0; i < customSort.categories.length; i++) {
       const category = customSort.categories[i]!;
-      if (cardMatchesCustomCategory(card, category.filter)) {
+      if (cardMatchesCustomCategory(effectiveCard, category.filter)) {
         labels.push(category.label);
         // If matchFirstOnly is true, stop after first match
         if (customSort.matchFirstOnly) {
@@ -778,47 +794,52 @@ export function cardGetLabels(
 
   /* Start of sort options */
   if (sort === 'Color Category') {
-    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string);
-    ret = [convertedColorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
+    const convertedColorCategory = convertFromLegacyCardColorCategory(effectiveCard.colorCategory as string);
+    ret = [convertedColorCategory ?? GetColorCategory(cardType(effectiveCard), cardColorIdentity(effectiveCard))];
   } else if (sort === 'Color Category Full') {
-    const convertedColorCategory = convertFromLegacyCardColorCategory(card.colorCategory as string);
-    const colorCategory = convertedColorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
+    const convertedColorCategory = convertFromLegacyCardColorCategory(effectiveCard.colorCategory as string);
+    const colorCategory =
+      convertedColorCategory ?? GetColorCategory(cardType(effectiveCard), cardColorIdentity(effectiveCard));
     if (colorCategory === 'Multicolored') {
-      ret = [getColorCombination(cardColorIdentity(card))];
+      ret = [getColorCombination(cardColorIdentity(effectiveCard))];
     } else {
       ret = [colorCategory];
     }
   } else if (sort === 'Color Identity') {
-    ret = [getColorIdentity(cardColorIdentity(card))];
+    ret = [getColorIdentity(cardColorIdentity(effectiveCard))];
   } else if (sort === 'Color Identity Full') {
-    ret = [getColorCombination(cardColorIdentity(card))];
+    ret = [getColorCombination(cardColorIdentity(effectiveCard))];
   } else if (sort === 'Color Combination Includes') {
-    ret = COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(cardColorIdentity(card), comb)).map(getColorCombination);
+    ret = COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(cardColorIdentity(effectiveCard), comb)).map(
+      getColorCombination,
+    );
   } else if (sort === 'Includes Color Combination') {
-    ret = COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(comb, cardColorIdentity(card))).map(getColorCombination);
+    ret = COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(comb, cardColorIdentity(effectiveCard))).map(
+      getColorCombination,
+    );
   } else if (sort === 'Color') {
-    const colors = cardColors(card);
+    const colors = cardColors(effectiveCard);
     if (colors.length === 0) {
       ret = ['Colorless'];
     } else {
       ret = colors.map((c: string) => COLOR_MAP[c]).filter((c): c is string => !!c);
     }
   } else if (sort === '4+ Color') {
-    if (cardColorIdentity(card).length === 5) {
+    if (cardColorIdentity(effectiveCard).length === 5) {
       ret = ['Five Color'];
-    } else if (cardColorIdentity(card).length === 4) {
-      ret = [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
+    } else if (cardColorIdentity(effectiveCard).length === 4) {
+      ret = [...'WUBRG'].filter((c) => !cardColorIdentity(effectiveCard).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
   } else if (sort === 'Mana Value' || sort === 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
-    const cmc = Math.round(cardCmc(card));
+    const cmc = Math.round(cardCmc(effectiveCard));
     if (cmc >= 8) {
       ret = ['8+'];
     } else {
       ret = [cmc.toString()];
     }
   } else if (sort === 'Mana Value 2') {
-    const cmc = Math.round(cardCmc(card));
+    const cmc = Math.round(cardCmc(effectiveCard));
     if (cmc >= 7) {
       ret = ['7+'];
     } else if (cmc <= 1) {
@@ -828,13 +849,13 @@ export function cardGetLabels(
     }
   } else if (sort === 'Mana Value Full') {
     // Round to half-integer.
-    ret = [(Math.round(cardCmc(card) * 2) / 2).toString()];
+    ret = [(Math.round(cardCmc(effectiveCard) * 2) / 2).toString()];
   } else if (sort === 'Supertype') {
-    const { typesAndSuperTypes } = splitCardTypes(card);
+    const { typesAndSuperTypes } = splitCardTypes(effectiveCard);
     const labels = getLabelsRaw(null, sort, showOther);
     ret = typesAndSuperTypes.filter((t) => labels.includes(t));
   } else if (sort === 'Type') {
-    const { typesAndSuperTypes } = splitCardTypes(card);
+    const { typesAndSuperTypes } = splitCardTypes(effectiveCard);
     //Overriding the types for contraptions and planes
     if (typesAndSuperTypes.includes('Contraption')) {
       ret = ['Contraption'];
@@ -844,78 +865,78 @@ export function cardGetLabels(
       ret = filterOutSupertypes(typesAndSuperTypes);
     }
   } else if (sort === 'Tags') {
-    ret = card.tags || [];
+    ret = effectiveCard.tags || [];
   } else if (sort === 'Keywords') {
-    ret = cardKeywords(card);
+    ret = cardKeywords(effectiveCard);
   } else if (sort === 'Status') {
-    ret = [cardStatus(card)];
+    ret = [cardStatus(effectiveCard)];
   } else if (sort === 'Finish') {
-    ret = [cardFinish(card)];
+    ret = [cardFinish(effectiveCard)];
   } else if (sort === 'Date Added') {
-    ret = [(cardAddedTime(card) ?? new Date(0)).toLocaleDateString('en-US')];
+    ret = [(cardAddedTime(effectiveCard) ?? new Date(0)).toLocaleDateString('en-US')];
   } else if (sort === 'Guilds') {
-    if (cardColorIdentity(card).length === 2) {
-      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+    if (cardColorIdentity(effectiveCard).length === 2) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(effectiveCard).includes(c)).join('');
       const guildName = GUILD_MAP[ordered];
       ret = guildName ? [guildName] : ['Unknown'];
     }
   } else if (sort === 'Shards / Wedges') {
-    if (cardColorIdentity(card).length === 3) {
-      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+    if (cardColorIdentity(effectiveCard).length === 3) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(effectiveCard).includes(c)).join('');
       const shardName = SHARD_AND_WEDGE_MAP[ordered];
       ret = shardName ? [shardName] : ['Unknown'];
     }
   } else if (sort === 'Color Count') {
-    ret = [cardColorIdentity(card).length.toFixed(0)];
+    ret = [cardColorIdentity(effectiveCard).length.toFixed(0)];
   } else if (sort === 'Set' || sort === 'Set (Release Date)') {
-    ret = [cardSet(card).toUpperCase()];
+    ret = [cardSet(effectiveCard).toUpperCase()];
   } else if (sort === 'Rarity') {
-    const rarity = cardRarity(card);
+    const rarity = cardRarity(effectiveCard);
     ret = rarity && rarity.length > 0 ? [rarity[0]!.toUpperCase() + rarity.slice(1)] : ['Unknown'];
   } else if (sort === 'Subtype') {
-    const { subtypes } = splitCardTypes(card);
+    const { subtypes } = splitCardTypes(effectiveCard);
     ret = subtypes;
   } else if (sort === 'Types-Multicolor') {
-    if (cardColorIdentity(card).length <= 1) {
-      const { typesAndSuperTypes } = splitCardTypes(card);
+    if (cardColorIdentity(effectiveCard).length <= 1) {
+      const { typesAndSuperTypes } = splitCardTypes(effectiveCard);
       //Grouping by the last type. Eg for Walking Ballista (Artifact Creature) is is grouped under Creature
       const type = typesAndSuperTypes.length > 0 ? typesAndSuperTypes[typesAndSuperTypes.length - 1] : '';
       //Because of custom cards don't check against valid MTG types
       ret = type ? [type] : ['Unknown'];
-    } else if (cardColorIdentity(card).length === 5) {
+    } else if (cardColorIdentity(effectiveCard).length === 5) {
       ret = ['Five Color'];
-    } else if (cardColorIdentity(card).length === 4) {
-      ret = [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
-    } else if (cardColorIdentity(card).length === 3) {
-      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+    } else if (cardColorIdentity(effectiveCard).length === 4) {
+      ret = [...'WUBRG'].filter((c) => !cardColorIdentity(effectiveCard).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
+    } else if (cardColorIdentity(effectiveCard).length === 3) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(effectiveCard).includes(c)).join('');
       const shardName = SHARD_AND_WEDGE_MAP[ordered];
       ret = shardName ? [shardName] : ['Unknown'];
-    } else if (cardColorIdentity(card).length === 2) {
-      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+    } else if (cardColorIdentity(effectiveCard).length === 2) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(effectiveCard).includes(c)).join('');
       const guildName = GUILD_MAP[ordered];
       ret = guildName ? [guildName] : ['Unknown'];
     }
   } else if (sort === 'Artist') {
-    ret = [cardArtist(card)];
+    ret = [cardArtist(effectiveCard)];
   } else if (sort === 'Legality') {
-    ret = Object.entries(card.details?.legalities ?? {})
+    ret = Object.entries(effectiveCard.details?.legalities ?? {})
       .filter(([, v]) => ['legal', 'banned'].includes(v))
       .map(([k]) => k);
   } else if (sort === 'Power') {
-    if (card.details?.power) {
-      ret = [card.details?.power];
+    if (effectiveCard.details?.power) {
+      ret = [effectiveCard.details?.power];
     }
   } else if (sort === 'Toughness') {
-    if (card.details?.toughness) {
-      ret = [card.details?.toughness];
+    if (effectiveCard.details?.toughness) {
+      ret = [effectiveCard.details?.toughness];
     }
   } else if (sort === 'Loyalty') {
-    if (card.details?.loyalty) {
-      ret = [card.details?.loyalty ?? '0'];
+    if (effectiveCard.details?.loyalty) {
+      ret = [effectiveCard.details?.loyalty ?? '0'];
     }
   } else if (sort === 'Manacost Type') {
-    const colors = cardColors(card);
-    const parsedCost = card.details?.parsed_cost ?? [];
+    const colors = cardColors(effectiveCard);
+    const parsedCost = effectiveCard.details?.parsed_cost ?? [];
     if (colors.length > 1 && parsedCost.every((symbol: string) => !symbol.includes('-'))) {
       ret = ['Gold'];
     } else if (
@@ -927,49 +948,55 @@ export function cardGetLabels(
       ret = ['Phyrexian'];
     }
   } else if (sort === 'Creature/Non-Creature') {
-    ret = cardType(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
+    ret = cardType(effectiveCard).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
   } else if (sort === 'Price USD' || sort === 'Price') {
-    const price = card.details?.prices.usd ?? card.details?.prices.usd_foil ?? card.details?.prices.usd_etched;
+    const price =
+      effectiveCard.details?.prices.usd ??
+      effectiveCard.details?.prices.usd_foil ??
+      effectiveCard.details?.prices.usd_etched;
     if (price) {
       ret = [getPriceBucket(price, '$')];
     } else {
       ret = ['No Price Available'];
     }
   } else if (sort === 'Price USD Foil') {
-    const price = card.details?.prices.usd_foil ?? card.details?.prices.usd_etched ?? card.details?.prices.usd;
+    const price =
+      effectiveCard.details?.prices.usd_foil ??
+      effectiveCard.details?.prices.usd_etched ??
+      effectiveCard.details?.prices.usd;
     if (price) {
       ret = [getPriceBucket(price, '$')];
     } else {
       ret = ['No Price Available'];
     }
   } else if (sort === 'Price EUR') {
-    const price = cardPriceEur(card);
+    const price = cardPriceEur(effectiveCard);
     if (price) {
       ret = [getPriceBucket(price, '€')];
     } else {
       ret = ['No Price Available'];
     }
   } else if (sort === 'MTGO TIX') {
-    const price = cardTix(card);
+    const price = cardTix(effectiveCard);
     if (price) {
       ret = [getPriceBucket(price, '')];
     } else {
       ret = ['No Price Available'];
     }
   } else if (sort === 'Devotion to White') {
-    ret = [cardDevotion(card, 'w').toString()];
+    ret = [cardDevotion(effectiveCard, 'w').toString()];
   } else if (sort === 'Devotion to Blue') {
-    ret = [cardDevotion(card, 'u').toString()];
+    ret = [cardDevotion(effectiveCard, 'u').toString()];
   } else if (sort === 'Devotion to Black') {
-    ret = [cardDevotion(card, 'b').toString()];
+    ret = [cardDevotion(effectiveCard, 'b').toString()];
   } else if (sort === 'Devotion to Red') {
-    ret = [cardDevotion(card, 'r').toString()];
+    ret = [cardDevotion(effectiveCard, 'r').toString()];
   } else if (sort === 'Devotion to Green') {
-    ret = [cardDevotion(card, 'g').toString()];
+    ret = [cardDevotion(effectiveCard, 'g').toString()];
   } else if (sort === 'Unsorted') {
     ret = ['All'];
   } else if (sort === 'Popularity') {
-    const popularity = cardPopularity(card);
+    const popularity = cardPopularity(effectiveCard);
     if (popularity < 1) ret = ['0–1%'];
     else if (popularity < 2) ret = ['1–2%'];
     else if (popularity < 5) ret = ['3–5%'];
@@ -980,12 +1007,12 @@ export function cardGetLabels(
     else if (popularity < 50) ret = ['30–50%'];
     else if (popularity <= 100) ret = ['50–100%'];
   } else if (sort === 'Elo') {
-    ret = [getEloBucket(cardElo(card))];
+    ret = [getEloBucket(cardElo(effectiveCard))];
   } else if (sort === 'Approximate Word Count') {
-    const wordCount = cardWordCount(card);
+    const wordCount = cardWordCount(effectiveCard);
     ret = [wordCountBucket(wordCount)];
   } else if (sort === 'First Year') {
-    const year = cardFirstPrintYear(card);
+    const year = cardFirstPrintYear(effectiveCard);
     ret = year > 0 ? [year.toString()] : ['Unknown'];
   }
   /* End of sort options */
@@ -1019,11 +1046,12 @@ export function sortGroupsOrdered(
   sort: string,
   showOther: boolean,
   cubeObj?: Cube | null,
+  useBaseAttributes?: boolean,
 ): [string, Card[]][] {
-  const labels = getLabelsRaw(cards, sort, showOther, cubeObj);
+  const labels = getLabelsRaw(cards, sort, showOther, cubeObj, useBaseAttributes);
   const allCardLabels: [Card, string[]][] = cards.map((card) => [
     card,
-    cardGetLabels(card, sort, showOther, cubeObj ?? cards).map((label) => {
+    cardGetLabels(card, sort, showOther, cubeObj ?? cards, useBaseAttributes).map((label) => {
       if (labels.includes(label)) {
         return label;
       }
@@ -1051,8 +1079,9 @@ export function sortIntoGroups(
   sort: string,
   showOther = false,
   cubeObj?: Cube | null,
+  useBaseAttributes?: boolean,
 ): Record<string, Card[]> {
-  return fromEntries(sortGroupsOrdered(cards, sort, showOther, cubeObj));
+  return fromEntries(sortGroupsOrdered(cards, sort, showOther, cubeObj, useBaseAttributes));
 }
 
 type DeepSorted = Card[] | [string, DeepSorted][];
@@ -1063,18 +1092,31 @@ function sortDeepImpl(
   last: string,
   sorts: string[],
   cubeObj?: Cube | null,
+  useBaseAttributes?: boolean,
 ): DeepSorted {
   if (sorts.length === 0) {
-    return [...cards].sort(SortFunctions[last]);
+    const comparator = SortFunctions[last];
+    if (useBaseAttributes && comparator) {
+      return [...cards].sort((a, b) => comparator(cardWithBaseAttributes(a), cardWithBaseAttributes(b)));
+    }
+    return [...cards].sort(comparator);
   }
   const [first, ...rest] = sorts;
-  const nextSort = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther, cubeObj);
+  const nextSort = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther, cubeObj, useBaseAttributes);
   const result: [string, DeepSorted][] = [];
   for (const [label, group] of nextSort) {
     if (rest.length > 0) {
-      result.push([label, sortDeepImpl(group, showOther, last, rest, cubeObj)]);
+      result.push([label, sortDeepImpl(group, showOther, last, rest, cubeObj, useBaseAttributes)]);
     } else {
-      result.push([label, group.sort(SortFunctions[last])]);
+      const comparator = SortFunctions[last];
+      if (useBaseAttributes && comparator) {
+        result.push([
+          label,
+          [...group].sort((a, b) => comparator(cardWithBaseAttributes(a), cardWithBaseAttributes(b))),
+        ]);
+      } else {
+        result.push([label, group.sort(comparator)]);
+      }
     }
   }
   return result;
@@ -1087,12 +1129,20 @@ export function sortDeep(
   last: string,
   sorts: string[],
   cubeObj?: Cube | null,
+  useBaseAttributes?: boolean,
 ): DeepSorted;
 export function sortDeep(cards: Card[], showOther: boolean, last: string, ...args: any[]): DeepSorted {
   // Detect whether called with array-of-sorts + cubeObj, or with ...rest string sorts
   if (args.length > 0 && Array.isArray(args[0])) {
-    // Called as sortDeep(cards, showOther, last, sorts[], cubeObj?)
-    return sortDeepImpl(cards, showOther, last, args[0] as string[], args[1] as Cube | null | undefined);
+    // Called as sortDeep(cards, showOther, last, sorts[], cubeObj?, useBaseAttributes?)
+    return sortDeepImpl(
+      cards,
+      showOther,
+      last,
+      args[0] as string[],
+      args[1] as Cube | null | undefined,
+      args[2] as boolean | undefined,
+    );
   }
   // Called as sortDeep(cards, showOther, last, ...sorts)
   return sortDeepImpl(cards, showOther, last, args as string[]);

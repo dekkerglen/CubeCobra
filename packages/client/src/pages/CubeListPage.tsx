@@ -151,6 +151,15 @@ const CubeListPageRaw: React.FC = () => {
         const showBoardHeaders = activeBoards.length > 1;
 
         return Object.entries(changedCards)
+          .sort(([a], [b]) => {
+            const aIndex = viewBoards.indexOf(a.toLowerCase());
+            const bIndex = viewBoards.indexOf(b.toLowerCase());
+            // Boards in the view come first in their defined order; others go to the end
+            if (aIndex === -1 && bIndex === -1) return 0;
+            if (aIndex === -1) return 1;
+            if (bIndex === -1) return -1;
+            return aIndex - bIndex;
+          })
           .map(([boardname, boardcards]) => {
             // Convert boardname to lowercase key for comparison with view's boards
             const boardKey = boardname.toLowerCase();
@@ -190,8 +199,7 @@ const CubeListPageRaw: React.FC = () => {
                 </Flexbox>
               </ErrorBoundary>
             );
-          })
-          .reverse();
+          });
       })()}
     </>
   );

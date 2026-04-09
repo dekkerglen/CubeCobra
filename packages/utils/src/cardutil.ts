@@ -509,6 +509,24 @@ export const cardArtCrop = (card: Card): string => card.details?.art_crop ?? '';
 
 export const cardImageFlip = (card: Card): string => card.details?.image_flip ?? '';
 
+/**
+ * Returns a shallow copy of the card with all user-override fields stripped,
+ * so that accessor functions (cardCmc, cardType, cardRarity, etc.) will fall
+ * through to the base card.details values. Useful for sorting and filtering
+ * by the card's original printed attributes rather than user customizations.
+ */
+export const cardWithBaseAttributes = (card: Card): Card => ({
+  ...card,
+  colors: undefined,
+  colorCategory: undefined,
+  cmc: undefined,
+  type_line: undefined,
+  rarity: undefined,
+  custom_name: undefined,
+  imgUrl: undefined,
+  imgBackUrl: undefined,
+});
+
 export const cardTokens = (card: Card): string[] => card.details?.tokens ?? [];
 
 export const cardElo = (card: Card): number => (card.details ? card.details?.elo || DefaultElo : DefaultElo);
@@ -876,4 +894,5 @@ export default {
   sortDeck,
   getCardColorClass,
   getCardTagColorClass,
+  cardWithBaseAttributes,
 };
