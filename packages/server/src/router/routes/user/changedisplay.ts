@@ -49,6 +49,7 @@ export const handler = async (req: Request, res: Response) => {
     user.yourCubesSortOrder = req.body.yourCubesSortOrder;
     user.disableAnimations = req.body.disableAnimations === 'true';
     user.useTextOverIcons = req.body.useTextOverIcons === 'true';
+    user.disableFollowAlerts = req.body.disableFollowAlerts === 'true';
 
     await userDao.update(user as any);
 

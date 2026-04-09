@@ -47,6 +47,8 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
     toggleShowInlineTagEmojis,
     showAllBoards,
     setShowAllBoards,
+    useBaseCardData,
+    toggleUseBaseCardData,
   } = useContext(DisplayContext);
   const { url: rotoURL, setUrl: setRotoURL } = useContext(RotoDraftContext);
 
@@ -152,6 +154,12 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                 <QuestionIcon size={16} className="hidden md:inline" />
               </Tooltip>
             </Flexbox>
+            <Flexbox direction="row" gap="2" alignItems="center">
+              <Checkbox label="Use Base Card Data" checked={useBaseCardData} setChecked={toggleUseBaseCardData} />
+              <Tooltip text="Sort and filter using a card's original printed attributes, ignoring any overrides you've set (e.g. custom CMC, colors, type).">
+                <QuestionIcon size={16} className="hidden md:inline" />
+              </Tooltip>
+            </Flexbox>
           </Flexbox>
         </Flexbox>
       ) : (
@@ -230,6 +238,12 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               <Flexbox direction="row" gap="2" alignItems="center">
                 <Checkbox label="Show All Boards" checked={showAllBoards} setChecked={setShowAllBoards} />
                 <Tooltip text="Display all boards at the same time, regardless of the current view's board selection.">
+                  <QuestionIcon size={16} />
+                </Tooltip>
+              </Flexbox>
+              <Flexbox direction="row" gap="2" alignItems="center">
+                <Checkbox label="Use Base Card Data" checked={useBaseCardData} setChecked={toggleUseBaseCardData} />
+                <Tooltip text="Sort and filter using a card's original printed attributes, ignoring any overrides you've set (e.g. custom CMC, colors, type).">
                   <QuestionIcon size={16} />
                 </Tooltip>
               </Flexbox>

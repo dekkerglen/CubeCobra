@@ -201,6 +201,7 @@ console.log(card.name);                         // "Lightning Bolt"`}
     "image_artist": "Artist Name",
     "card_count": 540,
     "following": 42,
+    "date_last_updated": 1775683279151,
     "cards": [0, 15, 42, 103, ...]  // Card indexes
   },
   ...

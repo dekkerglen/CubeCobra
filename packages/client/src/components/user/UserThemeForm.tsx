@@ -27,6 +27,7 @@ const UserThemeForm: React.FC = () => {
   const [hideFeaturedCubes, setHideFeaturedCubes] = useState(user?.hideFeatured || false);
   const [disableAnimations, setDisableAnimations] = useState(user?.disableAnimations || false);
   const [useTextOverIcons, setUseTextOverIcons] = useState(user?.useTextOverIcons || false);
+  const [disableFollowAlerts, setDisableFollowAlerts] = useState(user?.disableFollowAlerts || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
     () => ({
@@ -38,6 +39,7 @@ const UserThemeForm: React.FC = () => {
       yourCubesSortOrder: `${yourCubesSortOrder}`,
       disableAnimations: `${disableAnimations}`,
       useTextOverIcons: `${useTextOverIcons}`,
+      disableFollowAlerts: `${disableFollowAlerts}`,
     }),
     [
       selectedTheme,
@@ -48,6 +50,7 @@ const UserThemeForm: React.FC = () => {
       yourCubesSortOrder,
       disableAnimations,
       useTextOverIcons,
+      disableFollowAlerts,
     ],
   );
 
@@ -94,6 +97,11 @@ const UserThemeForm: React.FC = () => {
           label="Use text over icons where possible"
           checked={useTextOverIcons}
           setChecked={setUseTextOverIcons}
+        />
+        <Checkbox
+          label="Disable Follow Notifications"
+          checked={disableFollowAlerts}
+          setChecked={setDisableFollowAlerts}
         />
         <Select
           label="Your cubes sort order"

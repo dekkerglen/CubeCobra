@@ -22,6 +22,9 @@ Since 1.6.0
 - New `game:arena` / `game:paper` / `game:mtgo` filter now checks across all printings of a card (any version ever available in that game), instead of only the current printing's availability
 - New `game:is-arena` / `game:is-paper` / `game:is-mtgo` filter for checking whether the specific printing is available in that game (the previous strict behavior)
 - Adding a user as a collaborator now creates a notification to that user
+- Add `date_last_updated` to cube exports.
+- New "Use Base Card Data" display option — when enabled, sorts and filters use a card's original printed attributes (CMC, colors, color category, type, rarity, name) instead of any user-set overrides, so you can see how your cube looks by the cards' base data
+- New "Disable Follow Notifications" setting — suppress notifications when users follow your cube (cube-level, in Options settings) or follow you (user-level, in Display Preferences)
 
 # Bug Fixes
 
@@ -39,10 +42,14 @@ Since 1.6.0
 - Fixed list view selections persisting incorrectly after removing cards — when cards were removed via "Edit Selected" → "Remove all" → "Save Changes," the checked state used stale card indices, causing a different card to appear selected after the commit
 - Improved draft creation error messages — instead of the generic "no cards in board" message, errors now distinguish between a board having no cards at all, running out of cards mid-draft (with the original count and a suggestion to add more cards or reduce players/packs), and having remaining cards that don't match a slot filter (with the filter text and card counts)
 - Improved date display — dates within the last 7 days now show relative time (e.g. "3 hours ago"), while older dates show an absolute format (e.g. "Feb 7, 2026")
+- Fixed Cube card count not updating in the hero as mainboard changes were saved
+- Fixed problem selecting cards with accented charcters (eg Lórien) when adding to a draft record for cards in the cube
 - Fixed deckbuild land count and non-land count settings not being saved
 - Added a loading indicator when a draft finishes while bot decks are being built
+- Moved bot deckbuilding to the client side with a progress bar — instead of one long server request that could time out, the client now makes ~31 small incremental ML calls (1 batch build + ~30 draft steps), showing a live percentage and step counter during the process
 - Fixed pick-by-pick breakdown collapsing duplicate cards in packs when "collapse duplicates" is enabled for the cube
 - Fixed board display order in cube list views not respecting the order configured in view settings
 - Respect Right Sidebar inline position when adjusting Cube Table and Stacks layouts.
+- Fixed "Disable Clone Notifications" cube setting not persisting — the setting would revert after saving
 
 # Technical Changes

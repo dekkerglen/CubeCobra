@@ -34,7 +34,9 @@ export const handler = async (req: Request, res: Response) => {
       user.followedUsers.push(other.id);
     }
 
-    await addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
+    if (!other.disableFollowAlerts) {
+      await addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
+    }
 
     await userDao.batchPut([other, user]);
 

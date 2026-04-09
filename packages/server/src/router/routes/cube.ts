@@ -270,12 +270,14 @@ export const followHandler = async (req: Request, res: Response) => {
   await userDao.update(userToUpdate as any);
   await cubeDao.update(cube, { skipTimestampUpdate: true });
 
-  await addNotification(
-    cubeOwner,
-    user!,
-    `/cube/list/${cube.id}`,
-    `${user!.username} followed your cube: ${cube.name}`,
-  );
+  if (!cubeOwner.disableFollowAlerts && !cube.disableFollowAlerts) {
+    await addNotification(
+      cubeOwner,
+      user!,
+      `/cube/list/${cube.id}`,
+      `${user!.username} followed your cube: ${cube.name}`,
+    );
+  }
 
   return res.status(200).send({
     success: 'true',

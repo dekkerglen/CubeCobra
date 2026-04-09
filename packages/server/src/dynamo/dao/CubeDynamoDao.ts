@@ -110,6 +110,8 @@ export interface UnhydratedCube {
   defaultStatus: CardStatus;
   defaultPrinting: string;
   disableAlerts: boolean;
+  disableCloneAlerts?: boolean;
+  disableFollowAlerts?: boolean;
   basics: string[];
   views?: ViewDefinition[]; // View configurations for displaying cube content
   customSorts?: any[]; // Custom sort definitions
@@ -241,6 +243,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       defaultStatus: item.defaultStatus,
       defaultPrinting: item.defaultPrinting,
       disableAlerts: item.disableAlerts,
+      disableCloneAlerts: item.disableCloneAlerts,
+      disableFollowAlerts: item.disableFollowAlerts,
       basics: item.basics,
       views: item.views,
       customSorts: item.customSorts,
