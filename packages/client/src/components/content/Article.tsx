@@ -1,8 +1,8 @@
 import React from 'react';
 
 import ArticleData from '@utils/datatypes/Article';
-import Datetime from 'components/base/Datetime';
 
+import Datetime from 'components/base/Datetime';
 import CommentsSection from 'components/comments/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';

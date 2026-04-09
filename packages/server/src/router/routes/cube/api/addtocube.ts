@@ -1,5 +1,6 @@
 import Card from '@utils/datatypes/Card';
 import { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, packageDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
@@ -166,16 +167,19 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
         changelist,
       });
 
-      const followers = [...new Set([...(req.user.following || []), ...cube.following])];
+      // Only publish to follower feeds if the cube is public
+      if (cube.visibility === CUBE_VISIBILITY.PUBLIC) {
+        const followers = [...new Set([...(req.user.following || []), ...cube.following])];
 
-      const feedItems = followers.map((user) => ({
-        id,
-        to: user,
-        date: new Date().valueOf(),
-        type: FeedTypes.BLOG,
-      }));
+        const feedItems = followers.map((user) => ({
+          id,
+          to: user,
+          date: new Date().valueOf(),
+          type: FeedTypes.BLOG,
+        }));
 
-      await feedDao.batchPutUnhydrated(feedItems);
+        await feedDao.batchPutUnhydrated(feedItems);
+      }
     }
 
     return res.status(200).send({

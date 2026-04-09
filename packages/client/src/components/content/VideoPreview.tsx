@@ -2,9 +2,9 @@ import React from 'react';
 
 import { ContentStatus } from '@utils/datatypes/Content';
 import Video from '@utils/datatypes/Video';
-import Datetime from 'components/base/Datetime';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Datetime from 'components/base/Datetime';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
 

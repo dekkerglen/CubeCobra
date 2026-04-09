@@ -10,7 +10,7 @@ import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
 
 // Helper function to filter feed items based on cube privacy
-const filterFeedItemsByPrivacy = (feedItems: any[], userId?: string): any[] => {
+const filterFeedItemsByPrivacy = (feedItems: any[]): any[] => {
   return feedItems.filter((item) => {
     const blog = item.document;
     if (!blog) return false;
@@ -20,13 +20,9 @@ const filterFeedItemsByPrivacy = (feedItems: any[], userId?: string): any[] => {
       return true;
     }
 
-    // If the cube is private, only show to the owner
-    if (blog.cubeVisibility === CUBE_VISIBILITY.PRIVATE) {
-      return userId && userId === blog.owner.id;
-    }
-
-    // All other cubes (public, unlisted) are visible
-    return true;
+    // Only show feed items from public cubes
+    // Private and unlisted cube blogs should not appear in follower feeds
+    return blog.cubeVisibility === CUBE_VISIBILITY.PUBLIC;
   });
 };
 
@@ -39,7 +35,7 @@ const dashboardHandler = async (req: Request, res: Response) => {
     const posts = await feedDao.getByTo(req.user.id);
 
     // Filter out blog posts from private cubes that the user doesn't own
-    const filteredPosts = filterFeedItemsByPrivacy(posts.items || [], req.user.id);
+    const filteredPosts = filterFeedItemsByPrivacy(posts.items || []);
 
     const featured = await getFeaturedCubes();
 
@@ -91,7 +87,7 @@ const getMoreFeedItemsHandler = async (req: Request, res: Response) => {
   const result = await feedDao.getByTo(user.id, lastKey);
 
   // Filter out blog posts from private cubes that the user doesn't own
-  const filteredItems = filterFeedItemsByPrivacy(result.items || [], user.id);
+  const filteredItems = filterFeedItemsByPrivacy(result.items || []);
 
   return res.status(200).send({
     success: 'true',

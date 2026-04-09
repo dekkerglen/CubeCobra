@@ -34,13 +34,13 @@ describe('Datetime component', () => {
 
   it('shows an absolute date for a date older than 7 days', () => {
     mockNow('2024-06-15T12:00:00Z');
-    render(<Datetime date={new RealDate('2024-01-01T00:00:00Z')} />);
+    render(<Datetime date={new RealDate('2024-01-01T12:00:00Z')} />);
     expect(screen.getByRole('time').textContent).toMatch(/Jan 1, 2024/);
   });
 
   it('accepts a numeric timestamp', () => {
     mockNow('2024-06-15T12:00:00Z');
-    const ts = new RealDate('2020-03-20T00:00:00Z').getTime();
+    const ts = new RealDate('2020-03-20T12:00:00Z').getTime();
     render(<Datetime date={ts} />);
     expect(screen.getByRole('time').textContent).toMatch(/Mar 20, 2020/);
   });

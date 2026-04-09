@@ -6,6 +6,7 @@ dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
 import { cubeDao, draftDao, exportTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 import fs from 'fs';
@@ -224,8 +225,14 @@ const taskId = process.env.EXPORT_TASK_ID;
           if (d.cube && !cubeCache[d.cube]) cubeCache[d.cube] = await cubeDao.getById(d.cube);
         }
 
-        const processedDrafts = validDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
-        const picksResults = validDrafts.map((draft: any) => {
+        // Only export drafts from public cubes
+        const publicDrafts = validDrafts.filter((draft: any) => {
+          const cube = cubeCache[draft.cube];
+          return cube && cube.visibility === CUBE_VISIBILITY.PUBLIC;
+        });
+
+        const processedDrafts = publicDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
+        const picksResults = publicDrafts.map((draft: any) => {
           const cube = cubeCache[draft.cube];
           return processPicks(draft, oracleToIndex, cube?.deckbuildLands, cube?.deckbuildSpells);
         });

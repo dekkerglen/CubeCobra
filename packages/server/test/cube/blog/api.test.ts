@@ -542,22 +542,55 @@ describe('Delete a Blog Post', () => {
 
 describe('Blog Posts Pagination', () => {
   it('should retrieve more blog posts', async () => {
+    const cube = createCube();
     const items = [createBlogPost(), createBlogPost()];
     const lastKey = { id: '12345', timestamp: 1234567 };
 
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (blogDao.queryByCube as jest.Mock).mockResolvedValue({ items, lastKey });
 
     const res = await call(getMoreBlogPostsForCubeHandler)
-      .withParams({ id: 'blog-id' })
+      .withParams({ id: cube.id })
       .withBody({ lastKey: 'last-key ' })
       .send();
 
+    expect(cubeDao.getById).toHaveBeenCalledWith(cube.id);
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'true',
       items,
       lastKey,
     });
+  });
+
+  it('should return 404 if cube does not exist', async () => {
+    (cubeDao.getById as jest.Mock).mockResolvedValue(undefined);
+
+    const res = await call(getMoreBlogPostsForCubeHandler)
+      .withParams({ id: 'non-existent' })
+      .withBody({ lastKey: 'last-key' })
+      .send();
+
+    expect(res.status).toEqual(404);
+    expect(res.body).toEqual({ error: 'Cube not found' });
+  });
+
+  it('should return 404 if cube is private and user is not the owner', async () => {
+    const cube = createCube({
+      visibility: CUBE_VISIBILITY.PRIVATE,
+      owner: createUser({ id: 'cube-owner' }),
+    });
+
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+    const res = await call(getMoreBlogPostsForCubeHandler)
+      .as(createUser({ id: 'visitor' }))
+      .withParams({ id: cube.id })
+      .withBody({ lastKey: 'last-key' })
+      .send();
+
+    expect(res.status).toEqual(404);
+    expect(res.body).toEqual({ error: 'Cube not found' });
   });
 });
 

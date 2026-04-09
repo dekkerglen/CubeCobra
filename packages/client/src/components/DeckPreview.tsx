@@ -3,10 +3,10 @@ import React, { useContext, useMemo } from 'react';
 import { XIcon } from '@primer/octicons-react';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
-import Datetime from './base/Datetime';
 
 import UserContext from '../contexts/UserContext';
 import Button from './base/Button';
+import Datetime from './base/Datetime';
 import { Flexbox } from './base/Layout';
 import Link from './base/Link';
 import Text from './base/Text';

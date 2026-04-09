@@ -8,6 +8,7 @@ import { getCardDefaultRowColumn, getInitialState, setupPicks } from '@utils/dra
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Container from 'components/base/Container';
+import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import DeckStacks from 'components/DeckStacks';
 import Pack from 'components/Pack';
@@ -865,6 +866,15 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
                       retryInProgress={draftStatus.retryInProgress}
                     />
                   )
+                ) : draftStatus.loading || draftStatus.draftCompleted ? (
+                  <Card className="mt-3">
+                    <CardHeader className="flex items-center gap-2">
+                      <Spinner md />
+                      <Text semibold lg>
+                        Building bot decks and submitting completed draft...
+                      </Text>
+                    </CardHeader>
+                  </Card>
                 ) : (
                   <></>
                 )}
