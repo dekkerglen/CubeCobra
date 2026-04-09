@@ -18,6 +18,7 @@ import {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 import { computeSkeletons } from '../utils/draftSimulatorClustering';
+import { DeckbuildEntry, isDraftBotLoaded, loadDraftBot, localBatchDeckbuild, localPickBatch } from '../utils/draftBot';
 import { getCubeId } from '@utils/Util';
 import {
   BarElement,
@@ -410,23 +411,14 @@ async function runClientSimulation(
           let picks: string[];
 
           if (step.action === 'pick') {
-            // One ML call for this pick round — all numDrafts×numSeats seats batched together
             const flatPacks = allCurrentPacks.flatMap((draftPacks) => draftPacks);
             const flatPools = allPools.flatMap((draftPools) => draftPools);
-            const mlRes = await fetch('/cube/api/simulateall', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ cubeId: setup.cubeId, simToken: setup.simToken, packs: flatPacks, pools: flatPools }),
-              signal,
-            });
-            if (!mlRes.ok) {
-              const body = await mlRes.json().catch(() => ({}));
-              throw new Error((body as { message?: string }).message ?? `Simulation failed: ${mlRes.status}`);
-            }
-            picks = ((await mlRes.json()) as { picks: string[] }).picks;
             const expectedPicks = numDrafts * numSeats;
+
+            // Local TF.js inference — no server round-trip
+            picks = await localPickBatch(flatPacks, flatPools);
             if (!Array.isArray(picks) || picks.length !== expectedPicks) {
-              throw new Error(`ML service returned ${picks?.length ?? 0} picks, expected ${expectedPicks}`);
+              throw new Error(`Local draft bot returned ${picks?.length ?? 0} picks, expected ${expectedPicks}`);
             }
           } else {
             // pickrandom — choose a random card from each pack, no ML call needed
@@ -1419,7 +1411,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
   // Simulation state
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
-  const [simPhase, setSimPhase] = useState<'setup' | 'sim' | 'deckbuild' | 'save' | null>(null);
+  const [simPhase, setSimPhase] = useState<'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null>(null);
+  const [modelLoadProgress, setModelLoadProgress] = useState(0);
   const [simulating, setSimulating] = useState(false); // true while ML call is in flight
   const [simProgress, setSimProgress] = useState(0); // 0–100
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -1460,36 +1453,41 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     [displayRunData],
   );
 
-  // Build decks in batches; returns decks + any basic land metadata from the server
-  const buildAllDecks = useCallback(async (slimPools: SlimPool[]): Promise<{ decks: BuiltDeck[]; basicCardMeta: Record<string, CardMeta> } | null> => {
+  // Build decks client-side using the TF.js deck_build_decoder + draft_decoder
+  const buildAllDecks = useCallback(async (
+    slimPools: SlimPool[],
+    setup: SimulationSetupResponse,
+  ): Promise<{ decks: BuiltDeck[]; basicCardMeta: Record<string, CardMeta> } | null> => {
     if (slimPools.length === 0) return { decks: [], basicCardMeta: {} };
-    const BATCH_SIZE = 10;
-    const allResults: BuiltDeck[] = [];
-    const basicCardMeta: Record<string, CardMeta> = {};
     try {
-      for (let i = 0; i < slimPools.length; i += BATCH_SIZE) {
-        const batch = slimPools.slice(i, i + BATCH_SIZE);
-        const inputs = batch.map((p) => p.picks.map((pick) => pick.oracle_id));
-        const res = await csrfFetch(`/cube/api/simulatedeckbuild/${encodeURIComponent(cubeId)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ inputs }),
-        });
-        const json = await res.json();
-        if (json.success && Array.isArray(json.results)) {
-          allResults.push(...json.results);
-          Object.assign(basicCardMeta, json.basicCardMeta ?? {});
-        } else {
-          console.error('simulatedeckbuild batch failed:', json);
-          return null;
+      const entries: DeckbuildEntry[] = slimPools.map((pool) => ({
+        pool: pool.picks.map((p) => p.oracle_id),
+        cardMeta: setup.cardMeta,
+        basics: setup.basics,
+      }));
+      const decks = await localBatchDeckbuild(entries);
+
+      // Collect metadata for any basic oracle IDs that appear in mainboards but aren't in setup.cardMeta
+      const basicCardMeta: Record<string, CardMeta> = {};
+      for (const basic of setup.basics) {
+        if (!setup.cardMeta[basic.oracleId]) {
+          basicCardMeta[basic.oracleId] = {
+            name: basic.name,
+            imageUrl: basic.imageUrl,
+            colorIdentity: basic.colorIdentity,
+            elo: 1200,
+            cmc: 0,
+            type: basic.type,
+            producedMana: basic.producedMana,
+          };
         }
       }
-      return { decks: allResults, basicCardMeta };
+      return { decks, basicCardMeta };
     } catch (err) {
-      console.error('simulatedeckbuild fetch error:', err);
+      console.error('localBatchDeckbuild error:', err);
       return null;
     }
-  }, [csrfFetch, cubeId]);
+  }, []);
 
   const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
 
@@ -1594,9 +1592,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     try {
       const setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numDrafts, numSeats }) });
       const setupData = await setupRes.json();
-      if (!setupData.success) { setStatus('failed'); setSimPhase(null); setErrorMsg(setupData.message ?? 'Failed to set up simulation'); if (setupData.hoursRemaining) setRuns((r) => r); return; }
+      if (!setupData.success) { setStatus('failed'); setSimPhase(null); setErrorMsg(setupData.message ?? 'Failed to set up simulation'); return; }
 
       simTokenRef.current = (setupData as SimulationSetupResponse).simToken ?? null;
+
+      // Load the TF.js draft model locally (no-op if already loaded from a previous run)
+      setSimPhase('loadmodel'); setModelLoadProgress(0);
+      await loadDraftBot((pct) => setModelLoadProgress(pct));
+
       setSimPhase('sim'); setSimulating(true);
       const report = await runClientSimulation(setupData as SimulationSetupResponse, numDrafts, deadCardThresholdPct / 100, setSimProgress, controller.signal);
       setCurrentRunSetup(setupData as SimulationSetupResponse);
@@ -1604,7 +1607,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
 
       // Build decks for all pools before saving
       setSimPhase('deckbuild'); setDeckBuildsLoading(true);
-      const deckResult = await buildAllDecks(report.slimPools);
+      const deckResult = await buildAllDecks(report.slimPools, setupData as SimulationSetupResponse);
       setDeckBuildsLoading(false);
       if (!deckResult) {
         setStatus('failed'); setSimPhase(null);
@@ -1643,21 +1646,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     }
   }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, buildAllDecks]);
 
-  const COOLDOWN_MS = 24 * 60 * 60 * 1000;
   const isRunning = status === 'running';
   const lastRunTs = runs[0]?.ts ?? null;
-
-  // Tick every minute so the cooldown display stays current without a page reload
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    if (!lastRunTs) return;
-    const interval = setInterval(() => setTick((t) => t + 1), 60_000);
-    return () => clearInterval(interval);
-  }, [lastRunTs]);
-
-  const cooldownRemaining = lastRunTs ? Math.max(0, COOLDOWN_MS - (Date.now() - lastRunTs)) : 0;
-  const cooldownActive = cooldownRemaining > 0;
-  const hoursUntilNext = Math.ceil(cooldownRemaining / 3600000);
 
   const activeDecks = displayRunData?.deckBuilds ?? null;
   const displayedPools = useMemo(() => {
@@ -1980,18 +1970,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                   <li>Simulates bot-only drafts to estimate pick rates, color trends, and archetype outcomes</li>
                   <li>Owners and collaborators can run simulations; results are visible to anyone who can view the cube</li>
                 </ul>
-                {lastRunTs && <div className="mb-3"><Text xs className="text-text-secondary">Last run: {new Date(lastRunTs).toLocaleString()}{cooldownActive && ` — next run available in ${hoursUntilNext}h`}</Text></div>}
+                {lastRunTs && <div className="mb-3"><Text xs className="text-text-secondary">Last run: {new Date(lastRunTs).toLocaleString()}</Text></div>}
                 {canRun && (
                   <Row className="gap-4 flex-wrap items-end">
-                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><NumericInput min={1} max={50} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} /></Col>
+                    <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Drafts</label><NumericInput min={1} max={500} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} /></Col>
                     <Col xs={12} sm={4} md={2}><label className="block text-sm font-medium mb-1">Seats</label><NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} /></Col>
                     <Col xs={12} sm={4} md={2}>
                       <label className="block text-sm font-medium mb-1">Dead Card Threshold <Text xs className="text-text-secondary font-normal">(&lt;{deadCardThresholdPct}% pick rate)</Text></label>
                       <NumericInput min={1} max={100} value={deadCardThresholdPct} onChange={setDeadCardThresholdPct} disabled={isRunning} />
                     </Col>
                     <Col xs={12} sm={12} md={2} className="flex flex-col gap-1">
-                      <button onClick={handleStart} disabled={isRunning || cooldownActive} className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium">
-                        {isRunning ? 'Simulating…' : cooldownActive ? `Available in ${hoursUntilNext}h` : 'Run Simulation'}
+                      <button onClick={handleStart} disabled={isRunning} className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium">
+                        {isRunning ? 'Simulating…' : 'Run Simulation'}
                       </button>
                       {isRunning && (
                         <button type="button" onClick={handleCancel} className="w-full px-4 py-1.5 rounded border border-border text-sm text-text-secondary hover:bg-bg-active">
@@ -2014,6 +2004,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                   <Flexbox direction="row" justify="between">
                     <Text sm>
                       {simPhase === 'setup' ? 'Preparing packs…'
+                       : simPhase === 'loadmodel' ? `Loading draft model… ${modelLoadProgress < 100 ? `${modelLoadProgress}%` : ''}`
                        : simPhase === 'sim' ? 'Running draft simulation…'
                        : simPhase === 'deckbuild' ? 'Building decks…'
                        : 'Saving results…'}
@@ -2403,8 +2394,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                             <td className="px-3 py-2 text-right">
                               <button
                                 type="button"
-                                disabled={Date.now() - run.ts < COOLDOWN_MS}
-                                title={Date.now() - run.ts < COOLDOWN_MS ? 'Cannot delete a run from the last 24 hours' : undefined}
+                                disabled={Date.now() - run.ts < 24 * 60 * 60 * 1000}
+                                title={Date.now() - run.ts < 24 * 60 * 60 * 1000 ? 'Cannot delete a run from the last 24 hours' : undefined}
                                 className="px-2 py-0.5 rounded text-xs font-medium border bg-bg border-border disabled:opacity-40 disabled:cursor-not-allowed text-text-secondary hover:bg-bg-active disabled:hover:bg-bg"
                                 onClick={(e) => {
                                   e.stopPropagation();

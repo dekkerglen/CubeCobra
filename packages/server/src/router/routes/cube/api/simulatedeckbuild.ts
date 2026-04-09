@@ -2,6 +2,7 @@ import { cardFromId, getReasonableCardByOracle, isOracleBasic } from 'serverutil
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { getBasicsFromCube } from 'serverutils/cube';
 import { batchDeckbuild } from 'serverutils/draftbots';
+import { MAX_TOTAL_SEATS } from 'serverutils/simulatorConstants';
 import { cubeDao } from 'dynamo/daos';
 import { CardMeta } from '@utils/datatypes/SimulationReport';
 
@@ -30,8 +31,7 @@ export const simulatedeckbuildHandler = async (req: Request, res: Response) => {
   if (!Array.isArray(inputs)) {
     return res.status(400).json({ success: false, message: 'inputs must be an array' });
   }
-  const MAX_INPUTS = 50 * 16; // max drafts × max seats
-  if (inputs.length > MAX_INPUTS) {
+  if (inputs.length > MAX_TOTAL_SEATS) {
     return res.status(400).json({ success: false, message: 'Too many inputs' });
   }
 
