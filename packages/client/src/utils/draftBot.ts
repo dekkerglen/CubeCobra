@@ -354,6 +354,21 @@ export function buildOracleRemapping(
   return remapping;
 }
 
+export function buildSeatMlMaps(poolOracles: string[], remapping?: Record<string, string>): MlSeatMaps {
+  const toMl: Record<string, string> = {};
+  const fromMl: Record<string, string[]> = {};
+
+  for (const oracle of poolOracles) {
+    if (toMl[oracle] !== undefined) continue;
+    const mapped = mlOracle(oracle, remapping);
+    toMl[oracle] = mapped;
+    if (!fromMl[mapped]) fromMl[mapped] = [];
+    if (!fromMl[mapped]!.includes(oracle)) fromMl[mapped]!.push(oracle);
+  }
+
+  return { toMl, fromMl };
+}
+
 // ---------------------------------------------------------------------------
 // Draft picking (used during simulation)
 // ---------------------------------------------------------------------------
