@@ -17,6 +17,7 @@ interface PracticeDraftViewProps {
 
 const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
   const defaultFormat = cube.defaultFormat ?? -1;
+  const formats = cube.formats ?? [];
 
   // Sort formats alphabetically.
   const formatsSorted = useMemo(
@@ -32,7 +33,7 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
           }
           return a.title.localeCompare(b.title);
         }),
-    [cube.formats, defaultFormat],
+    [formats, defaultFormat],
   );
 
   // Create array of all tiles to render
