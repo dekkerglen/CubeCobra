@@ -117,6 +117,7 @@ const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
                 </Text>
                 <Text sm semibold className="text-text-secondary">
                   +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
+                  {(edits || []).length > 0 && (<>, <ToolsIcon size={12} />{(edits || []).length}</>)}
                 </Text>
               </Flexbox>
               <ul className="changelist">

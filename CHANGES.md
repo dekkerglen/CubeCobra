@@ -51,5 +51,7 @@ Since 1.6.0
 - Fixed board display order in cube list views not respecting the order configured in view settings
 - Respect Right Sidebar inline position when adjusting Cube Table and Stacks layouts.
 - Fixed "Disable Clone Notifications" cube setting not persisting — the setting would revert after saving
+- Fixed edit/remove card only searching the filtered card list — when a filter was active, removing or replacing a card by name would fail if the card wasn't in the filtered results; the lookup now searches the full unfiltered card list
+- Fixed card edits (property changes) inflating +/- counts in the edit pane — edits no longer count as both an addition and a removal. Instead, edited cards are shown as a separate count with a wrench icon (e.g. "+5, -3, 🔧2"), both in the pending changes panel and in committed changelogs
 
 # Technical Changes
