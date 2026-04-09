@@ -14,7 +14,7 @@ import { handleRouteError, redirect, render } from './render';
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom,Voucher';
 
 interface Cube {
   id: string;
@@ -274,7 +274,8 @@ function writeCard(res: Response, card: Card, boardName: string) {
   });
   res.write(`","${cardutil.cardNotes(card)}",`);
   res.write(`${cardutil.cardMtgoId(card)},`);
-  res.write(`${cardutil.isCustomCard(card) ? 'true' : 'false'}`);
+  res.write(`${cardutil.isCustomCard(card) ? 'true' : 'false'},`);
+  res.write(`${cardutil.isVoucher(card) ? 'true' : 'false'}`);
   res.write('\r\n');
 }
 

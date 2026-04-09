@@ -109,6 +109,9 @@ const Footer: React.FC = () => {
                 <li className="mb-2">
                   <FooterLink href="https://github.com/dekkerglen/CubeCobra">Github</FooterLink>
                 </li>
+                <li className="mb-2">
+                  <FooterLink href="/apidocs">API Docs</FooterLink>
+                </li>
               </ul>
             </Text>
           </Col>
