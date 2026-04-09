@@ -160,6 +160,14 @@ function isWebGLError(err: unknown): boolean {
 const WEBGL_CHUNK_SIZE = 32;
 
 /**
+ * Resolve the ML oracle ID for a given oracle ID, applying the remapping for
+ * cards not in the training vocabulary (e.g. Black Lotus → most similar known card).
+ */
+function mlOracle(oracle: string, remapping?: Record<string, string>): string {
+  return remapping?.[oracle] ?? oracle;
+}
+
+/**
  * One-hot encode pools, forward pass through encoder + decoder, return raw logits.
  * pools[i] = oracle IDs whose bits are set to 1 in the input row.
  * remapping maps original oracle IDs to their ML-vocab equivalents for unknown cards.
@@ -330,6 +338,20 @@ export function reshapeEmbeddings(flat: Float32Array, n: number): number[][] {
     result.push(row);
   }
   return result;
+}
+
+/**
+ * Build an oracle remapping from CardMeta: maps original oracle ID → ML oracle ID
+ * for cards whose mlOracleId differs (i.e. not in training vocab).
+ */
+export function buildOracleRemapping(
+  cardMeta: Record<string, { mlOracleId?: string }>,
+): Record<string, string> {
+  const remapping: Record<string, string> = {};
+  for (const [oracle, meta] of Object.entries(cardMeta)) {
+    if (meta.mlOracleId) remapping[oracle] = meta.mlOracleId;
+  }
+  return remapping;
 }
 
 // ---------------------------------------------------------------------------
