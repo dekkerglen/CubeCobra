@@ -6,6 +6,7 @@ import { getDrafterState } from '@utils/draftutil';
 
 import useLocalStorage from '../hooks/useLocalStorage';
 import useQueryParam from '../hooks/useQueryParam';
+import { modelScoresToProbabilities } from '../utils/botRatings';
 import Text from './base/Text';
 import DraftBreakdownDisplay from './draft/DraftBreakdownDisplay';
 
@@ -182,11 +183,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
             return uniqueOracleIds.reduce((acc, oracleId) => acc + (oracleRatings.get(oracleId) || 0), 0);
           });
 
-          // Normalize: duplicates get the same rating, then we normalize so total = 100%
-          const total = rawRatings.reduce((acc, r) => acc + r, 0);
-          const newRatings = total > 0 ? rawRatings.map((r) => r / total) : rawRatings;
-
-          setRatings(newRatings);
+          setRatings(modelScoresToProbabilities(rawRatings));
         }
       } catch (error) {
         console.error('Error fetching predictions:', error);
