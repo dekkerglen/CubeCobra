@@ -49,6 +49,7 @@ export interface UnhydratedUser {
   yourCubesSortOrder?: YourCubesSortOrder;
   disableAnimations?: boolean;
   useTextOverIcons?: boolean;
+  disableFollowAlerts?: boolean;
 }
 
 export interface UserWithSensitiveInformation extends UnhydratedUser {

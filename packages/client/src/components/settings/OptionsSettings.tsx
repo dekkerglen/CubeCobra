@@ -26,6 +26,7 @@ const OptionsSettings: React.FC = () => {
     priceVisibility: `${cube.priceVisibility === 'pu'}`,
     disableAlerts: `${cube.disableAlerts}`,
     disableCloneAlerts: `${cube.disableCloneAlerts ?? false}`,
+    disableFollowAlerts: `${cube.disableFollowAlerts ?? false}`,
     visibility: cube.visibility,
     defaultStatus: cube.defaultStatus,
     defaultPrinting: cube.defaultPrinting,
@@ -43,6 +44,7 @@ const OptionsSettings: React.FC = () => {
       priceVisibility: `${cube.priceVisibility === 'pu'}`,
       disableAlerts: `${cube.disableAlerts}`,
       disableCloneAlerts: `${cube.disableCloneAlerts ?? false}`,
+      disableFollowAlerts: `${cube.disableFollowAlerts ?? false}`,
       visibility: cube.visibility,
       defaultStatus: cube.defaultStatus,
       defaultPrinting: cube.defaultPrinting,
@@ -51,6 +53,7 @@ const OptionsSettings: React.FC = () => {
       priceVisibility: formData.priceVisibility,
       disableAlerts: formData.disableAlerts,
       disableCloneAlerts: formData.disableCloneAlerts,
+      disableFollowAlerts: formData.disableFollowAlerts,
       visibility: formData.visibility,
       defaultStatus: formData.defaultStatus,
       defaultPrinting: formData.defaultPrinting,
@@ -64,6 +67,7 @@ const OptionsSettings: React.FC = () => {
       priceVisibility: `${cube.priceVisibility === 'pu'}`,
       disableAlerts: `${cube.disableAlerts}`,
       disableCloneAlerts: `${cube.disableCloneAlerts ?? false}`,
+      disableFollowAlerts: `${cube.disableFollowAlerts ?? false}`,
       visibility: cube.visibility,
       defaultStatus: cube.defaultStatus,
       defaultPrinting: cube.defaultPrinting,
@@ -109,6 +113,11 @@ const OptionsSettings: React.FC = () => {
                 label="Disable Clone Notifications"
                 checked={formData.disableCloneAlerts === 'true'}
                 setChecked={(checked) => setFormData({ ...formData, disableCloneAlerts: `${checked}` })}
+              />
+              <Checkbox
+                label="Disable Follow Notifications"
+                checked={formData.disableFollowAlerts === 'true'}
+                setChecked={(checked) => setFormData({ ...formData, disableFollowAlerts: `${checked}` })}
               />
               <div>
                 <Select

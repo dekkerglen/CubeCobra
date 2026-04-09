@@ -8,6 +8,7 @@ import classNames from 'classnames';
 import { ListGroup, ListGroupItem } from 'components/base/ListGroup';
 import AutocardListItem from 'components/card/AutocardListItem';
 import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 import withCardModal from '../modals/WithCardModal';
 import withGroupModal from '../modals/WithGroupModal';
@@ -40,10 +41,11 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
   showOther = false,
 }) => {
   const { canEdit, cube } = useContext(CubeContext) ?? {};
+  const { useBaseCardData } = useContext(DisplayContext) ?? {};
   const collapseDuplicates = cube?.collapseDuplicateCards ?? false;
   const sorted = useMemo(
-    () => sortDeep(cards, showOther, orderedSort, [sort], cube ?? null),
-    [cards, showOther, orderedSort, sort, cube],
+    () => sortDeep(cards, showOther, orderedSort, [sort], cube ?? null, useBaseCardData),
+    [cards, showOther, orderedSort, sort, cube, useBaseCardData],
   );
 
   // Collapse duplicates if enabled
