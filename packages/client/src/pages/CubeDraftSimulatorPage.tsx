@@ -18,7 +18,7 @@ import {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 import { computeSkeletons } from '../utils/draftSimulatorClustering';
-import { DeckbuildEntry, isDraftBotLoaded, loadDraftBot, localBatchDeckbuild, localPickBatch } from '../utils/draftBot';
+import { DeckbuildEntry, buildOracleRemapping, isDraftBotLoaded, loadDraftBot, localBatchDeckbuild, localPickBatch } from '../utils/draftBot';
 import { getCubeId } from '@utils/Util';
 import {
   BarElement,
@@ -356,6 +356,7 @@ async function runClientSimulation(
   signal?: AbortSignal,
 ): Promise<SimulationReport> {
   const { initialPacks, packSteps, cardMeta, cubeName, numSeats } = setup;
+  const oracleRemapping = buildOracleRemapping(cardMeta);
   const statsMap = new Map<string, RawStats>();
   const archetypeCounts = new Map<string, number>();
 
@@ -416,7 +417,7 @@ async function runClientSimulation(
             const expectedPicks = numDrafts * numSeats;
 
             // Local TF.js inference — no server round-trip
-            picks = await localPickBatch(flatPacks, flatPools);
+            picks = await localPickBatch(flatPacks, flatPools, oracleRemapping);
             if (!Array.isArray(picks) || picks.length !== expectedPicks) {
               throw new Error(`Local draft bot returned ${picks?.length ?? 0} picks, expected ${expectedPicks}`);
             }
@@ -1416,7 +1417,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const [simulating, setSimulating] = useState(false); // true while ML call is in flight
   const [simProgress, setSimProgress] = useState(0); // 0–100
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const simTokenRef = useRef<string | null>(null); // HMAC token from setup; passed to per-pick calls
 
   // Run history & display
   const [runs, setRuns] = useState<SimulationRunEntry[]>([]);
@@ -1576,7 +1576,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const handleCancel = useCallback(() => {
     simAbortRef.current?.abort();
     simAbortRef.current = null;
-    simTokenRef.current = null;
     setStatus('idle');
     setSimPhase(null);
     setSimulating(false);
@@ -1593,8 +1592,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       const setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numDrafts, numSeats }) });
       const setupData = await setupRes.json();
       if (!setupData.success) { setStatus('failed'); setSimPhase(null); setErrorMsg(setupData.message ?? 'Failed to set up simulation'); return; }
-
-      simTokenRef.current = (setupData as SimulationSetupResponse).simToken ?? null;
 
       // Load the TF.js draft model locally (no-op if already loaded from a previous run)
       setSimPhase('loadmodel'); setModelLoadProgress(0);
@@ -1631,7 +1628,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       setStatus('completed'); setSimPhase(null);
       setDisplayRunData(runData);
       setSelectedTs(saveJson.ts ?? null);
-      simAbortRef.current = null; simTokenRef.current = null;
+      simAbortRef.current = null;
 
       fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`)
         .then((r) => r.json())

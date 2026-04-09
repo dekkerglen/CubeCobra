@@ -59,6 +59,9 @@ export interface CardMeta {
   cmc: number;
   type: string;
   producedMana?: string[];
+  parsedCost?: string[];
+  /** Remapped oracle ID for ML inference — set when card is not in the training vocab. */
+  mlOracleId?: string;
 }
 
 /** Basic land entry included in SimulationSetupResponse for client-side deckbuilding. */
@@ -185,8 +188,6 @@ export interface SimulationSetupResponse {
   cubeName: string;
   // Number of seats
   numSeats: number;
-  // Short-lived HMAC token for authenticating per-pick ML calls without per-pick DB lookups
-  simToken: string;
   // Cube's basic land options for client-side deckbuilding
   basics: BasicLandInfo[];
 }
