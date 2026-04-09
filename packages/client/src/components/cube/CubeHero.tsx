@@ -90,8 +90,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const [moreMenuAlign, setMoreMenuAlign] = React.useState<'left' | 'right'>('left');
 
-  const { showCustomImages: _showCustomImages, toggleShowCustomImages: _toggleShowCustomImages, activeView } =
-    useContext(DisplayContext);
+  const {
+    showCustomImages: _showCustomImages,
+    toggleShowCustomImages: _toggleShowCustomImages,
+    activeView,
+  } = useContext(DisplayContext);
 
   const { hasCustomImages: _hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
 
@@ -201,7 +204,17 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
     }
 
     return params.toString();
-  }, [isFilterUsed, filterInput, isSortUsed, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, exportAllBoards, currentViewBoards]);
+  }, [
+    isFilterUsed,
+    filterInput,
+    isSortUsed,
+    sortPrimary,
+    sortSecondary,
+    sortTertiary,
+    sortQuaternary,
+    exportAllBoards,
+    currentViewBoards,
+  ]);
 
   const exportMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">
@@ -254,7 +267,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
       </PrintAndPlayExportModalItem>
       <Flexbox direction="row" justify="between" alignItems="center" className="cursor-pointer">
         <Checkbox label="Export ALL boards" checked={exportAllBoards} setChecked={setExportAllBoards} />
-        <Tooltip text="If enabled, exports all cards from all boards. If disabled, only exports cards in boards visible in the current view." wrapperTag="span" className="ms-auto me-0">
+        <Tooltip
+          text="If enabled, exports all cards from all boards. If disabled, only exports cards in boards visible in the current view."
+          wrapperTag="span"
+          className="ms-auto me-0"
+        >
           <QuestionIcon size={16} className="hidden md:inline" />
         </Tooltip>
       </Flexbox>
@@ -503,7 +520,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               <div className="flex flex-row items-baseline gap-2 flex-wrap mb-2">
                 <h1 className="text-white font-semibold text-xl">{cube.name}</h1>
                 <Text sm className="text-white/80">
-                  {getCubeCardCountSnippet(cube)} Cube
+                  {getCubeCardCountSnippet(cube, unfilteredChangedCards)} Cube
                 </Text>
                 <Text sm className="text-white/80">
                   •
@@ -831,7 +848,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   <div>
                     <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
                     <Text md className="text-white/80 mt-1">
-                      {getCubeCardCountSnippet(cube)} Cube •{' '}
+                      {getCubeCardCountSnippet(cube, unfilteredChangedCards)} Cube •{' '}
                       <FollowersModalLink
                         href="#"
                         modalprops={{ id: cube.id, type: 'cube' }}

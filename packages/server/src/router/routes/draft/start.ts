@@ -1,7 +1,9 @@
+import * as cardutil from '@utils/cardutil';
 import type DraftType from '@utils/datatypes/Draft';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import Joi from 'joi';
+import { cardFromId } from 'serverutils/carddb';
 import { addBasics, getBasicsFromCube } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -97,6 +99,41 @@ const handler = async (req: Request, res: Response) => {
       type_line: card.type_line || card.details?.type || '',
     }));
 
+    // Expand voucher sub-cards: for each voucher, append its sub-cards to the cards array
+    // and store the indices on the voucher so they can be looked up on page reload
+    const expandedCards: any[] = [...cardsWithIndex];
+    for (let i = 0; i < cardsWithIndex.length; i++) {
+      const card = cardsWithIndex[i];
+      if (!card) continue;
+      if (cardutil.isVoucher(card) && card.voucher_cards && card.voucher_cards.length > 0) {
+        const subCardIndices: number[] = [];
+        for (const vc of card.voucher_cards) {
+          const newIndex = expandedCards.length;
+          const subCard = {
+            cardID: vc.cardID,
+            imgUrl: vc.imgUrl,
+            imgBackUrl: vc.imgBackUrl,
+            colors: vc.colors,
+            colorCategory: vc.colorCategory,
+            finish: vc.finish,
+            status: vc.status,
+            cmc: vc.cmc,
+            type_line: vc.type_line || vc.details?.type || '',
+            rarity: vc.rarity,
+            notes: vc.notes,
+            tags: vc.tags,
+            custom_name: vc.custom_name,
+            details: vc.details || cardFromId(vc.cardID),
+            index: newIndex,
+          };
+          expandedCards.push(subCard);
+          subCardIndices.push(newIndex);
+        }
+        // Store the sub-card indices on the voucher card
+        (expandedCards[i] as any).voucher_card_indices = subCardIndices;
+      }
+    }
+
     const draft = {
       complete: false,
       cube: cube.id,
@@ -106,7 +143,7 @@ const handler = async (req: Request, res: Response) => {
       owner: req.user?.id,
       seats: populated.seats,
       type: 'd' as const,
-      cards: cardsWithIndex,
+      cards: expandedCards,
       basics: [] as number[], // Will be populated by addBasics
       basicsBoard: populated.basicsBoard, // Store which board basics come from
       name: '',

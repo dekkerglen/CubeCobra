@@ -55,17 +55,26 @@ export const reportHandler = async (req: Request, res: Response) => {
     }
     if (!isValidId(commentid)) {
       // Silently ignore invalid IDs
-      req.flash('success', 'Thank you for the report! Our moderators will review the report can decide whether to take action.');
+      req.flash(
+        'success',
+        'Thank you for the report! Our moderators will review the report can decide whether to take action.',
+      );
       return redirect(req, res, `/comment/${commentid}`);
     }
 
     // Prevent duplicate active reports for this comment by this user
     const existing = await noticeDao.getByStatus(NoticeStatus.ACTIVE);
     const alreadyReported = (existing.items || []).some(
-      (n) => n.type === NoticeType.COMMENT_REPORT && n.subject === commentid && String(n.user?.id || n.user) === String(req.user?.id || null)
+      (n) =>
+        n.type === NoticeType.COMMENT_REPORT &&
+        n.subject === commentid &&
+        String(n.user?.id || n.user) === String(req.user?.id || null),
     );
     if (alreadyReported) {
-      req.flash('success', 'Thank you for the report! Our moderators will review the report can decide whether to take action.');
+      req.flash(
+        'success',
+        'Thank you for the report! Our moderators will review the report can decide whether to take action.',
+      );
       return redirect(req, res, `/comment/${commentid}`);
     }
 

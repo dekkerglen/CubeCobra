@@ -1,7 +1,8 @@
-import { isCubeOwner } from '@utils/Util';
+import { getCubeId, isCubeOwner } from '@utils/Util';
 import { collaboratorIndexDao, cubeDao, userDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
+import { addNotification } from 'serverutils/util';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -84,6 +85,12 @@ export const addCollaboratorHandler = async (req: Request, res: Response) => {
     cube.collaborators = [...cube.collaborators, targetUser.id];
     await cubeDao.update(cube);
     await collaboratorIndexDao.add(targetUser.id, cube.id);
+    await addNotification(
+      targetUser,
+      req.user!,
+      `/cube/list/${encodeURIComponent(getCubeId(cube))}`,
+      `${req.user!.username} added you as a collaborator on "${cube.name}"`,
+    );
 
     return res.status(200).json({
       success: 'true',

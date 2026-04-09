@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 import { BoardDefinition } from '@utils/datatypes/Cube';
-import { CardSlot, DraftAction, Pack } from '@utils/datatypes/Draft';
+import { DraftAction, Pack } from '@utils/datatypes/Draft';
 import { buildDefaultSteps, DEFAULT_STEPS } from '@utils/draftutil';
 
 import useToggle from '../hooks/UseToggle';

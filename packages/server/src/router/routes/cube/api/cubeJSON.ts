@@ -1,4 +1,5 @@
-import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
+import Card from '@utils/datatypes/Card';
+import { sortForDownload } from '@utils/sorting/Sort';
 import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -36,28 +37,13 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
 
     const cubeCards = await cubeDao.getCards(cube.id);
 
-    const sorts = getCubeSorts(cube);
-    const sortedMainboard = sortForDownload(
-      cubeCards.mainboard,
-      sorts[0],
-      sorts[1],
-      sorts[2],
-      sorts[3],
-      cube.showUnsorted || false,
-      cube,
-    );
-    cubeCards.mainboard = sortedMainboard;
-
-    const sortedMaybeboard = sortForDownload(
-      cubeCards.maybeboard,
-      sorts[0],
-      sorts[1],
-      sorts[2],
-      sorts[3],
-      cube.showUnsorted || false,
-      cube,
-    );
-    cubeCards.maybeboard = sortedMaybeboard;
+    // Sort every board using the default ordered sort (no longer depends on cube.defaultSorts, which moved to views)
+    for (const boardName of Object.keys(cubeCards)) {
+      const board = cubeCards[boardName];
+      if (Array.isArray(board)) {
+        cubeCards[boardName] = sortForDownload(board as Card[]);
+      }
+    }
 
     res.contentType('application/json');
     return res.status(200).send(JSON.stringify({ ...cube, cards: cubeCards }));

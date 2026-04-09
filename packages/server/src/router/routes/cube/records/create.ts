@@ -257,7 +257,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
           };
         }
         return {
-          name: 'Unknown Player',
+          name: seat.playerName || 'Unknown Player',
         };
       }),
       matches: record.matches || [],

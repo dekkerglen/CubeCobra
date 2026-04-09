@@ -63,6 +63,7 @@ const navItems = [
       { label: 'Donate', href: '/donate' },
       { label: 'Github', href: 'https://github.com/dekkerglen/CubeCobra' },
       { label: 'Filter Syntax', href: '/filters' },
+      { label: 'API Docs', href: '/apidocs' },
       { label: 'Card Updates', href: '/tool/cardupdates' },
     ],
   },
@@ -136,6 +137,19 @@ const Navbar: React.FC<NavbarProps> = () => {
                   {item.name}
                 </NavLink>
               ))}
+              {(user.collaboratingCubes || []).length > 0 && (
+                <>
+                  <div className="text-xs text-text-secondary font-semibold px-1 pt-2 pb-1">Collaborating</div>
+                  {(user.collaboratingCubes || []).slice(0, 12).map((item) => (
+                    <NavLink
+                      key={`dropdown_collab_${item.id}`}
+                      href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
+                    >
+                      {item.name}
+                    </NavLink>
+                  ))}
+                </>
+              )}
             </Flexbox>
             <CardFooter>
               <Flexbox direction="col" gap="2">
@@ -343,6 +357,19 @@ const Navbar: React.FC<NavbarProps> = () => {
                     {item.name}
                   </NavLink>
                 ))}
+                {(user.collaboratingCubes || []).length > 0 && (
+                  <>
+                    <div className="text-xs text-text-secondary font-semibold px-1 pt-2 pb-1">Collaborating</div>
+                    {(user.collaboratingCubes || []).slice(0, 12).map((item) => (
+                      <NavLink
+                        key={`mobile_collab_${item.id}`}
+                        href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
+                      >
+                        {item.name}
+                      </NavLink>
+                    ))}
+                  </>
+                )}
               </Flexbox>
               <CardFooter>
                 <Flexbox direction="col" gap="2">
