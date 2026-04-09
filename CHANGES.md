@@ -49,6 +49,7 @@ Since 1.6.0
 - Moved bot deckbuilding to the client side with a progress bar — instead of one long server request that could time out, the client now makes ~31 small incremental ML calls (1 batch build + ~30 draft steps), showing a live percentage and step counter during the process
 - Fixed pick-by-pick breakdown collapsing duplicate cards in packs when "collapse duplicates" is enabled for the cube
 - Fixed board display order in cube list views not respecting the order configured in view settings
+- Respect Right Sidebar inline position when adjusting Cube Table and Stacks layouts.
 - Fixed "Disable Clone Notifications" cube setting not persisting — the setting would revert after saving
 
 # Technical Changes

@@ -17,7 +17,7 @@ interface TableViewProps {
 
 const TableView: React.FC<TableViewProps> = ({ cards }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
-  const { rightSidebarMode, cubeSidebarExpanded, useBaseCardData } = useContext(DisplayContext);
+  const { rightSidebarMode, rightSidebarPosition, cubeSidebarExpanded, useBaseCardData } = useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>
@@ -37,7 +37,7 @@ const TableView: React.FC<TableViewProps> = ({ cards }) => {
     // Count how many sidebars are open (max 2: cube nav + edit/sort)
     let openSidebars = 0;
     if (cubeSidebarExpanded) openSidebars += 1;
-    if (rightSidebarMode !== 'none') openSidebars += 1;
+    if (rightSidebarMode !== 'none' && rightSidebarPosition === 'right') openSidebars += 1;
 
     console.log(
       'TableView: cubeSidebarExpanded=',
@@ -79,7 +79,7 @@ const TableView: React.FC<TableViewProps> = ({ cards }) => {
       console.log('adjustBreakpoint: input=', config, 'output=', result, 'openSidebars=', openSidebars);
       return result;
     };
-  }, [cubeSidebarExpanded, rightSidebarMode]);
+  }, [cubeSidebarExpanded, rightSidebarMode, rightSidebarPosition]);
 
   const rowWidths: {
     md: NumCols;
