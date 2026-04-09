@@ -21,7 +21,7 @@ interface CardStacksViewProps {
 const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube, setModalSelection, setModalOpen } =
     useContext(CubeContext);
-  const { rightSidebarMode, cubeSidebarExpanded, stacksPerRow } = useContext(DisplayContext);
+  const { rightSidebarMode, rightSidebarPosition, cubeSidebarExpanded, stacksPerRow } = useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>
@@ -58,7 +58,7 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
     // Count how many sidebars are open (max 2: cube nav + edit/sort)
     let openSidebars = 0;
     if (cubeSidebarExpanded) openSidebars += 1;
-    if (rightSidebarMode !== 'none') openSidebars += 1;
+    if (rightSidebarMode !== 'none' && rightSidebarPosition === 'right') openSidebars += 1;
 
     // Return a function that takes a breakpoint config and reduces column counts
     return (config: { md: NumCols; lg: NumCols; xl: NumCols; xxl: NumCols }) => {
@@ -90,7 +90,7 @@ const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) =
       }
       return result;
     };
-  }, [cubeSidebarExpanded, rightSidebarMode]);
+  }, [cubeSidebarExpanded, rightSidebarMode, rightSidebarPosition]);
 
   const rowWidths: {
     md: NumCols;

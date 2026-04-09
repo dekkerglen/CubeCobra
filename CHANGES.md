@@ -43,5 +43,6 @@ Since 1.6.0
 - Added a loading indicator when a draft finishes while bot decks are being built
 - Fixed pick-by-pick breakdown collapsing duplicate cards in packs when "collapse duplicates" is enabled for the cube
 - Fixed board display order in cube list views not respecting the order configured in view settings
+- Respect Right Sidebar inline position when adjusting Cube Table and Stacks layouts.
 
 # Technical Changes
