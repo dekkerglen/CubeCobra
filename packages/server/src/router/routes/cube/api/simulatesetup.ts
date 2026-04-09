@@ -4,12 +4,11 @@ import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
-import { cardFromId } from 'serverutils/carddb';
+import { cardFromId, getOracleForMl } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { MAX_DRAFTS, MAX_SEATS } from 'serverutils/simulatorConstants';
-import { createSimToken } from 'serverutils/simToken';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -111,6 +110,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       for (const card of cards) {
         if (!card?.details?.oracle_id || cardMeta[card.details.oracle_id]) continue;
         const details = card.details;
+        const mlOracleId = getOracleForMl(details.oracle_id, null);
         cardMeta[details.oracle_id] = {
           name: details.name ?? details.oracle_id,
           imageUrl: details.image_normal || details.image_small || '',
@@ -119,6 +119,8 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
           cmc: details.cmc ?? 0,
           type: details.type ?? '',
           producedMana: details.produced_mana ?? [],
+          parsedCost: details.parsed_cost ?? [],
+          mlOracleId: mlOracleId !== details.oracle_id ? mlOracleId : undefined,
         };
       }
     }
@@ -140,8 +142,6 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const simToken = createSimToken(req.user.id.toString(), cube.id);
-
     const response: SimulationSetupResponse = {
       cubeId: cube.id,
       initialPacks,
@@ -149,7 +149,6 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       cardMeta,
       cubeName: cube.name,
       numSeats,
-      simToken,
       basics,
     };
 
