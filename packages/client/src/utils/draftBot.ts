@@ -30,6 +30,14 @@ let deckBuildDecoder: any = null;
 let oracleToIndex: Record<string, number> = {};
 let numOracles = 0;
 let _loaded = false;
+let _loadPromise: Promise<void> | null = null;
+const loadProgressListeners = new Set<(pct: number) => void>();
+
+const emitLoadProgress = (pct: number): void => {
+  for (const listener of loadProgressListeners) {
+    listener(pct);
+  }
+};
 
 export function isDraftBotLoaded(): boolean {
   return _loaded;
@@ -41,37 +49,56 @@ export function isDraftBotLoaded(): boolean {
  * onProgress receives values 0–100.
  */
 export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<void> {
-  if (_loaded) return;
-
-  onProgress?.(0);
-
-  // Dynamic import — keeps TF.js (~3 MB) out of the main bundle
-  tf = await import('@tensorflow/tfjs');
-
-  // Oracle index map (1.6 MB) — maps integer index → oracle_id
-  const mapRes = await fetch(`${MODEL_BASE}/indexToOracleMap.json`);
-  if (!mapRes.ok) throw new Error(`Failed to load oracle index map: ${mapRes.status}`);
-  const indexToOracle: Record<string, string> = await mapRes.json();
-  numOracles = Object.keys(indexToOracle).length;
-  oracleToIndex = {};
-  for (const [k, v] of Object.entries(indexToOracle)) {
-    oracleToIndex[v] = parseInt(k, 10);
+  if (onProgress) loadProgressListeners.add(onProgress);
+  if (_loaded) {
+    onProgress?.(100);
+    return;
   }
-  onProgress?.(5);
+  if (_loadPromise) {
+    await _loadPromise;
+    return;
+  }
 
-  // Encoder: [N, numOracles] → [N, 128]  (~69 MB weight shards)
-  encoder = await tf.loadGraphModel(`${MODEL_BASE}/encoder/model.json`);
-  onProgress?.(45);
+  _loadPromise = (async () => {
+    emitLoadProgress(0);
 
-  // Draft decoder: [N, 128] → [N, numOracles]  (~69 MB weight shards)
-  draftDecoder = await tf.loadGraphModel(`${MODEL_BASE}/draft_decoder/model.json`);
-  onProgress?.(75);
+    // Dynamic import — keeps TF.js (~3 MB) out of the main bundle
+    tf = await import('@tensorflow/tfjs');
 
-  // Deck build decoder: [N, 128] → [N, numOracles]  (~69 MB weight shards)
-  deckBuildDecoder = await tf.loadGraphModel(`${MODEL_BASE}/deck_build_decoder/model.json`);
-  onProgress?.(100);
+    // Oracle index map (1.6 MB) — maps integer index → oracle_id
+    const mapRes = await fetch(`${MODEL_BASE}/indexToOracleMap.json`);
+    if (!mapRes.ok) throw new Error(`Failed to load oracle index map: ${mapRes.status}`);
+    const indexToOracle: Record<string, string> = await mapRes.json();
+    numOracles = Object.keys(indexToOracle).length;
+    oracleToIndex = {};
+    for (const [k, v] of Object.entries(indexToOracle)) {
+      oracleToIndex[v] = parseInt(k, 10);
+    }
+    emitLoadProgress(5);
 
-  _loaded = true;
+    // Encoder: [N, numOracles] → [N, 128]  (~69 MB weight shards)
+    encoder = await tf.loadGraphModel(`${MODEL_BASE}/encoder/model.json`);
+    emitLoadProgress(45);
+
+    // Draft decoder: [N, 128] → [N, numOracles]  (~69 MB weight shards)
+    draftDecoder = await tf.loadGraphModel(`${MODEL_BASE}/draft_decoder/model.json`);
+    emitLoadProgress(75);
+
+    // Deck build decoder: [N, 128] → [N, numOracles]  (~69 MB weight shards)
+    deckBuildDecoder = await tf.loadGraphModel(`${MODEL_BASE}/deck_build_decoder/model.json`);
+    emitLoadProgress(100);
+
+    _loaded = true;
+  })();
+  const activePromise = _loadPromise;
+
+  try {
+    await activePromise;
+  } finally {
+    if (onProgress) loadProgressListeners.delete(onProgress);
+    if (_loadPromise === activePromise) _loadPromise = null;
+    if (_loaded) loadProgressListeners.clear();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +106,8 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
 // ---------------------------------------------------------------------------
 
 type RatedCard = { oracle: string; rating: number };
+type MlSeatMaps = { toMl: Record<string, string>; fromMl: Record<string, string[]> };
+type DeckCardMeta = DeckbuildEntry['cardMeta'][string];
 
 /**
  * Resolve the ML oracle ID for a given oracle ID, applying the remapping for
@@ -130,6 +159,21 @@ export function buildOracleRemapping(
     if (meta.mlOracleId) remapping[oracle] = meta.mlOracleId;
   }
   return remapping;
+}
+
+export function buildSeatMlMaps(poolOracles: string[], remapping?: Record<string, string>): MlSeatMaps {
+  const toMl: Record<string, string> = {};
+  const fromMl: Record<string, string[]> = {};
+
+  for (const oracle of poolOracles) {
+    if (toMl[oracle] !== undefined) continue;
+    const mapped = mlOracle(oracle, remapping);
+    toMl[oracle] = mapped;
+    if (!fromMl[mapped]) fromMl[mapped] = [];
+    if (!fromMl[mapped]!.includes(oracle)) fromMl[mapped]!.push(oracle);
+  }
+
+  return { toMl, fromMl };
 }
 
 // ---------------------------------------------------------------------------
@@ -243,6 +287,109 @@ export interface DeckbuildEntry {
   maxLands?: number;
 }
 
+const oracleIsLand = (oracle: string, meta: DeckbuildEntry['cardMeta']): boolean =>
+  (meta[oracle]?.type ?? '').includes('Land');
+
+const getDeckCardMeta = (
+  oracle: string,
+  cardMeta: DeckbuildEntry['cardMeta'],
+  basics: BasicLandInfo[],
+): DeckCardMeta | BasicLandInfo | null =>
+  cardMeta[oracle] ?? basics.find((basic) => basic.oracleId === oracle) ?? null;
+
+const deckCardColors = (card: DeckCardMeta | BasicLandInfo): string[] =>
+  (card.producedMana ?? []).length > 0 ? (card.producedMana ?? []) : (card.colorIdentity ?? []);
+
+export function colorDemandPerSource(
+  cards: Array<DeckCardMeta | BasicLandInfo>,
+): Record<string, number> {
+  const demand: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  const sources: Record<string, number> = { W: 1, U: 1, B: 1, R: 1, G: 1 };
+
+  for (const card of cards) {
+    if ((card.type ?? '').includes('Land')) {
+      for (const color of deckCardColors(card)) {
+        if (sources[color] !== undefined) sources[color] += 1;
+      }
+    } else {
+      for (const color of card.colorIdentity ?? []) {
+        if (demand[color] !== undefined) demand[color] += 1;
+      }
+    }
+  }
+
+  return {
+    W: (demand.W ?? 0) / (sources.W ?? 1),
+    U: (demand.U ?? 0) / (sources.U ?? 1),
+    B: (demand.B ?? 0) / (sources.B ?? 1),
+    R: (demand.R ?? 0) / (sources.R ?? 1),
+    G: (demand.G ?? 0) / (sources.G ?? 1),
+  };
+}
+
+export function calculateBasicsForDeck(
+  mainboard: string[],
+  basics: BasicLandInfo[],
+  cardMeta: DeckbuildEntry['cardMeta'],
+  deckSize: number,
+): string[] {
+  if (basics.length === 0) return [];
+
+  const basicLands = basics.filter((basic) => basic.type.includes('Land'));
+  if (basicLands.length === 0) return [];
+
+  const result: string[] = [];
+  const basicsNeeded = deckSize - mainboard.length;
+
+  for (let i = 0; i < basicsNeeded; i++) {
+    const cards = [...mainboard, ...result]
+      .map((oracle) => getDeckCardMeta(oracle, cardMeta, basics))
+      .filter((card): card is DeckCardMeta | BasicLandInfo => card !== null);
+    const pips = colorDemandPerSource(cards);
+
+    let bestBasic = basicLands[0]!;
+    let bestScore = deckCardColors(bestBasic).reduce((sum, color) => sum + (pips[color] ?? 0), 0);
+
+    for (let j = 1; j < basicLands.length; j++) {
+      const candidate = basicLands[j]!;
+      const score = deckCardColors(candidate).reduce((sum, color) => sum + (pips[color] ?? 0), 0);
+      if (score > bestScore) {
+        bestBasic = candidate;
+        bestScore = score;
+      }
+    }
+
+    result.push(bestBasic.oracleId);
+  }
+
+  return result;
+}
+
+export function chooseBestMappedOracle(
+  ranked: RatedCard[],
+  remainingPool: string[],
+  deckCopies: Record<string, number>,
+  fromMl: Record<string, string[]>,
+): { oracle: string | null; score: number } {
+  let bestOracle: string | null = null;
+  let bestScore = -Infinity;
+
+  for (const item of ranked) {
+    const originals = fromMl[item.oracle] ?? [item.oracle];
+    const oracle = originals.find((candidate) => remainingPool.includes(candidate));
+    if (!oracle) continue;
+
+    const existing = deckCopies[oracle] ?? 0;
+    const adjusted = item.rating * Math.pow(0.9, existing);
+    if (adjusted > bestScore) {
+      bestOracle = oracle;
+      bestScore = adjusted;
+    }
+  }
+
+  return { oracle: bestOracle, score: bestScore };
+}
+
 /**
  * Port of master's batchDeckbuild().
  * Phase 1: deck_build_decoder seeds first 10 cards per seat.
@@ -256,9 +403,11 @@ export async function localBatchDeckbuild(
 
   const allPoolOracles = entries.map((e) => e.pool);
   const sharedRemapping = buildOracleRemapping(entries[0]!.cardMeta);
-
-  const oracleIsLand = (oracle: string, meta: DeckbuildEntry['cardMeta']): boolean =>
-    (meta[oracle]?.type ?? '').includes('Land');
+  const seatMaps = allPoolOracles.map((poolOracles) => buildSeatMlMaps(poolOracles, sharedRemapping));
+  const allPoolMlOracles = allPoolOracles.map((poolOracles, index) => {
+    const { toMl } = seatMaps[index]!;
+    return poolOracles.map((oracle) => toMl[oracle] ?? oracle);
+  });
 
   // Per-seat state
   const seats = entries.map((entry) => {
@@ -277,15 +426,20 @@ export async function localBatchDeckbuild(
   });
 
   // Phase 1: seed first 10 cards via deck_build_decoder
-  const buildResults = await localBatchBuild(allPoolOracles, sharedRemapping);
+  const buildResults = await localBatchBuild(allPoolMlOracles, sharedRemapping);
 
   for (let s = 0; s < seats.length; s++) {
     const seat = seats[s]!;
     const meta = entries[s]!.cardMeta;
+    const { fromMl } = seatMaps[s]!;
 
     for (const item of buildResults[s] ?? []) {
       if (seat.mainboard.length >= 10) break;
-      const oracle = item.oracle;
+
+      const originals = fromMl[item.oracle] ?? [item.oracle];
+      const oracle = originals.find((candidate) => seat.remainingPool.includes(candidate));
+      if (!oracle) continue;
+
       const poolIdx = seat.remainingPool.indexOf(oracle);
       if (poolIdx === -1) continue;
 
@@ -315,6 +469,7 @@ export async function localBatchDeckbuild(
     for (let s = 0; s < seats.length; s++) {
       const seat = seats[s]!;
       const meta = entries[s]!.cardMeta;
+      const { toMl } = seatMaps[s]!;
       if (seat.mainboard.length >= seat.deckSize || seat.remainingPool.length === 0) continue;
 
       const candidates = seat.remainingPool.filter((oracle) => {
@@ -326,16 +481,9 @@ export async function localBatchDeckbuild(
       if (candidates.length === 0) continue;
 
       activeIndices.push(s);
-      // Deduplicate by ML oracle — mirrors master's toMl deduplication
-      const seen = new Set<string>();
-      const dedupedPack: string[] = [];
-      for (const o of candidates) {
-        const ml = sharedRemapping[o] ?? o;
-        if (!seen.has(ml)) { seen.add(ml); dedupedPack.push(o); }
-      }
       batchInputs.push({
-        pack: dedupedPack,
-        pool: seat.mainboard,
+        pack: [...new Set(candidates.map((oracle) => toMl[oracle] ?? oracle))],
+        pool: seat.mainboard.map((oracle) => toMl[oracle] ?? oracle),
       });
     }
 
@@ -346,17 +494,13 @@ export async function localBatchDeckbuild(
     for (let i = 0; i < activeIndices.length; i++) {
       const s = activeIndices[i]!;
       const seat = seats[s]!;
-      const candidates = batchInputs[i]!.pack;
-
-      let bestOracle: string | null = null;
-      let bestScore = -Infinity;
-
-      for (const item of batchResults[i] ?? []) {
-        if (!candidates.includes(item.oracle)) continue;
-        const existing = seat.deckCopies[item.oracle] ?? 0;
-        const adjusted = item.rating * Math.pow(0.9, existing);
-        if (adjusted > bestScore) { bestScore = adjusted; bestOracle = item.oracle; }
-      }
+      const { fromMl } = seatMaps[s]!;
+      const { oracle: bestOracle, score: bestScore } = chooseBestMappedOracle(
+        batchResults[i] ?? [],
+        seat.remainingPool,
+        seat.deckCopies,
+        fromMl,
+      );
 
       if (!bestOracle || !Number.isFinite(bestScore)) continue;
 
@@ -377,46 +521,7 @@ export async function localBatchDeckbuild(
   // Fill basics using pipsPerSource (port of master's calculateBasics)
   return seats.map((seat, s) => {
     const entry = entries[s]!;
-    const meta = entry.cardMeta;
-    const basicLands = entry.basics.filter((b) => b.type.includes('Land'));
-    const needed = seat.deckSize - seat.mainboard.length;
-    const basicOracles: string[] = [];
-
-    for (let i = 0; i < needed && basicLands.length > 0; i++) {
-      const pips: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-      const sources: Record<string, number> = { W: 1, U: 1, B: 1, R: 1, G: 1 };
-
-      for (const oracle of [...seat.mainboard, ...basicOracles]) {
-        const m = meta[oracle];
-        const bMeta = entry.basics.find((b) => b.oracleId === oracle);
-        const type = m?.type ?? bMeta?.type ?? '';
-        const colorIdentity = m?.colorIdentity ?? bMeta?.colorIdentity ?? [];
-        const parsedCost = m?.parsedCost ?? [];
-
-        if (type.includes('Land')) {
-          for (const c of colorIdentity) { if (sources[c] !== undefined) sources[c] += 1; }
-        } else {
-          for (const pip of parsedCost) {
-            const c = pip.toUpperCase();
-            if (pips[c] !== undefined) pips[c] += 1;
-          }
-        }
-      }
-
-      const ratio: Record<string, number> = {
-        W: pips.W / sources.W, U: pips.U / sources.U,
-        B: pips.B / sources.B, R: pips.R / sources.R, G: pips.G / sources.G,
-      };
-
-      let best = basicLands[0]!;
-      let bestScore = best.colorIdentity.reduce((sum, c) => sum + (ratio[c] ?? 0), 0);
-      for (let j = 1; j < basicLands.length; j++) {
-        const b = basicLands[j]!;
-        const sc = b.colorIdentity.reduce((sum, c) => sum + (ratio[c] ?? 0), 0);
-        if (sc > bestScore) { bestScore = sc; best = b; }
-      }
-      basicOracles.push(best.oracleId);
-    }
+    const basicOracles = calculateBasicsForDeck(seat.mainboard, entry.basics, entry.cardMeta, seat.deckSize);
 
     return {
       mainboard: [...seat.mainboard, ...basicOracles].sort(),
