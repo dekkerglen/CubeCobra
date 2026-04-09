@@ -22,7 +22,7 @@ import {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 import { computeSkeletons } from '../utils/draftSimulatorClustering';
-import { DeckbuildEntry, isDraftBotLoaded, loadDraftBot, localBatchDeckbuild, localPickBatch } from '../utils/draftBot';
+import { DeckbuildEntry, buildOracleRemapping, isDraftBotLoaded, loadDraftBot, localBatchDeckbuild, localPickBatch } from '../utils/draftBot';
 import { getCubeId } from '@utils/Util';
 import {
   ArcElement,
@@ -4494,7 +4494,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [modelLoadProgress, setModelLoadProgress] = useState(0);
   const [simProgress, setSimProgress] = useState(0); // 0–100
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const simTokenRef = useRef<string | null>(null); // HMAC token from setup; passed to per-pick calls
 
   // Run history & display
   const [runs, setRuns] = useState<SimulationRunEntry[]>([]);
@@ -4808,7 +4807,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const handleCancel = useCallback(() => {
     simAbortRef.current?.abort();
     simAbortRef.current = null;
-    simTokenRef.current = null;
     setStatus('idle');
     setSimPhase(null);
     setSimulating(false);
