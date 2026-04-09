@@ -81,20 +81,30 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
 type RatedCard = { oracle: string; rating: number };
 
 /**
+ * Resolve the ML oracle ID for a given oracle ID, applying the remapping for
+ * cards not in the training vocabulary (e.g. Black Lotus → most similar known card).
+ */
+function mlOracle(oracle: string, remapping?: Record<string, string>): string {
+  return remapping?.[oracle] ?? oracle;
+}
+
+/**
  * One-hot encode pools, forward pass through encoder + decoder, return raw logits.
  * pools[i] = oracle IDs whose bits are set to 1 in the input row.
+ * remapping maps original oracle IDs to their ML-vocab equivalents for unknown cards.
  */
 async function forwardPass(
   pools: string[][],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   decoder: any,
+  remapping?: Record<string, string>,
 ): Promise<Float32Array> {
   const N = pools.length;
   const poolData = new Float32Array(N * numOracles);
   for (let i = 0; i < N; i++) {
     const base = i * numOracles;
     for (const oracle of pools[i]!) {
-      const idx = oracleToIndex[oracle];
+      const idx = oracleToIndex[mlOracle(oracle, remapping)];
       if (idx !== undefined) poolData[base + idx] = 1;
     }
   }
@@ -106,6 +116,20 @@ async function forwardPass(
   const logits = (await logitsTensor.data()) as Float32Array;
   logitsTensor.dispose();
   return logits;
+}
+
+/**
+ * Build an oracle remapping from CardMeta: maps original oracle ID → ML oracle ID
+ * for cards whose mlOracleId differs (i.e. not in training vocab).
+ */
+export function buildOracleRemapping(
+  cardMeta: Record<string, { mlOracleId?: string }>,
+): Record<string, string> {
+  const remapping: Record<string, string> = {};
+  for (const [oracle, meta] of Object.entries(cardMeta)) {
+    if (meta.mlOracleId) remapping[oracle] = meta.mlOracleId;
+  }
+  return remapping;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,24 +144,28 @@ async function forwardPass(
  * pools[i]  — oracle IDs already drafted by seat i
  * Returns an oracle ID per seat (empty string if pack is empty or model unavailable).
  */
-export async function localPickBatch(packs: string[][], pools: string[][]): Promise<string[]> {
+export async function localPickBatch(
+  packs: string[][],
+  pools: string[][],
+  remapping?: Record<string, string>,
+): Promise<string[]> {
   if (!_loaded || !tf || !encoder || !draftDecoder || packs.length === 0) {
     return packs.map(() => '');
   }
 
-  const logits = await forwardPass(pools, draftDecoder);
+  const logits = await forwardPass(pools, draftDecoder, remapping);
 
   // Extract top pick per seat via pack-masked softmax
   return packs.map((pack, i) => {
     if (pack.length === 0) return '';
     const rowBase = i * numOracles;
 
-    const entries: { oracle: string; raw: number }[] = [];
-    for (const oracle of pack) {
-      const idx = oracleToIndex[oracle];
-      if (idx !== undefined) entries.push({ oracle, raw: logits[rowBase + idx] ?? 0 });
-    }
-    if (entries.length === 0) return '';
+    // Look up each pack card by its ML oracle; include all cards (unknown cards get
+    // the logit of their remapped oracle, so Power cards are scored correctly)
+    const entries: { oracle: string; raw: number }[] = pack.map((oracle) => {
+      const idx = oracleToIndex[mlOracle(oracle, remapping)];
+      return { oracle, raw: idx !== undefined ? (logits[rowBase + idx] ?? 0) : 0 };
+    });
 
     // Numerically stable softmax over pack cards only
     const raws = entries.map((e) => e.raw);
@@ -166,16 +194,16 @@ export async function localPickBatch(packs: string[][], pools: string[][]): Prom
  * Batch deckbuild seed: scores all pool cards per seat via the deck_build_decoder.
  * Returns cards sorted by descending rating for each seat.
  */
-async function localBatchBuild(pools: string[][]): Promise<RatedCard[][]> {
+async function localBatchBuild(pools: string[][], remapping?: Record<string, string>): Promise<RatedCard[][]> {
   if (!_loaded || !tf || !encoder || !deckBuildDecoder || pools.length === 0) {
     return pools.map(() => []);
   }
-  const logits = await forwardPass(pools, deckBuildDecoder);
+  const logits = await forwardPass(pools, deckBuildDecoder, remapping);
   return pools.map((pool, i) => {
     const rowBase = i * numOracles;
     return pool
       .map((oracle) => {
-        const idx = oracleToIndex[oracle];
+        const idx = oracleToIndex[mlOracle(oracle, remapping)];
         return { oracle, rating: idx !== undefined ? (logits[rowBase + idx] ?? 0) : 0 };
       })
       .sort((a, b) => b.rating - a.rating);
@@ -187,103 +215,39 @@ async function localBatchBuild(pools: string[][]): Promise<RatedCard[][]> {
  * Returns cards sorted by descending rating for each seat.
  * Exported for use in normal drafts (CubeDraftPage).
  */
-export async function localBatchDraftRanked(inputs: { pack: string[]; pool: string[] }[]): Promise<RatedCard[][]> {
+export async function localBatchDraftRanked(
+  inputs: { pack: string[]; pool: string[] }[],
+  remapping?: Record<string, string>,
+): Promise<RatedCard[][]> {
   if (!_loaded || !tf || !encoder || !draftDecoder || inputs.length === 0) {
     return inputs.map(() => []);
   }
-  const logits = await forwardPass(inputs.map((x) => x.pool), draftDecoder);
+  const logits = await forwardPass(inputs.map((x) => x.pool), draftDecoder, remapping);
   return inputs.map(({ pack }, i) => {
     const rowBase = i * numOracles;
     return pack
       .map((oracle) => {
-        const idx = oracleToIndex[oracle];
+        const idx = oracleToIndex[mlOracle(oracle, remapping)];
         return { oracle, rating: idx !== undefined ? (logits[rowBase + idx] ?? 0) : 0 };
       })
       .sort((a, b) => b.rating - a.rating);
   });
 }
 
-/**
- * Fills remaining deck slots with basic lands, picking the basic that best satisfies
- * the current deck's color demand relative to mana sources already present.
- * Port of server's calculateBasics() in draftbots.ts.
- */
-function fillBasics(
-  mainboardOracles: string[],
-  mainboardMeta: { type: string; colorIdentity: string[]; producedMana?: string[] }[],
-  basics: BasicLandInfo[],
-  deckSize: number,
-): string[] {
-  const needed = deckSize - mainboardOracles.length;
-  if (needed <= 0 || basics.length === 0) return [];
-
-  const basicLands = basics.filter((b) => b.type.includes('Land'));
-  if (basicLands.length === 0) return [];
-
-  const result: string[] = [];
-  const resultMeta: { type: string; colorIdentity: string[]; producedMana: string[] }[] = [];
-
-  for (let i = 0; i < needed; i++) {
-    const demand: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-    const sources: Record<string, number> = { W: 1, U: 1, B: 1, R: 1, G: 1 };
-
-    // Combine mainboard + basics added so far
-    const allCards = [
-      ...mainboardMeta.map((m) => ({ type: m.type, colorIdentity: m.colorIdentity, producedMana: m.producedMana ?? [] })),
-      ...resultMeta,
-    ];
-
-    for (const card of allCards) {
-      if (card.type.includes('Land')) {
-        const produced = card.producedMana.length > 0 ? card.producedMana : card.colorIdentity;
-        for (const color of produced) {
-          if (sources[color] !== undefined) sources[color] += 1;
-        }
-      } else {
-        for (const color of card.colorIdentity) {
-          if (demand[color] !== undefined) demand[color] += 1;
-        }
-      }
-    }
-
-    const pips: Record<string, number> = {
-      W: (demand.W ?? 0) / (sources.W ?? 1),
-      U: (demand.U ?? 0) / (sources.U ?? 1),
-      B: (demand.B ?? 0) / (sources.B ?? 1),
-      R: (demand.R ?? 0) / (sources.R ?? 1),
-      G: (demand.G ?? 0) / (sources.G ?? 1),
-    };
-
-    let bestBasic = basicLands[0]!;
-    const score = (b: BasicLandInfo) =>
-      (b.producedMana.length > 0 ? b.producedMana : b.colorIdentity).reduce((s, c) => s + (pips[c] ?? 0), 0);
-    let bestScore = score(bestBasic);
-    for (let j = 1; j < basicLands.length; j++) {
-      const s = score(basicLands[j]!);
-      if (s > bestScore) { bestScore = s; bestBasic = basicLands[j]!; }
-    }
-
-    result.push(bestBasic.oracleId);
-    resultMeta.push({ type: bestBasic.type, colorIdentity: bestBasic.colorIdentity, producedMana: bestBasic.producedMana });
-  }
-
-  return result;
-}
-
 export interface DeckbuildEntry {
   pool: string[];
-  /** Type/color metadata for pool cards — keyed by oracle_id */
-  cardMeta: Record<string, { type: string; colorIdentity: string[]; producedMana?: string[] }>;
+  /** Card metadata keyed by oracle_id — needs type, colorIdentity, parsedCost, mlOracleId */
+  cardMeta: Record<string, { type: string; colorIdentity: string[]; parsedCost?: string[]; producedMana?: string[]; mlOracleId?: string }>;
   basics: BasicLandInfo[];
   maxSpells?: number;
   maxLands?: number;
 }
 
 /**
- * Client-side port of server's batchDeckbuild().
- * Phase 1: deck_build_decoder seeds first 10 cards from each pool.
+ * Port of master's batchDeckbuild().
+ * Phase 1: deck_build_decoder seeds first 10 cards per seat.
  * Phase 2: draft_decoder iteratively picks remaining cards until deck is full.
- * Then fills remaining slots with basic lands.
+ * Fills remaining slots with basics using pipsPerSource from master.
  */
 export async function localBatchDeckbuild(
   entries: DeckbuildEntry[],
@@ -291,6 +255,10 @@ export async function localBatchDeckbuild(
   if (!_loaded || entries.length === 0) return entries.map(() => ({ mainboard: [], sideboard: [] }));
 
   const allPoolOracles = entries.map((e) => e.pool);
+  const sharedRemapping = buildOracleRemapping(entries[0]!.cardMeta);
+
+  const oracleIsLand = (oracle: string, meta: DeckbuildEntry['cardMeta']): boolean =>
+    (meta[oracle]?.type ?? '').includes('Land');
 
   // Per-seat state
   const seats = entries.map((entry) => {
@@ -308,11 +276,8 @@ export async function localBatchDeckbuild(
     };
   });
 
-  const oracleIsLand = (oracle: string, meta: DeckbuildEntry['cardMeta']): boolean =>
-    !!(meta[oracle]?.type ?? '').includes('Land');
-
-  // Phase 1: Seed first 10 cards via deck_build_decoder
-  const buildResults = await localBatchBuild(allPoolOracles);
+  // Phase 1: seed first 10 cards via deck_build_decoder
+  const buildResults = await localBatchBuild(allPoolOracles, sharedRemapping);
 
   for (let s = 0; s < seats.length; s++) {
     const seat = seats[s]!;
@@ -321,28 +286,29 @@ export async function localBatchDeckbuild(
     for (const item of buildResults[s] ?? []) {
       if (seat.mainboard.length >= 10) break;
       const oracle = item.oracle;
-      if (!seat.remainingPool.includes(oracle)) continue;
+      const poolIdx = seat.remainingPool.indexOf(oracle);
+      if (poolIdx === -1) continue;
 
       const land = oracleIsLand(oracle, meta);
       if (land && seat.landCount >= seat.maxLands) continue;
       if (!land && seat.spellCount >= seat.maxSpells) continue;
 
       const existing = seat.deckCopies[oracle] ?? 0;
-      if (item.rating * Math.pow(0.9, existing) <= 0) continue;
+      const adjustedRating = item.rating * Math.pow(0.9, existing);
+      if (!Number.isFinite(adjustedRating)) continue;
 
       seat.mainboard.push(oracle);
       seat.deckCopies[oracle] = existing + 1;
-      seat.remainingPool.splice(seat.remainingPool.indexOf(oracle), 1);
+      seat.remainingPool.splice(poolIdx, 1);
       if (land) seat.landCount += 1;
       else seat.spellCount += 1;
     }
   }
 
-  // Phase 2: Iteratively pick with draft_decoder until all seats are full
+  // Phase 2: iteratively pick with draft_decoder until all seats are full
   let anyProgress = true;
   while (anyProgress) {
     anyProgress = false;
-
     const activeIndices: number[] = [];
     const batchInputs: { pack: string[]; pool: string[] }[] = [];
 
@@ -360,31 +326,39 @@ export async function localBatchDeckbuild(
       if (candidates.length === 0) continue;
 
       activeIndices.push(s);
-      batchInputs.push({ pack: [...new Set(candidates)], pool: seat.mainboard });
+      // Deduplicate by ML oracle — mirrors master's toMl deduplication
+      const seen = new Set<string>();
+      const dedupedPack: string[] = [];
+      for (const o of candidates) {
+        const ml = sharedRemapping[o] ?? o;
+        if (!seen.has(ml)) { seen.add(ml); dedupedPack.push(o); }
+      }
+      batchInputs.push({
+        pack: dedupedPack,
+        pool: seat.mainboard,
+      });
     }
 
     if (batchInputs.length === 0) break;
 
-    const batchResults = await localBatchDraftRanked(batchInputs);
+    const batchResults = await localBatchDraftRanked(batchInputs, sharedRemapping);
 
     for (let i = 0; i < activeIndices.length; i++) {
       const s = activeIndices[i]!;
       const seat = seats[s]!;
-      const meta = entries[s]!.cardMeta;
       const candidates = batchInputs[i]!.pack;
 
       let bestOracle: string | null = null;
       let bestScore = -Infinity;
 
       for (const item of batchResults[i] ?? []) {
-        const oracle = item.oracle;
-        if (!candidates.includes(oracle)) continue;
-        const existing = seat.deckCopies[oracle] ?? 0;
+        if (!candidates.includes(item.oracle)) continue;
+        const existing = seat.deckCopies[item.oracle] ?? 0;
         const adjusted = item.rating * Math.pow(0.9, existing);
-        if (adjusted > bestScore) { bestScore = adjusted; bestOracle = oracle; }
+        if (adjusted > bestScore) { bestScore = adjusted; bestOracle = item.oracle; }
       }
 
-      if (!bestOracle || bestScore <= 0) continue;
+      if (!bestOracle || !Number.isFinite(bestScore)) continue;
 
       const poolIdx = seat.remainingPool.indexOf(bestOracle);
       if (poolIdx === -1) continue;
@@ -393,22 +367,59 @@ export async function localBatchDeckbuild(
       seat.deckCopies[bestOracle] = (seat.deckCopies[bestOracle] ?? 0) + 1;
       seat.remainingPool.splice(poolIdx, 1);
 
-      const land = oracleIsLand(bestOracle, meta);
+      const land = oracleIsLand(bestOracle, entries[s]!.cardMeta);
       if (land) seat.landCount += 1;
       else seat.spellCount += 1;
-
       anyProgress = true;
     }
   }
 
-  // Fill basics and return
+  // Fill basics using pipsPerSource (port of master's calculateBasics)
   return seats.map((seat, s) => {
     const entry = entries[s]!;
-    const mainboardMeta = seat.mainboard.map((o) => entry.cardMeta[o] ?? { type: '', colorIdentity: [], producedMana: [] });
-    const basicOracles = fillBasics(seat.mainboard, mainboardMeta, entry.basics, seat.deckSize);
-    const fullMainboard = [...seat.mainboard, ...basicOracles].sort();
+    const meta = entry.cardMeta;
+    const basicLands = entry.basics.filter((b) => b.type.includes('Land'));
+    const needed = seat.deckSize - seat.mainboard.length;
+    const basicOracles: string[] = [];
+
+    for (let i = 0; i < needed && basicLands.length > 0; i++) {
+      const pips: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+      const sources: Record<string, number> = { W: 1, U: 1, B: 1, R: 1, G: 1 };
+
+      for (const oracle of [...seat.mainboard, ...basicOracles]) {
+        const m = meta[oracle];
+        const bMeta = entry.basics.find((b) => b.oracleId === oracle);
+        const type = m?.type ?? bMeta?.type ?? '';
+        const colorIdentity = m?.colorIdentity ?? bMeta?.colorIdentity ?? [];
+        const parsedCost = m?.parsedCost ?? [];
+
+        if (type.includes('Land')) {
+          for (const c of colorIdentity) { if (sources[c] !== undefined) sources[c] += 1; }
+        } else {
+          for (const pip of parsedCost) {
+            const c = pip.toUpperCase();
+            if (pips[c] !== undefined) pips[c] += 1;
+          }
+        }
+      }
+
+      const ratio: Record<string, number> = {
+        W: pips.W / sources.W, U: pips.U / sources.U,
+        B: pips.B / sources.B, R: pips.R / sources.R, G: pips.G / sources.G,
+      };
+
+      let best = basicLands[0]!;
+      let bestScore = best.colorIdentity.reduce((sum, c) => sum + (ratio[c] ?? 0), 0);
+      for (let j = 1; j < basicLands.length; j++) {
+        const b = basicLands[j]!;
+        const sc = b.colorIdentity.reduce((sum, c) => sum + (ratio[c] ?? 0), 0);
+        if (sc > bestScore) { bestScore = sc; best = b; }
+      }
+      basicOracles.push(best.oracleId);
+    }
+
     return {
-      mainboard: fullMainboard,
+      mainboard: [...seat.mainboard, ...basicOracles].sort(),
       sideboard: seat.remainingPool.slice().sort(),
     };
   });
