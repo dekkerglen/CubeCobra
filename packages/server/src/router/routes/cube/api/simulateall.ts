@@ -1,4 +1,6 @@
 import rateLimit from 'express-rate-limit';
+import { userOrIpKey } from 'serverutils/rateLimitKeys';
+import { MAX_TOTAL_SEATS } from 'serverutils/simulatorConstants';
 import { verifySimToken } from 'serverutils/simToken';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
@@ -6,14 +8,11 @@ import { NextFunction, Request, Response } from '../../../../types/express';
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5002';
 const ML_TIMEOUT_MS = 15_000;
 
-// Max packs/pools elements per call — numDrafts × numSeats = 50 × 16
-const MAX_SEATS = 800;
-
 // 100 req/min per user — generous for one sim (45 calls) but blocks rapid multi-sim abuse
 const pickLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 100,
-  keyGenerator: (req: Request) => (req as any).user?.id?.toString() ?? req.ip ?? 'anon',
+  keyGenerator: userOrIpKey,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, res: Response, _next: NextFunction) => {
@@ -47,8 +46,8 @@ export const simulateallHandler = async (req: Request, res: Response) => {
   if (!Array.isArray(packs) || !Array.isArray(pools)) {
     return res.status(400).json({ success: false, message: 'packs and pools must be arrays' });
   }
-  if (packs.length > MAX_SEATS || pools.length > MAX_SEATS) {
-    return res.status(400).json({ success: false, message: `Too many seats — maximum ${MAX_SEATS}` });
+  if (packs.length > MAX_TOTAL_SEATS || pools.length > MAX_TOTAL_SEATS) {
+    return res.status(400).json({ success: false, message: `Too many seats — maximum ${MAX_TOTAL_SEATS}` });
   }
 
   const controller = new AbortController();

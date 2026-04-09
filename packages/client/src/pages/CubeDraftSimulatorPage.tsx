@@ -22,6 +22,7 @@ import {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 import { computeSkeletons } from '../utils/draftSimulatorClustering';
+import { DeckbuildEntry, isDraftBotLoaded, loadDraftBot, localBatchDeckbuild, localPickBatch } from '../utils/draftBot';
 import { getCubeId } from '@utils/Util';
 import {
   ArcElement,
