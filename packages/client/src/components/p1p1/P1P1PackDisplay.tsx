@@ -3,6 +3,7 @@ import React, { useContext, useMemo } from 'react';
 import { P1P1Pack, P1P1VoteSummary } from '@utils/datatypes/P1P1Pack';
 
 import { detailsToCard } from '../../../../utils/src/cardutil';
+import { modelScoresToProbabilities } from '../../utils/botRatings';
 import UserContext from '../../contexts/UserContext';
 import useP1P1Vote from '../../hooks/useP1P1Vote';
 import Alert from '../base/Alert';
@@ -55,8 +56,7 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
 
   const ratings = useMemo((): number[] | undefined => {
     if (showBotWeights && votes.botWeights && votes.botWeights.length > 0) {
-      // Show bot weights
-      return votes.botWeights;
+      return modelScoresToProbabilities(votes.botWeights);
     } else if (votes.userVote !== undefined) {
       // Show vote percentages after user has voted
       const totalVotesWithBot = votes.totalVotes + (votes.botPick !== undefined ? 1 : 0);
@@ -76,7 +76,15 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
       // Don't show any overlays before voting
       return undefined;
     }
-  }, [showBotWeights, votes.botWeights, votes.userVote, votes.totalVotes, votes.botPick, votes.results, pack.cards]);
+  }, [
+    showBotWeights,
+    votes.botWeights,
+    votes.userVote,
+    votes.totalVotes,
+    votes.botPick,
+    votes.results,
+    pack.cards,
+  ]);
 
   return (
     <Flexbox direction="col" gap="2">

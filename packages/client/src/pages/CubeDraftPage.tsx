@@ -99,9 +99,7 @@ const processPredictions = (json: PredictResponse, packCards: any[]): number[] =
     return predictionsMap.get(card.oracle_id) || 0;
   });
 
-  // Normalize: duplicates get the same rating, then normalize so total = 100%
-  const total = rawRatings.reduce((acc, r) => acc + r, 0);
-  return total > 0 ? rawRatings.map((r) => r / total) : rawRatings;
+  return modelScoresToProbabilities(rawRatings);
 };
 
 const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
