@@ -49,15 +49,20 @@ export function isDraftBotLoaded(): boolean {
  * onProgress receives values 0–100.
  */
 export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<void> {
-  if (onProgress) loadProgressListeners.add(onProgress);
   if (_loaded) {
     onProgress?.(100);
     return;
   }
   if (_loadPromise) {
-    await _loadPromise;
+    if (onProgress) loadProgressListeners.add(onProgress);
+    try {
+      await _loadPromise;
+    } finally {
+      if (onProgress) loadProgressListeners.delete(onProgress);
+    }
     return;
   }
+  if (onProgress) loadProgressListeners.add(onProgress);
 
   _loadPromise = (async () => {
     emitLoadProgress(0);
@@ -97,8 +102,11 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
   } finally {
     if (onProgress) loadProgressListeners.delete(onProgress);
     if (_loadPromise === activePromise) _loadPromise = null;
-    if (_loaded) loadProgressListeners.clear();
   }
+}
+
+export function __getLoadProgressListenerCountForTests(): number {
+  return loadProgressListeners.size;
 }
 
 // ---------------------------------------------------------------------------
