@@ -42,5 +42,3 @@ Since 1.6.0
 - Improved date display — dates within the last 7 days now show relative time (e.g. "3 hours ago"), while older dates show an absolute format (e.g. "Feb 7, 2026")
 
 # Technical Changes
-
-- Replaced `react-timeago` dependency with a native `Datetime` component using `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` — dates within the last 7 days show relative time (e.g. "3 hours ago"), older dates show absolute format (e.g. "Feb 7, 2026")
