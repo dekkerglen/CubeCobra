@@ -1,4 +1,12 @@
-import { ArchetypeSkeleton, BuiltDeck, CardMeta, LockPair, SkeletonCard, SlimPool } from '@utils/datatypes/SimulationReport';
+/* eslint-disable camelcase, no-plusplus, no-restricted-syntax */
+import {
+  ArchetypeSkeleton,
+  BuiltDeck,
+  CardMeta,
+  LockPair,
+  SkeletonCard,
+  SlimPool,
+} from '@utils/datatypes/SimulationReport';
 
 export function euclidSq(a: number[], b: number[]): number {
   let s = 0;
@@ -17,8 +25,15 @@ export function kMeans(vecs: number[][], k: number): number[] {
   while (seedIdxs.length < k) {
     const dists = vecs.map((v) => Math.min(...seedIdxs.map((si) => euclidSq(v, vecs[si]!))));
     const total = dists.reduce((a, b) => a + b, 0);
-    let r = Math.random() * total, chosen = n - 1;
-    for (let i = 0; i < n; i++) { r -= dists[i]!; if (r <= 0) { chosen = i; break; } }
+    let r = Math.random() * total,
+      chosen = n - 1;
+    for (let i = 0; i < n; i++) {
+      r -= dists[i]!;
+      if (r <= 0) {
+        chosen = i;
+        break;
+      }
+    }
     seedIdxs.push(chosen);
   }
 
@@ -28,16 +43,33 @@ export function kMeans(vecs: number[][], k: number): number[] {
   for (let iter = 0; iter < 25; iter++) {
     let changed = false;
     for (let i = 0; i < n; i++) {
-      let best = 0, bestD = Infinity;
-      for (let c = 0; c < k; c++) { const d = euclidSq(vecs[i]!, centroids[c]!); if (d < bestD) { bestD = d; best = c; } }
-      if (assignments[i] !== best) { assignments[i] = best; changed = true; }
+      let best = 0,
+        bestD = Infinity;
+      for (let c = 0; c < k; c++) {
+        const d = euclidSq(vecs[i]!, centroids[c]!);
+        if (d < bestD) {
+          bestD = d;
+          best = c;
+        }
+      }
+      if (assignments[i] !== best) {
+        assignments[i] = best;
+        changed = true;
+      }
     }
     if (!changed) break;
 
     centroids = Array.from({ length: k }, () => new Array(dim).fill(0));
     const counts = new Array<number>(k).fill(0);
-    for (let i = 0; i < n; i++) { const c = assignments[i]!; counts[c]++; for (let j = 0; j < dim; j++) centroids[c]![j]! += vecs[i]![j]!; }
-    for (let c = 0; c < k; c++) { const cnt = counts[c]; if (cnt > 0) centroids[c] = centroids[c]!.map((v) => v / cnt); }
+    for (let i = 0; i < n; i++) {
+      const c = assignments[i]!;
+      counts[c]++;
+      for (let j = 0; j < dim; j++) centroids[c]![j]! += vecs[i]![j]!;
+    }
+    for (let c = 0; c < k; c++) {
+      const cnt = counts[c];
+      if (cnt > 0) centroids[c] = centroids[c]!.map((v) => v / cnt);
+    }
   }
 
   return assignments;
@@ -67,7 +99,10 @@ export function computeSkeletons(
   const vecs: Uint8Array[] = slimPools.map((pool, i) => {
     const v = new Uint8Array(dim);
     const cards = hasDecks ? deckBuilds![i]!.mainboard : pool.picks.map((p) => p.oracle_id);
-    for (const oracle_id of cards) { const idx = oracleIndex.get(oracle_id); if (idx !== undefined) v[idx] = 1; }
+    for (const oracle_id of cards) {
+      const idx = oracleIndex.get(oracle_id);
+      if (idx !== undefined) v[idx] = 1;
+    }
     return v;
   });
 
@@ -92,17 +127,47 @@ export function computeSkeletons(
 
     // Centroid card fractions: for each card, what fraction of pools in this cluster drafted it
     const fracs = new Float32Array(dim);
-    for (const pi of poolIndices) { const v = vecs[pi]!; for (let j = 0; j < dim; j++) fracs[j] += v[j]!; }
+    for (const pi of poolIndices) {
+      const v = vecs[pi]!;
+      for (let j = 0; j < dim; j++) fracs[j] += v[j]!;
+    }
     for (let j = 0; j < dim; j++) fracs[j] /= poolCount;
 
     const allCards: SkeletonCard[] = oracleIds
-      .map((oracle_id, j) => ({ oracle_id, name: cardMeta[oracle_id]?.name ?? oracle_id, imageUrl: cardMeta[oracle_id]?.imageUrl ?? '', fraction: fracs[j]! }))
+      .map((oracle_id, j) => ({
+        oracle_id,
+        name: cardMeta[oracle_id]?.name ?? oracle_id,
+        imageUrl: cardMeta[oracle_id]?.imageUrl ?? '',
+        fraction: fracs[j]!,
+      }))
       .filter((c) => c.fraction >= coreThresholdPct / 2 / 100)
       .sort((a, b) => b.fraction - a.fraction);
 
     const coreThresholdFrac = coreThresholdPct / 100;
     const coreCards = allCards.filter((c) => c.fraction >= coreThresholdFrac).slice(0, 24);
     const occasionalCards = allCards.filter((c) => c.fraction < coreThresholdFrac).slice(0, 12);
+    const sideboardCards: SkeletonCard[] = hasDecks
+      ? oracleIds
+          .map((oracle_id) => {
+            let sideboardCount = 0;
+            for (const pi of poolIndices) {
+              const deck = deckBuilds![pi];
+              if (!deck) continue;
+              const inMainboard = deck.mainboard.includes(oracle_id);
+              const inSideboard = deck.sideboard.includes(oracle_id);
+              if (!inMainboard && inSideboard) sideboardCount++;
+            }
+            return {
+              oracle_id,
+              name: cardMeta[oracle_id]?.name ?? oracle_id,
+              imageUrl: cardMeta[oracle_id]?.imageUrl ?? '',
+              fraction: sideboardCount / poolCount,
+            };
+          })
+          .filter((card) => card.fraction >= 0.15)
+          .sort((a, b) => b.fraction - a.fraction)
+          .slice(0, 5)
+      : [];
 
     // Color profile
     const colorWeight: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
@@ -113,26 +178,48 @@ export function computeSkeletons(
       totalWeight += fraction;
       for (const c of colors) if (c in colorWeight) colorWeight[c] += fraction;
     }
-    const colorProfile = Object.entries(colorWeight).filter(([, v]) => totalWeight > 0 && v / totalWeight > 0.2).sort((a, b) => b[1] - a[1]).map(([key]) => key).join('') || 'C';
+    const colorProfile =
+      Object.entries(colorWeight)
+        .filter(([, v]) => totalWeight > 0 && v / totalWeight > 0.2)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key]) => key)
+        .join('') || 'C';
 
     // Lock pairs
     const lockPairs: LockPair[] = [];
     const lockCandidates = allCards.filter((c) => c.fraction >= Math.max(0.25, coreThresholdFrac / 2)).slice(0, 24);
     for (let ai = 0; ai < lockCandidates.length; ai++) {
       for (let bi = ai + 1; bi < lockCandidates.length; bi++) {
-        const a = lockCandidates[ai]!, b = lockCandidates[bi]!;
-        const aIdx = oracleIndex.get(a.oracle_id)!, bIdx = oracleIndex.get(b.oracle_id)!;
+        const a = lockCandidates[ai]!,
+          b = lockCandidates[bi]!;
+        const aIdx = oracleIndex.get(a.oracle_id)!,
+          bIdx = oracleIndex.get(b.oracle_id)!;
         let both = 0;
         for (const pi of poolIndices) if (vecs[pi]![aIdx] && vecs[pi]![bIdx]) both++;
         const rate = both / poolCount;
-        if (rate > 0.60 && rate > a.fraction * b.fraction + 0.05) {
-          lockPairs.push({ oracle_id_a: a.oracle_id, oracle_id_b: b.oracle_id, nameA: a.name, nameB: b.name, coOccurrenceRate: rate });
+        if (rate > 0.6 && rate > a.fraction * b.fraction + 0.05) {
+          lockPairs.push({
+            oracle_id_a: a.oracle_id,
+            oracle_id_b: b.oracle_id,
+            nameA: a.name,
+            nameB: b.name,
+            coOccurrenceRate: rate,
+          });
         }
       }
     }
     lockPairs.sort((a, b) => b.coOccurrenceRate - a.coOccurrenceRate);
 
-    skeletons.push({ clusterId, colorProfile, poolCount, poolIndices, coreCards, occasionalCards, lockPairs: lockPairs.slice(0, 5) });
+    skeletons.push({
+      clusterId,
+      colorProfile,
+      poolCount,
+      poolIndices,
+      coreCards,
+      occasionalCards,
+      sideboardCards,
+      lockPairs: lockPairs.slice(0, 5),
+    });
   }
 
   return skeletons.sort((a, b) => b.poolCount - a.poolCount);

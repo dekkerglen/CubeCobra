@@ -69,6 +69,9 @@ export const createCardFromDetails = (overrides?: Partial<CardDetails>): Card =>
  * @param overrides
  */
 export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => {
+  const hasGamesOverride = !!overrides && Object.prototype.hasOwnProperty.call(overrides, 'games');
+  const hasGamesEverAvailableOverride =
+    !!overrides && Object.prototype.hasOwnProperty.call(overrides, 'gamesEverAvailable');
   const details: CardDetails = {
     error: false,
     language: generateRandomString(LETTERS, 2).toLowerCase(),
@@ -118,8 +121,10 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
     ...overrides,
   };
 
-  details.games = overrides?.games ?? details.games ?? ['paper'];
-  details.gamesEverAvailable = overrides?.gamesEverAvailable ?? details.games ?? ['paper'];
+  details.games = hasGamesOverride ? overrides?.games : details.games ?? ['paper'];
+  details.gamesEverAvailable = hasGamesEverAvailableOverride
+    ? overrides?.gamesEverAvailable ?? ['paper']
+    : details.games ?? ['paper'];
 
   return details;
 };
