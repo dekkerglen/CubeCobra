@@ -2045,6 +2045,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .border-yellow-500\/60 {
   border-color: rgb(234 179 8 / 0.6);
 }
+.border-yellow-700 {
+  --tw-border-opacity: 1;
+  border-color: rgb(161 98 7 / var(--tw-border-opacity));
+}
 .border-t-transparent {
   border-top-color: transparent;
 }
@@ -2829,6 +2833,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .text-yellow-200 {
   --tw-text-opacity: 1;
   color: rgb(254 240 138 / var(--tw-text-opacity));
+}
+.text-yellow-300 {
+  --tw-text-opacity: 1;
+  color: rgb(253 224 71 / var(--tw-text-opacity));
 }
 .text-yellow-500 {
   --tw-text-opacity: 1;
