@@ -1,7 +1,7 @@
-import CubeFn from 'serverutils/cubefn';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cardFromId, getOracleForMl } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
+import CubeFn from 'serverutils/cubefn';
 
 import { simulatesetupHandler } from '../../../src/router/routes/cube/api/simulatesetup';
 import { createCube, createUser } from '../../test-utils/data';
@@ -72,8 +72,30 @@ describe('POST /cube/api/simulatesetup/:id', () => {
         [{ steps: [{ action: 'pick', amount: 1 }], cards: [1] }],
       ],
       cards: [
-        { details: { oracle_id: 'oracle-a', name: 'Card A', image_normal: '', image_small: '', color_identity: ['U'], elo: 1210, cmc: 2, type: 'Instant' } },
-        { details: { oracle_id: 'oracle-b', name: 'Card B', image_normal: '', image_small: '', color_identity: ['R'], elo: 1190, cmc: 3, type: 'Sorcery' } },
+        {
+          details: {
+            oracle_id: 'oracle-a',
+            name: 'Card A',
+            image_normal: '',
+            image_small: '',
+            color_identity: ['U'],
+            elo: 1210,
+            cmc: 2,
+            type: 'Instant',
+          },
+        },
+        {
+          details: {
+            oracle_id: 'oracle-b',
+            name: 'Card B',
+            image_normal: '',
+            image_small: '',
+            color_identity: ['R'],
+            elo: 1190,
+            cmc: 3,
+            type: 'Sorcery',
+          },
+        },
       ],
     });
 
@@ -120,10 +142,35 @@ describe('POST /cube/api/simulatesetup/:id', () => {
     (CubeFn.isCubeEditable as jest.Mock).mockReturnValue(true);
     (getDraftFormat as jest.Mock).mockReturnValue({});
     (createDraft as jest.Mock).mockReturnValue({
-      InitialState: [[{ steps: [{ action: 'pick', amount: 1 }], cards: [0] }], [{ steps: [{ action: 'pick', amount: 1 }], cards: [1] }]],
+      InitialState: [
+        [{ steps: [{ action: 'pick', amount: 1 }], cards: [0] }],
+        [{ steps: [{ action: 'pick', amount: 1 }], cards: [1] }],
+      ],
       cards: [
-        { details: { oracle_id: 'oracle-a', name: 'Card A', image_normal: '', image_small: '', color_identity: ['U'], elo: 1210, cmc: 2, type: 'Instant' } },
-        { details: { oracle_id: 'oracle-b', name: 'Card B', image_normal: '', image_small: '', color_identity: ['R'], elo: 1190, cmc: 3, type: 'Sorcery' } },
+        {
+          details: {
+            oracle_id: 'oracle-a',
+            name: 'Card A',
+            image_normal: '',
+            image_small: '',
+            color_identity: ['U'],
+            elo: 1210,
+            cmc: 2,
+            type: 'Instant',
+          },
+        },
+        {
+          details: {
+            oracle_id: 'oracle-b',
+            name: 'Card B',
+            image_normal: '',
+            image_small: '',
+            color_identity: ['R'],
+            elo: 1190,
+            cmc: 3,
+            type: 'Sorcery',
+          },
+        },
       ],
     });
     (getBasicsFromCube as jest.Mock).mockReturnValue(['plains-id']);

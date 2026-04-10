@@ -28,7 +28,9 @@ export const saveHandler = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Cube not found' });
     }
     if (!isCubeEditable(cube, req.user)) {
-      return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can save simulation results' });
+      return res
+        .status(403)
+        .json({ success: false, message: 'Only the cube owner or collaborators can save simulation results' });
     }
 
     const runData: SimulationRunData = req.body;
@@ -36,8 +38,10 @@ export const saveHandler = async (req: Request, res: Response) => {
       !runData ||
       typeof runData.numDrafts !== 'number' ||
       typeof runData.numSeats !== 'number' ||
-      runData.numDrafts < 1 || runData.numDrafts > MAX_DRAFTS ||
-      runData.numSeats < 2 || runData.numSeats > MAX_SEATS ||
+      runData.numDrafts < 1 ||
+      runData.numDrafts > MAX_DRAFTS ||
+      runData.numSeats < 2 ||
+      runData.numSeats > MAX_SEATS ||
       !Array.isArray(runData.cardStats) ||
       !Array.isArray(runData.slimPools)
     ) {
@@ -169,7 +173,9 @@ export const deleteRunHandler = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Cube not found' });
     }
     if (!isCubeEditable(cube, req.user)) {
-      return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can delete simulation results' });
+      return res
+        .status(403)
+        .json({ success: false, message: 'Only the cube owner or collaborators can delete simulation results' });
     }
 
     if (Date.now() - ts < DELETE_COOLDOWN_MS) {
@@ -186,10 +192,7 @@ export const deleteRunHandler = async (req: Request, res: Response) => {
 
     const updatedRuns = runs.filter((run) => run.ts !== ts);
 
-    await Promise.all([
-      putObject(bucket, indexKey(cube.id), updatedRuns),
-      deleteObject(bucket, runKey(cube.id, ts)),
-    ]);
+    await Promise.all([putObject(bucket, indexKey(cube.id), updatedRuns), deleteObject(bucket, runKey(cube.id, ts))]);
 
     const latestRunData = updatedRuns.length > 0 ? await getObject(bucket, runKey(cube.id, updatedRuns[0]!.ts)) : null;
 

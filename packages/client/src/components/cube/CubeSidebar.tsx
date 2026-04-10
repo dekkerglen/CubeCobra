@@ -79,6 +79,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
         { label: 'Practice Draft', key: 'practice-draft' },
         { label: 'Sample Pack', key: 'sample-pack' },
         { label: 'Decks', key: 'decks' },
+        { label: 'Draft Simulator', key: 'draft-simulator', href: '/cube/draftsimulator' },
       ],
     },
     {
@@ -107,7 +108,6 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
         { label: 'Playtest Data', key: 'playtest-data' },
         { label: 'Tokens', key: 'tokens' },
         { label: 'Combos', key: 'combos' },
-        { label: 'Draft Simulator', key: 'draft-simulator', href: '/cube/draftsimulator' },
       ],
     },
   ];

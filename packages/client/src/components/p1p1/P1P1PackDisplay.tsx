@@ -3,9 +3,9 @@ import React, { useContext, useMemo } from 'react';
 import { P1P1Pack, P1P1VoteSummary } from '@utils/datatypes/P1P1Pack';
 
 import { detailsToCard } from '../../../../utils/src/cardutil';
-import { modelScoresToProbabilities } from '../../utils/botRatings';
 import UserContext from '../../contexts/UserContext';
 import useP1P1Vote from '../../hooks/useP1P1Vote';
+import { modelScoresToProbabilities } from '../../utils/botRatings';
 import Alert from '../base/Alert';
 import { Flexbox } from '../base/Layout';
 import Spinner from '../base/Spinner';
@@ -76,15 +76,7 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
       // Don't show any overlays before voting
       return undefined;
     }
-  }, [
-    showBotWeights,
-    votes.botWeights,
-    votes.userVote,
-    votes.totalVotes,
-    votes.botPick,
-    votes.results,
-    pack.cards,
-  ]);
+  }, [showBotWeights, votes.botWeights, votes.userVote, votes.totalVotes, votes.botPick, votes.results, pack.cards]);
 
   return (
     <Flexbox direction="col" gap="2">

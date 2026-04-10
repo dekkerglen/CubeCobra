@@ -35,7 +35,7 @@ const colorDemandPerSource = (cards: any[]): Record<string, number> => {
         if (sources[color] !== undefined) sources[color] += 1;
       }
     } else {
-      for (const color of (card.color_identity ?? [])) {
+      for (const color of card.color_identity ?? []) {
         if (demand[color] !== undefined) demand[color] += 1;
       }
     }
