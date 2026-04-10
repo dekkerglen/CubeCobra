@@ -103,9 +103,7 @@ export const build = async (oracles: string[]): Promise<{ oracle: string; rating
   }
 };
 
-export const simulateDecks = async (
-  pools: string[][],
-): Promise<{ oracle: string; rating: number }[][]> => {
+export const simulateDecks = async (pools: string[][]): Promise<{ oracle: string; rating: number }[][]> => {
   try {
     const response = await mlServiceRequest<{
       success: boolean;
@@ -124,14 +122,11 @@ type DraftStep = { action: string; amount?: number | null };
  * Returns seatPicks[seat] = oracle IDs picked in order.
  * Falls back to empty arrays if the ML service is unavailable.
  */
-export const simulateDraft = async (
-  initialPacks: string[][][],
-  packSteps: DraftStep[][],
-): Promise<string[][]> => {
-  const response = await mlServiceRequest<{ success: boolean; seatPicks: string[][] }>(
-    'simulatedraft',
-    { initialPacks, packSteps },
-  );
+export const simulateDraft = async (initialPacks: string[][][], packSteps: DraftStep[][]): Promise<string[][]> => {
+  const response = await mlServiceRequest<{ success: boolean; seatPicks: string[][] }>('simulatedraft', {
+    initialPacks,
+    packSteps,
+  });
   return response.seatPicks;
 };
 

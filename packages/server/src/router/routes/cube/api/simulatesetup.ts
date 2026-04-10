@@ -21,7 +21,10 @@ const setupLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, res: Response, _next: NextFunction) => {
-    res.status(429).json({ success: false, message: 'Too many simulation requests. Please wait before starting another simulation.' });
+    res.status(429).json({
+      success: false,
+      message: 'Too many simulation requests. Please wait before starting another simulation.',
+    });
   },
 });
 
@@ -47,7 +50,9 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
     }
 
     if (!isCubeEditable(cube, req.user)) {
-      return res.status(403).json({ success: false, message: 'Only the cube owner or collaborators can run the draft simulator' });
+      return res
+        .status(403)
+        .json({ success: false, message: 'Only the cube owner or collaborators can run the draft simulator' });
     }
 
     const { error, value } = SetupSchema.validate(req.body);
@@ -79,7 +84,9 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
         draft = createDraft(cube, format, boardCards, numSeats, undefined, `draftsim-setup-${i}-${Date.now()}`);
       } catch {
         // Not enough cards — return an error
-        return res.status(400).json({ success: false, message: 'Not enough cards in cube to run a draft with these settings' });
+        return res
+          .status(400)
+          .json({ success: false, message: 'Not enough cards in cube to run a draft with these settings' });
       }
 
       const { InitialState, cards } = draft;
