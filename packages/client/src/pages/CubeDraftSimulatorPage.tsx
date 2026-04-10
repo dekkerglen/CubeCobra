@@ -48,6 +48,7 @@ import {
   loadDraftBot,
   localBatchDeckbuild,
   localPickBatch,
+  WebGLInferenceError,
 } from '../utils/draftBot';
 import { computeSkeletons } from '../utils/draftSimulatorClustering';
 
@@ -2341,7 +2342,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       setDeckBuildsLoading(false);
       setStatus('failed');
       setSimPhase(null);
-      setErrorMsg(err instanceof Error ? err.message : 'Simulation failed');
+      if (err instanceof WebGLInferenceError) {
+        const suggestion =
+          numDrafts > 1
+            ? ` Try reducing the draft count (currently ${numDrafts}) — cutting it in half is a good starting point.`
+            : '';
+        setErrorMsg(`Your GPU ran out of memory during simulation.${suggestion}`);
+      } else {
+        setErrorMsg(err instanceof Error ? err.message : 'Simulation failed');
+      }
     }
   }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, buildAllDecks]);
 
