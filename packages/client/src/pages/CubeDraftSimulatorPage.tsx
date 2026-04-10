@@ -459,6 +459,18 @@ const NumericInput: React.FC<{
   );
 };
 
+const AutocardLink = withAutocard(Link);
+
+const renderAutocardNameLink = (oracleId: string, name: string) => (
+  <AutocardLink
+    href={`/tool/card/${oracleId}`}
+    className="text-inherit hover:text-link hover:underline"
+    card={{ details: { oracle_id: oracleId, name } } as any}
+  >
+    {name}
+  </AutocardLink>
+);
+
 /** Number input that lets the user type freely; commits/clamps only on blur or Enter. */
 const NumericInput: React.FC<{
   value: number;
@@ -4438,7 +4450,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </Text>
             <div className="flex flex-row flex-wrap gap-1.5">
               {skeleton.occasionalCards.map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={110} />
+                <SkeletonCardImage key={card.oracle_id} card={card} size={140} />
               ))}
             </div>
           </div>
@@ -4451,7 +4463,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             <div className="flex flex-col gap-1.5 rounded-md bg-bg-accent/40 px-3 py-2">
               {skeleton.sideboardCards.map((card) => (
                 <div key={card.oracle_id} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-medium">{card.name}</span>
+                  <span className="font-medium">{renderAutocardNameLink(card.oracle_id, card.name)}</span>
                   <span className="text-text-secondary tabular-nums">{(card.fraction * 100).toFixed(0)}%</span>
                 </div>
               ))}
@@ -4883,14 +4895,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       setSelectedArchetype(null);
       setSelectedSkeletonId(null);
       try {
-        const res = await fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`);
-        const json = await res.json();
-        if (json.success) {
-          setDisplayRunData(json.runData);
-          setCurrentRunSetup(json.runData.setupData ?? null);
-          setSelectedTs(ts);
+        const store = await readLocalSimulationStore(cubeId);
+        const run = store.runs.find((entry) => entry.entry.ts === ts);
+        if (!run) {
+          setLoadRunError('Run not found in local storage');
         } else {
-          setLoadRunError(json.message ?? 'Failed to load run');
+          setDisplayRunData(run.runData);
+          setCurrentRunSetup(run.runData.setupData ?? null);
+          setSelectedTs(ts);
         }
       } catch (err) {
         setLoadRunError(err instanceof Error ? err.message : 'Failed to load run');
@@ -4905,26 +4917,25 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const handleDeleteRun = useCallback(
     async (ts: number) => {
       try {
-        const res = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`, { method: 'DELETE' });
-        const json = await res.json();
-        if (!json.success) return;
-
-        const nextRuns = json.runs ?? [];
+        const store = await readLocalSimulationStore(cubeId);
+        const nextStoredRuns = store.runs.filter((run) => run.entry.ts !== ts);
+        await writeLocalSimulationStore(cubeId, nextStoredRuns);
+        const nextRuns = nextStoredRuns.map((run) => run.entry);
         setRuns(nextRuns);
         setSelectedCardOracles([]);
         setSelectedArchetype(null);
         setSelectedSkeletonId(null);
 
         if (selectedTs === ts) {
-          setDisplayRunData(json.latestRunData ?? null);
-          setCurrentRunSetup(json.latestRunData?.setupData ?? null);
+          setDisplayRunData(nextStoredRuns[0]?.runData ?? null);
+          setCurrentRunSetup(nextStoredRuns[0]?.runData.setupData ?? null);
           setSelectedTs(nextRuns[0]?.ts ?? null);
         }
       } catch (err) {
         console.error('Failed to delete run:', err);
       }
     },
-    [csrfFetch, cubeId, selectedTs],
+    [cubeId, selectedTs],
   );
 
   const handleCancel = useCallback(() => {
@@ -6146,7 +6157,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
               <Card className="border-green-700">
                 <CardBody>
                   <Text sm className="text-green-400">
-                    Simulation complete — results saved and displayed below.
+                    {storageNotice
+                      ? 'Simulation complete — results are displayed below.'
+                      : 'Simulation complete — results are stored locally in this browser and displayed below.'}
+                  </Text>
+                </CardBody>
+              </Card>
+            )}
+            {storageNotice && (
+              <Card className="border-yellow-700">
+                <CardBody>
+                  <Text sm className="text-yellow-300">
+                    {storageNotice}
                   </Text>
                 </CardBody>
               </Card>
@@ -7072,6 +7094,27 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
           The draft model and deckbuilder are loaded through TensorFlow.js and executed on the client with the browser
           GPU path. In practice that means your machine does the pick-by-pick inference and deckbuilding locally instead
           of sending every draft step back to the backend.
+        </p>
+        <p>
+          Completed runs are stored locally in IndexedDB, not on CubeCobra&apos;s servers. That keeps the tool
+          effectively backend-light after setup while still allowing recent runs to be reopened from this browser.
+        </p>
+      </div>
+    ),
+  },
+  {
+    q: 'How does it run?',
+    answer: (
+      <div className="space-y-3 text-sm text-text-secondary leading-relaxed">
+        <p>
+          Pack generation still starts on the server, because CubeCobra needs the cube, the draft format, and the
+          exact initial seat/pack layout. After that setup payload arrives, the expensive simulation work runs in the
+          browser.
+        </p>
+        <p>
+          The draft model and deckbuilder are loaded through TensorFlow.js and executed on the client with the browser
+          GPU path. In practice that means your machine does the pick-by-pick inference and deckbuilding locally
+          instead of sending every draft step back to the backend.
         </p>
         <p>
           Completed runs are stored locally in IndexedDB, not on CubeCobra&apos;s servers. That keeps the tool
