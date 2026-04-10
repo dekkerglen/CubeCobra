@@ -90,7 +90,13 @@ const NumericInput: React.FC<{
       disabled={disabled}
       className={className}
       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        setDraft(e.target.value);
+        const nextDraft = e.target.value;
+        setDraft(nextDraft);
+        const parsed = parseInt(nextDraft, 10);
+        if (!isNaN(parsed) && parsed >= min && (max === undefined || parsed <= max)) {
+          prevValueRef.current = parsed;
+          if (parsed !== value) onChange(parsed);
+        }
       }}
       onBlur={commit}
       onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
