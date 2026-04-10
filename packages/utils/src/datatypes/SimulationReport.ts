@@ -8,6 +8,7 @@ export interface CardStats {
   avgPickPosition: number; // average 1-based pick within pack when picked (1 = first pick)
   wheelCount: number; // times picked at position > numSeats (went around the table)
   p1p1Count: number; // times picked as first pick of pack 1
+  p1p1Seen: number; // times seen in an opening pack for pack 1 pick 1
   poolIndices: number[]; // indexes into slimPools / simulatedPools for pools containing this card
   elo: number; // card's Elo rating from the card database
 }
