@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
 import { cardFromId, getOracleForMl } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
-import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { isCubeViewable } from 'serverutils/cubefn';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { MAX_SEATS } from 'serverutils/simulatorConstants';
 
@@ -35,10 +35,6 @@ const SetupSchema = Joi.object({
 
 export const simulatesetupHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Must be logged in' });
-    }
-
     const cubeId = req.params.id;
     if (!cubeId) {
       return res.status(400).json({ success: false, message: 'Cube ID required' });
@@ -47,12 +43,6 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
     const cube = await cubeDao.getById(cubeId);
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).json({ success: false, message: 'Cube not found' });
-    }
-
-    if (!isCubeEditable(cube, req.user)) {
-      return res
-        .status(403)
-        .json({ success: false, message: 'Only the cube owner or collaborators can run the draft simulator' });
     }
 
     const { error, value } = SetupSchema.validate(req.body);

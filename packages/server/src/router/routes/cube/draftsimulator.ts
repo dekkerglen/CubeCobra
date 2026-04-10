@@ -1,5 +1,5 @@
 import { cubeDao } from 'dynamo/daos';
-import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { getBaseUrl } from 'serverutils/util';
@@ -25,7 +25,7 @@ const draftsimulatorHandler = async (req: Request, res: Response) => {
       req,
       res,
       'CubeDraftSimulatorPage',
-      { cube, canRun: !!req.user && isCubeEditable(cube, req.user) },
+      { cube },
       {
         title: `${abbreviate(cube.name)} - Draft Simulator`,
         metadata: generateMeta(

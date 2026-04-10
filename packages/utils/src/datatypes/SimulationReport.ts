@@ -76,8 +76,8 @@ export interface BasicLandInfo {
 }
 
 /**
- * Slim pool: persisted to S3 — pick sequence without redundant name/imageUrl fields
- * (those can be reconstructed from cardMeta at display time).
+ * Slim pool persisted with a simulation run — pick sequence without redundant
+ * name/imageUrl fields (those can be reconstructed from cardMeta at display time).
  */
 export interface SlimPool {
   draftIndex: number;
@@ -86,10 +86,7 @@ export interface SlimPool {
   picks: { oracle_id: string; packNumber: number; pickNumber: number }[];
 }
 
-/**
- * One entry in the per-cube run history index.
- * ts is a Unix-ms timestamp and also the S3 key suffix for the full run.
- */
+/** One entry in the per-cube run history index. */
 export interface SimulationRunEntry {
   ts: number;
   generatedAt: string;
@@ -99,9 +96,7 @@ export interface SimulationRunEntry {
   convergenceScore: number;
 }
 
-/**
- * Persisted to S3 per run — aggregate stats + slim pools + card metadata.
- */
+/** Persisted per run — aggregate stats + slim pools + card metadata. */
 export interface SimulationSummary {
   cubeId: string;
   cubeName: string;
@@ -118,7 +113,7 @@ export interface SimulationSummary {
 }
 
 /**
- * Full run data stored at each S3 run key — extends SimulationSummary with
+ * Full run data for a saved simulation — extends SimulationSummary with
  * card metadata (for pool image reconstruction), slim pool pick sequences,
  * and pre-built deck builds for every pool.
  */
