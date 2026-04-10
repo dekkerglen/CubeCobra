@@ -2253,11 +2253,33 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     try {
-      const setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numDrafts, numSeats }),
-      });
+      const setupTimeout = new AbortController();
+      const setupTimeoutId = setTimeout(() => setupTimeout.abort(), 120_000);
+      // Merge user cancel + setup timeout into a single signal
+      const setupSignal = AbortSignal.any
+        ? AbortSignal.any([controller.signal, setupTimeout.signal])
+        : setupTimeout.signal;
+      let setupRes: Response;
+      try {
+        setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ numDrafts, numSeats }),
+          signal: setupSignal,
+        });
+      } catch (fetchErr) {
+        clearTimeout(setupTimeoutId);
+        if (setupTimeout.signal.aborted) {
+          setStatus('failed');
+          setSimPhase(null);
+          setErrorMsg(
+            `Setup timed out after 120 s — the server took too long to generate ${numDrafts} drafts. Try a smaller number.`,
+          );
+          return;
+        }
+        throw fetchErr; // user cancel or network error — let outer catch handle it
+      }
+      clearTimeout(setupTimeoutId);
       const setupData = await setupRes.json();
       if (!setupData.success) {
         setStatus('failed');
