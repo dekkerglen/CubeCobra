@@ -125,9 +125,20 @@ function mlOracle(oracle: string, remapping?: Record<string, string>): string {
 }
 
 /**
+ * Maximum number of rows to process in a single WebGL forward pass.
+ * Larger batches blow up GPU memory and trigger context_lost_webgl on
+ * lower-end hardware or when numOracles × batchSize exceeds ~100 MB.
+ * 32 rows × ~26 k oracles × 4 bytes ≈ 3.3 MB per shard — safely within budget.
+ */
+const WEBGL_CHUNK_SIZE = 32;
+
+/**
  * One-hot encode pools, forward pass through encoder + decoder, return raw logits.
  * pools[i] = oracle IDs whose bits are set to 1 in the input row.
  * remapping maps original oracle IDs to their ML-vocab equivalents for unknown cards.
+ *
+ * Large batches are automatically split into chunks of WEBGL_CHUNK_SIZE to avoid
+ * exhausting the WebGL context (context_lost_webgl / clientWaitSync errors).
  */
 async function forwardPass(
   pools: string[][],
@@ -136,22 +147,35 @@ async function forwardPass(
   remapping?: Record<string, string>,
 ): Promise<Float32Array> {
   const N = pools.length;
-  const poolData = new Float32Array(N * numOracles);
-  for (let i = 0; i < N; i++) {
-    const base = i * numOracles;
-    for (const oracle of pools[i]!) {
-      const idx = oracleToIndex[mlOracle(oracle, remapping)];
-      if (idx !== undefined) poolData[base + idx] = 1;
+  if (N === 0) return new Float32Array(0);
+
+  const out = new Float32Array(N * numOracles);
+
+  for (let start = 0; start < N; start += WEBGL_CHUNK_SIZE) {
+    const end = Math.min(start + WEBGL_CHUNK_SIZE, N);
+    const chunkSize = end - start;
+    const chunkData = new Float32Array(chunkSize * numOracles);
+
+    for (let i = 0; i < chunkSize; i++) {
+      const base = i * numOracles;
+      for (const oracle of pools[start + i]!) {
+        const idx = oracleToIndex[mlOracle(oracle, remapping)];
+        if (idx !== undefined) chunkData[base + idx] = 1;
+      }
     }
+
+    const inputTensor = tf!.tensor2d(chunkData, [chunkSize, numOracles]);
+    const encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
+    inputTensor.dispose();
+    const logitsTensor = decoder.predict(encoded) as import('@tensorflow/tfjs').Tensor;
+    encoded.dispose();
+    const chunkLogits = (await logitsTensor.data()) as Float32Array;
+    logitsTensor.dispose();
+
+    out.set(chunkLogits, start * numOracles);
   }
-  const inputTensor = tf!.tensor2d(poolData, [N, numOracles]);
-  const encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
-  inputTensor.dispose();
-  const logitsTensor = decoder.predict(encoded) as import('@tensorflow/tfjs').Tensor;
-  encoded.dispose();
-  const logits = (await logitsTensor.data()) as Float32Array;
-  logitsTensor.dispose();
-  return logits;
+
+  return out;
 }
 
 /**
