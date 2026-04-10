@@ -121,7 +121,7 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
     ...overrides,
   };
 
-  details.games = hasGamesOverride ? overrides?.games : (details.games ?? ['paper']);
+  details.games = hasGamesOverride ? (overrides?.games ?? ['paper']) : (details.games ?? ['paper']);
   details.gamesEverAvailable = hasGamesEverAvailableOverride
     ? (overrides?.gamesEverAvailable ?? ['paper'])
     : (details.games ?? ['paper']);
