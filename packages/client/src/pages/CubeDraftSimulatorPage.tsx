@@ -31,10 +31,13 @@ import {
 import { Scatter } from 'react-chartjs-2';
 
 import { Card, CardBody, CardHeader } from '../components/base/Card';
+import Button from '../components/base/Button';
 import Collapse from '../components/base/Collapse';
 import Input from '../components/base/Input';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '../components/base/Modal';
+import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import DynamicFlash from '../components/DynamicFlash';
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
@@ -67,6 +70,29 @@ const renderAutocardNameLink = (oracleId: string, name: string) => (
     {name}
   </AutocardLink>
 );
+
+function getOverallSimProgress(
+  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null,
+  modelLoadProgress: number,
+  simProgress: number,
+): number {
+  switch (simPhase) {
+    case 'setup':
+      return 5;
+    case 'loadmodel':
+      return 5 + Math.round((modelLoadProgress / 100) * 15);
+    case 'sim':
+      return 20 + Math.round((simProgress / 100) * 70);
+    case 'deckbuild':
+      return 93;
+    case 'save':
+      return 98;
+    default:
+      return 0;
+  }
+}
+
+const SIM_PREVIEW_CARD_W = 140;
 
 /** Number input that lets the user type freely; commits/clamps only on blur or Enter. */
 const NumericInput: React.FC<{
@@ -323,6 +349,39 @@ const PriorRunDeleteModal: React.FC<{
         setOpen(false);
       }}
     />
+  );
+};
+
+const LeaveSimulationModal: React.FC<{
+  isOpen: boolean;
+  setOpen: (open: boolean) => void;
+  onLeave: () => void;
+}> = ({ isOpen, setOpen, onLeave }) => {
+  if (!isOpen) return null;
+
+  return (
+    <Modal isOpen={isOpen} setOpen={setOpen} md offsetClassName="pt-12 md:pt-20">
+      <ModalHeader setOpen={setOpen}>
+        <Text semibold lg>
+          Leave Simulator?
+        </Text>
+      </ModalHeader>
+      <ModalBody>
+        <Text>
+          A simulation is still running. If you leave this page now, the current run will be interrupted.
+        </Text>
+      </ModalBody>
+      <ModalFooter>
+        <Flexbox direction="row" className="w-full justify-end" gap="2">
+          <Button color="danger" onClick={onLeave}>
+            Leave Page
+          </Button>
+          <Button color="secondary" onClick={() => setOpen(false)}>
+            Stay Here
+          </Button>
+        </Flexbox>
+      </ModalFooter>
+    </Modal>
   );
 };
 
@@ -1344,12 +1403,15 @@ const PickCard: React.FC<{ pick: SimulatedPickCard; isSelected: boolean }> = ({ 
       'relative rounded border overflow-hidden bg-bg flex-shrink-0',
       isSelected ? 'border-link-active ring-2 ring-link-active' : 'border-border',
     ].join(' ')}
-    style={{ width: 160 }}
+    style={{ width: SIM_PREVIEW_CARD_W }}
   >
     {pick.imageUrl ? (
       <img src={pick.imageUrl} alt={pick.name} className="w-full block" />
     ) : (
-      <div className="w-full flex items-center justify-center p-1 text-xs text-text-secondary" style={{ height: 224 }}>
+      <div
+        className="w-full flex items-center justify-center p-1 text-xs text-text-secondary"
+        style={{ height: Math.round(SIM_PREVIEW_CARD_W * 1.4) }}
+      >
         {pick.name || 'Unknown'}
       </div>
     )}
@@ -1385,7 +1447,7 @@ const ViewToggle: React.FC<{
 );
 
 const CMC_COLS = 8;
-const DECK_CARD_W = 160;
+const DECK_CARD_W = SIM_PREVIEW_CARD_W;
 const STACK_OFFSET = 30;
 
 const SimDeckView: React.FC<{
@@ -1943,6 +2005,22 @@ const SkeletonCardImage: React.FC<{ card: SkeletonCard; size: number }> = ({ car
   </AutocardLink>
 );
 
+const LinkedCardImage: React.FC<{ oracleId: string; name: string; imageUrl: string; size: number }> = ({
+  oracleId,
+  name,
+  imageUrl,
+  size,
+}) => (
+  <AutocardLink
+    href={`/tool/card/${oracleId}`}
+    className="relative flex-shrink-0 block hover:opacity-95"
+    style={{ width: size }}
+    card={{ details: { oracle_id: oracleId, name, image_normal: imageUrl } } as any}
+  >
+    <img src={imageUrl} alt={name} className="w-full rounded border border-border shadow-sm" />
+  </AutocardLink>
+);
+
 const ArchetypeSkeletonSection: React.FC<{
   skeletons: ArchetypeSkeleton[];
   k: number;
@@ -2060,7 +2138,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </Text>
             <div className="flex flex-row flex-wrap gap-2">
               {skeleton.coreCards.map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={140} />
+                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_PREVIEW_CARD_W} />
               ))}
             </div>
           </div>
@@ -2072,7 +2150,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </Text>
             <div className="flex flex-row flex-wrap gap-1.5">
               {skeleton.occasionalCards.map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={140} />
+                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_PREVIEW_CARD_W} />
               ))}
             </div>
           </div>
@@ -2209,6 +2287,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [numSeats, setNumSeats] = useState(8);
   const [deadCardThresholdPct, setDeadCardThresholdPct] = useState(5);
   const [gpuBatchSize, setGpuBatchSize] = useState(32);
+  const [selectedFormatId, setSelectedFormatId] = useState(cube.defaultFormat ?? -1);
 
   // Simulation state
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
@@ -2294,6 +2373,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
   const [storageNotice, setStorageNotice] = useState<string | null>(null);
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
+  const isRunning = status === 'running';
+  const overallSimProgress = useMemo(
+    () => getOverallSimProgress(simPhase, modelLoadProgress, simProgress),
+    [simPhase, modelLoadProgress, simProgress],
+  );
+  const availableFormats = useMemo(
+    () => [
+      { value: '-1', label: 'Standard Draft' },
+      ...(cube.formats ?? []).map((format, index) => ({ value: `${index}`, label: format.title || `Format ${index + 1}` })),
+    ],
+    [cube.formats],
+  );
 
   // Load per-cube local history on mount.
   useEffect(() => {
@@ -2323,6 +2416,41 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       cancelled = true;
     };
   }, [cubeId]);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest('a');
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      const href = anchor.href;
+      if (!href) return;
+      if (anchor.target && anchor.target !== '_self') return;
+      if (anchor.hasAttribute('download')) return;
+      const nextUrl = new URL(href, window.location.href);
+      if (nextUrl.origin !== window.location.origin) return;
+      if (nextUrl.href === window.location.href) return;
+      event.preventDefault();
+      setPendingNavigationHref(nextUrl.href);
+      setLeaveModalOpen(true);
+    };
+    document.addEventListener('click', handleDocumentClick, true);
+    return () => document.removeEventListener('click', handleDocumentClick, true);
+  }, [isRunning]);
 
   const [loadRunError, setLoadRunError] = useState<string | null>(null);
   const loadRunInFlight = useRef(false);
@@ -2391,6 +2519,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setErrorMsg(null);
   }, []);
 
+  const handleConfirmedLeave = useCallback(() => {
+    if (!pendingNavigationHref) {
+      setLeaveModalOpen(false);
+      return;
+    }
+    simAbortRef.current?.abort();
+    window.location.assign(pendingNavigationHref);
+  }, [pendingNavigationHref]);
+
   const handleStart = useCallback(async () => {
     const controller = new AbortController();
     simAbortRef.current = controller;
@@ -2414,7 +2551,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numDrafts, numSeats }),
+          body: JSON.stringify({ numDrafts, numSeats, formatId: selectedFormatId }),
           signal: setupSignal,
         });
       } catch (fetchErr) {
@@ -2511,9 +2648,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         setErrorMsg(err instanceof Error ? err.message : 'Simulation failed');
       }
     }
-  }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, gpuBatchSize, buildAllDecks]);
+  }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, gpuBatchSize, buildAllDecks, selectedFormatId]);
 
-  const isRunning = status === 'running';
   const lastRunTs = runs[0]?.ts ?? null;
 
   const activeDecks = displayRunData?.deckBuilds ?? null;
@@ -2877,6 +3013,16 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
                   </Col>
                   <Col xs={12} sm={4} md={2}>
+                    <Select
+                      label="Format"
+                      id="draftSimulatorFormat"
+                      options={availableFormats}
+                      value={`${selectedFormatId}`}
+                      setValue={(value) => setSelectedFormatId(parseInt(value, 10))}
+                      disabled={isRunning}
+                    />
+                  </Col>
+                  <Col xs={12} sm={4} md={2}>
                     <label className="block text-sm font-medium mb-1">Seats</label>
                     <NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} />
                   </Col>
@@ -2936,31 +3082,25 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         {simPhase === 'setup'
                           ? 'Preparing packs…'
                           : simPhase === 'loadmodel'
-                            ? `Loading draft model… ${modelLoadProgress < 100 ? `${modelLoadProgress}%` : ''}`
+                            ? 'Loading draft model…'
                             : simPhase === 'sim'
                               ? 'Running draft simulation…'
                               : simPhase === 'deckbuild'
                                 ? 'Building decks…'
                                 : 'Storing results locally…'}
                       </Text>
-                      {simPhase === 'sim' && (
-                        <Text sm className="text-text-secondary">
-                          {simProgress}%
-                        </Text>
-                      )}
+                      <Text sm className="text-text-secondary">
+                        {overallSimProgress}%
+                      </Text>
                     </Flexbox>
                     <div className="w-full bg-bg rounded-full h-2.5 overflow-hidden">
-                      {simPhase === 'sim' ? (
-                        <div
-                          className="bg-green-600 h-2.5 rounded-full transition-all duration-500"
-                          style={{ width: `${Math.max(2, simProgress)}%` }}
-                        />
-                      ) : (
-                        <div
-                          className="h-2.5 rounded-full bg-green-600 animate-pulse"
-                          style={{ width: '100%', opacity: 0.7 }}
-                        />
-                      )}
+                      <div
+                        className={[
+                          'h-2.5 rounded-full bg-green-600 transition-all duration-500',
+                          simPhase !== 'sim' ? 'animate-pulse' : '',
+                        ].join(' ')}
+                        style={{ width: `${Math.max(2, overallSimProgress)}%`, opacity: simPhase === 'sim' ? 1 : 0.8 }}
+                      />
                     </div>
                   </Flexbox>
                 </CardBody>
@@ -2971,7 +3111,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             {status === 'completed' && !isRunning && (
               <Card className="border-green-700">
                 <CardBody>
-                  <Text sm className="text-green-400">
+                  <Text sm className="text-text">
                     {storageNotice
                       ? 'Simulation complete — results are displayed below.'
                       : 'Simulation complete — results are stored locally in this browser and displayed below.'}
@@ -3197,11 +3337,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 {selectedCards.map((card) => {
                                   const imageUrl = displayRunData.cardMeta[card.oracle_id]?.imageUrl;
                                   return imageUrl ? (
-                                    <img
+                                    <LinkedCardImage
                                       key={card.oracle_id}
-                                      src={imageUrl}
-                                      alt={card.name}
-                                      className="w-20 rounded border border-border/40 shadow-sm"
+                                      oracleId={card.oracle_id}
+                                      name={card.name}
+                                      imageUrl={imageUrl}
+                                      size={SIM_PREVIEW_CARD_W}
                                     />
                                   ) : null;
                                 })}
@@ -3327,13 +3468,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 <div className="flex flex-row gap-2 pb-1" style={{ minWidth: 'max-content' }}>
                                   {sk.coreCards.map((card) => (
                                     <SkeletonCardImage key={card.oracle_id} card={card} size={90} />
+                                    
                                   ))}
                                   {sk.occasionalCards.length > 0 && (
                                     <>
                                       <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
                                       {sk.occasionalCards.map((card) => (
                                       <div key={card.oracle_id} className="opacity-60">
-                                          <SkeletonCardImage card={card} size={90} />
+                                          <SkeletonCardImage card={card} size={SIM_PREVIEW_CARD_W} />
                                         </div>
                                       ))}
                                     </>
@@ -3381,14 +3523,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                           <div className="overflow-x-auto">
                             <div className="flex flex-row gap-2 pb-3" style={{ minWidth: 'max-content' }}>
                               {selectedArchetypePreview.commonCards.map((card) => (
-                                <SkeletonCardImage key={card.oracle_id} card={card} size={90} />
+                                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_PREVIEW_CARD_W} />
                               ))}
                               {selectedArchetypePreview.supportCards.length > 0 && (
                                 <>
                                   <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
                                   {selectedArchetypePreview.supportCards.map((card) => (
                                     <div key={card.oracle_id} className="opacity-60">
-                                      <SkeletonCardImage card={card} size={90} />
+                                      <SkeletonCardImage card={card} size={SIM_PREVIEW_CARD_W} />
                                     </div>
                                   ))}
                                 </>
@@ -3655,6 +3797,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
               setOpen={setDeleteRunModalOpen}
               run={runPendingDelete}
               onConfirm={handleDeleteRun}
+            />
+            <LeaveSimulationModal
+              isOpen={leaveModalOpen}
+              setOpen={(open) => {
+                setLeaveModalOpen(open);
+                if (!open) setPendingNavigationHref(null);
+              }}
+              onLeave={handleConfirmedLeave}
             />
           </Flexbox>
         </CubeLayout>

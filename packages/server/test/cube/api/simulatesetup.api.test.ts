@@ -210,4 +210,38 @@ describe('POST /cube/api/simulatesetup/:id', () => {
       }),
     ]);
   });
+
+  it('uses the requested custom format id when provided', async () => {
+    const owner = createUser({ id: 'owner-1' });
+    const cube = createCube({
+      id: 'cube-1',
+      owner,
+      defaultFormat: 0,
+      formats: [{ title: 'Two Packs', packs: [], multiples: false, defaultSeats: 8 }],
+    });
+
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getCards as jest.Mock).mockResolvedValue({});
+    (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
+    (getDraftFormat as jest.Mock).mockReturnValue({});
+    (createDraft as jest.Mock).mockReturnValue({
+      InitialState: [
+        [{ steps: [{ action: 'pick', amount: 1 }], cards: [0] }],
+        [{ steps: [{ action: 'pick', amount: 1 }], cards: [1] }],
+      ],
+      cards: [
+        { details: { oracle_id: 'oracle-a', name: 'Card A', color_identity: [], type: 'Instant' } },
+        { details: { oracle_id: 'oracle-b', name: 'Card B', color_identity: [], type: 'Sorcery' } },
+      ],
+    });
+
+    const res = await call(simulatesetupHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ numDrafts: 1, numSeats: 2, formatId: 0 })
+      .send();
+
+    expect(res.status).toBe(200);
+    expect(getDraftFormat).toHaveBeenCalledWith(expect.objectContaining({ id: 0, players: 2 }), cube);
+  });
 });
