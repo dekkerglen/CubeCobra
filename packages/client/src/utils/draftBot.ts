@@ -125,6 +125,33 @@ function mlOracle(oracle: string, remapping?: Record<string, string>): string {
 }
 
 /**
+ * Thrown when a WebGL context loss or GPU OOM is detected during TF.js inference.
+ * Callers can catch this specifically to surface a "try fewer drafts" message.
+ */
+export class WebGLInferenceError extends Error {
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'WebGLInferenceError';
+    if (cause instanceof Error && cause.stack) {
+      this.stack = `${this.stack}\nCaused by: ${cause.stack}`;
+    }
+  }
+}
+
+/** Returns true if an error looks like a WebGL context loss or GPU OOM. */
+function isWebGLError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
+  return (
+    msg.includes('context_lost_webgl') ||
+    msg.includes('webgl') ||
+    msg.includes('clientwaitsync') ||
+    msg.includes('invalid_operation') ||
+    msg.includes('out of memory') ||
+    msg.includes('gpu')
+  );
+}
+
+/**
  * Maximum number of rows to process in a single WebGL forward pass.
  * Larger batches blow up GPU memory and trigger context_lost_webgl on
  * lower-end hardware or when numOracles × batchSize exceeds ~100 MB.
@@ -164,15 +191,33 @@ async function forwardPass(
       }
     }
 
-    const inputTensor = tf!.tensor2d(chunkData, [chunkSize, numOracles]);
-    const encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
-    inputTensor.dispose();
-    const logitsTensor = decoder.predict(encoded) as import('@tensorflow/tfjs').Tensor;
-    encoded.dispose();
-    const chunkLogits = (await logitsTensor.data()) as Float32Array;
-    logitsTensor.dispose();
-
-    out.set(chunkLogits, start * numOracles);
+    let inputTensor: import('@tensorflow/tfjs').Tensor | null = null;
+    let encoded: import('@tensorflow/tfjs').Tensor | null = null;
+    let logitsTensor: import('@tensorflow/tfjs').Tensor | null = null;
+    try {
+      inputTensor = tf!.tensor2d(chunkData, [chunkSize, numOracles]);
+      encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
+      inputTensor.dispose();
+      inputTensor = null;
+      logitsTensor = decoder.predict(encoded) as import('@tensorflow/tfjs').Tensor;
+      encoded.dispose();
+      encoded = null;
+      const chunkLogits = (await logitsTensor.data()) as Float32Array;
+      logitsTensor.dispose();
+      logitsTensor = null;
+      out.set(chunkLogits, start * numOracles);
+    } catch (err) {
+      inputTensor?.dispose();
+      encoded?.dispose();
+      logitsTensor?.dispose();
+      if (isWebGLError(err)) {
+        throw new WebGLInferenceError(
+          'WebGL context lost during inference — your GPU ran out of memory. Try running fewer drafts.',
+          err,
+        );
+      }
+      throw err;
+    }
   }
 
   return out;
