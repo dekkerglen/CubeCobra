@@ -463,7 +463,7 @@ const NumericInput: React.FC<{
 const NumericInput: React.FC<{
   value: number;
   min: number;
-  max: number;
+  max?: number;
   onChange: (v: number) => void;
   disabled?: boolean;
   className?: string;
@@ -480,7 +480,7 @@ const NumericInput: React.FC<{
 
   const commit = () => {
     const parsed = parseInt(draft, 10);
-    const clamped = isNaN(parsed) ? value : Math.max(min, Math.min(max, parsed));
+    const clamped = isNaN(parsed) ? value : Math.max(min, max !== undefined ? Math.min(max, parsed) : parsed);
     prevValueRef.current = clamped;
     setDraft(String(clamped));
     if (clamped !== value) onChange(clamped);
@@ -499,7 +499,7 @@ const NumericInput: React.FC<{
         setDraft(nextDraft);
         const parsed = parseInt(nextDraft, 10);
         if (!isNaN(parsed)) {
-          const clamped = Math.max(min, Math.min(max, parsed));
+          const clamped = Math.max(min, max !== undefined ? Math.min(max, parsed) : parsed);
           prevValueRef.current = clamped;
           if (clamped !== value) onChange(clamped);
         }
