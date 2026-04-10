@@ -2,7 +2,7 @@ import { SimulationRunData, SimulationRunEntry } from '@utils/datatypes/Simulati
 import { cubeDao } from 'dynamo/daos';
 import { deleteObject, getBucketName, getObject, putObject } from 'dynamo/s3client';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
-import { MAX_DRAFTS, MAX_HISTORY, MAX_SEATS, MAX_TOTAL_SEATS } from 'serverutils/simulatorConstants';
+import { MAX_HISTORY, MAX_SEATS, MAX_TOTAL_SEATS } from 'serverutils/simulatorConstants';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -39,7 +39,6 @@ export const saveHandler = async (req: Request, res: Response) => {
       typeof runData.numDrafts !== 'number' ||
       typeof runData.numSeats !== 'number' ||
       runData.numDrafts < 1 ||
-      runData.numDrafts > MAX_DRAFTS ||
       runData.numSeats < 2 ||
       runData.numSeats > MAX_SEATS ||
       !Array.isArray(runData.cardStats) ||
