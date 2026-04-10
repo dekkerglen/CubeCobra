@@ -390,6 +390,7 @@ async function runClientSimulation(
   deadCardThreshold: number,
   onProgress: (pct: number) => void,
   _signal?: AbortSignal,
+  gpuBatchSize?: number,
 ): Promise<SimulationReport> {
   const { initialPacks, packSteps, cardMeta, cubeName, numSeats } = setup;
   const oracleRemapping = buildOracleRemapping(cardMeta);
@@ -470,7 +471,7 @@ async function runClientSimulation(
             const expectedPicks = numDrafts * numSeats;
 
             // Local TF.js inference — no server round-trip
-            picks = await localPickBatch(flatPacks, flatPools, oracleRemapping);
+            picks = await localPickBatch(flatPacks, flatPools, oracleRemapping, gpuBatchSize);
             if (!Array.isArray(picks) || picks.length !== expectedPicks) {
               throw new Error(`Local draft bot returned ${picks?.length ?? 0} picks, expected ${expectedPicks}`);
             }
@@ -2063,6 +2064,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const [numDrafts, setNumDrafts] = useState(100);
   const [numSeats, setNumSeats] = useState(8);
   const [deadCardThresholdPct, setDeadCardThresholdPct] = useState(5);
+  const [gpuBatchSize, setGpuBatchSize] = useState(32);
 
   // Simulation state
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
@@ -2119,8 +2121,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
           cardMeta: setup.cardMeta,
           basics: setup.basics,
         }));
-        const decks = await localBatchDeckbuild(entries);
-
+        const decks = await localBatchDeckbuild(entries, gpuBatchSize);
         // Collect metadata for any basic oracle IDs that appear in mainboards but aren't in setup.cardMeta
         const basicCardMeta: Record<string, CardMeta> = {};
         for (const basic of setup.basics) {
@@ -2142,7 +2143,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
         return null;
       }
     },
-    [],
+    [gpuBatchSize],
   );
 
   const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
@@ -2306,6 +2307,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
         deadCardThresholdPct / 100,
         setSimProgress,
         controller.signal,
+        gpuBatchSize,
       );
       setCurrentRunSetup(setupData as SimulationSetupResponse);
 
@@ -2373,7 +2375,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
         setErrorMsg(err instanceof Error ? err.message : 'Simulation failed');
       }
     }
-  }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, buildAllDecks]);
+  }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, gpuBatchSize, buildAllDecks]);
 
   const isRunning = status === 'running';
   const lastRunTs = runs[0]?.ts ?? null;
@@ -2759,6 +2761,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                         onChange={setDeadCardThresholdPct}
                         disabled={isRunning}
                       />
+                    </Col>
+                    <Col xs={12} sm={4} md={2}>
+                      <label className="block text-sm font-medium mb-1">
+                        GPU Batch Size{' '}
+                        <Text xs className="text-text-secondary font-normal">
+                          (larger = faster, needs more GPU memory)
+                        </Text>
+                      </label>
+                      <NumericInput min={1} value={gpuBatchSize} onChange={setGpuBatchSize} disabled={isRunning} />
                     </Col>
                     <Col xs={12} sm={12} md={2} className="flex flex-col gap-1">
                       <button

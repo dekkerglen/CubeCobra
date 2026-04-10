@@ -163,27 +163,33 @@ const WEBGL_CHUNK_SIZE = 32;
  * One-hot encode pools, forward pass through encoder + decoder, return raw logits.
  * pools[i] = oracle IDs whose bits are set to 1 in the input row.
  * remapping maps original oracle IDs to their ML-vocab equivalents for unknown cards.
- *
- * Large batches are automatically split into chunks of WEBGL_CHUNK_SIZE to avoid
- * exhausting the WebGL context (context_lost_webgl / clientWaitSync errors).
+ * chunkSize controls how many rows are processed per WebGL call (default WEBGL_CHUNK_SIZE).
  */
 async function forwardPass(
   pools: string[][],
-
   decoder: any,
   remapping?: Record<string, string>,
+  chunkSize: number = WEBGL_CHUNK_SIZE,
 ): Promise<Float32Array> {
   const N = pools.length;
   if (N === 0) return new Float32Array(0);
 
-  const out = new Float32Array(N * numOracles);
+  let out: Float32Array;
+  try {
+    out = new Float32Array(N * numOracles);
+  } catch (err) {
+    throw new WebGLInferenceError(
+      `Not enough memory to run ${N} drafts — the result buffer alone needs ~${Math.round((N * numOracles * 4) / 1024 / 1024)} MB. Try fewer drafts.`,
+      err,
+    );
+  }
 
-  for (let start = 0; start < N; start += WEBGL_CHUNK_SIZE) {
-    const end = Math.min(start + WEBGL_CHUNK_SIZE, N);
-    const chunkSize = end - start;
-    const chunkData = new Float32Array(chunkSize * numOracles);
+  for (let start = 0; start < N; start += chunkSize) {
+    const end = Math.min(start + chunkSize, N);
+    const rows = end - start;
+    const chunkData = new Float32Array(rows * numOracles);
 
-    for (let i = 0; i < chunkSize; i++) {
+    for (let i = 0; i < rows; i++) {
       const base = i * numOracles;
       for (const oracle of pools[start + i]!) {
         const idx = oracleToIndex[mlOracle(oracle, remapping)];
@@ -195,7 +201,7 @@ async function forwardPass(
     let encoded: import('@tensorflow/tfjs').Tensor | null = null;
     let logitsTensor: import('@tensorflow/tfjs').Tensor | null = null;
     try {
-      inputTensor = tf!.tensor2d(chunkData, [chunkSize, numOracles]);
+      inputTensor = tf!.tensor2d(chunkData, [rows, numOracles]);
       encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
       inputTensor.dispose();
       inputTensor = null;
@@ -266,12 +272,13 @@ export async function localPickBatch(
   packs: string[][],
   pools: string[][],
   remapping?: Record<string, string>,
+  chunkSize?: number,
 ): Promise<string[]> {
   if (!draftBotLoaded || !tf || !encoder || !draftDecoder || packs.length === 0) {
     return packs.map(() => '');
   }
 
-  const logits = await forwardPass(pools, draftDecoder, remapping);
+  const logits = await forwardPass(pools, draftDecoder, remapping, chunkSize);
 
   // Extract top pick per seat via pack-masked softmax
   return packs.map((pack, i) => {
@@ -312,11 +319,15 @@ export async function localPickBatch(
  * Batch deckbuild seed: scores all pool cards per seat via the deck_build_decoder.
  * Returns cards sorted by descending rating for each seat.
  */
-async function localBatchBuild(pools: string[][], remapping?: Record<string, string>): Promise<RatedCard[][]> {
+async function localBatchBuild(
+  pools: string[][],
+  remapping?: Record<string, string>,
+  chunkSize?: number,
+): Promise<RatedCard[][]> {
   if (!draftBotLoaded || !tf || !encoder || !deckBuildDecoder || pools.length === 0) {
     return pools.map(() => []);
   }
-  const logits = await forwardPass(pools, deckBuildDecoder, remapping);
+  const logits = await forwardPass(pools, deckBuildDecoder, remapping, chunkSize);
   return pools.map((pool, i) => {
     const rowBase = i * numOracles;
     return pool
@@ -336,6 +347,7 @@ async function localBatchBuild(pools: string[][], remapping?: Record<string, str
 export async function localBatchDraftRanked(
   inputs: { pack: string[]; pool: string[] }[],
   remapping?: Record<string, string>,
+  chunkSize?: number,
 ): Promise<RatedCard[][]> {
   if (!draftBotLoaded || !tf || !encoder || !draftDecoder || inputs.length === 0) {
     return inputs.map(() => []);
@@ -344,6 +356,7 @@ export async function localBatchDraftRanked(
     inputs.map((x) => x.pool),
     draftDecoder,
     remapping,
+    chunkSize,
   );
   return inputs.map(({ pack }, i) => {
     const rowBase = i * numOracles;
@@ -476,6 +489,7 @@ export function chooseBestMappedOracle(
  */
 export async function localBatchDeckbuild(
   entries: DeckbuildEntry[],
+  chunkSize?: number,
 ): Promise<{ mainboard: string[]; sideboard: string[] }[]> {
   if (!draftBotLoaded || entries.length === 0) return entries.map(() => ({ mainboard: [], sideboard: [] }));
 
@@ -504,7 +518,7 @@ export async function localBatchDeckbuild(
   });
 
   // Phase 1: seed first 10 cards via deck_build_decoder
-  const buildResults = await localBatchBuild(allPoolMlOracles, sharedRemapping);
+  const buildResults = await localBatchBuild(allPoolMlOracles, sharedRemapping, chunkSize);
 
   for (let s = 0; s < seats.length; s++) {
     const seat = seats[s]!;
@@ -567,7 +581,7 @@ export async function localBatchDeckbuild(
 
     if (batchInputs.length === 0) break;
 
-    const batchResults = await localBatchDraftRanked(batchInputs, sharedRemapping);
+    const batchResults = await localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize);
 
     for (let i = 0; i < activeIndices.length; i++) {
       const s = activeIndices[i]!;
