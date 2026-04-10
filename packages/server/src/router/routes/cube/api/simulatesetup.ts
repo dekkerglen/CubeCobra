@@ -31,6 +31,7 @@ const setupLimiter = rateLimit({
 const SetupSchema = Joi.object({
   numDrafts: Joi.number().integer().min(1).default(100),
   numSeats: Joi.number().integer().min(2).max(MAX_SEATS).default(8),
+  formatId: Joi.number().integer().min(-1).default(-1),
 });
 
 export const simulatesetupHandler = async (req: Request, res: Response) => {
@@ -50,7 +51,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: error.message });
     }
 
-    const { numDrafts, numSeats } = value;
+    const { numDrafts, numSeats, formatId } = value;
 
     const cubeCards = await cubeDao.getCards(cube.id);
     const boardCards: Record<string, Card[]> = {};
@@ -60,8 +61,8 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
-    const format = getDraftFormat({ id: formatId, packs: 3, players: numSeats, cards: 15 }, cube);
+    const resolvedFormatId = formatId ?? (cube.defaultFormat === undefined ? -1 : cube.defaultFormat);
+    const format = getDraftFormat({ id: resolvedFormatId, packs: 3, players: numSeats, cards: 15 }, cube);
 
     // Generate initial packs for all N drafts
     const initialPacks: string[][][][] = [];
