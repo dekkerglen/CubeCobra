@@ -36,6 +36,7 @@ import { Bar, Doughnut, Scatter } from 'react-chartjs-2';
 
 import Button from '../components/base/Button';
 import { Card, CardBody, CardHeader } from '../components/base/Card';
+import Button from '../components/base/Button';
 import Collapse from '../components/base/Collapse';
 import Input from '../components/base/Input';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -470,6 +471,29 @@ const renderAutocardNameLink = (oracleId: string, name: string) => (
     {name}
   </AutocardLink>
 );
+
+function getOverallSimProgress(
+  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null,
+  modelLoadProgress: number,
+  simProgress: number,
+): number {
+  switch (simPhase) {
+    case 'setup':
+      return 5;
+    case 'loadmodel':
+      return 5 + Math.round((modelLoadProgress / 100) * 15);
+    case 'sim':
+      return 20 + Math.round((simProgress / 100) * 70);
+    case 'deckbuild':
+      return 93;
+    case 'save':
+      return 98;
+    default:
+      return 0;
+  }
+}
+
+const SIM_PREVIEW_CARD_W = 140;
 
 /** Number input that lets the user type freely; commits/clamps only on blur or Enter. */
 const NumericInput: React.FC<{
@@ -4438,7 +4462,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </Text>
             <div className="flex flex-row flex-wrap gap-2">
               {skeleton.coreCards.map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={140} />
+                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_PREVIEW_CARD_W} />
               ))}
             </div>
           </div>
@@ -4450,7 +4474,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </Text>
             <div className="flex flex-row flex-wrap gap-1.5">
               {skeleton.occasionalCards.map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={140} />
+                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_PREVIEW_CARD_W} />
               ))}
             </div>
           </div>
@@ -4947,6 +4971,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setSimProgress(0);
     setErrorMsg(null);
   }, []);
+
+  const handleConfirmedLeave = useCallback(() => {
+    if (!pendingNavigationHref) {
+      setLeaveModalOpen(false);
+      return;
+    }
+    simAbortRef.current?.abort();
+    window.location.assign(pendingNavigationHref);
+  }, [pendingNavigationHref]);
 
   const handleStart = useCallback(async () => {
     const controller = new AbortController();
