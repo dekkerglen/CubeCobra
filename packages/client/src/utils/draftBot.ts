@@ -344,9 +344,7 @@ export function reshapeEmbeddings(flat: Float32Array, n: number): number[][] {
  * Build an oracle remapping from CardMeta: maps original oracle ID → ML oracle ID
  * for cards whose mlOracleId differs (i.e. not in training vocab).
  */
-export function buildOracleRemapping(
-  cardMeta: Record<string, { mlOracleId?: string }>,
-): Record<string, string> {
+export function buildOracleRemapping(cardMeta: Record<string, { mlOracleId?: string }>): Record<string, string> {
   const remapping: Record<string, string> = {};
   for (const [oracle, meta] of Object.entries(cardMeta)) {
     if (meta.mlOracleId) remapping[oracle] = meta.mlOracleId;
