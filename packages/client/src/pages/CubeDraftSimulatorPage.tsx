@@ -34,10 +34,12 @@ import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Collapse from '../components/base/Collapse';
 import Input from '../components/base/Input';
 import { Col, Flexbox, Row } from '../components/base/Layout';
+import Link from '../components/base/Link';
 import Text from '../components/base/Text';
 import DynamicFlash from '../components/DynamicFlash';
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 import RenderToRoot from '../components/RenderToRoot';
+import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
 import CubeLayout from '../layouts/CubeLayout';
@@ -53,6 +55,18 @@ import {
 import { computeSkeletons } from '../utils/draftSimulatorClustering';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
+
+const AutocardLink = withAutocard(Link);
+
+const renderAutocardNameLink = (oracleId: string, name: string) => (
+  <AutocardLink
+    href={`/tool/card/${oracleId}`}
+    className="text-inherit hover:text-link hover:underline"
+    card={{ details: { oracle_id: oracleId, name } } as any}
+  >
+    {name}
+  </AutocardLink>
+);
 
 /** Number input that lets the user type freely; commits/clamps only on blur or Enter. */
 const NumericInput: React.FC<{
@@ -162,6 +176,135 @@ interface RawStats {
   poolIndices: number[];
 }
 
+const LOCAL_SIM_HISTORY_LIMIT = 5;
+const LOCAL_SIM_STORAGE_VERSION = 1;
+const LOCAL_SIM_DB_NAME = 'cubecobra-draft-simulator';
+const LOCAL_SIM_DB_VERSION = 1;
+const LOCAL_SIM_STORE_NAME = 'runs';
+
+interface LocalSimulationStore {
+  version: number;
+  runs: { entry: SimulationRunEntry; runData: SimulationRunData }[];
+}
+
+interface IndexedDbSimulationRunRecord {
+  key: string;
+  cubeId: string;
+  ts: number;
+  entry: SimulationRunEntry;
+  runData: SimulationRunData;
+}
+
+const localSimulationStorageKey = (cubeId: string, ts: number): string => `${cubeId}:${ts}`;
+
+async function openLocalSimulationDb(): Promise<IDBDatabase> {
+  if (typeof window === 'undefined' || !window.indexedDB) {
+    throw new Error('IndexedDB is not available in this browser');
+  }
+  return await new Promise((resolve, reject) => {
+    const request = window.indexedDB.open(LOCAL_SIM_DB_NAME, LOCAL_SIM_DB_VERSION);
+    request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(LOCAL_SIM_STORE_NAME)) {
+        const store = db.createObjectStore(LOCAL_SIM_STORE_NAME, { keyPath: 'key' });
+        store.createIndex('cubeId', 'cubeId', { unique: false });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+async function readLocalSimulationStore(cubeId: string): Promise<LocalSimulationStore> {
+  const db = await openLocalSimulationDb();
+  try {
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(LOCAL_SIM_STORE_NAME, 'readonly');
+      const store = tx.objectStore(LOCAL_SIM_STORE_NAME);
+      const request = store.index('cubeId').getAll(cubeId);
+      request.onerror = () => reject(request.error ?? new Error('Failed to load local simulation history'));
+      request.onsuccess = () => {
+        const runs = (request.result as IndexedDbSimulationRunRecord[])
+          .filter(
+            (run): run is IndexedDbSimulationRunRecord =>
+              !!run &&
+              run.cubeId === cubeId &&
+              typeof run.entry?.ts === 'number' &&
+              typeof run.entry?.generatedAt === 'string' &&
+              !!run.runData &&
+              typeof run.runData.numDrafts === 'number',
+          )
+          .sort((a, b) => b.ts - a.ts)
+          .slice(0, LOCAL_SIM_HISTORY_LIMIT)
+          .map((run) => ({ entry: run.entry, runData: run.runData }));
+        resolve({ version: LOCAL_SIM_STORAGE_VERSION, runs });
+      };
+    });
+  } finally {
+    db.close();
+  }
+}
+
+async function writeLocalSimulationStore(
+  cubeId: string,
+  runs: { entry: SimulationRunEntry; runData: SimulationRunData }[],
+): Promise<void> {
+  const nextRuns = [...runs].sort((a, b) => b.entry.ts - a.entry.ts);
+  const desiredKeys = new Set(nextRuns.slice(0, LOCAL_SIM_HISTORY_LIMIT).map((run) => localSimulationStorageKey(cubeId, run.entry.ts)));
+  const db = await openLocalSimulationDb();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(LOCAL_SIM_STORE_NAME, 'readwrite');
+      const store = tx.objectStore(LOCAL_SIM_STORE_NAME);
+      const existingReq = store.index('cubeId').getAll(cubeId);
+      existingReq.onerror = () => reject(existingReq.error ?? new Error('Failed to write local simulation history'));
+      existingReq.onsuccess = () => {
+        const existing = existingReq.result as IndexedDbSimulationRunRecord[];
+        for (const run of nextRuns.slice(0, LOCAL_SIM_HISTORY_LIMIT)) {
+          store.put({
+            key: localSimulationStorageKey(cubeId, run.entry.ts),
+            cubeId,
+            ts: run.entry.ts,
+            entry: run.entry,
+            runData: run.runData,
+          } satisfies IndexedDbSimulationRunRecord);
+        }
+        for (const record of existing) {
+          if (!desiredKeys.has(record.key)) {
+            store.delete(record.key);
+          }
+        }
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? new Error('Failed to write local simulation history'));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+async function persistSimulationRun(
+  cubeId: string,
+  entry: SimulationRunEntry,
+  runData: SimulationRunData,
+): Promise<{ runs: SimulationRunEntry[]; persisted: boolean }> {
+  const store = await readLocalSimulationStore(cubeId);
+  const nextStoredRuns = [{ entry, runData }, ...store.runs.filter((run) => run.entry.ts !== entry.ts)];
+  try {
+    await writeLocalSimulationStore(cubeId, nextStoredRuns);
+    const nextStore = await readLocalSimulationStore(cubeId);
+    return { runs: nextStore.runs.map((run) => run.entry), persisted: true };
+  } catch {
+    try {
+      await writeLocalSimulationStore(cubeId, [{ entry, runData }]);
+      const nextStore = await readLocalSimulationStore(cubeId);
+      return { runs: nextStore.runs.map((run) => run.entry), persisted: true };
+    } catch {
+      return { runs: store.runs.map((run) => run.entry), persisted: false };
+    }
+  }
+}
+
 const PriorRunDeleteModal: React.FC<{
   isOpen: boolean;
   setOpen: (open: boolean) => void;
@@ -174,7 +317,7 @@ const PriorRunDeleteModal: React.FC<{
     <ConfirmDeleteModal
       isOpen={isOpen}
       setOpen={setOpen}
-      text={`Delete the saved simulation run from ${new Date(run.generatedAt).toLocaleString()}? This action cannot be undone.`}
+      text={`Delete the local simulation run from ${new Date(run.generatedAt).toLocaleString()}? This action cannot be undone.`}
       submitDelete={async () => {
         await onConfirm(run.ts);
         setOpen(false);
@@ -238,7 +381,7 @@ function reconstructSimulatedPools(slimPools: SlimPool[], cardMeta: Record<strin
 }
 
 function computeFilteredCardStats(
-  setup: SimulationSetupResponse,
+  setup: Pick<SimulationSetupResponse, 'initialPacks' | 'packSteps' | 'numSeats'>,
   runData: SimulationRunData,
   activePoolIndexSet: Set<number>,
 ): CardStats[] {
@@ -1116,7 +1259,7 @@ const CardStatsTable: React.FC<{
                     .filter(Boolean)
                     .join(' ')}
                 >
-                  <td className="px-3 py-2 font-medium">{c.name}</td>
+                  <td className="px-3 py-2 font-medium">{renderAutocardNameLink(c.oracle_id, c.name)}</td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td>
@@ -1711,7 +1854,7 @@ const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) =>
   );
   const DR: React.FC<{ row: (typeof rows)[0] }> = ({ row }) => (
     <tr className="hover:bg-bg-active">
-      <td className="px-3 py-2 font-medium">{row.name}</td>
+      <td className="px-3 py-2 font-medium">{renderAutocardNameLink(row.oracle_id, row.name)}</td>
       <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{row.elo}</td>
       <td className="px-3 py-2 text-text-secondary text-right tabular-nums">#{row.eloRank}</td>
       <td className="px-3 py-2 text-text-secondary text-right tabular-nums">#{row.draftRank}</td>
@@ -1774,10 +1917,12 @@ const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) =>
 };
 
 const SkeletonCardImage: React.FC<{ card: SkeletonCard; size: number }> = ({ card, size }) => (
-  <div
-    className="relative flex-shrink-0"
+  <AutocardLink
+    href={`/tool/card/${card.oracle_id}`}
+    className="relative flex-shrink-0 block hover:opacity-95"
     style={{ width: size }}
     title={`${card.name} — ${(card.fraction * 100).toFixed(0)}% of pools`}
+    card={{ details: { oracle_id: card.oracle_id, name: card.name, image_normal: card.imageUrl } } as any}
   >
     {card.imageUrl ? (
       <img src={card.imageUrl} alt={card.name} className="w-full rounded border border-border shadow-sm" />
@@ -1795,7 +1940,7 @@ const SkeletonCardImage: React.FC<{ card: SkeletonCard; size: number }> = ({ car
     >
       {(card.fraction * 100).toFixed(0)}%
     </div>
-  </div>
+  </AutocardLink>
 );
 
 const ArchetypeSkeletonSection: React.FC<{
@@ -1927,7 +2072,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </Text>
             <div className="flex flex-row flex-wrap gap-1.5">
               {skeleton.occasionalCards.map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={110} />
+                <SkeletonCardImage key={card.oracle_id} card={card} size={140} />
               ))}
             </div>
           </div>
@@ -1940,7 +2085,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             <div className="flex flex-col gap-1.5 rounded-md bg-bg-accent/40 px-3 py-2">
               {skeleton.sideboardCards.map((card) => (
                 <div key={card.oracle_id} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-medium">{card.name}</span>
+                  <span className="font-medium">{renderAutocardNameLink(card.oracle_id, card.name)}</span>
                   <span className="text-text-secondary tabular-nums">{(card.fraction * 100).toFixed(0)}%</span>
                 </div>
               ))}
@@ -2053,10 +2198,9 @@ const ArchetypeSkeletonSectionInner: React.FC<{
 
 interface CubeDraftSimulatorPageProps {
   cube: Cube;
-  canRun: boolean;
 }
 
-const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, canRun }) => {
+const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const cubeId = getCubeId(cube);
 
@@ -2076,7 +2220,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   // Run history & display
   const [runs, setRuns] = useState<SimulationRunEntry[]>([]);
   const [displayRunData, setDisplayRunData] = useState<SimulationRunData | null>(null);
-  const [currentRunSetup, setCurrentRunSetup] = useState<SimulationSetupResponse | null>(null);
+  const [currentRunSetup, setCurrentRunSetup] = useState<
+    Pick<SimulationSetupResponse, 'initialPacks' | 'packSteps' | 'numSeats'> | null
+  >(null);
   const [selectedTs, setSelectedTs] = useState<number | null>(null);
   const [loadingRun, setLoadingRun] = useState(false);
   const [deleteRunModalOpen, setDeleteRunModalOpen] = useState(false);
@@ -2147,38 +2293,35 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   );
 
   const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
+  const [storageNotice, setStorageNotice] = useState<string | null>(null);
 
-  // Load run history on mount — fetch the index first (lightweight), then the latest run data separately
+  // Load per-cube local history on mount.
   useEffect(() => {
-    fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`)
-      .then((r) => r.json())
-      .then(async (data) => {
-        if (!data.success) {
-          setHistoryLoadError(data.message ?? 'Failed to load simulation history');
-          return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const store = await readLocalSimulationStore(cubeId);
+        if (cancelled) return;
+        const nextRuns = store.runs.map((run) => run.entry);
+        setRuns(nextRuns);
+        if (store.runs[0]) {
+          setDisplayRunData(store.runs[0].runData);
+          setCurrentRunSetup(store.runs[0].runData.setupData ?? null);
+          setSelectedTs(store.runs[0].entry.ts);
+        } else {
+          setDisplayRunData(null);
+          setCurrentRunSetup(null);
+          setSelectedTs(null);
         }
-        const runs: SimulationRunEntry[] = data.runs ?? [];
-        setRuns(runs);
-        if (runs[0]) {
-          setLoadingRun(true);
-          try {
-            const runRes = await fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${runs[0].ts}`);
-            const runJson = await runRes.json();
-            if (runJson.success && runJson.runData) {
-              setDisplayRunData(runJson.runData);
-              setCurrentRunSetup(runJson.runData.setupData ?? null);
-              setSelectedTs(runs[0].ts);
-            }
-          } catch {
-            // Non-fatal — history list still shows
-          } finally {
-            setLoadingRun(false);
-          }
-        }
-      })
-      .catch((err) => {
-        setHistoryLoadError(err instanceof Error ? err.message : 'Failed to load simulation history');
-      });
+        setHistoryLoadError(null);
+      } catch (err) {
+        if (cancelled) return;
+        setHistoryLoadError(err instanceof Error ? err.message : 'Failed to load local simulation history');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [cubeId]);
 
   const [loadRunError, setLoadRunError] = useState<string | null>(null);
@@ -2195,14 +2338,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
       setSelectedArchetype(null);
       setSelectedSkeletonId(null);
       try {
-        const res = await fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`);
-        const json = await res.json();
-        if (json.success) {
-          setDisplayRunData(json.runData);
-          setCurrentRunSetup(json.runData.setupData ?? null);
-          setSelectedTs(ts);
+        const store = await readLocalSimulationStore(cubeId);
+        const run = store.runs.find((entry) => entry.entry.ts === ts);
+        if (!run) {
+          setLoadRunError('Run not found in local storage');
         } else {
-          setLoadRunError(json.message ?? 'Failed to load run');
+          setDisplayRunData(run.runData);
+          setCurrentRunSetup(run.runData.setupData ?? null);
+          setSelectedTs(ts);
         }
       } catch (err) {
         setLoadRunError(err instanceof Error ? err.message : 'Failed to load run');
@@ -2217,26 +2360,25 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const handleDeleteRun = useCallback(
     async (ts: number) => {
       try {
-        const res = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}/${ts}`, { method: 'DELETE' });
-        const json = await res.json();
-        if (!json.success) return;
-
-        const nextRuns = json.runs ?? [];
+        const store = await readLocalSimulationStore(cubeId);
+        const nextStoredRuns = store.runs.filter((run) => run.entry.ts !== ts);
+        await writeLocalSimulationStore(cubeId, nextStoredRuns);
+        const nextRuns = nextStoredRuns.map((run) => run.entry);
         setRuns(nextRuns);
         setSelectedCardOracles([]);
         setSelectedArchetype(null);
         setSelectedSkeletonId(null);
 
         if (selectedTs === ts) {
-          setDisplayRunData(json.latestRunData ?? null);
-          setCurrentRunSetup(json.latestRunData?.setupData ?? null);
+          setDisplayRunData(nextStoredRuns[0]?.runData ?? null);
+          setCurrentRunSetup(nextStoredRuns[0]?.runData.setupData ?? null);
           setSelectedTs(nextRuns[0]?.ts ?? null);
         }
       } catch (err) {
         console.error('Failed to delete run:', err);
       }
     },
-    [csrfFetch, cubeId, selectedTs],
+    [cubeId, selectedTs],
   );
 
   const handleCancel = useCallback(() => {
@@ -2256,6 +2398,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
     setSimPhase('setup');
     setSimProgress(0);
     setErrorMsg(null);
+    setStorageNotice(null);
     setSelectedCardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
@@ -2323,7 +2466,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
         return;
       }
 
-      // Assemble run data and save to S3; merge basic land metadata into cardMeta
+      // Assemble the locally persisted run payload; merge basic land metadata into cardMeta.
       setSimPhase('save');
       const { simulatedPools: _derived, ...runDataBase } = report;
       const mergedCardMeta = { ...runDataBase.cardMeta, ...deckResult.basicCardMeta };
@@ -2333,33 +2476,26 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
         deckBuilds: deckResult.decks,
         setupData: report.setupData,
       };
-      const saveRes = await csrfFetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(runData),
-      });
-      const saveJson = await saveRes.json();
-      if (!saveJson.success) {
-        setStatus('failed');
-        setSimPhase(null);
-        setErrorMsg(saveJson.message ?? 'Failed to save simulation results');
-        return;
+      const ts = Date.now();
+      const entry: SimulationRunEntry = {
+        ts,
+        generatedAt: runData.generatedAt,
+        numDrafts: runData.numDrafts,
+        numSeats: runData.numSeats,
+        deadCardCount: runData.deadCards.length,
+        convergenceScore: runData.convergenceScore ?? 0,
+      };
+      const persistResult = await persistSimulationRun(cubeId, entry, runData);
+      setRuns(persistResult.runs);
+      if (!persistResult.persisted) {
+        setStorageNotice('Results are shown below, but this browser did not have enough local storage to save them.');
       }
 
       setStatus('completed');
       setSimPhase(null);
       setDisplayRunData(runData);
-      setSelectedTs(saveJson.ts ?? null);
+      setSelectedTs(ts);
       simAbortRef.current = null;
-
-      fetch(`/cube/api/simulatesave/${encodeURIComponent(cubeId)}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.success) setRuns(data.runs ?? []);
-        })
-        .catch((err) => {
-          console.error('Failed to refresh run history:', err);
-        });
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return; // user cancelled — state already reset by handleCancel
       setDeckBuildsLoading(false);
@@ -2726,9 +2862,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
               <CardBody>
                 <ul className="mb-4 text-sm text-text-secondary list-disc list-inside space-y-0.5">
                   <li>Simulates bot-only drafts to estimate pick rates, color trends, and archetype outcomes</li>
-                  <li>
-                    Owners and collaborators can run simulations; results are visible to anyone who can view the cube
-                  </li>
+                  <li>Runs in this browser and stores local history only on this device</li>
                 </ul>
                 {lastRunTs && (
                   <div className="mb-3">
@@ -2737,65 +2871,58 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                     </Text>
                   </div>
                 )}
-                {canRun && (
-                  <Row className="gap-4 flex-wrap items-end">
-                    <Col xs={12} sm={4} md={2}>
-                      <label className="block text-sm font-medium mb-1">Drafts</label>
-                      <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
-                    </Col>
-                    <Col xs={12} sm={4} md={2}>
-                      <label className="block text-sm font-medium mb-1">Seats</label>
-                      <NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} />
-                    </Col>
-                    <Col xs={12} sm={4} md={2}>
-                      <label className="block text-sm font-medium mb-1">
-                        Dead Card Threshold{' '}
-                        <Text xs className="text-text-secondary font-normal">
-                          (&lt;{deadCardThresholdPct}% pick rate)
-                        </Text>
-                      </label>
-                      <NumericInput
-                        min={1}
-                        max={100}
-                        value={deadCardThresholdPct}
-                        onChange={setDeadCardThresholdPct}
-                        disabled={isRunning}
-                      />
-                    </Col>
-                    <Col xs={12} sm={4} md={2}>
-                      <label className="block text-sm font-medium mb-1">
-                        GPU Batch Size{' '}
-                        <Text xs className="text-text-secondary font-normal">
-                          (larger = faster, needs more GPU memory)
-                        </Text>
-                      </label>
-                      <NumericInput min={1} value={gpuBatchSize} onChange={setGpuBatchSize} disabled={isRunning} />
-                    </Col>
-                    <Col xs={12} sm={12} md={2} className="flex flex-col gap-1">
+                <Row className="gap-4 flex-wrap items-end">
+                  <Col xs={12} sm={4} md={2}>
+                    <label className="block text-sm font-medium mb-1">Drafts</label>
+                    <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
+                  </Col>
+                  <Col xs={12} sm={4} md={2}>
+                    <label className="block text-sm font-medium mb-1">Seats</label>
+                    <NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} />
+                  </Col>
+                  <Col xs={12} sm={4} md={2}>
+                    <label className="block text-sm font-medium mb-1">
+                      Dead Card Threshold{' '}
+                      <Text xs className="text-text-secondary font-normal">
+                        (&lt;{deadCardThresholdPct}% pick rate)
+                      </Text>
+                    </label>
+                    <NumericInput
+                      min={1}
+                      max={100}
+                      value={deadCardThresholdPct}
+                      onChange={setDeadCardThresholdPct}
+                      disabled={isRunning}
+                    />
+                  </Col>
+                  <Col xs={12} sm={4} md={2}>
+                    <label className="block text-sm font-medium mb-1">
+                      GPU Batch Size{' '}
+                      <Text xs className="text-text-secondary font-normal">
+                        (larger = faster, needs more GPU memory)
+                      </Text>
+                    </label>
+                    <NumericInput min={1} value={gpuBatchSize} onChange={setGpuBatchSize} disabled={isRunning} />
+                  </Col>
+                  <Col xs={12} sm={12} md={2} className="flex flex-col gap-1">
+                    <button
+                      onClick={handleStart}
+                      disabled={isRunning}
+                      className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium"
+                    >
+                      {isRunning ? 'Simulating…' : 'Run Simulation'}
+                    </button>
+                    {isRunning && (
                       <button
-                        onClick={handleStart}
-                        disabled={isRunning}
-                        className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium"
+                        type="button"
+                        onClick={handleCancel}
+                        className="w-full px-4 py-1.5 rounded border border-border text-sm text-text-secondary hover:bg-bg-active"
                       >
-                        {isRunning ? 'Simulating…' : 'Run Simulation'}
+                        Cancel
                       </button>
-                      {isRunning && (
-                        <button
-                          type="button"
-                          onClick={handleCancel}
-                          className="w-full px-4 py-1.5 rounded border border-border text-sm text-text-secondary hover:bg-bg-active"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </Col>
-                  </Row>
-                )}
-                {!canRun && (
-                  <Text xs className="text-text-secondary">
-                    Only the cube owner and collaborators can start a new simulation from this page.
-                  </Text>
-                )}
+                    )}
+                  </Col>
+                </Row>
               </CardBody>
             </Card>
 
@@ -2814,7 +2941,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                               ? 'Running draft simulation…'
                               : simPhase === 'deckbuild'
                                 ? 'Building decks…'
-                                : 'Saving results…'}
+                                : 'Storing results locally…'}
                       </Text>
                       {simPhase === 'sim' && (
                         <Text sm className="text-text-secondary">
@@ -2845,7 +2972,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
               <Card className="border-green-700">
                 <CardBody>
                   <Text sm className="text-green-400">
-                    Simulation complete — results saved and displayed below.
+                    {storageNotice
+                      ? 'Simulation complete — results are displayed below.'
+                      : 'Simulation complete — results are stored locally in this browser and displayed below.'}
+                  </Text>
+                </CardBody>
+              </Card>
+            )}
+            {storageNotice && (
+              <Card className="border-yellow-700">
+                <CardBody>
+                  <Text sm className="text-yellow-300">
+                    {storageNotice}
                   </Text>
                 </CardBody>
               </Card>
@@ -2874,7 +3012,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
               <Card className="border-red-700">
                 <CardBody>
                   <Text sm className="text-red-400">
-                    Failed to load simulation history: {historyLoadError}
+                    Failed to load local simulation history: {historyLoadError}
                   </Text>
                 </CardBody>
               </Card>
@@ -3194,8 +3332,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                                     <>
                                       <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
                                       {sk.occasionalCards.map((card) => (
-                                        <div key={card.oracle_id} className="opacity-60">
-                                          <SkeletonCardImage card={card} size={72} />
+                                      <div key={card.oracle_id} className="opacity-60">
+                                          <SkeletonCardImage card={card} size={90} />
                                         </div>
                                       ))}
                                     </>
@@ -3212,11 +3350,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                                   </Text>
                                   <div className="flex flex-col gap-1.5 rounded-md bg-bg/60 px-3 py-2">
                                     {sk.sideboardCards.map((card) => (
-                                      <div
+                                    <div
                                         key={card.oracle_id}
                                         className="flex items-baseline justify-between gap-3 text-sm"
                                       >
-                                        <span className="font-medium">{card.name}</span>
+                                        <span className="font-medium">
+                                          {renderAutocardNameLink(card.oracle_id, card.name)}
+                                        </span>
                                         <span className="text-text-secondary tabular-nums">
                                           {(card.fraction * 100).toFixed(0)}%
                                         </span>
@@ -3248,7 +3388,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                                   <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
                                   {selectedArchetypePreview.supportCards.map((card) => (
                                     <div key={card.oracle_id} className="opacity-60">
-                                      <SkeletonCardImage card={card} size={72} />
+                                      <SkeletonCardImage card={card} size={90} />
                                     </div>
                                   ))}
                                 </>
@@ -3266,7 +3406,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                                     key={card.oracle_id}
                                     className="flex items-baseline justify-between gap-3 text-sm"
                                   >
-                                    <span className="font-medium">{card.name}</span>
+                                    <span className="font-medium">
+                                      {renderAutocardNameLink(card.oracle_id, card.name)}
+                                    </span>
                                     <span className="text-text-secondary tabular-nums">
                                       {(card.fraction * 100).toFixed(0)}%
                                     </span>
@@ -3439,7 +3581,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                 {runs.length > 0 && (
                   <Card>
                     <CardHeader>
-                      <Text semibold>Simulation History</Text>
+                      <Text semibold>Local Simulation History</Text>
                     </CardHeader>
                     <CardBody>
                       <div className="overflow-x-auto rounded border border-border bg-bg">
@@ -3482,13 +3624,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                                 <td className="px-3 py-2 text-right">
                                   <button
                                     type="button"
-                                    disabled={Date.now() - run.ts < 24 * 60 * 60 * 1000}
-                                    title={
-                                      Date.now() - run.ts < 24 * 60 * 60 * 1000
-                                        ? 'Cannot delete a run from the last 24 hours'
-                                        : undefined
-                                    }
-                                    className="px-2 py-0.5 rounded text-xs font-medium border bg-bg border-border disabled:opacity-40 disabled:cursor-not-allowed text-text-secondary hover:bg-bg-active disabled:hover:bg-bg"
+                                    className="px-2 py-0.5 rounded text-xs font-medium border bg-bg border-border text-text-secondary hover:bg-bg-active"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setRunPendingDelete(run);
@@ -3550,6 +3686,27 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         <p>
           The simulation tracks pick rate, average pick position within the pack, wheel count (drafted after the pack
           has gone all the way around the table), and P1P1 frequency per card.
+        </p>
+      </div>
+    ),
+  },
+  {
+    q: 'How does it run?',
+    answer: (
+      <div className="space-y-3 text-sm text-text-secondary leading-relaxed">
+        <p>
+          Pack generation still starts on the server, because CubeCobra needs the cube, the draft format, and the
+          exact initial seat/pack layout. After that setup payload arrives, the expensive simulation work runs in the
+          browser.
+        </p>
+        <p>
+          The draft model and deckbuilder are loaded through TensorFlow.js and executed on the client with the browser
+          GPU path. In practice that means your machine does the pick-by-pick inference and deckbuilding locally
+          instead of sending every draft step back to the backend.
+        </p>
+        <p>
+          Completed runs are stored locally in IndexedDB, not on CubeCobra&apos;s servers. That keeps the tool
+          effectively backend-light after setup while still allowing recent runs to be reopened from this browser.
         </p>
       </div>
     ),

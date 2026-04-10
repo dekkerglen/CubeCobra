@@ -38,13 +38,24 @@ describe('POST /cube/api/simulatesetup/:id', () => {
     (getOracleForMl as jest.Mock).mockImplementation((oracle: string) => oracle);
   });
 
-  it('returns 403 when requester cannot edit the cube', async () => {
+  it('allows a viewer who can see the cube to request setup data', async () => {
     const viewer = createUser({ id: 'viewer-1' });
     const cube = createCube({ id: 'cube-1' });
 
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
-    (CubeFn.isCubeEditable as jest.Mock).mockReturnValue(false);
+    (cubeDao.getCards as jest.Mock).mockResolvedValue({});
+    (getDraftFormat as jest.Mock).mockReturnValue({});
+    (createDraft as jest.Mock).mockReturnValue({
+      InitialState: [
+        [{ steps: [{ action: 'pick', amount: 1 }], cards: [0] }],
+        [{ steps: [{ action: 'pick', amount: 1 }], cards: [1] }],
+      ],
+      cards: [
+        { details: { oracle_id: 'oracle-a', name: 'Card A', color_identity: [], type: 'Instant' } },
+        { details: { oracle_id: 'oracle-b', name: 'Card B', color_identity: [], type: 'Sorcery' } },
+      ],
+    });
 
     const res = await call(simulatesetupHandler)
       .as(viewer)
@@ -52,9 +63,9 @@ describe('POST /cube/api/simulatesetup/:id', () => {
       .withBody({ numDrafts: 1, numSeats: 2 })
       .send();
 
-    expect(res.status).toBe(403);
-    expect(res.body.message).toMatch(/owner or collaborators/i);
-    expect(cubeDao.getCards).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(cubeDao.getCards).toHaveBeenCalled();
   });
 
   it('returns setup data on success and does not stamp cooldown yet', async () => {
