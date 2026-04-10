@@ -342,6 +342,7 @@ function computeFilteredCardStats(
         avgPickPosition: filtered.pickPositionCount > 0 ? filtered.pickPositionSum / filtered.pickPositionCount : 0,
         wheelCount: filtered.wheelCount,
         p1p1Count: filtered.p1p1Count,
+        p1p1Seen: filtered.p1p1Seen,
         poolIndices: filtered.poolIndices,
       };
     })
@@ -493,7 +494,7 @@ async function runClientSimulation(
 
   const cardStats: CardStats[] = [];
   for (const [oracle_id, raw] of statsMap.entries()) {
-    cardStats.push({ oracle_id, name: raw.name, colorIdentity: raw.colorIdentity, elo: raw.elo, timesSeen: raw.timesSeen, timesPicked: raw.timesPicked, pickRate: raw.timesSeen > 0 ? raw.timesPicked / raw.timesSeen : 0, avgPickPosition: raw.pickPositionCount > 0 ? raw.pickPositionSum / raw.pickPositionCount : 0, wheelCount: raw.wheelCount, p1p1Count: raw.p1p1Count, poolIndices: raw.poolIndices });
+    cardStats.push({ oracle_id, name: raw.name, colorIdentity: raw.colorIdentity, elo: raw.elo, timesSeen: raw.timesSeen, timesPicked: raw.timesPicked, pickRate: raw.timesSeen > 0 ? raw.timesPicked / raw.timesSeen : 0, avgPickPosition: raw.pickPositionCount > 0 ? raw.pickPositionSum / raw.pickPositionCount : 0, wheelCount: raw.wheelCount, p1p1Count: raw.p1p1Count, p1p1Seen: raw.p1p1Seen, poolIndices: raw.poolIndices });
   }
   cardStats.sort((a, b) => a.avgPickPosition - b.avgPickPosition);
 
@@ -794,7 +795,7 @@ const ArchetypeChart: React.FC<{
   );
 };
 
-type SortKey = keyof CardStats | 'deckInclusion';
+type SortKey = keyof CardStats | 'deckInclusion' | 'openerTakeRate';
 type DeckLocationFilter = 'all' | 'deck' | 'sideboard';
 const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: number; onSelectCard: (id: string) => void; selectedCardOracles: string[]; inDeckOracles: Set<string> | null; inSideboardOracles: Set<string> | null; deckInclusionPct: Map<string, number>; visiblePoolCounts: Map<string, number>; onPageChange?: () => void }> = ({ cardStats, deadCardThreshold, onSelectCard, selectedCardOracles, inDeckOracles, inSideboardOracles, deckInclusionPct, visiblePoolCounts, onPageChange }) => {
   const PAGE_SIZE = 25;
@@ -817,6 +818,10 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
   const sorted = [...filtered].sort((a, b) => {
     let av: number | string, bv: number | string;
     if (sortKey === 'deckInclusion') { av = deckInclusionPct.get(a.oracle_id) ?? 0; bv = deckInclusionPct.get(b.oracle_id) ?? 0; }
+    else if (sortKey === 'openerTakeRate') {
+      av = a.p1p1Seen > 0 ? a.p1p1Count / a.p1p1Seen : 0;
+      bv = b.p1p1Seen > 0 ? b.p1p1Count / b.p1p1Seen : 0;
+    }
     else if (sortKey === 'avgPickPosition') {
       av = a.avgPickPosition > 0 ? a.avgPickPosition : Number.POSITIVE_INFINITY;
       bv = b.avgPickPosition > 0 ? b.avgPickPosition : Number.POSITIVE_INFINITY;
@@ -833,7 +838,7 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
-  const numericSortCols = new Set<SortKey>(['elo', 'timesSeen', 'timesPicked', 'pickRate', 'avgPickPosition', 'wheelCount', 'p1p1Count', 'deckInclusion']);
+  const numericSortCols = new Set<SortKey>(['elo', 'timesSeen', 'timesPicked', 'pickRate', 'avgPickPosition', 'wheelCount', 'p1p1Count', 'p1p1Seen', 'deckInclusion', 'openerTakeRate']);
   const SH: React.FC<{ label: string; col: SortKey; tooltip?: string }> = ({ label, col, tooltip }) => (
     <th
       className={[
@@ -886,8 +891,8 @@ const CardStatsTable: React.FC<{ cardStats: CardStats[]; deadCardThreshold: numb
       </Flexbox>
       <div className="overflow-x-auto rounded border border-border bg-bg">
         <table className="min-w-full divide-y divide-border text-sm">
-          <thead className="bg-bg-accent"><tr><SH label="Card" col="name" /><SH label="Elo" col="elo" /><SH label="Seen" col="timesSeen" /><SH label="Picked" col="timesPicked" /><SH label="Pick Rate" col="pickRate" /><SH label="Avg Pick" col="avgPickPosition" /><SH label="Wheels" col="wheelCount" tooltip="Times this card was drafted after the pack went all the way around the table (position > seats)" /><SH label="P1P1" col="p1p1Count" tooltip="Times this card was taken as the very first pick of pack 1" /><SH label="Deck %" col="deckInclusion" tooltip="Of decks that drafted this card, how often it made the maindeck vs. sideboard" /><th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Filter</th></tr></thead>
-          <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = selectedCardOracles.includes(c.oracle_id); const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? <>✕ <span className="tabular-nums">{visiblePoolCount}</span></> : <span className="tabular-nums">{visiblePoolCount}</span>}</button></td></tr>); })}</tbody>
+          <thead className="bg-bg-accent"><tr><SH label="Card" col="name" /><SH label="Elo" col="elo" /><SH label="Seen" col="timesSeen" tooltip="Times this card appeared in a live pack during the draft" /><SH label="Picked" col="timesPicked" /><SH label="Pick Rate" col="pickRate" tooltip="When this card was seen in a pack, how often it was drafted" /><SH label="Avg Pick" col="avgPickPosition" /><SH label="Wheels" col="wheelCount" tooltip="Times this card was drafted after the pack went all the way around the table (position > seats)" /><SH label="P1P1" col="p1p1Count" tooltip="Times this card was taken as the very first pick of pack 1" /><SH label="Opener %" col="openerTakeRate" tooltip="Of opening packs in pack 1 that contained this card, how often it was the pick" /><SH label="Deck %" col="deckInclusion" tooltip="Of decks that drafted this card, how often it made the maindeck vs. sideboard" /><th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Filter</th></tr></thead>
+          <tbody className="divide-y divide-border">{pagedRows.map((c) => { const isDead = c.pickRate < deadCardThreshold; const inclPct = deckInclusionPct.get(c.oracle_id); const isFilteredCard = selectedCardOracles.includes(c.oracle_id); const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length; const openerTakeRate = c.p1p1Seen > 0 ? c.p1p1Count / c.p1p1Seen : 0; return (<tr key={c.oracle_id} className={[isFilteredCard ? 'bg-bg-active' : '', isDead ? 'bg-red-950/20' : 'hover:bg-bg-active'].filter(Boolean).join(' ')}><td className="px-3 py-2 font-medium">{c.name}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td><td className="px-3 py-2 text-right tabular-nums"><span className={c.pickRate < deadCardThreshold ? 'text-red-400' : ''}>{(c.pickRate * 100).toFixed(1)}%</span></td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Seen > 0 ? `${(openerTakeRate * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-text-secondary text-right tabular-nums">{inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}</td><td className="px-3 py-2 text-right"><button type="button" className={[ 'px-2 py-0.5 rounded text-xs font-medium border', isFilteredCard ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20', ].join(' ')} onClick={() => onSelectCard(c.oracle_id)}>{isFilteredCard ? <>✕ <span className="tabular-nums">{visiblePoolCount}</span></> : <span className="tabular-nums">{visiblePoolCount}</span>}</button></td></tr>); })}</tbody>
         </table>
       </div>
       <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2 pt-1">
