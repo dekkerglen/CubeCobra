@@ -9,12 +9,12 @@
  *   carol / password: carol123
  */
 
-import 'dotenv/config';
-
+import documentClient from '@server/dynamo/documentClient';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
-import documentClient from '@server/dynamo/documentClient';
+import 'dotenv/config';
+
 import { PutCommand } from '../../server/node_modules/@aws-sdk/lib-dynamodb';
 
 const TABLE = process.env.DYNAMO_TABLE || 'LOCAL_CUBECOBRA';

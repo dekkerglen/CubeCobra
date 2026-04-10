@@ -60,7 +60,10 @@ const mlModelHandler = async (req: Request, res: Response) => {
 
     const pump = async (): Promise<void> => {
       const { done, value } = await reader.read();
-      if (done) { res.end(); return; }
+      if (done) {
+        res.end();
+        return;
+      }
       res.write(Buffer.from(value));
       return pump();
     };
