@@ -232,6 +232,16 @@ async function forwardPass(
       }
       throw err;
     }
+
+    const inputTensor = tf!.tensor2d(chunkData, [chunkSize, numOracles]);
+    const encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
+    inputTensor.dispose();
+    const logitsTensor = decoder.predict(encoded) as import('@tensorflow/tfjs').Tensor;
+    encoded.dispose();
+    const chunkLogits = (await logitsTensor.data()) as Float32Array;
+    logitsTensor.dispose();
+
+    out.set(chunkLogits, start * numOracles);
   }
 
   return out;
