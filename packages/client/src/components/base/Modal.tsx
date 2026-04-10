@@ -16,6 +16,7 @@ interface ModalProps {
   xxl?: boolean;
   //If you set scrollable on the modal also set it on the ModalBody
   scrollable?: boolean;
+  offsetClassName?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -29,6 +30,7 @@ export const Modal: React.FC<ModalProps> = ({
   xl,
   xxl,
   scrollable = false,
+  offsetClassName = '',
 }) => {
   return (
     <Transition show={isOpen}>
@@ -65,7 +67,7 @@ export const Modal: React.FC<ModalProps> = ({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <div className="p-4 pb-20">
+                <div className={classNames('p-4 pb-20', offsetClassName)}>
                   <DialogPanel
                     className={classNames(
                       'relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col',
