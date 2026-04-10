@@ -8,7 +8,7 @@ import { cardFromId, getOracleForMl } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
-import { MAX_DRAFTS, MAX_SEATS } from 'serverutils/simulatorConstants';
+import { MAX_SEATS } from 'serverutils/simulatorConstants';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -29,7 +29,7 @@ const setupLimiter = rateLimit({
 });
 
 const SetupSchema = Joi.object({
-  numDrafts: Joi.number().integer().min(1).max(MAX_DRAFTS).default(MAX_DRAFTS),
+  numDrafts: Joi.number().integer().min(1).default(100),
   numSeats: Joi.number().integer().min(2).max(MAX_SEATS).default(8),
 });
 

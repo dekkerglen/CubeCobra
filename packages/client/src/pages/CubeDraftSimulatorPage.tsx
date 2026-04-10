@@ -2061,7 +2061,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
   const cubeId = getCubeId(cube);
 
   // Controls
-  const [numDrafts, setNumDrafts] = useState(50);
+  const [numDrafts, setNumDrafts] = useState(100);
   const [numSeats, setNumSeats] = useState(8);
   const [deadCardThresholdPct, setDeadCardThresholdPct] = useState(5);
 
@@ -2718,7 +2718,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube, c
                   <Row className="gap-4 flex-wrap items-end">
                     <Col xs={12} sm={4} md={2}>
                       <label className="block text-sm font-medium mb-1">Drafts</label>
-                      <NumericInput min={1} max={500} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
+                      <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
                     </Col>
                     <Col xs={12} sm={4} md={2}>
                       <label className="block text-sm font-medium mb-1">Seats</label>
