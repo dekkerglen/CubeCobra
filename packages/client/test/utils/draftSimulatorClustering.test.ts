@@ -1,4 +1,4 @@
-import { kMeans, euclidSq, computeSkeletons } from '../../src/utils/draftSimulatorClustering';
+import { computeSkeletons, euclidSq, kMeans } from '../../src/utils/draftSimulatorClustering';
 
 const makeMeta = (id: string, type = 'Creature', colorIdentity: string[] = []) => ({
   name: id,
@@ -42,22 +42,33 @@ describe('kMeans', () => {
   });
 
   it('clamps k to the number of vectors', () => {
-    const vecs = [[1, 0], [0, 1]];
+    const vecs = [
+      [1, 0],
+      [0, 1],
+    ];
     const result = kMeans(vecs, 10); // k=10 but only 2 points
     expect(result).toHaveLength(2);
     expect(new Set(result).size).toBeLessThanOrEqual(2);
   });
 
   it('assigns all points to cluster 0 when k=1', () => {
-    const vecs = [[1, 0], [0, 1], [1, 1]];
+    const vecs = [
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ];
     const result = kMeans(vecs, 1);
     expect(result.every((a) => a === 0)).toBe(true);
   });
 
   it('separates two clearly distinct groups', () => {
     const vecs = [
-      [0, 0], [0.1, 0], [0, 0.1],        // cluster A — near origin
-      [10, 10], [10.1, 10], [10, 10.1],  // cluster B — far corner
+      [0, 0],
+      [0.1, 0],
+      [0, 0.1], // cluster A — near origin
+      [10, 10],
+      [10.1, 10],
+      [10, 10.1], // cluster B — far corner
     ];
     const result = kMeans(vecs, 2);
     expect(result).toHaveLength(6);
@@ -96,10 +107,7 @@ describe('computeSkeletons', () => {
       spell: makeMeta('spell', 'Creature', ['U']),
       island: makeMeta('island', 'Basic Land', ['U']),
     };
-    const pools = [
-      makePool(0, 0, ['spell', 'island']),
-      makePool(0, 1, ['spell', 'island']),
-    ];
+    const pools = [makePool(0, 0, ['spell', 'island']), makePool(0, 1, ['spell', 'island'])];
     const result = computeSkeletons(pools, meta, 1);
     expect(result).toHaveLength(1);
     const allCardIds = result.flatMap((s) => [...s.coreCards, ...s.occasionalCards].map((c) => c.oracle_id));
@@ -124,5 +132,31 @@ describe('computeSkeletons', () => {
     if (result.length >= 2) {
       expect(result[0].poolCount).toBeGreaterThanOrEqual(result[1].poolCount);
     }
+  });
+
+  it('includes common sideboard-only cards when deck builds are available', () => {
+    const meta = {
+      core: makeMeta('core', 'Creature', ['G']),
+      side: makeMeta('side', 'Instant', ['U']),
+      maindeck: makeMeta('maindeck', 'Sorcery', ['R']),
+    };
+    const pools = [
+      makePool(0, 0, ['core', 'side', 'maindeck']),
+      makePool(0, 1, ['core', 'side', 'maindeck']),
+      makePool(0, 2, ['core', 'side', 'maindeck']),
+      makePool(0, 3, ['core', 'side', 'maindeck']),
+    ];
+    const deckBuilds = [
+      { mainboard: ['core', 'maindeck'], sideboard: ['side'] },
+      { mainboard: ['core', 'maindeck'], sideboard: ['side'] },
+      { mainboard: ['core', 'maindeck'], sideboard: ['side'] },
+      { mainboard: ['core', 'maindeck'], sideboard: ['side'] },
+    ];
+
+    const result = computeSkeletons(pools, meta, 1, 60, deckBuilds);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.sideboardCards.map((card) => card.oracle_id)).toContain('side');
+    expect(result[0]?.sideboardCards.find((card) => card.oracle_id === 'side')?.fraction).toBe(1);
   });
 });

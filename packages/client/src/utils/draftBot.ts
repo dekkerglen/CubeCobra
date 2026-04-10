@@ -19,18 +19,17 @@ import { BasicLandInfo } from '@utils/datatypes/SimulationReport';
 
 const MODEL_BASE = '/api/mlmodel';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let tf: typeof import('@tensorflow/tfjs') | null = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 let encoder: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 let draftDecoder: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 let deckBuildDecoder: any = null;
 let oracleToIndex: Record<string, number> = {};
 let numOracles = 0;
-let _loaded = false;
-let _loadPromise: Promise<void> | null = null;
+let draftBotLoaded = false;
+let draftBotLoadPromise: Promise<void> | null = null;
 const loadProgressListeners = new Set<(pct: number) => void>();
 
 const emitLoadProgress = (pct: number): void => {
@@ -40,7 +39,7 @@ const emitLoadProgress = (pct: number): void => {
 };
 
 export function isDraftBotLoaded(): boolean {
-  return _loaded;
+  return draftBotLoaded;
 }
 
 /**
@@ -49,14 +48,14 @@ export function isDraftBotLoaded(): boolean {
  * onProgress receives values 0–100.
  */
 export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<void> {
-  if (_loaded) {
+  if (draftBotLoaded) {
     onProgress?.(100);
     return;
   }
-  if (_loadPromise) {
+  if (draftBotLoadPromise) {
     if (onProgress) loadProgressListeners.add(onProgress);
     try {
-      await _loadPromise;
+      await draftBotLoadPromise;
     } finally {
       if (onProgress) loadProgressListeners.delete(onProgress);
     }
@@ -64,7 +63,7 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
   }
   if (onProgress) loadProgressListeners.add(onProgress);
 
-  _loadPromise = (async () => {
+  draftBotLoadPromise = (async () => {
     emitLoadProgress(0);
 
     // Dynamic import — keeps TF.js (~3 MB) out of the main bundle
@@ -93,19 +92,19 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
     deckBuildDecoder = await tf.loadGraphModel(`${MODEL_BASE}/deck_build_decoder/model.json`);
     emitLoadProgress(100);
 
-    _loaded = true;
+    draftBotLoaded = true;
   })();
-  const activePromise = _loadPromise;
+  const activePromise = draftBotLoadPromise;
 
   try {
     await activePromise;
   } finally {
     if (onProgress) loadProgressListeners.delete(onProgress);
-    if (_loadPromise === activePromise) _loadPromise = null;
+    if (draftBotLoadPromise === activePromise) draftBotLoadPromise = null;
   }
 }
 
-export function __getLoadProgressListenerCountForTests(): number {
+export function getLoadProgressListenerCountForTests(): number {
   return loadProgressListeners.size;
 }
 
@@ -132,7 +131,7 @@ function mlOracle(oracle: string, remapping?: Record<string, string>): string {
  */
 async function forwardPass(
   pools: string[][],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   decoder: any,
   remapping?: Record<string, string>,
 ): Promise<Float32Array> {
@@ -159,9 +158,7 @@ async function forwardPass(
  * Build an oracle remapping from CardMeta: maps original oracle ID → ML oracle ID
  * for cards whose mlOracleId differs (i.e. not in training vocab).
  */
-export function buildOracleRemapping(
-  cardMeta: Record<string, { mlOracleId?: string }>,
-): Record<string, string> {
+export function buildOracleRemapping(cardMeta: Record<string, { mlOracleId?: string }>): Record<string, string> {
   const remapping: Record<string, string> = {};
   for (const [oracle, meta] of Object.entries(cardMeta)) {
     if (meta.mlOracleId) remapping[oracle] = meta.mlOracleId;
@@ -201,7 +198,7 @@ export async function localPickBatch(
   pools: string[][],
   remapping?: Record<string, string>,
 ): Promise<string[]> {
-  if (!_loaded || !tf || !encoder || !draftDecoder || packs.length === 0) {
+  if (!draftBotLoaded || !tf || !encoder || !draftDecoder || packs.length === 0) {
     return packs.map(() => '');
   }
 
@@ -247,7 +244,7 @@ export async function localPickBatch(
  * Returns cards sorted by descending rating for each seat.
  */
 async function localBatchBuild(pools: string[][], remapping?: Record<string, string>): Promise<RatedCard[][]> {
-  if (!_loaded || !tf || !encoder || !deckBuildDecoder || pools.length === 0) {
+  if (!draftBotLoaded || !tf || !encoder || !deckBuildDecoder || pools.length === 0) {
     return pools.map(() => []);
   }
   const logits = await forwardPass(pools, deckBuildDecoder, remapping);
@@ -271,10 +268,14 @@ export async function localBatchDraftRanked(
   inputs: { pack: string[]; pool: string[] }[],
   remapping?: Record<string, string>,
 ): Promise<RatedCard[][]> {
-  if (!_loaded || !tf || !encoder || !draftDecoder || inputs.length === 0) {
+  if (!draftBotLoaded || !tf || !encoder || !draftDecoder || inputs.length === 0) {
     return inputs.map(() => []);
   }
-  const logits = await forwardPass(inputs.map((x) => x.pool), draftDecoder, remapping);
+  const logits = await forwardPass(
+    inputs.map((x) => x.pool),
+    draftDecoder,
+    remapping,
+  );
   return inputs.map(({ pack }, i) => {
     const rowBase = i * numOracles;
     return pack
@@ -289,7 +290,10 @@ export async function localBatchDraftRanked(
 export interface DeckbuildEntry {
   pool: string[];
   /** Card metadata keyed by oracle_id — needs type, colorIdentity, parsedCost, mlOracleId */
-  cardMeta: Record<string, { type: string; colorIdentity: string[]; parsedCost?: string[]; producedMana?: string[]; mlOracleId?: string }>;
+  cardMeta: Record<
+    string,
+    { type: string; colorIdentity: string[]; parsedCost?: string[]; producedMana?: string[]; mlOracleId?: string }
+  >;
   basics: BasicLandInfo[];
   maxSpells?: number;
   maxLands?: number;
@@ -302,15 +306,12 @@ const getDeckCardMeta = (
   oracle: string,
   cardMeta: DeckbuildEntry['cardMeta'],
   basics: BasicLandInfo[],
-): DeckCardMeta | BasicLandInfo | null =>
-  cardMeta[oracle] ?? basics.find((basic) => basic.oracleId === oracle) ?? null;
+): DeckCardMeta | BasicLandInfo | null => cardMeta[oracle] ?? basics.find((basic) => basic.oracleId === oracle) ?? null;
 
 const deckCardColors = (card: DeckCardMeta | BasicLandInfo): string[] =>
   (card.producedMana ?? []).length > 0 ? (card.producedMana ?? []) : (card.colorIdentity ?? []);
 
-export function colorDemandPerSource(
-  cards: Array<DeckCardMeta | BasicLandInfo>,
-): Record<string, number> {
+export function colorDemandPerSource(cards: Array<DeckCardMeta | BasicLandInfo>): Record<string, number> {
   const demand: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
   const sources: Record<string, number> = { W: 1, U: 1, B: 1, R: 1, G: 1 };
 
@@ -407,7 +408,7 @@ export function chooseBestMappedOracle(
 export async function localBatchDeckbuild(
   entries: DeckbuildEntry[],
 ): Promise<{ mainboard: string[]; sideboard: string[] }[]> {
-  if (!_loaded || entries.length === 0) return entries.map(() => ({ mainboard: [], sideboard: [] }));
+  if (!draftBotLoaded || entries.length === 0) return entries.map(() => ({ mainboard: [], sideboard: [] }));
 
   const allPoolOracles = entries.map((e) => e.pool);
   const sharedRemapping = buildOracleRemapping(entries[0]!.cardMeta);

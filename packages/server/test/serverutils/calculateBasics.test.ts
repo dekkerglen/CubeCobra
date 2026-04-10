@@ -1,10 +1,10 @@
 import { calculateBasics } from 'serverutils/draftbots';
 
-const makeSpell = (color_identity: string[]) => ({
+const makeSpell = (colorIdentity: string[]) => ({
   type: 'Creature',
-  color_identity,
+  color_identity: colorIdentity,
   produced_mana: [],
-  parsed_cost: color_identity.map((c) => c.toLowerCase()),
+  parsed_cost: colorIdentity.map((c) => c.toLowerCase()),
 });
 
 const makeBasic = (color: string) => ({
@@ -16,14 +16,18 @@ const makeBasic = (color: string) => ({
 
 describe('calculateBasics', () => {
   it('returns empty when no land basics provided (only non-land cards in basics)', () => {
-    const spells = Array(10).fill(null).map(() => makeSpell(['U']));
+    const spells = Array(10)
+      .fill(null)
+      .map(() => makeSpell(['U']));
     const nonLandBasic = { type: 'Instant', color_identity: ['U'], produced_mana: ['U'], oracle_id: 'oracle-U' };
     expect(calculateBasics(spells, [nonLandBasic], 20)).toHaveLength(0);
   });
 
   it('skews heavily toward blue for a 10U / 1R split', () => {
     const spells = [
-      ...Array(10).fill(null).map(() => makeSpell(['U'])),
+      ...Array(10)
+        .fill(null)
+        .map(() => makeSpell(['U'])),
       makeSpell(['R']),
     ];
     const basics = [makeBasic('U'), makeBasic('R')];
@@ -37,7 +41,9 @@ describe('calculateBasics', () => {
   });
 
   it('handles a colorless/all-land deck without crashing', () => {
-    const spells = Array(5).fill(null).map(() => makeSpell([]));
+    const spells = Array(5)
+      .fill(null)
+      .map(() => makeSpell([]));
     const basics = [makeBasic('W'), makeBasic('U')];
     // No colored demand — should not crash; result length may be 0 or any split
     expect(() => calculateBasics(spells, basics, 10)).not.toThrow();
@@ -46,9 +52,15 @@ describe('calculateBasics', () => {
   it('produces an even split for an equal thirds U/B/R deck', () => {
     // 9 spells: 3 blue, 3 black, 3 red
     const spells = [
-      ...Array(3).fill(null).map(() => makeSpell(['U'])),
-      ...Array(3).fill(null).map(() => makeSpell(['B'])),
-      ...Array(3).fill(null).map(() => makeSpell(['R'])),
+      ...Array(3)
+        .fill(null)
+        .map(() => makeSpell(['U'])),
+      ...Array(3)
+        .fill(null)
+        .map(() => makeSpell(['B'])),
+      ...Array(3)
+        .fill(null)
+        .map(() => makeSpell(['R'])),
     ];
 
     const basics = [makeBasic('U'), makeBasic('B'), makeBasic('R')];
@@ -76,7 +88,9 @@ describe('calculateBasics', () => {
   });
 
   it('produces only Islands for a mono-blue deck', () => {
-    const spells = Array(15).fill(null).map(() => makeSpell(['U']));
+    const spells = Array(15)
+      .fill(null)
+      .map(() => makeSpell(['U']));
     const basics = [makeBasic('W'), makeBasic('U'), makeBasic('B'), makeBasic('R'), makeBasic('G')];
 
     const result = calculateBasics(spells, basics, 20);
@@ -86,7 +100,9 @@ describe('calculateBasics', () => {
   });
 
   it('returns empty when no basics provided', () => {
-    const spells = Array(10).fill(null).map(() => makeSpell(['U']));
+    const spells = Array(10)
+      .fill(null)
+      .map(() => makeSpell(['U']));
     expect(calculateBasics(spells, [], 20)).toHaveLength(0);
   });
 });

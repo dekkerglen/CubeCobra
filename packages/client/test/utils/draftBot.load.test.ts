@@ -1,5 +1,5 @@
 describe('loadDraftBot', () => {
-  const deferred = <T,>() => {
+  const deferred = <T>() => {
     let resolve!: (value: T) => void;
     const promise = new Promise<T>((res) => {
       resolve = res;
@@ -41,17 +41,17 @@ describe('loadDraftBot', () => {
 
     expect((global as any).fetch).toHaveBeenCalledTimes(1);
     expect(loadGraphModel).toHaveBeenCalledTimes(1);
-    expect(draftBot.__getLoadProgressListenerCountForTests()).toBe(2);
+    expect(draftBot.getLoadProgressListenerCountForTests()).toBe(2);
 
     encoderLoad.resolve({});
     await Promise.all([loadA, loadB]);
 
     expect(loadGraphModel).toHaveBeenCalledTimes(3);
-    expect(draftBot.__getLoadProgressListenerCountForTests()).toBe(0);
+    expect(draftBot.getLoadProgressListenerCountForTests()).toBe(0);
 
     onProgressA.mockClear();
     await draftBot.loadDraftBot(onProgressA);
     expect(onProgressA).toHaveBeenCalledWith(100);
-    expect(draftBot.__getLoadProgressListenerCountForTests()).toBe(0);
+    expect(draftBot.getLoadProgressListenerCountForTests()).toBe(0);
   });
 });
