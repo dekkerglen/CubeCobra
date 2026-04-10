@@ -83,10 +83,9 @@ describe('POST /cube/api/simulatesave/:id', () => {
         randomTrashByPool: makeRunData().randomTrashByPool,
       }),
     );
-    expect(cubeDao.update).toHaveBeenCalledWith(
-      expect.objectContaining({ id: cube.id, lastDraftSimulation: now }),
-      { skipTimestampUpdate: true },
-    );
+    expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ id: cube.id, lastDraftSimulation: now }), {
+      skipTimestampUpdate: true,
+    });
   });
 
   it('does not stamp cooldown when saving the run file fails', async () => {
@@ -125,7 +124,10 @@ describe('DELETE /cube/api/simulatesave/:id/:ts', () => {
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (CubeFn.isCubeEditable as jest.Mock).mockReturnValue(true);
 
-    const res = await call(deleteRunHandler).as(owner).withParams({ id: cube.id, ts: String(recentTs) }).send();
+    const res = await call(deleteRunHandler)
+      .as(owner)
+      .withParams({ id: cube.id, ts: String(recentTs) })
+      .send();
 
     expect(res.status).toBe(403);
     expect(res.body.message).toMatch(/24 hours/i);
@@ -144,18 +146,42 @@ describe('DELETE /cube/api/simulatesave/:id/:ts', () => {
     (CubeFn.isCubeEditable as jest.Mock).mockReturnValue(true);
     (getObject as jest.Mock)
       .mockResolvedValueOnce([
-        { ts: latestTs, generatedAt: new Date(latestTs).toISOString(), numDrafts: 2, numSeats: 8, deadCardCount: 0, convergenceScore: 0 },
-        { ts: olderTs, generatedAt: new Date(olderTs).toISOString(), numDrafts: 2, numSeats: 8, deadCardCount: 1, convergenceScore: 0.2 },
+        {
+          ts: latestTs,
+          generatedAt: new Date(latestTs).toISOString(),
+          numDrafts: 2,
+          numSeats: 8,
+          deadCardCount: 0,
+          convergenceScore: 0,
+        },
+        {
+          ts: olderTs,
+          generatedAt: new Date(olderTs).toISOString(),
+          numDrafts: 2,
+          numSeats: 8,
+          deadCardCount: 1,
+          convergenceScore: 0.2,
+        },
       ])
       .mockResolvedValueOnce(updatedLatestRun);
     (putObject as jest.Mock).mockResolvedValue(undefined);
     (deleteObject as jest.Mock).mockResolvedValue(undefined);
 
-    const res = await call(deleteRunHandler).as(owner).withParams({ id: cube.id, ts: String(olderTs) }).send();
+    const res = await call(deleteRunHandler)
+      .as(owner)
+      .withParams({ id: cube.id, ts: String(olderTs) })
+      .send();
 
     expect(res.status).toBe(200);
     expect(putObject).toHaveBeenCalledWith('bucket', `cube/${cube.id}/draftsimulator/index.json`, [
-      { ts: latestTs, generatedAt: new Date(latestTs).toISOString(), numDrafts: 2, numSeats: 8, deadCardCount: 0, convergenceScore: 0 },
+      {
+        ts: latestTs,
+        generatedAt: new Date(latestTs).toISOString(),
+        numDrafts: 2,
+        numSeats: 8,
+        deadCardCount: 0,
+        convergenceScore: 0,
+      },
     ]);
     expect(deleteObject).toHaveBeenCalledWith('bucket', `cube/${cube.id}/draftsimulator/${olderTs}.json`);
     expect(res.body.latestRunData).toEqual(updatedLatestRun);
