@@ -1,6 +1,8 @@
 /* eslint-disable camelcase, no-plusplus, no-restricted-syntax */
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import type CardType from '@utils/datatypes/Card';
+import type { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import {
   ArchetypeEntry,
@@ -14,6 +16,7 @@ import {
   SimulationRunData,
   SimulationRunEntry,
   SimulationSetupResponse,
+  SimulationTimingBreakdown,
   SkeletonCard,
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
@@ -40,6 +43,7 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from '../components/base/M
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import DynamicFlash from '../components/DynamicFlash';
+import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
@@ -52,9 +56,11 @@ import {
   DeckbuildEntry,
   loadDraftBot,
   localBatchDeckbuild,
+  localBatchDraftRanked,
   localPickBatch,
   WebGLInferenceError,
 } from '../utils/draftBot';
+import { modelScoresToProbabilities } from '../utils/botRatings';
 import { computeSkeletons } from '../utils/draftSimulatorClustering';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
@@ -93,6 +99,11 @@ function getOverallSimProgress(
 }
 
 const SIM_PREVIEW_CARD_W = 140;
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${(ms / 1000).toFixed(ms >= 10_000 ? 0 : 1)} s`;
+}
 
 /** Number input that lets the user type freely; commits/clamps only on blur or Enter. */
 const NumericInput: React.FC<{
@@ -207,6 +218,12 @@ const LOCAL_SIM_STORAGE_VERSION = 1;
 const LOCAL_SIM_DB_NAME = 'cubecobra-draft-simulator';
 const LOCAL_SIM_DB_VERSION = 1;
 const LOCAL_SIM_STORE_NAME = 'runs';
+const GPU_BATCH_OPTIONS = [
+  { value: '16', label: '16 - conservative' },
+  { value: '32', label: '32 - safe' },
+  { value: '64', label: '64 - balanced' },
+  { value: '128', label: '128 - strong GPU' },
+];
 
 interface LocalSimulationStore {
   version: number;
@@ -331,6 +348,34 @@ async function persistSimulationRun(
   }
 }
 
+async function clearLocalSimulationStore(cubeId: string): Promise<void> {
+  await writeLocalSimulationStore(cubeId, []);
+}
+
+async function getStoragePressureNotice(): Promise<string | null> {
+  if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return null;
+  try {
+    const estimate = await navigator.storage.estimate();
+    if (!estimate.quota || estimate.usage === undefined) return null;
+    const remaining = estimate.quota - estimate.usage;
+    const remainingMb = remaining / 1024 / 1024;
+    const usedRatio = estimate.usage / estimate.quota;
+    if (remainingMb < 100 || usedRatio > 0.85) {
+      return `Local browser storage is getting tight (${Math.max(0, Math.round(remainingMb))} MB estimated free). Old simulator runs may need to be cleared if saves start failing.`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function nextLowerGpuBatchSize(batchSize: number): number | null {
+  const lowerOptions = GPU_BATCH_OPTIONS.map((option) => parseInt(option.value, 10))
+    .filter((value) => value < batchSize)
+    .sort((a, b) => b - a);
+  return lowerOptions[0] ?? null;
+}
+
 const PriorRunDeleteModal: React.FC<{
   isOpen: boolean;
   setOpen: (open: boolean) => void;
@@ -351,6 +396,22 @@ const PriorRunDeleteModal: React.FC<{
     />
   );
 };
+
+const ClearSimulationHistoryModal: React.FC<{
+  isOpen: boolean;
+  setOpen: (open: boolean) => void;
+  onConfirm: () => Promise<void>;
+}> = ({ isOpen, setOpen, onConfirm }) => (
+  <ConfirmDeleteModal
+    isOpen={isOpen}
+    setOpen={setOpen}
+    text="Clear all local simulation history for this cube? This only affects this browser and cannot be undone."
+    submitDelete={async () => {
+      await onConfirm();
+      setOpen(false);
+    }}
+  />
+);
 
 const LeaveSimulationModal: React.FC<{
   isOpen: boolean;
@@ -591,7 +652,7 @@ async function runClientSimulation(
   numDrafts: number,
   deadCardThreshold: number,
   onProgress: (pct: number) => void,
-  _signal?: AbortSignal,
+  signal?: AbortSignal,
   gpuBatchSize?: number,
 ): Promise<SimulationReport> {
   const { initialPacks, packSteps, cardMeta, cubeName, numSeats } = setup;
@@ -643,6 +704,7 @@ async function runClientSimulation(
   onProgress(0);
 
   for (let packNum = 0; packNum < numPacks; packNum++) {
+    signal?.throwIfAborted();
     if (packNum > 0) {
       for (let d = 0; d < numDrafts; d++)
         for (let s = 0; s < numSeats; s++) allCurrentPacks[d]![s] = [...(initialPacks[d]?.[s]?.[packNum] ?? [])];
@@ -655,6 +717,7 @@ async function runClientSimulation(
       if (step.action === 'pick' || step.action === 'pickrandom') {
         const numPicksThisStep = step.amount ?? 1;
         for (let p = 0; p < numPicksThisStep; p++) {
+          signal?.throwIfAborted();
           // Track timesSeen (and p1p1Seen at P1P1) for all cards currently visible
           const isP1P1 = packNum === 0 && pickNumInPack === 1;
           for (let d = 0; d < numDrafts; d++)
@@ -711,6 +774,7 @@ async function runClientSimulation(
       } else if (step.action === 'trash' || step.action === 'trashrandom') {
         const numTrash = step.amount ?? 1;
         for (let p = 0; p < numTrash; p++) {
+          signal?.throwIfAborted();
           for (let d = 0; d < numDrafts; d++)
             for (let s = 0; s < numSeats; s++) {
               const pack = allCurrentPacks[d]![s]!;
@@ -1292,14 +1356,14 @@ const CardStatsTable: React.FC<{
               )}
               {renderSortHeader('P1P1', 'p1p1Count', 'Times this card was taken as the very first pick of pack 1')}
               {renderSortHeader(
-                'Opener %',
+                'Taken P1P1 %',
                 'openerTakeRate',
                 'Of opening packs in pack 1 that contained this card, how often it was the pick',
               )}
               {renderSortHeader(
                 'Deck %',
                 'deckInclusion',
-                'Of decks that drafted this card, how often it made the maindeck vs. sideboard',
+                'Of decks that drafted this card, how often it made the main deck vs. sideboard',
               )}
               <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Filter</th>
             </tr>
@@ -1421,26 +1485,350 @@ const PickCard: React.FC<{ pick: SimulatedPickCard; isSelected: boolean }> = ({ 
   </div>
 );
 
+type PoolViewMode = 'pool' | 'deck' | 'fullPickOrder';
+type SimulatorBreakdownPick = { cardIndex: number };
+type SimulatorBreakdownState = {
+  packNumber: number;
+  pickNumber: number;
+  cardsInPack: SimulatorBreakdownPick[];
+  actualPickIndex: number;
+  packOracleIds: string[];
+  previousPickOracleIds: string[];
+};
+
+function simulatorCardFromMeta(oracleId: string, meta?: CardMeta): CardType {
+  const name = meta?.name ?? oracleId;
+  return {
+    cardID: oracleId,
+    imgUrl: meta?.imageUrl,
+    details: {
+      oracle_id: oracleId,
+      scryfall_id: oracleId,
+      name,
+      full_name: name,
+      name_lower: name.toLowerCase(),
+      image_normal: meta?.imageUrl,
+      cmc: meta?.cmc ?? 0,
+      type: meta?.type ?? '',
+      color_identity: meta?.colorIdentity ?? [],
+      colors: meta?.colorIdentity ?? [],
+    } as CardDetails,
+  };
+}
+
+function buildSimulatorDraftBreakdown(
+  pool: SimulatedPool,
+  runData: SimulationRunData,
+): { cards: CardType[]; picksList: SimulatorBreakdownPick[][]; states: SimulatorBreakdownState[] } | null {
+  const setup = runData.setupData;
+  if (!setup) return null;
+
+  const { initialPacks, packSteps, numSeats } = setup;
+  const draftIndex = pool.draftIndex;
+  const targetPoolIndex = pool.poolIndex;
+  const cardIndexByOracle = new Map<string, number>();
+  const cards: CardType[] = [];
+  const getCardIndex = (oracleId: string): number => {
+    const existing = cardIndexByOracle.get(oracleId);
+    if (existing !== undefined) return existing;
+    const nextIndex = cards.length;
+    cardIndexByOracle.set(oracleId, nextIndex);
+    cards.push(simulatorCardFromMeta(oracleId, runData.cardMeta[oracleId]));
+    return nextIndex;
+  };
+
+  const orderedPicksByPool = runData.slimPools.map((slim) =>
+    [...slim.picks].sort((a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber),
+  );
+  const pickPointers = new Array<number>(runData.slimPools.length).fill(0);
+  const randomTrashPointers = new Array<number>(runData.slimPools.length).fill(0);
+  const currentPacks: string[][] = Array.from({ length: numSeats }, (_, seatIndex) => [
+    ...(initialPacks[draftIndex]?.[seatIndex]?.[0] ?? []),
+  ]);
+  const picksList: SimulatorBreakdownPick[][] = Array.from({ length: packSteps.length }, () => []);
+  const states: SimulatorBreakdownState[] = [];
+  const previousPickOracleIds: string[] = [];
+
+  for (let packNum = 0; packNum < packSteps.length; packNum++) {
+    if (packNum > 0) {
+      for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
+        currentPacks[seatIndex] = [...(initialPacks[draftIndex]?.[seatIndex]?.[packNum] ?? [])];
+      }
+    }
+
+    const steps = packSteps[packNum] ?? [];
+    let pickNumInPack = 1;
+
+    for (const step of steps) {
+      if (step.action === 'pick' || step.action === 'pickrandom') {
+        const numPicks = step.amount ?? 1;
+        for (let pickStep = 0; pickStep < numPicks; pickStep++) {
+          for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
+            const poolIndex = draftIndex * numSeats + seatIndex;
+            const pack = currentPacks[seatIndex] ?? [];
+            const nextPick = orderedPicksByPool[poolIndex]?.[pickPointers[poolIndex] ?? 0];
+            if (!nextPick) continue;
+
+            if (poolIndex === targetPoolIndex) {
+              const packOracleIds = [...pack];
+              const cardsInPack = packOracleIds.map((oracleId) => ({ cardIndex: getCardIndex(oracleId) }));
+              const actualPickIndex = packOracleIds.findIndex((oracleId) => oracleId === nextPick.oracle_id);
+              picksList[packNum]!.push({ cardIndex: getCardIndex(nextPick.oracle_id) });
+              states.push({
+                packNumber: packNum,
+                pickNumber: pickNumInPack,
+                cardsInPack,
+                actualPickIndex,
+                packOracleIds,
+                previousPickOracleIds: [...previousPickOracleIds],
+              });
+              previousPickOracleIds.push(nextPick.oracle_id);
+            }
+
+            pickPointers[poolIndex] = (pickPointers[poolIndex] ?? 0) + 1;
+            const removeIdx = pack.indexOf(nextPick.oracle_id);
+            if (removeIdx >= 0) pack.splice(removeIdx, 1);
+          }
+          pickNumInPack++;
+        }
+      } else if (step.action === 'trash' || step.action === 'trashrandom') {
+        const numTrash = step.amount ?? 1;
+        for (let trashStep = 0; trashStep < numTrash; trashStep++) {
+          for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
+            const poolIndex = draftIndex * numSeats + seatIndex;
+            const pack = currentPacks[seatIndex] ?? [];
+            if (pack.length === 0) continue;
+            if (step.action === 'trashrandom') {
+              const trashed = runData.randomTrashByPool?.[poolIndex]?.[randomTrashPointers[poolIndex] ?? 0];
+              randomTrashPointers[poolIndex] = (randomTrashPointers[poolIndex] ?? 0) + 1;
+              const removeIdx = trashed ? pack.indexOf(trashed) : -1;
+              if (removeIdx >= 0) pack.splice(removeIdx, 1);
+            } else {
+              pack.shift();
+            }
+          }
+          pickNumInPack++;
+        }
+      } else if (step.action === 'pass') {
+        const direction = packNum % 2 === 0 ? 1 : -1;
+        const snapshot = currentPacks.map((pack) => [...pack]);
+        for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
+          currentPacks[(seatIndex + direction + numSeats) % numSeats] = snapshot[seatIndex]!;
+        }
+      }
+    }
+  }
+
+  return { cards, picksList, states };
+}
+
+function reconstructSimulatorPoolFromRun(runData: SimulationRunData, poolIndex: number): SimulatedPool | null {
+  const slim = runData.slimPools[poolIndex];
+  if (!slim) return null;
+  return {
+    poolIndex,
+    draftIndex: slim.draftIndex,
+    seatIndex: slim.seatIndex,
+    archetype: slim.archetype,
+    picks: slim.picks.map((pick) => {
+      const meta = runData.cardMeta[pick.oracle_id];
+      return {
+        oracle_id: pick.oracle_id,
+        name: meta?.name ?? pick.oracle_id,
+        imageUrl: meta?.imageUrl ?? '',
+        packNumber: pick.packNumber,
+        pickNumber: pick.pickNumber,
+      };
+    }),
+  };
+}
+
+const SimulatorPickBreakdown: React.FC<{ pool: SimulatedPool; runData: SimulationRunData }> = ({ pool, runData }) => {
+  const [pickNumber, setPickNumber] = useState('0');
+  const [selectedSeatIndex, setSelectedSeatIndex] = useState(pool.seatIndex);
+  const [showRatings, setShowRatings] = useState(true);
+  const [ratings, setRatings] = useState<number[]>([]);
+  const seatPools = useMemo(
+    () =>
+      runData.slimPools
+        .map((slim, poolIndex) => ({ poolIndex, draftIndex: slim.draftIndex, seatIndex: slim.seatIndex }))
+        .filter((candidate) => candidate.draftIndex === pool.draftIndex)
+        .sort((a, b) => a.seatIndex - b.seatIndex),
+    [pool.draftIndex, runData.slimPools],
+  );
+  const activePool = useMemo(() => {
+    const selectedSeatPool = seatPools.find((candidate) => candidate.seatIndex === selectedSeatIndex);
+    return selectedSeatPool ? reconstructSimulatorPoolFromRun(runData, selectedSeatPool.poolIndex) : pool;
+  }, [pool, runData, seatPools, selectedSeatIndex]);
+  const breakdown = useMemo(
+    () => (activePool ? buildSimulatorDraftBreakdown(activePool, runData) : null),
+    [activePool, runData],
+  );
+  const currentPickNumber = Math.min(
+    Math.max(parseInt(pickNumber, 10) || 0, 0),
+    Math.max(0, (breakdown?.states.length ?? 1) - 1),
+  );
+  const current = breakdown?.states[currentPickNumber];
+
+  useEffect(() => {
+    setSelectedSeatIndex(pool.seatIndex);
+    setPickNumber('0');
+    setRatings([]);
+  }, [pool.poolIndex]);
+
+  useEffect(() => {
+    if (!breakdown) return undefined;
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft' && currentPickNumber > 0) {
+        setPickNumber((currentPickNumber - 1).toString());
+      } else if (event.key === 'ArrowRight' && currentPickNumber < breakdown.states.length - 1) {
+        setPickNumber((currentPickNumber + 1).toString());
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [breakdown, currentPickNumber]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!showRatings || !current || current.packOracleIds.length === 0) {
+      setRatings([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    (async () => {
+      try {
+        await loadDraftBot();
+        const ranked = await localBatchDraftRanked(
+          [{ pack: current.packOracleIds, pool: current.previousPickOracleIds }],
+          buildOracleRemapping(runData.cardMeta),
+        );
+        if (cancelled) return;
+        const rawByOracle = new Map((ranked[0] ?? []).map((entry) => [entry.oracle, entry.rating]));
+        setRatings(modelScoresToProbabilities(current.packOracleIds.map((oracleId) => rawByOracle.get(oracleId) ?? 0)));
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to load simulator pick recommendations:', err);
+          setRatings([]);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [current, runData.cardMeta, showRatings]);
+
+  if (!breakdown || !current) {
+    return (
+      <div className="p-3">
+        <Text sm className="text-text-secondary">
+          Full pick order is unavailable for this run.
+        </Text>
+      </div>
+    );
+  }
+
+  const onPickClick = (packIndex: number, pickIndex: number) => {
+    let picks = 0;
+    for (let i = 0; i < packIndex; i++) picks += breakdown.picksList[i]?.length ?? 0;
+    setPickNumber((picks + pickIndex).toString());
+  };
+  const selectedSeatPoolIndex = seatPools.findIndex((candidate) => candidate.seatIndex === selectedSeatIndex);
+  const goToRelativeSeat = (delta: number) => {
+    if (seatPools.length === 0) return;
+    const currentIndex = selectedSeatPoolIndex >= 0 ? selectedSeatPoolIndex : 0;
+    const next = seatPools[(currentIndex + delta + seatPools.length) % seatPools.length];
+    if (next) setSelectedSeatIndex(next.seatIndex);
+  };
+
+  return (
+    <div className="p-3">
+      <Flexbox
+        direction="row"
+        justify="between"
+        alignItems="center"
+        className="mb-3 flex-wrap gap-2 rounded border border-border bg-bg-accent/50 px-3 py-2"
+      >
+        <Text sm semibold>
+          Draft {pool.draftIndex + 1} · Seat {selectedSeatIndex + 1}
+        </Text>
+        <Flexbox direction="row" gap="1" className="flex-wrap">
+          <button
+            type="button"
+            onClick={() => goToRelativeSeat(-1)}
+            className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+          >
+            Previous seat
+          </button>
+          {seatPools.map((seatPool) => (
+            <button
+              key={seatPool.poolIndex}
+              type="button"
+              onClick={() => setSelectedSeatIndex(seatPool.seatIndex)}
+              className={[
+                'px-2 py-0.5 rounded text-xs font-medium border',
+                selectedSeatIndex === seatPool.seatIndex
+                  ? 'bg-link text-white border-link'
+                  : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
+              ].join(' ')}
+            >
+              Seat {seatPool.seatIndex + 1}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => goToRelativeSeat(1)}
+            className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+          >
+            Next seat
+          </button>
+        </Flexbox>
+      </Flexbox>
+      <DraftBreakdownDisplay
+        showRatings={showRatings}
+        setShowRatings={setShowRatings}
+        packNumber={current.packNumber}
+        pickNumber={current.pickNumber}
+        cardsInPack={current.cardsInPack}
+        picksList={breakdown.picksList}
+        ratings={showRatings ? ratings : undefined}
+        actualPickIndex={current.actualPickIndex}
+        cards={breakdown.cards}
+        onPickClick={onPickClick}
+        cardUrlPrefix="/tool/card"
+        hideRatingsToggle
+        hideHelpText
+      />
+    </div>
+  );
+};
+
 const ViewToggle: React.FC<{
-  mode: 'pool' | 'deck';
-  onChange: (m: 'pool' | 'deck') => void;
+  mode: PoolViewMode;
+  onChange: (m: PoolViewMode) => void;
   hasDeck: boolean;
+  hasFullPickOrder: boolean;
   deckLoading?: boolean;
-}> = ({ mode, onChange, hasDeck, deckLoading }) => (
+}> = ({ mode, onChange, hasDeck, hasFullPickOrder, deckLoading }) => (
   <Flexbox direction="row" gap="1">
-    {(['deck', 'pool'] as const).map((m) => (
+    {(['deck', 'pool', 'fullPickOrder'] as const).map((m) => (
       <button
         key={m}
         type="button"
-        disabled={m === 'deck' && !hasDeck}
+        disabled={(m === 'deck' && !hasDeck) || (m === 'fullPickOrder' && !hasFullPickOrder)}
         onClick={() => onChange(m)}
         className={[
           'px-2 py-0.5 rounded text-xs font-medium border',
           mode === m ? 'bg-link text-white border-link' : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
-          m === 'deck' && !hasDeck ? 'opacity-40 cursor-not-allowed' : '',
+          (m === 'deck' && !hasDeck) || (m === 'fullPickOrder' && !hasFullPickOrder)
+            ? 'opacity-40 cursor-not-allowed'
+            : '',
         ].join(' ')}
       >
-        {m === 'pool' ? 'Pick Order' : deckLoading ? 'Building…' : 'Deck'}
+        {m === 'deck' ? (deckLoading ? 'Building…' : 'Deck') : m === 'pool' ? 'Pick Order' : 'Full pick order'}
       </button>
     ))}
   </Flexbox>
@@ -1572,17 +1960,21 @@ const SimDeckView: React.FC<{
 
 const PoolExpansionContent: React.FC<{
   pool: SimulatedPool;
-  mode: 'pool' | 'deck';
+  mode: PoolViewMode;
   deck: BuiltDeck | null;
   cardMeta: Record<string, CardMeta>;
+  runData: SimulationRunData;
   highlightOracle?: string;
-}> = ({ pool, mode, deck, cardMeta, highlightOracle }) => {
+}> = ({ pool, mode, deck, cardMeta, runData, highlightOracle }) => {
   if (mode === 'deck' && deck && (deck.mainboard.length > 0 || deck.sideboard.length > 0)) {
     const picksByOracle: Record<string, SimulatedPickCard> = {};
     for (const pick of pool.picks) picksByOracle[pick.oracle_id] = pick;
     return (
       <SimDeckView deck={deck} picksByOracle={picksByOracle} cardMeta={cardMeta} highlightOracle={highlightOracle} />
     );
+  }
+  if (mode === 'fullPickOrder') {
+    return <SimulatorPickBreakdown pool={pool} runData={runData} />;
   }
   const orderedPicks = [...pool.picks].sort((a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber);
   return (
@@ -1621,13 +2013,15 @@ const CardPoolView: React.FC<{
   deckBuilds: BuiltDeck[] | null;
   deckLoading: boolean;
   cardMeta: Record<string, CardMeta>;
+  runData: SimulationRunData;
   onClose: () => void;
-}> = ({ card, pools, deckBuilds, deckLoading, cardMeta, onClose }) => {
+}> = ({ card, pools, deckBuilds, deckLoading, cardMeta, runData, onClose }) => {
   const [expandedPool, setExpandedPool] = useState<number | null>(pools[0]?.poolIndex ?? null);
-  const [viewMode, setViewMode] = useState<'pool' | 'deck'>('deck');
+  const [viewMode, setViewMode] = useState<PoolViewMode>('deck');
   const [poolLocationFilter, setPoolLocationFilter] = useState<DeckLocationFilter>('all');
   const [poolPage, setPoolPage] = useState(1);
   const hasDeck = !!deckBuilds && deckBuilds.length > 0;
+  const hasFullPickOrder = !!runData.setupData;
 
   const visiblePools = pools.filter((pool) => {
     if (!deckBuilds || poolLocationFilter === 'all') return true;
@@ -1687,7 +2081,13 @@ const CardPoolView: React.FC<{
               gap="1"
               className="flex-wrap rounded border border-border bg-bg-accent/70 px-2 py-1"
             >
-              <ViewToggle mode={viewMode} onChange={setViewMode} hasDeck={hasDeck} deckLoading={deckLoading} />
+              <ViewToggle
+                mode={viewMode}
+                onChange={setViewMode}
+                hasDeck={hasDeck}
+                hasFullPickOrder={hasFullPickOrder}
+                deckLoading={deckLoading}
+              />
             </Flexbox>
             <button
               type="button"
@@ -1748,6 +2148,7 @@ const CardPoolView: React.FC<{
                       mode={viewMode}
                       deck={deckBuilds?.[pool.poolIndex] ?? null}
                       cardMeta={cardMeta}
+                      runData={runData}
                       highlightOracle={card.oracle_id}
                     />
                   )}
@@ -1793,11 +2194,13 @@ const ArchetypePoolList: React.FC<{
   deckBuilds: BuiltDeck[] | null;
   deckLoading: boolean;
   cardMeta: Record<string, CardMeta>;
+  runData: SimulationRunData;
   onClose: () => void;
-}> = ({ archetype, title, pools, deckBuilds, deckLoading, cardMeta, onClose }) => {
+}> = ({ archetype, title, pools, deckBuilds, deckLoading, cardMeta, runData, onClose }) => {
   const [expandedPool, setExpandedPool] = useState<number | null>(null);
   const hasDeck = !!deckBuilds && deckBuilds.length > 0;
-  const [viewMode, setViewMode] = useState<'pool' | 'deck'>('pool');
+  const hasFullPickOrder = !!runData.setupData;
+  const [viewMode, setViewMode] = useState<PoolViewMode>('pool');
   useEffect(() => {
     if (hasDeck) setViewMode('deck');
   }, [hasDeck]);
@@ -1821,7 +2224,13 @@ const ArchetypePoolList: React.FC<{
             alignItems="center"
             className="flex-wrap rounded border border-border bg-bg-accent/60 px-2 py-1"
           >
-            <ViewToggle mode={viewMode} onChange={setViewMode} hasDeck={hasDeck} deckLoading={deckLoading} />
+            <ViewToggle
+              mode={viewMode}
+              onChange={setViewMode}
+              hasDeck={hasDeck}
+              hasFullPickOrder={hasFullPickOrder}
+              deckLoading={deckLoading}
+            />
             <button
               type="button"
               onClick={onClose}
@@ -1863,6 +2272,7 @@ const ArchetypePoolList: React.FC<{
                     mode={viewMode}
                     deck={deckBuilds?.[pool.poolIndex] ?? null}
                     cardMeta={cardMeta}
+                    runData={runData}
                   />
                 )}
               </div>
@@ -2306,6 +2716,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [loadingRun, setLoadingRun] = useState(false);
   const [deleteRunModalOpen, setDeleteRunModalOpen] = useState(false);
   const [runPendingDelete, setRunPendingDelete] = useState<SimulationRunEntry | null>(null);
+  const [clearHistoryModalOpen, setClearHistoryModalOpen] = useState(false);
 
   // Card pool view
   const [selectedCardOracles, setSelectedCardOracles] = useState<string[]>([]);
@@ -2338,6 +2749,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     async (
       slimPools: SlimPool[],
       setup: SimulationSetupResponse,
+      signal?: AbortSignal,
+      batchSize = gpuBatchSize,
     ): Promise<{ decks: BuiltDeck[]; basicCardMeta: Record<string, CardMeta> } | null> => {
       if (slimPools.length === 0) return { decks: [], basicCardMeta: {} };
       try {
@@ -2346,7 +2759,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
           cardMeta: setup.cardMeta,
           basics: setup.basics,
         }));
-        const decks = await localBatchDeckbuild(entries, gpuBatchSize);
+        const decks = await localBatchDeckbuild(entries, batchSize, signal);
         // Collect metadata for any basic oracle IDs that appear in mainboards but aren't in setup.cardMeta
         const basicCardMeta: Record<string, CardMeta> = {};
         for (const basic of setup.basics) {
@@ -2364,6 +2777,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         }
         return { decks, basicCardMeta };
       } catch (err) {
+        if (err instanceof WebGLInferenceError || (err instanceof Error && err.name === 'AbortError')) throw err;
         console.error('localBatchDeckbuild error:', err);
         return null;
       }
@@ -2509,6 +2923,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     [cubeId, selectedTs],
   );
 
+  const handleClearHistory = useCallback(async () => {
+    await clearLocalSimulationStore(cubeId);
+    setRuns([]);
+    setDisplayRunData(null);
+    setCurrentRunSetup(null);
+    setSelectedTs(null);
+    setSelectedCardOracles([]);
+    setSelectedArchetype(null);
+    setSelectedSkeletonId(null);
+    setStorageNotice(null);
+  }, [cubeId]);
+
   const handleCancel = useCallback(() => {
     simAbortRef.current?.abort();
     simAbortRef.current = null;
@@ -2530,6 +2956,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const handleStart = useCallback(async () => {
     const controller = new AbortController();
+    const runStart = performance.now();
+    let setupMs = 0;
+    let modelLoadMs = 0;
+    let simulationMs = 0;
+    let deckbuildMs = 0;
+    let saveMs = 0;
     simAbortRef.current = controller;
     setStatus('running');
     setSimPhase('setup');
@@ -2548,12 +2980,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         : setupTimeout.signal;
       let setupRes: Response;
       try {
+        const setupStart = performance.now();
         setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ numDrafts, numSeats, formatId: selectedFormatId }),
           signal: setupSignal,
         });
+        setupMs = performance.now() - setupStart;
       } catch (fetchErr) {
         clearTimeout(setupTimeoutId);
         if (setupTimeout.signal.aborted) {
@@ -2578,23 +3012,71 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       // Load the TF.js draft model locally (no-op if already loaded from a previous run)
       setSimPhase('loadmodel');
       setModelLoadProgress(0);
+      const modelLoadStart = performance.now();
       await loadDraftBot((pct) => setModelLoadProgress(pct));
+      modelLoadMs = performance.now() - modelLoadStart;
 
+      let effectiveGpuBatchSize = gpuBatchSize;
+      const retryNotices: string[] = [];
       setSimPhase('sim');
-      const report = await runClientSimulation(
-        setupData as SimulationSetupResponse,
-        numDrafts,
-        deadCardThresholdPct / 100,
-        setSimProgress,
-        controller.signal,
-        gpuBatchSize,
-      );
+      const simulationStart = performance.now();
+      let report: SimulationReport;
+      try {
+        report = await runClientSimulation(
+          setupData as SimulationSetupResponse,
+          numDrafts,
+          deadCardThresholdPct / 100,
+          setSimProgress,
+          controller.signal,
+          effectiveGpuBatchSize,
+        );
+      } catch (err) {
+        const fallbackBatchSize = err instanceof WebGLInferenceError ? nextLowerGpuBatchSize(effectiveGpuBatchSize) : null;
+        if (!fallbackBatchSize) throw err;
+        retryNotices.push(
+          `Draft simulation exceeded GPU memory at batch size ${effectiveGpuBatchSize}; retried at ${fallbackBatchSize}.`,
+        );
+        effectiveGpuBatchSize = fallbackBatchSize;
+        setSimProgress(0);
+        report = await runClientSimulation(
+          setupData as SimulationSetupResponse,
+          numDrafts,
+          deadCardThresholdPct / 100,
+          setSimProgress,
+          controller.signal,
+          effectiveGpuBatchSize,
+        );
+      }
+      simulationMs = performance.now() - simulationStart;
       setCurrentRunSetup(setupData as SimulationSetupResponse);
 
       // Build decks for all pools before saving
       setSimPhase('deckbuild');
       setDeckBuildsLoading(true);
-      const deckResult = await buildAllDecks(report.slimPools, setupData as SimulationSetupResponse);
+      const deckbuildStart = performance.now();
+      let deckResult: { decks: BuiltDeck[]; basicCardMeta: Record<string, CardMeta> } | null;
+      try {
+        deckResult = await buildAllDecks(
+          report.slimPools,
+          setupData as SimulationSetupResponse,
+          controller.signal,
+          effectiveGpuBatchSize,
+        );
+      } catch (err) {
+        const fallbackBatchSize = err instanceof WebGLInferenceError ? nextLowerGpuBatchSize(effectiveGpuBatchSize) : null;
+        if (!fallbackBatchSize) throw err;
+        retryNotices.push(
+          `Deckbuilding exceeded GPU memory at batch size ${effectiveGpuBatchSize}; retried at ${fallbackBatchSize}.`,
+        );
+        effectiveGpuBatchSize = fallbackBatchSize;
+        deckResult = await buildAllDecks(
+          report.slimPools,
+          setupData as SimulationSetupResponse,
+          controller.signal,
+          effectiveGpuBatchSize,
+        );
+      }
+      deckbuildMs = performance.now() - deckbuildStart;
       setDeckBuildsLoading(false);
       if (!deckResult) {
         setStatus('failed');
@@ -2605,13 +3087,23 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
       // Assemble the locally persisted run payload; merge basic land metadata into cardMeta.
       setSimPhase('save');
+      const saveStart = performance.now();
       const { simulatedPools: _derived, ...runDataBase } = report;
       const mergedCardMeta = { ...runDataBase.cardMeta, ...deckResult.basicCardMeta };
+      const timings: SimulationTimingBreakdown = {
+        setupMs,
+        modelLoadMs,
+        simulationMs,
+        deckbuildMs,
+        saveMs: 0,
+        totalMs: 0,
+      };
       const runData = {
         ...runDataBase,
         cardMeta: mergedCardMeta,
         deckBuilds: deckResult.decks,
         setupData: report.setupData,
+        timings,
       };
       const ts = Date.now();
       const entry: SimulationRunEntry = {
@@ -2622,10 +3114,30 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         deadCardCount: runData.deadCards.length,
         convergenceScore: runData.convergenceScore ?? 0,
       };
+      runData.timings = {
+        setupMs,
+        modelLoadMs,
+        simulationMs,
+        deckbuildMs,
+        saveMs: 0,
+        totalMs: performance.now() - runStart,
+      };
+      const storagePressureNotice = await getStoragePressureNotice();
       const persistResult = await persistSimulationRun(cubeId, entry, runData);
+      saveMs = performance.now() - saveStart;
+      runData.timings = {
+        setupMs,
+        modelLoadMs,
+        simulationMs,
+        deckbuildMs,
+        saveMs,
+        totalMs: performance.now() - runStart,
+      };
       setRuns(persistResult.runs);
       if (!persistResult.persisted) {
         setStorageNotice('Results are shown below, but this browser did not have enough local storage to save them.');
+      } else if (retryNotices.length > 0 || storagePressureNotice) {
+        setStorageNotice([...retryNotices, storagePressureNotice].filter(Boolean).join(' '));
       }
 
       setStatus('completed');
@@ -2639,11 +3151,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       setStatus('failed');
       setSimPhase(null);
       if (err instanceof WebGLInferenceError) {
-        const suggestion =
-          numDrafts > 1
-            ? ` Try reducing the draft count (currently ${numDrafts}) — cutting it in half is a good starting point.`
-            : '';
-        setErrorMsg(`Your GPU ran out of memory during simulation.${suggestion}`);
+        const draftSuggestion =
+          numDrafts > 1 ? `reduce the draft count (currently ${numDrafts})` : 'run fewer seats or a smaller format';
+        const batchSuggestion = gpuBatchSize > 16 ? ' or lower the GPU batch size' : '';
+        setErrorMsg(
+          `Your GPU ran out of memory during simulation. Try to ${draftSuggestion}${batchSuggestion}, then run it again.`,
+        );
       } else {
         setErrorMsg(err instanceof Error ? err.message : 'Simulation failed');
       }
@@ -3042,13 +3555,19 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     />
                   </Col>
                   <Col xs={12} sm={4} md={2}>
-                    <label className="block text-sm font-medium mb-1">
-                      GPU Batch Size{' '}
+                    <label className="block text-sm font-medium mb-1" htmlFor="draftSimulatorGpuBatchSize">
+                      GPU batch size{' '}
                       <Text xs className="text-text-secondary font-normal">
-                        (larger = faster, needs more GPU memory)
+                        (higher can speed up draft sim on strong GPUs)
                       </Text>
                     </label>
-                    <NumericInput min={1} value={gpuBatchSize} onChange={setGpuBatchSize} disabled={isRunning} />
+                    <Select
+                      id="draftSimulatorGpuBatchSize"
+                      options={GPU_BATCH_OPTIONS}
+                      value={`${gpuBatchSize}`}
+                      setValue={(value) => setGpuBatchSize(parseInt(value, 10))}
+                      disabled={isRunning}
+                    />
                   </Col>
                   <Col xs={12} sm={12} md={2} className="flex flex-col gap-1">
                     <button
@@ -3112,7 +3631,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
               <Card className="border-green-700">
                 <CardBody>
                   <Text sm className="text-text">
-                    {storageNotice
+                    {storageNotice?.startsWith('Results are shown below')
                       ? 'Simulation complete — results are displayed below.'
                       : 'Simulation complete — results are stored locally in this browser and displayed below.'}
                   </Text>
@@ -3196,7 +3715,40 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         value={displayRunData.cardStats.length}
                         sub="unique cards seen across all packs"
                       />
+                      {displayRunData.timings && (
+                        <SummaryCard
+                          label="Run Time"
+                          value={formatDuration(displayRunData.timings.totalMs)}
+                          sub="end-to-end in this browser"
+                        />
+                      )}
                     </Flexbox>
+                    {displayRunData.timings && (
+                      <Card className="border-border/60 bg-bg-accent/20">
+                        <CardBody>
+                          <Flexbox direction="row" gap="3" className="flex-wrap">
+                            <Text xs className="text-text-secondary">
+                              Setup: <span className="text-text">{formatDuration(displayRunData.timings.setupMs)}</span>
+                            </Text>
+                            <Text xs className="text-text-secondary">
+                              Model load:{' '}
+                              <span className="text-text">{formatDuration(displayRunData.timings.modelLoadMs)}</span>
+                            </Text>
+                            <Text xs className="text-text-secondary">
+                              Draft sim:{' '}
+                              <span className="text-text">{formatDuration(displayRunData.timings.simulationMs)}</span>
+                            </Text>
+                            <Text xs className="text-text-secondary">
+                              Deckbuild:{' '}
+                              <span className="text-text">{formatDuration(displayRunData.timings.deckbuildMs)}</span>
+                            </Text>
+                            <Text xs className="text-text-secondary">
+                              Save: <span className="text-text">{formatDuration(displayRunData.timings.saveMs)}</span>
+                            </Text>
+                          </Flexbox>
+                        </CardBody>
+                      </Card>
+                    )}
                   </Flexbox>
                 </div>
                 <div className="simSection simSectionCards flex flex-col gap-5 pt-2">
@@ -3474,7 +4026,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                     <>
                                       <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
                                       {sk.occasionalCards.map((card) => (
-                                      <div key={card.oracle_id} className="opacity-60">
+                                        <div key={card.oracle_id}>
                                           <SkeletonCardImage card={card} size={SIM_PREVIEW_CARD_W} />
                                         </div>
                                       ))}
@@ -3529,7 +4081,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 <>
                                   <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
                                   {selectedArchetypePreview.supportCards.map((card) => (
-                                    <div key={card.oracle_id} className="opacity-60">
+                                    <div key={card.oracle_id}>
                                       <SkeletonCardImage card={card} size={SIM_PREVIEW_CARD_W} />
                                     </div>
                                   ))}
@@ -3572,7 +4124,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 </div>
                                 <div className="mt-0.5">
                                   <Text xs className="text-text-secondary">
-                                    Each maindeck card contributes to its colors. Multicolor cards split evenly.
+                                    Each main deck card contributes to its colors. Multicolor cards split evenly.
                                     {activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}
                                   </Text>
                                 </div>
@@ -3592,7 +4144,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 </div>
                                 <div className="mt-0.5">
                                   <Text xs className="text-text-secondary">
-                                    Nonland maindeck cards by mana value.
+                                    Nonland main deck cards by mana value.
                                     {activeFilterPoolIndexSet ? ' Filtered to current scope.' : ''}
                                   </Text>
                                 </div>
@@ -3651,6 +4203,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                               deckBuilds={activeDecks}
                               deckLoading={deckBuildsLoading}
                               cardMeta={displayRunData.cardMeta}
+                              runData={displayRunData}
                               onClose={() => setSelectedCardOracles([])}
                             />
                           </div>
@@ -3665,6 +4218,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             deckBuilds={activeDecks}
                             deckLoading={deckBuildsLoading}
                             cardMeta={displayRunData.cardMeta}
+                            runData={displayRunData}
                             onClose={() => setSelectedCardOracles([])}
                           />
                         </div>
@@ -3686,6 +4240,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                     deckBuilds={activeDecks}
                                     deckLoading={deckBuildsLoading}
                                     cardMeta={displayRunData.cardMeta}
+                                    runData={displayRunData}
                                     onClose={() => setSelectedSkeletonId(null)}
                                   />
                                 ) : null;
@@ -3698,6 +4253,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 deckBuilds={activeDecks}
                                 deckLoading={deckBuildsLoading}
                                 cardMeta={displayRunData.cardMeta}
+                                runData={displayRunData}
                                 onClose={() => setSelectedArchetype(null)}
                               />
                             )}
@@ -3723,7 +4279,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 {runs.length > 0 && (
                   <Card>
                     <CardHeader>
-                      <Text semibold>Local Simulation History</Text>
+                      <Flexbox direction="row" justify="between" alignItems="center" className="w-full gap-3">
+                        <Text semibold>Local Simulation History</Text>
+                        <Button color="secondary" onClick={() => setClearHistoryModalOpen(true)}>
+                          Clear History
+                        </Button>
+                      </Flexbox>
                     </CardHeader>
                     <CardBody>
                       <div className="overflow-x-auto rounded border border-border bg-bg">
@@ -3798,6 +4359,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
               run={runPendingDelete}
               onConfirm={handleDeleteRun}
             />
+            <ClearSimulationHistoryModal
+              isOpen={clearHistoryModalOpen}
+              setOpen={setClearHistoryModalOpen}
+              onConfirm={handleClearHistory}
+            />
             <LeaveSimulationModal
               isOpen={leaveModalOpen}
               setOpen={(open) => {
@@ -3835,7 +4401,7 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         </p>
         <p>
           The simulation tracks pick rate, average pick position within the pack, wheel count (drafted after the pack
-          has gone all the way around the table), and P1P1 frequency per card.
+          has gone all the way around the table), and taken-P1P1 rate per card.
         </p>
       </div>
     ),
@@ -3868,12 +4434,12 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         <p>
           After deckbuilding, each built deck is grouped with other similar decks to surface recurring deck families.
           This is an approximate similarity-based view, not a claim that every deck belongs cleanly to a single
-          archetype. Clustering on mainboards instead of full pools keeps the focus on cards that actually made the
+          archetype. Clustering on main decks instead of full pools keeps the focus on cards that actually made the
           final deck, rather than sideboard picks. Three steps build the vectors used for comparison:
         </p>
         <ol className="list-decimal list-inside space-y-1.5 ml-2">
           <li>
-            <span className="font-medium text-text">Binary presence</span> — each mainboard becomes a vector of 1s (in
+            <span className="font-medium text-text">Binary presence</span> — each main deck becomes a vector of 1s (in
             the deck) and 0s (not in the deck), one dimension per card.
           </li>
           <li>
@@ -3938,13 +4504,13 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
           </li>
           <li>
             <span className="font-medium text-text">Land fill</span> — basic lands from the cube's basics board are
-            added to reach the configured land count (default 17). Color ratios follow the mainboard's mana
+            added to reach the configured land count (default 17). Color ratios follow the main deck's mana
             requirements.
           </li>
         </ol>
         <p>
           The <span className="font-medium text-text">Deck %</span> column in All Card Stats shows what fraction of
-          builds that included a card in the pool chose to mainboard it — near 100% means it's an auto-include whenever
+          builds that included a card in the pool chose to put it in the main deck — near 100% means it's an auto-include whenever
           drafted; low values indicate it frequently gets relegated to the sideboard.
         </p>
       </div>
