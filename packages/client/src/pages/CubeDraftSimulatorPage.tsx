@@ -4399,6 +4399,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   k: number;
   onSetK: (k: number) => void;
   coreThreshold: number;
+  appliedCoreThreshold: number;
   onSetCoreThreshold: (v: number) => void;
   onRecluster: () => void;
   totalPools: number;
@@ -4411,6 +4412,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   k,
   onSetK,
   coreThreshold,
+  appliedCoreThreshold,
   onSetCoreThreshold,
   onRecluster,
   totalPools,
@@ -4467,7 +4469,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
         {skeleton.coreCards.length > 0 && (
           <div className="mb-5">
             <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2.5">
-              Core (&gt;={coreThreshold}% of pools)
+              Core (&gt;={appliedCoreThreshold}% of pools)
             </Text>
             <div className="flex flex-row flex-wrap gap-2">
               {skeleton.coreCards.map((card) => (
@@ -4479,7 +4481,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
         {skeleton.occasionalCards.length > 0 && (
           <div className="mb-4">
             <Text xs className="text-text-secondary/80 font-medium uppercase tracking-[0.14em] mb-1.5">
-              Support ({Math.round(coreThreshold / 2)}-{coreThreshold - 1}% of pools)
+              Support ({Math.round(appliedCoreThreshold / 2)}-{appliedCoreThreshold - 1}% of pools)
             </Text>
             <div className="flex flex-row flex-wrap gap-1.5">
               {skeleton.occasionalCards.map((card) => (
@@ -5953,7 +5955,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       return sk ? `Cluster ${skIdx + 1}` : 'Detailed View';
     }
     if (selectedArchetype) return archetypeFullName(selectedArchetype);
-    return 'Detailed View';
+    return 'No filter selected';
   }, [selectedCard, selectedCards, selectedCardScopeLabel, selectedSkeletonId, selectedArchetype, skeletons]);
 
   const detailedViewSubtitle = useMemo(() => {
