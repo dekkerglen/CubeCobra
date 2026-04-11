@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import 'dotenv/config';
 
-import { PutCommand } from '../../server/node_modules/@aws-sdk/lib-dynamodb';
+import { PutCommand } from '@aws-sdk/lib-dynamodb';
 
 const TABLE = process.env.DYNAMO_TABLE || 'LOCAL_CUBECOBRA';
 const SALT_ROUNDS = 10;
