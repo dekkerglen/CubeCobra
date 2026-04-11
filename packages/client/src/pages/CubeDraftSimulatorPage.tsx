@@ -2436,6 +2436,7 @@ const ArchetypeSkeletonSection: React.FC<{
   k: number;
   onSetK: (k: number) => void;
   coreThreshold: number;
+  appliedCoreThreshold: number;
   onSetCoreThreshold: (v: number) => void;
   onRecluster: () => void;
   totalPools: number;
@@ -2448,6 +2449,7 @@ const ArchetypeSkeletonSection: React.FC<{
   k,
   onSetK,
   coreThreshold,
+  appliedCoreThreshold,
   onSetCoreThreshold,
   onRecluster,
   totalPools,
@@ -2461,6 +2463,7 @@ const ArchetypeSkeletonSection: React.FC<{
     k={k}
     onSetK={onSetK}
     coreThreshold={coreThreshold}
+    appliedCoreThreshold={appliedCoreThreshold}
     onSetCoreThreshold={onSetCoreThreshold}
     onRecluster={onRecluster}
     totalPools={totalPools}
@@ -2476,6 +2479,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   k: number;
   onSetK: (k: number) => void;
   coreThreshold: number;
+  appliedCoreThreshold: number;
   onSetCoreThreshold: (v: number) => void;
   onRecluster: () => void;
   totalPools: number;
@@ -2488,6 +2492,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   k,
   onSetK,
   coreThreshold,
+  appliedCoreThreshold,
   onSetCoreThreshold,
   onRecluster,
   totalPools,
@@ -2544,7 +2549,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
         {skeleton.coreCards.length > 0 && (
           <div className="mb-5">
             <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2.5">
-              Core (&gt;={coreThreshold}% of pools)
+              Core (&gt;={appliedCoreThreshold}% of pools)
             </Text>
             <div className="flex flex-row flex-wrap gap-2">
               {skeleton.coreCards.map((card) => (
@@ -2556,7 +2561,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
         {skeleton.occasionalCards.length > 0 && (
           <div className="mb-4">
             <Text xs className="text-text-secondary/80 font-medium uppercase tracking-[0.14em] mb-1.5">
-              Support ({Math.round(coreThreshold / 2)}-{coreThreshold - 1}% of pools)
+              Support ({Math.round(appliedCoreThreshold / 2)}-{appliedCoreThreshold - 1}% of pools)
             </Text>
             <div className="flex flex-row flex-wrap gap-1.5">
               {skeleton.occasionalCards.map((card) => (
@@ -2727,15 +2732,22 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const cardStatsRef = useRef<HTMLDivElement>(null);
   const simAbortRef = useRef<AbortController | null>(null);
 
-  // Section collapse state (default collapsed)
+  // Section collapse state (default open)
+  const [overviewOpen, setOverviewOpen] = useState(true);
+  const [cardAnalysisOpen, setCardAnalysisOpen] = useState(true);
+  const [draftPatternsOpen, setDraftPatternsOpen] = useState(true);
+  const [detailedViewOpen, setDetailedViewOpen] = useState(true);
+  const [referenceOpen, setReferenceOpen] = useState(true);
   const [archetypesOpen, setArchetypesOpen] = useState(true);
   const [deckColorOpen, setDeckColorOpen] = useState(true);
   const [cardStatsOpen, setCardStatsOpen] = useState(true);
 
   // Archetype skeleton clustering
   const [clusterK, setClusterK] = useState(10);
+  const [pendingClusterK, setPendingClusterK] = useState(10);
   const [clusterSeed, setClusterSeed] = useState(0);
   const [coreThreshold, setCoreThreshold] = useState(60);
+  const [pendingCoreThreshold, setPendingCoreThreshold] = useState(60);
   const [deckBuildsLoading, setDeckBuildsLoading] = useState(false);
 
   // Reconstruct SimulatedPool[] from slim pools for display (works for both fresh and historical)
@@ -3449,7 +3461,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       return sk ? `Cluster ${skIdx + 1}` : 'Detailed View';
     }
     if (selectedArchetype) return archetypeFullName(selectedArchetype);
-    return 'Detailed View';
+    return 'No filter selected';
   }, [selectedCard, selectedCards, selectedCardScopeLabel, selectedSkeletonId, selectedArchetype, skeletons]);
 
   const detailedViewSubtitle = useMemo(() => {
@@ -3681,206 +3693,221 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             {displayRunData && (
               <Flexbox direction="col" gap="6">
                 <div className="simSection simSectionOverview flex flex-col gap-4">
-                  <div className="simSectionHeading">
+                  <div className="simSectionHeading flex items-center justify-between gap-3">
                     <Text semibold className="tracking-wide">
                       Overview
                     </Text>
+                    <button
+                      type="button"
+                      onClick={() => setOverviewOpen((open) => !open)}
+                      className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                    >
+                      {overviewOpen ? '▲ Hide' : '▼ Show'}
+                    </button>
                   </div>
-                  <Flexbox direction="col" gap="4">
-                    <Flexbox direction="row" gap="4" className="flex-wrap">
-                      <SummaryCard
-                        label="Drafts Simulated"
-                        value={displayRunData.numDrafts}
-                        sub={`${displayRunData.numSeats} seats each`}
-                      />
-                      <SummaryCard
-                        label="Dead Cards"
-                        value={displayRunData.deadCards.length}
-                        sub={`< ${(displayRunData.deadCardThreshold * 100).toFixed(0)}% pick rate`}
-                        onClick={() => {
-                          setCardStatsOpen(true);
-                          setTimeout(
-                            () => cardStatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-                            50,
-                          );
-                        }}
-                        badge={
-                          displayRunData.deadCards.length > 0 ? (
-                            <span className="text-xs text-link">Click to view in card stats</span>
-                          ) : undefined
-                        }
-                      />
-                      <SummaryCard
-                        label="Cards Tracked"
-                        value={displayRunData.cardStats.length}
-                        sub="unique cards seen across all packs"
-                      />
-                      {displayRunData.timings && (
+                  <Collapse isOpen={overviewOpen}>
+                    <Flexbox direction="col" gap="4">
+                      <Flexbox direction="row" gap="4" className="flex-wrap">
                         <SummaryCard
-                          label="Run Time"
-                          value={formatDuration(displayRunData.timings.totalMs)}
-                          sub="end-to-end in this browser"
+                          label="Drafts Simulated"
+                          value={displayRunData.numDrafts}
+                          sub={`${displayRunData.numSeats} seats each`}
                         />
-                      )}
+                        <SummaryCard
+                          label="Dead Cards"
+                          value={displayRunData.deadCards.length}
+                          sub={`< ${(displayRunData.deadCardThreshold * 100).toFixed(0)}% pick rate`}
+                          onClick={() => {
+                            setCardStatsOpen(true);
+                            setTimeout(
+                              () => cardStatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+                              50,
+                            );
+                          }}
+                          badge={
+                            displayRunData.deadCards.length > 0 ? (
+                              <span className="text-xs text-link">Click to view in card stats</span>
+                            ) : undefined
+                          }
+                        />
+                        <SummaryCard
+                          label="Cards Tracked"
+                          value={displayRunData.cardStats.length}
+                          sub="unique cards seen across all packs"
+                        />
+                        {displayRunData.timings && (
+                          <SummaryCard
+                            label="Run Time"
+                            value={formatDuration(displayRunData.timings.totalMs)}
+                            sub="end-to-end in this browser"
+                          />
+                        )}
+                      </Flexbox>
                     </Flexbox>
-                    {displayRunData.timings && (
-                      <Card className="border-border/60 bg-bg-accent/20">
-                        <CardBody>
-                          <Flexbox direction="row" gap="3" className="flex-wrap">
-                            <Text xs className="text-text-secondary">
-                              Setup: <span className="text-text">{formatDuration(displayRunData.timings.setupMs)}</span>
-                            </Text>
-                            <Text xs className="text-text-secondary">
-                              Model load:{' '}
-                              <span className="text-text">{formatDuration(displayRunData.timings.modelLoadMs)}</span>
-                            </Text>
-                            <Text xs className="text-text-secondary">
-                              Draft sim:{' '}
-                              <span className="text-text">{formatDuration(displayRunData.timings.simulationMs)}</span>
-                            </Text>
-                            <Text xs className="text-text-secondary">
-                              Deckbuild:{' '}
-                              <span className="text-text">{formatDuration(displayRunData.timings.deckbuildMs)}</span>
-                            </Text>
-                            <Text xs className="text-text-secondary">
-                              Save: <span className="text-text">{formatDuration(displayRunData.timings.saveMs)}</span>
-                            </Text>
-                          </Flexbox>
-                        </CardBody>
-                      </Card>
-                    )}
-                  </Flexbox>
+                  </Collapse>
                 </div>
                 <div className="simSection simSectionCards flex flex-col gap-5 pt-2">
-                  <div className="simSectionHeading">
+                  <div className="simSectionHeading flex items-center justify-between gap-3">
                     <Text semibold className="tracking-wide">
                       Card Analysis
                     </Text>
+                    <button
+                      type="button"
+                      onClick={() => setCardAnalysisOpen((open) => !open)}
+                      className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                    >
+                      {cardAnalysisOpen ? '▲ Hide' : '▼ Show'}
+                    </button>
                   </div>
                   <Flexbox direction="col" gap="4">
-                    <div className="simCardDiagBlock simCardDiagSummary flex flex-col gap-4">
-                      <div className="simCardDiagBlock simCardDiagElo">
-                        <Card>
-                          <CardHeader>
-                            <div>
-                              <div>
-                                <Text semibold>Elo vs. Pick Position</Text>
-                              </div>
-                              <div className="mt-0.5">
-                                <Text xs className="text-text-secondary">
-                                  Each dot is a card. Higher on the chart means it is taken earlier on average.
-                                </Text>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardBody>
-                            <EloVsPickRateScatter cardStats={displayRunData.cardStats} />
-                          </CardBody>
-                        </Card>
-                      </div>
-                      <div className="simCardDiagBlock simCardDiagContext">
-                        <DraftVsEloTable cardStats={displayRunData.cardStats} />
-                      </div>
-                    </div>
-                    <div className="simSection simSectionArchetypes flex flex-col gap-5 pt-2">
-                      <div className="simSectionHeading">
-                        <Text semibold className="tracking-wide">
-                          Draft Patterns
-                        </Text>
-                      </div>
-                      <Row className="gap-4">
-                        <Col xs={12}>
+                    <Collapse isOpen={cardAnalysisOpen}>
+                      <div className="simCardDiagBlock simCardDiagSummary flex flex-col gap-4">
+                        <div className="simCardDiagBlock simCardDiagElo">
                           <Card>
                             <CardHeader>
-                              <Flexbox
-                                direction="row"
-                                justify="between"
-                                alignItems="center"
-                                className="flex-wrap gap-2"
-                              >
+                              <div>
                                 <div>
-                                  <div>
-                                    <Text semibold>Deck Color Distribution</Text>
-                                  </div>
-                                  <div className="mt-0.5">
-                                    <Text xs className="text-text-secondary">
-                                      Click a row to filter stats by color profile
-                                    </Text>
-                                  </div>
+                                  <Text semibold>Elo vs. Pick Position</Text>
                                 </div>
-                                <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
-                                  {selectedArchetype && (
-                                    <Flexbox direction="row" gap="2" alignItems="center">
-                                      <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
-                                        {archetypeFullName(selectedArchetype)}
-                                      </span>
-                                      <button
-                                        type="button"
-                                        className="text-xs text-text-secondary hover:text-text border border-border rounded px-2 py-0.5 hover:bg-bg-active"
-                                        onClick={() => setSelectedArchetype(null)}
-                                      >
-                                        ✕ Clear
-                                      </button>
-                                    </Flexbox>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => setDeckColorOpen((o) => !o)}
-                                    className="whitespace-nowrap px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
-                                  >
-                                    {deckColorOpen ? '▲ Hide' : '▼ Show'}
-                                  </button>
-                                </Flexbox>
-                              </Flexbox>
+                                <div className="mt-0.5">
+                                  <Text xs className="text-text-secondary">
+                                    Each dot is a card. Higher on the chart means it is taken earlier on average.
+                                  </Text>
+                                </div>
+                              </div>
                             </CardHeader>
-                            <Collapse isOpen={deckColorOpen}>
-                              <CardBody>
-                                <ArchetypeChart
-                                  archetypeDistribution={displayedArchetypeDistribution}
-                                  selectedArchetype={selectedArchetype}
-                                  onSelect={(cp) => {
-                                    setSelectedArchetype(cp);
-                                    setSelectedSkeletonId(null);
-                                  }}
-                                />
-                              </CardBody>
-                            </Collapse>
+                            <CardBody>
+                              <EloVsPickRateScatter cardStats={displayRunData.cardStats} />
+                            </CardBody>
                           </Card>
-                        </Col>
-                      </Row>
-                      {skeletons.length > 0 && (
-                        <ArchetypeSkeletonSection
-                          skeletons={skeletons}
-                          k={clusterK}
-                          onSetK={setClusterK}
-                          coreThreshold={coreThreshold}
-                          onSetCoreThreshold={setCoreThreshold}
-                          onRecluster={() => {
-                            setSelectedSkeletonId(null);
-                            setClusterSeed((s) => s + 1);
-                          }}
-                          totalPools={displayRunData.slimPools.length}
-                          selectedSkeletonId={selectedSkeletonId}
-                          onSelectSkeleton={(id) => {
-                            setSelectedSkeletonId(id);
-                            setSelectedArchetype(null);
-                          }}
-                          isOpen={archetypesOpen}
-                          onToggle={() => setArchetypesOpen((o) => !o)}
-                        />
-                      )}
-                    </div>
+                        </div>
+                        <div className="simCardDiagBlock simCardDiagContext">
+                          <DraftVsEloTable cardStats={displayRunData.cardStats} />
+                        </div>
+                      </div>
+                    </Collapse>
+                      <div className="simSection simSectionArchetypes flex flex-col gap-5 pt-2">
+                        <div className="simSectionHeading flex items-center justify-between gap-3">
+                          <Text semibold className="tracking-wide">
+                            Draft Patterns
+                          </Text>
+                          <button
+                            type="button"
+                            onClick={() => setDraftPatternsOpen((open) => !open)}
+                            className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                          >
+                            {draftPatternsOpen ? '▲ Hide' : '▼ Show'}
+                          </button>
+                        </div>
+                        <Collapse isOpen={draftPatternsOpen}>
+                          <Flexbox direction="col" gap="5">
+                            <Row className="gap-4">
+                              <Col xs={12}>
+                                <Card>
+                                  <CardHeader>
+                                    <Flexbox
+                                      direction="row"
+                                      justify="between"
+                                      alignItems="center"
+                                      className="flex-wrap gap-2"
+                                    >
+                                      <div>
+                                        <div>
+                                          <Text semibold>Deck Color Distribution</Text>
+                                        </div>
+                                        <div className="mt-0.5">
+                                          <Text xs className="text-text-secondary">
+                                            Click a row to filter stats by color profile
+                                          </Text>
+                                        </div>
+                                      </div>
+                                      <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
+                                        {selectedArchetype && (
+                                          <Flexbox direction="row" gap="2" alignItems="center">
+                                            <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
+                                              {archetypeFullName(selectedArchetype)}
+                                            </span>
+                                            <button
+                                              type="button"
+                                              className="text-xs text-text-secondary hover:text-text border border-border rounded px-2 py-0.5 hover:bg-bg-active"
+                                              onClick={() => setSelectedArchetype(null)}
+                                            >
+                                              ✕ Clear
+                                            </button>
+                                          </Flexbox>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => setDeckColorOpen((o) => !o)}
+                                          className="whitespace-nowrap px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                                        >
+                                          {deckColorOpen ? '▲ Hide' : '▼ Show'}
+                                        </button>
+                                      </Flexbox>
+                                    </Flexbox>
+                                  </CardHeader>
+                                  <Collapse isOpen={deckColorOpen}>
+                                    <CardBody>
+                                      <ArchetypeChart
+                                        archetypeDistribution={displayedArchetypeDistribution}
+                                        selectedArchetype={selectedArchetype}
+                                        onSelect={(cp) => {
+                                          setSelectedArchetype(cp);
+                                          setSelectedSkeletonId(null);
+                                        }}
+                                      />
+                                    </CardBody>
+                                  </Collapse>
+                                </Card>
+                              </Col>
+                            </Row>
+                            {skeletons.length > 0 && (
+                              <ArchetypeSkeletonSection
+                                skeletons={skeletons}
+                                k={pendingClusterK}
+                                onSetK={setPendingClusterK}
+                                coreThreshold={pendingCoreThreshold}
+                                appliedCoreThreshold={coreThreshold}
+                                onSetCoreThreshold={setPendingCoreThreshold}
+                                onRecluster={() => {
+                                  setSelectedSkeletonId(null);
+                                  setClusterK(pendingClusterK);
+                                  setCoreThreshold(pendingCoreThreshold);
+                                  setClusterSeed((s) => s + 1);
+                                }}
+                                totalPools={displayRunData.slimPools.length}
+                                selectedSkeletonId={selectedSkeletonId}
+                                onSelectSkeleton={(id) => {
+                                  setSelectedSkeletonId(id);
+                                  setSelectedArchetype(null);
+                                }}
+                                isOpen={archetypesOpen}
+                                onToggle={() => setArchetypesOpen((o) => !o)}
+                              />
+                            )}
+                          </Flexbox>
+                        </Collapse>
+                      </div>
                     <div
                       ref={detailedViewRef}
                       className="simCardDiagBlock simCardDiagDetailArea flex flex-col gap-5 pt-2"
                     >
-                      <div className="simSectionHeading">
+                      <div className="simSectionHeading flex items-center justify-between gap-3">
                         <Text semibold className="tracking-wide">
                           Detailed View
                         </Text>
+                        <button
+                          type="button"
+                          onClick={() => setDetailedViewOpen((open) => !open)}
+                          className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                        >
+                          {detailedViewOpen ? '▲ Hide' : '▼ Show'}
+                        </button>
                       </div>
-                      {/* Top summary row — no harsh inner borders, flat surfaces */}
-                      <div className="flex flex-col md:flex-row gap-3 items-stretch">
+                      <Collapse isOpen={detailedViewOpen}>
+                        <Flexbox direction="col" gap="5">
+                          {/* Top summary row — no harsh inner borders, flat surfaces */}
+                          <div className="flex flex-col md:flex-row gap-3 items-stretch">
                         {/* Left: selected card / default state */}
                         <div className="flex-1 min-w-0 rounded-lg bg-bg-accent/40 px-4 py-3">
                           {selectedCards.length > 0 ? (
@@ -4259,9 +4286,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             )}
                           </div>
                         )}
+                        </Flexbox>
+                      </Collapse>
                     </div>
                   </Flexbox>
-                </div>
+              </div>
                 <Text xs className="text-text-secondary text-right">
                   Generated {new Date(displayRunData.generatedAt).toLocaleString()}
                 </Text>
@@ -4269,89 +4298,98 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             )}
 
             <div className="simSection simSectionReference flex flex-col gap-4 pt-3 border-t border-border">
-              <div className="simSectionHeading simSectionHeadingSubtle">
-                <Text semibold className="tracking-wide text-text-secondary">
+              <div className="simSectionHeading flex items-center justify-between gap-3">
+                <Text semibold className="tracking-wide">
                   Reference
                 </Text>
+                <button
+                  type="button"
+                  onClick={() => setReferenceOpen((open) => !open)}
+                  className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                >
+                  {referenceOpen ? '▲ Hide' : '▼ Show'}
+                </button>
               </div>
-              <Flexbox direction="col" gap="4">
-                {/* Run history */}
-                {runs.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <Flexbox direction="row" justify="between" alignItems="center" className="w-full gap-3">
-                        <Text semibold>Local Simulation History</Text>
-                        <Button color="secondary" onClick={() => setClearHistoryModalOpen(true)}>
-                          Clear History
-                        </Button>
-                      </Flexbox>
-                    </CardHeader>
-                    <CardBody>
-                      <div className="overflow-x-auto rounded border border-border bg-bg">
-                        <table className="min-w-full divide-y divide-border text-sm">
-                          <thead className="bg-bg-accent">
-                            <tr>
-                              {['Date', 'Drafts', 'Dead Cards', ''].map((h) => (
-                                <th
-                                  key={h}
-                                  className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                                >
-                                  {h}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border">
-                            {runs.map((run) => (
-                              <tr
-                                key={run.ts}
-                                onClick={() => handleLoadRun(run.ts)}
-                                className={[
-                                  'cursor-pointer',
-                                  run.ts === selectedTs
-                                    ? 'bg-bg-active font-semibold border-l-2 border-link'
-                                    : 'hover:bg-bg-active border-l-2 border-transparent',
-                                ].join(' ')}
-                              >
-                                <td className="px-3 py-2">{new Date(run.generatedAt).toLocaleString()}</td>
-                                <td className="px-3 py-2 text-text-secondary">
-                                  {run.numDrafts} × {run.numSeats} seats
-                                </td>
-                                <td className="px-3 py-2 text-text-secondary">
-                                  {run.deadCardCount > 0 ? (
-                                    <span className="text-red-400">{run.deadCardCount}</span>
-                                  ) : (
-                                    '—'
-                                  )}
-                                </td>
-                                <td className="px-3 py-2 text-right">
-                                  <button
-                                    type="button"
-                                    className="px-2 py-0.5 rounded text-xs font-medium border bg-bg border-border text-text-secondary hover:bg-bg-active"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setRunPendingDelete(run);
-                                      setDeleteRunModalOpen(true);
-                                    }}
+              <Collapse isOpen={referenceOpen}>
+                <Flexbox direction="col" gap="4">
+                  {/* Run history */}
+                  {runs.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <Flexbox direction="row" justify="between" alignItems="center" className="w-full gap-3">
+                          <Text semibold>Local Simulation History</Text>
+                          <Button color="secondary" onClick={() => setClearHistoryModalOpen(true)}>
+                            Clear History
+                          </Button>
+                        </Flexbox>
+                      </CardHeader>
+                      <CardBody>
+                        <div className="overflow-x-auto rounded border border-border bg-bg">
+                          <table className="min-w-full divide-y divide-border text-sm">
+                            <thead className="bg-bg-accent">
+                              <tr>
+                                {['Date', 'Drafts', 'Dead Cards', ''].map((h) => (
+                                  <th
+                                    key={h}
+                                    className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider"
                                   >
-                                    Delete
-                                  </button>
-                                </td>
+                                    {h}
+                                  </th>
+                                ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      {loadingRun && (
-                        <Text xs className="text-text-secondary mt-2">
-                          Loading run…
-                        </Text>
-                      )}
-                    </CardBody>
-                  </Card>
-                )}
-                <SimulatorExplainer />
-              </Flexbox>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              {runs.map((run) => (
+                                <tr
+                                  key={run.ts}
+                                  onClick={() => handleLoadRun(run.ts)}
+                                  className={[
+                                    'cursor-pointer',
+                                    run.ts === selectedTs
+                                      ? 'bg-bg-active font-semibold border-l-2 border-link'
+                                      : 'hover:bg-bg-active border-l-2 border-transparent',
+                                  ].join(' ')}
+                                >
+                                  <td className="px-3 py-2">{new Date(run.generatedAt).toLocaleString()}</td>
+                                  <td className="px-3 py-2 text-text-secondary">
+                                    {run.numDrafts} × {run.numSeats} seats
+                                  </td>
+                                  <td className="px-3 py-2 text-text-secondary">
+                                    {run.deadCardCount > 0 ? (
+                                      <span className="text-red-400">{run.deadCardCount}</span>
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-right">
+                                    <button
+                                      type="button"
+                                      className="px-2 py-0.5 rounded text-xs font-medium border bg-bg border-border text-text-secondary hover:bg-bg-active"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setRunPendingDelete(run);
+                                        setDeleteRunModalOpen(true);
+                                      }}
+                                    >
+                                      Delete
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        {loadingRun && (
+                          <Text xs className="text-text-secondary mt-2">
+                            Loading run…
+                          </Text>
+                        )}
+                      </CardBody>
+                    </Card>
+                  )}
+                  <SimulatorExplainer />
+                </Flexbox>
+              </Collapse>
             </div>
             <PriorRunDeleteModal
               isOpen={deleteRunModalOpen}
