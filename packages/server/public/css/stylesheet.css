@@ -2089,6 +2089,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--bg-accent) / var(--tw-bg-opacity));
 }
+.bg-bg-accent\/20 {
+  background-color: rgb(var(--bg-accent) / 0.2);
+}
 .bg-bg-accent\/25 {
   background-color: rgb(var(--bg-accent) / 0.25);
 }
@@ -2521,6 +2524,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .pt-1 {
   padding-top: 0.25rem;
+}
+.pt-12 {
+  padding-top: 3rem;
 }
 .pt-2 {
   padding-top: 0.5rem;
@@ -3838,6 +3844,11 @@ img.mana-symbol-sm {
   color: rgb(21 128 61 / var(--tw-text-opacity));
 }
 
+.hover\:text-link:hover {
+  --tw-text-opacity: 1;
+  color: rgb(var(--link) / var(--tw-text-opacity));
+}
+
 .hover\:text-link-active:hover {
   --tw-text-opacity: 1;
   color: rgb(var(--link-active) / var(--tw-text-opacity));
@@ -3880,6 +3891,10 @@ img.mana-symbol-sm {
 
 .hover\:opacity-50:hover {
   opacity: 0.5;
+}
+
+.hover\:opacity-95:hover {
+  opacity: 0.95;
 }
 
 .hover\:shadow-md:hover {
@@ -4304,6 +4319,10 @@ img.mana-symbol-sm {
 
   .md\:pb-4 {
     padding-bottom: 1rem;
+  }
+
+  .md\:pt-20 {
+    padding-top: 5rem;
   }
 
   .md\:text-base {

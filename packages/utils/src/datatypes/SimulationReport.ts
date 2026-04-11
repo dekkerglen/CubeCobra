@@ -36,6 +36,15 @@ export interface P1P1Entry {
   percentage: number; // count / times the card appeared in a P1P1 pack
 }
 
+export interface SimulationTimingBreakdown {
+  setupMs: number;
+  modelLoadMs: number;
+  simulationMs: number;
+  deckbuildMs: number;
+  saveMs: number;
+  totalMs: number;
+}
+
 export interface SimulatedPickCard {
   oracle_id: string;
   name: string;
@@ -110,6 +119,7 @@ export interface SimulationSummary {
   p1p1Frequency?: P1P1Entry[]; // top 20 — computed but not currently displayed
   convergenceScore: number; // stdev of pickRates
   generatedAt: string; // ISO timestamp
+  timings?: SimulationTimingBreakdown;
 }
 
 /**

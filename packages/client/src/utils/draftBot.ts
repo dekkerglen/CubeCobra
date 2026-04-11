@@ -280,34 +280,23 @@ export async function localPickBatch(
 
   const logits = await forwardPass(pools, draftDecoder, remapping, chunkSize);
 
-  // Extract top pick per seat via pack-masked softmax
+  // Extract top pick per seat via pack-masked argmax.
+  // Softmax preserves the same ordering while doing substantially more work.
   return packs.map((pack, i) => {
     if (pack.length === 0) return '';
     const rowBase = i * numOracles;
 
-    // Look up each pack card by its ML oracle; include all cards (unknown cards get
-    // the logit of their remapped oracle, so Power cards are scored correctly)
-    const entries: { oracle: string; raw: number }[] = pack.map((oracle) => {
+    let bestOracle = '';
+    let bestRaw = -Infinity;
+    for (const oracle of pack) {
       const idx = oracleToIndex[mlOracle(oracle, remapping)];
-      return { oracle, raw: idx !== undefined ? (logits[rowBase + idx] ?? 0) : 0 };
-    });
-
-    // Numerically stable softmax over pack cards only
-    const raws = entries.map((e) => e.raw);
-    const max = Math.max(...raws);
-    const exps = raws.map((r) => Math.exp(r - max));
-    const sum = exps.reduce((a, b) => a + b, 0);
-
-    let bestIdx = 0;
-    let bestProb = -Infinity;
-    for (let j = 0; j < exps.length; j++) {
-      const prob = (exps[j] ?? 0) / sum;
-      if (prob > bestProb) {
-        bestProb = prob;
-        bestIdx = j;
+      const raw = idx !== undefined ? (logits[rowBase + idx] ?? 0) : 0;
+      if (raw > bestRaw) {
+        bestRaw = raw;
+        bestOracle = oracle;
       }
     }
-    return entries[bestIdx]?.oracle ?? '';
+    return bestOracle;
   });
 }
 
@@ -380,6 +369,11 @@ export interface DeckbuildEntry {
   maxSpells?: number;
   maxLands?: number;
 }
+
+const throwIfAborted = (signal?: AbortSignal): void => {
+  if (!signal?.aborted) return;
+  throw new DOMException('Operation aborted', 'AbortError');
+};
 
 const oracleIsLand = (oracle: string, meta: DeckbuildEntry['cardMeta']): boolean =>
   (meta[oracle]?.type ?? '').includes('Land');
@@ -458,7 +452,7 @@ export function calculateBasicsForDeck(
 
 export function chooseBestMappedOracle(
   ranked: RatedCard[],
-  remainingPool: string[],
+  remainingCounts: Record<string, number>,
   deckCopies: Record<string, number>,
   fromMl: Record<string, string[]>,
 ): { oracle: string | null; score: number } {
@@ -467,7 +461,7 @@ export function chooseBestMappedOracle(
 
   for (const item of ranked) {
     const originals = fromMl[item.oracle] ?? [item.oracle];
-    const oracle = originals.find((candidate) => remainingPool.includes(candidate));
+    const oracle = originals.find((candidate) => (remainingCounts[candidate] ?? 0) > 0);
     if (!oracle) continue;
 
     const existing = deckCopies[oracle] ?? 0;
@@ -490,7 +484,9 @@ export function chooseBestMappedOracle(
 export async function localBatchDeckbuild(
   entries: DeckbuildEntry[],
   chunkSize?: number,
+  signal?: AbortSignal,
 ): Promise<{ mainboard: string[]; sideboard: string[] }[]> {
+  throwIfAborted(signal);
   if (!draftBotLoaded || entries.length === 0) return entries.map(() => ({ mainboard: [], sideboard: [] }));
 
   const allPoolOracles = entries.map((e) => e.pool);
@@ -505,12 +501,22 @@ export async function localBatchDeckbuild(
   const seats = entries.map((entry) => {
     const maxSpells = entry.maxSpells ?? 23;
     const maxLands = entry.maxLands ?? 17;
+    const remainingCounts: Record<string, number> = {};
+    const remainingUnique: string[] = [];
+    for (const oracle of entry.pool) {
+      if ((remainingCounts[oracle] ?? 0) === 0) remainingUnique.push(oracle);
+      remainingCounts[oracle] = (remainingCounts[oracle] ?? 0) + 1;
+    }
     return {
       maxSpells,
       maxLands,
       deckSize: maxSpells + maxLands,
       mainboard: [] as string[],
-      remainingPool: [...entry.pool],
+      mlMainboard: [] as string[],
+      originalPool: entry.pool,
+      remainingCounts,
+      remainingUnique,
+      remainingCount: entry.pool.length,
       deckCopies: {} as Record<string, number>,
       spellCount: 0,
       landCount: 0,
@@ -519,8 +525,10 @@ export async function localBatchDeckbuild(
 
   // Phase 1: seed first 10 cards via deck_build_decoder
   const buildResults = await localBatchBuild(allPoolMlOracles, sharedRemapping, chunkSize);
+  throwIfAborted(signal);
 
   for (let s = 0; s < seats.length; s++) {
+    throwIfAborted(signal);
     const seat = seats[s]!;
     const meta = entries[s]!.cardMeta;
     const { fromMl } = seatMaps[s]!;
@@ -529,11 +537,8 @@ export async function localBatchDeckbuild(
       if (seat.mainboard.length >= 10) break;
 
       const originals = fromMl[item.oracle] ?? [item.oracle];
-      const oracle = originals.find((candidate) => seat.remainingPool.includes(candidate));
+      const oracle = originals.find((candidate) => (seat.remainingCounts[candidate] ?? 0) > 0);
       if (!oracle) continue;
-
-      const poolIdx = seat.remainingPool.indexOf(oracle);
-      if (poolIdx === -1) continue;
 
       const land = oracleIsLand(oracle, meta);
       if (land && seat.landCount >= seat.maxLands) continue;
@@ -544,8 +549,10 @@ export async function localBatchDeckbuild(
       if (!Number.isFinite(adjustedRating)) continue;
 
       seat.mainboard.push(oracle);
+      seat.mlMainboard.push(seatMaps[s]!.toMl[oracle] ?? oracle);
       seat.deckCopies[oracle] = existing + 1;
-      seat.remainingPool.splice(poolIdx, 1);
+      seat.remainingCounts[oracle] = (seat.remainingCounts[oracle] ?? 0) - 1;
+      seat.remainingCount -= 1;
       if (land) seat.landCount += 1;
       else seat.spellCount += 1;
     }
@@ -554,6 +561,7 @@ export async function localBatchDeckbuild(
   // Phase 2: iteratively pick with draft_decoder until all seats are full
   let anyProgress = true;
   while (anyProgress) {
+    throwIfAborted(signal);
     anyProgress = false;
     const activeIndices: number[] = [];
     const batchInputs: { pack: string[]; pool: string[] }[] = [];
@@ -562,26 +570,33 @@ export async function localBatchDeckbuild(
       const seat = seats[s]!;
       const meta = entries[s]!.cardMeta;
       const { toMl } = seatMaps[s]!;
-      if (seat.mainboard.length >= seat.deckSize || seat.remainingPool.length === 0) continue;
+      if (seat.mainboard.length >= seat.deckSize || seat.remainingCount === 0) continue;
 
-      const candidates = seat.remainingPool.filter((oracle) => {
+      const pack: string[] = [];
+      const seenMl = new Set<string>();
+      for (const oracle of seat.remainingUnique) {
+        if ((seat.remainingCounts[oracle] ?? 0) <= 0) continue;
         const land = oracleIsLand(oracle, meta);
-        if (land && seat.landCount >= seat.maxLands) return false;
-        if (!land && seat.spellCount >= seat.maxSpells) return false;
-        return true;
-      });
-      if (candidates.length === 0) continue;
+        if (land && seat.landCount >= seat.maxLands) continue;
+        if (!land && seat.spellCount >= seat.maxSpells) continue;
+        const mlOracleId = toMl[oracle] ?? oracle;
+        if (seenMl.has(mlOracleId)) continue;
+        seenMl.add(mlOracleId);
+        pack.push(mlOracleId);
+      }
+      if (pack.length === 0) continue;
 
       activeIndices.push(s);
       batchInputs.push({
-        pack: [...new Set(candidates.map((oracle) => toMl[oracle] ?? oracle))],
-        pool: seat.mainboard.map((oracle) => toMl[oracle] ?? oracle),
+        pack,
+        pool: seat.mlMainboard,
       });
     }
 
     if (batchInputs.length === 0) break;
 
     const batchResults = await localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize);
+    throwIfAborted(signal);
 
     for (let i = 0; i < activeIndices.length; i++) {
       const s = activeIndices[i]!;
@@ -589,19 +604,18 @@ export async function localBatchDeckbuild(
       const { fromMl } = seatMaps[s]!;
       const { oracle: bestOracle, score: bestScore } = chooseBestMappedOracle(
         batchResults[i] ?? [],
-        seat.remainingPool,
+        seat.remainingCounts,
         seat.deckCopies,
         fromMl,
       );
 
       if (!bestOracle || !Number.isFinite(bestScore)) continue;
 
-      const poolIdx = seat.remainingPool.indexOf(bestOracle);
-      if (poolIdx === -1) continue;
-
       seat.mainboard.push(bestOracle);
+      seat.mlMainboard.push(seatMaps[s]!.toMl[bestOracle] ?? bestOracle);
       seat.deckCopies[bestOracle] = (seat.deckCopies[bestOracle] ?? 0) + 1;
-      seat.remainingPool.splice(poolIdx, 1);
+      seat.remainingCounts[bestOracle] = (seat.remainingCounts[bestOracle] ?? 0) - 1;
+      seat.remainingCount -= 1;
 
       const land = oracleIsLand(bestOracle, entries[s]!.cardMeta);
       if (land) seat.landCount += 1;
@@ -614,10 +628,16 @@ export async function localBatchDeckbuild(
   return seats.map((seat, s) => {
     const entry = entries[s]!;
     const basicOracles = calculateBasicsForDeck(seat.mainboard, entry.basics, entry.cardMeta, seat.deckSize);
+    const sideboardCounts = { ...seat.remainingCounts };
+    const sideboard = seat.originalPool.filter((oracle) => {
+      if ((sideboardCounts[oracle] ?? 0) <= 0) return false;
+      sideboardCounts[oracle] -= 1;
+      return true;
+    });
 
     return {
       mainboard: [...seat.mainboard, ...basicOracles].sort(),
-      sideboard: seat.remainingPool.slice().sort(),
+      sideboard: sideboard.sort(),
     };
   });
 }
