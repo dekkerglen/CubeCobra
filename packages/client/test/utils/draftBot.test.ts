@@ -21,9 +21,10 @@ describe('buildSeatMlMaps', () => {
 
 describe('chooseBestMappedOracle', () => {
   it('maps ranked ML results back through fromMl', () => {
+    const remainingCounts: Record<string, number> = { 'black-lotus-a': 0, 'black-lotus-b': 1 };
     const choice = chooseBestMappedOracle(
       [{ oracle: 'shared-power', rating: 1.5 }],
-      ['black-lotus-a', 'black-lotus-b'],
+      remainingCounts,
       {},
       { 'shared-power': ['black-lotus-b', 'black-lotus-a'] },
     );
