@@ -47,6 +47,7 @@ import Text from '../components/base/Text';
 import { DeckStacksStatic } from '../components/DeckCard';
 import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
 import DynamicFlash from '../components/DynamicFlash';
+import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
@@ -494,6 +495,11 @@ function getOverallSimProgress(
 }
 
 const SIM_PREVIEW_CARD_W = 140;
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${(ms / 1000).toFixed(ms >= 10_000 ? 0 : 1)} s`;
+}
 
 /** Number input that lets the user type freely; commits/clamps only on blur or Enter. */
 const NumericInput: React.FC<{
@@ -2801,6 +2807,9 @@ const PoolExpansionContent: React.FC<{
   if (mode === 'fullPickOrder') {
     return <SimulatorPickBreakdown pool={pool} runData={runData} />;
   }
+  if (mode === 'fullPickOrder') {
+    return <SimulatorPickBreakdown pool={pool} runData={runData} />;
+  }
   const orderedPicks = [...pool.picks].sort((a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber);
   return (
     <div className="p-3 overflow-x-auto">
@@ -4631,6 +4640,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [loadingRun, setLoadingRun] = useState(false);
   const [deleteRunModalOpen, setDeleteRunModalOpen] = useState(false);
   const [runPendingDelete, setRunPendingDelete] = useState<SimulationRunEntry | null>(null);
+  const [clearHistoryModalOpen, setClearHistoryModalOpen] = useState(false);
 
   // Session-level cache — avoids recomputing embeddings when switching between runs
   const embeddingsCache = useRef<Map<string, number[][] | Record<string, number[]> | null>>(new Map());
@@ -4961,6 +4971,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     },
     [cubeId, selectedTs],
   );
+
+  const handleClearHistory = useCallback(async () => {
+    await clearLocalSimulationStore(cubeId);
+    setRuns([]);
+    setDisplayRunData(null);
+    setCurrentRunSetup(null);
+    setSelectedTs(null);
+    setSelectedCardOracles([]);
+    setSelectedArchetype(null);
+    setSelectedSkeletonId(null);
+    setStorageNotice(null);
+  }, [cubeId]);
 
   const handleCancel = useCallback(() => {
     simAbortRef.current?.abort();
