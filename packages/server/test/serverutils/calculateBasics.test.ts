@@ -76,8 +76,6 @@ describe('calculateBasics', () => {
       counts[key] = (counts[key] ?? 0) + 1;
     }
 
-    console.log('Basic counts:', counts);
-
     // Each color should get roughly 1/3 of the basics (within ±2 of 3.67)
     expect(counts.U).toBeGreaterThanOrEqual(2);
     expect(counts.B).toBeGreaterThanOrEqual(2);

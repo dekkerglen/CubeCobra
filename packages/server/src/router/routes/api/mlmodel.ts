@@ -8,7 +8,7 @@ const PUBLIC_MODEL_BASE = `https://cubecobra-public.s3.us-east-2.amazonaws.com/m
  *
  * Proxies model files from the public S3 bucket so the browser can load
  * TF.js graph models without requiring S3 CORS configuration.
- * Heavy files (~69 MB each) are cached by the browser for one day.
+ * Heavy files (~69 MB each) are cached by the browser for one week.
  */
 const mlModelHandler = async (req: Request, res: Response) => {
   const modelPath = (req.params as any)[0] as string | undefined;
