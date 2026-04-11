@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DndContext } from '@dnd-kit/core';
 import { isVoucher, makeSubtitle } from '@utils/cardutil';
@@ -23,7 +23,6 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
 import { modelScoresToProbabilities } from '../utils/botRatings';
-import { loadDraftBot, localBatchDraftRanked } from '../utils/draftBot';
 
 interface CubeDraftPageProps {
   cube: Cube;
@@ -44,16 +43,6 @@ interface DraftStatus {
   retryInProgress: boolean;
   draftCompleted: boolean;
 }
-
-interface BatchPredictRequest {
-  pack: string[];
-  picks: string[];
-}
-
-const localBatchPredict = async (inputs: BatchPredictRequest[]): Promise<PredictResponse> => {
-  const ranked = await localBatchDraftRanked(inputs.map((i) => ({ pack: i.pack, pool: i.picks })));
-  return { prediction: ranked };
-};
 
 const processPredictions = (json: PredictResponse, packCards: any[]): number[] => {
   // Create a map of oracle IDs to ratings
@@ -122,13 +111,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   const [dragStartTime, setDragStartTime] = useState<number | null>(null);
   const [deckbuildProgress, setDeckbuildProgress] = useState<{ step: number; totalSteps: number } | null>(null);
   const { csrfFetch } = useContext(CSRFContext);
-
-  // Load the draft bot model in the background as soon as the page mounts.
-  // modelReadyRef lets getPredictions await it without re-rendering on load completion.
-  const modelReadyRef = useRef<Promise<void> | null>(null);
-  useEffect(() => {
-    modelReadyRef.current = loadDraftBot();
-  }, []);
 
   const getLocationReferences = useCallback(
     (type: location): { board: any[][][]; setter: React.Dispatch<React.SetStateAction<any[][][]>> } => {
@@ -242,15 +224,22 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     async (request: { state: any; packCards: { index: number; oracle_id: string; voucherOracleIds?: string[] }[] }) => {
       setDraftStatus((prev) => ({ ...prev, predictionsLoading: true, predictError: false }));
       try {
-        // Ensure the model is loaded before making predictions (no-op if already loaded)
-        if (modelReadyRef.current) await modelReadyRef.current;
-
         const inputs = request.state.seats.map((seat: any) => ({
           pack: seat.pack.flatMap((index: number) => getCardOracleIds(index)),
           picks: seat.picks.flatMap((index: number) => getCardOracleIds(index)),
         }));
 
-        const json = await localBatchPredict(inputs);
+        const response = await csrfFetch('/api/draftbots/batchpredict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inputs }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Prediction request failed: ${response.status}`);
+        }
+
+        const json = (await response.json()) as PredictResponse;
         setCurrentPredictions(json);
         setRatings(processPredictions(json, request.packCards));
         return json;
@@ -262,7 +251,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         setDraftStatus((prev) => ({ ...prev, predictionsLoading: false }));
       }
     },
-    [getCardOracleIds],
+    [csrfFetch, getCardOracleIds],
   );
 
   const handleRetryPredict = useCallback(async () => {
