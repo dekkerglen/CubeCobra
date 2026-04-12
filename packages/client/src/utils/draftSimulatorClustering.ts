@@ -79,7 +79,6 @@ export function computeSkeletons(
   slimPools: SlimPool[],
   cardMeta: Record<string, CardMeta>,
   k: number,
-  lockPairThresholdPct: number = 60,
   deckBuilds?: BuiltDeck[] | null,
 ): ArchetypeSkeleton[] {
   const n = slimPools.length;
@@ -143,7 +142,6 @@ export function computeSkeletons(
       .filter((c) => c.fraction > 0)
       .sort((a, b) => b.fraction - a.fraction);
 
-    const lockPairThresholdFrac = lockPairThresholdPct / 100;
     const coreCards = allCards.slice(0, 8);
     const occasionalCards: SkeletonCard[] = [];
     const sideboardCards: SkeletonCard[] = hasDecks
@@ -187,9 +185,7 @@ export function computeSkeletons(
 
     // Lock pairs
     const lockPairs: LockPair[] = [];
-    const lockCandidates = allCards
-      .filter((c) => c.fraction >= Math.max(0.25, lockPairThresholdFrac / 2))
-      .slice(0, 24);
+    const lockCandidates = allCards.slice(0, 24);
     for (let ai = 0; ai < lockCandidates.length; ai++) {
       for (let bi = ai + 1; bi < lockCandidates.length; bi++) {
         const a = lockCandidates[ai]!,
@@ -199,15 +195,15 @@ export function computeSkeletons(
         let both = 0;
         for (const pi of poolIndices) if (vecs[pi]![aIdx] && vecs[pi]![bIdx]) both++;
         const rate = both / poolCount;
-        if (rate > 0.6 && rate > a.fraction * b.fraction + 0.05) {
-          lockPairs.push({
-            oracle_id_a: a.oracle_id,
-            oracle_id_b: b.oracle_id,
-            nameA: a.name,
-            nameB: b.name,
-            coOccurrenceRate: rate,
-          });
-        }
+        lockPairs.push({
+          oracle_id_a: a.oracle_id,
+          oracle_id_b: b.oracle_id,
+          nameA: a.name,
+          nameB: b.name,
+          imageUrlA: a.imageUrl,
+          imageUrlB: b.imageUrl,
+          coOccurrenceRate: rate,
+        });
       }
     }
     lockPairs.sort((a, b) => b.coOccurrenceRate - a.coOccurrenceRate);

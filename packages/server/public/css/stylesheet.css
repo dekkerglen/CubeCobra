@@ -1322,6 +1322,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .w-96 {
   width: 24rem;
 }
+.w-fit {
+  width: -webkit-fit-content;
+  width: fit-content;
+}
 .w-full {
   width: 100%;
 }
@@ -1563,6 +1567,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .grid-cols-9 {
   grid-template-columns: repeat(9, minmax(0, 1fr));
 }
+.grid-cols-\[8\.5rem_minmax\(0\2c 1fr\)\] {
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+}
 .flex-row {
   flex-direction: row;
 }
@@ -1637,6 +1644,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .gap-0 {
   gap: 0px;
+}
+.gap-0\.5 {
+  gap: 0.125rem;
 }
 .gap-1 {
   gap: 0.25rem;
@@ -1779,6 +1789,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .divide-border > :not([hidden]) ~ :not([hidden]) {
   --tw-divide-opacity: 1;
   border-color: rgb(var(--border) / var(--tw-divide-opacity));
+}
+.divide-border\/70 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(var(--border) / 0.7);
 }
 .self-start {
   align-self: flex-start;
@@ -2092,9 +2105,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--bg-accent) / var(--tw-bg-opacity));
 }
-.bg-bg-accent\/20 {
-  background-color: rgb(var(--bg-accent) / 0.2);
-}
 .bg-bg-accent\/25 {
   background-color: rgb(var(--bg-accent) / 0.25);
 }
@@ -2103,6 +2113,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .bg-bg-accent\/40 {
   background-color: rgb(var(--bg-accent) / 0.4);
+}
+.bg-bg-accent\/50 {
+  background-color: rgb(var(--bg-accent) / 0.5);
 }
 .bg-bg-accent\/60 {
   background-color: rgb(var(--bg-accent) / 0.6);
@@ -2240,6 +2253,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .bg-orange-900 {
   --tw-bg-opacity: 1;
   background-color: rgb(124 45 18 / var(--tw-bg-opacity));
+}
+.bg-link\/5 {
+  background-color: rgb(var(--link) / 0.05);
 }
 .bg-orange-900 {
   --tw-bg-opacity: 1;
@@ -4126,6 +4142,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(9, minmax(0, 1fr));
   }
 
+  .sm\:grid-cols-\[12rem_minmax\(0\2c 1fr\)\] {
+    grid-template-columns: 12rem minmax(0, 1fr);
+  }
+
   .sm\:flex-row {
     flex-direction: row;
   }
@@ -4278,6 +4298,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(9, minmax(0, 1fr));
   }
 
+  .md\:grid-cols-\[15rem_minmax\(0\2c 1fr\)\] {
+    grid-template-columns: 15rem minmax(0, 1fr);
+  }
+
   .md\:flex-row {
     flex-direction: row;
   }
@@ -4309,6 +4333,10 @@ img.mana-symbol-sm {
   .md\:px-4 {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  .md\:pb-0 {
+    padding-bottom: 0px;
   }
 
   .md\:pb-4 {
