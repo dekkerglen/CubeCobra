@@ -38,6 +38,7 @@ import { Bar, Doughnut, Scatter } from 'react-chartjs-2';
 import Button from '../components/base/Button';
 import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Button from '../components/base/Button';
+import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Collapse from '../components/base/Collapse';
 import Input from '../components/base/Input';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -49,6 +50,7 @@ import { DeckStacksStatic } from '../components/DeckCard';
 import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
 import DynamicFlash from '../components/DynamicFlash';
 import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
+import DynamicFlash from '../components/DynamicFlash';
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
@@ -2010,6 +2012,273 @@ const EloVsPickRateScatter: React.FC<{ cardStats: CardStats[] }> = ({ cardStats 
             suggestedMax: Math.max(15, Math.ceil(maxAvgPick)),
             title: { display: true, text: 'Average Pick Position' },
           },
+        },
+      }}
+    />
+  );
+};
+
+interface DraftMapPoint {
+  x: number;
+  y: number;
+  poolIndex: number;
+  draftIndex: number;
+  seatIndex: number;
+  clusterId: number | null;
+  clusterIndex: number | null;
+  clusterLabel: string;
+  archetype: string;
+}
+
+function normalizeVector(vec: number[]): number[] {
+  const norm = Math.sqrt(vec.reduce((sum, value) => sum + value * value, 0));
+  return norm > 0 ? vec.map((value) => value / norm) : vec;
+}
+
+function principalComponent(data: number[][], previous: number[][] = []): number[] {
+  const dim = data[0]?.length ?? 0;
+  let component = normalizeVector(Array.from({ length: dim }, (_, index) => Math.sin(index + 1) || 1));
+
+  for (let iter = 0; iter < 30; iter++) {
+    const next = new Array<number>(dim).fill(0);
+    for (const row of data) {
+      const score = row.reduce((sum, value, index) => sum + value * component[index]!, 0);
+      for (let index = 0; index < dim; index++) next[index]! += row[index]! * score;
+    }
+    for (const prev of previous) {
+      const projection = next.reduce((sum, value, index) => sum + value * prev[index]!, 0);
+      for (let index = 0; index < dim; index++) next[index]! -= projection * prev[index]!;
+    }
+    component = normalizeVector(next);
+  }
+
+  return component;
+}
+
+function pcaCoordinates(centered: number[][]): { x: number; y: number }[] {
+  const pc1 = principalComponent(centered);
+  const pc2 = principalComponent(centered, [pc1]);
+  return centered.map((row) => ({
+    x: row.reduce((sum, value, index) => sum + value * pc1[index]!, 0),
+    y: row.reduce((sum, value, index) => sum + value * pc2[index]!, 0),
+  }));
+}
+
+function normalizeCoordinates(coords: { x: number; y: number }[], targetScale = 3): { x: number; y: number }[] {
+  const xMean = coords.reduce((sum, coord) => sum + coord.x, 0) / Math.max(1, coords.length);
+  const yMean = coords.reduce((sum, coord) => sum + coord.y, 0) / Math.max(1, coords.length);
+  const centered = coords.map((coord) => ({ x: coord.x - xMean, y: coord.y - yMean }));
+  const maxAbs = Math.max(...centered.flatMap((coord) => [Math.abs(coord.x), Math.abs(coord.y)]), 1);
+  return centered.map((coord) => ({ x: (coord.x / maxAbs) * targetScale, y: (coord.y / maxAbs) * targetScale }));
+}
+
+function approximateUmapCoordinates(vectors: number[][], pcaInit: { x: number; y: number }[]): { x: number; y: number }[] {
+  const n = vectors.length;
+  if (n < 3) return pcaInit;
+  const neighborCount = Math.min(12, n - 1);
+  const coords = normalizeCoordinates(pcaInit, 2);
+  const edges: { a: number; b: number; weight: number }[] = [];
+
+  for (let i = 0; i < n; i++) {
+    const distances: { index: number; distance: number }[] = [];
+    for (let j = 0; j < n; j++) {
+      if (i === j) continue;
+      const similarity = vectors[i]!.reduce((sum, value, index) => sum + value * vectors[j]![index]!, 0);
+      distances.push({ index: j, distance: Math.max(0, 1 - similarity) });
+    }
+    distances.sort((a, b) => a.distance - b.distance);
+    const localScale = Math.max(distances[neighborCount - 1]?.distance ?? distances[0]?.distance ?? 1, 0.001);
+    for (const neighbor of distances.slice(0, neighborCount)) {
+      if (i < neighbor.index) {
+        edges.push({ a: i, b: neighbor.index, weight: Math.exp(-neighbor.distance / localScale) });
+      }
+    }
+  }
+
+  const learningRate = 0.035;
+  for (let iter = 0; iter < 90; iter++) {
+    const forces = Array.from({ length: n }, () => ({ x: 0, y: 0 }));
+    for (const edge of edges) {
+      const a = coords[edge.a]!;
+      const b = coords[edge.b]!;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      forces[edge.a]!.x += dx * edge.weight;
+      forces[edge.a]!.y += dy * edge.weight;
+      forces[edge.b]!.x -= dx * edge.weight;
+      forces[edge.b]!.y -= dy * edge.weight;
+    }
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const a = coords[i]!;
+        const b = coords[j]!;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const distSq = dx * dx + dy * dy + 0.01;
+        const repulsion = 0.015 / distSq;
+        forces[i]!.x -= dx * repulsion;
+        forces[i]!.y -= dy * repulsion;
+        forces[j]!.x += dx * repulsion;
+        forces[j]!.y += dy * repulsion;
+      }
+    }
+    const step = learningRate * (1 - iter / 100);
+    for (let i = 0; i < n; i++) {
+      coords[i]!.x += Math.max(-0.1, Math.min(0.1, forces[i]!.x * step));
+      coords[i]!.y += Math.max(-0.1, Math.min(0.1, forces[i]!.y * step));
+    }
+  }
+
+  return normalizeCoordinates(coords, 3);
+}
+
+function computeDraftMapPoints(
+  slimPools: SlimPool[],
+  displayedPools: SimulatedPool[],
+  cardMeta: Record<string, CardMeta>,
+  skeletons: ArchetypeSkeleton[],
+  deckBuilds?: BuiltDeck[] | null,
+): DraftMapPoint[] {
+  if (slimPools.length === 0) return [];
+
+  const oracleIds = Object.keys(cardMeta).filter((id) => {
+    const typeLower = (cardMeta[id]?.type ?? '').toLowerCase();
+    return !(typeLower.includes('basic') && typeLower.includes('land'));
+  });
+  const oracleIndex = new Map(oracleIds.map((id, index) => [id, index]));
+  const dim = oracleIds.length;
+  if (dim === 0) return [];
+
+  const hasDecks = deckBuilds && deckBuilds.length === slimPools.length;
+  const binaryVecs = slimPools.map((pool, poolIndex) => {
+    const vec = new Uint8Array(dim);
+    const cards = hasDecks ? deckBuilds![poolIndex]?.mainboard ?? [] : pool.picks.map((pick) => pick.oracle_id);
+    for (const oracleId of cards) {
+      const index = oracleIndex.get(oracleId);
+      if (index !== undefined) vec[index] = 1;
+    }
+    return vec;
+  });
+
+  const df = new Float32Array(dim);
+  for (const vec of binaryVecs) for (let index = 0; index < dim; index++) if (vec[index]) df[index]++;
+  const idf = Float32Array.from({ length: dim }, (_, index) => Math.log((slimPools.length + 1) / (df[index]! + 1)));
+
+  const tfidfVecs = binaryVecs.map((vec) => {
+    const weighted = Array.from({ length: dim }, (_, index) => vec[index]! * idf[index]!);
+    return normalizeVector(weighted);
+  });
+  const means = Array.from({ length: dim }, (_, index) =>
+    tfidfVecs.reduce((sum, vec) => sum + vec[index]!, 0) / tfidfVecs.length,
+  );
+  const centered = tfidfVecs.map((vec) => vec.map((value, index) => value - means[index]!));
+  const coords = approximateUmapCoordinates(tfidfVecs, pcaCoordinates(centered));
+  const clusterByPoolIndex = new Map<number, { clusterId: number; clusterIndex: number; label: string }>();
+  skeletons.forEach((skeleton, index) => {
+    for (const poolIndex of skeleton.poolIndices) {
+      clusterByPoolIndex.set(poolIndex, {
+        clusterId: skeleton.clusterId,
+        clusterIndex: index,
+        label: `Cluster ${index + 1}`,
+      });
+    }
+  });
+
+  return slimPools.map((pool, poolIndex) => {
+    const coord = coords[poolIndex]!;
+    const cluster = clusterByPoolIndex.get(poolIndex);
+    return {
+      x: coord.x,
+      y: coord.y,
+      poolIndex,
+      draftIndex: pool.draftIndex,
+      seatIndex: pool.seatIndex,
+      clusterId: cluster?.clusterId ?? null,
+      clusterIndex: cluster?.clusterIndex ?? null,
+      clusterLabel: cluster?.label ?? 'Unclustered',
+      archetype: displayedPools[poolIndex]?.archetype ?? pool.archetype,
+    };
+  });
+}
+
+const CLUSTER_COLORS = [
+  '#2563eb',
+  '#dc2626',
+  '#16a34a',
+  '#ca8a04',
+  '#9333ea',
+  '#0891b2',
+  '#db2777',
+  '#65a30d',
+  '#ea580c',
+  '#4f46e5',
+];
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace('#', '');
+  const value = parseInt(normalized, 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+const DraftMapScatter: React.FC<{
+  points: DraftMapPoint[];
+  selectedPoolIndex: number | null;
+  activePoolIndexSet: Set<number> | null;
+  onSelectPoint: (point: DraftMapPoint) => void;
+}> = ({ points, selectedPoolIndex, activePoolIndexSet, onSelectPoint }) => {
+  if (points.length === 0) {
+    return (
+      <Text sm className="text-text-secondary">
+        Draft map is unavailable for this run.
+      </Text>
+    );
+  }
+  const hasActiveFilter = activePoolIndexSet !== null;
+  const isInActiveFilter = (point: DraftMapPoint) => !hasActiveFilter || activePoolIndexSet.has(point.poolIndex);
+  const pointBaseColor = (point: DraftMapPoint) =>
+    point.clusterIndex === null ? MTG_COLORS.C!.bg : CLUSTER_COLORS[point.clusterIndex % CLUSTER_COLORS.length]!;
+
+  return (
+    <Scatter
+      data={{
+        datasets: [
+          {
+            label: 'Draft decks',
+            data: points,
+            backgroundColor: points.map((point) => hexToRgba(pointBaseColor(point), isInActiveFilter(point) ? 0.9 : 0.15)),
+            borderColor: points.map((point) => (point.poolIndex === selectedPoolIndex ? '#ffffff' : 'transparent')),
+            borderWidth: points.map((point) => (point.poolIndex === selectedPoolIndex ? 2 : 0)),
+            pointRadius: points.map((point) => (point.poolIndex === selectedPoolIndex ? 6 : isInActiveFilter(point) ? 4 : 3)),
+            pointHoverRadius: 7,
+          },
+        ],
+      }}
+      options={{
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: (_event, elements) => {
+          const element = elements[0];
+          if (!element) return;
+          const point = points[element.index];
+          if (point) onSelectPoint(point);
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const point = ctx.raw as DraftMapPoint;
+                return `${point.clusterLabel} · Draft ${point.draftIndex + 1} Seat ${point.seatIndex + 1} · ${point.archetype}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false },
         },
       }}
     />
@@ -4406,17 +4675,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   onSelectSkeleton: (id: number | null) => void;
   isOpen: boolean;
   onToggle: () => void;
-}> = ({
-  skeletons,
-  k,
-  onSetK,
-  onRecluster,
-  totalPools,
-  selectedSkeletonId,
-  onSelectSkeleton,
-  isOpen,
-  onToggle,
-}) => {
+}> = ({ skeletons, k, onSetK, onRecluster, totalPools, selectedSkeletonId, onSelectSkeleton, isOpen, onToggle }) => {
   const [showAllClusters, setShowAllClusters] = useState(false);
   const [reclusterFlash, setReclusterFlash] = useState(false);
   const handleRecluster = () => {
@@ -4893,6 +5152,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         setSelectedCardOracles([]);
         setSelectedArchetype(null);
         setSelectedSkeletonId(null);
+        setFocusedPoolIndex(null);
 
         if (selectedTs === ts) {
           setDisplayRunData(nextStoredRuns[0]?.runData ?? null);
@@ -4915,6 +5175,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setSelectedCardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
+    setFocusedPoolIndex(null);
     setStorageNotice(null);
   }, [cubeId]);
 
@@ -5738,16 +5999,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     ? `${draftMapScopeSeatCount} matching seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`
     : `${draftMapScopeSeatCount} total seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`;
 
-
-  // Scroll to Detailed View whenever a new selection is made
-  useEffect(() => {
-    if (
-      (selectedCardOracles.length > 0 || selectedArchetype || selectedSkeletonId !== null) &&
-      detailedViewRef.current
-    ) {
-      detailedViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [selectedCardOracles, selectedArchetype, selectedSkeletonId]);
 
   const activeFilterChips = useMemo(() => {
     const chips: string[] = [];
@@ -7127,8 +7378,8 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         </p>
         <p>
           The draft model and deckbuilder are loaded through TensorFlow.js and executed on the client with the browser
-          GPU path. In practice that means your machine does the pick-by-pick inference and deckbuilding locally
-          instead of sending every draft step back to the backend.
+          GPU path. In practice that means your machine does the pick-by-pick inference and deckbuilding locally instead
+          of sending every draft step back to the backend.
         </p>
         <p>
           Completed runs are stored locally in IndexedDB, not on CubeCobra&apos;s servers. That keeps the tool
