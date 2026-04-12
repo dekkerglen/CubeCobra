@@ -173,10 +173,10 @@ export interface ArchetypeSkeleton {
   colorProfile: string; // e.g. "UR", "BGW", "C"
   poolCount: number;
   poolIndices: number[]; // indices into slimPools
-  coreCards: SkeletonCard[]; // fraction >= 0.4
-  occasionalCards: SkeletonCard[]; // fraction 0.2–0.4
+  coreCards: SkeletonCard[]; // top common cards in the cluster
+  occasionalCards: SkeletonCard[]; // deprecated; kept for older locally stored runs
   sideboardCards: SkeletonCard[]; // most common sideboard-only cards across decks in this cluster
-  lockPairs: LockPair[]; // pairs co-occurring > 85% and well above independence baseline
+  lockPairs: LockPair[]; // pairs co-occurring > 60% and well above independence baseline
 }
 
 /**
