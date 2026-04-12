@@ -79,7 +79,7 @@ export function computeSkeletons(
   slimPools: SlimPool[],
   cardMeta: Record<string, CardMeta>,
   k: number,
-  coreThresholdPct: number = 60,
+  lockPairThresholdPct: number = 60,
   deckBuilds?: BuiltDeck[] | null,
 ): ArchetypeSkeleton[] {
   const n = slimPools.length;
@@ -140,12 +140,12 @@ export function computeSkeletons(
         imageUrl: cardMeta[oracle_id]?.imageUrl ?? '',
         fraction: fracs[j]!,
       }))
-      .filter((c) => c.fraction >= coreThresholdPct / 2 / 100)
+      .filter((c) => c.fraction > 0)
       .sort((a, b) => b.fraction - a.fraction);
 
-    const coreThresholdFrac = coreThresholdPct / 100;
-    const coreCards = allCards.filter((c) => c.fraction >= coreThresholdFrac).slice(0, 24);
-    const occasionalCards = allCards.filter((c) => c.fraction < coreThresholdFrac).slice(0, 12);
+    const lockPairThresholdFrac = lockPairThresholdPct / 100;
+    const coreCards = allCards.slice(0, 8);
+    const occasionalCards: SkeletonCard[] = [];
     const sideboardCards: SkeletonCard[] = hasDecks
       ? oracleIds
           .map((oracle_id) => {
@@ -172,7 +172,7 @@ export function computeSkeletons(
     // Color profile
     const colorWeight: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
     let totalWeight = 0;
-    for (const { oracle_id, fraction } of coreCards) {
+    for (const { oracle_id, fraction } of allCards.slice(0, 10)) {
       const colors = cardMeta[oracle_id]?.colorIdentity ?? [];
       if (colors.length === 0) continue;
       totalWeight += fraction;
@@ -187,7 +187,9 @@ export function computeSkeletons(
 
     // Lock pairs
     const lockPairs: LockPair[] = [];
-    const lockCandidates = allCards.filter((c) => c.fraction >= Math.max(0.25, coreThresholdFrac / 2)).slice(0, 24);
+    const lockCandidates = allCards
+      .filter((c) => c.fraction >= Math.max(0.25, lockPairThresholdFrac / 2))
+      .slice(0, 24);
     for (let ai = 0; ai < lockCandidates.length; ai++) {
       for (let bi = ai + 1; bi < lockCandidates.length; bi++) {
         const a = lockCandidates[ai]!,
