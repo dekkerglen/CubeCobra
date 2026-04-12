@@ -99,6 +99,7 @@ function getOverallSimProgress(
 }
 
 const SIM_PREVIEW_CARD_W = 140;
+const SIM_CLUSTER_CARD_W = 165;
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${Math.round(ms)} ms`;
@@ -2435,9 +2436,6 @@ const ArchetypeSkeletonSection: React.FC<{
   skeletons: ArchetypeSkeleton[];
   k: number;
   onSetK: (k: number) => void;
-  coreThreshold: number;
-  appliedCoreThreshold: number;
-  onSetCoreThreshold: (v: number) => void;
   onRecluster: () => void;
   totalPools: number;
   selectedSkeletonId: number | null;
@@ -2448,9 +2446,6 @@ const ArchetypeSkeletonSection: React.FC<{
   skeletons,
   k,
   onSetK,
-  coreThreshold,
-  appliedCoreThreshold,
-  onSetCoreThreshold,
   onRecluster,
   totalPools,
   selectedSkeletonId,
@@ -2462,9 +2457,6 @@ const ArchetypeSkeletonSection: React.FC<{
     skeletons={skeletons}
     k={k}
     onSetK={onSetK}
-    coreThreshold={coreThreshold}
-    appliedCoreThreshold={appliedCoreThreshold}
-    onSetCoreThreshold={onSetCoreThreshold}
     onRecluster={onRecluster}
     totalPools={totalPools}
     selectedSkeletonId={selectedSkeletonId}
@@ -2478,9 +2470,6 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   skeletons: ArchetypeSkeleton[];
   k: number;
   onSetK: (k: number) => void;
-  coreThreshold: number;
-  appliedCoreThreshold: number;
-  onSetCoreThreshold: (v: number) => void;
   onRecluster: () => void;
   totalPools: number;
   selectedSkeletonId: number | null;
@@ -2491,9 +2480,6 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   skeletons,
   k,
   onSetK,
-  coreThreshold,
-  appliedCoreThreshold,
-  onSetCoreThreshold,
   onRecluster,
   totalPools,
   selectedSkeletonId,
@@ -2515,102 +2501,50 @@ const ArchetypeSkeletonSectionInner: React.FC<{
     <div
       key={skeleton.clusterId}
       className={[
-        'rounded-lg overflow-hidden border bg-bg shadow-sm',
-        selectedSkeletonId === skeleton.clusterId ? 'border-link-active ring-1 ring-link-active' : 'border-border/80',
+        'grid gap-2 bg-bg px-2 py-1.5 md:grid-cols-[minmax(0,1fr)_17rem] md:items-center',
+        selectedSkeletonId === skeleton.clusterId ? 'bg-link/5' : '',
       ].join(' ')}
     >
+      {skeleton.coreCards.length > 0 ? (
+        <div className="flex flex-row gap-1 overflow-x-auto pb-1 md:pb-0">
+          {skeleton.coreCards.map((card) => (
+            <SkeletonCardImage key={card.oracle_id} card={card} size={128} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-md border border-border/70 bg-bg-accent/30 px-3 py-2">
+          <Text sm className="text-text-secondary">
+            No shared cards were found for this cluster.
+          </Text>
+        </div>
+      )}
       <button
         type="button"
-        className="w-full px-4 py-3 bg-bg-accent/60 hover:bg-bg-active flex items-center gap-2.5 flex-wrap text-left border-b border-border/70"
+        className="flex flex-col gap-1 rounded-md px-2 py-1 text-left hover:bg-bg-active"
         onClick={() => onSelectSkeleton(selectedSkeletonId === skeleton.clusterId ? null : skeleton.clusterId)}
       >
-        <span className="text-base font-semibold tracking-tight">Cluster {skIdx + 1}</span>
-        <span className="text-[11px] bg-bg border border-border/80 rounded px-2 py-0.5 text-text-secondary">
-          {skeleton.poolCount} seats ({((skeleton.poolCount / totalPools) * 100).toFixed(1)}% of {totalPools})
-        </span>
-        {skeleton.lockPairs.length > 0 && (
-          <span className="text-xs bg-yellow-500/15 text-text border border-yellow-500/60 rounded px-2 py-0.5">
-            <span
-              className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-yellow-500 text-black font-bold mr-1"
-              style={{ fontSize: 9 }}
-            >
-              !
-            </span>
-            {skeleton.lockPairs.length} lock pair{skeleton.lockPairs.length > 1 ? 's' : ''}
-          </span>
-        )}
-        {selectedSkeletonId === skeleton.clusterId && (
-          <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5 ml-auto">
-            Filtering ✕
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 whitespace-nowrap text-sm">
+          <span className="font-semibold tracking-tight">Cluster {skIdx + 1}</span>
+          <span className="text-text-secondary">·</span>
+          <span className="text-text-secondary">{skeleton.poolCount} seats</span>
+          <span className="text-text-secondary">·</span>
+          <span className="text-text-secondary">{((skeleton.poolCount / totalPools) * 100).toFixed(1)}%</span>
+          {selectedSkeletonId === skeleton.clusterId && (
+            <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">Filtering</span>
+          )}
+        </div>
+        <div className="text-xs text-text-secondary">
+          {skeleton.lockPairs.length > 0 && (
+            <>
+              <span className="font-medium">Locks: </span>
+              {skeleton.lockPairs
+                .slice(0, 2)
+                .map((pair) => `${pair.nameA} + ${pair.nameB}`)
+                .join(', ')}
+            </>
+          )}
+        </div>
       </button>
-      <div className="p-4 md:p-5">
-        {skeleton.coreCards.length > 0 && (
-          <div className="mb-5">
-            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2.5">
-              Core (&gt;={appliedCoreThreshold}% of pools)
-            </Text>
-            <div className="flex flex-row flex-wrap gap-2">
-              {skeleton.coreCards.map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_PREVIEW_CARD_W} />
-              ))}
-            </div>
-          </div>
-        )}
-        {skeleton.occasionalCards.length > 0 && (
-          <div className="mb-4">
-            <Text xs className="text-text-secondary/80 font-medium uppercase tracking-[0.14em] mb-1.5">
-              Support ({Math.round(appliedCoreThreshold / 2)}-{appliedCoreThreshold - 1}% of pools)
-            </Text>
-            <div className="flex flex-row flex-wrap gap-1.5">
-              {skeleton.occasionalCards.map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_PREVIEW_CARD_W} />
-              ))}
-            </div>
-          </div>
-        )}
-        {skeleton.sideboardCards.length > 0 && (
-          <div className="mb-4">
-            <Text xs className="text-text-secondary/80 font-medium uppercase tracking-[0.14em] mb-2">
-              Common Sideboard Cards
-            </Text>
-            <div className="flex flex-col gap-1.5 rounded-md bg-bg-accent/40 px-3 py-2">
-              {skeleton.sideboardCards.map((card) => (
-                <div key={card.oracle_id} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-medium">{renderAutocardNameLink(card.oracle_id, card.name)}</span>
-                  <span className="text-text-secondary tabular-nums">{(card.fraction * 100).toFixed(0)}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {skeleton.lockPairs.length > 0 && (
-          <div className="pt-1">
-            <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.16em] mb-2">
-              Lock Pairs
-            </Text>
-            <Flexbox direction="col" gap="1">
-              {skeleton.lockPairs.map((pair) => (
-                <div key={`${pair.oracle_id_a}-${pair.oracle_id_b}`} className="flex items-center gap-2 text-sm">
-                  <span
-                    className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-yellow-500 text-black font-bold flex-shrink-0"
-                    style={{ fontSize: 9 }}
-                  >
-                    !
-                  </span>
-                  <span className="font-medium">{pair.nameA}</span>
-                  <span className="text-text-secondary">+</span>
-                  <span className="font-medium">{pair.nameB}</span>
-                  <span className="text-text-secondary ml-1">
-                    {(pair.coOccurrenceRate * 100).toFixed(0)}% co-occurrence
-                  </span>
-                </div>
-              ))}
-            </Flexbox>
-          </div>
-        )}
-      </div>
     </div>
   );
 
@@ -2632,8 +2566,6 @@ const ArchetypeSkeletonSectionInner: React.FC<{
               <>
                 <label className="text-xs font-medium text-text-secondary whitespace-nowrap">Clusters</label>
                 <NumericInput min={2} max={16} value={k} onChange={onSetK} className="w-14" />
-                <label className="text-xs font-medium text-text-secondary whitespace-nowrap">Core %</label>
-                <NumericInput min={10} max={95} value={coreThreshold} onChange={onSetCoreThreshold} className="w-14" />
                 <button
                   type="button"
                   onClick={handleRecluster}
@@ -2660,23 +2592,21 @@ const ArchetypeSkeletonSectionInner: React.FC<{
       </CardHeader>
       <Collapse isOpen={isOpen}>
         <CardBody>
-          <Flexbox direction="col" gap="6">
-            {visibleSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx))}
+          <Flexbox direction="col" gap="3">
+            <div className="overflow-hidden rounded-lg border border-border/80 divide-y divide-border/70">
+              {visibleSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx))}
+              {showAllClusters && hiddenSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx + 2))}
+            </div>
             {hiddenSkeletons.length > 0 && (
-              <>
-                <Collapse isOpen={showAllClusters} className="flex flex-col gap-6">
-                  {hiddenSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx + 2))}
-                </Collapse>
-                <button
-                  type="button"
-                  onClick={() => setShowAllClusters((open) => !open)}
-                  className="self-start px-2 py-1 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
-                >
-                  {showAllClusters
-                    ? 'Show fewer clusters'
-                    : `Show ${hiddenSkeletons.length} more cluster${hiddenSkeletons.length === 1 ? '' : 's'}`}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => setShowAllClusters((open) => !open)}
+                className="self-start px-2 py-1 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
+              >
+                {showAllClusters
+                  ? 'Show fewer clusters'
+                  : `Show ${hiddenSkeletons.length} more cluster${hiddenSkeletons.length === 1 ? '' : 's'}`}
+              </button>
             )}
           </Flexbox>
         </CardBody>
@@ -2746,8 +2676,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [clusterK, setClusterK] = useState(10);
   const [pendingClusterK, setPendingClusterK] = useState(10);
   const [clusterSeed, setClusterSeed] = useState(0);
-  const [coreThreshold, setCoreThreshold] = useState(60);
-  const [pendingCoreThreshold, setPendingCoreThreshold] = useState(60);
   const [deckBuildsLoading, setDeckBuildsLoading] = useState(false);
 
   // Reconstruct SimulatedPool[] from slim pools for display (works for both fresh and historical)
@@ -3205,11 +3133,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     // startTransition defers the k-means computation so user interactions aren't blocked
     React.startTransition(() => {
       setSkeletons(
-        computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, clusterK, coreThreshold, activeDecks),
+        computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, clusterK, 60, activeDecks),
       );
     });
     // clusterSeed intentionally triggers re-cluster without being a real dependency
-  }, [displayRunData, clusterK, clusterSeed, coreThreshold, activeDecks]);
+  }, [displayRunData, clusterK, clusterSeed, activeDecks]);
 
   const selectedCards = useMemo(
     () =>
@@ -3392,10 +3320,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       .sort((a, b) => b.fraction - a.fraction)
       .slice(0, 8);
 
-    const supportCards = [...mainboardCounts.entries()]
-      .map(toSkeletonCard)
-      .sort((a, b) => b.fraction - a.fraction)
-      .slice(8, 16);
+    const supportCards: SkeletonCard[] = [];
 
     const sideboardCards = [...sideboardOnlyCounts.entries()]
       .map(toSkeletonCard)
@@ -3866,13 +3791,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 skeletons={skeletons}
                                 k={pendingClusterK}
                                 onSetK={setPendingClusterK}
-                                coreThreshold={pendingCoreThreshold}
-                                appliedCoreThreshold={coreThreshold}
-                                onSetCoreThreshold={setPendingCoreThreshold}
                                 onRecluster={() => {
                                   setSelectedSkeletonId(null);
                                   setClusterK(pendingClusterK);
-                                  setCoreThreshold(pendingCoreThreshold);
                                   setClusterSeed((s) => s + 1);
                                 }}
                                 totalPools={displayRunData.slimPools.length}
@@ -4031,34 +3952,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                       {selectedSkeletonId !== null &&
                         (() => {
                           const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-                          if (
-                            !sk ||
-                            (sk.coreCards.length === 0 &&
-                              sk.occasionalCards.length === 0 &&
-                              sk.sideboardCards.length === 0)
-                          )
+                          if (!sk || (sk.coreCards.length === 0 && sk.sideboardCards.length === 0))
                             return null;
                           return (
                             <div className="rounded-lg bg-bg-accent/30 border border-border/50 px-4 py-3">
                               <Text xs className="text-text-secondary font-semibold uppercase tracking-[0.14em] mb-2.5">
-                                Cluster defining cards
+                                Most common cards in this cluster
                               </Text>
                               <div className="overflow-x-auto">
                                 <div className="flex flex-row gap-2 pb-1" style={{ minWidth: 'max-content' }}>
                                   {sk.coreCards.map((card) => (
-                                    <SkeletonCardImage key={card.oracle_id} card={card} size={90} />
-                                    
+                                    <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_CLUSTER_CARD_W} />
                                   ))}
-                                  {sk.occasionalCards.length > 0 && (
-                                    <>
-                                      <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
-                                      {sk.occasionalCards.map((card) => (
-                                        <div key={card.oracle_id}>
-                                          <SkeletonCardImage card={card} size={SIM_PREVIEW_CARD_W} />
-                                        </div>
-                                      ))}
-                                    </>
-                                  )}
                                 </div>
                               </div>
                               {sk.sideboardCards.length > 0 && (
@@ -4067,11 +3972,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                     xs
                                     className="text-text-secondary/70 font-medium uppercase tracking-[0.14em] mb-2"
                                   >
-                                    Common Sideboard Cards for the Cluster
+                                    Common Sideboard Cards
                                   </Text>
                                   <div className="flex flex-col gap-1.5 rounded-md bg-bg/60 px-3 py-2">
                                     {sk.sideboardCards.map((card) => (
-                                    <div
+                                      <div
                                         key={card.oracle_id}
                                         className="flex items-baseline justify-between gap-3 text-sm"
                                       >
@@ -4096,24 +4001,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                               Most common cards in {archetypeFullName(selectedArchetype)}
                             </Text>
                           </div>
-                          <Text xs className="text-text-secondary/70 font-medium uppercase tracking-[0.14em] mb-2">
-                            Most Common Main Deck Cards
-                          </Text>
                           <div className="overflow-x-auto">
                             <div className="flex flex-row gap-2 pb-3" style={{ minWidth: 'max-content' }}>
                               {selectedArchetypePreview.commonCards.map((card) => (
-                                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_PREVIEW_CARD_W} />
+                                <SkeletonCardImage key={card.oracle_id} card={card} size={SIM_CLUSTER_CARD_W} />
                               ))}
-                              {selectedArchetypePreview.supportCards.length > 0 && (
-                                <>
-                                  <div className="w-px bg-border/60 self-stretch mx-1 flex-shrink-0" />
-                                  {selectedArchetypePreview.supportCards.map((card) => (
-                                    <div key={card.oracle_id}>
-                                      <SkeletonCardImage card={card} size={SIM_PREVIEW_CARD_W} />
-                                    </div>
-                                  ))}
-                                </>
-                              )}
                             </div>
                           </div>
                           {selectedArchetypePreview.sideboardCards.length > 0 && (
@@ -4501,16 +4393,8 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         <p>Each cluster shows:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>
-            <span className="font-medium text-text">Core cards</span> — cards found in at least Core% of decks in the
-            cluster
-          </li>
-          <li>
-            <span className="font-medium text-text">Support cards</span> — cards found in roughly half Core% up to Core%
-            of decks in the cluster
-          </li>
-          <li>
-            <span className="font-medium text-text">Common sideboard cards</span> — cards that show up in sideboards for
-            a meaningful share of decks in the cluster without commonly making the main deck
+            <span className="font-medium text-text">Most common cards</span> — the top cards that appear most often in
+            decks in that cluster
           </li>
           <li>
             <span className="font-medium text-text">Lock pairs</span> — card pairs that appear together much more often
