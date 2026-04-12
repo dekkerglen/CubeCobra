@@ -165,6 +165,8 @@ export interface LockPair {
   oracle_id_b: string;
   nameA: string;
   nameB: string;
+  imageUrlA?: string;
+  imageUrlB?: string;
   coOccurrenceRate: number; // 0–1
 }
 

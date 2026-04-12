@@ -117,7 +117,7 @@ describe('computeSkeletons', () => {
   it('identifies a card in every pool as a core card', () => {
     const meta = { staple: makeMeta('staple', 'Creature', ['U']) };
     const pools = Array.from({ length: 5 }, (_, i) => makePool(0, i, ['staple']));
-    const result = computeSkeletons(pools, meta, 1, 60);
+    const result = computeSkeletons(pools, meta, 1);
     expect(result).toHaveLength(1);
     expect(result[0].coreCards.map((c) => c.oracle_id)).toContain('staple');
   });
@@ -128,7 +128,7 @@ describe('computeSkeletons', () => {
       ...Array.from({ length: 5 }, (_, i) => makePool(0, i, ['a'])),
       ...Array.from({ length: 2 }, (_, i) => makePool(1, i, ['b'])),
     ];
-    const result = computeSkeletons(pools, meta, 2, 60);
+    const result = computeSkeletons(pools, meta, 2);
     if (result.length >= 2) {
       expect(result[0].poolCount).toBeGreaterThanOrEqual(result[1].poolCount);
     }
@@ -153,7 +153,7 @@ describe('computeSkeletons', () => {
       { mainboard: ['core', 'maindeck'], sideboard: ['side'] },
     ];
 
-    const result = computeSkeletons(pools, meta, 1, 60, deckBuilds);
+    const result = computeSkeletons(pools, meta, 1, deckBuilds);
 
     expect(result).toHaveLength(1);
     expect(result[0]?.sideboardCards.map((card) => card.oracle_id)).toContain('side');
