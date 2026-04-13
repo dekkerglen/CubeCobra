@@ -2030,149 +2030,14 @@ interface DraftMapPoint {
   archetype: string;
 }
 
-function normalizeVector(vec: number[]): number[] {
-  const norm = Math.sqrt(vec.reduce((sum, value) => sum + value * value, 0));
-  return norm > 0 ? vec.map((value) => value / norm) : vec;
-}
-
-function principalComponent(data: number[][], previous: number[][] = []): number[] {
-  const dim = data[0]?.length ?? 0;
-  let component = normalizeVector(Array.from({ length: dim }, (_, index) => Math.sin(index + 1) || 1));
-
-  for (let iter = 0; iter < 30; iter++) {
-    const next = new Array<number>(dim).fill(0);
-    for (const row of data) {
-      const score = row.reduce((sum, value, index) => sum + value * component[index]!, 0);
-      for (let index = 0; index < dim; index++) next[index]! += row[index]! * score;
-    }
-    for (const prev of previous) {
-      const projection = next.reduce((sum, value, index) => sum + value * prev[index]!, 0);
-      for (let index = 0; index < dim; index++) next[index]! -= projection * prev[index]!;
-    }
-    component = normalizeVector(next);
-  }
-
-  return component;
-}
-
-function pcaCoordinates(centered: number[][]): { x: number; y: number }[] {
-  const pc1 = principalComponent(centered);
-  const pc2 = principalComponent(centered, [pc1]);
-  return centered.map((row) => ({
-    x: row.reduce((sum, value, index) => sum + value * pc1[index]!, 0),
-    y: row.reduce((sum, value, index) => sum + value * pc2[index]!, 0),
-  }));
-}
-
-function normalizeCoordinates(coords: { x: number; y: number }[], targetScale = 3): { x: number; y: number }[] {
-  const xMean = coords.reduce((sum, coord) => sum + coord.x, 0) / Math.max(1, coords.length);
-  const yMean = coords.reduce((sum, coord) => sum + coord.y, 0) / Math.max(1, coords.length);
-  const centered = coords.map((coord) => ({ x: coord.x - xMean, y: coord.y - yMean }));
-  const maxAbs = Math.max(...centered.flatMap((coord) => [Math.abs(coord.x), Math.abs(coord.y)]), 1);
-  return centered.map((coord) => ({ x: (coord.x / maxAbs) * targetScale, y: (coord.y / maxAbs) * targetScale }));
-}
-
-function approximateUmapCoordinates(vectors: number[][], pcaInit: { x: number; y: number }[]): { x: number; y: number }[] {
-  const n = vectors.length;
-  if (n < 3) return pcaInit;
-  const neighborCount = Math.min(12, n - 1);
-  const coords = normalizeCoordinates(pcaInit, 2);
-  const edges: { a: number; b: number; weight: number }[] = [];
-
-  for (let i = 0; i < n; i++) {
-    const distances: { index: number; distance: number }[] = [];
-    for (let j = 0; j < n; j++) {
-      if (i === j) continue;
-      const similarity = vectors[i]!.reduce((sum, value, index) => sum + value * vectors[j]![index]!, 0);
-      distances.push({ index: j, distance: Math.max(0, 1 - similarity) });
-    }
-    distances.sort((a, b) => a.distance - b.distance);
-    const localScale = Math.max(distances[neighborCount - 1]?.distance ?? distances[0]?.distance ?? 1, 0.001);
-    for (const neighbor of distances.slice(0, neighborCount)) {
-      if (i < neighbor.index) {
-        edges.push({ a: i, b: neighbor.index, weight: Math.exp(-neighbor.distance / localScale) });
-      }
-    }
-  }
-
-  const learningRate = 0.035;
-  for (let iter = 0; iter < 90; iter++) {
-    const forces = Array.from({ length: n }, () => ({ x: 0, y: 0 }));
-    for (const edge of edges) {
-      const a = coords[edge.a]!;
-      const b = coords[edge.b]!;
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      forces[edge.a]!.x += dx * edge.weight;
-      forces[edge.a]!.y += dy * edge.weight;
-      forces[edge.b]!.x -= dx * edge.weight;
-      forces[edge.b]!.y -= dy * edge.weight;
-    }
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const a = coords[i]!;
-        const b = coords[j]!;
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const distSq = dx * dx + dy * dy + 0.01;
-        const repulsion = 0.015 / distSq;
-        forces[i]!.x -= dx * repulsion;
-        forces[i]!.y -= dy * repulsion;
-        forces[j]!.x += dx * repulsion;
-        forces[j]!.y += dy * repulsion;
-      }
-    }
-    const step = learningRate * (1 - iter / 100);
-    for (let i = 0; i < n; i++) {
-      coords[i]!.x += Math.max(-0.1, Math.min(0.1, forces[i]!.x * step));
-      coords[i]!.y += Math.max(-0.1, Math.min(0.1, forces[i]!.y * step));
-    }
-  }
-
-  return normalizeCoordinates(coords, 3);
-}
-
 function computeDraftMapPoints(
   slimPools: SlimPool[],
   displayedPools: SimulatedPool[],
-  cardMeta: Record<string, CardMeta>,
   skeletons: ArchetypeSkeleton[],
-  deckBuilds?: BuiltDeck[] | null,
+  umapCoords: { x: number; y: number }[],
 ): DraftMapPoint[] {
-  if (slimPools.length === 0) return [];
+  if (slimPools.length === 0 || umapCoords.length !== slimPools.length) return [];
 
-  const oracleIds = Object.keys(cardMeta).filter((id) => {
-    const typeLower = (cardMeta[id]?.type ?? '').toLowerCase();
-    return !(typeLower.includes('basic') && typeLower.includes('land'));
-  });
-  const oracleIndex = new Map(oracleIds.map((id, index) => [id, index]));
-  const dim = oracleIds.length;
-  if (dim === 0) return [];
-
-  const hasDecks = deckBuilds && deckBuilds.length === slimPools.length;
-  const binaryVecs = slimPools.map((pool, poolIndex) => {
-    const vec = new Uint8Array(dim);
-    const cards = hasDecks ? deckBuilds![poolIndex]?.mainboard ?? [] : pool.picks.map((pick) => pick.oracle_id);
-    for (const oracleId of cards) {
-      const index = oracleIndex.get(oracleId);
-      if (index !== undefined) vec[index] = 1;
-    }
-    return vec;
-  });
-
-  const df = new Float32Array(dim);
-  for (const vec of binaryVecs) for (let index = 0; index < dim; index++) if (vec[index]) df[index]++;
-  const idf = Float32Array.from({ length: dim }, (_, index) => Math.log((slimPools.length + 1) / (df[index]! + 1)));
-
-  const tfidfVecs = binaryVecs.map((vec) => {
-    const weighted = Array.from({ length: dim }, (_, index) => vec[index]! * idf[index]!);
-    return normalizeVector(weighted);
-  });
-  const means = Array.from({ length: dim }, (_, index) =>
-    tfidfVecs.reduce((sum, vec) => sum + vec[index]!, 0) / tfidfVecs.length,
-  );
-  const centered = tfidfVecs.map((vec) => vec.map((value, index) => value - means[index]!));
-  const coords = approximateUmapCoordinates(tfidfVecs, pcaCoordinates(centered));
   const clusterByPoolIndex = new Map<number, { clusterId: number; clusterIndex: number; label: string }>();
   skeletons.forEach((skeleton, index) => {
     for (const poolIndex of skeleton.poolIndices) {
@@ -2185,7 +2050,7 @@ function computeDraftMapPoints(
   });
 
   return slimPools.map((pool, poolIndex) => {
-    const coord = coords[poolIndex]!;
+    const coord = umapCoords[poolIndex]!;
     const cluster = clusterByPoolIndex.get(poolIndex);
     return {
       x: coord.x,
@@ -2223,12 +2088,34 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/**
+ * Map an archetype string (e.g. "UB", "RG", "C") to a single hex colour.
+ * For multi-colour archetypes we average the component MTG colours.
+ */
+function archetypeToColor(archetype: string): string {
+  const codes = getColorProfileCodes(archetype);
+  if (codes.length === 1) return MTG_COLORS[codes[0]!]?.bg ?? MTG_COLORS.C!.bg;
+  // Average the RGB components
+  let r = 0, g = 0, b = 0;
+  for (const code of codes) {
+    const hex = (MTG_COLORS[code]?.bg ?? MTG_COLORS.C!.bg).replace('#', '');
+    r += parseInt(hex.substring(0, 2), 16);
+    g += parseInt(hex.substring(2, 4), 16);
+    b += parseInt(hex.substring(4, 6), 16);
+  }
+  r = Math.round(r / codes.length);
+  g = Math.round(g / codes.length);
+  b = Math.round(b / codes.length);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
 const DraftMapScatter: React.FC<{
   points: DraftMapPoint[];
   selectedPoolIndex: number | null;
   activePoolIndexSet: Set<number> | null;
+  colorMode: DraftMapColorMode;
   onSelectPoint: (point: DraftMapPoint) => void;
-}> = ({ points, selectedPoolIndex, activePoolIndexSet, onSelectPoint }) => {
+}> = ({ points, selectedPoolIndex, activePoolIndexSet, colorMode, onSelectPoint }) => {
   if (points.length === 0) {
     return (
       <Text sm className="text-text-secondary">
@@ -2238,8 +2125,10 @@ const DraftMapScatter: React.FC<{
   }
   const hasActiveFilter = activePoolIndexSet !== null;
   const isInActiveFilter = (point: DraftMapPoint) => !hasActiveFilter || activePoolIndexSet.has(point.poolIndex);
-  const pointBaseColor = (point: DraftMapPoint) =>
-    point.clusterIndex === null ? MTG_COLORS.C!.bg : CLUSTER_COLORS[point.clusterIndex % CLUSTER_COLORS.length]!;
+  const pointBaseColor = (point: DraftMapPoint) => {
+    if (colorMode === 'deckColor') return archetypeToColor(point.archetype);
+    return point.clusterIndex === null ? MTG_COLORS.C!.bg : CLUSTER_COLORS[point.clusterIndex % CLUSTER_COLORS.length]!;
+  };
 
   return (
     <Scatter
@@ -2258,7 +2147,8 @@ const DraftMapScatter: React.FC<{
       }}
       options={{
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
+        aspectRatio: 1,
         onClick: (_event, elements) => {
           const element = elements[0];
           if (!element) return;
@@ -4675,14 +4565,8 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   onSelectSkeleton: (id: number | null) => void;
   isOpen: boolean;
   onToggle: () => void;
-}> = ({ skeletons, k, onSetK, onRecluster, totalPools, selectedSkeletonId, onSelectSkeleton, isOpen, onToggle }) => {
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, isOpen, onToggle }) => {
   const [showAllClusters, setShowAllClusters] = useState(false);
-  const [reclusterFlash, setReclusterFlash] = useState(false);
-  const handleRecluster = () => {
-    onRecluster();
-    setReclusterFlash(true);
-    setTimeout(() => setReclusterFlash(false), 1200);
-  };
   const visibleSkeletons = skeletons.slice(0, 2);
   const hiddenSkeletons = skeletons.slice(2);
 
@@ -4743,24 +4627,6 @@ const ArchetypeSkeletonSectionInner: React.FC<{
             </Text>
           </button>
           <div className="flex flex-row items-center gap-2 flex-shrink-0">
-            {isOpen && (
-              <>
-                <label className="text-xs font-medium text-text-secondary whitespace-nowrap">Clusters</label>
-                <NumericInput min={2} max={16} value={k} onChange={onSetK} className="w-14" />
-                <button
-                  type="button"
-                  onClick={handleRecluster}
-                  className={[
-                    'whitespace-nowrap px-2 py-1 rounded text-xs font-medium border transition-colors',
-                    reclusterFlash
-                      ? 'bg-green-700 text-white border-green-600'
-                      : 'bg-bg-accent border-border hover:bg-bg-active',
-                  ].join(' ')}
-                >
-                  {reclusterFlash ? '✓ Done' : 'Re-cluster'}
-                </button>
-              </>
-            )}
             <button
               type="button"
               onClick={onToggle}
