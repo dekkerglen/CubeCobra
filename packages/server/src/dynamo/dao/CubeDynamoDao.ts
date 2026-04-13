@@ -626,10 +626,15 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
           // Persist the migration: clear legacy basics and save to DynamoDB and S3
           try {
             // Clear the legacy basics array
-            await this.update({
-              ...cube,
-              basics: [],
-            });
+            // Use skipTimestampUpdate so this migration doesn't affect the cube's
+            // "last edited" sort order in the owner's nav dropdown.
+            await this.update(
+              {
+                ...cube,
+                basics: [],
+              },
+              { skipTimestampUpdate: true },
+            );
           } catch (_err) {
             // Continue anyway - migration will happen again next time
           }
