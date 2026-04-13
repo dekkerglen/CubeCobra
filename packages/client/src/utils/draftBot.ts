@@ -257,6 +257,82 @@ export function buildSeatMlMaps(poolOracles: string[], remapping?: Record<string
 }
 
 // ---------------------------------------------------------------------------
+// Embedding extraction (used for clustering / UMAP visualization)
+// ---------------------------------------------------------------------------
+
+const EMBEDDING_DIM = 128;
+
+/**
+ * Encode each pool/deck into a 128-dim embedding via the ML encoder.
+ * pools[i] = oracle IDs whose bits should be set to 1 in the input.
+ * Returns Float32Array of length N * 128 (row-major).
+ */
+export async function encodePools(
+  pools: string[][],
+  remapping?: Record<string, string>,
+  chunkSize: number = WEBGL_CHUNK_SIZE,
+): Promise<Float32Array> {
+  const N = pools.length;
+  if (N === 0) return new Float32Array(0);
+  if (!draftBotLoaded || !tf || !encoder) {
+    throw new Error('Draft bot must be loaded before encoding pools');
+  }
+
+  const out = new Float32Array(N * EMBEDDING_DIM);
+
+  for (let start = 0; start < N; start += chunkSize) {
+    const end = Math.min(start + chunkSize, N);
+    const rows = end - start;
+    const chunkData = new Float32Array(rows * numOracles);
+
+    for (let i = 0; i < rows; i++) {
+      const base = i * numOracles;
+      for (const oracle of pools[start + i]!) {
+        const idx = oracleToIndex[mlOracle(oracle, remapping)];
+        if (idx !== undefined) chunkData[base + idx] = 1;
+      }
+    }
+
+    let inputTensor: import('@tensorflow/tfjs').Tensor | null = null;
+    let encoded: import('@tensorflow/tfjs').Tensor | null = null;
+    try {
+      inputTensor = tf.tensor2d(chunkData, [rows, numOracles]);
+      encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
+      inputTensor.dispose();
+      inputTensor = null;
+      const embeddingData = (await encoded.data()) as Float32Array;
+      encoded.dispose();
+      encoded = null;
+      out.set(embeddingData, start * EMBEDDING_DIM);
+    } catch (err) {
+      inputTensor?.dispose();
+      encoded?.dispose();
+      if (isWebGLError(err)) {
+        throw new WebGLInferenceError(
+          'WebGL context lost during encoding — your GPU ran out of memory. Try running fewer drafts.',
+          err,
+        );
+      }
+      throw err;
+    }
+  }
+
+  return out;
+}
+
+/** Convert flat Float32Array of embeddings (N * 128) into number[][] for downstream use. */
+export function reshapeEmbeddings(flat: Float32Array, n: number): number[][] {
+  const result: number[][] = [];
+  for (let i = 0; i < n; i++) {
+    const row: number[] = [];
+    const base = i * EMBEDDING_DIM;
+    for (let j = 0; j < EMBEDDING_DIM; j++) row.push(flat[base + j]!);
+    result.push(row);
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 // Draft picking (used during simulation)
 // ---------------------------------------------------------------------------
 

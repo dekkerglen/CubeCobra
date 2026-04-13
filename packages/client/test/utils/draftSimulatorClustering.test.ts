@@ -1,4 +1,4 @@
-import { computeSkeletons, euclidSq, kMeans } from '../../src/utils/draftSimulatorClustering';
+import { approximateUmap, computeSkeletons, euclidSq, hdbscanAssignments } from '../../src/utils/draftSimulatorClustering';
 
 const makeMeta = (id: string, type = 'Creature', colorIdentity: string[] = []) => ({
   name: id,
@@ -34,31 +34,28 @@ describe('euclidSq', () => {
 });
 
 // ---------------------------------------------------------------------------
-// kMeans
+// hdbscanAssignments
 // ---------------------------------------------------------------------------
-describe('kMeans', () => {
+describe('hdbscanAssignments', () => {
   it('returns [] for empty input', () => {
-    expect(kMeans([], 3)).toEqual([]);
+    expect(hdbscanAssignments([], 3)).toEqual([]);
   });
 
-  it('clamps k to the number of vectors', () => {
-    const vecs = [
-      [1, 0],
-      [0, 1],
-    ];
-    const result = kMeans(vecs, 10); // k=10 but only 2 points
-    expect(result).toHaveLength(2);
-    expect(new Set(result).size).toBeLessThanOrEqual(2);
+  it('returns [0] for a single point', () => {
+    expect(hdbscanAssignments([[1, 2]], 3)).toEqual([0]);
   });
 
-  it('assigns all points to cluster 0 when k=1', () => {
+  it('assigns all points to cluster 0 when everything is close', () => {
     const vecs = [
-      [1, 0],
-      [0, 1],
-      [1, 1],
+      [0, 0],
+      [0.1, 0],
+      [0, 0.1],
+      [0.1, 0.1],
     ];
-    const result = kMeans(vecs, 1);
-    expect(result.every((a) => a === 0)).toBe(true);
+    const result = hdbscanAssignments(vecs, 2);
+    expect(result).toHaveLength(4);
+    // All same cluster
+    expect(new Set(result).size).toBe(1);
   });
 
   it('separates two clearly distinct groups', () => {
@@ -70,20 +67,91 @@ describe('kMeans', () => {
       [10.1, 10],
       [10, 10.1], // cluster B — far corner
     ];
-    const result = kMeans(vecs, 2);
+    const result = hdbscanAssignments(vecs, 2);
     expect(result).toHaveLength(6);
+    // First three should be same cluster
     expect(result[0]).toBe(result[1]);
     expect(result[1]).toBe(result[2]);
+    // Last three should be same cluster
     expect(result[3]).toBe(result[4]);
     expect(result[4]).toBe(result[5]);
+    // The two groups should be different clusters
     expect(result[0]).not.toBe(result[3]);
   });
 
   it('returns one assignment per input vector', () => {
     const vecs = Array.from({ length: 20 }, (_, i) => [i % 4, Math.floor(i / 4)]);
-    const result = kMeans(vecs, 4);
+    const result = hdbscanAssignments(vecs, 3);
     expect(result).toHaveLength(20);
     for (const a of result) expect(a).toBeGreaterThanOrEqual(0);
+  });
+
+  it('treats small groups as noise and assigns to nearest cluster', () => {
+    // Two big clusters + 1 isolated point
+    const vecs = [
+      ...Array.from({ length: 5 }, (_, i) => [i * 0.1, 0]),   // cluster near origin
+      ...Array.from({ length: 5 }, (_, i) => [10 + i * 0.1, 10]), // cluster far away
+      [0.2, 0.1], // isolated but close to cluster A
+    ];
+    const result = hdbscanAssignments(vecs, 4);
+    expect(result).toHaveLength(11);
+    // The isolated point should be assigned to cluster A (same as first 5 points)
+    expect(result[10]).toBe(result[0]);
+  });
+
+  it('produces a reasonable number of clusters with high-dim data', () => {
+    // 3 well-separated clusters of 10 points each in 10-dim space
+    const vecs: number[][] = [];
+    for (let c = 0; c < 3; c++) {
+      for (let i = 0; i < 10; i++) {
+        const v = new Array(10).fill(0);
+        v[c * 3] = 10 + i * 0.1;         // each cluster is far apart in a different dimension
+        v[c * 3 + 1] = i * 0.1;
+        vecs.push(v);
+      }
+    }
+    const result = hdbscanAssignments(vecs, 5);
+    expect(result).toHaveLength(30);
+    const numClusters = new Set(result).size;
+    // Should find roughly 3 clusters, not 30
+    expect(numClusters).toBeGreaterThanOrEqual(2);
+    expect(numClusters).toBeLessThanOrEqual(5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// approximateUmap
+// ---------------------------------------------------------------------------
+describe('approximateUmap', () => {
+  it('returns [] for empty input', () => {
+    expect(approximateUmap([])).toEqual([]);
+  });
+
+  it('returns coordinates for each input vector', () => {
+    const vecs = [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+      [1, 1, 0],
+      [0, 1, 1],
+    ];
+    const result = approximateUmap(vecs);
+    expect(result).toHaveLength(5);
+    for (const coord of result) {
+      expect(typeof coord.x).toBe('number');
+      expect(typeof coord.y).toBe('number');
+      expect(Number.isFinite(coord.x)).toBe(true);
+      expect(Number.isFinite(coord.y)).toBe(true);
+    }
+  });
+
+  it('handles fewer than 3 points gracefully', () => {
+    const vecs = [
+      [1, 2],
+      [3, 4],
+    ];
+    const result = approximateUmap(vecs);
+    expect(result).toHaveLength(2);
   });
 });
 
@@ -91,15 +159,19 @@ describe('kMeans', () => {
 // computeSkeletons
 // ---------------------------------------------------------------------------
 describe('computeSkeletons', () => {
-  it('returns [] for empty pools', () => {
-    expect(computeSkeletons([], {}, 4)).toEqual([]);
+  it('returns empty for empty pools', () => {
+    const result = computeSkeletons([], {}, 2, null);
+    expect(result.skeletons).toEqual([]);
+    expect(result.umapCoords).toEqual([]);
   });
 
-  it('clamps k to the number of pools', () => {
+  it('handles more pools than minClusterSize gracefully', () => {
     const meta = { a: makeMeta('a'), b: makeMeta('b') };
     const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b'])];
-    const result = computeSkeletons(pools, meta, 10);
-    expect(result.length).toBeLessThanOrEqual(2);
+    const result = computeSkeletons(pools, meta, 10, null);
+    // With minClusterSize=10 and only 2 pools, no valid clusters exist —
+    // all points should still be assigned (noise goes to nearest cluster fallback)
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('excludes basic lands from card vectors', () => {
@@ -108,18 +180,20 @@ describe('computeSkeletons', () => {
       island: makeMeta('island', 'Basic Land', ['U']),
     };
     const pools = [makePool(0, 0, ['spell', 'island']), makePool(0, 1, ['spell', 'island'])];
-    const result = computeSkeletons(pools, meta, 1);
-    expect(result).toHaveLength(1);
-    const allCardIds = result.flatMap((s) => [...s.coreCards, ...s.occasionalCards].map((c) => c.oracle_id));
+    const result = computeSkeletons(pools, meta, 2, null);
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+    const allCardIds = result.skeletons.flatMap((s) => [...s.coreCards, ...s.occasionalCards].map((c) => c.oracle_id));
     expect(allCardIds).not.toContain('island');
   });
 
   it('identifies a card in every pool as a core card', () => {
     const meta = { staple: makeMeta('staple', 'Creature', ['U']) };
     const pools = Array.from({ length: 5 }, (_, i) => makePool(0, i, ['staple']));
-    const result = computeSkeletons(pools, meta, 1);
-    expect(result).toHaveLength(1);
-    expect(result[0].coreCards.map((c) => c.oracle_id)).toContain('staple');
+    const result = computeSkeletons(pools, meta, 3, null);
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+    // At least one skeleton should contain the staple as a core card
+    const hasStaple = result.skeletons.some((s) => s.coreCards.some((c) => c.oracle_id === 'staple'));
+    expect(hasStaple).toBe(true);
   });
 
   it('sorts skeletons by pool count descending', () => {
@@ -128,9 +202,9 @@ describe('computeSkeletons', () => {
       ...Array.from({ length: 5 }, (_, i) => makePool(0, i, ['a'])),
       ...Array.from({ length: 2 }, (_, i) => makePool(1, i, ['b'])),
     ];
-    const result = computeSkeletons(pools, meta, 2);
-    if (result.length >= 2) {
-      expect(result[0].poolCount).toBeGreaterThanOrEqual(result[1].poolCount);
+    const result = computeSkeletons(pools, meta, 2, null);
+    if (result.skeletons.length >= 2) {
+      expect(result.skeletons[0].poolCount).toBeGreaterThanOrEqual(result.skeletons[1].poolCount);
     }
   });
 
@@ -153,10 +227,36 @@ describe('computeSkeletons', () => {
       { mainboard: ['core', 'maindeck'], sideboard: ['side'] },
     ];
 
-    const result = computeSkeletons(pools, meta, 1, deckBuilds);
+    const result = computeSkeletons(pools, meta, 2, null, deckBuilds);
 
-    expect(result).toHaveLength(1);
-    expect(result[0]?.sideboardCards.map((card) => card.oracle_id)).toContain('side');
-    expect(result[0]?.sideboardCards.find((card) => card.oracle_id === 'side')?.fraction).toBe(1);
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+    // At least one skeleton should detect the sideboard card
+    const hasSide = result.skeletons.some((s) => s.sideboardCards.some((c) => c.oracle_id === 'side'));
+    expect(hasSide).toBe(true);
+  });
+
+  it('returns umapCoords matching the number of pools', () => {
+    const meta = { a: makeMeta('a'), b: makeMeta('b'), c: makeMeta('c') };
+    const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['c'])];
+    const result = computeSkeletons(pools, meta, 2, null);
+    expect(result.umapCoords).toHaveLength(3);
+    for (const coord of result.umapCoords) {
+      expect(typeof coord.x).toBe('number');
+      expect(typeof coord.y).toBe('number');
+    }
+  });
+
+  it('uses provided embeddings when available', () => {
+    const meta = { a: makeMeta('a'), b: makeMeta('b'), c: makeMeta('c') };
+    const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['c'])];
+    // 3 pools with 4-dim embeddings
+    const embeddings = [
+      [1, 0, 0, 0],
+      [0, 1, 0, 0],
+      [0, 0, 1, 0],
+    ];
+    const result = computeSkeletons(pools, meta, 2, embeddings);
+    expect(result.skeletons.length).toBeGreaterThan(0);
+    expect(result.umapCoords).toHaveLength(3);
   });
 });
