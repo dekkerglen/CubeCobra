@@ -284,7 +284,8 @@ export function hdbscanAssignments(
     const workStack: [number, number][] = [[startNodeIdx, startClusterId]];
 
     while (workStack.length > 0) {
-      let [nodeIdx, clusterId] = workStack.pop()!;
+      const [initialNodeIdx, clusterId] = workStack.pop()!;
+      let nodeIdx = initialNodeIdx;
       const cluster = condensed[clusterId]!;
 
       // Iterate through noise ejections (tail-call style)
@@ -638,6 +639,11 @@ export function computeSkeletons(
   // Determine the set of unique cluster IDs from the assignments
   const uniqueClusters = [...new Set(assignments)].sort((a, b) => a - b);
 
+  const globalCardCounts = new Float32Array(dim);
+  for (const v of vecs) {
+    for (let j = 0; j < dim; j++) globalCardCounts[j] += v[j]!;
+  }
+
   const skeletons: ArchetypeSkeleton[] = [];
   for (const clusterId of uniqueClusters) {
     const poolIndices = assignments.map((a, i) => (a === clusterId ? i : -1)).filter((i) => i >= 0);
@@ -652,15 +658,21 @@ export function computeSkeletons(
     }
     for (let j = 0; j < dim; j++) fracs[j] /= poolCount;
 
-    const allCards: SkeletonCard[] = oracleIds
-      .map((oracle_id, j) => ({
-        oracle_id,
-        name: cardMeta[oracle_id]?.name ?? oracle_id,
-        imageUrl: cardMeta[oracle_id]?.imageUrl ?? '',
-        fraction: fracs[j]!,
-      }))
+    const allCards: (SkeletonCard & { distinctiveness: number })[] = oracleIds
+      .map((oracle_id, j) => {
+        const fraction = fracs[j]!;
+        const globalCount = globalCardCounts[j]!;
+        const idf = Math.log((n + 1) / (globalCount + 1));
+        return {
+          oracle_id,
+          name: cardMeta[oracle_id]?.name ?? oracle_id,
+          imageUrl: cardMeta[oracle_id]?.imageUrl ?? '',
+          fraction,
+          distinctiveness: fraction * idf,
+        };
+      })
       .filter((c) => c.fraction > 0)
-      .sort((a, b) => b.fraction - a.fraction);
+      .sort((a, b) => b.distinctiveness - a.distinctiveness || b.fraction - a.fraction);
 
     const coreCards = allCards.slice(0, 12);
     const occasionalCards: SkeletonCard[] = [];
