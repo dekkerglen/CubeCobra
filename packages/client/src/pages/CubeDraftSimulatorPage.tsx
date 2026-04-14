@@ -43,6 +43,7 @@ import Link from '../components/base/Link';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../components/base/Modal';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
+import { DeckStacksStatic } from '../components/DeckCard';
 import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
 import DynamicFlash from '../components/DynamicFlash';
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
@@ -2193,125 +2194,64 @@ const ViewToggle: React.FC<{
 );
 
 const CMC_COLS = 8;
-const DECK_CARD_W = SIM_PREVIEW_CARD_W;
-const STACK_OFFSET = 30;
+
+/** Build piles + a minimal cards array compatible with DeckStacksStatic from oracle ID lists.
+ *  Rows: 0 = Creatures, 1 = Non-Creatures, 2 = Lands. Columns: CMC 0–7+. */
+function buildPilesFromOracles(
+  oracleIds: string[],
+  cardMeta: Record<string, CardMeta>,
+): { piles: number[][][]; cards: { cardID: string; details: { oracle_id: string; name: string; image_normal: string } }[] } {
+  const cards: { cardID: string; details: { oracle_id: string; name: string; image_normal: string } }[] = [];
+  const oracleToIndex: Record<string, number> = {};
+  for (const id of oracleIds) {
+    if (oracleToIndex[id] !== undefined) continue;
+    const meta = cardMeta[id];
+    oracleToIndex[id] = cards.length;
+    cards.push({ cardID: id, details: { oracle_id: id, name: meta?.name ?? id, image_normal: meta?.imageUrl ?? '' } });
+  }
+
+  const piles: number[][][] = Array.from({ length: 3 }, () =>
+    Array.from({ length: CMC_COLS }, () => [] as number[]),
+  );
+
+  for (const id of oracleIds) {
+    const meta = cardMeta[id];
+    const typeLower = (meta?.type ?? '').toLowerCase();
+    const row = typeLower.includes('land') ? 2 : typeLower.includes('creature') ? 0 : 1;
+    const col = Math.min(CMC_COLS - 1, Math.max(0, Math.floor(meta?.cmc ?? 0)));
+    piles[row]![col]!.push(oracleToIndex[id]!);
+  }
+
+  const nonEmptyPiles = piles.filter((row) => row.some((col) => col.length > 0));
+  return { piles: nonEmptyPiles, cards };
+}
 
 const SimDeckView: React.FC<{
   deck: BuiltDeck;
-  picksByOracle: Record<string, SimulatedPickCard>;
   cardMeta: Record<string, CardMeta>;
-  highlightOracle?: string;
-}> = ({ deck, picksByOracle, cardMeta, highlightOracle }) => {
-  // Build 3-row grid: [creatures, non-creatures, lands][cmc col]
-  const grid: SimulatedPickCard[][][] = Array.from({ length: 3 }, () =>
-    Array.from({ length: CMC_COLS }, () => [] as SimulatedPickCard[]),
+}> = ({ deck, cardMeta }) => {
+  const { piles: mainPiles, cards } = useMemo(
+    () => buildPilesFromOracles(deck.mainboard, cardMeta),
+    [deck.mainboard, cardMeta],
   );
-  for (const oracle_id of deck.mainboard) {
-    const meta = cardMeta[oracle_id];
-    // Fall back to a synthetic entry for basics/cards added by the deckbuilder (not in pool picks)
-    const pick: SimulatedPickCard = picksByOracle[oracle_id] ?? {
-      oracle_id,
-      name: meta?.name ?? oracle_id,
-      imageUrl: meta?.imageUrl ?? '',
-      packNumber: 0,
-      pickNumber: 0,
-    };
-    const typeLower = (meta?.type ?? '').toLowerCase();
-    const isLand = typeLower.includes('land');
-    const isCreature = typeLower.includes('creature');
-    const row = isLand ? 2 : isCreature ? 0 : 1;
-    const col = Math.min(CMC_COLS - 1, Math.max(0, Math.floor(meta?.cmc ?? 0)));
-    grid[row]![col]!.push(pick);
-  }
-
-  const sideboardPicks = deck.sideboard.map((id) => {
-    const meta = cardMeta[id];
-    return (
-      picksByOracle[id] ?? {
-        oracle_id: id,
-        name: meta?.name ?? id,
-        imageUrl: meta?.imageUrl ?? '',
-        packNumber: 0,
-        pickNumber: 0,
-      }
-    );
-  });
-
-  const rowLabels = ['Creatures', 'Non-Creatures', 'Lands'];
+  const { piles: sbPiles, cards: sbCards } = useMemo(
+    () => buildPilesFromOracles(deck.sideboard, cardMeta),
+    [deck.sideboard, cardMeta],
+  );
 
   return (
-    <div className="p-3 overflow-x-auto">
-      <Flexbox direction="col" gap="4">
-        {grid.map((row, rowIdx) => {
-          const hasCards = row.some((col) => col.length > 0);
-          if (!hasCards) return null;
-          return (
-            <div key={rowIdx}>
-              <Text xs className="text-text-secondary mb-1 font-semibold uppercase tracking-wider">
-                {rowLabels[rowIdx]}
-              </Text>
-              <div className="flex flex-row gap-1">
-                {row.map((stack, colIdx) => {
-                  if (stack.length === 0) return <div key={colIdx} style={{ width: DECK_CARD_W }} />;
-                  const stackH = Math.round(DECK_CARD_W * 1.4) + (stack.length - 1) * STACK_OFFSET;
-                  return (
-                    <div key={colIdx} className="relative flex-shrink-0" style={{ width: DECK_CARD_W, height: stackH }}>
-                      {stack.map((pick, i) => (
-                        <div
-                          key={`${pick.oracle_id}-${i}`}
-                          className={[
-                            'absolute rounded border overflow-hidden',
-                            pick.oracle_id === highlightOracle
-                              ? 'border-link-active ring-1 ring-link-active'
-                              : 'border-border',
-                          ].join(' ')}
-                          style={{ top: i * STACK_OFFSET, width: DECK_CARD_W, zIndex: i }}
-                        >
-                          {pick.imageUrl ? (
-                            <img src={pick.imageUrl} alt={pick.name} className="w-full block" />
-                          ) : (
-                            <div
-                              className="w-full flex items-center justify-center p-1 text-xs text-text-secondary bg-bg"
-                              style={{ height: Math.round(DECK_CARD_W * 1.4) }}
-                            >
-                              {pick.name}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-
-        {sideboardPicks.length > 0 && (
-          <div>
-            <Text xs className="text-text-secondary mb-1 font-semibold uppercase tracking-wider">
-              Sideboard ({sideboardPicks.length})
+    <div className="overflow-x-auto">
+      <DeckStacksStatic piles={mainPiles} cards={cards} />
+      {deck.sideboard.length > 0 && (
+        <>
+          <div className="px-3 py-2 border-t border-border">
+            <Text semibold lg>
+              Sideboard ({deck.sideboard.length})
             </Text>
-            <div className="flex flex-row flex-wrap gap-1 opacity-75">
-              {sideboardPicks.map((pick) => (
-                <div
-                  key={pick.oracle_id}
-                  className="rounded border border-border overflow-hidden flex-shrink-0"
-                  style={{ width: 110 }}
-                >
-                  {pick.imageUrl ? (
-                    <img src={pick.imageUrl} alt={pick.name} className="w-full block" />
-                  ) : (
-                    <div className="text-xs p-1 text-text-secondary bg-bg" style={{ height: 154 }}>
-                      {pick.name}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
           </div>
-        )}
-      </Flexbox>
+          <DeckStacksStatic piles={sbPiles} cards={sbCards} />
+        </>
+      )}
     </div>
   );
 };
@@ -2325,11 +2265,7 @@ const PoolExpansionContent: React.FC<{
   highlightOracle?: string;
 }> = ({ pool, mode, deck, cardMeta, runData, highlightOracle }) => {
   if (mode === 'deck' && deck && (deck.mainboard.length > 0 || deck.sideboard.length > 0)) {
-    const picksByOracle: Record<string, SimulatedPickCard> = {};
-    for (const pick of pool.picks) picksByOracle[pick.oracle_id] = pick;
-    return (
-      <SimDeckView deck={deck} picksByOracle={picksByOracle} cardMeta={cardMeta} highlightOracle={highlightOracle} />
-    );
+    return <SimDeckView deck={deck} cardMeta={cardMeta} />;
   }
   if (mode === 'fullPickOrder') {
     return <SimulatorPickBreakdown pool={pool} runData={runData} />;
@@ -2981,10 +2917,10 @@ const DraftBreakdownTable: React.FC<{
             className="flex-wrap gap-2 border-b border-link/20 bg-link/10 px-3 py-2"
           >
             <div>
-              <Text sm semibold>
+              <Text sm semibold className="block">
                 Draft {selectedSummary.pool.draftIndex + 1} · Seat {selectedSummary.pool.seatIndex + 1}
               </Text>
-              <Text xs className="text-text-secondary">
+              <Text xs className="block text-text-secondary">
                 {selectedSummary.themes.join(', ')}
                 {selectedCardName ? ` · ${selectedCardName}` : ''}
               </Text>

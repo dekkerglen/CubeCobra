@@ -20,7 +20,7 @@ interface DeckStacksStaticProps {
   cards: any[];
 }
 
-const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards }) => (
+export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
     {piles.map((row, index) => (
       <Row key={index} xs={2} md={4} lg={8}>
