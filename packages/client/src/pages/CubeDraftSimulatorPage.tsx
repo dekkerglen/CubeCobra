@@ -1463,8 +1463,8 @@ const ArchetypeChart: React.FC<{
 }> = ({ archetypeDistribution, selectedArchetype, onSelect }) => {
   const [showAllProfiles, setShowAllProfiles] = useState(false);
   const maxCount = Math.max(...archetypeDistribution.map((e) => e.count), 1);
-  const visibleEntries = archetypeDistribution.slice(0, 3);
-  const hiddenEntries = archetypeDistribution.slice(3);
+  const visibleEntries = archetypeDistribution.slice(0, 4);
+  const hiddenEntries = archetypeDistribution.slice(4);
   const hiddenHasSelection = hiddenEntries.some((entry) => entry.colorPair === selectedArchetype);
   const showHiddenProfiles = showAllProfiles || hiddenHasSelection;
 
@@ -3032,24 +3032,13 @@ const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) =>
         <CardBody>
           <Row className="gap-4">
             {[
-              {
-                title: 'Overperformers',
-                sub: 'Picked higher than Elo suggests — stronger in this cube than their global rating implies',
-                data: gainers,
-              },
-              {
-                title: 'Underperformers',
-                sub: 'High Elo but drafted later — may be situational or a poor fit for this cube',
-                data: losers,
-              },
-            ].map(({ title, sub, data }) => (
+              { title: 'Overperformers', data: gainers },
+              { title: 'Underperformers', data: losers },
+            ].map(({ title, data }) => (
               <Col key={title} xs={12} md={6}>
                 <div className="h-full rounded border border-border bg-bg">
                   <div className="border-b border-border bg-bg-accent/50 px-3 py-2">
                     <Text semibold>{title}</Text>
-                    <Text xs className="text-text-secondary mt-0.5">
-                      {sub}
-                    </Text>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-border text-sm">
@@ -3272,8 +3261,8 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   onToggle: () => void;
 }> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, isOpen, onToggle }) => {
   const [showAllClusters, setShowAllClusters] = useState(false);
-  const visibleSkeletons = skeletons.slice(0, 3);
-  const hiddenSkeletons = skeletons.slice(3);
+  const visibleSkeletons = skeletons.slice(0, 4);
+  const hiddenSkeletons = skeletons.slice(4);
   const hiddenHasSelection = hiddenSkeletons.some((skeleton) => skeleton.clusterId === selectedSkeletonId);
   const showHiddenClusters = showAllClusters || hiddenHasSelection;
 
