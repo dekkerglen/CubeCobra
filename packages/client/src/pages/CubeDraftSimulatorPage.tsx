@@ -1179,6 +1179,33 @@ function getDeckShareColors(oracle: string, cardMeta: Record<string, CardMeta>):
   return [];
 }
 
+const RowColorShare: React.FC<{ deck: BuiltDeck | null; cardMeta: Record<string, CardMeta> }> = ({ deck, cardMeta }) => {
+  if (!deck || deck.mainboard.length === 0) return null;
+  const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS.map((k) => [k, 0]));
+  for (const oracle of deck.mainboard) {
+    const colors = getDeckShareColors(oracle, cardMeta);
+    if (colors.length === 0) continue;
+    const share = 1 / colors.length;
+    for (const c of colors) shares[c] = (shares[c] ?? 0) + share;
+  }
+  const total = Object.values(shares).reduce((s, v) => s + v, 0);
+  if (total === 0) return null;
+  const segments = COLOR_KEYS.map((k) => ({ key: k, pct: (shares[k] ?? 0) / total, bg: MTG_COLORS[k]!.bg })).filter(
+    (s) => s.pct > 0.01,
+  );
+  return (
+    <div className="flex w-full overflow-hidden rounded-sm" style={{ height: 10 }}>
+      {segments.map((s) => (
+        <div
+          key={s.key}
+          style={{ width: `${s.pct * 100}%`, background: s.bg }}
+          title={`${s.key}: ${(s.pct * 100).toFixed(0)}%`}
+        />
+      ))}
+    </div>
+  );
+};
+
 const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
   deckBuilds,
   cardMeta,
@@ -2420,7 +2447,7 @@ function getDraftHighlights(
       return !typeLower.includes('basic land');
     })
     .sort((a, b) => (cardMeta[b]?.elo ?? 0) - (cardMeta[a]?.elo ?? 0))
-    .slice(0, 5);
+    .slice(0, 8);
 
   return cards.map((oracleId) => {
     const meta = cardMeta[oracleId];
@@ -2453,14 +2480,19 @@ function buildDraftBreakdownRowSummary(
 }
 
 const ColorPips: React.FC<{ colors: string }> = ({ colors }) => (
-  <span className="inline-flex items-center gap-px" title={archetypeFullName(colors)}>
+  <span className="inline-flex items-center" style={{ gap: 3 }} title={archetypeFullName(colors)}>
     {getColorProfileCodes(colors).map((color) => (
       <span
         key={color}
-        className="inline-flex h-5 w-5 items-center justify-center rounded text-[11px] font-bold text-black"
+        className="inline-flex items-center justify-center text-[10px] font-extrabold"
         style={{
+          width: 24,
+          height: 24,
+          borderRadius: 6,
           background: MTG_COLORS[color]?.bg ?? MTG_COLORS.C!.bg,
-          boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.18)',
+          color: 'rgba(17,24,39,0.85)',
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.22), 0 1px 2px rgba(0,0,0,0.12)',
+          flexShrink: 0,
         }}
       >
         {color}
@@ -2515,36 +2547,6 @@ const TinyCurve: React.FC<{ creatureCounts: number[]; nonCreatureCounts: number[
   );
 };
 
-const HighlightThumbnails: React.FC<{ cards: SimulatedPickCard[]; highlightOracle?: string }> = ({
-  cards,
-  highlightOracle,
-}) => {
-  const shown = cards.slice(0, 4);
-  const extra = cards.length - shown.length;
-  return (
-    <div className="flex items-center" title={cards.map((c) => c.name).join(', ')}>
-      {shown.map((card, i) => (
-        <span
-          key={card.oracle_id}
-          className={[
-            'h-9 w-6 overflow-hidden rounded border bg-bg flex-shrink-0',
-            i > 0 ? '-ml-1.5' : '',
-            card.oracle_id === highlightOracle ? 'border-link-active ring-1 ring-link-active z-10' : 'border-border/60',
-          ].join(' ')}
-        >
-          {card.imageUrl ? (
-            <img src={card.imageUrl} alt={card.name} className="h-full w-full object-cover" />
-          ) : (
-            <span className="block h-full w-full bg-bg-accent" />
-          )}
-        </span>
-      ))}
-      {extra > 0 && (
-        <span className="ml-1.5 text-[11px] text-text-secondary">+{extra}</span>
-      )}
-    </div>
-  );
-};
 
 type FilteredDraftCard = Pick<CardStats, 'oracle_id' | 'name'>;
 
@@ -2627,8 +2629,10 @@ const DraftBreakdownTable: React.FC<{
       if (locationFilter === 'sideboard' && !deck.sideboard.includes(highlightOracle)) return false;
     }
     if (colorFilter !== 'all' && !getColorProfileCodes(pool.archetype).includes(colorFilter)) return false;
-    if (archetypeFilter && !archetypeFullName(pool.archetype).toLowerCase().includes(archetypeFilter.toLowerCase())) {
-      return false;
+    if (archetypeFilter) {
+      const q = archetypeFilter.toLowerCase();
+      const themes = summary.themes.map((t) => t.toLowerCase());
+      if (!themes.some((t) => t.includes(q))) return false;
     }
     if (seatFilter && pool.seatIndex + 1 !== Number(seatFilter)) return false;
     if (draftFilter && pool.draftIndex + 1 !== Number(draftFilter)) return false;
@@ -2686,7 +2690,7 @@ const DraftBreakdownTable: React.FC<{
     }
   };
   const renderSortHeader = (label: string, key: DraftBreakdownSortKey, className = 'text-left') => (
-    <th scope="col" className={`px-3 py-2.5 text-[11px] font-bold uppercase tracking-widest text-text-secondary ${className}`}>
+    <th scope="col" className={`px-3 py-2 text-xs font-semibold text-text-secondary ${className}`}>
       <button
         type="button"
         className="w-full rounded px-1 py-0.5 text-inherit hover:bg-bg-active"
@@ -2700,8 +2704,9 @@ const DraftBreakdownTable: React.FC<{
 
   return (
     <Flexbox direction="col" gap="3">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-bg-accent/40 px-3 py-2.5">
+      <div>
+      {/* Toolbar — visually attached to the table */}
+      <div className="flex flex-wrap items-center gap-2 rounded-t-lg border border-border bg-bg-accent px-3 py-2">
         {showLocationFilter && hasDeck && (
           <div className="flex items-center gap-1">
             {(['all', 'deck', 'sideboard'] as const).map((v) => (
@@ -2741,32 +2746,36 @@ const DraftBreakdownTable: React.FC<{
         <div className="flex items-center gap-2 ml-auto">
           <Input
             type="text"
-            placeholder="Archetype"
+            placeholder="Theme"
             value={archetypeFilter}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setArchetypeFilter(e.target.value)}
-            className="max-w-[9rem]"
+            className="w-32"
           />
           <Input
             type="number"
-            placeholder="Seat #"
+            placeholder="Seat"
             value={seatFilter}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSeatFilter(e.target.value)}
-            className="max-w-[5rem]"
+            className="w-20"
           />
           <Input
             type="number"
-            placeholder="Draft #"
+            placeholder="Draft"
             value={draftFilter}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraftFilter(e.target.value)}
-            className="max-w-[5.5rem]"
+            className="w-20"
           />
         </div>
       </div>
 
       {/* Mobile list */}
-      <div className="divide-y divide-border rounded border border-border bg-bg md:hidden">
+      <div className="divide-y divide-border rounded-b border border-t-0 border-border bg-bg md:hidden">
         {pagedPools.map((summary) => {
           const isSelected = selectedPool === summary.pool.poolIndex;
+          const artImages = summary.highlights
+            .slice(0, 5)
+            .filter((c) => c.imageUrl)
+            .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
           return (
             <button
               key={summary.pool.poolIndex}
@@ -2778,21 +2787,31 @@ const DraftBreakdownTable: React.FC<{
               onClick={() => setSelectedPool(summary.pool.poolIndex)}
             >
               <Flexbox direction="row" justify="between" alignItems="center" className="gap-2">
-                <Text sm semibold>
-                  Draft {summary.pool.draftIndex + 1} · Seat {summary.pool.seatIndex + 1}
-                </Text>
-                <ColorPips colors={summary.colors} />
+                <div>
+                  <Text sm semibold className="block">
+                    Draft {summary.pool.draftIndex + 1} · Seat {summary.pool.seatIndex + 1}
+                  </Text>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {summary.themes.map((theme) => (
+                      <span key={theme} className="rounded bg-bg-accent px-1.5 py-0.5 text-[11px] text-text-secondary">
+                        {theme}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <ColorPips colors={summary.colors} />
+                  {artImages.length > 0 && (
+                    <div className="flex gap-0.5 ml-1">
+                      {artImages.map((c) => (
+                        <div key={c.oracle_id} className="flex-shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }} title={c.name}>
+                          <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </Flexbox>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {summary.themes.map((theme) => (
-                  <span key={theme} className="rounded bg-bg-accent px-1.5 py-0.5 text-[11px] text-text-secondary">
-                    {theme}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-2">
-                <HighlightThumbnails cards={summary.highlights} highlightOracle={highlightOracle} />
-              </div>
               {filteredCards.length > 0 && (
                 <div className="mt-2">
                   <FilteredCardPickChips picks={getFilteredCardPickLabels(summary.pool, filteredCards)} />
@@ -2804,72 +2823,104 @@ const DraftBreakdownTable: React.FC<{
       </div>
 
       {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded border border-border bg-bg md:block">
-        <table className="min-w-full text-sm">
+      <div className="hidden overflow-x-auto rounded-b border border-t-0 border-border bg-bg md:block">
+        <table className="min-w-full text-base" style={{ tableLayout: 'fixed' }}>
+          <colgroup>
+            <col style={{ width: 150 }} />
+            <col style={{ width: 130 }} />
+            <col style={{ width: 240 }} />
+            {filteredCards.length > 0 && <col />}
+            <col style={{ width: 200 }} />
+            <col style={{ width: 160 }} />
+            <col style={{ width: 180 }} />
+          </colgroup>
           <thead>
-            <tr className="border-b border-border bg-bg-accent">
+            <tr className="border-b-2 border-border bg-bg-accent">
               {renderSortHeader('Draft · Seat', 'draft')}
               {renderSortHeader('Colors', 'color')}
-              <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-widest text-text-secondary">
+              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
                 Theme
               </th>
-              <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-widest text-text-secondary">
-                Highlights
-              </th>
               {filteredCards.length > 0 && (
-                <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-widest text-text-secondary">
+                <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
                   Picked
                 </th>
               )}
               {renderSortHeader('Composition', 'creatures')}
               {renderSortHeader('Curve', 'avgMv')}
+              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                Color share
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border/50">
             {pagedPools.map((summary) => {
               const isSelected = selectedPool === summary.pool.poolIndex;
+              const artImages = summary.highlights
+                .slice(0, 8)
+                .filter((c) => c.imageUrl)
+                .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
               return (
                 <tr
                   key={summary.pool.poolIndex}
                   className={[
-                    'cursor-pointer border-b border-border/60 hover:bg-bg-active border-l-2',
-                    isSelected ? 'bg-link/5 border-l-link' : 'border-l-transparent',
+                    'cursor-pointer transition-colors duration-100',
+                    isSelected
+                      ? 'border-l-[3px] border-l-link'
+                      : 'border-l-[3px] border-l-transparent hover:bg-bg-active',
                   ].join(' ')}
+                  style={isSelected ? { background: 'rgb(var(--link) / 0.07)', boxShadow: 'inset 3px 0 0 rgb(var(--link))' } : undefined}
                   onClick={() => setSelectedPool(summary.pool.poolIndex)}
                 >
-                  <td className="px-3 py-3 tabular-nums">
-                    <span className="font-semibold text-text">D{summary.pool.draftIndex + 1}</span>
+                  <td className="px-3 py-4 tabular-nums">
+                    <span className={isSelected ? 'font-bold text-text' : 'font-semibold text-text'}>
+                      D{summary.pool.draftIndex + 1}
+                    </span>
                     <span className="text-text-secondary"> · S{summary.pool.seatIndex + 1}</span>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-4">
                     <ColorPips colors={summary.colors} />
                   </td>
-                  <td className="px-3 py-3">
-                    <div className="flex flex-wrap gap-1">
+                  <td className="px-3 py-4">
+                    <div className="flex flex-wrap gap-0.5">
                       {summary.themes.map((theme) => (
-                        <span key={theme} className="rounded bg-bg-accent px-1.5 py-0.5 text-[11px] text-text-secondary">
+                        <span
+                          key={theme}
+                          className="inline-flex items-center rounded bg-bg-accent px-2 text-xs font-semibold text-text-secondary"
+                          style={{ height: 22 }}
+                        >
                           {theme}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-3 py-3">
-                    <HighlightThumbnails cards={summary.highlights} highlightOracle={highlightOracle} />
-                  </td>
                   {filteredCards.length > 0 && (
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-4">
                       <FilteredCardPickChips picks={getFilteredCardPickLabels(summary.pool, filteredCards)} />
                     </td>
                   )}
-                  <td className="px-3 py-3 whitespace-nowrap text-text-secondary tabular-nums text-xs">
-                    {summary.creatureCount}C · {summary.nonCreatureCount}NC
-                    {summary.landCount > 0 ? ` · ${summary.landCount}L` : ''}
+                  <td className="px-3 py-4 whitespace-nowrap tabular-nums text-sm">
+                    <span className="font-semibold text-text">{summary.creatureCount}</span>
+                    <span className="text-text-secondary/60">C</span>
+                    <span className="text-text-secondary/40"> · </span>
+                    <span className="font-semibold text-text">{summary.nonCreatureCount}</span>
+                    <span className="text-text-secondary/60">NC</span>
+                    {summary.landCount > 0 && (
+                      <>
+                        <span className="text-text-secondary/40"> · </span>
+                        <span className="font-semibold text-text">{summary.landCount}</span>
+                        <span className="text-text-secondary/60">L</span>
+                      </>
+                    )}
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-4">
                     <TinyCurve
                       creatureCounts={summary.creatureCurveCounts}
                       nonCreatureCounts={summary.nonCreatureCurveCounts}
                     />
+                  </td>
+                  <td className="px-3 py-4">
+                    <RowColorShare deck={summary.deck} cardMeta={cardMeta} />
                   </td>
                 </tr>
               );
@@ -2877,6 +2928,7 @@ const DraftBreakdownTable: React.FC<{
           </tbody>
         </table>
       </div>
+      </div>{/* end toolbar+table wrapper */}
 
       {sorted.length === 0 && (
         <Text sm className="text-text-secondary">
@@ -2884,29 +2936,29 @@ const DraftBreakdownTable: React.FC<{
         </Text>
       )}
 
-      <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
+      <div className="flex items-center justify-between gap-2 pt-1">
         <Text xs className="text-text-secondary">
-          Page {currentPage} / {totalPoolPages} · {sorted.length} seats
+          {sorted.length} seats · page {currentPage} of {totalPoolPages}
         </Text>
-        <Flexbox direction="row" gap="2">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setPoolPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 rounded-md text-xs font-semibold border bg-bg text-text-secondary border-border hover:bg-bg-active disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Previous
+            ← Prev
           </button>
           <button
             type="button"
             onClick={() => setPoolPage((p) => Math.min(totalPoolPages, p + 1))}
             disabled={currentPage === totalPoolPages}
-            className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 rounded-md text-xs font-semibold border bg-bg text-text-secondary border-border hover:bg-bg-active disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Next
+            Next →
           </button>
-        </Flexbox>
-      </Flexbox>
+        </div>
+      </div>
 
       {selectedSummary && (
         <div className="rounded-lg border border-link/30 bg-link/5 overflow-hidden">
