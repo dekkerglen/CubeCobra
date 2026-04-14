@@ -2833,6 +2833,7 @@ const DraftBreakdownTable: React.FC<{
             <col style={{ width: 200 }} />
             <col style={{ width: 160 }} />
             <col style={{ width: 180 }} />
+            <col />
           </colgroup>
           <thead>
             <tr className="border-b-2 border-border bg-bg-accent">
@@ -2850,6 +2851,9 @@ const DraftBreakdownTable: React.FC<{
               {renderSortHeader('Curve', 'avgMv')}
               <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
                 Color share
+              </th>
+              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                Key cards
               </th>
             </tr>
           </thead>
@@ -2921,6 +2925,25 @@ const DraftBreakdownTable: React.FC<{
                   </td>
                   <td className="px-3 py-4">
                     <RowColorShare deck={summary.deck} cardMeta={cardMeta} />
+                  </td>
+                  <td className="py-1.5 pr-2 pl-6">
+                    <div className="flex gap-0.5">
+                      {artImages.slice(0, 6).map((c) => (
+                        <div
+                          key={c.oracle_id}
+                          className="flex-shrink-0 overflow-hidden transition-transform duration-100 hover:-translate-y-0.5"
+                          style={{
+                            width: 52,
+                            height: 52,
+                            borderRadius: 7,
+                            border: '1px solid rgba(17,24,39,0.08)',
+                          }}
+                          title={c.name}
+                        >
+                          <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                        </div>
+                      ))}
+                    </div>
                   </td>
                 </tr>
               );
