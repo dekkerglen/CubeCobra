@@ -72,6 +72,8 @@ export interface CardMeta {
   parsedCost?: string[];
   /** Remapped oracle ID for ML inference — set when card is not in the training vocab. */
   mlOracleId?: string;
+  /** Cube-specific tags from the Card object. */
+  tags?: string[];
 }
 
 /** Basic land entry included in SimulationSetupResponse for client-side deckbuilding. */
