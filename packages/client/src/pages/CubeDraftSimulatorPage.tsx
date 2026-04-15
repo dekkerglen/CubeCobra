@@ -95,6 +95,98 @@ const renderAutocardNameLink = (oracleId: string, name: string, imageUrl?: strin
   );
 };
 
+const CardFilterInput: React.FC<{
+  cardStats: CardStats[];
+  selectedCardOracles: string[];
+  onAddCard: (oracleId: string) => void;
+}> = ({ cardStats, selectedCardOracles, onAddCard }) => {
+  const [value, setValue] = useState('');
+  const [visible, setVisible] = useState(false);
+  const [position, setPosition] = useState(-1);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const suggestions = useMemo(() => {
+    if (!value.trim()) return [];
+    const q = value.trim().toLowerCase();
+    return cardStats.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 10);
+  }, [value, cardStats]);
+
+  const accept = useCallback(
+    (card: CardStats) => {
+      onAddCard(card.oracle_id);
+      setValue('');
+      setVisible(false);
+      setPosition(-1);
+    },
+    [onAddCard],
+  );
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setVisible(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const showDropdown = visible && suggestions.length > 0;
+  const disabled = selectedCardOracles.length >= 2;
+
+  return (
+    <div className="relative" ref={wrapperRef}>
+      <input
+        value={value}
+        disabled={disabled}
+        onChange={(e) => {
+          setValue(e.target.value);
+          setVisible(true);
+          setPosition(-1);
+        }}
+        onFocus={() => { if (value) setVisible(true); }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setPosition((p) => Math.min(p + 1, suggestions.length - 1));
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setPosition((p) => Math.max(p - 1, -1));
+          } else if (e.key === 'Enter' || e.key === 'Tab') {
+            if (showDropdown) {
+              const idx = position >= 0 ? position : 0;
+              const card = suggestions[idx];
+              if (card) { e.preventDefault(); accept(card); }
+            }
+          } else if (e.key === 'Escape') {
+            setVisible(false);
+          }
+        }}
+        placeholder={disabled ? 'Max 2 cards' : 'Search cards in this cube…'}
+        className="w-full rounded border border-border bg-bg px-2 py-1 text-sm text-text disabled:opacity-50"
+      />
+      {showDropdown && (
+        <div className="absolute top-full left-0 mt-0.5 w-full rounded-md border border-border flex flex-col z-[1050]">
+          {suggestions.map((card, idx) => (
+            <div
+              key={card.oracle_id}
+              onMouseDown={(e) => { e.preventDefault(); accept(card); }}
+              className={[
+                'px-2 py-1.5 cursor-pointer text-sm',
+                idx === 0 ? 'rounded-t-md' : 'border-t border-border',
+                idx === suggestions.length - 1 ? 'rounded-b-md' : '',
+                idx === position ? 'bg-bg-active' : 'bg-bg-accent hover:bg-bg-active',
+              ].join(' ')}
+            >
+              {card.name}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface FilterChipItem {
   key: string;
   label: string;
@@ -132,21 +224,9 @@ const ActiveFilterBar: React.FC<{
   onClearAll,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [cardSearchValue, setCardSearchValue] = useState('');
   const hasFilters = chips.length > 0;
   const topColorProfiles = archetypeDistribution.slice(0, 8);
   const topSkeletons = skeletons.slice(0, 8);
-
-  const handleAddCard = useCallback(() => {
-    const trimmed = cardSearchValue.trim().toLowerCase();
-    if (!trimmed) return;
-    const match = cardStats.find(
-      (card) => card.name.toLowerCase() === trimmed || card.oracle_id.toLowerCase() === trimmed,
-    );
-    if (!match) return;
-    onAddCard(match.oracle_id);
-    setCardSearchValue('');
-  }, [cardSearchValue, cardStats, onAddCard]);
 
   return (
     <div className="sticky top-2 z-20 rounded-lg border border-border bg-bg shadow-md">
@@ -207,33 +287,11 @@ const ActiveFilterBar: React.FC<{
             <Text xs className="mb-1.5 font-medium uppercase tracking-[0.14em] text-text-secondary/70">
               Cards
             </Text>
-            <div className="flex gap-2">
-              <input
-                list="sim-filter-card-options"
-                value={cardSearchValue}
-                onChange={(event) => setCardSearchValue(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    handleAddCard();
-                  }
-                }}
-                placeholder="Add card"
-                className="min-w-0 flex-1 rounded border border-border bg-bg px-2 py-1 text-sm text-text"
-              />
-              <datalist id="sim-filter-card-options">
-                {cardStats.map((card) => (
-                  <option key={card.oracle_id} value={card.name} />
-                ))}
-              </datalist>
-              <button
-                type="button"
-                onClick={handleAddCard}
-                className="rounded border border-border bg-bg px-2 py-1 text-xs font-medium text-text-secondary hover:bg-bg-active"
-              >
-                Add
-              </button>
-            </div>
+            <CardFilterInput
+              cardStats={cardStats}
+              selectedCardOracles={selectedCardOracles}
+              onAddCard={onAddCard}
+            />
             <Text xs className="mt-1 text-text-secondary/70">
               Up to two card filters. Current: {selectedCardOracles.length}/2.
             </Text>
@@ -1211,11 +1269,7 @@ const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: 
   cardMeta,
 }) => {
   if (!deckBuilds || deckBuilds.length === 0) {
-    return (
-      <Text sm className="text-text-secondary">
-        Unavailable for this filter.
-      </Text>
-    );
+    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
 
   const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS.map((key) => [key, 0]));
@@ -1227,25 +1281,49 @@ const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: 
       for (const color of cardColors) shares[color] = (shares[color] ?? 0) + share;
     }
   }
-
-  const totalShare = Object.values(shares).reduce((sum, value) => sum + value, 0);
-
-  const rows = COLOR_KEYS.map((key) => ({
+  const totalShare = Object.values(shares).reduce((sum, v) => sum + v, 0);
+  const segments = COLOR_KEYS.map((key) => ({
     key,
     label: MTG_COLORS[key]!.label,
     bg: MTG_COLORS[key]!.bg,
     pct: totalShare > 0 ? (shares[key] ?? 0) / totalShare : 0,
-  })).filter((r) => r.pct > 0);
+  })).filter((s) => s.pct > 0.005);
+
+  // Full 5-color map for legend (includes zero-pct colors)
+  const allColorData = COLOR_KEYS.map((key) => ({
+    key,
+    label: MTG_COLORS[key]!.label,
+    bg: MTG_COLORS[key]!.bg,
+    pct: totalShare > 0 ? (shares[key] ?? 0) / totalShare : 0,
+  }));
 
   return (
-    <div className="flex flex-row items-end gap-2 h-32">
-      {rows.map((r) => (
-        <div key={r.key} className="flex flex-col items-center gap-1 flex-1 min-w-0 h-full justify-end">
-          <span className="text-[10px] text-text-secondary tabular-nums">{(r.pct * 100).toFixed(0)}%</span>
-          <div className="w-full rounded" style={{ height: `${Math.max(4, r.pct * 100 * 0.95)}px`, background: r.bg }} />
-          <span className="text-[10px] text-text-secondary truncate w-full text-center">{r.label}</span>
+    <div className="flex flex-col gap-2">
+      {/* Track + stacked bar */}
+      <div className="w-full rounded-[6px] overflow-hidden" style={{ height: 16, background: 'rgb(var(--bg-accent))' }}>
+        <div className="flex h-full">
+          {segments.map((s) => (
+            <div
+              key={s.key}
+              style={{ width: `${s.pct * 100}%`, background: s.bg }}
+              title={`${s.label}: ${(s.pct * 100).toFixed(1)}%`}
+            />
+          ))}
         </div>
-      ))}
+      </div>
+      {/* Legend — equal-width flex items so dots align on any row */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: 6 }}>
+        {allColorData.map((s) => (
+          <div
+            key={s.key}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, flex: '0 0 20%', paddingTop: 6, paddingRight: 16, opacity: s.pct < 0.005 ? 0.35 : 1 }}
+          >
+            <span style={{ flexShrink: 0, width: 9, height: 9, borderRadius: '50%', background: s.bg, display: 'inline-block' }} />
+            <span className="text-xs text-text-secondary">{s.label}</span>
+            <span className="text-xs font-semibold text-text tabular-nums">{(s.pct * 100).toFixed(0)}%</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -1261,53 +1339,74 @@ const MANA_CURVE_BUCKETS = [
   { key: '7+', label: '7+' },
 ] as const;
 
+const HISTOGRAM_HEIGHT = 56; // px — bar drawing area
+
 const ManaCurveShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
   deckBuilds,
   cardMeta,
 }) => {
   if (!deckBuilds || deckBuilds.length === 0) {
-    return (
-      <Text sm className="text-text-secondary">
-        Unavailable for this filter.
-      </Text>
-    );
+    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
 
-  const counts: Record<string, number> = Object.fromEntries(MANA_CURVE_BUCKETS.map((bucket) => [bucket.key, 0]));
+  const counts: Record<string, number> = Object.fromEntries(MANA_CURVE_BUCKETS.map((b) => [b.key, 0]));
   let totalCards = 0;
-
   for (const deck of deckBuilds) {
     for (const oracle of deck.mainboard) {
       const meta = cardMeta[oracle];
-      const typeLower = (meta?.type ?? '').toLowerCase();
-      if (typeLower.includes('land')) continue;
+      if ((meta?.type ?? '').toLowerCase().includes('land')) continue;
       const cmc = Math.max(0, Math.floor(meta?.cmc ?? 0));
-      const bucketKey = cmc >= 7 ? '7+' : String(cmc);
-      counts[bucketKey] = (counts[bucketKey] ?? 0) + 1;
+      const key = cmc >= 7 ? '7+' : String(cmc);
+      counts[key] = (counts[key] ?? 0) + 1;
       totalCards++;
     }
   }
 
-  const rows = MANA_CURVE_BUCKETS.map((bucket) => ({
-    ...bucket,
-    pct: totalCards > 0 ? (counts[bucket.key] ?? 0) / totalCards : 0,
-  })).filter((row) => row.pct > 0);
+  const buckets = MANA_CURVE_BUCKETS.map((b) => ({
+    ...b,
+    pct: totalCards > 0 ? (counts[b.key] ?? 0) / totalCards : 0,
+  }));
+  const maxPct = Math.max(...buckets.map((b) => b.pct), 0.001);
 
   return (
-    <div className="flex flex-row items-end gap-1.5 h-32">
-      {rows.map((row) => (
-        <div key={row.key} className="flex flex-col items-center gap-1 flex-1 min-w-0 h-full justify-end">
-          <span className="text-[10px] text-text-secondary tabular-nums">{(row.pct * 100).toFixed(0)}%</span>
-          <div
-            className="w-full rounded"
-            style={{
-              height: `${Math.max(4, row.pct * 100 * 0.95)}px`,
-              background: 'linear-gradient(180deg, #475569 0%, #64748b 100%)',
-            }}
-          />
-          <span className="text-[10px] text-text-secondary">{row.label}</span>
-        </div>
-      ))}
+    <div className="flex flex-col gap-1">
+      {/* Histogram bars */}
+      <div className="flex items-end gap-1" style={{ height: HISTOGRAM_HEIGHT }}>
+        {buckets.map((b) => {
+          const barH = Math.round((b.pct / maxPct) * HISTOGRAM_HEIGHT);
+          return (
+            <div key={b.key} className="flex-1 flex flex-col items-center justify-end" style={{ height: HISTOGRAM_HEIGHT }}>
+              {b.pct > 0 && (
+                <div
+                  title={`${b.label}: ${(b.pct * 100).toFixed(1)}%`}
+                  style={{
+                    height: Math.max(3, barH),
+                    width: '100%',
+                    borderRadius: '4px 4px 0 0',
+                    background: 'rgb(var(--link) / 0.65)',
+                  }}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* Baseline */}
+      <div className="w-full" style={{ height: 1, background: 'rgb(var(--border))' }} />
+      {/* X-axis labels */}
+      <div className="flex gap-1">
+        {buckets.map((b) => (
+          <div key={b.key} className="flex-1 text-center text-[10px] text-text-secondary">{b.label}</div>
+        ))}
+      </div>
+      {/* Value row — compact, under axis */}
+      <div className="flex gap-1 mt-0.5">
+        {buckets.map((b) => (
+          <div key={b.key} className="flex-1 text-center text-[10px] font-semibold text-text tabular-nums">
+            {b.pct > 0 ? `${(b.pct * 100).toFixed(0)}%` : ''}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -1488,12 +1587,7 @@ const ArchetypeChart: React.FC<{
   selectedArchetype: string | null;
   onSelect: (colorPair: string | null) => void;
 }> = ({ archetypeDistribution, selectedArchetype, onSelect }) => {
-  const [showAllProfiles, setShowAllProfiles] = useState(false);
   const maxCount = Math.max(...archetypeDistribution.map((e) => e.count), 1);
-  const visibleEntries = archetypeDistribution.slice(0, 4);
-  const hiddenEntries = archetypeDistribution.slice(4);
-  const hiddenHasSelection = hiddenEntries.some((entry) => entry.colorPair === selectedArchetype);
-  const showHiddenProfiles = showAllProfiles || hiddenHasSelection;
 
   const renderEntry = (entry: ArchetypeEntry) => {
     const colorCodes = getColorProfileCodes(entry.colorPair);
@@ -1552,23 +1646,7 @@ const ArchetypeChart: React.FC<{
 
   return (
     <div className="flex flex-col gap-2">
-      {visibleEntries.map(renderEntry)}
-      {hiddenEntries.length > 0 && (
-        <>
-          <Collapse isOpen={showHiddenProfiles} className="flex flex-col gap-2">
-            {hiddenEntries.map(renderEntry)}
-          </Collapse>
-          <button
-            type="button"
-            onClick={() => setShowAllProfiles((open) => !open)}
-            className="self-start px-2 py-1 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
-          >
-            {showHiddenProfiles
-              ? 'Show fewer color profiles'
-              : `Show ${hiddenEntries.length} more color profile${hiddenEntries.length === 1 ? '' : 's'}`}
-          </button>
-        </>
-      )}
+      {archetypeDistribution.map(renderEntry)}
     </div>
   );
 };
@@ -1598,7 +1676,7 @@ const CardStatsTable: React.FC<{
   visiblePoolCounts,
   onPageChange,
 }) => {
-  const PAGE_SIZE = 15;
+  const PAGE_SIZE = 20;
   const defaultSortDir = (key: SortKey): 'asc' | 'desc' =>
     key === 'name' || key === 'avgPickPosition' ? 'asc' : 'desc';
   const [sortKey, setSortKey] = useState<SortKey>('avgPickPosition');
@@ -3027,7 +3105,6 @@ const DraftBreakdownTable: React.FC<{
 const POOL_PAGE_SIZE = 10;
 
 const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
-  const [isOpen, setIsOpen] = useState(true);
   const picked = cardStats.filter((c) => c.timesPicked > 0 && c.avgPickPosition > 0);
   const eloRankMap = new Map([...picked].sort((a, b) => b.elo - a.elo).map((c, i) => [c.oracle_id, i + 1]));
   const draftRankMap = new Map(
@@ -3085,55 +3162,39 @@ const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) =>
     </tr>
   );
   return (
-    <Card>
-      <CardHeader>
-        <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
-          <button type="button" className="flex-1 text-left" onClick={() => setIsOpen((open) => !open)}>
-            <Text semibold>Overperformers / Underperformers</Text>
-            <div className="mt-0.5">
-              <Text xs className="text-text-secondary">
-                Cards drafted earlier or later than Elo would suggest
-              </Text>
+    <Row className="gap-4">
+      {[
+        {
+          title: 'Overperformers',
+          sub: 'Drafted earlier than their Elo suggests — picked more highly than expected.',
+          data: gainers,
+        },
+        {
+          title: 'Underperformers',
+          sub: 'Drafted later than their Elo suggests — picked lower than expected.',
+          data: losers,
+        },
+      ].map(({ title, sub, data }) => (
+        <Col key={title} xs={12} md={6}>
+          <div className="h-full rounded border border-border bg-bg">
+            <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex flex-col gap-0.5">
+              <Text semibold>{title}</Text>
+              <Text xs className="text-text-secondary">{sub}</Text>
             </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsOpen((open) => !open)}
-            className="whitespace-nowrap px-2 py-1 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
-          >
-            {isOpen ? '▲ Hide' : '▼ Show'}
-          </button>
-        </Flexbox>
-      </CardHeader>
-      <Collapse isOpen={isOpen}>
-        <CardBody>
-          <Row className="gap-4">
-            {[
-              { title: 'Overperformers', data: gainers },
-              { title: 'Underperformers', data: losers },
-            ].map(({ title, data }) => (
-              <Col key={title} xs={12} md={6}>
-                <div className="h-full rounded border border-border bg-bg">
-                  <div className="border-b border-border bg-bg-accent/50 px-3 py-2">
-                    <Text semibold>{title}</Text>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-border text-sm">
-                      <TH />
-                      <tbody className="divide-y divide-border">
-                        {data.map((row) => (
-                          <DR key={row.oracle_id} row={row} />
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </Col>
-            ))}
-          </Row>
-        </CardBody>
-      </Collapse>
-    </Card>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <TH />
+                <tbody className="divide-y divide-border">
+                  {data.map((row) => (
+                    <DR key={row.oracle_id} row={row} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Col>
+      ))}
+    </Row>
   );
 };
 
@@ -3216,7 +3277,7 @@ const ClusterDetailPanel: React.FC<{
   const colorCodes = getColorProfileCodes(colorProfile);
   const pct = totalPools > 0 ? ((skeleton.poolCount / totalPools) * 100).toFixed(1) : '0';
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-2">
         <div>
           <Text semibold className="text-base">Cluster {clusterIndex + 1}</Text>
@@ -3245,7 +3306,7 @@ const ClusterDetailPanel: React.FC<{
       </div>
       {commonCards.length > 0 ? (
         <div>
-          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common in filter</Text>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common cards in matching pools</Text>
           <div className="grid grid-cols-6 gap-1.5">
             {commonCards.slice(0, 12).map((card) => (
               <SkeletonCardImage key={card.oracle_id} card={card} />
@@ -3281,8 +3342,8 @@ const DraftMapScopePanel: React.FC<{
   deckBuilds: BuiltDeck[] | null;
   cardMeta: Record<string, CardMeta>;
 }> = ({ title, subtitle, commonCards, deckBuilds, cardMeta }) => (
-  <div className="flex flex-col gap-3">
-    <div>
+  <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-0.5">
       <Text semibold className="text-base">
         {title}
       </Text>
@@ -3292,7 +3353,7 @@ const DraftMapScopePanel: React.FC<{
     </div>
     {commonCards.length > 0 && (
       <div>
-        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common in filter</Text>
+        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common cards in matching pools</Text>
         <div className="grid grid-cols-6 gap-1.5">
           {commonCards.slice(0, 12).map((card) => (
             <SkeletonCardImage key={card.oracle_id} card={card} />
@@ -3316,16 +3377,12 @@ const ArchetypeSkeletonSection: React.FC<{
   totalPools: number;
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
-  isOpen: boolean;
-  onToggle: () => void;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, isOpen, onToggle }) => (
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton }) => (
   <ArchetypeSkeletonSectionInner
     skeletons={skeletons}
     totalPools={totalPools}
     selectedSkeletonId={selectedSkeletonId}
     onSelectSkeleton={onSelectSkeleton}
-    isOpen={isOpen}
-    onToggle={onToggle}
   />
 );
 
@@ -3334,14 +3391,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   totalPools: number;
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
-  isOpen: boolean;
-  onToggle: () => void;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, isOpen, onToggle }) => {
-  const [showAllClusters, setShowAllClusters] = useState(false);
-  const visibleSkeletons = skeletons.slice(0, 4);
-  const hiddenSkeletons = skeletons.slice(4);
-  const hiddenHasSelection = hiddenSkeletons.some((skeleton) => skeleton.clusterId === selectedSkeletonId);
-  const showHiddenClusters = showAllClusters || hiddenHasSelection;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton }) => {
 
   const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => (
     <div
@@ -3389,48 +3439,20 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   return (
     <Card>
       <CardHeader>
-        <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
-          <button type="button" className="flex-1 text-left" onClick={onToggle}>
-            <Flexbox direction="row" gap="2" alignItems="center">
-              <Text semibold>Archetypes</Text>
-              {!isOpen && <span className="text-xs text-text-secondary font-normal">{skeletons.length} clusters</span>}
-            </Flexbox>
-            <Text xs className="text-text-secondary mt-0.5">
-              Grouped by shared cards
-            </Text>
-          </button>
-          <div className="flex flex-row items-center gap-2 flex-shrink-0">
-            <button
-              type="button"
-              onClick={onToggle}
-              className="whitespace-nowrap px-2 py-1 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
-            >
-              {isOpen ? '▲ Hide' : '▼ Show'}
-            </button>
+        <div className="flex flex-col gap-0.5">
+          <Text semibold>Archetypes</Text>
+          <Text xs className="text-text-secondary">
+            Grouped by shared cards
+          </Text>
+        </div>
+      </CardHeader>
+      <CardBody>
+        <Flexbox direction="col" gap="3">
+          <div className="overflow-hidden rounded-lg border border-border/80 divide-y divide-border/70">
+            {skeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx))}
           </div>
         </Flexbox>
-      </CardHeader>
-      <Collapse isOpen={isOpen}>
-        <CardBody>
-          <Flexbox direction="col" gap="3">
-            <div className="overflow-hidden rounded-lg border border-border/80 divide-y divide-border/70">
-              {visibleSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx))}
-              {showHiddenClusters && hiddenSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx + 3))}
-            </div>
-            {hiddenSkeletons.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowAllClusters((open) => !open)}
-                className="self-start px-2 py-1 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
-              >
-                {showHiddenClusters
-                  ? 'Show fewer clusters'
-                  : `Show ${hiddenSkeletons.length} more cluster${hiddenSkeletons.length === 1 ? '' : 's'}`}
-              </button>
-            )}
-          </Flexbox>
-        </CardBody>
-      </Collapse>
+      </CardBody>
     </Card>
   );
 };
@@ -3492,7 +3514,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [archetypesOpen, setArchetypesOpen] = useState(true);
   const [deckColorOpen, setDeckColorOpen] = useState(true);
   const [cardStatsOpen, setCardStatsOpen] = useState(true);
-  const [bottomTab, setBottomTab] = useState<'archetypes' | 'deckColor' | 'cardStats' | 'draftBreakdown' | 'overperformers'>('archetypes');
+  const [bottomTab, setBottomTab] = useState<'archetypes' | 'deckColor' | 'cardStats' | 'draftBreakdown' | 'overperformers' | 'sideboardAndPairings'>('archetypes');
+  const [pairingsExcludeLands, setPairingsExcludeLands] = useState(true);
   const [draftMapColorMode, setDraftMapColorMode] = useState<DraftMapColorMode>('cluster');
 
   // Archetype skeleton clustering
@@ -3930,8 +3953,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }
   }, [csrfFetch, cubeId, numDrafts, numSeats, deadCardThresholdPct, gpuBatchSize, buildAllDecks, selectedFormatId]);
 
-  const lastRunTs = runs[0]?.ts ?? null;
-
   const activeDecks = displayRunData?.deckBuilds ?? null;
   const displayedPools = useMemo(() => {
     if (!displayRunData) return [];
@@ -4103,6 +4124,50 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     return counts;
   }, [visibleCardStats]);
   const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
+
+  const topSideboardCards = useMemo(() => {
+    if (bottomTab !== 'sideboardAndPairings') return [];
+    if (!filteredDecks || filteredDecks.length === 0) return [];
+    const counts = new Map<string, number>();
+    const total = filteredDecks.length;
+    for (const deck of filteredDecks) {
+      for (const oracleId of new Set(deck.sideboard)) {
+        counts.set(oracleId, (counts.get(oracleId) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()]
+      .map(([oracle_id, count]) => ({ oracle_id, count, pct: count / total }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 50);
+  }, [bottomTab, filteredDecks]);
+
+  const topCardPairings = useMemo(() => {
+    if (bottomTab !== 'sideboardAndPairings') return [];
+    if (!filteredDecks || filteredDecks.length === 0) return [];
+    const pairCounts = new Map<string, number>();
+    const cardCounts = new Map<string, number>();
+    const isBasicLand = (oracleId: string) => /\bBasic\b/.test(displayRunData?.cardMeta[oracleId]?.type ?? '');
+    const isLand = (oracleId: string) => /\bLand\b/.test(displayRunData?.cardMeta[oracleId]?.type ?? '');
+    for (const deck of filteredDecks) {
+      const mb = [...new Set(deck.mainboard)].filter((o) => !isBasicLand(o) && (!pairingsExcludeLands || !isLand(o)));
+      for (const o of mb) cardCounts.set(o, (cardCounts.get(o) ?? 0) + 1);
+      for (let i = 0; i < mb.length; i++) {
+        for (let j = i + 1; j < mb.length; j++) {
+          const key = [mb[i], mb[j]].sort().join('\x00');
+          pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
+        }
+      }
+    }
+    const total = filteredDecks.length;
+    return [...pairCounts.entries()]
+      .map(([key, count]) => {
+        const [oracle_id_a, oracle_id_b] = key.split('\x00');
+        const minCardCount = Math.min(cardCounts.get(oracle_id_a!) ?? 1, cardCounts.get(oracle_id_b!) ?? 1);
+        return { oracle_id_a, oracle_id_b, count, pct: count / minCardCount, rawPct: count / total };
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 50);
+  }, [bottomTab, filteredDecks, pairingsExcludeLands, displayRunData]);
 
   const selectedPools =
     selectedCards.length > 0
@@ -4351,7 +4416,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const draftMapScopeSubtitle = activeFilterPoolIndexSet
     ? `${draftMapScopeSeatCount} matching seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`
     : `${draftMapScopeSeatCount} total seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`;
-  const showDraftMapOverviewCharts = activeFilterPoolIndexSet === null && selectedSkeletonId === null;
+
 
   return (
     <MainLayout>
@@ -4360,50 +4425,45 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
           <Flexbox direction="col" gap="4" className="p-4">
             <DynamicFlash />
 
-            {/* Controls */}
+            {/* Simulator workspace */}
             <Card>
               <CardHeader>
-                <Text lg semibold>
-                  Draft Simulator
-                </Text>
+                <div className="flex flex-col gap-0.5">
+                  <Text lg semibold>
+                    Draft Simulator
+                  </Text>
+                  <Text sm className="text-text-secondary">
+                    Simulate bot-only drafts to estimate pick rates, color trends, and archetype outcomes. Results are stored locally on this device.
+                  </Text>
+                </div>
               </CardHeader>
-              <CardBody>
-                <ul className="mb-4 text-sm text-text-secondary list-disc list-inside space-y-0.5">
-                  <li>Simulates bot-only drafts to estimate pick rates, color trends, and archetype outcomes</li>
-                  <li>Runs in this browser and stores local history only on this device</li>
-                </ul>
-                {lastRunTs && (
-                  <div className="mb-3">
-                    <Text xs className="text-text-secondary">
-                      Last run: {new Date(lastRunTs).toLocaleString()}
-                    </Text>
-                  </div>
-                )}
-                <Row className="gap-4 flex-wrap items-end">
-                  <Col xs={12} sm={4} md={2}>
-                    <label className="block text-sm font-medium mb-1">Drafts</label>
+              <CardBody className="pt-3">
+                {/* Controls grid — 5 fields + CTA as sixth column */}
+                <div
+                  className="grid gap-3 items-end"
+                  style={{ gridTemplateColumns: 'repeat(5, minmax(0, 1fr)) auto' }}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-medium text-text-secondary">Drafts</label>
                     <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
-                  </Col>
-                  <Col xs={12} sm={4} md={2}>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-medium text-text-secondary" htmlFor="draftSimulatorFormat">Format</label>
                     <Select
-                      label="Format"
                       id="draftSimulatorFormat"
                       options={availableFormats}
                       value={`${selectedFormatId}`}
                       setValue={(value) => setSelectedFormatId(parseInt(value, 10))}
                       disabled={isRunning}
                     />
-                  </Col>
-                  <Col xs={12} sm={4} md={2}>
-                    <label className="block text-sm font-medium mb-1">Seats</label>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-medium text-text-secondary">Seats</label>
                     <NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} />
-                  </Col>
-                  <Col xs={12} sm={4} md={2}>
-                    <label className="block text-sm font-medium mb-1">
-                      Dead Card Threshold{' '}
-                      <Text xs className="text-text-secondary font-normal">
-                        (&lt;{deadCardThresholdPct}% pick rate)
-                      </Text>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-medium text-text-secondary" title="Cards picked below this rate are flagged as dead">
+                      Dead card %
                     </label>
                     <NumericInput
                       min={1}
@@ -4412,13 +4472,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                       onChange={setDeadCardThresholdPct}
                       disabled={isRunning}
                     />
-                  </Col>
-                  <Col xs={12} sm={4} md={2}>
-                    <label className="block text-sm font-medium mb-1" htmlFor="draftSimulatorGpuBatchSize">
-                      GPU batch size{' '}
-                      <Text xs className="text-text-secondary font-normal">
-                        (higher can speed up draft sim on strong GPUs)
-                      </Text>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-xs font-medium text-text-secondary" htmlFor="draftSimulatorGpuBatchSize" title="Higher values speed up simulation on strong GPUs">
+                      GPU batch
                     </label>
                     <Select
                       id="draftSimulatorGpuBatchSize"
@@ -4427,12 +4484,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                       setValue={(value) => setGpuBatchSize(parseInt(value, 10))}
                       disabled={isRunning}
                     />
-                  </Col>
-                  <Col xs={12} sm={12} md={2} className="flex flex-col gap-1">
+                  </div>
+                  {/* CTA — sixth column, aligned to input baseline */}
+                  <div className="flex flex-col gap-1">
                     <button
                       onClick={handleStart}
                       disabled={isRunning}
-                      className="w-full px-4 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium"
+                      className="px-5 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold whitespace-nowrap"
                     >
                       {isRunning ? 'Simulating…' : 'Run Simulation'}
                     </button>
@@ -4440,13 +4498,73 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                       <button
                         type="button"
                         onClick={handleCancel}
-                        className="w-full px-4 py-1.5 rounded border border-border text-sm text-text-secondary hover:bg-bg-active"
+                        className="px-4 py-1.5 rounded border border-border text-sm text-text-secondary hover:bg-bg-active"
                       >
                         Cancel
                       </button>
                     )}
-                  </Col>
-                </Row>
+                  </div>
+                </div>
+
+                {/* Recent runs strip */}
+                {runs.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Text xs className="font-medium text-text-secondary uppercase tracking-wide">Recent runs</Text>
+                      <button
+                        type="button"
+                        className="text-xs text-text-secondary hover:text-text"
+                        onClick={() => setClearHistoryModalOpen(true)}
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto pb-0.5">
+                      {runs.map((run) => (
+                        <div
+                          key={run.ts}
+                          className={[
+                            'group relative flex flex-col flex-shrink-0 cursor-pointer transition-colors select-none rounded-md border',
+                            run.ts === selectedTs
+                              ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-500 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.15)]'
+                              : 'border-border bg-bg-accent hover:bg-bg-active',
+                          ].join(' ')}
+                          style={{ minWidth: 160, padding: '8px 28px 8px 10px' }}
+                          onClick={() => handleLoadRun(run.ts)}
+                        >
+                          <span
+                            className="text-sm font-semibold whitespace-nowrap leading-tight"
+                            style={{ color: run.ts === selectedTs ? 'rgb(29 78 216)' : undefined }}
+                          >
+                            {run.numDrafts} drafts · {run.numSeats} seats
+                          </span>
+                          <span className="text-[11px] text-text-secondary whitespace-nowrap mt-0.5">
+                            {new Date(run.generatedAt).toLocaleString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                          <button
+                            type="button"
+                            className="absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center rounded text-[9px] text-text-secondary/40 hover:text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRunPendingDelete(run);
+                              setDeleteRunModalOpen(true);
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      {loadingRun && (
+                        <Text xs className="text-text-secondary self-center flex-shrink-0">Loading…</Text>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardBody>
             </Card>
 
@@ -4542,7 +4660,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 <div className="simSection simSectionOverview flex flex-col gap-4">
                   <div className="simSectionHeading flex items-center justify-between gap-3">
                     <Text semibold className="tracking-wide">
-                      Overview
+                      Simulation Overview
                     </Text>
                     <button
                       type="button"
@@ -4564,30 +4682,26 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         value={displayRunData.cardStats.length}
                         sub="unique cards seen across all packs"
                       />
-                      {showDraftMapOverviewCharts && (
-                        <>
-                          <div className="flex-1 min-w-[180px]">
-                            <Card className="h-full">
-                              <CardBody className="py-3">
-                                <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
-                                  Deck Color Share
-                                </Text>
-                                <DeckColorShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} />
-                              </CardBody>
-                            </Card>
-                          </div>
-                          <div className="flex-1 min-w-[180px]">
-                            <Card className="h-full">
-                              <CardBody className="py-3">
-                                <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
-                                  Mana Curve Share
-                                </Text>
-                                <ManaCurveShareChart deckBuilds={filteredDecks} cardMeta={displayRunData.cardMeta} />
-                              </CardBody>
-                            </Card>
-                          </div>
-                        </>
-                      )}
+                      <div className="flex-1 min-w-[180px]">
+                        <Card className="h-full">
+                          <CardBody className="py-3">
+                            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
+                              Deck Color Share
+                            </Text>
+                            <DeckColorShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                          </CardBody>
+                        </Card>
+                      </div>
+                      <div className="flex-1 min-w-[180px]">
+                        <Card className="h-full">
+                          <CardBody className="py-3">
+                            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
+                              Mana Curve Share
+                            </Text>
+                            <ManaCurveShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                          </CardBody>
+                        </Card>
+                      </div>
                     </Flexbox>
                   </Collapse>
                 </div>
@@ -4826,6 +4940,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         { key: 'deckColor', label: 'Deck Color Distribution' },
                         { key: 'cardStats', label: 'Card Stats' },
                         { key: 'draftBreakdown', label: 'Draft Breakdown' },
+                        { key: 'sideboardAndPairings', label: 'Sideboard & Pairings' },
                         { key: 'overperformers', label: 'Over/Underperformers' },
                       ] as const
                     ).map((tab) => (
@@ -4856,8 +4971,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             setSelectedSkeletonId(id);
                             setSelectedArchetype(null);
                           }}
-                          isOpen={true}
-                          onToggle={() => {}}
                         />
                       ) : (
                         <Text sm className="text-text-secondary">No archetypes found. Try lowering the minimum cluster size.</Text>
@@ -5018,6 +5131,151 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                       <DraftVsEloTable cardStats={displayRunData.cardStats} />
                     </div>
                   )}
+                  {/* Sideboard & Pairings tab */}
+                  {bottomTab === 'sideboardAndPairings' && (
+                    <Row className="gap-4">
+                      {/* Common Sideboard Cards */}
+                      <Col xs={12} md={6}>
+                        <div className="h-full rounded border border-border bg-bg">
+                          <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex flex-col gap-0.5">
+                            <Text semibold>Common Sideboard Cards</Text>
+                            <Text xs className="text-text-secondary">Cards most often left in the sideboard across matching pools.</Text>
+                          </div>
+                          {topSideboardCards.length === 0 ? (
+                            <div className="px-3 py-3">
+                              <Text sm className="text-text-secondary">No sideboard data available for the current filter.</Text>
+                            </div>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-border text-sm" style={{ tableLayout: 'fixed' }}>
+                                <colgroup>
+                                  <col style={{ width: 48 }} />
+                                  <col />
+                                  <col style={{ width: 60 }} />
+                                  <col style={{ width: 72 }} />
+                                </colgroup>
+                                <thead className="bg-bg-accent/50 border-b border-border">
+                                  <tr>
+                                    <th className="px-2 py-2" />
+                                    <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card</th>
+                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Pools</th>
+                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">%</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                  {topSideboardCards.map((entry) => {
+                                    const meta = displayRunData.cardMeta[entry.oracle_id];
+                                    const artUrl = meta?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
+                                    return (
+                                      <tr key={entry.oracle_id} className="hover:bg-bg-accent/40">
+                                        <td className="px-2 py-1">
+                                          {artUrl && (
+                                            <div className="overflow-hidden rounded" style={{ width: 36, height: 36 }}>
+                                              <img src={artUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td className="px-3 py-2 font-medium text-text truncate">
+                                          {meta ? renderAutocardNameLink(entry.oracle_id, meta.name, meta.imageUrl) : entry.oracle_id}
+                                        </td>
+                                        <td className="px-3 py-2 text-right text-text-secondary">{entry.count}</td>
+                                        <td className="px-3 py-2 text-right text-text-secondary">{(entry.pct * 100).toFixed(1)}%</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      </Col>
+                      {/* Common Card Pairings */}
+                      <Col xs={12} md={6}>
+                        <div className="h-full rounded border border-border bg-bg">
+                          <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex items-start justify-between gap-3">
+                            <div className="flex flex-col gap-0.5">
+                              <Text semibold>Common Card Pairings</Text>
+                              <Text xs className="text-text-secondary">Pairs of cards most often drafted together into the same deck.</Text>
+                            </div>
+                            <label className="flex items-center gap-1.5 text-xs text-text-secondary cursor-pointer select-none flex-shrink-0 pt-0.5">
+                              <input
+                                type="checkbox"
+                                checked={pairingsExcludeLands}
+                                onChange={(e) => setPairingsExcludeLands(e.target.checked)}
+                                className="rounded"
+                              />
+                              Exclude lands
+                            </label>
+                          </div>
+                          {topCardPairings.length === 0 ? (
+                            <div className="px-3 py-3">
+                              <Text sm className="text-text-secondary">No pairing data available for the current filter.</Text>
+                            </div>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-border text-sm" style={{ tableLayout: 'fixed' }}>
+                                <colgroup>
+                                  <col style={{ width: 48 }} />
+                                  <col />
+                                  <col style={{ width: 48 }} />
+                                  <col />
+                                  <col style={{ width: 60 }} />
+                                  <col style={{ width: 80 }} />
+                                  <col style={{ width: 80 }} />
+                                </colgroup>
+                                <thead className="bg-bg-accent/50 border-b border-border">
+                                  <tr>
+                                    <th className="px-2 py-2" />
+                                    <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card A</th>
+                                    <th className="px-2 py-2" />
+                                    <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card B</th>
+                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Pools</th>
+                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary" title="% of decks containing both cards">% decks</th>
+                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary" title="% of decks with the rarer card that also have the other">Given rarer</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                  {topCardPairings.map((entry) => {
+                                    const metaA = displayRunData.cardMeta[entry.oracle_id_a ?? ''];
+                                    const metaB = displayRunData.cardMeta[entry.oracle_id_b ?? ''];
+                                    const artA = metaA?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
+                                    const artB = metaB?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
+                                    return (
+                                      <tr key={`${entry.oracle_id_a}|${entry.oracle_id_b}`} className="hover:bg-bg-accent/40">
+                                        <td className="px-2 py-1">
+                                          {artA && (
+                                            <div className="overflow-hidden rounded" style={{ width: 36, height: 36 }}>
+                                              <img src={artA} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td className="px-3 py-2 font-medium text-text truncate">
+                                          {metaA ? renderAutocardNameLink(entry.oracle_id_a!, metaA.name, metaA.imageUrl) : entry.oracle_id_a}
+                                        </td>
+                                        <td className="px-2 py-1">
+                                          {artB && (
+                                            <div className="overflow-hidden rounded" style={{ width: 36, height: 36 }}>
+                                              <img src={artB} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td className="px-3 py-2 font-medium text-text truncate">
+                                          {metaB ? renderAutocardNameLink(entry.oracle_id_b!, metaB.name, metaB.imageUrl) : entry.oracle_id_b}
+                                        </td>
+                                        <td className="px-3 py-2 text-right text-text-secondary">{entry.count}</td>
+                                        <td className="px-3 py-2 text-right text-text-secondary">{(entry.rawPct * 100).toFixed(1)}%</td>
+                                        <td className="px-3 py-2 text-right text-text-secondary">{(entry.pct * 100).toFixed(1)}%</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      </Col>
+                    </Row>
+                  )}
                   <Text xs className="text-text-secondary text-right mt-4">
                     Generated {new Date(displayRunData.generatedAt).toLocaleString()}
                   </Text>
@@ -5025,100 +5283,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
               </Flexbox>
             )}
 
-            <div className="simSection simSectionReference flex flex-col gap-4 pt-3 border-t border-border">
-              <div className="simSectionHeading flex items-center justify-between gap-3">
-                <Text semibold className="tracking-wide">
-                  Reference
-                </Text>
-                <button
-                  type="button"
-                  onClick={() => setReferenceOpen((open) => !open)}
-                  className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
-                >
-                  {referenceOpen ? '▲ Hide' : '▼ Show'}
-                </button>
-              </div>
-              <Collapse isOpen={referenceOpen}>
-                <Flexbox direction="col" gap="4">
-                  {/* Run history */}
-                  {runs.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <Flexbox direction="row" justify="between" alignItems="center" className="w-full gap-3">
-                          <Text semibold>Local Simulation History</Text>
-                          <Button color="secondary" onClick={() => setClearHistoryModalOpen(true)}>
-                            Clear History
-                          </Button>
-                        </Flexbox>
-                      </CardHeader>
-                      <CardBody>
-                        <div className="overflow-x-auto rounded border border-border bg-bg">
-                          <table className="min-w-full divide-y divide-border text-sm">
-                            <thead className="bg-bg-accent">
-                              <tr>
-                                {['Date', 'Drafts', 'Dead Cards', ''].map((h) => (
-                                  <th
-                                    key={h}
-                                    className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                                  >
-                                    {h}
-                                  </th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                              {runs.map((run) => (
-                                <tr
-                                  key={run.ts}
-                                  onClick={() => handleLoadRun(run.ts)}
-                                  className={[
-                                    'cursor-pointer',
-                                    run.ts === selectedTs
-                                      ? 'bg-bg-active font-semibold border-l-2 border-link'
-                                      : 'hover:bg-bg-active border-l-2 border-transparent',
-                                  ].join(' ')}
-                                >
-                                  <td className="px-3 py-2">{new Date(run.generatedAt).toLocaleString()}</td>
-                                  <td className="px-3 py-2 text-text-secondary">
-                                    {run.numDrafts} × {run.numSeats} seats
-                                  </td>
-                                  <td className="px-3 py-2 text-text-secondary">
-                                    {run.deadCardCount > 0 ? (
-                                      <span className="text-red-400">{run.deadCardCount}</span>
-                                    ) : (
-                                      '—'
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2 text-right">
-                                    <button
-                                      type="button"
-                                      className="px-2 py-0.5 rounded text-xs font-medium border bg-bg border-border text-text-secondary hover:bg-bg-active"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setRunPendingDelete(run);
-                                        setDeleteRunModalOpen(true);
-                                      }}
-                                    >
-                                      Delete
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                        {loadingRun && (
-                          <Text xs className="text-text-secondary mt-2">
-                            Loading run…
-                          </Text>
-                        )}
-                      </CardBody>
-                    </Card>
-                  )}
-                  <SimulatorExplainer />
-                </Flexbox>
-              </Collapse>
-            </div>
+            <SimulatorExplainer />
             <PriorRunDeleteModal
               isOpen={deleteRunModalOpen}
               setOpen={setDeleteRunModalOpen}
