@@ -107,6 +107,20 @@ export interface Combo {
   dateLastUpdated: number;
 }
 
+/**
+ * Compressed tag dictionaries for efficient tag lookups.
+ * Keys are stringified OracleIdIndex values (compressed oracle indices).
+ * Values are arrays of tag name indices into the corresponding tag names array.
+ *
+ * To check if a card has a specific tag:
+ *   1. Look up the card's compressed oracle index via oracleToIndex[oracleId]
+ *   2. Look up tagDict[oracleIndex] to get the array of tag name indices
+ *   3. Check if the desired tag's index is in that array
+ *
+ * To resolve tag names, use oracleTagNames[tagIndex] or illustrationTagNames[tagIndex].
+ */
+export type TagDict = Record<number, number[]>;
+
 export interface Catalog {
   cardtree: Record<string, any>;
   imagedict: Record<string, any>;
@@ -124,4 +138,10 @@ export interface Catalog {
   oracleToIndex: Record<string, number>;
   // Combo-specific oracle index mapping - saved alongside comboTree to ensure index consistency
   comboOracleToIndex: Record<string, number>;
+  // Scryfall oracle-level tags (e.g. "synergy-burn", "zombify")
+  oracleTagDict: TagDict;
+  oracleTagNames: string[];
+  // Scryfall illustration-level tags (e.g. artwork-related classifications)
+  illustrationTagDict: TagDict;
+  illustrationTagNames: string[];
 }

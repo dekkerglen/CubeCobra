@@ -19,6 +19,10 @@ const catalog: Catalog = {
   metadatadict: {},
   printedCardList: [], // for card filters
   comboOracleToIndex: {}, // Combo-specific mapping saved with comboTree
+  oracleTagDict: {},
+  oracleTagNames: [],
+  illustrationTagDict: {},
+  illustrationTagNames: [],
 };
 
 export const fileToAttribute: Record<string, keyof Catalog> = {
@@ -35,6 +39,10 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'metadatadict.json': 'metadatadict',
   'comboTree.json': 'comboTree',
   'comboOracleToIndex.json': 'comboOracleToIndex',
+  'oracleTagDict.json': 'oracleTagDict',
+  'oracleTagNames.json': 'oracleTagNames',
+  'illustrationTagDict.json': 'illustrationTagDict',
+  'illustrationTagNames.json': 'illustrationTagNames',
 };
 
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {
