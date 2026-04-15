@@ -104,22 +104,31 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       );
       initialPacks.push(draftPacks);
 
-      // Collect card metadata (only needs to be done once per oracle_id)
+      // Collect card metadata, unioning tags across all instances of the same oracle_id
       for (const card of cards) {
-        if (!card?.details?.oracle_id || cardMeta[card.details.oracle_id]) continue;
+        if (!card?.details?.oracle_id) continue;
         const details = card.details;
-        const mlOracleId = getOracleForMl(details.oracle_id, null);
-        cardMeta[details.oracle_id] = {
-          name: details.name ?? details.oracle_id,
-          imageUrl: details.image_normal || details.image_small || '',
-          colorIdentity: details.color_identity ?? [],
-          elo: details.elo ?? 1200,
-          cmc: details.cmc ?? 0,
-          type: details.type ?? '',
-          producedMana: details.produced_mana ?? [],
-          parsedCost: details.parsed_cost ?? [],
-          mlOracleId: mlOracleId !== details.oracle_id ? mlOracleId : undefined,
-        };
+        const oracleId = details.oracle_id;
+        if (!cardMeta[oracleId]) {
+          const mlOracleId = getOracleForMl(oracleId, null);
+          cardMeta[oracleId] = {
+            name: details.name ?? oracleId,
+            imageUrl: details.image_normal || details.image_small || '',
+            colorIdentity: details.color_identity ?? [],
+            elo: details.elo ?? 1200,
+            cmc: details.cmc ?? 0,
+            type: details.type ?? '',
+            producedMana: details.produced_mana ?? [],
+            parsedCost: details.parsed_cost ?? [],
+            mlOracleId: mlOracleId !== oracleId ? mlOracleId : undefined,
+            tags: card.tags && card.tags.length > 0 ? [...card.tags] : undefined,
+          };
+        } else if (card.tags && card.tags.length > 0) {
+          // Union tags from additional instances of the same oracle_id
+          const existing = new Set(cardMeta[oracleId].tags ?? []);
+          for (const tag of card.tags) existing.add(tag);
+          cardMeta[oracleId].tags = [...existing];
+        }
       }
     }
 

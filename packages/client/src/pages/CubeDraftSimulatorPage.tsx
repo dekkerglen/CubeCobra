@@ -650,6 +650,7 @@ async function clearLocalSimulationStore(cubeId: string): Promise<void> {
   await writeLocalSimulationStore(cubeId, []);
 }
 
+
 async function getStoragePressureNotice(): Promise<string | null> {
   if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return null;
   try {
@@ -1168,6 +1169,15 @@ async function runClientSimulation(
 // Sub-components
 // ---------------------------------------------------------------------------
 
+const OverviewChartSpinner: React.FC = () => (
+  <div className="flex items-center justify-center" style={{ minHeight: 120 }}>
+    <svg className="animate-spin h-6 w-6 text-text-secondary/40" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  </div>
+);
+
 const SummaryCard: React.FC<{
   label: string;
   value: string | number;
@@ -1268,6 +1278,7 @@ const RowColorShare: React.FC<{ deck: BuiltDeck | null; cardMeta: Record<string,
 const DECK_COLOR_DOUGHNUT_OPTIONS = {
   responsive: true,
   maintainAspectRatio: true,
+  animation: false as const,
   plugins: {
     legend: {
       position: 'right' as const,
@@ -2599,7 +2610,6 @@ function inferDraftThemes(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta:
   let instantsSorceries = 0;
   let creatures = 0;
   const creatureTypeCounts = new Map<string, number>();
-
   for (const oracleId of cards) {
     const meta = cardMeta[oracleId];
     const type = meta?.type ?? '';
@@ -2623,7 +2633,7 @@ function inferDraftThemes(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta:
   if (instantsSorceries >= 8) themes.push('Spells');
   if (enchantments >= 5) themes.push('Enchantments');
   if (topCreatureType && topCreatureType[1] >= 4 && topCreatureType[1] / Math.max(1, creatures) >= 0.3) {
-    themes.push(topCreatureType[0]);
+    themes.push(`${topCreatureType[0]}s`);
   }
   if (creatures >= 16 && themes.length < 3) themes.push('Creatures');
   if (themes.length === 0) themes.push(archetypeFullName(pool.archetype));
@@ -3035,7 +3045,7 @@ const DraftBreakdownTable: React.FC<{
             <col style={{ width: 180 }} />
             <col />
           </colgroup>
-          <thead>
+          <thead className="sticky top-0 z-10">
             <tr className="border-b-2 border-border bg-bg-accent">
               {renderSortHeader('Draft · Seat', 'draft')}
               {renderSortHeader('Colors', 'color')}
@@ -3103,19 +3113,23 @@ const DraftBreakdownTable: React.FC<{
                       <FilteredCardPickChips picks={getFilteredCardPickLabels(summary.pool, filteredCards)} />
                     </td>
                   )}
-                  <td className="px-3 py-4 whitespace-nowrap tabular-nums text-sm">
-                    <span className="font-semibold text-text">{summary.creatureCount}</span>
-                    <span className="text-text-secondary/60">C</span>
-                    <span className="text-text-secondary/40"> · </span>
-                    <span className="font-semibold text-text">{summary.nonCreatureCount}</span>
-                    <span className="text-text-secondary/60">NC</span>
-                    {summary.landCount > 0 && (
-                      <>
-                        <span className="text-text-secondary/40"> · </span>
-                        <span className="font-semibold text-text">{summary.landCount}</span>
-                        <span className="text-text-secondary/60">L</span>
-                      </>
-                    )}
+                  <td className="px-3 py-4">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#dbeafe', color: '#3b82f6' }}>
+                        <span className="font-bold" style={{ color: '#1d4ed8' }}>{summary.creatureCount}</span>
+                        <span style={{ opacity: 0.75 }}>C</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#f1f5f9', color: '#64748b' }}>
+                        <span className="font-bold" style={{ color: '#334155' }}>{summary.nonCreatureCount}</span>
+                        <span style={{ opacity: 0.75 }}>NC</span>
+                      </span>
+                      {summary.landCount > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#fef3c7', color: '#92400e' }}>
+                          <span className="font-bold" style={{ color: '#78350f' }}>{summary.landCount}</span>
+                          <span style={{ opacity: 0.75 }}>L</span>
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-3 py-4">
                     <TinyCurve
@@ -3636,6 +3650,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   > | null>(null);
   const [selectedTs, setSelectedTs] = useState<number | null>(null);
   const [loadingRun, setLoadingRun] = useState(false);
+
+  // Session-level cache — avoids recomputing embeddings when switching between runs
+  const embeddingsCache = useRef<Map<string, number[][] | null>>(new Map());
   const [deleteRunModalOpen, setDeleteRunModalOpen] = useState(false);
   const [runPendingDelete, setRunPendingDelete] = useState<SimulationRunEntry | null>(null);
   const [clearHistoryModalOpen, setClearHistoryModalOpen] = useState(false);
@@ -3812,6 +3829,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       setSelectedArchetype(null);
       setSelectedSkeletonId(null);
       setFocusedPoolIndex(null);
+      setFocusedPoolViewMode('deck');
+      setBottomTab('archetypes');
+      setDraftMapColorMode('cluster');
       try {
         const store = await readLocalSimulationStore(cubeId);
         const run = store.runs.find((entry) => entry.entry.ts === ts);
@@ -3906,6 +3926,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
+    setFocusedPoolViewMode('deck');
+    setBottomTab('archetypes');
+    setDraftMapColorMode('cluster');
     try {
       const setupTimeout = new AbortController();
       const setupTimeoutId = setTimeout(() => setupTimeout.abort(), 120_000);
@@ -4121,10 +4144,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [clusteringInProgress, setClusteringInProgress] = useState(false);
   const [poolEmbeddings, setPoolEmbeddings] = useState<number[][] | null>(null);
 
-  // Compute 128-dim embeddings for each pool/deck via the ML encoder
+  // Compute 128-dim embeddings for each pool via the ML encoder.
+  // Uses deck mainboards when available (better signal), falls back to pick sequences.
+  // Runs twice intentionally: first pass with picks gives the map quickly; second pass
+  // with deck builds refines it once deckbuilding completes.
+  // Results are cached by run ts + input type so switching runs is instant.
   useEffect(() => {
-    if (!displayRunData || displayRunData.slimPools.length === 0) {
+    if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {
       setPoolEmbeddings(null);
+      return;
+    }
+    const hasDecks = !!(activeDecks && activeDecks.length === displayRunData.slimPools.length);
+    const cacheKey = `${selectedTs}-${hasDecks ? 'decks' : 'picks'}`;
+    if (embeddingsCache.current.has(cacheKey)) {
+      setPoolEmbeddings(embeddingsCache.current.get(cacheKey)!);
       return;
     }
     let cancelled = false;
@@ -4132,22 +4165,25 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       try {
         await loadDraftBot();
         const remapping = buildOracleRemapping(displayRunData.cardMeta);
-        const hasDecks = activeDecks && activeDecks.length === displayRunData.slimPools.length;
         const pools = displayRunData.slimPools.map((pool, i) => {
           const cards = hasDecks ? activeDecks![i]!.mainboard : pool.picks.map((p) => p.oracle_id);
           return cards;
         });
         const flat = await encodePools(pools, remapping);
         if (!cancelled) {
-          setPoolEmbeddings(reshapeEmbeddings(flat, pools.length));
+          const result = reshapeEmbeddings(flat, pools.length);
+          embeddingsCache.current.set(cacheKey, result);
+          setPoolEmbeddings(result);
         }
       } catch {
-        // If encoding fails (e.g. model not loaded), fall back to null embeddings
-        if (!cancelled) setPoolEmbeddings(null);
+        if (!cancelled) {
+          embeddingsCache.current.set(cacheKey, null);
+          setPoolEmbeddings(null);
+        }
       }
     })();
     return () => { cancelled = true; };
-  }, [displayRunData, activeDecks]);
+  }, [displayRunData, activeDecks, selectedTs]);
 
   // Clustering: embeddings → UMAP → HDBSCAN
   useEffect(() => {
@@ -4259,7 +4295,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     return displayRunData.cardStats.filter((c) => c.poolIndices.some((i) => activeFilterPoolIndexSet.has(i)));
   }, [displayRunData, activeFilterPoolIndexSet, currentRunSetup]);
   const selectedCardStats = useMemo(
-    () => (selectedCard ? (visibleCardStats.find((c) => c.oracle_id === selectedCard.oracle_id) ?? null) : null),
+    () => (selectedCard ? (visibleCardStats.find((c) => c.oracle_id === selectedCard.oracle_id) ?? selectedCard) : null),
     [visibleCardStats, selectedCard],
   );
   const visiblePoolCounts = useMemo(() => {
@@ -4293,11 +4329,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     const isBasicLand = (oracleId: string) => /\bBasic\b/.test(displayRunData?.cardMeta[oracleId]?.type ?? '');
     const isLand = (oracleId: string) => /\bLand\b/.test(displayRunData?.cardMeta[oracleId]?.type ?? '');
     for (const deck of filteredDecks) {
-      const mb = [...new Set(deck.mainboard)].filter((o) => !isBasicLand(o) && (!pairingsExcludeLands || !isLand(o)));
+      const mb = [...new Set(deck.mainboard)].filter((o) => !isBasicLand(o) && (!pairingsExcludeLands || !isLand(o))).sort();
       for (const o of mb) cardCounts.set(o, (cardCounts.get(o) ?? 0) + 1);
       for (let i = 0; i < mb.length; i++) {
         for (let j = i + 1; j < mb.length; j++) {
-          const key = [mb[i], mb[j]].sort().join('\x00');
+          const key = `${mb[i]}\x00${mb[j]}`;
           pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
         }
       }
@@ -4535,6 +4571,64 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setFocusedPoolIndex(null);
   }, []);
 
+  const downloadDraftBreakdownCsv = useCallback((pools: SimulatedPool[], label: string) => {
+    if (!displayRunData) return;
+    const { cardMeta } = displayRunData;
+    const hasDeckBuilds = !!activeDecks && activeDecks.length === displayRunData.slimPools.length;
+    const header = ['Draft', 'Seat', 'Colors', 'Themes', 'Creatures', 'Noncreatures', 'Lands', 'Avg MV', 'Mainboard', 'Sideboard'];
+    const rows = pools.map((pool) => {
+      const deck = hasDeckBuilds ? (activeDecks![pool.poolIndex] ?? null) : null;
+      const summary = buildDraftBreakdownRowSummary(pool, deck, cardMeta);
+      const resolveName = (oracleId: string) => cardMeta[oracleId]?.name ?? oracleId;
+      const mainboard = (deck?.mainboard ?? pool.picks.map((p) => p.oracle_id)).map(resolveName).join(', ');
+      const sideboard = (deck?.sideboard ?? []).map(resolveName).join(', ');
+      return [
+        pool.draftIndex + 1,
+        pool.seatIndex + 1,
+        archetypeFullName(pool.archetype),
+        summary.themes.join(', '),
+        summary.creatureCount,
+        summary.nonCreatureCount,
+        summary.landCount,
+        summary.avgMv.toFixed(2),
+        mainboard,
+        sideboard,
+      ];
+    });
+    const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${displayRunData.cubeName}-${displayRunData.numDrafts}drafts-breakdown-${label}.csv`.replace(/\s+/g, '-');
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [displayRunData, activeDecks]);
+
+  const downloadCardStatsCsv = useCallback((stats: CardStats[], label: string) => {
+    if (!displayRunData) return;
+    const header = ['Name', 'Color Identity', 'Times Seen', 'Times Picked', 'Pick Rate', 'Avg Pick Position', 'Wheel Count', 'P1P1 Count', 'Elo'];
+    const rows = stats.map((c) => [
+      c.name,
+      c.colorIdentity.join(''),
+      c.timesSeen,
+      c.timesPicked,
+      c.pickRate.toFixed(3),
+      c.avgPickPosition.toFixed(2),
+      c.wheelCount,
+      c.p1p1Count,
+      c.elo,
+    ]);
+    const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${displayRunData.cubeName}-${displayRunData.numDrafts}drafts-${label}.csv`.replace(/\s+/g, '-');
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [displayRunData]);
+
   const handleToggleSelectedCard = useCallback((oracleId: string) => {
     setSelectedCardOracles((current) => {
       if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
@@ -4563,7 +4657,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
 
   return (
-    <MainLayout>
+    <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cubeId}>
         <CubeLayout cube={cube} activeLink="draft-simulator">
           <Flexbox direction="col" gap="4" className="p-4">
@@ -4834,7 +4928,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
                               Deck Color Share
                             </Text>
-                            <DeckColorShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                            {!activeDecks ? (
+                              <OverviewChartSpinner />
+                            ) : (
+                              <DeckColorShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                            )}
                           </CardBody>
                         </Card>
                       </div>
@@ -4844,7 +4942,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
                               Card Types
                             </Text>
-                            <CardTypeShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                            {!activeDecks ? (
+                              <OverviewChartSpinner />
+                            ) : (
+                              <CardTypeShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                            )}
                           </CardBody>
                         </Card>
                       </div>
@@ -4854,7 +4956,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
                               Mana Curve Share
                             </Text>
-                            <ManaCurveShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                            {!activeDecks ? (
+                              <OverviewChartSpinner />
+                            ) : (
+                              <ManaCurveShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                            )}
                           </CardBody>
                         </Card>
                         <Card className="h-full">
@@ -4862,7 +4968,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
                               Elo Distribution
                             </Text>
-                            <EloDistributionChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                            {!activeDecks ? (
+                              <OverviewChartSpinner />
+                            ) : (
+                              <EloDistributionChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                            )}
                           </CardBody>
                         </Card>
                       </div>
@@ -4873,7 +4983,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   <Flexbox direction="col" gap="4">
                     <div className="simCardDiagBlock simCardDiagSummary flex flex-col gap-4">
                         {/* Draft Map — full width, with cluster detail panel on the right when selected */}
-                        {draftMapPoints.length > 0 && (
+                        {(draftMapPoints.length > 0 || clusteringInProgress) && (
                           <Card className="border-border">
                             <CardHeader>
                               <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
@@ -4951,7 +5061,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 <div className={`relative ${showDraftMapScopePanel ? '' : 'col-span-2'}`}
                                   style={{ aspectRatio: '1 / 1', width: showDraftMapScopePanel ? '100%' : 'calc(50% - 0.75rem)', ...(!showDraftMapScopePanel ? { margin: '0 auto' } : {}) }}>
                                   {clusteringInProgress && (
-                                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-bg/60 rounded backdrop-blur-sm">
+                                    <div className={`${draftMapPoints.length === 0 ? '' : 'absolute inset-0 bg-bg/60 backdrop-blur-sm'} z-10 flex items-center justify-center rounded`}
+                                      style={draftMapPoints.length === 0 ? { aspectRatio: '1 / 1' } : undefined}>
                                       <div className="flex flex-col items-center gap-2">
                                         <svg className="animate-spin h-8 w-8 text-link" viewBox="0 0 24 24" fill="none">
                                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -4961,18 +5072,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                       </div>
                                     </div>
                                   )}
-                                  <DraftMapScatter
-                                    points={draftMapPoints}
-                                    selectedPoolIndex={focusedPoolIndex}
-                                    activePoolIndexSet={activeFilterPoolIndexSet}
-                                    colorMode={draftMapColorMode}
-                                    onSelectPoint={(point) => {
-                                      setFocusedPoolIndex(point.poolIndex);
-                                      setSelectedSkeletonId(point.clusterId);
-                                      setSelectedArchetype(null);
-                                      setDraftBreakdownOpen(true);
-                                    }}
-                                  />
+                                  {draftMapPoints.length > 0 && (
+                                    <DraftMapScatter
+                                      points={draftMapPoints}
+                                      selectedPoolIndex={focusedPoolIndex}
+                                      activePoolIndexSet={activeFilterPoolIndexSet}
+                                      colorMode={draftMapColorMode}
+                                      onSelectPoint={(point) => {
+                                        setFocusedPoolIndex(point.poolIndex);
+                                        setSelectedSkeletonId(point.clusterId);
+                                        setSelectedArchetype(null);
+                                        setDraftBreakdownOpen(true);
+                                      }}
+                                    />
+                                  )}
                                 </div>
                                 {showDraftMapScopePanel && (
                                   <div className="min-w-0 flex flex-col gap-3">
@@ -5217,20 +5330,42 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                       ) : null}
                       <Card className="border-border">
                         <CardHeader>
-                          <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
-                            <Text semibold>{cardStatsTitle}</Text>
-                            {filterChipItems.filter((chip) => !chip.key.startsWith('focus-')).map((chip) => (
+                          <Flexbox direction="row" gap="2" alignItems="center" justify="between" className="flex-wrap">
+                            <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
+                              <Text semibold>{cardStatsTitle}</Text>
+                              {filterChipItems.filter((chip) => !chip.key.startsWith('focus-')).map((chip) => (
+                                <button
+                                  key={chip.key}
+                                  type="button"
+                                  onClick={chip.onClear}
+                                  className="inline-flex items-center gap-1 rounded bg-link/10 border border-link/20 px-2 py-0.5 text-xs text-link hover:bg-link/20"
+                                  title={`Clear ${chip.label}`}
+                                >
+                                  {chip.label}
+                                  <span className="opacity-60">×</span>
+                                </button>
+                              ))}
+                            </Flexbox>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {activeFilterPoolIndexSet && (
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
+                                  onClick={() => downloadCardStatsCsv(visibleCardStats, 'filtered')}
+                                  title="Download filtered card stats as CSV"
+                                >
+                                  ↓ Export (filtered)
+                                </button>
+                              )}
                               <button
-                                key={chip.key}
                                 type="button"
-                                onClick={chip.onClear}
-                                className="inline-flex items-center gap-1 rounded bg-link/10 border border-link/20 px-2 py-0.5 text-xs text-link hover:bg-link/20"
-                                title={`Clear ${chip.label}`}
+                                className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
+                                onClick={() => downloadCardStatsCsv(displayRunData.cardStats, 'all')}
+                                title="Download all card stats as CSV"
                               >
-                                {chip.label}
-                                <span className="opacity-60">×</span>
+                                ↓ Export
                               </button>
-                            ))}
+                            </div>
                           </Flexbox>
                         </CardHeader>
                         <CardBody>
@@ -5255,8 +5390,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   {/* Draft Breakdown tab */}
                   {bottomTab === 'draftBreakdown' && (
                     <div ref={detailedViewRef} className="flex flex-col gap-4">
-                      {/* Filter chips */}
-                      {filterChipItems.length > 0 && (
+                      {/* Filter chips + CSV */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
                           {filterChipItems.map((chip) => (
                             <button
@@ -5271,7 +5406,27 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             </button>
                           ))}
                         </Flexbox>
-                      )}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {activeFilterPoolIndexSet && (
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
+                              onClick={() => downloadDraftBreakdownCsv(displayedPools.filter((p) => activeFilterPoolIndexSet.has(p.poolIndex)), 'filtered')}
+                              title="Download filtered draft breakdown as CSV"
+                            >
+                              ↓ Export (filtered)
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
+                            onClick={() => downloadDraftBreakdownCsv(displayedPools, 'all')}
+                            title="Download all draft breakdown as CSV"
+                          >
+                            ↓ Export
+                          </button>
+                        </div>
+                      </div>
                       <DraftBreakdownTable
                         pools={activeFilterPoolIndexSet !== null ? displayedPools.filter((p) => activeFilterPoolIndexSet.has(p.poolIndex)) : displayedPools}
                         deckBuilds={activeDecks}
