@@ -23,6 +23,7 @@ import {
 } from '@utils/datatypes/SimulationReport';
 import { getCubeId } from '@utils/Util';
 import {
+  ArcElement,
   BarElement,
   CategoryScale,
   Chart as ChartJS,
@@ -32,7 +33,7 @@ import {
   ScatterController,
   Tooltip,
 } from 'chart.js';
-import { Scatter } from 'react-chartjs-2';
+import { Bar, Doughnut, Scatter } from 'react-chartjs-2';
 
 import Button from '../components/base/Button';
 import { Card, CardBody, CardHeader } from '../components/base/Card';
@@ -67,7 +68,7 @@ import {
 } from '../utils/draftBot';
 import { computeSkeletons } from '../utils/draftSimulatorClustering';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
+ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
 
 const AutocardLink = withAutocard(Link);
 
@@ -1264,6 +1265,38 @@ const RowColorShare: React.FC<{ deck: BuiltDeck | null; cardMeta: Record<string,
   );
 };
 
+const DECK_COLOR_DOUGHNUT_OPTIONS = {
+  responsive: true,
+  maintainAspectRatio: true,
+  plugins: {
+    legend: {
+      position: 'right' as const,
+      labels: {
+        usePointStyle: true,
+        padding: 10,
+        font: { size: 11 },
+        generateLabels: (chart: any) => {
+          const data = chart.data;
+          return (data.labels as string[]).map((label: string, i: number) => ({
+            text: `${label}  ${(data.datasets[0].data[i] as number).toFixed(0)}%`,
+            fillStyle: data.datasets[0].backgroundColor[i],
+            strokeStyle: data.datasets[0].backgroundColor[i],
+            pointStyle: 'circle' as const,
+            hidden: false,
+            index: i,
+          }));
+        },
+      },
+    },
+    tooltip: {
+      callbacks: {
+        label: (ctx: any) => ` ${ctx.label}: ${(ctx.raw as number).toFixed(1)}%`,
+      },
+    },
+  },
+  cutout: '55%',
+};
+
 const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
   deckBuilds,
   cardMeta,
@@ -1289,41 +1322,21 @@ const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: 
     pct: totalShare > 0 ? (shares[key] ?? 0) / totalShare : 0,
   })).filter((s) => s.pct > 0.005);
 
-  // Full 5-color map for legend (includes zero-pct colors)
-  const allColorData = COLOR_KEYS.map((key) => ({
-    key,
-    label: MTG_COLORS[key]!.label,
-    bg: MTG_COLORS[key]!.bg,
-    pct: totalShare > 0 ? (shares[key] ?? 0) / totalShare : 0,
-  }));
+  const chartData = {
+    labels: segments.map((s) => s.label),
+    datasets: [
+      {
+        data: segments.map((s) => s.pct * 100),
+        backgroundColor: segments.map((s) => s.bg),
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+      },
+    ],
+  };
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Track + stacked bar */}
-      <div className="w-full rounded-[6px] overflow-hidden" style={{ height: 16, background: 'rgb(var(--bg-accent))' }}>
-        <div className="flex h-full">
-          {segments.map((s) => (
-            <div
-              key={s.key}
-              style={{ width: `${s.pct * 100}%`, background: s.bg }}
-              title={`${s.label}: ${(s.pct * 100).toFixed(1)}%`}
-            />
-          ))}
-        </div>
-      </div>
-      {/* Legend — equal-width flex items so dots align on any row */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: 6 }}>
-        {allColorData.map((s) => (
-          <div
-            key={s.key}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, flex: '0 0 20%', paddingTop: 6, paddingRight: 16, opacity: s.pct < 0.005 ? 0.35 : 1 }}
-          >
-            <span style={{ flexShrink: 0, width: 9, height: 9, borderRadius: '50%', background: s.bg, display: 'inline-block' }} />
-            <span className="text-xs text-text-secondary">{s.label}</span>
-            <span className="text-xs font-semibold text-text tabular-nums">{(s.pct * 100).toFixed(0)}%</span>
-          </div>
-        ))}
-      </div>
+    <div style={{ maxWidth: 380 }}>
+      <Doughnut data={chartData} options={DECK_COLOR_DOUGHNUT_OPTIONS} />
     </div>
   );
 };
@@ -1409,6 +1422,113 @@ const ManaCurveShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: 
       </div>
     </div>
   );
+};
+
+const CARD_TYPE_COLORS: Record<string, string> = {
+  Creature: '#6AB572',
+  Instant: '#67A6D3',
+  Sorcery: '#D85F69',
+  Enchantment: '#DBC467',
+  Artifact: '#ADADAD',
+  Planeswalker: '#9B59B6',
+  Land: '#8B7355',
+  Battle: '#E8883A',
+  Other: '#555555',
+};
+
+const CARD_TYPE_ORDER = ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land', 'Battle', 'Other'];
+
+function getMajorCardType(typeStr: string): string {
+  for (const t of CARD_TYPE_ORDER) {
+    if (t !== 'Other' && typeStr.includes(t)) return t;
+  }
+  return 'Other';
+}
+
+const CardTypeShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
+  deckBuilds,
+  cardMeta,
+}) => {
+  if (!deckBuilds || deckBuilds.length === 0) {
+    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+  }
+
+  const counts: Record<string, number> = Object.fromEntries(CARD_TYPE_ORDER.map((t) => [t, 0]));
+  for (const deck of deckBuilds) {
+    for (const oracle of deck.mainboard) {
+      const typeStr = cardMeta[oracle]?.type ?? '';
+      if (/Basic Land/i.test(typeStr)) continue;
+      const t = getMajorCardType(typeStr);
+      counts[t] = (counts[t] ?? 0) + 1;
+    }
+  }
+
+  const entries = CARD_TYPE_ORDER.map((t) => ({ label: t, count: counts[t] ?? 0, bg: CARD_TYPE_COLORS[t]! })).filter(
+    (e) => e.count > 0,
+  );
+  const total = entries.reduce((s, e) => s + e.count, 0);
+
+  const chartData = {
+    labels: entries.map((e) => e.label),
+    datasets: [
+      {
+        data: entries.map((e) => (total > 0 ? (e.count / total) * 100 : 0)),
+        backgroundColor: entries.map((e) => e.bg),
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+      },
+    ],
+  };
+
+  return (
+    <div style={{ maxWidth: 380 }}>
+      <Doughnut data={chartData} options={DECK_COLOR_DOUGHNUT_OPTIONS} />
+    </div>
+  );
+};
+
+const ELO_HISTOGRAM_OPTIONS = {
+  responsive: true,
+  maintainAspectRatio: true,
+  scales: {
+    x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+    y: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+  },
+  plugins: { legend: { display: false } },
+};
+
+const EloDistributionChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
+  deckBuilds,
+  cardMeta,
+}) => {
+  if (!deckBuilds || deckBuilds.length === 0) {
+    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+  }
+
+  const elos: number[] = [];
+  for (const deck of deckBuilds) {
+    for (const oracle of deck.mainboard) {
+      const elo = cardMeta[oracle]?.elo;
+      if (elo) elos.push(elo);
+    }
+  }
+  if (elos.length === 0) return <Text sm className="text-text-secondary">No Elo data available.</Text>;
+
+  const minElo = Math.floor(elos.reduce((a, b) => Math.min(a, b), Infinity) / 50) * 50;
+  const maxElo = Math.ceil(elos.reduce((a, b) => Math.max(a, b), -Infinity) / 50) * 50;
+  const labels: string[] = [];
+  const counts: number[] = [];
+  for (let bucket = minElo; bucket < maxElo; bucket += 50) {
+    labels.push(String(bucket));
+    counts.push(elos.filter((e) => e >= bucket && e < bucket + 50).length);
+  }
+
+  const chartData = {
+    labels,
+    datasets: [{ data: counts, backgroundColor: '#67A6D3', borderRadius: 2 }],
+  };
+
+  return <Bar data={chartData} options={ELO_HISTOGRAM_OPTIONS} />;
 };
 
 interface DraftMapPoint {
@@ -3323,13 +3443,25 @@ const ClusterDetailPanel: React.FC<{
           </div>
         </div>
       )}
-      <div>
-        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
-        <DeckColorShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
-      </div>
-      <div>
-        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Mana Curve Share</Text>
-        <ManaCurveShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+      <div className="flex flex-row gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
+          <DeckColorShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Card Types</Text>
+          <CardTypeShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+        </div>
+        <div className="flex-1 min-w-0 flex flex-col gap-4">
+          <div>
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Mana Curve Share</Text>
+            <ManaCurveShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+          </div>
+          <div>
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Elo Distribution</Text>
+            <EloDistributionChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -3361,13 +3493,25 @@ const DraftMapScopePanel: React.FC<{
         </div>
       </div>
     )}
-    <div>
-      <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
-      <DeckColorShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
-    </div>
-    <div>
-      <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Mana Curve Share</Text>
-      <ManaCurveShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+    <div className="flex flex-row gap-4 flex-wrap">
+      <div className="flex-1 min-w-0">
+        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
+        <DeckColorShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Card Types</Text>
+        <CardTypeShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+      </div>
+      <div className="flex-1 min-w-0 flex flex-col gap-4">
+        <div>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Mana Curve Share</Text>
+          <ManaCurveShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+        </div>
+        <div>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Elo Distribution</Text>
+          <EloDistributionChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -4256,7 +4400,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     const commonCards = [...poolCounts.entries()]
       .map(toSkeletonCard)
       .sort((a, b) => b.fraction - a.fraction)
-      .slice(0, 8);
+      .slice(0, 12);
 
     const supportCards: SkeletonCard[] = [];
     const lockCandidates = [...poolCounts.entries()]
@@ -4672,16 +4816,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   </div>
                   <Collapse isOpen={overviewOpen}>
                     <Flexbox direction="row" gap="4" className="flex-wrap items-stretch">
-                      <SummaryCard
-                        label="Drafts Simulated"
-                        value={displayRunData.numDrafts}
-                        sub={`${displayRunData.numSeats} seats each`}
-                      />
-                      <SummaryCard
-                        label="Cards Tracked"
-                        value={displayRunData.cardStats.length}
-                        sub="unique cards seen across all packs"
-                      />
+                      <div className="flex flex-col gap-4 flex-shrink-0" style={{ width: 200 }}>
+                        <SummaryCard
+                          label="Drafts Simulated"
+                          value={displayRunData.numDrafts}
+                          sub={`${displayRunData.numSeats} seats each`}
+                        />
+                        <SummaryCard
+                          label="Cards Tracked"
+                          value={displayRunData.cardStats.length}
+                          sub="unique cards seen across all packs"
+                        />
+                      </div>
                       <div className="flex-1 min-w-[180px]">
                         <Card className="h-full">
                           <CardBody className="py-3">
@@ -4696,9 +4842,27 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         <Card className="h-full">
                           <CardBody className="py-3">
                             <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
+                              Card Types
+                            </Text>
+                            <CardTypeShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                          </CardBody>
+                        </Card>
+                      </div>
+                      <div className="flex-1 min-w-[180px] flex flex-col gap-3">
+                        <Card className="h-full">
+                          <CardBody className="py-3">
+                            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
                               Mana Curve Share
                             </Text>
                             <ManaCurveShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
+                          </CardBody>
+                        </Card>
+                        <Card className="h-full">
+                          <CardBody className="py-3">
+                            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
+                              Elo Distribution
+                            </Text>
+                            <EloDistributionChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
                           </CardBody>
                         </Card>
                       </div>
@@ -5149,14 +5313,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             <div className="overflow-x-auto">
                               <table className="min-w-full divide-y divide-border text-sm" style={{ tableLayout: 'fixed' }}>
                                 <colgroup>
-                                  <col style={{ width: 48 }} />
                                   <col />
                                   <col style={{ width: 60 }} />
                                   <col style={{ width: 72 }} />
                                 </colgroup>
                                 <thead className="bg-bg-accent/50 border-b border-border">
                                   <tr>
-                                    <th className="px-2 py-2" />
                                     <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card</th>
                                     <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Pools</th>
                                     <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">%</th>
@@ -5165,16 +5327,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 <tbody className="divide-y divide-border">
                                   {topSideboardCards.map((entry) => {
                                     const meta = displayRunData.cardMeta[entry.oracle_id];
-                                    const artUrl = meta?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
                                     return (
                                       <tr key={entry.oracle_id} className="hover:bg-bg-accent/40">
-                                        <td className="px-2 py-1">
-                                          {artUrl && (
-                                            <div className="overflow-hidden rounded" style={{ width: 36, height: 36 }}>
-                                              <img src={artUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                          )}
-                                        </td>
                                         <td className="px-3 py-2 font-medium text-text truncate">
                                           {meta ? renderAutocardNameLink(entry.oracle_id, meta.name, meta.imageUrl) : entry.oracle_id}
                                         </td>
