@@ -1278,43 +1278,76 @@ const RowColorShare: React.FC<{ deck: BuiltDeck | null; cardMeta: Record<string,
   );
 };
 
-const DECK_COLOR_DOUGHNUT_OPTIONS = {
-  responsive: true,
-  maintainAspectRatio: true,
-  animation: false as const,
-  plugins: {
-    legend: {
-      position: 'right' as const,
-      labels: {
-        usePointStyle: true,
-        padding: 10,
-        font: { size: 11 },
-        generateLabels: (chart: any) => {
-          const data = chart.data;
-          return (data.labels as string[]).map((label: string, i: number) => ({
-            text: `${label}  ${(data.datasets[0].data[i] as number).toFixed(0)}%`,
-            fillStyle: data.datasets[0].backgroundColor[i],
-            strokeStyle: data.datasets[0].backgroundColor[i],
-            pointStyle: 'circle' as const,
-            hidden: false,
-            index: i,
-          }));
+/** Reads the --text CSS variable as an rgb() string, reacting to theme changes. */
+function useChartTextColor(): string {
+  const read = () => {
+    if (typeof document === 'undefined') return 'rgb(33,37,41)';
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+    return v ? `rgb(${v})` : 'rgb(33,37,41)';
+  };
+  const [color, setColor] = React.useState(read);
+  React.useEffect(() => {
+    const obs = new MutationObserver(() => setColor(read()));
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+  return color;
+}
+
+function makeDoughnutOptions(textColor: string) {
+  return {
+    responsive: true,
+    maintainAspectRatio: true,
+    animation: false as const,
+    plugins: {
+      legend: {
+        position: 'right' as const,
+        labels: {
+          usePointStyle: true,
+          padding: 10,
+          font: { size: 11 },
+          color: textColor,
+          generateLabels: (chart: any) => {
+            const data = chart.data;
+            return (data.labels as string[]).map((label: string, i: number) => ({
+              text: `${label}  ${(data.datasets[0].data[i] as number).toFixed(0)}%`,
+              fillStyle: data.datasets[0].backgroundColor[i],
+              strokeStyle: data.datasets[0].backgroundColor[i],
+              fontColor: textColor,
+              pointStyle: 'circle' as const,
+              hidden: false,
+              index: i,
+            }));
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => ` ${ctx.label}: ${(ctx.raw as number).toFixed(1)}%`,
         },
       },
     },
-    tooltip: {
-      callbacks: {
-        label: (ctx: any) => ` ${ctx.label}: ${(ctx.raw as number).toFixed(1)}%`,
-      },
+    cutout: '55%',
+  };
+}
+
+function makeEloHistogramOptions(textColor: string) {
+  return {
+    responsive: true,
+    maintainAspectRatio: true,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, color: textColor } },
+      y: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 10 }, color: textColor } },
     },
-  },
-  cutout: '55%',
-};
+    plugins: { legend: { display: false } },
+  };
+}
 
 const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
   deckBuilds,
   cardMeta,
 }) => {
+  const textColor = useChartTextColor();
   if (!deckBuilds || deckBuilds.length === 0) {
     return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
@@ -1350,7 +1383,7 @@ const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: 
 
   return (
     <div style={{ maxWidth: 380 }}>
-      <Doughnut data={chartData} options={DECK_COLOR_DOUGHNUT_OPTIONS} />
+      <Doughnut data={chartData} options={makeDoughnutOptions(textColor)} />
     </div>
   );
 };
@@ -1463,6 +1496,7 @@ const CardTypeShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: R
   deckBuilds,
   cardMeta,
 }) => {
+  const textColor = useChartTextColor();
   if (!deckBuilds || deckBuilds.length === 0) {
     return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
@@ -1496,25 +1530,16 @@ const CardTypeShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: R
 
   return (
     <div style={{ maxWidth: 380 }}>
-      <Doughnut data={chartData} options={DECK_COLOR_DOUGHNUT_OPTIONS} />
+      <Doughnut data={chartData} options={makeDoughnutOptions(textColor)} />
     </div>
   );
-};
-
-const ELO_HISTOGRAM_OPTIONS = {
-  responsive: true,
-  maintainAspectRatio: true,
-  scales: {
-    x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-    y: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 10 } } },
-  },
-  plugins: { legend: { display: false } },
 };
 
 const EloDistributionChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
   deckBuilds,
   cardMeta,
 }) => {
+  const textColor = useChartTextColor();
   if (!deckBuilds || deckBuilds.length === 0) {
     return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
@@ -1542,7 +1567,7 @@ const EloDistributionChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta:
     datasets: [{ data: counts, backgroundColor: '#67A6D3', borderRadius: 2 }],
   };
 
-  return <Bar data={chartData} options={ELO_HISTOGRAM_OPTIONS} />;
+  return <Bar data={chartData} options={makeEloHistogramOptions(textColor)} />;
 };
 
 interface DraftMapPoint {
@@ -2606,6 +2631,22 @@ function getDraftComposition(
   };
 }
 
+// Oracle tag patterns for draft archetype theme detection.
+// Each entry maps a display label to a list of tag substrings — a card
+// "contributes" to a theme if any of its oracleTags contains one of the keywords.
+const TAG_THEME_RULES: Array<{ label: string; keywords: string[]; threshold: number }> = [
+  { label: 'Reanimator', keywords: ['reanimate'], threshold: 2 },
+  { label: 'Graveyard', keywords: ['graveyard-matter', 'self-mill', 'flashback', 'threshold', 'delirium', 'dredge'], threshold: 3 },
+  { label: 'Tokens', keywords: ['repeatable-creature-tokens', 'creates-token', 'token-matter', 'populate'], threshold: 3 },
+  { label: 'Sacrifice', keywords: ['sacrifice-outlet', 'sacrifice-matter', 'blood-artist'], threshold: 2 },
+  { label: 'Blink', keywords: ['blink'], threshold: 2 },
+  { label: 'Landfall', keywords: ['landfall'], threshold: 2 },
+  { label: 'Enchantress', keywords: ['enchantress'], threshold: 2 },
+  { label: 'Wheels', keywords: ['wheel'], threshold: 2 },
+  { label: 'Looting', keywords: ['loot'], threshold: 3 },
+  { label: 'Prowess', keywords: ['prowess'], threshold: 3 },
+];
+
 function inferDraftThemes(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta: Record<string, CardMeta>): string[] {
   const cards = getPoolMainCards(pool, deck, cardMeta);
   let artifacts = 0;
@@ -2613,6 +2654,9 @@ function inferDraftThemes(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta:
   let instantsSorceries = 0;
   let creatures = 0;
   const creatureTypeCounts = new Map<string, number>();
+
+  // Count oracle tag theme hits across mainboard cards
+  const tagHits = new Map<string, number>();
   for (const oracleId of cards) {
     const meta = cardMeta[oracleId];
     const type = meta?.type ?? '';
@@ -2628,17 +2672,36 @@ function inferDraftThemes(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta:
         creatureTypeCounts.set(creatureType, (creatureTypeCounts.get(creatureType) ?? 0) + 1);
       }
     }
+
+    if (meta?.oracleTags?.length) {
+      for (const { label, keywords } of TAG_THEME_RULES) {
+        if (meta.oracleTags.some((tag) => keywords.some((kw) => tag.includes(kw)))) {
+          tagHits.set(label, (tagHits.get(label) ?? 0) + 1);
+        }
+      }
+    }
   }
 
+  // Primary: oracle tag themes sorted by hit count (most prevalent first)
+  const themes: string[] = TAG_THEME_RULES
+    .filter(({ label, threshold }) => (tagHits.get(label) ?? 0) >= threshold)
+    .sort((a, b) => (tagHits.get(b.label) ?? 0) - (tagHits.get(a.label) ?? 0))
+    .map(({ label }) => label);
+
+  // Secondary: type-based heuristics to fill remaining slots
   const topCreatureType = [...creatureTypeCounts.entries()].sort((a, b) => b[1] - a[1])[0];
-  const themes: string[] = [];
-  if (artifacts >= 5) themes.push('Artifacts');
-  if (instantsSorceries >= 8) themes.push('Spells');
-  if (enchantments >= 5) themes.push('Enchantments');
-  if (topCreatureType && topCreatureType[1] >= 4 && topCreatureType[1] / Math.max(1, creatures) >= 0.3) {
+  if (themes.length < 3 && artifacts >= 5 && !themes.includes('Artifacts')) themes.push('Artifacts');
+  if (themes.length < 3 && instantsSorceries >= 8 && !themes.includes('Spells') && !themes.includes('Prowess')) themes.push('Spells');
+  if (themes.length < 3 && enchantments >= 5 && !themes.includes('Enchantments') && !themes.includes('Enchantress')) themes.push('Enchantments');
+  if (
+    themes.length < 3 &&
+    topCreatureType &&
+    topCreatureType[1] >= 4 &&
+    topCreatureType[1] / Math.max(1, creatures) >= 0.3
+  ) {
     themes.push(`${topCreatureType[0]}s`);
   }
-  if (creatures >= 16 && themes.length < 3) themes.push('Creatures');
+  if (themes.length < 3 && creatures >= 16) themes.push('Creatures');
   if (themes.length === 0) themes.push(archetypeFullName(pool.archetype));
   return themes.slice(0, 3);
 }
@@ -3383,6 +3446,14 @@ const LinkedCardImage: React.FC<{ oracleId: string; name: string; imageUrl: stri
   </AutocardLink>
 );
 
+interface MapSelectedCardInfo {
+  cardImages: { oracleId: string; name: string; imageUrl: string }[];
+  name: string; // joined display name
+  pickRate?: number; // only set for single-card selection
+  avgPickPosition?: number;
+  onClear: () => void;
+}
+
 /** Panel shown to the right of the Draft Map when a cluster is selected. */
 const ClusterDetailPanel: React.FC<{
   skeleton: ArchetypeSkeleton;
@@ -3489,10 +3560,12 @@ const ClusterDetailPanel: React.FC<{
   const pct = totalPools > 0 ? ((skeleton.poolCount / totalPools) * 100).toFixed(1) : '0';
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <Text semibold className="text-base">Cluster {clusterIndex + 1}</Text>
-          <div className="flex items-center gap-1.5 mt-0.5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1 pt-2">
+          <div><Text semibold className="text-lg leading-snug">
+            {selectedCardInfo ? `${selectedCardInfo.name} in Cluster ${clusterIndex + 1}` : `Cluster ${clusterIndex + 1}`}
+          </Text></div>
+          <div className="mt-1 flex items-center gap-1.5">
             <div className="flex items-center gap-0.5">
               {colorCodes.map((code) => (
                 <span
@@ -3506,6 +3579,16 @@ const ClusterDetailPanel: React.FC<{
               {archetypeFullName(colorProfile)} · {skeleton.poolCount} seats · {pct}%
             </Text>
           </div>
+          {selectedCardInfo && (selectedCardInfo.pickRate !== undefined || (selectedCardInfo.avgPickPosition ?? 0) > 0) && (
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+              {selectedCardInfo.pickRate !== undefined && (
+                <span className="text-sm text-text-secondary/50">Pick rate <span className="text-text-secondary/80">{(selectedCardInfo.pickRate * 100).toFixed(1)}%</span></span>
+              )}
+              {(selectedCardInfo.avgPickPosition ?? 0) > 0 && (
+                <span className="text-sm text-text-secondary/50">Avg pos <span className="text-text-secondary/80">{selectedCardInfo.avgPickPosition!.toFixed(1)}</span></span>
+              )}
+            </div>
+          )}
         </div>
         <button
           type="button"
@@ -3515,13 +3598,37 @@ const ClusterDetailPanel: React.FC<{
           ✕
         </button>
       </div>
-      {commonCards.length > 0 ? (
-        <div>
-          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common cards in matching pools</Text>
-          <div className="grid grid-cols-6 gap-1.5">
-            {commonCards.slice(0, 12).map((card) => (
-              <SkeletonCardImage key={card.oracle_id} card={card} />
-            ))}
+      {(() => {
+        const displayCards = commonCards.length > 0 ? commonCards : skeleton.coreCards;
+        const label = commonCards.length > 0 ? 'Most common cards in matching pools' : 'Defining cards';
+        const hasSelected = selectedCardInfo && selectedCardInfo.cardImages.length > 0;
+        if (!hasSelected && displayCards.length === 0) return null;
+        return (
+          <div className="flex flex-col gap-3">
+            {hasSelected && (
+              <div className="grid grid-cols-6 gap-1.5">
+                {selectedCardInfo!.cardImages.map((img) => (
+                  <AutocardLink
+                    key={img.oracleId}
+                    href={`/tool/card/${encodeURIComponent(img.oracleId)}`}
+                    className="block hover:opacity-95"
+                    card={{ details: autocardDetails(img.oracleId, img.name, img.imageUrl) } as any}
+                  >
+                    <img src={img.imageUrl} alt={img.name} className="w-full rounded border-2 border-primary shadow-sm" />
+                  </AutocardLink>
+                ))}
+              </div>
+            )}
+            {displayCards.length > 0 && (
+              <div>
+                <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">{label}</Text>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {displayCards.slice(0, hasSelected ? 6 : 12).map((card) => (
+                    <SkeletonCardImage key={card.oracle_id} card={card} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : skeleton.coreCards.length > 0 && (
@@ -3619,48 +3726,97 @@ const DraftMapScopePanel: React.FC<{
   commonCards: SkeletonCard[];
   deckBuilds: BuiltDeck[] | null;
   cardMeta: Record<string, CardMeta>;
-}> = ({ title, subtitle, commonCards, deckBuilds, cardMeta }) => (
+  selectedCardInfo?: MapSelectedCardInfo;
+  matchingCount: number;
+}> = ({ title, subtitle, commonCards, deckBuilds, cardMeta, selectedCardInfo, matchingCount }) => {
+  return (
   <div className="flex flex-col gap-5">
-    <div className="flex flex-col gap-0.5">
-      <Text semibold className="text-base">
-        {title}
-      </Text>
-      <Text xs className="text-text-secondary">
-        {subtitle}
-      </Text>
-    </div>
-    {commonCards.length > 0 && (
-      <div>
-        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common cards in matching pools</Text>
-        <div className="grid grid-cols-6 gap-1.5">
-          {commonCards.slice(0, 12).map((card) => (
-            <SkeletonCardImage key={card.oracle_id} card={card} />
-          ))}
-        </div>
+    <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0 flex-1 pt-2">
+        <div><Text semibold className="text-lg leading-snug">
+          {selectedCardInfo
+            ? (title ? `${selectedCardInfo.name} in ${title}` : selectedCardInfo.name)
+            : title}
+        </Text></div>
+        <div className="mt-1"><Text xs className="text-text-secondary">{subtitle}</Text></div>
+        {selectedCardInfo && (selectedCardInfo.pickRate !== undefined || (selectedCardInfo.avgPickPosition ?? 0) > 0) && (
+          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+            {selectedCardInfo.pickRate !== undefined && (
+              <span className="text-sm text-text-secondary/50">Pick rate <span className="text-text-secondary/80">{(selectedCardInfo.pickRate * 100).toFixed(1)}%</span></span>
+            )}
+            {(selectedCardInfo.avgPickPosition ?? 0) > 0 && (
+              <span className="text-sm text-text-secondary/50">Avg pos <span className="text-text-secondary/80">{selectedCardInfo.avgPickPosition!.toFixed(1)}</span></span>
+            )}
+          </div>
+        )}
       </div>
+      {selectedCardInfo && (
+        <button
+          type="button"
+          onClick={selectedCardInfo.onClear}
+          className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active flex-shrink-0"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+    {matchingCount === 0 ? (
+      <Text sm className="text-text-secondary">No pools match all active filters. Try removing a card or changing the scope.</Text>
+    ) : (
+      <>
+        {(selectedCardInfo?.cardImages.length || commonCards.length > 0) ? (
+          <div className="flex flex-col gap-3">
+            {selectedCardInfo && selectedCardInfo.cardImages.length > 0 && (
+              <div className="grid grid-cols-6 gap-1.5">
+                {selectedCardInfo.cardImages.map((img) => (
+                  <AutocardLink
+                    key={img.oracleId}
+                    href={`/tool/card/${encodeURIComponent(img.oracleId)}`}
+                    className="block hover:opacity-95"
+                    card={{ details: autocardDetails(img.oracleId, img.name, img.imageUrl) } as any}
+                  >
+                    <img src={img.imageUrl} alt={img.name} className="w-full rounded border-2 border-primary shadow-sm" />
+                  </AutocardLink>
+                ))}
+              </div>
+            )}
+            {commonCards.length > 0 && (
+              <div>
+                <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common cards in matching pools</Text>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {commonCards.slice(0, selectedCardInfo ? 6 : 12).map((card) => (
+                    <SkeletonCardImage key={card.oracle_id} card={card} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+        <div className="flex flex-row gap-4 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
+            <DeckColorShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Card Types</Text>
+            <CardTypeShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+          </div>
+          <div className="flex-1 min-w-0 flex flex-col gap-4">
+            <div>
+              <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Mana Curve Share</Text>
+              <ManaCurveShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+            </div>
+            <div>
+              <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Elo Distribution</Text>
+              <EloDistributionChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+            </div>
+          </div>
+        </div>
+      </>
     )}
-    <div className="flex flex-row gap-4 flex-wrap">
-      <div className="flex-1 min-w-0">
-        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
-        <DeckColorShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Card Types</Text>
-        <CardTypeShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
-      </div>
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
-        <div>
-          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Mana Curve Share</Text>
-          <ManaCurveShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
-        </div>
-        <div>
-          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Elo Distribution</Text>
-          <EloDistributionChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
-        </div>
-      </div>
-    </div>
   </div>
-);
+  );
+};
 
 const ArchetypeSkeletonSection: React.FC<{
   skeletons: ArchetypeSkeleton[];
@@ -4576,6 +4732,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     return activeFilterChips.join(' · ');
   }, [activeFilterChips]);
 
+  // Filter chips with card entries stripped — used as scope panel title when cards are also selected
+  const scopeOnlySummary = useMemo(() => {
+    const nonCard = activeFilterChips.filter((c) => !c.startsWith('Pools Containing:'));
+    return nonCard.length > 0 ? nonCard.join(' · ') : null;
+  }, [activeFilterChips]);
+
   const activeFilterPreview = useMemo(() => {
     if (!displayRunData || !activeFilterPoolIndexSet) return null;
     const isBasicLand = (oracleId: string) => {
@@ -4841,6 +5003,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   }, [selectedSkeletonId, selectedArchetype, selectedCards.length, skeletons]);
 
   const showDraftMapScopePanel = selectedSkeletonId !== null || activeFilterPoolIndexSet !== null || selectedCards.length > 0;
+  const mapPanelHasBoth = selectedCards.length > 0 && (selectedSkeletonId !== null || activeFilterPoolIndexSet !== null);
   const draftMapScopeSeatCount = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
   const draftMapScopeSubtitle = activeFilterPoolIndexSet
     ? `${draftMapScopeSeatCount} matching seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`
@@ -4939,7 +5102,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 {runs.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex items-center gap-3 mb-2">
-                      <Text xs className="font-medium text-text-secondary uppercase tracking-wide">Recent runs</Text>
+                      <Text xs className="font-medium text-text-secondary/60 uppercase tracking-wide">Recent runs</Text>
                       <button
                         type="button"
                         className="text-xs text-text-secondary hover:text-text"
@@ -4953,18 +5116,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         <div
                           key={run.ts}
                           className={[
-                            'group relative flex flex-col flex-shrink-0 cursor-pointer transition-colors select-none rounded-md border',
+                            'group relative flex flex-col flex-shrink-0 cursor-pointer transition-colors select-none rounded-md border overflow-hidden',
                             run.ts === selectedTs
-                              ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-500 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.15)]'
+                              ? 'border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-800 shadow-[inset_3px_0_0_rgb(59_130_246)]'
                               : 'border-border bg-bg-accent hover:bg-bg-active',
                           ].join(' ')}
-                          style={{ minWidth: 160, padding: '8px 28px 8px 10px' }}
+                          style={{ minWidth: 160, padding: '8px 28px 8px 13px' }}
                           onClick={() => handleLoadRun(run.ts)}
                         >
-                          <span
-                            className="text-sm font-semibold whitespace-nowrap leading-tight"
-                            style={{ color: run.ts === selectedTs ? 'rgb(29 78 216)' : undefined }}
-                          >
+                          <span className="text-sm font-semibold whitespace-nowrap leading-tight text-text">
                             {run.numDrafts} drafts · {run.numSeats} seats
                           </span>
                           <span className="text-[11px] text-text-secondary whitespace-nowrap mt-0.5">
@@ -5382,67 +5542,77 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                     />
                                   )}
                                 </div>
-                                {showDraftMapScopePanel && (
+                                {showDraftMapScopePanel && (() => {
+                                  const statsForScope = activeFilterPoolIndexSet
+                                    ? selectedCardStats
+                                    : (selectedCardStats ?? selectedCard);
+                                  const cardInfo: MapSelectedCardInfo | undefined = mapPanelHasBoth && selectedCards.length > 0
+                                    ? {
+                                        cardImages: selectedCards
+                                          .map((c) => ({ oracleId: c.oracle_id, name: c.name, imageUrl: displayRunData.cardMeta[c.oracle_id]?.imageUrl ?? '' }))
+                                          .filter((img) => img.imageUrl),
+                                        name: selectedCards.map((c) => c.name).join(' + '),
+                                        pickRate: selectedCards.length === 1 ? (statsForScope?.pickRate ?? selectedCard?.pickRate) : undefined,
+                                        avgPickPosition: selectedCards.length === 1 ? (statsForScope?.avgPickPosition ?? selectedCard?.avgPickPosition) : undefined,
+                                        onClear: () => setSelectedCardOracles([]),
+                                      }
+                                    : undefined;
+                                  return (
                                   <div className="min-w-0 flex flex-col gap-3">
-                                    {selectedCards.length > 0 && (() => {
-                                      const statsForScope = activeFilterPoolIndexSet
-                                        ? selectedCardStats
-                                        : (selectedCardStats ?? selectedCard);
-                                      return (
-                                        <div className="rounded-lg border border-border bg-bg-accent/40 px-3 py-2.5">
-                                          <Flexbox direction="row" gap="3" alignItems="start" className="min-w-0">
-                                            {selectedCard && displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl && (
-                                              <div className="flex-shrink-0">
-                                                <LinkedCardImage
-                                                  oracleId={selectedCard.oracle_id}
-                                                  name={selectedCard.name}
-                                                  imageUrl={displayRunData.cardMeta[selectedCard.oracle_id].imageUrl}
-                                                  size={SIM_PREVIEW_CARD_W}
-                                                />
+                                    {!mapPanelHasBoth && selectedCards.length > 0 && (
+                                      <div className="rounded-lg border border-border bg-bg-accent/40 px-3 py-2.5">
+                                        <Flexbox direction="row" gap="3" alignItems="start" className="min-w-0">
+                                          {selectedCard && displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl && (
+                                            <div className="flex-shrink-0">
+                                              <LinkedCardImage
+                                                oracleId={selectedCard.oracle_id}
+                                                name={selectedCard.name}
+                                                imageUrl={displayRunData.cardMeta[selectedCard.oracle_id].imageUrl}
+                                                size={SIM_PREVIEW_CARD_W}
+                                              />
+                                            </div>
+                                          )}
+                                          <div className="min-w-0 flex-1">
+                                            <Text semibold className="leading-snug">
+                                              {selectedCards.map((c) => c.name).join(' + ')}
+                                            </Text>
+                                            {selectedCardScopeLabel && (
+                                              <div className="mt-0.5">
+                                                <Text xs className="text-text-secondary/80">{detailedViewTitle}</Text>
                                               </div>
                                             )}
-                                            <div className="min-w-0 flex-1">
-                                              <Text semibold className="leading-snug">
-                                                {selectedCards.map((c) => c.name).join(' + ')}
-                                              </Text>
-                                              {selectedCardScopeLabel && (
-                                                <div className="mt-0.5">
-                                                  <Text xs className="text-text-secondary/80">{detailedViewTitle}</Text>
-                                                </div>
-                                              )}
-                                              <div className="mt-0.5">
-                                                <Text xs className="text-text-secondary/60">{detailedViewSubtitle}</Text>
-                                              </div>
-                                              {statsForScope && (
-                                                <Flexbox direction="row" gap="3" alignItems="center" className="flex-wrap mt-1.5">
-                                                  <span className="text-xs text-text-secondary/50 font-medium">
-                                                    Pick rate{' '}
-                                                    <span className="text-text-secondary/80">
-                                                      {`${(statsForScope.pickRate * 100).toFixed(1)}%`}
-                                                    </span>
-                                                  </span>
-                                                  <span className="text-xs text-text-secondary/50 font-medium">
-                                                    Avg position{' '}
-                                                    <span className="text-text-secondary/80">
-                                                      {statsForScope.avgPickPosition > 0
-                                                        ? statsForScope.avgPickPosition.toFixed(1)
-                                                        : '—'}
-                                                    </span>
-                                                  </span>
-                                                </Flexbox>
-                                              )}
+                                            <div className="mt-0.5">
+                                              <Text xs className="text-text-secondary/60">{detailedViewSubtitle}</Text>
                                             </div>
-                                            <button
-                                              type="button"
-                                              className="flex-shrink-0 text-xs text-text-secondary hover:text-text"
-                                              onClick={() => setSelectedCardOracles([])}
-                                            >
-                                              ✕
-                                            </button>
-                                          </Flexbox>
-                                        </div>
-                                      );
-                                    })()}
+                                            {statsForScope && (
+                                              <Flexbox direction="row" gap="3" alignItems="center" className="flex-wrap mt-1.5">
+                                                <span className="text-xs text-text-secondary/50 font-medium">
+                                                  Pick rate{' '}
+                                                  <span className="text-text-secondary/80">
+                                                    {`${(statsForScope.pickRate * 100).toFixed(1)}%`}
+                                                  </span>
+                                                </span>
+                                                <span className="text-xs text-text-secondary/50 font-medium">
+                                                  Avg position{' '}
+                                                  <span className="text-text-secondary/80">
+                                                    {statsForScope.avgPickPosition > 0
+                                                      ? statsForScope.avgPickPosition.toFixed(1)
+                                                      : '—'}
+                                                  </span>
+                                                </span>
+                                              </Flexbox>
+                                            )}
+                                          </div>
+                                          <button
+                                            type="button"
+                                            className="flex-shrink-0 text-xs text-text-secondary hover:text-text"
+                                            onClick={() => setSelectedCardOracles([])}
+                                          >
+                                            ✕
+                                          </button>
+                                        </Flexbox>
+                                      </div>
+                                    )}
                                     {selectedSkeletonId !== null ? (() => {
                                       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
                                       const skIdx = skeletons.indexOf(sk!);
@@ -5467,15 +5637,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                       ) : null;
                                     })() : activeFilterPoolIndexSet !== null && (
                                       <DraftMapScopePanel
-                                        title={activeFilterSummary ?? 'All draft pools'}
+                                        title={cardInfo ? (scopeOnlySummary ?? '') : (activeFilterSummary ?? 'All draft pools')}
                                         subtitle={draftMapScopeSubtitle}
                                         commonCards={activeFilterPreview?.commonCards ?? []}
                                         deckBuilds={filteredDecks}
                                         cardMeta={displayRunData.cardMeta}
+                                        selectedCardInfo={cardInfo}
+                                        matchingCount={draftMapScopeSeatCount}
                                       />
                                     )}
                                   </div>
-                                )}
+                                  );
+                                })()}
                               </div>
                             </CardBody>
                           </Card>

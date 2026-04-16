@@ -4,6 +4,7 @@ import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
+import catalog from 'serverutils/cardCatalog';
 import { cardFromId, getOracleForMl } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -111,6 +112,12 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
         const oracleId = details.oracle_id;
         if (!cardMeta[oracleId]) {
           const mlOracleId = getOracleForMl(oracleId, null);
+          const oracleIndex = catalog.oracleToIndex[oracleId];
+          const tagIndices = oracleIndex !== undefined ? catalog.oracleTagDict[oracleIndex] : undefined;
+          const oracleTags =
+            tagIndices && tagIndices.length > 0
+              ? tagIndices.map((i) => catalog.oracleTagNames[i]).filter((t): t is string => !!t)
+              : undefined;
           cardMeta[oracleId] = {
             name: details.name ?? oracleId,
             imageUrl: details.image_normal || details.image_small || '',
@@ -122,6 +129,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
             parsedCost: details.parsed_cost ?? [],
             mlOracleId: mlOracleId !== oracleId ? mlOracleId : undefined,
             tags: card.tags && card.tags.length > 0 ? [...card.tags] : undefined,
+            oracleTags,
           };
         } else if (card.tags && card.tags.length > 0) {
           // Union tags from additional instances of the same oracle_id

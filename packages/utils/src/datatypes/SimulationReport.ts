@@ -74,6 +74,8 @@ export interface CardMeta {
   mlOracleId?: string;
   /** Cube-specific tags from the Card object. */
   tags?: string[];
+  /** Scryfall oracle tags for this card. */
+  oracleTags?: string[];
 }
 
 /** Basic land entry included in SimulationSetupResponse for client-side deckbuilding. */

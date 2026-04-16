@@ -15,7 +15,7 @@ export const s3 = new S3({
 // Public S3 client with no credentials for accessing public buckets
 // Reference: https://github.com/aws/aws-sdk-js-v3/issues/4093#issuecomment-2364084415
 export const publicS3 = new S3({
-  region: process.env.AWS_REGION || 'us-east-2',
+  region: 'us-east-2', // cubecobra-public is always in us-east-2
   // No credentials
   credentials: { accessKeyId: '', secretAccessKey: '' },
   // No signing of requests
