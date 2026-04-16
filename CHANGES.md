@@ -18,6 +18,8 @@ Since 1.6.0
 - New `kw:`, `keyword:`, and `keywords:` filter for filtering cards by keyword (e.g. `kw:flying`, `keywords>3`)
 - New `is:standard` filter for cards that were first printed in a standard expansion set
 - New `is:supplemental` filter for cards that were first printed in supplemental products
+- New `otag:` (oracle tag) and `atag:` (art tag) filters powered by Scryfall tagging data — filter cards by community-maintained oracle tags (e.g. `otag:removal`, `otag:ramp`) and art/illustration tags (e.g. `atag:forest`, `atag:sword`)
+- New `Oracle Tags` and `Art Tags` group sorts for sorting/grouping cards by their Scryfall tags
 - Improved bot deckbuilding algorithm — cards are now added one at a time using ML scores with a cumulative 10% duplicate penalty per copy, preventing bots from stacking too many copies of the same card
 - New `game:arena` / `game:paper` / `game:mtgo` filter now checks across all printings of a card (any version ever available in that game), instead of only the current printing's availability
 - New `game:is-arena` / `game:is-paper` / `game:is-mtgo` filter for checking whether the specific printing is available in that game (the previous strict behavior)
