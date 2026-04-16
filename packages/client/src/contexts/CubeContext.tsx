@@ -1057,6 +1057,23 @@ export function CubeContextProvider({
       setLoading(true);
 
       try {
+        // Strip `details` from changes before sending to avoid bloating the request body.
+        // Card details are large objects that the server doesn't need — it strips them before persisting.
+        const strippedChanges: Changes = { version: changes.version };
+        for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
+          const boardChanges = changes[board] as BoardChanges | undefined;
+          if (!boardChanges) continue;
+          strippedChanges[board] = {
+            adds: boardChanges.adds?.map(({ details, index, board: _board, ...rest }) => rest as Card),
+            removes: boardChanges.removes,
+            swaps: boardChanges.swaps?.map((swap) => {
+              const { details, index: _idx, board: _board, ...cardRest } = swap.card;
+              return { ...swap, card: { ...cardRest, index: swap.index } as Card };
+            }),
+            edits: boardChanges.edits,
+          };
+        }
+
         const result = await csrfFetch(`/cube/api/commit`, {
           method: 'POST',
           headers: {
@@ -1065,7 +1082,7 @@ export function CubeContextProvider({
           body: JSON.stringify({
             title,
             blog,
-            changes,
+            changes: strippedChanges,
             id: cube.id,
             useBlog,
             expectedVersion: changes.version,
@@ -1082,6 +1099,43 @@ export function CubeContextProvider({
         } else {
           const newCards = deepCopy(unfilteredChangedCards);
 
+          // Collect all card IDs that need details fetched, then batch-fetch them
+          // instead of making individual requests per card.
+          const cardIdsToFetch = new Set<string>();
+          for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
+            const boardChanges = changes[board] as BoardChanges | undefined;
+            if (boardChanges?.swaps) {
+              for (const swap of boardChanges.swaps) {
+                cardIdsToFetch.add(swap.card.cardID);
+              }
+            }
+            if (boardChanges?.adds) {
+              for (const add of boardChanges.adds) {
+                cardIdsToFetch.add(add.cardID);
+              }
+            }
+          }
+
+          let detailsMap: Record<string, CardDetails> = {};
+          if (cardIdsToFetch.size > 0) {
+            try {
+              const detailsResponse = await csrfFetch(`/cube/api/getdetailsforcards`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cards: [...cardIdsToFetch] }),
+              });
+              const detailsJson = await detailsResponse.json();
+              if (detailsJson.success === 'true' && detailsJson.details) {
+                const ids = [...cardIdsToFetch];
+                for (let i = 0; i < ids.length; i++) {
+                  detailsMap[ids[i]] = detailsJson.details[i];
+                }
+              }
+            } catch {
+              // If batch fetch fails, cards will just lack details until next page load
+            }
+          }
+
           const newCardsToFetchVersions = [];
           for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
             const boardChanges = changes[board] as BoardChanges | undefined;
@@ -1089,9 +1143,8 @@ export function CubeContextProvider({
             if (boardChanges?.swaps) {
               for (const swap of boardChanges.swaps) {
                 newCards[board][swap.index] = swap.card;
-                const newDetails = await getDetails(csrfFetch, swap.card.cardID);
-                if (newDetails !== null) {
-                  newCards[board][swap.index].details = newDetails;
+                if (detailsMap[swap.card.cardID]) {
+                  newCards[board][swap.index].details = detailsMap[swap.card.cardID];
                 }
               }
             }
@@ -1108,11 +1161,8 @@ export function CubeContextProvider({
               for (const add of boardChanges.adds) {
                 newCards[board].push({
                   ...add,
+                  details: detailsMap[add.cardID] || add.details,
                 });
-                const newDetails = await getDetails(csrfFetch, add.cardID);
-                if (newDetails !== null) {
-                  newCards[board][newCards[board].length - 1].details = newDetails;
-                }
                 newCardsToFetchVersions.push(add.cardID);
               }
             }

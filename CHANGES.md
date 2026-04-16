@@ -55,5 +55,7 @@ Since 1.6.0
 - Fixed "Disable Clone Notifications" cube setting not persisting — the setting would revert after saving
 - Fixed edit/remove card only searching the filtered card list — when a filter was active, removing or replacing a card by name would fail if the card wasn't in the filtered results; the lookup now searches the full unfiltered card list
 - Fixed card edits (property changes) inflating +/- counts in the edit pane — edits no longer count as both an addition and a removal. Instead, edited cards are shown as a separate count with a wrench icon (e.g. "+5, -3, 🔧2"), both in the pending changes panel and in committed changelogs
+- Fixed committing large changelogs (e.g. bulk uploads with many cards) causing request timeouts
+- Improved performance of saving changes for large updates — card data is now fetched in a single batch request instead of one-at-a-time
 
 # Technical Changes
