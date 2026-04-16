@@ -43,7 +43,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
     addCard,
     removeCard,
     swapCard,
-    changedCards,
+    changedCards: _changedCards,
     unfilteredChangedCards,
     clearChanges,
     commitChanges,

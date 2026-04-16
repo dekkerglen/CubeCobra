@@ -109,15 +109,19 @@ export interface Combo {
 
 /**
  * Compressed tag dictionaries for efficient tag lookups.
- * Keys are stringified OracleIdIndex values (compressed oracle indices).
+ * For oracle tags: keys are OracleIdIndex values (compressed oracle indices).
+ * For illustration tags: keys are ScryfallIdIndex values (compressed scryfall indices).
  * Values are arrays of tag name indices into the corresponding tag names array.
  *
- * To check if a card has a specific tag:
+ * Oracle tag lookup:
  *   1. Look up the card's compressed oracle index via oracleToIndex[oracleId]
- *   2. Look up tagDict[oracleIndex] to get the array of tag name indices
- *   3. Check if the desired tag's index is in that array
+ *   2. Look up oracleTagDict[oracleIndex] to get the array of tag name indices
+ *   3. Resolve tag names via oracleTagNames[tagIndex]
  *
- * To resolve tag names, use oracleTagNames[tagIndex] or illustrationTagNames[tagIndex].
+ * Illustration tag lookup:
+ *   1. Look up the card's compressed scryfall index via scryfallIdToIndex[scryfallId]
+ *   2. Look up illustrationTagDict[scryfallIndex] to get the array of tag name indices
+ *   3. Resolve tag names via illustrationTagNames[tagIndex]
  */
 export type TagDict = Record<number, number[]>;
 
@@ -138,10 +142,13 @@ export interface Catalog {
   oracleToIndex: Record<string, number>;
   // Combo-specific oracle index mapping - saved alongside comboTree to ensure index consistency
   comboOracleToIndex: Record<string, number>;
-  // Scryfall oracle-level tags (e.g. "synergy-burn", "zombify")
+  // Scryfall oracle-level tags (e.g. "synergy-burn", "zombify") — keyed by oracle index
   oracleTagDict: TagDict;
   oracleTagNames: string[];
-  // Scryfall illustration-level tags (e.g. artwork-related classifications)
+  // Scryfall illustration-level tags (e.g. artwork-related classifications) — keyed by scryfall index
   illustrationTagDict: TagDict;
   illustrationTagNames: string[];
+  // Compressed scryfall ID index for illustration tag lookups
+  indexToScryfallId: string[];
+  scryfallIdToIndex: Record<string, number>;
 }

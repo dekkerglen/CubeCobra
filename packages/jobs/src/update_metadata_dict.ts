@@ -12,11 +12,12 @@ import { cardMetadataTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import carddb, { cardFromId } from '@server/serverutils/carddb';
 import { updateCardbase } from '@server/serverutils/updatecards';
-import { CardMetadata, Related, TagDict } from '@utils/datatypes/CardCatalog';
+import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
 
 import { downloadModelsFromS3 } from '../../recommenderService/src/mlutils/downloadModel';
 import { encode, initializeMl, oracleInData } from '../../recommenderService/src/mlutils/ml';
 import { updateCombos } from './update_combos';
+import { updateScryfallTags } from './update_scryfall_tags';
 import { downloadJson, listFiles, uploadJson } from './utils/s3';
 const correlationLimit = 36;
 // import { HierarchicalNSW } from 'hnswlib-node';
@@ -37,73 +38,6 @@ type CubeDict = Record<string, string[]>;
 interface CubeHistory {
   cubes: Record<string, number[]>;
   indexToOracleMap: Record<number, string>;
-}
-
-interface ScryfallTag {
-  object: string;
-  id: string;
-  label: string;
-  type: string;
-  description: string | null;
-  oracle_ids: string[];
-}
-
-interface ScryfallTagResponse {
-  data: ScryfallTag[];
-}
-
-/**
- * Fetches Scryfall tags and builds a compressed tag dictionary.
- * The dict maps compressed oracle index → array of tag name indices.
- * This allows O(1) lookup of whether a card has a specific tag by checking
- * if the tag's index appears in the card's tag array.
- *
- * @returns { tagDict, tagNames } where tagNames[i] is the label for tag index i,
- *   and tagDict[oracleIndex] contains the tag indices assigned to that oracle.
- */
-async function fetchAndProcessTags(
-  url: string,
-  oracleToIndex: Record<string, number>,
-): Promise<{ tagDict: TagDict; tagNames: string[] }> {
-  console.log(`Fetching tags from ${url}`);
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'CubeCobra/1.0',
-      Accept: 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch tags from ${url}: ${response.status} ${response.statusText}`);
-  }
-
-  const { data: tags }: ScryfallTagResponse = await response.json();
-  console.log(`Received ${tags.length} tags from ${url}`);
-
-  const tagNames: string[] = [];
-  const tagDict: TagDict = {};
-
-  for (let tagIndex = 0; tagIndex < tags.length; tagIndex++) {
-    const tag = tags[tagIndex];
-    if (!tag) continue;
-
-    tagNames.push(tag.label);
-
-    for (const oracleId of tag.oracle_ids) {
-      const compressedIndex = oracleToIndex[oracleId];
-      if (compressedIndex === undefined) continue;
-
-      if (!tagDict[compressedIndex]) {
-        tagDict[compressedIndex] = [];
-      }
-      tagDict[compressedIndex]!.push(tagIndex);
-    }
-  }
-
-  const cardCount = Object.keys(tagDict).length;
-  console.log(`Processed ${tagNames.length} tags across ${cardCount} cards`);
-
-  return { tagDict, tagNames };
 }
 
 const taskId = process.env.CARD_METADATA_TASK_ID;
@@ -604,24 +538,26 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
     }
   }
 
-  console.log('Finished all oracles, fetching Scryfall tags...');
+  console.log('Finished all oracles, Writing metadatadict.json');
 
-  // Fetch and process Scryfall oracle and illustration tags
-  const [oracleTags, illustrationTags] = await Promise.all([
-    fetchAndProcessTags('https://api.scryfall.com/private/tags/oracle?pretty=true', oracleToIndex),
-    fetchAndProcessTags('https://api.scryfall.com/private/tags/illustration?pretty=true', oracleToIndex),
-  ]);
+  await Promise.all([uploadJson('metadatadict.json', metadatadict), uploadJson('indexToOracle.json', indexToOracle)]);
 
-  console.log('Writing metadatadict.json and tag files...');
+  // Update Scryfall tags using the same oracle index mapping
+  console.log('Starting Scryfall tag update with fresh oracle index...');
+  try {
+    // Load the illustration_id -> scryfall_id[] mapping (built by update_cards)
+    const illustrationIdToScryfallIds: Record<string, string[]> =
+      (await downloadJson('cards/illustrationIdToScryfallIds.json')) || {};
 
-  await Promise.all([
-    uploadJson('metadatadict.json', metadatadict),
-    uploadJson('indexToOracle.json', indexToOracle),
-    uploadJson('oracleTagDict.json', oracleTags.tagDict),
-    uploadJson('oracleTagNames.json', oracleTags.tagNames),
-    uploadJson('illustrationTagDict.json', illustrationTags.tagDict),
-    uploadJson('illustrationTagNames.json', illustrationTags.tagNames),
-  ]);
+    if (Object.keys(illustrationIdToScryfallIds).length === 0) {
+      console.warn('illustrationIdToScryfallIds.json not found — illustration tags will be empty');
+    }
+
+    await updateScryfallTags(oracleToIndex, illustrationIdToScryfallIds);
+  } catch (error) {
+    // Tag update failure is non-fatal — log and continue
+    console.error('Error updating Scryfall tags (non-fatal):', error);
+  }
 
   // Note: Manifest timestamp was already updated at the start of the process
   // to claim this run and prevent duplicates

@@ -313,8 +313,13 @@ const Changelist: React.FC = () => {
                   </Text>
                   <div className="text-secondary">
                     +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
-                    {(edits || []).length > 0 && (<>, <ToolsIcon size={12} />{(edits || []).length}</>)},{' '}
-                    {(cube.cards[board]?.length || 0) + (adds || []).length - (removes || []).length} Total
+                    {(edits || []).length > 0 && (
+                      <>
+                        , <ToolsIcon size={12} />
+                        {(edits || []).length}
+                      </>
+                    )}
+                    , {(cube.cards[board]?.length || 0) + (adds || []).length - (removes || []).length} Total
                   </div>
                 </Flexbox>
               </Text>

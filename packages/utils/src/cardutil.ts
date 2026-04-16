@@ -562,6 +562,56 @@ export const cardKeywords = (card: Card): string[] => card.details?.keywords ?? 
 
 export const cardIsReserved = (card: Card): boolean => card.details?.reserved ?? false;
 
+// --- Scryfall Tag Data Registry ---
+// Tag dictionaries are loaded on the server from catalog and on the client from an API.
+// This registry allows the filter/sort system to resolve tags without coupling to server code.
+interface TagData {
+  oracleTagDict: Record<number, number[]>;
+  oracleTagNames: string[];
+  illustrationTagDict: Record<number, number[]>;
+  illustrationTagNames: string[];
+  oracleToIndex: Record<string, number>;
+  scryfallIdToIndex: Record<string, number>;
+}
+
+let tagData: TagData | null = null;
+
+export const configureTagData = (data: TagData): void => {
+  tagData = data;
+};
+
+export const getTagData = (): TagData | null => tagData;
+
+/**
+ * Returns the oracle-level Scryfall tag labels for a card (e.g. "synergy-burn").
+ * Looks up by oracle_id → oracleToIndex → oracleTagDict → oracleTagNames.
+ */
+export const cardOracleTags = (card: Card): string[] => {
+  if (!tagData) return [];
+  const oracleId = card.details?.oracle_id;
+  if (!oracleId) return [];
+  const oracleIndex = tagData.oracleToIndex[oracleId];
+  if (oracleIndex === undefined) return [];
+  const tagIndices = tagData.oracleTagDict[oracleIndex];
+  if (!tagIndices) return [];
+  return tagIndices.map((i) => tagData!.oracleTagNames[i]).filter((s): s is string => !!s);
+};
+
+/**
+ * Returns the illustration-level Scryfall tag labels for a card (per-printing art tags).
+ * Looks up by scryfall_id → scryfallIdToIndex → illustrationTagDict → illustrationTagNames.
+ */
+export const cardArtTags = (card: Card): string[] => {
+  if (!tagData) return [];
+  const scryfallId = card.details?.scryfall_id;
+  if (!scryfallId) return [];
+  const scryfallIndex = tagData.scryfallIdToIndex[scryfallId];
+  if (scryfallIndex === undefined) return [];
+  const tagIndices = tagData.illustrationTagDict[scryfallIndex];
+  if (!tagIndices) return [];
+  return tagIndices.map((i) => tagData!.illustrationTagNames[i]).filter((s): s is string => !!s);
+};
+
 export const cardDevotion = (card: Card, color: string): number => {
   let cost = cardCost(card);
   if (cost && cardLayout(card) === 'adventure') cost = cost.slice(cost.findIndex((x) => x === 'split') + 1);
@@ -875,6 +925,10 @@ export default {
   cardDevotion,
   cardWordCount,
   cardKeywords,
+  cardOracleTags,
+  cardArtTags,
+  configureTagData,
+  getTagData,
   cardFirstPrintYear,
   cardLayout,
   cardIsSpecialZoneType,

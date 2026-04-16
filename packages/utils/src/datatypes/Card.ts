@@ -135,6 +135,8 @@ export const allFields = [
   'is',
   'color',
   'colorIdentity',
+  'otag',
+  'atag',
 ] as const;
 
 export type AllField = (typeof allFields)[number];

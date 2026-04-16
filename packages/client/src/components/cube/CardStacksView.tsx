@@ -21,7 +21,8 @@ interface CardStacksViewProps {
 const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube, setModalSelection, setModalOpen } =
     useContext(CubeContext);
-  const { rightSidebarMode, rightSidebarPosition, cubeSidebarExpanded, stacksPerRow, useBaseCardData } = useContext(DisplayContext);
+  const { rightSidebarMode, rightSidebarPosition, cubeSidebarExpanded, stacksPerRow, useBaseCardData } =
+    useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>

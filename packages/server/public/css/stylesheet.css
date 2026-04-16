@@ -843,6 +843,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .bottom-\[5\%\] {
   bottom: 5%;
 }
+.bottom-full {
+  bottom: 100%;
+}
 .left-0 {
   left: 0px;
 }
@@ -866,6 +869,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .top-4 {
   top: 1rem;
+}
+.top-full {
+  top: 100%;
 }
 .isolate {
   isolation: isolate;
@@ -1027,6 +1033,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   -webkit-margin-end: 0.5rem;
   margin-inline-end: 0.5rem;
 }
+.me-3 {
+  -webkit-margin-end: 0.75rem;
+  margin-inline-end: 0.75rem;
+}
 .me-auto {
   -webkit-margin-end: auto;
   margin-inline-end: auto;
@@ -1103,47 +1113,11 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .table {
   display: table;
 }
-.inline-table {
-  display: inline-table;
-}
-.table-caption {
-  display: table-caption;
-}
-.table-cell {
-  display: table-cell;
-}
-.table-column {
-  display: table-column;
-}
-.table-column-group {
-  display: table-column-group;
-}
-.table-footer-group {
-  display: table-footer-group;
-}
-.table-header-group {
-  display: table-header-group;
-}
-.table-row-group {
-  display: table-row-group;
-}
-.table-row {
-  display: table-row;
-}
-.flow-root {
-  display: flow-root;
-}
 .grid {
   display: grid;
 }
-.inline-grid {
-  display: inline-grid;
-}
 .contents {
   display: contents;
-}
-.list-item {
-  display: list-item;
 }
 .\!hidden {
   display: none !important;
@@ -1812,6 +1786,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .rounded-br-none {
   border-bottom-right-radius: 0px;
 }
+.rounded-tr-none {
+  border-top-right-radius: 0px;
+}
 .border {
   border-width: 1px;
 }
@@ -2247,9 +2224,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .py-\[3px\] {
   padding-top: 3px;
   padding-bottom: 3px;
-}
-.pb-0 {
-  padding-bottom: 0px;
 }
 .pb-1 {
   padding-bottom: 0.25rem;
@@ -3718,6 +3692,10 @@ img.mana-symbol-sm {
     display: inline;
   }
 
+  .sm\:flex {
+    display: flex;
+  }
+
   .sm\:hidden {
     display: none;
   }
@@ -3796,6 +3774,10 @@ img.mana-symbol-sm {
 
   .sm\:flex-row {
     flex-direction: row;
+  }
+
+  .sm\:gap-2 {
+    gap: 0.5rem;
   }
 
   .sm\:whitespace-nowrap {

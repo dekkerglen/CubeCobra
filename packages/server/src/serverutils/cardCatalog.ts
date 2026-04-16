@@ -1,4 +1,5 @@
 // import missing types from @utils/datatypes/Catalog
+import { configureTagData } from '@utils/cardutil';
 import { Catalog } from '@utils/datatypes/CardCatalog';
 import json from 'big-json';
 import fs from 'fs';
@@ -23,6 +24,8 @@ const catalog: Catalog = {
   oracleTagNames: [],
   illustrationTagDict: {},
   illustrationTagNames: [],
+  indexToScryfallId: [],
+  scryfallIdToIndex: {},
 };
 
 export const fileToAttribute: Record<string, keyof Catalog> = {
@@ -43,6 +46,7 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'oracleTagNames.json': 'oracleTagNames',
   'illustrationTagDict.json': 'illustrationTagDict',
   'illustrationTagNames.json': 'illustrationTagNames',
+  'indexToScryfallId.json': 'indexToScryfallId',
 };
 
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {
@@ -97,12 +101,32 @@ export async function initializeCardDb(basePath: string = 'private') {
     catalog.indexToOracle.map((oracleId: string, index: number) => [oracleId, index]),
   );
 
+  // Build scryfallIdToIndex from indexToScryfallId for illustration tag lookups
+  if (catalog.indexToScryfallId.length > 0) {
+    catalog.scryfallIdToIndex = Object.fromEntries(
+      catalog.indexToScryfallId.map((scryfallId: string, index: number) => [scryfallId, index]),
+    );
+  }
+
   // If comboOracleToIndex wasn't loaded (file doesn't exist yet), fall back to oracleToIndex
   // This maintains backward compatibility until the metadata task runs and generates the file
   if (Object.keys(catalog.comboOracleToIndex).length === 0) {
     console.info('comboOracleToIndex not found, falling back to oracleToIndex for combo lookups');
     catalog.comboOracleToIndex = catalog.oracleToIndex;
   }
+
+  // Configure the tag data registry so filters and sorts can resolve otag/atag
+  configureTagData({
+    oracleTagDict: catalog.oracleTagDict,
+    oracleTagNames: catalog.oracleTagNames,
+    illustrationTagDict: catalog.illustrationTagDict,
+    illustrationTagNames: catalog.illustrationTagNames,
+    oracleToIndex: catalog.oracleToIndex,
+    scryfallIdToIndex: catalog.scryfallIdToIndex,
+  });
+  console.info(
+    `Tag data configured: ${catalog.oracleTagNames.length} oracle tags, ${catalog.illustrationTagNames.length} illustration tags`,
+  );
 
   console.info('Finished loading carddb.');
 }

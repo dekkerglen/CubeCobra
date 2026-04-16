@@ -8,6 +8,7 @@ export const s3 = new S3({
   forcePathStyle: !!process.env.AWS_ENDPOINT,
   credentials: fromNodeProviderChain(),
   region: process.env.AWS_REGION,
+  maxAttempts: 5,
 });
 
 /**
@@ -81,11 +82,10 @@ export const uploadFileToPublicBucket = async (key: string, filePath: string, co
 };
 
 /**
- * Download a JSON object from S3
+ * Download a JSON object from a specific S3 bucket
  * Returns null if the object doesn't exist
  */
-export const downloadJson = async (key: string): Promise<any | null> => {
-  const bucket = getJobsBucket();
+export const downloadJsonFromBucket = async (key: string, bucket: string): Promise<any | null> => {
   try {
     const response = await s3.send(
       new GetObjectCommand({
@@ -106,6 +106,14 @@ export const downloadJson = async (key: string): Promise<any | null> => {
     }
     throw error;
   }
+};
+
+/**
+ * Download a JSON object from the DATA_BUCKET
+ * Returns null if the object doesn't exist
+ */
+export const downloadJson = async (key: string): Promise<any | null> => {
+  return downloadJsonFromBucket(key, getJobsBucket());
 };
 
 /**

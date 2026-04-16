@@ -1,5 +1,6 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 
+import { configureTagData, getTagData } from '@utils/cardutil';
 import { defaultFilter, FilterFunction, makeFilter } from '@utils/filtering/FilterCards';
 
 import useQueryParam from '../hooks/useQueryParam';
@@ -30,6 +31,33 @@ export const FilterContextProvider: React.FC<FilterContextProviderProps> = ({ ch
   const [filterInput, setFilterInput] = useQueryParam('f', '');
   const [filterValid, setFilterValid] = useState(true);
   const [cardFilter, setCardFilter] = useState<{ filter: FilterFunction }>({ filter: defaultFilter() });
+  const [tagDataLoaded, setTagDataLoaded] = useState(() => getTagData() !== null);
+
+  // Fetch Scryfall tag data for otag/atag filters and Oracle Tags/Art Tags sorts
+  useEffect(() => {
+    if (getTagData()) {
+      setTagDataLoaded(true);
+      return;
+    }
+    fetch('/tool/api/tags/', { cache: 'no-cache' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          configureTagData({
+            oracleTagDict: data.oracleTagDict,
+            oracleTagNames: data.oracleTagNames,
+            illustrationTagDict: data.illustrationTagDict,
+            illustrationTagNames: data.illustrationTagNames,
+            oracleToIndex: data.oracleToIndex,
+            scryfallIdToIndex: data.scryfallIdToIndex,
+          });
+        }
+        setTagDataLoaded(true);
+      })
+      .catch(() => {
+        setTagDataLoaded(true);
+      });
+  }, []);
 
   useEffect(
     (overrideFilter?: string) => {
@@ -48,7 +76,7 @@ export const FilterContextProvider: React.FC<FilterContextProviderProps> = ({ ch
       setFilterValid(true);
       setCardFilter({ filter });
     },
-    [filterInput, setCardFilter],
+    [filterInput, setCardFilter, tagDataLoaded],
   );
 
   const value = useMemo(

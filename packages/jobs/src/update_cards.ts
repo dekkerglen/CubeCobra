@@ -42,6 +42,7 @@ interface Catalog {
   english: Record<string, string>;
   metadatadict: Record<string, CardMetadata>;
   indexToOracleId: string[];
+  illustrationIdToScryfallIds: Record<string, string[]>;
 }
 
 interface SetRelease {
@@ -67,6 +68,7 @@ const catalog: Catalog = {
   english: {},
   metadatadict: {},
   indexToOracleId: [],
+  illustrationIdToScryfallIds: {},
 };
 
 // Track the earliest released_at per oracle_id to compute firstPrintYear
@@ -681,6 +683,7 @@ async function writeCatalog(basePath = PRIVATE_DIR) {
   await writeFile(path.join(basePath, 'cardimages.json'), catalog.cardimages);
   await writeFile(path.join(basePath, 'metadatadict.json'), catalog.metadatadict);
   await writeFile(path.join(basePath, 'indexToOracle.json'), catalog.indexToOracleId);
+  await writeFile(path.join(basePath, 'illustrationIdToScryfallIds.json'), catalog.illustrationIdToScryfallIds);
 
   const duration = (Date.now() - start) / 1000;
 
@@ -695,6 +698,14 @@ function saveCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPric
   addCardToCatalog(convertedCard, false);
   //card.name contains both faces name
   addToNameToIdMap(cardutil.normalizeName(card.name), convertedCard.scryfall_id);
+
+  // Map illustration_id -> scryfall_ids for illustration tag lookups
+  if (card.illustration_id) {
+    if (!catalog.illustrationIdToScryfallIds[card.illustration_id]) {
+      catalog.illustrationIdToScryfallIds[card.illustration_id] = [];
+    }
+    catalog.illustrationIdToScryfallIds[card.illustration_id]!.push(convertedCard.scryfall_id);
+  }
 }
 
 const ALL_NOT_LEGAL = Object.fromEntries(SUPPORTED_SCRYFALL_FORMATS.map((format) => [format, 'not_legal' as const]));
@@ -1080,6 +1091,7 @@ const CARD_UPDATE_FILES = [
   'imagedict.json',
   'cardimages.json',
   'english.json',
+  'illustrationIdToScryfallIds.json',
 ];
 
 const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: number }, taskId?: string) => {

@@ -137,8 +137,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
 
       // PDF settings for portrait US Letter: 8.5" x 11"
       // Target: 3 rows × 3 columns, adjacent cards (no spacing), 2.5" × 3.5" printed size
-      // Compensating for ~8% oversizing: 2.5/1.08 = 2.31" × 3.5/1.08 = 3.24" maintains 5:7 ratio
-      // Total grid: 6.93" × 9.72" centered on page
+      // Total grid: 7.5" × 10.5" centered on page
 
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -146,8 +145,8 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
         format: 'letter',
       });
 
-      const cardWidth = 2.31;
-      const cardHeight = 3.24;
+      const cardWidth = 2.5;
+      const cardHeight = 3.5;
       const cardsPerRow = 3;
       const rowsPerPage = 3;
       const cardsPerPage = cardsPerRow * rowsPerPage;

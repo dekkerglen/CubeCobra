@@ -3,6 +3,7 @@ import Cube, { CustomSort } from '@utils/datatypes/Cube';
 import {
   cardAddedTime,
   cardArtist,
+  cardArtTags,
   cardCmc,
   cardCollectorNumber,
   cardColorIdentity,
@@ -14,6 +15,7 @@ import {
   cardFirstPrintYear,
   cardKeywords,
   cardName,
+  cardOracleTags,
   cardPickCount,
   cardPopularity,
   cardPrice,
@@ -209,6 +211,8 @@ export const SORTS: string[] = [
   'Subtype',
   'Supertype',
   'Tags',
+  'Oracle Tags',
+  'Art Tags',
   'Keywords',
   'Toughness',
   'Type',
@@ -565,6 +569,26 @@ export function getLabelsRaw(
       }
     }
     ret = tags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  } else if (sort === 'Oracle Tags') {
+    const oTags: string[] = [];
+    for (const card of cube || []) {
+      for (const t of cardOracleTags(card)) {
+        if (t.length > 0 && !oTags.includes(t)) {
+          oTags.push(t);
+        }
+      }
+    }
+    ret = oTags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  } else if (sort === 'Art Tags') {
+    const aTags: string[] = [];
+    for (const card of cube || []) {
+      for (const t of cardArtTags(card)) {
+        if (t.length > 0 && !aTags.includes(t)) {
+          aTags.push(t);
+        }
+      }
+    }
+    ret = aTags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   } else if (sort === 'Keywords') {
     const kws: string[] = [];
     for (const card of cube || []) {
@@ -866,6 +890,10 @@ export function cardGetLabels(
     }
   } else if (sort === 'Tags') {
     ret = effectiveCard.tags || [];
+  } else if (sort === 'Oracle Tags') {
+    ret = cardOracleTags(effectiveCard);
+  } else if (sort === 'Art Tags') {
+    ret = cardArtTags(effectiveCard);
   } else if (sort === 'Keywords') {
     ret = cardKeywords(effectiveCard);
   } else if (sort === 'Status') {
