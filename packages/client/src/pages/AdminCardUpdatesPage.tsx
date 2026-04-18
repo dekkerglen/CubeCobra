@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import { CheckCircleFillIcon, ChevronDownIcon, ChevronUpIcon, XCircleFillIcon } from '@primer/octicons-react';
 import { CardMetadataTask } from '@utils/datatypes/CardMetadataTask';
@@ -6,13 +6,17 @@ import { CardUpdateTask } from '@utils/datatypes/CardUpdateTask';
 import { ExportTask } from '@utils/datatypes/ExportTask';
 import { MigrationTask } from '@utils/datatypes/MigrationTask';
 
+import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import { TabbedView } from 'components/base/Tabs';
 import Text from 'components/base/Text';
+import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 import RenderToRoot from 'components/RenderToRoot';
+import { CSRFContext } from 'contexts/CSRFContext';
 import useQueryParam from 'hooks/useQueryParam';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import MainLayout from 'layouts/MainLayout';
 
 interface AdminCardUpdatesPageProps {
@@ -151,6 +155,59 @@ const StepProgress: React.FC<{
   );
 };
 
+const RunJobButton: React.FC<{
+  jobType: string;
+  label: string;
+  addAlert: (color: string, message: string) => void;
+  dismissAlerts: () => void;
+}> = ({ jobType, label, addAlert, dismissAlerts }) => {
+  const { csrfFetch } = useContext(CSRFContext);
+  const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleConfirm = useCallback(async () => {
+    setConfirmOpen(false);
+    dismissAlerts();
+    setLoading(true);
+
+    try {
+      const response = await csrfFetch('/admin/triggerjob', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobType }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        addAlert('success', `Job started. Task ID: ${data.taskId}`);
+      } else {
+        addAlert('danger', data.error || 'Failed to start job');
+      }
+    } catch (err) {
+      addAlert('danger', err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [csrfFetch, jobType, addAlert, dismissAlerts]);
+
+  return (
+    <>
+      <Button color="primary" onClick={() => setConfirmOpen(true)} disabled={loading}>
+        {loading ? <Spinner sm /> : `Run ${label}`}
+      </Button>
+      <ConfirmActionModal
+        isOpen={confirmOpen}
+        setOpen={setConfirmOpen}
+        title={`Run ${label} Job`}
+        message={`Are you sure you want to manually trigger the ${label} job? This will start an ECS Fargate task.`}
+        buttonText={`Run ${label}`}
+        onClick={handleConfirm}
+      />
+    </>
+  );
+};
+
 const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({
   cardUpdates,
   cardMetadataTasks,
@@ -197,13 +254,20 @@ const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({
   );
 };
 
-const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) => (
+const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) => {
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
+
+  return (
   <CardBody>
     <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of card database updates from Scryfall. Updates are checked regularly and applied automatically when new
-        card data is available.
-      </Text>
+      <Alerts alerts={alerts} />
+      <Flexbox direction="row" alignItems="center" justify="between">
+        <Text md className="text-text-secondary">
+          History of card database updates from Scryfall. Updates are checked regularly and applied automatically when
+          new card data is available.
+        </Text>
+        <RunJobButton jobType="card-update" label="Card Update" addAlert={addAlert} dismissAlerts={dismissAlerts} />
+      </Flexbox>
 
       {updates.length === 0 ? (
         <Text className="text-center py-8 text-text-secondary">No card updates found.</Text>
@@ -310,16 +374,24 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
       )}
     </Flexbox>
   </CardBody>
-);
+  );
+};
 
-const CardMetadataTab: React.FC<{ tasks: CardMetadataTask[] }> = ({ tasks }) => (
+const CardMetadataTab: React.FC<{ tasks: CardMetadataTask[] }> = ({ tasks }) => {
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
+
+  return (
   <CardBody>
     <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of card metadata and correlation updates. This job runs weekly and calculates card statistics,
-        correlations, synergies, and combo data. It processes all cube and draft data to generate recommendations and
-        insights.
-      </Text>
+      <Alerts alerts={alerts} />
+      <Flexbox direction="row" alignItems="center" justify="between">
+        <Text md className="text-text-secondary">
+          History of card metadata and correlation updates. This job runs weekly and calculates card statistics,
+          correlations, synergies, and combo data. It processes all cube and draft data to generate recommendations and
+          insights.
+        </Text>
+        <RunJobButton jobType="card-metadata" label="Card Metadata" addAlert={addAlert} dismissAlerts={dismissAlerts} />
+      </Flexbox>
 
       {tasks.length === 0 ? (
         <Text className="text-center py-8 text-text-secondary">No card metadata tasks found.</Text>
@@ -389,15 +461,23 @@ const CardMetadataTab: React.FC<{ tasks: CardMetadataTask[] }> = ({ tasks }) => 
       )}
     </Flexbox>
   </CardBody>
-);
+  );
+};
 
-const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
+const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => {
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
+
+  return (
   <CardBody>
     <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of data export tasks. Exports are scheduled to run every 3 months and generate comprehensive data
-        exports for backup and analysis purposes.
-      </Text>
+      <Alerts alerts={alerts} />
+      <Flexbox direction="row" alignItems="center" justify="between">
+        <Text md className="text-text-secondary">
+          History of data export tasks. Exports are scheduled to run every 3 months and generate comprehensive data
+          exports for backup and analysis purposes.
+        </Text>
+        <RunJobButton jobType="export" label="Export" addAlert={addAlert} dismissAlerts={dismissAlerts} />
+      </Flexbox>
 
       {tasks.length === 0 ? (
         <Text className="text-center py-8 text-text-secondary">No export tasks found.</Text>
@@ -490,15 +570,23 @@ const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
       )}
     </Flexbox>
   </CardBody>
-);
+  );
+};
 
-const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
+const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => {
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
+
+  return (
   <CardBody>
     <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of Scryfall card migration tasks. Migrations occur when cards are deleted or merged on Scryfall, and
-        these tasks apply those changes to all cubes.
-      </Text>
+      <Alerts alerts={alerts} />
+      <Flexbox direction="row" alignItems="center" justify="between">
+        <Text md className="text-text-secondary">
+          History of Scryfall card migration tasks. Migrations occur when cards are deleted or merged on Scryfall, and
+          these tasks apply those changes to all cubes.
+        </Text>
+        <RunJobButton jobType="migration" label="Migration" addAlert={addAlert} dismissAlerts={dismissAlerts} />
+      </Flexbox>
 
       {tasks.length === 0 ? (
         <Text className="text-center py-8 text-text-secondary">No migration tasks found.</Text>
@@ -606,6 +694,7 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
       )}
     </Flexbox>
   </CardBody>
-);
+  );
+};
 
 export default RenderToRoot(AdminCardUpdatesPage);

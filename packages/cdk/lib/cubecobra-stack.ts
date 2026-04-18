@@ -152,24 +152,6 @@ export class CubeCobraStack extends cdk.Stack {
     // This eliminates public internet data transfer costs
     const mlServiceUrl = `http://${recommenderService.environment.attrEndpointUrl}`;
 
-    // Create everything we need related to ElasticBeanstalk, including the environment and the application
-    const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
-      certificate: cert.consoleCertificate,
-      vpc,
-      environmentName: params.environmentName,
-      environmentVariables: createEnvironmentVariables(params, props, dynamoTables.table.tableName, mlServiceUrl),
-      fleetSize: params.fleetSize,
-      instanceProfile: instanceProfile,
-      appBucket: s3Buckets.appBucket,
-      appVersion: params.version,
-    });
-
-    new Route53(this, 'Route53', {
-      dnsName: elasticBeanstalk.environment.attrEndpointUrl,
-      domain: params.domain,
-      recordSetId: 'ConsoleAliasRecord', // Keep the same ID as before to avoid resource replacement
-    });
-
     // Note: No Route53 record for recommender service - it uses internal ALB
     // accessible only within the VPC via the internal ALB DNS name
 
@@ -197,6 +179,63 @@ export class CubeCobraStack extends cdk.Stack {
       environmentVariables: jobsEnvVars,
       cpu: 4096, // 4 vCPU (required for 30 GB memory)
       memoryMiB: 30720, // 30 GB to accommodate metadata dict processing
+    });
+
+    // Compute ECS networking config (same logic as card-update-monitor-lambda)
+    const subnets = vpc.privateSubnets.length > 0 ? vpc.privateSubnets : vpc.publicSubnets;
+    const subnetIds = subnets.map((subnet) => subnet.subnetId);
+    const usePublicSubnets = vpc.privateSubnets.length === 0;
+
+    // Create everything we need related to ElasticBeanstalk, including the environment and the application
+    const serverEnvVars = createEnvironmentVariables(params, props, dynamoTables.table.tableName, mlServiceUrl);
+    serverEnvVars.ECS_CLUSTER_NAME = fargateCluster.clusterName;
+    serverEnvVars.ECS_TASK_DEFINITION_ARN = jobsTask.taskDefinition.taskDefinitionArn;
+    serverEnvVars.ECS_SUBNET_IDS = cdk.Fn.join(',', subnetIds);
+    serverEnvVars.ECS_ASSIGN_PUBLIC_IP = usePublicSubnets ? 'ENABLED' : 'DISABLED';
+
+    const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
+      certificate: cert.consoleCertificate,
+      vpc,
+      environmentName: params.environmentName,
+      environmentVariables: serverEnvVars,
+      fleetSize: params.fleetSize,
+      instanceProfile: instanceProfile,
+      appBucket: s3Buckets.appBucket,
+      appVersion: params.version,
+    });
+
+    // Grant the server's instance role permissions to run and monitor ECS tasks
+    const taskFamily = `cubecobra-jobs-${params.environmentName}`;
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['ecs:RunTask'],
+        resources: [
+          `arn:aws:ecs:${props?.env?.region}:${props?.env?.account}:task-definition/${taskFamily}:*`,
+        ],
+      }),
+    );
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['ecs:DescribeTasks', 'ecs:ListTasks'],
+        resources: ['*'],
+      }),
+    );
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['iam:PassRole'],
+        resources: [jobsTask.taskRole.roleArn, jobsTask.executionRole.roleArn],
+        conditions: {
+          StringEquals: {
+            'iam:PassedToService': 'ecs-tasks.amazonaws.com',
+          },
+        },
+      }),
+    );
+
+    new Route53(this, 'Route53', {
+      dnsName: elasticBeanstalk.environment.attrEndpointUrl,
+      domain: params.domain,
+      recordSetId: 'ConsoleAliasRecord', // Keep the same ID as before to avoid resource replacement
     });
 
     // Register all the scheduled jobs we have
