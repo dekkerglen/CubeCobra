@@ -13,7 +13,10 @@ interface JobConfig {
   command: string[];
   envVarName: string;
   createTask: () => Promise<{ id: string; taskArn?: string; step?: string; dateLastUpdated?: number }>;
-  saveTaskArn: (task: { id: string; taskArn?: string; step?: string; dateLastUpdated?: number }, taskArn: string) => Promise<void>;
+  saveTaskArn: (
+    task: { id: string; taskArn?: string; step?: string; dateLastUpdated?: number },
+    taskArn: string,
+  ) => Promise<void>;
 }
 
 const JOB_CONFIGS: Record<string, JobConfig> = {

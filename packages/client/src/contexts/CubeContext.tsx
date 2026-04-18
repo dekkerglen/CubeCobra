@@ -1064,10 +1064,12 @@ export function CubeContextProvider({
           const boardChanges = changes[board] as BoardChanges | undefined;
           if (!boardChanges) continue;
           strippedChanges[board] = {
-            adds: boardChanges.adds?.map(({ details, index, board: _board, ...rest }) => rest as Card),
+            adds: boardChanges.adds?.map(
+              ({ details: _details, index: _index, board: _board, ...rest }) => rest as Card,
+            ),
             removes: boardChanges.removes,
             swaps: boardChanges.swaps?.map((swap) => {
-              const { details, index: _idx, board: _board, ...cardRest } = swap.card;
+              const { details: _details, index: _idx, board: _board, ...cardRest } = swap.card;
               return { ...swap, card: { ...cardRest, index: swap.index } as Card };
             }),
             edits: boardChanges.edits,
@@ -1116,7 +1118,7 @@ export function CubeContextProvider({
             }
           }
 
-          let detailsMap: Record<string, CardDetails> = {};
+          const detailsMap: Record<string, CardDetails> = {};
           if (cardIdsToFetch.size > 0) {
             try {
               const detailsResponse = await csrfFetch(`/cube/api/getdetailsforcards`, {

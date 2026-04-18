@@ -209,9 +209,7 @@ export class CubeCobraStack extends cdk.Stack {
     role.addToPolicy(
       new iam.PolicyStatement({
         actions: ['ecs:RunTask'],
-        resources: [
-          `arn:aws:ecs:${props?.env?.region}:${props?.env?.account}:task-definition/${taskFamily}:*`,
-        ],
+        resources: [`arn:aws:ecs:${props?.env?.region}:${props?.env?.account}:task-definition/${taskFamily}:*`],
       }),
     );
     role.addToPolicy(
