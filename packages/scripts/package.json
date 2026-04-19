@@ -15,6 +15,7 @@
     "setup:local:files": "node src/create_local_files.js",
     "setup:local:db": "NODE_OPTIONS=--max-old-space-size=8192 ts-node -r tsconfig-paths/register src/createTables.ts",
     "create-mock-files": "ts-node src/create_local_files.ts",
+    "seed:cubes": "node src/seed_cubes_from_prod.js",
     "migrate-combos": "ts-node -r tsconfig-paths/register --project tsconfig.json src/migrateCombosToDb.ts",
     "transfer-ownership": "ts-node -r tsconfig-paths/register --project tsconfig.json src/transfer-ownership.ts",
     "backfill-date-last-updated": "ts-node -r tsconfig-paths/register --project tsconfig.json src/dynamoMigrations/backfillDateLastUpdated.ts"

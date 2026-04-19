@@ -156,7 +156,7 @@ describe('approximateUmap', () => {
 });
 
 // ---------------------------------------------------------------------------
-// computeSkeletons
+// computeSkeletons (UMAP-Nd + HDBSCAN)
 // ---------------------------------------------------------------------------
 describe('computeSkeletons', () => {
   it('returns empty for empty pools', () => {
@@ -169,8 +169,6 @@ describe('computeSkeletons', () => {
     const meta = { a: makeMeta('a'), b: makeMeta('b') };
     const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b'])];
     const result = computeSkeletons(pools, meta, 10, null);
-    // With minClusterSize=10 and only 2 pools, no valid clusters exist —
-    // all points should still be assigned (noise goes to nearest cluster fallback)
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -191,7 +189,6 @@ describe('computeSkeletons', () => {
     const pools = Array.from({ length: 5 }, (_, i) => makePool(0, i, ['staple']));
     const result = computeSkeletons(pools, meta, 3, null);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
-    // At least one skeleton should contain the staple as a core card
     const hasStaple = result.skeletons.some((s) => s.coreCards.some((c) => c.oracle_id === 'staple'));
     expect(hasStaple).toBe(true);
   });
@@ -230,7 +227,6 @@ describe('computeSkeletons', () => {
     const result = computeSkeletons(pools, meta, 2, null, deckBuilds);
 
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
-    // At least one skeleton should detect the sideboard card
     const hasSide = result.skeletons.some((s) => s.sideboardCards.some((c) => c.oracle_id === 'side'));
     expect(hasSide).toBe(true);
   });
@@ -249,7 +245,6 @@ describe('computeSkeletons', () => {
   it('uses provided embeddings when available', () => {
     const meta = { a: makeMeta('a'), b: makeMeta('b'), c: makeMeta('c') };
     const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['c'])];
-    // 3 pools with 4-dim embeddings
     const embeddings = [
       [1, 0, 0, 0],
       [0, 1, 0, 0],
@@ -258,5 +253,20 @@ describe('computeSkeletons', () => {
     const result = computeSkeletons(pools, meta, 2, embeddings);
     expect(result.skeletons.length).toBeGreaterThan(0);
     expect(result.umapCoords).toHaveLength(3);
+  });
+
+  it('respects custom umapDims parameter', () => {
+    const meta = { a: makeMeta('a'), b: makeMeta('b') };
+    const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['a', 'b'])];
+    const result = computeSkeletons(pools, meta, 2, null, null, 5);
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('supports graph-based clustering mode', () => {
+    const meta = { a: makeMeta('a'), b: makeMeta('b'), c: makeMeta('c') };
+    const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['c']), makePool(0, 3, ['a', 'b'])];
+    const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'graph');
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+    expect(result.umapCoords).toHaveLength(4);
   });
 });
