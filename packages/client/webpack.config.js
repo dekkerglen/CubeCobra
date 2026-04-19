@@ -65,6 +65,8 @@ module.exports = {
     static: {
       directory: path.join(__dirname, 'dist'),
     },
+    host: '0.0.0.0',
+    allowedHosts: 'all',
     proxy: [
       {
         context: (pathname) => {

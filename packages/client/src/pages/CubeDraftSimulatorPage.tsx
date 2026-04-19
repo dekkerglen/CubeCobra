@@ -3535,12 +3535,14 @@ const ArchetypeSkeletonSection: React.FC<{
   totalPools: number;
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton }) => (
+  clusterMethod: string;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterMethod }) => (
   <ArchetypeSkeletonSectionInner
     skeletons={skeletons}
     totalPools={totalPools}
     selectedSkeletonId={selectedSkeletonId}
     onSelectSkeleton={onSelectSkeleton}
+    clusterMethod={clusterMethod}
   />
 );
 
@@ -3549,7 +3551,8 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   totalPools: number;
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton }) => {
+  clusterMethod: string;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterMethod }) => {
 
   const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => (
     <div
@@ -3598,7 +3601,17 @@ const ArchetypeSkeletonSectionInner: React.FC<{
     <Card>
       <CardHeader>
         <div className="flex flex-col gap-0.5">
-          <Text semibold>Archetypes</Text>
+          <div className="flex items-center gap-2">
+            <Text semibold>Archetypes</Text>
+            <span className={[
+              'text-[10px] font-medium px-1.5 py-0.5 rounded',
+              clusterMethod.startsWith('hdbscan')
+                ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                : 'bg-amber-500/10 text-amber-600 border border-amber-500/20',
+            ].join(' ')}>
+              {clusterMethod}
+            </span>
+          </div>
           <Text xs className="text-text-secondary">
             Grouped by shared cards
           </Text>
@@ -3682,6 +3695,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   // Archetype skeleton clustering
   const [minClusterSize, setMinClusterSize] = useState(3);
   const [pendingMinClusterSize, setPendingMinClusterSize] = useState(3);
+  const [pcaDims, setPcaDims] = useState(20);
+  const [pendingPcaDims, setPendingPcaDims] = useState(20);
+  const [minPts, setMinPts] = useState(3);
+  const [pendingMinPts, setPendingMinPts] = useState(3);
+  const [knnK, setKnnK] = useState(50);
+  const [pendingKnnK, setPendingKnnK] = useState(50);
+  const [negSamples, setNegSamples] = useState(20);
+  const [pendingNegSamples, setPendingNegSamples] = useState(20);
+  const [clusterMode, setClusterMode] = useState<'umap' | 'graph'>('umap');
   const [clusterSeed, setClusterSeed] = useState(0);
 
   // Reconstruct SimulatedPool[] from slim pools for display (works for both fresh and historical)
@@ -4141,6 +4163,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   }, [displayRunData, activeDecks, simulatedPools.length, displayedPools]);
   const [skeletons, setSkeletons] = useState<ArchetypeSkeleton[]>([]);
   const [umapCoords, setUmapCoords] = useState<{ x: number; y: number }[]>([]);
+  const [clusterMethod, setClusterMethod] = useState<string>('hdbscan (umap)');
   const [clusteringInProgress, setClusteringInProgress] = useState(false);
   const [poolEmbeddings, setPoolEmbeddings] = useState<number[][] | null>(null);
 
@@ -4185,7 +4208,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     return () => { cancelled = true; };
   }, [displayRunData, activeDecks, selectedTs]);
 
-  // Clustering: embeddings → UMAP → HDBSCAN
+  // Clustering: PCA → HDBSCAN → UMAP viz
   useEffect(() => {
     if (!displayRunData || displayRunData.slimPools.length === 0) {
       setSkeletons([]);
@@ -4196,14 +4219,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setClusteringInProgress(true);
     // setTimeout lets the loading state paint before the synchronous compute blocks
     const timer = setTimeout(() => {
-      const result = computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, minClusterSize, poolEmbeddings, activeDecks);
+      const result = computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, minClusterSize, poolEmbeddings, activeDecks, pcaDims, minPts, clusterMode, knnK, negSamples);
       setSkeletons(result.skeletons);
       setUmapCoords(result.umapCoords);
+      setClusterMethod(result.clusterMethod);
       setClusteringInProgress(false);
     }, 20);
     return () => clearTimeout(timer);
     // clusterSeed intentionally triggers re-cluster without being a real dependency
-  }, [displayRunData, minClusterSize, clusterSeed, activeDecks, poolEmbeddings]);
+  }, [displayRunData, minClusterSize, pcaDims, minPts, clusterMode, knnK, negSamples, clusterSeed, activeDecks, poolEmbeddings]);
   const draftMapPoints = useMemo(
     () =>
       displayRunData
@@ -5023,27 +5047,67 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                       Deck Color
                                     </button>
                                   </div>
-                                  <div className="flex flex-row items-center gap-1">
-                                    <label className="text-xs font-medium text-text-secondary whitespace-nowrap">Min Size</label>
-                                    <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-14" />
+                                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-1">
+                                    <div className="flex flex-row gap-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => { setClusterMode('umap'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                        className={[
+                                          'px-2 py-0.5 rounded-l text-xs font-medium border transition-colors',
+                                          clusterMode === 'umap'
+                                            ? 'bg-link text-white border-link'
+                                            : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
+                                        ].join(' ')}
+                                      >
+                                        UMAP
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => { setClusterMode('graph'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                        className={[
+                                          'px-2 py-0.5 rounded-r text-xs font-medium border transition-colors',
+                                          clusterMode === 'graph'
+                                            ? 'bg-link text-white border-link'
+                                            : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
+                                        ].join(' ')}
+                                      >
+                                        Graph
+                                      </button>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-x-2 gap-y-1 sm:flex sm:flex-row sm:items-center sm:gap-1">
+                                      <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="k-NN neighbors — more = stronger cluster signal">k-NN K</label>
+                                      <NumericInput min={5} max={200} value={pendingKnnK} onChange={setPendingKnnK} className="w-14 col-span-2" />
+                                      <label className={['text-xs font-medium whitespace-nowrap col-span-1', clusterMode === 'graph' ? 'text-text-secondary/40' : 'text-text-secondary'].join(' ')} title="UMAP target dimensions for clustering">UMAP Dims</label>
+                                      <NumericInput min={2} max={128} value={pendingPcaDims} onChange={setPendingPcaDims} className={['w-14 col-span-2', clusterMode === 'graph' ? 'opacity-40' : ''].join(' ')} />
+                                      <label className={['text-xs font-medium whitespace-nowrap col-span-1', clusterMode === 'graph' ? 'text-text-secondary/40' : 'text-text-secondary'].join(' ')} title="Negative samples per edge in UMAP force layout">Neg Samp</label>
+                                      <NumericInput min={1} max={50} value={pendingNegSamples} onChange={setPendingNegSamples} className={['w-14 col-span-2', clusterMode === 'graph' ? 'opacity-40' : ''].join(' ')} />
+                                      <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Minimum number of pools to form a cluster">Min Size</label>
+                                      <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-14 col-span-2" />
+                                      <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Neighbors for density smoothing (higher = smoother density estimate)">Min Pts</label>
+                                      <NumericInput min={2} max={20} value={pendingMinPts} onChange={setPendingMinPts} className="w-14 col-span-2" />
+                                    </div>
                                     <button
                                       type="button"
                                       disabled={clusteringInProgress}
                                       onClick={() => {
+                                        setKnnK(pendingKnnK);
+                                        setPcaDims(pendingPcaDims);
+                                        setNegSamples(pendingNegSamples);
                                         setMinClusterSize(pendingMinClusterSize);
+                                        setMinPts(pendingMinPts);
                                         setSelectedSkeletonId(null);
                                         setFocusedPoolIndex(null);
                                         setClusterSeed((s) => s + 1);
                                       }}
                                       className={[
-                                        'whitespace-nowrap px-2 py-0.5 rounded text-xs font-medium border',
+                                        'whitespace-nowrap px-2 py-0.5 rounded text-xs font-medium border w-full sm:w-auto',
                                         clusteringInProgress
                                           ? 'bg-bg-accent border-border text-text-secondary cursor-wait'
                                           : 'bg-bg-accent border-border hover:bg-bg-active',
                                       ].join(' ')}
                                     >
                                       {clusteringInProgress ? (
-                                        <span className="flex items-center gap-1">
+                                        <span className="flex items-center justify-center gap-1">
                                           <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -5248,6 +5312,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             setSelectedSkeletonId(id);
                             setSelectedArchetype(null);
                           }}
+                          clusterMethod={clusterMethod}
                         />
                       ) : (
                         <Text sm className="text-text-secondary">No archetypes found. Try lowering the minimum cluster size.</Text>

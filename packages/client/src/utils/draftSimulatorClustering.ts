@@ -10,6 +10,32 @@ import {
 } from '@utils/datatypes/SimulationReport';
 
 // ---------------------------------------------------------------------------
+// Seeded PRNG (xorshift32) for deterministic clustering
+// ---------------------------------------------------------------------------
+
+function createRng(seed: number): () => number {
+  let s = seed | 0 || 1;
+  return () => {
+    s ^= s << 13;
+    s ^= s >> 17;
+    s ^= s << 5;
+    return (s >>> 0) / 4294967296;
+  };
+}
+
+function deriveClusterSeed(slimPools: SlimPool[]): number {
+  let h = slimPools.length;
+  for (let i = 0; i < Math.min(slimPools.length, 20); i++) {
+    const pool = slimPools[i]!;
+    for (let j = 0; j < Math.min(pool.picks.length, 5); j++) {
+      const id = pool.picks[j]!.oracle_id;
+      for (let k = 0; k < id.length; k++) h = (h * 31 + id.charCodeAt(k)) | 0;
+    }
+  }
+  return h;
+}
+
+// ---------------------------------------------------------------------------
 // Euclidean distance helpers
 // ---------------------------------------------------------------------------
 
@@ -31,7 +57,7 @@ function euclidean(a: number[], b: number[]): number {
  * Simple k-means++ seeded k-means. Used as a fallback when HDBSCAN sees
  * uniform density and collapses everything into one cluster.
  */
-function kmeansAssignments(vectors: number[][], k: number, maxIter = 30): number[] {
+function kmeansAssignments(vectors: number[][], k: number, maxIter = 30, rng: () => number = Math.random): number[] {
   const n = vectors.length;
   const dim = vectors[0]?.length ?? 0;
   if (n === 0 || k <= 0) return [];
@@ -39,7 +65,7 @@ function kmeansAssignments(vectors: number[][], k: number, maxIter = 30): number
 
   // k-means++ initialisation
   const centroids: number[][] = [];
-  const firstIdx = Math.floor(Math.random() * n);
+  const firstIdx = Math.floor(rng() * n);
   centroids.push([...vectors[firstIdx]!]);
 
   for (let c = 1; c < k; c++) {
@@ -49,7 +75,7 @@ function kmeansAssignments(vectors: number[][], k: number, maxIter = 30): number
       return minD;
     });
     const total = dists.reduce((s, d) => s + d, 0);
-    let r = Math.random() * total;
+    let r = rng() * total;
     let picked = 0;
     for (let i = 0; i < n; i++) {
       r -= dists[i]!;
@@ -133,90 +159,25 @@ interface CondensedCluster {
  * @param minClusterSize  Minimum points for a group to be a cluster
  * @returns An array of cluster indices (0-based), one per input point.
  */
-export function hdbscanAssignments(
-  vectors: number[][],
+/**
+ * Shared HDBSCAN internals: takes sorted MST edges and produces cluster assignments.
+ * Used by both the dense (vector-based) and sparse (graph-based) HDBSCAN paths.
+ */
+function hdbscanFromMST(
+  mstEdges: { i: number; j: number; dist: number }[],
+  n: number,
   minClusterSize: number,
+  vectors: number[][], // for noise → nearest centroid assignment
 ): number[] {
-  const n = vectors.length;
   if (n === 0) return [];
   if (n === 1) return [0];
 
-  // minPts controls density smoothing (core distance = distance to minPts-th neighbor).
-  // Keep it small and independent of minClusterSize so that density estimation
-  // stays sensitive even when the user requests larger clusters.
-  const minPts = Math.min(3, n - 1);
-
-  // -----------------------------------------------------------------------
-  // Step 1: Compute core distances
-  // -----------------------------------------------------------------------
-  // For each point, the distance to its minPts-th nearest neighbor.
-  const coreDist = new Float64Array(n);
-  for (let i = 0; i < n; i++) {
-    const dists = new Float64Array(n - 1);
-    let idx = 0;
-    for (let j = 0; j < n; j++) {
-      if (i !== j) dists[idx++] = euclidean(vectors[i]!, vectors[j]!);
-    }
-    dists.sort();
-    coreDist[i] = dists[Math.min(minPts - 1, dists.length - 1)]!;
-  }
-
-  // Mutual reachability distance
-  function mreach(i: number, j: number): number {
-    return Math.max(coreDist[i]!, coreDist[j]!, euclidean(vectors[i]!, vectors[j]!));
-  }
-
-  // -----------------------------------------------------------------------
-  // Step 2: Build MST via Prim's algorithm with mutual reachability
-  // -----------------------------------------------------------------------
-  interface MSTEdge { i: number; j: number; dist: number }
-  const mstEdges: MSTEdge[] = [];
-  const inMST = new Uint8Array(n);
-  const minEdgeDist = new Float64Array(n).fill(Infinity);
-  const minEdgeFrom = new Int32Array(n).fill(-1);
-
-  inMST[0] = 1;
-  for (let j = 1; j < n; j++) {
-    minEdgeDist[j] = mreach(0, j);
-    minEdgeFrom[j] = 0;
-  }
-
-  for (let step = 1; step < n; step++) {
-    let bestIdx = -1;
-    let bestDist = Infinity;
-    for (let j = 0; j < n; j++) {
-      if (!inMST[j] && minEdgeDist[j]! < bestDist) {
-        bestDist = minEdgeDist[j]!;
-        bestIdx = j;
-      }
-    }
-    if (bestIdx < 0) break;
-
-    inMST[bestIdx] = 1;
-    mstEdges.push({ i: minEdgeFrom[bestIdx]!, j: bestIdx, dist: bestDist });
-
-    for (let j = 0; j < n; j++) {
-      if (inMST[j]) continue;
-      const d = mreach(bestIdx, j);
-      if (d < minEdgeDist[j]!) {
-        minEdgeDist[j] = d;
-        minEdgeFrom[j] = bestIdx;
-      }
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // Step 3: Sort MST edges by distance → build single-linkage dendrogram
-  // -----------------------------------------------------------------------
-  mstEdges.sort((a, b) => a.dist - b.dist);
-
-  // Dendrogram: nodes 0..n-1 are leaves, internal nodes appended as merges.
+  // Build single-linkage dendrogram from sorted MST edges
   const dendroLeft: number[] = new Array(n).fill(-1);
   const dendroRight: number[] = new Array(n).fill(-1);
   const dendroDist: number[] = new Array(n).fill(0);
   const dendroSize: number[] = new Array(n).fill(1);
 
-  // Union-find
   const ufParent = Int32Array.from({ length: n }, (_, i) => i);
   const ufRank = new Uint8Array(n);
   const ufDendroNode = Int32Array.from({ length: n }, (_, i) => i);
@@ -256,7 +217,6 @@ export function hdbscanAssignments(
 
   const treeRoot = dendroLeft.length - 1;
 
-  // Helper: collect all original point indices in a dendrogram subtree
   function collectPoints(rootIdx: number): number[] {
     const result: number[] = [];
     const stack = [rootIdx];
@@ -269,18 +229,14 @@ export function hdbscanAssignments(
     return result;
   }
 
-  // -----------------------------------------------------------------------
-  // Step 4: Build condensed tree + accumulate stability
-  // -----------------------------------------------------------------------
+  // Build condensed tree + accumulate stability
   const condensed: CondensedCluster[] = [];
   condensed.push({
     id: 0, birthLambda: 0, childIds: [], stability: 0,
     selected: false, allPointIndices: [],
   });
 
-  // Iterative walk — only recurse at real splits (bounded depth = condensed tree height)
   function walk(startNodeIdx: number, startClusterId: number): void {
-    // Use an explicit work-stack for the recursion at real splits
     const workStack: [number, number][] = [[startNodeIdx, startClusterId]];
 
     while (workStack.length > 0) {
@@ -288,10 +244,8 @@ export function hdbscanAssignments(
       let nodeIdx = initialNodeIdx;
       const cluster = condensed[clusterId]!;
 
-      // Iterate through noise ejections (tail-call style)
       while (true) {
         if (nodeIdx < n) {
-          // Leaf node — single point persists in this cluster
           cluster.allPointIndices.push(nodeIdx);
           break;
         }
@@ -306,37 +260,24 @@ export function hdbscanAssignments(
         const rightBig = rightSize >= minClusterSize;
 
         if (leftBig && rightBig) {
-          // ---- Real split: cluster dies, two children born ----
           cluster.stability += (lambda - cluster.birthLambda) * (leftSize + rightSize);
-
           const leftCId = condensed.length;
-          condensed.push({
-            id: leftCId, birthLambda: lambda, childIds: [], stability: 0,
-            selected: false, allPointIndices: [],
-          });
+          condensed.push({ id: leftCId, birthLambda: lambda, childIds: [], stability: 0, selected: false, allPointIndices: [] });
           const rightCId = condensed.length;
-          condensed.push({
-            id: rightCId, birthLambda: lambda, childIds: [], stability: 0,
-            selected: false, allPointIndices: [],
-          });
+          condensed.push({ id: rightCId, birthLambda: lambda, childIds: [], stability: 0, selected: false, allPointIndices: [] });
           cluster.childIds = [leftCId, rightCId];
-
-          // Process both children via the work stack
           workStack.push([leftIdx, leftCId]);
           workStack.push([rightIdx, rightCId]);
-          break; // done with this (nodeIdx, clusterId)
+          break;
         } else if (leftBig) {
-          // Right is noise — eject and continue with left
           cluster.stability += (lambda - cluster.birthLambda) * rightSize;
           cluster.allPointIndices.push(...collectPoints(rightIdx));
           nodeIdx = leftIdx;
         } else if (rightBig) {
-          // Left is noise — eject and continue with right
           cluster.stability += (lambda - cluster.birthLambda) * leftSize;
           cluster.allPointIndices.push(...collectPoints(leftIdx));
           nodeIdx = rightIdx;
         } else {
-          // Neither big enough — all points exit here
           cluster.stability += (lambda - cluster.birthLambda) * (leftSize + rightSize);
           cluster.allPointIndices.push(...collectPoints(nodeIdx));
           break;
@@ -344,7 +285,6 @@ export function hdbscanAssignments(
       }
     }
 
-    // Post-pass: propagate allPointIndices up to parent condensed clusters
     for (let i = condensed.length - 1; i >= 0; i--) {
       const c = condensed[i]!;
       for (const childId of c.childIds) {
@@ -355,27 +295,15 @@ export function hdbscanAssignments(
 
   walk(treeRoot, 0);
 
-  // -----------------------------------------------------------------------
-  // Step 5: Bottom-up stability selection
-  // -----------------------------------------------------------------------
+  // Bottom-up stability selection
   function selectClusters(cId: number): number {
     const c = condensed[cId]!;
-    if (c.childIds.length === 0) {
-      c.selected = true;
-      return c.stability;
-    }
-    const childStabilitySum = c.childIds.reduce(
-      (sum, childId) => sum + selectClusters(childId),
-      0,
-    );
-    if (childStabilitySum > c.stability) {
-      c.selected = false;
-      return childStabilitySum;
-    }
+    if (c.childIds.length === 0) { c.selected = true; return c.stability; }
+    const childStabilitySum = c.childIds.reduce((sum, childId) => sum + selectClusters(childId), 0);
+    if (childStabilitySum > c.stability) { c.selected = false; return childStabilitySum; }
     c.selected = true;
     function deselectSubtree(id: number): void {
-      const node = condensed[id]!;
-      node.selected = false;
+      const node = condensed[id]!; node.selected = false;
       for (const childId of node.childIds) deselectSubtree(childId);
     }
     for (const childId of c.childIds) deselectSubtree(childId);
@@ -384,16 +312,11 @@ export function hdbscanAssignments(
 
   selectClusters(0);
 
-  // -----------------------------------------------------------------------
-  // Step 6: Assign points to selected clusters
-  // -----------------------------------------------------------------------
+  // Assign points to selected clusters; noise to nearest centroid
   const dim = vectors[0]?.length ?? 0;
   const assignments = new Array<number>(n).fill(-1);
   const selectedClusters: CondensedCluster[] = condensed.filter((c) => c.selected);
-
-  if (selectedClusters.length === 0) {
-    return new Array<number>(n).fill(0);
-  }
+  if (selectedClusters.length === 0) return new Array<number>(n).fill(0);
 
   const centroids: number[][] = [];
   for (let sc = 0; sc < selectedClusters.length; sc++) {
@@ -409,7 +332,6 @@ export function hdbscanAssignments(
     for (const idx of indices) assignments[idx] = sc;
   }
 
-  // Assign noise points to nearest selected cluster centroid
   for (let i = 0; i < n; i++) {
     if (assignments[i] >= 0) continue;
     let bestCluster = 0;
@@ -424,6 +346,145 @@ export function hdbscanAssignments(
   return assignments;
 }
 
+/**
+ * Dense HDBSCAN: compute core distances and MST from all pairwise distances,
+ * then delegate to hdbscanFromMST for dendrogram + cluster extraction.
+ */
+export function hdbscanAssignments(
+  vectors: number[][],
+  minClusterSize: number,
+  minPtsOverride?: number,
+): number[] {
+  const n = vectors.length;
+  if (n === 0) return [];
+  if (n === 1) return [0];
+
+  const minPts = Math.min(minPtsOverride ?? 3, n - 1);
+
+  // Core distances
+  const coreDist = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const dists = new Float64Array(n - 1);
+    let idx = 0;
+    for (let j = 0; j < n; j++) {
+      if (i !== j) dists[idx++] = euclidean(vectors[i]!, vectors[j]!);
+    }
+    dists.sort();
+    coreDist[i] = dists[Math.min(minPts - 1, dists.length - 1)]!;
+  }
+
+  function mreach(i: number, j: number): number {
+    return Math.max(coreDist[i]!, coreDist[j]!, euclidean(vectors[i]!, vectors[j]!));
+  }
+
+  // MST via Prim's
+  interface MSTEdge { i: number; j: number; dist: number }
+  const mstEdges: MSTEdge[] = [];
+  const inMST = new Uint8Array(n);
+  const minEdgeDist = new Float64Array(n).fill(Infinity);
+  const minEdgeFrom = new Int32Array(n).fill(-1);
+
+  inMST[0] = 1;
+  for (let j = 1; j < n; j++) { minEdgeDist[j] = mreach(0, j); minEdgeFrom[j] = 0; }
+
+  for (let step = 1; step < n; step++) {
+    let bestIdx = -1;
+    let bestDist = Infinity;
+    for (let j = 0; j < n; j++) {
+      if (!inMST[j] && minEdgeDist[j]! < bestDist) { bestDist = minEdgeDist[j]!; bestIdx = j; }
+    }
+    if (bestIdx < 0) break;
+    inMST[bestIdx] = 1;
+    mstEdges.push({ i: minEdgeFrom[bestIdx]!, j: bestIdx, dist: bestDist });
+    for (let j = 0; j < n; j++) {
+      if (inMST[j]) continue;
+      const d = mreach(bestIdx, j);
+      if (d < minEdgeDist[j]!) { minEdgeDist[j] = d; minEdgeFrom[j] = bestIdx; }
+    }
+  }
+
+  mstEdges.sort((a, b) => a.dist - b.dist);
+  return hdbscanFromMST(mstEdges, n, minClusterSize, vectors);
+}
+
+/**
+ * Graph-based HDBSCAN: derive core distances and MST from the k-NN graph
+ * instead of computing all pairwise distances. Much faster for large n.
+ */
+function hdbscanFromKnnGraph(
+  graph: KNNGraph,
+  n: number,
+  minClusterSize: number,
+  minPts: number,
+  vectors: number[][], // for noise → nearest centroid
+): number[] {
+  if (n === 0) return [];
+  if (n === 1) return [0];
+
+  const effectiveMinPts = Math.min(minPts, graph.neighbors[0]?.length ?? 1);
+
+  // Core distances from k-NN neighbors
+  const coreDist = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const kNeighbors = graph.neighbors[i]!;
+    coreDist[i] = kNeighbors[Math.min(effectiveMinPts - 1, kNeighbors.length - 1)]!.dist;
+  }
+
+  // Collect all k-NN edges with mutual reachability distances (deduplicated i < j)
+  const mreachEdges: { i: number; j: number; dist: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    for (const nb of graph.neighbors[i]!) {
+      const j = nb.index;
+      if (i < j) {
+        mreachEdges.push({ i, j, dist: Math.max(coreDist[i]!, coreDist[j]!, nb.dist) });
+      }
+    }
+  }
+
+  // Kruskal's MST on sparse edges
+  mreachEdges.sort((a, b) => a.dist - b.dist);
+
+  const ufParent = Int32Array.from({ length: n }, (_, i) => i);
+  const ufRank = new Uint8Array(n);
+  function find(x: number): number {
+    let r = x;
+    while (ufParent[r] !== r) r = ufParent[r]!;
+    while (ufParent[x] !== r) { const next = ufParent[x]!; ufParent[x] = r; x = next; }
+    return r;
+  }
+
+  const mstEdges: { i: number; j: number; dist: number }[] = [];
+  for (const edge of mreachEdges) {
+    const ri = find(edge.i);
+    const rj = find(edge.j);
+    if (ri === rj) continue;
+    mstEdges.push(edge);
+    if (ufRank[ri]! < ufRank[rj]!) { ufParent[ri] = rj; }
+    else if (ufRank[ri]! > ufRank[rj]!) { ufParent[rj] = ri; }
+    else { ufParent[rj] = ri; ufRank[ri]!++; }
+    if (mstEdges.length === n - 1) break;
+  }
+
+  // If the k-NN graph is disconnected, some components won't be linked.
+  // Connect remaining components with large-distance dummy edges.
+  if (mstEdges.length < n - 1) {
+    const maxDist = mstEdges.length > 0 ? mstEdges[mstEdges.length - 1]!.dist * 2 : 1;
+    for (let i = 1; i < n; i++) {
+      const ri = find(0);
+      const rj = find(i);
+      if (ri !== rj) {
+        mstEdges.push({ i: 0, j: i, dist: maxDist });
+        if (ufRank[ri]! < ufRank[rj]!) { ufParent[ri] = rj; }
+        else if (ufRank[ri]! > ufRank[rj]!) { ufParent[rj] = ri; }
+        else { ufParent[rj] = ri; ufRank[ri]!++; }
+      }
+    }
+    mstEdges.sort((a, b) => a.dist - b.dist);
+  }
+
+  return hdbscanFromMST(mstEdges, n, minClusterSize, vectors);
+}
+
 // ---------------------------------------------------------------------------
 // UMAP: compress high-dimensional embeddings to 2D
 // ---------------------------------------------------------------------------
@@ -434,9 +495,9 @@ function normalizeVector(v: number[]): number[] {
 }
 
 /** Power-iteration PCA: extract one principal component. */
-function principalComponent(rows: number[][], previous: number[][] = []): number[] {
+function principalComponent(rows: number[][], previous: number[][] = [], rng: () => number = Math.random): number[] {
   const dim = rows[0]?.length ?? 0;
-  let component = normalizeVector(Array.from({ length: dim }, () => Math.random() - 0.5));
+  let component = normalizeVector(Array.from({ length: dim }, () => rng() - 0.5));
   for (let iter = 0; iter < 30; iter++) {
     const next = new Array<number>(dim).fill(0);
     for (const row of rows) {
@@ -453,48 +514,21 @@ function principalComponent(rows: number[][], previous: number[][] = []): number
   return component;
 }
 
-function pcaCoordinates(centered: number[][]): { x: number; y: number }[] {
-  const pc1 = principalComponent(centered);
-  const pc2 = principalComponent(centered, [pc1]);
-  return centered.map((row) => ({
-    x: row.reduce((sum, v, i) => sum + v * pc1[i]!, 0),
-    y: row.reduce((sum, v, i) => sum + v * pc2[i]!, 0),
-  }));
+// ---------------------------------------------------------------------------
+// k-NN graph (shared between UMAP runs)
+// ---------------------------------------------------------------------------
+
+interface KNNEdge { a: number; b: number; weight: number }
+
+interface KNNGraph {
+  edges: KNNEdge[];
+  neighbors: { index: number; dist: number }[][]; // per-point k nearest neighbors with raw euclidean distances
 }
 
-function normalizeCoordinates(coords: { x: number; y: number }[], targetScale = 3): { x: number; y: number }[] {
-  const xMean = coords.reduce((sum, c) => sum + c.x, 0) / Math.max(1, coords.length);
-  const yMean = coords.reduce((sum, c) => sum + c.y, 0) / Math.max(1, coords.length);
-  const centered = coords.map((c) => ({ x: c.x - xMean, y: c.y - yMean }));
-  const maxAbs = Math.max(...centered.flatMap((c) => [Math.abs(c.x), Math.abs(c.y)]), 1);
-  return centered.map((c) => ({ x: (c.x / maxAbs) * targetScale, y: (c.y / maxAbs) * targetScale }));
-}
-
-/**
- * Approximate UMAP: PCA-initialised force-directed layout that preserves
- * local neighborhoods while spreading global structure.
- *
- * Works on arbitrary high-dimensional vectors (128-dim encoder embeddings).
- */
-export function approximateUmap(vectors: number[][]): { x: number; y: number }[] {
+function buildKnnGraph(vectors: number[][], neighborCount: number): KNNGraph {
   const n = vectors.length;
-  if (n === 0) return [];
-
-  // Center vectors for PCA initialisation
-  const dim = vectors[0]?.length ?? 0;
-  const means = Array.from({ length: dim }, (_, j) =>
-    vectors.reduce((sum, v) => sum + v[j]!, 0) / n,
-  );
-  const centered = vectors.map((v) => v.map((val, j) => val - means[j]!));
-  const pcaInit = pcaCoordinates(centered);
-
-  if (n < 3) return normalizeCoordinates(pcaInit, 3);
-
-  const neighborCount = Math.min(12, n - 1);
-  const coords = normalizeCoordinates(pcaInit, 2);
-  const edges: { a: number; b: number; weight: number }[] = [];
-
-  // Build k-NN graph using Euclidean distance on the full embeddings
+  const edges: KNNEdge[] = [];
+  const neighbors: { index: number; dist: number }[][] = [];
   for (let i = 0; i < n; i++) {
     const distances: { index: number; distance: number }[] = [];
     for (let j = 0; j < n; j++) {
@@ -502,66 +536,159 @@ export function approximateUmap(vectors: number[][]): { x: number; y: number }[]
       distances.push({ index: j, distance: euclidSq(vectors[i]!, vectors[j]!) });
     }
     distances.sort((a, b) => a.distance - b.distance);
-    const localScale = Math.max(distances[neighborCount - 1]?.distance ?? distances[0]?.distance ?? 1, 0.001);
-    for (const neighbor of distances.slice(0, neighborCount)) {
+    const kNeighbors = distances.slice(0, neighborCount);
+    neighbors.push(kNeighbors.map((d) => ({ index: d.index, dist: Math.sqrt(d.distance) })));
+    const localScale = Math.max(kNeighbors[kNeighbors.length - 1]?.distance ?? kNeighbors[0]?.distance ?? 1, 0.001);
+    for (const neighbor of kNeighbors) {
       if (i < neighbor.index) {
         edges.push({ a: i, b: neighbor.index, weight: Math.exp(-neighbor.distance / localScale) });
       }
     }
   }
-
-  // Force-directed optimisation: attractive forces along edges, repulsive globally
-  const learningRate = 0.035;
-  for (let iter = 0; iter < 90; iter++) {
-    const forces = Array.from({ length: n }, () => ({ x: 0, y: 0 }));
-    for (const edge of edges) {
-      const a = coords[edge.a]!;
-      const b = coords[edge.b]!;
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      forces[edge.a]!.x += dx * edge.weight;
-      forces[edge.a]!.y += dy * edge.weight;
-      forces[edge.b]!.x -= dx * edge.weight;
-      forces[edge.b]!.y -= dy * edge.weight;
-    }
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const a = coords[i]!;
-        const b = coords[j]!;
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const distSq = dx * dx + dy * dy + 0.01;
-        const repulsion = 0.015 / distSq;
-        forces[i]!.x -= dx * repulsion;
-        forces[i]!.y -= dy * repulsion;
-        forces[j]!.x += dx * repulsion;
-        forces[j]!.y += dy * repulsion;
-      }
-    }
-    const step = learningRate * (1 - iter / 100);
-    for (let i = 0; i < n; i++) {
-      coords[i]!.x += Math.max(-0.1, Math.min(0.1, forces[i]!.x * step));
-      coords[i]!.y += Math.max(-0.1, Math.min(0.1, forces[i]!.y * step));
-    }
-  }
-
-  return normalizeCoordinates(coords, 3);
+  return { edges, neighbors };
 }
 
 // ---------------------------------------------------------------------------
-// computeSkeletons — HDBSCAN on high-dim vectors, UMAP for visualization
+// Generalized UMAP: project to arbitrary target dimensions
+// ---------------------------------------------------------------------------
+
+/** PCA initialization to `targetDim` dimensions. */
+function pcaInitNd(centered: number[][], targetDim: number, rng: () => number = Math.random): number[][] {
+  const pcs: number[][] = [];
+  for (let i = 0; i < targetDim; i++) {
+    pcs.push(principalComponent(centered, pcs, rng));
+  }
+  return centered.map((row) =>
+    pcs.map((pc) => row.reduce((sum, v, j) => sum + v * pc[j]!, 0)),
+  );
+}
+
+/** Normalize Nd coordinates: center and scale to ±targetScale. */
+function normalizeNd(coords: number[][], targetScale: number): number[][] {
+  const n = coords.length;
+  if (n === 0) return coords;
+  const d = coords[0]!.length;
+  const means = Array.from({ length: d }, (_, j) =>
+    coords.reduce((sum, c) => sum + c[j]!, 0) / n,
+  );
+  const centered = coords.map((c) => c.map((v, j) => v - means[j]!));
+  let maxAbs = 1;
+  for (const c of centered) for (const v of c) maxAbs = Math.max(maxAbs, Math.abs(v));
+  return centered.map((c) => c.map((v) => (v / maxAbs) * targetScale));
+}
+
+/**
+ * UMAP projection to `targetDim` dimensions using negative sampling.
+ * PCA-initialized, force-directed layout preserving local neighborhoods.
+ *
+ * @param edges       Pre-built k-NN graph edges
+ * @param n           Number of points
+ * @param targetDim   Output dimensionality (2 for viz, higher for clustering)
+ * @param vectors     Original high-dim vectors (for PCA initialization)
+ * @param negSamples  Negative samples per edge endpoint (default 5)
+ * @param iterations  Force-directed iterations (default 90)
+ */
+function umapProject(
+  edges: KNNEdge[],
+  n: number,
+  targetDim: number,
+  vectors: number[][],
+  negSamples: number = 5,
+  iterations: number = 90,
+  rng: () => number = Math.random,
+): number[][] {
+  if (n === 0) return [];
+
+  // PCA initialization
+  const dim = vectors[0]?.length ?? 0;
+  const means = Array.from({ length: dim }, (_, j) =>
+    vectors.reduce((sum, v) => sum + v[j]!, 0) / n,
+  );
+  const centered = vectors.map((v) => v.map((val, j) => val - means[j]!));
+  const pcaInit = pcaInitNd(centered, Math.min(targetDim, dim, n), rng);
+  const coords = normalizeNd(pcaInit, 2);
+
+  if (n < 3) return normalizeNd(coords, 3);
+
+  // Force-directed optimization with negative sampling
+  const learningRate = 0.035;
+  for (let iter = 0; iter < iterations; iter++) {
+    const forces: number[][] = Array.from({ length: n }, () => new Array(targetDim).fill(0));
+
+    // Attractive forces along k-NN edges
+    for (const edge of edges) {
+      const a = coords[edge.a]!;
+      const b = coords[edge.b]!;
+      for (let d = 0; d < targetDim; d++) {
+        const delta = b[d]! - a[d]!;
+        forces[edge.a]![d] += delta * edge.weight;
+        forces[edge.b]![d] -= delta * edge.weight;
+      }
+
+      // Negative sampling: for each edge endpoint, repulse against random points
+      for (let s = 0; s < negSamples; s++) {
+        const negA = Math.floor(rng() * n);
+        if (negA !== edge.a) {
+          let distSq = 0;
+          for (let d = 0; d < targetDim; d++) distSq += (coords[edge.a]![d]! - coords[negA]![d]!) ** 2;
+          distSq += 0.01;
+          const repulsion = 0.015 / distSq;
+          for (let d = 0; d < targetDim; d++) {
+            const delta = coords[negA]![d]! - coords[edge.a]![d]!;
+            forces[edge.a]![d] -= delta * repulsion;
+          }
+        }
+        const negB = Math.floor(rng() * n);
+        if (negB !== edge.b) {
+          let distSq = 0;
+          for (let d = 0; d < targetDim; d++) distSq += (coords[edge.b]![d]! - coords[negB]![d]!) ** 2;
+          distSq += 0.01;
+          const repulsion = 0.015 / distSq;
+          for (let d = 0; d < targetDim; d++) {
+            const delta = coords[negB]![d]! - coords[edge.b]![d]!;
+            forces[edge.b]![d] -= delta * repulsion;
+          }
+        }
+      }
+    }
+
+    const step = learningRate * (1 - iter / (iterations + 10));
+    const clamp = 0.1;
+    for (let i = 0; i < n; i++) {
+      for (let d = 0; d < targetDim; d++) {
+        coords[i]![d] += Math.max(-clamp, Math.min(clamp, forces[i]![d]! * step));
+      }
+    }
+  }
+
+  return normalizeNd(coords, 3);
+}
+
+/**
+ * Approximate UMAP to 2D: convenience wrapper around umapProject.
+ * Builds its own k-NN graph if not provided.
+ */
+export function approximateUmap(vectors: number[][], prebuiltEdges?: KNNEdge[], negSamples: number = 20, rng: () => number = Math.random): { x: number; y: number }[] {
+  const n = vectors.length;
+  if (n === 0) return [];
+  const edges = prebuiltEdges ?? buildKnnGraph(vectors, Math.min(50, n - 1)).edges;
+  const coords = umapProject(edges, n, 2, vectors, negSamples, 90, rng);
+  return coords.map((c) => ({ x: c[0]!, y: c[1]! }));
+}
+
+// ---------------------------------------------------------------------------
+// computeSkeletons — HDBSCAN on UMAP-Nd vectors, UMAP-2D for visualization
 // ---------------------------------------------------------------------------
 
 /**
  * Compute archetype clusters from deck embeddings.
  *
  * Flow:
- *   1. HDBSCAN on the full high-dimensional vectors (128-dim embeddings or
- *      TF-IDF) to find density-based clusters — this avoids the information
- *      loss that comes from clustering on a lossy 2D projection.
- *   2. UMAP on the same vectors to produce 2D coordinates for the scatter plot.
- *   3. Extract archetype skeleton metadata (core cards, sideboard, etc.)
- *      from the original pool/deck data.
+ *   1. Build k-NN graph on the high-dimensional vectors (shared).
+ *   2. UMAP to pcaDims dimensions for clustering (creates density contrast).
+ *   3. HDBSCAN on the UMAP-reduced vectors.
+ *   4. UMAP to 2D for scatter plot visualization (reuses k-NN graph).
+ *   5. Extract archetype skeleton metadata (core cards, sideboard, etc.)
  *
  * @param slimPools      Slim pool data for each seat
  * @param cardMeta       Card metadata keyed by oracle_id
@@ -569,7 +696,11 @@ export function approximateUmap(vectors: number[][]): { x: number; y: number }[]
  * @param embeddings     128-dim embeddings from the ML encoder (one per pool), or null
  *                       to fall back to TF-IDF clustering
  * @param deckBuilds     Optional built decks (mainboard/sideboard)
- * @returns { skeletons, umapCoords } — cluster data + 2D coordinates for the scatter plot
+ * @param umapDims       UMAP target dimensions for clustering (default 20, only used in 'umap' mode)
+ * @param minPts         Neighbors for density smoothing (default 3)
+ * @param clusterMode    'umap' = UMAP-Nd then HDBSCAN, 'graph' = HDBSCAN directly on k-NN graph
+ * @param knnK           Number of neighbors in k-NN graph (default 50)
+ * @param negSamples     Negative samples per edge in UMAP (default 20)
  */
 export function computeSkeletons(
   slimPools: SlimPool[],
@@ -577,9 +708,14 @@ export function computeSkeletons(
   minClusterSize: number,
   embeddings: number[][] | null,
   deckBuilds?: BuiltDeck[] | null,
-): { skeletons: ArchetypeSkeleton[]; umapCoords: { x: number; y: number }[] } {
+  umapDims: number = 20,
+  minPts: number = 3,
+  clusterMode: 'umap' | 'graph' = 'umap',
+  knnK: number = 50,
+  negSamples: number = 20,
+): { skeletons: ArchetypeSkeleton[]; umapCoords: { x: number; y: number }[]; clusterMethod: string } {
   const n = slimPools.length;
-  if (n === 0) return { skeletons: [], umapCoords: [] };
+  if (n === 0) return { skeletons: [], umapCoords: [], clusterMethod: 'hdbscan (umap)' };
 
   // Exclude basic lands
   const oracleIds = Object.keys(cardMeta).filter((id) => {
@@ -602,39 +738,58 @@ export function computeSkeletons(
   });
 
   // Choose the high-dimensional vectors for clustering and UMAP
-  let clusterVecs: number[][];
+  let rawVecs: number[][];
   if (embeddings && embeddings.length === n) {
-    clusterVecs = embeddings;
+    rawVecs = embeddings;
   } else {
     // Fallback: TF-IDF vectors
     const df = new Float32Array(dim);
     for (const v of vecs) for (let j = 0; j < dim; j++) if (v[j]) df[j]++;
     const idf = Float32Array.from({ length: dim }, (_, j) => Math.log((n + 1) / (df[j]! + 1)));
-    clusterVecs = vecs.map((v) => {
+    rawVecs = vecs.map((v) => {
       const vec = Array.from({ length: dim }, (_, j) => v[j]! * idf[j]!);
       const norm = Math.sqrt(vec.reduce((s, x) => s + x * x, 0));
       return norm > 0 ? vec.map((x) => x / norm) : vec;
     });
   }
 
-  // UMAP: project high-dimensional vectors to 2D for visualization
-  const umapCoords = approximateUmap(clusterVecs);
+  // Deterministic seeded RNG derived from pool data
+  const rng = createRng(deriveClusterSeed(slimPools));
 
-  // HDBSCAN on the 2D UMAP coordinates — high-dimensional euclidean distances
-  // concentrate (curse of dimensionality), making HDBSCAN see uniform density.
-  // The 2D UMAP projection preserves local structure and makes clusters separable.
-  // Our HDBSCAN implementation uses mutual reachability distances which prevents
-  // the chaining effect that previously caused split-island artefacts in 2D.
-  const umapVecs = umapCoords.map((c) => [c.x, c.y]);
-  let assignments = hdbscanAssignments(umapVecs, minClusterSize);
+  // Build k-NN graph once (shared between clustering and visualization)
+  const knnGraph = buildKnnGraph(rawVecs, Math.min(knnK, n - 1));
 
-  // If HDBSCAN collapsed to a single cluster (uniform density), fall back to
-  // k-means on the 2D coordinates so the user always gets meaningful groups.
-  const uniqueFromHdbscan = new Set(assignments);
-  if (uniqueFromHdbscan.size <= 1 && n >= 4) {
-    const k = Math.max(2, Math.min(12, Math.floor(Math.sqrt(n / 2))));
-    assignments = kmeansAssignments(umapVecs, k);
+  let assignments: number[];
+  let clusterMethod: string;
+
+  if (clusterMode === 'graph') {
+    // Graph-based: HDBSCAN directly on k-NN graph (no dimensionality reduction)
+    assignments = hdbscanFromKnnGraph(knnGraph, n, minClusterSize, minPts, rawVecs);
+    clusterMethod = 'hdbscan (graph)';
+
+    const uniqueFromHdbscan = new Set(assignments);
+    if (uniqueFromHdbscan.size <= 1 && n >= 4) {
+      const k = Math.max(2, Math.min(12, Math.floor(Math.sqrt(n / 2))));
+      assignments = kmeansAssignments(rawVecs, k, 30, rng);
+      clusterMethod = 'kmeans (fallback)';
+    }
+  } else {
+    // UMAP-Nd: reduce to umapDims, then HDBSCAN
+    const clusterVecs = umapProject(knnGraph.edges, n, umapDims, rawVecs, negSamples, 90, rng);
+    assignments = hdbscanAssignments(clusterVecs, minClusterSize, minPts);
+    clusterMethod = `hdbscan (umap-${umapDims}d)`;
+
+    const uniqueFromHdbscan = new Set(assignments);
+    if (uniqueFromHdbscan.size <= 1 && n >= 4) {
+      const k = Math.max(2, Math.min(12, Math.floor(Math.sqrt(n / 2))));
+      assignments = kmeansAssignments(clusterVecs, k, 30, rng);
+      clusterMethod = 'kmeans (fallback)';
+    }
   }
+
+  // UMAP to 2D for visualization (reuses k-NN graph, separate rng for independence)
+  const vizRng = createRng(deriveClusterSeed(slimPools) ^ 0x5a5a5a5a);
+  const umapCoords = approximateUmap(rawVecs, knnGraph.edges, negSamples, vizRng);
 
   // Determine the set of unique cluster IDs from the assignments
   const uniqueClusters = [...new Set(assignments)].sort((a, b) => a - b);
@@ -759,5 +914,6 @@ export function computeSkeletons(
   return {
     skeletons: skeletons.sort((a, b) => b.poolCount - a.poolCount),
     umapCoords,
+    clusterMethod,
   };
 }
