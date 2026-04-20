@@ -67,6 +67,7 @@ import {
   WebGLInferenceError,
 } from '../utils/draftBot';
 import { computeSkeletons, findCooccurrencePockets } from '../utils/draftSimulatorClustering';
+import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
 
@@ -2580,7 +2581,7 @@ interface DraftBreakdownRowSummary {
 }
 
 function getPoolMainCards(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta: Record<string, CardMeta>): string[] {
-  if (deck?.mainboard?.length) return deck.mainboard;
+  if (deck !== null) return deck.mainboard;
   return pool.picks.map((pick) => pick.oracle_id).filter((oracleId) => !!cardMeta[oracleId]);
 }
 
@@ -2631,40 +2632,259 @@ function getDraftComposition(
   };
 }
 
-// Oracle tag patterns for draft archetype theme detection.
-// Each entry maps a display label to a list of tag substrings — a card
-// "contributes" to a theme if any of its oracleTags contains one of the keywords.
-const TAG_THEME_RULES: Array<{ label: string; keywords: string[]; threshold: number }> = [
-  { label: 'Reanimator', keywords: ['reanimate'], threshold: 2 },
-  { label: 'Graveyard', keywords: ['graveyard-matter', 'self-mill', 'flashback', 'threshold', 'delirium', 'dredge'], threshold: 3 },
-  { label: 'Tokens', keywords: ['repeatable-creature-tokens', 'creates-token', 'token-matter', 'populate'], threshold: 3 },
-  { label: 'Sacrifice', keywords: ['sacrifice-outlet', 'sacrifice-matter', 'blood-artist'], threshold: 2 },
-  { label: 'Blink', keywords: ['blink'], threshold: 2 },
-  { label: 'Landfall', keywords: ['landfall'], threshold: 2 },
-  { label: 'Enchantress', keywords: ['enchantress'], threshold: 2 },
-  { label: 'Wheels', keywords: ['wheel'], threshold: 2 },
-  { label: 'Looting', keywords: ['loot'], threshold: 3 },
-  { label: 'Prowess', keywords: ['prowess'], threshold: 3 },
-];
 
-function inferDraftThemes(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta: Record<string, CardMeta>): string[] {
+/**
+ * Extracts all theme feature keys for a card — oracle tags (mapped to canonical
+ * archetype buckets), tribal subtypes, and broad card types — using a common
+ * prefix scheme:
+ *   otag:<bucket>  canonical archetype bucket from OTAG_BUCKET_MAP
+ *   ctype:<Type>   creature subtype (e.g. "ctype:Elf")
+ *   type:<Type>    broad card type (e.g. "type:Artifact")
+ *
+ * Only oracle tags present in OTAG_BUCKET_MAP are included — this filters out
+ * Scryfall metadata noise and maps aliases/sub-tags to a single canonical name.
+ */
+function extractThemeFeatures(type: string, oracleTags: string[] | undefined): string[] {
+  const features: string[] = [];
+  const typeLower = type.toLowerCase();
+
+  // Map oracle tags to canonical buckets; skip anything not in the map
+  const seen = new Set<string>();
+  for (const tag of oracleTags ?? []) {
+    const bucket = OTAG_BUCKET_MAP[tag];
+    if (bucket && !seen.has(bucket)) {
+      seen.add(bucket);
+      features.push(`otag:${bucket}`);
+    }
+  }
+
+  // Broad card types
+  if (typeLower.includes('artifact') && !typeLower.includes('enchantment')) features.push('type:Artifact');
+  if (typeLower.includes('enchantment')) features.push('type:Enchantment');
+  if (typeLower.includes('instant') || typeLower.includes('sorcery')) features.push('type:Spell');
+
+  // Creature types
+  if (typeLower.includes('creature')) {
+    const subtypePart = type.split('—')[1] ?? type.split('-')[1] ?? '';
+    for (const subtype of subtypePart.trim().split(/\s+/).filter((s) => s.length > 1)) {
+      features.push(`ctype:${subtype}`);
+    }
+  }
+
+  return features;
+}
+
+function pluralizeCreatureType(name: string): string {
+  if (name.endsWith('f')) return name.slice(0, -1) + 'ves'; // Elf → Elves, Wolf → Wolves
+  if (name.endsWith('s') || name.endsWith('x') || name.endsWith('z')) return name + 'es'; // Sphinx → Sphinxes
+  return name + 's';
+}
+
+/** Formats a feature key (otag:/ctype:/type:) into a display string. */
+function formatFeatureKey(key: string): string {
+  if (key.startsWith('otag:')) {
+    return key.slice(5).replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  if (key.startsWith('ctype:')) return pluralizeCreatureType(key.slice(6));
+  if (key.startsWith('type:')) return `${key.slice(5)}s`;
+  return key;
+}
+
+/**
+ * Formats a lift-ranked tag list as display strings (no count).
+ */
+function formatClusterThemeLabels(rankedTags: { tag: string; lift: number }[], limit = 10): string[] {
+  return rankedTags.slice(0, limit).map(({ tag }) => formatFeatureKey(tag));
+}
+
+const MIN_LIFT = 1.5;
+// A deck needs at least this many cards of a creature type to count as "running that tribe"
+const MIN_CTYPE_CARDS_PER_DECK = 5;
+// A creature type must appear as a real tribal plan in at least this many global decks
+const MIN_GLOBAL_CTYPE_DECKS = 5;
+// Additive smoothing pseudo-count for lift calculation.
+// Added to the global numerator before dividing, so a tag with 0-few global occurrences
+// gets treated as if it appeared LIFT_PSEUDO_COUNT times — limiting max lift for rare tags
+// without meaningfully affecting tags that appear frequently.
+const LIFT_PSEUDO_COUNT = 5;
+
+/**
+ * For each cluster, computes which features (oracle tags, tribal types, card types)
+ * are disproportionately present relative to the global baseline.
+ *
+ * Oracle tags and card types use per-card rates.
+ * Tribal uses per-deck rates: a deck "has" a tribe only if it runs ≥ MIN_CTYPE_CARDS_PER_DECK
+ * of that creature type, so incidental one-ofs don't inflate the signal.
+ *
+ * Returns a Map from poolIndex → features ranked by lift.
+ */
+function computeClusterThemes(
+  skeletons: ArchetypeSkeleton[],
+  simulatedPools: SimulatedPool[],
+  deckBuilds: BuiltDeck[] | null,
+  cardMeta: Record<string, CardMeta>,
+): { poolThemes: Map<number, { tag: string; lift: number }[]>; tagAllowlist: Set<string> } {
+  const poolByIndex = new Map(simulatedPools.map((p) => [p.poolIndex, p]));
+
+  // Collect all pool indices across all clusters
+  const allPoolIndices = skeletons.flatMap((s) => s.poolIndices);
+  const totalDecks = allPoolIndices.length;
+  if (totalDecks === 0) return { poolThemes: new Map(), tagAllowlist: new Set() };
+
+  // Global baseline — oracle tags and card types: per-card counts
+  const globalCardCount = new Map<string, number>(); // non-tribal features
+  let globalTotalCards = 0;
+  // Tribal: per-deck counts (how many decks run ≥ threshold of each type)
+  const globalCreatureTypeDeckCount = new Map<string, number>();
+
+  for (const poolIndex of allPoolIndices) {
+    const pool = poolByIndex.get(poolIndex);
+    if (!pool) continue;
+    const cards = getPoolMainCards(pool, deckBuilds?.[poolIndex] ?? null, cardMeta);
+    globalTotalCards += cards.length;
+
+    // Non-tribal per-card features
+    for (const oracleId of cards) {
+      const meta = cardMeta[oracleId];
+      for (const key of extractThemeFeatures(meta?.type ?? '', meta?.oracleTags)) {
+        if (!key.startsWith('ctype:')) globalCardCount.set(key, (globalCardCount.get(key) ?? 0) + 1);
+      }
+    }
+
+    // Tribal: count per-deck
+    const deckCreatureTypeCounts = new Map<string, number>();
+    for (const oracleId of cards) {
+      const meta = cardMeta[oracleId];
+      for (const key of extractThemeFeatures(meta?.type ?? '', meta?.oracleTags)) {
+        if (key.startsWith('ctype:')) deckCreatureTypeCounts.set(key, (deckCreatureTypeCounts.get(key) ?? 0) + 1);
+      }
+    }
+    for (const [key, count] of deckCreatureTypeCounts) {
+      if (count >= MIN_CTYPE_CARDS_PER_DECK) {
+        globalCreatureTypeDeckCount.set(key, (globalCreatureTypeDeckCount.get(key) ?? 0) + 1);
+      }
+    }
+  }
+
+  const result = new Map<number, { tag: string; lift: number }[]>();
+
+  for (const skeleton of skeletons) {
+    const clusterCardCount = new Map<string, number>();
+    let clusterTotalCards = 0;
+    const clusterCreatureTypeDeckCount = new Map<string, number>();
+    const clusterDeckCount = skeleton.poolIndices.length;
+
+    for (const poolIndex of skeleton.poolIndices) {
+      const pool = poolByIndex.get(poolIndex);
+      if (!pool) continue;
+      const cards = getPoolMainCards(pool, deckBuilds?.[poolIndex] ?? null, cardMeta);
+      clusterTotalCards += cards.length;
+
+      for (const oracleId of cards) {
+        const meta = cardMeta[oracleId];
+        for (const key of extractThemeFeatures(meta?.type ?? '', meta?.oracleTags)) {
+          if (!key.startsWith('ctype:')) clusterCardCount.set(key, (clusterCardCount.get(key) ?? 0) + 1);
+        }
+      }
+
+      const deckCreatureTypeCounts = new Map<string, number>();
+      for (const oracleId of cards) {
+        const meta = cardMeta[oracleId];
+        for (const key of extractThemeFeatures(meta?.type ?? '', meta?.oracleTags)) {
+          if (key.startsWith('ctype:')) deckCreatureTypeCounts.set(key, (deckCreatureTypeCounts.get(key) ?? 0) + 1);
+        }
+      }
+      for (const [key, count] of deckCreatureTypeCounts) {
+        if (count >= MIN_CTYPE_CARDS_PER_DECK) {
+          clusterCreatureTypeDeckCount.set(key, (clusterCreatureTypeDeckCount.get(key) ?? 0) + 1);
+        }
+      }
+    }
+
+    if (clusterTotalCards === 0) continue;
+
+    // Compute lift for non-tribal features (per-card rate)
+    const nonTribalEntries = [...clusterCardCount.keys()].map((tag) => {
+      const smoothedGlobalRate = ((globalCardCount.get(tag) ?? 0) + LIFT_PSEUDO_COUNT) / (globalTotalCards + LIFT_PSEUDO_COUNT);
+      const clusterRate = clusterCardCount.get(tag)! / clusterTotalCards;
+      const lift = clusterRate / smoothedGlobalRate;
+      return { tag, lift };
+    });
+
+    // Compute lift for creature type features (per-deck rate), cap at top 2
+    const creatureTypeEntries = [...clusterCreatureTypeDeckCount.keys()]
+      .filter((key) => (globalCreatureTypeDeckCount.get(key) ?? 0) >= MIN_GLOBAL_CTYPE_DECKS)
+      .map((tag) => {
+        const smoothedGlobalRate = ((globalCreatureTypeDeckCount.get(tag) ?? 0) + LIFT_PSEUDO_COUNT) / (totalDecks + LIFT_PSEUDO_COUNT);
+        const clusterRate = clusterCreatureTypeDeckCount.get(tag)! / clusterDeckCount;
+        const lift = clusterRate / smoothedGlobalRate;
+        return { tag, lift };
+      })
+      .filter(({ lift }) => lift >= MIN_LIFT)
+      .sort((a, b) => b.lift - a.lift)
+      .slice(0, 2);
+
+    const rankedTags = [...nonTribalEntries.filter(({ lift }) => lift >= MIN_LIFT), ...creatureTypeEntries]
+      .sort((a, b) => b.lift - a.lift);
+
+    for (const poolIndex of skeleton.poolIndices) {
+      result.set(poolIndex, rankedTags);
+    }
+  }
+
+  // Build dynamic tag allowlist: all tags that achieved lift >= MIN_LIFT in at least one cluster.
+  // This replaces a hardcoded allowlist — only discriminative tags (not uniform/noise ones) are included.
+  const tagAllowlist = new Set<string>();
+  for (const rankedTags of result.values()) {
+    for (const { tag } of rankedTags) tagAllowlist.add(tag);
+  }
+
+  return { poolThemes: result, tagAllowlist };
+}
+
+function inferDraftThemes(
+  pool: SimulatedPool,
+  deck: BuiltDeck | null,
+  cardMeta: Record<string, CardMeta>,
+  clusterThemes?: Map<number, { tag: string; lift: number }[]>,
+  tagAllowlist?: Set<string>,
+): string[] {
+  // Intersect cluster's lift-ranked features with features actually present in this deck
+  if (clusterThemes) {
+    const rankedTags = clusterThemes.get(pool.poolIndex);
+    if (rankedTags && rankedTags.length > 0) {
+      const cards = getPoolMainCards(pool, deck, cardMeta);
+      const deckFeatureCounts = new Map<string, number>();
+      for (const oracleId of cards) {
+        const meta = cardMeta[oracleId];
+        for (const key of extractThemeFeatures(meta?.type ?? '', meta?.oracleTags)) {
+          // Only count features in the dynamic allowlist — skips noise tags not discriminative in any cluster
+          if (!tagAllowlist || tagAllowlist.has(key)) {
+            deckFeatureCounts.set(key, (deckFeatureCounts.get(key) ?? 0) + 1);
+          }
+        }
+      }
+      const themes = rankedTags
+        .filter(({ tag }) => (deckFeatureCounts.get(tag) ?? 0) > 1)
+        .slice(0, 20)
+        .map(({ tag }) => `${formatFeatureKey(tag)} (${deckFeatureCounts.get(tag)!})`);
+      if (themes.length > 0) return themes;
+    }
+  }
+
+  // Fallback for runs without oracle tag data
   const cards = getPoolMainCards(pool, deck, cardMeta);
   let artifacts = 0;
   let enchantments = 0;
   let instantsSorceries = 0;
   let creatures = 0;
   const creatureTypeCounts = new Map<string, number>();
-
-  // Count oracle tag theme hits across mainboard cards
-  const tagHits = new Map<string, number>();
   for (const oracleId of cards) {
-    const meta = cardMeta[oracleId];
-    const type = meta?.type ?? '';
+    const type = cardMeta[oracleId]?.type ?? '';
     const typeLower = type.toLowerCase();
     if (typeLower.includes('artifact')) artifacts++;
     if (typeLower.includes('enchantment')) enchantments++;
     if (typeLower.includes('instant') || typeLower.includes('sorcery')) instantsSorceries++;
-
     if (typeLower.includes('creature')) {
       creatures++;
       const subtypePart = type.split('—')[1] ?? type.split('-')[1] ?? '';
@@ -2672,38 +2892,18 @@ function inferDraftThemes(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta:
         creatureTypeCounts.set(creatureType, (creatureTypeCounts.get(creatureType) ?? 0) + 1);
       }
     }
-
-    if (meta?.oracleTags?.length) {
-      for (const { label, keywords } of TAG_THEME_RULES) {
-        if (meta.oracleTags.some((tag) => keywords.some((kw) => tag.includes(kw)))) {
-          tagHits.set(label, (tagHits.get(label) ?? 0) + 1);
-        }
-      }
-    }
   }
-
-  // Primary: oracle tag themes sorted by hit count (most prevalent first)
-  const themes: string[] = TAG_THEME_RULES
-    .filter(({ label, threshold }) => (tagHits.get(label) ?? 0) >= threshold)
-    .sort((a, b) => (tagHits.get(b.label) ?? 0) - (tagHits.get(a.label) ?? 0))
-    .map(({ label }) => label);
-
-  // Secondary: type-based heuristics to fill remaining slots
   const topCreatureType = [...creatureTypeCounts.entries()].sort((a, b) => b[1] - a[1])[0];
-  if (themes.length < 3 && artifacts >= 5 && !themes.includes('Artifacts')) themes.push('Artifacts');
-  if (themes.length < 3 && instantsSorceries >= 8 && !themes.includes('Spells') && !themes.includes('Prowess')) themes.push('Spells');
-  if (themes.length < 3 && enchantments >= 5 && !themes.includes('Enchantments') && !themes.includes('Enchantress')) themes.push('Enchantments');
-  if (
-    themes.length < 3 &&
-    topCreatureType &&
-    topCreatureType[1] >= 4 &&
-    topCreatureType[1] / Math.max(1, creatures) >= 0.3
-  ) {
+  const themes: string[] = [];
+  if (artifacts >= 5) themes.push('Artifacts');
+  if (instantsSorceries >= 8) themes.push('Spells');
+  if (enchantments >= 5) themes.push('Enchantments');
+  if (topCreatureType && topCreatureType[1] >= 4 && topCreatureType[1] / Math.max(1, creatures) >= 0.3) {
     themes.push(`${topCreatureType[0]}s`);
   }
-  if (themes.length < 3 && creatures >= 16) themes.push('Creatures');
+  if (creatures >= 16 && themes.length < 20) themes.push('Creatures');
   if (themes.length === 0) themes.push(archetypeFullName(pool.archetype));
-  return themes.slice(0, 3);
+  return themes.slice(0, 30);
 }
 
 function getDraftHighlights(
@@ -2741,13 +2941,15 @@ function buildDraftBreakdownRowSummary(
   pool: SimulatedPool,
   deck: BuiltDeck | null,
   cardMeta: Record<string, CardMeta>,
+  clusterThemes?: Map<number, { tag: string; lift: number }[]>,
+  tagAllowlist?: Set<string>,
 ): DraftBreakdownRowSummary {
   const composition = getDraftComposition(pool, deck, cardMeta);
   return {
     pool,
     deck,
     colors: pool.archetype,
-    themes: inferDraftThemes(pool, deck, cardMeta),
+    themes: inferDraftThemes(pool, deck, cardMeta, clusterThemes, tagAllowlist),
     highlights: getDraftHighlights(pool, deck, cardMeta),
     ...composition,
   };
@@ -2856,6 +3058,7 @@ const DraftBreakdownTable: React.FC<{
   deckLoading: boolean;
   cardMeta: Record<string, CardMeta>;
   runData: SimulationRunData;
+  skeletons?: ArchetypeSkeleton[];
   viewMode: PoolViewMode;
   setViewMode: (mode: PoolViewMode) => void;
   highlightOracle?: string;
@@ -2870,6 +3073,7 @@ const DraftBreakdownTable: React.FC<{
   deckLoading,
   cardMeta,
   runData,
+  skeletons,
   viewMode,
   setViewMode,
   highlightOracle,
@@ -2891,9 +3095,20 @@ const DraftBreakdownTable: React.FC<{
   const [locationFilter, setLocationFilter] = useState<DeckLocationFilter>('all');
   const [poolPage, setPoolPage] = useState(1);
 
+  const { poolThemes: clusterThemes, tagAllowlist: clusterTagAllowlist } = useMemo(
+    () =>
+      skeletons && skeletons.length > 0
+        ? computeClusterThemes(skeletons, pools, deckBuilds, cardMeta)
+        : { poolThemes: undefined, tagAllowlist: undefined },
+    [skeletons, pools, deckBuilds, cardMeta],
+  );
+
   const summaries = useMemo(
-    () => pools.map((pool) => buildDraftBreakdownRowSummary(pool, deckBuilds?.[pool.poolIndex] ?? null, cardMeta)),
-    [pools, deckBuilds, cardMeta],
+    () =>
+      pools.map((pool) =>
+        buildDraftBreakdownRowSummary(pool, deckBuilds?.[pool.poolIndex] ?? null, cardMeta, clusterThemes, clusterTagAllowlist),
+      ),
+    [pools, deckBuilds, cardMeta, clusterThemes, clusterTagAllowlist],
   );
 
   const filtered = summaries.filter((summary) => {
@@ -3464,8 +3679,9 @@ const ClusterDetailPanel: React.FC<{
   commonCards?: SkeletonCard[];
   slimPools: SlimPool[];
   deckBuilds?: BuiltDeck[] | null;
+  themes?: string[];
   onClose: () => void;
-}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cardMeta, commonCards = [], slimPools, deckBuilds, onClose }) => {
+}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cardMeta, commonCards = [], slimPools, deckBuilds, themes, onClose }) => {
   // Compute actual color profile from deck color shares (≥10% threshold)
   const colorProfile = useMemo(() => {
     if (!clusterDeckBuilds || clusterDeckBuilds.length === 0) return skeleton.colorProfile;
@@ -3563,7 +3779,7 @@ const ClusterDetailPanel: React.FC<{
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 pt-2">
           <div><Text semibold className="text-lg leading-snug">
-            {selectedCardInfo ? `${selectedCardInfo.name} in Cluster ${clusterIndex + 1}` : `Cluster ${clusterIndex + 1}`}
+            Cluster {clusterIndex + 1}
           </Text></div>
           <div className="mt-1 flex items-center gap-1.5">
             <div className="flex items-center gap-0.5">
@@ -3579,14 +3795,16 @@ const ClusterDetailPanel: React.FC<{
               {archetypeFullName(colorProfile)} · {skeleton.poolCount} seats · {pct}%
             </Text>
           </div>
-          {selectedCardInfo && (selectedCardInfo.pickRate !== undefined || (selectedCardInfo.avgPickPosition ?? 0) > 0) && (
-            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-              {selectedCardInfo.pickRate !== undefined && (
-                <span className="text-sm text-text-secondary/50">Pick rate <span className="text-text-secondary/80">{(selectedCardInfo.pickRate * 100).toFixed(1)}%</span></span>
-              )}
-              {(selectedCardInfo.avgPickPosition ?? 0) > 0 && (
-                <span className="text-sm text-text-secondary/50">Avg pos <span className="text-text-secondary/80">{selectedCardInfo.avgPickPosition!.toFixed(1)}</span></span>
-              )}
+          {themes && themes.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {themes.map((theme) => (
+                <span
+                  key={theme}
+                  className="inline-flex text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary"
+                >
+                  {theme}
+                </span>
+              ))}
             </div>
           )}
         </div>
@@ -3598,37 +3816,13 @@ const ClusterDetailPanel: React.FC<{
           ✕
         </button>
       </div>
-      {(() => {
-        const displayCards = commonCards.length > 0 ? commonCards : skeleton.coreCards;
-        const label = commonCards.length > 0 ? 'Most common cards in matching pools' : 'Defining cards';
-        const hasSelected = selectedCardInfo && selectedCardInfo.cardImages.length > 0;
-        if (!hasSelected && displayCards.length === 0) return null;
-        return (
-          <div className="flex flex-col gap-3">
-            {hasSelected && (
-              <div className="grid grid-cols-6 gap-1.5">
-                {selectedCardInfo!.cardImages.map((img) => (
-                  <AutocardLink
-                    key={img.oracleId}
-                    href={`/tool/card/${encodeURIComponent(img.oracleId)}`}
-                    className="block hover:opacity-95"
-                    card={{ details: autocardDetails(img.oracleId, img.name, img.imageUrl) } as any}
-                  >
-                    <img src={img.imageUrl} alt={img.name} className="w-full rounded border-2 border-primary shadow-sm" />
-                  </AutocardLink>
-                ))}
-              </div>
-            )}
-            {displayCards.length > 0 && (
-              <div>
-                <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">{label}</Text>
-                <div className="grid grid-cols-6 gap-1.5">
-                  {displayCards.slice(0, hasSelected ? 6 : 12).map((card) => (
-                    <SkeletonCardImage key={card.oracle_id} card={card} />
-                  ))}
-                </div>
-              </div>
-            )}
+      {commonCards.length > 0 ? (
+        <div>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common cards in matching pools</Text>
+          <div className="grid grid-cols-6 gap-1.5">
+            {commonCards.slice(0, 12).map((card) => (
+              <SkeletonCardImage key={card.oracle_id} card={card} />
+            ))}
           </div>
         </div>
       ) : skeleton.coreCards.length > 0 && (
@@ -3824,13 +4018,15 @@ const ArchetypeSkeletonSection: React.FC<{
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
   clusterMethod: string;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterMethod }) => (
+  clusterThemesByClusterId?: Map<number, string[]>;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterMethod, clusterThemesByClusterId }) => (
   <ArchetypeSkeletonSectionInner
     skeletons={skeletons}
     totalPools={totalPools}
     selectedSkeletonId={selectedSkeletonId}
     onSelectSkeleton={onSelectSkeleton}
     clusterMethod={clusterMethod}
+    clusterThemesByClusterId={clusterThemesByClusterId}
   />
 );
 
@@ -3840,7 +4036,8 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
   clusterMethod: string;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterMethod }) => {
+  clusterThemesByClusterId?: Map<number, string[]>;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterMethod, clusterThemesByClusterId }) => {
 
   const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => (
     <div
@@ -3860,13 +4057,19 @@ const ArchetypeSkeletonSectionInner: React.FC<{
           <span className="text-xs text-text-secondary">
             {skeleton.poolCount} seats · {((skeleton.poolCount / totalPools) * 100).toFixed(1)}%
           </span>
-          <span>
-            {selectedSkeletonId === skeleton.clusterId && (
-              <span className="inline-flex w-fit text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
-                Filtering
-              </span>
-            )}
-          </span>
+          {clusterThemesByClusterId?.get(skeleton.clusterId)?.map((theme) => (
+            <span
+              key={theme}
+              className="inline-flex w-fit text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary"
+            >
+              {theme}
+            </span>
+          ))}
+          {selectedSkeletonId === skeleton.clusterId && (
+            <span className="inline-flex w-fit text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
+              Filtering
+            </span>
+          )}
         </div>
       </button>
       {skeleton.coreCards.length > 0 ? (
@@ -4558,6 +4761,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         : [],
     [displayRunData, displayedPools, skeletons, umapCoords],
   );
+
+  // Cluster-level theme labels (keyed by clusterId) for display in the archetype list
+  const clusterThemesByClusterId = useMemo(() => {
+    if (!displayRunData || skeletons.length === 0) return new Map<number, string[]>();
+    const { poolThemes } = computeClusterThemes(skeletons, displayedPools, activeDecks, displayRunData.cardMeta);
+    const result = new Map<number, string[]>();
+    for (const skeleton of skeletons) {
+      const rankedTags = poolThemes.get(skeleton.poolIndices[0] ?? -1);
+      if (rankedTags) result.set(skeleton.clusterId, formatClusterThemeLabels(rankedTags));
+    }
+    return result;
+  }, [displayRunData, skeletons, displayedPools, activeDecks]);
 
   const selectedCards = useMemo(
     () =>
@@ -5629,6 +5844,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                           commonCards={activeFilterPreview?.commonCards ?? []}
                                           slimPools={displayRunData.slimPools}
                                           deckBuilds={activeDecks}
+                                          themes={clusterThemesByClusterId.get(sk.clusterId)}
                                           onClose={() => {
                                             setSelectedSkeletonId(null);
                                             setFocusedPoolIndex(null);
@@ -5719,6 +5935,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                             setSelectedArchetype(null);
                           }}
                           clusterMethod={clusterMethod}
+                          clusterThemesByClusterId={clusterThemesByClusterId}
                         />
                       ) : (
                         <Text sm className="text-text-secondary">No archetypes found. Try lowering the minimum cluster size.</Text>
@@ -5904,6 +6121,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         deckLoading={simPhase === 'deckbuild'}
                         cardMeta={displayRunData.cardMeta}
                         runData={displayRunData}
+                        skeletons={skeletons}
                         viewMode={focusedPoolViewMode}
                         setViewMode={setFocusedPoolViewMode}
                         highlightOracle={selectedCard?.oracle_id}
