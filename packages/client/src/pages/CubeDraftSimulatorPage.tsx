@@ -66,7 +66,7 @@ import {
   reshapeEmbeddings,
   WebGLInferenceError,
 } from '../utils/draftBot';
-import { computeSkeletons } from '../utils/draftSimulatorClustering';
+import { computeSkeletons, findCooccurrencePockets } from '../utils/draftSimulatorClustering';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
 
@@ -406,11 +406,13 @@ const NumericInput: React.FC<{
   value: number;
   min: number;
   max?: number;
+  step?: number;
   onChange: (v: number) => void;
   disabled?: boolean;
   className?: string;
-}> = ({ value, min, max, onChange, disabled, className }) => {
+}> = ({ value, min, max, step, onChange, disabled, className }) => {
   const [draft, setDraft] = useState(String(value));
+  const isFloat = step !== undefined && step % 1 !== 0;
   // Keep draft in sync when the parent value changes externally
   const prevValueRef = useRef(value);
   useEffect(() => {
@@ -421,7 +423,7 @@ const NumericInput: React.FC<{
   }, [value]);
 
   const commit = () => {
-    const parsed = parseInt(draft, 10);
+    const parsed = isFloat ? parseFloat(draft) : parseInt(draft, 10);
     const clamped = isNaN(parsed) ? value : Math.max(min, max !== undefined ? Math.min(max, parsed) : parsed);
     prevValueRef.current = clamped;
     setDraft(String(clamped));
@@ -433,13 +435,14 @@ const NumericInput: React.FC<{
       type="number"
       min={min}
       max={max}
+      step={step}
       value={draft}
       disabled={disabled}
       className={className}
       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
         const nextDraft = e.target.value;
         setDraft(nextDraft);
-        const parsed = parseInt(nextDraft, 10);
+        const parsed = isFloat ? parseFloat(nextDraft) : parseInt(nextDraft, 10);
         if (!isNaN(parsed) && parsed >= min && (max === undefined || parsed <= max)) {
           prevValueRef.current = parsed;
           if (parsed !== value) onChange(parsed);
@@ -3388,8 +3391,10 @@ const ClusterDetailPanel: React.FC<{
   clusterDeckBuilds: BuiltDeck[] | null;
   cardMeta: Record<string, CardMeta>;
   commonCards?: SkeletonCard[];
+  slimPools: SlimPool[];
+  deckBuilds?: BuiltDeck[] | null;
   onClose: () => void;
-}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cardMeta, commonCards = [], onClose }) => {
+}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cardMeta, commonCards = [], slimPools, deckBuilds, onClose }) => {
   // Compute actual color profile from deck color shares (≥10% threshold)
   const colorProfile = useMemo(() => {
     if (!clusterDeckBuilds || clusterDeckBuilds.length === 0) return skeleton.colorProfile;
@@ -3407,6 +3412,78 @@ const ClusterDetailPanel: React.FC<{
     const significant = COLOR_KEYS.filter((k) => (shares[k] ?? 0) / total >= 0.1);
     return significant.length > 0 ? significant.join('') : 'C';
   }, [clusterDeckBuilds, cardMeta, skeleton.colorProfile]);
+
+  const [pocketCount, setPocketCount] = useState(3);
+  const pockets = useMemo(
+    () => findCooccurrencePockets(skeleton.poolIndices, slimPools, cardMeta, pocketCount, deckBuilds),
+    [skeleton.poolIndices, slimPools, cardMeta, pocketCount, deckBuilds],
+  );
+
+  // Greedy co-occurrence chain: each card is chosen because it appears alongside
+  // ALL previously selected cards as often as possible.
+  const hasDecks = deckBuilds && deckBuilds.length === slimPools.length;
+  const [topN, setTopN] = useState(10);
+  const coreChain = useMemo(() => {
+    if (!hasDecks) return [];
+
+    // Build per-deck top-N rated mainboard card sets
+    const deckCardSets: Set<string>[] = [];
+    for (const pi of skeleton.poolIndices) {
+      const deck = deckBuilds![pi]!;
+      const mainboardSet = new Set(deck.mainboard);
+      const ratings = deck.deckbuildRatings;
+      let topCards: string[];
+      if (ratings && ratings.length > 0) {
+        topCards = ratings
+          .filter((r) => mainboardSet.has(r.oracle))
+          .slice(0, topN)
+          .map((r) => r.oracle);
+      } else {
+        topCards = deck.mainboard.slice(0, topN);
+      }
+      deckCardSets.push(new Set(topCards));
+    }
+
+    // Greedy chain: pick card that co-occurs most with all previously selected
+    const chain: { oracle_id: string; name: string; imageUrl: string; cooccurrence: number }[] = [];
+    let matchingDecks = deckCardSets.map((_, i) => i); // all decks initially
+    const used = new Set<string>();
+
+    for (let step = 0; step < 18; step++) {
+      if (matchingDecks.length === 0) break;
+
+      // Count each unused card's frequency in the current matching set
+      const counts = new Map<string, number>();
+      for (const di of matchingDecks) {
+        for (const id of deckCardSets[di]!) {
+          if (!used.has(id)) counts.set(id, (counts.get(id) ?? 0) + 1);
+        }
+      }
+      if (counts.size === 0) break;
+
+      // Pick the card with highest frequency in matching decks
+      let bestCard = '';
+      let bestCount = 0;
+      for (const [id, count] of counts) {
+        if (count > bestCount) { bestCount = count; bestCard = id; }
+      }
+      if (!bestCard) break;
+
+      const rate = bestCount / matchingDecks.length;
+      chain.push({
+        oracle_id: bestCard,
+        name: cardMeta[bestCard]?.name ?? bestCard,
+        imageUrl: cardMeta[bestCard]?.imageUrl ?? '',
+        cooccurrence: rate,
+      });
+      used.add(bestCard);
+
+      // Narrow to decks that contain this card
+      matchingDecks = matchingDecks.filter((di) => deckCardSets[di]!.has(bestCard));
+    }
+
+    return chain;
+  }, [skeleton.poolIndices, deckBuilds, cardMeta, topN, hasDecks]);
 
   const colorCodes = getColorProfileCodes(colorProfile);
   const pct = totalPools > 0 ? ((skeleton.poolCount / totalPools) * 100).toFixed(1) : '0';
@@ -3453,6 +3530,61 @@ const ClusterDetailPanel: React.FC<{
           <div className="grid grid-cols-6 gap-1.5">
             {skeleton.coreCards.slice(0, 12).map((card) => (
               <SkeletonCardImage key={card.oracle_id} card={card} />
+            ))}
+          </div>
+        </div>
+      )}
+      {skeleton.signatureCards && skeleton.signatureCards.length > 0 && (
+        <div>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Signature cards (unique to this archetype)</Text>
+          <div className="grid grid-cols-6 gap-1.5">
+            {skeleton.signatureCards.slice(0, 8).map((card) => (
+              <SkeletonCardImage key={card.oracle_id} card={card} />
+            ))}
+          </div>
+        </div>
+      )}
+      {coreChain.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider">Core Package</Text>
+            <label className="text-xs text-text-secondary whitespace-nowrap" title="Top N rated cards per deck to consider">top</label>
+            <NumericInput min={5} max={23} value={topN} onChange={setTopN} className="w-14" />
+          </div>
+          <div className="grid grid-cols-6 gap-1.5">
+            {coreChain.map((card) => (
+              <SkeletonCardImage
+                key={card.oracle_id}
+                card={{ oracle_id: card.oracle_id, name: card.name, imageUrl: card.imageUrl, fraction: card.cooccurrence }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {pockets.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider">Card Pockets</Text>
+            <NumericInput min={2} max={10} value={pocketCount} onChange={setPocketCount} className="w-14" />
+          </div>
+          <div className="flex flex-col gap-2">
+            {pockets.map((pocket) => (
+              <div key={pocket.pocketIndex} className="rounded border border-border/50 p-2">
+                <Text xs className="text-text-secondary font-medium mb-1">Pocket {pocket.pocketIndex + 1}</Text>
+                {pocket.cards.length > 0 ? (
+                  <div className="flex flex-row gap-1 overflow-x-auto pb-0.5">
+                    {pocket.cards.map((card) => (
+                      <SkeletonCardImage
+                        key={card.oracle_id}
+                        card={{ oracle_id: card.oracle_id, name: card.name, imageUrl: card.imageUrl, fraction: card.frequency }}
+                        size={80}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Text xs className="text-text-secondary">No cards</Text>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -3665,7 +3797,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [loadingRun, setLoadingRun] = useState(false);
 
   // Session-level cache — avoids recomputing embeddings when switching between runs
-  const embeddingsCache = useRef<Map<string, number[][] | null>>(new Map());
+  const embeddingsCache = useRef<Map<string, number[][] | Record<string, number[]> | null>>(new Map());
   const [deleteRunModalOpen, setDeleteRunModalOpen] = useState(false);
   const [runPendingDelete, setRunPendingDelete] = useState<SimulationRunEntry | null>(null);
   const [clearHistoryModalOpen, setClearHistoryModalOpen] = useState(false);
@@ -3703,8 +3835,16 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [pendingKnnK, setPendingKnnK] = useState(50);
   const [negSamples, setNegSamples] = useState(20);
   const [pendingNegSamples, setPendingNegSamples] = useState(20);
-  const [clusterMode, setClusterMode] = useState<'umap' | 'graph'>('umap');
+  const [clusterMode, setClusterMode] = useState<'umap' | 'graph' | 'leiden' | 'nmf'>('leiden');
   const [clusterSeed, setClusterSeed] = useState(0);
+  const [resolution, setResolution] = useState(1.0);
+  const [pendingResolution, setPendingResolution] = useState(1.0);
+  const [numTopics, setNumTopics] = useState(0);
+  const [pendingNumTopics, setPendingNumTopics] = useState(0);
+  const [distanceMetric, setDistanceMetric] = useState<'euclidean' | 'cosine'>('cosine');
+  const [useHybridEmbeddings, setUseHybridEmbeddings] = useState(false);
+  const [hybridWeight, setHybridWeight] = useState(5.0);
+  const [pendingHybridWeight, setPendingHybridWeight] = useState(5.0);
 
   // Reconstruct SimulatedPool[] from slim pools for display (works for both fresh and historical)
   const simulatedPools = useMemo(
@@ -4166,6 +4306,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [clusterMethod, setClusterMethod] = useState<string>('hdbscan (umap)');
   const [clusteringInProgress, setClusteringInProgress] = useState(false);
   const [poolEmbeddings, setPoolEmbeddings] = useState<number[][] | null>(null);
+  const [cardEmbeddings, setCardEmbeddings] = useState<Record<string, number[]> | null>(null);
 
   // Compute 128-dim embeddings for each pool via the ML encoder.
   // Uses deck mainboards when available (better signal), falls back to pick sequences.
@@ -4175,12 +4316,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   useEffect(() => {
     if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {
       setPoolEmbeddings(null);
+      setCardEmbeddings(null);
       return;
     }
     const hasDecks = !!(activeDecks && activeDecks.length === displayRunData.slimPools.length);
     const cacheKey = `${selectedTs}-${hasDecks ? 'decks' : 'picks'}`;
     if (embeddingsCache.current.has(cacheKey)) {
-      setPoolEmbeddings(embeddingsCache.current.get(cacheKey)!);
+      setPoolEmbeddings(embeddingsCache.current.get(cacheKey) as number[][] | null);
+      // Also restore card embeddings if cached
+      const cardCacheKey = `${selectedTs}-cards`;
+      if (embeddingsCache.current.has(cardCacheKey)) {
+        setCardEmbeddings(embeddingsCache.current.get(cardCacheKey) as Record<string, number[]> | null);
+      }
       return;
     }
     let cancelled = false;
@@ -4197,6 +4344,26 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
           const result = reshapeEmbeddings(flat, pools.length);
           embeddingsCache.current.set(cacheKey, result);
           setPoolEmbeddings(result);
+        }
+
+        // Encode individual cards (one-hot) for theme decomposition
+        const cardCacheKey = `${selectedTs}-cards`;
+        if (!embeddingsCache.current.has(cardCacheKey)) {
+          const oracleIds = Object.keys(displayRunData.cardMeta).filter((id) => {
+            const t = (displayRunData.cardMeta[id]?.type ?? '').toLowerCase();
+            return !(t.includes('basic') && t.includes('land'));
+          });
+          const oneHotPools = oracleIds.map((id) => [id]);
+          const cardFlat = await encodePools(oneHotPools, remapping);
+          if (!cancelled) {
+            const cardVecs = reshapeEmbeddings(cardFlat, oracleIds.length);
+            const cardMap: Record<string, number[]> = {};
+            for (let i = 0; i < oracleIds.length; i++) cardMap[oracleIds[i]!] = cardVecs[i]!;
+            embeddingsCache.current.set(cardCacheKey, cardMap);
+            setCardEmbeddings(cardMap);
+          }
+        } else if (!cancelled) {
+          setCardEmbeddings(embeddingsCache.current.get(cardCacheKey) as Record<string, number[]>);
         }
       } catch {
         if (!cancelled) {
@@ -4219,7 +4386,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setClusteringInProgress(true);
     // setTimeout lets the loading state paint before the synchronous compute blocks
     const timer = setTimeout(() => {
-      const result = computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, minClusterSize, poolEmbeddings, activeDecks, pcaDims, minPts, clusterMode, knnK, negSamples);
+      const result = computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, minClusterSize, poolEmbeddings, activeDecks, pcaDims, minPts, clusterMode, knnK, negSamples, resolution, numTopics, distanceMetric, useHybridEmbeddings, hybridWeight);
       setSkeletons(result.skeletons);
       setUmapCoords(result.umapCoords);
       setClusterMethod(result.clusterMethod);
@@ -4227,7 +4394,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }, 20);
     return () => clearTimeout(timer);
     // clusterSeed intentionally triggers re-cluster without being a real dependency
-  }, [displayRunData, minClusterSize, pcaDims, minPts, clusterMode, knnK, negSamples, clusterSeed, activeDecks, poolEmbeddings]);
+  }, [displayRunData, minClusterSize, pcaDims, minPts, clusterMode, knnK, negSamples, clusterSeed, activeDecks, poolEmbeddings, resolution, numTopics, distanceMetric, useHybridEmbeddings, hybridWeight]);
   const draftMapPoints = useMemo(
     () =>
       displayRunData
@@ -5047,44 +5214,105 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                       Deck Color
                                     </button>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-1">
-                                    <div className="flex flex-row gap-0.5">
+                                  <div className="flex flex-col items-start gap-2">
+                                    <div className="flex flex-row flex-wrap items-center gap-1">
+                                      <div className="flex flex-row gap-0.5">
+                                        {(['umap', 'graph', 'leiden', 'nmf'] as const).map((mode, idx, arr) => (
+                                          <button
+                                            key={mode}
+                                            type="button"
+                                            onClick={() => { setClusterMode(mode); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                            className={[
+                                              'px-2 py-0.5 text-xs font-medium border transition-colors',
+                                              idx === 0 ? 'rounded-l' : idx === arr.length - 1 ? 'rounded-r' : '',
+                                              clusterMode === mode
+                                                ? 'bg-link text-white border-link'
+                                                : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
+                                            ].join(' ')}
+                                          >
+                                            {mode === 'umap' ? 'UMAP' : mode === 'graph' ? 'Graph' : mode === 'leiden' ? 'Leiden' : 'NMF'}
+                                          </button>
+                                        ))}
+                                      </div>
+                                      <div className="flex flex-row gap-0.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => { setDistanceMetric('euclidean'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                          className={[
+                                            'px-2 py-0.5 rounded-l text-xs font-medium border transition-colors',
+                                            distanceMetric === 'euclidean'
+                                              ? 'bg-link text-white border-link'
+                                              : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
+                                          ].join(' ')}
+                                          title="Euclidean distance for k-NN graph"
+                                        >
+                                          Euclid
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => { setDistanceMetric('cosine'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                          className={[
+                                            'px-2 py-0.5 rounded-r text-xs font-medium border transition-colors',
+                                            distanceMetric === 'cosine'
+                                              ? 'bg-link text-white border-link'
+                                              : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
+                                          ].join(' ')}
+                                          title="Cosine distance for k-NN graph (direction over magnitude)"
+                                        >
+                                          Cosine
+                                        </button>
+                                      </div>
                                       <button
                                         type="button"
-                                        onClick={() => { setClusterMode('umap'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                        onClick={() => { setUseHybridEmbeddings(!useHybridEmbeddings); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
                                         className={[
-                                          'px-2 py-0.5 rounded-l text-xs font-medium border transition-colors',
-                                          clusterMode === 'umap'
+                                          'px-2 py-0.5 rounded text-xs font-medium border transition-colors',
+                                          useHybridEmbeddings
                                             ? 'bg-link text-white border-link'
                                             : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
                                         ].join(' ')}
+                                        title="Append color + type distribution features to embeddings"
                                       >
-                                        UMAP
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => { setClusterMode('graph'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
-                                        className={[
-                                          'px-2 py-0.5 rounded-r text-xs font-medium border transition-colors',
-                                          clusterMode === 'graph'
-                                            ? 'bg-link text-white border-link'
-                                            : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
-                                        ].join(' ')}
-                                      >
-                                        Graph
+                                        Hybrid
                                       </button>
                                     </div>
-                                    <div className="grid grid-cols-3 gap-x-2 gap-y-1 sm:flex sm:flex-row sm:items-center sm:gap-1">
-                                      <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="k-NN neighbors — more = stronger cluster signal">k-NN K</label>
+                                    <div className="grid grid-cols-3 gap-x-2 gap-y-1 sm:flex sm:flex-row sm:items-center sm:gap-1 flex-wrap">
+                                      <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="k-NN neighbors">k-NN K</label>
                                       <NumericInput min={5} max={200} value={pendingKnnK} onChange={setPendingKnnK} className="w-14 col-span-2" />
-                                      <label className={['text-xs font-medium whitespace-nowrap col-span-1', clusterMode === 'graph' ? 'text-text-secondary/40' : 'text-text-secondary'].join(' ')} title="UMAP target dimensions for clustering">UMAP Dims</label>
-                                      <NumericInput min={2} max={128} value={pendingPcaDims} onChange={setPendingPcaDims} className={['w-14 col-span-2', clusterMode === 'graph' ? 'opacity-40' : ''].join(' ')} />
-                                      <label className={['text-xs font-medium whitespace-nowrap col-span-1', clusterMode === 'graph' ? 'text-text-secondary/40' : 'text-text-secondary'].join(' ')} title="Negative samples per edge in UMAP force layout">Neg Samp</label>
-                                      <NumericInput min={1} max={50} value={pendingNegSamples} onChange={setPendingNegSamples} className={['w-14 col-span-2', clusterMode === 'graph' ? 'opacity-40' : ''].join(' ')} />
-                                      <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Minimum number of pools to form a cluster">Min Size</label>
-                                      <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-14 col-span-2" />
-                                      <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Neighbors for density smoothing (higher = smoother density estimate)">Min Pts</label>
-                                      <NumericInput min={2} max={20} value={pendingMinPts} onChange={setPendingMinPts} className="w-14 col-span-2" />
+                                      {clusterMode === 'leiden' && (
+                                        <>
+                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Leiden resolution: higher = more smaller communities">Resol</label>
+                                          <NumericInput min={0.1} max={10} step={0.1} value={pendingResolution} onChange={setPendingResolution} className="w-16 col-span-2" />
+                                        </>
+                                      )}
+                                      {clusterMode === 'nmf' && (
+                                        <>
+                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Number of topics (0 = auto)">Topics</label>
+                                          <NumericInput min={0} max={100} value={pendingNumTopics} onChange={setPendingNumTopics} className="w-14 col-span-2" />
+                                        </>
+                                      )}
+                                      {clusterMode === 'umap' && (
+                                        <>
+                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="UMAP target dimensions for clustering">UMAP Dims</label>
+                                          <NumericInput min={2} max={128} value={pendingPcaDims} onChange={setPendingPcaDims} className="w-14 col-span-2" />
+                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Negative samples per edge in UMAP force layout">Neg Samp</label>
+                                          <NumericInput min={1} max={50} value={pendingNegSamples} onChange={setPendingNegSamples} className="w-14 col-span-2" />
+                                        </>
+                                      )}
+                                      {(clusterMode === 'umap' || clusterMode === 'graph') && (
+                                        <>
+                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Minimum number of pools to form a cluster">Min Size</label>
+                                          <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-14 col-span-2" />
+                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Neighbors for density smoothing">Min Pts</label>
+                                          <NumericInput min={2} max={20} value={pendingMinPts} onChange={setPendingMinPts} className="w-14 col-span-2" />
+                                        </>
+                                      )}
+                                      {useHybridEmbeddings && (
+                                        <>
+                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Scale factor for structural features relative to embedding">Hybrid W</label>
+                                          <NumericInput min={0.5} max={20} step={0.5} value={pendingHybridWeight} onChange={setPendingHybridWeight} className="w-16 col-span-2" />
+                                        </>
+                                      )}
                                     </div>
                                     <button
                                       type="button"
@@ -5095,6 +5323,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                         setNegSamples(pendingNegSamples);
                                         setMinClusterSize(pendingMinClusterSize);
                                         setMinPts(pendingMinPts);
+                                        setResolution(pendingResolution);
+                                        setNumTopics(pendingNumTopics);
+                                        setHybridWeight(pendingHybridWeight);
                                         setSelectedSkeletonId(null);
                                         setFocusedPoolIndex(null);
                                         setClusterSeed((s) => s + 1);
@@ -5226,6 +5457,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                           clusterDeckBuilds={clusterDecks}
                                           cardMeta={displayRunData.cardMeta}
                                           commonCards={activeFilterPreview?.commonCards ?? []}
+                                          slimPools={displayRunData.slimPools}
+                                          deckBuilds={activeDecks}
                                           onClose={() => {
                                             setSelectedSkeletonId(null);
                                             setFocusedPoolIndex(null);
