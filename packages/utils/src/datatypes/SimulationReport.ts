@@ -149,6 +149,7 @@ export interface SimulationReport extends SimulationRunData {
 export interface BuiltDeck {
   mainboard: string[];
   sideboard: string[];
+  deckbuildRatings?: { oracle: string; rating: number }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -177,7 +178,8 @@ export interface ArchetypeSkeleton {
   colorProfile: string; // e.g. "UR", "BGW", "C"
   poolCount: number;
   poolIndices: number[]; // indices into slimPools
-  coreCards: SkeletonCard[]; // cards most distinctive to the cluster
+  coreCards: SkeletonCard[]; // cards most distinctive to the cluster (fraction × IDF)
+  signatureCards?: SkeletonCard[]; // cards unique to this cluster vs neighbors (contrastive scoring)
   occasionalCards: SkeletonCard[]; // deprecated; kept for older locally stored runs
   sideboardCards: SkeletonCard[]; // most common sideboard-only cards across decks in this cluster
   lockPairs: LockPair[]; // pairs co-occurring > 60% and well above independence baseline

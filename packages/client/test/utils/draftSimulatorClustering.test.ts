@@ -1,4 +1,4 @@
-import { approximateUmap, computeSkeletons, euclidSq, hdbscanAssignments } from '../../src/utils/draftSimulatorClustering';
+import { approximateUmap, buildKnnGraph, computeSkeletons, cosineDist, euclidSq, hdbscanAssignments, leidenAssignments, nmfAssignments } from '../../src/utils/draftSimulatorClustering';
 
 const makeMeta = (id: string, type = 'Creature', colorIdentity: string[] = []) => ({
   name: id,
@@ -268,5 +268,175 @@ describe('computeSkeletons', () => {
     const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'graph');
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
     expect(result.umapCoords).toHaveLength(4);
+  });
+
+  it('supports leiden clustering mode', () => {
+    const meta = { a: makeMeta('a', 'Creature', ['R']), b: makeMeta('b', 'Creature', ['G']), c: makeMeta('c', 'Creature', ['U']) };
+    const pools = [
+      ...Array.from({ length: 4 }, (_, i) => makePool(0, i, ['a'])),
+      ...Array.from({ length: 4 }, (_, i) => makePool(1, i, ['b'])),
+    ];
+    const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'leiden', 50, 20, 1.0);
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+    expect(result.umapCoords).toHaveLength(8);
+    expect(result.clusterMethod).toContain('leiden');
+  });
+
+  it('supports nmf clustering mode', () => {
+    const meta = { a: makeMeta('a', 'Creature', ['R']), b: makeMeta('b', 'Creature', ['G']) };
+    const pools = [
+      ...Array.from({ length: 4 }, (_, i) => makePool(0, i, ['a'])),
+      ...Array.from({ length: 4 }, (_, i) => makePool(1, i, ['b'])),
+    ];
+    const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'nmf', 50, 20, 1.0, 2);
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+    expect(result.umapCoords).toHaveLength(8);
+    expect(result.clusterMethod).toContain('nmf');
+  });
+
+  it('populates signatureCards for clusters', () => {
+    const meta = {
+      shared: makeMeta('shared', 'Creature', ['U']),
+      uniqueA: makeMeta('uniqueA', 'Creature', ['R']),
+      uniqueB: makeMeta('uniqueB', 'Creature', ['G']),
+    };
+    const pools = [
+      makePool(0, 0, ['shared', 'uniqueA']),
+      makePool(0, 1, ['shared', 'uniqueA']),
+      makePool(0, 2, ['shared', 'uniqueA']),
+      makePool(1, 0, ['shared', 'uniqueB']),
+      makePool(1, 1, ['shared', 'uniqueB']),
+      makePool(1, 2, ['shared', 'uniqueB']),
+    ];
+    const result = computeSkeletons(pools, meta, 2, null);
+    for (const skel of result.skeletons) {
+      expect(skel.signatureCards).toBeDefined();
+    }
+  });
+
+  it('supports cosine distance metric', () => {
+    const meta = { a: makeMeta('a'), b: makeMeta('b') };
+    const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['a', 'b'])];
+    const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'umap', 50, 20, 1.0, 0, 'cosine');
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// cosineDist
+// ---------------------------------------------------------------------------
+describe('cosineDist', () => {
+  it('returns 0 for identical vectors', () => {
+    expect(cosineDist([1, 2, 3], [1, 2, 3])).toBeCloseTo(0);
+  });
+
+  it('returns 1 for orthogonal vectors', () => {
+    expect(cosineDist([1, 0], [0, 1])).toBeCloseTo(1);
+  });
+
+  it('returns ~2 for opposite vectors', () => {
+    expect(cosineDist([1, 0], [-1, 0])).toBeCloseTo(2);
+  });
+
+  it('returns 1 for zero vector', () => {
+    expect(cosineDist([0, 0], [1, 2])).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// leidenAssignments
+// ---------------------------------------------------------------------------
+describe('leidenAssignments', () => {
+  it('returns [] for empty graph', () => {
+    const graph = buildKnnGraph([], 5);
+    expect(leidenAssignments(graph, 0)).toEqual([]);
+  });
+
+  it('returns [0] for single point', () => {
+    const graph = { edges: [], neighbors: [[]] };
+    expect(leidenAssignments(graph, 1)).toEqual([0]);
+  });
+
+  it('separates two distinct groups', () => {
+    const vecs = [
+      [0, 0], [0.1, 0], [0, 0.1], [0.1, 0.1],
+      [10, 10], [10.1, 10], [10, 10.1], [10.1, 10.1],
+    ];
+    const graph = buildKnnGraph(vecs, 3);
+    // Use deterministic rng
+    let seed = 42;
+    const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const result = leidenAssignments(graph, 8, 1.0, rng);
+    expect(result).toHaveLength(8);
+    // First four should be in the same community
+    const groupA = result[0];
+    expect(result.slice(0, 4).every((r) => r === groupA)).toBe(true);
+    // Last four should be in the same community
+    const groupB = result[4];
+    expect(result.slice(4).every((r) => r === groupB)).toBe(true);
+    // The two groups should differ
+    expect(groupA).not.toBe(groupB);
+  });
+
+  it('higher resolution produces more communities', () => {
+    const vecs = [
+      [0, 0], [0.5, 0], [1, 0],
+      [5, 0], [5.5, 0], [6, 0],
+      [10, 0], [10.5, 0], [11, 0],
+    ];
+    const graph = buildKnnGraph(vecs, 4);
+    const lowRes = new Set(leidenAssignments(graph, 9, 0.1)).size;
+    const highRes = new Set(leidenAssignments(graph, 9, 5.0)).size;
+    expect(highRes).toBeGreaterThanOrEqual(lowRes);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// nmfAssignments
+// ---------------------------------------------------------------------------
+describe('nmfAssignments', () => {
+  it('returns all zeros for empty matrix', () => {
+    expect(nmfAssignments([], 3)).toEqual([]);
+  });
+
+  it('assigns each deck to a topic', () => {
+    const matrix = [
+      new Uint8Array([1, 1, 0, 0]),
+      new Uint8Array([1, 0, 1, 0]),
+      new Uint8Array([0, 0, 1, 1]),
+      new Uint8Array([0, 1, 0, 1]),
+    ];
+    const result = nmfAssignments(matrix, 2, 50);
+    expect(result).toHaveLength(4);
+    for (const a of result) {
+      expect(a).toBeGreaterThanOrEqual(0);
+      expect(a).toBeLessThan(2);
+    }
+  });
+
+  it('separates clearly distinct card patterns', () => {
+    // Group A: cards 0-4, Group B: cards 5-9
+    const matrix = [
+      ...Array.from({ length: 5 }, () => {
+        const v = new Uint8Array(10);
+        for (let j = 0; j < 5; j++) v[j] = 1;
+        return v;
+      }),
+      ...Array.from({ length: 5 }, () => {
+        const v = new Uint8Array(10);
+        for (let j = 5; j < 10; j++) v[j] = 1;
+        return v;
+      }),
+    ];
+    const result = nmfAssignments(matrix, 2, 100);
+    expect(result).toHaveLength(10);
+    // All of group A should share a topic
+    expect(result[0]).toBe(result[1]);
+    expect(result[1]).toBe(result[2]);
+    // All of group B should share a topic
+    expect(result[5]).toBe(result[6]);
+    expect(result[6]).toBe(result[7]);
+    // Groups should be different
+    expect(result[0]).not.toBe(result[5]);
   });
 });

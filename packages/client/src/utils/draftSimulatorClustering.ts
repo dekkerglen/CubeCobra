@@ -49,6 +49,21 @@ function euclidean(a: number[], b: number[]): number {
   return Math.sqrt(euclidSq(a, b));
 }
 
+export function cosineDist(a: number[], b: number[]): number {
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    const ai = a[i] ?? 0;
+    const bi = b[i] ?? 0;
+    dot += ai * bi;
+    normA += ai * ai;
+    normB += bi * bi;
+  }
+  const denom = Math.sqrt(normA) * Math.sqrt(normB);
+  return denom > 0 ? 1 - dot / denom : 1;
+}
+
 // ---------------------------------------------------------------------------
 // k-means fallback for uniform-density data
 // ---------------------------------------------------------------------------
@@ -486,6 +501,416 @@ function hdbscanFromKnnGraph(
 }
 
 // ---------------------------------------------------------------------------
+// Leiden community detection (Louvain-style modularity optimization)
+// ---------------------------------------------------------------------------
+
+export function leidenAssignments(
+  graph: KNNGraph,
+  n: number,
+  resolution: number = 1.0,
+  rng: () => number = Math.random,
+): number[] {
+  if (n === 0) return [];
+  if (n === 1) return [0];
+
+  // Build symmetric adjacency from k-NN neighbors (binary weights)
+  const adjList: number[][] = Array.from({ length: n }, () => []);
+  const seen = new Set<number>();
+
+  for (let i = 0; i < n; i++) {
+    for (const nb of graph.neighbors[i]!) {
+      const j = nb.index;
+      const key = i < j ? i * n + j : j * n + i;
+      if (!seen.has(key)) {
+        seen.add(key);
+        adjList[i]!.push(j);
+        adjList[j]!.push(i);
+      }
+    }
+  }
+
+  const deg = new Float64Array(n);
+  for (let i = 0; i < n; i++) deg[i] = adjList[i]!.length;
+  const totalEdges = seen.size;
+
+  if (totalEdges === 0) return Array.from({ length: n }, (_, i) => i);
+
+  const m2 = 2 * totalEdges;
+
+  // Each node starts in its own community
+  const comm = new Int32Array(n);
+  for (let i = 0; i < n; i++) comm[i] = i;
+
+  // Sum of degrees per community
+  const commDeg = new Float64Array(n);
+  for (let i = 0; i < n; i++) commDeg[i] = deg[i]!;
+
+  for (let iter = 0; iter < 50; iter++) {
+    let moved = false;
+
+    // Shuffle node visit order
+    const order = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [order[i], order[j]] = [order[j]!, order[i]!];
+    }
+
+    for (const i of order) {
+      const ci = comm[i]!;
+      const ki = deg[i]!;
+
+      // Count edges from i to each neighboring community
+      const neighborComms = new Map<number, number>();
+      for (const j of adjList[i]!) {
+        const cj = comm[j]!;
+        neighborComms.set(cj, (neighborComms.get(cj) ?? 0) + 1);
+      }
+
+      const ki_own = neighborComms.get(ci) ?? 0;
+
+      let bestComm = ci;
+      let bestDelta = 0;
+
+      for (const [cj, ki_cj] of neighborComms) {
+        if (cj === ci) continue;
+        // ΔQ = (ki_cj - ki_own)/m - γ·ki·(Σ_tot_cj - Σ_tot_ci + ki)/(2m²)
+        const delta = (ki_cj - ki_own) / totalEdges
+          - resolution * ki * (commDeg[cj]! - commDeg[ci]! + ki) / (m2 * totalEdges);
+        if (delta > bestDelta) {
+          bestDelta = delta;
+          bestComm = cj;
+        }
+      }
+
+      if (bestComm !== ci) {
+        comm[i] = bestComm;
+        commDeg[ci] -= ki;
+        commDeg[bestComm] += ki;
+        moved = true;
+      }
+    }
+
+    if (!moved) break;
+  }
+
+  // Renumber to contiguous 0-based IDs
+  const remap = new Map<number, number>();
+  let nextId = 0;
+  return Array.from(comm, (c) => {
+    if (!remap.has(c)) remap.set(c, nextId++);
+    return remap.get(c)!;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// NMF (Non-negative Matrix Factorization) topic modeling
+// ---------------------------------------------------------------------------
+
+export function nmfAssignments(
+  cardMatrix: Uint8Array[],
+  numTopics: number,
+  maxIter: number = 100,
+  rng: () => number = Math.random,
+): number[] {
+  const n = cardMatrix.length;
+  const d = cardMatrix[0]?.length ?? 0;
+  if (n === 0 || d === 0 || numTopics <= 0) return new Array(n).fill(0);
+
+  const k = Math.min(numTopics, n);
+  const eps = 1e-10;
+
+  // Pre-compute non-zero column indices per row for sparse multiplication
+  const nnzByRow: number[][] = cardMatrix.map((row) => {
+    const nz: number[] = [];
+    for (let j = 0; j < d; j++) if (row[j]) nz.push(j);
+    return nz;
+  });
+
+  // Initialize W (n × k) and H (k × d) with small random values
+  const W: number[][] = Array.from({ length: n }, () =>
+    Array.from({ length: k }, () => rng() * 0.5 + 0.01),
+  );
+  const H: number[][] = Array.from({ length: k }, () =>
+    Array.from({ length: d }, () => rng() * 0.5 + 0.01),
+  );
+
+  for (let iter = 0; iter < maxIter; iter++) {
+    // Update H: H *= (W^T V) ./ (W^T W H + eps)
+    // Exploit sparsity: W^T V[a][j] = Σ_{i: V[i][j]=1} W[i][a]
+    const WtV: number[][] = Array.from({ length: k }, () => new Array(d).fill(0));
+    const WtW: number[][] = Array.from({ length: k }, () => new Array(k).fill(0));
+
+    for (let i = 0; i < n; i++) {
+      for (let a = 0; a < k; a++) {
+        const wia = W[i]![a]!;
+        for (const j of nnzByRow[i]!) WtV[a]![j] += wia;
+        for (let b = 0; b < k; b++) WtW[a]![b] += wia * W[i]![b]!;
+      }
+    }
+
+    for (let a = 0; a < k; a++) {
+      for (let j = 0; j < d; j++) {
+        let WtWH = 0;
+        for (let b = 0; b < k; b++) WtWH += WtW[a]![b]! * H[b]![j]!;
+        H[a]![j] = H[a]![j]! * WtV[a]![j]! / (WtWH + eps);
+      }
+    }
+
+    // Update W: W *= (V H^T) ./ (W H H^T + eps)
+    const HHt: number[][] = Array.from({ length: k }, () => new Array(k).fill(0));
+    for (let a = 0; a < k; a++) {
+      for (let b = 0; b < k; b++) {
+        let s = 0;
+        for (let j = 0; j < d; j++) s += H[a]![j]! * H[b]![j]!;
+        HHt[a]![b] = s;
+      }
+    }
+
+    for (let i = 0; i < n; i++) {
+      // VHt[a] = Σ_{j ∈ nnz(i)} H[a][j]   (sparse: V is binary)
+      const VHt = new Array<number>(k).fill(0);
+      for (let a = 0; a < k; a++) {
+        for (const j of nnzByRow[i]!) VHt[a] += H[a]![j]!;
+      }
+
+      for (let a = 0; a < k; a++) {
+        let WHHt = 0;
+        for (let b = 0; b < k; b++) WHHt += W[i]![b]! * HHt[b]![a]!;
+        W[i]![a] = W[i]![a]! * VHt[a]! / (WHHt + eps);
+      }
+    }
+  }
+
+  // Assign each deck to its highest-weight topic
+  return W.map((row) => {
+    let bestK = 0;
+    let bestW = -1;
+    for (let a = 0; a < k; a++) {
+      if (row[a]! > bestW) { bestW = row[a]!; bestK = a; }
+    }
+    return bestK;
+  });
+}
+
+/**
+ * Run NMF on a subset of decks and return the top cards per topic.
+ * Designed for real-time topic decomposition within a single cluster.
+ *
+ * @param poolIndices  Indices into slimPools for this cluster
+ * @param slimPools    All slim pools
+ * @param cardMeta     Card metadata
+ * @param numTopics    Number of topics to extract
+ * @param deckBuilds   Optional deck builds (uses mainboard if available)
+ * @returns Array of topics, each with a label and top cards sorted by weight
+ */
+export function nmfDecompose(
+  poolIndices: number[],
+  slimPools: SlimPool[],
+  cardMeta: Record<string, CardMeta>,
+  numTopics: number,
+  deckBuilds?: BuiltDeck[] | null,
+): { topicIndex: number; cards: { oracle_id: string; name: string; imageUrl: string; weight: number }[] }[] {
+  const hasDecks = deckBuilds && deckBuilds.length === slimPools.length;
+
+  // Build oracle ID list (exclude basic lands)
+  const oracleIds = Object.keys(cardMeta).filter((id) => {
+    const t = (cardMeta[id]?.type ?? '').toLowerCase();
+    return !(t.includes('basic') && t.includes('land'));
+  });
+  const oracleIndex = new Map(oracleIds.map((id, i) => [id, i]));
+  const dim = oracleIds.length;
+
+  // Build binary card matrix for just this cluster's pools
+  const matrix: Uint8Array[] = poolIndices.map((pi) => {
+    const v = new Uint8Array(dim);
+    const pool = slimPools[pi]!;
+    const cards = hasDecks ? deckBuilds![pi]!.mainboard : pool.picks.map((p) => p.oracle_id);
+    for (const oracle_id of cards) {
+      const idx = oracleIndex.get(oracle_id);
+      if (idx !== undefined) v[idx] = 1;
+    }
+    return v;
+  });
+
+  const n = matrix.length;
+  const k = Math.min(numTopics, n);
+  if (n === 0 || k <= 0) return [];
+
+  const eps = 1e-10;
+  const rng = createRng(poolIndices.length * 31 + poolIndices[0]!);
+
+  const nnzByRow: number[][] = matrix.map((row) => {
+    const nz: number[] = [];
+    for (let j = 0; j < dim; j++) if (row[j]) nz.push(j);
+    return nz;
+  });
+
+  const W: number[][] = Array.from({ length: n }, () =>
+    Array.from({ length: k }, () => rng() * 0.5 + 0.01),
+  );
+  const H: number[][] = Array.from({ length: k }, () =>
+    Array.from({ length: dim }, () => rng() * 0.5 + 0.01),
+  );
+
+  for (let iter = 0; iter < 100; iter++) {
+    const WtV: number[][] = Array.from({ length: k }, () => new Array(dim).fill(0));
+    const WtW: number[][] = Array.from({ length: k }, () => new Array(k).fill(0));
+    for (let i = 0; i < n; i++) {
+      for (let a = 0; a < k; a++) {
+        const wia = W[i]![a]!;
+        for (const j of nnzByRow[i]!) WtV[a]![j] += wia;
+        for (let b = 0; b < k; b++) WtW[a]![b] += wia * W[i]![b]!;
+      }
+    }
+    for (let a = 0; a < k; a++) {
+      for (let j = 0; j < dim; j++) {
+        let WtWH = 0;
+        for (let b = 0; b < k; b++) WtWH += WtW[a]![b]! * H[b]![j]!;
+        H[a]![j] = H[a]![j]! * WtV[a]![j]! / (WtWH + eps);
+      }
+    }
+
+    const HHt: number[][] = Array.from({ length: k }, () => new Array(k).fill(0));
+    for (let a = 0; a < k; a++) {
+      for (let b = 0; b < k; b++) {
+        let s = 0;
+        for (let j = 0; j < dim; j++) s += H[a]![j]! * H[b]![j]!;
+        HHt[a]![b] = s;
+      }
+    }
+    for (let i = 0; i < n; i++) {
+      const VHt = new Array<number>(k).fill(0);
+      for (let a = 0; a < k; a++) {
+        for (const j of nnzByRow[i]!) VHt[a] += H[a]![j]!;
+      }
+      for (let a = 0; a < k; a++) {
+        let WHHt = 0;
+        for (let b = 0; b < k; b++) WHHt += W[i]![b]! * HHt[b]![a]!;
+        W[i]![a] = W[i]![a]! * VHt[a]! / (WHHt + eps);
+      }
+    }
+  }
+
+  // Extract top cards per topic from H matrix
+  return Array.from({ length: k }, (_, topicIdx) => {
+    const topicRow = H[topicIdx]!;
+    const cardWeights = oracleIds
+      .map((oracle_id, j) => ({ oracle_id, weight: topicRow[j]! }))
+      .filter((c) => c.weight > 0.01)
+      .sort((a, b) => b.weight - a.weight)
+      .slice(0, 8)
+      .map((c) => ({
+        oracle_id: c.oracle_id,
+        name: cardMeta[c.oracle_id]?.name ?? c.oracle_id,
+        imageUrl: cardMeta[c.oracle_id]?.imageUrl ?? '',
+        weight: c.weight,
+      }));
+    return { topicIndex: topicIdx, cards: cardWeights };
+  });
+}
+
+/**
+ * Find co-occurrence pockets: groups of cards that frequently appear together
+ * in this cluster's decks. Uses pairwise co-occurrence rates as feature vectors
+ * for k-means clustering — cards that travel together have similar profiles.
+ *
+ * @param poolIndices  Indices of pools in this cluster
+ * @param slimPools    All slim pools
+ * @param cardMeta     Card metadata for names/images
+ * @param numPockets   Number of card groups (k)
+ * @param deckBuilds   Optional deck builds (uses mainboard if available)
+ */
+export function findCooccurrencePockets(
+  poolIndices: number[],
+  slimPools: SlimPool[],
+  cardMeta: Record<string, CardMeta>,
+  numPockets: number,
+  deckBuilds?: BuiltDeck[] | null,
+): { pocketIndex: number; cards: { oracle_id: string; name: string; imageUrl: string; frequency: number }[] }[] {
+  if (poolIndices.length === 0 || numPockets < 1) return [];
+
+  const hasDecks = deckBuilds && deckBuilds.length === slimPools.length;
+  const nDecks = poolIndices.length;
+
+  // Build card presence sets per deck + collect unique cards
+  const deckCardSets: Set<string>[] = [];
+  const cardCounts = new Map<string, number>();
+  for (const pi of poolIndices) {
+    const pool = slimPools[pi]!;
+    const cards = hasDecks ? deckBuilds![pi]!.mainboard : pool.picks.map((p) => p.oracle_id);
+    const cardSet = new Set<string>();
+    for (const id of cards) {
+      const t = (cardMeta[id]?.type ?? '').toLowerCase();
+      if (!(t.includes('basic') && t.includes('land'))) {
+        cardSet.add(id);
+        cardCounts.set(id, (cardCounts.get(id) ?? 0) + 1);
+      }
+    }
+    deckCardSets.push(cardSet);
+  }
+
+  // Filter to cards appearing in at least 15% of cluster decks
+  const oracleIds = [...cardCounts.entries()]
+    .filter(([_, count]) => count / nDecks >= 0.15)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id]) => id);
+
+  const numCards = oracleIds.length;
+  if (numCards === 0) return [];
+  const cardIdx = new Map(oracleIds.map((id, i) => [id, i]));
+
+  // Build co-occurrence matrix: cooc[i][j] = fraction of decks containing both card i and card j
+  const cooc: number[][] = Array.from({ length: numCards }, () => new Array(numCards).fill(0));
+  for (const deckSet of deckCardSets) {
+    const present: number[] = [];
+    for (const id of deckSet) {
+      const idx = cardIdx.get(id);
+      if (idx !== undefined) present.push(idx);
+    }
+    for (let a = 0; a < present.length; a++) {
+      for (let b = a; b < present.length; b++) {
+        cooc[present[a]!]![present[b]!]++;
+        if (a !== b) cooc[present[b]!]![present[a]!]++;
+      }
+    }
+  }
+  // Normalize to fractions
+  for (let i = 0; i < numCards; i++) {
+    for (let j = 0; j < numCards; j++) {
+      cooc[i]![j] /= nDecks;
+    }
+  }
+
+  // K-means on co-occurrence profiles
+  const k = Math.min(numPockets, numCards);
+  const rng = createRng(poolIndices.length * 43 + numCards);
+  const assignments = kmeansAssignments(cooc, k, 30, rng);
+
+  // Group cards by assignment, sorted by frequency in cluster
+  const groups = new Map<number, string[]>();
+  for (let i = 0; i < numCards; i++) {
+    const c = assignments[i]!;
+    if (!groups.has(c)) groups.set(c, []);
+    groups.get(c)!.push(oracleIds[i]!);
+  }
+
+  return [...groups.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([_, cards], idx) => ({
+      pocketIndex: idx,
+      cards: cards
+        .sort((a, b) => (cardCounts.get(b) ?? 0) - (cardCounts.get(a) ?? 0))
+        .slice(0, 10)
+        .map((id) => ({
+          oracle_id: id,
+          name: cardMeta[id]?.name ?? id,
+          imageUrl: cardMeta[id]?.imageUrl ?? '',
+          frequency: (cardCounts.get(id) ?? 0) / nDecks,
+        })),
+    }));
+}
+
+// ---------------------------------------------------------------------------
 // UMAP: compress high-dimensional embeddings to 2D
 // ---------------------------------------------------------------------------
 
@@ -525,19 +950,20 @@ interface KNNGraph {
   neighbors: { index: number; dist: number }[][]; // per-point k nearest neighbors with raw euclidean distances
 }
 
-function buildKnnGraph(vectors: number[][], neighborCount: number): KNNGraph {
+export function buildKnnGraph(vectors: number[][], neighborCount: number, metric: 'euclidean' | 'cosine' = 'euclidean'): KNNGraph {
   const n = vectors.length;
   const edges: KNNEdge[] = [];
   const neighbors: { index: number; dist: number }[][] = [];
+  const useCosine = metric === 'cosine';
   for (let i = 0; i < n; i++) {
     const distances: { index: number; distance: number }[] = [];
     for (let j = 0; j < n; j++) {
       if (i === j) continue;
-      distances.push({ index: j, distance: euclidSq(vectors[i]!, vectors[j]!) });
+      distances.push({ index: j, distance: useCosine ? cosineDist(vectors[i]!, vectors[j]!) : euclidSq(vectors[i]!, vectors[j]!) });
     }
     distances.sort((a, b) => a.distance - b.distance);
     const kNeighbors = distances.slice(0, neighborCount);
-    neighbors.push(kNeighbors.map((d) => ({ index: d.index, dist: Math.sqrt(d.distance) })));
+    neighbors.push(kNeighbors.map((d) => ({ index: d.index, dist: useCosine ? d.distance : Math.sqrt(d.distance) })));
     const localScale = Math.max(kNeighbors[kNeighbors.length - 1]?.distance ?? kNeighbors[0]?.distance ?? 1, 0.001);
     for (const neighbor of kNeighbors) {
       if (i < neighbor.index) {
@@ -680,28 +1106,6 @@ export function approximateUmap(vectors: number[][], prebuiltEdges?: KNNEdge[], 
 // computeSkeletons — HDBSCAN on UMAP-Nd vectors, UMAP-2D for visualization
 // ---------------------------------------------------------------------------
 
-/**
- * Compute archetype clusters from deck embeddings.
- *
- * Flow:
- *   1. Build k-NN graph on the high-dimensional vectors (shared).
- *   2. UMAP to pcaDims dimensions for clustering (creates density contrast).
- *   3. HDBSCAN on the UMAP-reduced vectors.
- *   4. UMAP to 2D for scatter plot visualization (reuses k-NN graph).
- *   5. Extract archetype skeleton metadata (core cards, sideboard, etc.)
- *
- * @param slimPools      Slim pool data for each seat
- * @param cardMeta       Card metadata keyed by oracle_id
- * @param minClusterSize Minimum number of points for a group to be a cluster
- * @param embeddings     128-dim embeddings from the ML encoder (one per pool), or null
- *                       to fall back to TF-IDF clustering
- * @param deckBuilds     Optional built decks (mainboard/sideboard)
- * @param umapDims       UMAP target dimensions for clustering (default 20, only used in 'umap' mode)
- * @param minPts         Neighbors for density smoothing (default 3)
- * @param clusterMode    'umap' = UMAP-Nd then HDBSCAN, 'graph' = HDBSCAN directly on k-NN graph
- * @param knnK           Number of neighbors in k-NN graph (default 50)
- * @param negSamples     Negative samples per edge in UMAP (default 20)
- */
 export function computeSkeletons(
   slimPools: SlimPool[],
   cardMeta: Record<string, CardMeta>,
@@ -710,9 +1114,14 @@ export function computeSkeletons(
   deckBuilds?: BuiltDeck[] | null,
   umapDims: number = 20,
   minPts: number = 3,
-  clusterMode: 'umap' | 'graph' = 'umap',
+  clusterMode: 'umap' | 'graph' | 'leiden' | 'nmf' = 'umap',
   knnK: number = 50,
   negSamples: number = 20,
+  resolution: number = 1.0,
+  numTopics: number = 0,
+  distanceMetric: 'euclidean' | 'cosine' = 'euclidean',
+  useHybridEmbeddings: boolean = false,
+  hybridWeight: number = 5.0,
 ): { skeletons: ArchetypeSkeleton[]; umapCoords: { x: number; y: number }[]; clusterMethod: string } {
   const n = slimPools.length;
   if (n === 0) return { skeletons: [], umapCoords: [], clusterMethod: 'hdbscan (umap)' };
@@ -753,17 +1162,58 @@ export function computeSkeletons(
     });
   }
 
+  // Hybrid embeddings: concatenate probability-based structural features
+  if (useHybridEmbeddings && embeddings && embeddings.length === n) {
+    const colors = ['W', 'U', 'B', 'R', 'G'];
+    const typeCategories = ['creature', 'instant', 'sorcery', 'enchantment', 'artifact'];
+
+    rawVecs = embeddings.map((emb, i) => {
+      const cards = hasDecks ? deckBuilds![i]!.mainboard : slimPools[i]!.picks.map((p) => p.oracle_id);
+
+      let nonLandCount = 0;
+      const colorCounts = new Float64Array(5);
+      const typeCounts = new Float64Array(5);
+
+      for (const oracleId of cards) {
+        const meta = cardMeta[oracleId];
+        if (!meta) continue;
+        const t = (meta.type ?? '').toLowerCase();
+        if (t.includes('land')) continue;
+        nonLandCount++;
+        for (let c = 0; c < 5; c++) {
+          if ((meta.colorIdentity ?? []).includes(colors[c]!)) colorCounts[c]++;
+          if (t.includes(typeCategories[c]!)) typeCounts[c]++;
+        }
+      }
+
+      const colorDist = nonLandCount > 0 ? Array.from(colorCounts, (c) => c / nonLandCount) : [0, 0, 0, 0, 0];
+      const typeDist = nonLandCount > 0 ? Array.from(typeCounts, (c) => c / nonLandCount) : [0, 0, 0, 0, 0];
+
+      return [
+        ...emb,
+        ...colorDist.map((x) => x * hybridWeight),
+        ...typeDist.map((x) => x * hybridWeight),
+      ];
+    });
+  }
+
   // Deterministic seeded RNG derived from pool data
   const rng = createRng(deriveClusterSeed(slimPools));
 
   // Build k-NN graph once (shared between clustering and visualization)
-  const knnGraph = buildKnnGraph(rawVecs, Math.min(knnK, n - 1));
+  const knnGraph = buildKnnGraph(rawVecs, Math.min(knnK, n - 1), distanceMetric);
 
   let assignments: number[];
   let clusterMethod: string;
 
-  if (clusterMode === 'graph') {
-    // Graph-based: HDBSCAN directly on k-NN graph (no dimensionality reduction)
+  if (clusterMode === 'leiden') {
+    assignments = leidenAssignments(knnGraph, n, resolution, rng);
+    clusterMethod = `leiden (γ=${resolution})`;
+  } else if (clusterMode === 'nmf') {
+    const k = numTopics > 0 ? numTopics : Math.max(5, Math.floor(Math.sqrt(n)));
+    assignments = nmfAssignments(vecs, k, 100, rng);
+    clusterMethod = `nmf (k=${k})`;
+  } else if (clusterMode === 'graph') {
     assignments = hdbscanFromKnnGraph(knnGraph, n, minClusterSize, minPts, rawVecs);
     clusterMethod = 'hdbscan (graph)';
 
@@ -774,7 +1224,6 @@ export function computeSkeletons(
       clusterMethod = 'kmeans (fallback)';
     }
   } else {
-    // UMAP-Nd: reduce to umapDims, then HDBSCAN
     const clusterVecs = umapProject(knnGraph.edges, n, umapDims, rawVecs, negSamples, 90, rng);
     assignments = hdbscanAssignments(clusterVecs, minClusterSize, minPts);
     clusterMethod = `hdbscan (umap-${umapDims}d)`;
@@ -799,19 +1248,27 @@ export function computeSkeletons(
     for (let j = 0; j < dim; j++) globalCardCounts[j] += v[j]!;
   }
 
+  // Pre-compute per-cluster card fractions for contrastive scoring
+  const clusterFracsMap = new Map<number, Float32Array>();
+  for (const cid of uniqueClusters) {
+    const indices = assignments.map((a, i) => (a === cid ? i : -1)).filter((i) => i >= 0);
+    const f = new Float32Array(dim);
+    for (const pi of indices) {
+      const v = vecs[pi]!;
+      for (let j = 0; j < dim; j++) f[j] += v[j]!;
+    }
+    const cnt = indices.length;
+    if (cnt > 0) for (let j = 0; j < dim; j++) f[j] /= cnt;
+    clusterFracsMap.set(cid, f);
+  }
+
   const skeletons: ArchetypeSkeleton[] = [];
   for (const clusterId of uniqueClusters) {
     const poolIndices = assignments.map((a, i) => (a === clusterId ? i : -1)).filter((i) => i >= 0);
     const poolCount = poolIndices.length;
     if (poolCount === 0) continue;
 
-    // Centroid card fractions: for each card, what fraction of pools in this cluster drafted it
-    const fracs = new Float32Array(dim);
-    for (const pi of poolIndices) {
-      const v = vecs[pi]!;
-      for (let j = 0; j < dim; j++) fracs[j] += v[j]!;
-    }
-    for (let j = 0; j < dim; j++) fracs[j] /= poolCount;
+    const fracs = clusterFracsMap.get(clusterId)!;
 
     const allCards: (SkeletonCard & { distinctiveness: number })[] = oracleIds
       .map((oracle_id, j) => {
@@ -830,6 +1287,28 @@ export function computeSkeletons(
       .sort((a, b) => b.distinctiveness - a.distinctiveness || b.fraction - a.fraction);
 
     const coreCards = allCards.slice(0, 12);
+
+    // Signature cards: cards most distinctive to THIS cluster vs other clusters
+    const signatureCards: SkeletonCard[] = oracleIds
+      .map((oracle_id, j) => {
+        const fraction = fracs[j]!;
+        if (fraction <= 0) return null;
+        let maxOther = 0;
+        for (const [cid, otherFracs] of clusterFracsMap) {
+          if (cid !== clusterId) maxOther = Math.max(maxOther, otherFracs[j]!);
+        }
+        return {
+          oracle_id,
+          name: cardMeta[oracle_id]?.name ?? oracle_id,
+          imageUrl: cardMeta[oracle_id]?.imageUrl ?? '',
+          fraction,
+          contrastive: fraction - maxOther,
+        };
+      })
+      .filter((c): c is NonNullable<typeof c> => c !== null && c.contrastive > 0 && c.fraction > 0.1)
+      .sort((a, b) => b.contrastive - a.contrastive)
+      .slice(0, 8)
+      .map(({ contrastive: _, ...card }) => card);
     const occasionalCards: SkeletonCard[] = [];
     const sideboardCards: SkeletonCard[] = hasDecks
       ? oracleIds
@@ -905,6 +1384,7 @@ export function computeSkeletons(
       poolCount,
       poolIndices,
       coreCards,
+      signatureCards,
       occasionalCards,
       sideboardCards,
       lockPairs: lockPairs.slice(0, 5),

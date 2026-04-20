@@ -112,7 +112,7 @@ export function getLoadProgressListenerCountForTests(): number {
 // Shared forward pass helper
 // ---------------------------------------------------------------------------
 
-type RatedCard = { oracle: string; rating: number };
+export type RatedCard = { oracle: string; rating: number };
 type MlSeatMaps = { toMl: Record<string, string>; fromMl: Record<string, string[]> };
 type DeckCardMeta = DeckbuildEntry['cardMeta'][string];
 
@@ -384,7 +384,7 @@ export async function localPickBatch(
  * Batch deckbuild seed: scores all pool cards per seat via the deck_build_decoder.
  * Returns cards sorted by descending rating for each seat.
  */
-async function localBatchBuild(
+export async function localBatchBuild(
   pools: string[][],
   remapping?: Record<string, string>,
   chunkSize?: number,
@@ -561,7 +561,7 @@ export async function localBatchDeckbuild(
   entries: DeckbuildEntry[],
   chunkSize?: number,
   signal?: AbortSignal,
-): Promise<{ mainboard: string[]; sideboard: string[] }[]> {
+): Promise<{ mainboard: string[]; sideboard: string[]; deckbuildRatings?: RatedCard[] }[]> {
   throwIfAborted(signal);
   if (!draftBotLoaded || entries.length === 0) return entries.map(() => ({ mainboard: [], sideboard: [] }));
 
@@ -711,9 +711,17 @@ export async function localBatchDeckbuild(
       return true;
     });
 
+    // Map build ratings back to original oracle IDs
+    const { fromMl } = seatMaps[s]!;
+    const deckbuildRatings: RatedCard[] = (buildResults[s] ?? []).map((item) => {
+      const originals = fromMl[item.oracle] ?? [item.oracle];
+      return { oracle: originals[0] ?? item.oracle, rating: item.rating };
+    });
+
     return {
       mainboard: [...seat.mainboard, ...basicOracles].sort(),
       sideboard: sideboard.sort(),
+      deckbuildRatings,
     };
   });
 }
