@@ -83,5 +83,9 @@ yarn-error.log*
 # migration checkpoints
 .migration-checkpoints/
 
+# archetypeAnnotater data
+packages/archetypeAnnotater/data/
+packages/archetypeAnnotater/.venv/
+
 # clinic profiling output
 .clinic

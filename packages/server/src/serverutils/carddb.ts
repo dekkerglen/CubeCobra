@@ -27,7 +27,7 @@ export function getPlaceholderCard(scryfall_id: string): CardDetails {
     rarity: '',
     legalities: Object.fromEntries(SUPPORTED_FORMATS.map((format) => [format, 'not_legal' as const])),
     oracle_text: '',
-    image_normal: 'https://img.scryfall.com/errors/missing.jpg',
+    image_normal: '/content/default_card.png',
     cmc: 0,
     type: '',
     colors: [],

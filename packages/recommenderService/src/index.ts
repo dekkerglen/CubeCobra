@@ -1,4 +1,10 @@
 import dotenv from 'dotenv';
+import util from 'util';
+
+// Polyfill util.isNullOrUndefined removed in newer Node.js but required by tfjs-node
+if (!(util as any).isNullOrUndefined) {
+  (util as any).isNullOrUndefined = (val: unknown) => val === null || val === undefined;
+}
 
 import 'module-alias/register';
 dotenv.config();

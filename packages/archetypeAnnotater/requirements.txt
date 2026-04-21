@@ -1,0 +1,3 @@
+numpy
+umap-learn
+hdbscan
