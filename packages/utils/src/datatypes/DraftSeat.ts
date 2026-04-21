@@ -10,6 +10,8 @@ export default interface DraftSeat {
   owner?: string | User;
   bot?: boolean;
   name?: string;
+  // User-provided deck name (overrides auto-generated name in display)
+  title?: string;
   // Display name for external players (e.g. from Draftmancer) who don't have a CubeCobra account
   playerName?: string;
   // grid draft only

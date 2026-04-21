@@ -67,7 +67,7 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               setValue={setSeatIndex}
               options={draft.seats.map((seat, index) => ({
                 value: index.toString(),
-                label: `Seat ${index + 1}: ${seat.name}`,
+                label: `Seat ${index + 1}: ${seat.title || seat.name}`,
               }))}
             />
           </div>

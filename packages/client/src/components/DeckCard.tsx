@@ -113,8 +113,13 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
       <CardHeader>
         <Flexbox direction="col" alignItems="start" gap="1">
           <Text semibold lg>
-            {seat.name} ({mbCount})
+            {seat.title || seat.name} ({mbCount})
           </Text>
+          {seat.title && seat.name && (
+            <Text sm className="text-text-secondary">
+              {seat.name}
+            </Text>
+          )}
           {!seat.bot && (
             <Text md semibold>
               Drafted by {seat.owner ? <Username user={seat.owner} /> : 'Anonymous'}

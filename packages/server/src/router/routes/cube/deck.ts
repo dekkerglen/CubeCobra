@@ -605,7 +605,7 @@ export const editDeckHandler = async (req: Request, res: Response) => {
 
     targetSeat.mainboard = JSON.parse(main);
     targetSeat.sideboard = JSON.parse(side);
-    (targetSeat as any).title = (title || '').substring(0, 100);
+    targetSeat.title = (title || '').substring(0, 100);
     (targetSeat as any).body = (description || '').substring(0, 1000);
 
     deck.complete = true;

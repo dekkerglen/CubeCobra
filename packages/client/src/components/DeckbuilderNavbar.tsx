@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
-import { EyeIcon, FileMediaIcon, PencilIcon, ZapIcon } from '@primer/octicons-react';
+import { EyeIcon, FileMediaIcon, PencilIcon, TagIcon, ZapIcon } from '@primer/octicons-react';
 import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
@@ -57,13 +57,16 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   const formRef = useRef<HTMLFormElement>(null);
   const [displayDropdownOpen, setDisplayDropdownOpen] = React.useState(false);
   const [autobuilding, setAutobuilding] = useState(false);
+  const seatData = draft.seats[seat];
+  const [deckTitle, setDeckTitle] = useState(seatData?.title || '');
   const formData = useMemo<Record<string, string>>(
     () => ({
       main: JSON.stringify(mainboard),
       side: JSON.stringify(sideboard),
       seat: seat.toString(),
+      title: deckTitle,
     }),
-    [mainboard, sideboard, seat],
+    [mainboard, sideboard, seat, deckTitle],
   );
 
   const autoBuildDeck = useCallback(async () => {
@@ -195,14 +198,25 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         </Flexbox>
       </Dropdown>
       <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
-        <Link
-          href="#"
-          onClick={() => formRef.current?.submit()}
-          className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
-        >
-          <PencilIcon size={16} />
-          Save Deck
-        </Link>
+        <Flexbox direction="row" gap="2" alignItems="center">
+          <TagIcon size={16} className="text-text-secondary" />
+          <input
+            type="text"
+            value={deckTitle}
+            onChange={(e) => setDeckTitle(e.target.value)}
+            placeholder={seatData?.name || 'Deck name...'}
+            maxLength={100}
+            className="border border-border rounded px-2 py-1 text-sm w-48 bg-bg focus:outline-none focus:border-link"
+          />
+          <Link
+            href="#"
+            onClick={() => formRef.current?.submit()}
+            className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+          >
+            <PencilIcon size={16} />
+            Save Deck
+          </Link>
+        </Flexbox>
       </CSRFForm>
     </Flexbox>
   );

@@ -24,6 +24,7 @@ import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import DraftType, { DRAFT_TYPES, DraftmancerLog, REVERSE_TYPES } from '@utils/datatypes/Draft';
 import DraftSeat from '@utils/datatypes/DraftSeat';
 import User from '@utils/datatypes/User';
+import { classifyDeck } from 'serverutils/archetype';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -751,7 +752,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     const cubeName = cube?.name || 'Unknown Cube';
 
     // Calculate seat names and draft name from mainboard colors
-    const { seatNames, name } = this.getDeckColors(draftData, cubeName);
+    const { seatNames, name } = await this.getDeckColors(draftData, cubeName);
 
     // Resolve cube owner
     let cubeOwner: User;
@@ -856,7 +857,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       }
 
       // Recalculate seat names and draft from mainboard colors
-      const { seatNames, name } = this.getDeckColors(item, cubeName);
+      const { seatNames, name } = await this.getDeckColors(item, cubeName);
       item.seatNames = seatNames;
       item.name = name;
 
@@ -1009,7 +1010,12 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
 
     let count = 0;
     for (const card of mainboard.flat(3)) {
-      const details = cardFromId(cards[card].cardID);
+      const pickedCard = cards[card];
+      if (!pickedCard?.cardID) {
+        continue;
+      }
+
+      const details = cardFromId(pickedCard.cardID);
       if (!details.type.includes('Land')) {
         count += 1;
         for (const color of details.color_identity) {
@@ -1031,12 +1037,42 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     return colorKeysFiltered;
   }
 
-  private getDeckColors(
+  private getOracleIds(mainboard: any, cards: any): string[] {
+    const oracleIds = new Set<string>();
+    for (const card of mainboard.flat(3)) {
+      const pickedCard = cards[card];
+      if (!pickedCard?.cardID) {
+        continue;
+      }
+
+      const details = cardFromId(pickedCard.cardID);
+      if (details.oracle_id) {
+        oracleIds.add(details.oracle_id);
+      }
+    }
+    return [...oracleIds];
+  }
+
+  private async getDeckColors(
     draft: Pick<DraftType, 'seats' | 'type' | 'cards'>,
     cubeName: string,
-  ): { seatNames: string[]; name: string } {
-    // Calculate seat names from mainboard colors
-    const seatNames = draft.seats.map((seat: any) => this.assessColors(seat.mainboard, draft.cards).join(''));
+  ): Promise<{ seatNames: string[]; name: string }> {
+    // Calculate color identities
+    const colorNames = draft.seats.map((seat: any) => this.assessColors(seat.mainboard, draft.cards).join(''));
+
+    // Try to classify each seat into an archetype
+    const seatNames: string[] = await Promise.all(
+      draft.seats.map(async (seat: any, i: number) => {
+        const colors = colorNames[i] || 'C';
+        try {
+          const oracleIds = this.getOracleIds(seat.mainboard, draft.cards);
+          const archetype = await classifyDeck(oracleIds);
+          return archetype ? `${colors} ${archetype}` : colors;
+        } catch {
+          return colors;
+        }
+      }),
+    );
 
     return {
       seatNames,

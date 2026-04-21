@@ -140,6 +140,24 @@ export const encode = (oracles: string[]) => {
   });
 };
 
+export const batchEncode = (inputs: string[][]): number[][] => {
+  if (!encoder || inputs.length === 0) {
+    return inputs.map(() => []);
+  }
+
+  const vectors = inputs.map((oracles) =>
+    encodeIndeces(
+      oracles.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
+    ),
+  );
+
+  return tidy(() => {
+    const inputTensor = tensor(vectors);
+    const result = encoder.predict(inputTensor) as any;
+    return result.arraySync();
+  });
+};
+
 const oracleIdToMlIndex = (oracleId: string) => {
   const oracleIndex = oracleToIndex[oracleId];
 

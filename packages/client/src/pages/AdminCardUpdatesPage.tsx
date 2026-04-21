@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import { CheckCircleFillIcon, ChevronDownIcon, ChevronUpIcon, XCircleFillIcon } from '@primer/octicons-react';
 import { CardMetadataTask } from '@utils/datatypes/CardMetadataTask';
@@ -6,12 +6,16 @@ import { CardUpdateTask } from '@utils/datatypes/CardUpdateTask';
 import { ExportTask } from '@utils/datatypes/ExportTask';
 import { MigrationTask } from '@utils/datatypes/MigrationTask';
 
+import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import { TabbedView } from 'components/base/Tabs';
 import Text from 'components/base/Text';
+import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 import RenderToRoot from 'components/RenderToRoot';
+import { CSRFContext } from 'contexts/CSRFContext';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 
@@ -151,6 +155,59 @@ const StepProgress: React.FC<{
   );
 };
 
+const RunJobButton: React.FC<{
+  jobType: string;
+  label: string;
+  addAlert: (color: string, message: string) => void;
+  dismissAlerts: () => void;
+}> = ({ jobType, label, addAlert, dismissAlerts }) => {
+  const { csrfFetch } = useContext(CSRFContext);
+  const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleConfirm = useCallback(async () => {
+    setConfirmOpen(false);
+    dismissAlerts();
+    setLoading(true);
+
+    try {
+      const response = await csrfFetch('/admin/triggerjob', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobType }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        addAlert('success', `Job started. Task ID: ${data.taskId}`);
+      } else {
+        addAlert('danger', data.error || 'Failed to start job');
+      }
+    } catch (err) {
+      addAlert('danger', err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [csrfFetch, jobType, addAlert, dismissAlerts]);
+
+  return (
+    <>
+      <Button color="primary" onClick={() => setConfirmOpen(true)} disabled={loading}>
+        {loading ? <Spinner sm /> : `Run ${label}`}
+      </Button>
+      <ConfirmActionModal
+        isOpen={confirmOpen}
+        setOpen={setConfirmOpen}
+        title={`Run ${label} Job`}
+        message={`Are you sure you want to manually trigger the ${label} job? This will start an ECS Fargate task.`}
+        buttonText={`Run ${label}`}
+        onClick={handleConfirm}
+      />
+    </>
+  );
+};
+
 const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({
   cardUpdates,
   cardMetadataTasks,
@@ -197,162 +254,287 @@ const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({
   );
 };
 
-const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) => (
-  <CardBody>
-    <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of card database updates from Scryfall. Updates are checked regularly and applied automatically when new
-        card data is available.
-      </Text>
+const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) => {
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
 
-      {updates.length === 0 ? (
-        <Text className="text-center py-8 text-text-secondary">No card updates found.</Text>
-      ) : (
-        <div className="space-y-4">
-          {updates.map((update) => {
-            const statusBadge = getStatusBadge(update.status);
-            return (
-              <Card key={update.id} className="border border-border">
-                <CardBody>
-                  <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
-                    <Text semibold lg>
-                      Update on {formatDate(update.completedAt || update.timestamp)}
-                    </Text>
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                      {statusBadge.text}
-                    </span>
-                  </Flexbox>
+  return (
+    <CardBody>
+      <Flexbox direction="col" gap="4">
+        <Alerts alerts={alerts} />
+        <Flexbox direction="row" alignItems="center" justify="between">
+          <Text md className="text-text-secondary">
+            History of card database updates from Scryfall. Updates are checked regularly and applied automatically when
+            new card data is available.
+          </Text>
+          <RunJobButton jobType="card-update" label="Card Update" addAlert={addAlert} dismissAlerts={dismissAlerts} />
+        </Flexbox>
 
-                  <Flexbox direction="row" gap="4" className="mb-3">
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Text sm className="text-text-secondary">
-                        Scryfall Update Date
+        {updates.length === 0 ? (
+          <Text className="text-center py-8 text-text-secondary">No card updates found.</Text>
+        ) : (
+          <div className="space-y-4">
+            {updates.map((update) => {
+              const statusBadge = getStatusBadge(update.status);
+              return (
+                <Card key={update.id} className="border border-border">
+                  <CardBody>
+                    <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
+                      <Text semibold lg>
+                        Update on {formatDate(update.completedAt || update.timestamp)}
                       </Text>
-                      <Text semibold md>
-                        {new Date(update.scryfallUpdatedAt).toLocaleDateString()}
-                      </Text>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                        {statusBadge.text}
+                      </span>
                     </Flexbox>
 
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Text sm className="text-text-secondary">
-                        File Size
-                      </Text>
-                      <Text semibold md>
-                        {formatFileSize(update.scryfallFileSize)}
-                      </Text>
-                    </Flexbox>
-
-                    {update.status === 'IN_PROGRESS' && (
+                    <Flexbox direction="row" gap="4" className="mb-3">
                       <Flexbox direction="col" gap="1" className="flex-1">
                         <Text sm className="text-text-secondary">
-                          Current Step
+                          Scryfall Update Date
                         </Text>
                         <Text semibold md>
-                          {update.step}
+                          {new Date(update.scryfallUpdatedAt).toLocaleDateString()}
                         </Text>
                       </Flexbox>
-                    )}
+
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
+                          File Size
+                        </Text>
+                        <Text semibold md>
+                          {formatFileSize(update.scryfallFileSize)}
+                        </Text>
+                      </Flexbox>
+
+                      {update.status === 'IN_PROGRESS' && (
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Current Step
+                          </Text>
+                          <Text semibold md>
+                            {update.step}
+                          </Text>
+                        </Flexbox>
+                      )}
+
+                      {update.status === 'COMPLETED' && (
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Duration
+                          </Text>
+                          <Text semibold md>
+                            {formatDuration(update.startedAt, update.completedAt)}
+                          </Text>
+                        </Flexbox>
+                      )}
+                    </Flexbox>
+
+                    {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
+
+                    <StepProgress
+                      completedSteps={update.completedSteps || []}
+                      currentStep={update.step}
+                      status={update.status}
+                      stepTimestamps={update.stepTimestamps}
+                    />
 
                     {update.status === 'COMPLETED' && (
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Duration
-                        </Text>
-                        <Text semibold md>
-                          {formatDuration(update.startedAt, update.completedAt)}
-                        </Text>
-                      </Flexbox>
-                    )}
-                  </Flexbox>
-
-                  {update.errorMessage && <ErrorDetails errorMessage={update.errorMessage} />}
-
-                  <StepProgress
-                    completedSteps={update.completedSteps || []}
-                    currentStep={update.step}
-                    status={update.status}
-                    stepTimestamps={update.stepTimestamps}
-                  />
-
-                  {update.status === 'COMPLETED' && (
-                    <>
-                      <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                        <Flexbox direction="col" gap="1" className="flex-1">
-                          <Text sm className="text-text-secondary">
-                            Total Cards
-                          </Text>
-                          <Text semibold md>
-                            {update.totalCards.toLocaleString()}
-                          </Text>
-                        </Flexbox>
-                        <Flexbox direction="col" gap="1" className="flex-1">
-                          <Text sm className="text-text-secondary">
-                            Cards Added
-                          </Text>
-                          <Text semibold md>
-                            +{update.cardsAdded.toLocaleString()}
-                          </Text>
-                        </Flexbox>
-                      </Flexbox>
-
-                      <div className="mt-3 pt-3 border-t border-border">
-                        <Text xs className="text-text-secondary font-mono">
-                          Checksum: {update.checksum.substring(0, 16)}...
-                        </Text>
-                      </div>
-                    </>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </Flexbox>
-  </CardBody>
-);
-
-const CardMetadataTab: React.FC<{ tasks: CardMetadataTask[] }> = ({ tasks }) => (
-  <CardBody>
-    <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of card metadata and correlation updates. This job runs weekly and calculates card statistics,
-        correlations, synergies, and combo data. It processes all cube and draft data to generate recommendations and
-        insights.
-      </Text>
-
-      {tasks.length === 0 ? (
-        <Text className="text-center py-8 text-text-secondary">No card metadata tasks found.</Text>
-      ) : (
-        <div className="space-y-4">
-          {tasks.map((task) => {
-            const statusBadge = getStatusBadge(task.status);
-            return (
-              <Card key={task.id} className="border border-border">
-                <CardBody>
-                  <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
-                    <Text semibold lg>
-                      Metadata Update on {formatDate(task.completedAt || task.timestamp)}
-                    </Text>
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                      {statusBadge.text}
-                    </span>
-                  </Flexbox>
-
-                  <Flexbox direction="row" gap="4" className="mb-3">
-                    {task.status === 'IN_PROGRESS' && (
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Current Step
-                        </Text>
-                        <Text semibold md>
-                          {task.step}
-                        </Text>
-                      </Flexbox>
-                    )}
-
-                    {task.status === 'COMPLETED' && (
                       <>
+                        <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                          <Flexbox direction="col" gap="1" className="flex-1">
+                            <Text sm className="text-text-secondary">
+                              Total Cards
+                            </Text>
+                            <Text semibold md>
+                              {update.totalCards.toLocaleString()}
+                            </Text>
+                          </Flexbox>
+                          <Flexbox direction="col" gap="1" className="flex-1">
+                            <Text sm className="text-text-secondary">
+                              Cards Added
+                            </Text>
+                            <Text semibold md>
+                              +{update.cardsAdded.toLocaleString()}
+                            </Text>
+                          </Flexbox>
+                        </Flexbox>
+
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <Text xs className="text-text-secondary font-mono">
+                            Checksum: {update.checksum.substring(0, 16)}...
+                          </Text>
+                        </div>
+                      </>
+                    )}
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </Flexbox>
+    </CardBody>
+  );
+};
+
+const CardMetadataTab: React.FC<{ tasks: CardMetadataTask[] }> = ({ tasks }) => {
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
+
+  return (
+    <CardBody>
+      <Flexbox direction="col" gap="4">
+        <Alerts alerts={alerts} />
+        <Flexbox direction="row" alignItems="center" justify="between">
+          <Text md className="text-text-secondary">
+            History of card metadata and correlation updates. This job runs weekly and calculates card statistics,
+            correlations, synergies, and combo data. It processes all cube and draft data to generate recommendations
+            and insights.
+          </Text>
+          <RunJobButton
+            jobType="card-metadata"
+            label="Card Metadata"
+            addAlert={addAlert}
+            dismissAlerts={dismissAlerts}
+          />
+        </Flexbox>
+
+        {tasks.length === 0 ? (
+          <Text className="text-center py-8 text-text-secondary">No card metadata tasks found.</Text>
+        ) : (
+          <div className="space-y-4">
+            {tasks.map((task) => {
+              const statusBadge = getStatusBadge(task.status);
+              return (
+                <Card key={task.id} className="border border-border">
+                  <CardBody>
+                    <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
+                      <Text semibold lg>
+                        Metadata Update on {formatDate(task.completedAt || task.timestamp)}
+                      </Text>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                        {statusBadge.text}
+                      </span>
+                    </Flexbox>
+
+                    <Flexbox direction="row" gap="4" className="mb-3">
+                      {task.status === 'IN_PROGRESS' && (
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Current Step
+                          </Text>
+                          <Text semibold md>
+                            {task.step}
+                          </Text>
+                        </Flexbox>
+                      )}
+
+                      {task.status === 'COMPLETED' && (
+                        <>
+                          <Flexbox direction="col" gap="1" className="flex-1">
+                            <Text sm className="text-text-secondary">
+                              Duration
+                            </Text>
+                            <Text semibold md>
+                              {formatDuration(task.startedAt, task.completedAt)}
+                            </Text>
+                          </Flexbox>
+                          <Flexbox direction="col" gap="1" className="flex-1">
+                            <Text sm className="text-text-secondary">
+                              Completed At
+                            </Text>
+                            <Text semibold md>
+                              {formatDate(task.completedAt || task.timestamp)}
+                            </Text>
+                          </Flexbox>
+                        </>
+                      )}
+                    </Flexbox>
+
+                    {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
+
+                    <StepProgress
+                      completedSteps={task.completedSteps || []}
+                      currentStep={task.step}
+                      status={task.status}
+                      stepTimestamps={task.stepTimestamps}
+                    />
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </Flexbox>
+    </CardBody>
+  );
+};
+
+const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => {
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
+
+  return (
+    <CardBody>
+      <Flexbox direction="col" gap="4">
+        <Alerts alerts={alerts} />
+        <Flexbox direction="row" alignItems="center" justify="between">
+          <Text md className="text-text-secondary">
+            History of data export tasks. Exports are scheduled to run every 3 months and generate comprehensive data
+            exports for backup and analysis purposes.
+          </Text>
+          <RunJobButton jobType="export" label="Export" addAlert={addAlert} dismissAlerts={dismissAlerts} />
+        </Flexbox>
+
+        {tasks.length === 0 ? (
+          <Text className="text-center py-8 text-text-secondary">No export tasks found.</Text>
+        ) : (
+          <div className="space-y-4">
+            {tasks.map((task) => {
+              const statusBadge = getStatusBadge(task.status);
+              return (
+                <Card key={task.id} className="border border-border">
+                  <CardBody>
+                    <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
+                      <Text semibold lg>
+                        Export on {formatDate(task.completedAt || task.timestamp)}
+                      </Text>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                        {statusBadge.text}
+                      </span>
+                    </Flexbox>
+
+                    <Flexbox direction="row" gap="4" className="mb-3">
+                      <Flexbox direction="col" gap="1" className="flex-1">
+                        <Text sm className="text-text-secondary">
+                          Export Type
+                        </Text>
+                        <Text semibold md>
+                          {task.exportType}
+                        </Text>
+                      </Flexbox>
+
+                      {task.fileSize > 0 && (
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            File Size
+                          </Text>
+                          <Text semibold md>
+                            {formatFileSize(task.fileSize)}
+                          </Text>
+                        </Flexbox>
+                      )}
+
+                      {task.status === 'IN_PROGRESS' && (
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Current Step
+                          </Text>
+                          <Text semibold md>
+                            {task.step}
+                          </Text>
+                        </Flexbox>
+                      )}
+
+                      {task.status === 'COMPLETED' && (
                         <Flexbox direction="col" gap="1" className="flex-1">
                           <Text sm className="text-text-secondary">
                             Duration
@@ -361,251 +543,163 @@ const CardMetadataTab: React.FC<{ tasks: CardMetadataTask[] }> = ({ tasks }) => 
                             {formatDuration(task.startedAt, task.completedAt)}
                           </Text>
                         </Flexbox>
+                      )}
+                    </Flexbox>
+
+                    {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
+
+                    <StepProgress
+                      completedSteps={task.completedSteps || []}
+                      currentStep={task.step}
+                      status={task.status}
+                      stepTimestamps={task.stepTimestamps}
+                    />
+
+                    {task.status === 'COMPLETED' && task.fileSize > 0 && (
+                      <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
                         <Flexbox direction="col" gap="1" className="flex-1">
                           <Text sm className="text-text-secondary">
-                            Completed At
+                            Export Size
                           </Text>
                           <Text semibold md>
-                            {formatDate(task.completedAt || task.timestamp)}
+                            {formatFileSize(task.fileSize)}
                           </Text>
                         </Flexbox>
-                      </>
+                      </Flexbox>
                     )}
-                  </Flexbox>
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </Flexbox>
+    </CardBody>
+  );
+};
 
-                  {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
+const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => {
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
 
-                  <StepProgress
-                    completedSteps={task.completedSteps || []}
-                    currentStep={task.step}
-                    status={task.status}
-                    stepTimestamps={task.stepTimestamps}
-                  />
-                </CardBody>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </Flexbox>
-  </CardBody>
-);
+  return (
+    <CardBody>
+      <Flexbox direction="col" gap="4">
+        <Alerts alerts={alerts} />
+        <Flexbox direction="row" alignItems="center" justify="between">
+          <Text md className="text-text-secondary">
+            History of Scryfall card migration tasks. Migrations occur when cards are deleted or merged on Scryfall, and
+            these tasks apply those changes to all cubes.
+          </Text>
+          <RunJobButton jobType="migration" label="Migration" addAlert={addAlert} dismissAlerts={dismissAlerts} />
+        </Flexbox>
 
-const ExportTasksTab: React.FC<{ tasks: ExportTask[] }> = ({ tasks }) => (
-  <CardBody>
-    <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of data export tasks. Exports are scheduled to run every 3 months and generate comprehensive data
-        exports for backup and analysis purposes.
-      </Text>
-
-      {tasks.length === 0 ? (
-        <Text className="text-center py-8 text-text-secondary">No export tasks found.</Text>
-      ) : (
-        <div className="space-y-4">
-          {tasks.map((task) => {
-            const statusBadge = getStatusBadge(task.status);
-            return (
-              <Card key={task.id} className="border border-border">
-                <CardBody>
-                  <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
-                    <Text semibold lg>
-                      Export on {formatDate(task.completedAt || task.timestamp)}
-                    </Text>
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                      {statusBadge.text}
-                    </span>
-                  </Flexbox>
-
-                  <Flexbox direction="row" gap="4" className="mb-3">
-                    <Flexbox direction="col" gap="1" className="flex-1">
-                      <Text sm className="text-text-secondary">
-                        Export Type
+        {tasks.length === 0 ? (
+          <Text className="text-center py-8 text-text-secondary">No migration tasks found.</Text>
+        ) : (
+          <div className="space-y-4">
+            {tasks.map((task) => {
+              const statusBadge = getStatusBadge(task.status);
+              return (
+                <Card key={task.id} className="border border-border">
+                  <CardBody>
+                    <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
+                      <Text semibold lg>
+                        Migration on {formatDate(task.completedAt || task.timestamp)}
                       </Text>
-                      <Text semibold md>
-                        {task.exportType}
-                      </Text>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
+                        {statusBadge.text}
+                      </span>
                     </Flexbox>
 
-                    {task.fileSize > 0 && (
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          File Size
-                        </Text>
-                        <Text semibold md>
-                          {formatFileSize(task.fileSize)}
-                        </Text>
-                      </Flexbox>
-                    )}
+                    <Flexbox direction="row" gap="4" className="mb-3">
+                      {task.lastMigrationDate && (
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Last Migration Date
+                          </Text>
+                          <Text semibold md>
+                            {new Date(task.lastMigrationDate).toLocaleDateString()}
+                          </Text>
+                        </Flexbox>
+                      )}
 
-                    {task.status === 'IN_PROGRESS' && (
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Current Step
-                        </Text>
-                        <Text semibold md>
-                          {task.step}
-                        </Text>
-                      </Flexbox>
-                    )}
+                      {task.status === 'IN_PROGRESS' && (
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Current Step
+                          </Text>
+                          <Text semibold md>
+                            {task.step}
+                          </Text>
+                        </Flexbox>
+                      )}
+
+                      {task.status === 'COMPLETED' && (
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Duration
+                          </Text>
+                          <Text semibold md>
+                            {formatDuration(task.startedAt, task.completedAt)}
+                          </Text>
+                        </Flexbox>
+                      )}
+                    </Flexbox>
+
+                    {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
+
+                    <StepProgress
+                      completedSteps={task.completedSteps || []}
+                      currentStep={task.step}
+                      status={task.status}
+                      stepTimestamps={task.stepTimestamps}
+                    />
 
                     {task.status === 'COMPLETED' && (
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Duration
-                        </Text>
-                        <Text semibold md>
-                          {formatDuration(task.startedAt, task.completedAt)}
-                        </Text>
+                      <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Migrations Processed
+                          </Text>
+                          <Text semibold md>
+                            {task.migrationsProcessed.toLocaleString()}
+                          </Text>
+                        </Flexbox>
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Cubes Affected
+                          </Text>
+                          <Text semibold md>
+                            {task.cubesAffected.toLocaleString()}
+                          </Text>
+                        </Flexbox>
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Cards Deleted
+                          </Text>
+                          <Text semibold md>
+                            {task.cardsDeleted.toLocaleString()}
+                          </Text>
+                        </Flexbox>
+                        <Flexbox direction="col" gap="1" className="flex-1">
+                          <Text sm className="text-text-secondary">
+                            Cards Merged
+                          </Text>
+                          <Text semibold md>
+                            {task.cardsMerged.toLocaleString()}
+                          </Text>
+                        </Flexbox>
                       </Flexbox>
                     )}
-                  </Flexbox>
-
-                  {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
-
-                  <StepProgress
-                    completedSteps={task.completedSteps || []}
-                    currentStep={task.step}
-                    status={task.status}
-                    stepTimestamps={task.stepTimestamps}
-                  />
-
-                  {task.status === 'COMPLETED' && task.fileSize > 0 && (
-                    <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Export Size
-                        </Text>
-                        <Text semibold md>
-                          {formatFileSize(task.fileSize)}
-                        </Text>
-                      </Flexbox>
-                    </Flexbox>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </Flexbox>
-  </CardBody>
-);
-
-const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => (
-  <CardBody>
-    <Flexbox direction="col" gap="4">
-      <Text md className="text-text-secondary">
-        History of Scryfall card migration tasks. Migrations occur when cards are deleted or merged on Scryfall, and
-        these tasks apply those changes to all cubes.
-      </Text>
-
-      {tasks.length === 0 ? (
-        <Text className="text-center py-8 text-text-secondary">No migration tasks found.</Text>
-      ) : (
-        <div className="space-y-4">
-          {tasks.map((task) => {
-            const statusBadge = getStatusBadge(task.status);
-            return (
-              <Card key={task.id} className="border border-border">
-                <CardBody>
-                  <Flexbox direction="row" alignItems="center" gap="2" className="mb-4">
-                    <Text semibold lg>
-                      Migration on {formatDate(task.completedAt || task.timestamp)}
-                    </Text>
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${statusBadge.color}`}>
-                      {statusBadge.text}
-                    </span>
-                  </Flexbox>
-
-                  <Flexbox direction="row" gap="4" className="mb-3">
-                    {task.lastMigrationDate && (
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Last Migration Date
-                        </Text>
-                        <Text semibold md>
-                          {new Date(task.lastMigrationDate).toLocaleDateString()}
-                        </Text>
-                      </Flexbox>
-                    )}
-
-                    {task.status === 'IN_PROGRESS' && (
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Current Step
-                        </Text>
-                        <Text semibold md>
-                          {task.step}
-                        </Text>
-                      </Flexbox>
-                    )}
-
-                    {task.status === 'COMPLETED' && (
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Duration
-                        </Text>
-                        <Text semibold md>
-                          {formatDuration(task.startedAt, task.completedAt)}
-                        </Text>
-                      </Flexbox>
-                    )}
-                  </Flexbox>
-
-                  {task.errorMessage && <ErrorDetails errorMessage={task.errorMessage} />}
-
-                  <StepProgress
-                    completedSteps={task.completedSteps || []}
-                    currentStep={task.step}
-                    status={task.status}
-                    stepTimestamps={task.stepTimestamps}
-                  />
-
-                  {task.status === 'COMPLETED' && (
-                    <Flexbox direction="row" gap="4" className="pt-3 border-t border-border">
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Migrations Processed
-                        </Text>
-                        <Text semibold md>
-                          {task.migrationsProcessed.toLocaleString()}
-                        </Text>
-                      </Flexbox>
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Cubes Affected
-                        </Text>
-                        <Text semibold md>
-                          {task.cubesAffected.toLocaleString()}
-                        </Text>
-                      </Flexbox>
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Cards Deleted
-                        </Text>
-                        <Text semibold md>
-                          {task.cardsDeleted.toLocaleString()}
-                        </Text>
-                      </Flexbox>
-                      <Flexbox direction="col" gap="1" className="flex-1">
-                        <Text sm className="text-text-secondary">
-                          Cards Merged
-                        </Text>
-                        <Text semibold md>
-                          {task.cardsMerged.toLocaleString()}
-                        </Text>
-                      </Flexbox>
-                    </Flexbox>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </Flexbox>
-  </CardBody>
-);
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </Flexbox>
+    </CardBody>
+  );
+};
 
 export default RenderToRoot(AdminCardUpdatesPage);

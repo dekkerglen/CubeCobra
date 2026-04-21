@@ -49,6 +49,9 @@ Since 1.6.0
 - Fixed deckbuild land count and non-land count settings not being saved
 - Added a loading indicator when a draft finishes while bot decks are being built
 - Moved bot deckbuilding to the client side with a progress bar — instead of one long server request that could time out, the client now makes ~31 small incremental ML calls (1 batch build + ~30 draft steps), showing a live percentage and step counter during the process
+- Fixed draft finish returning HTTP 400 when unknown cards produced empty oracle IDs in iterative bot deckbuilding — empty/invalid oracle IDs are now filtered before building and submitting bot decks
+- Improved draft naming durability for unknown or malformed cards — cluster/archetype naming now skips missing card references instead of throwing during finish/update flows
+- Fixed invalid-card image fallback pointing to an unreachable external URL — placeholder cards now use the local default card image path
 - Fixed pick-by-pick breakdown collapsing duplicate cards in packs when "collapse duplicates" is enabled for the cube
 - Fixed board display order in cube list views not respecting the order configured in view settings
 - Respect Right Sidebar inline position when adjusting Cube Table and Stacks layouts.

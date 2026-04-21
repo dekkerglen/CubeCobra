@@ -67,12 +67,15 @@ const finalizeBotDecks = (
     // Add basics to fill remaining slots
     const mainboardCards = seat.mainboard.map(getReasonableCardByOracle);
     const basicsToAdd = calculateBasics(mainboardCards, basicsCards, seat.deckSize);
-    const mainboardOracles = [...seat.mainboard, ...basicsToAdd.map((card: any) => card.oracle_id)];
+    const mainboardOracles = [
+      ...seat.mainboard.filter(Boolean),
+      ...basicsToAdd.map((card: any) => card.oracle_id).filter(Boolean),
+    ];
 
     return {
       seatIndex: seat.seatIndex,
       mainboard: mainboardOracles.sort(),
-      sideboard: seat.remainingPool.slice().sort(),
+      sideboard: seat.remainingPool.filter(Boolean).slice().sort(),
     };
   });
 };
@@ -149,7 +152,7 @@ export const startHandler = async (req: Request, res: Response) => {
     const allPoolOracles: string[][] = botSeats.map((bot) =>
       bot.expandedPicks
         .map((index) => draft.cards[index]?.details?.oracle_id)
-        .filter((id): id is string => typeof id === 'string'),
+        .filter((id): id is string => Boolean(id)),
     );
 
     const seatMaps = allPoolOracles.map((poolOracles) => {

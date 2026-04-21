@@ -18,6 +18,12 @@ const mockCardCatalog: Catalog = {
   metadatadict: {},
   printedCardList: [], // for card filters
   comboOracleToIndex: {}, // for combo lookups
+  oracleTagDict: {},
+  oracleTagNames: [],
+  illustrationTagDict: {},
+  illustrationTagNames: [],
+  indexToScryfallId: [],
+  scryfallIdToIndex: {},
 };
 
 jest.mock('serverutils/cardCatalog', () => {
