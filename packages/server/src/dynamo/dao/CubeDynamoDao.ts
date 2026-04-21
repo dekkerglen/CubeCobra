@@ -1614,21 +1614,21 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         const filteredCubes = this.filterByCardCount(cubes, cardCountFilter);
 
         matchingCubes.push(...filteredCubes);
-
-        // Return with pagination key for next query
-        // Note: Results are already sorted by the GSI query
-        return {
-          items: matchingCubes,
-          lastKey: candidatesResult.lastKey,
-        };
       }
 
-      // No matches in this page, continue to next page
       currentLastKey = candidatesResult.lastKey;
 
       if (!currentLastKey) {
         // No more pages to check
         break;
+      }
+
+      // If we have results, return them
+      if (matchingCubes.length > 0) {
+        return {
+          items: matchingCubes,
+          lastKey: currentLastKey,
+        };
       }
     }
 
@@ -1643,7 +1643,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Return whatever we found (might be empty)
     return {
       items: matchingCubes,
-      lastKey: undefined,
+      lastKey: currentLastKey,
     };
   }
 
@@ -1719,42 +1719,62 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         gsiPK = 'GSI1PK';
     }
 
-    const params: QueryCommandInput = {
-      TableName: this.tableName,
-      IndexName: indexName,
-      KeyConditionExpression: `${gsiPK} = :hash`,
-      ExpressionAttributeValues: {
-        ':hash': hash,
-      },
-      ScanIndexForward: ascending,
-      Limit: limit,
-      ExclusiveStartKey: lastKey,
-    };
+    const targetLimit = limit || 36;
+    const matchingCubes: Cube[] = [];
+    let currentLastKey = lastKey;
+    const MAX_PAGES = 10;
+    let pagesChecked = 0;
 
-    // Query hash rows
-    const queryResult = await this.dynamoClient.send(new QueryCommand(params));
+    // When filtering by card count, we need to loop through DynamoDB pages
+    // until we accumulate enough matching results, since the filter is applied
+    // after fetching and may discard most items from each page.
+    while (matchingCubes.length < targetLimit && pagesChecked < MAX_PAGES) {
+      pagesChecked += 1;
 
-    if (!queryResult.Items || queryResult.Items.length === 0) {
-      return { items: [] };
+      const params: QueryCommandInput = {
+        TableName: this.tableName,
+        IndexName: indexName,
+        KeyConditionExpression: `${gsiPK} = :hash`,
+        ExpressionAttributeValues: {
+          ':hash': hash,
+        },
+        ScanIndexForward: ascending,
+        Limit: cardCountFilter ? targetLimit * 3 : targetLimit,
+        ExclusiveStartKey: currentLastKey,
+      };
+
+      const queryResult = await this.dynamoClient.send(new QueryCommand(params));
+
+      if (!queryResult.Items || queryResult.Items.length === 0) {
+        // No more results in DynamoDB
+        return { items: matchingCubes };
+      }
+
+      const cubeIds = queryResult.Items.map((item) => {
+        const pk = item.PK as string;
+        return pk.replace('HASH#CUBE#', '');
+      });
+
+      const cubes = await this.batchGet(cubeIds);
+      const filteredCubes = this.filterByCardCount(cubes, cardCountFilter);
+      matchingCubes.push(...filteredCubes);
+
+      currentLastKey = queryResult.LastEvaluatedKey;
+
+      if (!currentLastKey) {
+        // No more pages available
+        return { items: matchingCubes };
+      }
+
+      // If no card count filter, one page is sufficient
+      if (!cardCountFilter) {
+        break;
+      }
     }
 
-    // Extract cube IDs from hash rows
-    const cubeIds = queryResult.Items.map((item) => {
-      // PK contains the cube partition key: HASH#CUBE#{id}
-      const pk = item.PK as string;
-      // Remove 'HASH#CUBE#' prefix to get the cube ID
-      return pk.replace('HASH#CUBE#', '');
-    });
-
-    // Fetch cubes
-    const cubes = await this.batchGet(cubeIds);
-
-    // Apply card count filter if provided
-    const filteredCubes = this.filterByCardCount(cubes, cardCountFilter);
-
     return {
-      items: filteredCubes,
-      lastKey: queryResult.LastEvaluatedKey || undefined,
+      items: matchingCubes.slice(0, targetLimit),
+      lastKey: currentLastKey,
     };
   }
 
