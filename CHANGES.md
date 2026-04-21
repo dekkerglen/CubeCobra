@@ -2,7 +2,7 @@ Since 1.6.0
 
 # New Features
 
-- New API Documentation page (`/apidocs`) — comprehensive reference for all public-facing API endpoints including cube JSON export, file downloads (CSV, plaintext, MTGO, Forge, XMage), deck downloads (Arena, Cockatrice, TopDecked, etc.), card data lookups, search endpoints, cube metadata, changelog/history, draft bot ML predictions, RSS feeds, and bulk data exports. Includes code examples in cURL, JavaScript, and Python, plus rate limit documentation. Accessible from the "About" dropdown in the navbar and the footer.
+- New API Documentation page (`/apidocs`) — comprehensive reference for all public-facing API endpoints
 - New "Voucher" card type — a special card that contains a list of other cards; when drafted, the voucher expands into its contained cards instead of being picked directly. Supports custom names, `is:voucher` filter, and CSV import/export.
 - New "At a Glance" analysis page — a quick dashboard with key stats, pricing, mana curve, and distribution charts for your cube
 - New cubes now get a random art crop from a curated set of cards instead of always using Doubling Cube
@@ -27,6 +27,8 @@ Since 1.6.0
 - Add `date_last_updated` to cube exports.
 - New "Use Base Card Data" display option — when enabled, sorts and filters use a card's original printed attributes (CMC, colors, color category, type, rarity, name) instead of any user-set overrides, so you can see how your cube looks by the cards' base data
 - New "Disable Follow Notifications" setting — suppress notifications when users follow your cube (cube-level, in Options settings) or follow you (user-level, in Display Preferences)
+- Bot decks now get meaningful archetype names (e.g. "UW Control", "RG Aggro") derived from ML cluster centers, instead of generic labels
+- Deck naming is back — you can set your own deck name in the deckbuilder, and if you leave it blank an archetype name is generated automatically using the same cluster-based mechanism
 
 # Bug Fixes
 
@@ -62,3 +64,5 @@ Since 1.6.0
 - Improved performance of saving changes for large updates — card data is now fetched in a single batch request instead of one-at-a-time
 
 # Technical Changes
+
+- Added a new `archetypeAnnotater` package — a standalone tool for manually labeling draft/deck datasets and building the cluster-center annotations that power automatic archetype naming
