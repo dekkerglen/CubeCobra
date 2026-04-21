@@ -4194,6 +4194,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [pendingKnnK, setPendingKnnK] = useState(50);
   const [negSamples, setNegSamples] = useState(20);
   const [pendingNegSamples, setPendingNegSamples] = useState(20);
+  const [showAdvancedClustering, setShowAdvancedClustering] = useState(false);
   const [clusterMode, setClusterMode] = useState<'umap' | 'graph' | 'leiden' | 'nmf'>('leiden');
   const [clusterSeed, setClusterSeed] = useState(0);
   const [resolution, setResolution] = useState(1.0);
@@ -5552,179 +5553,181 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         {(draftMapPoints.length > 0 || clusteringInProgress) && (
                           <Card className="border-border">
                             <CardHeader>
-                              <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
-                                <div>
-                                  <Text semibold>Draft Map{skeletons.length > 0 ? ` · ${skeletons.length} clusters` : ''}</Text>
-                                  <div className="mt-0.5">
-                                    <Text xs className="text-text-secondary">
-                                      UMAP projection of deck embeddings. Click a point to focus its deck.
-                                    </Text>
+                              <div className="flex flex-col gap-2 w-full">
+                                {/* Always-visible: title + color toggle + advanced trigger */}
+                                <div className="flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                                  <div className="flex flex-row items-baseline gap-3">
+                                    <Text semibold>Draft Map{skeletons.length > 0 ? ` · ${skeletons.length} clusters` : ''}</Text>
+                                    {skeletons.length > 0 && (
+                                      <span className="text-xs text-text-secondary opacity-60">{clusterMethod}</span>
+                                    )}
                                   </div>
-                                </div>
-                                <div className="flex flex-row items-center gap-2 flex-shrink-0 flex-wrap">
-                                  <div className="flex flex-row items-center gap-1">
-                                    <label className="text-xs font-medium text-text-secondary whitespace-nowrap mr-1">Color by</label>
-                                    <button
-                                      type="button"
-                                      onClick={() => setDraftMapColorMode('cluster')}
-                                      className={[
-                                        'px-2 py-0.5 rounded text-xs font-medium border transition-colors',
-                                        draftMapColorMode === 'cluster'
-                                          ? 'bg-link text-white border-link'
-                                          : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
-                                      ].join(' ')}
-                                    >
-                                      Cluster
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setDraftMapColorMode('deckColor')}
-                                      className={[
-                                        'px-2 py-0.5 rounded text-xs font-medium border transition-colors',
-                                        draftMapColorMode === 'deckColor'
-                                          ? 'bg-link text-white border-link'
-                                          : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
-                                      ].join(' ')}
-                                    >
-                                      Deck Color
-                                    </button>
-                                  </div>
-                                  <div className="flex flex-col items-start gap-2">
-                                    <div className="flex flex-row flex-wrap items-center gap-1">
-                                      <div className="flex flex-row gap-0.5">
-                                        {(['umap', 'graph', 'leiden', 'nmf'] as const).map((mode, idx, arr) => (
-                                          <button
-                                            key={mode}
-                                            type="button"
-                                            onClick={() => { setClusterMode(mode); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
-                                            className={[
-                                              'px-2 py-0.5 text-xs font-medium border transition-colors',
-                                              idx === 0 ? 'rounded-l' : idx === arr.length - 1 ? 'rounded-r' : '',
-                                              clusterMode === mode
-                                                ? 'bg-link text-white border-link'
-                                                : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
-                                            ].join(' ')}
-                                          >
-                                            {mode === 'umap' ? 'UMAP' : mode === 'graph' ? 'Graph' : mode === 'leiden' ? 'Leiden' : 'NMF'}
-                                          </button>
-                                        ))}
-                                      </div>
-                                      <div className="flex flex-row gap-0.5">
-                                        <button
-                                          type="button"
-                                          onClick={() => { setDistanceMetric('euclidean'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
-                                          className={[
-                                            'px-2 py-0.5 rounded-l text-xs font-medium border transition-colors',
-                                            distanceMetric === 'euclidean'
-                                              ? 'bg-link text-white border-link'
-                                              : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
-                                          ].join(' ')}
-                                          title="Euclidean distance for k-NN graph"
-                                        >
-                                          Euclid
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => { setDistanceMetric('cosine'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
-                                          className={[
-                                            'px-2 py-0.5 rounded-r text-xs font-medium border transition-colors',
-                                            distanceMetric === 'cosine'
-                                              ? 'bg-link text-white border-link'
-                                              : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
-                                          ].join(' ')}
-                                          title="Cosine distance for k-NN graph (direction over magnitude)"
-                                        >
-                                          Cosine
-                                        </button>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => { setUseHybridEmbeddings(!useHybridEmbeddings); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
-                                        className={[
-                                          'px-2 py-0.5 rounded text-xs font-medium border transition-colors',
-                                          useHybridEmbeddings
-                                            ? 'bg-link text-white border-link'
-                                            : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary',
-                                        ].join(' ')}
-                                        title="Append color + type distribution features to embeddings"
-                                      >
-                                        Hybrid
+                                  <div className="flex flex-row items-center gap-2">
+                                    <div className="inline-flex rounded border border-border overflow-hidden">
+                                      <button type="button" onClick={() => setDraftMapColorMode('cluster')}
+                                        className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', draftMapColorMode === 'cluster' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                                        Cluster
+                                      </button>
+                                      <button type="button" onClick={() => setDraftMapColorMode('deckColor')}
+                                        className={['px-2 py-1 text-xs font-medium transition-colors', draftMapColorMode === 'deckColor' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                                        Deck Color
                                       </button>
                                     </div>
-                                    <div className="grid grid-cols-3 gap-x-2 gap-y-1 sm:flex sm:flex-row sm:items-center sm:gap-1 flex-wrap">
-                                      <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="k-NN neighbors">k-NN K</label>
-                                      <NumericInput min={5} max={200} value={pendingKnnK} onChange={setPendingKnnK} className="w-14 col-span-2" />
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowAdvancedClustering((v) => !v)}
+                                      className="flex items-center gap-1 text-xs text-text-secondary hover:text-text transition-colors"
+                                    >
+                                      <svg
+                                        className={['h-3 w-3 transition-transform', showAdvancedClustering ? 'rotate-180' : ''].join(' ')}
+                                        viewBox="0 0 20 20" fill="currentColor"
+                                      >
+                                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                      </svg>
+                                      Advanced
+                                    </button>
+                                  </div>
+                                </div>
+                                {/* Advanced options: method, k-NN graph, params, action */}
+                                {showAdvancedClustering && (
+                                  <>
+                                    {/* Controls row */}
+                                    <div className="flex flex-row flex-wrap items-end gap-3 pt-1">
+                                      {/* Method */}
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-text-secondary">Method</span>
+                                        <div className="inline-flex rounded border border-border overflow-hidden">
+                                          {(['umap', 'graph', 'leiden', 'nmf'] as const).map((mode) => (
+                                            <button key={mode} type="button"
+                                              onClick={() => { setClusterMode(mode); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                              className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border last:border-r-0', clusterMode === mode ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                                              {mode === 'umap' ? 'UMAP' : mode === 'graph' ? 'Graph' : mode === 'leiden' ? 'Leiden' : 'NMF'}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      {/* k-NN graph */}
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className={['text-[10px] font-semibold uppercase tracking-widest', clusterMode === 'nmf' ? 'text-text-secondary opacity-50' : 'text-text-secondary'].join(' ')}>
+                                          k-NN graph{clusterMode === 'nmf' ? ' (map only)' : ''}
+                                        </span>
+                                        <div className="flex flex-row items-center gap-1">
+                                          <div className={['inline-flex rounded border border-border overflow-hidden', clusterMode === 'nmf' ? 'opacity-50' : ''].join(' ')}>
+                                            <button type="button"
+                                              onClick={() => { setDistanceMetric('euclidean'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                              className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', distanceMetric === 'euclidean' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                                              Euclid
+                                            </button>
+                                            <button type="button"
+                                              onClick={() => { setDistanceMetric('cosine'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                              className={['px-2 py-1 text-xs font-medium transition-colors', distanceMetric === 'cosine' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                                              Cosine
+                                            </button>
+                                          </div>
+                                          <button type="button"
+                                            onClick={() => { setUseHybridEmbeddings(!useHybridEmbeddings); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                            title="Append color + card-type distribution to the embedding vectors before building the k-NN graph"
+                                            className={['px-2 py-1 rounded border text-xs font-medium transition-colors', clusterMode === 'nmf' ? 'opacity-50' : '', useHybridEmbeddings ? 'bg-link text-white border-link' : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary'].join(' ')}>
+                                            +Features
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    {/* Help text */}
+                                    <p className="text-xs text-text-secondary leading-snug max-w-2xl">
+                                      {clusterMode === 'umap' && <span>Projects drafters into 2D so similar pickers land near each other, then finds dense clumps. <strong>UMAP Dims</strong> controls fidelity; <strong>Min Size</strong> is the smallest valid cluster. k-NN metric and features affect clustering directly.</span>}
+                                      {clusterMode === 'graph' && <span>Connects drafters via k-NN graph, then finds dense neighborhoods using HDBSCAN. <strong>Min Size</strong> is the smallest valid cluster; <strong>Min Pts</strong> controls required density. k-NN metric and features affect clustering directly.</span>}
+                                      {clusterMode === 'leiden' && <span>Treats the k-NN graph as a social network and finds communities. <strong>Resolution</strong> controls granularity — higher means more, smaller clusters. k-NN metric and features affect clustering directly.</span>}
+                                      {clusterMode === 'nmf' && <span>Decomposes drafts into shared card themes and assigns each drafter to their best match. <strong>Topics</strong> sets how many archetypes to find (<strong>0</strong> = auto). k-NN metric and features only affect map layout here — NMF clusters from raw card overlap.</span>}
+                                      {clusterMode !== 'nmf' && <>{' '}<span className="opacity-60"><strong>Neighbors (k)</strong> controls graph connectivity — higher gives smoother boundaries.</span></>}
+                                    </p>
+                                    {/* Params + action */}
+                                    <div className="flex flex-row flex-wrap items-end gap-3">
+                                      <div className="flex flex-col gap-0.5">
+                                        <label className="text-[11px] font-medium text-text-secondary">
+                                          Neighbors (k){clusterMode === 'nmf' ? <span className="opacity-50"> · map</span> : ''}
+                                        </label>
+                                        <NumericInput min={5} max={200} value={pendingKnnK} onChange={setPendingKnnK} className="w-20" />
+                                      </div>
                                       {clusterMode === 'leiden' && (
-                                        <>
-                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Leiden resolution: higher = more smaller communities">Resol</label>
-                                          <NumericInput min={0.1} max={10} step={0.1} value={pendingResolution} onChange={setPendingResolution} className="w-16 col-span-2" />
-                                        </>
+                                        <div className="flex flex-col gap-0.5">
+                                          <label className="text-[11px] font-medium text-text-secondary">Resolution</label>
+                                          <NumericInput min={0.1} max={10} step={0.1} value={pendingResolution} onChange={setPendingResolution} className="w-20" />
+                                        </div>
                                       )}
                                       {clusterMode === 'nmf' && (
-                                        <>
-                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Number of topics (0 = auto)">Topics</label>
-                                          <NumericInput min={0} max={100} value={pendingNumTopics} onChange={setPendingNumTopics} className="w-14 col-span-2" />
-                                        </>
+                                        <div className="flex flex-col gap-0.5">
+                                          <label className="text-[11px] font-medium text-text-secondary">Topics</label>
+                                          <NumericInput min={0} max={100} value={pendingNumTopics} onChange={setPendingNumTopics} className="w-20" />
+                                        </div>
                                       )}
                                       {clusterMode === 'umap' && (
                                         <>
-                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="UMAP target dimensions for clustering">UMAP Dims</label>
-                                          <NumericInput min={2} max={128} value={pendingPcaDims} onChange={setPendingPcaDims} className="w-14 col-span-2" />
-                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Negative samples per edge in UMAP force layout">Neg Samp</label>
-                                          <NumericInput min={1} max={50} value={pendingNegSamples} onChange={setPendingNegSamples} className="w-14 col-span-2" />
+                                          <div className="flex flex-col gap-0.5">
+                                            <label className="text-[11px] font-medium text-text-secondary">UMAP Dims</label>
+                                            <NumericInput min={2} max={128} value={pendingPcaDims} onChange={setPendingPcaDims} className="w-20" />
+                                          </div>
+                                          <div className="flex flex-col gap-0.5">
+                                            <label className="text-[11px] font-medium text-text-secondary">Neg Samples</label>
+                                            <NumericInput min={1} max={50} value={pendingNegSamples} onChange={setPendingNegSamples} className="w-20" />
+                                          </div>
                                         </>
                                       )}
                                       {(clusterMode === 'umap' || clusterMode === 'graph') && (
                                         <>
-                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Minimum number of pools to form a cluster">Min Size</label>
-                                          <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-14 col-span-2" />
-                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Neighbors for density smoothing">Min Pts</label>
-                                          <NumericInput min={2} max={20} value={pendingMinPts} onChange={setPendingMinPts} className="w-14 col-span-2" />
+                                          <div className="flex flex-col gap-0.5">
+                                            <label className="text-[11px] font-medium text-text-secondary">Min Size</label>
+                                            <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-20" />
+                                          </div>
+                                          <div className="flex flex-col gap-0.5">
+                                            <label className="text-[11px] font-medium text-text-secondary">Min Pts</label>
+                                            <NumericInput min={2} max={20} value={pendingMinPts} onChange={setPendingMinPts} className="w-20" />
+                                          </div>
                                         </>
                                       )}
                                       {useHybridEmbeddings && (
-                                        <>
-                                          <label className="text-xs font-medium text-text-secondary whitespace-nowrap col-span-1" title="Scale factor for structural features relative to embedding">Hybrid W</label>
-                                          <NumericInput min={0.5} max={20} step={0.5} value={pendingHybridWeight} onChange={setPendingHybridWeight} className="w-16 col-span-2" />
-                                        </>
+                                        <div className="flex flex-col gap-0.5">
+                                          <label className="text-[11px] font-medium text-text-secondary">Hybrid Weight</label>
+                                          <NumericInput min={0.5} max={20} step={0.5} value={pendingHybridWeight} onChange={setPendingHybridWeight} className="w-20" />
+                                        </div>
                                       )}
+                                      <button
+                                        type="button"
+                                        disabled={clusteringInProgress}
+                                        onClick={() => {
+                                          setKnnK(pendingKnnK);
+                                          setPcaDims(pendingPcaDims);
+                                          setNegSamples(pendingNegSamples);
+                                          setMinClusterSize(pendingMinClusterSize);
+                                          setMinPts(pendingMinPts);
+                                          setResolution(pendingResolution);
+                                          setNumTopics(pendingNumTopics);
+                                          setHybridWeight(pendingHybridWeight);
+                                          setSelectedSkeletonId(null);
+                                          setFocusedPoolIndex(null);
+                                          setClusterSeed((s) => s + 1);
+                                        }}
+                                        className={[
+                                          'ml-auto self-end px-3 py-1.5 rounded text-xs font-semibold border transition-colors whitespace-nowrap',
+                                          clusteringInProgress
+                                            ? 'bg-bg-accent border-border text-text-secondary cursor-wait'
+                                            : 'bg-link border-link text-white hover:opacity-90',
+                                        ].join(' ')}
+                                      >
+                                        {clusteringInProgress ? (
+                                          <span className="flex items-center gap-1.5">
+                                            <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                            </svg>
+                                            Clustering…
+                                          </span>
+                                        ) : 'Update clusters'}
+                                      </button>
                                     </div>
-                                    <button
-                                      type="button"
-                                      disabled={clusteringInProgress}
-                                      onClick={() => {
-                                        setKnnK(pendingKnnK);
-                                        setPcaDims(pendingPcaDims);
-                                        setNegSamples(pendingNegSamples);
-                                        setMinClusterSize(pendingMinClusterSize);
-                                        setMinPts(pendingMinPts);
-                                        setResolution(pendingResolution);
-                                        setNumTopics(pendingNumTopics);
-                                        setHybridWeight(pendingHybridWeight);
-                                        setSelectedSkeletonId(null);
-                                        setFocusedPoolIndex(null);
-                                        setClusterSeed((s) => s + 1);
-                                      }}
-                                      className={[
-                                        'whitespace-nowrap px-2 py-0.5 rounded text-xs font-medium border w-full sm:w-auto',
-                                        clusteringInProgress
-                                          ? 'bg-bg-accent border-border text-text-secondary cursor-wait'
-                                          : 'bg-bg-accent border-border hover:bg-bg-active',
-                                      ].join(' ')}
-                                    >
-                                      {clusteringInProgress ? (
-                                        <span className="flex items-center justify-center gap-1">
-                                          <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                          </svg>
-                                          Clustering…
-                                        </span>
-                                      ) : 'Re-cluster'}
-                                    </button>
-                                  </div>
-                                </div>
-                              </Flexbox>
+                                  </>
+                                )}
+                              </div>
                             </CardHeader>
                             <CardBody>
                               <div className="grid grid-cols-2 gap-6 items-start">
