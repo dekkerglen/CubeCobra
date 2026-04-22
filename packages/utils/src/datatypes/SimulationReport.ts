@@ -105,7 +105,6 @@ export interface SimulationRunEntry {
   generatedAt: string;
   numDrafts: number;
   numSeats: number;
-  deadCardCount: number;
   convergenceScore: number;
 }
 
@@ -115,9 +114,7 @@ export interface SimulationSummary {
   cubeName: string;
   numDrafts: number;
   numSeats: number;
-  deadCardThreshold: number; // 0.0 - 1.0
   cardStats: CardStats[];
-  deadCards: CardStats[];
   colorBalance?: ColorBalance;
   archetypeDistribution: ArchetypeEntry[];
   p1p1Frequency?: P1P1Entry[]; // top 20 — computed but not currently displayed

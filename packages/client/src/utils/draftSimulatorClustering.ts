@@ -266,7 +266,8 @@ function hdbscanFromMST(
         }
 
         const dist = dendroDist[nodeIdx]!;
-        const lambda = dist > 1e-10 ? 1 / dist : 1e10;
+        // Cap lambda to avoid infinity/overflow when two points are nearly identical.
+        const lambda = dist > 1e-6 ? 1 / dist : 1e6;
         const leftIdx = dendroLeft[nodeIdx]!;
         const rightIdx = dendroRight[nodeIdx]!;
         const leftSize = dendroSize[leftIdx]!;
@@ -517,12 +518,13 @@ export function leidenAssignments(
   const adjList: number[][] = Array.from({ length: n }, () => []);
   const seen = new Set<number>();
 
+  const seenStr = new Set<string>();
   for (let i = 0; i < n; i++) {
     for (const nb of graph.neighbors[i]!) {
       const j = nb.index;
-      const key = i < j ? i * n + j : j * n + i;
-      if (!seen.has(key)) {
-        seen.add(key);
+      const key = i < j ? `${i},${j}` : `${j},${i}`;
+      if (!seenStr.has(key)) {
+        seenStr.add(key);
         adjList[i]!.push(j);
         adjList[j]!.push(i);
       }
@@ -531,7 +533,7 @@ export function leidenAssignments(
 
   const deg = new Float64Array(n);
   for (let i = 0; i < n; i++) deg[i] = adjList[i]!.length;
-  const totalEdges = seen.size;
+  const totalEdges = seenStr.size;
 
   if (totalEdges === 0) return Array.from({ length: n }, (_, i) => i);
 
