@@ -108,6 +108,30 @@ export function getLoadProgressListenerCountForTests(): number {
   return loadProgressListeners.size;
 }
 
+/**
+ * Returns true if the given oracle ID (or its mlOracleId remap) is present in
+ * the loaded model's vocabulary. Cards that return false will receive zero pick
+ * ratings and be systematically underpicked — callers can use this to warn users.
+ */
+export function isOracleInVocab(oracle: string, remapping?: Record<string, string>): boolean {
+  return oracleToIndex[remapping?.[oracle] ?? oracle] !== undefined;
+}
+
+/**
+ * Returns the count of oracles in cardMeta that are missing from the model vocab
+ * (after applying mlOracleId remapping). Useful for surfacing a warning when
+ * a large fraction of cube cards are out-of-vocabulary.
+ */
+export function countOutOfVocabOracles(cardMeta: Record<string, { mlOracleId?: string }>): number {
+  if (!draftBotLoaded) return 0;
+  let count = 0;
+  for (const [oracle, meta] of Object.entries(cardMeta)) {
+    const resolved = meta.mlOracleId ?? oracle;
+    if (oracleToIndex[resolved] === undefined) count++;
+  }
+  return count;
+}
+
 // ---------------------------------------------------------------------------
 // Shared forward pass helper
 // ---------------------------------------------------------------------------
@@ -353,6 +377,7 @@ export async function localPickBatch(
   if (!draftBotLoaded || !tf || !encoder || !draftDecoder || packs.length === 0) {
     return packs.map(() => '');
   }
+  if (numOracles === 0) throw new Error('Draft bot loaded but oracle vocabulary is empty — model may have loaded incorrectly.');
 
   const logits = await forwardPass(pools, draftDecoder, remapping, chunkSize);
 
@@ -452,7 +477,7 @@ const throwIfAborted = (signal?: AbortSignal): void => {
 };
 
 const oracleIsLand = (oracle: string, meta: DeckbuildEntry['cardMeta']): boolean =>
-  (meta[oracle]?.type ?? '').includes('Land');
+  /\bLand\b/.test(meta[oracle]?.type ?? '');
 
 const getDeckCardMeta = (
   oracle: string,
@@ -468,7 +493,7 @@ export function colorDemandPerSource(cards: Array<DeckCardMeta | BasicLandInfo>)
   const sources: Record<string, number> = { W: 1, U: 1, B: 1, R: 1, G: 1 };
 
   for (const card of cards) {
-    if ((card.type ?? '').includes('Land')) {
+    if (/\bLand\b/.test(card.type ?? '')) {
       for (const color of deckCardColors(card)) {
         if (sources[color] !== undefined) sources[color] += 1;
       }

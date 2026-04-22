@@ -1,9 +1,11 @@
 /**
- * Maps Scryfall oracle tag names to canonical draft/cube archetype buckets.
- * Multiple raw tags (aliases, sub-tags, near-synonyms) consolidate into one bucket.
- * Noise tags (metadata, silver-border, DnD-specific, formatting oddities) are omitted.
+ * Conservative OTAG -> archetype bucket mapping.
  *
- * ~50 canonical buckets covering the most impactful draft/cube archetypes.
+ * Philosophy:
+ * - bias toward precision over recall
+ * - only map tags that feel like real deck labels
+ * - avoid generic gameplay descriptors that create noisy deck names
+ * - prefer under-tagging to over-tagging
  */
 export const OTAG_BUCKET_MAP: Record<string, string> = {
   // ── removal ──────────────────────────────────────────────────────────────
@@ -58,61 +60,41 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'burn-player-each': 'burn',
   'opponent-loses-life': 'burn',
 
-  // ── card-advantage ────────────────────────────────────────────────────────
-  'card-advantage': 'card-advantage',
-  'draw-card': 'card-advantage',
-  'pure-draw': 'card-advantage',
-  'repeatable-draw': 'card-advantage',
-  'draw-engine': 'card-advantage',
-  'repeatable-pure-draw': 'card-advantage',
-  cantrip: 'card-advantage',
-  'burst-draw': 'card-advantage',
-  impulse: 'card-advantage',
-  'impulse-draw': 'card-advantage',
-  'impulsive-draw': 'card-advantage',
-  'bottle-draw': 'card-advantage',
-  'repeatable-impulsive-draw': 'card-advantage',
-  'life-for-cards': 'card-advantage',
-  curiosity: 'card-advantage',
-  'curiosity-like': 'card-advantage',
-  'draw-matters': 'card-advantage',
-  'second-draw-matters': 'card-advantage',
-  tome: 'card-advantage',
+  // ── card advantage ───────────────────────────────────────────────────────
+  'card-advantage': 'draw / card-advantage',
+  'draw-card': 'draw / card-advantage',
+  'pure-draw': 'draw / card-advantage',
+  'repeatable-draw': 'draw / card-advantage',
+  'draw-engine': 'draw / card-advantage',
+  'repeatable-pure-draw': 'draw / card-advantage',
+  cantrip: 'draw / card-advantage',
+  'burst-draw': 'draw / card-advantage',
+  impulse: 'draw / card-advantage',
+  'impulse-draw': 'draw / card-advantage',
+  'impulsive-draw': 'draw / card-advantage',
+  'bottle-draw': 'draw / card-advantage',
+  'repeatable-impulsive-draw': 'draw / card-advantage',
+  'life-for-cards': 'draw / card-advantage',
+  curiosity: 'draw / card-advantage',
+  'curiosity-like': 'draw / card-advantage',
+  'draw-matters': 'draw / card-advantage',
+  'second-draw-matters': 'draw / card-advantage',
+  tome: 'draw / card-advantage',
 
-  // ── evasion ───────────────────────────────────────────────────────────────
+  // ── evasion ──────────────────────────────────────────────────────────────
   evasion: 'evasion',
   'gives-evasion': 'evasion',
   'gives-flying': 'evasion',
   'gains-flying': 'evasion',
-  'gives-haste': 'evasion',
-  'gains-haste': 'evasion',
-  'gives-trample': 'evasion',
-  'gains-trample': 'evasion',
   'gives-unblockable': 'evasion',
-  'gives-first-strike': 'evasion',
-  'gains-first-strike': 'evasion',
-  'gives-double-strike': 'evasion',
-  'gains-double-strike': 'evasion',
   'gives-menace': 'evasion',
   'gains-menace': 'evasion',
-  'gives-vigilance': 'evasion',
-  'gains-vigilance': 'evasion',
-  'gives-lifelink': 'evasion',
-  'gains-lifelink': 'evasion',
-  'gives-deathtouch': 'evasion',
-  'gains-deathtouch': 'evasion',
-  'gives-indestructible': 'evasion',
-  'gains-indestructible': 'evasion',
-  'gives-hexproof': 'evasion',
-  'gains-hexproof': 'evasion',
-  'gives-reach': 'evasion',
-  'gives-ward': 'evasion',
   'gives-skulk': 'evasion',
   unblockable: 'evasion',
   saboteur: 'evasion',
   'unique-evasion': 'evasion',
 
-  // ── ramp ──────────────────────────────────────────────────────────────────
+  // ── ramp ─────────────────────────────────────────────────────────────────
   acceleration: 'ramp',
   'mana-ramp': 'ramp',
   ramp: 'ramp',
@@ -139,15 +121,13 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'ramp-with-sets-mechanic': 'ramp',
   'utility-mana-rock': 'ramp',
   'mana-rock-with-sets-mechanic': 'ramp',
-  fixing: 'ramp',
-  'mana-fix': 'ramp',
 
-  // ── landfall ──────────────────────────────────────────────────────────────
+  // ── landfall ─────────────────────────────────────────────────────────────
   landfall: 'landfall',
   'lands-matter': 'landfall',
   'synergy-land': 'landfall',
 
-  // ── mana-sink ─────────────────────────────────────────────────────────────
+  // ── mana sink ────────────────────────────────────────────────────────────
   'mana-dump': 'mana-sink',
   'mana-sink': 'mana-sink',
   'bottomless-mana-sink': 'mana-sink',
@@ -155,87 +135,17 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   firebreathing: 'mana-sink',
   'shade-pump': 'mana-sink',
 
-  // ── tribal ────────────────────────────────────────────────────────────────
-  kindred: 'tribal',
-  tribal: 'tribal',
-  typal: 'tribal',
-  'typal-creature': 'tribal',
-  'tribal-coupling': 'tribal',
-  'typal-coupling': 'tribal',
-  anthem: 'tribal',
-  lord: 'tribal',
-  'keyword-anthem': 'tribal',
-  'tribal-dragon': 'tribal',
-  'typal-dragon': 'tribal',
-  'dragon-tribal': 'tribal',
-  'tribal-elf': 'tribal',
-  'typal-elf': 'tribal',
-  'tribal-goblin': 'tribal',
-  'typal-goblin': 'tribal',
-  'goblin-synergy': 'tribal',
-  'tribal-zombie': 'tribal',
-  'typal-zombie': 'tribal',
-  'zombie-lord': 'tribal',
-  'tribal-sliver': 'tribal',
-  'typal-sliver': 'tribal',
-  'tribal-vampire': 'tribal',
-  'typal-vampire': 'tribal',
-  'vampire-lord': 'tribal',
-  'tribal-warrior': 'tribal',
-  'typal-warrior': 'tribal',
-  'tribal-wizard': 'tribal',
-  'typal-wizard': 'tribal',
-  'tribal-spirit': 'tribal',
-  'typal-spirit': 'tribal',
-  'spirit-lord': 'tribal',
-  'tribal-merfolk': 'tribal',
-  'typal-merfolk': 'tribal',
-  'tribal-rogue': 'tribal',
-  'typal-rogue': 'tribal',
-  'tribal-human': 'tribal',
-  'typal-human': 'tribal',
-  'human-tribal': 'tribal',
-  'tribal-ally': 'tribal',
-  'typal-ally': 'tribal',
-  'tribal-cleric': 'tribal',
-  'typal-cleric': 'tribal',
-  'tribal-pirate': 'tribal',
-  'typal-pirate': 'tribal',
-  'tribal-knight': 'tribal',
-  'typal-knight': 'tribal',
-  'tribal-soldier': 'tribal',
-  'typal-soldier': 'tribal',
-  'tribal-assassin': 'tribal',
-  'typal-assassin': 'tribal',
-  'tribal-dinosaur': 'tribal',
-  'typal-dinosaur': 'tribal',
-  'tribal-army': 'tribal',
-  'typal-army': 'tribal',
-  'tribal-choose': 'tribal',
-  'typal-choose': 'tribal',
-  'black-lord': 'tribal',
-  'lord-black': 'tribal',
-  changeling: 'tribal',
-  'hate-typal': 'tribal',
-  'tribal-hate': 'tribal',
-  'synergy-spirit': 'tribal',
-  'synergy-knight': 'tribal',
-  'synergy-party': 'tribal',
-
-  // ── lifegain ──────────────────────────────────────────────────────────────
+  // ── lifegain ─────────────────────────────────────────────────────────────
   'life-gain': 'lifegain',
   lifegain: 'lifegain',
   'repeatable-lifegain': 'lifegain',
   'lifegain-matters': 'lifegain',
   'synergy-lifegain': 'lifegain',
-  'life-payment': 'lifegain',
-  'life-total-matters-self': 'lifegain',
-  'opponent-lifegain': 'lifegain',
   'drain-life': 'lifegain',
   'life-drain': 'lifegain',
   'drain-creature': 'lifegain',
 
-  // ── recursion ─────────────────────────────────────────────────────────────
+  // ── recursion ────────────────────────────────────────────────────────────
   recursion: 'recursion',
   'recursion-creature': 'recursion',
   reanimate: 'recursion',
@@ -281,24 +191,18 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'rescue-artifact': 'recursion',
   'rescue-land': 'recursion',
   'mass-reanimation': 'recursion',
-  unexile: 'recursion',
   'castable-from-graveyard': 'recursion',
   flashback: 'recursion',
   'cast-from-graveyard': 'recursion',
   'activate-from-graveyard': 'recursion',
-  'cast-from-nonhand': 'recursion',
-  'gives-castable-from-nonhand': 'recursion',
-  'castable-from-nonhand': 'recursion',
   'cheat-death': 'recursion',
   'cheat-death-self': 'recursion',
   'creature-reanimation-automatic': 'recursion',
   graveflicker: 'recursion',
   'temporary-reanimation': 'recursion',
   'trigger-from-graveyard': 'recursion',
-  'cast-on-resolution': 'recursion',
-  'homeward-effect': 'recursion',
 
-  // ── graveyard-matters ─────────────────────────────────────────────────────
+  // ── graveyard matters ────────────────────────────────────────────────────
   'graveyard-fuel': 'graveyard-matters',
   'cards-in-graveyard-matter': 'graveyard-matters',
   'graveyard-fuel-creature': 'graveyard-matters',
@@ -309,19 +213,18 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'card-types-in-graveyard-matter': 'graveyard-matters',
   'synergy-graveyard-cast': 'graveyard-matters',
 
-  // ── looting ───────────────────────────────────────────────────────────────
+  // ── looting ──────────────────────────────────────────────────────────────
   loot: 'looting',
   rummage: 'looting',
   'repeatable-loot': 'looting',
   'repeatable-rummage': 'looting',
   'discard-outlet': 'looting',
   discardoutlet: 'looting',
-  discard: 'looting',
   'discard-outlet-land': 'looting',
   'discard-exile': 'looting',
   'discard-to-exile': 'looting',
 
-  // ── mill ──────────────────────────────────────────────────────────────────
+  // ── mill ─────────────────────────────────────────────────────────────────
   mill: 'mill',
   'mill-opponent': 'mill',
   'mill-any': 'mill',
@@ -333,58 +236,38 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'synergy-mill': 'mill',
   'graveyard-seal': 'mill',
 
-  // ── counterspells ─────────────────────────────────────────────────────────
-  counter: 'counterspells',
+  // ── counterspells ────────────────────────────────────────────────────────
   counterspell: 'counterspells',
   'counterspell-soft': 'counterspells',
   'soft-counter': 'counterspells',
   'counterspell-reusable': 'counterspells',
   'counterspell-ability': 'counterspells',
   'counterspell-creature': 'counterspells',
-  stifle: 'counterspells',
-  'counter-fuel': 'counterspells',
   'counterspell-with-set-mechanic': 'counterspells',
   'counterspell-with-sets-mechanic': 'counterspells',
 
-  // ── +1/+1-counters ────────────────────────────────────────────────────────
+  // ── +1/+1 counters ───────────────────────────────────────────────────────
   'counters-matter': '+1/+1-counters',
-  'power-boost-to-all': '+1/+1-counters',
-  'toughness-boost-to-all': '+1/+1-counters',
-  'power-matters': '+1/+1-counters',
-  'power-matters-self': '+1/+1-counters',
-  'power-matters-individual': '+1/+1-counters',
   'gives-1-1-counters-to-all': '+1/+1-counters',
   'gives-counters-to-all': '+1/+1-counters',
-  'giant-growth': '+1/+1-counters',
-  'giant-growth-with-set-mechanic': '+1/+1-counters',
-  'giant-growth-with-sets-mechanic': '+1/+1-counters',
-  enlarge: '+1/+1-counters',
-  'scales-with-power': '+1/+1-counters',
-  'toughness-matters': '+1/+1-counters',
   'counter-increaser': '+1/+1-counters',
   'counter-doubler': '+1/+1-counters',
   'counter-movement': '+1/+1-counters',
   'move-counters': '+1/+1-counters',
   'ability-counter': '+1/+1-counters',
   'keyword-counter': '+1/+1-counters',
-  'scales-with-multiple': '+1/+1-counters',
   'remove-counters': '+1/+1-counters',
   'remove-counters-you': '+1/+1-counters',
 
-  // ── blink-flicker ─────────────────────────────────────────────────────────
+  // ── blink-flicker ────────────────────────────────────────────────────────
   blink: 'blink-flicker',
   flicker: 'blink-flicker',
   'flicker-creature': 'blink-flicker',
   'flicker-slow': 'blink-flicker',
   'blink-slow': 'blink-flicker',
-  'enters-in-company': 'blink-flicker',
   'etb-other-creature': 'blink-flicker',
-  alliance: 'blink-flicker',
-  creaturefall: 'blink-flicker',
-  'leaves-battlefield-trigger': 'blink-flicker',
-  'leaves-trigger-self': 'blink-flicker',
 
-  // ── copy ──────────────────────────────────────────────────────────────────
+  // ── copy ─────────────────────────────────────────────────────────────────
   copy: 'copy',
   'copy-creature': 'copy',
   'copy-self': 'copy',
@@ -394,10 +277,8 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'copy-artifact': 'copy',
   'copy-from-graveyard': 'copy',
   clone: 'copy',
-  'animate-self': 'copy',
-  'becomes-creature': 'copy',
 
-  // ── tutor ─────────────────────────────────────────────────────────────────
+  // ── tutor ────────────────────────────────────────────────────────────────
   tutor: 'tutor',
   'tutor-to': 'tutor',
   'tutor-hand': 'tutor',
@@ -422,7 +303,7 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'seek-to-hand': 'tutor',
   wish: 'tutor',
 
-  // ── cheat-mana ────────────────────────────────────────────────────────────
+  // ── cheat mana ───────────────────────────────────────────────────────────
   'cheat-mana': 'cheat-mana',
   'cost-ignorer': 'cheat-mana',
   'free-casting': 'cheat-mana',
@@ -437,35 +318,25 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'cast-from-top': 'cheat-mana',
   'play-from-top': 'cheat-mana',
   'cost-reducer': 'cheat-mana',
-  'cost-reducer-self': 'cheat-mana',
-  'discount-self': 'cheat-mana',
-  'cheaper-than-mv': 'cheat-mana',
-  'less-expensive-than-mv': 'cheat-mana',
   convoke: 'cheat-mana',
   affinity: 'cheat-mana',
   'potentially-free': 'cheat-mana',
   'phyrexian-mana': 'cheat-mana',
-  'offcolor-kicker': 'cheat-mana',
-  'offcolor-additional-cost': 'cheat-mana',
   'free-cast-another': 'cheat-mana',
   'alternate-cost-tap-creature': 'cheat-mana',
   'discount-tap-creature': 'cheat-mana',
   'alternate-cost-sacrifice': 'cheat-mana',
+  delve: 'cheat-mana',
+  escape: 'cheat-mana',
+  cascade: 'cheat-mana',
 
-  // ── hand-disruption ───────────────────────────────────────────────────────
+  // ── hand disruption ──────────────────────────────────────────────────────
   'hand-disruption': 'hand-disruption',
   coercion: 'hand-disruption',
   duress: 'hand-disruption',
   thoughtseize: 'hand-disruption',
-  'hand-size-matters': 'hand-disruption',
-  handsize: 'hand-disruption',
-  'high-hand-size-matters': 'hand-disruption',
-  'low-hand-size-matters': 'hand-disruption',
-  'hand-size-hate': 'hand-disruption',
-  'hand-size-increase': 'hand-disruption',
-  'discard-with-sets-mechanic': 'hand-disruption',
 
-  // ── library-manipulation ──────────────────────────────────────────────────
+  // ── library manipulation ────────────────────────────────────────────────
   'library-manipulation': 'library-manipulation',
   'top-deck-manipulation': 'library-manipulation',
   'bottom-deck-manipulation': 'library-manipulation',
@@ -481,14 +352,14 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'impulse-land': 'library-manipulation',
   'impulse-creature': 'library-manipulation',
 
-  // ── bounce ────────────────────────────────────────────────────────────────
+  // ── bounce ───────────────────────────────────────────────────────────────
   bounce: 'bounce',
   'bounce-self': 'bounce',
   'man-o-war': 'bounce',
   tuck: 'bounce',
   'tuck-self': 'bounce',
 
-  // ── sweeper ───────────────────────────────────────────────────────────────
+  // ── sweeper ──────────────────────────────────────────────────────────────
   boardwipe: 'sweeper',
   'mass-removal': 'sweeper',
   sweeper: 'sweeper',
@@ -497,7 +368,7 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'sweeper-one-sided': 'sweeper',
   'sweeper-graveyard': 'sweeper',
 
-  // ── protection ────────────────────────────────────────────────────────────
+  // ── protection ───────────────────────────────────────────────────────────
   'protects-creature': 'protection',
   'combat-trick': 'protection',
   'damage-prevention': 'protection',
@@ -524,7 +395,7 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   arrest: 'protection',
   pacifism: 'protection',
 
-  // ── theft ─────────────────────────────────────────────────────────────────
+  // ── theft ────────────────────────────────────────────────────────────────
   theft: 'theft',
   'theft-creature': 'theft',
   'theft-cast': 'theft',
@@ -534,9 +405,8 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'control-changing-effects': 'theft',
   donate: 'theft',
   defector: 'theft',
-  'regain-control': 'theft',
 
-  // ── token-generation ──────────────────────────────────────────────────────
+  // ── token generation ─────────────────────────────────────────────────────
   'repeatable-token-generator': 'token-generation',
   'repeatable-creature-tokens': 'token-generation',
   'multiple-bodies': 'token-generation',
@@ -551,10 +421,10 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'doomed-traveler': 'token-generation',
   'leaves-body-behind': 'token-generation',
   'repeatable-noncreature-tokens': 'token-generation',
-  'synergy-token': 'token-generation',
-  'synergy-token-creature': 'token-generation',
+  'synergy-token': 'tokens-matter',
+  'synergy-token-creature': 'tokens-matter',
 
-  // ── sacrifice ─────────────────────────────────────────────────────────────
+  // ── sacrifice ────────────────────────────────────────────────────────────
   'sac-outlet': 'sacrifice',
   'sacrifice-outlet': 'sacrifice',
   'sacrifice-outlet-creature': 'sacrifice',
@@ -562,7 +432,6 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'sacrifice-outlet-enchantment': 'sacrifice',
   'sacrifice-outlet-land': 'sacrifice',
   'sacrifice-outlet-permanent': 'sacrifice',
-  'sacrifice-self': 'sacrifice',
   'free-sac-outlet': 'sacrifice',
   'free-sacrifice-outlet': 'sacrifice',
   'repeatable-sacrifice-outlet': 'sacrifice',
@@ -574,18 +443,16 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   martyr: 'sacrifice',
   egg: 'sacrifice',
 
-  // ── attack-triggers ───────────────────────────────────────────────────────
+  // ── attack triggers ──────────────────────────────────────────────────────
   'attack-trigger': 'attack-triggers',
   'attacking-matters-self': 'attack-triggers',
   'attacking-matters': 'attack-triggers',
   'block-trigger': 'attack-triggers',
-  'cast-trigger': 'attack-triggers',
-  'cast-trigger-you': 'attack-triggers',
-  'cast-trigger-other': 'attack-triggers',
-  'cast-trigger-self': 'attack-triggers',
   'titan-trigger': 'attack-triggers',
+  ninjutsu: 'attack-triggers',
+  mentor: 'attack-triggers',
 
-  // ── hate ──────────────────────────────────────────────────────────────────
+  // ── hate ─────────────────────────────────────────────────────────────────
   hate: 'hate',
   'hate-artifact': 'hate',
   'graveyard-hate': 'hate',
@@ -602,7 +469,6 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'hate-flying': 'hate',
   'flying-hate': 'hate',
   'hate-tapped': 'hate',
-  'hate-set-mechanic': 'hate',
   'hate-instant': 'hate',
   'hate-sorcery': 'hate',
   'hate-target': 'hate',
@@ -628,19 +494,9 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'hate-color-choose': 'hate',
   'color-hate': 'hate',
 
-  // ── land-matters ──────────────────────────────────────────────────────────
+  // ── land matters ─────────────────────────────────────────────────────────
   'utility-land': 'land-matters',
-  'cycle-land': 'land-matters',
-  'cycle-dual-land': 'land-matters',
-  'dual-land': 'land-matters',
-  tapland: 'land-matters',
-  'tapland-with-set-mechanic': 'land-matters',
-  'tapland-with-sets-mechanic': 'land-matters',
   fetchland: 'land-matters',
-  filterland: 'land-matters',
-  painland: 'land-matters',
-  'rainbow-land': 'land-matters',
-  'cycle-mono-land': 'land-matters',
   creatureland: 'land-matters',
   'man-land': 'land-matters',
   manland: 'land-matters',
@@ -651,21 +507,15 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'animate-land': 'land-matters',
   'untap-land': 'land-matters',
   'untapper-land': 'land-matters',
-  'conditional-tapland': 'land-matters',
-  'etb-self-tapped-conditional': 'land-matters',
-  'nonbasic-basic-land-type': 'land-matters',
 
-  // ── artifact-synergy ──────────────────────────────────────────────────────
+  // ── artifact synergy ─────────────────────────────────────────────────────
   'synergy-artifact': 'artifact-synergy',
   'synergy-artifact-creature': 'artifact-synergy',
   artifactfall: 'artifact-synergy',
   'becomes-artifact': 'artifact-synergy',
   artifactify: 'artifact-synergy',
-  'tap-artifact': 'artifact-synergy',
-  'tapper-artifact': 'artifact-synergy',
   'tap-fuel-artifact': 'artifact-synergy',
   'untapper-artifact': 'artifact-synergy',
-  'mana-storage': 'artifact-synergy',
   'living-weapon': 'artifact-synergy',
   'synergy-equipment': 'artifact-synergy',
   'animate-artifact': 'artifact-synergy',
@@ -675,184 +525,178 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'snap-on': 'artifact-synergy',
   'etb-self-attach': 'artifact-synergy',
 
-  // ── enchantment-synergy ───────────────────────────────────────────────────
+  // ── enchantment synergy ──────────────────────────────────────────────────
   'synergy-enchantment': 'enchantment-synergy',
   enchantmentfall: 'enchantment-synergy',
   constellation: 'enchantment-synergy',
+  enchantress: 'enchantment-synergy',
   'synergy-aura': 'enchantment-synergy',
-  disenchant: 'enchantment-synergy',
-  'disenchant-naturalize': 'enchantment-synergy',
-  naturalize: 'enchantment-synergy',
   'synergy-saga': 'enchantment-synergy',
 
-  // ── tapping ───────────────────────────────────────────────────────────────
-  tapper: 'tapping',
-  'tap-creature': 'tapping',
-  'tapper-creature': 'tapping',
-  'tap-outlet': 'tapping',
-  'tap-fuel-creature': 'tapping',
-  'tapper-land': 'tapping',
-  'tapper-planeswalker': 'tapping',
-  'tapper-permanent': 'tapping',
-  untapper: 'tapping',
-  'untapper-creature': 'tapping',
-  'untap-creature': 'tapping',
-  'untapper-self': 'tapping',
-  'untaps-self': 'tapping',
-  'untapper-permanent': 'tapping',
-  'untapper-nonland': 'tapping',
-  'gives-tap-ability': 'tapping',
-  twiddle: 'tapping',
-
-  // ── extra-turns ───────────────────────────────────────────────────────────
-  'extra-turn': 'extra-turns',
-  'extra-attack': 'extra-turns',
-  'extra-combat': 'extra-turns',
-  'extra-combat-phase': 'extra-turns',
-
-  // ── spells-matter ─────────────────────────────────────────────────────────
+  // ── spells matter ────────────────────────────────────────────────────────
   'synergy-instant': 'spells-matter',
   'synergy-sorcery': 'spells-matter',
   'synergy-noncreature': 'spells-matter',
   'second-spell-matters': 'spells-matter',
   heroic: 'spells-matter',
   strive: 'spells-matter',
+  'cast-trigger': 'spells-matter',
+  'cast-trigger-you': 'spells-matter',
+  'cast-trigger-other': 'spells-matter',
+  'cast-trigger-self': 'spells-matter',
 
-  // ── mana-value-matters ────────────────────────────────────────────────────
-  'mana-value-matters': 'mana-value-matters',
-  'cmc-matters': 'mana-value-matters',
-  'converted-mana-cost-matters': 'mana-value-matters',
-  'bigger-than-mv': 'mana-value-matters',
-  'more-expensive-than-mv': 'mana-value-matters',
-  lhurgoyf: 'mana-value-matters',
+  // ── cast from exile ──────────────────────────────────────────────────────
+  'cast-from-exile': 'cast-from-exile',
+  'gives-castable-from-exile': 'cast-from-exile',
+  'castable-from-exile': 'cast-from-exile',
 
-  // ── group-slug ────────────────────────────────────────────────────────────
-  'group-slug': 'group-slug',
-  punisher: 'group-slug',
-  'villainous-choice': 'group-slug',
-  rhystic: 'group-slug',
-  tax: 'group-slug',
-  'cost-increaser': 'group-slug',
-  toll: 'group-slug',
-  'per-opponent': 'group-slug',
-  'per-player': 'group-slug',
-  dilemma: 'group-slug',
-  'opponent-chooses': 'group-slug',
+  // ── graveyard hate ───────────────────────────────────────────────────────
+  'exile-self': 'graveyard-hate',
+  'exiles-self': 'graveyard-hate',
+  'graveyard-to-library': 'graveyard-hate',
 
-  // ── group-hug ─────────────────────────────────────────────────────────────
-  'group-hug': 'group-hug',
-  'selective-group-hug': 'group-hug',
-  symmetrical: 'group-hug',
+  // ── cycling ──────────────────────────────────────────────────────────────
+  'cycling-non-mana': 'cycling',
+  'gives-cycling': 'cycling',
+  'pseudo-cycling': 'cycling',
+  recycling: 'cycling',
+  'synergy-cycling': 'cycling',
+  'hate-cycling': 'cycling',
 
-  // ── combat-tricks ─────────────────────────────────────────────────────────
-  'combat-manipulation': 'combat-tricks',
-  'combat-mana': 'combat-tricks',
-  'combat-ramp': 'combat-tricks',
-  'combat-neutral-damage-trigger': 'combat-tricks',
-  'force-attacker': 'combat-tricks',
-  'forces-attack': 'combat-tricks',
-  'forced-attacker': 'combat-tricks',
-  'force-blocker': 'combat-tricks',
-  'prevent-attack': 'combat-tricks',
-  'prevent-attacker': 'combat-tricks',
-  'restricted-blocker': 'combat-tricks',
-  'restricted-attacker': 'combat-tricks',
+  // ── etb value ────────────────────────────────────────────────────────────
+  'enters-and-leaves-trigger-self': 'etb-value',
+  'enters-in-company': 'etb-value',
+  'etb-untapper': 'etb-value',
 
-  // ── overrun ───────────────────────────────────────────────────────────────
-  overrun: 'overrun',
+  // ── aristocrats ──────────────────────────────────────────────────────────
+  'blood-artist-ability': 'aristocrats',
 
-  // ── modal ─────────────────────────────────────────────────────────────────
-  modal: 'modal',
-  charm: 'modal',
-  'beast-within': 'modal',
-  pongify: 'modal',
+  // ── proliferate ──────────────────────────────────────────────────────────
+  'synergy-proliferate': 'proliferate',
+  'virtual-proliferate': 'proliferate',
 
-  // ── pillowfort ────────────────────────────────────────────────────────────
-  pillowfort: 'pillowfort',
-  'damage-deflection': 'pillowfort',
-  'damage-redirection': 'pillowfort',
-  'redirect-damage': 'pillowfort',
+  // ── haste ────────────────────────────────────────────────────────────────
+  'gives-haste': 'haste',
+  'gains-haste': 'haste',
+  'gives-super-haste': 'haste',
+  'pseudo-haste': 'haste',
+  'synergy-haste': 'haste',
 
-  // ── alternate-win ─────────────────────────────────────────────────────────
-  'alternate-win-condition': 'alternate-win',
-  'automatic-win': 'alternate-win',
-  'win-condition': 'alternate-win',
-  exponential: 'alternate-win',
-  quadratic: 'alternate-win',
+  // ── flash ────────────────────────────────────────────────────────────────
+  'gives-flash': 'flash',
+  'gains-flash': 'flash',
+  'synergy-flash': 'flash',
 
-  // ── poison ────────────────────────────────────────────────────────────────
-  'poison-mechanics': 'poison',
-  poisonous: 'poison',
-  'gives-mm-counters': 'poison',
-  'mm-counters-matter': 'poison',
+  // ── stax ─────────────────────────────────────────────────────────────────
+  tax: 'stax',
+  'cast-tax': 'stax',
+  'tax-attack': 'stax',
+  'tax-block': 'stax',
+  'rule-of-law': 'stax',
+  punisher: 'stax',
 
-  // ── planeswalker-support ──────────────────────────────────────────────────
+  // ── madness ──────────────────────────────────────────────────────────────
+  madness: 'madness',
+  'gives-madness': 'madness',
+  'synergy-madness': 'madness',
+  'discard-matters': 'madness',
+  'self-discard-matters': 'madness',
+  'opponent-discard-matters': 'madness',
+
+  // ── storm ────────────────────────────────────────────────────────────────
+  'storm-count-matters': 'storm',
+  'storm-like': 'storm',
+  'gives-storm': 'storm',
+
+  // ── wheels ───────────────────────────────────────────────────────────────
+  wheel: 'wheel',
+  'wheel-one-sided': 'wheel',
+  'wheel-symmetrical': 'wheel',
+  'wheel-symmetrical-optional': 'wheel',
+  miniwheel: 'wheel',
+
+  // ── untap combo ──────────────────────────────────────────────────────────
+  untapper: 'untap',
+  'untapper-creature': 'untap',
+  'untap-creature': 'untap',
+  'extra-untap': 'untap',
+  'ritual-untap': 'untap',
+
+  // ── planeswalker support ─────────────────────────────────────────────────
   'planeswalker-support': 'planeswalker-support',
   'synergy-planeswalker': 'planeswalker-support',
 
-  // ── energy ────────────────────────────────────────────────────────────────
+  // ── energy ───────────────────────────────────────────────────────────────
   'energy-generator': 'energy',
   'counter-fuel-energy': 'energy',
 
-  // ── legendary-matters ─────────────────────────────────────────────────────
+  // ── legendary matters ────────────────────────────────────────────────────
   'synergy-legendary': 'legendary-matters',
 
-  // ── food-treasure ─────────────────────────────────────────────────────────
-  'repeatable-food': 'food-treasure',
-  'repeatable-treasures': 'food-treasure',
-  'synergy-treasure': 'food-treasure',
-  'repeatable-clues': 'food-treasure',
-  'synergy-food': 'food-treasure',
+  // ── food / treasure / clue ───────────────────────────────────────────────
+  'repeatable-food': 'food',
+  'synergy-food': 'food',
+  'repeatable-treasures': 'treasure',
+  'synergy-treasure': 'treasure',
+  'repeatable-clues': 'clues',
 
-  // ── colorless-matters ─────────────────────────────────────────────────────
+  // ── colorless matters ────────────────────────────────────────────────────
   'synergy-colorless': 'colorless-matters',
   'colourless-matters': 'colorless-matters',
 
-  // ── snow-matters ──────────────────────────────────────────────────────────
+  // ── snow matters ─────────────────────────────────────────────────────────
   'synergy-snow': 'snow-matters',
 
-  // ── multicolor-matters ────────────────────────────────────────────────────
+  // ── multicolor matters ───────────────────────────────────────────────────
   'synergy-multicolor': 'multicolor-matters',
   'synergy-color-multi': 'multicolor-matters',
   'synergy-color-each': 'multicolor-matters',
   'synergy-color-share': 'multicolor-matters',
 
-  // ── historic ──────────────────────────────────────────────────────────────
+  // ── historic ─────────────────────────────────────────────────────────────
   'synergy-historic': 'historic',
 
-  // ── color-matters ─────────────────────────────────────────────────────────
+  // ── color matters ────────────────────────────────────────────────────────
   'color-spent-matters': 'color-matters',
   'mana-spent-matters': 'color-matters',
   'offcolor-ability': 'color-matters',
   'color-change': 'color-matters',
   'color-change-self': 'color-matters',
-  ferocious: 'color-matters',
 
-  // ── discard-payoff ────────────────────────────────────────────────────────
-  'discard-matters': 'discard-payoff',
-  'synergy-discard': 'discard-payoff',
-  'synergy-discard-self': 'discard-payoff',
-  'self-discard-matters': 'discard-payoff',
-  madness: 'discard-payoff',
+  // ── extra turns ──────────────────────────────────────────────────────────
+  'extra-turn': 'extra-turns',
+  'extra-turn-each': 'extra-turns',
+  'extra-turn-conditional': 'extra-turns',
+  'time-walk': 'extra-turns',
 
-  // ── instant-speed ─────────────────────────────────────────────────────────
-  'gives-flash': 'instant-speed',
-  'instant-rebate': 'instant-speed',
-  refund: 'instant-speed',
-  'full-refund': 'instant-speed',
-  'mini-refund': 'instant-speed',
+  // ── monarch ──────────────────────────────────────────────────────────────
+  monarch: 'monarch',
+  'becomes-monarch': 'monarch',
+  'monarch-support': 'monarch',
 
-  // (draw-matters, second-draw-matters, curiosity-like already mapped to card-advantage above)
+  // ── dredge ───────────────────────────────────────────────────────────────
+  dredge: 'dredge',
+  'dredge-like': 'dredge',
 
-  // ── cast-from-exile ───────────────────────────────────────────────────────
-  'cast-from-exile': 'cast-from-exile',
-  'gives-castable-from-exile': 'cast-from-exile',
-  'castable-from-exile': 'cast-from-exile',
-  // cast-from-nonhand / gives-castable-from-nonhand already mapped to recursion above
+  // ── revolt ───────────────────────────────────────────────────────────────
+  revolt: 'revolt',
+  'synergy-revolt': 'revolt',
 
-  // ── graveyard-hate ────────────────────────────────────────────────────────
-  'exile-self': 'graveyard-hate',
-  'exiles-self': 'graveyard-hate',
-  'graveyard-to-library': 'graveyard-hate',
-  // sweeper-graveyard already mapped to sweeper above
+  // ── initiative ───────────────────────────────────────────────────────────
+  initiative: 'initiative',
+  'takes-initiative': 'initiative',
+  venture: 'initiative',
+  'venture-into-dungeon': 'initiative',
+
+  // ── infect / -1/-1 counters ──────────────────────────────────────────────
+  infect: 'infect',
+  toxic: 'infect',
+  poisonous: 'infect',
+  'poison-counter': 'infect',
+  'synergy-poison': 'infect',
+  'synergy-infect': 'infect',
+  'synergy-minus-counter': '-1/+1-counters',
+  wither: '-1/+1-counters',
+  'minus-counter': '-1/+1-counters',
+  'minus-1-minus-1-counter': '-1/+1-counters',
 };
