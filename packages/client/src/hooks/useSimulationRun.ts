@@ -3,6 +3,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type {
   BuiltDeck,
   CardMeta,
+  SimulationReport,
   SimulationRunData,
   SimulationRunEntry,
   SimulationSetupResponse,
@@ -13,13 +14,15 @@ import type {
 import { loadDraftBot, WebGLInferenceError } from '../utils/draftBot';
 import { getStoragePressureNotice } from '../utils/draftSimulatorLocalStorage';
 
+type ExtendedRequestInit = RequestInit & { timeout?: number };
+
 interface PersistResult {
   runs: SimulationRunEntry[];
   persisted: boolean;
 }
 
 interface UseSimulationRunArgs {
-  csrfFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+  csrfFetch: (input: RequestInfo, init?: ExtendedRequestInit) => Promise<Response>;
   cubeId: string;
   numDrafts: number;
   numSeats: number;
@@ -37,7 +40,7 @@ interface UseSimulationRunArgs {
     onProgress: (pct: number) => void,
     signal?: AbortSignal,
     gpuBatchSize?: number,
-  ) => Promise<any>;
+  ) => Promise<SimulationReport>;
   nextLowerGpuBatchSize: (batchSize: number) => number | null;
   onResetViewSelection: () => void;
   onSimulationStart: () => void;
@@ -303,7 +306,6 @@ export default function useSimulationRun({
     simAbortRef,
     isRunning,
     overallSimProgress,
-    setStorageNotice: onSetStorageNotice,
     handleStart,
     handleCancel,
   };
