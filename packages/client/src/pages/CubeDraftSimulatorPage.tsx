@@ -17,7 +17,6 @@ import {
   SimulationRunData,
   SimulationRunEntry,
   SimulationSetupResponse,
-  SimulationTimingBreakdown,
   SkeletonCard,
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
@@ -52,23 +51,22 @@ import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
+import useClusteringPipeline from '../hooks/useClusteringPipeline';
 import useLocalSimulationHistory from '../hooks/useLocalSimulationHistory';
+import useSimulationRun from '../hooks/useSimulationRun';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 import { modelScoresToProbabilities } from '../utils/botRatings';
 import {
   buildOracleRemapping,
-  countOutOfVocabOracles,
   DeckbuildEntry,
-  encodePools,
   loadDraftBot,
   localBatchDeckbuild,
   localBatchDraftRanked,
   localPickBatch,
-  reshapeEmbeddings,
   WebGLInferenceError,
 } from '../utils/draftBot';
-import { computeSkeletons, findCooccurrencePockets } from '../utils/draftSimulatorClustering';
+import { findCooccurrencePockets } from '../utils/draftSimulatorClustering';
 import {
   archetypeFullName,
   computeClusterThemes,
@@ -78,10 +76,6 @@ import {
   getPoolMainCards,
   inferDraftThemes,
 } from '../utils/draftSimulatorThemes';
-import {
-  getStoragePressureNotice,
-  patchClusteringCache,
-} from '../utils/draftSimulatorLocalStorage';
 import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
@@ -393,27 +387,6 @@ const ActiveFilterBar: React.FC<{
   );
 };
 
-function getOverallSimProgress(
-  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null,
-  modelLoadProgress: number,
-  simProgress: number,
-): number {
-  switch (simPhase) {
-    case 'setup':
-      return 5;
-    case 'loadmodel':
-      return 5 + Math.round((modelLoadProgress / 100) * 15);
-    case 'sim':
-      return 20 + Math.round((simProgress / 100) * 70);
-    case 'deckbuild':
-      return 93;
-    case 'save':
-      return 98;
-    default:
-      return 0;
-  }
-}
-
 const SIM_PREVIEW_CARD_W = 140;
 
 function formatDuration(ms: number): string {
@@ -570,9 +543,6 @@ interface RawStats {
   poolIndices: number[];
 }
 
-// Auto-tune heuristics: k = n / KNN_K_DIVISOR (clamped 5–50), resolution = n / LEIDEN_RES_DIVISOR (clamped 0.5–2.0)
-const KNN_K_DIVISOR = 16;
-const LEIDEN_RES_DIVISOR = 400;
 // Number of lock-pair candidates to check in the filter preview (O(k²) so keep small)
 const LOCK_CANDIDATE_LIMIT = 12;
 const GPU_BATCH_OPTIONS = [
@@ -3863,13 +3833,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [gpuBatchSize, setGpuBatchSize] = useState(32);
   const [selectedFormatId, setSelectedFormatId] = useState(cube.defaultFormat ?? -1);
 
-  // Simulation state
-  const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
-  const [simPhase, setSimPhase] = useState<'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null>(null);
-  const [modelLoadProgress, setModelLoadProgress] = useState(0);
-  const [simProgress, setSimProgress] = useState(0); // 0–100
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   // Session-level cache — avoids recomputing embeddings when switching between runs
   const embeddingsCache = useRef<Map<string, number[][] | Record<string, number[]> | null>>(new Map());
   // Cache for computeFilteredCardStats — keyed by sorted pool indices joined as a string.
@@ -3887,7 +3850,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [focusedPoolViewMode, setFocusedPoolViewMode] = useState<PoolViewMode>('deck');
   const detailedViewRef = useRef<HTMLDivElement>(null);
   const cardStatsRef = useRef<HTMLDivElement>(null);
-  const simAbortRef = useRef<AbortController | null>(null);
 
   // Section collapse state (default open)
   const [overviewOpen, setOverviewOpen] = useState(true);
@@ -3939,41 +3901,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   });
 
   // Archetype skeleton clustering
-  const [minClusterSize, setMinClusterSize] = useState(3);
-  const [pendingMinClusterSize, setPendingMinClusterSize] = useState(3);
-  const [pcaDims, setPcaDims] = useState(20);
-  const [pendingPcaDims, setPendingPcaDims] = useState(20);
-  const [minPts, setMinPts] = useState(3);
-  const [pendingMinPts, setPendingMinPts] = useState(3);
-  const [knnK, setKnnK] = useState(50);
-  const [pendingKnnK, setPendingKnnK] = useState(50);
-  const [negSamples, setNegSamples] = useState(20);
-  const [pendingNegSamples, setPendingNegSamples] = useState(20);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [showAdvancedClustering, setShowAdvancedClustering] = useState(false);
-  const [clusterMode, setClusterMode] = useState<'umap' | 'graph' | 'leiden' | 'nmf'>('leiden');
-  const [clusterSeed, setClusterSeed] = useState(0);
-  const [resolution, setResolution] = useState(1.0);
-  const [pendingResolution, setPendingResolution] = useState(1.0);
-  const [numTopics, setNumTopics] = useState(0);
-  const [pendingNumTopics, setPendingNumTopics] = useState(0);
-  const [distanceMetric, setDistanceMetric] = useState<'euclidean' | 'cosine'>('cosine');
-  const [useHybridEmbeddings, setUseHybridEmbeddings] = useState(false);
-  const [hybridWeight, setHybridWeight] = useState(5.0);
-  const [pendingHybridWeight, setPendingHybridWeight] = useState(5.0);
-
-  // Auto-tune kNN k and Leiden resolution when the run changes, scaling with pool count.
-  // sqrt(n) neighbors is a common heuristic; resolution scales linearly up to 1.0 at ~800 pools.
-  useEffect(() => {
-    if (!displayRunData) return;
-    const n = displayRunData.slimPools.length;
-    const autoK = Math.min(50, Math.max(5, Math.round(n / KNN_K_DIVISOR)));
-    const autoRes = parseFloat(Math.min(2.0, Math.max(0.5, n / LEIDEN_RES_DIVISOR)).toFixed(2));
-    setKnnK(autoK);
-    setPendingKnnK(autoK);
-    setResolution(autoRes);
-    setPendingResolution(autoRes);
-  }, [displayRunData]);
 
   // Reconstruct SimulatedPool[] from slim pools for display (works for both fresh and historical)
   const simulatedPools = useMemo(
@@ -4024,11 +3953,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
-  const isRunning = status === 'running';
-  const overallSimProgress = useMemo(
-    () => getOverallSimProgress(simPhase, modelLoadProgress, simProgress),
-    [simPhase, modelLoadProgress, simProgress],
-  );
   const availableFormats = useMemo(
     () => [
       { value: '-1', label: 'Standard Draft' },
@@ -4039,6 +3963,34 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     ],
     [cube.formats],
   );
+
+  const {
+    status,
+    simPhase,
+    modelLoadProgress,
+    simProgress,
+    errorMsg,
+    simAbortRef,
+    isRunning,
+    overallSimProgress,
+    handleStart,
+    handleCancel,
+  } = useSimulationRun({
+    csrfFetch,
+    cubeId,
+    numDrafts,
+    numSeats,
+    gpuBatchSize,
+    selectedFormatId,
+    buildAllDecks,
+    runClientSimulation,
+    nextLowerGpuBatchSize,
+    onResetViewSelection: resetViewSelection,
+    onSimulationStart: () => {},
+    onSetCurrentRunSetup: setCurrentRunSetup,
+    onSetStorageNotice: setStorageNotice,
+    onPersistCompletedRun: handlePersistCompletedRun,
+  });
 
   useEffect(() => {
     if (!isRunning) return;
@@ -4075,15 +4027,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     return () => document.removeEventListener('click', handleDocumentClick, true);
   }, [isRunning]);
 
-  const handleCancel = useCallback(() => {
-    simAbortRef.current?.abort();
-    simAbortRef.current = null;
-    setStatus('idle');
-    setSimPhase(null);
-    setSimProgress(0);
-    setErrorMsg(null);
-  }, []);
-
   const handleConfirmedLeave = useCallback(() => {
     if (!pendingNavigationHref) {
       setLeaveModalOpen(false);
@@ -4092,194 +4035,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     simAbortRef.current?.abort();
     window.location.assign(pendingNavigationHref);
   }, [pendingNavigationHref]);
-
-  const handleStart = useCallback(async () => {
-    const controller = new AbortController();
-    const runStart = performance.now();
-    let setupMs = 0;
-    let modelLoadMs = 0;
-    let simulationMs = 0;
-    let deckbuildMs = 0;
-    let saveMs = 0;
-    simAbortRef.current = controller;
-    skipClusterUntilSeed.current = null;
-    setStatus('running');
-    setSimPhase('setup');
-    setSimProgress(0);
-    setErrorMsg(null);
-    setStorageNotice(null);
-    setSelectedCardOracles([]);
-    setSelectedArchetype(null);
-    setSelectedSkeletonId(null);
-    setFocusedPoolIndex(null);
-    setFocusedPoolViewMode('deck');
-    setBottomTab('archetypes');
-    setDraftMapColorMode('cluster');
-    try {
-      const setupTimeout = new AbortController();
-      const setupTimeoutId = setTimeout(() => setupTimeout.abort(), 120_000);
-      // Merge user cancel + setup timeout into a single signal
-      const setupSignal = AbortSignal.any
-        ? AbortSignal.any([controller.signal, setupTimeout.signal])
-        : setupTimeout.signal;
-      let setupRes: Response;
-      try {
-        const setupStart = performance.now();
-        setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numDrafts, numSeats, formatId: selectedFormatId }),
-          signal: setupSignal,
-        });
-        setupMs = performance.now() - setupStart;
-      } catch (fetchErr) {
-        clearTimeout(setupTimeoutId);
-        if (setupTimeout.signal.aborted) {
-          setStatus('failed');
-          setSimPhase(null);
-          setErrorMsg(
-            `Setup timed out after 120 s — the server took too long to generate ${numDrafts} drafts. Try a smaller number.`,
-          );
-          return;
-        }
-        throw fetchErr; // user cancel or network error — let outer catch handle it
-      }
-      clearTimeout(setupTimeoutId);
-      const setupData = await setupRes.json();
-      if (!setupData.success) {
-        setStatus('failed');
-        setSimPhase(null);
-        setErrorMsg(setupData.message ?? 'Failed to set up simulation');
-        return;
-      }
-
-      // Load the TF.js draft model locally (no-op if already loaded from a previous run)
-      setSimPhase('loadmodel');
-      setModelLoadProgress(0);
-      const modelLoadStart = performance.now();
-      await loadDraftBot((pct) => setModelLoadProgress(pct));
-      modelLoadMs = performance.now() - modelLoadStart;
-
-      let effectiveGpuBatchSize = gpuBatchSize;
-      const retryNotices: string[] = [];
-      // Loop progressively lower GPU batch sizes on WebGLInferenceError.
-      // Any non-OOM failure rethrows; exhausting the batch-size ladder also rethrows.
-      const runWithGpuRetry = async <T,>(
-        label: string,
-        fn: (batchSize: number) => Promise<T>,
-        onRetry?: () => void,
-      ): Promise<T> => {
-        for (;;) {
-          try {
-            return await fn(effectiveGpuBatchSize);
-          } catch (err) {
-            if (!(err instanceof WebGLInferenceError)) throw err;
-            const next = nextLowerGpuBatchSize(effectiveGpuBatchSize);
-            if (!next) throw err;
-            retryNotices.push(`${label} exceeded GPU memory at batch size ${effectiveGpuBatchSize}; retried at ${next}.`);
-            effectiveGpuBatchSize = next;
-            onRetry?.();
-          }
-        }
-      };
-
-      setSimPhase('sim');
-      const simulationStart = performance.now();
-      const report = await runWithGpuRetry(
-        'Draft simulation',
-        (bs) => runClientSimulation(setupData as SimulationSetupResponse, numDrafts, setSimProgress, controller.signal, bs),
-        () => setSimProgress(0),
-      );
-      simulationMs = performance.now() - simulationStart;
-      setCurrentRunSetup(setupData as SimulationSetupResponse);
-
-      // Build decks for all pools before saving
-      setSimPhase('deckbuild');
-      const deckbuildStart = performance.now();
-      const deckResult = await runWithGpuRetry(
-        'Deckbuilding',
-        (bs) => buildAllDecks(report.slimPools, setupData as SimulationSetupResponse, controller.signal, bs),
-      );
-      deckbuildMs = performance.now() - deckbuildStart;
-      if (!deckResult) {
-        setStatus('failed');
-        setSimPhase(null);
-        setErrorMsg('Deck building failed. The simulation ran successfully but decks could not be built.');
-        return;
-      }
-
-      // Assemble the locally persisted run payload; merge basic land metadata into cardMeta.
-      setSimPhase('save');
-      const saveStart = performance.now();
-      const { simulatedPools: _derived, ...runDataBase } = report;
-      const mergedCardMeta = { ...runDataBase.cardMeta, ...deckResult.basicCardMeta };
-      const timings: SimulationTimingBreakdown = {
-        setupMs,
-        modelLoadMs,
-        simulationMs,
-        deckbuildMs,
-        saveMs: 0,
-        totalMs: 0,
-      };
-      const runData = {
-        ...runDataBase,
-        cardMeta: mergedCardMeta,
-        deckBuilds: deckResult.decks,
-        setupData: report.setupData,
-        timings,
-      };
-      const ts = Date.now();
-      const entry: SimulationRunEntry = {
-        ts,
-        generatedAt: runData.generatedAt,
-        numDrafts: runData.numDrafts,
-        numSeats: runData.numSeats,
-        convergenceScore: runData.convergenceScore ?? 0,
-      };
-      runData.timings = {
-        setupMs,
-        modelLoadMs,
-        simulationMs,
-        deckbuildMs,
-        saveMs: 0,
-        totalMs: performance.now() - runStart,
-      };
-      const storagePressureNotice = await getStoragePressureNotice();
-      const persistResult = await handlePersistCompletedRun(entry, runData);
-      saveMs = performance.now() - saveStart;
-      runData.timings = {
-        setupMs,
-        modelLoadMs,
-        simulationMs,
-        deckbuildMs,
-        saveMs,
-        totalMs: performance.now() - runStart,
-      };
-      if (!persistResult.persisted) {
-        setStorageNotice('Results are shown below, but this browser did not have enough local storage to save them.');
-      } else if (retryNotices.length > 0 || storagePressureNotice) {
-        setStorageNotice([...retryNotices, storagePressureNotice].filter(Boolean).join(' '));
-      }
-
-      setStatus('completed');
-      setSimPhase(null);
-      simAbortRef.current = null;
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') return; // user cancelled — state already reset by handleCancel
-      setStatus('failed');
-      setSimPhase(null);
-      if (err instanceof WebGLInferenceError) {
-        const draftSuggestion =
-          numDrafts > 1 ? `reduce the draft count (currently ${numDrafts})` : 'run fewer seats or a smaller format';
-        const batchSuggestion = gpuBatchSize > 16 ? ' or lower the GPU batch size' : '';
-        setErrorMsg(
-          `Your GPU ran out of memory during simulation. Try to ${draftSuggestion}${batchSuggestion}, then run it again.`,
-        );
-      } else {
-        setErrorMsg(err instanceof Error ? err.message : 'Simulation failed');
-      }
-    }
-  }, [csrfFetch, cubeId, numDrafts, numSeats, gpuBatchSize, buildAllDecks, selectedFormatId, handlePersistCompletedRun]);
 
   const activeDecks = displayRunData?.deckBuilds ?? null;
   const displayedPools = useMemo(() => {
@@ -4300,48 +4055,46 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       .map(([colorPair, count]) => ({ colorPair, count, percentage: count / totalPools }))
       .sort((a, b) => b.count - a.count);
   }, [displayRunData, activeDecks, simulatedPools.length, displayedPools]);
-  const [skeletons, setSkeletons] = useState<ArchetypeSkeleton[]>([]);
-  const [umapCoords, setUmapCoords] = useState<{ x: number; y: number }[]>([]);
-  const [clusterMethod, setClusterMethod] = useState<string>('hdbscan (umap)');
-  const [clusteringInProgress, setClusteringInProgress] = useState(false);
-
-  const [poolEmbeddings, setPoolEmbeddings] = useState<number[][] | null>(null);
-  const [cardEmbeddings, setCardEmbeddings] = useState<Record<string, number[]> | null>(null);
-  const [poolArchetypeLabels, setPoolArchetypeLabels] = useState<Map<number, string> | null>(null);
-  const [poolEmbeddingsFailed, setPoolEmbeddingsFailed] = useState(false);
-  // When skeletons are hydrated from IDB cache, we don't want the clustering effect
-  // to re-compute. But the effect fires multiple times during load (displayRunData set,
-  // then poolEmbeddings set). A one-shot flag isn't enough. Instead we remember the
-  // clusterSeed at hydration time — the cache stays valid until the user bumps the seed
-  // (via "Apply" / "Recluster") or a new run loads without a cache.
-  const skipClusterUntilSeed = useRef<number | null>(null);
-  // Derived — no race window: loading whenever a run is loaded, labels are absent, and embeddings haven't permanently failed.
-  const poolArchetypeLabelsLoading = displayRunData !== null && poolArchetypeLabels === null && !poolEmbeddingsFailed;
-  const [oovWarningPct, setOovWarningPct] = useState<number | null>(null);
-  // Cached archetype data so we only fetch once
-  const archetypeDataRef = useRef<{ centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null>(null);
-
-  useEffect(() => {
-    if (loadedClusterCache?.skeletons && loadedClusterCache?.umapCoords) {
-      skipClusterUntilSeed.current = clusterSeed;
-      setSkeletons(loadedClusterCache.skeletons);
-      setUmapCoords(loadedClusterCache.umapCoords);
-      setClusterMethod(loadedClusterCache.clusterMethod);
-      setKnnK(loadedClusterCache.knnK);
-      setPendingKnnK(loadedClusterCache.knnK);
-      setResolution(loadedClusterCache.resolution);
-      setPendingResolution(loadedClusterCache.resolution);
-      setPoolArchetypeLabels(
-        loadedClusterCache.poolArchetypeLabels ? new Map(loadedClusterCache.poolArchetypeLabels) : null,
-      );
-      return;
-    }
-    skipClusterUntilSeed.current = null;
-    setSkeletons([]);
-    setUmapCoords([]);
-    setClusterMethod('hdbscan (umap)');
-    setPoolArchetypeLabels(null);
-  }, [loadedClusterCache, clusterSeed]);
+  const {
+    pendingMinClusterSize,
+    setPendingMinClusterSize,
+    pendingPcaDims,
+    setPendingPcaDims,
+    pendingMinPts,
+    setPendingMinPts,
+    pendingKnnK,
+    setPendingKnnK,
+    pendingNegSamples,
+    setPendingNegSamples,
+    clusterMode,
+    setClusterMode,
+    pendingResolution,
+    setPendingResolution,
+    pendingNumTopics,
+    setPendingNumTopics,
+    distanceMetric,
+    setDistanceMetric,
+    useHybridEmbeddings,
+    setUseHybridEmbeddings,
+    pendingHybridWeight,
+    setPendingHybridWeight,
+    skeletons,
+    umapCoords,
+    clusterMethod,
+    clusteringInProgress,
+    poolArchetypeLabels,
+    poolArchetypeLabelsLoading,
+    oovWarningPct,
+    queueRecluster,
+    applyPendingClusteringSettings,
+  } = useClusteringPipeline({
+    cubeId,
+    displayRunData,
+    activeDecks,
+    selectedTs,
+    loadedClusterCache,
+    embeddingsCache,
+  });
 
   // Deck-based color profiles for each skeleton (same logic as ArchetypeSkeletonCard's useMemo)
   const skeletonColorProfiles = useMemo<Map<number, string>>(() => {
@@ -4366,177 +4119,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }
     return result;
   }, [poolArchetypeLabels, displayedPools]);
-
-  // Compute 128-dim embeddings for each pool via the ML encoder.
-  // Uses deck mainboards when available (better signal), falls back to pick sequences.
-  // Runs twice intentionally: first pass with picks gives the map quickly; second pass
-  // with deck builds refines it once deckbuilding completes.
-  // Results are cached by run ts + input type so switching runs is instant.
-  useEffect(() => {
-    if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {
-      setPoolEmbeddings(null);
-      setCardEmbeddings(null);
-      setPoolEmbeddingsFailed(false);
-      return;
-    }
-    setPoolEmbeddingsFailed(false);
-    const hasDecks = !!(activeDecks && activeDecks.length === displayRunData.slimPools.length);
-    const cacheKey = `${selectedTs}-${hasDecks ? 'decks' : 'picks'}`;
-    if (embeddingsCache.current.has(cacheKey)) {
-      setPoolEmbeddings(embeddingsCache.current.get(cacheKey) as number[][] | null);
-      // Also restore card embeddings if cached
-      const cardCacheKey = `${selectedTs}-cards`;
-      if (embeddingsCache.current.has(cardCacheKey)) {
-        setCardEmbeddings(embeddingsCache.current.get(cardCacheKey) as Record<string, number[]> | null);
-      }
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      try {
-        await loadDraftBot();
-        const remapping = buildOracleRemapping(displayRunData.cardMeta);
-        const oovCount = countOutOfVocabOracles(displayRunData.cardMeta);
-        const oovPct = oovCount / Math.max(1, Object.keys(displayRunData.cardMeta).length);
-        if (!cancelled) setOovWarningPct(oovPct > 0.1 ? oovPct : null);
-        const pools = displayRunData.slimPools.map((pool, i) => {
-          const cards = hasDecks ? activeDecks![i]!.mainboard : pool.picks.map((p) => p.oracle_id);
-          return cards;
-        });
-        const flat = await encodePools(pools, remapping);
-        if (!cancelled) {
-          const result = reshapeEmbeddings(flat, pools.length);
-          embeddingsCache.current.set(cacheKey, result);
-          setPoolEmbeddings(result);
-        }
-
-        // Encode individual cards (one-hot) for theme decomposition
-        const cardCacheKey = `${selectedTs}-cards`;
-        if (!embeddingsCache.current.has(cardCacheKey)) {
-          const oracleIds = Object.keys(displayRunData.cardMeta).filter((id) => {
-            const t = (displayRunData.cardMeta[id]?.type ?? '').toLowerCase();
-            return !(t.includes('basic') && t.includes('land'));
-          });
-          const oneHotPools = oracleIds.map((id) => [id]);
-          const cardFlat = await encodePools(oneHotPools, remapping);
-          if (!cancelled) {
-            const cardVecs = reshapeEmbeddings(cardFlat, oracleIds.length);
-            const cardMap: Record<string, number[]> = {};
-            for (let i = 0; i < oracleIds.length; i++) cardMap[oracleIds[i]!] = cardVecs[i]!;
-            embeddingsCache.current.set(cardCacheKey, cardMap);
-            setCardEmbeddings(cardMap);
-          }
-        } else if (!cancelled) {
-          setCardEmbeddings(embeddingsCache.current.get(cardCacheKey) as Record<string, number[]>);
-        }
-      } catch {
-        if (!cancelled) {
-          embeddingsCache.current.set(cacheKey, null);
-          setPoolEmbeddings(null);
-          setPoolEmbeddingsFailed(true);
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [displayRunData, activeDecks, selectedTs]);
-
-  // Compute Gwen's archetype label for each pool via cosine similarity to 496 cluster centers
-  useEffect(() => {
-    if (!poolEmbeddings || poolEmbeddings.length === 0) {
-      setPoolArchetypeLabels(null);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      // Fetch once and cache in ref
-      if (!archetypeDataRef.current) {
-        try {
-          const resp = await fetch('/api/archetypes');
-          if (!resp.ok) return;
-          archetypeDataRef.current = await resp.json();
-        } catch {
-          return;
-        }
-      }
-      if (cancelled || !archetypeDataRef.current) return;
-      const { centers, annotations } = archetypeDataRef.current;
-
-      const labels = new Map<number, string>();
-      for (let pi = 0; pi < poolEmbeddings.length; pi++) {
-        const emb = poolEmbeddings[pi]!;
-        const embNorm = Math.sqrt(emb.reduce((s, v) => s + v * v, 0)) || 1;
-        let bestSim = -Infinity;
-        let bestClusterId = -1;
-        for (const { clusterId, center } of centers) {
-          let dot = 0;
-          const cNorm = Math.sqrt(center.reduce((s, v) => s + v * v, 0)) || 1;
-          for (let d = 0; d < emb.length; d++) dot += emb[d]! * (center[d] ?? 0);
-          const sim = dot / (embNorm * cNorm);
-          if (sim > bestSim) { bestSim = sim; bestClusterId = clusterId; }
-        }
-        const label = annotations[String(bestClusterId)];
-        if (label) labels.set(pi, label);
-      }
-      if (!cancelled) {
-        setPoolArchetypeLabels(labels);
-        if (selectedTs) {
-          void patchClusteringCache(cubeId, selectedTs, { poolArchetypeLabels: [...labels.entries()] });
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [poolEmbeddings, selectedTs, cubeId]);
-
-  // Clustering: PCA → Leiden → UMAP viz
-  useEffect(() => {
-    if (!displayRunData || displayRunData.slimPools.length === 0) {
-      setSkeletons([]);
-      setUmapCoords([]);
-      setClusteringInProgress(false);
-      return;
-    }
-
-    // Skip re-compute while IDB-cached skeletons are still valid.
-    // The flag clears only when the user bumps clusterSeed (via "Apply" / "Recluster")
-    // or when a new run without a cache loads.
-    if (skipClusterUntilSeed.current !== null) {
-      if (skipClusterUntilSeed.current === clusterSeed) {
-        setClusteringInProgress(false);
-        return;
-      }
-      skipClusterUntilSeed.current = null;
-    }
-
-    // Wait for the embeddings pipeline to settle before clustering.
-    // Without this guard the map clusters twice: once with poolEmbeddings=null,
-    // then again when ML embeddings arrive — causing a visible flicker.
-    if (poolEmbeddings === null && !poolEmbeddingsFailed) {
-      setClusteringInProgress(true);
-      return;
-    }
-
-    setClusteringInProgress(true);
-
-    const timer = setTimeout(() => {
-      const result = computeSkeletons(displayRunData.slimPools, displayRunData.cardMeta, minClusterSize, poolEmbeddings, activeDecks, pcaDims, minPts, clusterMode, knnK, negSamples, resolution, numTopics, distanceMetric, useHybridEmbeddings, hybridWeight);
-      setSkeletons(result.skeletons);
-      setUmapCoords(result.umapCoords);
-      setClusterMethod(result.clusterMethod);
-      setClusteringInProgress(false);
-      if (selectedTs) {
-        void patchClusteringCache(cubeId, selectedTs, {
-          skeletons: result.skeletons,
-          umapCoords: result.umapCoords,
-          clusterMethod: result.clusterMethod,
-          knnK,
-          resolution,
-        });
-      }
-    }, 20);
-
-    return () => clearTimeout(timer);
-    // clusterSeed intentionally triggers re-cluster without being a real dependency
-  }, [displayRunData, minClusterSize, pcaDims, minPts, clusterMode, knnK, negSamples, clusterSeed, activeDecks, poolEmbeddings, poolEmbeddingsFailed, resolution, numTopics, distanceMetric, useHybridEmbeddings, hybridWeight, selectedTs, cubeId]);
   const draftMapPoints = useMemo(
     () =>
       displayRunData
@@ -5375,7 +4957,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                         <div className="inline-flex rounded border border-border overflow-hidden">
                                           {(['umap', 'graph', 'leiden', 'nmf'] as const).map((mode) => (
                                             <button key={mode} type="button"
-                                              onClick={() => { setClusterMode(mode); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                              onClick={() => { setClusterMode(mode); setSelectedSkeletonId(null); queueRecluster(); }}
                                               className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border last:border-r-0', clusterMode === mode ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
                                               {mode === 'umap' ? 'UMAP' : mode === 'graph' ? 'Graph' : mode === 'leiden' ? 'Leiden' : 'NMF'}
                                             </button>
@@ -5389,19 +4971,19 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                         </span>
                                         <div className="flex flex-row items-center gap-1">
                                           <div className={['inline-flex rounded border border-border overflow-hidden', clusterMode === 'nmf' ? 'opacity-50' : ''].join(' ')}>
-                                            <button type="button"
-                                              onClick={() => { setDistanceMetric('euclidean'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                          <button type="button"
+                                              onClick={() => { setDistanceMetric('euclidean'); setSelectedSkeletonId(null); queueRecluster(); }}
                                               className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', distanceMetric === 'euclidean' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
                                               Euclid
                                             </button>
                                             <button type="button"
-                                              onClick={() => { setDistanceMetric('cosine'); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                              onClick={() => { setDistanceMetric('cosine'); setSelectedSkeletonId(null); queueRecluster(); }}
                                               className={['px-2 py-1 text-xs font-medium transition-colors', distanceMetric === 'cosine' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
                                               Cosine
                                             </button>
                                           </div>
                                           <button type="button"
-                                            onClick={() => { setUseHybridEmbeddings(!useHybridEmbeddings); setSelectedSkeletonId(null); setClusterSeed((s) => s + 1); }}
+                                            onClick={() => { setUseHybridEmbeddings(!useHybridEmbeddings); setSelectedSkeletonId(null); queueRecluster(); }}
                                             title="Append color + card-type distribution to the embedding vectors before building the k-NN graph"
                                             className={['px-2 py-1 rounded border text-xs font-medium transition-colors', clusterMode === 'nmf' ? 'opacity-50' : '', useHybridEmbeddings ? 'bg-link text-white border-link' : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary'].join(' ')}>
                                             +Features
@@ -5471,17 +5053,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                         type="button"
                                         disabled={clusteringInProgress}
                                         onClick={() => {
-                                          setKnnK(pendingKnnK);
-                                          setPcaDims(pendingPcaDims);
-                                          setNegSamples(pendingNegSamples);
-                                          setMinClusterSize(pendingMinClusterSize);
-                                          setMinPts(pendingMinPts);
-                                          setResolution(pendingResolution);
-                                          setNumTopics(pendingNumTopics);
-                                          setHybridWeight(pendingHybridWeight);
                                           setSelectedSkeletonId(null);
                                           setFocusedPoolIndex(null);
-                                          setClusterSeed((s) => s + 1);
+                                          applyPendingClusteringSettings();
                                         }}
                                         className={[
                                           'ml-auto self-end px-3 py-1.5 rounded text-xs font-semibold border transition-colors whitespace-nowrap',
