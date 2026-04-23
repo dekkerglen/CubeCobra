@@ -1471,7 +1471,7 @@ const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: 
   };
 
   return (
-    <div style={{ maxWidth: 380 }}>
+    <div className="w-full">
       <Doughnut data={chartData} options={makeDoughnutOptions(textColor)} />
     </div>
   );
@@ -1618,7 +1618,7 @@ const CardTypeShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: R
   };
 
   return (
-    <div style={{ maxWidth: 380 }}>
+    <div className="w-full">
       <Doughnut data={chartData} options={makeDoughnutOptions(textColor)} />
     </div>
   );
@@ -3682,10 +3682,10 @@ const ClusterDetailPanel: React.FC<{
       </div>
       {(() => {
         const tabs = [
-          { key: 'common', label: 'Common Cards' },
-          { key: 'signature', label: 'Signature Cards' },
-          { key: 'core', label: 'Core Package' },
-          { key: 'pockets', label: 'Card Pockets' },
+          { key: 'common', label: 'Common Cards', title: 'Cards appearing most often across decks in this cluster' },
+          { key: 'signature', label: 'Signature Cards', title: 'Cards that appear significantly more in this cluster than in others — contrastive scoring vs. neighboring clusters' },
+          { key: 'core', label: 'Core Package', title: 'The tightest co-drafted chain of cards — cards that tend to show up together in the same deck, linked by highest pairwise co-occurrence' },
+          { key: 'pockets', label: 'Card Pockets', title: 'Sub-groups within the cluster: cards clustered by co-occurrence into distinct packages (e.g. a removal suite vs. a synergy engine)' },
         ] as const;
         type CardTab = typeof tabs[number]['key'];
         const [cardTab, setCardTab] = React.useState<CardTab>('common');
@@ -3697,6 +3697,7 @@ const ClusterDetailPanel: React.FC<{
                   key={tab.key}
                   type="button"
                   onClick={() => setCardTab(tab.key)}
+                  title={tab.title}
                   className={[
                     'px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors',
                     cardTab === tab.key
@@ -3994,7 +3995,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
         </div>
       </button>
       {skeleton.coreCards.length > 0 ? (
-        <div className="min-w-0 flex flex-row gap-1 overflow-x-auto pb-1 md:pb-0">
+        <div className="min-w-0 flex flex-row flex-wrap gap-1">
           {skeleton.coreCards.map((card) => (
             <SkeletonCardImage key={card.oracle_id} card={card} size={128} />
           ))}
@@ -5356,7 +5357,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   style={{ gridTemplateColumns: 'repeat(5, minmax(0, 1fr)) auto' }}
                 >
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-medium text-text-secondary">Drafts</label>
+                    <div className="flex items-baseline gap-1.5">
+                      <label className="text-xs font-medium text-text-secondary">Drafts</label>
+                      {numDrafts > 300 && (
+                        <span className="text-[11px] text-amber-600 dark:text-amber-400">Large run — may be slow or time out.</span>
+                      )}
+                    </div>
                     <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
                   </div>
                   <div className="flex flex-col gap-0.5">
@@ -6569,11 +6575,19 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>
             <span className="font-medium text-text">Common cards</span> — cards appearing most often across decks in
-            the cluster (from built decks when available, otherwise from draft pools)
+            the cluster
           </li>
           <li>
             <span className="font-medium text-text">Signature cards</span> — cards that appear significantly more in
             this cluster than in others (contrastive scoring vs. neighboring clusters)
+          </li>
+          <li>
+            <span className="font-medium text-text">Core package</span> — the tightest co-drafted chain of cards
+            linked by highest pairwise co-occurrence; the cards most likely to show up together in the same deck
+          </li>
+          <li>
+            <span className="font-medium text-text">Card pockets</span> — sub-groups within the cluster: cards
+            partitioned by co-occurrence into distinct packages (e.g. a removal suite vs. a synergy engine)
           </li>
           <li>
             <span className="font-medium text-text">Themes</span> — oracle-tag based theme labels (e.g. "Removal",

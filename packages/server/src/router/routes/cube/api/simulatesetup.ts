@@ -120,7 +120,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
               : undefined;
           cardMeta[oracleId] = {
             name: details.name ?? oracleId,
-            imageUrl: details.image_normal || details.image_small || '',
+            imageUrl: card.imgUrl || details.image_normal || details.image_small || '',
             colorIdentity: details.color_identity ?? [],
             elo: details.elo ?? 1200,
             cmc: details.cmc ?? 0,
