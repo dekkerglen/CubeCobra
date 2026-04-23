@@ -724,7 +724,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                             aboutViewContext.setView(subItem.key);
                           }
                         };
-                      } else if (item.key === 'playtest') {
+                      } else if (item.key === 'playtest' && !subItem.href) {
                         subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
 
                         handleClick = (e: React.MouseEvent) => {
