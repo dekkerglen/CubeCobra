@@ -9,7 +9,7 @@ import { cardFromId, getOracleForMl } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
-import { MAX_SEATS } from 'serverutils/simulatorConstants';
+import { MAX_SEATS, MAX_SETUP_DRAFTS } from 'serverutils/simulatorConstants';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -30,7 +30,7 @@ const setupLimiter = rateLimit({
 });
 
 const SetupSchema = Joi.object({
-  numDrafts: Joi.number().integer().min(1).default(100),
+  numDrafts: Joi.number().integer().min(1).max(MAX_SETUP_DRAFTS).default(100),
   numSeats: Joi.number().integer().min(2).max(MAX_SEATS).default(8),
   formatId: Joi.number().integer().min(-1).default(-1),
 });
@@ -150,9 +150,9 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       basics.push({
         oracleId: details.oracle_id,
         name: details.name ?? details.oracle_id,
-        imageUrl: (details as any).image_normal || (details as any).image_small || '',
+        imageUrl: details.image_normal || details.image_small || '',
         colorIdentity: details.color_identity ?? [],
-        producedMana: (details as any).produced_mana ?? [],
+        producedMana: details.produced_mana ?? [],
         type: details.type ?? '',
       });
     }

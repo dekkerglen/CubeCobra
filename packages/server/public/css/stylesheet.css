@@ -2799,6 +2799,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-text-opacity: 1 !important;
   color: rgb(var(--text-secondary) / var(--tw-text-opacity)) !important;
 }
+.text-amber-600 {
+  --tw-text-opacity: 1;
+  color: rgb(217 119 6 / var(--tw-text-opacity));
+}
 .text-bg {
   --tw-text-opacity: 1;
   color: rgb(var(--bg) / var(--tw-text-opacity));
@@ -4512,10 +4516,6 @@ img.mana-symbol-sm {
     padding-right: 1rem;
   }
 
-  .md\:pb-0 {
-    padding-bottom: 0px;
-  }
-
   .md\:pb-4 {
     padding-bottom: 1rem;
   }
@@ -5027,6 +5027,11 @@ img.mana-symbol-sm {
 
   .dark\:bg-red-900\/20 {
     background-color: rgb(127 29 29 / 0.2);
+  }
+
+  .dark\:text-amber-400 {
+    --tw-text-opacity: 1;
+    color: rgb(251 191 36 / var(--tw-text-opacity));
   }
 
   .dark\:text-red-200 {

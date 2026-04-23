@@ -52,6 +52,7 @@ import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
+import useLocalSimulationHistory from '../hooks/useLocalSimulationHistory';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 import { modelScoresToProbabilities } from '../utils/botRatings';
@@ -77,6 +78,10 @@ import {
   getPoolMainCards,
   inferDraftThemes,
 } from '../utils/draftSimulatorThemes';
+import {
+  getStoragePressureNotice,
+  patchClusteringCache,
+} from '../utils/draftSimulatorLocalStorage';
 import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
@@ -565,12 +570,6 @@ interface RawStats {
   poolIndices: number[];
 }
 
-const LOCAL_SIM_HISTORY_LIMIT = 5;
-const LOCAL_SIM_STORAGE_VERSION = 1;
-const LOCAL_SIM_DB_NAME = 'cubecobra-draft-simulator';
-const LOCAL_SIM_DB_VERSION = 1;
-const LOCAL_SIM_STORE_NAME = 'runs';
-
 // Auto-tune heuristics: k = n / KNN_K_DIVISOR (clamped 5–50), resolution = n / LEIDEN_RES_DIVISOR (clamped 0.5–2.0)
 const KNN_K_DIVISOR = 16;
 const LEIDEN_RES_DIVISOR = 400;
@@ -584,191 +583,6 @@ const GPU_BATCH_OPTIONS = [
   { value: '64', label: '64 - balanced' },
   { value: '128', label: '128 - strong GPU' },
 ];
-
-
-
-interface ClusteringCache {
-  skeletons: ArchetypeSkeleton[];
-  umapCoords: { x: number; y: number }[];
-  clusterMethod: string;
-  knnK: number;
-  resolution: number;
-  poolArchetypeLabels?: [number, string][];
-}
-
-interface LocalSimulationStore {
-  version: number;
-  runs: { entry: SimulationRunEntry; runData: SimulationRunData; clusterCache?: ClusteringCache }[];
-}
-
-interface IndexedDbSimulationRunRecord {
-  key: string;
-  cubeId: string;
-  ts: number;
-  entry: SimulationRunEntry;
-  runData: SimulationRunData;
-  clusterCache?: ClusteringCache;
-}
-
-const localSimulationStorageKey = (cubeId: string, ts: number): string => `${cubeId}:${ts}`;
-
-async function openLocalSimulationDb(): Promise<IDBDatabase> {
-  if (typeof window === 'undefined' || !window.indexedDB) {
-    throw new Error('IndexedDB is not available in this browser');
-  }
-  return await new Promise((resolve, reject) => {
-    const request = window.indexedDB.open(LOCAL_SIM_DB_NAME, LOCAL_SIM_DB_VERSION);
-    request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(LOCAL_SIM_STORE_NAME)) {
-        const store = db.createObjectStore(LOCAL_SIM_STORE_NAME, { keyPath: 'key' });
-        store.createIndex('cubeId', 'cubeId', { unique: false });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-  });
-}
-
-async function readLocalSimulationStore(cubeId: string): Promise<LocalSimulationStore> {
-  const db = await openLocalSimulationDb();
-  try {
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(LOCAL_SIM_STORE_NAME, 'readonly');
-      const store = tx.objectStore(LOCAL_SIM_STORE_NAME);
-      const request = store.index('cubeId').getAll(cubeId);
-      request.onerror = () => reject(request.error ?? new Error('Failed to load local simulation history'));
-      request.onsuccess = () => {
-        const runs = (request.result as IndexedDbSimulationRunRecord[])
-          .filter(
-            (run): run is IndexedDbSimulationRunRecord =>
-              !!run &&
-              run.cubeId === cubeId &&
-              typeof run.entry?.ts === 'number' &&
-              typeof run.entry?.generatedAt === 'string' &&
-              !!run.runData &&
-              typeof run.runData.numDrafts === 'number',
-          )
-          .sort((a, b) => b.ts - a.ts)
-          .slice(0, LOCAL_SIM_HISTORY_LIMIT)
-          .map((run) => ({ entry: run.entry, runData: run.runData, clusterCache: run.clusterCache }));
-        resolve({ version: LOCAL_SIM_STORAGE_VERSION, runs });
-      };
-    });
-  } finally {
-    db.close();
-  }
-}
-
-async function writeLocalSimulationStore(
-  cubeId: string,
-  runs: { entry: SimulationRunEntry; runData: SimulationRunData }[],
-): Promise<void> {
-  const nextRuns = [...runs].sort((a, b) => b.entry.ts - a.entry.ts);
-  const desiredKeys = new Set(
-    nextRuns.slice(0, LOCAL_SIM_HISTORY_LIMIT).map((run) => localSimulationStorageKey(cubeId, run.entry.ts)),
-  );
-  const db = await openLocalSimulationDb();
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(LOCAL_SIM_STORE_NAME, 'readwrite');
-      const store = tx.objectStore(LOCAL_SIM_STORE_NAME);
-      const existingReq = store.index('cubeId').getAll(cubeId);
-      existingReq.onerror = () => reject(existingReq.error ?? new Error('Failed to write local simulation history'));
-      existingReq.onsuccess = () => {
-        const existing = existingReq.result as IndexedDbSimulationRunRecord[];
-        for (const run of nextRuns.slice(0, LOCAL_SIM_HISTORY_LIMIT)) {
-          store.put({
-            key: localSimulationStorageKey(cubeId, run.entry.ts),
-            cubeId,
-            ts: run.entry.ts,
-            entry: run.entry,
-            runData: run.runData,
-          } satisfies IndexedDbSimulationRunRecord);
-        }
-        for (const record of existing) {
-          if (!desiredKeys.has(record.key)) {
-            store.delete(record.key);
-          }
-        }
-      };
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error ?? new Error('Failed to write local simulation history'));
-    });
-  } finally {
-    db.close();
-  }
-}
-
-async function persistSimulationRun(
-  cubeId: string,
-  entry: SimulationRunEntry,
-  runData: SimulationRunData,
-): Promise<{ runs: SimulationRunEntry[]; persisted: boolean }> {
-  const store = await readLocalSimulationStore(cubeId);
-  const nextStoredRuns = [{ entry, runData }, ...store.runs.filter((run) => run.entry.ts !== entry.ts)];
-  try {
-    await writeLocalSimulationStore(cubeId, nextStoredRuns);
-    const nextStore = await readLocalSimulationStore(cubeId);
-    return { runs: nextStore.runs.map((run) => run.entry), persisted: true };
-  } catch {
-    try {
-      await writeLocalSimulationStore(cubeId, [{ entry, runData }]);
-      const nextStore = await readLocalSimulationStore(cubeId);
-      return { runs: nextStore.runs.map((run) => run.entry), persisted: true };
-    } catch {
-      return { runs: store.runs.map((run) => run.entry), persisted: false };
-    }
-  }
-}
-
-async function clearLocalSimulationStore(cubeId: string): Promise<void> {
-  await writeLocalSimulationStore(cubeId, []);
-}
-
-async function patchClusteringCache(cubeId: string, ts: number, patch: Partial<ClusteringCache>): Promise<void> {
-  const db = await openLocalSimulationDb();
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(LOCAL_SIM_STORE_NAME, 'readwrite');
-      const store = tx.objectStore(LOCAL_SIM_STORE_NAME);
-      const req = store.get(localSimulationStorageKey(cubeId, ts));
-      req.onsuccess = () => {
-        const record = req.result as IndexedDbSimulationRunRecord | undefined;
-        // Only write if we have a complete base (skeletons + umapCoords already present),
-        // or the patch itself is providing them. Prevents partial records that crash on reload.
-        const base = record?.clusterCache;
-        const merged = { ...base, ...patch } as ClusteringCache;
-        if (record && merged.skeletons && merged.umapCoords) store.put({ ...record, clusterCache: merged });
-      };
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error ?? new Error('Failed to patch clustering cache'));
-    });
-  } catch {
-    // cache write failure is non-fatal
-  } finally {
-    db.close();
-  }
-}
-
-
-async function getStoragePressureNotice(): Promise<string | null> {
-  if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return null;
-  try {
-    const estimate = await navigator.storage.estimate();
-    if (!estimate.quota || estimate.usage === undefined) return null;
-    const remaining = estimate.quota - estimate.usage;
-    const remainingMb = remaining / 1024 / 1024;
-    const usedRatio = estimate.usage / estimate.quota;
-    if (remainingMb < 100 || usedRatio > 0.85) {
-      return `Local browser storage is getting tight (${Math.max(0, Math.round(remainingMb))} MB estimated free). Old simulator runs may need to be cleared if saves start failing.`;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
 function nextLowerGpuBatchSize(batchSize: number): number | null {
   const lowerOptions = GPU_BATCH_OPTIONS.map((option) => parseInt(option.value, 10))
     .filter((value) => value < batchSize)
@@ -3559,6 +3373,15 @@ const ClusterDetailPanel: React.FC<{
     return significant.length > 0 ? significant.join('') : 'C';
   }, [clusterDeckBuilds, cardMeta, skeleton.colorProfile]);
 
+  const CARD_TABS = [
+    { key: 'common', label: 'Common Cards', title: 'Cards appearing most often across decks in this cluster' },
+    { key: 'signature', label: 'Signature Cards', title: 'Cards that appear significantly more in this cluster than in others — contrastive scoring vs. neighboring clusters' },
+    { key: 'core', label: 'Core Package', title: 'The tightest co-drafted chain of cards — cards that tend to show up together in the same deck, linked by highest pairwise co-occurrence' },
+    { key: 'pockets', label: 'Card Pockets', title: 'Sub-groups within the cluster: cards clustered by co-occurrence into distinct packages (e.g. a removal suite vs. a synergy engine)' },
+  ] as const;
+  type CardTab = typeof CARD_TABS[number]['key'];
+  const [cardTab, setCardTab] = useState<CardTab>('common');
+
   const [pocketCount, setPocketCount] = useState(3);
   const pockets = useMemo(
     () => findCooccurrencePockets(skeleton.poolIndices, slimPools, cardMeta, pocketCount, deckBuilds),
@@ -3680,107 +3503,95 @@ const ClusterDetailPanel: React.FC<{
           ✕
         </button>
       </div>
-      {(() => {
-        const tabs = [
-          { key: 'common', label: 'Common Cards', title: 'Cards appearing most often across decks in this cluster' },
-          { key: 'signature', label: 'Signature Cards', title: 'Cards that appear significantly more in this cluster than in others — contrastive scoring vs. neighboring clusters' },
-          { key: 'core', label: 'Core Package', title: 'The tightest co-drafted chain of cards — cards that tend to show up together in the same deck, linked by highest pairwise co-occurrence' },
-          { key: 'pockets', label: 'Card Pockets', title: 'Sub-groups within the cluster: cards clustered by co-occurrence into distinct packages (e.g. a removal suite vs. a synergy engine)' },
-        ] as const;
-        type CardTab = typeof tabs[number]['key'];
-        const [cardTab, setCardTab] = React.useState<CardTab>('common');
-        return (
-          <div>
-            <div className="flex flex-row border-b border-border mb-3">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setCardTab(tab.key)}
-                  title={tab.title}
-                  className={[
-                    'px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors',
-                    cardTab === tab.key
-                      ? 'border-link text-link'
-                      : 'border-transparent text-text-secondary hover:text-text hover:border-border',
-                  ].join(' ')}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            {cardTab === 'common' && (
-              <div className="grid grid-cols-6 gap-1.5">
-                {(commonCards.length > 0 ? commonCards : skeleton.coreCards).slice(0, 12).map((card) => (
-                  <SkeletonCardImage key={card.oracle_id} card={card} />
-                ))}
-              </div>
-            )}
-            {cardTab === 'signature' && (
-              <div className="grid grid-cols-6 gap-1.5">
-                {(skeleton.signatureCards ?? []).slice(0, 12).map((card) => (
-                  <SkeletonCardImage key={card.oracle_id} card={card} />
-                ))}
-                {(skeleton.signatureCards ?? []).length === 0 && (
-                  <Text sm className="text-text-secondary col-span-6">No signature cards found for this cluster.</Text>
-                )}
-              </div>
-            )}
-            {cardTab === 'core' && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="text-xs text-text-secondary" title="Top N rated cards per deck to consider">top</label>
-                  <NumericInput min={5} max={23} value={topN} onChange={setTopN} className="w-14" />
-                </div>
-                {coreChain.length > 0 ? (
-                  <div className="grid grid-cols-6 gap-1.5">
-                    {coreChain.map((card) => (
-                      <SkeletonCardImage
-                        key={card.oracle_id}
-                        card={{ oracle_id: card.oracle_id, name: card.name, imageUrl: card.imageUrl, fraction: card.cooccurrence }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <Text sm className="text-text-secondary">No core package found. Deck builds may still be loading.</Text>
-                )}
-              </div>
-            )}
-            {cardTab === 'pockets' && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="text-xs text-text-secondary">Pockets</label>
-                  <NumericInput min={2} max={10} value={pocketCount} onChange={setPocketCount} className="w-14" />
-                </div>
-                {pockets.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {pockets.map((pocket) => (
-                      <div key={pocket.pocketIndex} className="rounded border border-border/50 p-2">
-                        <Text xs className="text-text-secondary font-medium mb-1">Pocket {pocket.pocketIndex + 1}</Text>
-                        {pocket.cards.length > 0 ? (
-                          <div className="flex flex-row gap-1 overflow-x-auto pb-0.5">
-                            {pocket.cards.map((card) => (
-                              <SkeletonCardImage
-                                key={card.oracle_id}
-                                card={{ oracle_id: card.oracle_id, name: card.name, imageUrl: card.imageUrl, fraction: card.frequency }}
-                                size={80}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <Text xs className="text-text-secondary">No cards</Text>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <Text sm className="text-text-secondary">No card pockets found.</Text>
-                )}
-              </div>
+      <div>
+        <div className="flex flex-row border-b border-border mb-3">
+          {CARD_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setCardTab(tab.key)}
+              title={tab.title}
+              className={[
+                'px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors',
+                cardTab === tab.key
+                  ? 'border-link text-link'
+                  : 'border-transparent text-text-secondary hover:text-text hover:border-border',
+              ].join(' ')}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {cardTab === 'common' && (
+          <div className="grid grid-cols-6 gap-1.5">
+            {(commonCards.length > 0 ? commonCards : skeleton.coreCards).slice(0, 12).map((card) => (
+              <SkeletonCardImage key={card.oracle_id} card={card} />
+            ))}
+          </div>
+        )}
+        {cardTab === 'signature' && (
+          <div className="grid grid-cols-6 gap-1.5">
+            {(skeleton.signatureCards ?? []).slice(0, 12).map((card) => (
+              <SkeletonCardImage key={card.oracle_id} card={card} />
+            ))}
+            {(skeleton.signatureCards ?? []).length === 0 && (
+              <Text sm className="text-text-secondary col-span-6">No signature cards found for this cluster.</Text>
             )}
           </div>
-        );
-      })()}
+        )}
+        {cardTab === 'core' && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-text-secondary" title="Top N rated cards per deck to consider">top</label>
+              <NumericInput min={5} max={23} value={topN} onChange={setTopN} className="w-14" />
+            </div>
+            {coreChain.length > 0 ? (
+              <div className="grid grid-cols-6 gap-1.5">
+                {coreChain.map((card) => (
+                  <SkeletonCardImage
+                    key={card.oracle_id}
+                    card={{ oracle_id: card.oracle_id, name: card.name, imageUrl: card.imageUrl, fraction: card.cooccurrence }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Text sm className="text-text-secondary">No core package found. Deck builds may still be loading.</Text>
+            )}
+          </div>
+        )}
+        {cardTab === 'pockets' && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-text-secondary">Pockets</label>
+              <NumericInput min={2} max={10} value={pocketCount} onChange={setPocketCount} className="w-14" />
+            </div>
+            {pockets.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {pockets.map((pocket) => (
+                  <div key={pocket.pocketIndex} className="rounded border border-border/50 p-2">
+                    <Text xs className="text-text-secondary font-medium mb-1">Pocket {pocket.pocketIndex + 1}</Text>
+                    {pocket.cards.length > 0 ? (
+                      <div className="flex flex-row gap-1 overflow-x-auto pb-0.5">
+                        {pocket.cards.map((card) => (
+                          <SkeletonCardImage
+                            key={card.oracle_id}
+                            card={{ oracle_id: card.oracle_id, name: card.name, imageUrl: card.imageUrl, fraction: card.frequency }}
+                            size={80}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <Text xs className="text-text-secondary">No cards</Text>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Text sm className="text-text-secondary">No card pockets found.</Text>
+            )}
+          </div>
+        )}
+      </div>
       <div className="flex flex-row gap-4 flex-wrap">
         <div className="flex-1 min-w-0">
           <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
@@ -4059,16 +3870,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [simProgress, setSimProgress] = useState(0); // 0–100
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Run history & display
-  const [runs, setRuns] = useState<SimulationRunEntry[]>([]);
-  const [displayRunData, setDisplayRunData] = useState<SimulationRunData | null>(null);
-  const [currentRunSetup, setCurrentRunSetup] = useState<Pick<
-    SimulationSetupResponse,
-    'initialPacks' | 'packSteps' | 'numSeats'
-  > | null>(null);
-  const [selectedTs, setSelectedTs] = useState<number | null>(null);
-  const [loadingRun, setLoadingRun] = useState(false);
-
   // Session-level cache — avoids recomputing embeddings when switching between runs
   const embeddingsCache = useRef<Map<string, number[][] | Record<string, number[]> | null>>(new Map());
   // Cache for computeFilteredCardStats — keyed by sorted pool indices joined as a string.
@@ -4099,6 +3900,43 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [bottomTab, setBottomTab] = useState<'archetypes' | 'deckColor' | 'cardStats' | 'draftBreakdown' | 'overperformers' | 'sideboardAndPairings'>('archetypes');
   const [pairingsExcludeLands, setPairingsExcludeLands] = useState(true);
   const [draftMapColorMode, setDraftMapColorMode] = useState<DraftMapColorMode>('cluster');
+
+  const resetViewSelection = useCallback(() => {
+    setSelectedCardOracles([]);
+    setSelectedArchetype(null);
+    setSelectedSkeletonId(null);
+    setFocusedPoolIndex(null);
+    setFocusedPoolViewMode('deck');
+    setBottomTab('archetypes');
+    setDraftMapColorMode('cluster');
+  }, []);
+
+  const resetSessionCaches = useCallback(() => {
+    embeddingsCache.current = new Map();
+    filteredCardStatsCache.current = new Map();
+  }, []);
+
+  const {
+    runs,
+    displayRunData,
+    currentRunSetup,
+    selectedTs,
+    loadedClusterCache,
+    loadingRun,
+    historyLoadError,
+    loadRunError,
+    storageNotice,
+    setCurrentRunSetup,
+    setStorageNotice,
+    handleLoadRun,
+    handleDeleteRun,
+    handleClearHistory,
+    handlePersistCompletedRun,
+  } = useLocalSimulationHistory({
+    cubeId,
+    onResetViewSelection: resetViewSelection,
+    onResetSessionCaches: resetSessionCaches,
+  });
 
   // Archetype skeleton clustering
   const [minClusterSize, setMinClusterSize] = useState(3);
@@ -4184,8 +4022,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     [gpuBatchSize],
   );
 
-  const [historyLoadError, setHistoryLoadError] = useState<string | null>(null);
-  const [storageNotice, setStorageNotice] = useState<string | null>(null);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
   const isRunning = status === 'running';
@@ -4203,47 +4039,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     ],
     [cube.formats],
   );
-
-  // Load per-cube local history on mount.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const store = await readLocalSimulationStore(cubeId);
-        if (cancelled) return;
-        const nextRuns = store.runs.map((run) => run.entry);
-        setRuns(nextRuns);
-        if (store.runs[0]) {
-          setDisplayRunData(store.runs[0].runData);
-          setCurrentRunSetup(store.runs[0].runData.setupData ?? null);
-          setSelectedTs(store.runs[0].entry.ts);
-          if (store.runs[0].clusterCache?.skeletons && store.runs[0].clusterCache?.umapCoords) {
-            const c = store.runs[0].clusterCache;
-            skipClusterUntilSeed.current = clusterSeed;
-            setSkeletons(c.skeletons);
-            setUmapCoords(c.umapCoords);
-            setClusterMethod(c.clusterMethod);
-            setKnnK(c.knnK);
-            setPendingKnnK(c.knnK);
-            setResolution(c.resolution);
-            setPendingResolution(c.resolution);
-            if (c.poolArchetypeLabels) setPoolArchetypeLabels(new Map(c.poolArchetypeLabels));
-          }
-        } else {
-          setDisplayRunData(null);
-          setCurrentRunSetup(null);
-          setSelectedTs(null);
-        }
-        setHistoryLoadError(null);
-      } catch (err) {
-        if (cancelled) return;
-        setHistoryLoadError(err instanceof Error ? err.message : 'Failed to load local simulation history');
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [cubeId]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -4280,104 +4075,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     return () => document.removeEventListener('click', handleDocumentClick, true);
   }, [isRunning]);
 
-  const [loadRunError, setLoadRunError] = useState<string | null>(null);
-  const loadRunInFlight = useRef(false);
-  // When skeletons are hydrated from IDB cache, we don't want the clustering effect
-  // to re-compute. But the effect fires multiple times during load (displayRunData set,
-  // then poolEmbeddings set). A one-shot flag isn't enough. Instead we remember the
-  // clusterSeed at hydration time — the cache stays valid until the user bumps the seed
-  // (via "Apply" / "Recluster") or a new run loads without a cache.
-  const skipClusterUntilSeed = useRef<number | null>(null);
-
-  const handleLoadRun = useCallback(
-    async (ts: number) => {
-      if (ts === selectedTs && displayRunData) return;
-      if (loadRunInFlight.current) return;
-      loadRunInFlight.current = true;
-      setLoadingRun(true);
-      setLoadRunError(null);
-      setSelectedCardOracles([]);
-      setSelectedArchetype(null);
-      setSelectedSkeletonId(null);
-      setFocusedPoolIndex(null);
-      setFocusedPoolViewMode('deck');
-      setBottomTab('archetypes');
-      setDraftMapColorMode('cluster');
-      embeddingsCache.current = new Map();
-      filteredCardStatsCache.current = new Map();
-      try {
-        const store = await readLocalSimulationStore(cubeId);
-        const run = store.runs.find((entry) => entry.entry.ts === ts);
-        if (!run) {
-          setLoadRunError('Run not found in local storage');
-        } else {
-          setDisplayRunData(run.runData);
-          setCurrentRunSetup(run.runData.setupData ?? null);
-          setSelectedTs(ts);
-          if (run.clusterCache?.skeletons && run.clusterCache?.umapCoords) {
-            const c = run.clusterCache;
-            skipClusterUntilSeed.current = clusterSeed;
-            setSkeletons(c.skeletons);
-            setUmapCoords(c.umapCoords);
-            setClusterMethod(c.clusterMethod);
-            setKnnK(c.knnK);
-            setPendingKnnK(c.knnK);
-            setResolution(c.resolution);
-            setPendingResolution(c.resolution);
-            if (c.poolArchetypeLabels) setPoolArchetypeLabels(new Map(c.poolArchetypeLabels));
-          } else {
-            // No cache — cluster normally, don't inherit a stale skip flag from a previous run.
-            skipClusterUntilSeed.current = null;
-          }
-        }
-      } catch (err) {
-        setLoadRunError(err instanceof Error ? err.message : 'Failed to load run');
-      } finally {
-        setLoadingRun(false);
-        loadRunInFlight.current = false;
-      }
-    },
-    [cubeId, selectedTs, displayRunData, clusterSeed],
-  );
-
-  const handleDeleteRun = useCallback(
-    async (ts: number) => {
-      try {
-        const store = await readLocalSimulationStore(cubeId);
-        const nextStoredRuns = store.runs.filter((run) => run.entry.ts !== ts);
-        await writeLocalSimulationStore(cubeId, nextStoredRuns);
-        const nextRuns = nextStoredRuns.map((run) => run.entry);
-        setRuns(nextRuns);
-        setSelectedCardOracles([]);
-        setSelectedArchetype(null);
-        setSelectedSkeletonId(null);
-        setFocusedPoolIndex(null);
-
-        if (selectedTs === ts) {
-          setDisplayRunData(nextStoredRuns[0]?.runData ?? null);
-          setCurrentRunSetup(nextStoredRuns[0]?.runData.setupData ?? null);
-          setSelectedTs(nextRuns[0]?.ts ?? null);
-        }
-      } catch (err) {
-        console.error('Failed to delete run:', err);
-      }
-    },
-    [cubeId, selectedTs],
-  );
-
-  const handleClearHistory = useCallback(async () => {
-    await clearLocalSimulationStore(cubeId);
-    setRuns([]);
-    setDisplayRunData(null);
-    setCurrentRunSetup(null);
-    setSelectedTs(null);
-    setSelectedCardOracles([]);
-    setSelectedArchetype(null);
-    setSelectedSkeletonId(null);
-    setFocusedPoolIndex(null);
-    setStorageNotice(null);
-  }, [cubeId]);
-
   const handleCancel = useCallback(() => {
     simAbortRef.current?.abort();
     simAbortRef.current = null;
@@ -4405,6 +4102,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     let deckbuildMs = 0;
     let saveMs = 0;
     simAbortRef.current = controller;
+    skipClusterUntilSeed.current = null;
     setStatus('running');
     setSimPhase('setup');
     setSimProgress(0);
@@ -4464,63 +4162,44 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
       let effectiveGpuBatchSize = gpuBatchSize;
       const retryNotices: string[] = [];
+      // Loop progressively lower GPU batch sizes on WebGLInferenceError.
+      // Any non-OOM failure rethrows; exhausting the batch-size ladder also rethrows.
+      const runWithGpuRetry = async <T,>(
+        label: string,
+        fn: (batchSize: number) => Promise<T>,
+        onRetry?: () => void,
+      ): Promise<T> => {
+        for (;;) {
+          try {
+            return await fn(effectiveGpuBatchSize);
+          } catch (err) {
+            if (!(err instanceof WebGLInferenceError)) throw err;
+            const next = nextLowerGpuBatchSize(effectiveGpuBatchSize);
+            if (!next) throw err;
+            retryNotices.push(`${label} exceeded GPU memory at batch size ${effectiveGpuBatchSize}; retried at ${next}.`);
+            effectiveGpuBatchSize = next;
+            onRetry?.();
+          }
+        }
+      };
+
       setSimPhase('sim');
       const simulationStart = performance.now();
-      let report: SimulationReport;
-      try {
-        report = await runClientSimulation(
-          setupData as SimulationSetupResponse,
-          numDrafts,
-          setSimProgress,
-          controller.signal,
-          effectiveGpuBatchSize,
-        );
-      } catch (err) {
-        const fallbackBatchSize =
-          err instanceof WebGLInferenceError ? nextLowerGpuBatchSize(effectiveGpuBatchSize) : null;
-        if (!fallbackBatchSize) throw err;
-        retryNotices.push(
-          `Draft simulation exceeded GPU memory at batch size ${effectiveGpuBatchSize}; retried at ${fallbackBatchSize}.`,
-        );
-        effectiveGpuBatchSize = fallbackBatchSize;
-        setSimProgress(0);
-        report = await runClientSimulation(
-          setupData as SimulationSetupResponse,
-          numDrafts,
-          setSimProgress,
-          controller.signal,
-          effectiveGpuBatchSize,
-        );
-      }
+      const report = await runWithGpuRetry(
+        'Draft simulation',
+        (bs) => runClientSimulation(setupData as SimulationSetupResponse, numDrafts, setSimProgress, controller.signal, bs),
+        () => setSimProgress(0),
+      );
       simulationMs = performance.now() - simulationStart;
       setCurrentRunSetup(setupData as SimulationSetupResponse);
 
       // Build decks for all pools before saving
       setSimPhase('deckbuild');
       const deckbuildStart = performance.now();
-      let deckResult: { decks: BuiltDeck[]; basicCardMeta: Record<string, CardMeta> } | null;
-      try {
-        deckResult = await buildAllDecks(
-          report.slimPools,
-          setupData as SimulationSetupResponse,
-          controller.signal,
-          effectiveGpuBatchSize,
-        );
-      } catch (err) {
-        const fallbackBatchSize =
-          err instanceof WebGLInferenceError ? nextLowerGpuBatchSize(effectiveGpuBatchSize) : null;
-        if (!fallbackBatchSize) throw err;
-        retryNotices.push(
-          `Deckbuilding exceeded GPU memory at batch size ${effectiveGpuBatchSize}; retried at ${fallbackBatchSize}.`,
-        );
-        effectiveGpuBatchSize = fallbackBatchSize;
-        deckResult = await buildAllDecks(
-          report.slimPools,
-          setupData as SimulationSetupResponse,
-          controller.signal,
-          effectiveGpuBatchSize,
-        );
-      }
+      const deckResult = await runWithGpuRetry(
+        'Deckbuilding',
+        (bs) => buildAllDecks(report.slimPools, setupData as SimulationSetupResponse, controller.signal, bs),
+      );
       deckbuildMs = performance.now() - deckbuildStart;
       if (!deckResult) {
         setStatus('failed');
@@ -4566,7 +4245,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         totalMs: performance.now() - runStart,
       };
       const storagePressureNotice = await getStoragePressureNotice();
-      const persistResult = await persistSimulationRun(cubeId, entry, runData);
+      const persistResult = await handlePersistCompletedRun(entry, runData);
       saveMs = performance.now() - saveStart;
       runData.timings = {
         setupMs,
@@ -4576,7 +4255,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         saveMs,
         totalMs: performance.now() - runStart,
       };
-      setRuns(persistResult.runs);
       if (!persistResult.persisted) {
         setStorageNotice('Results are shown below, but this browser did not have enough local storage to save them.');
       } else if (retryNotices.length > 0 || storagePressureNotice) {
@@ -4585,8 +4263,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
       setStatus('completed');
       setSimPhase(null);
-      setDisplayRunData(runData);
-      setSelectedTs(ts);
       simAbortRef.current = null;
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return; // user cancelled — state already reset by handleCancel
@@ -4603,7 +4279,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         setErrorMsg(err instanceof Error ? err.message : 'Simulation failed');
       }
     }
-  }, [csrfFetch, cubeId, numDrafts, numSeats, gpuBatchSize, buildAllDecks, selectedFormatId]);
+  }, [csrfFetch, cubeId, numDrafts, numSeats, gpuBatchSize, buildAllDecks, selectedFormatId, handlePersistCompletedRun]);
 
   const activeDecks = displayRunData?.deckBuilds ?? null;
   const displayedPools = useMemo(() => {
@@ -4633,11 +4309,39 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [cardEmbeddings, setCardEmbeddings] = useState<Record<string, number[]> | null>(null);
   const [poolArchetypeLabels, setPoolArchetypeLabels] = useState<Map<number, string> | null>(null);
   const [poolEmbeddingsFailed, setPoolEmbeddingsFailed] = useState(false);
+  // When skeletons are hydrated from IDB cache, we don't want the clustering effect
+  // to re-compute. But the effect fires multiple times during load (displayRunData set,
+  // then poolEmbeddings set). A one-shot flag isn't enough. Instead we remember the
+  // clusterSeed at hydration time — the cache stays valid until the user bumps the seed
+  // (via "Apply" / "Recluster") or a new run loads without a cache.
+  const skipClusterUntilSeed = useRef<number | null>(null);
   // Derived — no race window: loading whenever a run is loaded, labels are absent, and embeddings haven't permanently failed.
   const poolArchetypeLabelsLoading = displayRunData !== null && poolArchetypeLabels === null && !poolEmbeddingsFailed;
   const [oovWarningPct, setOovWarningPct] = useState<number | null>(null);
   // Cached archetype data so we only fetch once
   const archetypeDataRef = useRef<{ centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null>(null);
+
+  useEffect(() => {
+    if (loadedClusterCache?.skeletons && loadedClusterCache?.umapCoords) {
+      skipClusterUntilSeed.current = clusterSeed;
+      setSkeletons(loadedClusterCache.skeletons);
+      setUmapCoords(loadedClusterCache.umapCoords);
+      setClusterMethod(loadedClusterCache.clusterMethod);
+      setKnnK(loadedClusterCache.knnK);
+      setPendingKnnK(loadedClusterCache.knnK);
+      setResolution(loadedClusterCache.resolution);
+      setPendingResolution(loadedClusterCache.resolution);
+      setPoolArchetypeLabels(
+        loadedClusterCache.poolArchetypeLabels ? new Map(loadedClusterCache.poolArchetypeLabels) : null,
+      );
+      return;
+    }
+    skipClusterUntilSeed.current = null;
+    setSkeletons([]);
+    setUmapCoords([]);
+    setClusterMethod('hdbscan (umap)');
+    setPoolArchetypeLabels(null);
+  }, [loadedClusterCache, clusterSeed]);
 
   // Deck-based color profiles for each skeleton (same logic as ArchetypeSkeletonCard's useMemo)
   const skeletonColorProfiles = useMemo<Map<number, string>>(() => {
@@ -4841,11 +4545,18 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     [displayRunData, displayedPools, skeletons, umapCoords, poolArchetypeLabels, skeletonColorProfiles],
   );
 
-  // Cluster-level theme labels (keyed by clusterId) for display in the archetype list
-  const clusterThemesByClusterId = useMemo(() => {
-    if (!displayRunData || skeletons.length === 0) return new Map<number, string[]>();
-    const { poolThemes } = computeClusterThemes(skeletons, displayedPools, activeDecks, displayRunData.cardMeta);
-    const result = new Map<number, string[]>();
+  // Cluster theme analysis — shared between the archetype list (byClusterId) and DraftBreakdownTable
+  // (poolThemes + tagAllowlist). Computed once per (runData, skeletons, pools, decks) tuple.
+  const { clusterThemesByClusterId, allPoolClusterThemes, allPoolTagAllowlist } = useMemo(() => {
+    if (!displayRunData || skeletons.length === 0) {
+      return {
+        clusterThemesByClusterId: new Map<number, string[]>(),
+        allPoolClusterThemes: undefined,
+        allPoolTagAllowlist: undefined,
+      };
+    }
+    const { poolThemes, tagAllowlist } = computeClusterThemes(skeletons, displayedPools, activeDecks, displayRunData.cardMeta);
+    const byClusterId = new Map<number, string[]>();
     for (const skeleton of skeletons) {
       // Merge ranked tags from all pools in the cluster (union by tag, keep highest lift)
       const merged = new Map<string, { tag: string; lift: number }>();
@@ -4859,20 +4570,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       }
       if (merged.size > 0) {
         const sorted = [...merged.values()].sort((a, b) => b.lift - a.lift);
-        result.set(skeleton.clusterId, formatClusterThemeLabels(sorted));
+        byClusterId.set(skeleton.clusterId, formatClusterThemeLabels(sorted));
       }
     }
-    return result;
+    return {
+      clusterThemesByClusterId: byClusterId,
+      allPoolClusterThemes: poolThemes,
+      allPoolTagAllowlist: tagAllowlist,
+    };
   }, [displayRunData, skeletons, displayedPools, activeDecks]);
-
-  // Full-pool cluster themes passed to DraftBreakdownTable so filtering doesn't degrade the baseline.
-  const { poolThemes: allPoolClusterThemes, tagAllowlist: allPoolTagAllowlist } = useMemo(
-    () =>
-      displayRunData && skeletons.length > 0
-        ? computeClusterThemes(skeletons, displayedPools, activeDecks, displayRunData.cardMeta)
-        : { poolThemes: undefined, tagAllowlist: undefined },
-    [displayRunData, skeletons, displayedPools, activeDecks],
-  );
 
   const selectedCards = useMemo(
     () =>
