@@ -3996,7 +3996,7 @@ const ArchetypeSkeletonSectionInner: React.FC<{
       </button>
       {skeleton.coreCards.length > 0 ? (
         <div className="min-w-0 flex flex-row flex-wrap gap-1">
-          {skeleton.coreCards.map((card) => (
+          {skeleton.coreCards.slice(0, 8).map((card) => (
             <SkeletonCardImage key={card.oracle_id} card={card} size={128} />
           ))}
         </div>
