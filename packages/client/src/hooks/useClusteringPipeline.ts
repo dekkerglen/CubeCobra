@@ -69,6 +69,14 @@ export default function useClusteringPipeline({
 
   const poolArchetypeLabelsLoading = displayRunData !== null && poolArchetypeLabels === null && !poolEmbeddingsFailed;
   const hasDecksForSource = !!(displayRunData && activeDecks && activeDecks.length === displayRunData.slimPools.length);
+
+  const clusteringPhase: string | null = clusteringInProgress
+    ? poolEmbeddings === null && !poolEmbeddingsFailed
+      ? 'Embedding pools…'
+      : poolArchetypeLabelsLoading
+      ? 'Identifying archetypes…'
+      : 'Clustering drafts…'
+    : null;
   const clusteringSourceKey = [
     selectedTs ?? 'unsaved',
     displayRunData?.generatedAt ?? 'none',
@@ -331,6 +339,7 @@ export default function useClusteringPipeline({
     umapCoords,
     clusterMethod,
     clusteringInProgress,
+    clusteringPhase,
     poolArchetypeLabels,
     poolArchetypeLabelsLoading,
     oovWarningPct,

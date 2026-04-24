@@ -4023,6 +4023,7 @@ const DraftMapCard: React.FC<{
   pendingHybridWeight: number;
   setPendingHybridWeight: (v: number) => void;
   clusteringInProgress: boolean;
+  clusteringPhase: string | null;
   applyPendingClusteringSettings: () => void;
   queueRecluster: () => void;
   draftMapPoints: DraftMapPoint[];
@@ -4086,6 +4087,7 @@ const DraftMapCard: React.FC<{
   pendingHybridWeight,
   setPendingHybridWeight,
   clusteringInProgress,
+  clusteringPhase,
   applyPendingClusteringSettings,
   queueRecluster,
   draftMapPoints,
@@ -4243,7 +4245,7 @@ const DraftMapCard: React.FC<{
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Clustering…
+                      {clusteringPhase ?? 'Clustering…'}
                     </span>
                   ) : 'Update clusters'}
                 </button>
@@ -4264,7 +4266,7 @@ const DraftMapCard: React.FC<{
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  <Text xs className="text-text-secondary">Clustering…</Text>
+                  <Text xs className="text-text-secondary">{clusteringPhase ?? 'Clustering…'}</Text>
                 </div>
               </div>
             )}
@@ -4429,6 +4431,7 @@ const DraftSimulatorBottomSection: React.FC<{
   setBottomTab: React.Dispatch<React.SetStateAction<DraftSimulatorBottomTab>>;
   displayRunData: SimulationRunData;
   clusteringInProgress: boolean;
+  clusteringPhase: string | null;
   clusterMethod: string;
   skeletons: ArchetypeSkeleton[];
   selectedSkeletonId: number | null;
@@ -4477,6 +4480,7 @@ const DraftSimulatorBottomSection: React.FC<{
   setBottomTab,
   displayRunData,
   clusteringInProgress,
+  clusteringPhase,
   clusterMethod,
   skeletons,
   selectedSkeletonId,
@@ -4522,6 +4526,20 @@ const DraftSimulatorBottomSection: React.FC<{
   status,
 }) => (
   <div className="simSection simSectionBottomTabs flex flex-col gap-0 pt-3 border-t border-border">
+    {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
+      <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 mb-3 flex items-center justify-between gap-3">
+        <Text sm className="text-text">
+          No draft pools match the current combination of filters.
+        </Text>
+        <button
+          type="button"
+          className="text-xs text-text border border-yellow-500 rounded px-2 py-0.5 hover:bg-yellow-500/20 flex-shrink-0"
+          onClick={clearActiveFilter}
+        >
+          Clear filters
+        </button>
+      </div>
+    )}
     <div className="flex flex-row items-stretch gap-0 border-b border-border mb-4">
       {BOTTOM_TABS.map((tab) => (
         <button
@@ -4543,6 +4561,9 @@ const DraftSimulatorBottomSection: React.FC<{
       <div className="flex flex-col gap-4">
         {clusteringInProgress ? (
           <div className="flex flex-col gap-3 py-2">
+            {clusteringPhase && (
+              <Text xs className="text-text-secondary text-center">{clusteringPhase}</Text>
+            )}
             {[100, 80, 90, 70, 85].map((w, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-full bg-bg-accent" />
@@ -4620,32 +4641,14 @@ const DraftSimulatorBottomSection: React.FC<{
     )}
     {bottomTab === 'cardStats' && (
       <div ref={cardStatsRef} className="flex flex-col gap-5">
-        {(activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0) || hasApproximateFilteredStats ? (
-          <Flexbox direction="col" gap="3">
-            {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
-              <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 flex items-center justify-between gap-3">
-                <Text sm className="text-text">
-                  No draft pools match the current combination of filters.
-                </Text>
-                <button
-                  type="button"
-                  className="text-xs text-text border border-yellow-500 rounded px-2 py-0.5 hover:bg-yellow-500/20 flex-shrink-0"
-                  onClick={clearActiveFilter}
-                >
-                  Clear filters
-                </button>
-              </div>
-            )}
-            {hasApproximateFilteredStats && (
-              <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3">
-                <Text sm className="text-text">
-                  Exact card-stat filtering isn't available for this run — re-simulate to get precise per-filter stats.
-                  Deck and draft breakdowns are filtered correctly; card-level stats reflect the full run.
-                </Text>
-              </div>
-            )}
-          </Flexbox>
-        ) : null}
+        {hasApproximateFilteredStats && (
+          <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3">
+            <Text sm className="text-text">
+              Exact card-stat filtering isn't available for this run — re-simulate to get precise per-filter stats.
+              Deck and draft breakdowns are filtered correctly; card-level stats reflect the full run.
+            </Text>
+          </div>
+        )}
         <Card className="border-border">
           <CardHeader>
             <Flexbox direction="row" gap="2" alignItems="center" justify="between" className="flex-wrap">
@@ -5200,7 +5203,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [archetypesOpen, setArchetypesOpen] = useState(true);
   const [deckColorOpen, setDeckColorOpen] = useState(true);
   const [cardStatsOpen, setCardStatsOpen] = useState(true);
-  const [bottomTab, setBottomTab] = useState<'archetypes' | 'deckColor' | 'cardStats' | 'draftBreakdown' | 'overperformers' | 'sideboardAndPairings'>('archetypes');
+  const [bottomTab, setBottomTab] = useState<DraftSimulatorBottomTab>('archetypes');
   const [pairingsExcludeLands, setPairingsExcludeLands] = useState(true);
   const [draftMapColorMode, setDraftMapColorMode] = useState<DraftMapColorMode>('cluster');
 
@@ -5292,8 +5295,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     [gpuBatchSize],
   );
 
-  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
-  const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
   const availableFormats = useMemo(
     () => [
       { value: '-1', label: 'Standard Draft' },
@@ -5314,6 +5315,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     simAbortRef,
     isRunning,
     overallSimProgress,
+    leaveModalOpen,
+    handleCancelLeave,
+    handleConfirmedLeave,
     handleStart,
     handleCancel,
   } = useSimulationRun({
@@ -5699,6 +5703,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     umapCoords,
     clusterMethod,
     clusteringInProgress,
+    clusteringPhase,
     poolArchetypeLabels,
     poolArchetypeLabelsLoading,
     oovWarningPct,
@@ -6117,7 +6122,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     state: selectionState,
     filteredCardStatsCache,
     computeFilteredCardStats,
-    buildActiveFilterPreview,
     bottomTab,
     pairingsExcludeLands,
   });
@@ -6754,6 +6758,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         pendingHybridWeight={pendingHybridWeight}
                         setPendingHybridWeight={setPendingHybridWeight}
                         clusteringInProgress={clusteringInProgress}
+                        clusteringPhase={clusteringPhase}
                         applyPendingClusteringSettings={applyPendingClusteringSettings}
                         queueRecluster={queueRecluster}
                         draftMapPoints={draftMapPoints}
@@ -6826,6 +6831,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   setBottomTab={setBottomTab}
                   displayRunData={displayRunData}
                   clusteringInProgress={clusteringInProgress}
+                  clusteringPhase={clusteringPhase}
                   clusterMethod={clusterMethod}
                   skeletons={skeletons}
                   selectedSkeletonId={selectedSkeletonId}
@@ -6929,10 +6935,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             />
             <LeaveSimulationModal
               isOpen={leaveModalOpen}
-              setOpen={(open) => {
-                setLeaveModalOpen(open);
-                if (!open) setPendingNavigationHref(null);
-              }}
+              setOpen={(open) => { if (!open) handleCancelLeave(); }}
               onLeave={handleConfirmedLeave}
             />
           </Flexbox>
