@@ -3077,11 +3077,13 @@ const DraftSimulatorBottomSection: React.FC<{
   setSelectedArchetype: React.Dispatch<React.SetStateAction<string | null>>;
   displayedArchetypeDistribution: ArchetypeEntry[];
   colorPairTopArchetypes: Map<string, string[]>;
-  filterChipItems: ReturnType<typeof useDraftSimulatorPresentation>['filterChipItems'];
   clearActiveFilter: () => void;
   activeFilterPoolIndexSet: Set<number> | null;
   hasApproximateFilteredStats: boolean;
-  cardStatsTitle: string;
+  scopedCardStatsTitle: string;
+  draftBreakdownTitle: string;
+  sideboardTitle: string;
+  pairingsTitle: string;
   downloadCardStatsCsv: (stats: CardStats[], label: string) => void;
   visibleCardStats: CardStats[];
   handleToggleSelectedCard: (oracleId: string) => void;
@@ -3126,11 +3128,13 @@ const DraftSimulatorBottomSection: React.FC<{
   setSelectedArchetype,
   displayedArchetypeDistribution,
   colorPairTopArchetypes,
-  filterChipItems,
   clearActiveFilter,
   activeFilterPoolIndexSet,
   hasApproximateFilteredStats,
-  cardStatsTitle,
+  scopedCardStatsTitle,
+  draftBreakdownTitle,
+  sideboardTitle,
+  pairingsTitle,
   downloadCardStatsCsv,
   visibleCardStats,
   handleToggleSelectedCard,
@@ -3285,10 +3289,7 @@ const DraftSimulatorBottomSection: React.FC<{
         <Card className="border-border">
           <CardHeader>
             <Flexbox direction="row" gap="2" alignItems="center" justify="between" className="flex-wrap">
-              <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
-                <Text semibold>{cardStatsTitle}</Text>
-                <FilterChipButtons chips={filterChipItems} />
-              </Flexbox>
+              <Text semibold>{scopedCardStatsTitle}</Text>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {activeFilterPoolIndexSet && (
                   <button
@@ -3331,9 +3332,7 @@ const DraftSimulatorBottomSection: React.FC<{
     {bottomTab === 'draftBreakdown' && (
       <div ref={detailedViewRef} className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
-            <FilterChipButtons chips={filterChipItems} includeFocus />
-          </Flexbox>
+          <Text semibold>{draftBreakdownTitle}</Text>
           <div className="flex items-center gap-2 flex-shrink-0">
             {activeFilterPoolIndexSet && (
               <button
@@ -3391,10 +3390,7 @@ const DraftSimulatorBottomSection: React.FC<{
         <Col xs={12} md={6}>
           <div className="h-full rounded border border-border bg-bg">
             <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex flex-col gap-0.5">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <Text semibold>Common Sideboard Cards</Text>
-                <FilterChipButtons chips={filterChipItems} />
-              </div>
+              <Text semibold>{sideboardTitle}</Text>
               <Text xs className="text-text-secondary">Cards most often left in the sideboard across matching pools.</Text>
             </div>
             {topSideboardCards.length === 0 ? (
@@ -3443,10 +3439,7 @@ const DraftSimulatorBottomSection: React.FC<{
           <div className="h-full rounded border border-border bg-bg">
             <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex items-start justify-between gap-3">
               <div className="flex flex-col gap-0.5">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Text semibold>Common Card Pairings</Text>
-                  <FilterChipButtons chips={filterChipItems} />
-                </div>
+                <Text semibold>{pairingsTitle}</Text>
                 <Text xs className="text-text-secondary">Pairs of cards most often drafted together into the same deck.</Text>
               </div>
               <label className="flex items-center gap-1.5 text-xs text-text-secondary cursor-pointer select-none flex-shrink-0 pt-0.5">
@@ -4059,7 +4052,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     clearActiveFilter,
     downloadDraftBreakdownCsv,
     downloadCardStatsCsv,
-    cardStatsTitle,
+    scopedCardStatsTitle,
+    draftBreakdownTitle,
+    sideboardTitle,
+    pairingsTitle,
   } = useDraftSimulatorPresentation({
     data: derivedData,
     state: selectionState,
@@ -4515,11 +4511,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   setSelectedArchetype={setSelectedArchetype}
                   displayedArchetypeDistribution={displayedArchetypeDistribution}
                   colorPairTopArchetypes={colorPairTopArchetypes}
-                  filterChipItems={filterChipItems}
                   clearActiveFilter={clearActiveFilter}
                   activeFilterPoolIndexSet={activeFilterPoolIndexSet}
                   hasApproximateFilteredStats={hasApproximateFilteredStats}
-                  cardStatsTitle={cardStatsTitle}
+                  scopedCardStatsTitle={scopedCardStatsTitle}
+                  draftBreakdownTitle={draftBreakdownTitle}
+                  sideboardTitle={sideboardTitle}
+                  pairingsTitle={pairingsTitle}
                   downloadCardStatsCsv={downloadCardStatsCsv}
                   visibleCardStats={visibleCardStats}
                   handleToggleSelectedCard={handleToggleSelectedCard}
