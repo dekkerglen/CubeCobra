@@ -64,10 +64,18 @@ export default function useClusteringPipeline({
   const [poolEmbeddingsFailed, setPoolEmbeddingsFailed] = useState(false);
   const [oovWarningPct, setOovWarningPct] = useState<number | null>(null);
 
-  const skipClusterUntilSeed = useRef<number | null>(null);
+  const hydratedClusterSourceKey = useRef<string | null>(null);
   const archetypeDataRef = useRef<{ centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null>(null);
 
   const poolArchetypeLabelsLoading = displayRunData !== null && poolArchetypeLabels === null && !poolEmbeddingsFailed;
+  const hasDecksForSource = !!(displayRunData && activeDecks && activeDecks.length === displayRunData.slimPools.length);
+  const clusteringSourceKey = [
+    selectedTs ?? 'unsaved',
+    displayRunData?.generatedAt ?? 'none',
+    displayRunData?.slimPools.length ?? 0,
+    hasDecksForSource ? 'decks' : 'picks',
+    clusterSeed,
+  ].join(':');
 
   useEffect(() => {
     if (!displayRunData) return;
@@ -82,7 +90,7 @@ export default function useClusteringPipeline({
 
   useEffect(() => {
     if (loadedClusterCache?.skeletons && loadedClusterCache?.umapCoords) {
-      skipClusterUntilSeed.current = clusterSeed;
+      hydratedClusterSourceKey.current = clusteringSourceKey;
       setSkeletons(loadedClusterCache.skeletons);
       setUmapCoords(loadedClusterCache.umapCoords);
       setClusterMethod(loadedClusterCache.clusterMethod);
@@ -95,12 +103,12 @@ export default function useClusteringPipeline({
       );
       return;
     }
-    skipClusterUntilSeed.current = null;
+    hydratedClusterSourceKey.current = null;
     setSkeletons([]);
     setUmapCoords([]);
     setClusterMethod('hdbscan (umap)');
     setPoolArchetypeLabels(null);
-  }, [loadedClusterCache, clusterSeed]);
+  }, [loadedClusterCache, clusteringSourceKey]);
 
   useEffect(() => {
     if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {
@@ -204,12 +212,9 @@ export default function useClusteringPipeline({
       return;
     }
 
-    if (skipClusterUntilSeed.current !== null) {
-      if (skipClusterUntilSeed.current === clusterSeed) {
-        setClusteringInProgress(false);
-        return;
-      }
-      skipClusterUntilSeed.current = null;
+    if (hydratedClusterSourceKey.current === clusteringSourceKey) {
+      setClusteringInProgress(false);
+      return;
     }
 
     if (poolEmbeddings === null && !poolEmbeddingsFailed) {
@@ -239,6 +244,7 @@ export default function useClusteringPipeline({
       setSkeletons(result.skeletons);
       setUmapCoords(result.umapCoords);
       setClusterMethod(result.clusterMethod);
+      hydratedClusterSourceKey.current = null;
       setClusteringInProgress(false);
       if (selectedTs) {
         void patchClusteringCache(cubeId, selectedTs, {
@@ -260,7 +266,7 @@ export default function useClusteringPipeline({
     clusterMode,
     knnK,
     negSamples,
-    clusterSeed,
+    clusteringSourceKey,
     activeDecks,
     poolEmbeddings,
     poolEmbeddingsFailed,
