@@ -22,14 +22,23 @@ interface UseLocalSimulationHistoryArgs {
   onResetSessionCaches: () => void;
 }
 
+export interface LocalSimulationHistoryEntry {
+  entry: SimulationRunEntry;
+  hasExactFiltering: boolean;
+}
+
 const setupFromRunData = (runData: SimulationRunData): CurrentRunSetup => runData.setupData ?? null;
+const historyEntryFromRun = (entry: SimulationRunEntry, runData: SimulationRunData): LocalSimulationHistoryEntry => ({
+  entry,
+  hasExactFiltering: !!runData.setupData,
+});
 
 export default function useLocalSimulationHistory({
   cubeId,
   onResetViewSelection,
   onResetSessionCaches,
 }: UseLocalSimulationHistoryArgs) {
-  const [runs, setRuns] = useState<SimulationRunEntry[]>([]);
+  const [runs, setRuns] = useState<LocalSimulationHistoryEntry[]>([]);
   const [displayRunData, setDisplayRunData] = useState<SimulationRunData | null>(null);
   const [currentRunSetup, setCurrentRunSetup] = useState<CurrentRunSetup>(null);
   const [selectedTs, setSelectedTs] = useState<number | null>(null);
@@ -47,7 +56,7 @@ export default function useLocalSimulationHistory({
       try {
         const store = await readLocalSimulationStore(cubeId);
         if (cancelled) return;
-        const nextRuns = store.runs.map((run) => run.entry);
+        const nextRuns = store.runs.map((run) => historyEntryFromRun(run.entry, run.runData));
         setRuns(nextRuns);
         if (store.runs[0]) {
           setDisplayRunData(store.runs[0].runData);
@@ -112,13 +121,13 @@ export default function useLocalSimulationHistory({
       const store = await readLocalSimulationStore(cubeId);
       const nextStoredRuns = store.runs.filter((run) => run.entry.ts !== ts);
       await writeLocalSimulationStore(cubeId, nextStoredRuns);
-      const nextRuns = nextStoredRuns.map((run) => run.entry);
+      const nextRuns = nextStoredRuns.map((run) => historyEntryFromRun(run.entry, run.runData));
       setRuns(nextRuns);
       onResetViewSelection();
       if (selectedTs === ts) {
         setDisplayRunData(nextStoredRuns[0]?.runData ?? null);
         setCurrentRunSetup(nextStoredRuns[0] ? setupFromRunData(nextStoredRuns[0].runData) : null);
-        setSelectedTs(nextRuns[0]?.ts ?? null);
+        setSelectedTs(nextRuns[0]?.entry.ts ?? null);
         setLoadedClusterCache(nextStoredRuns[0]?.clusterCache ?? null);
       }
     },
@@ -139,7 +148,14 @@ export default function useLocalSimulationHistory({
   const handlePersistCompletedRun = useCallback(
     async (entry: SimulationRunEntry, runData: SimulationRunData) => {
       const persistResult = await persistSimulationRun(cubeId, entry, runData);
-      setRuns(persistResult.runs);
+      setRuns((currentRuns) => {
+        const nextRun = historyEntryFromRun(entry, runData);
+        const persistedTimestamps = new Set(persistResult.runs.map((runEntry) => runEntry.ts));
+        const retainedRuns = currentRuns.filter(
+          (runEntry) => runEntry.entry.ts !== entry.ts && persistedTimestamps.has(runEntry.entry.ts),
+        );
+        return [nextRun, ...retainedRuns];
+      });
       setDisplayRunData(runData);
       setCurrentRunSetup(setupFromRunData(runData));
       setSelectedTs(entry.ts);

@@ -62,21 +62,25 @@ describe('hdbscanAssignments', () => {
     const vecs = [
       [0, 0],
       [0.1, 0],
-      [0, 0.1], // cluster A — near origin
-      [10, 10],
-      [10.1, 10],
-      [10, 10.1], // cluster B — far corner
+      [0, 0.1],
+      [0.1, 0.1], // cluster A — near origin
+      [20, 20],
+      [20.1, 20],
+      [20, 20.1],
+      [20.1, 20.1], // cluster B — far corner
     ];
     const result = hdbscanAssignments(vecs, 2);
-    expect(result).toHaveLength(6);
-    // First three should be same cluster
+    expect(result).toHaveLength(8);
+    // First four should be same cluster
     expect(result[0]).toBe(result[1]);
     expect(result[1]).toBe(result[2]);
-    // Last three should be same cluster
-    expect(result[3]).toBe(result[4]);
+    expect(result[2]).toBe(result[3]);
+    // Last four should be same cluster
     expect(result[4]).toBe(result[5]);
+    expect(result[5]).toBe(result[6]);
+    expect(result[6]).toBe(result[7]);
     // The two groups should be different clusters
-    expect(result[0]).not.toBe(result[3]);
+    expect(result[0]).not.toBe(result[4]);
   });
 
   it('returns one assignment per input vector', () => {
