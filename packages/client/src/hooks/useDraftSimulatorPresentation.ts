@@ -242,14 +242,59 @@ export default function useDraftSimulatorPresentation({
   }, [displayRunData]);
 
   const cardStatsTitle = useMemo(() => {
-    if (selectedCards.length > 0) return 'Card Stats';
-    if (selectedSkeletonId !== null) {
-      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-      return sk ? `Card Stats for ${getSkeletonDisplayName(sk, poolArchetypeLabels, skeletonColorProfiles)} Drafters` : 'All Card Stats';
-    }
-    if (selectedArchetype) return `Card Stats for ${archetypeFullName(selectedArchetype)} Drafters`;
-    return 'All Card Stats';
-  }, [selectedSkeletonId, selectedArchetype, selectedCards.length, skeletons, poolArchetypeLabels, skeletonColorProfiles, getSkeletonDisplayName]);
+    return 'Card Stats';
+  }, []);
+
+  const filteredPoolScopeSuffix = useMemo(() => {
+    const scopeLabel = (() => {
+      if (selectedSkeletonId !== null) {
+        const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+        return sk ? getSkeletonDisplayName(sk, poolArchetypeLabels, skeletonColorProfiles) : null;
+      }
+      if (selectedArchetype) return archetypeFullName(selectedArchetype);
+      return null;
+    })();
+
+    const selectedCardNames = selectedCards.map((card) => card.name);
+    const cardClause =
+      selectedCardNames.length === 0
+        ? null
+        : selectedCardNames.length === 1
+          ? `that include ${selectedCardNames[0]}`
+          : selectedCardNames.length === 2
+            ? `that include ${selectedCardNames[0]} and ${selectedCardNames[1]}`
+            : `that include ${selectedCardNames.slice(0, -1).join(', ')}, and ${selectedCardNames[selectedCardNames.length - 1]}`;
+
+    if (!scopeLabel && !cardClause) return null;
+
+    const base = scopeLabel ? `${scopeLabel} Draft Pools` : 'Draft Pools';
+    return cardClause ? `for ${base} ${cardClause}` : `for ${base}`;
+  }, [
+    selectedSkeletonId,
+    selectedArchetype,
+    selectedCards,
+    skeletons,
+    poolArchetypeLabels,
+    skeletonColorProfiles,
+    getSkeletonDisplayName,
+  ]);
+
+  const scopedCardStatsTitle = useMemo(
+    () => `${cardStatsTitle}${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
+    [cardStatsTitle, filteredPoolScopeSuffix],
+  );
+  const draftBreakdownTitle = useMemo(
+    () => `Draft Breakdown${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
+    [filteredPoolScopeSuffix],
+  );
+  const sideboardTitle = useMemo(
+    () => `Common Sideboard Cards${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
+    [filteredPoolScopeSuffix],
+  );
+  const pairingsTitle = useMemo(
+    () => `Common Card Pairings${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
+    [filteredPoolScopeSuffix],
+  );
 
   return {
     activeFilterSummary,
@@ -262,5 +307,9 @@ export default function useDraftSimulatorPresentation({
     downloadDraftBreakdownCsv,
     downloadCardStatsCsv,
     cardStatsTitle,
+    scopedCardStatsTitle,
+    draftBreakdownTitle,
+    sideboardTitle,
+    pairingsTitle,
   };
 }
