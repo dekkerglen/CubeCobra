@@ -52,6 +52,8 @@ import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
 import useClusteringPipeline from '../hooks/useClusteringPipeline';
+import useDraftSimulatorPresentation from '../hooks/useDraftSimulatorPresentation';
+import useDraftSimulatorSelection from '../hooks/useDraftSimulatorSelection';
 import useLocalSimulationHistory from '../hooks/useLocalSimulationHistory';
 import useSimulationRun from '../hooks/useSimulationRun';
 import CubeLayout from '../layouts/CubeLayout';
@@ -4162,199 +4164,23 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     };
   }, [displayRunData, skeletons, displayedPools, activeDecks]);
 
-  const selectedCards = useMemo(
-    () =>
-      displayRunData
-        ? selectedCardOracles
-            .map((oracle) => displayRunData.cardStats.find((c) => c.oracle_id === oracle) ?? null)
-            .filter((c): c is CardStats => !!c)
-        : [],
-    [displayRunData, selectedCardOracles],
-  );
-  const selectedCard = selectedCards.length === 1 ? (selectedCards[0] ?? null) : null;
-  const activeFilterPoolIndexSet = useMemo(() => {
-    const filterSets: Set<number>[] = [];
-
-    if (selectedSkeletonId !== null) {
-      const skeleton = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-      if (skeleton) filterSets.push(new Set<number>(skeleton.poolIndices));
-    }
-
-    if (selectedArchetype) {
-      const colorSet = new Set<number>();
-      for (const pool of displayedPools) {
-        if (pool.archetype === selectedArchetype) colorSet.add(pool.poolIndex);
-      }
-      filterSets.push(colorSet);
-    }
-
-    for (const selectedCardEntry of selectedCards) {
-      filterSets.push(new Set<number>(selectedCardEntry.poolIndices));
-    }
-
-    if (filterSets.length === 0) return null;
-
-    const [first, ...rest] = filterSets;
-    const intersection = new Set<number>(first);
-    for (const value of [...intersection]) {
-      if (!rest.every((set) => set.has(value))) intersection.delete(value);
-    }
-    return intersection;
-  }, [selectedArchetype, selectedSkeletonId, selectedCards, skeletons, displayedPools]);
-
-  const filteredDecks = useMemo(() => {
-    if (!activeDecks) return null;
-    if (!activeFilterPoolIndexSet) return activeDecks;
-    return activeDecks.filter((_, idx) => activeFilterPoolIndexSet.has(idx));
-  }, [activeDecks, activeFilterPoolIndexSet]);
-  const deckInclusionPct = useMemo<Map<string, number>>(() => {
-    if (!filteredDecks || filteredDecks.length === 0) return new Map();
-    const mainboardCounts = new Map<string, number>();
-    const poolCounts = new Map<string, number>();
-    for (const d of filteredDecks) {
-      for (const o of d.mainboard) {
-        mainboardCounts.set(o, (mainboardCounts.get(o) ?? 0) + 1);
-        poolCounts.set(o, (poolCounts.get(o) ?? 0) + 1);
-      }
-      for (const o of d.sideboard) {
-        poolCounts.set(o, (poolCounts.get(o) ?? 0) + 1);
-      }
-    }
-    const result = new Map<string, number>();
-    for (const [o, inDeck] of mainboardCounts) {
-      const inPool = poolCounts.get(o) ?? inDeck;
-      result.set(o, inDeck / inPool);
-    }
-    return result;
-  }, [filteredDecks]);
-  const inDeckOracles = useMemo<Set<string> | null>(
-    () => (filteredDecks ? new Set(deckInclusionPct.keys()) : null),
-    [filteredDecks, deckInclusionPct],
-  );
-  const inSideboardOracles = useMemo<Set<string> | null>(() => {
-    if (!filteredDecks) return null;
-    const s = new Set<string>();
-    for (const d of filteredDecks) for (const o of d.sideboard) s.add(o);
-    return s;
-  }, [filteredDecks]);
-
-  const visibleCardStats = useMemo(() => {
-    if (!displayRunData) return [];
-    if (!activeFilterPoolIndexSet) return displayRunData.cardStats;
-    if (currentRunSetup) {
-      const cacheKey = [...activeFilterPoolIndexSet].sort((a, b) => a - b).join(',');
-      const cached = filteredCardStatsCache.current.get(cacheKey);
-      if (cached) return cached;
-      const result = computeFilteredCardStats(currentRunSetup, displayRunData, activeFilterPoolIndexSet);
-      filteredCardStatsCache.current.set(cacheKey, result);
-      return result;
-    }
-    return displayRunData.cardStats.filter((c) => c.poolIndices.some((i) => activeFilterPoolIndexSet.has(i)));
-  }, [displayRunData, activeFilterPoolIndexSet, currentRunSetup]);
-  const selectedCardStats = useMemo(
-    () => (selectedCard ? (visibleCardStats.find((c) => c.oracle_id === selectedCard.oracle_id) ?? selectedCard) : null),
-    [visibleCardStats, selectedCard],
-  );
-  const visiblePoolCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const cardStat of visibleCardStats) counts.set(cardStat.oracle_id, cardStat.poolIndices.length);
-    return counts;
-  }, [visibleCardStats]);
-  const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
-
-  const topSideboardCards = useMemo(() => {
-    if (bottomTab !== 'sideboardAndPairings') return [];
-    if (!filteredDecks || filteredDecks.length === 0) return [];
-    const counts = new Map<string, number>();
-    const total = filteredDecks.length;
-    for (const deck of filteredDecks) {
-      for (const oracleId of new Set(deck.sideboard)) {
-        counts.set(oracleId, (counts.get(oracleId) ?? 0) + 1);
-      }
-    }
-    return [...counts.entries()]
-      .map(([oracle_id, count]) => ({ oracle_id, count, pct: count / total }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 50);
-  }, [bottomTab, filteredDecks]);
-
-  const topCardPairings = useMemo(() => {
-    if (bottomTab !== 'sideboardAndPairings') return [];
-    if (!filteredDecks || filteredDecks.length === 0) return [];
-    const pairCounts = new Map<string, number>();
-    const cardCounts = new Map<string, number>();
-    const isBasicLand = (oracleId: string) => /\bBasic\b/.test(displayRunData?.cardMeta[oracleId]?.type ?? '');
-    const isLand = (oracleId: string) => /\bLand\b/.test(displayRunData?.cardMeta[oracleId]?.type ?? '');
-    for (const deck of filteredDecks) {
-      const mb = [...new Set(deck.mainboard)].filter((o) => !isBasicLand(o) && (!pairingsExcludeLands || !isLand(o))).sort();
-      for (const o of mb) cardCounts.set(o, (cardCounts.get(o) ?? 0) + 1);
-      for (let i = 0; i < mb.length; i++) {
-        for (let j = i + 1; j < mb.length; j++) {
-          const [a, b] = mb[i]! < mb[j]! ? [mb[i]!, mb[j]!] : [mb[j]!, mb[i]!];
-          const key = `${a}\x00${b}`;
-          pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
-        }
-      }
-    }
-    const total = filteredDecks.length;
-    return [...pairCounts.entries()]
-      .map(([key, count]) => {
-        const [oracle_id_a, oracle_id_b] = key.split('\x00');
-        const minCardCount = Math.min(cardCounts.get(oracle_id_a!) ?? 1, cardCounts.get(oracle_id_b!) ?? 1);
-        return { oracle_id_a, oracle_id_b, count, pct: count / minCardCount, rawPct: count / total };
-      })
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 50);
-  }, [bottomTab, filteredDecks, pairingsExcludeLands, displayRunData]);
-
-  const selectedPools =
-    selectedCards.length > 0
-      ? displayedPools.filter((p) => !activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex))
-      : [];
-  const focusedPool =
-    focusedPoolIndex === null ? null : (displayedPools.find((pool) => pool.poolIndex === focusedPoolIndex) ?? null);
-  const focusedDeck = focusedPool ? (activeDecks?.[focusedPool.poolIndex] ?? null) : null;
-  const focusedDeckAvailable = !!focusedDeck && (focusedDeck.mainboard.length > 0 || focusedDeck.sideboard.length > 0);
-  const focusedFullPickOrderAvailable = !!displayRunData?.setupData;
-  const effectiveFocusedPoolViewMode =
-    (focusedPoolViewMode === 'deck' && !focusedDeckAvailable) ||
-    (focusedPoolViewMode === 'fullPickOrder' && !focusedFullPickOrderAvailable)
-      ? 'pool'
-      : focusedPoolViewMode;
-  const scopedPools = useMemo(
-    () => displayedPools.filter((p) => !activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex)),
-    [displayedPools, activeFilterPoolIndexSet],
-  );
-
-  const activeFilterChips = useMemo(() => {
-    const chips: string[] = [];
-    if (selectedSkeletonId !== null) {
-      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-      if (sk) {
-        const skIdx = skeletons.indexOf(sk);
-        chips.push(`Cluster: ${skIdx + 1}`);
-      }
-    }
-    if (selectedArchetype) chips.push(`Deck Color: ${archetypeFullName(selectedArchetype)}`);
-    for (const selectedCardEntry of selectedCards) chips.push(`Pools Containing: ${selectedCardEntry.name}`);
-    return chips;
-  }, [selectedSkeletonId, selectedArchetype, selectedCards, skeletons]);
-
-  const activeFilterSummary = useMemo(() => {
-    if (activeFilterChips.length === 0) return null;
-    return activeFilterChips.join(' · ');
-  }, [activeFilterChips]);
-
-  // Filter chips with card entries stripped — used as scope panel title when cards are also selected
-  const scopeOnlySummary = useMemo(() => {
-    const nonCard = activeFilterChips.filter((c) => !c.startsWith('Pools Containing:'));
-    return nonCard.length > 0 ? nonCard.join(' · ') : null;
-  }, [activeFilterChips]);
-
-  const activeFilterPreview = useMemo(() => {
-    if (!displayRunData || !activeFilterPoolIndexSet) return null;
+  const buildActiveFilterPreview = useCallback(({
+    displayRunData: runData,
+    activeFilterPoolIndexSet,
+    scopedPools,
+    activeDecks: scopedDecks,
+    displayedPools: scopedDisplayedPools,
+    selectedCards,
+  }: {
+    displayRunData: SimulationRunData;
+    activeFilterPoolIndexSet: Set<number>;
+    scopedPools: SimulatedPool[];
+    activeDecks: BuiltDeck[] | null;
+    displayedPools: SimulatedPool[];
+    selectedCards: CardStats[];
+  }) => {
     const isBasicLand = (oracleId: string) => {
-      const typeLower = (displayRunData.cardMeta[oracleId]?.type ?? '').toLowerCase();
+      const typeLower = (runData.cardMeta[oracleId]?.type ?? '').toLowerCase();
       return typeLower.includes('basic land');
     };
 
@@ -4365,10 +4191,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     const poolCounts = new Map<string, number>();
     const sideboardOnlyCounts = new Map<string, number>();
     const poolOracleSets = new Map<number, Set<string>>();
-    const hasDeckData = !!activeDecks && activeDecks.length === displayedPools.length;
+    const hasDeckData = !!scopedDecks && scopedDecks.length === scopedDisplayedPools.length;
 
     for (const poolIndex of matchingPoolIndices) {
-      const pool = displayedPools[poolIndex];
+      const pool = scopedDisplayedPools[poolIndex];
       if (!pool) continue;
       const poolOracleSet = new Set(
         pool.picks
@@ -4381,7 +4207,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       }
 
       if (hasDeckData) {
-        const deck = activeDecks?.[poolIndex];
+        const deck = scopedDecks?.[poolIndex];
         if (!deck) continue;
         for (const oracleId of new Set(deck.sideboard)) {
           if (!oracleId || isBasicLand(oracleId) || selectedFilterOracleIds.has(oracleId)) continue;
@@ -4394,8 +4220,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
     const toSkeletonCard = ([oracleId, count]: [string, number]): SkeletonCard => ({
       oracle_id: oracleId,
-      name: displayRunData.cardMeta[oracleId]?.name || oracleId,
-      imageUrl: displayRunData.cardMeta[oracleId]?.imageUrl ?? '',
+      name: runData.cardMeta[oracleId]?.name || oracleId,
+      imageUrl: runData.cardMeta[oracleId]?.imageUrl ?? '',
       fraction: count / matchingPoolIndices.length,
     });
 
@@ -4440,157 +4266,114 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       .slice(0, 5);
 
     return { commonCards, supportCards, sideboardCards, lockPairs: lockPairs.slice(0, 5) };
-  }, [displayRunData, activeFilterPoolIndexSet, scopedPools, activeDecks, displayedPools, selectedCards]);
-
-  const filterChipItems = useMemo(() => {
-    const chips: FilterChipItem[] = [];
-    for (const selectedCardEntry of selectedCards) {
-      chips.push({
-        key: `card-${selectedCardEntry.oracle_id}`,
-        label: selectedCardEntry.name,
-        detail: 'Card',
-        onClear: () =>
-          setSelectedCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
-      });
-    }
-    if (selectedSkeletonId !== null) {
-      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-      if (sk) {
-        chips.push({
-          key: `cluster-${sk.clusterId}`,
-          label: getSkeletonDisplayName(sk, poolArchetypeLabels, skeletonColorProfiles),
-          detail: 'Cluster',
-          onClear: () => setSelectedSkeletonId(null),
-        });
-      }
-    }
-    if (selectedArchetype) {
-      chips.push({
-        key: `archetype-${selectedArchetype}`,
-        label: archetypeFullName(selectedArchetype),
-        detail: 'Color',
-        onClear: () => setSelectedArchetype(null),
-      });
-    }
-    if (focusedPoolIndex !== null) {
-      const focusedPool = displayedPools.find((pool) => pool.poolIndex === focusedPoolIndex);
-      if (focusedPool) {
-        chips.push({
-          key: `focus-${focusedPoolIndex}`,
-          label: `Draft ${focusedPool.draftIndex + 1} · Seat ${focusedPool.seatIndex + 1}`,
-          detail: 'Focus',
-          onClear: () => setFocusedPoolIndex(null),
-        });
-      }
-    }
-    return chips;
-  }, [selectedCards, selectedSkeletonId, selectedArchetype, focusedPoolIndex, displayedPools, skeletons, poolArchetypeLabels, skeletonColorProfiles]);
-
-  const selectedCardScopeLabel = useMemo(() => {
-    if (selectedCards.length === 0) return null;
-    const scopeParts: string[] = [];
-    if (selectedSkeletonId !== null) {
-      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-      if (sk) scopeParts.push(getSkeletonDisplayName(sk, poolArchetypeLabels, skeletonColorProfiles));
-    }
-    if (selectedArchetype) scopeParts.push(archetypeFullName(selectedArchetype));
-    return scopeParts.length > 0 ? scopeParts.join(' · ') : null;
-  }, [selectedCards.length, selectedSkeletonId, selectedArchetype, skeletons, poolArchetypeLabels, skeletonColorProfiles]);
-
-  const detailedViewTitle = useMemo(() => {
-    if (selectedCards.length === 1 && selectedCard)
-      return `${selectedCard.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
-    if (selectedCards.length === 2)
-      return `${selectedCards[0]!.name} + ${selectedCards[1]!.name}${selectedCardScopeLabel ? ` in ${selectedCardScopeLabel}` : ''}`;
-    if (selectedCards.length > 2) return `${selectedCards.length} cards`;
-    if (selectedSkeletonId !== null) {
-      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-      return sk ? getSkeletonDisplayName(sk, poolArchetypeLabels, skeletonColorProfiles) : 'Detailed View';
-    }
-    if (selectedArchetype) return archetypeFullName(selectedArchetype);
-    return 'No filter selected';
-  }, [selectedCard, selectedCards, selectedCardScopeLabel, selectedSkeletonId, selectedArchetype, skeletons, poolArchetypeLabels, skeletonColorProfiles]);
-
-  const detailedViewSubtitle = useMemo(() => {
-    const matchingPools = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
-    if (selectedCards.length > 0)
-      return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
-    if (selectedSkeletonId !== null || selectedArchetype)
-      return `${matchingPools} matching draft pool${matchingPools !== 1 ? 's' : ''}`;
-    return 'Select a color profile, archetype cluster, or card above to narrow the view.';
-  }, [
-    activeFilterPoolIndexSet,
-    displayRunData,
-    selectedCards.length,
-    selectedPools.length,
-    selectedSkeletonId,
-    selectedArchetype,
-  ]);
-
-  const clearActiveFilter = useCallback(() => {
-    setSelectedCardOracles([]);
-    setSelectedArchetype(null);
-    setSelectedSkeletonId(null);
-    setFocusedPoolIndex(null);
   }, []);
 
-  const downloadDraftBreakdownCsv = useCallback((pools: SimulatedPool[], label: string) => {
-    if (!displayRunData) return;
-    const { cardMeta } = displayRunData;
-    const hasDeckBuilds = !!activeDecks && activeDecks.length === displayRunData.slimPools.length;
-    const header = ['Draft', 'Seat', 'Colors', 'Themes', 'Creatures', 'Noncreatures', 'Lands', 'Avg MV', 'Mainboard', 'Sideboard'];
-    const rows = pools.map((pool) => {
-      const deck = hasDeckBuilds ? (activeDecks![pool.poolIndex] ?? null) : null;
-      const summary = buildDraftBreakdownRowSummary(pool, deck, cardMeta);
-      const resolveName = (oracleId: string) => cardMeta[oracleId]?.name ?? oracleId;
-      const mainboard = (deck?.mainboard ?? pool.picks.map((p) => p.oracle_id)).map(resolveName).join(', ');
-      const sideboard = (deck?.sideboard ?? []).map(resolveName).join(', ');
-      return [
-        pool.draftIndex + 1,
-        pool.seatIndex + 1,
-        archetypeFullName(pool.archetype),
-        summary.themes.join(', '),
-        summary.creatureCount,
-        summary.nonCreatureCount,
-        summary.landCount,
-        summary.avgMv.toFixed(2),
-        mainboard,
-        sideboard,
-      ];
-    });
-    const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${displayRunData.cubeName}-${displayRunData.numDrafts}drafts-breakdown-${label}.csv`.replace(/\s+/g, '-');
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [displayRunData, activeDecks]);
+  const {
+    selectedCards,
+    selectedCard,
+    activeFilterPoolIndexSet,
+    filteredDecks,
+    visibleCardStats,
+    selectedCardStats,
+    visiblePoolCounts,
+    scopedPools,
+    activeFilterPreview,
+    topSideboardCards,
+    topCardPairings,
+  } = useDraftSimulatorSelection({
+    displayRunData,
+    currentRunSetup,
+    displayedPools,
+    activeDecks,
+    selectedCardOracles,
+    selectedSkeletonId,
+    selectedArchetype,
+    skeletons,
+    filteredCardStatsCache,
+    computeFilteredCardStats,
+    buildActiveFilterPreview,
+    bottomTab,
+    pairingsExcludeLands,
+  });
 
-  const downloadCardStatsCsv = useCallback((stats: CardStats[], label: string) => {
-    if (!displayRunData) return;
-    const header = ['Name', 'Color Identity', 'Times Seen', 'Times Picked', 'Pick Rate', 'Avg Pick Position', 'Wheel Count', 'P1P1 Count', 'Elo'];
-    const rows = stats.map((c) => [
-      c.name,
-      c.colorIdentity.join(''),
-      c.timesSeen,
-      c.timesPicked,
-      c.pickRate.toFixed(3),
-      c.avgPickPosition.toFixed(2),
-      c.wheelCount,
-      c.p1p1Count,
-      c.elo,
-    ]);
-    const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${displayRunData.cubeName}-${displayRunData.numDrafts}drafts-${label}.csv`.replace(/\s+/g, '-');
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [displayRunData]);
+  const deckInclusionPct = useMemo<Map<string, number>>(() => {
+    if (!filteredDecks || filteredDecks.length === 0) return new Map();
+    const mainboardCounts = new Map<string, number>();
+    const poolCounts = new Map<string, number>();
+    for (const d of filteredDecks) {
+      for (const o of d.mainboard) {
+        mainboardCounts.set(o, (mainboardCounts.get(o) ?? 0) + 1);
+        poolCounts.set(o, (poolCounts.get(o) ?? 0) + 1);
+      }
+      for (const o of d.sideboard) {
+        poolCounts.set(o, (poolCounts.get(o) ?? 0) + 1);
+      }
+    }
+    const result = new Map<string, number>();
+    for (const [o, inDeck] of mainboardCounts) {
+      const inPool = poolCounts.get(o) ?? inDeck;
+      result.set(o, inDeck / inPool);
+    }
+    return result;
+  }, [filteredDecks]);
+  const inDeckOracles = useMemo<Set<string> | null>(
+    () => (filteredDecks ? new Set(deckInclusionPct.keys()) : null),
+    [filteredDecks, deckInclusionPct],
+  );
+  const inSideboardOracles = useMemo<Set<string> | null>(() => {
+    if (!filteredDecks) return null;
+    const s = new Set<string>();
+    for (const d of filteredDecks) for (const o of d.sideboard) s.add(o);
+    return s;
+  }, [filteredDecks]);
+  const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
+
+  const selectedPools =
+    selectedCards.length > 0
+      ? displayedPools.filter((p) => !activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex))
+      : [];
+  const focusedPool =
+    focusedPoolIndex === null ? null : (displayedPools.find((pool) => pool.poolIndex === focusedPoolIndex) ?? null);
+  const focusedDeck = focusedPool ? (activeDecks?.[focusedPool.poolIndex] ?? null) : null;
+  const focusedDeckAvailable = !!focusedDeck && (focusedDeck.mainboard.length > 0 || focusedDeck.sideboard.length > 0);
+  const focusedFullPickOrderAvailable = !!displayRunData?.setupData;
+  const effectiveFocusedPoolViewMode =
+    (focusedPoolViewMode === 'deck' && !focusedDeckAvailable) ||
+    (focusedPoolViewMode === 'fullPickOrder' && !focusedFullPickOrderAvailable)
+      ? 'pool'
+      : focusedPoolViewMode;
+  const {
+    activeFilterSummary,
+    scopeOnlySummary,
+    filterChipItems,
+    selectedCardScopeLabel,
+    detailedViewTitle,
+    detailedViewSubtitle,
+    clearActiveFilter,
+    downloadDraftBreakdownCsv,
+    downloadCardStatsCsv,
+    cardStatsTitle,
+  } = useDraftSimulatorPresentation({
+    displayRunData,
+    activeDecks,
+    displayedPools,
+    selectedCards,
+    selectedCard,
+    selectedSkeletonId,
+    selectedArchetype,
+    focusedPoolIndex,
+    skeletons,
+    poolArchetypeLabels,
+    skeletonColorProfiles,
+    activeFilterPoolIndexSet,
+    selectedPools,
+    setSelectedCardOracles,
+    setSelectedArchetype,
+    setSelectedSkeletonId,
+    setFocusedPoolIndex,
+    getSkeletonDisplayName,
+    buildDraftBreakdownRowSummary,
+  });
 
   const handleToggleSelectedCard = useCallback((oracleId: string) => {
     setSelectedCardOracles((current) => {
@@ -4599,17 +4382,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       return [current[1]!, oracleId];
     });
   }, []);
-
-  // Derived filter label for showing active filter in tables
-  const cardStatsTitle = useMemo(() => {
-    if (selectedCards.length > 0) return 'Card Stats';
-    if (selectedSkeletonId !== null) {
-      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-      return sk ? `Card Stats for ${getSkeletonDisplayName(sk, poolArchetypeLabels, skeletonColorProfiles)} Drafters` : 'All Card Stats';
-    }
-    if (selectedArchetype) return `Card Stats for ${archetypeFullName(selectedArchetype)} Drafters`;
-    return 'All Card Stats';
-  }, [selectedSkeletonId, selectedArchetype, selectedCards.length, skeletons, poolArchetypeLabels, skeletonColorProfiles]);
 
   const showDraftMapScopePanel = selectedSkeletonId !== null || activeFilterPoolIndexSet !== null || selectedCards.length > 0;
   const mapPanelHasBoth = selectedCards.length > 0 && (selectedSkeletonId !== null || activeFilterPoolIndexSet !== null);
