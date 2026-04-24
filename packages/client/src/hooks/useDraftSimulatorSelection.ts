@@ -1,57 +1,41 @@
 import { useMemo } from 'react';
 
 import type {
-  ArchetypeSkeleton,
-  BuiltDeck,
   CardStats,
-  LockPair,
-  SimulatedPool,
   SimulationRunData,
-  SimulationSetupResponse,
-  SkeletonCard,
 } from '@utils/datatypes/SimulationReport';
 
+import type {
+  DraftSimulatorBottomTab,
+  DraftSimulatorDerivedData,
+  DraftSimulatorFilterPreview,
+  DraftSimulatorSelectionState,
+} from './draftSimulatorHookTypes';
+
 interface UseDraftSimulatorSelectionArgs {
-  displayRunData: SimulationRunData | null;
-  currentRunSetup: Pick<SimulationSetupResponse, 'initialPacks' | 'packSteps' | 'numSeats'> | null;
-  displayedPools: SimulatedPool[];
-  activeDecks: BuiltDeck[] | null;
-  selectedCardOracles: string[];
-  selectedSkeletonId: number | null;
-  selectedArchetype: string | null;
-  skeletons: ArchetypeSkeleton[];
+  data: DraftSimulatorDerivedData;
+  state: Pick<DraftSimulatorSelectionState, 'selectedCardOracles' | 'selectedSkeletonId' | 'selectedArchetype'>;
   filteredCardStatsCache: { current: Map<string, CardStats[]> };
   computeFilteredCardStats: (
-    setup: Pick<SimulationSetupResponse, 'initialPacks' | 'packSteps' | 'numSeats'>,
+    setup: NonNullable<DraftSimulatorDerivedData['currentRunSetup']>,
     runData: SimulationRunData,
     poolIndexSet: Set<number>,
   ) => CardStats[];
   buildActiveFilterPreview: (args: {
     displayRunData: SimulationRunData;
     activeFilterPoolIndexSet: Set<number>;
-    scopedPools: SimulatedPool[];
-    activeDecks: BuiltDeck[] | null;
-    displayedPools: SimulatedPool[];
+    scopedPools: DraftSimulatorDerivedData['displayedPools'];
+    activeDecks: DraftSimulatorDerivedData['activeDecks'];
+    displayedPools: DraftSimulatorDerivedData['displayedPools'];
     selectedCards: CardStats[];
-  }) => {
-    commonCards: SkeletonCard[];
-    supportCards: SkeletonCard[];
-    sideboardCards: SkeletonCard[];
-    lockPairs: LockPair[];
-  } | null;
-  bottomTab: 'archetypes' | 'deckColor' | 'cardStats' | 'draftBreakdown' | 'overperformers' | 'sideboardAndPairings';
+  }) => DraftSimulatorFilterPreview | null;
+  bottomTab: DraftSimulatorBottomTab;
   pairingsExcludeLands: boolean;
 }
 
 export default function useDraftSimulatorSelection({
-  displayRunData,
-  currentRunSetup,
-  displayedPools,
-  activeDecks,
-  selectedCardOracles,
-  selectedSkeletonId,
-  selectedArchetype,
-  skeletons,
+  data: { displayRunData, currentRunSetup, displayedPools, activeDecks, skeletons },
+  state: { selectedCardOracles, selectedSkeletonId, selectedArchetype },
   filteredCardStatsCache,
   computeFilteredCardStats,
   buildActiveFilterPreview,
