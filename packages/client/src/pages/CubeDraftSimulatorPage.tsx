@@ -52,8 +52,14 @@ import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
 import { DisplayContextProvider } from '../contexts/DisplayContext';
 import useClusteringPipeline from '../hooks/useClusteringPipeline';
+import useDraftSimulatorFocus from '../hooks/useDraftSimulatorFocus';
 import useDraftSimulatorPresentation from '../hooks/useDraftSimulatorPresentation';
 import useDraftSimulatorSelection from '../hooks/useDraftSimulatorSelection';
+import type {
+  DraftSimulatorDerivedData,
+  DraftSimulatorSelectionSetters,
+  DraftSimulatorSelectionState,
+} from '../hooks/draftSimulatorHookTypes';
 import useLocalSimulationHistory from '../hooks/useLocalSimulationHistory';
 import useSimulationRun from '../hooks/useSimulationRun';
 import CubeLayout from '../layouts/CubeLayout';
@@ -3686,6 +3692,402 @@ const DraftMapScopePanel: React.FC<{
   );
 };
 
+const DraftMapCard: React.FC<{
+  skeletons: ArchetypeSkeleton[];
+  showAdvancedClustering: boolean;
+  clusterMode: 'umap' | 'graph' | 'leiden' | 'nmf';
+  setClusterMode: React.Dispatch<React.SetStateAction<'umap' | 'graph' | 'leiden' | 'nmf'>>;
+  distanceMetric: 'euclidean' | 'cosine';
+  setDistanceMetric: React.Dispatch<React.SetStateAction<'euclidean' | 'cosine'>>;
+  useHybridEmbeddings: boolean;
+  setUseHybridEmbeddings: React.Dispatch<React.SetStateAction<boolean>>;
+  pendingKnnK: number;
+  setPendingKnnK: (v: number) => void;
+  pendingResolution: number;
+  setPendingResolution: (v: number) => void;
+  pendingNumTopics: number;
+  setPendingNumTopics: (v: number) => void;
+  pendingPcaDims: number;
+  setPendingPcaDims: (v: number) => void;
+  pendingNegSamples: number;
+  setPendingNegSamples: (v: number) => void;
+  pendingMinClusterSize: number;
+  setPendingMinClusterSize: (v: number) => void;
+  pendingMinPts: number;
+  setPendingMinPts: (v: number) => void;
+  pendingHybridWeight: number;
+  setPendingHybridWeight: (v: number) => void;
+  clusteringInProgress: boolean;
+  applyPendingClusteringSettings: () => void;
+  queueRecluster: () => void;
+  draftMapPoints: DraftMapPoint[];
+  showDraftMapScopePanel: boolean;
+  activeFilterPoolIndexSet: Set<number> | null;
+  draftMapColorMode: DraftMapColorMode;
+  setDraftMapColorMode: React.Dispatch<React.SetStateAction<DraftMapColorMode>>;
+  focusedPoolIndex: number | null;
+  setFocusedPoolIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  setSelectedSkeletonId: React.Dispatch<React.SetStateAction<number | null>>;
+  selectedSkeletonId: number | null;
+  setSelectedArchetype: React.Dispatch<React.SetStateAction<string | null>>;
+  setDraftBreakdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  mapPanelHasBoth: boolean;
+  selectedCards: CardStats[];
+  displayRunData: SimulationRunData;
+  selectedCard: CardStats | null;
+  selectedCardStats: CardStats | null;
+  statsForScope: CardStats | null;
+  selectedCardScopeLabel: string | null;
+  detailedViewTitle: string;
+  detailedViewSubtitle: string;
+  activeFilterPreview: {
+    commonCards: SkeletonCard[];
+    supportCards: SkeletonCard[];
+    sideboardCards: SkeletonCard[];
+    lockPairs: LockPair[];
+  } | null;
+  activeDecks: BuiltDeck[] | null;
+  clusterThemesByClusterId: Map<number, string[]>;
+  poolArchetypeLabels: Map<number, string> | null;
+  activeFilterSummary: string | null;
+  scopeOnlySummary: string | null;
+  filteredDecks: BuiltDeck[] | null;
+  draftMapScopeSubtitle: string;
+  draftMapScopeSeatCount: number;
+  onClearSelectedCards: () => void;
+}> = ({
+  skeletons,
+  showAdvancedClustering,
+  clusterMode,
+  setClusterMode,
+  distanceMetric,
+  setDistanceMetric,
+  useHybridEmbeddings,
+  setUseHybridEmbeddings,
+  pendingKnnK,
+  setPendingKnnK,
+  pendingResolution,
+  setPendingResolution,
+  pendingNumTopics,
+  setPendingNumTopics,
+  pendingPcaDims,
+  setPendingPcaDims,
+  pendingNegSamples,
+  setPendingNegSamples,
+  pendingMinClusterSize,
+  setPendingMinClusterSize,
+  pendingMinPts,
+  setPendingMinPts,
+  pendingHybridWeight,
+  setPendingHybridWeight,
+  clusteringInProgress,
+  applyPendingClusteringSettings,
+  queueRecluster,
+  draftMapPoints,
+  showDraftMapScopePanel,
+  activeFilterPoolIndexSet,
+  draftMapColorMode,
+  setDraftMapColorMode,
+  focusedPoolIndex,
+  setFocusedPoolIndex,
+  setSelectedSkeletonId,
+  selectedSkeletonId,
+  setSelectedArchetype,
+  setDraftBreakdownOpen,
+  mapPanelHasBoth,
+  selectedCards,
+  displayRunData,
+  selectedCard,
+  selectedCardStats,
+  statsForScope,
+  selectedCardScopeLabel,
+  detailedViewTitle,
+  detailedViewSubtitle,
+  activeFilterPreview,
+  activeDecks,
+  clusterThemesByClusterId,
+  poolArchetypeLabels,
+  activeFilterSummary,
+  scopeOnlySummary,
+  filteredDecks,
+  draftMapScopeSubtitle,
+  draftMapScopeSeatCount,
+  onClearSelectedCards,
+}) => {
+  return (
+    <Card className="border-border">
+      <CardHeader>
+        <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <div className="flex flex-row items-baseline gap-3">
+              <Text semibold>Draft Map{skeletons.length > 0 ? ` · ${skeletons.length} clusters` : ''}</Text>
+            </div>
+            <div className="flex flex-row items-center gap-2">
+              <div className="inline-flex rounded border border-border overflow-hidden">
+                <button type="button" onClick={() => setDraftMapColorMode('cluster')}
+                  className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', draftMapColorMode === 'cluster' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                  Cluster
+                </button>
+                <button type="button" onClick={() => setDraftMapColorMode('deckColor')}
+                  className={['px-2 py-1 text-xs font-medium transition-colors', draftMapColorMode === 'deckColor' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                  Deck Color
+                </button>
+              </div>
+            </div>
+          </div>
+          {showAdvancedClustering && (
+            <>
+              <div className="flex flex-row flex-wrap items-end gap-3 pt-1">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-text-secondary">Method</span>
+                  <div className="inline-flex rounded border border-border overflow-hidden">
+                    {(['umap', 'graph', 'leiden', 'nmf'] as const).map((mode) => (
+                      <button key={mode} type="button"
+                        onClick={() => { setClusterMode(mode); setSelectedSkeletonId(null); queueRecluster(); }}
+                        className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border last:border-r-0', clusterMode === mode ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                        {mode === 'umap' ? 'UMAP' : mode === 'graph' ? 'Graph' : mode === 'leiden' ? 'Leiden' : 'NMF'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className={['text-[10px] font-semibold uppercase tracking-widest', clusterMode === 'nmf' ? 'text-text-secondary opacity-50' : 'text-text-secondary'].join(' ')}>
+                    k-NN graph{clusterMode === 'nmf' ? ' (map only)' : ''}
+                  </span>
+                  <div className="flex flex-row items-center gap-1">
+                    <div className={['inline-flex rounded border border-border overflow-hidden', clusterMode === 'nmf' ? 'opacity-50' : ''].join(' ')}>
+                      <button type="button" onClick={() => { setDistanceMetric('euclidean'); setSelectedSkeletonId(null); queueRecluster(); }}
+                        className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', distanceMetric === 'euclidean' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                        Euclid
+                      </button>
+                      <button type="button" onClick={() => { setDistanceMetric('cosine'); setSelectedSkeletonId(null); queueRecluster(); }}
+                        className={['px-2 py-1 text-xs font-medium transition-colors', distanceMetric === 'cosine' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
+                        Cosine
+                      </button>
+                    </div>
+                    <button type="button"
+                      onClick={() => { setUseHybridEmbeddings(!useHybridEmbeddings); setSelectedSkeletonId(null); queueRecluster(); }}
+                      title="Append color + card-type distribution to the embedding vectors before building the k-NN graph"
+                      className={['px-2 py-1 rounded border text-xs font-medium transition-colors', clusterMode === 'nmf' ? 'opacity-50' : '', useHybridEmbeddings ? 'bg-link text-white border-link' : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary'].join(' ')}>
+                      +Features
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-text-secondary leading-snug max-w-2xl">
+                {clusterMode === 'umap' && <span>Projects drafters into 2D so similar pickers land near each other, then finds dense clumps. <strong>UMAP Dims</strong> controls fidelity; <strong>Min Size</strong> is the smallest valid cluster. k-NN metric and features affect clustering directly.</span>}
+                {clusterMode === 'graph' && <span>Connects drafters via k-NN graph, then finds dense neighborhoods using HDBSCAN. <strong>Min Size</strong> is the smallest valid cluster; <strong>Min Pts</strong> controls required density. k-NN metric and features affect clustering directly.</span>}
+                {clusterMode === 'leiden' && <span>Treats the k-NN graph as a social network and finds communities. <strong>Resolution</strong> controls granularity - higher means more, smaller clusters. k-NN metric and features affect clustering directly.</span>}
+                {clusterMode === 'nmf' && <span>Decomposes drafts into shared card themes and assigns each drafter to their best match. <strong>Topics</strong> sets how many archetypes to find (<strong>0</strong> = auto). k-NN metric and features only affect map layout here - NMF clusters from raw card overlap.</span>}
+                {clusterMode !== 'nmf' && <> <span className="opacity-60"><strong>Neighbors (k)</strong> controls graph connectivity - higher gives smoother boundaries.</span></>}
+              </p>
+              <div className="flex flex-row flex-wrap items-end gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-[11px] font-medium text-text-secondary">
+                    Neighbors (k){clusterMode === 'nmf' ? <span className="opacity-50"> · map</span> : ''}
+                  </label>
+                  <NumericInput min={5} max={200} value={pendingKnnK} onChange={setPendingKnnK} className="w-20" />
+                </div>
+                {clusterMode === 'leiden' && (
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[11px] font-medium text-text-secondary">Resolution</label>
+                    <NumericInput min={0.1} max={10} step={0.1} value={pendingResolution} onChange={setPendingResolution} className="w-20" />
+                  </div>
+                )}
+                {clusterMode === 'nmf' && (
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[11px] font-medium text-text-secondary">Topics</label>
+                    <NumericInput min={0} max={100} value={pendingNumTopics} onChange={setPendingNumTopics} className="w-20" />
+                  </div>
+                )}
+                {clusterMode === 'umap' && (
+                  <>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[11px] font-medium text-text-secondary">UMAP Dims</label>
+                      <NumericInput min={2} max={128} value={pendingPcaDims} onChange={setPendingPcaDims} className="w-20" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[11px] font-medium text-text-secondary">Neg Samples</label>
+                      <NumericInput min={1} max={50} value={pendingNegSamples} onChange={setPendingNegSamples} className="w-20" />
+                    </div>
+                  </>
+                )}
+                {(clusterMode === 'umap' || clusterMode === 'graph') && (
+                  <>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[11px] font-medium text-text-secondary">Min Size</label>
+                      <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-20" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-[11px] font-medium text-text-secondary">Min Pts</label>
+                      <NumericInput min={2} max={20} value={pendingMinPts} onChange={setPendingMinPts} className="w-20" />
+                    </div>
+                  </>
+                )}
+                {useHybridEmbeddings && (
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[11px] font-medium text-text-secondary">Hybrid Weight</label>
+                    <NumericInput min={0.5} max={20} step={0.5} value={pendingHybridWeight} onChange={setPendingHybridWeight} className="w-20" />
+                  </div>
+                )}
+                <button type="button" disabled={clusteringInProgress} onClick={() => { setSelectedSkeletonId(null); setFocusedPoolIndex(null); applyPendingClusteringSettings(); }}
+                  className={['ml-auto self-end px-3 py-1.5 rounded text-xs font-semibold border transition-colors whitespace-nowrap', clusteringInProgress ? 'bg-bg-accent border-border text-text-secondary cursor-wait' : 'bg-link border-link text-white hover:opacity-90'].join(' ')}>
+                  {clusteringInProgress ? (
+                    <span className="flex items-center gap-1.5">
+                      <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Clustering…
+                    </span>
+                  ) : 'Update clusters'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </CardHeader>
+      <CardBody>
+        <div className="grid grid-cols-2 gap-6 items-start">
+          <div className={`relative ${showDraftMapScopePanel ? '' : 'col-span-2'}`}
+            style={{ aspectRatio: '1 / 1', width: showDraftMapScopePanel ? '100%' : 'calc(50% - 0.75rem)', ...(!showDraftMapScopePanel ? { margin: '0 auto' } : {}) }}>
+            {clusteringInProgress && (
+              <div className={`${draftMapPoints.length === 0 ? '' : 'absolute inset-0 bg-bg/60 backdrop-blur-sm'} z-10 flex items-center justify-center rounded`}
+                style={draftMapPoints.length === 0 ? { aspectRatio: '1 / 1' } : undefined}>
+                <div className="flex flex-col items-center gap-2">
+                  <svg className="animate-spin h-8 w-8 text-link" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <Text xs className="text-text-secondary">Clustering…</Text>
+                </div>
+              </div>
+            )}
+            {!clusteringInProgress && draftMapPoints.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center rounded border border-dashed border-border bg-bg-accent/30">
+                <div className="flex flex-col items-center gap-1.5 px-4 text-center">
+                  <Text sm semibold className="text-text-secondary">
+                    Draft map unavailable
+                  </Text>
+                  <Text xs className="text-text-secondary/70">
+                    Try reclustering this run.
+                  </Text>
+                </div>
+              </div>
+            )}
+            {draftMapPoints.length > 0 && (
+              <DraftMapScatter
+                points={draftMapPoints}
+                selectedPoolIndex={focusedPoolIndex}
+                activePoolIndexSet={activeFilterPoolIndexSet}
+                colorMode={draftMapColorMode}
+                onSelectPoint={(point) => {
+                  setFocusedPoolIndex(point.poolIndex);
+                  setSelectedSkeletonId(point.clusterId);
+                  setSelectedArchetype(null);
+                  setDraftBreakdownOpen(true);
+                }}
+              />
+            )}
+          </div>
+          {showDraftMapScopePanel && (() => {
+            const cardInfo: MapSelectedCardInfo | undefined = mapPanelHasBoth && selectedCards.length > 0
+              ? {
+                  cardImages: selectedCards
+                    .map((c) => ({ oracleId: c.oracle_id, name: c.name, imageUrl: displayRunData.cardMeta[c.oracle_id]?.imageUrl ?? '' }))
+                    .filter((img) => img.imageUrl),
+                  name: selectedCards.map((c) => c.name).join(' + '),
+                  pickRate: selectedCards.length === 1 ? (statsForScope?.pickRate ?? selectedCard?.pickRate) : undefined,
+                  avgPickPosition: selectedCards.length === 1 ? (statsForScope?.avgPickPosition ?? selectedCard?.avgPickPosition) : undefined,
+                  onClear: onClearSelectedCards,
+                }
+              : undefined;
+            return (
+              <div className="min-w-0 flex flex-col gap-3">
+                {!mapPanelHasBoth && selectedCards.length > 0 && (
+                  <div className="rounded-lg border border-border bg-bg-accent/40 px-3 py-2.5">
+                    <Flexbox direction="row" gap="3" alignItems="start" className="min-w-0">
+                      {selectedCard && displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl && (
+                        <div className="flex-shrink-0">
+                          <LinkedCardImage
+                            oracleId={selectedCard.oracle_id}
+                            name={selectedCard.name}
+                            imageUrl={displayRunData.cardMeta[selectedCard.oracle_id].imageUrl}
+                            size={SIM_PREVIEW_CARD_W}
+                          />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <Text semibold className="leading-snug">
+                          {selectedCards.map((c) => c.name).join(' + ')}
+                        </Text>
+                        {selectedCardScopeLabel && (
+                          <div className="mt-0.5">
+                            <Text xs className="text-text-secondary/80">{detailedViewTitle}</Text>
+                          </div>
+                        )}
+                        <div className="mt-0.5">
+                          <Text xs className="text-text-secondary/60">{detailedViewSubtitle}</Text>
+                        </div>
+                        {statsForScope && (
+                          <Flexbox direction="row" gap="3" alignItems="center" className="flex-wrap mt-1.5">
+                            <span className="text-xs text-text-secondary/50 font-medium">
+                              Pick rate <span className="text-text-secondary/80">{`${(statsForScope.pickRate * 100).toFixed(1)}%`}</span>
+                            </span>
+                            <span className="text-xs text-text-secondary/50 font-medium">
+                              Avg position <span className="text-text-secondary/80">{statsForScope.avgPickPosition > 0 ? statsForScope.avgPickPosition.toFixed(1) : '—'}</span>
+                            </span>
+                          </Flexbox>
+                        )}
+                      </div>
+                      <button type="button" className="flex-shrink-0 text-xs text-text-secondary hover:text-text" onClick={onClearSelectedCards}>
+                        ✕
+                      </button>
+                    </Flexbox>
+                  </div>
+                )}
+                {selectedSkeletonId !== null ? (() => {
+                  const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+                  const skIdx = skeletons.indexOf(sk!);
+                  const clusterDecks = sk && activeDecks ? sk.poolIndices.map((i) => activeDecks[i]).filter(Boolean) : null;
+                  return sk ? (
+                    <ClusterDetailPanel
+                      skeleton={sk}
+                      clusterIndex={skIdx}
+                      totalPools={displayRunData.slimPools.length}
+                      clusterDeckBuilds={clusterDecks}
+                      cardMeta={displayRunData.cardMeta}
+                      commonCards={activeFilterPreview?.commonCards ?? []}
+                      slimPools={displayRunData.slimPools}
+                      deckBuilds={activeDecks}
+                      themes={clusterThemesByClusterId.get(sk.clusterId)}
+                      poolArchetypeLabels={poolArchetypeLabels}
+                      onClose={() => {
+                        setSelectedSkeletonId(null);
+                        setFocusedPoolIndex(null);
+                      }}
+                    />
+                  ) : null;
+                })() : activeFilterPoolIndexSet !== null && (
+                  <DraftMapScopePanel
+                    title={cardInfo ? (scopeOnlySummary ?? '') : (activeFilterSummary ?? 'All draft pools')}
+                    subtitle={draftMapScopeSubtitle}
+                    commonCards={activeFilterPreview?.commonCards ?? []}
+                    deckBuilds={filteredDecks}
+                    cardMeta={displayRunData.cardMeta}
+                    selectedCardInfo={cardInfo}
+                    matchingCount={draftMapScopeSeatCount}
+                  />
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      </CardBody>
+    </Card>
+  );
+};
+
 const ArchetypeSkeletonSection: React.FC<{
   skeletons: ArchetypeSkeleton[];
   totalPools: number;
@@ -4103,6 +4505,37 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     if (!displayRunData?.deckBuilds || skeletons.length === 0) return new Map();
     return new Map(skeletons.map((sk) => [sk.clusterId, computeSkeletonColorProfile(sk, displayRunData.deckBuilds, displayRunData.cardMeta)]));
   }, [skeletons, displayRunData?.deckBuilds, displayRunData?.cardMeta]);
+  const derivedData = useMemo<DraftSimulatorDerivedData>(
+    () => ({
+      displayRunData,
+      currentRunSetup,
+      displayedPools,
+      activeDecks,
+      skeletons,
+      poolArchetypeLabels,
+      skeletonColorProfiles,
+    }),
+    [displayRunData, currentRunSetup, displayedPools, activeDecks, skeletons, poolArchetypeLabels, skeletonColorProfiles],
+  );
+  const selectionState = useMemo<DraftSimulatorSelectionState>(
+    () => ({
+      selectedCardOracles,
+      selectedSkeletonId,
+      selectedArchetype,
+      focusedPoolIndex,
+      focusedPoolViewMode,
+    }),
+    [selectedCardOracles, selectedSkeletonId, selectedArchetype, focusedPoolIndex, focusedPoolViewMode],
+  );
+  const selectionSetters = useMemo<DraftSimulatorSelectionSetters>(
+    () => ({
+      setSelectedCardOracles,
+      setSelectedArchetype,
+      setSelectedSkeletonId,
+      setFocusedPoolIndex,
+    }),
+    [setSelectedCardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex],
+  );
 
   // Top Gwen archetype labels per color pair, for the Deck Color Distribution chart
   const colorPairTopArchetypes = useMemo<Map<string, string[]>>(() => {
@@ -4281,14 +4714,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     topSideboardCards,
     topCardPairings,
   } = useDraftSimulatorSelection({
-    displayRunData,
-    currentRunSetup,
-    displayedPools,
-    activeDecks,
-    selectedCardOracles,
-    selectedSkeletonId,
-    selectedArchetype,
-    skeletons,
+    data: derivedData,
+    state: selectionState,
     filteredCardStatsCache,
     computeFilteredCardStats,
     buildActiveFilterPreview,
@@ -4327,21 +4754,26 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     return s;
   }, [filteredDecks]);
   const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
-
-  const selectedPools =
-    selectedCards.length > 0
-      ? displayedPools.filter((p) => !activeFilterPoolIndexSet || activeFilterPoolIndexSet.has(p.poolIndex))
-      : [];
-  const focusedPool =
-    focusedPoolIndex === null ? null : (displayedPools.find((pool) => pool.poolIndex === focusedPoolIndex) ?? null);
-  const focusedDeck = focusedPool ? (activeDecks?.[focusedPool.poolIndex] ?? null) : null;
-  const focusedDeckAvailable = !!focusedDeck && (focusedDeck.mainboard.length > 0 || focusedDeck.sideboard.length > 0);
-  const focusedFullPickOrderAvailable = !!displayRunData?.setupData;
-  const effectiveFocusedPoolViewMode =
-    (focusedPoolViewMode === 'deck' && !focusedDeckAvailable) ||
-    (focusedPoolViewMode === 'fullPickOrder' && !focusedFullPickOrderAvailable)
-      ? 'pool'
-      : focusedPoolViewMode;
+  const {
+    selectedPools,
+    focusedPool,
+    focusedDeck,
+    focusedDeckAvailable,
+    focusedFullPickOrderAvailable,
+    effectiveFocusedPoolViewMode,
+    showDraftMapScopePanel,
+    mapPanelHasBoth,
+    draftMapScopeSeatCount,
+    draftMapScopeSubtitle,
+    statsForScope,
+  } = useDraftSimulatorFocus({
+    data: derivedData,
+    state: selectionState,
+    activeFilterPoolIndexSet,
+    selectedCards,
+    selectedCard,
+    selectedCardStats,
+  });
   const {
     activeFilterSummary,
     scopeOnlySummary,
@@ -4354,23 +4786,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     downloadCardStatsCsv,
     cardStatsTitle,
   } = useDraftSimulatorPresentation({
-    displayRunData,
-    activeDecks,
-    displayedPools,
+    data: derivedData,
+    state: selectionState,
+    setters: selectionSetters,
     selectedCards,
     selectedCard,
-    selectedSkeletonId,
-    selectedArchetype,
-    focusedPoolIndex,
-    skeletons,
-    poolArchetypeLabels,
-    skeletonColorProfiles,
     activeFilterPoolIndexSet,
     selectedPools,
-    setSelectedCardOracles,
-    setSelectedArchetype,
-    setSelectedSkeletonId,
-    setFocusedPoolIndex,
     getSkeletonDisplayName,
     buildDraftBreakdownRowSummary,
   });
@@ -4382,13 +4804,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       return [current[1]!, oracleId];
     });
   }, []);
-
-  const showDraftMapScopePanel = selectedSkeletonId !== null || activeFilterPoolIndexSet !== null || selectedCards.length > 0;
-  const mapPanelHasBoth = selectedCards.length > 0 && (selectedSkeletonId !== null || activeFilterPoolIndexSet !== null);
-  const draftMapScopeSeatCount = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
-  const draftMapScopeSubtitle = activeFilterPoolIndexSet
-    ? `${draftMapScopeSeatCount} matching seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`
-    : `${draftMapScopeSeatCount} total seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`;
 
 
   return (
@@ -4695,306 +5110,66 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 <div className="simSection simSectionCards flex flex-col gap-5 pt-2">
                   <Flexbox direction="col" gap="4">
                     <div className="simCardDiagBlock simCardDiagSummary flex flex-col gap-4">
-                        {/* Draft Map — full width, with cluster detail panel on the right when selected */}
-                        {(draftMapPoints.length > 0 || clusteringInProgress) && (
-                          <Card className="border-border">
-                            <CardHeader>
-                              <div className="flex flex-col gap-2 w-full">
-                                {/* Always-visible: title + color toggle + advanced trigger */}
-                                <div className="flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                                  <div className="flex flex-row items-baseline gap-3">
-                                    <Text semibold>Draft Map{skeletons.length > 0 ? ` · ${skeletons.length} clusters` : ''}</Text>
-                                  </div>
-                                  <div className="flex flex-row items-center gap-2">
-                                    <div className="inline-flex rounded border border-border overflow-hidden">
-                                      <button type="button" onClick={() => setDraftMapColorMode('cluster')}
-                                        className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', draftMapColorMode === 'cluster' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
-                                        Cluster
-                                      </button>
-                                      <button type="button" onClick={() => setDraftMapColorMode('deckColor')}
-                                        className={['px-2 py-1 text-xs font-medium transition-colors', draftMapColorMode === 'deckColor' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
-                                        Deck Color
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                                {/* Advanced options: method, k-NN graph, params, action */}
-                                {showAdvancedClustering && (
-                                  <>
-                                    {/* Controls row */}
-                                    <div className="flex flex-row flex-wrap items-end gap-3 pt-1">
-                                      {/* Method */}
-                                      <div className="flex flex-col gap-0.5">
-                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-text-secondary">Method</span>
-                                        <div className="inline-flex rounded border border-border overflow-hidden">
-                                          {(['umap', 'graph', 'leiden', 'nmf'] as const).map((mode) => (
-                                            <button key={mode} type="button"
-                                              onClick={() => { setClusterMode(mode); setSelectedSkeletonId(null); queueRecluster(); }}
-                                              className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border last:border-r-0', clusterMode === mode ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
-                                              {mode === 'umap' ? 'UMAP' : mode === 'graph' ? 'Graph' : mode === 'leiden' ? 'Leiden' : 'NMF'}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </div>
-                                      {/* k-NN graph */}
-                                      <div className="flex flex-col gap-0.5">
-                                        <span className={['text-[10px] font-semibold uppercase tracking-widest', clusterMode === 'nmf' ? 'text-text-secondary opacity-50' : 'text-text-secondary'].join(' ')}>
-                                          k-NN graph{clusterMode === 'nmf' ? ' (map only)' : ''}
-                                        </span>
-                                        <div className="flex flex-row items-center gap-1">
-                                          <div className={['inline-flex rounded border border-border overflow-hidden', clusterMode === 'nmf' ? 'opacity-50' : ''].join(' ')}>
-                                          <button type="button"
-                                              onClick={() => { setDistanceMetric('euclidean'); setSelectedSkeletonId(null); queueRecluster(); }}
-                                              className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', distanceMetric === 'euclidean' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
-                                              Euclid
-                                            </button>
-                                            <button type="button"
-                                              onClick={() => { setDistanceMetric('cosine'); setSelectedSkeletonId(null); queueRecluster(); }}
-                                              className={['px-2 py-1 text-xs font-medium transition-colors', distanceMetric === 'cosine' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
-                                              Cosine
-                                            </button>
-                                          </div>
-                                          <button type="button"
-                                            onClick={() => { setUseHybridEmbeddings(!useHybridEmbeddings); setSelectedSkeletonId(null); queueRecluster(); }}
-                                            title="Append color + card-type distribution to the embedding vectors before building the k-NN graph"
-                                            className={['px-2 py-1 rounded border text-xs font-medium transition-colors', clusterMode === 'nmf' ? 'opacity-50' : '', useHybridEmbeddings ? 'bg-link text-white border-link' : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary'].join(' ')}>
-                                            +Features
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    {/* Help text */}
-                                    <p className="text-xs text-text-secondary leading-snug max-w-2xl">
-                                      {clusterMode === 'umap' && <span>Projects drafters into 2D so similar pickers land near each other, then finds dense clumps. <strong>UMAP Dims</strong> controls fidelity; <strong>Min Size</strong> is the smallest valid cluster. k-NN metric and features affect clustering directly.</span>}
-                                      {clusterMode === 'graph' && <span>Connects drafters via k-NN graph, then finds dense neighborhoods using HDBSCAN. <strong>Min Size</strong> is the smallest valid cluster; <strong>Min Pts</strong> controls required density. k-NN metric and features affect clustering directly.</span>}
-                                      {clusterMode === 'leiden' && <span>Treats the k-NN graph as a social network and finds communities. <strong>Resolution</strong> controls granularity — higher means more, smaller clusters. k-NN metric and features affect clustering directly.</span>}
-                                      {clusterMode === 'nmf' && <span>Decomposes drafts into shared card themes and assigns each drafter to their best match. <strong>Topics</strong> sets how many archetypes to find (<strong>0</strong> = auto). k-NN metric and features only affect map layout here — NMF clusters from raw card overlap.</span>}
-                                      {clusterMode !== 'nmf' && <>{' '}<span className="opacity-60"><strong>Neighbors (k)</strong> controls graph connectivity — higher gives smoother boundaries.</span></>}
-                                    </p>
-                                    {/* Params + action */}
-                                    <div className="flex flex-row flex-wrap items-end gap-3">
-                                      <div className="flex flex-col gap-0.5">
-                                        <label className="text-[11px] font-medium text-text-secondary">
-                                          Neighbors (k){clusterMode === 'nmf' ? <span className="opacity-50"> · map</span> : ''}
-                                        </label>
-                                        <NumericInput min={5} max={200} value={pendingKnnK} onChange={setPendingKnnK} className="w-20" />
-                                      </div>
-                                      {clusterMode === 'leiden' && (
-                                        <div className="flex flex-col gap-0.5">
-                                          <label className="text-[11px] font-medium text-text-secondary">Resolution</label>
-                                          <NumericInput min={0.1} max={10} step={0.1} value={pendingResolution} onChange={setPendingResolution} className="w-20" />
-                                        </div>
-                                      )}
-                                      {clusterMode === 'nmf' && (
-                                        <div className="flex flex-col gap-0.5">
-                                          <label className="text-[11px] font-medium text-text-secondary">Topics</label>
-                                          <NumericInput min={0} max={100} value={pendingNumTopics} onChange={setPendingNumTopics} className="w-20" />
-                                        </div>
-                                      )}
-                                      {clusterMode === 'umap' && (
-                                        <>
-                                          <div className="flex flex-col gap-0.5">
-                                            <label className="text-[11px] font-medium text-text-secondary">UMAP Dims</label>
-                                            <NumericInput min={2} max={128} value={pendingPcaDims} onChange={setPendingPcaDims} className="w-20" />
-                                          </div>
-                                          <div className="flex flex-col gap-0.5">
-                                            <label className="text-[11px] font-medium text-text-secondary">Neg Samples</label>
-                                            <NumericInput min={1} max={50} value={pendingNegSamples} onChange={setPendingNegSamples} className="w-20" />
-                                          </div>
-                                        </>
-                                      )}
-                                      {(clusterMode === 'umap' || clusterMode === 'graph') && (
-                                        <>
-                                          <div className="flex flex-col gap-0.5">
-                                            <label className="text-[11px] font-medium text-text-secondary">Min Size</label>
-                                            <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-20" />
-                                          </div>
-                                          <div className="flex flex-col gap-0.5">
-                                            <label className="text-[11px] font-medium text-text-secondary">Min Pts</label>
-                                            <NumericInput min={2} max={20} value={pendingMinPts} onChange={setPendingMinPts} className="w-20" />
-                                          </div>
-                                        </>
-                                      )}
-                                      {useHybridEmbeddings && (
-                                        <div className="flex flex-col gap-0.5">
-                                          <label className="text-[11px] font-medium text-text-secondary">Hybrid Weight</label>
-                                          <NumericInput min={0.5} max={20} step={0.5} value={pendingHybridWeight} onChange={setPendingHybridWeight} className="w-20" />
-                                        </div>
-                                      )}
-                                      <button
-                                        type="button"
-                                        disabled={clusteringInProgress}
-                                        onClick={() => {
-                                          setSelectedSkeletonId(null);
-                                          setFocusedPoolIndex(null);
-                                          applyPendingClusteringSettings();
-                                        }}
-                                        className={[
-                                          'ml-auto self-end px-3 py-1.5 rounded text-xs font-semibold border transition-colors whitespace-nowrap',
-                                          clusteringInProgress
-                                            ? 'bg-bg-accent border-border text-text-secondary cursor-wait'
-                                            : 'bg-link border-link text-white hover:opacity-90',
-                                        ].join(' ')}
-                                      >
-                                        {clusteringInProgress ? (
-                                          <span className="flex items-center gap-1.5">
-                                            <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
-                                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                            </svg>
-                                            Clustering…
-                                          </span>
-                                        ) : 'Update clusters'}
-                                      </button>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            </CardHeader>
-                            <CardBody>
-                              <div className="grid grid-cols-2 gap-6 items-start">
-                                <div className={`relative ${showDraftMapScopePanel ? '' : 'col-span-2'}`}
-                                  style={{ aspectRatio: '1 / 1', width: showDraftMapScopePanel ? '100%' : 'calc(50% - 0.75rem)', ...(!showDraftMapScopePanel ? { margin: '0 auto' } : {}) }}>
-                                  {clusteringInProgress && (
-                                    <div className={`${draftMapPoints.length === 0 ? '' : 'absolute inset-0 bg-bg/60 backdrop-blur-sm'} z-10 flex items-center justify-center rounded`}
-                                      style={draftMapPoints.length === 0 ? { aspectRatio: '1 / 1' } : undefined}>
-                                      <div className="flex flex-col items-center gap-2">
-                                        <svg className="animate-spin h-8 w-8 text-link" viewBox="0 0 24 24" fill="none">
-                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                        </svg>
-                                        <Text xs className="text-text-secondary">Clustering…</Text>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {draftMapPoints.length > 0 && (
-                                    <DraftMapScatter
-                                      points={draftMapPoints}
-                                      selectedPoolIndex={focusedPoolIndex}
-                                      activePoolIndexSet={activeFilterPoolIndexSet}
-                                      colorMode={draftMapColorMode}
-                                      onSelectPoint={(point) => {
-                                        setFocusedPoolIndex(point.poolIndex);
-                                        setSelectedSkeletonId(point.clusterId);
-                                        setSelectedArchetype(null);
-                                        setDraftBreakdownOpen(true);
-                                      }}
-                                    />
-                                  )}
-                                </div>
-                                {showDraftMapScopePanel && (() => {
-                                  const statsForScope = activeFilterPoolIndexSet
-                                    ? selectedCardStats
-                                    : (selectedCardStats ?? selectedCard);
-                                  const cardInfo: MapSelectedCardInfo | undefined = mapPanelHasBoth && selectedCards.length > 0
-                                    ? {
-                                        cardImages: selectedCards
-                                          .map((c) => ({ oracleId: c.oracle_id, name: c.name, imageUrl: displayRunData.cardMeta[c.oracle_id]?.imageUrl ?? '' }))
-                                          .filter((img) => img.imageUrl),
-                                        name: selectedCards.map((c) => c.name).join(' + '),
-                                        pickRate: selectedCards.length === 1 ? (statsForScope?.pickRate ?? selectedCard?.pickRate) : undefined,
-                                        avgPickPosition: selectedCards.length === 1 ? (statsForScope?.avgPickPosition ?? selectedCard?.avgPickPosition) : undefined,
-                                        onClear: () => setSelectedCardOracles([]),
-                                      }
-                                    : undefined;
-                                  return (
-                                  <div className="min-w-0 flex flex-col gap-3">
-                                    {!mapPanelHasBoth && selectedCards.length > 0 && (
-                                      <div className="rounded-lg border border-border bg-bg-accent/40 px-3 py-2.5">
-                                        <Flexbox direction="row" gap="3" alignItems="start" className="min-w-0">
-                                          {selectedCard && displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl && (
-                                            <div className="flex-shrink-0">
-                                              <LinkedCardImage
-                                                oracleId={selectedCard.oracle_id}
-                                                name={selectedCard.name}
-                                                imageUrl={displayRunData.cardMeta[selectedCard.oracle_id].imageUrl}
-                                                size={SIM_PREVIEW_CARD_W}
-                                              />
-                                            </div>
-                                          )}
-                                          <div className="min-w-0 flex-1">
-                                            <Text semibold className="leading-snug">
-                                              {selectedCards.map((c) => c.name).join(' + ')}
-                                            </Text>
-                                            {selectedCardScopeLabel && (
-                                              <div className="mt-0.5">
-                                                <Text xs className="text-text-secondary/80">{detailedViewTitle}</Text>
-                                              </div>
-                                            )}
-                                            <div className="mt-0.5">
-                                              <Text xs className="text-text-secondary/60">{detailedViewSubtitle}</Text>
-                                            </div>
-                                            {statsForScope && (
-                                              <Flexbox direction="row" gap="3" alignItems="center" className="flex-wrap mt-1.5">
-                                                <span className="text-xs text-text-secondary/50 font-medium">
-                                                  Pick rate{' '}
-                                                  <span className="text-text-secondary/80">
-                                                    {`${(statsForScope.pickRate * 100).toFixed(1)}%`}
-                                                  </span>
-                                                </span>
-                                                <span className="text-xs text-text-secondary/50 font-medium">
-                                                  Avg position{' '}
-                                                  <span className="text-text-secondary/80">
-                                                    {statsForScope.avgPickPosition > 0
-                                                      ? statsForScope.avgPickPosition.toFixed(1)
-                                                      : '—'}
-                                                  </span>
-                                                </span>
-                                              </Flexbox>
-                                            )}
-                                          </div>
-                                          <button
-                                            type="button"
-                                            className="flex-shrink-0 text-xs text-text-secondary hover:text-text"
-                                            onClick={() => setSelectedCardOracles([])}
-                                          >
-                                            ✕
-                                          </button>
-                                        </Flexbox>
-                                      </div>
-                                    )}
-                                    {selectedSkeletonId !== null ? (() => {
-                                      const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
-                                      const skIdx = skeletons.indexOf(sk!);
-                                      const clusterDecks = sk && activeDecks
-                                        ? sk.poolIndices.map((i) => activeDecks[i]).filter(Boolean)
-                                        : null;
-                                      return sk ? (
-                                        <ClusterDetailPanel
-                                          skeleton={sk}
-                                          clusterIndex={skIdx}
-                                          totalPools={displayRunData.slimPools.length}
-                                          clusterDeckBuilds={clusterDecks}
-                                          cardMeta={displayRunData.cardMeta}
-                                          commonCards={activeFilterPreview?.commonCards ?? []}
-                                          slimPools={displayRunData.slimPools}
-                                          deckBuilds={activeDecks}
-                                          themes={clusterThemesByClusterId.get(sk.clusterId)}
-                                          poolArchetypeLabels={poolArchetypeLabels}
-                                          onClose={() => {
-                                            setSelectedSkeletonId(null);
-                                            setFocusedPoolIndex(null);
-                                          }}
-                                        />
-                                      ) : null;
-                                    })() : activeFilterPoolIndexSet !== null && (
-                                      <DraftMapScopePanel
-                                        title={cardInfo ? (scopeOnlySummary ?? '') : (activeFilterSummary ?? 'All draft pools')}
-                                        subtitle={draftMapScopeSubtitle}
-                                        commonCards={activeFilterPreview?.commonCards ?? []}
-                                        deckBuilds={filteredDecks}
-                                        cardMeta={displayRunData.cardMeta}
-                                        selectedCardInfo={cardInfo}
-                                        matchingCount={draftMapScopeSeatCount}
-                                      />
-                                    )}
-                                  </div>
-                                  );
-                                })()}
-                              </div>
-                            </CardBody>
-                          </Card>
-                        )}
+                      {/* Draft Map — full width, with cluster detail panel on the right when selected */}
+                      <DraftMapCard
+                        skeletons={skeletons}
+                        showAdvancedClustering={showAdvancedClustering}
+                        clusterMode={clusterMode}
+                        setClusterMode={setClusterMode}
+                        distanceMetric={distanceMetric}
+                        setDistanceMetric={setDistanceMetric}
+                        useHybridEmbeddings={useHybridEmbeddings}
+                        setUseHybridEmbeddings={setUseHybridEmbeddings}
+                        pendingKnnK={pendingKnnK}
+                        setPendingKnnK={setPendingKnnK}
+                        pendingResolution={pendingResolution}
+                        setPendingResolution={setPendingResolution}
+                        pendingNumTopics={pendingNumTopics}
+                        setPendingNumTopics={setPendingNumTopics}
+                        pendingPcaDims={pendingPcaDims}
+                        setPendingPcaDims={setPendingPcaDims}
+                        pendingNegSamples={pendingNegSamples}
+                        setPendingNegSamples={setPendingNegSamples}
+                        pendingMinClusterSize={pendingMinClusterSize}
+                        setPendingMinClusterSize={setPendingMinClusterSize}
+                        pendingMinPts={pendingMinPts}
+                        setPendingMinPts={setPendingMinPts}
+                        pendingHybridWeight={pendingHybridWeight}
+                        setPendingHybridWeight={setPendingHybridWeight}
+                        clusteringInProgress={clusteringInProgress}
+                        applyPendingClusteringSettings={applyPendingClusteringSettings}
+                        queueRecluster={queueRecluster}
+                        draftMapPoints={draftMapPoints}
+                        showDraftMapScopePanel={showDraftMapScopePanel}
+                        activeFilterPoolIndexSet={activeFilterPoolIndexSet}
+                        draftMapColorMode={draftMapColorMode}
+                        setDraftMapColorMode={setDraftMapColorMode}
+                        focusedPoolIndex={focusedPoolIndex}
+                        setFocusedPoolIndex={setFocusedPoolIndex}
+                        setSelectedSkeletonId={setSelectedSkeletonId}
+                        selectedSkeletonId={selectedSkeletonId}
+                        setSelectedArchetype={setSelectedArchetype}
+                        setDraftBreakdownOpen={setDraftBreakdownOpen}
+                        mapPanelHasBoth={mapPanelHasBoth}
+                        selectedCards={selectedCards}
+                        displayRunData={displayRunData}
+                        selectedCard={selectedCard}
+                        selectedCardStats={selectedCardStats}
+                        statsForScope={statsForScope}
+                        selectedCardScopeLabel={selectedCardScopeLabel}
+                        detailedViewTitle={detailedViewTitle}
+                        detailedViewSubtitle={detailedViewSubtitle}
+                        activeFilterPreview={activeFilterPreview}
+                        activeDecks={activeDecks}
+                        clusterThemesByClusterId={clusterThemesByClusterId}
+                        poolArchetypeLabels={poolArchetypeLabels}
+                        activeFilterSummary={activeFilterSummary}
+                        scopeOnlySummary={scopeOnlySummary}
+                        filteredDecks={filteredDecks}
+                        draftMapScopeSubtitle={draftMapScopeSubtitle}
+                        draftMapScopeSeatCount={draftMapScopeSeatCount}
+                        onClearSelectedCards={() => setSelectedCardOracles([])}
+                      />
                     </div>
                   </Flexbox>
                 </div>

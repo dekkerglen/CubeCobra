@@ -1,14 +1,15 @@
 import { useCallback, useMemo } from 'react';
 
 import type {
-  ArchetypeSkeleton,
-  BuiltDeck,
   CardStats,
-  SimulatedPool,
-  SimulationRunData,
 } from '@utils/datatypes/SimulationReport';
 
 import { archetypeFullName } from '../utils/draftSimulatorThemes';
+import type {
+  DraftSimulatorDerivedData,
+  DraftSimulatorSelectionSetters,
+  DraftSimulatorSelectionState,
+} from './draftSimulatorHookTypes';
 
 interface FilterChipItem {
   key: string;
@@ -18,32 +19,18 @@ interface FilterChipItem {
 }
 
 interface UseDraftSimulatorPresentationArgs {
-  displayRunData: SimulationRunData | null;
-  activeDecks: BuiltDeck[] | null;
-  displayedPools: SimulatedPool[];
+  data: DraftSimulatorDerivedData;
+  state: Pick<DraftSimulatorSelectionState, 'selectedSkeletonId' | 'selectedArchetype' | 'focusedPoolIndex'>;
+  setters: DraftSimulatorSelectionSetters;
   selectedCards: CardStats[];
   selectedCard: CardStats | null;
-  selectedSkeletonId: number | null;
-  selectedArchetype: string | null;
-  focusedPoolIndex: number | null;
-  skeletons: ArchetypeSkeleton[];
-  poolArchetypeLabels: Map<number, string> | null;
-  skeletonColorProfiles: Map<number, string>;
   activeFilterPoolIndexSet: Set<number> | null;
-  selectedPools: SimulatedPool[];
-  setSelectedCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
-  setSelectedArchetype: React.Dispatch<React.SetStateAction<string | null>>;
-  setSelectedSkeletonId: React.Dispatch<React.SetStateAction<number | null>>;
-  setFocusedPoolIndex: React.Dispatch<React.SetStateAction<number | null>>;
-  getSkeletonDisplayName: (
-    skeleton: ArchetypeSkeleton,
-    poolArchetypeLabels?: Map<number, string> | null,
-    skeletonColorProfiles?: Map<number, string>,
-  ) => string;
+  selectedPools: DraftSimulatorDerivedData['displayedPools'];
+  getSkeletonDisplayName: (skeleton: DraftSimulatorDerivedData['skeletons'][number], poolArchetypeLabels?: Map<number, string> | null, skeletonColorProfiles?: Map<number, string>) => string;
   buildDraftBreakdownRowSummary: (
-    pool: SimulatedPool,
-    deck: BuiltDeck | null,
-    cardMeta: SimulationRunData['cardMeta'],
+    pool: DraftSimulatorDerivedData['displayedPools'][number],
+    deck: NonNullable<DraftSimulatorDerivedData['activeDecks']>[number] | null,
+    cardMeta: NonNullable<DraftSimulatorDerivedData['displayRunData']>['cardMeta'],
   ) => {
     themes: string[];
     creatureCount: number;
@@ -54,23 +41,13 @@ interface UseDraftSimulatorPresentationArgs {
 }
 
 export default function useDraftSimulatorPresentation({
-  displayRunData,
-  activeDecks,
-  displayedPools,
+  data: { displayRunData, activeDecks, displayedPools, skeletons, poolArchetypeLabels, skeletonColorProfiles },
+  state: { selectedSkeletonId, selectedArchetype, focusedPoolIndex },
+  setters: { setSelectedCardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex },
   selectedCards,
   selectedCard,
-  selectedSkeletonId,
-  selectedArchetype,
-  focusedPoolIndex,
-  skeletons,
-  poolArchetypeLabels,
-  skeletonColorProfiles,
   activeFilterPoolIndexSet,
   selectedPools,
-  setSelectedCardOracles,
-  setSelectedArchetype,
-  setSelectedSkeletonId,
-  setFocusedPoolIndex,
   getSkeletonDisplayName,
   buildDraftBreakdownRowSummary,
 }: UseDraftSimulatorPresentationArgs) {
@@ -206,7 +183,7 @@ export default function useDraftSimulatorPresentation({
     setFocusedPoolIndex(null);
   }, [setFocusedPoolIndex, setSelectedArchetype, setSelectedCardOracles, setSelectedSkeletonId]);
 
-  const downloadDraftBreakdownCsv = useCallback((pools: SimulatedPool[], label: string) => {
+  const downloadDraftBreakdownCsv = useCallback((pools: DraftSimulatorDerivedData['displayedPools'], label: string) => {
     if (!displayRunData) return;
     const { cardMeta } = displayRunData;
     const hasDeckBuilds = !!activeDecks && activeDecks.length === displayRunData.slimPools.length;
@@ -215,7 +192,7 @@ export default function useDraftSimulatorPresentation({
       const deck = hasDeckBuilds ? (activeDecks![pool.poolIndex] ?? null) : null;
       const summary = buildDraftBreakdownRowSummary(pool, deck, cardMeta);
       const resolveName = (oracleId: string) => cardMeta[oracleId]?.name ?? oracleId;
-      const mainboard = (deck?.mainboard ?? pool.picks.map((p) => p.oracle_id)).map(resolveName).join(', ');
+      const mainboard = (deck?.mainboard ?? pool.picks.map((p: DraftSimulatorDerivedData['displayedPools'][number]['picks'][number]) => p.oracle_id)).map(resolveName).join(', ');
       const sideboard = (deck?.sideboard ?? []).map(resolveName).join(', ');
       return [
         pool.draftIndex + 1,
