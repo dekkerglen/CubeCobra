@@ -56,6 +56,7 @@ import useDraftSimulatorFocus from '../hooks/useDraftSimulatorFocus';
 import useDraftSimulatorPresentation from '../hooks/useDraftSimulatorPresentation';
 import useDraftSimulatorSelection from '../hooks/useDraftSimulatorSelection';
 import type {
+  DraftSimulatorBottomTab,
   DraftSimulatorDerivedData,
   DraftSimulatorSelectionSetters,
   DraftSimulatorSelectionState,
@@ -4088,6 +4089,511 @@ const DraftMapCard: React.FC<{
   );
 };
 
+const BOTTOM_TABS: { key: DraftSimulatorBottomTab; label: string }[] = [
+  { key: 'archetypes', label: 'Archetypes' },
+  { key: 'deckColor', label: 'Deck Color Distribution' },
+  { key: 'cardStats', label: 'Card Stats' },
+  { key: 'draftBreakdown', label: 'Draft Breakdown' },
+  { key: 'sideboardAndPairings', label: 'Sideboard & Pairings' },
+  { key: 'overperformers', label: 'Over/Underperformers' },
+];
+
+const FilterChipButtons: React.FC<{
+  chips: ReturnType<typeof useDraftSimulatorPresentation>['filterChipItems'];
+  includeFocus?: boolean;
+}> = ({ chips, includeFocus = false }) => (
+  <>
+    {chips
+      .filter((chip) => includeFocus || !chip.key.startsWith('focus-'))
+      .map((chip) => (
+        <button
+          key={chip.key}
+          type="button"
+          onClick={chip.onClear}
+          className="inline-flex items-center gap-1 rounded bg-link/10 border border-link/20 px-2 py-0.5 text-xs text-link hover:bg-link/20"
+          title={`Clear ${chip.label}`}
+        >
+          {chip.label}
+          <span className="opacity-60">×</span>
+        </button>
+      ))}
+  </>
+);
+
+const DraftSimulatorBottomSection: React.FC<{
+  bottomTab: DraftSimulatorBottomTab;
+  setBottomTab: React.Dispatch<React.SetStateAction<DraftSimulatorBottomTab>>;
+  displayRunData: SimulationRunData;
+  clusteringInProgress: boolean;
+  clusterMethod: string;
+  skeletons: ArchetypeSkeleton[];
+  selectedSkeletonId: number | null;
+  setSelectedSkeletonId: React.Dispatch<React.SetStateAction<number | null>>;
+  clusterThemesByClusterId: Map<number, string[]>;
+  poolArchetypeLabels: Map<number, string> | null;
+  poolArchetypeLabelsLoading: boolean;
+  skeletonColorProfiles: Map<number, string>;
+  selectedArchetype: string | null;
+  setSelectedArchetype: React.Dispatch<React.SetStateAction<string | null>>;
+  displayedArchetypeDistribution: ArchetypeEntry[];
+  colorPairTopArchetypes: Map<string, string[]>;
+  filterChipItems: ReturnType<typeof useDraftSimulatorPresentation>['filterChipItems'];
+  clearActiveFilter: () => void;
+  activeFilterPoolIndexSet: Set<number> | null;
+  hasApproximateFilteredStats: boolean;
+  cardStatsTitle: string;
+  downloadCardStatsCsv: (stats: CardStats[], label: string) => void;
+  visibleCardStats: CardStats[];
+  handleToggleSelectedCard: (oracleId: string) => void;
+  selectedCardOracles: string[];
+  inDeckOracles: Set<string> | null;
+  inSideboardOracles: Set<string> | null;
+  deckInclusionPct: Map<string, number>;
+  visiblePoolCounts: Map<string, number>;
+  cardStatsRef: React.RefObject<HTMLDivElement>;
+  detailedViewRef: React.RefObject<HTMLDivElement>;
+  downloadDraftBreakdownCsv: (pools: SimulatedPool[], label: string) => void;
+  displayedPools: SimulatedPool[];
+  activeDecks: BuiltDeck[] | null;
+  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null;
+  focusedPoolViewMode: PoolViewMode;
+  setFocusedPoolViewMode: React.Dispatch<React.SetStateAction<PoolViewMode>>;
+  selectedCard: CardStats | null;
+  focusedPoolIndex: number | null;
+  setFocusedPoolIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  allPoolClusterThemes?: Map<number, { tag: string; lift: number }[]>;
+  allPoolTagAllowlist?: Set<string>;
+  topSideboardCards: ReturnType<typeof useDraftSimulatorSelection>['topSideboardCards'];
+  topCardPairings: ReturnType<typeof useDraftSimulatorSelection>['topCardPairings'];
+  pairingsExcludeLands: boolean;
+  setPairingsExcludeLands: React.Dispatch<React.SetStateAction<boolean>>;
+  status: 'idle' | 'running' | 'completed' | 'failed';
+}> = ({
+  bottomTab,
+  setBottomTab,
+  displayRunData,
+  clusteringInProgress,
+  clusterMethod,
+  skeletons,
+  selectedSkeletonId,
+  setSelectedSkeletonId,
+  clusterThemesByClusterId,
+  poolArchetypeLabels,
+  poolArchetypeLabelsLoading,
+  skeletonColorProfiles,
+  selectedArchetype,
+  setSelectedArchetype,
+  displayedArchetypeDistribution,
+  colorPairTopArchetypes,
+  filterChipItems,
+  clearActiveFilter,
+  activeFilterPoolIndexSet,
+  hasApproximateFilteredStats,
+  cardStatsTitle,
+  downloadCardStatsCsv,
+  visibleCardStats,
+  handleToggleSelectedCard,
+  selectedCardOracles,
+  inDeckOracles,
+  inSideboardOracles,
+  deckInclusionPct,
+  visiblePoolCounts,
+  cardStatsRef,
+  detailedViewRef,
+  downloadDraftBreakdownCsv,
+  displayedPools,
+  activeDecks,
+  simPhase,
+  focusedPoolViewMode,
+  setFocusedPoolViewMode,
+  selectedCard,
+  focusedPoolIndex,
+  setFocusedPoolIndex,
+  allPoolClusterThemes,
+  allPoolTagAllowlist,
+  topSideboardCards,
+  topCardPairings,
+  pairingsExcludeLands,
+  setPairingsExcludeLands,
+  status,
+}) => (
+  <div className="simSection simSectionBottomTabs flex flex-col gap-0 pt-3 border-t border-border">
+    <div className="flex flex-row items-stretch gap-0 border-b border-border mb-4">
+      {BOTTOM_TABS.map((tab) => (
+        <button
+          key={tab.key}
+          type="button"
+          onClick={() => setBottomTab(tab.key)}
+          className={[
+            'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+            bottomTab === tab.key
+              ? 'border-link text-link'
+              : 'border-transparent text-text-secondary hover:text-text hover:border-border',
+          ].join(' ')}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+    {bottomTab === 'archetypes' && (
+      <div className="flex flex-col gap-4">
+        {clusteringInProgress ? (
+          <div className="flex flex-col gap-3 py-2">
+            {[100, 80, 90, 70, 85].map((w, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-full bg-bg-accent" />
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <div className="h-3 animate-pulse rounded bg-bg-accent" style={{ width: `${w}%` }} />
+                  <div className="h-2.5 animate-pulse rounded bg-bg-accent" style={{ width: `${w * 0.6}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : skeletons.length > 0 ? (
+          <ArchetypeSkeletonSection
+            skeletons={skeletons}
+            totalPools={displayRunData.slimPools.length}
+            selectedSkeletonId={selectedSkeletonId}
+            onSelectSkeleton={(id) => {
+              setSelectedSkeletonId(id);
+              setSelectedArchetype(null);
+            }}
+            clusterMethod={clusterMethod}
+            clusterThemesByClusterId={clusterThemesByClusterId}
+            poolArchetypeLabels={poolArchetypeLabels}
+            poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
+            skeletonColorProfiles={skeletonColorProfiles}
+          />
+        ) : (
+          <Text sm className="text-text-secondary">
+            No archetypes found. Try lowering the minimum cluster size.
+          </Text>
+        )}
+      </div>
+    )}
+    {bottomTab === 'deckColor' && (
+      <div className="flex flex-col gap-4">
+        <Card className="border-border">
+          <CardHeader>
+            <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
+              <div>
+                <Text semibold>Deck Color Distribution</Text>
+                <div className="mt-0.5">
+                  <Text xs className="text-text-secondary">
+                    Click a row to filter stats by color profile
+                  </Text>
+                </div>
+              </div>
+              {selectedArchetype && (
+                <Flexbox direction="row" gap="2" alignItems="center">
+                  <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
+                    {archetypeFullName(selectedArchetype)}
+                  </span>
+                  <button
+                    type="button"
+                    className="text-xs text-text-secondary hover:text-text border border-border rounded px-2 py-0.5 hover:bg-bg-active"
+                    onClick={() => setSelectedArchetype(null)}
+                  >
+                    ✕ Clear
+                  </button>
+                </Flexbox>
+              )}
+            </Flexbox>
+          </CardHeader>
+          <CardBody>
+            <ArchetypeChart
+              archetypeDistribution={displayedArchetypeDistribution}
+              selectedArchetype={selectedArchetype}
+              onSelect={(cp) => {
+                setSelectedArchetype(cp);
+                setSelectedSkeletonId(null);
+              }}
+              topArchetypesByColor={colorPairTopArchetypes}
+            />
+          </CardBody>
+        </Card>
+      </div>
+    )}
+    {bottomTab === 'cardStats' && (
+      <div ref={cardStatsRef} className="flex flex-col gap-5">
+        {(activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0) || hasApproximateFilteredStats ? (
+          <Flexbox direction="col" gap="3">
+            {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
+              <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 flex items-center justify-between gap-3">
+                <Text sm className="text-text">
+                  No draft pools match the current combination of filters.
+                </Text>
+                <button
+                  type="button"
+                  className="text-xs text-text border border-yellow-500 rounded px-2 py-0.5 hover:bg-yellow-500/20 flex-shrink-0"
+                  onClick={clearActiveFilter}
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+            {hasApproximateFilteredStats && (
+              <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3">
+                <Text sm className="text-text">
+                  Exact card-stat filtering isn't available for this run — re-simulate to get precise per-filter stats.
+                  Deck and draft breakdowns are filtered correctly; card-level stats reflect the full run.
+                </Text>
+              </div>
+            )}
+          </Flexbox>
+        ) : null}
+        <Card className="border-border">
+          <CardHeader>
+            <Flexbox direction="row" gap="2" alignItems="center" justify="between" className="flex-wrap">
+              <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
+                <Text semibold>{cardStatsTitle}</Text>
+                <FilterChipButtons chips={filterChipItems} />
+              </Flexbox>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {activeFilterPoolIndexSet && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
+                    onClick={() => downloadCardStatsCsv(visibleCardStats, 'filtered')}
+                    title="Download filtered card stats as CSV"
+                  >
+                    ↓ Export (filtered)
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
+                  onClick={() => downloadCardStatsCsv(displayRunData.cardStats, 'all')}
+                  title="Download all card stats as CSV"
+                >
+                  ↓ Export
+                </button>
+              </div>
+            </Flexbox>
+          </CardHeader>
+          <CardBody>
+            <CardStatsTable
+              cardStats={visibleCardStats}
+              cardMeta={displayRunData.cardMeta}
+              onSelectCard={handleToggleSelectedCard}
+              selectedCardOracles={selectedCardOracles}
+              inDeckOracles={inDeckOracles}
+              inSideboardOracles={inSideboardOracles}
+              deckInclusionPct={deckInclusionPct}
+              visiblePoolCounts={visiblePoolCounts}
+              onPageChange={() => cardStatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            />
+          </CardBody>
+        </Card>
+      </div>
+    )}
+    {bottomTab === 'draftBreakdown' && (
+      <div ref={detailedViewRef} className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
+            <FilterChipButtons chips={filterChipItems} includeFocus />
+          </Flexbox>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {activeFilterPoolIndexSet && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
+                onClick={() =>
+                  downloadDraftBreakdownCsv(displayedPools.filter((p) => activeFilterPoolIndexSet.has(p.poolIndex)), 'filtered')
+                }
+                title="Download filtered draft breakdown as CSV"
+              >
+                ↓ Export (filtered)
+              </button>
+            )}
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
+              onClick={() => downloadDraftBreakdownCsv(displayedPools, 'all')}
+              title="Download all draft breakdown as CSV"
+            >
+              ↓ Export
+            </button>
+          </div>
+        </div>
+        <DraftBreakdownTable
+          pools={activeFilterPoolIndexSet !== null ? displayedPools.filter((p) => activeFilterPoolIndexSet.has(p.poolIndex)) : displayedPools}
+          deckBuilds={activeDecks}
+          deckLoading={simPhase === 'deckbuild'}
+          cardMeta={displayRunData.cardMeta}
+          runData={displayRunData}
+          skeletons={skeletons}
+          viewMode={focusedPoolViewMode}
+          setViewMode={setFocusedPoolViewMode}
+          highlightOracle={selectedCard?.oracle_id}
+          showLocationFilter={!!selectedCard}
+          selectedCardName={selectedCard?.name}
+          focusedPoolIndex={focusedPoolIndex}
+          onSelectPool={setFocusedPoolIndex}
+          poolArchetypeLabels={poolArchetypeLabels}
+          poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
+          clusterThemes={allPoolClusterThemes}
+          clusterTagAllowlist={allPoolTagAllowlist}
+        />
+      </div>
+    )}
+    {bottomTab === 'overperformers' && (
+      <div className="flex flex-col gap-4">
+        <DraftVsEloTable cardStats={displayRunData.cardStats} />
+      </div>
+    )}
+    {bottomTab === 'sideboardAndPairings' && (
+      <Row className="gap-4">
+        <Col xs={12} md={6}>
+          <div className="h-full rounded border border-border bg-bg">
+            <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex flex-col gap-0.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Text semibold>Common Sideboard Cards</Text>
+                <FilterChipButtons chips={filterChipItems} />
+              </div>
+              <Text xs className="text-text-secondary">Cards most often left in the sideboard across matching pools.</Text>
+            </div>
+            {topSideboardCards.length === 0 ? (
+              <div className="px-3 py-3">
+                <Text sm className="text-text-secondary">
+                  {simPhase === 'deckbuild' || (!activeDecks && status === 'running')
+                    ? 'Building decks…'
+                    : 'No sideboard data available for the current filter.'}
+                </Text>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border text-sm" style={{ tableLayout: 'fixed' }}>
+                  <colgroup>
+                    <col />
+                    <col style={{ width: 60 }} />
+                    <col style={{ width: 72 }} />
+                  </colgroup>
+                  <thead className="bg-bg-accent/50 border-b border-border">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card</th>
+                      <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Pools</th>
+                      <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">%</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {topSideboardCards.map((entry) => {
+                      const meta = displayRunData.cardMeta[entry.oracle_id];
+                      return (
+                        <tr key={entry.oracle_id} className="hover:bg-bg-accent/40">
+                          <td className="px-3 py-2 font-medium text-text truncate">
+                            {meta ? renderAutocardNameLink(entry.oracle_id, meta.name, meta.imageUrl) : entry.oracle_id}
+                          </td>
+                          <td className="px-3 py-2 text-right text-text-secondary">{entry.count}</td>
+                          <td className="px-3 py-2 text-right text-text-secondary">{(entry.pct * 100).toFixed(1)}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Col>
+        <Col xs={12} md={6}>
+          <div className="h-full rounded border border-border bg-bg">
+            <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-0.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Text semibold>Common Card Pairings</Text>
+                  <FilterChipButtons chips={filterChipItems} />
+                </div>
+                <Text xs className="text-text-secondary">Pairs of cards most often drafted together into the same deck.</Text>
+              </div>
+              <label className="flex items-center gap-1.5 text-xs text-text-secondary cursor-pointer select-none flex-shrink-0 pt-0.5">
+                <input
+                  type="checkbox"
+                  checked={pairingsExcludeLands}
+                  onChange={(e) => setPairingsExcludeLands(e.target.checked)}
+                  className="rounded"
+                />
+                Exclude lands
+              </label>
+            </div>
+            {topCardPairings.length === 0 ? (
+              <div className="px-3 py-3">
+                <Text sm className="text-text-secondary">
+                  {simPhase === 'deckbuild' || (!activeDecks && status === 'running')
+                    ? 'Building decks…'
+                    : 'No pairing data available for the current filter.'}
+                </Text>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border text-sm" style={{ tableLayout: 'fixed' }}>
+                  <colgroup>
+                    <col style={{ width: 48 }} />
+                    <col />
+                    <col style={{ width: 48 }} />
+                    <col />
+                    <col style={{ width: 60 }} />
+                    <col style={{ width: 80 }} />
+                    <col style={{ width: 80 }} />
+                  </colgroup>
+                  <thead className="bg-bg-accent/50 border-b border-border">
+                    <tr>
+                      <th className="px-2 py-2" />
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card A</th>
+                      <th className="px-2 py-2" />
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card B</th>
+                      <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Pools</th>
+                      <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary" title="% of decks containing both cards">% decks</th>
+                      <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary" title="% of decks with the rarer card that also have the other">Given rarer</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {topCardPairings.map((entry) => {
+                      const metaA = displayRunData.cardMeta[entry.oracle_id_a ?? ''];
+                      const metaB = displayRunData.cardMeta[entry.oracle_id_b ?? ''];
+                      const artA = metaA?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
+                      const artB = metaB?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
+                      return (
+                        <tr key={`${entry.oracle_id_a}|${entry.oracle_id_b}`} className="hover:bg-bg-accent/40">
+                          <td className="px-2 py-1">
+                            {artA && (
+                              <div className="overflow-hidden rounded" style={{ width: 36, height: 36 }}>
+                                <img src={artA} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 font-medium text-text truncate">
+                            {metaA ? renderAutocardNameLink(entry.oracle_id_a!, metaA.name, metaA.imageUrl) : entry.oracle_id_a}
+                          </td>
+                          <td className="px-2 py-1">
+                            {artB && (
+                              <div className="overflow-hidden rounded" style={{ width: 36, height: 36 }}>
+                                <img src={artB} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 font-medium text-text truncate">
+                            {metaB ? renderAutocardNameLink(entry.oracle_id_b!, metaB.name, metaB.imageUrl) : entry.oracle_id_b}
+                          </td>
+                          <td className="px-3 py-2 text-right text-text-secondary">{entry.count}</td>
+                          <td className="px-3 py-2 text-right text-text-secondary">{(entry.rawPct * 100).toFixed(1)}%</td>
+                          <td className="px-3 py-2 text-right text-text-secondary">{(entry.pct * 100).toFixed(1)}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Col>
+      </Row>
+    )}
+    <Text xs className="text-text-secondary text-right mt-4">
+      Generated {new Date(displayRunData.generatedAt).toLocaleString()}
+    </Text>
+  </div>
+);
+
 const ArchetypeSkeletonSection: React.FC<{
   skeletons: ArchetypeSkeleton[];
   totalPools: number;
@@ -4706,9 +5212,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     selectedCard,
     activeFilterPoolIndexSet,
     filteredDecks,
+    deckInclusionPct,
+    inDeckOracles,
+    inSideboardOracles,
     visibleCardStats,
     selectedCardStats,
     visiblePoolCounts,
+    hasApproximateFilteredStats,
     scopedPools,
     activeFilterPreview,
     topSideboardCards,
@@ -4722,38 +5232,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     bottomTab,
     pairingsExcludeLands,
   });
-
-  const deckInclusionPct = useMemo<Map<string, number>>(() => {
-    if (!filteredDecks || filteredDecks.length === 0) return new Map();
-    const mainboardCounts = new Map<string, number>();
-    const poolCounts = new Map<string, number>();
-    for (const d of filteredDecks) {
-      for (const o of d.mainboard) {
-        mainboardCounts.set(o, (mainboardCounts.get(o) ?? 0) + 1);
-        poolCounts.set(o, (poolCounts.get(o) ?? 0) + 1);
-      }
-      for (const o of d.sideboard) {
-        poolCounts.set(o, (poolCounts.get(o) ?? 0) + 1);
-      }
-    }
-    const result = new Map<string, number>();
-    for (const [o, inDeck] of mainboardCounts) {
-      const inPool = poolCounts.get(o) ?? inDeck;
-      result.set(o, inDeck / inPool);
-    }
-    return result;
-  }, [filteredDecks]);
-  const inDeckOracles = useMemo<Set<string> | null>(
-    () => (filteredDecks ? new Set(deckInclusionPct.keys()) : null),
-    [filteredDecks, deckInclusionPct],
-  );
-  const inSideboardOracles = useMemo<Set<string> | null>(() => {
-    if (!filteredDecks) return null;
-    const s = new Set<string>();
-    for (const d of filteredDecks) for (const o of d.sideboard) s.add(o);
-    return s;
-  }, [filteredDecks]);
-  const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
   const {
     selectedPools,
     focusedPool,
@@ -5204,445 +5682,55 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     </Text>
                   </div>
                 )}
-                {/* Bottom tabs: Card Stats / Draft Breakdown / Overperformers */}
-                <div className="simSection simSectionBottomTabs flex flex-col gap-0 pt-3 border-t border-border">
-                  {/* Tab bar */}
-                  <div className="flex flex-row items-stretch gap-0 border-b border-border mb-4">
-                    {(
-                      [
-                        { key: 'archetypes', label: 'Archetypes' },
-                        { key: 'deckColor', label: 'Deck Color Distribution' },
-                        { key: 'cardStats', label: 'Card Stats' },
-                        { key: 'draftBreakdown', label: 'Draft Breakdown' },
-                        { key: 'sideboardAndPairings', label: 'Sideboard & Pairings' },
-                        { key: 'overperformers', label: 'Over/Underperformers' },
-                      ] as const
-                    ).map((tab) => (
-                      <button
-                        key={tab.key}
-                        type="button"
-                        onClick={() => setBottomTab(tab.key)}
-                        className={[
-                          'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-                          bottomTab === tab.key
-                            ? 'border-link text-link'
-                            : 'border-transparent text-text-secondary hover:text-text hover:border-border',
-                        ].join(' ')}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                  {/* Archetypes tab */}
-                  {bottomTab === 'archetypes' && (
-                    <div className="flex flex-col gap-4">
-                      {clusteringInProgress ? (
-                        <div className="flex flex-col gap-3 py-2">
-                          {[100, 80, 90, 70, 85].map((w, i) => (
-                            <div key={i} className="flex items-center gap-3">
-                              <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-full bg-bg-accent" />
-                              <div className="flex flex-col gap-1.5 flex-1">
-                                <div className="h-3 animate-pulse rounded bg-bg-accent" style={{ width: `${w}%` }} />
-                                <div className="h-2.5 animate-pulse rounded bg-bg-accent" style={{ width: `${w * 0.6}%` }} />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : skeletons.length > 0 ? (
-                        <ArchetypeSkeletonSection
-                          skeletons={skeletons}
-                          totalPools={displayRunData.slimPools.length}
-                          selectedSkeletonId={selectedSkeletonId}
-                          onSelectSkeleton={(id) => {
-                            setSelectedSkeletonId(id);
-                            setSelectedArchetype(null);
-                          }}
-                          clusterMethod={clusterMethod}
-                          clusterThemesByClusterId={clusterThemesByClusterId}
-                          poolArchetypeLabels={poolArchetypeLabels}
-                          poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
-                          skeletonColorProfiles={skeletonColorProfiles}
-                        />
-                      ) : (
-                        <Text sm className="text-text-secondary">No archetypes found. Try lowering the minimum cluster size.</Text>
-                      )}
-                    </div>
-                  )}
-                  {/* Deck Color Distribution tab */}
-                  {bottomTab === 'deckColor' && (
-                    <div className="flex flex-col gap-4">
-                      <Card className="border-border">
-                        <CardHeader>
-                          <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
-                            <div>
-                              <Text semibold>Deck Color Distribution</Text>
-                              <div className="mt-0.5">
-                                <Text xs className="text-text-secondary">
-                                  Click a row to filter stats by color profile
-                                </Text>
-                              </div>
-                            </div>
-                            {selectedArchetype && (
-                              <Flexbox direction="row" gap="2" alignItems="center">
-                                <span className="text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
-                                  {archetypeFullName(selectedArchetype)}
-                                </span>
-                                <button
-                                  type="button"
-                                  className="text-xs text-text-secondary hover:text-text border border-border rounded px-2 py-0.5 hover:bg-bg-active"
-                                  onClick={() => setSelectedArchetype(null)}
-                                >
-                                  ✕ Clear
-                                </button>
-                              </Flexbox>
-                            )}
-                          </Flexbox>
-                        </CardHeader>
-                        <CardBody>
-                          <ArchetypeChart
-                            archetypeDistribution={displayedArchetypeDistribution}
-                            selectedArchetype={selectedArchetype}
-                            onSelect={(cp) => {
-                              setSelectedArchetype(cp);
-                              setSelectedSkeletonId(null);
-                            }}
-                            topArchetypesByColor={colorPairTopArchetypes}
-                          />
-                        </CardBody>
-                      </Card>
-                    </div>
-                  )}
-                  {/* Card Stats tab */}
-                  {bottomTab === 'cardStats' && (
-                    <div ref={cardStatsRef} className="flex flex-col gap-5">
-                      {/* Warnings */}
-                      {(activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0) || hasApproximateFilteredStats ? (
-                        <Flexbox direction="col" gap="3">
-                          {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
-                            <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 flex items-center justify-between gap-3">
-                              <Text sm className="text-text">
-                                No draft pools match the current combination of filters.
-                              </Text>
-                              <button
-                                type="button"
-                                className="text-xs text-text border border-yellow-500 rounded px-2 py-0.5 hover:bg-yellow-500/20 flex-shrink-0"
-                                onClick={clearActiveFilter}
-                              >
-                                Clear filters
-                              </button>
-                            </div>
-                          )}
-                          {hasApproximateFilteredStats && (
-                            <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3">
-                              <Text sm className="text-text">
-                                Exact card-stat filtering isn't available for this run — re-simulate to get precise
-                                per-filter stats. Deck and draft breakdowns are filtered correctly; card-level stats
-                                reflect the full run.
-                              </Text>
-                            </div>
-                          )}
-                        </Flexbox>
-                      ) : null}
-                      <Card className="border-border">
-                        <CardHeader>
-                          <Flexbox direction="row" gap="2" alignItems="center" justify="between" className="flex-wrap">
-                            <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
-                              <Text semibold>{cardStatsTitle}</Text>
-                              {filterChipItems.filter((chip) => !chip.key.startsWith('focus-')).map((chip) => (
-                                <button
-                                  key={chip.key}
-                                  type="button"
-                                  onClick={chip.onClear}
-                                  className="inline-flex items-center gap-1 rounded bg-link/10 border border-link/20 px-2 py-0.5 text-xs text-link hover:bg-link/20"
-                                  title={`Clear ${chip.label}`}
-                                >
-                                  {chip.label}
-                                  <span className="opacity-60">×</span>
-                                </button>
-                              ))}
-                            </Flexbox>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {activeFilterPoolIndexSet && (
-                                <button
-                                  type="button"
-                                  className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
-                                  onClick={() => downloadCardStatsCsv(visibleCardStats, 'filtered')}
-                                  title="Download filtered card stats as CSV"
-                                >
-                                  ↓ Export (filtered)
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
-                                onClick={() => downloadCardStatsCsv(displayRunData.cardStats, 'all')}
-                                title="Download all card stats as CSV"
-                              >
-                                ↓ Export
-                              </button>
-                            </div>
-                          </Flexbox>
-                        </CardHeader>
-                        <CardBody>
-                          <CardStatsTable
-                            cardStats={visibleCardStats}
-                            cardMeta={displayRunData.cardMeta}
-                            onSelectCard={handleToggleSelectedCard}
-                            selectedCardOracles={selectedCardOracles}
-                            inDeckOracles={inDeckOracles}
-                            inSideboardOracles={inSideboardOracles}
-                            deckInclusionPct={deckInclusionPct}
-                            visiblePoolCounts={visiblePoolCounts}
-                            onPageChange={() =>
-                              cardStatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                            }
-                          />
-                        </CardBody>
-                      </Card>
-                    </div>
-                  )}
-                  {/* Draft Breakdown tab */}
-                  {bottomTab === 'draftBreakdown' && (
-                    <div ref={detailedViewRef} className="flex flex-col gap-4">
-                      {/* Filter chips + CSV */}
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <Flexbox direction="row" gap="2" alignItems="center" className="flex-wrap">
-                          {filterChipItems.map((chip) => (
-                            <button
-                              key={chip.key}
-                              type="button"
-                              onClick={chip.onClear}
-                              className="inline-flex items-center gap-1 rounded bg-link/10 border border-link/20 px-2 py-0.5 text-xs text-link hover:bg-link/20"
-                              title={`Clear ${chip.label}`}
-                            >
-                              {chip.label}
-                              <span className="opacity-60">×</span>
-                            </button>
-                          ))}
-                        </Flexbox>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {activeFilterPoolIndexSet && (
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
-                              onClick={() => downloadDraftBreakdownCsv(displayedPools.filter((p) => activeFilterPoolIndexSet.has(p.poolIndex)), 'filtered')}
-                              title="Download filtered draft breakdown as CSV"
-                            >
-                              ↓ Export (filtered)
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs text-text-secondary hover:bg-bg-active hover:text-text"
-                            onClick={() => downloadDraftBreakdownCsv(displayedPools, 'all')}
-                            title="Download all draft breakdown as CSV"
-                          >
-                            ↓ Export
-                          </button>
-                        </div>
-                      </div>
-                      <DraftBreakdownTable
-                        pools={activeFilterPoolIndexSet !== null ? displayedPools.filter((p) => activeFilterPoolIndexSet.has(p.poolIndex)) : displayedPools}
-                        deckBuilds={activeDecks}
-                        deckLoading={simPhase === 'deckbuild'}
-                        cardMeta={displayRunData.cardMeta}
-                        runData={displayRunData}
-                        skeletons={skeletons}
-                        viewMode={focusedPoolViewMode}
-                        setViewMode={setFocusedPoolViewMode}
-                        highlightOracle={selectedCard?.oracle_id}
-                        showLocationFilter={!!selectedCard}
-                        selectedCardName={selectedCard?.name}
-                        focusedPoolIndex={focusedPoolIndex}
-                        onSelectPool={setFocusedPoolIndex}
-                        poolArchetypeLabels={poolArchetypeLabels}
-                        poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
-                        clusterThemes={allPoolClusterThemes}
-                        clusterTagAllowlist={allPoolTagAllowlist}
-                      />
-                    </div>
-                  )}
-                  {/* Overperformers tab */}
-                  {bottomTab === 'overperformers' && (
-                    <div className="flex flex-col gap-4">
-                      <DraftVsEloTable cardStats={displayRunData.cardStats} />
-                    </div>
-                  )}
-                  {/* Sideboard & Pairings tab */}
-                  {bottomTab === 'sideboardAndPairings' && (
-                    <Row className="gap-4">
-                      {/* Common Sideboard Cards */}
-                      <Col xs={12} md={6}>
-                        <div className="h-full rounded border border-border bg-bg">
-                          <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex flex-col gap-0.5">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <Text semibold>Common Sideboard Cards</Text>
-                              {filterChipItems.filter((chip) => !chip.key.startsWith('focus-')).map((chip) => (
-                                <button
-                                  key={chip.key}
-                                  type="button"
-                                  onClick={chip.onClear}
-                                  className="inline-flex items-center gap-1 rounded bg-link/10 border border-link/20 px-2 py-0.5 text-xs text-link hover:bg-link/20"
-                                  title={`Clear ${chip.label}`}
-                                >
-                                  {chip.label}
-                                  <span className="opacity-60">×</span>
-                                </button>
-                              ))}
-                            </div>
-                            <Text xs className="text-text-secondary">Cards most often left in the sideboard across matching pools.</Text>
-                          </div>
-                          {topSideboardCards.length === 0 ? (
-                            <div className="px-3 py-3">
-                              <Text sm className="text-text-secondary">
-                                {simPhase === 'deckbuild' || (!activeDecks && status === 'running')
-                                  ? 'Building decks…'
-                                  : 'No sideboard data available for the current filter.'}
-                              </Text>
-                            </div>
-                          ) : (
-                            <div className="overflow-x-auto">
-                              <table className="min-w-full divide-y divide-border text-sm" style={{ tableLayout: 'fixed' }}>
-                                <colgroup>
-                                  <col />
-                                  <col style={{ width: 60 }} />
-                                  <col style={{ width: 72 }} />
-                                </colgroup>
-                                <thead className="bg-bg-accent/50 border-b border-border">
-                                  <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card</th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Pools</th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">%</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                  {topSideboardCards.map((entry) => {
-                                    const meta = displayRunData.cardMeta[entry.oracle_id];
-                                    return (
-                                      <tr key={entry.oracle_id} className="hover:bg-bg-accent/40">
-                                        <td className="px-3 py-2 font-medium text-text truncate">
-                                          {meta ? renderAutocardNameLink(entry.oracle_id, meta.name, meta.imageUrl) : entry.oracle_id}
-                                        </td>
-                                        <td className="px-3 py-2 text-right text-text-secondary">{entry.count}</td>
-                                        <td className="px-3 py-2 text-right text-text-secondary">{(entry.pct * 100).toFixed(1)}%</td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      </Col>
-                      {/* Common Card Pairings */}
-                      <Col xs={12} md={6}>
-                        <div className="h-full rounded border border-border bg-bg">
-                          <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex items-start justify-between gap-3">
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex flex-wrap items-center gap-1.5">
-                                <Text semibold>Common Card Pairings</Text>
-                                {filterChipItems.filter((chip) => !chip.key.startsWith('focus-')).map((chip) => (
-                                  <button
-                                    key={chip.key}
-                                    type="button"
-                                    onClick={chip.onClear}
-                                    className="inline-flex items-center gap-1 rounded bg-link/10 border border-link/20 px-2 py-0.5 text-xs text-link hover:bg-link/20"
-                                    title={`Clear ${chip.label}`}
-                                  >
-                                    {chip.label}
-                                    <span className="opacity-60">×</span>
-                                  </button>
-                                ))}
-                              </div>
-                              <Text xs className="text-text-secondary">Pairs of cards most often drafted together into the same deck.</Text>
-                            </div>
-                            <label className="flex items-center gap-1.5 text-xs text-text-secondary cursor-pointer select-none flex-shrink-0 pt-0.5">
-                              <input
-                                type="checkbox"
-                                checked={pairingsExcludeLands}
-                                onChange={(e) => setPairingsExcludeLands(e.target.checked)}
-                                className="rounded"
-                              />
-                              Exclude lands
-                            </label>
-                          </div>
-                          {topCardPairings.length === 0 ? (
-                            <div className="px-3 py-3">
-                              <Text sm className="text-text-secondary">
-                                {simPhase === 'deckbuild' || (!activeDecks && status === 'running')
-                                  ? 'Building decks…'
-                                  : 'No pairing data available for the current filter.'}
-                              </Text>
-                            </div>
-                          ) : (
-                            <div className="overflow-x-auto">
-                              <table className="min-w-full divide-y divide-border text-sm" style={{ tableLayout: 'fixed' }}>
-                                <colgroup>
-                                  <col style={{ width: 48 }} />
-                                  <col />
-                                  <col style={{ width: 48 }} />
-                                  <col />
-                                  <col style={{ width: 60 }} />
-                                  <col style={{ width: 80 }} />
-                                  <col style={{ width: 80 }} />
-                                </colgroup>
-                                <thead className="bg-bg-accent/50 border-b border-border">
-                                  <tr>
-                                    <th className="px-2 py-2" />
-                                    <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card A</th>
-                                    <th className="px-2 py-2" />
-                                    <th className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">Card B</th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary">Pools</th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary" title="% of decks containing both cards">% decks</th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-text-secondary" title="% of decks with the rarer card that also have the other">Given rarer</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                  {topCardPairings.map((entry) => {
-                                    const metaA = displayRunData.cardMeta[entry.oracle_id_a ?? ''];
-                                    const metaB = displayRunData.cardMeta[entry.oracle_id_b ?? ''];
-                                    const artA = metaA?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
-                                    const artB = metaB?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
-                                    return (
-                                      <tr key={`${entry.oracle_id_a}|${entry.oracle_id_b}`} className="hover:bg-bg-accent/40">
-                                        <td className="px-2 py-1">
-                                          {artA && (
-                                            <div className="overflow-hidden rounded" style={{ width: 36, height: 36 }}>
-                                              <img src={artA} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                          )}
-                                        </td>
-                                        <td className="px-3 py-2 font-medium text-text truncate">
-                                          {metaA ? renderAutocardNameLink(entry.oracle_id_a!, metaA.name, metaA.imageUrl) : entry.oracle_id_a}
-                                        </td>
-                                        <td className="px-2 py-1">
-                                          {artB && (
-                                            <div className="overflow-hidden rounded" style={{ width: 36, height: 36 }}>
-                                              <img src={artB} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                          )}
-                                        </td>
-                                        <td className="px-3 py-2 font-medium text-text truncate">
-                                          {metaB ? renderAutocardNameLink(entry.oracle_id_b!, metaB.name, metaB.imageUrl) : entry.oracle_id_b}
-                                        </td>
-                                        <td className="px-3 py-2 text-right text-text-secondary">{entry.count}</td>
-                                        <td className="px-3 py-2 text-right text-text-secondary">{(entry.rawPct * 100).toFixed(1)}%</td>
-                                        <td className="px-3 py-2 text-right text-text-secondary">{(entry.pct * 100).toFixed(1)}%</td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      </Col>
-                    </Row>
-                  )}
-                  <Text xs className="text-text-secondary text-right mt-4">
-                    Generated {new Date(displayRunData.generatedAt).toLocaleString()}
-                  </Text>
-                </div>
+                <DraftSimulatorBottomSection
+                  bottomTab={bottomTab}
+                  setBottomTab={setBottomTab}
+                  displayRunData={displayRunData}
+                  clusteringInProgress={clusteringInProgress}
+                  clusterMethod={clusterMethod}
+                  skeletons={skeletons}
+                  selectedSkeletonId={selectedSkeletonId}
+                  setSelectedSkeletonId={setSelectedSkeletonId}
+                  clusterThemesByClusterId={clusterThemesByClusterId}
+                  poolArchetypeLabels={poolArchetypeLabels}
+                  poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
+                  skeletonColorProfiles={skeletonColorProfiles}
+                  selectedArchetype={selectedArchetype}
+                  setSelectedArchetype={setSelectedArchetype}
+                  displayedArchetypeDistribution={displayedArchetypeDistribution}
+                  colorPairTopArchetypes={colorPairTopArchetypes}
+                  filterChipItems={filterChipItems}
+                  clearActiveFilter={clearActiveFilter}
+                  activeFilterPoolIndexSet={activeFilterPoolIndexSet}
+                  hasApproximateFilteredStats={hasApproximateFilteredStats}
+                  cardStatsTitle={cardStatsTitle}
+                  downloadCardStatsCsv={downloadCardStatsCsv}
+                  visibleCardStats={visibleCardStats}
+                  handleToggleSelectedCard={handleToggleSelectedCard}
+                  selectedCardOracles={selectedCardOracles}
+                  inDeckOracles={inDeckOracles}
+                  inSideboardOracles={inSideboardOracles}
+                  deckInclusionPct={deckInclusionPct}
+                  visiblePoolCounts={visiblePoolCounts}
+                  cardStatsRef={cardStatsRef}
+                  detailedViewRef={detailedViewRef}
+                  downloadDraftBreakdownCsv={downloadDraftBreakdownCsv}
+                  displayedPools={displayedPools}
+                  activeDecks={activeDecks}
+                  simPhase={simPhase}
+                  focusedPoolViewMode={focusedPoolViewMode}
+                  setFocusedPoolViewMode={setFocusedPoolViewMode}
+                  selectedCard={selectedCard}
+                  focusedPoolIndex={focusedPoolIndex}
+                  setFocusedPoolIndex={setFocusedPoolIndex}
+                  allPoolClusterThemes={allPoolClusterThemes}
+                  allPoolTagAllowlist={allPoolTagAllowlist}
+                  topSideboardCards={topSideboardCards}
+                  topCardPairings={topCardPairings}
+                  pairingsExcludeLands={pairingsExcludeLands}
+                  setPairingsExcludeLands={setPairingsExcludeLands}
+                  status={status}
+                />
               </Flexbox>
             )}
 
