@@ -32,7 +32,7 @@ import {
   ScatterController,
   Tooltip,
 } from 'chart.js';
-import { Bar, Doughnut, Scatter } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 
 import Button from '../components/base/Button';
 import { Card, CardBody, CardHeader } from '../components/base/Card';
@@ -42,10 +42,19 @@ import Collapse from '../components/base/Collapse';
 import Input from '../components/base/Input';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from '../components/base/Modal';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import { DeckStacksStatic } from '../components/DeckCard';
+import ArchetypeChart from '../components/draftSimulator/ArchetypeChart';
+import CardStatsTable from '../components/draftSimulator/CardStatsTable';
+import DraftSimulatorFilterBar, { type FilterChipItem } from '../components/draftSimulator/DraftSimulatorFilterBar';
+import DraftMapScatter, { type DraftMapColorMode, type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
+import DraftVsEloTable from '../components/draftSimulator/DraftVsEloTable';
+import {
+  ClearSimulationHistoryModal,
+  LeaveSimulationModal,
+  PriorRunDeleteModal,
+} from '../components/draftSimulator/DraftSimulatorModals';
 import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
 import DynamicFlash from '../components/DynamicFlash';
 import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
@@ -131,287 +140,6 @@ const renderAutocardNameLink = (oracleId: string, name: string, imageUrl?: strin
     >
       {name}
     </AutocardLink>
-  );
-};
-
-const CardFilterInput: React.FC<{
-  cardStats: CardStats[];
-  selectedCardOracles: string[];
-  onAddCard: (oracleId: string) => void;
-}> = ({ cardStats, selectedCardOracles, onAddCard }) => {
-  const [value, setValue] = useState('');
-  const [visible, setVisible] = useState(false);
-  const [position, setPosition] = useState(-1);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const suggestions = useMemo(() => {
-    if (!value.trim()) return [];
-    const q = value.trim().toLowerCase();
-    return cardStats.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 10);
-  }, [value, cardStats]);
-
-  const accept = useCallback(
-    (card: CardStats) => {
-      onAddCard(card.oracle_id);
-      setValue('');
-      setVisible(false);
-      setPosition(-1);
-    },
-    [onAddCard],
-  );
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setVisible(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const showDropdown = visible && suggestions.length > 0;
-  const disabled = selectedCardOracles.length >= 2;
-
-  return (
-    <div className="relative" ref={wrapperRef}>
-      <input
-        value={value}
-        disabled={disabled}
-        onChange={(e) => {
-          setValue(e.target.value);
-          setVisible(true);
-          setPosition(-1);
-        }}
-        onFocus={() => { if (value) setVisible(true); }}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setPosition((p) => Math.min(p + 1, suggestions.length - 1));
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setPosition((p) => Math.max(p - 1, -1));
-          } else if (e.key === 'Enter' || e.key === 'Tab') {
-            if (showDropdown) {
-              const idx = position >= 0 ? position : 0;
-              const card = suggestions[idx];
-              if (card) { e.preventDefault(); accept(card); }
-            }
-          } else if (e.key === 'Escape') {
-            setVisible(false);
-          }
-        }}
-        placeholder={disabled ? 'Max 2 cards' : 'Search cards in this cube…'}
-        className="w-full rounded border border-border bg-bg px-2 py-1 text-sm text-text disabled:opacity-50"
-      />
-      {showDropdown && (
-        <div className="absolute top-full left-0 mt-0.5 w-full rounded-md border border-border flex flex-col z-[1050]">
-          {suggestions.map((card, idx) => (
-            <div
-              key={card.oracle_id}
-              onMouseDown={(e) => { e.preventDefault(); accept(card); }}
-              className={[
-                'px-2 py-1.5 cursor-pointer text-sm',
-                idx === 0 ? 'rounded-t-md' : 'border-t border-border',
-                idx === suggestions.length - 1 ? 'rounded-b-md' : '',
-                idx === position ? 'bg-bg-active' : 'bg-bg-accent hover:bg-bg-active',
-              ].join(' ')}
-            >
-              {card.name}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface FilterChipItem {
-  key: string;
-  label: string;
-  detail?: string;
-  onClear: () => void;
-}
-
-const ActiveFilterBar: React.FC<{
-  chips: FilterChipItem[];
-  matchingPools: number;
-  totalPools: number;
-  cardStats: CardStats[];
-  selectedCardOracles: string[];
-  archetypeDistribution: ArchetypeEntry[];
-  selectedArchetype: string | null;
-  skeletons: ArchetypeSkeleton[];
-  selectedSkeletonId: number | null;
-  poolArchetypeLabels: Map<number, string> | null;
-  skeletonColorProfiles: Map<number, string>;
-  onAddCard: (oracleId: string) => void;
-  onSelectArchetype: (archetype: string | null) => void;
-  onSelectSkeleton: (clusterId: number | null) => void;
-  onClearAll: () => void;
-}> = ({
-  chips,
-  matchingPools,
-  totalPools,
-  cardStats,
-  selectedCardOracles,
-  archetypeDistribution,
-  selectedArchetype,
-  skeletons,
-  selectedSkeletonId,
-  poolArchetypeLabels,
-  skeletonColorProfiles,
-  onAddCard,
-  onSelectArchetype,
-  onSelectSkeleton,
-  onClearAll,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const hasFilters = chips.length > 0;
-  const topColorProfiles = archetypeDistribution.slice(0, 8);
-  const topSkeletons = skeletons.slice(0, 8);
-
-  return (
-    <div className="sticky top-2 z-20 rounded-lg border border-border bg-bg shadow-md">
-      <div className="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <Text semibold className="text-lg">
-              Active Filters
-            </Text>
-            <span className="rounded bg-bg-accent px-2.5 py-1 text-xs text-text-secondary">
-              {matchingPools}/{totalPools} seats
-            </span>
-          </div>
-          <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2.5">
-            {hasFilters ? (
-              chips.map((chip) => (
-                <button
-                  key={chip.key}
-                  type="button"
-                  onClick={chip.onClear}
-                  className="inline-flex max-w-full items-center gap-1.5 rounded border border-link/30 bg-link/10 px-3 py-1.5 text-sm font-semibold text-link hover:bg-link/20"
-                  title={`Clear ${chip.label}`}
-                >
-                  {chip.detail && <span className="font-medium opacity-70">{chip.detail}</span>}
-                  <span className="truncate">{chip.label}</span>
-                  <span className="opacity-60">×</span>
-                </button>
-              ))
-            ) : (
-              <Text xs className="text-text-secondary">
-                No active filters. Click a card, color profile, cluster, or map point to narrow the run.
-              </Text>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-row items-center gap-2">
-          {hasFilters && (
-            <button
-              type="button"
-              onClick={onClearAll}
-              className="rounded border border-border bg-bg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-active"
-            >
-              Clear all
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setIsOpen((open) => !open)}
-            className="rounded border border-border bg-bg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-active"
-          >
-            {isOpen ? 'Hide filters' : 'Edit filters'}
-          </button>
-        </div>
-      </div>
-      {isOpen && (
-        <div className="grid gap-5 border-t border-border px-5 py-5 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]">
-          <div>
-            <Text xs className="mb-1.5 font-medium uppercase tracking-[0.14em] text-text-secondary/70">
-              Cards
-            </Text>
-            <CardFilterInput
-              cardStats={cardStats}
-              selectedCardOracles={selectedCardOracles}
-              onAddCard={onAddCard}
-            />
-            <Text xs className="mt-1 text-text-secondary/70">
-              Up to two card filters. Current: {selectedCardOracles.length}/2.
-            </Text>
-          </div>
-          <div>
-            <Text xs className="mb-1.5 font-medium uppercase tracking-[0.14em] text-text-secondary/70">
-              Color
-            </Text>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => onSelectArchetype(null)}
-                className={[
-                  'rounded border px-2 py-1 text-xs font-medium',
-                  selectedArchetype === null
-                    ? 'border-link bg-link/10 text-link'
-                    : 'border-border bg-bg text-text-secondary hover:bg-bg-active',
-                ].join(' ')}
-              >
-                Any
-              </button>
-              {topColorProfiles.map((entry) => (
-                <button
-                  key={entry.colorPair}
-                  type="button"
-                  onClick={() => onSelectArchetype(selectedArchetype === entry.colorPair ? null : entry.colorPair)}
-                  className={[
-                    'rounded border px-2 py-1 text-xs font-medium',
-                    selectedArchetype === entry.colorPair
-                      ? 'border-link bg-link/10 text-link'
-                      : 'border-border bg-bg text-text-secondary hover:bg-bg-active',
-                  ].join(' ')}
-                >
-                  {archetypeFullName(entry.colorPair)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <Text xs className="mb-1.5 font-medium uppercase tracking-[0.14em] text-text-secondary/70">
-              Cluster
-            </Text>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => onSelectSkeleton(null)}
-                className={[
-                  'rounded border px-2 py-1 text-xs font-medium',
-                  selectedSkeletonId === null
-                    ? 'border-link bg-link/10 text-link'
-                    : 'border-border bg-bg text-text-secondary hover:bg-bg-active',
-                ].join(' ')}
-              >
-                Any
-              </button>
-              {topSkeletons.map((skeleton, index) => (
-                <button
-                  key={skeleton.clusterId}
-                  type="button"
-                  onClick={() =>
-                    onSelectSkeleton(selectedSkeletonId === skeleton.clusterId ? null : skeleton.clusterId)
-                  }
-                  className={[
-                    'rounded border px-2 py-1 text-xs font-medium',
-                    selectedSkeletonId === skeleton.clusterId
-                      ? 'border-link bg-link/10 text-link'
-                      : 'border-border bg-bg text-text-secondary hover:bg-bg-active',
-                  ].join(' ')}
-                >
-                  {getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 };
 
@@ -691,74 +419,6 @@ function nextLowerGpuBatchSize(batchSize: number): number | null {
   return lowerOptions[0] ?? null;
 }
 
-const PriorRunDeleteModal: React.FC<{
-  isOpen: boolean;
-  setOpen: (open: boolean) => void;
-  run: SimulationRunEntry | null;
-  onConfirm: (ts: number) => Promise<void>;
-}> = ({ isOpen, setOpen, run, onConfirm }) => {
-  if (!run) return null;
-
-  return (
-    <ConfirmDeleteModal
-      isOpen={isOpen}
-      setOpen={setOpen}
-      text={`Delete the local simulation run from ${new Date(run.generatedAt).toLocaleString()}? This action cannot be undone.`}
-      submitDelete={async () => {
-        await onConfirm(run.ts);
-        setOpen(false);
-      }}
-    />
-  );
-};
-
-const ClearSimulationHistoryModal: React.FC<{
-  isOpen: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => Promise<void>;
-}> = ({ isOpen, setOpen, onConfirm }) => (
-  <ConfirmDeleteModal
-    isOpen={isOpen}
-    setOpen={setOpen}
-    text="Clear all local simulation history for this cube? This only affects this browser and cannot be undone."
-    submitDelete={async () => {
-      await onConfirm();
-      setOpen(false);
-    }}
-  />
-);
-
-const LeaveSimulationModal: React.FC<{
-  isOpen: boolean;
-  setOpen: (open: boolean) => void;
-  onLeave: () => void;
-}> = ({ isOpen, setOpen, onLeave }) => {
-  if (!isOpen) return null;
-
-  return (
-    <Modal isOpen={isOpen} setOpen={setOpen} md offsetClassName="pt-12 md:pt-20">
-      <ModalHeader setOpen={setOpen}>
-        <Text semibold lg>
-          Leave Simulator?
-        </Text>
-      </ModalHeader>
-      <ModalBody>
-        <Text>A simulation is still running. If you leave this page now, the current run will be interrupted.</Text>
-      </ModalBody>
-      <ModalFooter>
-        <Flexbox direction="row" className="w-full justify-end" gap="2">
-          <Button color="danger" onClick={onLeave}>
-            Leave Page
-          </Button>
-          <Button color="secondary" onClick={() => setOpen(false)}>
-            Stay Here
-          </Button>
-        </Flexbox>
-      </ModalFooter>
-    </Modal>
-  );
-};
-
 function randomIndex(length: number): number {
   return Math.floor(Math.random() * length);
 }
@@ -791,8 +451,6 @@ function assessDeckColors(cards: string[], cardMeta: Record<string, CardMeta>): 
 function assessPoolColors(picks: string[], cardMeta: Record<string, CardMeta>): string {
   return assessDeckColors(picks, cardMeta);
 }
-
-type DraftMapColorMode = 'cluster' | 'deckColor';
 
 function reconstructSimulatedPools(slimPools: SlimPool[], cardMeta: Record<string, CardMeta>): SimulatedPool[] {
   return slimPools.map((slim, poolIndex) => ({
@@ -1426,18 +1084,6 @@ const EloDistributionChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta:
 
   return <Bar data={chartData} options={makeEloHistogramOptions(textColor)} />;
 };
-
-interface DraftMapPoint {
-  x: number;
-  y: number;
-  poolIndex: number;
-  draftIndex: number;
-  seatIndex: number;
-  clusterId: number | null;
-  clusterIndex: number | null;
-  clusterLabel: string;
-  archetype: string;
-}
 
 function computeDraftMapPoints(
   slimPools: SlimPool[],
@@ -2298,6 +1944,7 @@ const PickCard: React.FC<{ pick: SimulatedPickCard; isSelected: boolean }> = Rea
 ));
 
 type PoolViewMode = 'pool' | 'deck' | 'fullPickOrder';
+type DeckLocationFilter = 'all' | 'deck' | 'sideboard';
 type SimulatorBreakdownPick = { cardIndex: number };
 type SimulatorBreakdownState = {
   packNumber: number;
@@ -3474,100 +3121,6 @@ const DraftBreakdownTable: React.FC<{
 
 const POOL_PAGE_SIZE = 10;
 
-const DraftVsEloTable: React.FC<{ cardStats: CardStats[] }> = ({ cardStats }) => {
-  const picked = cardStats.filter((c) => c.timesPicked > 0 && c.avgPickPosition > 0);
-  const eloRankMap = new Map([...picked].sort((a, b) => b.elo - a.elo).map((c, i) => [c.oracle_id, i + 1]));
-  const draftRankMap = new Map(
-    [...picked].sort((a, b) => a.avgPickPosition - b.avgPickPosition).map((c, i) => [c.oracle_id, i + 1]),
-  );
-  const rows = picked.map((c) => {
-    const eloRank = eloRankMap.get(c.oracle_id) ?? 0;
-    const draftRank = draftRankMap.get(c.oracle_id) ?? 0;
-    return {
-      oracle_id: c.oracle_id,
-      name: c.name,
-      elo: Math.round(c.elo),
-      eloRank,
-      draftRank,
-      delta: eloRank - draftRank,
-      avgPickPosition: c.avgPickPosition,
-      pickRate: c.pickRate,
-    };
-  });
-  const gainers = [...rows].sort((a, b) => b.delta - a.delta).slice(0, 20);
-  const losers = [...rows].sort((a, b) => a.delta - b.delta).slice(0, 20);
-  const cols = ['Card', 'Elo', 'Elo Rank', 'Draft Rank', 'Delta', 'Avg Position', 'Pick Rate'];
-  const TH = () => (
-    <thead className="bg-bg-accent">
-      <tr>
-        {cols.map((h, idx) => (
-          <th
-            key={h}
-            className={[
-              'px-3 py-2 text-xs font-medium uppercase tracking-wider',
-              idx === 0 ? 'text-left' : 'text-right',
-            ].join(' ')}
-          >
-            {h}
-          </th>
-        ))}
-      </tr>
-    </thead>
-  );
-  const DR: React.FC<{ row: (typeof rows)[0] }> = ({ row }) => (
-    <tr className="hover:bg-bg-active">
-      <td className="px-3 py-2 font-medium">{renderAutocardNameLink(row.oracle_id, row.name)}</td>
-      <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{row.elo}</td>
-      <td className="px-3 py-2 text-text-secondary text-right tabular-nums">#{row.eloRank}</td>
-      <td className="px-3 py-2 text-text-secondary text-right tabular-nums">#{row.draftRank}</td>
-      <td className="px-3 py-2 text-right tabular-nums">
-        <span
-          className={row.delta > 0 ? 'text-green-400 font-medium' : row.delta < 0 ? 'text-red-400 font-medium' : ''}
-        >
-          {row.delta > 0 ? `+${row.delta}` : row.delta}
-        </span>
-      </td>
-      <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{row.avgPickPosition.toFixed(1)}</td>
-      <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{(row.pickRate * 100).toFixed(1)}%</td>
-    </tr>
-  );
-  return (
-    <Row className="gap-4">
-      {[
-        {
-          title: 'Overperformers',
-          sub: 'Drafted earlier than their Elo suggests — picked more highly than expected.',
-          data: gainers,
-        },
-        {
-          title: 'Underperformers',
-          sub: 'Drafted later than their Elo suggests — picked lower than expected.',
-          data: losers,
-        },
-      ].map(({ title, sub, data }) => (
-        <Col key={title} xs={12} md={6}>
-          <div className="h-full rounded border border-border bg-bg">
-            <div className="border-b border-border bg-bg-accent/50 px-3 py-2 flex flex-col gap-0.5">
-              <Text semibold>{title}</Text>
-              <Text xs className="text-text-secondary">{sub}</Text>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border text-sm">
-                <TH />
-                <tbody className="divide-y divide-border">
-                  {data.map((row) => (
-                    <DR key={row.oracle_id} row={row} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </Col>
-      ))}
-    </Row>
-  );
-};
-
 const SkeletonCardImage: React.FC<{ card: SkeletonCard; size?: number }> = React.memo(({ card, size }) => (
   <AutocardLink
     href={`/tool/card/${encodeURIComponent(card.oracle_id)}`}
@@ -4688,6 +4241,7 @@ const DraftSimulatorBottomSection: React.FC<{
               inSideboardOracles={inSideboardOracles}
               deckInclusionPct={deckInclusionPct}
               visiblePoolCounts={visiblePoolCounts}
+              renderCardLink={renderAutocardNameLink}
               onPageChange={() => cardStatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             />
           </CardBody>
@@ -4743,12 +4297,15 @@ const DraftSimulatorBottomSection: React.FC<{
           clusterTagAllowlist={allPoolTagAllowlist}
         />
       </div>
-    )}
-    {bottomTab === 'overperformers' && (
-      <div className="flex flex-col gap-4">
-        <DraftVsEloTable cardStats={displayRunData.cardStats} />
-      </div>
-    )}
+                  )}
+                  {bottomTab === 'overperformers' && (
+                    <div className="flex flex-col gap-4">
+                      <DraftVsEloTable
+                        cardStats={displayRunData.cardStats}
+                        renderCardLink={(oracleId, name) => renderAutocardNameLink(oracleId, name)}
+                      />
+                    </div>
+                  )}
     {bottomTab === 'sideboardAndPairings' && (
       <Row className="gap-4">
         <Col xs={12} md={6}>
@@ -6795,7 +6352,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     </div>
                   </Flexbox>
                 </div>
-                <ActiveFilterBar
+                <DraftSimulatorFilterBar
                   chips={filterChipItems}
                   matchingPools={activeFilterPoolIndexSet?.size ?? displayRunData.slimPools.length}
                   totalPools={displayRunData.slimPools.length}
@@ -6805,8 +6362,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   selectedArchetype={selectedArchetype}
                   skeletons={skeletons}
                   selectedSkeletonId={selectedSkeletonId}
-                  poolArchetypeLabels={poolArchetypeLabels}
-                  skeletonColorProfiles={skeletonColorProfiles}
                   onAddCard={handleToggleSelectedCard}
                   onSelectArchetype={(archetype) => {
                     setSelectedArchetype(archetype);
@@ -6817,6 +6372,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     if (clusterId !== null) setSelectedArchetype(null);
                   }}
                   onClearAll={clearActiveFilter}
+                  renderArchetypeLabel={archetypeFullName}
+                  renderSkeletonLabel={(skeleton) =>
+                    getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)
+                  }
                 />
                 {oovWarningPct !== null && (
                   <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 mb-2">
