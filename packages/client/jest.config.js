@@ -1,10 +1,15 @@
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'jsdom',
 
   // Transform configuration
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.json',
+        diagnostics: false,
+      },
+    ],
     '^.+\\.(js|jsx)$': [
       'babel-jest',
       {

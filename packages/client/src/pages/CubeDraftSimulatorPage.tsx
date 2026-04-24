@@ -3573,6 +3573,7 @@ const DraftMapCard: React.FC<{
   pendingHybridWeight: number;
   setPendingHybridWeight: (v: number) => void;
   clusteringInProgress: boolean;
+  clusteringPhase: string | null;
   applyPendingClusteringSettings: () => void;
   queueRecluster: () => void;
   draftMapPoints: DraftMapPoint[];
@@ -3636,6 +3637,7 @@ const DraftMapCard: React.FC<{
   pendingHybridWeight,
   setPendingHybridWeight,
   clusteringInProgress,
+  clusteringPhase,
   applyPendingClusteringSettings,
   queueRecluster,
   draftMapPoints,
@@ -3793,7 +3795,7 @@ const DraftMapCard: React.FC<{
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Clustering…
+                      {clusteringPhase ?? 'Clustering…'}
                     </span>
                   ) : 'Update clusters'}
                 </button>
@@ -3814,7 +3816,7 @@ const DraftMapCard: React.FC<{
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  <Text xs className="text-text-secondary">Clustering…</Text>
+                  <Text xs className="text-text-secondary">{clusteringPhase ?? 'Clustering…'}</Text>
                 </div>
               </div>
             )}
@@ -3979,6 +3981,7 @@ const DraftSimulatorBottomSection: React.FC<{
   setBottomTab: React.Dispatch<React.SetStateAction<DraftSimulatorBottomTab>>;
   displayRunData: SimulationRunData;
   clusteringInProgress: boolean;
+  clusteringPhase: string | null;
   clusterMethod: string;
   skeletons: ArchetypeSkeleton[];
   selectedSkeletonId: number | null;
@@ -4027,6 +4030,7 @@ const DraftSimulatorBottomSection: React.FC<{
   setBottomTab,
   displayRunData,
   clusteringInProgress,
+  clusteringPhase,
   clusterMethod,
   skeletons,
   selectedSkeletonId,
@@ -4072,6 +4076,20 @@ const DraftSimulatorBottomSection: React.FC<{
   status,
 }) => (
   <div className="simSection simSectionBottomTabs flex flex-col gap-0 pt-3 border-t border-border">
+    {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
+      <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 mb-3 flex items-center justify-between gap-3">
+        <Text sm className="text-text">
+          No draft pools match the current combination of filters.
+        </Text>
+        <button
+          type="button"
+          className="text-xs text-text border border-yellow-500 rounded px-2 py-0.5 hover:bg-yellow-500/20 flex-shrink-0"
+          onClick={clearActiveFilter}
+        >
+          Clear filters
+        </button>
+      </div>
+    )}
     <div className="flex flex-row items-stretch gap-0 border-b border-border mb-4">
       {BOTTOM_TABS.map((tab) => (
         <button
@@ -4093,6 +4111,9 @@ const DraftSimulatorBottomSection: React.FC<{
       <div className="flex flex-col gap-4">
         {clusteringInProgress ? (
           <div className="flex flex-col gap-3 py-2">
+            {clusteringPhase && (
+              <Text xs className="text-text-secondary text-center">{clusteringPhase}</Text>
+            )}
             {[100, 80, 90, 70, 85].map((w, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-full bg-bg-accent" />
@@ -4170,32 +4191,14 @@ const DraftSimulatorBottomSection: React.FC<{
     )}
     {bottomTab === 'cardStats' && (
       <div ref={cardStatsRef} className="flex flex-col gap-5">
-        {(activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0) || hasApproximateFilteredStats ? (
-          <Flexbox direction="col" gap="3">
-            {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
-              <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 flex items-center justify-between gap-3">
-                <Text sm className="text-text">
-                  No draft pools match the current combination of filters.
-                </Text>
-                <button
-                  type="button"
-                  className="text-xs text-text border border-yellow-500 rounded px-2 py-0.5 hover:bg-yellow-500/20 flex-shrink-0"
-                  onClick={clearActiveFilter}
-                >
-                  Clear filters
-                </button>
-              </div>
-            )}
-            {hasApproximateFilteredStats && (
-              <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3">
-                <Text sm className="text-text">
-                  Exact card-stat filtering isn't available for this run — re-simulate to get precise per-filter stats.
-                  Deck and draft breakdowns are filtered correctly; card-level stats reflect the full run.
-                </Text>
-              </div>
-            )}
-          </Flexbox>
-        ) : null}
+        {hasApproximateFilteredStats && (
+          <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3">
+            <Text sm className="text-text">
+              Exact card-stat filtering isn't available for this run — re-simulate to get precise per-filter stats.
+              Deck and draft breakdowns are filtered correctly; card-level stats reflect the full run.
+            </Text>
+          </div>
+        )}
         <Card className="border-border">
           <CardHeader>
             <Flexbox direction="row" gap="2" alignItems="center" justify="between" className="flex-wrap">
@@ -4623,7 +4626,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [archetypesOpen, setArchetypesOpen] = useState(true);
   const [deckColorOpen, setDeckColorOpen] = useState(true);
   const [cardStatsOpen, setCardStatsOpen] = useState(true);
-  const [bottomTab, setBottomTab] = useState<'archetypes' | 'deckColor' | 'cardStats' | 'draftBreakdown' | 'overperformers' | 'sideboardAndPairings'>('archetypes');
+  const [bottomTab, setBottomTab] = useState<DraftSimulatorBottomTab>('archetypes');
   const [pairingsExcludeLands, setPairingsExcludeLands] = useState(true);
   const [draftMapColorMode, setDraftMapColorMode] = useState<DraftMapColorMode>('cluster');
 
@@ -4715,8 +4718,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     [gpuBatchSize],
   );
 
-  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
-  const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
   const availableFormats = useMemo(
     () => [
       { value: '-1', label: 'Standard Draft' },
@@ -4737,6 +4738,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     simAbortRef,
     isRunning,
     overallSimProgress,
+    leaveModalOpen,
+    handleCancelLeave,
+    handleConfirmedLeave,
     handleStart,
     handleCancel,
   } = useSimulationRun({
@@ -4755,50 +4759,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     onSetStorageNotice: setStorageNotice,
     onPersistCompletedRun: handlePersistCompletedRun,
   });
-
-  useEffect(() => {
-    if (!isRunning) return;
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isRunning]);
-
-  useEffect(() => {
-    if (!isRunning) return;
-    const handleDocumentClick = (event: MouseEvent) => {
-      if (event.defaultPrevented) return;
-      if (event.button !== 0) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const anchor = target.closest('a');
-      if (!(anchor instanceof HTMLAnchorElement)) return;
-      const href = anchor.href;
-      if (!href) return;
-      if (anchor.target && anchor.target !== '_self') return;
-      if (anchor.hasAttribute('download')) return;
-      const nextUrl = new URL(href, window.location.href);
-      if (nextUrl.origin !== window.location.origin) return;
-      if (nextUrl.href === window.location.href) return;
-      event.preventDefault();
-      setPendingNavigationHref(nextUrl.href);
-      setLeaveModalOpen(true);
-    };
-    document.addEventListener('click', handleDocumentClick, true);
-    return () => document.removeEventListener('click', handleDocumentClick, true);
-  }, [isRunning]);
-
-  const handleConfirmedLeave = useCallback(() => {
-    if (!pendingNavigationHref) {
-      setLeaveModalOpen(false);
-      return;
-    }
-    simAbortRef.current?.abort();
-    window.location.assign(pendingNavigationHref);
-  }, [pendingNavigationHref]);
 
   const activeDecks = displayRunData?.deckBuilds ?? null;
   const displayedPools = useMemo(() => {
@@ -4846,6 +4806,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     umapCoords,
     clusterMethod,
     clusteringInProgress,
+    clusteringPhase,
     poolArchetypeLabels,
     poolArchetypeLabelsLoading,
     oovWarningPct,
@@ -4957,110 +4918,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     };
   }, [displayRunData, skeletons, displayedPools, activeDecks]);
 
-  const buildActiveFilterPreview = useCallback(({
-    displayRunData: runData,
-    activeFilterPoolIndexSet,
-    scopedPools,
-    activeDecks: scopedDecks,
-    displayedPools: scopedDisplayedPools,
-    selectedCards,
-  }: {
-    displayRunData: SimulationRunData;
-    activeFilterPoolIndexSet: Set<number>;
-    scopedPools: SimulatedPool[];
-    activeDecks: BuiltDeck[] | null;
-    displayedPools: SimulatedPool[];
-    selectedCards: CardStats[];
-  }) => {
-    const isBasicLand = (oracleId: string) => {
-      const typeLower = (runData.cardMeta[oracleId]?.type ?? '').toLowerCase();
-      return typeLower.includes('basic land');
-    };
-
-    const matchingPoolIndices = scopedPools.map((pool) => pool.poolIndex);
-    if (matchingPoolIndices.length === 0) return null;
-
-    const selectedFilterOracleIds = new Set(selectedCards.map((card) => card.oracle_id));
-    const poolCounts = new Map<string, number>();
-    const sideboardOnlyCounts = new Map<string, number>();
-    const poolOracleSets = new Map<number, Set<string>>();
-    const hasDeckData = !!scopedDecks && scopedDecks.length === scopedDisplayedPools.length;
-
-    for (const poolIndex of matchingPoolIndices) {
-      const pool = scopedDisplayedPools[poolIndex];
-      if (!pool) continue;
-      const poolOracleSet = new Set(
-        pool.picks
-          .map((pick) => pick.oracle_id)
-          .filter((oracleId) => oracleId && !isBasicLand(oracleId) && !selectedFilterOracleIds.has(oracleId)),
-      );
-      poolOracleSets.set(poolIndex, poolOracleSet);
-      for (const oracleId of poolOracleSet) {
-        poolCounts.set(oracleId, (poolCounts.get(oracleId) ?? 0) + 1);
-      }
-
-      if (hasDeckData) {
-        const deck = scopedDecks?.[poolIndex];
-        if (!deck) continue;
-        for (const oracleId of new Set(deck.sideboard)) {
-          if (!oracleId || isBasicLand(oracleId) || selectedFilterOracleIds.has(oracleId)) continue;
-          if (!deck.mainboard.includes(oracleId)) {
-            sideboardOnlyCounts.set(oracleId, (sideboardOnlyCounts.get(oracleId) ?? 0) + 1);
-          }
-        }
-      }
-    }
-
-    const toSkeletonCard = ([oracleId, count]: [string, number]): SkeletonCard => ({
-      oracle_id: oracleId,
-      name: runData.cardMeta[oracleId]?.name || oracleId,
-      imageUrl: runData.cardMeta[oracleId]?.imageUrl ?? '',
-      fraction: count / matchingPoolIndices.length,
-    });
-
-    const commonCards = [...poolCounts.entries()]
-      .map(toSkeletonCard)
-      .sort((a, b) => b.fraction - a.fraction)
-      .slice(0, 12);
-
-    const supportCards: SkeletonCard[] = [];
-    const lockCandidates = [...poolCounts.entries()]
-      .map(toSkeletonCard)
-      .sort((a, b) => b.fraction - a.fraction)
-      .slice(0, LOCK_CANDIDATE_LIMIT);
-    const lockPairs: LockPair[] = [];
-    for (let ai = 0; ai < lockCandidates.length; ai++) {
-      for (let bi = ai + 1; bi < lockCandidates.length; bi++) {
-        const a = lockCandidates[ai]!;
-        const b = lockCandidates[bi]!;
-        let both = 0;
-        for (const poolIndex of matchingPoolIndices) {
-          const picks = poolOracleSets.get(poolIndex);
-          if (picks?.has(a.oracle_id) && picks.has(b.oracle_id)) both++;
-        }
-        const rate = both / matchingPoolIndices.length;
-        lockPairs.push({
-          oracle_id_a: a.oracle_id,
-          oracle_id_b: b.oracle_id,
-          nameA: a.name,
-          nameB: b.name,
-          imageUrlA: a.imageUrl,
-          imageUrlB: b.imageUrl,
-          coOccurrenceRate: rate,
-        });
-      }
-    }
-    lockPairs.sort((a, b) => b.coOccurrenceRate - a.coOccurrenceRate);
-
-    const sideboardCards = [...sideboardOnlyCounts.entries()]
-      .map(toSkeletonCard)
-      .filter((card) => card.fraction >= 0.15)
-      .sort((a, b) => b.fraction - a.fraction)
-      .slice(0, 5);
-
-    return { commonCards, supportCards, sideboardCards, lockPairs: lockPairs.slice(0, 5) };
-  }, []);
-
   const {
     selectedCards,
     selectedCard,
@@ -5082,7 +4939,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     state: selectionState,
     filteredCardStatsCache,
     computeFilteredCardStats,
-    buildActiveFilterPreview,
     bottomTab,
     pairingsExcludeLands,
   });
@@ -5484,6 +5340,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         pendingHybridWeight={pendingHybridWeight}
                         setPendingHybridWeight={setPendingHybridWeight}
                         clusteringInProgress={clusteringInProgress}
+                        clusteringPhase={clusteringPhase}
                         applyPendingClusteringSettings={applyPendingClusteringSettings}
                         queueRecluster={queueRecluster}
                         draftMapPoints={draftMapPoints}
@@ -5556,6 +5413,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   setBottomTab={setBottomTab}
                   displayRunData={displayRunData}
                   clusteringInProgress={clusteringInProgress}
+                  clusteringPhase={clusteringPhase}
                   clusterMethod={clusterMethod}
                   skeletons={skeletons}
                   selectedSkeletonId={selectedSkeletonId}
@@ -5659,10 +5517,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             />
             <LeaveSimulationModal
               isOpen={leaveModalOpen}
-              setOpen={(open) => {
-                setLeaveModalOpen(open);
-                if (!open) setPendingNavigationHref(null);
-              }}
+              setOpen={(open) => { if (!open) handleCancelLeave(); }}
               onLeave={handleConfirmedLeave}
             />
           </Flexbox>

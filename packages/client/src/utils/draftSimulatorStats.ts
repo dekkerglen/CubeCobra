@@ -124,6 +124,8 @@ export function computeFilteredCardStats(
                 const trashed = runData.randomTrashByPool?.[poolIndex]?.[randomTrashPointers[poolIndex] ?? 0];
                 randomTrashPointers[poolIndex] = (randomTrashPointers[poolIndex] ?? 0) + 1;
                 if (!trashed) {
+                  // randomTrashByPool metadata absent (older run format) — discard partial accumulation
+                  // and fall back to the pre-computed approximate stats stored on the run.
                   return runData.cardStats.filter((cardStats) =>
                     cardStats.poolIndices.some((poolIdx) => activePoolIndexSet.has(poolIdx)),
                   );

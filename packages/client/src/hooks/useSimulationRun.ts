@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   BuiltDeck,
@@ -94,6 +94,59 @@ export default function useSimulationRun({
   const simAbortRef = useRef<AbortController | null>(null);
 
   const isRunning = status === 'running';
+
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest('a');
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      const href = anchor.href;
+      if (!href) return;
+      if (anchor.target && anchor.target !== '_self') return;
+      if (anchor.hasAttribute('download')) return;
+      const nextUrl = new URL(href, window.location.href);
+      if (nextUrl.origin !== window.location.origin) return;
+      if (nextUrl.href === window.location.href) return;
+      event.preventDefault();
+      setPendingNavigationHref(nextUrl.href);
+      setLeaveModalOpen(true);
+    };
+    document.addEventListener('click', handleDocumentClick, true);
+    return () => document.removeEventListener('click', handleDocumentClick, true);
+  }, [isRunning]);
+
+  const handleCancelLeave = useCallback(() => {
+    setLeaveModalOpen(false);
+    setPendingNavigationHref(null);
+  }, []);
+
+  const handleConfirmedLeave = useCallback(() => {
+    if (!pendingNavigationHref) {
+      setLeaveModalOpen(false);
+      return;
+    }
+    simAbortRef.current?.abort();
+    window.location.assign(pendingNavigationHref);
+  }, [pendingNavigationHref]);
+
   const overallSimProgress = useMemo(
     () => getOverallSimProgress(simPhase, modelLoadProgress, simProgress),
     [simPhase, modelLoadProgress, simProgress],
@@ -306,6 +359,9 @@ export default function useSimulationRun({
     simAbortRef,
     isRunning,
     overallSimProgress,
+    leaveModalOpen,
+    handleCancelLeave,
+    handleConfirmedLeave,
     handleStart,
     handleCancel,
   };

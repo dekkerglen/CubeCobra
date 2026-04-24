@@ -1,8 +1,12 @@
 import { useMemo } from 'react';
 
 import type {
+  BuiltDeck,
   CardStats,
+  LockPair,
+  SimulatedPool,
   SimulationRunData,
+  SkeletonCard,
 } from '@utils/datatypes/SimulationReport';
 
 import type {
@@ -11,6 +15,107 @@ import type {
   DraftSimulatorFilterPreview,
   DraftSimulatorSelectionState,
 } from './draftSimulatorHookTypes';
+
+const LOCK_CANDIDATE_LIMIT = 12;
+
+function buildActiveFilterPreview({
+  displayRunData: runData,
+  activeFilterPoolIndexSet,
+  scopedPools,
+  activeDecks: scopedDecks,
+  displayedPools: scopedDisplayedPools,
+  selectedCards,
+}: {
+  displayRunData: SimulationRunData;
+  activeFilterPoolIndexSet: Set<number>;
+  scopedPools: SimulatedPool[];
+  activeDecks: BuiltDeck[] | null;
+  displayedPools: SimulatedPool[];
+  selectedCards: CardStats[];
+}): DraftSimulatorFilterPreview | null {
+  const isBasicLand = (oracleId: string) => (runData.cardMeta[oracleId]?.type ?? '').toLowerCase().includes('basic land');
+
+  const matchingPoolIndices = scopedPools.map((pool) => pool.poolIndex);
+  if (matchingPoolIndices.length === 0) return null;
+
+  const selectedFilterOracleIds = new Set(selectedCards.map((card) => card.oracle_id));
+  const poolCounts = new Map<string, number>();
+  const sideboardOnlyCounts = new Map<string, number>();
+  const poolOracleSets = new Map<number, Set<string>>();
+  const hasDeckData = !!scopedDecks && scopedDecks.length === scopedDisplayedPools.length;
+
+  for (const poolIndex of matchingPoolIndices) {
+    const pool = scopedDisplayedPools[poolIndex];
+    if (!pool) continue;
+    const poolOracleSet = new Set(
+      pool.picks
+        .map((pick) => pick.oracle_id)
+        .filter((oracleId) => oracleId && !isBasicLand(oracleId) && !selectedFilterOracleIds.has(oracleId)),
+    );
+    poolOracleSets.set(poolIndex, poolOracleSet);
+    for (const oracleId of poolOracleSet) {
+      poolCounts.set(oracleId, (poolCounts.get(oracleId) ?? 0) + 1);
+    }
+
+    if (hasDeckData) {
+      const deck = scopedDecks?.[poolIndex];
+      if (!deck) continue;
+      for (const oracleId of new Set(deck.sideboard)) {
+        if (!oracleId || isBasicLand(oracleId) || selectedFilterOracleIds.has(oracleId)) continue;
+        if (!deck.mainboard.includes(oracleId)) {
+          sideboardOnlyCounts.set(oracleId, (sideboardOnlyCounts.get(oracleId) ?? 0) + 1);
+        }
+      }
+    }
+  }
+
+  const toSkeletonCard = ([oracleId, count]: [string, number]): SkeletonCard => ({
+    oracle_id: oracleId,
+    name: runData.cardMeta[oracleId]?.name || oracleId,
+    imageUrl: runData.cardMeta[oracleId]?.imageUrl ?? '',
+    fraction: count / matchingPoolIndices.length,
+  });
+
+  const commonCards = [...poolCounts.entries()]
+    .map(toSkeletonCard)
+    .sort((a, b) => b.fraction - a.fraction)
+    .slice(0, 12);
+
+  const lockCandidates = [...poolCounts.entries()]
+    .map(toSkeletonCard)
+    .sort((a, b) => b.fraction - a.fraction)
+    .slice(0, LOCK_CANDIDATE_LIMIT);
+  const lockPairs: LockPair[] = [];
+  for (let ai = 0; ai < lockCandidates.length; ai++) {
+    for (let bi = ai + 1; bi < lockCandidates.length; bi++) {
+      const a = lockCandidates[ai]!;
+      const b = lockCandidates[bi]!;
+      let both = 0;
+      for (const poolIndex of matchingPoolIndices) {
+        const picks = poolOracleSets.get(poolIndex);
+        if (picks?.has(a.oracle_id) && picks.has(b.oracle_id)) both++;
+      }
+      lockPairs.push({
+        oracle_id_a: a.oracle_id,
+        oracle_id_b: b.oracle_id,
+        nameA: a.name,
+        nameB: b.name,
+        imageUrlA: a.imageUrl,
+        imageUrlB: b.imageUrl,
+        coOccurrenceRate: both / matchingPoolIndices.length,
+      });
+    }
+  }
+  lockPairs.sort((a, b) => b.coOccurrenceRate - a.coOccurrenceRate);
+
+  const sideboardCards = [...sideboardOnlyCounts.entries()]
+    .map(toSkeletonCard)
+    .filter((card) => card.fraction >= 0.15)
+    .sort((a, b) => b.fraction - a.fraction)
+    .slice(0, 5);
+
+  return { commonCards, supportCards: [], sideboardCards, lockPairs: lockPairs.slice(0, 5) };
+}
 
 interface UseDraftSimulatorSelectionArgs {
   data: DraftSimulatorDerivedData;
@@ -21,14 +126,6 @@ interface UseDraftSimulatorSelectionArgs {
     runData: SimulationRunData,
     poolIndexSet: Set<number>,
   ) => CardStats[];
-  buildActiveFilterPreview: (args: {
-    displayRunData: SimulationRunData;
-    activeFilterPoolIndexSet: Set<number>;
-    scopedPools: DraftSimulatorDerivedData['displayedPools'];
-    activeDecks: DraftSimulatorDerivedData['activeDecks'];
-    displayedPools: DraftSimulatorDerivedData['displayedPools'];
-    selectedCards: CardStats[];
-  }) => DraftSimulatorFilterPreview | null;
   bottomTab: DraftSimulatorBottomTab;
   pairingsExcludeLands: boolean;
 }
@@ -38,7 +135,6 @@ export default function useDraftSimulatorSelection({
   state: { selectedCardOracles, selectedSkeletonId, selectedArchetype },
   filteredCardStatsCache,
   computeFilteredCardStats,
-  buildActiveFilterPreview,
   bottomTab,
   pairingsExcludeLands,
 }: UseDraftSimulatorSelectionArgs) {
@@ -129,6 +225,9 @@ export default function useDraftSimulatorSelection({
       const cached = filteredCardStatsCache.current.get(cacheKey);
       if (cached) return cached;
       const result = computeFilteredCardStats(currentRunSetup, displayRunData, activeFilterPoolIndexSet);
+      if (filteredCardStatsCache.current.size >= 32) {
+        filteredCardStatsCache.current.delete(filteredCardStatsCache.current.keys().next().value!);
+      }
       filteredCardStatsCache.current.set(cacheKey, result);
       return result;
     }
@@ -164,7 +263,7 @@ export default function useDraftSimulatorSelection({
       displayedPools,
       selectedCards,
     });
-  }, [displayRunData, activeFilterPoolIndexSet, scopedPools, activeDecks, displayedPools, selectedCards, buildActiveFilterPreview]);
+  }, [displayRunData, activeFilterPoolIndexSet, scopedPools, activeDecks, displayedPools, selectedCards]);
 
   const topSideboardCards = useMemo(() => {
     if (bottomTab !== 'sideboardAndPairings') return [];
