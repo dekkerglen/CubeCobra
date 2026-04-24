@@ -85,9 +85,24 @@ import {
   getPoolMainCards,
   inferDraftThemes,
 } from '../utils/draftSimulatorThemes';
+import { computeFilteredCardStats } from '../utils/draftSimulatorStats';
 import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
+
+interface RawStats {
+  name: string;
+  colorIdentity: string[];
+  elo: number;
+  timesSeen: number;
+  timesPicked: number;
+  pickPositionSum: number;
+  pickPositionCount: number;
+  wheelCount: number;
+  p1p1Count: number;
+  p1p1Seen: number;
+  poolIndices: number[];
+}
 
 const AutocardLink = withAutocard(Link);
 
@@ -538,20 +553,6 @@ function getColorProfileGradient(colorPair: string): string {
   return `linear-gradient(90deg, ${colors.map((color, index) => `${color} ${(index / (colors.length - 1)) * 100}%`).join(', ')})`;
 }
 
-interface RawStats {
-  name: string;
-  colorIdentity: string[];
-  elo: number;
-  timesSeen: number;
-  timesPicked: number;
-  pickPositionSum: number;
-  pickPositionCount: number;
-  wheelCount: number;
-  p1p1Count: number;
-  p1p1Seen: number;
-  poolIndices: number[];
-}
-
 // Number of lock-pair candidates to check in the filter preview (O(k²) so keep small)
 const LOCK_CANDIDATE_LIMIT = 12;
 const GPU_BATCH_OPTIONS = [
@@ -689,153 +690,6 @@ function reconstructSimulatedPools(slimPools: SlimPool[], cardMeta: Record<strin
       };
     }),
   }));
-}
-
-function computeFilteredCardStats(
-  setup: Pick<SimulationSetupResponse, 'initialPacks' | 'packSteps' | 'numSeats'>,
-  runData: SimulationRunData,
-  activePoolIndexSet: Set<number>,
-): CardStats[] {
-  const { initialPacks, packSteps, numSeats } = setup;
-  const statsMap = new Map<string, RawStats>();
-  const orderedPicksByPool = runData.slimPools.map((pool) =>
-    [...pool.picks].sort((a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber),
-  );
-  const pickPointers = new Array<number>(runData.slimPools.length).fill(0);
-  const randomTrashPointers = new Array<number>(runData.slimPools.length).fill(0);
-  const getStats = (oracle: string): RawStats => {
-    let s = statsMap.get(oracle);
-    if (!s) {
-      const meta = runData.cardMeta[oracle];
-      s = {
-        name: meta?.name ?? oracle,
-        colorIdentity: meta?.colorIdentity ?? [],
-        elo: meta?.elo ?? 1200,
-        timesSeen: 0,
-        timesPicked: 0,
-        pickPositionSum: 0,
-        pickPositionCount: 0,
-        wheelCount: 0,
-        p1p1Count: 0,
-        p1p1Seen: 0,
-        poolIndices: [],
-      };
-      statsMap.set(oracle, s);
-    }
-    return s;
-  };
-
-  const numDrafts = runData.numDrafts;
-  const numPacks = packSteps.length;
-  const allCurrentPacks: string[][][] = Array.from({ length: numDrafts }, (_, d) =>
-    Array.from({ length: numSeats }, (_, s) => [...(initialPacks[d]?.[s]?.[0] ?? [])]),
-  );
-
-  for (let packNum = 0; packNum < numPacks; packNum++) {
-    if (packNum > 0) {
-      for (let d = 0; d < numDrafts; d++) {
-        for (let s = 0; s < numSeats; s++) {
-          allCurrentPacks[d]![s] = [...(initialPacks[d]?.[s]?.[packNum] ?? [])];
-        }
-      }
-    }
-
-    const steps = packSteps[packNum] ?? [];
-    let pickNumInPack = 1;
-
-    for (const step of steps) {
-      if (step.action === 'pick' || step.action === 'pickrandom') {
-        const numPicks = step.amount ?? 1;
-        for (let p = 0; p < numPicks; p++) {
-          for (let d = 0; d < numDrafts; d++) {
-            for (let s = 0; s < numSeats; s++) {
-              const poolIndex = d * numSeats + s;
-              const pack = allCurrentPacks[d]![s]!;
-              const isActivePool = activePoolIndexSet.has(poolIndex);
-
-              if (isActivePool) {
-                for (const oracle of pack) {
-                  getStats(oracle).timesSeen++;
-                  if (packNum === 0 && pickNumInPack === 1) getStats(oracle).p1p1Seen++;
-                }
-              }
-
-              const poolPicks = orderedPicksByPool[poolIndex] ?? [];
-              const nextPick = poolPicks[pickPointers[poolIndex] ?? 0];
-              if (!nextPick) continue;
-              pickPointers[poolIndex] = (pickPointers[poolIndex] ?? 0) + 1;
-
-              const removeIdx = pack.indexOf(nextPick.oracle_id);
-              if (removeIdx >= 0) pack.splice(removeIdx, 1);
-
-              if (isActivePool) {
-                const entry = getStats(nextPick.oracle_id);
-                entry.timesPicked++;
-                entry.pickPositionSum += pickNumInPack;
-                entry.pickPositionCount++;
-                if (pickNumInPack > numSeats) entry.wheelCount++;
-                if (packNum === 0 && pickNumInPack === 1) entry.p1p1Count++;
-                entry.poolIndices.push(poolIndex);
-              }
-            }
-          }
-          pickNumInPack++;
-        }
-      } else if (step.action === 'trash' || step.action === 'trashrandom') {
-        const numTrash = step.amount ?? 1;
-        for (let p = 0; p < numTrash; p++) {
-          for (let d = 0; d < numDrafts; d++) {
-            for (let s = 0; s < numSeats; s++) {
-              const poolIndex = d * numSeats + s;
-              const pack = allCurrentPacks[d]![s]!;
-              if (activePoolIndexSet.has(poolIndex)) {
-                for (const oracle of pack) getStats(oracle).timesSeen++;
-              }
-              if (pack.length === 0) continue;
-              if (step.action === 'trashrandom') {
-                const trashed = runData.randomTrashByPool?.[poolIndex]?.[randomTrashPointers[poolIndex] ?? 0];
-                randomTrashPointers[poolIndex] = (randomTrashPointers[poolIndex] ?? 0) + 1;
-                if (!trashed)
-                  return runData.cardStats.filter((c) => c.poolIndices.some((i) => activePoolIndexSet.has(i)));
-                const removeIdx = pack.indexOf(trashed);
-                if (removeIdx >= 0) pack.splice(removeIdx, 1);
-              } else {
-                pack.shift();
-              }
-            }
-          }
-          pickNumInPack++;
-        }
-      } else if (step.action === 'pass') {
-        const direction = packNum % 2 === 0 ? 1 : -1;
-        for (let d = 0; d < numDrafts; d++) {
-          const snapshot = allCurrentPacks[d]!.map((pack) => [...pack]);
-          for (let s = 0; s < numSeats; s++) allCurrentPacks[d]![(s + direction + numSeats) % numSeats] = snapshot[s]!;
-        }
-      }
-    }
-  }
-
-  return runData.cardStats
-    .map((base) => {
-      const filtered = statsMap.get(base.oracle_id);
-      if (!filtered || filtered.timesSeen === 0) return null;
-      return {
-        oracle_id: base.oracle_id,
-        name: base.name,
-        colorIdentity: base.colorIdentity,
-        elo: base.elo,
-        timesSeen: filtered.timesSeen,
-        timesPicked: filtered.timesPicked,
-        pickRate: filtered.timesSeen > 0 ? filtered.timesPicked / filtered.timesSeen : 0,
-        avgPickPosition: filtered.pickPositionCount > 0 ? filtered.pickPositionSum / filtered.pickPositionCount : 0,
-        wheelCount: filtered.wheelCount,
-        p1p1Count: filtered.p1p1Count,
-        p1p1Seen: filtered.p1p1Seen,
-        poolIndices: filtered.poolIndices,
-      };
-    })
-    .filter((c): c is CardStats => c !== null);
 }
 
 async function runClientSimulation(
@@ -5369,33 +5223,38 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     <div className="flex gap-2 overflow-x-auto pb-0.5">
                       {runs.map((run) => (
                         <div
-                          key={run.ts}
+                          key={run.entry.ts}
                           className={[
                             'group relative flex flex-col flex-shrink-0 cursor-pointer transition-colors select-none rounded-md border overflow-hidden',
-                            run.ts === selectedTs
+                            run.entry.ts === selectedTs
                               ? 'border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-800 shadow-[inset_3px_0_0_rgb(59_130_246)]'
                               : 'border-border bg-bg-accent hover:bg-bg-active',
                           ].join(' ')}
                           style={{ minWidth: 160, padding: '8px 28px 8px 13px' }}
-                          onClick={() => handleLoadRun(run.ts)}
+                          onClick={() => handleLoadRun(run.entry.ts)}
                         >
                           <span className="text-sm font-semibold whitespace-nowrap leading-tight text-text">
-                            {run.numDrafts} drafts · {run.numSeats} seats
+                            {run.entry.numDrafts} drafts · {run.entry.numSeats} seats
                           </span>
                           <span className="text-[11px] text-text-secondary whitespace-nowrap mt-0.5">
-                            {new Date(run.generatedAt).toLocaleString(undefined, {
+                            {new Date(run.entry.generatedAt).toLocaleString(undefined, {
                               month: 'short',
                               day: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit',
                             })}
                           </span>
+                          {!run.hasExactFiltering && (
+                            <span className="mt-1 inline-flex w-fit rounded border border-yellow-500/40 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300">
+                              Limited filtering
+                            </span>
+                          )}
                           <button
                             type="button"
                             className="absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center rounded text-[9px] text-text-secondary/40 hover:text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setRunPendingDelete(run);
+                              setRunPendingDelete(run.entry);
                               setDeleteRunModalOpen(true);
                             }}
                           >
@@ -5501,6 +5360,16 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             {/* Results */}
             {displayRunData && (
               <Flexbox direction="col" gap="6">
+                {!currentRunSetup && (
+                  <Card className="border-yellow-700">
+                    <CardBody>
+                      <Text sm className="text-text">
+                        This saved run predates exact filter reconstruction. Filtered card stats are approximate, and
+                        full pick order may be unavailable.
+                      </Text>
+                    </CardBody>
+                  </Card>
+                )}
                 <div className="simSection simSectionOverview flex flex-col gap-4">
                   <div className="simSectionHeading flex items-center justify-between gap-3">
                     <Text semibold className="tracking-wide">
