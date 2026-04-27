@@ -21,7 +21,7 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
   // Sort formats alphabetically.
   const formatsSorted = useMemo(
     () =>
-      cube.formats
+      (cube.formats ?? [])
         .map((format, index) => ({ ...format, index }))
         .sort((a, b) => {
           if (a.index === defaultFormat) {
@@ -64,6 +64,7 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
     if (!cube.disableGrid) {
       tiles.push({ type: 'grid', key: 'grid' });
     }
+    tiles.push({ type: 'simulator', key: 'simulator' });
 
     return tiles;
   }, [defaultFormat, formatsSorted, cube.disableDraft, cube.disableMultiplayer, cube.disableSealed, cube.disableGrid]);
@@ -114,6 +115,27 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
         return <SealedCard key={tile.key} />;
       case 'grid':
         return <GridDraftCard key={tile.key} />;
+      case 'simulator':
+        return (
+          <Card key={tile.key}>
+            <CardHeader>
+              <Text semibold lg>
+                Draft Simulator
+              </Text>
+            </CardHeader>
+            <CardBody>
+              <Text>
+                Simulate hundreds of drafts with bots to analyze card pick rates, archetype distribution, and deck
+                composition for your cube.
+              </Text>
+            </CardBody>
+            <CardFooter>
+              <Button block type="link" color="primary" href={`/cube/draftsimulator/${cube.id}`}>
+                Open Draft Simulator
+              </Button>
+            </CardFooter>
+          </Card>
+        );
       default:
         return null;
     }

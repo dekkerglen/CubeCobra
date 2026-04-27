@@ -22,6 +22,8 @@ import useLocalStorage from 'hooks/useLocalStorage';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
+import { modelScoresToProbabilities } from '../utils/botRatings';
+
 interface CubeDraftPageProps {
   cube: Cube;
   draft: Draft;
@@ -42,26 +44,6 @@ interface DraftStatus {
   draftCompleted: boolean;
 }
 
-interface BatchPredictRequest {
-  pack: string[];
-  picks: string[];
-}
-
-const fetchBatchPredict = async (inputs: BatchPredictRequest[]): Promise<PredictResponse> => {
-  //Unlike csrfFetch which has a default client time, a fetch like this doesn't.
-  const response = await fetch('/api/draftbots/batchpredict', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ inputs }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch batch predictions: ${response.status}`);
-  }
-
-  return response.json();
-};
-
 const processPredictions = (json: PredictResponse, packCards: any[]): number[] => {
   // Create a map of oracle IDs to ratings
   const predictionsMap = new Map(json.prediction[0].map((p) => [p.oracle, p.rating]));
@@ -76,9 +58,7 @@ const processPredictions = (json: PredictResponse, packCards: any[]): number[] =
     return predictionsMap.get(card.oracle_id) || 0;
   });
 
-  // Normalize: duplicates get the same rating, then normalize so total = 100%
-  const total = rawRatings.reduce((acc, r) => acc + r, 0);
-  return total > 0 ? rawRatings.map((r) => r / total) : rawRatings;
+  return modelScoresToProbabilities(rawRatings);
 };
 
 const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
@@ -249,19 +229,29 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
           picks: seat.picks.flatMap((index: number) => getCardOracleIds(index)),
         }));
 
-        const json = await fetchBatchPredict(inputs);
+        const response = await csrfFetch('/api/draftbots/batchpredict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inputs }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Prediction request failed: ${response.status}`);
+        }
+
+        const json = (await response.json()) as PredictResponse;
         setCurrentPredictions(json);
         setRatings(processPredictions(json, request.packCards));
         return json;
       } catch (error) {
-        console.error('Error fetching predictions:', error, 'inputs', request.state);
+        console.error('Error getting predictions:', error, 'inputs', request.state);
         setDraftStatus((prev) => ({ ...prev, predictError: true }));
         return null;
       } finally {
         setDraftStatus((prev) => ({ ...prev, predictionsLoading: false }));
       }
     },
-    [getCardOracleIds],
+    [csrfFetch, getCardOracleIds],
   );
 
   const handleRetryPredict = useCallback(async () => {
