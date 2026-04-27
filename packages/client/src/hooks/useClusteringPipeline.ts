@@ -34,30 +34,14 @@ export default function useClusteringPipeline({
   loadedClusterCache,
   embeddingsCache,
 }: UseClusteringPipelineArgs) {
-  const [minClusterSize, setMinClusterSize] = useState(3);
-  const [pendingMinClusterSize, setPendingMinClusterSize] = useState(3);
-  const [pcaDims, setPcaDims] = useState(20);
-  const [pendingPcaDims, setPendingPcaDims] = useState(20);
-  const [minPts, setMinPts] = useState(3);
-  const [pendingMinPts, setPendingMinPts] = useState(3);
   const [knnK, setKnnK] = useState(50);
   const [pendingKnnK, setPendingKnnK] = useState(50);
-  const [negSamples, setNegSamples] = useState(20);
-  const [pendingNegSamples, setPendingNegSamples] = useState(20);
-  const [clusterMode, setClusterMode] = useState<'umap' | 'graph' | 'leiden' | 'nmf'>('leiden');
   const [clusterSeed, setClusterSeed] = useState(0);
   const [resolution, setResolution] = useState(1.0);
   const [pendingResolution, setPendingResolution] = useState(1.0);
-  const [numTopics, setNumTopics] = useState(0);
-  const [pendingNumTopics, setPendingNumTopics] = useState(0);
-  const [distanceMetric, setDistanceMetric] = useState<'euclidean' | 'cosine'>('cosine');
-  const [useHybridEmbeddings, setUseHybridEmbeddings] = useState(false);
-  const [hybridWeight, setHybridWeight] = useState(5.0);
-  const [pendingHybridWeight, setPendingHybridWeight] = useState(5.0);
 
   const [skeletons, setSkeletons] = useState<ArchetypeSkeleton[]>([]);
   const [umapCoords, setUmapCoords] = useState<{ x: number; y: number }[]>([]);
-  const [clusterMethod, setClusterMethod] = useState<string>('hdbscan (umap)');
   const [clusteringInProgress, setClusteringInProgress] = useState(false);
   const [poolEmbeddings, setPoolEmbeddings] = useState<number[][] | null>(null);
   const [poolArchetypeLabels, setPoolArchetypeLabels] = useState<Map<number, string> | null>(null);
@@ -77,11 +61,14 @@ export default function useClusteringPipeline({
       ? 'Identifying archetypes…'
       : 'Clustering drafts…'
     : null;
-  const clusteringSourceKey = [
+  const runSourceKey = [
     selectedTs ?? 'unsaved',
     displayRunData?.generatedAt ?? 'none',
     displayRunData?.slimPools.length ?? 0,
     hasDecksForSource ? 'decks' : 'picks',
+  ].join(':');
+  const clusteringSourceKey = [
+    runSourceKey,
     clusterSeed,
   ].join(':');
 
@@ -101,7 +88,6 @@ export default function useClusteringPipeline({
       hydratedClusterSourceKey.current = clusteringSourceKey;
       setSkeletons(loadedClusterCache.skeletons);
       setUmapCoords(loadedClusterCache.umapCoords);
-      setClusterMethod(loadedClusterCache.clusterMethod);
       setKnnK(loadedClusterCache.knnK);
       setPendingKnnK(loadedClusterCache.knnK);
       setResolution(loadedClusterCache.resolution);
@@ -114,9 +100,8 @@ export default function useClusteringPipeline({
     hydratedClusterSourceKey.current = null;
     setSkeletons([]);
     setUmapCoords([]);
-    setClusterMethod('hdbscan (umap)');
     setPoolArchetypeLabels(null);
-  }, [loadedClusterCache, clusteringSourceKey]);
+  }, [loadedClusterCache, runSourceKey]);
 
   useEffect(() => {
     if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {
@@ -235,23 +220,13 @@ export default function useClusteringPipeline({
       const result = computeSkeletons(
         displayRunData.slimPools,
         displayRunData.cardMeta,
-        minClusterSize,
         poolEmbeddings,
         activeDecks,
-        pcaDims,
-        minPts,
-        clusterMode,
         knnK,
-        negSamples,
         resolution,
-        numTopics,
-        distanceMetric,
-        useHybridEmbeddings,
-        hybridWeight,
       );
       setSkeletons(result.skeletons);
       setUmapCoords(result.umapCoords);
-      setClusterMethod(result.clusterMethod);
       hydratedClusterSourceKey.current = null;
       setClusteringInProgress(false);
       if (selectedTs) {
@@ -268,82 +243,34 @@ export default function useClusteringPipeline({
     return () => clearTimeout(timer);
   }, [
     displayRunData,
-    minClusterSize,
-    pcaDims,
-    minPts,
-    clusterMode,
     knnK,
-    negSamples,
     clusteringSourceKey,
     activeDecks,
     poolEmbeddings,
     poolEmbeddingsFailed,
     resolution,
-    numTopics,
-    distanceMetric,
-    useHybridEmbeddings,
-    hybridWeight,
     selectedTs,
     cubeId,
   ]);
 
-  const queueRecluster = useCallback(() => {
-    setClusterSeed((seed) => seed + 1);
-  }, []);
-
   const applyPendingClusteringSettings = useCallback(() => {
     setKnnK(pendingKnnK);
-    setPcaDims(pendingPcaDims);
-    setNegSamples(pendingNegSamples);
-    setMinClusterSize(pendingMinClusterSize);
-    setMinPts(pendingMinPts);
     setResolution(pendingResolution);
-    setNumTopics(pendingNumTopics);
-    setHybridWeight(pendingHybridWeight);
     setClusterSeed((seed) => seed + 1);
-  }, [
-    pendingKnnK,
-    pendingPcaDims,
-    pendingNegSamples,
-    pendingMinClusterSize,
-    pendingMinPts,
-    pendingResolution,
-    pendingNumTopics,
-    pendingHybridWeight,
-  ]);
+  }, [pendingKnnK, pendingResolution]);
 
   return {
-    pendingMinClusterSize,
-    setPendingMinClusterSize,
-    pendingPcaDims,
-    setPendingPcaDims,
-    pendingMinPts,
-    setPendingMinPts,
     pendingKnnK,
     setPendingKnnK,
-    pendingNegSamples,
-    setPendingNegSamples,
-    clusterMode,
-    setClusterMode,
     pendingResolution,
     setPendingResolution,
-    pendingNumTopics,
-    setPendingNumTopics,
-    distanceMetric,
-    setDistanceMetric,
-    useHybridEmbeddings,
-    setUseHybridEmbeddings,
-    pendingHybridWeight,
-    setPendingHybridWeight,
     skeletons,
     umapCoords,
-    clusterMethod,
     clusteringInProgress,
     clusteringPhase,
     poolArchetypeLabels,
     poolArchetypeLabelsLoading,
     oovWarningPct,
-    queueRecluster,
     applyPendingClusteringSettings,
   };
 }

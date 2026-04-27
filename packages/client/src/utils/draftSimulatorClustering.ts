@@ -1111,22 +1111,14 @@ export function approximateUmap(vectors: number[][], prebuiltEdges?: KNNEdge[], 
 export function computeSkeletons(
   slimPools: SlimPool[],
   cardMeta: Record<string, CardMeta>,
-  minClusterSize: number,
   embeddings: number[][] | null,
   deckBuilds?: BuiltDeck[] | null,
-  umapDims: number = 20,
-  minPts: number = 3,
-  clusterMode: 'umap' | 'graph' | 'leiden' | 'nmf' = 'umap',
   knnK: number = 50,
   negSamples: number = 20,
   resolution: number = 1.0,
-  numTopics: number = 0,
-  distanceMetric: 'euclidean' | 'cosine' = 'euclidean',
-  useHybridEmbeddings: boolean = false,
-  hybridWeight: number = 5.0,
 ): { skeletons: ArchetypeSkeleton[]; umapCoords: { x: number; y: number }[]; clusterMethod: string } {
   const n = slimPools.length;
-  if (n === 0) return { skeletons: [], umapCoords: [], clusterMethod: 'hdbscan (umap)' };
+  if (n === 0) return { skeletons: [], umapCoords: [], clusterMethod: 'leiden' };
 
   // Exclude basic lands
   const oracleIds = Object.keys(cardMeta).filter((id) => {
@@ -1164,79 +1156,14 @@ export function computeSkeletons(
     });
   }
 
-  // Hybrid embeddings: concatenate probability-based structural features
-  if (useHybridEmbeddings && embeddings && embeddings.length === n) {
-    const colors = ['W', 'U', 'B', 'R', 'G'];
-    const typeCategories = ['creature', 'instant', 'sorcery', 'enchantment', 'artifact'];
-
-    rawVecs = embeddings.map((emb, i) => {
-      const cards = hasDecks ? deckBuilds![i]!.mainboard : slimPools[i]!.picks.map((p) => p.oracle_id);
-
-      let nonLandCount = 0;
-      const colorCounts = new Float64Array(5);
-      const typeCounts = new Float64Array(5);
-
-      for (const oracleId of cards) {
-        const meta = cardMeta[oracleId];
-        if (!meta) continue;
-        const t = (meta.type ?? '').toLowerCase();
-        if (t.includes('land')) continue;
-        nonLandCount++;
-        for (let c = 0; c < 5; c++) {
-          if ((meta.colorIdentity ?? []).includes(colors[c]!)) colorCounts[c]++;
-          if (t.includes(typeCategories[c]!)) typeCounts[c]++;
-        }
-      }
-
-      const colorDist = nonLandCount > 0 ? Array.from(colorCounts, (c) => c / nonLandCount) : [0, 0, 0, 0, 0];
-      const typeDist = nonLandCount > 0 ? Array.from(typeCounts, (c) => c / nonLandCount) : [0, 0, 0, 0, 0];
-
-      return [
-        ...emb,
-        ...colorDist.map((x) => x * hybridWeight),
-        ...typeDist.map((x) => x * hybridWeight),
-      ];
-    });
-  }
-
   // Deterministic seeded RNG derived from pool data
   const rng = createRng(deriveClusterSeed(slimPools));
 
-  // Build k-NN graph once (shared between clustering and visualization)
-  const knnGraph = buildKnnGraph(rawVecs, Math.min(knnK, n - 1), distanceMetric);
-
-  let assignments: number[];
-  let clusterMethod: string;
-
-  if (clusterMode === 'leiden') {
-    assignments = leidenAssignments(knnGraph, n, resolution, rng);
-    clusterMethod = `leiden (γ=${resolution})`;
-  } else if (clusterMode === 'nmf') {
-    const k = numTopics > 0 ? numTopics : Math.max(5, Math.floor(Math.sqrt(n)));
-    assignments = nmfAssignments(vecs, k, 100, rng);
-    clusterMethod = `nmf (k=${k})`;
-  } else if (clusterMode === 'graph') {
-    assignments = hdbscanFromKnnGraph(knnGraph, n, minClusterSize, minPts, rawVecs);
-    clusterMethod = 'hdbscan (graph)';
-
-    const uniqueFromHdbscan = new Set(assignments);
-    if (uniqueFromHdbscan.size <= 1 && n >= 4) {
-      const k = Math.max(2, Math.min(12, Math.floor(Math.sqrt(n / 2))));
-      assignments = kmeansAssignments(rawVecs, k, 30, rng);
-      clusterMethod = 'kmeans (fallback)';
-    }
-  } else {
-    const clusterVecs = umapProject(knnGraph.edges, n, umapDims, rawVecs, negSamples, 90, rng);
-    assignments = hdbscanAssignments(clusterVecs, minClusterSize, minPts);
-    clusterMethod = `hdbscan (umap-${umapDims}d)`;
-
-    const uniqueFromHdbscan = new Set(assignments);
-    if (uniqueFromHdbscan.size <= 1 && n >= 4) {
-      const k = Math.max(2, Math.min(12, Math.floor(Math.sqrt(n / 2))));
-      assignments = kmeansAssignments(clusterVecs, k, 30, rng);
-      clusterMethod = 'kmeans (fallback)';
-    }
-  }
+  // Build k-NN graph once (shared between clustering and visualization).
+  // The default clustering path uses cosine distance and Leiden community detection.
+  const knnGraph = buildKnnGraph(rawVecs, Math.min(knnK, n - 1), 'cosine');
+  const assignments = leidenAssignments(knnGraph, n, resolution, rng);
+  const clusterMethod = `leiden (γ=${resolution})`;
 
   // UMAP to 2D for visualization (reuses k-NN graph, separate rng for independence)
   const vizRng = createRng(deriveClusterSeed(slimPools) ^ 0x5a5a5a5a);

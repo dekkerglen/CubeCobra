@@ -164,7 +164,7 @@ describe('approximateUmap', () => {
 // ---------------------------------------------------------------------------
 describe('computeSkeletons', () => {
   it('returns empty for empty pools', () => {
-    const result = computeSkeletons([], {}, 2, null);
+    const result = computeSkeletons([], {}, null);
     expect(result.skeletons).toEqual([]);
     expect(result.umapCoords).toEqual([]);
   });
@@ -172,7 +172,7 @@ describe('computeSkeletons', () => {
   it('handles more pools than minClusterSize gracefully', () => {
     const meta = { a: makeMeta('a'), b: makeMeta('b') };
     const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b'])];
-    const result = computeSkeletons(pools, meta, 10, null);
+    const result = computeSkeletons(pools, meta, null);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -182,7 +182,7 @@ describe('computeSkeletons', () => {
       island: makeMeta('island', 'Basic Land', ['U']),
     };
     const pools = [makePool(0, 0, ['spell', 'island']), makePool(0, 1, ['spell', 'island'])];
-    const result = computeSkeletons(pools, meta, 2, null);
+    const result = computeSkeletons(pools, meta, null);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
     const allCardIds = result.skeletons.flatMap((s) => [...s.coreCards, ...s.occasionalCards].map((c) => c.oracle_id));
     expect(allCardIds).not.toContain('island');
@@ -191,7 +191,7 @@ describe('computeSkeletons', () => {
   it('identifies a card in every pool as a core card', () => {
     const meta = { staple: makeMeta('staple', 'Creature', ['U']) };
     const pools = Array.from({ length: 5 }, (_, i) => makePool(0, i, ['staple']));
-    const result = computeSkeletons(pools, meta, 3, null);
+    const result = computeSkeletons(pools, meta, null);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
     const hasStaple = result.skeletons.some((s) => s.coreCards.some((c) => c.oracle_id === 'staple'));
     expect(hasStaple).toBe(true);
@@ -203,7 +203,7 @@ describe('computeSkeletons', () => {
       ...Array.from({ length: 5 }, (_, i) => makePool(0, i, ['a'])),
       ...Array.from({ length: 2 }, (_, i) => makePool(1, i, ['b'])),
     ];
-    const result = computeSkeletons(pools, meta, 2, null);
+    const result = computeSkeletons(pools, meta, null);
     if (result.skeletons.length >= 2) {
       expect(result.skeletons[0].poolCount).toBeGreaterThanOrEqual(result.skeletons[1].poolCount);
     }
@@ -228,7 +228,7 @@ describe('computeSkeletons', () => {
       { mainboard: ['core', 'maindeck'], sideboard: ['side'] },
     ];
 
-    const result = computeSkeletons(pools, meta, 2, null, deckBuilds);
+    const result = computeSkeletons(pools, meta, null, deckBuilds);
 
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
     const hasSide = result.skeletons.some((s) => s.sideboardCards.some((c) => c.oracle_id === 'side'));
@@ -238,7 +238,7 @@ describe('computeSkeletons', () => {
   it('returns umapCoords matching the number of pools', () => {
     const meta = { a: makeMeta('a'), b: makeMeta('b'), c: makeMeta('c') };
     const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['c'])];
-    const result = computeSkeletons(pools, meta, 2, null);
+    const result = computeSkeletons(pools, meta, null);
     expect(result.umapCoords).toHaveLength(3);
     for (const coord of result.umapCoords) {
       expect(typeof coord.x).toBe('number');
@@ -254,48 +254,29 @@ describe('computeSkeletons', () => {
       [0, 1, 0, 0],
       [0, 0, 1, 0],
     ];
-    const result = computeSkeletons(pools, meta, 2, embeddings);
+    const result = computeSkeletons(pools, meta, embeddings);
     expect(result.skeletons.length).toBeGreaterThan(0);
     expect(result.umapCoords).toHaveLength(3);
   });
 
-  it('respects custom umapDims parameter', () => {
+  it('supports custom leiden graph parameters', () => {
     const meta = { a: makeMeta('a'), b: makeMeta('b') };
     const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['a', 'b'])];
-    const result = computeSkeletons(pools, meta, 2, null, null, 5);
+    const result = computeSkeletons(pools, meta, null, null, 12, 10, 1.5);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+    expect(result.clusterMethod).toContain('leiden');
   });
 
-  it('supports graph-based clustering mode', () => {
-    const meta = { a: makeMeta('a'), b: makeMeta('b'), c: makeMeta('c') };
-    const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['c']), makePool(0, 3, ['a', 'b'])];
-    const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'graph');
-    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
-    expect(result.umapCoords).toHaveLength(4);
-  });
-
-  it('supports leiden clustering mode', () => {
+  it('uses leiden clustering', () => {
     const meta = { a: makeMeta('a', 'Creature', ['R']), b: makeMeta('b', 'Creature', ['G']), c: makeMeta('c', 'Creature', ['U']) };
     const pools = [
       ...Array.from({ length: 4 }, (_, i) => makePool(0, i, ['a'])),
       ...Array.from({ length: 4 }, (_, i) => makePool(1, i, ['b'])),
     ];
-    const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'leiden', 50, 20, 1.0);
+    const result = computeSkeletons(pools, meta, null, null, 50, 20, 1.0);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
     expect(result.umapCoords).toHaveLength(8);
     expect(result.clusterMethod).toContain('leiden');
-  });
-
-  it('supports nmf clustering mode', () => {
-    const meta = { a: makeMeta('a', 'Creature', ['R']), b: makeMeta('b', 'Creature', ['G']) };
-    const pools = [
-      ...Array.from({ length: 4 }, (_, i) => makePool(0, i, ['a'])),
-      ...Array.from({ length: 4 }, (_, i) => makePool(1, i, ['b'])),
-    ];
-    const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'nmf', 50, 20, 1.0, 2);
-    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
-    expect(result.umapCoords).toHaveLength(8);
-    expect(result.clusterMethod).toContain('nmf');
   });
 
   it('populates signatureCards for clusters', () => {
@@ -312,17 +293,10 @@ describe('computeSkeletons', () => {
       makePool(1, 1, ['shared', 'uniqueB']),
       makePool(1, 2, ['shared', 'uniqueB']),
     ];
-    const result = computeSkeletons(pools, meta, 2, null);
+    const result = computeSkeletons(pools, meta, null);
     for (const skel of result.skeletons) {
       expect(skel.signatureCards).toBeDefined();
     }
-  });
-
-  it('supports cosine distance metric', () => {
-    const meta = { a: makeMeta('a'), b: makeMeta('b') };
-    const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b']), makePool(0, 2, ['a', 'b'])];
-    const result = computeSkeletons(pools, meta, 2, null, null, 20, 3, 'umap', 50, 20, 1.0, 0, 'cosine');
-    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
   });
 });
 
