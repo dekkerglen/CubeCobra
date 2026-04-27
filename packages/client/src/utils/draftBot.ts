@@ -10,6 +10,10 @@
  *   Phase 1: encoder → deck_build_decoder → seed first 10 cards from pool
  *   Phase 2: encoder → draft_decoder → iteratively fill remaining slots
  *
+ * The recommender head (cube_decoder) is loaded lazily on demand so the normal
+ * draft simulator path does not pay its download cost unless recommendations
+ * are actually requested.
+ *
  * Models are fetched through /api/mlmodel/* (a thin S3 proxy) and cached by
  * the browser via normal HTTP caching. TF.js itself is dynamically imported
  * to keep it out of the main bundle.
@@ -26,10 +30,13 @@ let encoder: any = null;
 let draftDecoder: any = null;
 
 let deckBuildDecoder: any = null;
+let recommendDecoder: any = null;
 let oracleToIndex: Record<string, number> = {};
+let indexToOracle: string[] = [];
 let numOracles = 0;
 let draftBotLoaded = false;
 let draftBotLoadPromise: Promise<void> | null = null;
+let recommendLoadPromise: Promise<void> | null = null;
 const loadProgressListeners = new Set<(pct: number) => void>();
 
 const emitLoadProgress = (pct: number): void => {
@@ -72,11 +79,13 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
     // Oracle index map (1.6 MB) — maps integer index → oracle_id
     const mapRes = await fetch(`${MODEL_BASE}/indexToOracleMap.json`);
     if (!mapRes.ok) throw new Error(`Failed to load oracle index map: ${mapRes.status}`);
-    const indexToOracle: Record<string, string> = await mapRes.json();
-    numOracles = Object.keys(indexToOracle).length;
+    const oracleMap: Record<string, string> = await mapRes.json();
+    numOracles = Object.keys(oracleMap).length;
     oracleToIndex = {};
-    for (const [k, v] of Object.entries(indexToOracle)) {
+    indexToOracle = new Array(numOracles);
+    for (const [k, v] of Object.entries(oracleMap)) {
       oracleToIndex[v] = parseInt(k, 10);
+      indexToOracle[parseInt(k, 10)] = v;
     }
     emitLoadProgress(5);
 
@@ -106,6 +115,30 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
 
 export function getLoadProgressListenerCountForTests(): number {
   return loadProgressListeners.size;
+}
+
+/**
+ * Lazily loads the recommendation head used for add/cut style predictions.
+ * The base encoder/draft/deckbuild models are loaded first if necessary.
+ */
+export async function loadDraftRecommender(): Promise<void> {
+  await loadDraftBot();
+  if (recommendDecoder) return;
+  if (recommendLoadPromise) {
+    await recommendLoadPromise;
+    return;
+  }
+
+  recommendLoadPromise = (async () => {
+    recommendDecoder = await tf!.loadGraphModel(`${MODEL_BASE}/cube_decoder/model.json`);
+  })();
+  const activePromise = recommendLoadPromise;
+
+  try {
+    await activePromise;
+  } finally {
+    if (recommendLoadPromise === activePromise) recommendLoadPromise = null;
+  }
 }
 
 /**
@@ -457,6 +490,81 @@ export async function localBatchDraftRanked(
       })
       .sort((a, b) => b.rating - a.rating);
   });
+}
+
+/**
+ * Recommend cards to add to or cut from a set of cards, using the same
+ * encoder + cube decoder path as the server-side recommender service.
+ */
+export async function localRecommend(
+  oracles: string[],
+  remapping?: Record<string, string>,
+): Promise<{ adds: RatedCard[]; cuts: RatedCard[] }> {
+  if (oracles.length === 0) {
+    return { adds: [], cuts: [] };
+  }
+
+  await loadDraftRecommender();
+
+  if (!draftBotLoaded || !tf || !encoder || !recommendDecoder) {
+    return { adds: [], cuts: [] };
+  }
+
+  const vector = new Float32Array(numOracles);
+  const mappedInputs = new Set<string>();
+  for (const oracle of oracles) {
+    const mapped = mlOracle(oracle, remapping);
+    const idx = oracleToIndex[mapped];
+    if (idx === undefined) continue;
+    vector[idx] = 1;
+    mappedInputs.add(mapped);
+  }
+
+  let inputTensor: import('@tensorflow/tfjs').Tensor | null = null;
+  let encoded: import('@tensorflow/tfjs').Tensor | null = null;
+  let logitsTensor: import('@tensorflow/tfjs').Tensor | null = null;
+
+  try {
+    inputTensor = tf.tensor2d(vector, [1, numOracles]);
+    encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
+    inputTensor.dispose();
+    inputTensor = null;
+    logitsTensor = recommendDecoder.predict([encoded]) as import('@tensorflow/tfjs').Tensor;
+    encoded.dispose();
+    encoded = null;
+    const logits = (await logitsTensor.data()) as Float32Array;
+    logitsTensor.dispose();
+    logitsTensor = null;
+
+    const adds: RatedCard[] = [];
+    const cuts: RatedCard[] = [];
+
+    for (let i = 0; i < numOracles; i++) {
+      const oracle = indexToOracle[i];
+      if (!oracle) continue;
+      const item = { oracle, rating: logits[i] ?? 0 };
+      if (mappedInputs.has(oracle)) {
+        cuts.push(item);
+      } else {
+        adds.push(item);
+      }
+    }
+
+    adds.sort((a, b) => b.rating - a.rating);
+    cuts.sort((a, b) => a.rating - b.rating);
+    return { adds, cuts };
+  } catch (err) {
+    inputTensor?.dispose();
+    encoded?.dispose();
+    logitsTensor?.dispose();
+    if (isWebGLError(err)) {
+      throw new WebGLInferenceError(
+        'WebGL context lost during recommendation inference — your GPU ran out of memory.',
+        err,
+      );
+    }
+    throw err;
+  }
 }
 
 export interface DeckbuildEntry {

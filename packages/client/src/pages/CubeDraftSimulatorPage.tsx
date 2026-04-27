@@ -78,12 +78,13 @@ import {
   buildOracleRemapping,
   DeckbuildEntry,
   loadDraftBot,
+  loadDraftRecommender,
   localBatchDeckbuild,
   localBatchDraftRanked,
   localPickBatch,
+  localRecommend,
   WebGLInferenceError,
 } from '../utils/draftBot';
-import { findCooccurrencePockets } from '../utils/draftSimulatorClustering';
 import {
   archetypeFullName,
   computeClusterThemes,
@@ -2263,14 +2264,18 @@ const ClusterDetailPanel: React.FC<{
   clusterIndex: number;
   totalPools: number;
   clusterDeckBuilds: BuiltDeck[] | null;
+  cubeOracleSet: Set<string>;
   cardMeta: Record<string, CardMeta>;
   commonCards?: SkeletonCard[];
   slimPools: SlimPool[];
   deckBuilds?: BuiltDeck[] | null;
   themes?: string[];
   poolArchetypeLabels?: Map<number, string> | null;
+  onOpenPool: (poolIndex: number) => void;
   onClose: () => void;
-}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cardMeta, commonCards = [], slimPools, deckBuilds, themes, poolArchetypeLabels, onClose }) => {
+}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, commonCards = [], slimPools, deckBuilds, themes, poolArchetypeLabels, onOpenPool, onClose }) => {
+  const { csrfFetch } = useContext(CSRFContext);
+
   // Compute actual color profile from deck color shares (≥10% threshold)
   const colorProfile = useMemo(() => {
     if (!clusterDeckBuilds || clusterDeckBuilds.length === 0) return normalizeColorOrder(skeleton.colorProfile);
@@ -2292,83 +2297,210 @@ const ClusterDetailPanel: React.FC<{
   const CARD_TABS = [
     { key: 'common', label: 'Common Cards', title: 'Cards appearing most often across decks in this cluster' },
     { key: 'signature', label: 'Signature Cards', title: 'Cards that appear significantly more in this cluster than in others — contrastive scoring vs. neighboring clusters' },
-    { key: 'core', label: 'Core Package', title: 'The tightest co-drafted chain of cards — cards that tend to show up together in the same deck, linked by highest pairwise co-occurrence' },
-    { key: 'pockets', label: 'Card Pockets', title: 'Sub-groups within the cluster: cards clustered by co-occurrence into distinct packages (e.g. a removal suite vs. a synergy engine)' },
+    { key: 'exemplary', label: 'Exemplary Deck', title: 'A real deck from this cluster chosen to best match the cluster’s representative high-priority card bucket' },
+    { key: 'recommendations', label: 'Recommendations', title: 'Use the cluster as a local recommender seed and suggest cards that would strengthen it' },
   ] as const;
   type CardTab = typeof CARD_TABS[number]['key'];
   const [cardTab, setCardTab] = useState<CardTab>('common');
 
-  const [pocketCount, setPocketCount] = useState(3);
-  const pockets = useMemo(
-    () => findCooccurrencePockets(skeleton.poolIndices, slimPools, cardMeta, pocketCount, deckBuilds),
-    [skeleton.poolIndices, slimPools, cardMeta, pocketCount, deckBuilds],
-  );
-
   // Greedy co-occurrence chain: each card is chosen because it appears alongside
   // ALL previously selected cards as often as possible.
   const hasDecks = deckBuilds && deckBuilds.length === slimPools.length;
-  const [topN, setTopN] = useState(10);
-  const coreChain = useMemo(() => {
-    if (!hasDecks) return [];
 
-    // Build per-deck top-N rated mainboard card sets
-    const deckCardSets: Set<string>[] = [];
-    for (const pi of skeleton.poolIndices) {
-      const deck = deckBuilds![pi]!;
+  const exemplaryDeck = useMemo(() => {
+    if (!hasDecks) return null;
+
+    const representativeWeights = new Map<string, number>();
+    const representativeTopN = 12;
+
+    for (const poolIndex of skeleton.poolIndices) {
+      const deck = deckBuilds![poolIndex]!;
       const mainboardSet = new Set(deck.mainboard);
-      const ratings = deck.deckbuildRatings;
-      let topCards: string[];
-      if (ratings && ratings.length > 0) {
-        topCards = ratings
-          .filter((r) => mainboardSet.has(r.oracle))
-          .slice(0, topN)
-          .map((r) => r.oracle);
-      } else {
-        topCards = deck.mainboard.slice(0, topN);
-      }
-      deckCardSets.push(new Set(topCards));
-    }
+      const ranked =
+        deck.deckbuildRatings && deck.deckbuildRatings.length > 0
+          ? deck.deckbuildRatings.filter((entry) => mainboardSet.has(entry.oracle)).slice(0, representativeTopN)
+          : deck.mainboard.slice(0, representativeTopN).map((oracle, index) => ({ oracle, rating: representativeTopN - index }));
 
-    // Greedy chain: pick card that co-occurs most with all previously selected
-    const chain: { oracle_id: string; name: string; imageUrl: string; cooccurrence: number }[] = [];
-    let matchingDecks = deckCardSets.map((_, i) => i); // all decks initially
-    const used = new Set<string>();
-
-    for (let step = 0; step < 18; step++) {
-      if (matchingDecks.length === 0) break;
-
-      // Count each unused card's frequency in the current matching set
-      const counts = new Map<string, number>();
-      for (const di of matchingDecks) {
-        for (const id of deckCardSets[di]!) {
-          if (!used.has(id)) counts.set(id, (counts.get(id) ?? 0) + 1);
-        }
-      }
-      if (counts.size === 0) break;
-
-      // Pick the card with highest frequency in matching decks
-      let bestCard = '';
-      let bestCount = 0;
-      for (const [id, count] of counts) {
-        if (count > bestCount) { bestCount = count; bestCard = id; }
-      }
-      if (!bestCard) break;
-
-      const rate = bestCount / matchingDecks.length;
-      chain.push({
-        oracle_id: bestCard,
-        name: cardMeta[bestCard]?.name ?? bestCard,
-        imageUrl: cardMeta[bestCard]?.imageUrl ?? '',
-        cooccurrence: rate,
+      ranked.forEach((entry, index) => {
+        const rankWeight = (representativeTopN - index) / representativeTopN;
+        representativeWeights.set(entry.oracle, (representativeWeights.get(entry.oracle) ?? 0) + rankWeight);
       });
-      used.add(bestCard);
-
-      // Narrow to decks that contain this card
-      matchingDecks = matchingDecks.filter((di) => deckCardSets[di]!.has(bestCard));
     }
 
-    return chain;
-  }, [skeleton.poolIndices, deckBuilds, cardMeta, topN, hasDecks]);
+    let best:
+      | {
+          poolIndex: number;
+          deck: BuiltDeck;
+          score: number;
+          overlap: number;
+          topCards: string[];
+        }
+      | null = null;
+
+    for (const poolIndex of skeleton.poolIndices) {
+      const deck = deckBuilds![poolIndex]!;
+      const mainboardSet = new Set(deck.mainboard);
+      let score = 0;
+      let overlap = 0;
+      for (const [oracle, weight] of representativeWeights) {
+        if (!mainboardSet.has(oracle)) continue;
+        score += weight;
+        overlap += 1;
+      }
+
+      const topCards =
+        deck.deckbuildRatings && deck.deckbuildRatings.length > 0
+          ? deck.deckbuildRatings.filter((entry) => mainboardSet.has(entry.oracle)).slice(0, 8).map((entry) => entry.oracle)
+          : deck.mainboard.slice(0, 8);
+
+      if (!best || score > best.score || (score === best.score && overlap > best.overlap)) {
+        best = { poolIndex, deck, score, overlap, topCards };
+      }
+    }
+
+    return best;
+  }, [cardMeta, deckBuilds, hasDecks, skeleton.poolIndices]);
+
+  const recommendationSeedCards = useMemo(() => {
+    const totalClusterPools = skeleton.poolIndices.length;
+    if (totalClusterPools === 0) return [] as Array<SkeletonCard & { count: number }>;
+
+    const counts = new Map<string, number>();
+    for (const poolIndex of skeleton.poolIndices) {
+      const cards = hasDecks
+        ? deckBuilds![poolIndex]!.mainboard
+        : slimPools[poolIndex]!.picks.map((pick) => pick.oracle_id);
+      for (const oracle of new Set(cards)) {
+        counts.set(oracle, (counts.get(oracle) ?? 0) + 1);
+      }
+    }
+
+    return [...counts.entries()]
+      .filter(([oracle]) => !(cardMeta[oracle]?.type?.includes('Basic') && cardMeta[oracle]?.type?.includes('Land')))
+      .map(([oracle, count]) => ({
+        oracle_id: oracle,
+        name: cardMeta[oracle]?.name ?? oracle,
+        imageUrl: cardMeta[oracle]?.imageUrl ?? '',
+        fraction: count / totalClusterPools,
+        count,
+      }))
+      .sort((a, b) => b.fraction - a.fraction || a.name.localeCompare(b.name));
+  }, [cardMeta, deckBuilds, hasDecks, skeleton.poolIndices, slimPools]);
+
+  const recommendationInputCards = useMemo(() => {
+    const minSeedCount = Math.max(2, Math.ceil(skeleton.poolCount * 0.1));
+    const frequentCards = recommendationSeedCards.filter((card) => card.count >= minSeedCount);
+    const seedCards = frequentCards.length >= 20 ? frequentCards : recommendationSeedCards.slice(0, 40);
+    return seedCards.slice(0, 120);
+  }, [recommendationSeedCards, skeleton.poolCount]);
+
+  const recommendationInputOracles = useMemo(
+    () => recommendationInputCards.map((card) => card.oracle_id),
+    [recommendationInputCards],
+  );
+  const recommendationInputThreshold = useMemo(
+    () => (skeleton.poolCount > 0 ? Math.max(2, Math.ceil(skeleton.poolCount * 0.1)) : 0),
+    [skeleton.poolCount],
+  );
+
+  type ClusterRecommendation = { oracle: string; rating: number; details: CardDetails };
+  const [clusterRecommendations, setClusterRecommendations] = useState<ClusterRecommendation[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
+  const [excludeClusterLands, setExcludeClusterLands] = useState(true);
+  const [excludeRecommendationLands, setExcludeRecommendationLands] = useState(true);
+
+  const visibleCommonCards = useMemo(
+    () =>
+      (commonCards.length > 0 ? commonCards : skeleton.coreCards).filter(
+        (card) => !excludeClusterLands || !cardMeta[card.oracle_id]?.type?.includes('Land'),
+      ),
+    [cardMeta, commonCards, excludeClusterLands, skeleton.coreCards],
+  );
+  const visibleSignatureCards = useMemo(
+    () =>
+      (skeleton.signatureCards ?? []).filter(
+        (card) => !excludeClusterLands || !cardMeta[card.oracle_id]?.type?.includes('Land'),
+      ),
+    [cardMeta, excludeClusterLands, skeleton.signatureCards],
+  );
+
+  const visibleClusterRecommendations = useMemo(
+    () =>
+      excludeRecommendationLands
+        ? clusterRecommendations.filter((item) => !item.details.type?.includes('Land'))
+        : clusterRecommendations,
+    [clusterRecommendations, excludeRecommendationLands],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (cardTab !== 'recommendations') {
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (recommendationInputOracles.length === 0) {
+      setClusterRecommendations([]);
+      setRecommendationsError(null);
+      setRecommendationsLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    (async () => {
+      setRecommendationsLoading(true);
+      setRecommendationsError(null);
+      try {
+        await loadDraftRecommender();
+        const remapping = buildOracleRemapping(cardMeta);
+        const { adds } = await localRecommend(recommendationInputOracles, remapping);
+        if (cancelled) return;
+
+        const candidateOracles = adds.slice(0, 80).map((item) => item.oracle);
+        const response = await csrfFetch('/cube/api/getdetailsforcards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cards: candidateOracles }),
+        });
+        if (!response.ok) throw new Error(`Failed to load recommendation details: ${response.status}`);
+        const data = await response.json();
+        if (cancelled) return;
+
+        const detailsByOracle = new Map<string, CardDetails>();
+        const detailsList: CardDetails[] = Array.isArray(data?.details) ? data.details : [];
+        for (const details of detailsList) {
+          if (details?.oracle_id) detailsByOracle.set(details.oracle_id, details);
+        }
+
+        const filtered = adds
+          .filter((item) => !cubeOracleSet.has(item.oracle))
+          .map((item) => ({ ...item, details: detailsByOracle.get(item.oracle) }))
+          .filter(
+            (item): item is ClusterRecommendation =>
+              !!item.details &&
+              !item.details.isToken &&
+              !(item.details.type?.includes('Basic') && item.details.type?.includes('Land')),
+          )
+          .slice(0, 24);
+
+        setClusterRecommendations(filtered);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load cluster recommendations:', err);
+        setClusterRecommendations([]);
+        setRecommendationsError('Unable to generate recommendations for this cluster.');
+      } finally {
+        if (!cancelled) setRecommendationsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cardMeta, cardTab, csrfFetch, cubeOracleSet, recommendationInputOracles]);
 
   const colorCodes = getColorProfileCodes(colorProfile);
   const pct = totalPools > 0 ? ((skeleton.poolCount / totalPools) * 100).toFixed(1) : '0';
@@ -2439,72 +2571,138 @@ const ClusterDetailPanel: React.FC<{
           ))}
         </div>
         {cardTab === 'common' && (
-          <div className="grid grid-cols-6 gap-1.5">
-            {(commonCards.length > 0 ? commonCards : skeleton.coreCards).slice(0, 12).map((card) => (
-              <SkeletonCardImage key={card.oracle_id} card={card} />
-            ))}
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-end">
+              <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+                <input
+                  type="checkbox"
+                  checked={excludeClusterLands}
+                  onChange={(event) => setExcludeClusterLands(event.target.checked)}
+                />
+                Exclude lands
+              </label>
+            </div>
+            {visibleCommonCards.length > 0 ? (
+              <div className="grid grid-cols-6 gap-1.5">
+                {visibleCommonCards.slice(0, 12).map((card) => (
+                  <SkeletonCardImage key={card.oracle_id} card={card} />
+                ))}
+              </div>
+            ) : (
+              <Text sm className="text-text-secondary">No common cards remain after filtering.</Text>
+            )}
           </div>
         )}
         {cardTab === 'signature' && (
-          <div className="grid grid-cols-6 gap-1.5">
-            {(skeleton.signatureCards ?? []).slice(0, 12).map((card) => (
-              <SkeletonCardImage key={card.oracle_id} card={card} />
-            ))}
-            {(skeleton.signatureCards ?? []).length === 0 && (
-              <Text sm className="text-text-secondary col-span-6">No signature cards found for this cluster.</Text>
-            )}
-          </div>
-        )}
-        {cardTab === 'core' && (
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <label className="text-xs text-text-secondary" title="Top N rated cards per deck to consider">top</label>
-              <NumericInput min={5} max={23} value={topN} onChange={setTopN} className="w-14" />
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-end">
+              <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+                <input
+                  type="checkbox"
+                  checked={excludeClusterLands}
+                  onChange={(event) => setExcludeClusterLands(event.target.checked)}
+                />
+                Exclude lands
+              </label>
             </div>
-            {coreChain.length > 0 ? (
+            {visibleSignatureCards.length > 0 ? (
               <div className="grid grid-cols-6 gap-1.5">
-                {coreChain.map((card) => (
-                  <SkeletonCardImage
-                    key={card.oracle_id}
-                    card={{ oracle_id: card.oracle_id, name: card.name, imageUrl: card.imageUrl, fraction: card.cooccurrence }}
-                  />
+                {visibleSignatureCards.slice(0, 12).map((card) => (
+                  <SkeletonCardImage key={card.oracle_id} card={card} />
                 ))}
               </div>
             ) : (
-              <Text sm className="text-text-secondary">No core package found. Deck builds may still be loading.</Text>
+              <Text sm className="text-text-secondary">
+                {(skeleton.signatureCards ?? []).length === 0
+                  ? 'No signature cards found for this cluster.'
+                  : 'No signature cards remain after filtering.'}
+              </Text>
             )}
           </div>
         )}
-        {cardTab === 'pockets' && (
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <label className="text-xs text-text-secondary">Pockets</label>
-              <NumericInput min={2} max={10} value={pocketCount} onChange={setPocketCount} className="w-14" />
-            </div>
-            {pockets.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                {pockets.map((pocket) => (
-                  <div key={pocket.pocketIndex} className="rounded border border-border/50 p-2">
-                    <Text xs className="text-text-secondary font-medium mb-1">Pocket {pocket.pocketIndex + 1}</Text>
-                    {pocket.cards.length > 0 ? (
-                      <div className="flex flex-row gap-1 overflow-x-auto pb-0.5">
-                        {pocket.cards.map((card) => (
-                          <SkeletonCardImage
-                            key={card.oracle_id}
-                            card={{ oracle_id: card.oracle_id, name: card.name, imageUrl: card.imageUrl, fraction: card.frequency }}
-                            size={80}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <Text xs className="text-text-secondary">No cards</Text>
-                    )}
+        {cardTab === 'exemplary' && (
+          <div className="flex flex-col gap-3">
+            {exemplaryDeck ? (
+              <>
+                <div className="flex items-center justify-between gap-3 flex-wrap rounded border border-border/60 bg-bg-accent/30 px-3 py-2">
+                  <div>
+                    <Text sm semibold>
+                      Draft {slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat {slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1}
+                    </Text>
+                    <Text xs className="text-text-secondary">
+                      Matches {exemplaryDeck.overlap} representative cards from the cluster bucket.
+                    </Text>
                   </div>
-                ))}
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => onOpenPool(exemplaryDeck.poolIndex)}
+                    className="px-3 py-1.5 rounded text-xs font-semibold border bg-bg text-text-secondary border-border hover:bg-bg-active"
+                  >
+                    Open in detailed view
+                  </button>
+                </div>
+                <SimDeckView deck={exemplaryDeck.deck} cardMeta={cardMeta} />
+              </>
             ) : (
-              <Text sm className="text-text-secondary">No card pockets found.</Text>
+              <Text sm className="text-text-secondary">Deck builds are required to show an exemplary deck.</Text>
             )}
+          </div>
+        )}
+        {cardTab === 'recommendations' && (
+          <div className="flex flex-col gap-4">
+            <div className="rounded border border-border/60 bg-bg-accent/30 p-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <Text xs className="text-text-secondary">
+                  Using {recommendationInputCards.length} cluster cards as the seed set.
+                  {recommendationInputThreshold > 0
+                    ? ` Seed cards appear in at least ${recommendationInputThreshold} decks when possible.`
+                    : ''}
+                </Text>
+                <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+                  <input
+                    type="checkbox"
+                    checked={excludeRecommendationLands}
+                    onChange={(event) => setExcludeRecommendationLands(event.target.checked)}
+                  />
+                  Exclude lands
+                </label>
+              </div>
+            </div>
+            <div>
+              <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+                Recommended Additions
+              </Text>
+              {recommendationsLoading ? (
+                <Text sm className="text-text-secondary">Generating recommendations…</Text>
+              ) : recommendationsError ? (
+                <Text sm className="text-text-secondary">{recommendationsError}</Text>
+              ) : visibleClusterRecommendations.length > 0 ? (
+                <div className="grid grid-cols-6 gap-1.5">
+                  {visibleClusterRecommendations.map((item) => (
+                    <AutocardLink
+                      key={item.oracle}
+                      href={`/tool/card/${encodeURIComponent(item.oracle)}`}
+                      className="relative block hover:opacity-95"
+                      title={item.details.name}
+                      card={{ cardID: item.oracle, details: item.details } as CardType}
+                    >
+                      <img
+                        src={item.details.image_normal || `/tool/cardimage/${encodeURIComponent(item.oracle)}`}
+                        alt={item.details.name}
+                        className="w-full rounded border border-border shadow-sm"
+                        style={{ imageRendering: 'auto' }}
+                      />
+                    </AutocardLink>
+                  ))}
+                </div>
+              ) : (
+                <Text sm className="text-text-secondary">
+                  {clusterRecommendations.length > 0
+                    ? 'No recommendations remain after filtering.'
+                    : 'No recommendations returned for this cluster.'}
+                </Text>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -2633,32 +2831,13 @@ const DraftMapScopePanel: React.FC<{
 const DraftMapCard: React.FC<{
   skeletons: ArchetypeSkeleton[];
   showAdvancedClustering: boolean;
-  clusterMode: 'umap' | 'graph' | 'leiden' | 'nmf';
-  setClusterMode: React.Dispatch<React.SetStateAction<'umap' | 'graph' | 'leiden' | 'nmf'>>;
-  distanceMetric: 'euclidean' | 'cosine';
-  setDistanceMetric: React.Dispatch<React.SetStateAction<'euclidean' | 'cosine'>>;
-  useHybridEmbeddings: boolean;
-  setUseHybridEmbeddings: React.Dispatch<React.SetStateAction<boolean>>;
   pendingKnnK: number;
   setPendingKnnK: (v: number) => void;
   pendingResolution: number;
   setPendingResolution: (v: number) => void;
-  pendingNumTopics: number;
-  setPendingNumTopics: (v: number) => void;
-  pendingPcaDims: number;
-  setPendingPcaDims: (v: number) => void;
-  pendingNegSamples: number;
-  setPendingNegSamples: (v: number) => void;
-  pendingMinClusterSize: number;
-  setPendingMinClusterSize: (v: number) => void;
-  pendingMinPts: number;
-  setPendingMinPts: (v: number) => void;
-  pendingHybridWeight: number;
-  setPendingHybridWeight: (v: number) => void;
   clusteringInProgress: boolean;
   clusteringPhase: string | null;
   applyPendingClusteringSettings: () => void;
-  queueRecluster: () => void;
   draftMapPoints: DraftMapPoint[];
   showDraftMapScopePanel: boolean;
   activeFilterPoolIndexSet: Set<number> | null;
@@ -2694,35 +2873,17 @@ const DraftMapCard: React.FC<{
   draftMapScopeSubtitle: string;
   draftMapScopeSeatCount: number;
   onClearSelectedCards: () => void;
+  cubeOracleSet: Set<string>;
 }> = ({
   skeletons,
   showAdvancedClustering,
-  clusterMode,
-  setClusterMode,
-  distanceMetric,
-  setDistanceMetric,
-  useHybridEmbeddings,
-  setUseHybridEmbeddings,
   pendingKnnK,
   setPendingKnnK,
   pendingResolution,
   setPendingResolution,
-  pendingNumTopics,
-  setPendingNumTopics,
-  pendingPcaDims,
-  setPendingPcaDims,
-  pendingNegSamples,
-  setPendingNegSamples,
-  pendingMinClusterSize,
-  setPendingMinClusterSize,
-  pendingMinPts,
-  setPendingMinPts,
-  pendingHybridWeight,
-  setPendingHybridWeight,
   clusteringInProgress,
   clusteringPhase,
   applyPendingClusteringSettings,
-  queueRecluster,
   draftMapPoints,
   showDraftMapScopePanel,
   activeFilterPoolIndexSet,
@@ -2753,6 +2914,7 @@ const DraftMapCard: React.FC<{
   draftMapScopeSubtitle,
   draftMapScopeSeatCount,
   onClearSelectedCards,
+  cubeOracleSet,
 }) => {
   return (
     <Card className="border-border">
@@ -2777,99 +2939,21 @@ const DraftMapCard: React.FC<{
           </div>
           {showAdvancedClustering && (
             <>
-              <div className="flex flex-row flex-wrap items-end gap-3 pt-1">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-text-secondary">Method</span>
-                  <div className="inline-flex rounded border border-border overflow-hidden">
-                    {(['umap', 'graph', 'leiden', 'nmf'] as const).map((mode) => (
-                      <button key={mode} type="button"
-                        onClick={() => { setClusterMode(mode); setSelectedSkeletonId(null); queueRecluster(); }}
-                        className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border last:border-r-0', clusterMode === mode ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
-                        {mode === 'umap' ? 'UMAP' : mode === 'graph' ? 'Graph' : mode === 'leiden' ? 'Leiden' : 'NMF'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className={['text-[10px] font-semibold uppercase tracking-widest', clusterMode === 'nmf' ? 'text-text-secondary opacity-50' : 'text-text-secondary'].join(' ')}>
-                    k-NN graph{clusterMode === 'nmf' ? ' (map only)' : ''}
-                  </span>
-                  <div className="flex flex-row items-center gap-1">
-                    <div className={['inline-flex rounded border border-border overflow-hidden', clusterMode === 'nmf' ? 'opacity-50' : ''].join(' ')}>
-                      <button type="button" onClick={() => { setDistanceMetric('euclidean'); setSelectedSkeletonId(null); queueRecluster(); }}
-                        className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', distanceMetric === 'euclidean' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
-                        Euclid
-                      </button>
-                      <button type="button" onClick={() => { setDistanceMetric('cosine'); setSelectedSkeletonId(null); queueRecluster(); }}
-                        className={['px-2 py-1 text-xs font-medium transition-colors', distanceMetric === 'cosine' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
-                        Cosine
-                      </button>
-                    </div>
-                    <button type="button"
-                      onClick={() => { setUseHybridEmbeddings(!useHybridEmbeddings); setSelectedSkeletonId(null); queueRecluster(); }}
-                      title="Append color + card-type distribution to the embedding vectors before building the k-NN graph"
-                      className={['px-2 py-1 rounded border text-xs font-medium transition-colors', clusterMode === 'nmf' ? 'opacity-50' : '', useHybridEmbeddings ? 'bg-link text-white border-link' : 'bg-bg-accent border-border hover:bg-bg-active text-text-secondary'].join(' ')}>
-                      +Features
-                    </button>
-                  </div>
-                </div>
-              </div>
               <p className="text-xs text-text-secondary leading-snug max-w-2xl">
-                {clusterMode === 'umap' && <span>Projects drafters into 2D so similar pickers land near each other, then finds dense clumps. <strong>UMAP Dims</strong> controls fidelity; <strong>Min Size</strong> is the smallest valid cluster. k-NN metric and features affect clustering directly.</span>}
-                {clusterMode === 'graph' && <span>Connects drafters via k-NN graph, then finds dense neighborhoods using HDBSCAN. <strong>Min Size</strong> is the smallest valid cluster; <strong>Min Pts</strong> controls required density. k-NN metric and features affect clustering directly.</span>}
-                {clusterMode === 'leiden' && <span>Treats the k-NN graph as a social network and finds communities. <strong>Resolution</strong> controls granularity - higher means more, smaller clusters. k-NN metric and features affect clustering directly.</span>}
-                {clusterMode === 'nmf' && <span>Decomposes drafts into shared card themes and assigns each drafter to their best match. <strong>Topics</strong> sets how many archetypes to find (<strong>0</strong> = auto). k-NN metric and features only affect map layout here - NMF clusters from raw card overlap.</span>}
-                {clusterMode !== 'nmf' && <> <span className="opacity-60"><strong>Neighbors (k)</strong> controls graph connectivity - higher gives smoother boundaries.</span></>}
+                <span>
+                  Uses Leiden community detection on the draft similarity graph. <strong>Resolution</strong> controls
+                  granularity; higher values produce more, smaller clusters. <span className="opacity-60"><strong>Neighbors (k)</strong> controls graph connectivity; higher values produce smoother boundaries.</span>
+                </span>
               </p>
               <div className="flex flex-row flex-wrap items-end gap-3">
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-[11px] font-medium text-text-secondary">
-                    Neighbors (k){clusterMode === 'nmf' ? <span className="opacity-50"> · map</span> : ''}
-                  </label>
+                  <label className="text-[11px] font-medium text-text-secondary">Neighbors (k)</label>
                   <NumericInput min={5} max={200} value={pendingKnnK} onChange={setPendingKnnK} className="w-20" />
                 </div>
-                {clusterMode === 'leiden' && (
-                  <div className="flex flex-col gap-0.5">
-                    <label className="text-[11px] font-medium text-text-secondary">Resolution</label>
-                    <NumericInput min={0.1} max={10} step={0.1} value={pendingResolution} onChange={setPendingResolution} className="w-20" />
-                  </div>
-                )}
-                {clusterMode === 'nmf' && (
-                  <div className="flex flex-col gap-0.5">
-                    <label className="text-[11px] font-medium text-text-secondary">Topics</label>
-                    <NumericInput min={0} max={100} value={pendingNumTopics} onChange={setPendingNumTopics} className="w-20" />
-                  </div>
-                )}
-                {clusterMode === 'umap' && (
-                  <>
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-[11px] font-medium text-text-secondary">UMAP Dims</label>
-                      <NumericInput min={2} max={128} value={pendingPcaDims} onChange={setPendingPcaDims} className="w-20" />
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-[11px] font-medium text-text-secondary">Neg Samples</label>
-                      <NumericInput min={1} max={50} value={pendingNegSamples} onChange={setPendingNegSamples} className="w-20" />
-                    </div>
-                  </>
-                )}
-                {(clusterMode === 'umap' || clusterMode === 'graph') && (
-                  <>
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-[11px] font-medium text-text-secondary">Min Size</label>
-                      <NumericInput min={2} max={20} value={pendingMinClusterSize} onChange={setPendingMinClusterSize} className="w-20" />
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-[11px] font-medium text-text-secondary">Min Pts</label>
-                      <NumericInput min={2} max={20} value={pendingMinPts} onChange={setPendingMinPts} className="w-20" />
-                    </div>
-                  </>
-                )}
-                {useHybridEmbeddings && (
-                  <div className="flex flex-col gap-0.5">
-                    <label className="text-[11px] font-medium text-text-secondary">Hybrid Weight</label>
-                    <NumericInput min={0.5} max={20} step={0.5} value={pendingHybridWeight} onChange={setPendingHybridWeight} className="w-20" />
-                  </div>
-                )}
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-[11px] font-medium text-text-secondary">Resolution</label>
+                  <NumericInput min={0.1} max={10} step={0.1} value={pendingResolution} onChange={setPendingResolution} className="w-20" />
+                </div>
                 <button type="button" disabled={clusteringInProgress} onClick={() => { setSelectedSkeletonId(null); setFocusedPoolIndex(null); applyPendingClusteringSettings(); }}
                   className={['ml-auto self-end px-3 py-1.5 rounded text-xs font-semibold border transition-colors whitespace-nowrap', clusteringInProgress ? 'bg-bg-accent border-border text-text-secondary cursor-wait' : 'bg-link border-link text-white hover:opacity-90'].join(' ')}>
                   {clusteringInProgress ? (
@@ -2996,12 +3080,18 @@ const DraftMapCard: React.FC<{
                       clusterIndex={skIdx}
                       totalPools={displayRunData.slimPools.length}
                       clusterDeckBuilds={clusterDecks}
+                      cubeOracleSet={cubeOracleSet}
                       cardMeta={displayRunData.cardMeta}
                       commonCards={activeFilterPreview?.commonCards ?? []}
                       slimPools={displayRunData.slimPools}
                       deckBuilds={activeDecks}
                       themes={clusterThemesByClusterId.get(sk.clusterId)}
                       poolArchetypeLabels={poolArchetypeLabels}
+                      onOpenPool={(poolIndex) => {
+                        setSelectedSkeletonId(null);
+                        setFocusedPoolIndex(poolIndex);
+                        setDraftBreakdownOpen(true);
+                      }}
                       onClose={() => {
                         setSelectedSkeletonId(null);
                         setFocusedPoolIndex(null);
@@ -3065,7 +3155,6 @@ const DraftSimulatorBottomSection: React.FC<{
   displayRunData: SimulationRunData;
   clusteringInProgress: boolean;
   clusteringPhase: string | null;
-  clusterMethod: string;
   skeletons: ArchetypeSkeleton[];
   selectedSkeletonId: number | null;
   setSelectedSkeletonId: React.Dispatch<React.SetStateAction<number | null>>;
@@ -3116,7 +3205,6 @@ const DraftSimulatorBottomSection: React.FC<{
   displayRunData,
   clusteringInProgress,
   clusteringPhase,
-  clusterMethod,
   skeletons,
   selectedSkeletonId,
   setSelectedSkeletonId,
@@ -3220,7 +3308,6 @@ const DraftSimulatorBottomSection: React.FC<{
               setSelectedSkeletonId(id);
               setSelectedArchetype(null);
             }}
-            clusterMethod={clusterMethod}
             clusterThemesByClusterId={clusterThemesByClusterId}
             poolArchetypeLabels={poolArchetypeLabels}
             poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
@@ -3536,18 +3623,16 @@ const ArchetypeSkeletonSection: React.FC<{
   totalPools: number;
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
-  clusterMethod: string;
   clusterThemesByClusterId?: Map<number, string[]>;
   poolArchetypeLabels?: Map<number, string> | null;
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterMethod, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles }) => (
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles }) => (
   <ArchetypeSkeletonSectionInner
     skeletons={skeletons}
     totalPools={totalPools}
     selectedSkeletonId={selectedSkeletonId}
     onSelectSkeleton={onSelectSkeleton}
-    clusterMethod={clusterMethod}
     clusterThemesByClusterId={clusterThemesByClusterId}
     poolArchetypeLabels={poolArchetypeLabels}
     poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
@@ -3560,12 +3645,11 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   totalPools: number;
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
-  clusterMethod: string;
   clusterThemesByClusterId?: Map<number, string[]>;
   poolArchetypeLabels?: Map<number, string> | null;
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterMethod, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map() }) => {
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map() }) => {
 
   const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => {
     // Compute dominant Gwen archetype label for this cluster
@@ -3859,38 +3943,19 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       .map(([colorPair, count]) => ({ colorPair, count, percentage: count / totalPools }))
       .sort((a, b) => b.count - a.count);
   }, [displayRunData, activeDecks, simulatedPools.length, displayedPools]);
+  const cubeOracleSet = useMemo(() => new Set(Object.keys(displayRunData?.cardMeta ?? {})), [displayRunData?.cardMeta]);
   const {
-    pendingMinClusterSize,
-    setPendingMinClusterSize,
-    pendingPcaDims,
-    setPendingPcaDims,
-    pendingMinPts,
-    setPendingMinPts,
     pendingKnnK,
     setPendingKnnK,
-    pendingNegSamples,
-    setPendingNegSamples,
-    clusterMode,
-    setClusterMode,
     pendingResolution,
     setPendingResolution,
-    pendingNumTopics,
-    setPendingNumTopics,
-    distanceMetric,
-    setDistanceMetric,
-    useHybridEmbeddings,
-    setUseHybridEmbeddings,
-    pendingHybridWeight,
-    setPendingHybridWeight,
     skeletons,
     umapCoords,
-    clusterMethod,
     clusteringInProgress,
     clusteringPhase,
     poolArchetypeLabels,
     poolArchetypeLabelsLoading,
     oovWarningPct,
-    queueRecluster,
     applyPendingClusteringSettings,
   } = useClusteringPipeline({
     cubeId,
@@ -4400,32 +4465,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                       <DraftMapCard
                         skeletons={skeletons}
                         showAdvancedClustering={showAdvancedClustering}
-                        clusterMode={clusterMode}
-                        setClusterMode={setClusterMode}
-                        distanceMetric={distanceMetric}
-                        setDistanceMetric={setDistanceMetric}
-                        useHybridEmbeddings={useHybridEmbeddings}
-                        setUseHybridEmbeddings={setUseHybridEmbeddings}
                         pendingKnnK={pendingKnnK}
                         setPendingKnnK={setPendingKnnK}
                         pendingResolution={pendingResolution}
                         setPendingResolution={setPendingResolution}
-                        pendingNumTopics={pendingNumTopics}
-                        setPendingNumTopics={setPendingNumTopics}
-                        pendingPcaDims={pendingPcaDims}
-                        setPendingPcaDims={setPendingPcaDims}
-                        pendingNegSamples={pendingNegSamples}
-                        setPendingNegSamples={setPendingNegSamples}
-                        pendingMinClusterSize={pendingMinClusterSize}
-                        setPendingMinClusterSize={setPendingMinClusterSize}
-                        pendingMinPts={pendingMinPts}
-                        setPendingMinPts={setPendingMinPts}
-                        pendingHybridWeight={pendingHybridWeight}
-                        setPendingHybridWeight={setPendingHybridWeight}
                         clusteringInProgress={clusteringInProgress}
                         clusteringPhase={clusteringPhase}
                         applyPendingClusteringSettings={applyPendingClusteringSettings}
-                        queueRecluster={queueRecluster}
                         draftMapPoints={draftMapPoints}
                         showDraftMapScopePanel={showDraftMapScopePanel}
                         activeFilterPoolIndexSet={activeFilterPoolIndexSet}
@@ -4456,6 +4502,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         draftMapScopeSubtitle={draftMapScopeSubtitle}
                         draftMapScopeSeatCount={draftMapScopeSeatCount}
                         onClearSelectedCards={() => setSelectedCardOracles([])}
+                        cubeOracleSet={cubeOracleSet}
                       />
                     </div>
                   </Flexbox>
@@ -4499,7 +4546,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   displayRunData={displayRunData}
                   clusteringInProgress={clusteringInProgress}
                   clusteringPhase={clusteringPhase}
-                  clusterMethod={clusterMethod}
                   skeletons={skeletons}
                   selectedSkeletonId={selectedSkeletonId}
                   setSelectedSkeletonId={setSelectedSkeletonId}
